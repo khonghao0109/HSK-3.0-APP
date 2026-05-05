@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum QuestionType {
+  mcq
+  listening
+  reading
+}
+
+enum Skill {
+  listening
+  reading
+  writing
+}
+
+enum ProgressStatus {
+  not_started
+  learning
+  done
+}
+
+enum WordProgressStatus {
+  learning
+  done
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(user)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  results           Result[]
+  progresses        Progress[]
+  userWords         UserWord[]
+  wordProgresses    UserWordProgress[]
+}
+
+model Level {
+  id          Int      @id @default(autoincrement())
+  name        String
+  orderIndex  Int
+
+  lessons     Lesson[]
+  stories     Story[]
+  questions   Question[]
+  tests       Test[]
+  wordLevels  WordLevel[]
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  levelId     Int
+  title       String
+  description String?
+  orderIndex  Int
+  slug        String   @unique
+
+  level       Level    @relation(fields: [levelId], references: [id])
+  topics      Topic[]
+  progresses  Progress[]
+  lessonWords LessonWord[]
+}
+
+model Topic {
+  id        Int    @id @default(autoincrement())
+  lessonId  Int
+  title     String
+  content   String
+  orderIndex Int
+
+  lesson    Lesson @relation(fields: [lessonId], references: [id])
+}
+
+model Story {
+  id        Int    @id @default(autoincrement())
+  levelId   Int
+  title     String
+  content   String
+  slug      String @unique
+
+  level     Level  @relation(fields: [levelId], references: [id])
+}
+
+model Question {
+  id             Int       @id @default(autoincrement())
+  content        String
+  type           QuestionType
+  skill          Skill
+  answers        Json
+  correctAnswer  Json
+  explanation    String?
+  levelId        Int
+  audioUrl       String?
+  deletedAt      DateTime?
+
+  level          Level     @relation(fields: [levelId], references: [id])
+  testQuestions  TestQuestion[]
+
+  @@index([levelId])
+  @@index([skill])
+}
+
+model Test {
+  id         Int       @id @default(autoincrement())
+  levelId    Int
+  title      String
+  duration   Int
+  deletedAt  DateTime?
+
+  level      Level     @relation(fields: [levelId], references: [id])
+  questions  TestQuestion[]
+  results    Result[]
+}
+
+model TestQuestion {
+  id          Int  @id @default(autoincrement())
+  testId      Int
+  questionId  Int
+  orderIndex  Int
+
+  test        Test     @relation(fields: [testId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id])
+
+  @@unique([testId, questionId])
+}
+
+model Result {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  testId     Int
+  score      Int
+  detailJson Json
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  test       Test     @relation(fields: [testId], references: [id])
+
+  @@index([userId])
+}
+
+model Word {
+  id          Int      @id @default(autoincrement())
+  hanzi       String
+  pinyin      String
+  meanings    WordMeaning[]
+  example     String?
+
+  wordLevels  WordLevel[]
+  lessonWords LessonWord[]
+  userWords   UserWord[]
+  progresses  UserWordProgress[]
+
+  @@index([hanzi])
+  @@index([pinyin])
+}
+
+model WordMeaning {
+  id         Int    @id @default(autoincrement())
+  wordId     Int
+  meaningEn  String
+  meaningVi  String
+
+  word       Word   @relation(fields: [wordId], references: [id])
+
+  @@index([wordId])
+}
+
+model WordLevel {
+  id       Int @id @default(autoincrement())
+  wordId   Int
+  levelId  Int
+
+  word     Word  @relation(fields: [wordId], references: [id])
+  level    Level @relation(fields: [levelId], references: [id])
+
+  @@unique([wordId, levelId])
+}
+
+model LessonWord {
+  id        Int @id @default(autoincrement())
+  lessonId  Int
+  wordId    Int
+
+  lesson    Lesson @relation(fields: [lessonId], references: [id])
+  word      Word   @relation(fields: [wordId], references: [id])
+
+  @@unique([lessonId, wordId])
+}
+
+model UserWord {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  wordId    Int
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  word      Word @relation(fields: [wordId], references: [id])
+
+  @@unique([userId, wordId])
+}
+
+model Progress {
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  lessonId   Int
+  status     ProgressStatus
+  score      Int?
+  updatedAt  DateTime       @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id])
+  lesson     Lesson         @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model UserWordProgress {
+  id      Int                 @id @default(autoincrement())
+  userId  Int
+  wordId  Int
+  status  WordProgressStatus
+
+  user    User @relation(fields: [userId], references: [id])
+  word    Word @relation(fields: [wordId], references: [id])
+
+  @@unique([userId, wordId])
+}
