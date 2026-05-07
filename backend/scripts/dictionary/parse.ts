@@ -5,6 +5,7 @@ type Word = {
   hanzi: string;
   traditional: string;
   pinyin: string;
+  pinyin_tone: string;
   meaning_en: string[];
   is_pure: boolean;
 };
@@ -25,6 +26,8 @@ function main() {
     if (!match) continue;
 
     const [, traditional, simplified, pinyinRaw, meaningRaw] = match;
+
+    const pinyinTone = pinyinRaw.toLowerCase().trim(); // 🔥 raw giữ nguyên
 
     const pinyin = pinyinRaw.replace(/\d/g, '').toLowerCase().trim();
 
@@ -48,6 +51,7 @@ function main() {
         hanzi: simplified,
         traditional,
         pinyin,
+        pinyin_tone: pinyinTone,
         meaning_en: meanings,
         is_pure: isPureChinese,
       });
