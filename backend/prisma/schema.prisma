@@ -44,6 +44,9 @@ model Lesson {
   topics       Topic[]
   coverImageId Int?
   coverImage   Media?       @relation("LessonCoverImage", fields: [coverImageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Topic {
@@ -62,6 +65,9 @@ model Story {
   content String
   slug    String @unique
   level   Level  @relation(fields: [levelId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Question {
@@ -81,6 +87,9 @@ model Question {
 
   audio Media? @relation("QuestionAudio", fields: [audioId], references: [id])
   image Media? @relation("QuestionImage", fields: [imageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([levelId])
   @@index([skill])
@@ -136,6 +145,9 @@ model Word {
   isPure      Boolean            @default(true)
   audioId     Int?
   audio       Media?             @relation("WordAudio", fields: [audioId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([hanzi, pinyin]) // 🔥 BẮT BUỘC
   @@index([hanzi])
@@ -197,8 +209,8 @@ model UserWord {
   userId    Int
   wordId    Int
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  word      Word     @relation(fields: [wordId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@unique([userId, wordId])
 }
@@ -210,8 +222,8 @@ model Progress {
   status    ProgressStatus
   score     Int?
   updatedAt DateTime       @updatedAt
-  lesson    Lesson         @relation(fields: [lessonId], references: [id])
-  user      User           @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
 }
