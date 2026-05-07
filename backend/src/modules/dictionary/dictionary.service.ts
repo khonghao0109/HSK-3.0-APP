@@ -1,19 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class DictionaryService {
+  constructor(private prisma: PrismaService) {}
+
   async search(query: string) {
     if (!query) return [];
     const normalizedQuery = query.trim();
     if (!normalizedQuery) return [];
 
-    const isValid = /^[a-zA-Z\u4e00-\u9fa5]+$/.test(normalizedQuery);
+    // FIX 1: Cho phép khoảng trắng để search multi-word pinyin như "ni hao", "xue xi"
+    const isValid = /^[a-zA-Z\u4e00-\u9fa5 ]+$/.test(normalizedQuery);
     if (!isValid) return [];
 
-    const words = await prisma.word.findMany({
+    const words = await this.prisma.word.findMany({
       where: {
         AND: [
           {
@@ -22,21 +23,17 @@ export class DictionaryService {
               { pinyin: { startsWith: normalizedQuery.toLowerCase() } },
             ],
           },
-          {
-            isPure: true,
-          },
-          {
-            meanings: { some: {} },
-          },
+          { isPure: true },
+          { meanings: { some: {} } },
         ],
       },
       take: 20,
       include: {
         meanings: true,
         wordLevels: {
-          include: {
-            level: true,
-          },
+          include: { level: true },
+          // FIX 2: Sort theo orderIndex để lấy đúng level thấp nhất của từ
+          orderBy: { level: { orderIndex: 'asc' } },
         },
       },
     });
@@ -45,8 +42,13 @@ export class DictionaryService {
       hanzi: w.hanzi,
       pinyin: w.pinyin,
       pinyinTone: w.pinyinTone,
-      meanings: w.meanings.map((m) => m.meaningEn),
-      level: w.wordLevels[0]?.level?.name || null,
+      // FIX 3: Trả về tất cả meanings (EN + VI) thay vì chỉ EN
+      meanings: w.meanings.map((m) => ({
+        en: m.meaningEn,
+        vi: m.meaningVi ?? null,
+      })),
+      // Sau khi sort theo orderIndex, [0] luôn là level thấp nhất (chính xác nhất)
+      level: w.wordLevels[0]?.level?.name ?? null,
     }));
   }
 }

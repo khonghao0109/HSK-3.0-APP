@@ -25,6 +25,42 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+### Project Overview
+
+HSK System is a Chinese-learning platform focused on HSK practice and assessment.  
+The repository is organized as a monorepo with:
+- `backend`: NestJS API, authentication, user management, dictionary and health modules
+- `frontend`: client application
+- `docs`: project documentation and planning notes
+
+### Technologies
+
+- Backend framework: `NestJS` + `TypeScript`
+- Database: `PostgreSQL`
+- ORM: `Prisma`
+- Authentication: `JWT` (`@nestjs/jwt`, `passport`, `passport-jwt`)
+- Password security: `argon2id` + optional `pepper`
+- Validation: `class-validator`, `class-transformer`, `Joi` (env validation)
+- Rate limit: `@nestjs/throttler`
+- Testing: `Jest`, `Supertest` (unit + e2e)
+
+### Feature Overview
+
+- Auth:
+  - Register (`POST /api/v1/auth/register`)
+  - Login (`POST /api/v1/auth/login`)
+  - Current user profile (`GET /api/v1/auth/me`)
+- User:
+  - Current user profile (`GET /api/v1/users/me`)
+  - Admin-only user list (`GET /api/v1/users`)
+- Security:
+  - JWT-based protected routes (`JwtAuthGuard`)
+  - Role-based authorization (`Roles` decorator + `RolesGuard`)
+  - Weak-password blacklist, failed-login soft lockout, request throttling
+- System:
+  - Health check module
+  - Dictionary module scaffold for learning content
+
 ## Project setup
 
 ```bash
