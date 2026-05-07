@@ -11,7 +11,11 @@ model User {
   id             Int                @id @default(autoincrement())
   email          String             @unique
   password       String
+  // FIX: thêm name — cần thiết để hiển thị tên người dùng trong UI
+  name           String?
   role           Role               @default(user)
+  failedLoginAttempts Int           @default(0)
+  lockUntil      DateTime?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   progresses     Progress[]
@@ -22,7 +26,7 @@ model User {
 
 model Level {
   id         Int         @id @default(autoincrement())
-  name       String @unique  
+  name       String      @unique
   orderIndex Int
   lessons    Lesson[]
   questions  Question[]
@@ -32,16 +36,21 @@ model Level {
 }
 
 model Lesson {
-  id          Int          @id @default(autoincrement())
-  levelId     Int
-  title       String
-  description String?
-  orderIndex  Int
-  slug        String       @unique
-  level       Level        @relation(fields: [levelId], references: [id])
-  lessonWords LessonWord[]
-  progresses  Progress[]
-  topics      Topic[]
+  id           Int          @id @default(autoincrement())
+  levelId      Int
+  title        String
+  description  String?
+  orderIndex   Int
+  slug         String       @unique
+  level        Level        @relation(fields: [levelId], references: [id])
+  lessonWords  LessonWord[]
+  progresses   Progress[]
+  topics       Topic[]
+  coverImageId Int?
+  coverImage   Media?       @relation("LessonCoverImage", fields: [coverImageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Topic {
@@ -60,6 +69,9 @@ model Story {
   content String
   slug    String @unique
   level   Level  @relation(fields: [levelId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Question {
@@ -67,14 +79,21 @@ model Question {
   content       String
   type          QuestionType
   skill         Skill
+  audioId       Int?
+  imageId       Int?
   answers       Json
   correctAnswer Json
   explanation   String?
   levelId       Int
-  audioUrl      String?
   deletedAt     DateTime?
   level         Level          @relation(fields: [levelId], references: [id])
   testQuestions TestQuestion[]
+
+  audio Media? @relation("QuestionAudio", fields: [audioId], references: [id])
+  image Media? @relation("QuestionImage", fields: [imageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([levelId])
   @@index([skill])
@@ -119,7 +138,9 @@ model Word {
   id          Int                @id @default(autoincrement())
   hanzi       String
   pinyin      String
-  pinyinTone  String?   // 🔥 thêm dòng này
+  // FIX: đổi comment thành doc rõ ràng — pinyinTone lưu dạng "ni3 hao3" (có số thanh)
+  // pinyin (không số) dùng cho search; pinyinTone dùng để hiển thị
+  pinyinTone  String?
   example     String?
   lessonWords LessonWord[]
   userWords   UserWord[]
@@ -127,19 +148,42 @@ model Word {
   wordLevels  WordLevel[]
   meanings    WordMeaning[]
   traditional String?
-  isPure      Boolean @default(true)
+  isPure      Boolean            @default(true)
+  audioId     Int?
+  audio       Media?             @relation("WordAudio", fields: [audioId], references: [id])
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hanzi, pinyin])
   @@index([hanzi])
   @@index([pinyin])
-  @@unique([hanzi, pinyin]) // 🔥 BẮT BUỘC
+  @@index([audioId])
+}
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  url       String
+  type      MediaType
+  createdAt DateTime  @default(now())
+
+  lessonCoverImage Lesson[]   @relation("LessonCoverImage")
+  wordAudio        Word[]     @relation("WordAudio")
+  questionAudio    Question[] @relation("QuestionAudio")
+  questionImage    Question[] @relation("QuestionImage")
+}
+
+enum MediaType {
+  audio
+  image
 }
 
 model WordMeaning {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   wordId    Int
   meaningEn String
   meaningVi String?
-  word      Word   @relation(fields: [wordId], references: [id])
+  word      Word    @relation(fields: [wordId], references: [id])
 
   @@index([wordId])
 }
@@ -171,8 +215,8 @@ model UserWord {
   userId    Int
   wordId    Int
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  word      Word     @relation(fields: [wordId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word      Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@unique([userId, wordId])
 }
@@ -184,8 +228,8 @@ model Progress {
   status    ProgressStatus
   score     Int?
   updatedAt DateTime       @updatedAt
-  lesson    Lesson         @relation(fields: [lessonId], references: [id])
-  user      User           @relation(fields: [userId], references: [id])
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
 }
@@ -212,10 +256,13 @@ enum QuestionType {
   reading
 }
 
+// FIX: thêm 'speaking' — platform có 4 kỹ năng Nghe–Nói–Đọc–Viết
+// Lưu ý: cần tạo migration sau khi thêm enum value này
 enum Skill {
   listening
   reading
   writing
+  speaking
 }
 
 enum ProgressStatus {
