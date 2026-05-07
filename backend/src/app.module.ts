@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { DictionaryModule } from './modules/dictionary/dictionary.module';
 
 @Module({
-  imports: [],
+  imports: [DictionaryModule],
   controllers: [],
   providers: [],
 })

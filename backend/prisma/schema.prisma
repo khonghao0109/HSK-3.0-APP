@@ -22,7 +22,7 @@ model User {
 
 model Level {
   id         Int         @id @default(autoincrement())
-  name       String @unique  
+  name       String      @unique
   orderIndex Int
   lessons    Lesson[]
   questions  Question[]
@@ -32,16 +32,18 @@ model Level {
 }
 
 model Lesson {
-  id          Int          @id @default(autoincrement())
-  levelId     Int
-  title       String
-  description String?
-  orderIndex  Int
-  slug        String       @unique
-  level       Level        @relation(fields: [levelId], references: [id])
-  lessonWords LessonWord[]
-  progresses  Progress[]
-  topics      Topic[]
+  id           Int          @id @default(autoincrement())
+  levelId      Int
+  title        String
+  description  String?
+  orderIndex   Int
+  slug         String       @unique
+  level        Level        @relation(fields: [levelId], references: [id])
+  lessonWords  LessonWord[]
+  progresses   Progress[]
+  topics       Topic[]
+  coverImageId Int?
+  coverImage   Media?       @relation("LessonCoverImage", fields: [coverImageId], references: [id])
 }
 
 model Topic {
@@ -67,14 +69,18 @@ model Question {
   content       String
   type          QuestionType
   skill         Skill
+  audioId       Int?
+  imageId       Int?
   answers       Json
   correctAnswer Json
   explanation   String?
   levelId       Int
-  audioUrl      String?
   deletedAt     DateTime?
   level         Level          @relation(fields: [levelId], references: [id])
   testQuestions TestQuestion[]
+
+  audio Media? @relation("QuestionAudio", fields: [audioId], references: [id])
+  image Media? @relation("QuestionImage", fields: [imageId], references: [id])
 
   @@index([levelId])
   @@index([skill])
@@ -119,7 +125,7 @@ model Word {
   id          Int                @id @default(autoincrement())
   hanzi       String
   pinyin      String
-  pinyinTone  String?   // 🔥 thêm dòng này
+  pinyinTone  String? // 🔥 thêm dòng này
   example     String?
   lessonWords LessonWord[]
   userWords   UserWord[]
@@ -127,19 +133,39 @@ model Word {
   wordLevels  WordLevel[]
   meanings    WordMeaning[]
   traditional String?
-  isPure      Boolean @default(true)
+  isPure      Boolean            @default(true)
+  audioId     Int?
+  audio       Media?             @relation("WordAudio", fields: [audioId], references: [id])
 
+  @@unique([hanzi, pinyin]) // 🔥 BẮT BUỘC
   @@index([hanzi])
   @@index([pinyin])
-  @@unique([hanzi, pinyin]) // 🔥 BẮT BUỘC
+  @@index([audioId])
+}
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  url       String
+  type      MediaType
+  createdAt DateTime  @default(now())
+
+  lessonCoverImage Lesson[]   @relation("LessonCoverImage")
+  wordAudio        Word[]     @relation("WordAudio")
+  questionAudio    Question[] @relation("QuestionAudio")
+  questionImage    Question[] @relation("QuestionImage")
+}
+
+enum MediaType {
+  audio
+  image
 }
 
 model WordMeaning {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   wordId    Int
   meaningEn String
   meaningVi String?
-  word      Word   @relation(fields: [wordId], references: [id])
+  word      Word    @relation(fields: [wordId], references: [id])
 
   @@index([wordId])
 }
