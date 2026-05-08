@@ -22,7 +22,9 @@ async function bootstrap() {
 
   // FIX 2: CORS — chỉ cho phép origin được cấu hình
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? '*',
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
