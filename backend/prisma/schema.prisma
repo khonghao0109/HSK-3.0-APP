@@ -25,14 +25,20 @@ model User {
 }
 
 model Level {
-  id         Int         @id @default(autoincrement())
-  name       String      @unique
-  orderIndex Int
-  lessons    Lesson[]
-  questions  Question[]
-  stories    Story[]
-  tests      Test[]
-  wordLevels WordLevel[]
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  orderIndex  Int
+
+  lessons     Lesson[]
+  stories     Story[]
+  wordLevels  WordLevel[]
+  questions   Question[]
+  tests       Test[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderIndex])
 }
 
 model Lesson {
@@ -51,6 +57,9 @@ model Lesson {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([levelId])
+  @@index([orderIndex])
 }
 
 model Topic {
@@ -60,6 +69,9 @@ model Topic {
   content    String
   orderIndex Int
   lesson     Lesson @relation(fields: [lessonId], references: [id])
+
+  @@index([lessonId])
+  @@index([orderIndex])
 }
 
 model Story {
@@ -72,6 +84,8 @@ model Story {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([levelId])
 }
 
 model Question {
