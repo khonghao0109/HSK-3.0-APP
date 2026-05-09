@@ -1,7 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { LearningService } from './learning.service';
 import { ApiResponse } from './interfaces/learning-response.interface';
 import { LevelsResponseDto } from './dto/level-response.dto';
+import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
+import { LessonsResponseDto } from './dto/lesson-response.dto';
 
 @Controller('learning')
 export class LearningController {
@@ -15,5 +17,12 @@ export class LearningController {
   @Get('levels')
   async getLevels(): Promise<LevelsResponseDto> {
     return this.learningService.getLevels();
+  }
+
+  @Get('lessons')
+  async getLessons(
+    @Query() query: GetLessonsQueryDto,
+  ): Promise<LessonsResponseDto> {
+    return this.learningService.getLessons(query);
   }
 }
