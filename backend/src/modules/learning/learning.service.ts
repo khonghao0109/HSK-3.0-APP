@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ApiResponse } from './interfaces/learning-response.interface';
 import { LevelItemDto, LevelsResponseDto } from './dto/level-response.dto';
 import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
-import { LessonItemDto, LessonsResponseDto } from './dto/lesson-response.dto';
+import {
+  LessonDetailResponseDto,
+  LessonItemDto,
+  LessonsResponseDto,
+} from './dto/lesson-response.dto';
 
 @Injectable()
 export class LearningService {
@@ -67,6 +71,84 @@ export class LearningService {
           slug: lesson.slug,
         }),
       ),
+    };
+  }
+
+  async getLessonDetail(id: number): Promise<LessonDetailResponseDto> {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        topics: {
+          orderBy: {
+            orderIndex: 'asc',
+          },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            orderIndex: true,
+          },
+        },
+        lessonWords: {
+          select: {
+            word: {
+              select: {
+                id: true,
+                hanzi: true,
+                traditional: true,
+                pinyin: true,
+                pinyinTone: true,
+                meanings: {
+                  select: {
+                    meaningEn: true,
+                    meaningVi: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        level: {
+          select: {
+            stories: {
+              orderBy: {
+                id: 'asc',
+              },
+              select: {
+                id: true,
+                title: true,
+                content: true,
+                slug: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException('Lesson not found');
+    }
+
+    return {
+      success: true,
+      data: {
+        title: lesson.title,
+        topics: lesson.topics,
+        words: lesson.lessonWords.map(({ word }) => ({
+          id: word.id,
+          hanzi: word.hanzi,
+          traditional: word.traditional,
+          pinyin: word.pinyin,
+          pinyinTone: word.pinyinTone,
+          meanings: word.meanings.map((meaning) => ({
+            en: meaning.meaningEn,
+            vi: meaning.meaningVi,
+          })),
+        })),
+        stories: lesson.level.stories,
+      },
     };
   }
 }
