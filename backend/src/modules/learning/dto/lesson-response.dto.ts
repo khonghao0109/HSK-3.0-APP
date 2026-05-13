@@ -39,8 +39,16 @@ export class LessonDetailStoryDto {
   slug!: string;
 }
 
+export class LessonDetailLevelDto {
+  id!: number;
+  name!: string;
+  orderIndex!: number;
+}
+
 export class LessonDetailDto {
+  id!: number;
   title!: string;
+  level!: LessonDetailLevelDto;
   topics!: LessonDetailTopicDto[];
   words!: LessonDetailWordDto[];
   stories!: LessonDetailStoryDto[];
@@ -49,4 +57,14 @@ export class LessonDetailDto {
 export class LessonDetailResponseDto {
   success!: boolean;
   data!: LessonDetailDto;
+}
+
+export class TopicsResponseDto {
+  success!: boolean;
+  data!: LessonDetailTopicDto[];
+}
+
+export class StoriesResponseDto {
+  success!: boolean;
+  data!: LessonDetailStoryDto[];
 }

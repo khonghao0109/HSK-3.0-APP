@@ -3,10 +3,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ApiResponse } from './interfaces/learning-response.interface';
 import { LevelItemDto, LevelsResponseDto } from './dto/level-response.dto';
 import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
+import { GetStoriesQueryDto } from './dto/get-stories-query.dto';
+import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
 import {
   LessonDetailResponseDto,
   LessonItemDto,
   LessonsResponseDto,
+  StoriesResponseDto,
+  TopicsResponseDto,
 } from './dto/lesson-response.dto';
 
 @Injectable()
@@ -78,7 +82,26 @@ export class LearningService {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id },
       select: {
+        id: true,
         title: true,
+        level: {
+          select: {
+            id: true,
+            name: true,
+            orderIndex: true,
+            stories: {
+              orderBy: {
+                id: 'asc',
+              },
+              select: {
+                id: true,
+                title: true,
+                content: true,
+                slug: true,
+              },
+            },
+          },
+        },
         topics: {
           orderBy: {
             orderIndex: 'asc',
@@ -109,21 +132,6 @@ export class LearningService {
             },
           },
         },
-        level: {
-          select: {
-            stories: {
-              orderBy: {
-                id: 'asc',
-              },
-              select: {
-                id: true,
-                title: true,
-                content: true,
-                slug: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -134,7 +142,13 @@ export class LearningService {
     return {
       success: true,
       data: {
+        id: lesson.id,
         title: lesson.title,
+        level: {
+          id: lesson.level.id,
+          name: lesson.level.name,
+          orderIndex: lesson.level.orderIndex,
+        },
         topics: lesson.topics,
         words: lesson.lessonWords.map(({ word }) => ({
           id: word.id,
@@ -149,6 +163,50 @@ export class LearningService {
         })),
         stories: lesson.level.stories,
       },
+    };
+  }
+
+  async getTopics(query: GetTopicsQueryDto): Promise<TopicsResponseDto> {
+    const topics = await this.prisma.topic.findMany({
+      where: {
+        lessonId: query.lessonId,
+      },
+      orderBy: {
+        orderIndex: 'asc',
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        orderIndex: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: topics,
+    };
+  }
+
+  async getStories(query: GetStoriesQueryDto): Promise<StoriesResponseDto> {
+    const stories = await this.prisma.story.findMany({
+      where: {
+        levelId: query.levelId,
+      },
+      orderBy: {
+        id: 'asc',
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        slug: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: stories,
     };
   }
 }

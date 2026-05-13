@@ -10,7 +10,13 @@ import { PrismaService } from '../src/prisma/prisma.service';
 type LessonDetailResponseBody = {
   success: boolean;
   data: {
+    id: number;
     title: string;
+    level: {
+      id: number;
+      name: string;
+      orderIndex: number;
+    };
     topics: Array<{
       id: number;
       title: string;
@@ -196,7 +202,66 @@ describe('Learning Lesson Detail E2E', () => {
     await app.close();
   });
 
-  it('GET /lessons/:id returns lesson title, topics, words and stories', async () => {
+  it('GET /levels returns levels', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/levels')
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(
+      response.body.data.some(
+        (level: { id: number; name: string }) => level.id === levelId,
+      ),
+    ).toBe(true);
+  });
+
+  it('GET /lessons?levelId returns lessons by level', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/lessons?levelId=${levelId}`)
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      success: true,
+      data: [
+        {
+          id: lessonId,
+          title: 'E2E Lesson Detail',
+          slug: lessonSlug,
+          orderIndex: 1,
+        },
+      ],
+    });
+  });
+
+  it('GET /topics?lessonId returns topics sorted by orderIndex', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/topics?lessonId=${lessonId}`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.map((topic: { title: string }) => topic.title))
+      .toEqual(['First Topic', 'Second Topic']);
+  });
+
+  it('GET /stories?levelId returns stories by level', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/stories?levelId=${levelId}`)
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      success: true,
+      data: [
+        {
+          title: 'E2E Story',
+          content: 'Story linked through lesson level.',
+          slug: storySlug,
+        },
+      ],
+    });
+  });
+
+  it('GET /lessons/:id returns lesson title, level, topics, words and stories', async () => {
     const response = await request(app.getHttpServer())
       .get(`/api/v1/lessons/${lessonId}`)
       .expect(200);
@@ -205,12 +270,20 @@ describe('Learning Lesson Detail E2E', () => {
 
     expect(body.success).toBe(true);
     expect(Object.keys(body.data).sort()).toEqual([
+      'id',
+      'level',
       'stories',
       'title',
       'topics',
       'words',
     ]);
+    expect(body.data.id).toBe(lessonId);
     expect(body.data.title).toBe('E2E Lesson Detail');
+    expect(body.data.level).toEqual({
+      id: levelId,
+      name: levelName,
+      orderIndex: 9000,
+    });
 
     expect(body.data.topics).toHaveLength(2);
     expect(body.data.topics.map((topic) => topic.title)).toEqual([
