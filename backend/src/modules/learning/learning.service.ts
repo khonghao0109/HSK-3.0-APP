@@ -10,8 +10,12 @@ import {
   LessonItemDto,
   LessonsResponseDto,
   StoriesResponseDto,
-  TopicsResponseDto,
 } from './dto/lesson-response.dto';
+import {
+  TopicContentBlock,
+  TopicItemDto,
+  TopicsResponseDto,
+} from './dto/topic-response.dto';
 
 @Injectable()
 export class LearningService {
@@ -170,12 +174,15 @@ export class LearningService {
     const topics = await this.prisma.topic.findMany({
       where: {
         lessonId: query.lessonId,
+        status: 'published',
+        deletedAt: null,
       },
       orderBy: {
         orderIndex: 'asc',
       },
       select: {
         id: true,
+        lessonId: true,
         title: true,
         content: true,
         orderIndex: true,
@@ -184,7 +191,15 @@ export class LearningService {
 
     return {
       success: true,
-      data: topics,
+      data: topics.map(
+        (topic): TopicItemDto => ({
+          id: topic.id,
+          lessonId: topic.lessonId,
+          title: topic.title,
+          content: topic.content as TopicContentBlock[],
+          orderIndex: topic.orderIndex,
+        }),
+      ),
     };
   }
 

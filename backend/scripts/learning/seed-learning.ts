@@ -34,7 +34,7 @@ function slugifyLevelName(name: string) {
 }
 
 function vocabularyOverviewContent() {
-  return JSON.stringify([
+  return [
     {
       type: 'text',
       value: 'This topic introduces the main vocabulary of this lesson.',
@@ -43,17 +43,17 @@ function vocabularyOverviewContent() {
       type: 'vocabulary_list',
       value: 'lesson_words',
     },
-  ]);
+  ];
 }
 
 function practiceNotesContent() {
-  return JSON.stringify([
+  return [
     {
       type: 'text',
       value:
         'Practice reading, pronunciation, and basic usage of the lesson words.',
     },
-  ]);
+  ];
 }
 
 loadLocalEnv();
@@ -148,12 +148,14 @@ async function seedLearning() {
             title: 'Vocabulary Overview',
             orderIndex: 1,
             content: vocabularyOverviewContent(),
+            status: 'published',
           },
           {
             lessonId: lesson.id,
             title: 'Practice Notes',
             orderIndex: 2,
             content: practiceNotesContent(),
+            status: 'published',
           },
         ],
       });

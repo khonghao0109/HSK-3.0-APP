@@ -105,14 +105,26 @@ describe('Learning Lesson Detail E2E', () => {
         {
           lessonId,
           title: 'Second Topic',
-          content: 'This topic should come second.',
+          content: [
+            {
+              type: 'text',
+              value: 'This topic should come second.',
+            },
+          ],
           orderIndex: 2,
+          status: 'published',
         },
         {
           lessonId,
           title: 'First Topic',
-          content: 'This topic should come first.',
+          content: [
+            {
+              type: 'text',
+              value: 'This topic should come first.',
+            },
+          ],
           orderIndex: 1,
+          status: 'published',
         },
       ],
     });
@@ -242,6 +254,50 @@ describe('Learning Lesson Detail E2E', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.map((topic: { title: string }) => topic.title))
       .toEqual(['First Topic', 'Second Topic']);
+  });
+
+  it('GET /learning/topics?lessonId returns published topics sorted by orderIndex', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/learning/topics?lessonId=${lessonId}`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual([
+      {
+        id: expect.any(Number),
+        lessonId,
+        title: 'First Topic',
+        content: [
+          {
+            type: 'text',
+            value: 'This topic should come first.',
+          },
+        ],
+        orderIndex: 1,
+      },
+      {
+        id: expect.any(Number),
+        lessonId,
+        title: 'Second Topic',
+        content: [
+          {
+            type: 'text',
+            value: 'This topic should come second.',
+          },
+        ],
+        orderIndex: 2,
+      },
+    ]);
+  });
+
+  it('GET /learning/topics returns 400 when lessonId is missing', async () => {
+    await request(app.getHttpServer()).get('/api/v1/learning/topics').expect(400);
+  });
+
+  it('GET /learning/topics returns 400 when lessonId is invalid', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/topics?lessonId=abc')
+      .expect(400);
   });
 
   it('GET /stories?levelId returns stories by level', async () => {

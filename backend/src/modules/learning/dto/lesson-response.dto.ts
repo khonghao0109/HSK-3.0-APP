@@ -14,7 +14,7 @@ export class LessonsResponseDto {
 export class LessonDetailTopicDto {
   id!: number;
   title!: string;
-  content!: string;
+  content!: unknown;
   orderIndex!: number;
 }
 
@@ -35,7 +35,7 @@ export class LessonDetailWordDto {
 export class LessonDetailStoryDto {
   id!: number;
   title!: string;
-  content!: string;
+  content!: unknown;
   slug!: string;
 }
 
@@ -57,11 +57,6 @@ export class LessonDetailDto {
 export class LessonDetailResponseDto {
   success!: boolean;
   data!: LessonDetailDto;
-}
-
-export class TopicsResponseDto {
-  success!: boolean;
-  data!: LessonDetailTopicDto[];
 }
 
 export class StoriesResponseDto {

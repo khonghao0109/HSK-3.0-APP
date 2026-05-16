@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
-import { TopicsResponseDto } from './dto/lesson-response.dto';
+import { TopicsResponseDto } from './dto/topic-response.dto';
 import { LearningService } from './learning.service';
 
 @Controller('topics')
