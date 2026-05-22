@@ -55,6 +55,7 @@ describe('Learning Lesson Detail E2E', () => {
 
   let levelId: number;
   let lessonId: number;
+  let draftLessonId: number;
   let wordId: number;
 
   beforeAll(async () => {
@@ -93,12 +94,39 @@ describe('Learning Lesson Detail E2E', () => {
         description: 'Lesson detail e2e fixture',
         orderIndex: 1,
         slug: lessonSlug,
+        status: 'published',
       },
       select: {
         id: true,
       },
     });
     lessonId = lesson.id;
+
+    const draftLesson = await prisma.lesson.create({
+      data: {
+        levelId,
+        title: 'Hidden Draft Lesson',
+        description: 'Should not be visible in public learning API',
+        orderIndex: 2,
+        slug: `hidden-draft-lesson-${suffix}`,
+      },
+      select: {
+        id: true,
+      },
+    });
+    draftLessonId = draftLesson.id;
+
+    await prisma.lesson.create({
+      data: {
+        levelId,
+        title: 'Hidden Deleted Lesson',
+        description: 'Should not be visible in public learning API',
+        orderIndex: 3,
+        slug: `hidden-deleted-lesson-${suffix}`,
+        status: 'published',
+        deletedAt: new Date(),
+      },
+    });
 
     await prisma.topic.createMany({
       data: [
@@ -126,6 +154,30 @@ describe('Learning Lesson Detail E2E', () => {
           orderIndex: 1,
           status: 'published',
         },
+        {
+          lessonId,
+          title: 'Hidden Draft Topic',
+          content: [
+            {
+              type: 'text',
+              value: 'This draft topic should not be returned.',
+            },
+          ],
+          orderIndex: 3,
+        },
+        {
+          lessonId,
+          title: 'Hidden Deleted Topic',
+          content: [
+            {
+              type: 'text',
+              value: 'This deleted topic should not be returned.',
+            },
+          ],
+          orderIndex: 4,
+          status: 'published',
+          deletedAt: new Date(),
+        },
       ],
     });
 
@@ -135,7 +187,30 @@ describe('Learning Lesson Detail E2E', () => {
         title: 'E2E Story',
         content: 'Story linked through lesson level.',
         slug: storySlug,
+        status: 'published',
+        orderIndex: 1,
       },
+    });
+
+    await prisma.story.createMany({
+      data: [
+        {
+          levelId,
+          title: 'Hidden Draft Story',
+          content: 'This draft story should not be returned.',
+          slug: `hidden-draft-story-${suffix}`,
+          orderIndex: 2,
+        },
+        {
+          levelId,
+          title: 'Hidden Deleted Story',
+          content: 'This deleted story should not be returned.',
+          slug: `hidden-deleted-story-${suffix}`,
+          orderIndex: 3,
+          status: 'published',
+          deletedAt: new Date(),
+        },
+      ],
     });
 
     const word = await prisma.word.create({
@@ -188,7 +263,9 @@ describe('Learning Lesson Detail E2E', () => {
     });
     await prisma.topic.deleteMany({
       where: {
-        lessonId,
+        lesson: {
+          levelId,
+        },
       },
     });
     await prisma.story.deleteMany({
@@ -198,7 +275,7 @@ describe('Learning Lesson Detail E2E', () => {
     });
     await prisma.lesson.deleteMany({
       where: {
-        id: lessonId,
+        levelId,
       },
     });
     await prisma.word.deleteMany({
@@ -244,6 +321,45 @@ describe('Learning Lesson Detail E2E', () => {
         },
       ],
     });
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 20,
+      total: 1,
+      totalPages: 1,
+    });
+  });
+
+  it('GET /learning/lessons supports pagination', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/learning/lessons?levelId=${levelId}&page=1&limit=1`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 1,
+      total: 1,
+      totalPages: 1,
+    });
+  });
+
+  it('GET /learning/lessons returns 400 when levelId is missing', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/lessons')
+      .expect(400);
+  });
+
+  it('GET /learning/lessons returns 400 when levelId is invalid', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/lessons?levelId=abc')
+      .expect(400);
+  });
+
+  it('GET /learning/lessons returns 400 when limit is too large', async () => {
+    await request(app.getHttpServer())
+      .get(`/api/v1/learning/lessons?levelId=${levelId}&limit=101`)
+      .expect(400);
   });
 
   it('GET /topics?lessonId returns topics sorted by orderIndex', async () => {
@@ -252,8 +368,15 @@ describe('Learning Lesson Detail E2E', () => {
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(response.body.data.map((topic: { title: string }) => topic.title))
-      .toEqual(['First Topic', 'Second Topic']);
+    expect(
+      response.body.data.map((topic: { title: string }) => topic.title),
+    ).toEqual(['First Topic', 'Second Topic']);
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 20,
+      total: 2,
+      totalPages: 1,
+    });
   });
 
   it('GET /learning/topics?lessonId returns published topics sorted by orderIndex', async () => {
@@ -291,7 +414,9 @@ describe('Learning Lesson Detail E2E', () => {
   });
 
   it('GET /learning/topics returns 400 when lessonId is missing', async () => {
-    await request(app.getHttpServer()).get('/api/v1/learning/topics').expect(400);
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/topics')
+      .expect(400);
   });
 
   it('GET /learning/topics returns 400 when lessonId is invalid', async () => {
@@ -315,6 +440,58 @@ describe('Learning Lesson Detail E2E', () => {
         },
       ],
     });
+  });
+
+  it('GET /learning/stories?levelId returns stories by level', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/learning/stories?levelId=${levelId}`)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      success: true,
+      data: [
+        {
+          id: expect.any(Number),
+          levelId,
+          title: 'E2E Story',
+          content: 'Story linked through lesson level.',
+          slug: storySlug,
+        },
+      ],
+      meta: {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+      },
+    });
+  });
+
+  it('GET /learning/stories supports pagination', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/learning/stories?levelId=${levelId}&page=1&limit=1`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 1,
+      total: 1,
+      totalPages: 1,
+    });
+  });
+
+  it('GET /learning/stories returns 400 when levelId is missing', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/stories')
+      .expect(400);
+  });
+
+  it('GET /learning/stories returns 400 when levelId is invalid', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/learning/stories?levelId=abc')
+      .expect(400);
   });
 
   it('GET /lessons/:id returns lesson title, level, topics, words and stories', async () => {
@@ -368,9 +545,37 @@ describe('Learning Lesson Detail E2E', () => {
     });
   });
 
+  it('GET /learning/lessons/:id returns lesson title, level, topics, words and stories', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/learning/lessons/${lessonId}`)
+      .expect(200);
+
+    const body = response.body as LessonDetailResponseBody;
+
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      id: lessonId,
+      title: 'E2E Lesson Detail',
+      level: {
+        id: levelId,
+        name: levelName,
+        orderIndex: 9000,
+      },
+    });
+    expect(body.data.topics).toHaveLength(2);
+    expect(body.data.words).toHaveLength(1);
+    expect(body.data.stories).toHaveLength(1);
+  });
+
   it('GET /lessons/:id returns 404 when lesson does not exist', async () => {
     await request(app.getHttpServer())
       .get('/api/v1/lessons/999999999')
+      .expect(404);
+  });
+
+  it('GET /learning/lessons/:id returns 404 for draft lessons', async () => {
+    await request(app.getHttpServer())
+      .get(`/api/v1/learning/lessons/${draftLessonId}`)
       .expect(404);
   });
 

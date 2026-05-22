@@ -1,9 +1,10 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
 import {
-  LessonDetailResponseDto,
-  LessonsResponseDto,
-} from './dto/lesson-response.dto';
+  ApiSuccessResponse,
+  PaginationMeta,
+} from '../../common/interfaces/api-response.interface';
+import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
+import { LessonDetailDto, LessonItemDto } from './dto/lesson-response.dto';
 import { LearningService } from './learning.service';
 
 @Controller('lessons')
@@ -13,14 +14,14 @@ export class LessonsController {
   @Get()
   async getLessons(
     @Query() query: GetLessonsQueryDto,
-  ): Promise<LessonsResponseDto> {
+  ): Promise<ApiSuccessResponse<LessonItemDto[], PaginationMeta>> {
     return this.learningService.getLessons(query);
   }
 
   @Get(':id')
   async getLessonDetail(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<LessonDetailResponseDto> {
+  ): Promise<ApiSuccessResponse<LessonDetailDto>> {
     return this.learningService.getLessonDetail(id);
   }
 }

@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, Min } from 'class-validator';
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
-export class GetTopicsQueryDto {
+export class GetTopicsQueryDto extends PaginationQueryDto {
   @IsNotEmpty({
     message: 'lessonId is required',
   })

@@ -1,33 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ApiSuccessResponse,
+  PaginationMeta,
+} from '../../common/interfaces/api-response.interface';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ApiResponse } from './interfaces/learning-response.interface';
-import { LevelItemDto, LevelsResponseDto } from './dto/level-response.dto';
+import { LevelItemDto } from './dto/level-response.dto';
 import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
 import { GetStoriesQueryDto } from './dto/get-stories-query.dto';
 import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
-import {
-  LessonDetailResponseDto,
-  LessonItemDto,
-  LessonsResponseDto,
-  StoriesResponseDto,
-} from './dto/lesson-response.dto';
-import {
-  TopicContentBlock,
-  TopicItemDto,
-  TopicsResponseDto,
-} from './dto/topic-response.dto';
+import { LessonDetailDto, LessonItemDto } from './dto/lesson-response.dto';
+import { StoryItemDto } from './dto/story-response.dto';
+import { TopicContentBlock, TopicItemDto } from './dto/topic-response.dto';
 
 @Injectable()
 export class LearningService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getTestMessage(): ApiResponse<string> {
+  getTestMessage(): ApiSuccessResponse<string> {
     return {
       success: true,
       data: 'Learning module working',
     };
   }
-  async getLevels(): Promise<LevelsResponseDto> {
+  async getLevels(): Promise<ApiSuccessResponse<LevelItemDto[]>> {
     const levels = await this.prisma.level.findMany({
       orderBy: {
         orderIndex: 'asc',
@@ -51,22 +46,33 @@ export class LearningService {
     };
   }
 
-  async getLessons(query: GetLessonsQueryDto): Promise<LessonsResponseDto> {
-    const lessons = await this.prisma.lesson.findMany({
-      where: {
-        levelId: query.levelId,
-      },
-      orderBy: {
-        orderIndex: 'asc',
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        orderIndex: true,
-        slug: true,
-      },
-    });
+  async getLessons(
+    query: GetLessonsQueryDto,
+  ): Promise<ApiSuccessResponse<LessonItemDto[], PaginationMeta>> {
+    const where = {
+      levelId: query.levelId,
+      status: 'published' as const,
+      deletedAt: null,
+    };
+    const pagination = this.getPagination(query.page, query.limit);
+    const [lessons, total] = await this.prisma.$transaction([
+      this.prisma.lesson.findMany({
+        where,
+        orderBy: {
+          orderIndex: 'asc',
+        },
+        skip: pagination.skip,
+        take: pagination.take,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          orderIndex: true,
+          slug: true,
+        },
+      }),
+      this.prisma.lesson.count({ where }),
+    ]);
 
     return {
       success: true,
@@ -79,12 +85,19 @@ export class LearningService {
           slug: lesson.slug,
         }),
       ),
+      meta: this.buildPaginationMeta(query.page, query.limit, total),
     };
   }
 
-  async getLessonDetail(id: number): Promise<LessonDetailResponseDto> {
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id },
+  async getLessonDetail(
+    id: number,
+  ): Promise<ApiSuccessResponse<LessonDetailDto>> {
+    const lesson = await this.prisma.lesson.findFirst({
+      where: {
+        id,
+        status: 'published',
+        deletedAt: null,
+      },
       select: {
         id: true,
         title: true,
@@ -94,8 +107,12 @@ export class LearningService {
             name: true,
             orderIndex: true,
             stories: {
+              where: {
+                status: 'published',
+                deletedAt: null,
+              },
               orderBy: {
-                id: 'asc',
+                orderIndex: 'asc',
               },
               select: {
                 id: true,
@@ -107,6 +124,10 @@ export class LearningService {
           },
         },
         topics: {
+          where: {
+            status: 'published',
+            deletedAt: null,
+          },
           orderBy: {
             orderIndex: 'asc',
           },
@@ -118,6 +139,9 @@ export class LearningService {
           },
         },
         lessonWords: {
+          orderBy: {
+            orderIndex: 'asc',
+          },
           select: {
             word: {
               select: {
@@ -170,24 +194,33 @@ export class LearningService {
     };
   }
 
-  async getTopics(query: GetTopicsQueryDto): Promise<TopicsResponseDto> {
-    const topics = await this.prisma.topic.findMany({
-      where: {
-        lessonId: query.lessonId,
-        status: 'published',
-        deletedAt: null,
-      },
-      orderBy: {
-        orderIndex: 'asc',
-      },
-      select: {
-        id: true,
-        lessonId: true,
-        title: true,
-        content: true,
-        orderIndex: true,
-      },
-    });
+  async getTopics(
+    query: GetTopicsQueryDto,
+  ): Promise<ApiSuccessResponse<TopicItemDto[], PaginationMeta>> {
+    const where = {
+      lessonId: query.lessonId,
+      status: 'published' as const,
+      deletedAt: null,
+    };
+    const pagination = this.getPagination(query.page, query.limit);
+    const [topics, total] = await this.prisma.$transaction([
+      this.prisma.topic.findMany({
+        where,
+        orderBy: {
+          orderIndex: 'asc',
+        },
+        skip: pagination.skip,
+        take: pagination.take,
+        select: {
+          id: true,
+          lessonId: true,
+          title: true,
+          content: true,
+          orderIndex: true,
+        },
+      }),
+      this.prisma.topic.count({ where }),
+    ]);
 
     return {
       success: true,
@@ -200,28 +233,82 @@ export class LearningService {
           orderIndex: topic.orderIndex,
         }),
       ),
+      meta: this.buildPaginationMeta(query.page, query.limit, total),
     };
   }
 
-  async getStories(query: GetStoriesQueryDto): Promise<StoriesResponseDto> {
-    const stories = await this.prisma.story.findMany({
-      where: {
-        levelId: query.levelId,
-      },
-      orderBy: {
-        id: 'asc',
-      },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        slug: true,
-      },
-    });
+  async getStories(
+    query: GetStoriesQueryDto,
+  ): Promise<ApiSuccessResponse<StoryItemDto[], PaginationMeta>> {
+    const where = {
+      levelId: query.levelId,
+      status: 'published' as const,
+      deletedAt: null,
+    };
+    const pagination = this.getPagination(query.page, query.limit);
+    const [stories, total] = await this.prisma.$transaction([
+      this.prisma.story.findMany({
+        where,
+        orderBy: {
+          orderIndex: 'asc',
+        },
+        skip: pagination.skip,
+        take: pagination.take,
+        select: {
+          id: true,
+          levelId: true,
+          title: true,
+          content: true,
+          slug: true,
+        },
+      }),
+      this.prisma.story.count({ where }),
+    ]);
 
     return {
       success: true,
-      data: stories,
+      data: stories.map(
+        (story): StoryItemDto => ({
+          id: story.id,
+          levelId: story.levelId,
+          title: story.title,
+          content: this.stringifyStoryContent(story.content),
+          slug: story.slug,
+        }),
+      ),
+      meta: this.buildPaginationMeta(query.page, query.limit, total),
     };
+  }
+
+  private getPagination(page: number, limit: number) {
+    return {
+      skip: (page - 1) * limit,
+      take: limit,
+    };
+  }
+
+  private buildPaginationMeta(
+    page: number,
+    limit: number,
+    total: number,
+  ): PaginationMeta {
+    return {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  private stringifyStoryContent(content: unknown): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    if (content === null || content === undefined) {
+      return '';
+    }
+
+    return JSON.stringify(content);
   }
 }

@@ -3,8 +3,3 @@ export class LevelItemDto {
   name!: string;
   orderIndex!: number;
 }
-
-export class LevelsResponseDto {
-  success!: boolean;
-  data!: LevelItemDto[];
-}

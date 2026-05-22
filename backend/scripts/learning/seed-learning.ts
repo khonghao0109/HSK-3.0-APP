@@ -118,6 +118,8 @@ async function seedLearning() {
           title: lessonTitle,
           description: lessonDescription,
           orderIndex: lessonIndex,
+          status: 'published',
+          deletedAt: null,
         },
         create: {
           levelId: level.id,
@@ -125,6 +127,7 @@ async function seedLearning() {
           slug: lessonSlug,
           description: lessonDescription,
           orderIndex: lessonIndex,
+          status: 'published',
         },
         select: {
           id: true,
@@ -184,12 +187,17 @@ async function seedLearning() {
           levelId: level.id,
           title: `${level.name} Story ${storyIndex}`,
           content: `Temporary short story for ${level.name} reading practice.`,
+          orderIndex: storyIndex,
+          status: 'published',
+          deletedAt: null,
         },
         create: {
           levelId: level.id,
           title: `${level.name} Story ${storyIndex}`,
           slug: `${levelSlug}-story-${storyIndex}`,
           content: `Temporary short story for ${level.name} reading practice.`,
+          orderIndex: storyIndex,
+          status: 'published',
         },
       });
       storyCount += 1;

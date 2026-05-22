@@ -21,8 +21,3 @@ export class TopicItemDto {
   content!: TopicContentBlock[];
   orderIndex!: number;
 }
-
-export class TopicsResponseDto {
-  success!: boolean;
-  data!: TopicItemDto[];
-}

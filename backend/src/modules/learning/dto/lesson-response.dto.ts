@@ -6,11 +6,6 @@ export class LessonItemDto {
   slug!: string;
 }
 
-export class LessonsResponseDto {
-  success!: boolean;
-  data!: LessonItemDto[];
-}
-
 export class LessonDetailTopicDto {
   id!: number;
   title!: string;
@@ -52,14 +47,4 @@ export class LessonDetailDto {
   topics!: LessonDetailTopicDto[];
   words!: LessonDetailWordDto[];
   stories!: LessonDetailStoryDto[];
-}
-
-export class LessonDetailResponseDto {
-  success!: boolean;
-  data!: LessonDetailDto;
-}
-
-export class StoriesResponseDto {
-  success!: boolean;
-  data!: LessonDetailStoryDto[];
 }
