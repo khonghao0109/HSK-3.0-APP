@@ -44,3 +44,4 @@ Thumbs.db
 
 # Prisma / report artifacts
 report.*.*.*.*.json
+API test/  
