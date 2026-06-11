@@ -64,6 +64,14 @@ enum TargetType {
   sentence
 }
 
+enum TopicType {
+  vocabulary
+  grammar
+  key_text
+  quiz
+  ai_speaking
+}
+
 model User {
   id                  Int       @id @default(autoincrement())
   email               String    @unique
@@ -97,11 +105,15 @@ model Media {
 
   lessonCoverImage           Lesson[]                @relation("LessonCoverImage")
   wordAudio                  Word[]                  @relation("WordAudio")
+  wordImage                  Word[]                  @relation("WordImage")
+  wordStrokeAnimation        Word[]                  @relation("WordStrokeAnimation")
   questionAudio              Question[]              @relation("QuestionAudio")
   questionImage              Question[]              @relation("QuestionImage")
   sentenceAudio              Sentence[]              @relation("SentenceAudio")
   pronunciationPracticeAudio PronunciationPractice[] @relation("PronunciationPracticeAudio")
   pronunciationAttemptAudio  PronunciationAttempt[]  @relation("PronunciationAttemptAudio")
+  questionGroupAudio         QuestionGroup[]         @relation("QuestionGroupAudio")
+  questionGroupImage         QuestionGroup[]         @relation("QuestionGroupImage")
 
   @@index([type])
 }
@@ -145,29 +157,37 @@ model Lesson {
   exercises              LessonExercise[]
   pronunciationPractices PronunciationPractice[]
 
+  @@unique([levelId, orderIndex])
   @@index([levelId])
   @@index([status])
   @@index([deletedAt])
-  @@unique([levelId, orderIndex])
 }
 
 model Topic {
   id         Int           @id @default(autoincrement())
   lessonId   Int
   title      String
+  subtitle   String?
+  type       TopicType     @default(vocabulary)
   content    Json
   orderIndex Int
+  isPremium  Boolean       @default(false)
+  isLocked   Boolean       @default(false)
   status     ContentStatus @default(draft)
   deletedAt  DateTime?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson                 Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonWords            LessonWord[]
+  exercises              LessonExercise[]
+  pronunciationPractices PronunciationPractice[]
 
+  @@unique([lessonId, orderIndex])
   @@index([lessonId])
+  @@index([type])
   @@index([status])
   @@index([deletedAt])
-  @@unique([lessonId, orderIndex])
 }
 
 model Story {
@@ -195,29 +215,36 @@ model Story {
 }
 
 model Word {
-  id          Int      @id @default(autoincrement())
-  hanzi       String
-  traditional String?
-  pinyin      String
-  pinyinTone  String?
-  example     String?
-  isPure      Boolean  @default(true)
-  audioId     Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  hanzi             String
+  traditional       String?
+  pinyin            String
+  pinyinTone        String?
+  example           String?
+  isPure            Boolean  @default(true)
+  audioId           Int?
+  imageId           Int?
+  strokeAnimationId Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  audio       Media?             @relation("WordAudio", fields: [audioId], references: [id])
-  meanings    WordMeaning[]
-  wordLevels  WordLevel[]
-  lessonWords LessonWord[]
-  userWords   UserWord[]
-  progresses  UserWordProgress[]
+  audio                  Media?                  @relation("WordAudio", fields: [audioId], references: [id])
+  image                  Media?                  @relation("WordImage", fields: [imageId], references: [id])
+  strokeAnimation        Media?                  @relation("WordStrokeAnimation", fields: [strokeAnimationId], references: [id])
+  meanings               WordMeaning[]
+  wordLevels             WordLevel[]
+  lessonWords            LessonWord[]
+  pronunciationPractices PronunciationPractice[] @relation("PronunciationPracticeWord")
+  userWords              UserWord[]
+  progresses             UserWordProgress[]
 
   @@unique([hanzi, pinyin])
   @@index([hanzi])
   @@index([pinyin])
   @@index([isPure])
   @@index([audioId])
+  @@index([imageId])
+  @@index([strokeAnimationId])
 }
 
 model WordMeaning {
@@ -245,16 +272,20 @@ model WordLevel {
 }
 
 model LessonWord {
-  id         Int @id @default(autoincrement())
+  id         Int  @id @default(autoincrement())
   lessonId   Int
+  topicId    Int?
   wordId     Int
-  orderIndex Int @default(0)
+  orderIndex Int  @default(0)
 
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  lesson   Lesson              @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  topic    Topic?              @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  word     Word                @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  examples LessonWordExample[]
 
   @@unique([lessonId, wordId])
   @@index([lessonId])
+  @@index([topicId])
   @@index([wordId])
   @@index([lessonId, orderIndex])
 }
@@ -269,12 +300,31 @@ model Sentence {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  audio   Media?           @relation("SentenceAudio", fields: [audioId], references: [id])
-  lessons LessonSentence[]
+  audio                  Media?                  @relation("SentenceAudio", fields: [audioId], references: [id])
+  lessonWordExamples     LessonWordExample[]
+  lessons                LessonSentence[]
+  pronunciationPractices PronunciationPractice[] @relation("PronunciationPracticeSentence")
 
   @@index([hanzi])
   @@index([pinyin])
   @@index([audioId])
+}
+
+model LessonWordExample {
+  id           Int      @id @default(autoincrement())
+  lessonWordId Int
+  sentenceId   Int
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  lessonWord LessonWord @relation(fields: [lessonWordId], references: [id], onDelete: Cascade)
+  sentence   Sentence   @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonWordId, sentenceId])
+  @@index([lessonWordId])
+  @@index([sentenceId])
+  @@index([lessonWordId, orderIndex])
 }
 
 model LessonSentence {
@@ -295,6 +345,7 @@ model LessonSentence {
 model LessonExercise {
   id          Int           @id @default(autoincrement())
   lessonId    Int
+  topicId     Int?
   type        ExerciseType
   prompt      String
   content     Json
@@ -307,9 +358,11 @@ model LessonExercise {
   updatedAt   DateTime      @updatedAt
 
   lesson   Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  topic    Topic?                  @relation(fields: [topicId], references: [id], onDelete: SetNull)
   attempts LessonExerciseAttempt[]
 
   @@index([lessonId])
+  @@index([topicId])
   @@index([type])
   @@index([status])
   @@index([deletedAt])
@@ -337,6 +390,9 @@ model LessonExerciseAttempt {
 model PronunciationPractice {
   id         Int           @id @default(autoincrement())
   lessonId   Int
+  topicId    Int?
+  wordId     Int?
+  sentenceId Int?
   targetType TargetType
   targetText String
   pinyin     String?
@@ -348,10 +404,16 @@ model PronunciationPractice {
   updatedAt  DateTime      @updatedAt
 
   lesson   Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  topic    Topic?                 @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  word     Word?                  @relation("PronunciationPracticeWord", fields: [wordId], references: [id], onDelete: SetNull)
+  sentence Sentence?              @relation("PronunciationPracticeSentence", fields: [sentenceId], references: [id], onDelete: SetNull)
   audio    Media?                 @relation("PronunciationPracticeAudio", fields: [audioId], references: [id])
   attempts PronunciationAttempt[]
 
   @@index([lessonId])
+  @@index([topicId])
+  @@index([wordId])
+  @@index([sentenceId])
   @@index([targetType])
   @@index([status])
   @@index([deletedAt])
@@ -383,6 +445,7 @@ model Question {
   skill         Skill
   audioId       Int?
   imageId       Int?
+  groupId       Int?
   answers       Json
   correctAnswer Json
   explanation   String?
@@ -394,9 +457,11 @@ model Question {
 
   level         Level          @relation(fields: [levelId], references: [id])
   audio         Media?         @relation("QuestionAudio", fields: [audioId], references: [id])
+  group         QuestionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   image         Media?         @relation("QuestionImage", fields: [imageId], references: [id])
   testQuestions TestQuestion[]
 
+  @@index([groupId])
   @@index([levelId])
   @@index([skill])
   @@index([type])
@@ -418,10 +483,53 @@ model Test {
   results   Result[]
   level     Level          @relation(fields: [levelId], references: [id])
   questions TestQuestion[]
+  sections  TestSection[]
 
   @@index([levelId])
   @@index([status])
   @@index([deletedAt])
+}
+
+model TestSection {
+  id          Int      @id @default(autoincrement())
+  testId      Int
+  skill       Skill
+  title       String
+  instruction String?
+  orderIndex  Int
+  duration    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  test   Test            @relation(fields: [testId], references: [id], onDelete: Cascade)
+  groups QuestionGroup[]
+
+  @@unique([testId, orderIndex])
+  @@index([testId])
+  @@index([skill])
+}
+
+model QuestionGroup {
+  id          Int      @id @default(autoincrement())
+  sectionId   Int
+  title       String?
+  instruction String?
+  content     Json?
+  audioId     Int?
+  imageId     Int?
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section   TestSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  audio     Media?      @relation("QuestionGroupAudio", fields: [audioId], references: [id])
+  image     Media?      @relation("QuestionGroupImage", fields: [imageId], references: [id])
+  questions Question[]
+
+  @@index([sectionId])
+  @@index([sectionId, orderIndex])
+  @@index([audioId])
+  @@index([imageId])
 }
 
 model TestQuestion {

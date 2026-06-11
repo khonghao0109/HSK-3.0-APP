@@ -16,6 +16,7 @@ coverage/
 .env.*
 **/.env
 **/.env.*
+!**/.env.example
 
 # Logs
 logs/
@@ -45,3 +46,4 @@ Thumbs.db
 # Prisma / report artifacts
 report.*.*.*.*.json
 API test/  
+.codegraph/

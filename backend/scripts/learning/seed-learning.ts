@@ -56,6 +56,15 @@ function practiceNotesContent() {
   ];
 }
 
+function storyContent(levelName: string) {
+  return [
+    {
+      type: 'text',
+      value: `Temporary short story for ${levelName} reading practice.`,
+    },
+  ];
+}
+
 loadLocalEnv();
 
 const prisma = new PrismaClient();
@@ -165,20 +174,33 @@ async function seedLearning() {
       topicCount += 2;
 
       if (wordIds.length > 0) {
-        const lessonWords = wordIds.map((wordId) => ({
-          lessonId: lesson.id,
-          wordId,
-        }));
-
-        await prisma.lessonWord.createMany({
-          data: lessonWords,
-          skipDuplicates: true,
-        });
-        lessonWordCount += lessonWords.length;
+        await Promise.all(
+          wordIds.map((wordId, wordIndex) =>
+            prisma.lessonWord.upsert({
+              where: {
+                lessonId_wordId: {
+                  lessonId: lesson.id,
+                  wordId,
+                },
+              },
+              update: {
+                orderIndex: wordIndex + 1,
+              },
+              create: {
+                lessonId: lesson.id,
+                wordId,
+                orderIndex: wordIndex + 1,
+              },
+            }),
+          ),
+        );
+        lessonWordCount += wordIds.length;
       }
     }
 
     for (let storyIndex = 1; storyIndex <= 2; storyIndex++) {
+      const content = storyContent(level.name);
+
       await prisma.story.upsert({
         where: {
           slug: `${levelSlug}-story-${storyIndex}`,
@@ -186,7 +208,7 @@ async function seedLearning() {
         update: {
           levelId: level.id,
           title: `${level.name} Story ${storyIndex}`,
-          content: `Temporary short story for ${level.name} reading practice.`,
+          content,
           orderIndex: storyIndex,
           status: 'published',
           deletedAt: null,
@@ -195,7 +217,7 @@ async function seedLearning() {
           levelId: level.id,
           title: `${level.name} Story ${storyIndex}`,
           slug: `${levelSlug}-story-${storyIndex}`,
-          content: `Temporary short story for ${level.name} reading practice.`,
+          content,
           orderIndex: storyIndex,
           status: 'published',
         },

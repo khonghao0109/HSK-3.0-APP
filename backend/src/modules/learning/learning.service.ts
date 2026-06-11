@@ -9,7 +9,7 @@ import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
 import { GetStoriesQueryDto } from './dto/get-stories-query.dto';
 import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
 import { LessonDetailDto, LessonItemDto } from './dto/lesson-response.dto';
-import { StoryItemDto } from './dto/story-response.dto';
+import { StoryContentBlock, StoryItemDto } from './dto/story-response.dto';
 import { TopicContentBlock, TopicItemDto } from './dto/topic-response.dto';
 
 @Injectable()
@@ -272,7 +272,7 @@ export class LearningService {
           id: story.id,
           levelId: story.levelId,
           title: story.title,
-          content: this.stringifyStoryContent(story.content),
+          content: story.content as StoryContentBlock[],
           slug: story.slug,
         }),
       ),
@@ -300,15 +300,4 @@ export class LearningService {
     };
   }
 
-  private stringifyStoryContent(content: unknown): string {
-    if (typeof content === 'string') {
-      return content;
-    }
-
-    if (content === null || content === undefined) {
-      return '';
-    }
-
-    return JSON.stringify(content);
-  }
 }
