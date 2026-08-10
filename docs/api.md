@@ -9,7 +9,7 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 10/08/2026: schema P0 đã sẵn sàng. Runtime hiện mới có auth cơ bản, user read, health, dictionary search và learning read. Các endpoint session/onboarding/CMS/SRS/exam attempt bên dưới là contract mục tiêu, chưa được mô tả là runtime đã hoàn thành.
+> Trạng thái 10/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read và Onboarding Goal & Learning Plan V1. Session/profile/privacy, placement scoring, CMS, SRS và exam attempt vẫn là backlog.
 
 Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Các endpoint `DELETE` content trong tài liệu này mang nghĩa archive/soft-delete, không hard-delete row đã có lịch sử.
 
@@ -458,28 +458,120 @@ Chuẩn triển khai:
 
 - Spec này là baseline triển khai. Khi thêm endpoint mới phải cập nhật file này cùng pull request.
 
-## 16. P0 target contracts enabled by the schema
+## 16. P0 runtime contracts và backlog
 
-Các route dưới đây là backlog contract cho vertical slice tiếp theo; tên/payload cuối phải được đưa vào OpenAPI runtime cùng implementation.
+### 16.1 Active-account authorization — runtime complete
 
-### 16.1 Session, onboarding và privacy
+Mọi endpoint dùng `JwtAuthGuard` đều tải lại account theo JWT `sub`. Chỉ account `status=active` và `deletedAt IS NULL` được chấp nhận; email/role lấy từ database hiện tại, không lấy từ claim cũ. Token đúng chữ ký nhưng account không tồn tại, suspended, deletion pending, anonymized hoặc soft-deleted nhận `401` với thông báo không tiết lộ trạng thái nội bộ.
+
+### 16.2 Onboarding Goal & Learning Plan V1 — runtime complete
+
+Tất cả endpoint dưới đây yêu cầu `Authorization: Bearer <JWT>`. `userId` luôn lấy từ JWT và không được nhận qua body/query.
+
+#### GET `/onboarding/status`
+
+```json
+{
+  "success": true,
+  "data": {
+    "hasActiveGoal": true,
+    "hasActiveLearningPlan": true,
+    "hasCompletedPlacement": false,
+    "nextStep": "ready"
+  }
+}
+```
+
+`nextStep` là `set_goal`, `generate_plan` hoặc `ready`. Plan active nhưng không còn khớp level/band/start date của goal hiện hành sẽ cho `nextStep=generate_plan`. Endpoint không trả `PlacementAttempt.detailSnapshot`.
+
+#### GET `/onboarding/goals/current`
+
+Trả active goal của account hiện tại; chưa có goal là trạng thái bình thường và trả `data: null`.
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 10,
+    "targetLevelId": 7,
+    "targetBand": 8,
+    "dailyMinutes": 30,
+    "reminderEnabled": true,
+    "reminderTime": "20:30",
+    "startDate": "2026-08-11",
+    "isActive": true,
+    "createdAt": "2026-08-10T10:00:00.000Z",
+    "updatedAt": "2026-08-10T10:00:00.000Z",
+    "targetLevel": {
+      "id": 7,
+      "code": "HSK7_9",
+      "name": "HSK 7-9",
+      "minBand": 7,
+      "maxBand": 9
+    }
+  }
+}
+```
+
+#### POST `/onboarding/goals`
+
+```json
+{
+  "targetLevelId": 7,
+  "targetBand": 8,
+  "dailyMinutes": 30,
+  "reminderEnabled": true,
+  "reminderTime": "20:30",
+  "startDate": "2026-08-11"
+}
+```
+
+- `targetLevelId`: integer dương; level phải `published` và chưa soft-delete.
+- `targetBand`: integer 1–9 và thuộc `Level.minBand..maxBand`. Có thể bỏ/null với level một band (server tự resolve); bắt buộc với `HSK7_9`.
+- `dailyMinutes`: integer 1–1440, đúng database CHECK.
+- `reminderTime`: chỉ dùng format `HH:mm` 24 giờ; bắt buộc khi `reminderEnabled=true` và phải bỏ/null khi false.
+- `startDate`: ngày lịch hợp lệ theo `YYYY-MM-DD`; API và DB giữ date-only, không dịch timezone.
+- Field ngoài DTO bị từ chối.
+
+Request giống hoàn toàn active goal là idempotent và trả lại row hiện tại. Khi thay đổi, service khóa row `User` bằng `SELECT ... FOR UPDATE`, deactivate goal cũ và tạo goal mới trong một transaction. Hai request đồng thời không thể để lại nhiều hơn một active goal.
+
+#### GET `/learning-plans/current`
+
+Trả active plan của account hiện tại và items tăng dần theo `orderIndex`; chưa có plan trả `data: null`. Mỗi item có `scheduledDate` date-only và lesson tối thiểu gồm `id`, `title`, `description`, `orderIndex`, `slug`.
+
+#### POST `/learning-plans`
+
+Không có body. Active goal là bắt buộc. V1 snapshot danh sách lesson public tại thời điểm tạo bằng `LearningPlanItem`, xếp một lesson mỗi ngày từ `startDate`; `endDate` là ngày item cuối.
+
+Plan đang active và khớp `targetLevelId`, `targetBand`, `startDate` được trả lại khi retry. Nếu goal thay đổi, plan cũ chuyển `cancelled` và plan/items mới được tạo trong cùng transaction sau khi khóa row `User`. Chỉ lesson thuộc target level, `status=published`, `deletedAt IS NULL` được chọn; cùng `orderIndex` được tie-break bằng `id`. Nếu không có lesson hợp lệ, API trả `409` và không tạo/cancel plan.
+
+#### Error contract
+
+- `400`: DTO không hợp lệ, band sai range, thiếu active goal hoặc reminder/date không hợp lệ.
+- `401`: JWT/account không được chấp nhận.
+- `404`: level không tồn tại, không published hoặc đã soft-delete.
+- `409`: trạng thái dữ liệu cần repair hoặc target level chưa có lesson public.
+
+Client không nhận raw Prisma error, constraint name hoặc SQL trigger message.
+
+### 16.3 Session, profile, placement và privacy — backlog
 
 - `GET /auth/sessions`, `POST /auth/refresh`, `DELETE /auth/sessions/:id`.
 - `GET|PATCH /users/me/profile`.
-- `POST /onboarding/goals`, `POST /onboarding/placements`, `POST /onboarding/placements/:id/complete`.
-- `GET|POST /learning-plans` và cập nhật trạng thái item.
+- `POST /onboarding/placements`, `POST /onboarding/placements/:id/complete`.
+- Cập nhật trạng thái `LearningPlanItem`.
 - `POST /privacy/consents`, `POST /privacy/exports`, `POST /privacy/deletion-requests`.
 - Account deletion chuyển `deletion_pending` → revoke session/token → loại PII → `anonymized`; không hard-delete User hoặc immutable history. Xem `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`.
 
-Refresh/reset/verification token chỉ truyền raw value tại transport một lần; database chỉ lưu hash.
+Placement scoring chưa được triển khai; client không được gửi score/recommended level. Refresh/reset/verification token chỉ truyền raw value tại transport một lần; database chỉ lưu hash.
 
-### 16.2 CMS/import
+### 16.4 CMS/import
 
 - CRUD content tạo revision và audit.
 - `POST /admin/imports`, preview/validate/commit/status/error rows.
 - Review revision bằng approve/request-change/reject; publish chỉ cập nhật content sau authorization.
 
-### 16.3 Learning và SRS
+### 16.5 Learning activity và SRS
 
 - `POST /learning/exercises/:id/attempts` với idempotency key.
 - `PATCH /progress/lessons/:lessonId` và progress topic.
@@ -487,7 +579,7 @@ Refresh/reset/verification token chỉ truyền raw value tại transport một 
 
 `ReviewCard` là scheduler source of truth; `UserWordProgress` chỉ là legacy summary.
 
-### 16.4 Exam attempt flow
+### 16.6 Exam attempt flow
 
 - `POST /exam/tests/:id/attempts`: server tạo attempt và immutable snapshot.
 - `PUT /exam/attempts/:id/answers/:snapshotQuestionKey`: autosave idempotent/optimistic version.

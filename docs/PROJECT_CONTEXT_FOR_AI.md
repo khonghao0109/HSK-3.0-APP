@@ -310,6 +310,7 @@ Nguyen tac:
 - API prefix `/api/v1`.
 - Docs API + roadmap.
 - Data raw HSK + pipeline dictionary.
+- Active-account JWT authorization va Onboarding Goal & Learning Plan V1.
 
 ### Chua day du
 
@@ -353,7 +354,7 @@ Neu ban la AI duoc giao tiep tuc du an nay, thu tu uu tien:
 
 ## 15. P0 schema baseline + integrity hardening — 10/08/2026
 
-- Migration chain: 11 migration, gom 5 migration lich su, P0-00...P0-04 va forward migration `p0_integrity_hardening`.
+- Migration chain: 12 migration, gom 5 migration lich su, P0-00...P0-04, `p0_integrity_hardening` va `p0_integrity_concurrency_serialization`.
 - Schema sau rehearsal: 57 business tables, 138 foreign keys, 72 CHECK constraints va 24 trigger nghiep vu.
 - `Level` co stable code; `HSK7_9` dai dien band 7-9, khong tach thanh ba level o P0.
 - Email duoc canonicalize `trim().toLowerCase()` trong Auth runtime va unique theo `lower(email)` tai PostgreSQL.
@@ -374,4 +375,4 @@ Tai lieu chi tiet:
 - `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
 - `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`
 
-Schema da san sang cho runtime P0, nhung onboarding/CMS/SRS/exam API va frontend van chua duoc coi la hoan thanh.
+Schema da san sang cho runtime P0. Onboarding goal + learning plan V1 da co runtime voi active-account JWT authorization, ownership, row locking va idempotency; placement scoring van la backlog. CMS/SRS/exam API va frontend chua duoc coi la hoan thanh.

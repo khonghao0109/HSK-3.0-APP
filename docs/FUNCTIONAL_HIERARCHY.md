@@ -18,11 +18,14 @@ Tài liệu này mô tả chức năng theo vai trò **User** và **Admin**, đ�
 HSK System
 ├── Khách chưa đăng nhập [P0]
 │   ├── Đăng ký / Đăng nhập
-│   ├── Onboarding: mục tiêu học, thời gian học mỗi ngày
-│   ├── Placement test: đề xuất điểm bắt đầu
 │   └── Xem nội dung công khai
 │
 ├── User
+│   ├── Onboarding & lộ trình ban đầu [P0]
+│   │   ├── Xem trạng thái onboarding
+│   │   ├── Chọn level/band, thời lượng học và ngày bắt đầu
+│   │   ├── Sinh lịch một lesson public mỗi ngày
+│   │   └── Placement test: đề xuất điểm bắt đầu (backlog)
 │   ├── Tài khoản [P0]
 │   │   ├── Xem / cập nhật hồ sơ
 │   │   ├── Quản lý phiên đăng nhập
@@ -144,8 +147,8 @@ HSK System
 
 | Nhóm chức năng | User | Admin | Ưu tiên | Trạng thái hiện tại |
 |---|:---:|:---:|:---:|---|
-| Đăng ký, đăng nhập, JWT | Có | Có | P0 | Đã có |
-| Onboarding, placement test, learning plan | Có | Cấu hình | P0 | Schema sẵn sàng; runtime kế tiếp |
+| Đăng ký, đăng nhập, JWT | Có | Có | P0 | Đã có; JWT protected API kiểm tra active account từ DB |
+| Onboarding, placement test, learning plan | Có | Cấu hình | P0 | Goal + learning plan V1 runtime hoàn thành; placement scoring còn backlog |
 | Hồ sơ cá nhân và privacy lifecycle | Có | Xem | P0 | Schema sẵn sàng; API cập nhật còn thiếu |
 | Levels, lessons, topics, stories | Có | CRUD/publish | P0 | API đọc đã có |
 | Lesson activity engine | Có | Quản lý nội dung | P0 | Schema attempt/progress sẵn sàng; chưa có runtime |
@@ -171,6 +174,10 @@ HSK System
 - `GET /api/v1/health`.
 - `GET /api/v1/dictionary?query=...`.
 - `GET /api/v1/levels`, `/lessons`, `/topics`, `/stories` và các endpoint tương đương dưới `/learning`.
+- `GET /api/v1/onboarding/status`, `GET /api/v1/onboarding/goals/current`, `POST /api/v1/onboarding/goals`.
+- `GET /api/v1/learning-plans/current`, `POST /api/v1/learning-plans`.
+
+Onboarding Goal & Learning Plan V1 dùng JWT owner, khóa row `User` cho write concurrency, date-only schedule và chỉ snapshot lesson published/chưa soft-delete. Placement test/scoring chưa có runtime.
 
 Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoint mới, cần cập nhật cả tài liệu API, DTO và test tương ứng.
 
