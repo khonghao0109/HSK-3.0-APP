@@ -1,6 +1,6 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.1.0`
+> Phiên bản runbook: `1.2.0`
 > Áp dụng cho chuỗi migration P0 ngày `2026-08-10`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
@@ -237,7 +237,12 @@ ORDER BY code;
 
 Mọi test có write dùng chung safety guard. Guard yêu cầu `NODE_ENV=test`, cả `DATABASE_URL` và `TEST_DATABASE_URL` cùng trỏ tới một host/port/database, và database kết thúc bằng segment `_test`, `-e2e`, `_verify`, `_disposable` hoặc `_hardening` (có thể thêm suffix số/timestamp). Substring như `hsk_latest`, `contest_prod` hoặc `production_test_backup_prod` bị từ chối trước khi kết nối.
 
-`TEST_DATABASE_URL` phải trỏ vào database disposable hoàn toàn tách biệt và không thêm query parameter Prisma như `?schema=public`, vì runner truyền URL này cho `psql`. `DATABASE_URL` có thể thêm `?schema=public`, nhưng identity database sau khi bỏ query parameter phải giống `TEST_DATABASE_URL`.
+Project chỉ hỗ trợ effective schema `public` cho write test:
+
+- `DATABASE_URL` được phép không có `schema` hoặc có đúng một `schema=public`.
+- `DATABASE_URL` có schema rỗng, schema khác `public` hoặc nhiều `schema` parameter sẽ bị từ chối.
+- `TEST_DATABASE_URL` tuyệt đối không có `schema` parameter vì runner truyền nguyên URL này cho `psql`.
+- Sau khi bỏ query parameter hợp lệ, host/port/database của hai URL phải giống nhau. Credentials không được đưa vào error/log.
 
 ```bash
 export NODE_ENV=test
@@ -248,6 +253,8 @@ npm run test:db:concurrency
 ```
 
 Không chạy hai command này hoặc E2E trên `hsk_system`, staging hay production. Runner dùng `spawnSync('psql', args)` không qua shell interpolation, bật `ON_ERROR_STOP=1` và forward exit code của `psql`.
+
+`test:db:concurrency` chỉ chạy một lần trên database fresh migration-only. Trước fixture INSERT đầu tiên, runner yêu cầu `User`, `Level`, `Test`, `Result`, `ReviewCard` và `ReviewEvent` đều rỗng. Nếu bất kỳ table nào có dữ liệu, runner dừng với thông báo `Concurrency test requires a fresh migration-only disposable database.`; runner không truncate, delete, reset hoặc tự dọn dữ liệu. Muốn chạy lại phải drop database disposable cũ, tạo database disposable mới và chạy đủ `prisma migrate deploy`.
 
 Script `test/database/p0-schema.integration.sql` chạy trong transaction rollback và kiểm tra:
 
@@ -260,6 +267,7 @@ Script `test/database/p0-schema.integration.sql` chạy trong transaction rollba
 - band phải thuộc Level, ReviewEvent card/session phải cùng user và hard-delete parent có fact phải bị FK `RESTRICT` rõ ràng.
 - owner của ReviewCard/ReviewSession không được thay đổi, kể cả khi chưa có event; cập nhật primary key parent có history phải trả `foreign_key_violation`, không phải immutable-trigger exception.
 - test concurrency dùng ba scenario với hai Prisma connection độc lập, `statement_timeout`, `lock_timeout`, barrier và kiểm tra trạng thái cuối trực tiếp; không dùng sleep dài hoặc timing ngẫu nhiên.
+- mỗi scenario chỉ GREEN khi transaction A commit, transaction B đã được quan sát ở `wait_event_type = Lock` trước khi release A, B bị từ chối bởi đúng domain invariant và query trạng thái cuối vẫn hợp lệ. Lock/statement timeout, deadlock, Prisma transaction timeout, connection error, constraint sai domain hoặc B settled sớm đều là RED.
 
 Tiếp tục các cổng ứng dụng:
 

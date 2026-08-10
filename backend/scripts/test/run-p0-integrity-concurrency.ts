@@ -3,6 +3,17 @@ import { randomUUID } from 'node:crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
+import {
+  assertFreshMigrationOnlyCounts,
+  assertSerializedConflict,
+  CONCURRENCY_SCENARIO_LABELS,
+  P0ConcurrencyHarnessError,
+  toSafeConcurrencyErrorMessage,
+  type ConcurrentWriteEvidence,
+  type ConcurrencyScenario,
+  type MigrationOnlyTableCounts,
+  type TransactionOutcome,
+} from '../../src/common/utils/p0-concurrency-harness';
 
 const STATEMENT_TIMEOUT_MS = 5_000;
 const LOCK_TIMEOUT_MS = 3_000;
@@ -15,15 +26,10 @@ type Deferred<T> = {
   reject: (reason?: unknown) => void;
 };
 
-type TransactionOutcome =
-  | { status: 'fulfilled' }
-  | { status: 'rejected'; reason: unknown };
-
-type ConcurrentWriteResult = {
-  transactionA: TransactionOutcome;
-  transactionB: TransactionOutcome;
-  transactionBStateBeforeRelease: 'blocked' | 'settled';
-};
+type ConcurrentWriteResult = Omit<
+  ConcurrentWriteEvidence,
+  'finalInvariantHolds'
+>;
 
 function createDeferred<T>(): Deferred<T> {
   let resolve!: Deferred<T>['resolve'];
@@ -148,9 +154,14 @@ async function runConcurrentWrites(
   let transactionBSettled = false;
   const transactionBRaw = clientB.$transaction(
     async (transaction) => {
-      const backendPid = await configureTransaction(transaction);
-      transactionBBackendPid.resolve(backendPid);
-      await writeB(transaction);
+      try {
+        const backendPid = await configureTransaction(transaction);
+        transactionBBackendPid.resolve(backendPid);
+        await writeB(transaction);
+      } catch (error) {
+        transactionBBackendPid.reject(error);
+        throw error;
+      }
     },
     { maxWait: 5_000, timeout: TRANSACTION_TIMEOUT_MS },
   );
@@ -188,32 +199,44 @@ async function runConcurrentWrites(
   }
 }
 
-function requireTransactionACommitted(
-  scenario: string,
+function recordSerializedConflict(
+  failures: string[],
+  scenario: ConcurrencyScenario,
   result: ConcurrentWriteResult,
+  finalInvariantHolds: boolean,
 ): void {
-  if (result.transactionA.status === 'rejected') {
-    throw new Error(`${scenario}: transaction A unexpectedly failed`);
+  try {
+    const classified = assertSerializedConflict(scenario, {
+      ...result,
+      finalInvariantHolds,
+    });
+    console.log(
+      `${CONCURRENCY_SCENARIO_LABELS[scenario]}: GREEN (transaction B observed Lock, then ${classified.safeMessage})`,
+    );
+  } catch (error) {
+    failures.push(toSafeConcurrencyErrorMessage(error));
   }
 }
 
-function requireSerializedConflict(
-  scenario: string,
-  result: ConcurrentWriteResult,
-): string | undefined {
-  try {
-    requireTransactionACommitted(scenario, result);
-  } catch (error) {
-    return error instanceof Error ? error.message : String(error);
-  }
-  if (result.transactionB.status !== 'rejected') {
-    return `${scenario}: both concurrent transactions committed; serialization was not enforced`;
-  }
+async function assertFreshMigrationOnlyDatabase(
+  observer: PrismaClient,
+): Promise<void> {
+  const [counts] = await observer.$queryRaw<MigrationOnlyTableCounts[]>`
+    SELECT
+      (SELECT COUNT(*)::int FROM "User") AS users,
+      (SELECT COUNT(*)::int FROM "Level") AS levels,
+      (SELECT COUNT(*)::int FROM "Test") AS tests,
+      (SELECT COUNT(*)::int FROM "Result") AS results,
+      (SELECT COUNT(*)::int FROM "ReviewCard") AS "reviewCards",
+      (SELECT COUNT(*)::int FROM "ReviewEvent") AS "reviewEvents"
+  `;
 
-  console.log(
-    `${scenario}: GREEN (transaction B ${result.transactionBStateBeforeRelease}, then rejected)`,
-  );
-  return undefined;
+  if (!counts) {
+    throw new P0ConcurrencyHarnessError(
+      'Concurrency preflight could not read database table counts.',
+    );
+  }
+  assertFreshMigrationOnlyCounts(counts);
 }
 
 async function main(): Promise<void> {
@@ -232,6 +255,7 @@ async function main(): Promise<void> {
   console.log(`Running P0 two-connection tests on "${databaseName}"`);
 
   try {
+    await assertFreshMigrationOnlyDatabase(observer);
     const failures: string[] = [];
     const [userA, userB] = await Promise.all([
       observer.user.create({
@@ -304,17 +328,12 @@ async function main(): Promise<void> {
       WHERE goal."targetBand" IS NOT NULL
         AND goal."targetBand" NOT BETWEEN level."minBand" AND level."maxBand"
     `;
-    if (invalidGoalCount !== 0) {
-      failures.push(
-        'UserGoal/Level race: final database state violates the curriculum band invariant',
-      );
-    } else {
-      const failure = requireSerializedConflict(
-        'UserGoal/Level race',
-        goalLevelRace,
-      );
-      if (failure) failures.push(failure);
-    }
+    recordSerializedConflict(
+      failures,
+      'user-goal-level',
+      goalLevelRace,
+      invalidGoalCount === 0,
+    );
 
     const test = await observer.test.create({
       data: {
@@ -373,17 +392,12 @@ async function main(): Promise<void> {
       WHERE result."awardedBand" IS NOT NULL
         AND result."awardedBand" NOT BETWEEN level."minBand" AND level."maxBand"
     `;
-    if (invalidResultCount !== 0) {
-      failures.push(
-        'Result/Test race: final database state violates the awarded-band invariant',
-      );
-    } else {
-      const failure = requireSerializedConflict(
-        'Result/Test race',
-        resultTestRace,
-      );
-      if (failure) failures.push(failure);
-    }
+    recordSerializedConflict(
+      failures,
+      'result-test',
+      resultTestRace,
+      invalidResultCount === 0,
+    );
 
     const word = await observer.word.create({
       data: {
@@ -436,21 +450,18 @@ async function main(): Promise<void> {
       JOIN "ReviewSession" session ON session.id = event."sessionId"
       WHERE card."userId" <> session."userId"
     `;
-    if (invalidReviewCount !== 0) {
-      failures.push(
-        'Review ownership race: final database state contains a cross-user ReviewEvent',
-      );
-    } else {
-      const failure = requireSerializedConflict(
-        'Review ownership race',
-        reviewOwnershipRace,
-      );
-      if (failure) failures.push(failure);
-    }
+    recordSerializedConflict(
+      failures,
+      'review-ownership',
+      reviewOwnershipRace,
+      invalidReviewCount === 0,
+    );
 
     if (failures.length > 0) {
       for (const failure of failures) console.error(`RED: ${failure}`);
-      throw new Error(`${failures.length} concurrency invariant(s) failed`);
+      throw new P0ConcurrencyHarnessError(
+        `${failures.length} concurrency invariant(s) failed`,
+      );
     }
 
     console.log('P0 two-connection concurrency tests passed');
@@ -464,7 +475,8 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`P0 concurrency test failed: ${message}`);
+  console.error(
+    `P0 concurrency test failed: ${toSafeConcurrencyErrorMessage(error)}`,
+  );
   process.exitCode = 1;
 });

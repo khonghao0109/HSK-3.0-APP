@@ -34,6 +34,18 @@ function parseDatabaseTarget(
     throw new Error(`${variableName} must be a valid PostgreSQL URL`);
   }
 
+  const schemaParameters = parsed.searchParams.getAll('schema');
+  if (variableName === 'DATABASE_URL') {
+    if (schemaParameters.length > 1) {
+      throw new Error('DATABASE_URL must contain at most one schema parameter');
+    }
+    if (schemaParameters.length === 1 && schemaParameters[0] !== 'public') {
+      throw new Error('DATABASE_URL schema must be public when specified');
+    }
+  } else if (schemaParameters.length > 0) {
+    throw new Error('TEST_DATABASE_URL must not contain a schema parameter');
+  }
+
   let databaseName: string;
   try {
     databaseName = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
@@ -50,7 +62,7 @@ function parseDatabaseTarget(
 
   return {
     databaseName,
-    identity: `${parsed.protocol}//${host}:${port}/${databaseName}`,
+    identity: `${host}:${port}/${databaseName}`,
   };
 }
 
