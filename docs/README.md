@@ -54,6 +54,15 @@ Dictionary pipeline tai `backend/scripts/dictionary/`:
 - API spec: `docs/api.md`
 - Product roadmap: `docs/roadmap.md`
 - Full AI project context: `docs/PROJECT_CONTEXT_FOR_AI.md`
+- Phan cap chuc nang: `docs/FUNCTIONAL_HIERARCHY.md`
+- Lo trinh hoan thien database: `docs/DATABASE_SCHEMA_COMPLETION_PLAN.md`
+- P0 data dictionary: `docs/database/P0_DATA_DICTIONARY.md`
+- P0 ERD (thay the `docs/erd.png` legacy): `docs/database/P0_ERD.md`
+- P0 schema migration runbook: `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
+- ADR account deletion/immutable retention: `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`
+- Ke hoach tong the tu 0 den Production: `docs/PRODUCT_IMPLEMENTATION_MASTER_PLAN.md`
+- Quy trinh trien khai 10 nhom: `docs/implementation-process/`
+- Bao cao tien do 10 nhom: `docs/reports/`
 
 ## Quick start
 
@@ -82,7 +91,7 @@ Backend mac dinh chay tai `http://localhost:3000/api/v1`.
 ## Trang thai hien tai
 
 - Da hoan thien bo khung kien truc production-grade.
-- Da co Prisma schema + migrations ban dau.
+- Da co Prisma schema Web MVP P0, P0-00 den P0-04 va forward migration integrity hardening; runtime API van dang duoc hoan thien theo vertical slice.
 - Da co docs API/roadmap/context.
 - Dang tiep tuc hoan thien business modules va UI.
 

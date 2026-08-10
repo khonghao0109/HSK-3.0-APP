@@ -12,6 +12,13 @@ enum Role {
   admin
 }
 
+enum AccountStatus {
+  active
+  suspended
+  deletion_pending
+  anonymized
+}
+
 enum ContentStatus {
   draft
   published
@@ -23,6 +30,14 @@ enum MediaType {
   image
   pdf
   video
+}
+
+enum MediaProcessingStatus {
+  pending
+  processing
+  ready
+  failed
+  quarantined
 }
 
 enum QuestionType {
@@ -72,37 +87,441 @@ enum TopicType {
   ai_speaking
 }
 
+enum PlacementAttemptStatus {
+  in_progress
+  completed
+  abandoned
+}
+
+enum LearningPlanStatus {
+  active
+  completed
+  cancelled
+}
+
+enum LearningPlanItemStatus {
+  planned
+  in_progress
+  completed
+  skipped
+}
+
+enum ConsentType {
+  terms
+  privacy
+  analytics
+  marketing
+}
+
+enum PrivacyRequestStatus {
+  requested
+  processing
+  completed
+  failed
+  cancelled
+}
+
+enum ContentEntityType {
+  level
+  lesson
+  topic
+  story
+  word
+  sentence
+  lesson_exercise
+  question
+  test
+  media
+}
+
+enum ContentReviewDecision {
+  approved
+  changes_requested
+  rejected
+}
+
+enum ImportJobStatus {
+  pending
+  validating
+  ready
+  importing
+  completed
+  failed
+  cancelled
+}
+
+enum LearningEventType {
+  lesson_started
+  lesson_completed
+  topic_started
+  topic_completed
+  exercise_submitted
+  word_saved
+}
+
+enum ReviewCardState {
+  new
+  learning
+  review
+  suspended
+}
+
+enum ReviewGrade {
+  again
+  hard
+  good
+  easy
+}
+
+enum ReviewSessionStatus {
+  in_progress
+  completed
+  abandoned
+}
+
+enum ExamAttemptStatus {
+  in_progress
+  submitted
+  timed_out
+  invalidated
+}
+
+enum ExamAttemptEventType {
+  started
+  autosaved
+  submitted
+  timed_out
+  invalidated
+}
+
 model User {
-  id                  Int       @id @default(autoincrement())
-  email               String    @unique
+  id                  Int           @id @default(autoincrement())
+  email               String        @unique
   password            String
   name                String?
-  role                Role      @default(user)
-  failedLoginAttempts Int       @default(0)
+  role                Role          @default(user)
+  status              AccountStatus @default(active)
+  failedLoginAttempts Int           @default(0)
   lockUntil           DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  emailVerifiedAt     DateTime?
+  lastLoginAt         DateTime?
+  deletedAt           DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  progresses             Progress[]
-  results                Result[]
-  userWords              UserWord[]
-  wordProgresses         UserWordProgress[]
-  lessonExerciseAttempts LessonExerciseAttempt[]
-  pronunciationAttempts  PronunciationAttempt[]
+  profile                  UserProfile?
+  sessions                 UserSession[]
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  goals                    UserGoal[]
+  placementAttempts        PlacementAttempt[]
+  learningPlans            LearningPlan[]
+  consents                 Consent[]
+  dataExportJobs           DataExportJob[]
+  accountDeletionRequests  AccountDeletionRequest[]
+  progresses               Progress[]
+  topicProgresses          UserTopicProgress[]
+  results                  Result[]
+  userWords                UserWord[]
+  wordProgresses           UserWordProgress[]
+  lessonExerciseAttempts   LessonExerciseAttempt[]
+  pronunciationAttempts    PronunciationAttempt[]
+  learningEvents           LearningEvent[]
+  reviewCards              ReviewCard[]
+  reviewSessions           ReviewSession[]
+  examAttempts             ExamAttempt[]
+  createdLevels            Level[]                  @relation("LevelCreatedBy")
+  updatedLevels            Level[]                  @relation("LevelUpdatedBy")
+  publishedLevels          Level[]                  @relation("LevelPublishedBy")
+  createdLessons           Lesson[]                 @relation("LessonCreatedBy")
+  updatedLessons           Lesson[]                 @relation("LessonUpdatedBy")
+  publishedLessons         Lesson[]                 @relation("LessonPublishedBy")
+  createdTopics            Topic[]                  @relation("TopicCreatedBy")
+  updatedTopics            Topic[]                  @relation("TopicUpdatedBy")
+  publishedTopics          Topic[]                  @relation("TopicPublishedBy")
+  createdStories           Story[]                  @relation("StoryCreatedBy")
+  updatedStories           Story[]                  @relation("StoryUpdatedBy")
+  publishedStories         Story[]                  @relation("StoryPublishedBy")
+  createdWords             Word[]                   @relation("WordCreatedBy")
+  updatedWords             Word[]                   @relation("WordUpdatedBy")
+  publishedWords           Word[]                   @relation("WordPublishedBy")
+  createdSentences         Sentence[]               @relation("SentenceCreatedBy")
+  updatedSentences         Sentence[]               @relation("SentenceUpdatedBy")
+  publishedSentences       Sentence[]               @relation("SentencePublishedBy")
+  createdQuestions         Question[]               @relation("QuestionCreatedBy")
+  updatedQuestions         Question[]               @relation("QuestionUpdatedBy")
+  publishedQuestions       Question[]               @relation("QuestionPublishedBy")
+  createdTests             Test[]                   @relation("TestCreatedBy")
+  updatedTests             Test[]                   @relation("TestUpdatedBy")
+  publishedTests           Test[]                   @relation("TestPublishedBy")
+  uploadedMedia            Media[]                  @relation("MediaUploadedBy")
+  updatedMedia             Media[]                  @relation("MediaUpdatedBy")
+  createdDataSources       DataSource[]             @relation("DataSourceCreatedBy")
+  authoredContentRevisions ContentRevision[]        @relation("ContentRevisionAuthor")
+  performedContentReviews  ContentReview[]          @relation("ContentReviewer")
+  auditLogs                AuditLog[]               @relation("AuditActor")
+  importJobs               ImportJob[]              @relation("ImportJobCreator")
 
   @@index([role])
+  @@index([status, deletedAt])
+}
+
+model UserProfile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  displayName String?
+  avatarUrl   String?
+  locale      String   @default("vi-VN")
+  timezone    String   @default("Asia/Ho_Chi_Minh")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserSession {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  tokenHash        String    @unique
+  deviceId         String?
+  userAgent        String?
+  ipAddress        String?
+  createdAt        DateTime  @default(now())
+  lastSeenAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  revocationReason String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt, expiresAt])
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model UserGoal {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  targetLevelId   Int
+  targetBand      Int?
+  dailyMinutes    Int
+  reminderEnabled Boolean   @default(false)
+  reminderTime    DateTime? @db.Time(0)
+  startDate       DateTime  @db.Date
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetLevel Level @relation(fields: [targetLevelId], references: [id], onDelete: Restrict)
+
+  @@index([userId, isActive])
+  @@index([targetLevelId])
+}
+
+model PlacementAttempt {
+  id                 Int                    @id @default(autoincrement())
+  userId             Int
+  status             PlacementAttemptStatus @default(in_progress)
+  score              Int?
+  detailSnapshot     Json?
+  recommendedLevelId Int?
+  recommendedBand    Int?
+  startedAt          DateTime               @default(now())
+  completedAt        DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendedLevel Level?         @relation(fields: [recommendedLevelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  learningPlans    LearningPlan[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([recommendedLevelId])
+}
+
+model LearningPlan {
+  id                       Int                @id @default(autoincrement())
+  userId                   Int
+  targetLevelId            Int
+  targetBand               Int?
+  generatedFromPlacementId Int?
+  status                   LearningPlanStatus @default(active)
+  startDate                DateTime           @db.Date
+  endDate                  DateTime?          @db.Date
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetLevel            Level              @relation(fields: [targetLevelId], references: [id], onDelete: Restrict)
+  generatedFromPlacement PlacementAttempt?  @relation(fields: [generatedFromPlacementId], references: [id], onDelete: SetNull)
+  items                  LearningPlanItem[]
+
+  @@index([userId, status])
+  @@index([targetLevelId])
+  @@index([generatedFromPlacementId])
+}
+
+model LearningPlanItem {
+  id             Int                    @id @default(autoincrement())
+  learningPlanId Int
+  lessonId       Int
+  orderIndex     Int
+  scheduledDate  DateTime?              @db.Date
+  status         LearningPlanItemStatus @default(planned)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  learningPlan LearningPlan @relation(fields: [learningPlanId], references: [id], onDelete: Cascade)
+  lesson       Lesson       @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+
+  @@unique([learningPlanId, orderIndex])
+  @@unique([learningPlanId, lessonId])
+  @@index([lessonId])
+  @@index([learningPlanId, status, scheduledDate])
+}
+
+model Consent {
+  id             Int         @id @default(autoincrement())
+  userId         Int
+  type           ConsentType
+  consentVersion String
+  policyVersion  String
+  grantedAt      DateTime    @default(now())
+  revokedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, consentVersion])
+  @@index([userId, type, grantedAt])
+}
+
+model DataExportJob {
+  id               Int                  @id @default(autoincrement())
+  userId           Int
+  status           PrivacyRequestStatus @default(requested)
+  outputStorageKey String?
+  outputExpiresAt  DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  errorCode        String?
+  errorMessage     String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model AccountDeletionRequest {
+  id           Int                  @id @default(autoincrement())
+  userId       Int
+  status       PrivacyRequestStatus @default(requested)
+  reason       String?
+  verifiedAt   DateTime?
+  scheduledAt  DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  errorCode    String?
+  errorMessage String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+  @@index([status, scheduledAt])
+}
+
+model DataSource {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  name         String
+  version      String
+  referenceUrl String?
+  license      String?
+  attribution  String?
+  receivedAt   DateTime?
+  importedAt   DateTime?
+  contentHash  String?
+  notes        String?
+  createdById  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  createdBy    User?         @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  levels       Level[]
+  lessons      Lesson[]
+  topics       Topic[]
+  stories      Story[]
+  wordSources  WordSource[]
+  wordMeanings WordMeaning[]
+  wordLevels   WordLevel[]
+  sentences    Sentence[]
+  questions    Question[]
+  tests        Test[]
+  media        Media[]
+  importJobs   ImportJob[]
+
+  @@unique([name, version])
+  @@index([createdById])
 }
 
 model Media {
-  id        Int       @id @default(autoincrement())
-  url       String    @unique
-  type      MediaType
-  mimeType  String?
-  size      Int?
-  duration  Int?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id               Int                   @id @default(autoincrement())
+  url              String                @unique
+  type             MediaType
+  mimeType         String?
+  size             Int?
+  duration         Int?
+  storageProvider  String?
+  storageKey       String?
+  originalFilename String?
+  checksum         String?
+  processingStatus MediaProcessingStatus @default(pending)
+  metadata         Json?
+  dataSourceId     Int?
+  uploadedById     Int?
+  updatedById      Int?
+  deletedAt        DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
+  dataSource                 DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  uploadedBy                 User?                   @relation("MediaUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  updatedBy                  User?                   @relation("MediaUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   lessonCoverImage           Lesson[]                @relation("LessonCoverImage")
   wordAudio                  Word[]                  @relation("WordAudio")
   wordImage                  Word[]                  @relation("WordImage")
@@ -115,40 +534,76 @@ model Media {
   questionGroupAudio         QuestionGroup[]         @relation("QuestionGroupAudio")
   questionGroupImage         QuestionGroup[]         @relation("QuestionGroupImage")
 
-  @@index([type])
+  @@unique([storageProvider, storageKey])
+  @@index([type, processingStatus])
+  @@index([checksum])
+  @@index([dataSourceId])
+  @@index([uploadedById])
+  @@index([deletedAt])
 }
 
 model Level {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  orderIndex Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                Int           @id @default(autoincrement())
+  name              String        @unique
+  code              String        @unique
+  orderIndex        Int           @unique
+  minBand           Int
+  maxBand           Int
+  curriculumVersion String        @default("HSK_3_0")
+  status            ContentStatus @default(draft)
+  dataSourceId      Int?
+  createdById       Int?
+  updatedById       Int?
+  publishedById     Int?
+  publishedAt       DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  lessons    Lesson[]
-  stories    Story[]
-  wordLevels WordLevel[]
-  questions  Question[]
-  tests      Test[]
+  dataSource           DataSource?        @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy            User?              @relation("LevelCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy            User?              @relation("LevelUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy          User?              @relation("LevelPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
+  lessons              Lesson[]
+  stories              Story[]
+  wordLevels           WordLevel[]
+  questions            Question[]
+  tests                Test[]
+  userGoals            UserGoal[]
+  placementSuggestions PlacementAttempt[]
+  learningPlans        LearningPlan[]
 
-  @@index([orderIndex])
+  @@index([status, deletedAt, orderIndex])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
 model Lesson {
-  id           Int           @id @default(autoincrement())
-  levelId      Int
-  title        String
-  description  String?
-  orderIndex   Int
-  slug         String        @unique
-  status       ContentStatus @default(draft)
-  coverImageId Int?
-  deletedAt    DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  levelId       Int
+  title         String
+  description   String?
+  orderIndex    Int
+  slug          String        @unique
+  status        ContentStatus @default(draft)
+  coverImageId  Int?
+  dataSourceId  Int?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   level                  Level                   @relation(fields: [levelId], references: [id])
   coverImage             Media?                  @relation("LessonCoverImage", fields: [coverImageId], references: [id])
+  dataSource             DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy              User?                   @relation("LessonCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy              User?                   @relation("LessonUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy            User?                   @relation("LessonPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   lessonWords            LessonWord[]
   topics                 Topic[]
   stories                Story[]                 @relation("LessonStories")
@@ -156,119 +611,194 @@ model Lesson {
   lessonSentences        LessonSentence[]
   exercises              LessonExercise[]
   pronunciationPractices PronunciationPractice[]
+  learningPlanItems      LearningPlanItem[]
+  learningEvents         LearningEvent[]
 
   @@unique([levelId, orderIndex])
-  @@index([levelId])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([levelId, status, deletedAt, orderIndex])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
 model Topic {
-  id         Int           @id @default(autoincrement())
-  lessonId   Int
-  title      String
-  subtitle   String?
-  type       TopicType     @default(vocabulary)
-  content    Json
-  orderIndex Int
-  isPremium  Boolean       @default(false)
-  isLocked   Boolean       @default(false)
-  status     ContentStatus @default(draft)
-  deletedAt  DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  lessonId      Int
+  title         String
+  subtitle      String?
+  type          TopicType     @default(vocabulary)
+  content       Json
+  orderIndex    Int
+  isPremium     Boolean       @default(false)
+  isLocked      Boolean       @default(false)
+  status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  lesson                 Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  lessonWords            LessonWord[]
-  exercises              LessonExercise[]
-  pronunciationPractices PronunciationPractice[]
+  lesson                  Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  dataSource              DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy               User?                   @relation("TopicCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy               User?                   @relation("TopicUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy             User?                   @relation("TopicPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
+  lessonWords             LessonWord[]
+  exercises               LessonExercise[]
+  pronunciationPractices  PronunciationPractice[]
+  progresses              UserTopicProgress[]
+  currentLessonProgresses Progress[]              @relation("ProgressCurrentTopic")
+  learningEvents          LearningEvent[]
 
   @@unique([lessonId, orderIndex])
-  @@index([lessonId])
+  @@index([lessonId, status, deletedAt, orderIndex])
   @@index([type])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
 model Story {
-  id         Int           @id @default(autoincrement())
-  levelId    Int
-  lessonId   Int?
-  title      String
-  content    Json
-  slug       String        @unique
-  orderIndex Int           @default(0)
-  status     ContentStatus @default(draft)
-  deletedAt  DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  levelId       Int
+  lessonId      Int?
+  title         String
+  content       Json
+  slug          String        @unique
+  orderIndex    Int           @default(0)
+  status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  level  Level   @relation(fields: [levelId], references: [id])
-  lesson Lesson? @relation("LessonStories", fields: [lessonId], references: [id], onDelete: SetNull)
+  level       Level       @relation(fields: [levelId], references: [id])
+  lesson      Lesson?     @relation("LessonStories", fields: [lessonId], references: [id], onDelete: SetNull)
+  dataSource  DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy   User?       @relation("StoryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy   User?       @relation("StoryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy User?       @relation("StoryPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
 
-  @@index([levelId])
-  @@index([lessonId])
-  @@index([status])
-  @@index([deletedAt])
-  @@index([levelId, orderIndex])
+  @@index([levelId, status, deletedAt, orderIndex])
   @@index([lessonId, orderIndex])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
+/// Public prefix indexes on hanzi/pinyinNormalized use partial text_pattern_ops
+/// and are managed by the p0_integrity_hardening SQL migration.
 model Word {
-  id                Int      @id @default(autoincrement())
+  id                Int           @id @default(autoincrement())
   hanzi             String
   traditional       String?
   pinyin            String
+  pinyinNormalized  String
   pinyinTone        String?
   example           String?
-  isPure            Boolean  @default(true)
+  isPure            Boolean       @default(true)
   audioId           Int?
   imageId           Int?
   strokeAnimationId Int?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  status            ContentStatus @default(draft)
+  createdById       Int?
+  updatedById       Int?
+  publishedById     Int?
+  publishedAt       DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   audio                  Media?                  @relation("WordAudio", fields: [audioId], references: [id])
   image                  Media?                  @relation("WordImage", fields: [imageId], references: [id])
   strokeAnimation        Media?                  @relation("WordStrokeAnimation", fields: [strokeAnimationId], references: [id])
+  createdBy              User?                   @relation("WordCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy              User?                   @relation("WordUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy            User?                   @relation("WordPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   meanings               WordMeaning[]
+  sources                WordSource[]
   wordLevels             WordLevel[]
   lessonWords            LessonWord[]
   pronunciationPractices PronunciationPractice[] @relation("PronunciationPracticeWord")
   userWords              UserWord[]
   progresses             UserWordProgress[]
+  reviewCards            ReviewCard[]
 
   @@unique([hanzi, pinyin])
   @@index([hanzi])
-  @@index([pinyin])
-  @@index([isPure])
+  @@index([pinyinNormalized])
+  @@index([isPure, status, deletedAt])
   @@index([audioId])
   @@index([imageId])
   @@index([strokeAnimationId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
+}
+
+model WordSource {
+  id           Int      @id @default(autoincrement())
+  wordId       Int
+  dataSourceId Int
+  sourceKey    String?
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  word       Word       @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  dataSource DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Restrict)
+
+  @@unique([wordId, dataSourceId])
+  @@index([dataSourceId, wordId])
 }
 
 model WordMeaning {
-  id        Int     @id @default(autoincrement())
-  wordId    Int
-  meaningEn String
-  meaningVi String?
+  id                  Int      @id @default(autoincrement())
+  wordId              Int
+  meaningOrder        Int
+  meaningEn           String?
+  meaningVi           String?
+  meaningEnNormalized String?
+  meaningViNormalized String?
+  partOfSpeech        String?
+  usage               String?
+  note                String?
+  dataSourceId        Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  word       Word        @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  dataSource DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
 
+  @@unique([wordId, meaningOrder])
   @@index([wordId])
+  @@index([meaningEnNormalized])
+  @@index([meaningViNormalized])
+  @@index([dataSourceId])
 }
 
 model WordLevel {
-  id      Int @id @default(autoincrement())
-  wordId  Int
-  levelId Int
+  id           Int  @id @default(autoincrement())
+  wordId       Int
+  levelId      Int
+  dataSourceId Int?
 
-  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  word  Word  @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  level      Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  word       Word        @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  dataSource DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
 
   @@unique([wordId, levelId])
-  @@index([wordId])
-  @@index([levelId])
+  @@index([levelId, wordId])
+  @@index([dataSourceId])
 }
 
 model LessonWord {
@@ -284,23 +814,33 @@ model LessonWord {
   examples LessonWordExample[]
 
   @@unique([lessonId, wordId])
-  @@index([lessonId])
   @@index([topicId])
   @@index([wordId])
   @@index([lessonId, orderIndex])
 }
 
 model Sentence {
-  id        Int      @id @default(autoincrement())
-  hanzi     String
-  pinyin    String?
-  meaningEn String?
-  meaningVi String?
-  audioId   Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int           @id @default(autoincrement())
+  hanzi         String
+  pinyin        String?
+  meaningEn     String?
+  meaningVi     String?
+  audioId       Int?
+  status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   audio                  Media?                  @relation("SentenceAudio", fields: [audioId], references: [id])
+  dataSource             DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy              User?                   @relation("SentenceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy              User?                   @relation("SentenceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy            User?                   @relation("SentencePublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   lessonWordExamples     LessonWordExample[]
   lessons                LessonSentence[]
   pronunciationPractices PronunciationPractice[] @relation("PronunciationPracticeSentence")
@@ -308,6 +848,11 @@ model Sentence {
   @@index([hanzi])
   @@index([pinyin])
   @@index([audioId])
+  @@index([status, deletedAt])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
 model LessonWordExample {
@@ -322,7 +867,6 @@ model LessonWordExample {
   sentence   Sentence   @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
 
   @@unique([lessonWordId, sentenceId])
-  @@index([lessonWordId])
   @@index([sentenceId])
   @@index([lessonWordId, orderIndex])
 }
@@ -337,7 +881,6 @@ model LessonSentence {
   sentence Sentence @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, sentenceId])
-  @@index([lessonId])
   @@index([sentenceId])
   @@index([lessonId, orderIndex])
 }
@@ -351,40 +894,231 @@ model LessonExercise {
   content     Json
   answer      Json
   explanation String?
+  version     Int           @default(1)
   orderIndex  Int
   status      ContentStatus @default(draft)
   deletedAt   DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  lesson   Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  topic    Topic?                  @relation(fields: [topicId], references: [id], onDelete: SetNull)
-  attempts LessonExerciseAttempt[]
+  lesson            Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  topic             Topic?                  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  attempts          LessonExerciseAttempt[]
+  currentProgresses Progress[]              @relation("ProgressCurrentExercise")
+  learningEvents    LearningEvent[]
 
-  @@index([lessonId])
   @@index([topicId])
   @@index([type])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([status, deletedAt])
   @@index([lessonId, orderIndex])
 }
 
 model LessonExerciseAttempt {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  exerciseId Int
-  answer     Json
-  isCorrect  Boolean?
-  score      Int?
-  detailJson Json?
-  createdAt  DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  exerciseId      Int
+  attemptNumber   Int
+  answer          Json
+  contentSnapshot Json
+  exerciseVersion Int       @default(1)
+  isCorrect       Boolean?
+  score           Int?
+  durationSeconds Int?
+  detailJson      Json?
+  feedbackVersion String?
+  idempotencyKey  String?
+  submittedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exercise LessonExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  exercise       LessonExercise  @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  learningEvents LearningEvent[]
 
-  @@index([userId])
+  @@unique([userId, exerciseId, attemptNumber])
+  @@unique([userId, idempotencyKey])
+  @@index([exerciseId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Progress {
+  id                Int            @id @default(autoincrement())
+  userId            Int
+  lessonId          Int
+  status            ProgressStatus @default(not_started)
+  score             Int?
+  completionPercent Int            @default(0)
+  currentTopicId    Int?
+  currentExerciseId Int?
+  timeSpentSeconds  Int            @default(0)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  lastActivityAt    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  lesson          Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentTopic    Topic?          @relation("ProgressCurrentTopic", fields: [currentTopicId], references: [id], onDelete: SetNull)
+  currentExercise LessonExercise? @relation("ProgressCurrentExercise", fields: [currentExerciseId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, lessonId])
+  @@index([userId, status, lastActivityAt])
+  @@index([lessonId])
+  @@index([currentTopicId])
+  @@index([currentExerciseId])
+}
+
+model UserTopicProgress {
+  id                Int            @id @default(autoincrement())
+  userId            Int
+  topicId           Int
+  status            ProgressStatus @default(not_started)
+  completionPercent Int            @default(0)
+  timeSpentSeconds  Int            @default(0)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  lastActivityAt    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, status, lastActivityAt])
+  @@index([topicId])
+}
+
+model LearningEvent {
+  id             BigInt            @id @default(autoincrement())
+  userId         Int
+  type           LearningEventType
+  lessonId       Int?
+  topicId        Int?
+  exerciseId     Int?
+  attemptId      Int?
+  resourceType   String?
+  resourceId     Int?
+  idempotencyKey String
+  metadata       Json?
+  occurredAt     DateTime          @default(now())
+  createdAt      DateTime          @default(now())
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lesson   Lesson?                @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  topic    Topic?                 @relation(fields: [topicId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  exercise LessonExercise?        @relation(fields: [exerciseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  attempt  LessonExerciseAttempt? @relation(fields: [attemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, occurredAt])
+  @@index([userId, type, occurredAt])
+  @@index([lessonId])
+  @@index([topicId])
   @@index([exerciseId])
-  @@index([createdAt])
+  @@index([attemptId])
+}
+
+model UserWord {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  wordId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wordId])
+  @@index([wordId])
+}
+
+/// Legacy compatibility summary only. ReviewCard is the P0 SRS source of truth.
+model UserWordProgress {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  wordId    Int
+  status    WordProgressStatus
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wordId])
+  @@index([wordId])
+  @@index([userId, status])
+}
+
+model ReviewCard {
+  id               Int             @id @default(autoincrement())
+  userId           Int
+  wordId           Int
+  state            ReviewCardState @default(new)
+  dueAt            DateTime        @default(now())
+  intervalDays     Int             @default(0)
+  easeFactor       Float           @default(2.5)
+  repetitions      Int             @default(0)
+  lapses           Int             @default(0)
+  lastReviewedAt   DateTime?
+  schedulerVersion String          @default("sm2-p0-v1")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  word   Word          @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  events ReviewEvent[]
+
+  @@unique([userId, wordId])
+  @@index([userId, state, dueAt])
+  @@index([wordId])
+}
+
+model ReviewSession {
+  id             Int                 @id @default(autoincrement())
+  userId         Int
+  status         ReviewSessionStatus @default(in_progress)
+  mode           String
+  plannedCount   Int                 @default(0)
+  reviewedCount  Int                 @default(0)
+  idempotencyKey String?
+  summary        Json?
+  startedAt      DateTime            @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  events ReviewEvent[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, status, startedAt])
+}
+
+model ReviewEvent {
+  id                   BigInt          @id @default(autoincrement())
+  cardId               Int
+  sessionId            Int?
+  grade                ReviewGrade
+  previousState        ReviewCardState
+  nextState            ReviewCardState
+  previousDueAt        DateTime
+  nextDueAt            DateTime
+  previousIntervalDays Int
+  nextIntervalDays     Int
+  previousEaseFactor   Float
+  nextEaseFactor       Float
+  durationMs           Int?
+  idempotencyKey       String
+  reviewedAt           DateTime        @default(now())
+  createdAt            DateTime        @default(now())
+
+  card    ReviewCard     @relation(fields: [cardId], references: [id], onDelete: Restrict)
+  session ReviewSession? @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([cardId, idempotencyKey])
+  @@index([cardId, reviewedAt])
+  @@index([sessionId, reviewedAt])
 }
 
 model PronunciationPractice {
@@ -410,13 +1144,11 @@ model PronunciationPractice {
   audio    Media?                 @relation("PronunciationPracticeAudio", fields: [audioId], references: [id])
   attempts PronunciationAttempt[]
 
-  @@index([lessonId])
   @@index([topicId])
   @@index([wordId])
   @@index([sentenceId])
   @@index([targetType])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([status, deletedAt])
   @@index([lessonId, orderIndex])
 }
 
@@ -429,13 +1161,108 @@ model PronunciationAttempt {
   detailJson Json?
   createdAt  DateTime @default(now())
 
-  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   practice PronunciationPractice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
   audio    Media?                @relation("PronunciationAttemptAudio", fields: [audioId], references: [id])
 
-  @@index([userId])
+  @@index([userId, createdAt])
   @@index([practiceId])
-  @@index([createdAt])
+}
+
+model ContentRevision {
+  id          Int               @id @default(autoincrement())
+  entityType  ContentEntityType
+  entityId    Int
+  revision    Int
+  snapshot    Json
+  contentHash String?
+  authorId    Int?
+  createdAt   DateTime          @default(now())
+
+  author  User?           @relation("ContentRevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  reviews ContentReview[]
+
+  @@unique([entityType, entityId, revision])
+  @@index([entityType, entityId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model ContentReview {
+  id         Int                   @id @default(autoincrement())
+  revisionId Int
+  reviewerId Int?
+  decision   ContentReviewDecision
+  note       String?
+  createdAt  DateTime              @default(now())
+
+  revision ContentRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  reviewer User?           @relation("ContentReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([revisionId, createdAt])
+  @@index([reviewerId, createdAt])
+}
+
+model AuditLog {
+  id            BigInt   @id @default(autoincrement())
+  actorId       Int?
+  action        String
+  targetType    String
+  targetId      String?
+  correlationId String?
+  beforeSummary Json?
+  afterSummary  Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([correlationId])
+}
+
+model ImportJob {
+  id             Int               @id @default(autoincrement())
+  dataSourceId   Int?
+  createdById    Int?
+  entityType     ContentEntityType
+  status         ImportJobStatus   @default(pending)
+  idempotencyKey String            @unique
+  fileName       String
+  fileChecksum   String
+  totalRows      Int               @default(0)
+  validRows      Int               @default(0)
+  errorRows      Int               @default(0)
+  importedRows   Int               @default(0)
+  summary        Json?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  dataSource DataSource?      @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy  User?            @relation("ImportJobCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  rowErrors  ImportRowError[]
+
+  @@index([status, createdAt])
+  @@index([dataSourceId])
+  @@index([createdById, createdAt])
+}
+
+model ImportRowError {
+  id                BigInt   @id @default(autoincrement())
+  importJobId       Int
+  rowNumber         Int
+  errorCode         String
+  message           String
+  normalizedPayload Json?
+  createdAt         DateTime @default(now())
+
+  importJob ImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+
+  @@unique([importJobId, rowNumber, errorCode])
+  @@index([importJobId, rowNumber])
 }
 
 model Question {
@@ -445,49 +1272,105 @@ model Question {
   skill         Skill
   audioId       Int?
   imageId       Int?
-  groupId       Int?
   answers       Json
   correctAnswer Json
   explanation   String?
   levelId       Int
+  difficulty    Int?
+  objective     String?
+  version       Int           @default(1)
+  contentHash   String?
   status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
   deletedAt     DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   level         Level          @relation(fields: [levelId], references: [id])
   audio         Media?         @relation("QuestionAudio", fields: [audioId], references: [id])
-  group         QuestionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   image         Media?         @relation("QuestionImage", fields: [imageId], references: [id])
+  dataSource    DataSource?    @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy     User?          @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy     User?          @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy   User?          @relation("QuestionPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   testQuestions TestQuestion[]
+  tags          QuestionTag[]
+  examAnswers   ExamAnswer[]
 
-  @@index([groupId])
-  @@index([levelId])
-  @@index([skill])
+  @@index([levelId, skill, status, deletedAt])
   @@index([type])
-  @@index([status])
-  @@index([deletedAt])
-  @@index([levelId, skill])
+  @@index([difficulty])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions QuestionTag[]
+}
+
+model QuestionTag {
+  questionId Int
+  tagId      Int
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, tagId])
+  @@index([tagId, questionId])
 }
 
 model Test {
-  id        Int           @id @default(autoincrement())
-  levelId   Int
-  title     String
-  duration  Int
-  status    ContentStatus @default(draft)
-  deletedAt DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id             Int           @id @default(autoincrement())
+  levelId        Int
+  title          String
+  slug           String?       @unique
+  instruction    String?
+  duration       Int
+  version        Int           @default(1)
+  scoringVersion String        @default("hsk-p0-v1")
+  attemptLimit   Int?
+  passScore      Int?
+  availableFrom  DateTime?
+  availableTo    DateTime?
+  status         ContentStatus @default(draft)
+  dataSourceId   Int?
+  createdById    Int?
+  updatedById    Int?
+  publishedById  Int?
+  publishedAt    DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  results   Result[]
-  level     Level          @relation(fields: [levelId], references: [id])
-  questions TestQuestion[]
-  sections  TestSection[]
+  results     Result[]
+  level       Level          @relation(fields: [levelId], references: [id])
+  dataSource  DataSource?    @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy   User?          @relation("TestCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy   User?          @relation("TestUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy User?          @relation("TestPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
+  questions   TestQuestion[]
+  sections    TestSection[]
+  attempts    ExamAttempt[]
 
-  @@index([levelId])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([levelId, status, deletedAt])
+  @@index([availableFrom, availableTo])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
 }
 
 model TestSection {
@@ -501,16 +1384,18 @@ model TestSection {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  test   Test            @relation(fields: [testId], references: [id], onDelete: Cascade)
-  groups QuestionGroup[]
+  test       Test                    @relation(fields: [testId], references: [id], onDelete: Cascade)
+  groups     QuestionGroup[]
+  placements TestQuestionPlacement[]
 
   @@unique([testId, orderIndex])
-  @@index([testId])
+  @@unique([id, testId])
   @@index([skill])
 }
 
 model QuestionGroup {
   id          Int      @id @default(autoincrement())
+  testId      Int
   sectionId   Int
   title       String?
   instruction String?
@@ -521,13 +1406,14 @@ model QuestionGroup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  section   TestSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  audio     Media?      @relation("QuestionGroupAudio", fields: [audioId], references: [id])
-  image     Media?      @relation("QuestionGroupImage", fields: [imageId], references: [id])
-  questions Question[]
+  section    TestSection             @relation(fields: [sectionId, testId], references: [id, testId], onDelete: Cascade)
+  audio      Media?                  @relation("QuestionGroupAudio", fields: [audioId], references: [id])
+  image      Media?                  @relation("QuestionGroupImage", fields: [imageId], references: [id])
+  placements TestQuestionPlacement[]
 
-  @@index([sectionId])
-  @@index([sectionId, orderIndex])
+  @@unique([sectionId, orderIndex])
+  @@unique([id, sectionId, testId])
+  @@index([testId])
   @@index([audioId])
   @@index([imageId])
 }
@@ -538,30 +1424,135 @@ model TestQuestion {
   questionId Int
   orderIndex Int
 
-  question Question @relation(fields: [questionId], references: [id])
-  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question  Question               @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  test      Test                   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  placement TestQuestionPlacement?
 
   @@unique([testId, questionId])
-  @@index([testId])
+  @@unique([testId, orderIndex])
+  @@unique([id, testId])
   @@index([questionId])
-  @@index([testId, orderIndex])
+}
+
+model TestQuestionPlacement {
+  id             Int  @id @default(autoincrement())
+  testQuestionId Int  @unique
+  testId         Int
+  sectionId      Int
+  groupId        Int?
+  orderIndex     Int
+
+  testQuestion TestQuestion   @relation(fields: [testQuestionId, testId], references: [id, testId], onDelete: Cascade)
+  section      TestSection    @relation(fields: [sectionId, testId], references: [id, testId], onDelete: Restrict)
+  group        QuestionGroup? @relation(fields: [groupId, sectionId, testId], references: [id, sectionId, testId], onDelete: Restrict)
+
+  @@unique([testQuestionId, testId])
+  @@unique([testId, orderIndex])
+  @@index([sectionId, orderIndex])
+  @@index([groupId, orderIndex])
+}
+
+model ExamAttempt {
+  id                Int               @id @default(autoincrement())
+  userId            Int
+  testId            Int
+  status            ExamAttemptStatus @default(in_progress)
+  startedAt         DateTime          @default(now())
+  expiresAt         DateTime
+  submittedAt       DateTime?
+  remainingSeconds  Int
+  score             Int?
+  maxScore          Int?
+  snapshotVersion   Int               @default(1)
+  scoringVersion    String
+  idempotencyKey    String
+  invalidatedReason String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  test     Test                 @relation(fields: [testId], references: [id], onDelete: Restrict)
+  snapshot ExamAttemptSnapshot?
+  answers  ExamAnswer[]
+  events   ExamAttemptEvent[]
+  result   Result?
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, status, expiresAt])
+  @@index([testId, status])
+}
+
+model ExamAttemptSnapshot {
+  id              Int      @id @default(autoincrement())
+  attemptId       Int      @unique
+  testVersion     Int
+  snapshotVersion Int
+  contentHash     String
+  payload         Json
+  createdAt       DateTime @default(now())
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+}
+
+model ExamAnswer {
+  id                  Int       @id @default(autoincrement())
+  attemptId           Int
+  snapshotQuestionKey String
+  questionId          Int?
+  answer              Json
+  isFlagged           Boolean   @default(false)
+  answeredAt          DateTime?
+  lastSavedAt         DateTime  @default(now())
+  version             Int       @default(1)
+  score               Int?
+  detailJson          Json?
+  saveIdempotencyKey  String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  attempt  ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question?   @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, snapshotQuestionKey])
+  @@unique([attemptId, saveIdempotencyKey])
+  @@index([questionId])
+  @@index([attemptId, lastSavedAt])
+}
+
+model ExamAttemptEvent {
+  id             BigInt               @id @default(autoincrement())
+  attemptId      Int
+  type           ExamAttemptEventType
+  idempotencyKey String?
+  metadata       Json?
+  occurredAt     DateTime             @default(now())
+  createdAt      DateTime             @default(now())
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([attemptId, idempotencyKey])
+  @@index([attemptId, occurredAt])
 }
 
 model Result {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  testId     Int
-  score      Int
-  detailJson Json
-  createdAt  DateTime @default(now())
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  testId         Int
+  attemptId      Int?      @unique
+  score          Int
+  awardedBand    Int?
+  scoringVersion String?
+  detailJson     Json
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   test        Test               @relation(fields: [testId], references: [id])
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  attempt     ExamAttempt?       @relation(fields: [attemptId], references: [id], onDelete: Restrict)
   skillScores ResultSkillScore[]
 
-  @@index([userId])
-  @@index([testId])
-  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([testId, createdAt])
 }
 
 model ResultSkillScore {
@@ -574,55 +1565,5 @@ model ResultSkillScore {
   result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
 
   @@unique([resultId, skill])
-  @@index([resultId])
   @@index([skill])
-}
-
-model UserWord {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  wordId    Int
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, wordId])
-  @@index([userId])
-  @@index([wordId])
-}
-
-model Progress {
-  id        Int            @id @default(autoincrement())
-  userId    Int
-  lessonId  Int
-  status    ProgressStatus @default(not_started)
-  score     Int?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, lessonId])
-  @@index([userId])
-  @@index([lessonId])
-  @@index([status])
-}
-
-model UserWordProgress {
-  id        Int                @id @default(autoincrement())
-  userId    Int
-  wordId    Int
-  status    WordProgressStatus
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, wordId])
-  @@index([userId])
-  @@index([wordId])
-  @@index([status])
 }

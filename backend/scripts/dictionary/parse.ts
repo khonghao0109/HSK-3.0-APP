@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { normalizePinyin } from '../../src/common/utils/normalize-pinyin';
 
 type Word = {
   hanzi: string;
@@ -29,7 +30,7 @@ function main() {
 
     const pinyinTone = pinyinRaw.toLowerCase().trim(); // 🔥 raw giữ nguyên
 
-    const pinyin = pinyinRaw.replace(/\d/g, '').toLowerCase().trim();
+    const pinyin = normalizePinyin(pinyinRaw);
 
     const meanings = meaningRaw
       .split('/')

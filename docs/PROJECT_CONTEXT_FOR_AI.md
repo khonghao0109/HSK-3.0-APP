@@ -17,7 +17,7 @@ Tai lieu duoc viet theo trang thai repo hien tai tai `hsk-system/`.
 
 ### 2.1 Bai toan
 
-Xay dung nen tang on thi HSK 1-9 (phien ban 3.0) cho:
+Xay dung nen tang on thi HSK 1-9 (phien ban 3.0) theo 7 nhom curriculum `HSK1`...`HSK6`, `HSK7_9` cho:
 
 - Hoc sinh/sinh vien/nguoi di lam hoc tieng Trung.
 - Admin quan tri noi dung, nguoi dung, de thi, tai lieu, bao cao.
@@ -53,7 +53,7 @@ Xay dung nen tang on thi HSK 1-9 (phien ban 3.0) cho:
 ## 4. Luong nghiep vu cot loi
 
 1. Dang ky/Dang nhap.
-2. Chon cap do HSK (1-9).
+2. Chon nhom curriculum HSK1-HSK6 hoac HSK7_9 (band 7-9).
 3. Chon bai hoc/chu de/cau chuyen.
 4. Hoc va luyen tap.
 5. Lam bai thi.
@@ -145,6 +145,13 @@ File nguon: `backend/prisma/schema.prisma`
 - `Progress`: tien do hoc theo lesson
 - `UserWordProgress`: trang thai hoc tu vung
 
+Schema P0 moi bo sung:
+
+- Identity/privacy: `UserProfile`, `UserSession`, token hash, `UserGoal`, `PlacementAttempt`, `LearningPlan`, `Consent`, export/delete request.
+- CMS/provenance: `DataSource`, `WordSource`, `ContentRevision`, `ContentReview`, `AuditLog`, `ImportJob`, `ImportRowError`.
+- Learning/SRS: progress chi tiet, `UserTopicProgress`, `LearningEvent`, `ReviewCard`, `ReviewSession`, `ReviewEvent`.
+- Exam: `TestQuestionPlacement`, `ExamAttempt`, `ExamAnswer`, `ExamAttemptSnapshot`, `ExamAttemptEvent`.
+
 ### Enums
 
 - `Role`: `user`, `admin`
@@ -152,6 +159,8 @@ File nguon: `backend/prisma/schema.prisma`
 - `Skill`: `listening`, `reading`, `writing`
 - `ProgressStatus`: `not_started`, `learning`, `done`
 - `WordProgressStatus`: `learning`, `done`
+
+`UserWordProgress` duoc giu cho compatibility/summary; `ReviewCard` la source of truth duy nhat cho scheduler SRS P0.
 
 ## 6.4 API contract
 
@@ -342,3 +351,27 @@ Neu ban la AI duoc giao tiep tuc du an nay, thu tu uu tien:
 5. Ket noi frontend den API.
 6. Mo rong AI assistant qua `backend/modules/ai/chat` -> `ai/services/rag-api`.
 
+## 15. P0 schema baseline + integrity hardening — 10/08/2026
+
+- Migration chain: 11 migration, gom 5 migration lich su, P0-00...P0-04 va forward migration `p0_integrity_hardening`.
+- Schema sau rehearsal: 57 business tables, 138 foreign keys, 72 CHECK constraints va 24 trigger nghiep vu.
+- `Level` co stable code; `HSK7_9` dai dien band 7-9, khong tach thanh ba level o P0.
+- Email duoc canonicalize `trim().toLowerCase()` trong Auth runtime va unique theo `lower(email)` tai PostgreSQL.
+- Token session/reset/verification chi co cot `tokenHash`; khong co raw token column.
+- Dictionary legacy duoc backfill provenance: CC-CEDICT co source/license/hash da xac minh tu header; cac HSK word list co hash nhung license van phai duoc curriculum owner xac minh truoc production.
+- 200.156 meaning hien co duoc giu nguyen va co thu tu/normalized English/provenance; khong tu dong dich tieng Viet.
+- Cross-table trigger bao ve Story-Lesson-Level, Topic-Lesson children va pronunciation target.
+- Target/awarded band phai nam trong Level range; ReviewEvent card/session phai cung user.
+- Immutable fact dung FK `RESTRICT`; account deletion la lifecycle + anonymization theo ADR-001, khong hard-delete User/Lesson/ReviewSession.
+- Exam snapshot va append-only events duoc bao ve; placement cau hoi nam tai `TestQuestionPlacement`, khong con nam tren `Question`.
+- Public levels/words chi tra `published` va chua soft-delete; pinyin lookup dung `pinyinNormalized` va partial prefix index.
+- Database local data khong duoc dung cho destructive/E2E test; `TEST_DATABASE_URL` phai tro den PostgreSQL disposable.
+
+Tai lieu chi tiet:
+
+- `docs/database/P0_DATA_DICTIONARY.md`
+- `docs/database/P0_ERD.md`
+- `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
+- `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`
+
+Schema da san sang cho runtime P0, nhung onboarding/CMS/SRS/exam API va frontend van chua duoc coi la hoan thanh.

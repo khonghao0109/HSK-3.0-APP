@@ -14,7 +14,7 @@ export class LessonDetailTopicDto {
 }
 
 export class LessonDetailWordMeaningDto {
-  en!: string;
+  en!: string | null;
   vi!: string | null;
 }
 

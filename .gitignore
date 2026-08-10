@@ -10,6 +10,13 @@ build/
 coverage/
 **/coverage/
 .nyc_output/
+.next/
+**/.next/
+out/
+**/out/
+.turbo/
+**/.turbo/
+*.tsbuildinfo
 
 # Env files
 .env
@@ -33,6 +40,21 @@ lerna-debug.log*
 *.seed
 .temp/
 .tmp/
+.cache/
+**/.cache/
+
+# Python / AI runtime
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+**/.venv/
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
 
 # IDE/editor
 .vscode/
@@ -45,5 +67,23 @@ Thumbs.db
 
 # Prisma / report artifacts
 report.*.*.*.*.json
-API test/  
+/API test/
 .codegraph/
+
+# Local project skills (personal AI workspace)
+/skill/
+
+# Runtime uploads and logs; keep directory skeletons only
+/backend/uploads/*
+!/backend/uploads/audio/
+/backend/uploads/audio/*
+!/backend/uploads/audio/.gitkeep
+!/backend/uploads/images/
+/backend/uploads/images/*
+!/backend/uploads/images/.gitkeep
+!/backend/uploads/documents/
+/backend/uploads/documents/*
+!/backend/uploads/documents/.gitkeep
+!/backend/logs/
+/backend/logs/*
+!/backend/logs/.gitkeep

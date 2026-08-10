@@ -5,7 +5,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { normalizePinyin } from '../src/common/utils/normalize-pinyin';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
 type LessonDetailResponseBody = {
   success: boolean;
@@ -29,7 +31,7 @@ type LessonDetailResponseBody = {
       pinyin: string;
       pinyinTone: string | null;
       meanings: Array<{
-        en: string;
+        en: string | null;
         vi: string | null;
       }>;
     }>;
@@ -47,18 +49,23 @@ describe('Learning Lesson Detail E2E', () => {
   let prisma: PrismaService;
 
   const suffix = Date.now();
-  const levelName = `E2E HSK Lesson Detail ${suffix}`;
   const lessonSlug = `e2e-lesson-detail-${suffix}`;
   const storySlug = `e2e-story-detail-${suffix}`;
   const hanzi = `测${suffix}`;
   const pinyin = `ce ${suffix}`;
+  const publicVisibilityPinyin = 'ke jian gong kai';
+  const draftVisibilityPinyin = 'ke jian cao gao';
+  const deletedVisibilityPinyin = 'ke jian shan chu';
 
   let levelId: number;
+  let draftLevelId: number;
+  let deletedLevelId: number;
   let lessonId: number;
   let draftLessonId: number;
-  let wordId: number;
 
   beforeAll(async () => {
+    assertDisposableTestDatabase();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -76,16 +83,69 @@ describe('Learning Lesson Detail E2E', () => {
 
     prisma = app.get(PrismaService);
 
-    const level = await prisma.level.create({
-      data: {
-        name: levelName,
-        orderIndex: 9000,
+    const level = await prisma.level.upsert({
+      where: { code: 'HSK1' },
+      update: {
+        status: 'published',
+        publishedAt: new Date(),
+        deletedAt: null,
+      },
+      create: {
+        name: 'HSK1',
+        code: 'HSK1',
+        orderIndex: 1,
+        minBand: 1,
+        maxBand: 1,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        publishedAt: new Date(),
       },
       select: {
         id: true,
       },
     });
     levelId = level.id;
+
+    const draftLevel = await prisma.level.upsert({
+      where: { code: 'HSK2' },
+      update: {
+        status: 'draft',
+        publishedAt: null,
+        deletedAt: null,
+      },
+      create: {
+        name: 'HSK2',
+        code: 'HSK2',
+        orderIndex: 2,
+        minBand: 2,
+        maxBand: 2,
+        curriculumVersion: 'HSK_3_0',
+      },
+      select: { id: true },
+    });
+    draftLevelId = draftLevel.id;
+
+    const deletedLevel = await prisma.level.upsert({
+      where: { code: 'HSK3' },
+      update: {
+        status: 'published',
+        publishedAt: new Date(),
+        deletedAt: new Date(),
+      },
+      create: {
+        name: 'HSK3',
+        code: 'HSK3',
+        orderIndex: 3,
+        minBand: 3,
+        maxBand: 3,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        publishedAt: new Date(),
+        deletedAt: new Date(),
+      },
+      select: { id: true },
+    });
+    deletedLevelId = deletedLevel.id;
 
     const lesson = await prisma.lesson.create({
       data: {
@@ -217,12 +277,18 @@ describe('Learning Lesson Detail E2E', () => {
       data: {
         hanzi,
         pinyin,
+        pinyinNormalized: normalizePinyin(pinyin),
         pinyinTone: `ce4 ${suffix}`,
         isPure: true,
+        status: 'published',
+        publishedAt: new Date(),
         meanings: {
           create: {
+            meaningOrder: 1,
             meaningEn: 'test word',
+            meaningEnNormalized: 'test word',
             meaningVi: 'tu kiem thu',
+            meaningViNormalized: 'tu kiem thu',
           },
         },
         wordLevels: {
@@ -235,59 +301,54 @@ describe('Learning Lesson Detail E2E', () => {
         id: true,
       },
     });
-    wordId = word.id;
-
     await prisma.lessonWord.create({
       data: {
         lessonId,
-        wordId,
+        wordId: word.id,
       },
     });
+
+    for (const visibilityWord of [
+      {
+        hanzi: '可见性公开',
+        pinyin: publicVisibilityPinyin,
+        status: 'published' as const,
+        deletedAt: null,
+      },
+      {
+        hanzi: '可见性草稿',
+        pinyin: draftVisibilityPinyin,
+        status: 'draft' as const,
+        deletedAt: null,
+      },
+      {
+        hanzi: '可见性删除',
+        pinyin: deletedVisibilityPinyin,
+        status: 'published' as const,
+        deletedAt: new Date(),
+      },
+    ]) {
+      await prisma.word.create({
+        data: {
+          ...visibilityWord,
+          pinyinNormalized: normalizePinyin(visibilityWord.pinyin),
+          isPure: true,
+          ...(visibilityWord.status === 'published'
+            ? { publishedAt: new Date() }
+            : {}),
+          meanings: {
+            create: {
+              meaningOrder: 1,
+              meaningEn: 'visibility fixture',
+              meaningEnNormalized: 'visibility fixture',
+            },
+          },
+        },
+      });
+    }
   });
 
   afterAll(async () => {
-    await prisma.lessonWord.deleteMany({
-      where: {
-        lessonId,
-      },
-    });
-    await prisma.wordLevel.deleteMany({
-      where: {
-        wordId,
-      },
-    });
-    await prisma.wordMeaning.deleteMany({
-      where: {
-        wordId,
-      },
-    });
-    await prisma.topic.deleteMany({
-      where: {
-        lesson: {
-          levelId,
-        },
-      },
-    });
-    await prisma.story.deleteMany({
-      where: {
-        levelId,
-      },
-    });
-    await prisma.lesson.deleteMany({
-      where: {
-        levelId,
-      },
-    });
-    await prisma.word.deleteMany({
-      where: {
-        id: wordId,
-      },
-    });
-    await prisma.level.deleteMany({
-      where: {
-        id: levelId,
-      },
-    });
     await app.close();
   });
 
@@ -303,6 +364,30 @@ describe('Learning Lesson Detail E2E', () => {
         (level: { id: number; name: string }) => level.id === levelId,
       ),
     ).toBe(true);
+    expect(
+      response.body.data.some(
+        (level: { id: number }) => level.id === draftLevelId,
+      ),
+    ).toBe(false);
+    expect(
+      response.body.data.some(
+        (level: { id: number }) => level.id === deletedLevelId,
+      ),
+    ).toBe(false);
+  });
+
+  it('GET /dictionary uses normalized pinyin and hides non-public words', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/dictionary')
+      .query({ query: 'Ke3 Jian4' })
+      .expect(200);
+
+    const pinyins = (response.body as Array<{ pinyin: string }>).map(
+      (word) => word.pinyin,
+    );
+    expect(pinyins).toContain(publicVisibilityPinyin);
+    expect(pinyins).not.toContain(draftVisibilityPinyin);
+    expect(pinyins).not.toContain(deletedVisibilityPinyin);
   });
 
   it('GET /lessons?levelId returns lessons by level', async () => {
@@ -514,8 +599,8 @@ describe('Learning Lesson Detail E2E', () => {
     expect(body.data.title).toBe('E2E Lesson Detail');
     expect(body.data.level).toEqual({
       id: levelId,
-      name: levelName,
-      orderIndex: 9000,
+      name: 'HSK1',
+      orderIndex: 1,
     });
 
     expect(body.data.topics).toHaveLength(2);
@@ -558,8 +643,8 @@ describe('Learning Lesson Detail E2E', () => {
       title: 'E2E Lesson Detail',
       level: {
         id: levelId,
-        name: levelName,
-        orderIndex: 9000,
+        name: 'HSK1',
+        orderIndex: 1,
       },
     });
     expect(body.data.topics).toHaveLength(2);

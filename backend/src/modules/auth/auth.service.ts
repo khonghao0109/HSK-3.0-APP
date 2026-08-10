@@ -26,8 +26,9 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
+    const email = this.normalizeEmail(registerDto.email);
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: registerDto.email },
+      where: { email },
       select: { id: true },
     });
 
@@ -40,7 +41,7 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        email: registerDto.email,
+        email,
         password: passwordHash,
         name: registerDto.name,
       },
@@ -61,8 +62,9 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    const email = this.normalizeEmail(loginDto.email);
     const user = await this.prisma.user.findUnique({
-      where: { email: loginDto.email },
+      where: { email },
       select: {
         id: true,
         email: true,
@@ -71,11 +73,16 @@ export class AuthService {
         name: true,
         failedLoginAttempts: true,
         lockUntil: true,
+        status: true,
       },
     });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.status !== 'active') {
+      throw new ForbiddenException('Account is not active.');
     }
 
     if (user.lockUntil && user.lockUntil > new Date()) {
@@ -108,23 +115,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.failedLoginAttempts > 0 || user.lockUntil) {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: 0,
-          lockUntil: null,
-        },
-      });
-    }
+    const upgradedPassword = !user.password.startsWith('$argon2id$')
+      ? await this.hashPassword(loginDto.password)
+      : undefined;
 
-    if (!user.password.startsWith('$argon2id$')) {
-      const upgradedHash = await this.hashPassword(loginDto.password);
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { password: upgradedHash },
-      });
-    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts: 0,
+        lockUntil: null,
+        lastLoginAt: new Date(),
+        ...(upgradedPassword ? { password: upgradedPassword } : {}),
+      },
+    });
 
     const accessToken = await this.signToken(user.id, user.email, user.role);
 
@@ -143,6 +146,10 @@ export class AuthService {
     if (WEAK_PASSWORDS.has(password.toLowerCase())) {
       throw new BadRequestException('Password is too weak.');
     }
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 
   private getPepper(): string {

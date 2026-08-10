@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { normalizePinyin } from '../../common/utils/normalize-pinyin';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -7,32 +8,46 @@ export class DictionaryService {
 
   async search(query: string) {
     if (!query) return [];
-    const normalizedQuery = query.trim();
-    if (!normalizedQuery) return [];
+    const displayQuery = query.trim();
+    if (!displayQuery) return [];
 
-    // FIX 1: Cho phép khoảng trắng để search multi-word pinyin như "ni hao", "xue xi"
-    const isValid = /^[a-zA-Z\u4e00-\u9fa5 ]+$/.test(normalizedQuery);
+    const isValid = /^[a-zA-Z1-5:\u00fc\u00dc\u3400-\u9fff' ]+$/.test(
+      displayQuery,
+    );
     if (!isValid) return [];
+
+    const isHanziQuery = /[\u3400-\u9fff]/.test(displayQuery);
+    const publicVisibility = {
+      status: 'published' as const,
+      deletedAt: null,
+      isPure: true,
+    };
 
     const words = await this.prisma.word.findMany({
       where: {
-        AND: [
-          {
-            OR: [
-              { hanzi: { startsWith: normalizedQuery } },
-              { pinyin: { startsWith: normalizedQuery.toLowerCase() } },
-            ],
-          },
-          { isPure: true },
-          { meanings: { some: {} } },
-        ],
+        ...publicVisibility,
+        ...(isHanziQuery
+          ? { hanzi: { startsWith: displayQuery } }
+          : {
+              pinyinNormalized: {
+                startsWith: normalizePinyin(displayQuery),
+              },
+            }),
+        meanings: { some: {} },
       },
       take: 20,
       include: {
-        meanings: true,
+        meanings: {
+          orderBy: { meaningOrder: 'asc' },
+        },
         wordLevels: {
+          where: {
+            level: {
+              status: 'published',
+              deletedAt: null,
+            },
+          },
           include: { level: true },
-          // FIX 2: Sort theo orderIndex để lấy đúng level thấp nhất của từ
           orderBy: { level: { orderIndex: 'asc' } },
         },
       },
@@ -42,12 +57,10 @@ export class DictionaryService {
       hanzi: w.hanzi,
       pinyin: w.pinyin,
       pinyinTone: w.pinyinTone,
-      // FIX 3: Trả về tất cả meanings (EN + VI) thay vì chỉ EN
       meanings: w.meanings.map((m) => ({
         en: m.meaningEn,
         vi: m.meaningVi ?? null,
       })),
-      // Sau khi sort theo orderIndex, [0] luôn là level thấp nhất (chính xác nhất)
       level: w.wordLevels[0]?.level?.name ?? null,
     }));
   }

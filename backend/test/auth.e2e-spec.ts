@@ -6,6 +6,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
 describe('Auth E2E', () => {
   let app: INestApplication;
@@ -16,6 +17,8 @@ describe('Auth E2E', () => {
   const password = 'Test123!';
 
   beforeAll(async () => {
+    assertDisposableTestDatabase();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -35,9 +38,6 @@ describe('Auth E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: { email: { in: [userEmail, adminEmail] } },
-    });
     await app.close();
   });
 

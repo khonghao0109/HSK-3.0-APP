@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { normalizePinyin } from '../../src/common/utils/normalize-pinyin';
 
 function loadLocalEnv() {
   const envPath = join(process.cwd(), '.env');
@@ -43,7 +44,13 @@ async function main() {
     (await prisma.level.create({
       data: {
         name: 'HSK1',
+        code: 'HSK1',
         orderIndex: 1,
+        minBand: 1,
+        maxBand: 1,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        publishedAt: new Date(),
       },
       select: {
         id: true,
@@ -131,13 +138,17 @@ async function main() {
     },
     update: {
       pinyinTone: 'ni3 hao3',
+      pinyinNormalized: normalizePinyin('ni3 hao3'),
       isPure: true,
     },
     create: {
       hanzi: '你好',
       pinyin: 'ni hao',
+      pinyinNormalized: normalizePinyin('ni3 hao3'),
       pinyinTone: 'ni3 hao3',
       isPure: true,
+      status: 'published',
+      publishedAt: new Date(),
     },
     select: {
       id: true,
@@ -158,8 +169,11 @@ async function main() {
     await prisma.wordMeaning.create({
       data: {
         wordId: word.id,
+        meaningOrder: 1,
         meaningEn: 'hello',
+        meaningEnNormalized: 'hello',
         meaningVi: 'xin chao',
+        meaningViNormalized: 'xin chao',
       },
     });
   }

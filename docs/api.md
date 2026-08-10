@@ -9,6 +9,10 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
+> Trạng thái 10/08/2026: schema P0 đã sẵn sàng. Runtime hiện mới có auth cơ bản, user read, health, dictionary search và learning read. Các endpoint session/onboarding/CMS/SRS/exam attempt bên dưới là contract mục tiêu, chưa được mô tả là runtime đã hoàn thành.
+
+Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Các endpoint `DELETE` content trong tài liệu này mang nghĩa archive/soft-delete, không hard-delete row đã có lịch sử.
+
 ## 2. Conventions
 
 ### 2.1 Response format
@@ -82,6 +86,8 @@ Paginated response `meta`:
 ## 3.1 Endpoints
 
 ### POST `/auth/register`
+
+Email được canonicalize bằng `trim().toLowerCase()` trước lookup/create và PostgreSQL enforce unique theo `lower(email)`.
 
 Body:
 
@@ -173,9 +179,15 @@ Payload mẫu tạo level:
 ```json
 {
   "name": "HSK 3",
-  "orderIndex": 3
+  "code": "HSK3",
+  "orderIndex": 3,
+  "minBand": 3,
+  "maxBand": 3,
+  "curriculumVersion": "HSK_3_0"
 }
 ```
+
+P0 chỉ chấp nhận code `HSK1`…`HSK6`, `HSK7_9`; `HSK7_9` có `minBand=7`, `maxBand=9`.
 
 ## 5.2 Lessons
 
@@ -229,7 +241,14 @@ Create word:
 {
   "hanzi": "学习",
   "pinyin": "xue xi",
-  "meaning": "hoc tap",
+  "meanings": [
+    {
+      "meaningOrder": 1,
+      "meaningEn": "to study",
+      "meaningVi": "học tập",
+      "partOfSpeech": "verb"
+    }
+  ],
   "example": "wo xihuan xuexi hanyu"
 }
 ```
@@ -438,3 +457,41 @@ Chuẩn triển khai:
 ## 15. Notes
 
 - Spec này là baseline triển khai. Khi thêm endpoint mới phải cập nhật file này cùng pull request.
+
+## 16. P0 target contracts enabled by the schema
+
+Các route dưới đây là backlog contract cho vertical slice tiếp theo; tên/payload cuối phải được đưa vào OpenAPI runtime cùng implementation.
+
+### 16.1 Session, onboarding và privacy
+
+- `GET /auth/sessions`, `POST /auth/refresh`, `DELETE /auth/sessions/:id`.
+- `GET|PATCH /users/me/profile`.
+- `POST /onboarding/goals`, `POST /onboarding/placements`, `POST /onboarding/placements/:id/complete`.
+- `GET|POST /learning-plans` và cập nhật trạng thái item.
+- `POST /privacy/consents`, `POST /privacy/exports`, `POST /privacy/deletion-requests`.
+- Account deletion chuyển `deletion_pending` → revoke session/token → loại PII → `anonymized`; không hard-delete User hoặc immutable history. Xem `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`.
+
+Refresh/reset/verification token chỉ truyền raw value tại transport một lần; database chỉ lưu hash.
+
+### 16.2 CMS/import
+
+- CRUD content tạo revision và audit.
+- `POST /admin/imports`, preview/validate/commit/status/error rows.
+- Review revision bằng approve/request-change/reject; publish chỉ cập nhật content sau authorization.
+
+### 16.3 Learning và SRS
+
+- `POST /learning/exercises/:id/attempts` với idempotency key.
+- `PATCH /progress/lessons/:lessonId` và progress topic.
+- `GET /review/due`, `POST /review/sessions`, `POST /review/cards/:id/grade`.
+
+`ReviewCard` là scheduler source of truth; `UserWordProgress` chỉ là legacy summary.
+
+### 16.4 Exam attempt flow
+
+- `POST /exam/tests/:id/attempts`: server tạo attempt và immutable snapshot.
+- `PUT /exam/attempts/:id/answers/:snapshotQuestionKey`: autosave idempotent/optimistic version.
+- `GET /exam/attempts/:id`: resume dựa vào server timer.
+- `POST /exam/attempts/:id/submit`: transactionally finalize và tạo duy nhất một `Result`.
+
+Client không gửi đáp án đúng, điểm cuối hoặc thời gian có thẩm quyền. Kết quả mới phải truy được `ExamAttempt`, snapshot và scoring version.

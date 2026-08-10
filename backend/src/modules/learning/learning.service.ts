@@ -24,6 +24,10 @@ export class LearningService {
   }
   async getLevels(): Promise<ApiSuccessResponse<LevelItemDto[]>> {
     const levels = await this.prisma.level.findMany({
+      where: {
+        status: 'published',
+        deletedAt: null,
+      },
       orderBy: {
         orderIndex: 'asc',
       },
@@ -299,5 +303,4 @@ export class LearningService {
       totalPages: Math.ceil(total / limit),
     };
   }
-
 }

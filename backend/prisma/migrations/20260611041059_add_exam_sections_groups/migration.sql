@@ -1,4 +1,4 @@
-``-- AlterTable
+-- AlterTable
 ALTER TABLE "Question" ADD COLUMN     "groupId" INTEGER;
 
 -- CreateTable
