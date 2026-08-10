@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -32,6 +33,7 @@ import { PrismaModule } from './prisma/prisma.module';
     DictionaryModule,
     HealthModule,
     LearningModule,
+    OnboardingModule,
   ],
   controllers: [],
   providers: [
