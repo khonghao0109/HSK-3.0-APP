@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
@@ -7,9 +7,14 @@ import { PassportStrategy } from '@nestjs/passport';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import { PrismaService } from '../../../prisma/prisma.service';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     const jwtSecrets =
       configService.get<Record<string, string>>('jwt.secrets') ?? {};
     const activeKid = configService.get<string>('jwt.activeKid') ?? 'v1';
@@ -36,11 +41,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: { sub: number; email: string; role: string }) {
+  async validate(payload: { sub: number; email: string; role: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!user || user.status !== 'active' || user.deletedAt !== null) {
+      throw new UnauthorizedException('Account is not available.');
+    }
+
     return {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 

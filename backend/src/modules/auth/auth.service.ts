@@ -74,6 +74,7 @@ export class AuthService {
         failedLoginAttempts: true,
         lockUntil: true,
         status: true,
+        deletedAt: true,
       },
     });
 
@@ -81,7 +82,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'active') {
+    if (user.status !== 'active' || user.deletedAt !== null) {
       throw new ForbiddenException('Account is not active.');
     }
 
