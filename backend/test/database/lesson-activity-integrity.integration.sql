@@ -42,24 +42,24 @@ BEGIN
   RETURNING id INTO topic_2_id;
 
   INSERT INTO "LessonExercise" (
-    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "updatedAt"
+    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "publishedAt", "updatedAt"
   ) VALUES (
     lesson_1_id, topic_1_id, 'mcq', 'Choose A',
     '{"options":[{"id":"a","text":"A"},{"id":"b","text":"B"}]}'::jsonb,
-    '{"optionId":"a"}'::jsonb, 1, 1, 'published', CURRENT_TIMESTAMP
+    '{"optionId":"a"}'::jsonb, 1, 1, 'published', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO exercise_1_id;
   INSERT INTO "LessonExercise" (
-    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "updatedAt"
+    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "publishedAt", "updatedAt"
   ) VALUES (
     lesson_1_id, topic_1_id, 'mcq', 'Choose B',
     '{"options":[{"id":"a","text":"A"},{"id":"b","text":"B"}]}'::jsonb,
-    '{"optionId":"b"}'::jsonb, 1, 2, 'published', CURRENT_TIMESTAMP
+    '{"optionId":"b"}'::jsonb, 1, 2, 'published', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO exercise_2_id;
   INSERT INTO "LessonExercise" (
-    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "updatedAt"
+    "lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "publishedAt", "updatedAt"
   ) VALUES (
     lesson_1_id, NULL, 'fill_blank', 'Fill', '{}'::jsonb,
-    '{"acceptedTexts":["你好"],"caseSensitive":false}'::jsonb, 1, 3, 'published', CURRENT_TIMESTAMP
+    '{"acceptedTexts":["你好"],"caseSensitive":false}'::jsonb, 1, 3, 'published', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO standalone_exercise_id;
 
   INSERT INTO "LessonExerciseAttempt" (

@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
+import { upsertSeedLearningTopic } from './seed-learning-topic';
+
 const LESSONS_PER_LEVEL = 5;
 const WORDS_PER_LESSON = 20;
 const TEMP_LESSON_DESCRIPTION_PREFIX = 'Temporary lesson for testing';
@@ -144,33 +146,20 @@ async function seedLearning() {
       });
       lessonCount += 1;
 
-      await prisma.topic.deleteMany({
-        where: {
+      await Promise.all([
+        upsertSeedLearningTopic(prisma, {
           lessonId: lesson.id,
-          title: {
-            in: ['Vocabulary Overview', 'Practice Notes'],
-          },
-        },
-      });
-
-      await prisma.topic.createMany({
-        data: [
-          {
-            lessonId: lesson.id,
-            title: 'Vocabulary Overview',
-            orderIndex: 1,
-            content: vocabularyOverviewContent(),
-            status: 'published',
-          },
-          {
-            lessonId: lesson.id,
-            title: 'Practice Notes',
-            orderIndex: 2,
-            content: practiceNotesContent(),
-            status: 'published',
-          },
-        ],
-      });
+          title: 'Vocabulary Overview',
+          orderIndex: 1,
+          content: vocabularyOverviewContent(),
+        }),
+        upsertSeedLearningTopic(prisma, {
+          lessonId: lesson.id,
+          title: 'Practice Notes',
+          orderIndex: 2,
+          content: practiceNotesContent(),
+        }),
+      ]);
       topicCount += 2;
 
       if (wordIds.length > 0) {

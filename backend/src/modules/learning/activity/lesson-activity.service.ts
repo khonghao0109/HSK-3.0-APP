@@ -14,6 +14,11 @@ import {
   PUBLIC_CONTENT_WHERE,
 } from '../../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../../prisma/prisma.service';
+import {
+  PUBLIC_EXERCISE_MEDIA_SELECT,
+  PUBLIC_LESSON_EXERCISE_WHERE,
+  projectPublicExerciseMedia,
+} from '../public-exercise.policy';
 import { SubmitLessonExerciseAttemptDto } from './dto/lesson-activity-write.dto';
 import {
   buildActivityRequestHash,
@@ -60,7 +65,7 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
     },
   },
   exercises: {
-    where: PUBLIC_CONTENT_WHERE,
+    where: PUBLIC_LESSON_EXERCISE_WHERE,
     orderBy: [{ orderIndex: 'asc' as const }, { id: 'asc' as const }],
     select: {
       id: true,
@@ -72,6 +77,7 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
       explanation: true,
       version: true,
       orderIndex: true,
+      media: { select: PUBLIC_EXERCISE_MEDIA_SELECT },
     },
   },
 } satisfies Prisma.LessonSelect;
@@ -276,10 +282,6 @@ export class LessonActivityService {
     });
 
     return this.write('exercise.submit', userId, async (tx) => {
-      const { graph, exercise } = await this.requirePublicExercise(
-        tx,
-        exerciseId,
-      );
       const replay = await this.findEvent(tx, userId, idempotencyKey);
       if (replay) {
         this.assertEvent(replay, 'exercise_submitted', { exerciseId });
@@ -295,6 +297,12 @@ export class LessonActivityService {
         };
       }
 
+      const { graph, exercise } = await this.requirePublicExercise(
+        tx,
+        exerciseId,
+        userId,
+      );
+
       await this.lockProgressRows(tx, userId, graph.id, exercise.topicId);
       await this.requireStartedLessonProgress(tx, userId, graph.id);
       const score = scoreLessonExercise({
@@ -308,6 +316,7 @@ export class LessonActivityService {
         _max: { attemptNumber: true },
       });
       const now = new Date();
+      const media = projectPublicExerciseMedia(exercise.type, exercise.media);
       const attempt = await tx.lessonExerciseAttempt.create({
         data: {
           userId,
@@ -324,6 +333,7 @@ export class LessonActivityService {
             content: exercise.content,
             authoritativeAnswer: exercise.answer,
             explanation: exercise.explanation,
+            media,
             scoringVersion: LESSON_ACTIVITY_SCORING_VERSION,
           },
           exerciseVersion: exercise.version,
@@ -526,9 +536,10 @@ export class LessonActivityService {
       const visible = await this.prisma.lessonExercise.findFirst({
         where: {
           id: exerciseId,
-          ...PUBLIC_CONTENT_WHERE,
-          lesson: { is: buildLessonReadyWhere() },
-          OR: [{ topicId: null }, { topic: { is: PUBLIC_CONTENT_WHERE } }],
+          AND: [
+            PUBLIC_LESSON_EXERCISE_WHERE,
+            { lesson: { is: buildLessonReadyWhere() } },
+          ],
         },
         select: { id: true },
       });
@@ -568,6 +579,7 @@ export class LessonActivityService {
         content: exercise.content,
         version: exercise.version,
         orderIndex: exercise.orderIndex,
+        media: projectPublicExerciseMedia(exercise.type, exercise.media),
         latestAttempt: latestAttempts.get(exercise.id) ?? null,
       }));
       const currentExercise =
@@ -772,12 +784,19 @@ export class LessonActivityService {
   private async requirePublicExercise(
     tx: Prisma.TransactionClient,
     exerciseId: number,
+    userId: number,
   ) {
     const location = await tx.lessonExercise.findUnique({
       where: { id: exerciseId },
       select: { lessonId: true, topicId: true },
     });
     if (!location) throw new NotFoundException('Exercise not found.');
+    await this.coordinator.checkpoint({
+      operation: 'exercise.submit',
+      phase: 'before_content_lock',
+      userId,
+      transaction: tx,
+    });
     await this.lockLesson(tx, location.lessonId);
     if (location.topicId !== null) {
       await tx.$queryRaw(
@@ -787,6 +806,12 @@ export class LessonActivityService {
     await tx.$queryRaw(
       Prisma.sql`SELECT id FROM "LessonExercise" WHERE id = ${exerciseId} FOR SHARE`,
     );
+    await this.coordinator.checkpoint({
+      operation: 'exercise.submit',
+      phase: 'after_content_lock',
+      userId,
+      transaction: tx,
+    });
     const graph = await this.requirePublicLesson(tx, location.lessonId);
     const exercise = graph.exercises.find(
       (candidate) => candidate.id === exerciseId,

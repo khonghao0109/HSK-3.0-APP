@@ -10,14 +10,19 @@ export type LessonActivityTransactionOperation =
 
 export type LessonActivityTransactionCheckpoint = {
   operation: LessonActivityTransactionOperation;
-  phase: 'before_user_lock' | 'after_user_lock';
+  phase:
+    | 'before_user_lock'
+    | 'after_user_lock'
+    | 'before_content_lock'
+    | 'after_content_lock';
   userId: number;
   transaction: Prisma.TransactionClient;
 };
 
 /**
- * Production-path observation point for the per-user PostgreSQL lock. Runtime
- * behavior is a no-op; the concurrency harness injects a barrier coordinator.
+ * Production-path observation point for the per-user PostgreSQL lock and the
+ * Lesson -> Topic -> LessonExercise content lock chain. Runtime behavior is a
+ * no-op; the concurrency harness injects a barrier coordinator.
  */
 @Injectable()
 export class LessonActivityTransactionCoordinator {

@@ -129,6 +129,41 @@ describe('Lesson Activity scorer V1', () => {
     ).toThrow(BadRequestException);
   });
 
+  it.each(['option with space', ' option-a', 'option-a\t'])(
+    'rejects ambiguous authoring stable ids instead of scoring %p',
+    (optionId) => {
+      expect(() =>
+        scoreLessonExercise({
+          type: 'mcq',
+          content: {
+            options: [
+              { id: optionId, text: 'A' },
+              { id: 'option-b', text: 'B' },
+            ],
+          },
+          authoritativeAnswer: { optionId },
+          submittedAnswer: { optionId },
+        }),
+      ).toThrow(UnprocessableEntityException);
+    },
+  );
+
+  it('rejects stable ids that collide after canonical NFKC normalization', () => {
+    expect(() =>
+      scoreLessonExercise({
+        type: 'mcq',
+        content: {
+          options: [
+            { id: 'ｏｐｔ-a', text: 'A' },
+            { id: 'opt-a', text: 'B' },
+          ],
+        },
+        authoritativeAnswer: { optionId: 'ｏｐｔ-a' },
+        submittedAnswer: { optionId: 'ｏｐｔ-a' },
+      }),
+    ).toThrow(UnprocessableEntityException);
+  });
+
   it('rejects speaking_repeat instead of creating a fake score', () => {
     expect(() =>
       scoreLessonExercise({

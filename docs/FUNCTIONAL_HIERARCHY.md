@@ -1,6 +1,6 @@
 # Phân cấp chức năng — HSK System
 
-> Cập nhật schema P0: 10/08/2026. Hệ thống dùng 7 nhóm curriculum: `HSK1`…`HSK6`, `HSK7_9` (band 7–9). “Schema sẵn sàng” không đồng nghĩa API/UI đã chạy.
+> Cập nhật runtime/schema: 11/08/2026. Hệ thống dùng 7 nhóm curriculum: `HSK1`…`HSK6`, `HSK7_9` (band 7–9). “Schema sẵn sàng” không đồng nghĩa API/UI hoặc release gate đã hoàn tất.
 
 Tài liệu này mô tả chức năng theo vai trò **User** và **Admin**, đồng thời xác định mức ưu tiên triển khai.
 
@@ -91,11 +91,16 @@ HSK System
 ├── Admin
 │   ├── CMS Lite và chất lượng dữ liệu [P0]
 │   │   ├── Lesson/Topic immutable revision, review, publish, archive (đã có)
-│   │   ├── Strict JSON boolean cho cờ CMS; canonical snapshot/hash không phụ thuộc locale
-│   │   ├── Lock hierarchy Lesson → Topic và concurrency lifecycle test
+│   │   ├── Exercise draft/revision/review/publish/archive (đã có V1)
+│   │   ├── 4 dạng publishable; speaking_repeat chỉ author draft
+│   │   ├── Shared NFKC/exact-key/bounded JSON validation cho authoring, import và scoring
+│   │   ├── Listening publish với ready audio, URL không whitespace và media projection an toàn
+│   │   ├── Preview no-write → hash → atomic/idempotent Exercise import (đã có V1)
+│   │   ├── Strict JSON boolean; canonical snapshot/hash không phụ thuộc locale
+│   │   ├── Publish lock: admin User SHARE → Lesson/Topic/Exercise UPDATE → Media SHARE
 │   │   ├── CRUD level, story và các content entity còn lại (backlog)
 │   │   ├── CRUD từ vựng, nghĩa, ví dụ, cấp HSK
-│   │   ├── Import CSV / JSON và preview trước khi nhập
+│   │   ├── Import generic CSV / JSON cho entity ngoài Exercise (backlog)
 │   │   ├── Validate dữ liệu, chống duplicate
 │   │   └── Publish / archive nội dung
 │   ├── Quản lý thi thử [P0]
@@ -154,11 +159,11 @@ HSK System
 | Onboarding, placement test, learning plan | Có | Cấu hình | P0 | Goal + learning plan V1 runtime hoàn thành; placement scoring còn backlog |
 | Hồ sơ cá nhân và privacy lifecycle | Có | Xem | P0 | Schema sẵn sàng; API cập nhật còn thiếu |
 | Levels, lessons, topics, stories | Có | CRUD/publish | P0 | Public read + CMS Lite Lesson/Topic publish workflow đã có; Level/Story CMS còn backlog |
-| Lesson activity engine | Có | Quản lý nội dung | P0 | Attempt/score/snapshot/progress/resume/completion V1 đã có; speaking/premium entitlement còn backlog |
+| Lesson activity engine | Có | Quản lý nội dung | P0 | Attempt/score/safe media snapshot/progress/resume/completion V1 đã có; speaking/premium entitlement còn backlog |
 | Dictionary detail | Có | CRUD/import | P0 | Schema localization/provenance sẵn sàng; API mới chỉ search |
 | SRS, flashcard, review queue | Có | — | P0 | Schema SRS sẵn sàng; chưa có runtime |
 | Exam delivery và kết quả | Có | Question bank/test | P0 | Schema attempt/autosave/snapshot sẵn sàng; chưa có runtime |
-| CMS Lite / import / data validation | — | Có | P0 | Lesson/Topic revision-review-publish-archive runtime đã có; import và entity khác còn backlog |
+| CMS Lite / import / data validation | — | Có | P0 | Lesson/Topic và Exercise authoring workflow đã có; Exercise preview/atomic import đã có; generic import và CMS entity khác còn backlog |
 | RBAC, data privacy, API contract | Có | Có | P0 | RBAC runtime một phần; privacy schema sẵn sàng |
 | Interactive reader | Có | Quản lý stories | P1 | Kế hoạch |
 | Pronunciation / speaking feedback | Có | Quản lý practice | P1 | Schema một phần, chưa có runtime |
@@ -181,11 +186,13 @@ HSK System
 - `GET /api/v1/learning-plans/current`, `POST /api/v1/learning-plans`.
 - `GET|POST /api/v1/admin/cms/lessons` và Lesson revision/review/publish/archive endpoints.
 - `POST /api/v1/admin/cms/topics`, `GET /api/v1/admin/cms/topics/:topicId` và Topic revision/review/publish/archive endpoints.
+- `GET|POST /api/v1/admin/cms/exercises`, Exercise detail/revision/review/publish/archive endpoints.
+- `POST /api/v1/admin/cms/exercise-imports/preview` và `POST /api/v1/admin/cms/exercise-imports`.
 - `POST /api/v1/learning/lessons/:lessonId/start|complete`, `GET /api/v1/learning/lessons/:lessonId/activity`.
 - `POST /api/v1/learning/topics/:topicId/start|complete`, `GET|POST /api/v1/learning/exercises/:exerciseId/attempts`.
 - `GET /api/v1/progress/lessons` và `GET /api/v1/progress/lessons/:lessonId`.
 
-Onboarding Goal & Learning Plan V1 dùng JWT owner, khóa row `User` cho write concurrency, date-only schedule và chỉ chọn Lesson ready. Status phân biệt plan active với plan usable theo snapshot Lesson ready chính xác, đồng thời trả `content_unavailable` khi level chưa có content dùng được. CMS Lite khóa theo thứ tự `Lesson → Topic`, append immutable `ContentRevision`/`ContentReview`, giữ nguyên live content khi có draft revision mới và ghi audit summary an toàn. Lesson Activity V1 serialize write theo User, chấm `mcq`, `listening_choice`, `fill_blank`, `arrange_sentence` trên server, lưu immutable snapshot/event, derive progress và resume pointer; không nhận score/progress/userId từ client. Các cờ boolean chỉ nhận JSON boolean thật. Placement test/scoring, SRS, speaking scoring và premium entitlement chưa có runtime.
+Onboarding Goal & Learning Plan V1 dùng JWT owner, khóa row `User` cho write concurrency, date-only schedule và chỉ chọn Lesson ready. Status phân biệt plan active với plan usable theo snapshot Lesson ready chính xác, đồng thời trả `content_unavailable` khi level chưa có content dùng được. CMS Lite append immutable `ContentRevision`/`ContentReview`, giữ nguyên live content khi có draft revision mới và ghi audit summary an toàn. Exercise V1 publish theo lock order `active admin User FOR SHARE → Lesson/Topic/LessonExercise FOR UPDATE → Media FOR SHARE khi listening` với role/lifecycle được enforce, shared NFKC/exact-key/bounded validator, chỉ publish latest-approved revision dưới parent live/coherent, bắt buộc ready/live audio có URL nonempty/no-whitespace cho listening và import theo preview hash + atomic/idempotent commit từ 1 đến 100 rows. Import lock actor rồi DataSource và parent IDs `FOR UPDATE` theo thứ tự ổn định; interactive transaction dùng `maxWait=5.000 ms` và `timeout=30.000 ms`. Lesson Activity V1 serialize write theo User, chấm `mcq`, `listening_choice`, `fill_blank`, `arrange_sentence` trên server, lưu immutable snapshot/event, derive progress và resume pointer; không nhận score/progress/userId từ client. `speaking_repeat` chỉ được lưu draft và chưa được publish/chấm. Các cờ boolean chỉ nhận JSON boolean thật. Placement test/scoring, SRS và premium entitlement chưa có runtime.
 
 Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoint mới, cần cập nhật cả tài liệu API, DTO và test tương ứng.
 
@@ -195,14 +202,15 @@ Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoi
 - Các thao tác quản trị nội dung, người dùng, đề thi, tài nguyên và báo cáo yêu cầu role `admin`.
 - Endpoint công khai chỉ được trả nội dung có trạng thái `published` và chưa bị soft-delete.
 - Lesson chỉ được coi là ready khi Level cha cũng public và có ít nhất một Topic hoặc Story public; cùng policy áp dụng cho learning, onboarding và CMS publish.
-- Public Lesson không trả Topic/Story/Word/Exercise draft hoặc soft-deleted và không bao giờ trả `LessonExercise.answer`.
+- Public Lesson không trả Topic/Story/Word/Exercise draft hoặc soft-deleted, không trả `speaking_repeat`, và không bao giờ trả `LessonExercise.answer`; Exercise gắn Topic chỉ visible khi Topic đó cũng public.
+- Public listening exercise chỉ hiện khi media là audio `ready`, chưa soft-delete và URL không rỗng/không whitespace; response/snapshot công khai chỉ giữ `id`, `url`, `type`, `mimeType`, `duration`, không lộ storage/checksum/processing metadata. Quarantine/soft-archive Media sau publish được phép và làm public ẩn Exercise ngay, nhưng không rewrite immutable attempt snapshot cũ.
 - Kết quả thi phải snapshot câu hỏi/đáp án/lời giải tại thời điểm nộp để dữ liệu lịch sử không bị thay đổi theo nội dung mới.
 - AI gateway phải xác thực người dùng, giới hạn tần suất và chỉ gọi RAG service; không đặt logic RAG lõi trong backend.
 - Dữ liệu từ điển, audio và nội dung phải có nguồn gốc/version để hỗ trợ kiểm soát chất lượng và bản quyền.
 
 ## 5. Thứ tự triển khai đề xuất
 
-1. **P0 — Data + CMS Lite:** Lesson/Topic publish workflow V1 đã hoàn thành; tiếp theo dùng HSK1–HSK6 + HSK7_9, bổ sung dữ liệu nghĩa Việt đã review và triển khai import/validate cùng CMS cho entity còn lại.
+1. **P0 — Data + CMS Lite:** Lesson/Topic và Exercise authoring/import V1 đã được implement; tiếp theo hoàn tất release gate, dùng HSK1–HSK6 + HSK7_9, bổ sung dữ liệu nghĩa Việt đã review và triển khai CMS/import cho entity còn lại.
 2. **P0 — Learning + Review:** Lesson Activity Attempt & Progress V1 đã hoàn thành; tiếp theo triển khai SRS/flashcard trên `ReviewCard` source of truth.
 3. **P0 — Exam:** question bank, test, autosave, scoring theo skill, snapshot và result analysis.
 4. **P0 — Web MVP:** kết nối UI cho auth, learning, dictionary, review và exam.

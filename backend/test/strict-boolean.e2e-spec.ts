@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -32,6 +33,7 @@ describe('Strict JSON boolean contract E2E', () => {
         forbidNonWhitelisted: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();

@@ -1,3 +1,5 @@
+import { projectPublicExerciseMedia } from './public-exercise.policy';
+
 type PublicLessonRecord = {
   id: number;
   title: string;
@@ -31,6 +33,7 @@ type PublicLessonRecord = {
     content: unknown;
     version: number;
     orderIndex: number;
+    media?: unknown;
     answer?: unknown;
     explanation?: string | null;
     [key: string]: unknown;
@@ -56,13 +59,17 @@ export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
       })),
     })),
     stories: lesson.stories,
-    exercises: lesson.exercises.map((exercise) => ({
-      id: exercise.id,
-      type: exercise.type,
-      prompt: exercise.prompt,
-      content: exercise.content,
-      version: exercise.version,
-      orderIndex: exercise.orderIndex,
-    })),
+    exercises: lesson.exercises.map((exercise) => {
+      const media = projectPublicExerciseMedia(exercise.type, exercise.media);
+      return {
+        id: exercise.id,
+        type: exercise.type,
+        prompt: exercise.prompt,
+        content: exercise.content,
+        version: exercise.version,
+        orderIndex: exercise.orderIndex,
+        media,
+      };
+    }),
   };
 }

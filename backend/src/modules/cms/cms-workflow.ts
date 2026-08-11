@@ -33,16 +33,21 @@ export function decidePublishAction(input: {
     );
   }
 
-  return input.liveContentMatchesRevision === true ||
-    input.liveContentHash === input.requestedContentHash
+  if (input.liveContentMatchesRevision !== undefined) {
+    return input.liveContentMatchesRevision ? 'idempotent' : 'apply';
+  }
+
+  return input.liveContentHash === input.requestedContentHash
     ? 'idempotent'
     : 'apply';
 }
 
 export type CmsPersistenceErrorKind =
   | 'unique_conflict'
+  | 'constraint_conflict'
   | 'concurrent_retry'
   | 'timeout'
+  | 'connection'
   | 'unknown';
 
 export function classifyCmsPersistenceError(
@@ -51,10 +56,33 @@ export function classifyCmsPersistenceError(
   const codes = collectSafeErrorCodes(error);
 
   if (codes.has('P2002') || codes.has('23505')) return 'unique_conflict';
-  if (codes.has('P2034') || codes.has('P2028') || codes.has('40P01')) {
+  if (
+    codes.has('P2003') ||
+    codes.has('23503') ||
+    codes.has('P2004') ||
+    codes.has('23514')
+  ) {
+    return 'constraint_conflict';
+  }
+  if (codes.has('P2034') || codes.has('40P01') || codes.has('40001')) {
     return 'concurrent_retry';
   }
-  if (codes.has('55P03') || codes.has('57014')) return 'timeout';
+  if (
+    codes.has('P2028') ||
+    codes.has('P2024') ||
+    codes.has('55P03') ||
+    codes.has('57014')
+  ) {
+    return 'timeout';
+  }
+  if (
+    [...codes].some(
+      (code) =>
+        /^08[A-Z0-9]{3}$/u.test(code) || /^P10(?:0\d|1[017])$/u.test(code),
+    )
+  ) {
+    return 'connection';
+  }
   return 'unknown';
 }
 

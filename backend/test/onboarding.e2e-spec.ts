@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -74,6 +75,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
         forbidNonWhitelisted: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();
@@ -549,11 +551,13 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .send({ anonymizedEmail, email: anonymizedEmail, password })
       .expect(400);
 
-    expect(register.body.message).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining('property anonymizedEmail'),
+    expect(register.body).toMatchObject({
+      code: 'REQUEST_VALIDATION_FAILED',
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: '$.$unknown' }),
       ]),
-    );
+    });
+    expect(JSON.stringify(register.body)).not.toContain('anonymizedEmail');
 
     const validRegister = await request(app.getHttpServer())
       .post('/api/v1/auth/register')

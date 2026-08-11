@@ -25,6 +25,8 @@
     "test:db:p0": "ts-node scripts/test/run-p0-schema-integration.ts",
     "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
+    "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",
+    "test:db:exercise-integrity": "ts-node scripts/test/run-exercise-authoring-integrity.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts"
   },

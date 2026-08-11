@@ -10,12 +10,18 @@ export type CmsTransactionOperation =
   | 'topic.create_revision'
   | 'topic.review'
   | 'topic.publish'
-  | 'topic.archive';
+  | 'topic.archive'
+  | 'exercise.create'
+  | 'exercise.create_revision'
+  | 'exercise.review'
+  | 'exercise.publish'
+  | 'exercise.archive'
+  | 'exercise_import.commit';
 
 export type CmsTransactionCheckpoint = {
   operation: CmsTransactionOperation;
   phase: 'before_lock' | 'after_lock';
-  entityType: 'lesson' | 'topic';
+  entityType: 'lesson' | 'topic' | 'lesson_exercise' | 'exercise_import';
   entityId: number;
   parentLessonId?: number;
   transaction: Prisma.TransactionClient;

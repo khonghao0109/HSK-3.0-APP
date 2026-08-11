@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -72,6 +73,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
         forbidNonWhitelisted: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();
@@ -441,12 +443,18 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
         topicId,
         type: 'mcq',
         prompt: 'Choose the public answer',
-        content: { choices: ['A', 'B'] },
-        answer: { correct: 'A', secret: true },
+        content: {
+          options: [
+            { id: 'a', text: 'A' },
+            { id: 'b', text: 'B' },
+          ],
+        },
+        answer: { optionId: 'a' },
         explanation: 'Internal explanation',
         version: 1,
         orderIndex: 1,
         status: 'published',
+        publishedAt: new Date(),
       },
     });
 

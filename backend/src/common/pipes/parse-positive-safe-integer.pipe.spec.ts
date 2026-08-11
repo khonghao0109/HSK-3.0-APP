@@ -9,7 +9,7 @@ describe('ParsePositiveSafeIntegerPipe', () => {
     expect(pipe.transform('42')).toBe(42);
   });
 
-  it.each(['0', '-1', '1.2', '01', 'abc', '9007199254740992'])(
+  it.each(['0', '-1', '1.2', '01', 'abc', '2147483648', '9007199254740992'])(
     'rejects invalid path id %s',
     (value) => {
       expect(() => pipe.transform(value)).toThrow(BadRequestException);

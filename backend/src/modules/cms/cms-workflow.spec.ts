@@ -76,13 +76,16 @@ describe('CMS workflow policy', () => {
     expect(classifyCmsPersistenceError({ code: 'P2002' })).toBe(
       'unique_conflict',
     );
+    for (const code of ['P2003', '23503', 'P2004', '23514']) {
+      expect(classifyCmsPersistenceError({ code })).toBe('constraint_conflict');
+    }
     expect(classifyCmsPersistenceError({ code: 'P2034' })).toBe(
       'concurrent_retry',
     );
-    expect(classifyCmsPersistenceError({ code: 'P2028' })).toBe(
-      'concurrent_retry',
-    );
+    expect(classifyCmsPersistenceError({ code: 'P2028' })).toBe('timeout');
     expect(classifyCmsPersistenceError({ code: '55P03' })).toBe('timeout');
+    expect(classifyCmsPersistenceError({ code: 'P1001' })).toBe('connection');
+    expect(classifyCmsPersistenceError({ code: '08006' })).toBe('connection');
     expect(classifyCmsPersistenceError(new Error('unexpected'))).toBe(
       'unknown',
     );

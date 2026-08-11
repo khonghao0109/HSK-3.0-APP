@@ -1,6 +1,6 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.4.0`
+> Phiên bản runbook: `1.5.0`
 > Áp dụng cho chuỗi migration P0 đến ngày `2026-08-11`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
@@ -17,9 +17,10 @@
 | P0-C | `20260810143000_p0_integrity_concurrency_serialization` | Serialize band/ownership invariant, owner immutable và `ON UPDATE RESTRICT` cho history FK. |
 | CMS-R | `20260810170000_content_review_immutability` | Chặn UPDATE/DELETE `ContentReview` bằng immutable trigger dùng chung. |
 | ACT-I | `20260810210000_lesson_activity_integrity` | Submitted attempt immutable, LearningEvent coherence và bảo vệ parent location của activity history. |
+| EX-A | `20260811120000_exercise_authoring_import_validation_v1` | Exercise provenance/media/actor fields, revision parent/hash, publish readiness và archive-only lifecycle. |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 14 migration, trong đó chuỗi P0/runtime reliability gồm 9 migration P0-00..P0-04, P0-H, P0-C, CMS-R và ACT-I.
+Toàn project hiện có 15 migration, trong đó chuỗi P0/runtime reliability gồm 10 migration P0-00..P0-04, P0-H, P0-C, CMS-R, ACT-I và EX-A.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -41,20 +42,29 @@ npx prisma validate
 npx prisma generate
 npx prisma migrate status
 shasum -a 256 prisma/migrations/20260611041059_add_exam_sections_groups/migration.sql
+shasum -a 256 prisma/migrations/20260811120000_exercise_authoring_import_validation_v1/migration.sql
 ```
 
 Checksum migration lịch sử `20260611041059_add_exam_sections_groups` phải khớp `_prisma_migrations.checksum`. File lịch sử từng có ký tự fence Markdown thừa ở đầu và đã được phục hồi đúng source; không sửa lại migration này.
 
-Kiểm tra drift trước deploy bằng một shadow/disposable database cùng baseline, không chạy `db push`:
+Checksum EX-A của artifact frozen đã verify trên fresh disposable database ngày `2026-08-11` là `74944a7d95fabc02a0e84fe39b91543ac41a63e4714cfcaf389e81fe432d9f7c`. Trước deploy, source checksum phải khớp change record và, nếu environment đã apply, `_prisma_migrations.checksum`; nếu khác phải dừng, không sửa migration đã áp.
+
+Kiểm tra migration-history → datamodel bằng shadow database rỗng riêng, rồi kiểm tra database đích → datamodel; không chạy `db push`:
 
 ```bash
 npx prisma migrate diff \
+  --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma \
+  --shadow-database-url "$SHADOW_DATABASE_URL" \
+  --exit-code
+
+npx prisma migrate diff \
   --from-url "$DATABASE_URL" \
   --to-schema-datamodel prisma/schema.prisma \
-  --script
+  --exit-code
 ```
 
-Ở database chưa nhận P0, diff đương nhiên liệt kê thay đổi P0. Mọi khác biệt ngoài chín migration P0/runtime reliability đã review phải được dừng và điều tra.
+Ở database chưa nhận P0, diff đương nhiên liệt kê thay đổi P0. Mọi khác biệt ngoài mười migration P0/runtime reliability đã review phải được dừng và điều tra.
 
 ## 4. Kiểm tra dữ liệu trước migration
 
@@ -97,6 +107,59 @@ WHERE q."groupId" IS NOT NULL
 
 Không được có dòng. Migration sẽ dừng khi gặp placement mơ hồ/cross-test.
 
+Trước EX-A, audit Exercise legacy bằng truy vấn chỉ đọc:
+
+```sql
+SELECT id, "lessonId", "topicId", type, version, status, "deletedAt"
+FROM "LessonExercise"
+WHERE status = 'published'
+ORDER BY id;
+
+SELECT id, status, "deletedAt"
+FROM "LessonExercise"
+WHERE (status = 'archived') <> ("deletedAt" IS NOT NULL)
+ORDER BY id;
+
+SELECT exercise.id, exercise."lessonId", exercise."topicId",
+       lesson.status AS lesson_status, lesson."deletedAt" AS lesson_deleted_at,
+       topic."lessonId" AS topic_lesson_id, topic.status AS topic_status,
+       topic."deletedAt" AS topic_deleted_at
+FROM "LessonExercise" exercise
+JOIN "Lesson" lesson ON lesson.id = exercise."lessonId"
+LEFT JOIN "Topic" topic ON topic.id = exercise."topicId"
+WHERE lesson.status = 'archived'
+   OR lesson."deletedAt" IS NOT NULL
+   OR (
+     exercise."topicId" IS NOT NULL
+     AND (
+       topic.id IS NULL
+       OR topic."lessonId" <> exercise."lessonId"
+       OR topic.status = 'archived'
+       OR topic."deletedAt" IS NOT NULL
+     )
+   )
+ORDER BY exercise.id;
+
+SELECT revision.id, revision."entityId", revision.revision,
+       revision."contentHash", exercise.id AS exercise_id
+FROM "ContentRevision" revision
+LEFT JOIN "LessonExercise" exercise ON exercise.id = revision."entityId"
+WHERE revision."entityType" = 'lesson_exercise'
+  AND (
+    exercise.id IS NULL
+    OR NULLIF(btrim(revision."contentHash"), '') IS NULL
+  )
+ORDER BY revision."entityId", revision.revision, revision.id;
+
+SELECT id, url
+FROM "Media"
+WHERE char_length(url) = 0
+   OR url ~ '[[:space:]]'
+ORDER BY id;
+```
+
+Cả năm query phải rỗng. EX-A cố ý fail trước DDL nếu có Exercise legacy đang `published`, archive status/`deletedAt` mâu thuẫn, parent Lesson/Topic archived hoặc incoherent, revision `lesson_exercise` dangling/null/blank hash, hay `Media.url` rỗng hoặc chứa bất kỳ whitespace nào. Không đổi status, parent, tạo hash, đoán `mediaId` hay tự sửa asset URL: content owner phải audit JSON/answer/media provenance, đưa dữ liệu về trạng thái rõ ràng bằng change riêng rồi mới deploy lại. Transaction migration phải rollback toàn bộ khi preflight fail.
+
 ## 5. Backup và rehearsal
 
 Tạo backup theo chuẩn hạ tầng. Ví dụ logical backup có định danh rõ ràng:
@@ -107,7 +170,7 @@ pg_dump --format=custom --no-owner --no-acl "$DATABASE_URL" \
 pg_restore --list "hsk_before_p0_YYYYMMDD_HHMM.dump" >/dev/null
 ```
 
-Trước production, restore backup vào database rehearsal tách biệt, áp đúng chín migration P0/runtime reliability và chạy toàn bộ mục 7–9. Không rehearsal trực tiếp trên database local/production đang dùng.
+Trước production, restore backup vào database rehearsal tách biệt, áp đúng mười migration P0/runtime reliability và chạy toàn bộ mục 7–9. Không rehearsal trực tiếp trên database local/production đang dùng.
 
 Kết quả rehearsal tham chiếu ngày `2026-08-10` trên bản sao local:
 
@@ -132,7 +195,7 @@ npx prisma migrate deploy
 npx prisma migrate status
 ```
 
-`migrate deploy` phải báo cả chín migration P0/runtime reliability thành công. Không chạy lại bằng tay từng đoạn SQL sau khi Prisma đã ghi migration thành công.
+`migrate deploy` phải báo cả mười migration P0/runtime reliability thành công. Không chạy lại bằng tay từng đoạn SQL sau khi Prisma đã ghi migration thành công.
 
 ### 6.1. Concurrency policy của P0-C
 
@@ -154,8 +217,23 @@ npx prisma migrate status
 
 - Migration ACT-I có preflight fail-safe: nếu event lịch sử thuộc `lesson_started/completed`, `topic_started/completed` hoặc `exercise_submitted` không coherent với lesson/topic/exercise/attempt/user thì migration dừng, không tự sửa dữ liệu mơ hồ.
 - Submitted `LessonExerciseAttempt` là immutable fact; database chặn UPDATE/DELETE. `LearningEvent_coherence` xác minh shape và cross-reference khi INSERT. LessonExercise `lessonId/topicId` và Topic `lessonId` không được đổi nếu làm sai history.
-- Production activity write lock active `User FOR UPDATE` trước, rồi existing `Progress` và `UserTopicProgress` theo thứ tự cố định. Unique idempotency/attempt-number chỉ là backstop.
+- Production activity write lock active `User FOR UPDATE` trước; content-targeted write tiếp tục shared lock `Lesson → Topic → LessonExercise`, rồi existing `Progress → UserTopicProgress` theo thứ tự cố định. Unique idempotency/attempt-number chỉ là backstop.
 - `test:db:activity-integrity` chạy SQL acceptance trong transaction rollback. `test:db:activity-concurrency` gọi trực tiếp public method của `LessonActivityService`, quan sát B ở PostgreSQL Lock và kiểm tra final state của năm scenario gồm retry sau timeout.
+
+### 6.4. Exercise Authoring, media và import atomicity
+
+- EX-A là migration forward-only, bọc `BEGIN/COMMIT`; preflight ở mục 4 chạy trước mọi `ALTER TABLE`. Không chỉnh migration lịch sử để xử lý legacy Exercise.
+- `LessonExercise` thêm `mediaId`, `dataSourceId`, `sourceKey`, `createdById`, `updatedById`, `publishedById`, `publishedAt`. Lesson/Topic/Media/DataSource dùng `ON DELETE RESTRICT`; Lesson/Topic/Media/DataSource còn dùng `ON UPDATE RESTRICT`. Actor FK dùng `SET NULL` khi xóa user để giữ content history.
+- Unique `(dataSourceId, sourceKey)` và CHECK source key/provenance ngăn duplicate/ambiguous source identity. `Media_url_nonblank_check` bắt buộc URL có ít nhất một ký tự và không chứa whitespace. Published Exercise bắt buộc có `publishedAt`; `status=archived` phải tương đương `deletedAt IS NOT NULL`; chỉ listening được có `mediaId`; revision `entityType=lesson_exercise` bắt buộc nonblank `contentHash`.
+- Trigger `LessonExercise_publish_readiness` từ chối `speaking_repeat` publish và chỉ cho listening publish khi media là audio `ready`, chưa soft-delete, URL nonempty/no-whitespace. Service khóa Media readiness bằng `FOR SHARE` trước publish. Trigger `LessonExercise_live_parent` chặn insert/move/publish dưới Lesson/Topic archived hoặc incoherent nhưng cho phép chuyển Exercise sang archived để cleanup. Trigger `ContentRevision_lesson_exercise_parent` chặn polymorphic revision dangling. Trigger `LessonExercise_revision_parent_restrict` từ chối mọi hard-delete Exercise.
+- Exercise create khóa `active admin actor User FOR SHARE → Lesson FOR UPDATE → Topic FOR UPDATE (nếu có)` rồi insert; mutation trên Exercise hiện hữu khóa tiếp `LessonExercise FOR UPDATE`. Publish listening khóa `Media FOR SHARE` sau Exercise. Actor phải đồng thời có `role=admin`, `status=active` và `deletedAt IS NULL`. Safety `Media UPDATE` chờ publish nhả SHARE lock rồi mới có thể quarantine/soft-archive; public query ẩn Exercise sau đó. Revision/review/publish recheck parent live sau lock, còn archive vẫn được phép để cleanup. Activity submit dùng `active User FOR UPDATE → Lesson/Topic/LessonExercise FOR SHARE → Progress/UserTopicProgress FOR UPDATE`. Nhờ cùng content hierarchy, publish và submit không tạo snapshot trộn hai version, kể cả khi admin actor và learner là cùng một User.
+- `npm run seed:learning` upsert hai Topic seed theo stable `(lessonId, orderIndex)` và cập nhật tại chỗ; không còn delete/recreate Topic, nên chạy lại không vi phạm FK `RESTRICT` hoặc làm đổi Topic ID đang được Exercise tham chiếu.
+- Exercise version là revision đang materialize: draft revision cập nhật row; revision mới trên content đã published chưa đổi live row; publish latest-approved atomically copy snapshot và đặt `version = revision.revision`.
+- Public query chỉ trả bốn type publishable; listening mất media readiness bị ẩn ngay. Sau publish vẫn được phép quarantine/soft-archive Media vì lý do an toàn; public read không còn trả Exercise đó, còn immutable attempt snapshot cũ vẫn giữ safe media projection để replay. Exercise có `topicId` chỉ visible khi Topic đó cũng `published` và chưa soft-delete.
+- Import preview không ghi database và chỉ nhận 1–100 row. Commit xác minh `previewHash`, khóa theo `active admin actor User FOR SHARE → DataSource FOR UPDATE → Lesson IDs FOR UPDATE tăng dần → Topic IDs FOR UPDATE tăng dần`, kiểm tra idempotency/revalidate toàn bộ và ghi `ImportJob` + tất cả draft Exercise/revision + AuditLog trong một transaction all-or-nothing. Replay chỉ thành công sau khi current rows revalidate hợp lệ và job `completed` coherent: có started/completed timestamps, zero errors, exact counts, canonical sourceKey array khớp chính xác cả giá trị/thứ tự, đủ Exercise + revision 1 và đúng một completion audit; matching job `pending`/`failed`/incomplete trả safe `409` manual review. Interactive transaction đặt `maxWait=5.000 ms` (5 giây) và `timeout=30.000 ms` (30 giây). Invalid row, duplicate source key hoặc changed preview đều không được để lại partial write.
+- Import là transaction boundary riêng; không gọi ngược từ authoring transaction đang giữ content hierarchy sang import. Workflow tương lai cần kết hợp hai boundary phải có ADR/lock-order test mới trước khi release.
+
+Chi tiết quyết định: `docs/adr/ADR-002-EXERCISE-AUTHORING-VERSION-MEDIA-IMPORT-ATOMICITY.md`.
 
 Nếu deploy hoặc test gặp `lock_timeout`/deadlock:
 
@@ -211,7 +289,7 @@ GROUP BY event_object_table, trigger_name
 ORDER BY event_object_table, trigger_name;
 ```
 
-Baseline sau ACT-I: 57 business tables, 138 foreign keys, 72 CHECK constraints và 29 custom triggers. ACT-I thêm bốn trigger cho submitted-attempt immutability, event coherence và parent protection; không thêm table, FK hay CHECK constraint.
+Baseline sau EX-A trên fresh disposable database: **57 business tables, 143 foreign keys, 78 CHECK constraints, 33 custom triggers và 15 migration đã hoàn tất**. So với ACT-I, EX-A không thêm table; migration thay hai FK parent và thêm năm FK mới (net +5), thêm sáu CHECK và bốn trigger. Đây là object inventory của schema mới, không thay thế drift check hoặc acceptance test.
 
 ## 8. Xác minh dữ liệu/backfill sau deploy
 
@@ -261,6 +339,8 @@ Project chỉ hỗ trợ effective schema `public` cho write test:
 - `TEST_DATABASE_URL` tuyệt đối không có `schema` parameter vì runner truyền nguyên URL này cho `psql`.
 - Sau khi bỏ query parameter hợp lệ, host/port/database của hai URL phải giống nhau. Credentials không được đưa vào error/log.
 
+Các script khả dụng dưới đây là **danh mục**, không phải một chuỗi được chạy trên cùng database; quy tắc tách database nằm ngay sau block:
+
 ```bash
 export NODE_ENV=test
 export TEST_DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/hsk_system_test"
@@ -270,15 +350,34 @@ npm run test:db:concurrency
 npm run test:db:cms-concurrency
 npm run test:db:activity-integrity
 npm run test:db:activity-concurrency
+npm run test:db:exercise-integrity
+npm run test:db:exercise-concurrency
 ```
 
-Không chạy ba command database test này hoặc E2E trên `hsk_system`, staging hay production. Runner dùng `spawnSync('psql', args)` không qua shell interpolation, bật `ON_ERROR_STOP=1` và forward exit code của `psql`.
+Không chạy bất kỳ database write test hoặc E2E nào trên `hsk_system`, staging hay production. SQL runner dùng `spawnSync('psql', args)` không qua shell interpolation, bật `ON_ERROR_STOP=1` và forward exit code của `psql`.
+
+Không chạy tuần tự tất cả concurrency runner trên cùng database: mỗi runner tạo fixture và cố ý không cleanup. Ví dụ bootstrap riêng cho Exercise; `test:db:exercise-integrity` rollback nên có thể chạy ngay trước concurrency trên cùng database còn migration-only:
+
+```bash
+createdb hsk_exercise_authoring_disposable_test
+export NODE_ENV=test
+export TEST_DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/hsk_exercise_authoring_disposable_test"
+export DATABASE_URL="${TEST_DATABASE_URL}?schema=public"
+npx prisma migrate deploy
+npx prisma migrate status
+npm run test:db:exercise-integrity
+npm run test:db:exercise-concurrency
+```
+
+Muốn chạy lại concurrency phải drop/recreate đúng database disposable hoặc tạo database disposable mới, rồi `migrate deploy` đủ **15 migration**. Không truncate, delete fixture, `db push` hay `migrate reset`. E2E dùng database disposable khác và chỉ deploy migration, không seed.
 
 `test:db:concurrency` chỉ chạy một lần trên database fresh migration-only. Trước fixture INSERT đầu tiên, runner yêu cầu `User`, `Level`, `Test`, `Result`, `ReviewCard` và `ReviewEvent` đều rỗng. Nếu bất kỳ table nào có dữ liệu, runner dừng với thông báo `Concurrency test requires a fresh migration-only disposable database.`; runner không truncate, delete, reset hoặc tự dọn dữ liệu. Muốn chạy lại phải drop database disposable cũ, tạo database disposable mới và chạy đủ `prisma migrate deploy`.
 
 `test:db:cms-concurrency` cũng chỉ chạy một lần trên **database disposable fresh migration-only riêng**. Runner yêu cầu `User`, `Level`, `Lesson`, `Topic`, `ContentRevision` và `ContentReview` đều rỗng trước INSERT đầu tiên. Không chạy sau E2E/seed hoặc dùng chung database với runner concurrency khác; muốn chạy lại phải tạo database disposable mới và deploy đủ migration. Runner không truncate/delete/reset fixture.
 
 `test:db:activity-concurrency` chỉ chạy một lần trên **database disposable fresh migration-only riêng** và kiểm tra `User`, `Level`, `Lesson`, `Topic`, `LessonExercise`, `LessonExerciseAttempt`, `Progress`, `UserTopicProgress`, `LearningEvent` đều rỗng trước INSERT đầu tiên. Runner không truncate/delete/reset. `test:db:activity-integrity` dùng transaction rollback nhưng vẫn phải chạy trên disposable database; không chạy bất kỳ activity integration/E2E nào trên `hsk_system`, staging hoặc production.
+
+`test:db:exercise-concurrency` chỉ chạy một lần trên **database disposable fresh migration-only riêng**. Trước INSERT đầu tiên, runner yêu cầu `User`, `Level`, `Lesson`, `Topic`, `LessonExercise`, `LessonExerciseAttempt`, `LearningEvent`, `Progress`, `ContentRevision`, `ContentReview`, `Media`, `ImportJob`, `ImportRowError` và `AuditLog` đều rỗng. `DataSource` không nằm trong danh sách rỗng vì baseline migration đã tạo provenance source cần cho fixture import. Khi không fresh, runner dừng với `Exercise Authoring concurrency test requires a fresh migration-only disposable database.` và không cleanup/reset.
 
 Script `test/database/p0-schema.integration.sql` chạy trong transaction rollback và kiểm tra:
 
@@ -295,6 +394,36 @@ Script `test/database/p0-schema.integration.sql` chạy trong transaction rollba
 - mỗi scenario chỉ GREEN khi transaction A commit, transaction B đã được quan sát ở `wait_event_type = Lock` trước khi release A, B bị từ chối bởi đúng domain invariant và query trạng thái cuối vẫn hợp lệ. Lock/statement timeout, deadlock, Prisma transaction timeout, connection error, constraint sai domain hoặc B settled sớm đều là RED.
 - CMS service-level concurrency dùng bốn scenario độc lập để kiểm tra publish Lesson/archive Topic, archive Lesson/publish Topic, hai review và publish/create revision. Cả A/B phải gọi `CmsService`, B phải được quan sát block trước khi release A, actual HTTP domain exception phải khớp và final public visibility phải đúng. Architecture contract test cấm runner định nghĩa lock helper, tự mở transaction hoặc trực tiếp mutate lifecycle table.
 - Lesson Activity integration kiểm tra submitted attempt UPDATE/DELETE, event user/exercise/lesson/topic/type coherence và parent location. Production-path concurrency kiểm tra same-key one fact, different-key numbering 1/2, submit/topic-complete, final-attempt/lesson-complete, retry sau lock timeout và classifier không false-green timeout/deadlock/connection/constraint.
+- Exercise integrity kiểm tra đủ bảy field mới, FK actions, Media URL nonblank, archive-state/media-scope CHECK, live-parent/publish/revision/delete trigger, publish sau parent archive, speaking draft-only, mọi trạng thái listening media, ready audio publish, hide-on-safety-invalidation, safe immutable media snapshot, revision parent/hash, archive-only delete và duplicate provenance key.
+- Exercise production-path concurrency runner định nghĩa bảy race: concurrent revisions `1,2,3` nhưng giữ live V1; concurrent publish chỉ một audit; publish/archive; publish/submit với admin actor và learner khác User; publish/submit khi actor và learner là cùng User; archive/submit; và concurrent import idempotency retry chỉ một job/exercise/revision. Mỗi scenario chỉ GREEN khi A commit, B đã được quan sát `wait_event_type=Lock` trước release A, B đúng response/domain contract và final database invariant đúng. B settle sớm, lock/statement/Prisma timeout, deadlock, connection error hoặc constraint ngoài scenario luôn RED.
+
+### 9.1. Error classification và hành động vận hành
+
+| Signal/classification | HTTP runtime | Runner concurrency | Hành động |
+| --- | ---: | --- | --- |
+| Authoring shape/exact key/bounds; speaking publish; media không ready; import row/source key validation | `422` | Chỉ hợp lệ khi scenario kỳ vọng đúng domain; còn lại RED | Sửa payload/content, preview lại |
+| Preview hash thay đổi; stale revision; idempotency key dùng cho request khác; persistence FK/unique/CHECK backstop (`P2003`/`23503`/`P2004`/`23514`) hoặc concurrent conflict | `409` | RED nếu không phải exact expected scenario | Reload state hoặc dùng request/key đúng; không retry mù |
+| `55P03`, `57014`, Prisma `P2028` | `503` | Luôn RED | Retry đúng idempotency key sau khi điều tra lock/timeout |
+| `40001`, `40P01`, Prisma `P2034` | `409` retryable conflict | Luôn RED | Điều tra lock order; retry có giới hạn |
+| Prisma connection code hoặc SQLSTATE class `08` | `503` | Luôn RED | Kiểm tra DB/connectivity; retry cùng key |
+| Unknown persistence error | `500` generic | RED | Giữ correlation ID/log nội bộ; không lộ URL/credential/SQL |
+
+Public error chỉ chứa safe status/code/path/message; import row errors không chứa raw payload/answer. Log/harness classifier chỉ dùng SQLSTATE, Prisma code, constraint identifier hoặc HTTP status đã sanitize, không in `DATABASE_URL`/password.
+Field lạ trong authoring/import/DTO dùng generic path `$.$unknown`; response không phản chiếu tên property do client kiểm soát.
+
+### 9.2. Evidence artifact frozen và final gate
+
+Evidence feature-specific ghi nhận ngày `2026-08-11`:
+
+- Fresh disposable database deploy đủ 15 migration; `prisma migrate status` up-to-date, migration-history → datamodel và live database → datamodel đều không có drift.
+- `test:db:exercise-integrity` pass và rollback; existing Lesson Activity SQL acceptance vẫn pass trên cùng database còn migration-only.
+- Source/database checksum EX-A khớp `74944a7d95fabc02a0e84fe39b91543ac41a63e4714cfcaf389e81fe432d9f7c`; inventory là 57/143/78/33 cho table/FK/CHECK/custom trigger.
+- Negative preflight rehearsal trên database disposable dừng trước EX-A với một `Media.url` chứa whitespace trả exit nonzero/P0001 và message asset audit; sau fail vẫn còn fixture nhưng `Media_url_nonblank_check`, bảy cột và bốn trigger EX-A đều chưa tồn tại, chứng minh rollback atomic.
+- Exercise runner có bảy race, bổ sung publish/submit distinct-user và archive/submit đồng thời giữ riêng same-actor publish/submit; artifact frozen đã PASS `7/7` trên fresh migration-only disposable database. Mỗi race quan sát transaction B ở PostgreSQL `Lock` trước release A, đi qua production checkpoint, đúng response/domain contract và final-state invariant. Rerun cùng DB bị fresh-only preflight từ chối đúng kỳ vọng.
+- Bốn nhánh EX-A preflight còn lại đã được rehearsal độc lập trên bốn database disposable chỉ có 14 migration trước EX-A: published legacy, archive mismatch, parent archived/incoherent và revision dangling/blank-hash đều dừng đúng với exit nonzero/P0001. Mỗi case giữ nguyên fixture, không tạo bảy cột/sáu CHECK/bốn trigger EX-A và giữ nguyên hai parent FK legacy ở `CASCADE`, chứng minh migration rollback atomic theo checksum hiện hành.
+- `prisma format` và `prisma validate` đã pass trong vòng schema verification.
+
+Final gate ngày `2026-08-11` dùng sáu database disposable riêng, mỗi DB deploy đủ 15 migration và `migrate status` up to date: P0/Activity/Exercise integrity `3/3` suite PASS + rollback sạch; P0 concurrency `3/3`; CMS `4/4`; Activity `5/5` + classifier; Exercise `7/7`; full E2E `8/8` suite, `118/118` test. Static gate gồm Prisma format/validate/generate, TypeScript build/spec, build, lint check, package Prettier check, `31/31` unit suite (`327/327` test) và diff checks đều GREEN.
 
 Tiếp tục các cổng ứng dụng:
 
@@ -314,11 +443,13 @@ Theo dõi tối thiểu các luồng:
 
 1. Register/login với email có khoảng trắng/hoa thường; login thành công cập nhật `lastLoginAt` và reset lock.
 2. Admin đọc dictionary detail có nghĩa nullable đúng locale và provenance.
-3. Tạo/publish content revision qua CMS và có AuditLog đã redact.
-4. Start lesson, submit activity retry cùng idempotency key, progress không nhân đôi.
-5. Lấy due review, submit grade retry, chỉ có một ReviewEvent.
-6. Start exam tạo snapshot; autosave retry; submit retry; chỉ có một Result.
-7. Sửa question/test sau submit; lịch sử attempt/result vẫn render/chấm theo snapshot.
+3. Tạo/review/publish Lesson/Topic/Exercise revision qua CMS và có AuditLog đã redact; stale/non-approved publish bị từ chối.
+4. Publish listening với ready audio; public response chỉ có safe media projection. Quarantine media làm ẩn content mới nhưng attempt cũ vẫn replay từ snapshot.
+5. Preview Exercise import không tăng row count; commit cùng hash/key tạo một atomic job, retry trả cùng job; changed hash/duplicate source key không để lại partial row.
+6. Start lesson, submit activity retry cùng idempotency key, progress không nhân đôi.
+7. Lấy due review, submit grade retry, chỉ có một ReviewEvent.
+8. Start exam tạo snapshot; autosave retry; submit retry; chỉ có một Result.
+9. Sửa question/test sau submit; lịch sử attempt/result vẫn render/chấm theo snapshot.
 
 Theo dõi error rate, DB locks, latency query due queue/autosave và connection saturation trong ít nhất một chu kỳ traffic đại diện.
 
@@ -340,6 +471,8 @@ Các migration này có backfill và enforcement; không cung cấp down migrati
 - Trước khi mở traffic: nếu fail nghiêm trọng, restore backup đã verify và trỏ app về database phục hồi.
 - Sau khi mở traffic: ưu tiên feature flag/rollback application tương thích ngược, sau đó migration forward-fix.
 - Không drop cột/bảng P0 để “rollback nhanh”. Các runtime cũ dùng field legacy vẫn được giữ trong giai đoạn expand/contract.
+- Với EX-A, rollback application phải tắt các route Exercise authoring/import nhưng vẫn giữ cột, revision, provenance và immutable snapshot đã ghi. Không hard-delete Exercise/Media/DataSource để đảo import; archive content và tạo forward correction/revision hoặc compensating import job theo quyết định nghiệp vụ.
+- Nếu EX-A fail ở preflight thì transaction chưa đổi schema; xử lý dữ liệu legacy bằng migration/change record riêng rồi deploy lại nguyên checksum. Nếu EX-A đã được apply ở bất kỳ environment dùng chung nào, tuyệt đối không sửa file SQL đó.
 - Khi cần contract/drop legacy (`UserWordProgress`, field Result cũ), tạo release riêng sau khi log chứng minh không còn read/write.
 
 ## 13. Rủi ro còn mở và owner cần chốt
@@ -351,6 +484,9 @@ Các migration này có backfill và enforcement; không cung cấp down migrati
 | Xóa tài khoản | Immutable/historical FK đã được harden bằng `RESTRICT`; endpoint hard-delete bị cấm. Vẫn cần triển khai privacy job idempotent theo ADR-001 trước khi bật cho beta. |
 | JSON contract | DB chỉ bảo vệ `jsonb`; API phải dùng DTO/schema versioned và size limit. |
 | Immutable trigger | Prisma không biểu đạt; integration SQL là cổng bắt buộc. |
+| Media retention | Attempt pin safe media URL nhưng object-storage retention/URL longevity chưa được migration bảo đảm; Infra/Product phải chốt trước beta. |
+| Import V1 | Chỉ hỗ trợ LessonExercise JSON rows, reject duplicate và all-or-nothing; generic CSV/import status/error-row UI/upsert không nằm trong V1. |
+| Speaking | `speaking_repeat` chỉ author draft; publish/scoring chờ pronunciation engine. |
 | P1/P2 | Payment/social/gamification/offline/AI nâng cao chưa nằm trong cam kết P0. |
 
 ## 14. Change record tối thiểu

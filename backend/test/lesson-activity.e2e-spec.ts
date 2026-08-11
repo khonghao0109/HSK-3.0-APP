@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -26,6 +27,9 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   let contentOnlyLessonId: number;
   let speakingLessonId: number;
   let speakingId: number;
+  let listeningLessonId: number;
+  let listeningId: number;
+  let listeningMediaId: number;
   let archiveLessonId: number;
   let archivedPointerExerciseId: number;
   let nextPointerExerciseId: number;
@@ -53,6 +57,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
         forbidNonWhitelisted: true,
         transform: true,
         transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();
@@ -133,6 +138,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           explanation: '你好 is a greeting.',
           orderIndex: 1,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
@@ -147,6 +153,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           answer: { acceptedTexts: ['ＡBC  你好'] },
           orderIndex: 2,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
@@ -166,6 +173,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           answer: { tokenIds: ['t1', 't2', 't3'] },
           orderIndex: 3,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
@@ -201,7 +209,8 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           },
           answer: { optionId: 'a' },
           orderIndex: 100,
-          status: 'published',
+          status: 'archived',
+          publishedAt: new Date(),
           deletedAt: new Date(),
         },
       })
@@ -293,6 +302,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           answer: { optionId: 'a' },
           orderIndex: 1,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
@@ -348,7 +358,63 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           content: {},
           answer: {},
           orderIndex: 1,
+          status: 'draft',
+        },
+      })
+    ).id;
+
+    const listeningLesson = await prisma.lesson.create({
+      data: {
+        levelId,
+        title: 'Listening snapshot lesson',
+        orderIndex: 109,
+        slug: `activity-listening-${suffix}`,
+        status: 'published',
+        publishedAt: new Date(),
+        stories: {
+          create: {
+            levelId,
+            title: 'Listening instructions',
+            slug: `activity-listening-story-${suffix}`,
+            content: {},
+            status: 'published',
+            publishedAt: new Date(),
+          },
+        },
+      },
+    });
+    listeningLessonId = listeningLesson.id;
+    const listeningMedia = await prisma.media.create({
+      data: {
+        url: `https://cdn.example.test/activity-listening-${suffix}.mp3`,
+        type: 'audio',
+        mimeType: 'audio/mpeg',
+        duration: 13,
+        processingStatus: 'ready',
+        storageProvider: 's3',
+        storageKey: `private/activity-listening-${suffix}.mp3`,
+        checksum: `internal-${suffix}`,
+        metadata: { privateOrigin: true },
+      },
+    });
+    listeningMediaId = listeningMedia.id;
+    listeningId = (
+      await prisma.lessonExercise.create({
+        data: {
+          lessonId: listeningLessonId,
+          mediaId: listeningMediaId,
+          type: 'listening_choice',
+          prompt: 'Choose the word you hear',
+          content: {
+            options: [
+              { id: 'heard-hello', text: '你好' },
+              { id: 'heard-bye', text: '再见' },
+            ],
+          },
+          answer: { optionId: 'heard-hello' },
+          orderIndex: 1,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
@@ -389,6 +455,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
             answer: { optionId: 'a' },
             orderIndex,
             status: 'published',
+            publishedAt: new Date(),
           },
         }),
       ),
@@ -422,7 +489,6 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
         content: {},
         orderIndex: 1,
         status: 'published',
-        deletedAt: new Date(),
       },
     });
     deletedTopicExerciseId = (
@@ -441,9 +507,14 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
           answer: { optionId: 'a' },
           orderIndex: 1,
           status: 'published',
+          publishedAt: new Date(),
         },
       })
     ).id;
+    await prisma.topic.update({
+      where: { id: deletedTopic.id },
+      data: { deletedAt: new Date() },
+    });
   });
 
   afterAll(async () => {
@@ -803,6 +874,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
         answer: { optionId: 'a' },
         orderIndex: 100,
         status: 'published',
+        publishedAt: new Date(),
       },
     });
     const activity = await get(`/learning/lessons/${lessonId}/activity`).expect(
@@ -838,7 +910,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       .expect(201);
     await prisma.lessonExercise.update({
       where: { id: archivedPointerExerciseId },
-      data: { status: 'archived' },
+      data: { status: 'archived', deletedAt: new Date() },
     });
     const before = await prisma.progress.findUnique({
       where: {
@@ -866,7 +938,96 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     expect(after).toEqual(before);
   });
 
-  it('16. rejects speaking_repeat without creating fake facts', async () => {
+  it('16. snapshots safe listening media and replays history after media archive', async () => {
+    await post(
+      `/learning/lessons/${listeningLessonId}/start`,
+      'listening-start-01',
+    )
+      .send({})
+      .expect(201);
+    const activity = await get(
+      `/learning/lessons/${listeningLessonId}/activity`,
+    ).expect(200);
+    expect(activity.body.data.standaloneExercises).toEqual([
+      expect.objectContaining({
+        id: listeningId,
+        type: 'listening_choice',
+        media: {
+          id: listeningMediaId,
+          url: `https://cdn.example.test/activity-listening-${suffix}.mp3`,
+          type: 'audio',
+          mimeType: 'audio/mpeg',
+          duration: 13,
+        },
+      }),
+    ]);
+    expect(JSON.stringify(activity.body)).not.toContain('storageKey');
+    expect(JSON.stringify(activity.body)).not.toContain('checksum');
+    expect(JSON.stringify(activity.body)).not.toContain('privateOrigin');
+
+    const first = await post(
+      `/learning/exercises/${listeningId}/attempts`,
+      'listening-attempt-01',
+    )
+      .send({ answer: { optionId: 'heard-hello' }, durationSeconds: 3 })
+      .expect(201);
+    expect(first.body.data.media).toEqual({
+      id: listeningMediaId,
+      url: `https://cdn.example.test/activity-listening-${suffix}.mp3`,
+      type: 'audio',
+      mimeType: 'audio/mpeg',
+      duration: 13,
+    });
+    const stored = await prisma.lessonExerciseAttempt.findUniqueOrThrow({
+      where: { id: first.body.data.attemptId as number },
+      select: { contentSnapshot: true },
+    });
+    expect(stored.contentSnapshot).toMatchObject({
+      type: 'listening_choice',
+      media: {
+        id: listeningMediaId,
+        url: `https://cdn.example.test/activity-listening-${suffix}.mp3`,
+        type: 'audio',
+        mimeType: 'audio/mpeg',
+        duration: 13,
+      },
+    });
+    expect(JSON.stringify(stored.contentSnapshot)).not.toContain('storageKey');
+    expect(JSON.stringify(stored.contentSnapshot)).not.toContain('checksum');
+    expect(JSON.stringify(stored.contentSnapshot)).not.toContain(
+      'privateOrigin',
+    );
+
+    await prisma.media.update({
+      where: { id: listeningMediaId },
+      data: {
+        url: `https://cdn.example.test/changed-${suffix}.mp3`,
+        deletedAt: new Date(),
+      },
+    });
+    const retry = await post(
+      `/learning/exercises/${listeningId}/attempts`,
+      'listening-attempt-01',
+    )
+      .send({ answer: { optionId: 'heard-hello' }, durationSeconds: 3 })
+      .expect(201);
+    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data.media.url).toBe(
+      `https://cdn.example.test/activity-listening-${suffix}.mp3`,
+    );
+    const history = await get(
+      `/learning/exercises/${listeningId}/attempts`,
+    ).expect(200);
+    expect(history.body.data).toEqual([first.body.data]);
+    await post(
+      `/learning/exercises/${listeningId}/attempts`,
+      'listening-attempt-new',
+    )
+      .send({ answer: { optionId: 'heard-hello' } })
+      .expect(404);
+  });
+
+  it('17. keeps speaking_repeat draft-only and unavailable to runtime', async () => {
     await post(
       `/learning/lessons/${speakingLessonId}/start`,
       'speaking-start-01',
@@ -878,7 +1039,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       'speaking-attempt-1',
     )
       .send({ answer: { audioId: 'not-trusted' }, durationSeconds: 3 })
-      .expect(422);
+      .expect(404);
     await expect(
       prisma.lessonExerciseAttempt.count({
         where: { userId, exerciseId: speakingId },
@@ -886,7 +1047,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     ).resolves.toBe(0);
   });
 
-  it('17. explicitly completes a started content-only lesson', async () => {
+  it('18. explicitly completes a started content-only lesson', async () => {
     await post(
       `/learning/lessons/${contentOnlyLessonId}/complete`,
       'content-only-early',
@@ -915,10 +1076,10 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       });
   });
 
-  it('18. retains archived attempt history and enforces immutable facts', async () => {
+  it('19. retains archived attempt history and enforces immutable facts', async () => {
     await prisma.lessonExercise.update({
       where: { id: mcqId },
-      data: { status: 'archived' },
+      data: { status: 'archived', deletedAt: new Date() },
     });
     const history = await get(`/learning/exercises/${mcqId}/attempts`).expect(
       200,

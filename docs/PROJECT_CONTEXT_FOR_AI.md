@@ -100,7 +100,7 @@ hsk-system/
 `backend/src/modules` da duoc chia theo domain:
 
 - `auth`
-- `cms` (CMS Lite Lesson/Topic)
+- `cms` (CMS Lite Lesson/Topic + Exercise Authoring & Import Validation V1)
 - `learning/activity` (Lesson Activity Attempt & Progress V1)
 - `users`
 - `levels`
@@ -119,7 +119,7 @@ hsk-system/
 
 `backend/src` co them:
 
-- `common/` (decorators, guards, filters, interceptors, constants, utils)
+- `common/` (decorators, guards, filters, interceptors, constants, utils, shared LessonExercise NFKC/exact-key/bounds validation)
 - `shared/` (dto, types, interfaces)
 - `config/` (`app.config.ts`, `database.config.ts`, `env.validation.ts`)
 - `prisma/` (`prisma.module.ts`, `prisma.service.ts`)
@@ -150,7 +150,7 @@ File nguon: `backend/prisma/schema.prisma`
 Schema P0 moi bo sung:
 
 - Identity/privacy: `UserProfile`, `UserSession`, token hash, `UserGoal`, `PlacementAttempt`, `LearningPlan`, `Consent`, export/delete request.
-- CMS/provenance: `DataSource`, `WordSource`, `ContentRevision`, `ContentReview`, `AuditLog`, `ImportJob`, `ImportRowError`.
+- CMS/provenance: `DataSource`, `WordSource`, `ContentRevision`, `ContentReview`, `AuditLog`, `ImportJob`, `ImportRowError`; `LessonExercise` co media/provenance/actor/publish metadata va archive-only database policy.
 - Learning/SRS: progress chi tiet, `UserTopicProgress`, `LearningEvent`, `ReviewCard`, `ReviewSession`, `ReviewEvent`.
 - Exam: `TestQuestionPlacement`, `ExamAttempt`, `ExamAnswer`, `ExamAttemptSnapshot`, `ExamAttemptEvent`.
 
@@ -314,6 +314,7 @@ Nguyen tac:
 - Data raw HSK + pipeline dictionary.
 - Active-account JWT authorization va Onboarding Goal & Learning Plan V1.
 - CMS Lite publish workflow cho Lesson/Topic va shared Lesson readiness policy.
+- Exercise Authoring & Import Validation V1: shared NFKC validator, revision/review/publish/archive, listening media readiness va preview/atomic import.
 - Lesson Activity Attempt & Progress V1 voi server scoring, immutable snapshot/event, derived progress va resume.
 
 ### Chua day du
@@ -321,6 +322,7 @@ Nguyen tac:
 - Nhieu module backend moi o muc skeleton (chua co controller/service logic day du).
 - Frontend va AI service chua hoan thien package dependencies va code runtime.
 - Chua co CI/CD, observability, security hardening day du.
+- Exercise V1 frozen artifact da pass full release gate; speaking publish/scoring, generic import va CMS entity khac van la backlog.
 
 ## 12. Quy tac cho AI agent khi thao tac tren repo nay
 
@@ -343,6 +345,8 @@ Nguyen tac:
 - API spec: `docs/api.md`
 - Product roadmap: `docs/roadmap.md`
 - ERD image: `docs/erd.png`
+- P0 database runbook: `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
+- Exercise authoring decision: `docs/adr/ADR-002-EXERCISE-AUTHORING-VERSION-MEDIA-IMPORT-ATOMICITY.md`
 - Architecture concept image: `d:/HanziiApp/ChatGPT Image 16_25_28 4 thg 5, 2026.png`
 
 ## 14. Quick start cho AI assistant
@@ -356,10 +360,10 @@ Neu ban la AI duoc giao tiep tuc du an nay, thu tu uu tien:
 5. Ket noi frontend den API.
 6. Mo rong AI assistant qua `backend/modules/ai/chat` -> `ai/services/rag-api`.
 
-## 15. P0 schema baseline + integrity hardening — 10/08/2026
+## 15. P0 schema baseline + integrity hardening — 11/08/2026
 
-- Migration chain: 14 migration, gom 5 migration lich su, P0-00...P0-04, `p0_integrity_hardening`, `p0_integrity_concurrency_serialization`, `content_review_immutability` va `lesson_activity_integrity`.
-- Schema sau rehearsal: 57 business tables, 138 foreign keys, 72 CHECK constraints va 29 trigger nghiep vu.
+- Migration chain: 15 migration, gom 5 migration lich su, P0-00...P0-04, `p0_integrity_hardening`, `p0_integrity_concurrency_serialization`, `content_review_immutability`, `lesson_activity_integrity` va `exercise_authoring_import_validation_v1`.
+- Schema sau migration thu 15 tren fresh disposable database: 57 business tables, 143 foreign keys, 78 CHECK constraints va 33 custom trigger.
 - `Level` co stable code; `HSK7_9` dai dien band 7-9, khong tach thanh ba level o P0.
 - Email duoc canonicalize `trim().toLowerCase()` trong Auth runtime va unique theo `lower(email)` tai PostgreSQL.
 - Token session/reset/verification chi co cot `tokenHash`; khong co raw token column.
@@ -378,13 +382,14 @@ Tai lieu chi tiet:
 - `docs/database/P0_ERD.md`
 - `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
 - `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`
+- `docs/adr/ADR-002-EXERCISE-AUTHORING-VERSION-MEDIA-IMPORT-ATOMICITY.md`
 
-Schema da san sang cho runtime P0. Onboarding goal + learning plan V1, CMS Lite Lesson/Topic va Lesson Activity Attempt & Progress V1 da co runtime voi active-account JWT authorization, row locking, immutable facts, stable published content va idempotency. Placement scoring, import, CMS cho entity khac, SRS/exam API va frontend van la backlog.
+Schema da san sang cho runtime P0. Onboarding goal + learning plan V1, CMS Lite Lesson/Topic, Exercise Authoring & Import Validation V1 va Lesson Activity Attempt & Progress V1 da co implementation voi active-account JWT authorization, row locking, immutable facts, stable published content va idempotency. Placement scoring, generic import/CMS cho entity khac, SRS/exam API va frontend van la backlog. Exercise frozen artifact da co bang chung full release gate tren cac fresh disposable database rieng.
 
 ## 16. CMS Lite Publish Workflow & Lesson Readiness V1 — 10/08/2026
 
 - Module runtime: `backend/src/modules/cms`; admin routes dung prefix `/api/v1/admin/cms` va bat buoc `JwtAuthGuard` + `RolesGuard` + `admin` role tu database hien tai.
-- V1 chi quan ly Lesson va Topic. Create tao draft + revision 1; edit chi append `ContentRevision`; review append `ContentReview`; publish chi chap nhan revision moi nhat co latest decision `approved`; archive la soft lifecycle.
+- Phan Lesson/Topic V1 quan ly Lesson va Topic. Exercise authoring/import duoc mo rong rieng tai muc 18. Create tao draft + revision 1; edit chi append `ContentRevision`; review append `ContentReview`; publish chi chap nhan revision moi nhat co latest decision `approved`; archive la soft lifecycle.
 - Snapshot chi chua mutable domain fields. Hash SHA-256 duoc tinh tren canonical JSON sort object key theo UTF-16 code unit, khong phu thuoc locale; array order duoc giu nguyen va unsupported value bi reject.
 - Khong backfill hash cu. Idempotency cua revision/publish so sanh them canonical snapshot de tuong thich voi hash legacy tung duoc tao boi comparator phu thuoc locale.
 - Lock order CMS la `Lesson → Topic`; moi Topic mutation/review deu lock parent Lesson truoc Topic. Khi live row da published, draft revision moi khong overwrite row va public van thay version cu den khi publish atomically.
@@ -395,12 +400,12 @@ Schema da san sang cho runtime P0. Onboarding goal + learning plan V1, CMS Lite 
 - Public detail loc Topic, Story, Word va Exercise theo public visibility; serializer khong chon/tra `LessonExercise.answer` hoac explanation/internal metadata.
 - E2E bao phu stale publish, review reject/request-change, concurrent revision numbering, publish idempotency, stable live content, child visibility, audit/immutable trigger va stale admin token.
 - JSON boolean flags trong CMS/onboarding chi nhan literal `true`/`false`; string, number, null, object va array bi reject tai HTTP boundary.
-- Backlog gan: Level/Story/Word/Exercise CMS, import preview/validate/commit, four-eyes approval, scheduled publish, OpenAPI va admin frontend.
+- Backlog gan: Level/Story/Word/Question/Test/Media CMS, generic import ngoai Exercise, four-eyes approval, scheduled publish, OpenAPI va admin frontend.
 
 ## 17. Lesson Activity Attempt & Progress V1 — 11/08/2026
 
 - Runtime nam tai `backend/src/modules/learning/activity`; route write/read dung JWT owner, positive safe integer path ID va strict DTO.
-- Tat ca activity write cua cung user lock active `User FOR UPDATE`, sau do `Progress → UserTopicProgress`. `LessonActivityTransactionCoordinator` la no-op DI checkpoint quanh production lock de concurrency harness quan sat backend PID/Lock ma khong copy business logic.
+- Tat ca activity write cua cung user lock active `User FOR UPDATE`; content-targeted write tiep tuc shared lock `Lesson → Topic → LessonExercise`, roi `Progress → UserTopicProgress`. `LessonActivityTransactionCoordinator` la no-op DI checkpoint quanh production lock de concurrency harness quan sat backend PID/Lock ma khong copy business logic.
 - Idempotency key dai 8-128 ky tu, unique theo user tren `LearningEvent`; attempt semantic hash dung canonical JSON. Retry khong tao attempt/event, khong tang attempt number, duration hay progress.
 - Scorer `lesson-activity-v1` ho tro `mcq`, `listening_choice`, `fill_blank`, `arrange_sentence`; `speaking_repeat` tra 422 den khi co pronunciation engine. Malformed authoring rollback toan bo.
 - Attempt snapshot lay tu DB trong transaction va chua authoritative answer de render lich su, nhung response serializer chi lo safe result summary. History owner van doc duoc sau archive va khong join live content de viet lai ket qua.
@@ -408,3 +413,47 @@ Schema da san sang cho runtime P0. Onboarding goal + learning plan V1, CMS Lite 
 - Migration `20260810210000_lesson_activity_integrity` fail-safe tren legacy incoherence, khoa UPDATE/DELETE submitted attempt, validate LearningEvent cross-reference va chan doi parent location sau khi co history.
 - Production-path concurrency harness bao phu same key, different key numbering, submit/topic complete, final attempt/lesson complete va retry sau lock timeout; moi race phai quan sat B o `wait_event_type=Lock` truoc khi release A.
 - Backlog ro rang: SRS, exam, speaking/pronunciation scoring, premium entitlement va published-learning content version pinning.
+
+## 18. Exercise Authoring & Import Validation V1 — 11/08/2026
+
+### 18.1 Runtime boundary va routes
+
+- Runtime o `backend/src/modules/cms/exercise-authoring.service.ts` va `backend/src/modules/cms/exercise-import`; controller dung `/api/v1/admin/cms`, JWT active-account + role `admin`.
+- Routes: list/detail/create Exercise; create revision; append review; publish latest-approved revision; archive; import preview; import commit.
+- Shared contract o `backend/src/common/validation/lesson-exercise-authoring.validator.ts`; create/revision/import/scorer khong duoc tu dinh nghia shape khac nhau.
+- Bon type publishable la `mcq`, `listening_choice`, `fill_blank`, `arrange_sentence`. `speaking_repeat` co the luu draft co shape an toan nhung publish tra `422` cho den khi co pronunciation engine.
+
+### 18.2 Validation va version contract
+
+- Human text va stable ID duoc normalize NFKC. Top-level exact keys: `type`, `prompt`, `content`, `answer`, `explanation`, `mediaId`; subtype cung reject field du. Field la trong authoring/import/DTO luon dung safe path `$.$unknown`, khong phan chieu property do client kiem soat.
+- Bound chung: canonical JSON 65.536 byte, depth 8, string 4.096 ky tu, array 100; stable ID toi da 128 ky tu, khong whitespace; boolean chi nhan JSON boolean.
+- Choice dung stable option ID va authoritative `answer.optionId` phai co trong options. Fill blank normalize NFKC/trim/collapse whitespace. Arrange answer phai la dung va du token set, khong duplicate.
+- Create tao draft + revision/version 1. Draft revision moi duoc materialize vao live row; revision moi tren row da published khong thay live version/content. Chi latest revision co latest review `approved` duoc publish atomically va luc do `version = revision.revision`.
+- Create/revision/review/publish yeu cau Lesson/Topic parent live va coherent. Archive Exercise van hop le sau khi parent archive de cleanup; `status=archived` va `deletedAt` phai cung trang thai.
+- Snapshot/hash dung canonical JSON + SHA-256. Audit chi luu summary an toan; khong luu raw answer/payload. `ContentRevision`/`ContentReview` la history append-only va `LessonExercise` la archive-only.
+
+### 18.3 Media va learning hand-off
+
+- Chi `listening_choice` duoc mang `mediaId`. Listening publish bat buoc `Media` audio, `processingStatus=ready`, `deletedAt IS NULL`, URL nonempty va khong co whitespace; service khoa Media `FOR SHARE`, sau do service validation, CHECK va database trigger cung enforce.
+- Public projection/snapshot chi co `id`, `url`, `type`, `mimeType`, `duration`; khong co storage provider/key, original filename, checksum hay processing metadata.
+- Public query chi tra 4 type publishable; listening da mat readiness bi an; Exercise co `topicId` chi visible khi Topic public. Learner submit khoa cung hierarchy voi publish, sau do attempt pin `exerciseVersion`, content, authoritative answer va safe media trong immutable snapshot.
+- Safety workflow van duoc quarantine/soft-archive Media sau publish; public query/serializer an Exercise ngay khi readiness mat. Immutable attempt snapshot cu khong bi rewrite va van giu safe projection de replay, khong lam lo metadata noi bo qua response.
+
+### 18.4 Import contract
+
+- Preview la no-write read/validation phase. Input gom `dataSourceId`, NFKC/trim `fileName`, bat buoc 1-100 row; row exact keys va dung chung authoring validator.
+- `previewHash` la SHA-256 tren canonical contract version, source, file, normalized ordered rows va sorted structural errors. Relational state khong dong bang trong hash; commit bat buoc gui lai dung payload/hash va lookup/revalidate parent/media/existing key trong transaction.
+- Commit lock active admin actor `User FOR SHARE`, `DataSource FOR UPDATE`, cac Lesson ID `FOR UPDATE` tang dan roi Topic ID `FOR UPDATE` tang dan; role/admin lifecycle duoc enforce. Sau do service kiem tra lai parent, Media va `(dataSourceId, sourceKey)`, ghi mot `ImportJob.completed`, tat ca draft Exercise + revision 1 va audit trong transaction all-or-nothing co `maxWait=5.000 ms`, `timeout=30.000 ms`.
+- `Idempotency-Key` la global unique persistence key. Retry cung actor/source/file/hash/entity chi thanh cong sau khi revalidate current rows va job `completed` co started/completed timestamps, zero errors, exact counts, canonical sourceKey array khop chinh xac ca gia tri/thu tu, du Exercise + revision 1 va dung mot completion audit. Matching job `pending`/`failed`/incomplete hoac provenance incoherent tra safe `409` manual review; cung key khac request cung tra `409`.
+- Duplicate source key trong batch va key da co trong cung DataSource deu reject; cung key o DataSource version khac duoc phep. V1 khong implicit upsert/merge va khong persist partial error rows khi commit invalid.
+
+### 18.5 Concurrency, database va evidence status
+
+- Exercise create khoa `active admin actor User FOR SHARE → Lesson FOR UPDATE → Topic FOR UPDATE (neu co)` roi insert; mutation tren Exercise hien huu khoa tiep `LessonExercise FOR UPDATE`. Publish listening khoa `Media FOR SHARE` sau Exercise. Safety `Media UPDATE` doi SHARE lock ket thuc roi moi quarantine/soft-archive; public an Exercise sau do. Import lock `active admin actor User FOR SHARE → DataSource/Sorted Lesson/Sorted Topic FOR UPDATE`. Activity submit dung `User FOR UPDATE → Lesson/Topic/LessonExercise FOR SHARE → progress FOR UPDATE`; publish-vs-submit vi vay snapshot mot version coherent ke ca khi actor va learner la cung User.
+- `npm run seed:learning` upsert stable Topic theo `(lessonId, orderIndex)` va update tai cho; khong delete/recreate Topic da duoc Exercise tham chieu.
+- Migration forward-only: `20260811120000_exercise_authoring_import_validation_v1`. Preflight dung neu co published legacy Exercise, archive state ambiguous, parent archived/incoherent hoac LessonExercise revision dangling/null/blank hash; migration khong doan/backfill JSON/media provenance.
+- Database backstop: Lesson/Topic/Media/DataSource FK `RESTRICT`, unique source key theo DataSource, Media URL nonempty/no-whitespace, publishedAt/archive-state/media-scope/revision-hash CHECK, listening/speaking publish trigger, live-parent trigger, revision-parent trigger va hard-delete rejection. Persistence `P2003`/`23503`/`P2004`/`23514` map thanh safe HTTP `409`. Revision/review/publish recheck parent live; archive van duoc phep de cleanup child khi parent da archive.
+- Feature-specific SQL acceptance chay rollback qua `npm run test:db:exercise-integrity`. Production-path concurrency runner hien co 7 race: concurrent revisions, concurrent publish, publish/archive, publish/submit distinct-user, publish/submit same-actor, archive/submit va import idempotency. Race chi GREEN khi B duoc quan sat o PostgreSQL Lock truoc release A va final invariant dung.
+- Evidence artifact frozen `74944a7d95fabc02a0e84fe39b91543ac41a63e4714cfcaf389e81fe432d9f7c`: deploy du 15 migration, migrate status va migration-history shadow/live drift deu pass; inventory 57 table/143 FK/78 CHECK/33 trigger. P0/Activity/Exercise SQL integrity deu PASS + rollback sach. P0 concurrency `3/3`, CMS `4/4`, Activity `5/5`, Exercise `7/7`; moi Exercise race quan sat B o PostgreSQL Lock truoc release va xac minh response/domain/final invariant. Full E2E `8/8` suite, `118/118` test; static gate Prisma/TypeScript/build/lint/format/unit deu GREEN. Negative preflight Media URL whitespace tra P0001 va rollback atomic; Exercise runner rerun tren DB da co fixture bi fresh-only preflight tu choi dung contract.
+
+Decision rationale va rollback boundary: `docs/adr/ADR-002-EXERCISE-AUTHORING-VERSION-MEDIA-IMPORT-ATOMICITY.md`.

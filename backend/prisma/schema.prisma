@@ -248,6 +248,9 @@ model User {
   createdSentences         Sentence[]               @relation("SentenceCreatedBy")
   updatedSentences         Sentence[]               @relation("SentenceUpdatedBy")
   publishedSentences       Sentence[]               @relation("SentencePublishedBy")
+  createdLessonExercises   LessonExercise[]         @relation("LessonExerciseCreatedBy")
+  updatedLessonExercises   LessonExercise[]         @relation("LessonExerciseUpdatedBy")
+  publishedLessonExercises LessonExercise[]         @relation("LessonExercisePublishedBy")
   createdQuestions         Question[]               @relation("QuestionCreatedBy")
   updatedQuestions         Question[]               @relation("QuestionUpdatedBy")
   publishedQuestions       Question[]               @relation("QuestionPublishedBy")
@@ -481,19 +484,20 @@ model DataSource {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  createdBy    User?         @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  levels       Level[]
-  lessons      Lesson[]
-  topics       Topic[]
-  stories      Story[]
-  wordSources  WordSource[]
-  wordMeanings WordMeaning[]
-  wordLevels   WordLevel[]
-  sentences    Sentence[]
-  questions    Question[]
-  tests        Test[]
-  media        Media[]
-  importJobs   ImportJob[]
+  createdBy       User?            @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  levels          Level[]
+  lessons         Lesson[]
+  topics          Topic[]
+  stories         Story[]
+  wordSources     WordSource[]
+  wordMeanings    WordMeaning[]
+  wordLevels      WordLevel[]
+  sentences       Sentence[]
+  lessonExercises LessonExercise[]
+  questions       Question[]
+  tests           Test[]
+  media           Media[]
+  importJobs      ImportJob[]
 
   @@unique([name, version])
   @@index([createdById])
@@ -501,6 +505,7 @@ model DataSource {
 
 model Media {
   id               Int                   @id @default(autoincrement())
+  /// Nonblank/whitespace-free is enforced by the SQL-only Media_url_nonblank_check.
   url              String                @unique
   type             MediaType
   mimeType         String?
@@ -533,6 +538,7 @@ model Media {
   pronunciationAttemptAudio  PronunciationAttempt[]  @relation("PronunciationAttemptAudio")
   questionGroupAudio         QuestionGroup[]         @relation("QuestionGroupAudio")
   questionGroupImage         QuestionGroup[]         @relation("QuestionGroupImage")
+  lessonExercises            LessonExercise[]        @relation("LessonExerciseMedia")
 
   @@unique([storageProvider, storageKey])
   @@index([type, processingStatus])
@@ -885,31 +891,53 @@ model LessonSentence {
   @@index([lessonId, orderIndex])
 }
 
+/// Archive-only CMS entity. Live-parent, archive-state, relational publish
+/// readiness, revision-parent integrity and physical-delete rejection are
+/// enforced by the forward SQL migration because Prisma cannot express those
+/// cross-table constraints.
 model LessonExercise {
-  id          Int           @id @default(autoincrement())
-  lessonId    Int
-  topicId     Int?
-  type        ExerciseType
-  prompt      String
-  content     Json
-  answer      Json
-  explanation String?
-  version     Int           @default(1)
-  orderIndex  Int
-  status      ContentStatus @default(draft)
-  deletedAt   DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  lessonId      Int
+  topicId       Int?
+  mediaId       Int?
+  type          ExerciseType
+  prompt        String
+  content       Json
+  answer        Json
+  explanation   String?
+  version       Int           @default(1)
+  orderIndex    Int
+  status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  sourceKey     String?
+  createdById   Int?
+  updatedById   Int?
+  publishedById Int?
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  lesson            Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  topic             Topic?                  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  lesson            Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  topic             Topic?                  @relation(fields: [topicId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  media             Media?                  @relation("LessonExerciseMedia", fields: [mediaId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  dataSource        DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy         User?                   @relation("LessonExerciseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy         User?                   @relation("LessonExerciseUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy       User?                   @relation("LessonExercisePublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   attempts          LessonExerciseAttempt[]
   currentProgresses Progress[]              @relation("ProgressCurrentExercise")
   learningEvents    LearningEvent[]
 
+  @@unique([dataSourceId, sourceKey])
   @@index([topicId])
+  @@index([mediaId])
   @@index([type])
   @@index([status, deletedAt])
+  @@index([dataSourceId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
   @@index([lessonId, orderIndex])
 }
 

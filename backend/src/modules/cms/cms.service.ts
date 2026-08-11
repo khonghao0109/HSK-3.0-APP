@@ -1045,14 +1045,19 @@ export class CmsService {
           'Content conflicts with an existing slug or order.',
         );
       }
+      if (classification === 'constraint_conflict') {
+        throw new ConflictException(
+          'Content violates a database integrity constraint.',
+        );
+      }
       if (classification === 'concurrent_retry') {
         throw new ConflictException(
           'Concurrent content update detected; retry the request.',
         );
       }
-      if (classification === 'timeout') {
+      if (classification === 'timeout' || classification === 'connection') {
         throw new ServiceUnavailableException(
-          'Content operation timed out; retry the request.',
+          'Content operation is temporarily unavailable; retry the request.',
         );
       }
       throw new InternalServerErrorException('Content operation failed.');

@@ -9,7 +9,7 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic và Lesson Activity Attempt & Progress V1. Session/profile/privacy, placement scoring, import pipeline, CMS cho các entity khác, SRS và exam attempt vẫn là backlog.
+> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1 và Lesson Activity Attempt & Progress V1. Session/profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test/Media, SRS và exam attempt vẫn là backlog. Artifact Exercise V1 frozen đã pass fresh deploy/drift, ba SQL integrity suite, toàn bộ P0/CMS/Activity/Exercise concurrency runners, static quality gate và full E2E.
 
 Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Lesson public còn phải đạt readiness contract ở mục 16.4. Các endpoint archive/delete content trong tài liệu này mang nghĩa soft lifecycle, không hard-delete row đã có lịch sử.
 
@@ -624,15 +624,166 @@ Lesson ready khi đồng thời:
 2. Level cha `published` và `deletedAt IS NULL`.
 3. Có ít nhất một Topic hoặc Story liên kết trực tiếp đang `published` và chưa soft-delete.
 
-Exercise không bắt buộc ở V1. Cùng policy này được dùng cho public lesson list/detail, public Topic/Story relation, CMS Lesson publish validation và onboarding plan generation. Public lesson detail chỉ trả child Topic/Story/Exercise public; `LessonWord` chỉ trả Word public; `LessonExercise.answer`, `explanation` và internal metadata không được serialize.
+Exercise không bắt buộc ở V1. Cùng policy này được dùng cho public lesson list/detail, public Topic/Story relation, CMS Lesson publish validation và onboarding plan generation. Public lesson detail chỉ trả child Topic/Story/Exercise public; Exercise có `topicId` chỉ visible khi chính Topic đó public. `LessonWord` chỉ trả Word public; `LessonExercise.answer`, `explanation` và internal metadata không được serialize.
 
-#### CMS/import backlog
+#### CMS backlog còn lại
 
-- CMS Level, Story, Word, Exercise, Question, Test và Media.
-- `POST /admin/imports`, preview/validate/commit/status/error rows.
-- Four-eyes approval, scheduled publish, bulk action và optimistic version header.
+- CMS Level, Story, Word, Question, Test và Media; Exercise V1 đã có runtime riêng ở mục 16.5.
+- Import generic cho các entity khác, import job status/error-row UI, four-eyes approval, scheduled publish, bulk action và optimistic version header.
 
-### 16.5 Lesson Activity Attempt & Progress V1 — runtime complete
+### 16.5 Exercise Authoring & Import Validation V1 — implemented, final release gate GREEN
+
+Tất cả route bên dưới nằm dưới `/api/v1`, yêu cầu `JwtAuthGuard`, `RolesGuard` và role `admin` hiện hành lấy lại từ database. Path ID phải là positive safe integer. Mutation mặc định trả `201`; list/detail trả `200`.
+
+#### Exercise authoring routes
+
+- `GET /admin/cms/exercises?lessonId=&topicId=&type=&status=&page=1&limit=20`: list admin, sắp theo `lessonId, orderIndex, id`, kèm latest revision/review.
+- `GET /admin/cms/exercises/:exerciseId`: live/materialized row và revision history mới nhất trước.
+- `POST /admin/cms/exercises`: tạo draft + `ContentRevision.revision=1` + audit trong một transaction.
+- `POST /admin/cms/exercises/:exerciseId/revisions`: append revision mới; retry canonical payload giống latest revision là idempotent.
+- `POST /admin/cms/exercises/:exerciseId/revisions/:revisionId/reviews`: append `approved`, `changes_requested` hoặc `rejected`; retry cùng reviewer/decision/note khi đó vẫn là latest review là idempotent.
+- `POST /admin/cms/exercises/:exerciseId/revisions/:revisionId/publish`: chỉ publish latest revision có latest review `approved`.
+- `POST /admin/cms/exercises/:exerciseId/archive`: soft-delete bằng `status=archived` và `deletedAt`; retry là idempotent. Hard-delete `LessonExercise` bị database từ chối.
+
+Body create thêm `lessonId` và `topicId` optional; body revision chỉ gồm snapshot mutable:
+
+```json
+{
+  "lessonId": 12,
+  "topicId": 34,
+  "type": "mcq",
+  "prompt": "Chọn nghĩa đúng của 你好",
+  "content": {
+    "options": [
+      { "id": "hello", "text": "Xin chào" },
+      { "id": "goodbye", "text": "Tạm biệt" }
+    ]
+  },
+  "answer": { "optionId": "hello" },
+  "explanation": "你好 là lời chào thông dụng.",
+  "orderIndex": 1
+}
+```
+
+Client không được gửi `status`, `version`, revision number, score/correctness, actor, audit metadata, publication fields hoặc timestamp. Shared validator dùng cùng contract cho create, revision, import và scorer:
+
+- Chỉ chấp nhận đúng top-level keys `type`, `prompt`, `content`, `answer`, `explanation`, `mediaId`; mỗi subtype cũng dùng exact-key validation.
+- Toàn bộ human text và stable ID được chuẩn hóa Unicode NFKC. Stable ID dài tối đa 128 ký tự, không whitespace, bắt đầu bằng chữ/số và sau đó chỉ dùng chữ/số/`.`/`_`/`:`/`-`.
+- Payload canonical tối đa 65.536 byte, depth tối đa 8, string tối đa 4.096 ký tự, array tối đa 100 phần tử; `orderIndex` từ 1 đến 1.000.000.
+- Boolean như `caseSensitive` chỉ nhận JSON boolean thật.
+
+| Type | Exact `content` | Exact authoritative `answer` | Publish V1 |
+| --- | --- | --- | :---: |
+| `mcq` | `{ "options": [{ "id", "text" }, ...] }`, 2–100 stable unique ID | `{ "optionId": "..." }`, ID phải tồn tại | Có |
+| `listening_choice` | Giống `mcq` | Giống `mcq` | Có, bắt buộc ready/live audio |
+| `fill_blank` | `{}` | `{ "acceptedTexts": [...], "caseSensitive"?: boolean }`, 1–100 đáp án | Có |
+| `arrange_sentence` | `{ "tokens": [{ "id", "text" }, ...] }`, 2–100 stable unique ID | `{ "tokenIds": [...] }`, đúng và đủ tập token, không duplicate | Có |
+| `speaking_repeat` | `{ "referenceText"?: "..." }` | `{}` | Không; chỉ lưu draft, publish trả `422` |
+
+Lỗi từ shared shape validator trả `422` với `{ code, path, message }`; mọi field lạ trong authoring/import/DTO dùng generic path `$.$unknown`, không phản chiếu tên property do client kiểm soát. Publish `speaking_repeat` trả safe `422` message và listening media trả `422` với `{ code: "listening_media_not_ready", path: "mediaId", message }`. Không phản chiếu raw answer, SQL, constraint name hoặc Prisma error.
+
+#### Revision, version và publish semantics
+
+- `version` của live/materialized `LessonExercise` là revision đang được materialize. Tạo exercise bắt đầu ở revision/version 1.
+- Với exercise `draft`, append revision mới đồng thời materialize snapshot mới và tăng `version`.
+- Với exercise đang `published`, append draft revision không đổi live row/version; learner tiếp tục thấy bản đã publish. Publish latest-approved revision mới atomically thay snapshot và đặt `version = revision.revision`.
+- Create/revision/review/publish đều yêu cầu Lesson/Topic parent còn live và coherent. Khi parent đã archive, content mutation bị từ chối nhưng endpoint archive Exercise vẫn được phép để cleanup lifecycle; database coupling bắt buộc `status=archived` khi và chỉ khi `deletedAt` khác null.
+- Stale revision, revision không approved, archived exercise hoặc hash/snapshot không khớp trả conflict; publish retry đúng live hash/version không tạo side effect/audit lần hai.
+- Exercise create khóa `active admin actor User FOR SHARE → Lesson FOR UPDATE → Topic FOR UPDATE (nếu có)` rồi insert; mutation trên Exercise hiện hữu khóa tiếp `LessonExercise FOR UPDATE`. Publish listening mới khóa `Media FOR SHARE` sau Exercise. Role `admin` được enforce cùng active/deleted state. Safety `Media UPDATE` phải chờ publish nhả SHARE lock rồi mới có thể quarantine/soft-archive; public visibility sẽ ẩn Exercise sau đó. Learner submit dùng `active User FOR UPDATE → Lesson/Topic/LessonExercise FOR SHARE → progress FOR UPDATE`; publish và submit vì thế serialize an toàn, kể cả cùng user, để attempt chỉ snapshot trọn một version và không trộn old/new fields.
+
+#### Listening media và snapshot an toàn
+
+Chỉ `listening_choice` được mang `mediaId`; shared validator và database CHECK cùng chặn media trên type khác. Listening chỉ publish khi `mediaId` trỏ tới `Media.type=audio`, `processingStatus=ready`, `deletedAt IS NULL` và URL có ít nhất một ký tự, không chứa whitespace. Publish khóa row Media bằng `FOR SHARE` rồi kiểm tra readiness; `Media_url_nonblank_check` và database publish trigger là backstop cho writer ngoài service. Không có media, media pending/failed/quarantined/deleted, URL không an toàn hoặc media không phải audio đều trả `422` với code `listening_media_not_ready`.
+
+Public exercise và immutable attempt snapshot chỉ project media an toàn:
+
+```json
+{
+  "id": 99,
+  "url": "https://cdn.example.com/audio/hello.mp3",
+  "type": "audio",
+  "mimeType": "audio/mpeg",
+  "duration": 12
+}
+```
+
+Không trả `storageProvider`, `storageKey`, `originalFilename`, checksum hoặc metadata xử lý. Attempt giữ projection media cùng authoritative answer trong snapshot nội bộ để replay/scoring, nhưng response không trả authoritative answer hay raw snapshot. Sau publish, safety workflow vẫn được phép quarantine hoặc soft-archive Media; public query/serializer ẩn Exercise đó ngay, còn immutable attempt snapshot cũ không bị rewrite và vẫn giữ projection đã chốt để replay.
+
+#### Import preview và atomic commit
+
+- `POST /admin/cms/exercise-imports/preview`
+- `POST /admin/cms/exercise-imports` với header `Idempotency-Key`
+
+Preview body:
+
+```json
+{
+  "dataSourceId": 7,
+  "fileName": "hsk1-exercises-v1.json",
+  "rows": [
+    {
+      "sourceKey": "hsk1.lesson12.exercise001",
+      "lessonId": 12,
+      "topicId": 34,
+      "orderIndex": 1,
+      "type": "fill_blank",
+      "prompt": "Điền lời chào",
+      "content": {},
+      "answer": { "acceptedTexts": ["你好"] },
+      "explanation": "Đáp án được chuẩn hóa NFKC."
+    }
+  ]
+}
+```
+
+Mỗi row chỉ được có đúng các key `sourceKey`, `lessonId`, `topicId`, `orderIndex`, `type`, `prompt`, `content`, `answer`, `explanation`, `mediaId`. `rows` bắt buộc từ 1 đến 100; `fileName` 1–255 ký tự sau NFKC/trim. `sourceKey` dùng rule stable ID và unique trong một `DataSource`; cùng key ở DataSource/version khác được phép.
+
+Preview chỉ đọc, không tạo `ImportJob`, `LessonExercise`, revision hoặc audit. Response trả count, lỗi đã sort ổn định theo `rowNumber/path/code` và SHA-256 `previewHash` của canonical contract version + source + file + normalized rows + structural errors. Relational state (parent/media/existing source key) không được đóng băng trong hash, nên commit luôn lookup/revalidate lại trong transaction:
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalRows": 1,
+    "validRows": 1,
+    "invalidRows": 0,
+    "errors": [],
+    "previewHash": "64-character-sha256"
+  }
+}
+```
+
+Các code import đáng chú ý gồm `UNEXPECTED_FIELD`, `OPTION_ID_NOT_FOUND`, `DUPLICATE_SOURCE_KEY_IN_BATCH`, `SOURCE_KEY_ALREADY_EXISTS`, `PARENT_LESSON_NOT_FOUND`, `TOPIC_LESSON_MISMATCH`, `MEDIA_NOT_FOUND`; các structural code khác được upper-case. `UNEXPECTED_FIELD` dùng path `$.$unknown`, không dùng chính tên key lạ. Mỗi lỗi chỉ có `rowNumber`, `code`, `path`, không trả raw row/answer.
+
+Commit gửi lại cùng body và thêm `previewHash`. Service tính lại hash trước transaction, sau đó khóa theo `active admin actor User FOR SHARE → DataSource FOR UPDATE → Lesson IDs FOR UPDATE tăng dần → Topic IDs FOR UPDATE tăng dần`, revalidate structural + lesson/topic/media/source-key state rồi commit **all-or-nothing** một `ImportJob.completed`, các draft Exercise + revision 1 và một audit summary. Interactive transaction đặt `maxWait=5.000 ms`, `timeout=30.000 ms`; vượt ngưỡng được phân loại thành safe `503`. Có bất kỳ row lỗi thì trả `422 IMPORT_VALIDATION_FAILED` và không ghi partial job/exercise/revision.
+
+`Idempotency-Key` dài 8–128 ký tự, bắt đầu bằng chữ/số và chỉ gồm chữ/số/`.`/`_`/`:`/`-`. Retry cùng actor, DataSource, file name, preview hash và entity type chỉ trả `idempotent=true` khi service revalidate current rows thành công và job đã `completed`, có `startedAt/completedAt`, zero errors, exact row counts, mảng canonical `sourceKey` khớp chính xác cả giá trị lẫn thứ tự, đủ Exercise + revision 1 và đúng một completion audit. Job legacy `pending`/`failed`/incomplete hoặc provenance không coherent trả safe `409` yêu cầu manual review, không tự tiếp tục hay tạo job mới. Tái dùng key cho request khác cũng trả `409`. Duplicate `sourceKey` trong batch hoặc đã tồn tại trong cùng DataSource bị reject; unique `(dataSourceId, sourceKey)` là database backstop, không có upsert ngầm.
+
+Ví dụ commit dùng header `Idempotency-Key: hsk1-exercise-import-v1` và body preview cũ có thêm:
+
+```json
+{
+  "previewHash": "64-character-sha256"
+}
+```
+
+Đây là phần minh họa bổ sung; request thực tế vẫn phải gửi lại `dataSourceId`, `fileName` và toàn bộ `rows`. Success `data` gồm `importJob`, danh sách draft `exercises`, `importedRows` và `idempotent`; response retry phải giữ nguyên job/exercise ID.
+
+#### Error matrix
+
+| HTTP | Trường hợp | Contract an toàn |
+| ---: | --- | --- |
+| `400` | DTO/path/query sai kiểu, unexpected body field tại HTTP whitelist | Không chạy mutation; field lạ dùng path `$.$unknown` |
+| `401/403` | JWT/account/role admin không hợp lệ | Không tin role claim cũ |
+| `404` | Exercise, revision, DataSource hoặc parent Lesson không tồn tại | Không lộ SQL |
+| `409` | Stale revision, parent/topic mismatch, preview hash đổi, idempotency key reuse khác request, matching import job incomplete/incoherent, persistence FK/CHECK (`P2003`/`23503`/`P2004`/`23514`), race hoặc concurrent conflict | Client reload/preview lại; job incomplete cần manual review |
+| `422` | Shape/domain authoring sai, speaking publish, listening media chưa ready, import có row lỗi kể cả source key đã tồn tại | Có safe `code/path`; không trả raw answer/payload |
+| `503` | Lock/statement/Prisma transaction timeout hoặc connection tạm lỗi | Có thể retry đúng idempotency key |
+| `500` | Lỗi persistence không phân loại | Message generic, không lộ secret/URL/SQL |
+
+Feature-specific integrity và production-path concurrency runners được mô tả ở runbook. Runner định nghĩa 7 race: concurrent revisions, concurrent publish, publish/archive, publish/submit với actor và learner khác nhau, publish/submit cùng actor, archive/submit và import idempotency retry. Artifact frozen đã pass fresh deploy 15 migration, P0/Activity/Exercise SQL acceptance, migrate status và hai chiều drift; P0 `3/3`, CMS `4/4`, Activity `5/5`, Exercise `7/7`, full E2E `8/8` suite (`118/118` test) và Exercise preflight rerun rejection đều GREEN trên các database disposable riêng.
+
+### 16.6 Lesson Activity Attempt & Progress V1 — runtime complete
 
 Tất cả endpoint dưới đây yêu cầu Bearer JWT. User ID chỉ lấy từ JWT đã được đối chiếu lại với account active trong database; không endpoint nào nhận `userId`, score hay progress từ client. ID path phải là positive safe integer.
 
@@ -664,7 +815,7 @@ Body duy nhất của attempt:
 #### Visibility, transaction và idempotency
 
 - Mutation chỉ dùng Lesson đạt shared readiness, Level/Lesson/Topic/Exercise `published` và chưa soft-delete. Exercise có topic phải thuộc đúng Topic và Lesson public.
-- Mỗi write khóa active `User` row bằng `FOR UPDATE` trước, sau đó khóa `Progress` rồi `UserTopicProgress` theo thứ tự cố định. Attempt, derived progress, event và plan-item transition commit trong một transaction.
+- Mỗi write khóa active `User` row bằng `FOR UPDATE` trước. Khi thao tác trên content, service lấy shared lock theo `Lesson → Topic (nếu có) → LessonExercise (nếu có)`, rồi khóa `Progress → UserTopicProgress` theo thứ tự cố định. Attempt, derived progress, event và plan-item transition commit trong một transaction.
 - Draft/archived/deleted content không nhận activity mới. Attempt đã tạo trước khi archive vẫn đọc được bởi owner từ snapshot.
 - `LessonExerciseAttempt.attemptNumber` do server tính sau lock. Retry không tạo thêm attempt/event, không cộng duration và không thay progress.
 
@@ -678,7 +829,7 @@ Body duy nhất của attempt:
 | `arrange_sentence` | `{ "tokenIds": ["..."] }` | Token set phải chính xác và thứ tự phải khớp tuyệt đối. |
 | `speaking_repeat` | — | `422`, chưa có pronunciation engine nên không tạo điểm/fact giả. |
 
-V1 dùng binary score `100/0`; `isCorrect` nhất quán với score. Shape authoring mơ hồ/sai trả `422` và rollback toàn bộ. Server snapshot exercise ID/location, version, type, prompt, content, authoritative answer, explanation và scoring version trong immutable attempt. Public response chỉ trả attempt ID/number, result, duration, version, feedback version, explanation và submitted time; không trả `userId`, raw answer, authoritative answer, snapshot hoặc internal metadata.
+V1 dùng binary score `100/0`; `isCorrect` nhất quán với score. Shape authoring mơ hồ/sai trả `422` và rollback toàn bộ. Server snapshot exercise ID/location, version, type, prompt, content, authoritative answer, explanation, safe media projection và scoring version trong immutable attempt. Public response chỉ trả attempt ID/number, result, duration, version, feedback version, explanation, safe media projection và submitted time; không trả `userId`, raw answer, authoritative answer, snapshot hoặc internal metadata.
 
 #### Progress, completion và resume
 
@@ -701,7 +852,7 @@ Premium entitlement chưa có model nên `Topic.isPremium/isLocked` chưa đư�
 
 `ReviewCard` là scheduler source of truth; `UserWordProgress` chỉ là legacy summary.
 
-### 16.6 Exam attempt flow
+### 16.7 Exam attempt flow
 
 - `POST /exam/tests/:id/attempts`: server tạo attempt và immutable snapshot.
 - `PUT /exam/attempts/:id/answers/:snapshotQuestionKey`: autosave idempotent/optimistic version.

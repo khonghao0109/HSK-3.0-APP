@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 
+import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
+
 @Injectable()
 export class ParsePositiveIntPipe implements PipeTransform<string, number> {
   transform(value: string): number {
@@ -10,7 +12,7 @@ export class ParsePositiveIntPipe implements PipeTransform<string, number> {
     }
 
     const parsed = Number(value);
-    if (!Number.isSafeInteger(parsed)) {
+    if (!Number.isSafeInteger(parsed) || parsed > POSTGRESQL_INT4_MAX) {
       throw new BadRequestException(
         'Validation failed (positive integer expected).',
       );

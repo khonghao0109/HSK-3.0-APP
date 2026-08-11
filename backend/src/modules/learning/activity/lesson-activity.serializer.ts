@@ -1,3 +1,8 @@
+import {
+  projectPublicExerciseMedia,
+  type PublicExerciseMedia,
+} from '../public-exercise.policy';
+
 export type LessonAttemptSummary = {
   attemptId: number;
   exerciseId: number;
@@ -8,6 +13,7 @@ export type LessonAttemptSummary = {
   exerciseVersion: number;
   feedbackVersion: string | null;
   explanation: string | null;
+  media: PublicExerciseMedia | null;
   submittedAt: Date | null;
 };
 
@@ -36,8 +42,24 @@ export function serializeLessonAttempt(attempt: {
     exerciseVersion: attempt.exerciseVersion,
     feedbackVersion: attempt.feedbackVersion,
     explanation: readSnapshotExplanation(attempt.contentSnapshot),
+    media: readSnapshotMedia(attempt.contentSnapshot),
     submittedAt: attempt.submittedAt,
   };
+}
+
+function readSnapshotMedia(snapshot: unknown): PublicExerciseMedia | null {
+  if (
+    snapshot === null ||
+    typeof snapshot !== 'object' ||
+    Array.isArray(snapshot)
+  ) {
+    return null;
+  }
+  const value = snapshot as Record<string, unknown>;
+  return projectPublicExerciseMedia(
+    typeof value.type === 'string' ? value.type : '',
+    value.media,
+  );
 }
 
 function readSnapshotExplanation(snapshot: unknown): string | null {

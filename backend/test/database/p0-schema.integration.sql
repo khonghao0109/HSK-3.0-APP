@@ -373,7 +373,7 @@ BEGIN
     INSERT INTO "LessonExercise" (
       "lessonId", "topicId", "type", "prompt", "content", "answer", "orderIndex", "updatedAt"
     ) VALUES (lesson_1_id, topic_2_id, 'mcq', 'Invalid', '{}'::jsonb, '{}'::jsonb, 1, CURRENT_TIMESTAMP);
-  EXCEPTION WHEN raise_exception THEN
+  EXCEPTION WHEN raise_exception OR check_violation THEN
     rejected := true;
   END;
   IF NOT rejected THEN

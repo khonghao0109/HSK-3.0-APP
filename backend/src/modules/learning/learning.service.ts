@@ -15,6 +15,10 @@ import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
 import { LessonDetailDto, LessonItemDto } from './dto/lesson-response.dto';
 import { StoryContentBlock, StoryItemDto } from './dto/story-response.dto';
 import { TopicContentBlock, TopicItemDto } from './dto/topic-response.dto';
+import {
+  PUBLIC_EXERCISE_MEDIA_SELECT,
+  PUBLIC_LESSON_EXERCISE_WHERE,
+} from './public-exercise.policy';
 import { serializePublicLessonDetail } from './public-lesson.serializer';
 
 @Injectable()
@@ -157,7 +161,7 @@ export class LearningService {
           },
         },
         exercises: {
-          where: PUBLIC_CONTENT_WHERE,
+          where: PUBLIC_LESSON_EXERCISE_WHERE,
           orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
           select: {
             id: true,
@@ -166,6 +170,7 @@ export class LearningService {
             content: true,
             version: true,
             orderIndex: true,
+            media: { select: PUBLIC_EXERCISE_MEDIA_SELECT },
           },
         },
       },

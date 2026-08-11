@@ -303,6 +303,7 @@ async function createTopicFixture(
       answer: { optionId: 'a' },
       orderIndex: 1,
       status: 'published',
+      publishedAt: new Date(),
     },
   });
   return { lesson, topic, exercise };
@@ -347,6 +348,7 @@ async function createStandaloneFixture(
       answer: { optionId: 'a' },
       orderIndex: 1,
       status: 'published',
+      publishedAt: new Date(),
     },
   });
   return { lesson, exercise };

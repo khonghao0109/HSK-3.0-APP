@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { normalizePinyin } from '../src/common/utils/normalize-pinyin';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
@@ -40,6 +41,21 @@ type LessonDetailResponseBody = {
       title: string;
       content: string;
       slug: string;
+    }>;
+    exercises: Array<{
+      id: number;
+      type: string;
+      prompt: string;
+      content: unknown;
+      version: number;
+      orderIndex: number;
+      media: {
+        id: number;
+        url: string;
+        type: 'audio';
+        mimeType: string | null;
+        duration: number | null;
+      } | null;
     }>;
   };
 };
@@ -77,6 +93,7 @@ describe('Learning Lesson Detail E2E', () => {
         whitelist: true,
         forbidNonWhitelisted: true,
         transform: true,
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();
@@ -240,6 +257,10 @@ describe('Learning Lesson Detail E2E', () => {
         },
       ],
     });
+    const hiddenDraftTopic = await prisma.topic.findFirstOrThrow({
+      where: { lessonId, title: 'Hidden Draft Topic' },
+      select: { id: true },
+    });
 
     await prisma.story.create({
       data: {
@@ -314,12 +335,107 @@ describe('Learning Lesson Detail E2E', () => {
         lessonId,
         type: 'mcq',
         prompt: 'Public prompt',
-        content: { choices: ['A', 'B'] },
-        answer: { correct: 'A' },
+        content: {
+          options: [
+            { id: 'a', text: 'A' },
+            { id: 'b', text: 'B' },
+          ],
+        },
+        answer: { optionId: 'a' },
         explanation: 'Internal explanation',
         orderIndex: 1,
         status: 'published',
+        publishedAt: new Date(),
       },
+    });
+
+    await prisma.lessonExercise.create({
+      data: {
+        lessonId,
+        topicId: hiddenDraftTopic.id,
+        type: 'mcq',
+        prompt: 'Hidden exercise under draft topic',
+        content: {
+          options: [
+            { id: 'hidden-a', text: 'A' },
+            { id: 'hidden-b', text: 'B' },
+          ],
+        },
+        answer: { optionId: 'hidden-a' },
+        orderIndex: 99,
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
+
+    const publicAudio = await prisma.media.create({
+      data: {
+        url: `https://cdn.example.test/learning-public-${suffix}.mp3`,
+        type: 'audio',
+        mimeType: 'audio/mpeg',
+        duration: 11,
+        processingStatus: 'ready',
+        storageProvider: 's3',
+        storageKey: `private/learning-public-${suffix}.mp3`,
+        checksum: `internal-${suffix}`,
+        metadata: { internal: true },
+      },
+    });
+    const quarantinedAudio = await prisma.media.create({
+      data: {
+        url: `https://cdn.example.test/learning-hidden-${suffix}.mp3`,
+        type: 'audio',
+        processingStatus: 'ready',
+      },
+    });
+    await prisma.lessonExercise.createMany({
+      data: [
+        {
+          lessonId,
+          mediaId: publicAudio.id,
+          type: 'listening_choice',
+          prompt: 'Public listening prompt',
+          content: {
+            options: [
+              { id: 'heard-a', text: 'A' },
+              { id: 'heard-b', text: 'B' },
+            ],
+          },
+          answer: { optionId: 'heard-a' },
+          orderIndex: 2,
+          status: 'published',
+          publishedAt: new Date(),
+        },
+        {
+          lessonId,
+          mediaId: quarantinedAudio.id,
+          type: 'listening_choice',
+          prompt: 'Hidden quarantined listening prompt',
+          content: {
+            options: [
+              { id: 'hidden-a', text: 'A' },
+              { id: 'hidden-b', text: 'B' },
+            ],
+          },
+          answer: { optionId: 'hidden-a' },
+          orderIndex: 3,
+          status: 'published',
+          publishedAt: new Date(),
+        },
+        {
+          lessonId,
+          type: 'speaking_repeat',
+          prompt: 'Future speaking prompt',
+          content: {},
+          answer: {},
+          orderIndex: 4,
+          status: 'draft',
+        },
+      ],
+    });
+    await prisma.media.update({
+      where: { id: quarantinedAudio.id },
+      data: { processingStatus: 'quarantined' },
     });
 
     for (const visibilityWord of [
@@ -643,8 +759,34 @@ describe('Learning Lesson Detail E2E', () => {
       content: 'Story linked through lesson level.',
       slug: storySlug,
     });
+    expect(body.data.exercises).toEqual([
+      expect.objectContaining({
+        type: 'mcq',
+        prompt: 'Public prompt',
+        media: null,
+      }),
+      expect.objectContaining({
+        type: 'listening_choice',
+        prompt: 'Public listening prompt',
+        media: {
+          id: expect.any(Number),
+          url: `https://cdn.example.test/learning-public-${suffix}.mp3`,
+          type: 'audio',
+          mimeType: 'audio/mpeg',
+          duration: 11,
+        },
+      }),
+    ]);
     expect(JSON.stringify(body.data)).not.toContain('answer');
     expect(JSON.stringify(body.data)).not.toContain('Internal explanation');
+    expect(JSON.stringify(body.data)).not.toContain('storageKey');
+    expect(JSON.stringify(body.data)).not.toContain('checksum');
+    expect(JSON.stringify(body.data)).not.toContain('internal');
+    expect(JSON.stringify(body.data)).not.toContain('quarantined');
+    expect(JSON.stringify(body.data)).not.toContain('speaking_repeat');
+    expect(JSON.stringify(body.data)).not.toContain(
+      'Hidden exercise under draft topic',
+    );
   });
 
   it('GET /learning/lessons/:id returns lesson title, level, topics, words and stories', async () => {

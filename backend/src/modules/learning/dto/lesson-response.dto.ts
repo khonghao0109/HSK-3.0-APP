@@ -41,6 +41,15 @@ export class LessonDetailExerciseDto {
   content!: unknown;
   version!: number;
   orderIndex!: number;
+  media!: LessonDetailExerciseMediaDto | null;
+}
+
+export class LessonDetailExerciseMediaDto {
+  id!: number;
+  url!: string;
+  type!: 'audio';
+  mimeType!: string | null;
+  duration!: number | null;
 }
 
 export class LessonDetailLevelDto {

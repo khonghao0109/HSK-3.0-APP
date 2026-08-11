@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -30,6 +31,7 @@ describe('Auth E2E', () => {
         whitelist: true,
         forbidNonWhitelisted: true,
         transform: true,
+        exceptionFactory: createSafeValidationException,
       }),
     );
     await app.init();
