@@ -97,6 +97,27 @@ export const EXERCISE_ADMIN_SELECT = {
       deletedAt: true,
     },
   },
+  lesson: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+    },
+  },
+  topic: {
+    select: {
+      id: true,
+      title: true,
+    },
+  },
+  dataSource: {
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      version: true,
+    },
+  },
 } satisfies Prisma.LessonExerciseSelect;
 
 export type ExerciseSnapshot = LessonExerciseAuthoringValue & {

@@ -223,30 +223,26 @@ Duong dan: `backend/scripts/ai/embeddings/`
 
 ## 8.1 Trang thai
 
-- Frontend da co bo khung thu muc theo feature/domain.
-- Code app thuc te hien tai chua day du (moi co mot so file scaffold nhu `layout.tsx`, `page.tsx`).
+- Frontend Next.js 16.3 App Router + React 19 + TypeScript strict da chay duoc,
+  co npm lockfile rieng, production build, Vitest/RTL va Playwright/axe.
+- `Frontend Platform Foundation, Secure Admin Session & Exercise Read Console V1`
+  da co runtime: login admin qua same-origin BFF, protected admin shell, Exercise
+  list/detail read-only, safe states va responsive UI.
+- Browser khong nhan bearer token. Token chi nam trong HttpOnly/SameSite cookie;
+  backend URL la server-only va moi protected access revalidate `/auth/me`.
 
-## 8.2 Cau truc muc tieu
+## 8.2 Cau truc hien tai va muc tieu
 
-`frontend/src/app`:
+`frontend/src/app` hien co:
 
-- `(public)/home`
-- `(public)/knowledge`
-- `(public)/exam`
-- `(public)/materials`
-- `(public)/account`
-- `admin/dashboard`
-- `admin/users`
-- `admin/content`
-- `admin/reports`
+- `(auth)/login`, `forbidden` va global error/not-found states.
+- `admin/exercises` va `admin/exercises/[exerciseId]` duoi protected layout.
+- `api/session/{login,logout,me}` va allowlisted
+  `api/admin/exercises[/id]` BFF routes.
 
-`frontend/src/features`:
-
-- `auth`, `levels`, `lessons`, `dictionary`, `exam`, `materials`, `progress`, `analytics`, `admin`
-
-`frontend/src/components`:
-
-- `layout`, `knowledge`, `exam`, `materials`, `account`, `chatbot`
+`frontend/src/features` hien co `auth`, `admin-shell`, `exercises`; cac feature
+learning, dictionary, review, exam, materials, account va analytics van la cac
+vertical slice tiep theo.
 
 ## 8.3 Public assets
 
@@ -292,12 +288,14 @@ Nguyen tac:
 ## 10.1 Hien tai (xac nhan trong repo)
 
 - Backend: NestJS, Prisma, PostgreSQL, Jest, ESLint, Prettier.
-- Frontend: khung source da tao (package hien tai dang de trong, can chot framework chay that su).
+- Frontend: Next.js 16.3, React 19, TypeScript 6 strict, Zod, CSS variables,
+  Vitest/React Testing Library, Playwright/axe, npm lockfile.
 - AI: khung `rag-api` da tao (package hien tai dang de trong, can khai bao dependency va boot logic).
 
 ## 10.2 Theo dinh huong kien truc san pham (tu mockup + roadmap)
 
-- Frontend target: Next.js hoac Flutter Web (image de xuat Flutter cho web/android).
+- Frontend web da chot Next.js App Router; mobile native/Flutter chi danh gia lai
+  khi co boundary san pham rieng, khong thay frontend web hien tai.
 - Infra target: Docker, Nginx, Redis.
 - Storage target: Cloudinary/S3.
 - Security target: JWT, bcrypt, HTTPS, rate limit.
@@ -316,11 +314,14 @@ Nguyen tac:
 - CMS Lite publish workflow cho Lesson/Topic va shared Lesson readiness policy.
 - Exercise Authoring & Import Validation V1: shared NFKC validator, revision/review/publish/archive, listening media readiness va preview/atomic import.
 - Lesson Activity Attempt & Progress V1 voi server scoring, immutable snapshot/event, derived progress va resume.
+- Secure Admin Session & Exercise Read Console V1 voi BFF HttpOnly cookie,
+  role/account revalidation va real-backend browser test.
 
 ### Chua day du
 
 - Nhieu module backend moi o muc skeleton (chua co controller/service logic day du).
-- Frontend va AI service chua hoan thien package dependencies va code runtime.
+- Public learner frontend va AI service chua hoan thien runtime; admin frontend
+  moi chi co Exercise read console.
 - Chua co CI/CD, observability, security hardening day du.
 - Exercise V1 frozen artifact da pass full release gate; speaking publish/scoring, generic import va CMS entity khac van la backlog.
 
@@ -457,3 +458,43 @@ Schema da san sang cho runtime P0. Onboarding goal + learning plan V1, CMS Lite 
 - Evidence artifact frozen `74944a7d95fabc02a0e84fe39b91543ac41a63e4714cfcaf389e81fe432d9f7c`: deploy du 15 migration, migrate status va migration-history shadow/live drift deu pass; inventory 57 table/143 FK/78 CHECK/33 trigger. P0/Activity/Exercise SQL integrity deu PASS + rollback sach. P0 concurrency `3/3`, CMS `4/4`, Activity `5/5`, Exercise `7/7`; moi Exercise race quan sat B o PostgreSQL Lock truoc release va xac minh response/domain/final invariant. Full E2E `8/8` suite, `118/118` test; static gate Prisma/TypeScript/build/lint/format/unit deu GREEN. Negative preflight Media URL whitespace tra P0001 va rollback atomic; Exercise runner rerun tren DB da co fixture bi fresh-only preflight tu choi dung contract.
 
 Decision rationale va rollback boundary: `docs/adr/ADR-002-EXERCISE-AUTHORING-VERSION-MEDIA-IMPORT-ATOMICITY.md`.
+
+## 19. Frontend Platform Foundation, Secure Admin Session & Exercise Read Console V1 — 11/08/2026
+
+- Frontend runtime nam tai `frontend/`, dung Next.js 16.3 App Router, React 19,
+  TypeScript 6 strict va npm service-local lockfile. Server Components la mac dinh;
+  client components chi danh cho login/logout va interaction can browser.
+- Session browser dung BFF same-origin. `POST /api/session/login` validate Origin,
+  input va backend response, chi dat token vao cookie `HttpOnly`, `SameSite=Lax`,
+  `Secure` production, `Path=/`; `Max-Age` lay tu JWT `exp`. Response khong tra token.
+- Protected admin layout doc cookie server-side va goi `/api/v1/auth/me`; current
+  database role/account state la authority. Session invalid duoc clear va redirect
+  login; non-admin den `/forbidden` truoc khi render admin data.
+- Backend client co fixed server-only origin, explicit path allowlist, `no-store`,
+  timeout 8 giay mac dinh, request ID va safe error classification. BFF khong phai
+  generic proxy; browser storage khong chua credential.
+- UI `HSK Content Workbench` gom login, navy/jade/rice admin shell, URL-driven
+  Exercise filters/pagination, mobile record layout va Exercise detail voi canonical
+  content, admin-only answer, Lesson/Topic, provenance, safe Media va revision/review
+  history. Status dung text + marker, khong chi dung mau.
+- Backend Exercise admin read projection duoc mo rong read-only voi safe
+  `lesson`, `topic`, `dataSource`; khong thay schema/migration hay mutation contract.
+  BFF list loai `answer`; answer chi xuat hien trong protected server-rendered detail.
+- Security headers co CSP, frame deny, MIME sniffing deny, referrer va permissions
+  policy; HSTS chi o production. Logout V1 xoa frontend cookie, chua revoke token o
+  backend do refresh/session runtime chua co.
+- Test-first evidence: RED 9 suite do production modules chua ton tai; GREEN
+  11/11 suite, 46/46 unit/component/integration. Production build/typecheck/lint va
+  npm production audit (0 vulnerability) pass. Playwright qua NestJS that va database
+  disposable 15 migration: 12/12 tren Chromium desktop 1440/mobile 390/tablet 768,
+  bao gom deep link, HttpOnly persistence, RBAC, URL filters, detail, logout,
+  keyboard, no-overflow, console error va axe.
+- `backend/scripts/test/seed-frontend-admin-console.ts` chi seed mot lan tren fresh
+  disposable DB; guard cho phep migration-owned DataSource nhung yeu cau cac bang
+  mutable cua fixture rong, khong truncate/reset/delete.
+- Explicit exclusion: khong co create/review/publish/archive/import UI; Media Library
+  khong tuyen bo da co. Next vertical slice la **Media Asset Operations API & Admin
+  Library V1**; media detail/read/upload/lifecycle API phai co truoc khi bien nhan
+  “Media library” thanh navigation hoat dong.
+
+Quyet dinh: `docs/adr/ADR-003-FRONTEND-FOUNDATION-ADMIN-SESSION-BFF.md`.

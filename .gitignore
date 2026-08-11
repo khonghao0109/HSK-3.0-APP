@@ -16,6 +16,10 @@ out/
 **/out/
 .turbo/
 **/.turbo/
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
 *.tsbuildinfo
 
 # Env files

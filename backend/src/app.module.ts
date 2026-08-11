@@ -25,7 +25,9 @@ import { PrismaModule } from './prisma/prisma.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
-        limit: 20,
+        // Browser E2E deliberately exercises many authenticated navigations from
+        // one loopback address. Production keeps the fail-closed global limit.
+        limit: process.env.NODE_ENV === 'test' ? 1_000 : 20,
       },
     ]),
     PrismaModule,

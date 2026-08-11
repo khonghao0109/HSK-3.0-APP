@@ -307,6 +307,16 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
         topicId,
         type: 'mcq',
         status: 'draft',
+        lesson: {
+          id: lessonId,
+          title: 'Exercise authoring lesson',
+          slug: expect.stringMatching(/^exercise-authoring-/),
+        },
+        topic: {
+          id: topicId,
+          title: 'Exercise authoring topic',
+        },
+        dataSource: null,
         latestRevision: expect.objectContaining({ id: revision1Id }),
       }),
     ]);
@@ -319,6 +329,9 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     expect(detail.body.data).toMatchObject({
       id: exerciseId,
       answer: { optionId: 'hello' },
+      lesson: { id: lessonId, title: 'Exercise authoring lesson' },
+      topic: { id: topicId, title: 'Exercise authoring topic' },
+      dataSource: null,
       revisions: [expect.objectContaining({ id: revision1Id, revision: 1 })],
     });
   });

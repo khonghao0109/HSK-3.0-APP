@@ -89,6 +89,14 @@ HSK System
 │       └── Theo dõi yêu cầu hỗ trợ
 │
 ├── Admin
+│   ├── Secure Admin Console [P0]
+│   │   ├── Same-origin BFF login; bearer token chỉ ở HttpOnly cookie (đã có V1)
+│   │   ├── Revalidate current account/role qua /auth/me cho protected access
+│   │   ├── Responsive navy/jade admin shell, forbidden/session/error states
+│   │   ├── Exercise list server pagination/filter theo Lesson/Topic/type/status
+│   │   ├── Exercise detail: content, admin answer, provenance, safe media, revisions
+│   │   ├── BFF allowlist/no-store/timeout/safe error; không generic proxy
+│   │   └── Create/review/publish/archive/import UI (backlog, không claim ở V1)
 │   ├── CMS Lite và chất lượng dữ liệu [P0]
 │   │   ├── Lesson/Topic immutable revision, review, publish, archive (đã có)
 │   │   ├── Exercise draft/revision/review/publish/archive (đã có V1)
@@ -164,6 +172,7 @@ HSK System
 | SRS, flashcard, review queue | Có | — | P0 | Schema SRS sẵn sàng; chưa có runtime |
 | Exam delivery và kết quả | Có | Question bank/test | P0 | Schema attempt/autosave/snapshot sẵn sàng; chưa có runtime |
 | CMS Lite / import / data validation | — | Có | P0 | Lesson/Topic và Exercise authoring workflow đã có; Exercise preview/atomic import đã có; generic import và CMS entity khác còn backlog |
+| Secure admin frontend / Exercise read console | — | Có | P0 | Next.js/BFF HttpOnly session, admin shell và Exercise list/detail read-only đã có V1; mutation UI chưa có |
 | RBAC, data privacy, API contract | Có | Có | P0 | RBAC runtime một phần; privacy schema sẵn sàng |
 | Interactive reader | Có | Quản lý stories | P1 | Kế hoạch |
 | Pronunciation / speaking feedback | Có | Quản lý practice | P1 | Schema một phần, chưa có runtime |
@@ -210,9 +219,9 @@ Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoi
 
 ## 5. Thứ tự triển khai đề xuất
 
-1. **P0 — Data + CMS Lite:** Lesson/Topic và Exercise authoring/import V1 đã được implement; tiếp theo hoàn tất release gate, dùng HSK1–HSK6 + HSK7_9, bổ sung dữ liệu nghĩa Việt đã review và triển khai CMS/import cho entity còn lại.
+1. **P0 — Data + CMS Lite:** Lesson/Topic và Exercise authoring/import V1 đã được implement và Exercise admin read console đã nối backend thật; tiếp theo là **Media Asset Operations API & Admin Library V1**, dữ liệu HSK1–HSK6 + HSK7_9 và CMS/import cho entity còn lại.
 2. **P0 — Learning + Review:** Lesson Activity Attempt & Progress V1 đã hoàn thành; tiếp theo triển khai SRS/flashcard trên `ReviewCard` source of truth.
 3. **P0 — Exam:** question bank, test, autosave, scoring theo skill, snapshot và result analysis.
-4. **P0 — Web MVP:** kết nối UI cho auth, learning, dictionary, review và exam.
+4. **P0 — Web MVP:** admin auth/BFF + Exercise read console đã có; tiếp tục learner auth, learning, dictionary, review và exam theo vertical slice.
 5. **P1:** interactive reader, phát âm/nói, media, notification, analytics, staging/CI/CD.
 6. **P2:** AI/RAG, handwriting/OCR, subscription, mobile offline và community.

@@ -9,7 +9,7 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1 và Lesson Activity Attempt & Progress V1. Session/profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test/Media, SRS và exam attempt vẫn là backlog. Artifact Exercise V1 frozen đã pass fresh deploy/drift, ba SQL integrity suite, toàn bộ P0/CMS/Activity/Exercise concurrency runners, static quality gate và full E2E.
+> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1, Lesson Activity Attempt & Progress V1 và Secure Admin Session & Exercise Read Console V1. Backend refresh/revocation session, profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test/Media, SRS và exam attempt vẫn là backlog. Artifact Exercise backend V1 và frontend read console đều có fresh-disposable-DB gate evidence.
 
 Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Lesson public còn phải đạt readiness contract ở mục 16.4. Các endpoint archive/delete content trong tài liệu này mang nghĩa soft lifecycle, không hard-delete row đã có lịch sử.
 
@@ -860,3 +860,46 @@ Premium entitlement chưa có model nên `Topic.isPremium/isLocked` chưa đư�
 - `POST /exam/attempts/:id/submit`: transactionally finalize và tạo duy nhất một `Result`.
 
 Client không gửi đáp án đúng, điểm cuối hoặc thời gian có thẩm quyền. Kết quả mới phải truy được `ExamAttempt`, snapshot và scoring version.
+
+### 16.8 Frontend BFF session và Exercise read console V1
+
+Đây là same-origin Next.js boundary, không thay base URL backend `/api/v1` và
+không phải generic reverse proxy.
+
+| Frontend route | Method | Mục đích |
+| --- | --- | --- |
+| `/api/session/login` | `POST` | Validate exact Origin + credentials, gọi backend auth login, đặt HttpOnly cookie; response không có token. |
+| `/api/session/me` | `GET` | Đối chiếu cookie với backend `/auth/me`; chỉ trả current admin identity, clear cookie khi invalid. |
+| `/api/session/logout` | `POST` | Validate Origin và clear frontend cookie. |
+| `/api/admin/exercises` | `GET` | Allowlisted admin list; query page/limit/Lesson/Topic/type/status; response browser loại `answer`. |
+| `/api/admin/exercises/:id` | `GET` | Allowlisted protected detail; chỉ admin hiện tại được xem authoritative answer. |
+
+Cookie mặc định `hsk_admin_session` có `HttpOnly`, `SameSite=Lax`, `Path=/`,
+`Secure` ở production và `Max-Age <= JWT exp`. Browser không được lưu token vào
+local/session storage. Backend origin lấy từ `BACKEND_API_URL` server-only; mọi
+fetch protected là `no-store`, timeout mặc định 8 giây và chỉ trả safe error kind,
+message, optional request ID.
+
+Backend `GET /api/v1/admin/cms/exercises` và detail vẫn là authority. Read projection
+V1 gồm scalar Exercise fields, safe Media projection, cùng:
+
+```json
+{
+  "lesson": { "id": 12, "title": "Greetings", "slug": "greetings" },
+  "topic": { "id": 34, "title": "Saying hello" },
+  "dataSource": {
+    "id": 7,
+    "code": "HSK3",
+    "name": "HSK source",
+    "version": "1"
+  }
+}
+```
+
+`topic` và `dataSource` có thể `null`. List còn có `latestRevision`; detail có toàn
+bộ revision/review history. Không trả storage provider/key, checksum hay original
+filename qua Media projection.
+
+Frontend V1 chỉ đọc. Không có BFF/UI create, revision, review, publish, archive hay
+import; các backend mutation route hiện hữu không được proxy. Media Library là next
+slice **Media Asset Operations API & Admin Library V1**, chưa phải capability hiện tại.
