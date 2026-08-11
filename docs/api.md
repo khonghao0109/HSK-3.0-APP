@@ -9,9 +9,9 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 10/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read và Onboarding Goal & Learning Plan V1. Session/profile/privacy, placement scoring, CMS, SRS và exam attempt vẫn là backlog.
+> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic và Lesson Activity Attempt & Progress V1. Session/profile/privacy, placement scoring, import pipeline, CMS cho các entity khác, SRS và exam attempt vẫn là backlog.
 
-Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Các endpoint `DELETE` content trong tài liệu này mang nghĩa archive/soft-delete, không hard-delete row đã có lịch sử.
+Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Lesson public còn phải đạt readiness contract ở mục 16.4. Các endpoint archive/delete content trong tài liệu này mang nghĩa soft lifecycle, không hard-delete row đã có lịch sử.
 
 ## 2. Conventions
 
@@ -69,6 +69,8 @@ Query params:
 - `limit` (default `20`, max `100`)
 - `sortBy` (field)
 - `sortOrder` (`asc` | `desc`)
+
+Numeric query params như `page`, `limit`, `levelId` tiếp tục được chuyển từ chuỗi URL hợp lệ sang number; strict JSON boolean chỉ áp dụng cho field boolean trong request body.
 
 Paginated response `meta`:
 
@@ -169,10 +171,8 @@ Body (partial):
 ## 5.1 Levels
 
 - `GET /levels`
-- `GET /levels/:id`
-- `POST /levels` (admin)
-- `PATCH /levels/:id` (admin)
-- `DELETE /levels/:id` (admin)
+- Alias: `GET /learning/levels`.
+- Level admin mutation chưa có runtime trong CMS Lite V1.
 
 Payload mẫu tạo level:
 
@@ -193,9 +193,8 @@ P0 chỉ chấp nhận code `HSK1`…`HSK6`, `HSK7_9`; `HSK7_9` có `minBand=7`,
 
 - `GET /lessons?levelId=3`
 - `GET /lessons/:id`
-- `POST /lessons` (admin)
-- `PATCH /lessons/:id` (admin)
-- `DELETE /lessons/:id` (admin)
+- Alias: `GET /learning/lessons?levelId=3`, `GET /learning/lessons/:id`.
+- Admin revision/review/publish/archive dùng `/admin/cms/lessons`; xem mục 16.4.
 
 Create lesson:
 
@@ -212,18 +211,14 @@ Create lesson:
 ## 5.3 Topics
 
 - `GET /topics?lessonId=12`
-- `GET /topics/:id`
-- `POST /topics` (admin)
-- `PATCH /topics/:id` (admin)
-- `DELETE /topics/:id` (admin)
+- Alias: `GET /learning/topics?lessonId=12`.
+- Admin create/detail/revision/review/publish/archive dùng `/admin/cms/topics`; xem mục 16.4.
 
 ## 5.4 Stories
 
 - `GET /stories?levelId=3`
-- `GET /stories/:id`
-- `POST /stories` (admin)
-- `PATCH /stories/:id` (admin)
-- `DELETE /stories/:id` (admin)
+- Alias: `GET /learning/stories?levelId=3`.
+- Story admin mutation chưa có runtime trong CMS Lite V1.
 
 ## 6. Dictionary
 
@@ -476,13 +471,21 @@ Tất cả endpoint dưới đây yêu cầu `Authorization: Bearer <JWT>`. `use
   "data": {
     "hasActiveGoal": true,
     "hasActiveLearningPlan": true,
+    "hasUsableLearningPlan": true,
     "hasCompletedPlacement": false,
     "nextStep": "ready"
   }
 }
 ```
 
-`nextStep` là `set_goal`, `generate_plan` hoặc `ready`. Plan active nhưng không còn khớp level/band/start date của goal hiện hành sẽ cho `nextStep=generate_plan`. Endpoint không trả `PlacementAttempt.detailSnapshot`.
+`hasActiveLearningPlan` chỉ phản ánh có row plan `active`; `hasUsableLearningPlan` chỉ `true` khi plan đó khớp chính xác goal hiện hành **và** snapshot `lessonId` có thứ tự giống hoàn toàn tập Lesson ready hiện hành, đồng thời tập này không rỗng. `nextStep` có bốn giá trị:
+
+- `set_goal`: chưa có active goal.
+- `content_unavailable`: có goal nhưng target level hiện không có Lesson ready; plan lịch sử active, nếu có, không bị tự hủy.
+- `generate_plan`: có Lesson ready nhưng chưa có plan usable, gồm cả trường hợp archive/recover làm snapshot thay đổi.
+- `ready`: có active goal và active plan usable.
+
+Endpoint không trả `PlacementAttempt.detailSnapshot`.
 
 #### GET `/onboarding/goals/current`
 
@@ -530,6 +533,7 @@ Trả active goal của account hiện tại; chưa có goal là trạng thái b
 - `targetBand`: integer 1–9 và thuộc `Level.minBand..maxBand`. Có thể bỏ/null với level một band (server tự resolve); bắt buộc với `HSK7_9`.
 - `dailyMinutes`: integer 1–1440, đúng database CHECK.
 - `reminderTime`: chỉ dùng format `HH:mm` 24 giờ; bắt buộc khi `reminderEnabled=true` và phải bỏ/null khi false.
+- `reminderEnabled`: bắt buộc là JSON boolean thật (`true`/`false`); string, số, `null`, object và array đều trả `400`.
 - `startDate`: ngày lịch hợp lệ theo `YYYY-MM-DD`; API và DB giữ date-only, không dịch timezone.
 - Field ngoài DTO bị từ chối.
 
@@ -543,7 +547,7 @@ Trả active plan của account hiện tại và items tăng dần theo `orderIn
 
 Không có body. Active goal là bắt buộc. V1 snapshot danh sách lesson public tại thời điểm tạo bằng `LearningPlanItem`, xếp một lesson mỗi ngày từ `startDate`; `endDate` là ngày item cuối.
 
-Plan đang active và khớp `targetLevelId`, `targetBand`, `startDate` được trả lại khi retry. Nếu goal thay đổi, plan cũ chuyển `cancelled` và plan/items mới được tạo trong cùng transaction sau khi khóa row `User`. Chỉ lesson thuộc target level, `status=published`, `deletedAt IS NULL` được chọn; cùng `orderIndex` được tie-break bằng `id`. Nếu không có lesson hợp lệ, API trả `409` và không tạo/cancel plan.
+Plan đang active và khớp `targetLevelId`, `targetBand`, `startDate` cùng tập Lesson ready hiện hành được trả lại khi retry. Nếu goal hoặc tập Lesson ready thay đổi, plan cũ chuyển `cancelled` và plan/items mới được tạo trong cùng transaction sau khi khóa row `User`. Lesson được chọn phải đạt readiness contract ở mục 16.4; cùng `orderIndex` được tie-break bằng `id`. Nếu không còn Lesson ready, API trả `409` trước khi cancel plan active hiện hành. Khi đọc plan cũ, item trỏ đến Lesson không còn ready được ẩn khỏi response public nhưng lịch sử row vẫn được giữ.
 
 #### Error contract
 
@@ -565,16 +569,134 @@ Client không nhận raw Prisma error, constraint name hoặc SQL trigger messag
 
 Placement scoring chưa được triển khai; client không được gửi score/recommended level. Refresh/reset/verification token chỉ truyền raw value tại transport một lần; database chỉ lưu hash.
 
-### 16.4 CMS/import
+### 16.4 CMS Lite Lesson/Topic publish workflow — runtime complete
 
-- CRUD content tạo revision và audit.
+Tất cả endpoint CMS dưới đây yêu cầu `JwtAuthGuard`, `RolesGuard` và role `admin`. JWT strategy tải lại role, status và `deletedAt` từ database ở mỗi request; claim role cũ không có thẩm quyền. ID trên path là integer dương. Mutation trả `201`; list/detail trả `200`.
+
+#### Lesson admin API
+
+- `GET /admin/cms/lessons?levelId=&status=&search=&page=1&limit=20`: list/filter, kèm latest revision/review.
+- `GET /admin/cms/lessons/:lessonId`: live row cùng toàn bộ revision/review mới nhất trước.
+- `POST /admin/cms/lessons`: tạo Lesson `draft` và `ContentRevision.revision=1` trong cùng transaction.
+- `POST /admin/cms/lessons/:lessonId/revisions`: append revision mới.
+- `POST /admin/cms/lessons/:lessonId/revisions/:revisionId/reviews`: append decision `approved`, `changes_requested` hoặc `rejected`.
+- `POST /admin/cms/lessons/:lessonId/revisions/:revisionId/publish`: publish latest approved revision.
+- `POST /admin/cms/lessons/:lessonId/archive`: chuyển `archived`, đặt `deletedAt`; retry là idempotent.
+
+Body tạo Lesson gồm `levelId`, `title` (1–200), `description` (tối đa 2.000), `orderIndex` (1–1.000.000), `slug` lowercase kebab-case. Body revision không có `levelId`. Client không được gửi status, revision number, author/audit actor hay các timestamp/ID server-controlled.
+
+#### Topic admin API
+
+- `GET /admin/cms/topics/:topicId`.
+- `POST /admin/cms/topics`.
+- `POST /admin/cms/topics/:topicId/revisions`.
+- `POST /admin/cms/topics/:topicId/revisions/:revisionId/reviews`.
+- `POST /admin/cms/topics/:topicId/revisions/:revisionId/publish`.
+- `POST /admin/cms/topics/:topicId/archive`.
+
+Body tạo Topic gồm `lessonId`, `title`, `subtitle`, `type`, `content`, `orderIndex`, `isPremium`, `isLocked`; body revision không có `lessonId`. `isPremium` và `isLocked` chỉ nhận JSON boolean thật (`true`/`false`); string, số, `null`, object và array đều trả `400`. JSON content tối đa 100.000 byte và depth 20. Topic được phép publish dưới Lesson draft nhưng chỉ lộ public sau khi parent Lesson đạt readiness.
+
+#### Revision state machine và consistency
+
+```text
+draft revision -> approved ---------> published live state
+              -> changes_requested -X publish
+              -> rejected ----------X publish
+published live -> new draft revision (live cũ giữ nguyên) -> approved -> atomic replace
+published live -------------------------------------------------------> archived
+```
+
+- `ContentRevision` và `ContentReview` là append-only ở cả service lẫn database. Snapshot chỉ chứa mutable domain fields và `contentHash` là SHA-256 của canonical JSON.
+- Canonical JSON sort object key theo UTF-16 code unit bằng comparator xác định, không phụ thuộc locale; array giữ nguyên thứ tự và kiểu không hỗ trợ bị reject. Đây là contract nội bộ có phạm vi hẹp, không tuyên bố tương thích đầy đủ RFC 8785/JCS.
+- Hash revision cũ không bị backfill. Khi retry revision/publish, service còn so sánh canonical snapshot hiện hành để giữ idempotency cho row từng được hash bằng comparator locale-dependent trước đây; hash mới luôn dùng comparator xác định.
+- Lock hierarchy luôn theo `Lesson → Topic`: Topic create/revision/review/publish/archive khóa parent Lesson trước Topic. Unique `(entityType, entityId, revision)` chỉ là backstop.
+- Chỉ revision mới nhất với latest review `approved` được publish; stale revision hoặc decision khác trả `409`.
+- Retry cùng revision payload trả revision hiện hữu với `idempotent=true`. Retry publish live hash giống revision không ghi audit/publish side effect lần hai.
+- Unique conflict và concurrent retry trả `409` an toàn; lock/statement timeout trả `503`; raw Prisma/SQL error không được phản chiếu.
+- Mỗi create/revision/review/publish/archive ghi `AuditLog` summary gồm entity type/id, action, revision, status và hash; không lưu raw content/answer/token.
+- Hai review cùng decision/content là retry idempotent và không tạo fact thứ hai; decision mới vẫn append review mới. `ContentReview` đã tạo không thể UPDATE/DELETE, kể cả qua SQL trực tiếp.
+
+#### Lesson readiness và public visibility
+
+Lesson ready khi đồng thời:
+
+1. Lesson `published` và `deletedAt IS NULL`.
+2. Level cha `published` và `deletedAt IS NULL`.
+3. Có ít nhất một Topic hoặc Story liên kết trực tiếp đang `published` và chưa soft-delete.
+
+Exercise không bắt buộc ở V1. Cùng policy này được dùng cho public lesson list/detail, public Topic/Story relation, CMS Lesson publish validation và onboarding plan generation. Public lesson detail chỉ trả child Topic/Story/Exercise public; `LessonWord` chỉ trả Word public; `LessonExercise.answer`, `explanation` và internal metadata không được serialize.
+
+#### CMS/import backlog
+
+- CMS Level, Story, Word, Exercise, Question, Test và Media.
 - `POST /admin/imports`, preview/validate/commit/status/error rows.
-- Review revision bằng approve/request-change/reject; publish chỉ cập nhật content sau authorization.
+- Four-eyes approval, scheduled publish, bulk action và optimistic version header.
 
-### 16.5 Learning activity và SRS
+### 16.5 Lesson Activity Attempt & Progress V1 — runtime complete
 
-- `POST /learning/exercises/:id/attempts` với idempotency key.
-- `PATCH /progress/lessons/:lessonId` và progress topic.
+Tất cả endpoint dưới đây yêu cầu Bearer JWT. User ID chỉ lấy từ JWT đã được đối chiếu lại với account active trong database; không endpoint nào nhận `userId`, score hay progress từ client. ID path phải là positive safe integer.
+
+#### Endpoint
+
+- `POST /learning/lessons/:lessonId/start`
+- `GET /learning/lessons/:lessonId/activity`
+- `POST /learning/topics/:topicId/start`
+- `POST /learning/topics/:topicId/complete`
+- `POST /learning/exercises/:exerciseId/attempts`
+- `GET /learning/exercises/:exerciseId/attempts`
+- `POST /learning/lessons/:lessonId/complete`
+- `GET /progress/lessons`
+- `GET /progress/lessons/:lessonId`
+
+Mọi `POST` yêu cầu header `Idempotency-Key` dài 8–128 ký tự, bắt đầu bằng chữ/số và chỉ gồm chữ, số, `.`, `_`, `:`, `-`. Key có namespace toàn cục theo user nhờ unique `(userId, idempotencyKey)`: cùng user/key/request semantic trả cùng fact; cùng key nhưng operation, target hoặc payload khác trả `409`; hai user có thể dùng cùng key. Attempt request được so bằng SHA-256 của canonical JSON, không dùng thứ tự property của JSON. Timeout/connection error trả `503` an toàn để client retry đúng key; conflict đồng thời trả `409`; raw Prisma/SQL error không được phản chiếu.
+
+Body duy nhất của attempt:
+
+```json
+{
+  "answer": { "optionId": "stable-option-id" },
+  "durationSeconds": 12
+}
+```
+
+`durationSeconds` là integer 0–86.400 và optional. DTO từ chối `userId`, `attemptNumber`, `score`, `isCorrect`, `exerciseVersion`, `contentSnapshot`, `feedbackVersion`, `submittedAt`, progress và LearningEvent fields. Start/complete chỉ nhận body rỗng.
+
+#### Visibility, transaction và idempotency
+
+- Mutation chỉ dùng Lesson đạt shared readiness, Level/Lesson/Topic/Exercise `published` và chưa soft-delete. Exercise có topic phải thuộc đúng Topic và Lesson public.
+- Mỗi write khóa active `User` row bằng `FOR UPDATE` trước, sau đó khóa `Progress` rồi `UserTopicProgress` theo thứ tự cố định. Attempt, derived progress, event và plan-item transition commit trong một transaction.
+- Draft/archived/deleted content không nhận activity mới. Attempt đã tạo trước khi archive vẫn đọc được bởi owner từ snapshot.
+- `LessonExerciseAttempt.attemptNumber` do server tính sau lock. Retry không tạo thêm attempt/event, không cộng duration và không thay progress.
+
+#### Scoring `lesson-activity-v1`
+
+| Exercise type | Client answer | Rule |
+| --- | --- | --- |
+| `mcq` | `{ "optionId": "..." }` | So stable option ID có tồn tại trong authored options. |
+| `listening_choice` | `{ "optionId": "..." }` | Cùng rule stable option ID; không dùng array index. |
+| `fill_blank` | `{ "text": "..." }` | NFKC → trim → collapse whitespace; mặc định case-insensitive, chỉ case-sensitive khi authoring khai báo. |
+| `arrange_sentence` | `{ "tokenIds": ["..."] }` | Token set phải chính xác và thứ tự phải khớp tuyệt đối. |
+| `speaking_repeat` | — | `422`, chưa có pronunciation engine nên không tạo điểm/fact giả. |
+
+V1 dùng binary score `100/0`; `isCorrect` nhất quán với score. Shape authoring mơ hồ/sai trả `422` và rollback toàn bộ. Server snapshot exercise ID/location, version, type, prompt, content, authoritative answer, explanation và scoring version trong immutable attempt. Public response chỉ trả attempt ID/number, result, duration, version, feedback version, explanation và submitted time; không trả `userId`, raw answer, authoritative answer, snapshot hoặc internal metadata.
+
+#### Progress, completion và resume
+
+- Lesson start chuyển `not_started → learning`, giữ `startedAt` một lần, tạo `lesson_started`; active plan item `planned → in_progress`.
+- Topic start tạo `UserTopicProgress.learning`, cập nhật pointer và tạo `topic_started`.
+- Topic percent là số distinct public required exercise đã có submitted attempt chia tổng required exercise, làm tròn gần nhất và clamp 0–100. Topic chỉ `done` sau explicit complete; topic không có exercise phải start trước rồi mới complete.
+- Lesson completion unit gồm mỗi public Topic và mỗi public standalone Exercise. Topic chỉ được tính khi `done`; standalone được tính khi đã có attempt. Lesson complete yêu cầu mọi unit xong; content-only lesson vẫn phải start rồi explicit complete.
+- Lesson score là trung bình làm tròn của best server score trên từng public exercise đã attempt. Exercise chưa attempt/unsupported không bị gán điểm giả. Time là tổng duration của fact mới, không đếm retry.
+- Lesson complete đặt `done/100`, tạo `lesson_completed` và chuyển item thuộc active learning plan sang `completed`.
+- Resume order ổn định: Topic `orderIndex,id`, rồi Exercise `orderIndex,id`. `GET .../activity` trả public lesson, topic progress, exercise payload không có answer, latest-attempt summary, current topic/exercise và `nextAction` (`start_lesson`, `submit_exercise`, `complete_topic`, `complete_lesson`, `completed`). Pointer trỏ content vừa archive được recompute khi đọc nhưng không rewrite event/attempt.
+- Lesson đã `done` không tự regress khi CMS thêm content trong V1. Content version/published-learning snapshot là backlog.
+
+Database trigger chặn UPDATE/DELETE submitted `LessonExerciseAttempt`, xác minh coherence của `exercise_submitted` event và bảo vệ parent location sau khi có history. `LearningEvent.metadata` cho attempt chỉ có score, correctness, attempt number, exercise version, duration và feedback version; không có answer.
+
+Premium entitlement chưa có model nên `Topic.isPremium/isLocked` chưa được enforce như subscription authorization. Đây là backlog minh bạch, không phải quyền đã triển khai.
+
+#### SRS — backlog
+
 - `GET /review/due`, `POST /review/sessions`, `POST /review/cards/:id/grade`.
 
 `ReviewCard` là scheduler source of truth; `UserWordProgress` chỉ là legacy summary.

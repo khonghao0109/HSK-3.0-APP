@@ -23,6 +23,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:db:p0": "ts-node scripts/test/run-p0-schema-integration.ts",
+    "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
+    "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts"
   },

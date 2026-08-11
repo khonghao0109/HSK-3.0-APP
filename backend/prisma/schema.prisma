@@ -913,6 +913,8 @@ model LessonExercise {
   @@index([lessonId, orderIndex])
 }
 
+/// Submitted attempts are immutable facts. UPDATE/DELETE are rejected by the
+/// LessonExerciseAttempt_submitted_immutable database trigger.
 model LessonExerciseAttempt {
   id              Int       @id @default(autoincrement())
   userId          Int
@@ -990,6 +992,7 @@ model UserTopicProgress {
   @@index([topicId])
 }
 
+/// Append-only facts with cross-reference coherence enforced by SQL triggers.
 model LearningEvent {
   id             BigInt            @id @default(autoincrement())
   userId         Int
@@ -1187,6 +1190,8 @@ model ContentRevision {
   @@index([authorId, createdAt])
 }
 
+/// Append-only review facts. UPDATE/DELETE are rejected by the
+/// ContentReview_immutable trigger installed by the forward migration.
 model ContentReview {
   id         Int                   @id @default(autoincrement())
   revisionId Int
