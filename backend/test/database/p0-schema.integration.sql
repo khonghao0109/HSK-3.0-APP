@@ -34,7 +34,13 @@ DECLARE
   attempt_id INTEGER;
   attempt_2_id INTEGER;
   attempt_7_9_id INTEGER;
+  content_revision_id INTEGER;
+  content_review_id INTEGER;
+  audit_log_id BIGINT;
   rejected BOOLEAN;
+  update_rejected BOOLEAN;
+  delete_rejected BOOLEAN;
+  latest_review_decision "ContentReviewDecision";
   snapshot_title TEXT;
 BEGIN
   INSERT INTO "User" ("email", "password", "updatedAt")
@@ -568,6 +574,89 @@ BEGIN
   END;
   IF NOT rejected THEN
     RAISE EXCEPTION 'Result for in-progress ExamAttempt was accepted';
+  END IF;
+
+  INSERT INTO "ContentRevision" (
+    "entityType", "entityId", "revision", "snapshot", "contentHash", "authorId"
+  ) VALUES (
+    'lesson', lesson_1_id, 1, '{"title":"Review integrity"}'::jsonb,
+    'sha256:review-integrity-1', user_id
+  ) RETURNING "id" INTO content_revision_id;
+
+  INSERT INTO "ContentReview" ("revisionId", "reviewerId", "decision", "note")
+  VALUES (content_revision_id, user_id, 'approved', 'Initial immutable decision')
+  RETURNING "id" INTO content_review_id;
+
+  update_rejected := false;
+  BEGIN
+    UPDATE "ContentReview"
+    SET "decision" = 'rejected'
+    WHERE "id" = content_review_id;
+  EXCEPTION WHEN raise_exception THEN
+    update_rejected := true;
+  END;
+
+  delete_rejected := false;
+  BEGIN
+    DELETE FROM "ContentReview" WHERE "id" = content_review_id;
+  EXCEPTION WHEN raise_exception THEN
+    delete_rejected := true;
+  END;
+
+  IF NOT update_rejected OR NOT delete_rejected THEN
+    RAISE EXCEPTION 'ContentReview is mutable: update_rejected=%, delete_rejected=%',
+      update_rejected, delete_rejected;
+  END IF;
+
+  INSERT INTO "ContentReview" ("revisionId", "reviewerId", "decision", "note")
+  VALUES (content_revision_id, user_id, 'changes_requested', 'New authoritative decision');
+
+  SELECT "decision" INTO latest_review_decision
+  FROM "ContentReview"
+  WHERE "revisionId" = content_revision_id
+  ORDER BY "createdAt" DESC, "id" DESC
+  LIMIT 1;
+  IF latest_review_decision <> 'changes_requested' THEN
+    RAISE EXCEPTION 'newer ContentReview did not become authoritative';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    UPDATE "ContentRevision" SET "contentHash" = 'tampered' WHERE "id" = content_revision_id;
+  EXCEPTION WHEN raise_exception THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'ContentRevision mutation was accepted';
+  END IF;
+
+  INSERT INTO "AuditLog" (
+    "actorId", "action", "targetType", "targetId", "afterSummary"
+  ) VALUES (
+    user_id, 'content.reviewed', 'lesson', lesson_1_id::text, '{"status":"approved"}'::jsonb
+  ) RETURNING "id" INTO audit_log_id;
+  rejected := false;
+  BEGIN
+    UPDATE "AuditLog" SET "action" = 'tampered' WHERE "id" = audit_log_id;
+  EXCEPTION WHEN raise_exception THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'AuditLog mutation was accepted';
+  END IF;
+
+  UPDATE "User"
+  SET "email" = 'anonymized-schema-review@invalid.local',
+      "name" = NULL,
+      "status" = 'anonymized',
+      "deletedAt" = CURRENT_TIMESTAMP,
+      "updatedAt" = CURRENT_TIMESTAMP
+  WHERE "id" = user_id;
+  IF NOT EXISTS (
+    SELECT 1 FROM "ContentReview"
+    WHERE "revisionId" = content_revision_id AND "reviewerId" = user_id
+  ) THEN
+    RAISE EXCEPTION 'User anonymization detached or deleted ContentReview history';
   END IF;
 END
 $test$;

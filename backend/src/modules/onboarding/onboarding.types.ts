@@ -1,8 +1,13 @@
-export type OnboardingNextStep = 'ready' | 'set_goal' | 'generate_plan';
+export type OnboardingNextStep =
+  | 'ready'
+  | 'set_goal'
+  | 'generate_plan'
+  | 'content_unavailable';
 
 export interface OnboardingStatusView {
   hasActiveGoal: boolean;
   hasActiveLearningPlan: boolean;
+  hasUsableLearningPlan: boolean;
   hasCompletedPlacement: boolean;
   nextStep: OnboardingNextStep;
 }

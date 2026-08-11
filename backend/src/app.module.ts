@@ -7,6 +7,7 @@ import databaseConfig from './config/database.config';
 import { envValidationSchema } from './config/env.validation';
 import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
@@ -29,6 +30,7 @@ import { PrismaModule } from './prisma/prisma.module';
     ]),
     PrismaModule,
     AuthModule,
+    CmsModule,
     UserModule,
     DictionaryModule,
     HealthModule,

@@ -51,6 +51,8 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
   let token: string;
   let currentGoalId: number;
   let currentPlanId: number;
+  let firstLessonId: number;
+  let secondLessonId: number;
 
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
   const email = `onboarding-a-${suffix}@example.com`;
@@ -136,6 +138,31 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
         },
       ],
     });
+
+    const publicLessons = await prisma.lesson.findMany({
+      where: {
+        levelId,
+        slug: {
+          in: [`onboarding-first-${suffix}`, `onboarding-second-${suffix}`],
+        },
+      },
+      select: { id: true, slug: true },
+    });
+    firstLessonId = publicLessons.find(
+      (lesson) => lesson.slug === `onboarding-first-${suffix}`,
+    )!.id;
+    secondLessonId = publicLessons.find(
+      (lesson) => lesson.slug === `onboarding-second-${suffix}`,
+    )!.id;
+    await prisma.topic.createMany({
+      data: publicLessons.map((lesson, index) => ({
+        lessonId: lesson.id,
+        title: `Ready topic ${index + 1}`,
+        content: [{ type: 'text', value: 'Ready for onboarding plan.' }],
+        orderIndex: 1,
+        status: 'published',
+      })),
+    });
   });
 
   afterAll(async () => {
@@ -169,6 +196,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       data: {
         hasActiveGoal: false,
         hasActiveLearningPlan: false,
+        hasUsableLearningPlan: false,
         hasCompletedPlacement: false,
         nextStep: 'set_goal',
       },
@@ -224,6 +252,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     expect(response.body.data).toMatchObject({
       hasActiveGoal: true,
       hasActiveLearningPlan: false,
+      hasUsableLearningPlan: false,
       nextStep: 'generate_plan',
     });
   });
@@ -277,11 +306,133 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     expect(response.body.data).toMatchObject({
       hasActiveGoal: true,
       hasActiveLearningPlan: true,
+      hasUsableLearningPlan: true,
       nextStep: 'ready',
     });
   });
 
-  it('9. serializes concurrent changed-goal requests to one active goal', async () => {
+  it('9. reports generate_plan and hides an archived item while another Lesson remains ready', async () => {
+    const previousPlanId = currentPlanId;
+    await prisma.lesson.update({
+      where: { id: firstLessonId },
+      data: { status: 'archived', deletedAt: new Date() },
+    });
+
+    const status = await request(app.getHttpServer())
+      .get('/api/v1/onboarding/status')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(status.body.data).toMatchObject({
+      hasActiveGoal: true,
+      hasActiveLearningPlan: true,
+      hasUsableLearningPlan: false,
+      nextStep: 'generate_plan',
+    });
+
+    const current = await request(app.getHttpServer())
+      .get('/api/v1/learning-plans/current')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(current.body.data.id).toBe(previousPlanId);
+    expect(
+      current.body.data.items.map(
+        (item: { lesson: { id: number } }) => item.lesson.id,
+      ),
+    ).toEqual([secondLessonId]);
+  });
+
+  it('10. regenerates the ready snapshot and cancels the prior plan atomically', async () => {
+    const previousPlanId = currentPlanId;
+    const regenerated = await request(app.getHttpServer())
+      .post('/api/v1/learning-plans')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+    currentPlanId = regenerated.body.data.id as number;
+
+    expect(currentPlanId).not.toBe(previousPlanId);
+    expect(regenerated.body.data.items).toEqual([
+      expect.objectContaining({
+        lesson: expect.objectContaining({ id: secondLessonId }),
+      }),
+    ]);
+    await expect(
+      prisma.learningPlan.findUniqueOrThrow({
+        where: { id: previousPlanId },
+        select: { status: true },
+      }),
+    ).resolves.toEqual({ status: 'cancelled' });
+  });
+
+  it('11. reports content_unavailable without cancelling the active historical row', async () => {
+    await prisma.lesson.update({
+      where: { id: secondLessonId },
+      data: { status: 'archived', deletedAt: new Date() },
+    });
+
+    const status = await request(app.getHttpServer())
+      .get('/api/v1/onboarding/status')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(status.body.data).toMatchObject({
+      hasActiveGoal: true,
+      hasActiveLearningPlan: true,
+      hasUsableLearningPlan: false,
+      nextStep: 'content_unavailable',
+    });
+
+    const current = await request(app.getHttpServer())
+      .get('/api/v1/learning-plans/current')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(current.body.data.id).toBe(currentPlanId);
+    expect(current.body.data.items).toEqual([]);
+    await expect(
+      prisma.learningPlan.findUniqueOrThrow({
+        where: { id: currentPlanId },
+        select: { status: true },
+      }),
+    ).resolves.toEqual({ status: 'active' });
+  });
+
+  it('12. moves to generate_plan when ready content is published again', async () => {
+    const recoveredLessons = await Promise.all(
+      [10, 11].map((orderIndex) =>
+        prisma.lesson.create({
+          data: {
+            levelId,
+            title: `Recovered Lesson ${orderIndex}`,
+            orderIndex,
+            slug: `onboarding-recovered-${orderIndex}-${suffix}`,
+            status: 'published',
+            publishedAt: new Date(),
+          },
+          select: { id: true },
+        }),
+      ),
+    );
+    await prisma.topic.createMany({
+      data: recoveredLessons.map((lesson, index) => ({
+        lessonId: lesson.id,
+        title: `Recovered Topic ${index + 1}`,
+        content: [{ type: 'text', value: 'Content is available again.' }],
+        orderIndex: 1,
+        status: 'published',
+        publishedAt: new Date(),
+      })),
+    });
+
+    const status = await request(app.getHttpServer())
+      .get('/api/v1/onboarding/status')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(status.body.data).toMatchObject({
+      hasActiveLearningPlan: true,
+      hasUsableLearningPlan: false,
+      nextStep: 'generate_plan',
+    });
+  });
+
+  it('13. serializes concurrent changed-goal requests to one active goal', async () => {
     const goalRequest = (dailyMinutes: number, startDate: string) =>
       request(app.getHttpServer())
         .post('/api/v1/onboarding/goals')
@@ -313,7 +464,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     currentGoalId = currentGoal.id;
   });
 
-  it('10. serializes concurrent plan generation to one active plan', async () => {
+  it('14. serializes concurrent plan generation to one active plan', async () => {
     const planRequest = () =>
       request(app.getHttpServer())
         .post('/api/v1/learning-plans')
@@ -337,7 +488,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     currentPlanId = first.body.data.id as number;
   });
 
-  it('11. prevents User B from reading or targeting User A onboarding state', async () => {
+  it('15. prevents User B from reading or targeting User A onboarding state', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({ email: userBEmail, password, name: 'Onboarding User B' })
@@ -379,7 +530,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     expect(userAPlan.id).toBe(currentPlanId);
   });
 
-  it('12. rejects a previously valid JWT after the account is suspended', async () => {
+  it('16. rejects a previously valid JWT after the account is suspended', async () => {
     await prisma.user.update({
       where: { id: userId },
       data: { status: 'suspended' },

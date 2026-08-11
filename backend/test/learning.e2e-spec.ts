@@ -244,6 +244,7 @@ describe('Learning Lesson Detail E2E', () => {
     await prisma.story.create({
       data: {
         levelId,
+        lessonId,
         title: 'E2E Story',
         content: 'Story linked through lesson level.',
         slug: storySlug,
@@ -305,6 +306,19 @@ describe('Learning Lesson Detail E2E', () => {
       data: {
         lessonId,
         wordId: word.id,
+      },
+    });
+
+    await prisma.lessonExercise.create({
+      data: {
+        lessonId,
+        type: 'mcq',
+        prompt: 'Public prompt',
+        content: { choices: ['A', 'B'] },
+        answer: { correct: 'A' },
+        explanation: 'Internal explanation',
+        orderIndex: 1,
+        status: 'published',
       },
     });
 
@@ -588,6 +602,7 @@ describe('Learning Lesson Detail E2E', () => {
 
     expect(body.success).toBe(true);
     expect(Object.keys(body.data).sort()).toEqual([
+      'exercises',
       'id',
       'level',
       'stories',
@@ -628,6 +643,8 @@ describe('Learning Lesson Detail E2E', () => {
       content: 'Story linked through lesson level.',
       slug: storySlug,
     });
+    expect(JSON.stringify(body.data)).not.toContain('answer');
+    expect(JSON.stringify(body.data)).not.toContain('Internal explanation');
   });
 
   it('GET /learning/lessons/:id returns lesson title, level, topics, words and stories', async () => {

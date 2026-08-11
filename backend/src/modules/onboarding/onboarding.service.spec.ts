@@ -65,11 +65,122 @@ function createHarness() {
     ),
     userGoal: { findFirst: jest.fn() },
     learningPlan: { findFirst: jest.fn() },
+    lesson: { findMany: jest.fn() },
     placementAttempt: { count: jest.fn() },
   } as unknown as PrismaService;
 
   return { service: new OnboardingService(prisma), prisma, tx };
 }
+
+describe('OnboardingService availability status', () => {
+  const goalSummary = {
+    targetLevelId: 1,
+    targetBand: 1,
+    startDate,
+  };
+  const planSummary = {
+    targetLevelId: 1,
+    targetBand: 1,
+    startDate,
+    items: [{ lessonId: 20 }, { lessonId: 21 }],
+  };
+
+  function mockStatus(
+    prisma: PrismaService,
+    input: {
+      goal: typeof goalSummary | null;
+      plan: typeof planSummary | null;
+      readyLessonIds: number[];
+    },
+  ) {
+    (
+      prisma.userGoal as unknown as { findFirst: jest.Mock }
+    ).findFirst.mockResolvedValue(input.goal);
+    (
+      prisma.learningPlan as unknown as { findFirst: jest.Mock }
+    ).findFirst.mockResolvedValue(input.plan);
+    (
+      prisma.lesson as unknown as { findMany: jest.Mock }
+    ).findMany.mockResolvedValue(input.readyLessonIds.map((id) => ({ id })));
+    (
+      prisma.placementAttempt as unknown as { count: jest.Mock }
+    ).count.mockResolvedValue(0);
+  }
+
+  it('returns set_goal when there is no active goal', async () => {
+    const { service, prisma } = createHarness();
+    mockStatus(prisma, { goal: null, plan: null, readyLessonIds: [] });
+
+    await expect(service.getStatus(1)).resolves.toEqual({
+      success: true,
+      data: {
+        hasActiveGoal: false,
+        hasActiveLearningPlan: false,
+        hasUsableLearningPlan: false,
+        hasCompletedPlacement: false,
+        nextStep: 'set_goal',
+      },
+    });
+  });
+
+  it('returns generate_plan when ready content exists without a usable plan', async () => {
+    const { service, prisma } = createHarness();
+    mockStatus(prisma, {
+      goal: goalSummary,
+      plan: null,
+      readyLessonIds: [20, 21],
+    });
+
+    await expect(service.getStatus(1)).resolves.toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          hasActiveGoal: true,
+          hasActiveLearningPlan: false,
+          hasUsableLearningPlan: false,
+          nextStep: 'generate_plan',
+        }),
+      }),
+    );
+  });
+
+  it('returns content_unavailable when the target level has no ready content', async () => {
+    const { service, prisma } = createHarness();
+    mockStatus(prisma, {
+      goal: goalSummary,
+      plan: planSummary,
+      readyLessonIds: [],
+    });
+
+    await expect(service.getStatus(1)).resolves.toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          hasActiveLearningPlan: true,
+          hasUsableLearningPlan: false,
+          nextStep: 'content_unavailable',
+        }),
+      }),
+    );
+  });
+
+  it('returns ready only for an exact goal and ready-lesson snapshot match', async () => {
+    const { service, prisma } = createHarness();
+    mockStatus(prisma, {
+      goal: goalSummary,
+      plan: planSummary,
+      readyLessonIds: [20, 21],
+    });
+
+    await expect(service.getStatus(1)).resolves.toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          hasActiveLearningPlan: true,
+          hasUsableLearningPlan: true,
+          nextStep: 'ready',
+        }),
+      }),
+    );
+  });
+});
 
 describe('OnboardingService goals', () => {
   it('rejects a draft/deleted/non-existent level through the public-level lookup', async () => {
@@ -231,7 +342,12 @@ describe('OnboardingService learning plans', () => {
 
     expect(tx.lesson.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { levelId: 1, status: 'published', deletedAt: null },
+        where: expect.objectContaining({
+          levelId: 1,
+          status: 'published',
+          deletedAt: null,
+          level: { is: { status: 'published', deletedAt: null } },
+        }),
         orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
       }),
     );
@@ -265,11 +381,12 @@ describe('OnboardingService learning plans', () => {
     const { service, tx } = createHarness();
     tx.userGoal.findFirst.mockResolvedValue(goal);
     tx.learningPlan.findMany.mockResolvedValue([plan]);
+    tx.lesson.findMany.mockResolvedValue(lessons);
 
     const result = await service.generateLearningPlan(1);
 
     expect(result.data.id).toBe(plan.id);
-    expect(tx.lesson.findMany).not.toHaveBeenCalled();
+    expect(tx.lesson.findMany).toHaveBeenCalledTimes(1);
     expect(tx.learningPlan.create).not.toHaveBeenCalled();
   });
 

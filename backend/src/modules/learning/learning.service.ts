@@ -3,6 +3,10 @@ import {
   ApiSuccessResponse,
   PaginationMeta,
 } from '../../common/interfaces/api-response.interface';
+import {
+  buildLessonReadyWhere,
+  PUBLIC_CONTENT_WHERE,
+} from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LevelItemDto } from './dto/level-response.dto';
 import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
@@ -11,6 +15,7 @@ import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
 import { LessonDetailDto, LessonItemDto } from './dto/lesson-response.dto';
 import { StoryContentBlock, StoryItemDto } from './dto/story-response.dto';
 import { TopicContentBlock, TopicItemDto } from './dto/topic-response.dto';
+import { serializePublicLessonDetail } from './public-lesson.serializer';
 
 @Injectable()
 export class LearningService {
@@ -53,11 +58,7 @@ export class LearningService {
   async getLessons(
     query: GetLessonsQueryDto,
   ): Promise<ApiSuccessResponse<LessonItemDto[], PaginationMeta>> {
-    const where = {
-      levelId: query.levelId,
-      status: 'published' as const,
-      deletedAt: null,
-    };
+    const where = buildLessonReadyWhere({ levelId: query.levelId });
     const pagination = this.getPagination(query.page, query.limit);
     const [lessons, total] = await this.prisma.$transaction([
       this.prisma.lesson.findMany({
@@ -97,11 +98,7 @@ export class LearningService {
     id: number,
   ): Promise<ApiSuccessResponse<LessonDetailDto>> {
     const lesson = await this.prisma.lesson.findFirst({
-      where: {
-        id,
-        status: 'published',
-        deletedAt: null,
-      },
+      where: buildLessonReadyWhere({ id }),
       select: {
         id: true,
         title: true,
@@ -110,28 +107,10 @@ export class LearningService {
             id: true,
             name: true,
             orderIndex: true,
-            stories: {
-              where: {
-                status: 'published',
-                deletedAt: null,
-              },
-              orderBy: {
-                orderIndex: 'asc',
-              },
-              select: {
-                id: true,
-                title: true,
-                content: true,
-                slug: true,
-              },
-            },
           },
         },
         topics: {
-          where: {
-            status: 'published',
-            deletedAt: null,
-          },
+          where: PUBLIC_CONTENT_WHERE,
           orderBy: {
             orderIndex: 'asc',
           },
@@ -143,6 +122,9 @@ export class LearningService {
           },
         },
         lessonWords: {
+          where: {
+            word: { is: PUBLIC_CONTENT_WHERE },
+          },
           orderBy: {
             orderIndex: 'asc',
           },
@@ -164,6 +146,28 @@ export class LearningService {
             },
           },
         },
+        stories: {
+          where: PUBLIC_CONTENT_WHERE,
+          orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            slug: true,
+          },
+        },
+        exercises: {
+          where: PUBLIC_CONTENT_WHERE,
+          orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+          select: {
+            id: true,
+            type: true,
+            prompt: true,
+            content: true,
+            version: true,
+            orderIndex: true,
+          },
+        },
       },
     });
 
@@ -171,31 +175,7 @@ export class LearningService {
       throw new NotFoundException('Lesson not found');
     }
 
-    return {
-      success: true,
-      data: {
-        id: lesson.id,
-        title: lesson.title,
-        level: {
-          id: lesson.level.id,
-          name: lesson.level.name,
-          orderIndex: lesson.level.orderIndex,
-        },
-        topics: lesson.topics,
-        words: lesson.lessonWords.map(({ word }) => ({
-          id: word.id,
-          hanzi: word.hanzi,
-          traditional: word.traditional,
-          pinyin: word.pinyin,
-          pinyinTone: word.pinyinTone,
-          meanings: word.meanings.map((meaning) => ({
-            en: meaning.meaningEn,
-            vi: meaning.meaningVi,
-          })),
-        })),
-        stories: lesson.level.stories,
-      },
-    };
+    return { success: true, data: serializePublicLessonDetail(lesson) };
   }
 
   async getTopics(
@@ -203,8 +183,8 @@ export class LearningService {
   ): Promise<ApiSuccessResponse<TopicItemDto[], PaginationMeta>> {
     const where = {
       lessonId: query.lessonId,
-      status: 'published' as const,
-      deletedAt: null,
+      ...PUBLIC_CONTENT_WHERE,
+      lesson: { is: buildLessonReadyWhere() },
     };
     const pagination = this.getPagination(query.page, query.limit);
     const [topics, total] = await this.prisma.$transaction([
@@ -246,8 +226,9 @@ export class LearningService {
   ): Promise<ApiSuccessResponse<StoryItemDto[], PaginationMeta>> {
     const where = {
       levelId: query.levelId,
-      status: 'published' as const,
-      deletedAt: null,
+      ...PUBLIC_CONTENT_WHERE,
+      level: { is: PUBLIC_CONTENT_WHERE },
+      OR: [{ lessonId: null }, { lesson: { is: buildLessonReadyWhere() } }],
     };
     const pagination = this.getPagination(query.page, query.limit);
     const [stories, total] = await this.prisma.$transaction([

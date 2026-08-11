@@ -8,6 +8,7 @@ import {
 import { Prisma } from '@prisma/client';
 
 import { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
+import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
 
 import { CreateGoalDto } from './dto/create-goal.dto';
@@ -81,6 +82,16 @@ const PLAN_SELECT = {
   },
 } satisfies Prisma.LearningPlanSelect;
 
+const PLAN_PUBLIC_SELECT = {
+  ...PLAN_SELECT,
+  items: {
+    ...PLAN_SELECT.items,
+    where: {
+      lesson: { is: buildLessonReadyWhere() },
+    },
+  },
+} satisfies Prisma.LearningPlanSelect;
+
 type GoalRecord = Prisma.UserGoalGetPayload<{ select: typeof GOAL_SELECT }>;
 type PlanRecord = Prisma.LearningPlanGetPayload<{ select: typeof PLAN_SELECT }>;
 
@@ -108,6 +119,10 @@ export class OnboardingService {
           targetLevelId: true,
           targetBand: true,
           startDate: true,
+          items: {
+            orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+            select: { lessonId: true },
+          },
         },
       }),
       this.prisma.placementAttempt.count({
@@ -117,16 +132,32 @@ export class OnboardingService {
 
     const hasActiveGoal = goal !== null;
     const hasActiveLearningPlan = plan !== null;
-    const hasMatchingPlan =
+    const readyLessons = goal
+      ? await this.prisma.lesson.findMany({
+          where: buildLessonReadyWhere({ levelId: goal.targetLevelId }),
+          orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+          select: { id: true },
+        })
+      : [];
+    const hasUsableLearningPlan =
       goal !== null &&
       plan !== null &&
-      goal.targetLevelId === plan.targetLevelId &&
-      goal.targetBand === plan.targetBand &&
-      formatDateOnly(goal.startDate) === formatDateOnly(plan.startDate);
+      readyLessons.length > 0 &&
+      isPlanForGoal(plan, goal) &&
+      hasSameLessonSnapshot(
+        {
+          items: plan.items.map((item) => ({ lesson: { id: item.lessonId } })),
+        },
+        readyLessons,
+      );
 
     let nextStep: OnboardingNextStep = 'set_goal';
     if (hasActiveGoal) {
-      nextStep = hasMatchingPlan ? 'ready' : 'generate_plan';
+      if (readyLessons.length === 0) {
+        nextStep = 'content_unavailable';
+      } else {
+        nextStep = hasUsableLearningPlan ? 'ready' : 'generate_plan';
+      }
     }
 
     return {
@@ -134,6 +165,7 @@ export class OnboardingService {
       data: {
         hasActiveGoal,
         hasActiveLearningPlan,
+        hasUsableLearningPlan,
         hasCompletedPlacement: completedPlacementCount > 0,
         nextStep,
       },
@@ -248,7 +280,7 @@ export class OnboardingService {
     const plan = await this.prisma.learningPlan.findFirst({
       where: { userId, status: 'active' },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      select: PLAN_SELECT,
+      select: PLAN_PUBLIC_SELECT,
     });
 
     return {
@@ -287,17 +319,8 @@ export class OnboardingService {
         );
       }
 
-      const currentPlan = activePlans[0];
-      if (currentPlan && isPlanForGoal(currentPlan, goal)) {
-        return { success: true, data: serializePlan(currentPlan) };
-      }
-
       const lessons = await tx.lesson.findMany({
-        where: {
-          levelId: goal.targetLevelId,
-          status: 'published',
-          deletedAt: null,
-        },
+        where: buildLessonReadyWhere({ levelId: goal.targetLevelId }),
         orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
         select: {
           id: true,
@@ -312,6 +335,15 @@ export class OnboardingService {
         throw new ConflictException(
           'No published lessons are available for the selected level.',
         );
+      }
+
+      const currentPlan = activePlans[0];
+      if (
+        currentPlan &&
+        isPlanForGoal(currentPlan, goal) &&
+        hasSameLessonSnapshot(currentPlan, lessons)
+      ) {
+        return { success: true, data: serializePlan(currentPlan) };
       }
 
       const scheduledItems = lessons.map((lesson, index) => ({
@@ -468,11 +500,24 @@ function isSameGoal(
   );
 }
 
-function isPlanForGoal(plan: PlanRecord, goal: GoalRecord): boolean {
+function isPlanForGoal(
+  plan: { targetLevelId: number; targetBand: number | null; startDate: Date },
+  goal: { targetLevelId: number; targetBand: number | null; startDate: Date },
+): boolean {
   return (
     plan.targetLevelId === goal.targetLevelId &&
     plan.targetBand === goal.targetBand &&
     formatDateOnly(plan.startDate) === formatDateOnly(goal.startDate)
+  );
+}
+
+function hasSameLessonSnapshot(
+  plan: { items: Array<{ lesson: { id: number } }> },
+  lessons: Array<{ id: number }>,
+): boolean {
+  return (
+    plan.items.length === lessons.length &&
+    plan.items.every((item, index) => item.lesson.id === lessons[index].id)
   );
 }
 

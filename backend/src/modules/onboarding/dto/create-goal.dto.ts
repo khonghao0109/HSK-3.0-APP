@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -8,6 +7,8 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
+import { IsStrictBoolean } from '../../../common/decorators/is-strict-boolean.decorator';
 
 export class CreateGoalDto {
   @Type(() => Number)
@@ -28,7 +29,7 @@ export class CreateGoalDto {
   @Max(1440)
   dailyMinutes!: number;
 
-  @IsBoolean()
+  @IsStrictBoolean()
   reminderEnabled!: boolean;
 
   @IsOptional()

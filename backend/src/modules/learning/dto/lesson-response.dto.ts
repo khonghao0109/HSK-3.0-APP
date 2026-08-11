@@ -34,6 +34,15 @@ export class LessonDetailStoryDto {
   slug!: string;
 }
 
+export class LessonDetailExerciseDto {
+  id!: number;
+  type!: string;
+  prompt!: string;
+  content!: unknown;
+  version!: number;
+  orderIndex!: number;
+}
+
 export class LessonDetailLevelDto {
   id!: number;
   name!: string;
@@ -47,4 +56,5 @@ export class LessonDetailDto {
   topics!: LessonDetailTopicDto[];
   words!: LessonDetailWordDto[];
   stories!: LessonDetailStoryDto[];
+  exercises!: LessonDetailExerciseDto[];
 }

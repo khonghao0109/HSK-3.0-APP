@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import {
+import type {
   ApiSuccessResponse,
   PaginationMeta,
 } from '../../common/interfaces/api-response.interface';
