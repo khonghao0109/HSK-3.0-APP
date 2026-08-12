@@ -5,6 +5,9 @@
 - Owners: Product, Backend, Frontend, Security, Operations
 - Scope: Admin inventory, inspection, quarantine and soft archive of existing media
 
+> Follow-up: ADR-005 adds secure ingestion and authorized private delivery. It does
+> not change ADR-004's safe Admin Library projection or add an upload UI.
+
 ## Context
 
 `Media` is already the shared asset record for audio, image, PDF and video. It

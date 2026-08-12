@@ -1,0 +1,163 @@
+import { createHash } from 'node:crypto';
+
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { OBJECT_STORAGE } from '../../infrastructure/storage/object-storage.port';
+import type {
+  ObjectStoragePort,
+  StoredObject,
+} from '../../infrastructure/storage/object-storage.port';
+import { PrismaService } from '../../prisma/prisma.service';
+import {
+  createMediaAccessSignature,
+  verifyMediaAccessSignature,
+} from './media-access-signature';
+
+type AuthenticatedMediaActor = { id: number; role: string };
+
+@Injectable()
+export class MediaAccessService {
+  private readonly signingSecret: string;
+  private readonly accessTtlSeconds: number;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStoragePort,
+  ) {
+    this.signingSecret = config.getOrThrow<string>('media.signingSecret');
+    this.accessTtlSeconds = config.getOrThrow<number>('media.accessTtlSeconds');
+  }
+
+  async createAccess(actor: AuthenticatedMediaActor, mediaId: number) {
+    const media = await this.prisma.media.findUnique({
+      where: { id: mediaId },
+      select: {
+        id: true,
+        checksum: true,
+        mimeType: true,
+        storageProvider: true,
+        storageKey: true,
+        type: true,
+        processingStatus: true,
+        deletedAt: true,
+        lessonExercises: {
+          where: {
+            status: 'published',
+            deletedAt: null,
+            lesson: { is: { status: 'published', deletedAt: null } },
+            OR: [
+              { topicId: null },
+              { topic: { is: { status: 'published', deletedAt: null } } },
+            ],
+          },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+    if (
+      !media ||
+      media.processingStatus !== 'ready' ||
+      media.deletedAt !== null ||
+      !media.checksum ||
+      !isSupportedPrivateMedia(media) ||
+      !media.storageKey ||
+      !media.storageProvider
+    ) {
+      throw new NotFoundException('Media asset is not available.');
+    }
+    if (actor.role !== 'admin' && media.lessonExercises.length === 0) {
+      throw new ForbiddenException('Media asset access is not allowed.');
+    }
+    const expiresAt = Math.floor(Date.now() / 1000) + this.accessTtlSeconds;
+    const signature = createMediaAccessSignature({
+      mediaId,
+      expiresAt,
+      checksum: media.checksum,
+      secret: this.signingSecret,
+    });
+    return {
+      success: true as const,
+      data: {
+        expiresAt: new Date(expiresAt * 1000).toISOString(),
+        url: `/api/v1/media/${mediaId}/content?expires=${expiresAt}&signature=${signature}`,
+      },
+    };
+  }
+
+  async readSignedObject(
+    mediaId: number,
+    expiresAt: number,
+    signature: string,
+  ): Promise<StoredObject> {
+    const media = await this.prisma.media.findUnique({
+      where: { id: mediaId },
+      select: {
+        checksum: true,
+        mimeType: true,
+        size: true,
+        storageKey: true,
+        type: true,
+        processingStatus: true,
+        deletedAt: true,
+      },
+    });
+    if (
+      !media ||
+      !media.checksum ||
+      !media.mimeType ||
+      !media.size ||
+      !media.storageKey ||
+      !isSupportedPrivateMedia(media) ||
+      media.processingStatus !== 'ready' ||
+      media.deletedAt !== null ||
+      !verifyMediaAccessSignature({
+        mediaId,
+        expiresAt,
+        checksum: media.checksum,
+        signature,
+        secret: this.signingSecret,
+      })
+    ) {
+      throw new ForbiddenException('Media access grant is invalid or expired.');
+    }
+    try {
+      const object = await this.storage.getPrivateObject(media.storageKey);
+      if (
+        object.checksum !== media.checksum ||
+        object.body.length !== object.size ||
+        object.size !== media.size ||
+        object.contentType !== media.mimeType ||
+        createHash('sha256').update(object.body).digest('hex') !==
+          media.checksum
+      ) {
+        throw new Error('object integrity mismatch');
+      }
+      return object;
+    } catch {
+      throw new ServiceUnavailableException(
+        'Media content is temporarily unavailable.',
+      );
+    }
+  }
+}
+
+function isSupportedPrivateMedia(media: {
+  type: string;
+  mimeType: string | null;
+}): boolean {
+  return (
+    (media.type === 'image' &&
+      (media.mimeType === 'image/jpeg' || media.mimeType === 'image/png')) ||
+    (media.type === 'audio' &&
+      (media.mimeType === 'audio/mpeg' || media.mimeType === 'audio/wav'))
+  );
+}

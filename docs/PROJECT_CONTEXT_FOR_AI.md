@@ -496,7 +496,8 @@ Decision rationale va rollback boundary: `docs/adr/ADR-002-EXERCISE-AUTHORING-VE
   mutable cua fixture rong, khong truncate/reset/delete.
 - Explicit exclusion cua Exercise console: khong co create/review/publish/archive/
   import UI. Media navigation hien da hoat dong theo V1 inventory/detail/quarantine/
-  soft archive; secure upload/ingestion va binary delivery van la backlog rieng.
+  soft archive. Secure ingestion/private binary delivery API V1 da co o muc 21;
+  upload UI va async variant/transcode van la backlog rieng.
 
 Quyet dinh: `docs/adr/ADR-003-FRONTEND-FOUNDATION-ADMIN-SESSION-BFF.md`.
 
@@ -513,11 +514,64 @@ Quyet dinh: `docs/adr/ADR-003-FRONTEND-FOUNDATION-ADMIN-SESSION-BFF.md`.
   BFF. Filters/pagination nam trong URL; desktop dung semantic table, tablet/mobile
   dung labelled record list. UI theo `06-admin-cms-operations.png` va AdminShell
   navy/jade hien co, khong render action gia.
-- Upload/ingestion la explicit non-goal. Chua co shared private object storage,
-  magic-byte verification, streaming size cap, malware scanner/quarantine worker va
-  immutable delivery contract; local filesystem bi cam vi runtime phai stateless de
-  scale ngang.
+- Tai thoi diem ADR-004, upload/ingestion la explicit non-goal va chua co shared
+  private object storage. ADR-005/muc 21 da bo sung secure ingestion + private
+  delivery API; Admin Library upload UI van la backlog. Local filesystem van bi cam
+  vi runtime phai stateless de scale ngang.
 - Public listening visibility tiep tuc la consumer authority: Media mat ready/live
   se an Exercise moi, con immutable attempt snapshot cu duoc giu theo ADR-002.
 
 Quyet dinh: `docs/adr/ADR-004-MEDIA-ASSET-OPERATIONS-AND-ADMIN-LIBRARY.md`.
+
+## 21. Secure Media Ingestion, Object Storage & Processing V1 — 12/08/2026
+
+- Admin API upload mot JPEG/PNG/MP3/WAV toi da 10 MiB, bat buoc JWT admin hien
+  hanh, `DataSource` co license va `Idempotency-Key`. PostgreSQL rate limit
+  5 request/admin/phut de giu behavior nhat quan khi scale ngang.
+- Filename chi la NFKC bounded metadata; traversal/separator/control/bidi/encoded
+  separator bi reject. Object key dung UUID opaque, khong dung filename va khong
+  lo qua response/audit.
+- Anh duoc Sharp decode/re-encode voi 40M pixel cap; WAV parse container/chunk/PCM;
+  MP3 parse metadata. SVG/HTML/PDF/video/executable, MIME/signature mismatch,
+  malformed/truncated, double extension va audio polyglot bi reject.
+- Production storage la S3-compatible private adapter, AES256/checksum metadata,
+  8s timeout va actual-byte streamed read cap 10 MiB, khong tin rieng ContentLength;
+  test adapter chi active o `NODE_ENV=test`. ClamAV INSTREAM scan fail-closed voi
+  10s timeout va chi chap nhan exact NUL-terminated OK/FOUND response; khong danh dau
+  ready truoc scan va object write.
+- `MediaIngestion` state la pending/processing/completed/rejected/failed/
+  cleanup_required. Unknown PUT outcome khong auto-delete vi provider co the commit
+  muon; tracked key giu cleanup_required cho explicit reconciliation/admin cleanup.
+  Deterministic finalize failure co token-fenced delete compensation; delete khong
+  xac nhan duoc van giu cleanup_required. History/identity/terminal
+  state va completed↔Media coherence co SQL trigger/backstop.
+- Moi attempt co random `processingToken`; moi side effect fence theo token. V1 bo
+  automatic stale takeover theo application timestamp; processing retry tra 409 va
+  recovery la incident procedure: quiesce worker, reconcile tracked object, row-lock
+  va chuyen co chu dich sang cleanup_required/failed truoc cleanup/retry. Stale loser
+  khong the finalize/xoa object winner.
+- Claim/reject/finalize/cleanup xu ly transaction commit-ack bi mat bang request-owned
+  token va authoritative reread; outcome khong doc duoc tra safe 503, khong doan va
+  khong lap object side effect/audit.
+- Exact retry bind actor/source/filename/MIME/raw size/raw SHA-256 bang hash.
+  Completed replay re-read object va Media de verify checksum bytes, size, MIME,
+  provenance/storage identity. Concurrency serialize actor SHARE → licensed source
+  SHARE → ingestion UPDATE; network IO nam ngoai transaction.
+- Signed access la same-origin capability HMAC 60–600s. Access grant can JWT;
+  admin hoac learner co published Exercise reference moi duoc cap; content read
+  revalidate expiry, ready/live state, MIME/size/checksum va bytes.
+- Signed content dung `Cache-Control: private, no-store`; reverse proxy/CDN cam cache
+  va access log phai redact signature/full signed query URL.
+- UI not in scope: Admin Library khong tu dong them upload button. Upload UI,
+  PDF/video, thumbnail/variant va async job/worker la backlog ro rang.
+
+Quyet dinh: `docs/adr/ADR-005-SECURE-MEDIA-INGESTION-OBJECT-STORAGE-PROCESSING.md`.
+
+Closeout evidence `2026-08-12`: migration 16 SHA-256
+`a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e`; fresh
+deploy/status/SQL/drift GREEN, fencing `10/10`, Media E2E `20/20`, full backend E2E
+`11/11` suite (`155/155` test), unit `40/40` suite (`393/393` test), targeted
+security/adapter contract `8/8` suite (`58/58` test), production
+dependency audit 0 vulnerability. Day la PASS cho code commit, khong phai production
+release: live S3/ClamAV rehearsal, bucket policy/retention va proxy access-log
+redaction van do Infra/Release hoan tat truoc beta.

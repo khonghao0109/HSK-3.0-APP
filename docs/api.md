@@ -9,7 +9,7 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 12/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1, Lesson Activity Attempt & Progress V1, Secure Admin Session/Exercise Read Console và Media Asset Operations/Admin Library V1. Backend refresh/revocation session, profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test, secure Media upload/ingestion, SRS và exam attempt vẫn là backlog. Artifact Exercise backend V1 và frontend read console đều có fresh-disposable-DB gate evidence.
+> Trạng thái 12/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1, Lesson Activity Attempt & Progress V1, Secure Admin Session/Exercise Read Console, Media Asset Operations/Admin Library V1 và Secure Media Ingestion API V1 cho JPEG/PNG/MP3/WAV. Backend refresh/revocation session, profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test, media upload UI/PDF/video/async variants, SRS và exam attempt vẫn là backlog. Artifact Exercise backend V1 và frontend read console đều có fresh-disposable-DB gate evidence.
 
 Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Lesson public còn phải đạt readiness contract ở mục 16.4. Các endpoint archive/delete content trong tài liệu này mang nghĩa soft lifecycle, không hard-delete row đã có lịch sử.
 
@@ -906,8 +906,9 @@ inventory/detail và hai safety mutation được bổ sung riêng theo contract
 
 ### 16.9 Media Asset Operations API & Admin Library V1
 
-V1 quản trị asset đã tồn tại; không nhận binary upload và không cung cấp delivery
-URL. Mọi backend endpoint yêu cầu Bearer JWT, `role=admin`, account active/chưa
+Phạm vi ADR-004 quản trị asset đã tồn tại; các endpoint trong bảng này không nhận
+binary upload và không cung cấp delivery URL. Secure ingestion/delivery được bổ sung
+ở mục 16.10, không thay đổi safe projection của Admin Library. Mọi backend endpoint yêu cầu Bearer JWT, `role=admin`, account active/chưa
 soft-delete; lifecycle transaction còn recheck database role sau khi khóa actor.
 
 | Backend endpoint | Method | Contract |
@@ -945,10 +946,73 @@ Browser route tương ứng:
 | `/api/admin/media/:mediaId/quarantine` | `POST` | Exact canonical origin trước khi backend call. |
 | `/api/admin/media/:mediaId/archive` | `POST` | Exact canonical origin và UI xác nhận hai bước. |
 
-Không có upload route/button trong V1. Repository chưa có shared private object
-storage adapter, streaming byte limit, magic-byte MIME verification, malware scanner
-hay quarantine worker; dùng local disk sẽ phá horizontal scaling. MIME spoofing,
-oversize, SVG/HTML/executable, server hash dedupe và signed delivery phải được đóng
-trong vertical slice ingestion riêng trước khi bật upload.
+ADR-004 không có upload route/button. Vertical slice mục 16.10 đã bổ sung private
+storage, bounded validation/scanning và signed delivery ở API; Admin Library vẫn chưa
+có upload button. Không dùng local disk vì sẽ phá horizontal scaling.
 
 Quyết định: `docs/adr/ADR-004-MEDIA-ASSET-OPERATIONS-AND-ADMIN-LIBRARY.md`.
+
+### 16.10 Secure Media Ingestion, Object Storage & Processing Pipeline V1
+
+Vertical slice này bổ sung production boundary để tạo private `Media`; Admin
+Library/BFF hiện tại vẫn không có upload UI. Mọi upload yêu cầu JWT admin hiện hành,
+`DataSource` có license nonblank và rate limit PostgreSQL 5 request/admin/phút.
+
+| Backend endpoint | Method | Contract |
+| --- | --- | --- |
+| `/api/v1/admin/cms/media/ingestions?dataSourceId=:id` | `POST multipart/form-data` | Một field `file`, `Idempotency-Key` 32–128 ký tự; tối đa 10 MiB; JPEG/PNG/MP3/WAV. |
+| `/api/v1/admin/cms/media/ingestions/:id/cleanup` | `POST` | Admin retry cleanup khi trạng thái `cleanup_required`. |
+| `/api/v1/media/:mediaId/access` | `GET` | JWT; admin hoặc learner có published Exercise reference; trả signed same-origin URL TTL 60–600 giây. |
+| `/api/v1/media/:mediaId/content?expires=...&signature=...` | `GET` | Capability URL HMAC ngắn hạn; server verify state, expiry, checksum, MIME và size trước khi trả byte. |
+
+File allowlist được quyết định từ signature + safe decoder/parser, không tin extension
+hay Content-Type. PNG/JPEG được decode/re-encode bằng Sharp với trần 40 triệu pixel;
+WAV được parse RIFF/chunk/PCM và kiểm tra container length; MP3 dùng parser metadata.
+Active content, SVG/HTML/PDF/video/executable, malformed/truncated, double extension và
+audio có embedded executable signature đều bị reject. Filename chỉ là NFKC metadata
+tối đa 160 ký tự; separator, traversal, drive prefix, control/bidi và encoded/double-
+encoded separator bị chặn. Object key là UUID opaque dạng
+`media/YYYY/MM/<uuid>.<ext>` và không lộ qua response/audit.
+
+Production storage là private S3-compatible bucket qua adapter, server-side AES256,
+trusted checksum metadata, provider timeout 8 giây và không public ACL. Test dùng
+in-memory adapter chỉ khi `NODE_ENV=test`. Production malware boundary dùng ClamAV
+INSTREAM, timeout 10 giây và fail-closed; scan không sạch chuyển `rejected`, scanner
+unavailable chuyển `failed`.
+
+State machine: `pending → processing → completed`; validation/malware có thể sang
+`rejected`; infrastructure failure sang `failed`; object delete không xác nhận được
+sang `cleanup_required`. Unknown PUT outcome không auto-delete vì provider có thể
+commit muộn; tracked key ở `cleanup_required` cho explicit reconciliation. `completed`
+chỉ sau object write + ready Media + database coherence trong một transaction.
+Deterministic finalize failure thử token-fenced delete bù; cleanup không xác nhận được
+không được báo giả là sạch. `MediaIngestion` history/identity và
+terminal state được trigger bảo vệ; completed record phải khớp actor, source,
+provider/key, checksum, size, MIME và ready Media. Immutable storage identity của
+ingested Media có database backstop; quarantine/soft archive vẫn được phép.
+
+Mỗi processing attempt có `processingToken` ngẫu nhiên; reserve/finalize/reject/fail/
+compensation/cleanup chỉ có hiệu lực khi token còn là owner. V1 không tự takeover row
+`processing` dựa trên tuổi timestamp vì không thể chứng minh network side effect cũ
+đã dừng và clock replica không phải fencing authority. Retry trong lúc processing trả
+`409`; recovery là incident procedure: quiesce worker, reconcile tracked object, rồi
+row-lock và chuyển có chủ đích sang `cleanup_required`/`failed` trước cleanup/retry.
+Claim/reject/finalize/cleanup reconcile lost transaction commit acknowledgement bằng
+request-owned token và authoritative row reread; outcome không đọc được trả safe
+`503`, không đoán, lặp object side effect hoặc tạo audit trùng.
+
+Exact retry scope key theo actor và bind actor, source, sanitized filename, declared MIME, raw size và raw
+SHA-256 vào hashed idempotency identity. Completed replay re-read object và Media,
+verify raw bytes/checksum/MIME/size/provenance rồi mới trả `idempotent=true`. Cùng key
+khác request trả `409`; concurrent in-progress trả `409`; provider/DB/scanner timeout
+trả safe `503`; malformed/security reject trả `400/413/422`; không phản chiếu field,
+payload, URL ký, storage key hay credential.
+
+Production S3 read stream bị chặn theo byte thực tế ở 10 MiB, không tin riêng
+`ContentLength`. ClamAV chỉ chấp nhận response INSTREAM `OK`/`FOUND` kết thúc bằng đúng
+một NUL; thiếu/thừa terminator, response quá lớn hoặc mơ hồ đều fail-closed.
+
+Signed content trả `Cache-Control: private, no-store` và `nosniff`; proxy/CDN không
+được cache. Access log phải redact query `signature` và không ghi full signed URL.
+
+Quyết định: `docs/adr/ADR-005-SECURE-MEDIA-INGESTION-OBJECT-STORAGE-PROCESSING.md`.

@@ -6,11 +6,13 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { envValidationSchema } from './config/env.validation';
 import jwtConfig from './config/jwt.config';
+import mediaConfig from './config/media.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
+import { MediaModule } from './modules/media/media.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -19,7 +21,7 @@ import { PrismaModule } from './prisma/prisma.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mediaConfig],
       validationSchema: envValidationSchema,
     }),
     ThrottlerModule.forRoot([
@@ -37,6 +39,7 @@ import { PrismaModule } from './prisma/prisma.module';
     DictionaryModule,
     HealthModule,
     LearningModule,
+    MediaModule,
     OnboardingModule,
   ],
   controllers: [],

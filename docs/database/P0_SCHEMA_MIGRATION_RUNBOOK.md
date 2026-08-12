@@ -484,7 +484,7 @@ Các migration này có backfill và enforcement; không cung cấp down migrati
 | Xóa tài khoản | Immutable/historical FK đã được harden bằng `RESTRICT`; endpoint hard-delete bị cấm. Vẫn cần triển khai privacy job idempotent theo ADR-001 trước khi bật cho beta. |
 | JSON contract | DB chỉ bảo vệ `jsonb`; API phải dùng DTO/schema versioned và size limit. |
 | Immutable trigger | Prisma không biểu đạt; integration SQL là cổng bắt buộc. |
-| Media retention | Attempt pin safe media URL nhưng object-storage retention/URL longevity chưa được migration bảo đảm; Infra/Product phải chốt trước beta. |
+| Media retention | Secure ingestion dùng private object identity + signed same-origin access; Infra/Product vẫn phải cấu hình bucket versioning/retention/lifecycle và backup restore rehearsal trước beta. |
 | Import V1 | Chỉ hỗ trợ LessonExercise JSON rows, reject duplicate và all-or-nothing; generic CSV/import status/error-row UI/upsert không nằm trong V1. |
 | Speaking | `speaking_repeat` chỉ author draft; publish/scoring chờ pronunciation engine. |
 | P1/P2 | Payment/social/gamification/offline/AI nâng cao chưa nằm trong cam kết P0. |
@@ -492,3 +492,70 @@ Các migration này có backfill và enforcement; không cung cấp down migrati
 ## 14. Change record tối thiểu
 
 Mỗi lần deploy phải lưu: commit SHA, checksum migration, người phê duyệt, database/environment, thời gian bắt đầu/kết thúc, backup identifier, pre/post row counts, migrate status, drift output, integration/smoke-test result, dashboard/log link, sự cố và quyết định rollback/forward-fix.
+
+## 15. Secure Media Ingestion V1 — migration forward-only
+
+Migration `20260812130000_secure_media_ingestion_v1` là migration thứ 16, tạo enum
+`MediaIngestionStatus`, bảng `MediaIngestion`, bảng PostgreSQL-backed
+`MediaUploadRateLimit`, FK/index/CHECK và ba trigger backstop: ingestion lifecycle,
+completed↔ready Media coherence và immutable storage identity của ingested Media.
+Không migration lịch sử nào được sửa và không dùng `db push`.
+
+Fresh release gate phải dùng database `_test` mới, deploy đủ 16 migration rồi chạy:
+
+```bash
+npx prisma migrate deploy
+npx prisma migrate status
+npm run test:db:media-integrity
+npm run test:e2e -- --runInBand test/media-ingestion.e2e-spec.ts
+npx prisma migrate diff --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DATABASE_URL"
+```
+
+SQL acceptance chạy `BEGIN/ROLLBACK` và xác minh unsafe metadata, terminal/history
+immutability, hard-delete restriction, completed record coherence và Media storage
+identity. E2E yêu cầu disposable database guard, synthetic licensed source, test-only
+storage/scanner adapters; không chạy write test trên `hsk_system`, staging hoặc
+production. Migration rollback sau traffic là disable route + forward fix; không
+drop history/Media hoặc sửa checksum migration đã apply.
+
+Adapter gate phải giữ S3 actual-byte streaming cap 10 MiB kể cả khi provider khai
+`ContentLength` nhỏ, và ClamAV exact one-NUL `OK`/`FOUND` parsing; mọi response thiếu,
+thừa, quá lớn hoặc mơ hồ đều fail-closed.
+
+`processingToken` UUID là fencing identity của attempt. Mọi reserve/terminal write,
+finalize, compensation và cleanup phải match token hiện tại. Unknown object PUT
+outcome không auto-delete do provider có thể commit muộn; tracked key phải ở
+`cleanup_required` cho explicit reconciliation. Không tự takeover
+`processing` theo timestamp. Với row bị kẹt, Incident Commander phải quiesce worker,
+đối chiếu tracked key với private storage, rồi trong transaction có row lock chuyển
+sang `cleanup_required` nếu object tồn tại/chưa chắc chắn hoặc `failed` nếu đã chứng
+minh object không tồn tại; không đổi token/state khi worker cũ còn có thể chạy. Sau đó
+mới dùng cleanup/retry lifecycle. Reverse proxy và access-log pipeline phải
+xóa/redact query `signature` và full signed media URL;
+signed content dùng `Cache-Control: private, no-store`, không được cache ở CDN/shared
+proxy.
+
+Claim/reject/finalize/cleanup dùng request-owned token và authoritative row reread để
+reconcile lost transaction commit acknowledgement. Nếu authoritative read không khả
+dụng, route trả safe `503`/manual reconciliation; không lặp object side effect hoặc
+ghi audit giả/trùng.
+
+Artifact closeout `2026-08-12`: migration SHA-256
+`a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e` khớp
+source và `_prisma_migrations`. Fresh disposable DB deploy đủ 16 migration; status
+up to date; media SQL `BEGIN/DO/ROLLBACK`; fencing `10/10`; Media E2E `20/20`; full
+backend E2E `11/11` suite, `155/155` test; live→datamodel và migration-history→
+datamodel đều trả `-- This is an empty migration.`. No-DB gate `40/40` suite,
+`393/393` test; targeted security/adapter contract `8/8` suite, `58/58` test; và
+production dependency audit 0 vulnerability. Inventory quan sát
+sau migration 16 là 60 table, 147 FK, 507 CHECK row trong
+`information_schema.table_constraints` và 59 trigger row trong
+`information_schema.triggers`; số CHECK/trigger này là raw catalog rows (một object
+có thể xuất hiện nhiều event row), không so trực tiếp với custom-object count ở
+baseline migration 15.
+
+Live S3-compatible/ClamAV rehearsal chưa chạy trong closeout local. Code được phép
+commit nhưng **chưa production-release-ready**; Infra/Release phải hoàn tất private
+bucket/workload identity/encryption-retention, proxy log redaction và ClamAV
+availability rehearsal trước beta deployment.

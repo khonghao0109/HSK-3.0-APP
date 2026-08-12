@@ -10,8 +10,12 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { isUUID } from 'class-validator';
 import { Request } from 'express';
 
@@ -35,9 +39,17 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
+import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
+import {
+  MEDIA_UPLOAD_MAX_BYTES,
+  MediaIngestionService,
+  UploadedMediaFile,
+} from './media-ingestion/media-ingestion.service';
+import { MediaUploadRateLimitGuard } from './media-ingestion/media-upload-rate-limit.guard';
+import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upload-exception.filter';
 import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe';
 
 type AuthenticatedRequest = Request & { user: CmsActor };
@@ -51,7 +63,54 @@ export class CmsController {
     private readonly exerciseAuthoringService: ExerciseAuthoringService,
     private readonly exerciseImportService: ExerciseImportService,
     private readonly mediaAdminService: MediaAdminService,
+    private readonly mediaIngestionService: MediaIngestionService,
   ) {}
+
+  @Post('media/ingestions')
+  @Header('Cache-Control', 'no-store')
+  @UseGuards(MediaUploadRateLimitGuard)
+  @UseFilters(SafeMediaUploadExceptionFilter)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      preservePath: true,
+      limits: {
+        fileSize: MEDIA_UPLOAD_MAX_BYTES,
+        files: 1,
+        fields: 0,
+        // Busboy emits partsLimit when the counter reaches this value. Setting
+        // two accepts exactly one file part and rejects any second part.
+        parts: 2,
+        headerPairs: 32,
+      },
+    }),
+  )
+  ingestMedia(
+    @Req() request: AuthenticatedRequest,
+    @UploadedFile() file: UploadedMediaFile | undefined,
+    @Query() query: MediaIngestionQueryDto,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.mediaIngestionService.ingest(
+      request.user,
+      file,
+      query.dataSourceId,
+      idempotencyKey,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('media/ingestions/:ingestionId/cleanup')
+  @Header('Cache-Control', 'no-store')
+  retryMediaIngestionCleanup(
+    @Req() request: AuthenticatedRequest,
+    @Param('ingestionId', ParsePositiveIntPipe) ingestionId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.mediaIngestionService.retryCleanup(request.user, ingestionId, {
+      correlationId: correlationId(requestId),
+    });
+  }
 
   @Get('media')
   @Header('Cache-Control', 'no-store')

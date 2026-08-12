@@ -40,6 +40,15 @@ enum MediaProcessingStatus {
   quarantined
 }
 
+enum MediaIngestionStatus {
+  pending
+  processing
+  completed
+  rejected
+  failed
+  cleanup_required
+}
+
 enum QuestionType {
   mcq
   listening
@@ -259,6 +268,8 @@ model User {
   publishedTests           Test[]                   @relation("TestPublishedBy")
   uploadedMedia            Media[]                  @relation("MediaUploadedBy")
   updatedMedia             Media[]                  @relation("MediaUpdatedBy")
+  mediaIngestions          MediaIngestion[]
+  mediaUploadRateLimit     MediaUploadRateLimit?
   createdDataSources       DataSource[]             @relation("DataSourceCreatedBy")
   authoredContentRevisions ContentRevision[]        @relation("ContentRevisionAuthor")
   performedContentReviews  ContentReview[]          @relation("ContentReviewer")
@@ -497,6 +508,7 @@ model DataSource {
   questions       Question[]
   tests           Test[]
   media           Media[]
+  mediaIngestions MediaIngestion[]
   importJobs      ImportJob[]
 
   @@unique([name, version])
@@ -539,6 +551,7 @@ model Media {
   questionGroupAudio         QuestionGroup[]         @relation("QuestionGroupAudio")
   questionGroupImage         QuestionGroup[]         @relation("QuestionGroupImage")
   lessonExercises            LessonExercise[]        @relation("LessonExerciseMedia")
+  ingestion                  MediaIngestion?
 
   @@unique([storageProvider, storageKey])
   @@index([type, processingStatus])
@@ -546,6 +559,53 @@ model Media {
   @@index([dataSourceId])
   @@index([uploadedById])
   @@index([deletedAt])
+}
+
+model MediaIngestion {
+  /// Identity/terminal-state immutability and hard-delete rejection are enforced
+  /// by SQL-only MediaIngestion_lifecycle_guard.
+  id                   Int                  @id @default(autoincrement())
+  actorId              Int
+  dataSourceId         Int
+  idempotencyKeyHash   String
+  requestFingerprint   String
+  status               MediaIngestionStatus @default(pending)
+  originalFilename     String
+  declaredMimeType     String
+  validatedMimeType    String?
+  size                 Int
+  checksum             String?
+  storageProvider      String
+  storageKey           String?              @unique
+  mediaId              Int?                 @unique
+  failureCode          String?
+  processingStartedAt  DateTime?
+  processingToken      String
+  attemptCount         Int                  @default(0)
+  cleanupAttempts      Int                  @default(0)
+  cleanupLastAttemptAt DateTime?
+  startedAt            DateTime             @default(now())
+  completedAt          DateTime?
+  updatedAt            DateTime             @updatedAt
+
+  actor      User       @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  dataSource DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  media      Media?     @relation(fields: [mediaId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([actorId, idempotencyKeyHash])
+  @@index([actorId, startedAt])
+  @@index([dataSourceId, startedAt])
+  @@index([status, updatedAt])
+  @@index([checksum])
+}
+
+model MediaUploadRateLimit {
+  actorId         Int      @id
+  windowStartedAt DateTime
+  requestCount    Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 }
 
 model Level {

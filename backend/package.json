@@ -27,11 +27,13 @@
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
     "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",
     "test:db:exercise-integrity": "ts-node scripts/test/run-exercise-authoring-integrity.ts",
+    "test:db:media-integrity": "ts-node scripts/test/run-media-ingestion-integrity.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts",
     "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.883.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -44,11 +46,13 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "joi": "^18.2.1",
+    "music-metadata": "^11.8.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -94,6 +98,12 @@
         {
           "tsconfig": "tsconfig.spec.json"
         }
+      ]
+    },
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "node",
+        "node-addons"
       ]
     },
     "collectCoverageFrom": [
