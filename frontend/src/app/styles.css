@@ -1006,7 +1006,9 @@ h3 {
   text-underline-offset: 3px;
 }
 .detail-stack {
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 .detail-hero {
@@ -1131,7 +1133,7 @@ h3 {
   min-height: 72px;
   position: relative;
   display: grid;
-  grid-template-columns: 20px 1fr;
+  grid-template-columns: 20px minmax(0, 1fr);
   gap: 12px;
 }
 .timeline__rail::before {
@@ -1158,6 +1160,7 @@ h3 {
   display: none;
 }
 .timeline__content {
+  min-width: 0;
   padding: 0 0 22px;
 }
 .timeline__title {
@@ -1173,10 +1176,9 @@ h3 {
   display: block;
   max-width: 70ch;
   margin: 5px 0 9px;
-  overflow: hidden;
   color: var(--slate-500);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .review-record {
   display: flex;

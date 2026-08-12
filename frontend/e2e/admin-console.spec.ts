@@ -97,6 +97,7 @@ async function assertLoginLayout(page: Page) {
 const loginBoundaryWidths = [
   768, 320, 760, 761, 767, 839, 840, 841, 1024, 1440,
 ];
+const exerciseDetailBoundaryWidths = [320, 390, 430, 760, 768, 1024, 1440];
 
 test('keeps login routes inside every responsive boundary', async ({
   page,
@@ -470,6 +471,67 @@ test('uses URL filters and server pagination, then opens a detail', async ({
   await expect(page.getByText('Revision history')).toBeVisible();
 });
 
+test('keeps the exercise revision hash readable inside every responsive boundary', async ({
+  page,
+}, testInfo: TestInfo) => {
+  test.skip(
+    testInfo.project.name !== 'desktop-1440',
+    'The boundary matrix is exercised once; each project covers its native viewport separately.',
+  );
+
+  const consoleIssues = captureConsoleIssues(page);
+  await login(page);
+
+  for (const width of exerciseDetailBoundaryWidths) {
+    await page.setViewportSize({ width, height: width >= 1024 ? 900 : 1024 });
+    await page.goto('/admin/exercises/1');
+    await expect(
+      page.getByRole('heading', { name: 'Exercise 1', exact: true }),
+    ).toBeVisible();
+
+    const metrics = await assertNoHorizontalOverflow(page);
+    expect(metrics.innerWidth).toBe(width);
+
+    const revisionPanel = page.locator('.revision-panel');
+    const hash = revisionPanel.locator('.hash');
+    await expect(hash).toHaveCount(1);
+    await expect(hash).toHaveText(/^[a-f0-9]{64}$/u);
+
+    const [panelBox, hashBox, hashLayout] = await Promise.all([
+      revisionPanel.boundingBox(),
+      hash.boundingBox(),
+      hash.evaluate((element) => {
+        const styles = window.getComputedStyle(element);
+        return {
+          clientWidth: element.clientWidth,
+          overflow: styles.overflow,
+          overflowWrap: styles.overflowWrap,
+          scrollWidth: element.scrollWidth,
+          textOverflow: styles.textOverflow,
+          whiteSpace: styles.whiteSpace,
+        };
+      }),
+    ]);
+    expect(panelBox).not.toBeNull();
+    expect(hashBox).not.toBeNull();
+    expect(hashBox!.x).toBeGreaterThanOrEqual(panelBox!.x - 0.5);
+    expect(hashBox!.x + hashBox!.width).toBeLessThanOrEqual(
+      panelBox!.x + panelBox!.width + 0.5,
+    );
+    expect(hashLayout.whiteSpace).not.toBe('nowrap');
+    expect(hashLayout.overflow).not.toBe('hidden');
+    expect(hashLayout.textOverflow).not.toBe('ellipsis');
+    expect(hashLayout.scrollWidth).toBeLessThanOrEqual(
+      hashLayout.clientWidth + 1,
+    );
+
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations).toEqual([]);
+  }
+
+  expect(consoleIssues).toEqual([]);
+});
+
 test('matches the admin operations shell and adaptive inventory contract', async ({
   page,
 }, testInfo: TestInfo) => {
@@ -517,7 +579,14 @@ test('navigates the secure Media library, filters assets and opens safe detail',
 }, testInfo: TestInfo) => {
   const consoleIssues = captureConsoleIssues(page);
   await login(page);
-  await page.getByRole('link', { name: 'Media' }).first().click();
+  const adminNavigation = page.getByRole('navigation', {
+    name: testInfo.project.name.startsWith('desktop-')
+      ? 'Admin navigation'
+      : 'Admin module navigation',
+  });
+  await adminNavigation
+    .getByRole('link', { name: 'Media', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/admin\/media/u);
   await expect(
     page.getByRole('heading', { name: 'Media library' }),
@@ -542,10 +611,14 @@ test('navigates the secure Media library, filters assets and opens safe detail',
     await expect(compactList.getByText('nihao-listening.mp3')).toBeVisible();
   }
 
-  await page
-    .getByRole('link', { name: /open media/i })
-    .first()
-    .click();
+  const mediaRecord = testInfo.project.name.startsWith('desktop-')
+    ? desktopTable.getByRole('row').filter({
+        hasText: 'nihao-listening.mp3',
+      })
+    : compactList.getByRole('listitem', { name: /media \d+/iu }).filter({
+        hasText: 'nihao-listening.mp3',
+      });
+  await mediaRecord.getByRole('link', { name: /open media \d+/iu }).click();
   await expect(
     page.getByRole('heading', { name: 'nihao-listening.mp3' }),
   ).toBeVisible();
