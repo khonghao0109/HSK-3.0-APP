@@ -151,12 +151,40 @@ async function main(): Promise<void> {
         url: 'https://cdn.example.test/hsk/frontend-console/nihao.mp3',
         type: 'audio',
         mimeType: 'audio/mpeg',
+        size: 16384,
         duration: 7,
+        originalFilename: 'nihao-listening.mp3',
         processingStatus: 'ready',
         dataSourceId: source.id,
         uploadedById: admin.id,
         updatedById: admin.id,
       },
+    });
+    await tx.media.createMany({
+      data: [
+        {
+          url: 'https://cdn.example.test/hsk/frontend-console/greetings.png',
+          type: 'image',
+          mimeType: 'image/png',
+          size: 32768,
+          originalFilename: 'greetings-cover.png',
+          processingStatus: 'pending',
+          dataSourceId: source.id,
+          uploadedById: admin.id,
+          updatedById: admin.id,
+        },
+        {
+          url: 'https://cdn.example.test/hsk/frontend-console/legacy.pdf',
+          type: 'pdf',
+          mimeType: 'application/pdf',
+          size: 65536,
+          originalFilename: 'legacy-handout.pdf',
+          processingStatus: 'failed',
+          dataSourceId: source.id,
+          uploadedById: admin.id,
+          updatedById: admin.id,
+        },
+      ],
     });
 
     const fixtures: Array<{

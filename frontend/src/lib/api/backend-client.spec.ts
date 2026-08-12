@@ -57,4 +57,25 @@ describe('server-only backend client', () => {
       kind: 'invalid_request',
     });
   });
+
+  it('allowlists only the explicit media read and lifecycle endpoints', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/admin/cms/media?page=1&limit=20');
+    await client.request('/api/v1/admin/cms/media/41');
+    await client.request('/api/v1/admin/cms/media/41/quarantine', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    await expect(
+      client.request('/api/v1/admin/cms/media/41/upload', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+  });
 });

@@ -96,7 +96,9 @@ HSK System
 │   │   ├── Exercise list server pagination/filter theo Lesson/Topic/type/status
 │   │   ├── Exercise detail: content, admin answer, provenance, safe media, revisions
 │   │   ├── BFF allowlist/no-store/timeout/safe error; không generic proxy
-│   │   └── Create/review/publish/archive/import UI (backlog, không claim ở V1)
+│   │   ├── Media list/detail: safe metadata, provenance, references (đã có V1)
+│   │   ├── Media quarantine/soft archive idempotent qua exact-origin BFF (đã có V1)
+│   │   └── Exercise create/review/publish/archive/import UI (backlog)
 │   ├── CMS Lite và chất lượng dữ liệu [P0]
 │   │   ├── Lesson/Topic immutable revision, review, publish, archive (đã có)
 │   │   ├── Exercise draft/revision/review/publish/archive (đã có V1)
@@ -126,9 +128,12 @@ HSK System
 │   │   ├── Version nội dung và người duyệt (đã có); lịch publish (backlog)
 │   │   └── Báo cáo content thiếu nghĩa, audio hoặc metadata
 │   ├── Quản lý media [P1]
-│   │   ├── Upload audio, ảnh, PDF, video
-│   │   ├── Thư viện media, transcript / subtitle
-│   │   └── Liên kết media với lesson, word, question
+│   │   ├── Inventory/filter/pagination + safe detail/provenance (đã có V1)
+│   │   ├── Quarantine và soft archive có audit, không hard-delete (đã có V1)
+│   │   ├── Content usage/reference và orphan visibility (đã có V1)
+│   │   ├── Upload audio, ảnh, PDF, video qua secure ingestion pipeline (backlog)
+│   │   ├── Transcript / subtitle (backlog)
+│   │   └── Liên kết/replace media trên content authoring UI (backlog)
 │   ├── Dashboard và báo cáo [P1]
 │   │   ├── Tiến độ học và completion rate
 │   │   ├── Hiệu suất theo level, topic, skill
@@ -176,7 +181,7 @@ HSK System
 | RBAC, data privacy, API contract | Có | Có | P0 | RBAC runtime một phần; privacy schema sẵn sàng |
 | Interactive reader | Có | Quản lý stories | P1 | Kế hoạch |
 | Pronunciation / speaking feedback | Có | Quản lý practice | P1 | Schema một phần, chưa có runtime |
-| Media upload / library | Xem | Có | P1 | Schema một phần, chưa có runtime |
+| Media upload / library | Xem | Có | P1 | Inventory/detail/quarantine/soft archive V1 đã có; secure upload/ingestion còn backlog |
 | Gamification và notification | Có | Cấu hình | P1 | Kế hoạch |
 | Dashboard, analytics, support console | Xem cá nhân | Có | P1 | Kế hoạch |
 | Observability, CI/CD, staging | — | Vận hành | P1 | Kế hoạch |
@@ -197,6 +202,7 @@ HSK System
 - `POST /api/v1/admin/cms/topics`, `GET /api/v1/admin/cms/topics/:topicId` và Topic revision/review/publish/archive endpoints.
 - `GET|POST /api/v1/admin/cms/exercises`, Exercise detail/revision/review/publish/archive endpoints.
 - `POST /api/v1/admin/cms/exercise-imports/preview` và `POST /api/v1/admin/cms/exercise-imports`.
+- `GET /api/v1/admin/cms/media`, detail và `POST` quarantine/soft archive cho admin.
 - `POST /api/v1/learning/lessons/:lessonId/start|complete`, `GET /api/v1/learning/lessons/:lessonId/activity`.
 - `POST /api/v1/learning/topics/:topicId/start|complete`, `GET|POST /api/v1/learning/exercises/:exerciseId/attempts`.
 - `GET /api/v1/progress/lessons` và `GET /api/v1/progress/lessons/:lessonId`.
@@ -219,7 +225,7 @@ Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoi
 
 ## 5. Thứ tự triển khai đề xuất
 
-1. **P0 — Data + CMS Lite:** Lesson/Topic và Exercise authoring/import V1 đã được implement và Exercise admin read console đã nối backend thật; tiếp theo là **Media Asset Operations API & Admin Library V1**, dữ liệu HSK1–HSK6 + HSK7_9 và CMS/import cho entity còn lại.
+1. **P0 — Data + CMS Lite:** Lesson/Topic và Exercise authoring/import V1, Exercise console và Media Asset Operations/Admin Library V1 đã có; tiếp theo là dữ liệu HSK1–HSK6 + HSK7_9, secure media ingestion và CMS/import cho entity còn lại.
 2. **P0 — Learning + Review:** Lesson Activity Attempt & Progress V1 đã hoàn thành; tiếp theo triển khai SRS/flashcard trên `ReviewCard` source of truth.
 3. **P0 — Exam:** question bank, test, autosave, scoring theo skill, snapshot và result analysis.
 4. **P0 — Web MVP:** admin auth/BFF + Exercise read console đã có; tiếp tục learner auth, learning, dictionary, review và exam theo vertical slice.

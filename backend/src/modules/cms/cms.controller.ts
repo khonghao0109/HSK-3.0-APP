@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Headers,
   Param,
   Post,
@@ -22,6 +23,7 @@ import { CmsActor } from './cms-workflow';
 import { CmsService } from './cms.service';
 import { AdminExercisesQueryDto } from './dto/admin-exercises-query.dto';
 import { AdminLessonsQueryDto } from './dto/admin-lessons-query.dto';
+import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import {
@@ -35,6 +37,7 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
+import { MediaAdminService } from './media-admin.service';
 import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe';
 
 type AuthenticatedRequest = Request & { user: CmsActor };
@@ -47,7 +50,50 @@ export class CmsController {
     private readonly cmsService: CmsService,
     private readonly exerciseAuthoringService: ExerciseAuthoringService,
     private readonly exerciseImportService: ExerciseImportService,
+    private readonly mediaAdminService: MediaAdminService,
   ) {}
+
+  @Get('media')
+  @Header('Cache-Control', 'no-store')
+  listMedia(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminMediaQueryDto,
+  ) {
+    return this.mediaAdminService.listMedia(request.user, query);
+  }
+
+  @Get('media/:mediaId')
+  @Header('Cache-Control', 'no-store')
+  getMedia(
+    @Req() request: AuthenticatedRequest,
+    @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
+  ) {
+    return this.mediaAdminService.getMedia(request.user, mediaId);
+  }
+
+  @Post('media/:mediaId/quarantine')
+  @Header('Cache-Control', 'no-store')
+  quarantineMedia(
+    @Req() request: AuthenticatedRequest,
+    @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.mediaAdminService.quarantineMedia(request.user, mediaId, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Post('media/:mediaId/archive')
+  @Header('Cache-Control', 'no-store')
+  archiveMedia(
+    @Req() request: AuthenticatedRequest,
+    @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.mediaAdminService.archiveMedia(request.user, mediaId, {
+      correlationId: correlationId(requestId),
+    });
+  }
 
   @Get('exercises')
   listExercises(

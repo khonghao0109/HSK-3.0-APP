@@ -4,8 +4,9 @@
 
 The interface is an operational workbench for HSK content administrators. Its
 single job in V1 is to let an authenticated administrator inspect
-`LessonExercise` inventory and revision details quickly, without implying that
-authoring, publishing, imports, or media operations are available in the UI.
+`LessonExercise` inventory, revision details and safe Media asset operations
+quickly, without exposing storage credentials or implying that upload/import
+pipelines are available in the UI.
 
 ## Information architecture
 
@@ -15,7 +16,9 @@ Login
     ├── Exercises
     │   ├── Server-filtered, paginated inventory
     │   └── Exercise detail and revision history
-    └── Media — Coming later, non-interactive
+    └── Media
+        ├── URL-filtered inventory and safe metadata detail
+        └── Audited quarantine/archive operations
 
 Forbidden and session-expired states sit outside the protected admin shell.
 ```
@@ -72,7 +75,8 @@ Components consume semantic or component tokens, never raw hex values.
 ## Explicit exclusions
 
 - No Exercise create/review/publish/archive/import controls.
-- No working Media link, upload, or library.
+- No upload/transcode/provider configuration UI; V1 only exposes safe inventory,
+  detail, references, quarantine and archive.
 - No dashboard analytics or marketing hero.
 - No dark theme in V1.
 

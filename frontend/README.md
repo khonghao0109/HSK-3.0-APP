@@ -10,11 +10,16 @@ Frontend Next.js App Router cho HSK 3.0. Slice hiện tại cung cấp nền t�
   type và status.
 - `/admin/exercises/:id`: content, authoritative answer dành riêng cho admin,
   provenance, safe media projection và revision/review history.
+- `/admin/media`: inventory phân trang/lọc bằng URL, semantic desktop table và
+  labelled tablet/mobile record list.
+- `/admin/media/:id`: safe metadata/provenance/reference, quarantine và soft
+  archive có audit; không trả URL/storage secret.
 - `/forbidden`, not-found, loading, empty, upstream-error và session-expired states.
 - Responsive 390/768/1440 px, keyboard flow, reduced motion và axe WCAG checks.
 
-Không có UI create/review/publish/archive/import. Media Library chỉ là nhãn “Next”,
-không phải module đã triển khai.
+Không có UI create/review/publish/archive/import Exercise. Media upload/ingestion,
+restore, hard-delete và binary delivery chưa có; Media V1 chỉ quản trị an toàn asset
+đã tồn tại.
 
 ## Kiến trúc bảo mật
 
@@ -152,6 +157,7 @@ src/app/                 App Router pages, protected layouts, BFF routes
 src/features/auth/       runtime contracts, session handlers, login UI
 src/features/admin-shell navigation and account shell
 src/features/exercises/  query contract, server fetch, list/detail UI
+src/features/media/      safe contract, URL query, list/detail/lifecycle UI
 src/lib/api/             allowlisted backend client and safe errors
 src/lib/auth/            HttpOnly cookie lifecycle
 src/lib/security/        production CSP construction and nonce validation
@@ -171,3 +177,10 @@ Quyết định UI/token/responsive nằm trong `DESIGN.md`.
 - `/admin/exercises` và `/admin/exercises/:id`: admin CMS module, đối chiếu
   `docs/ui_image/06-admin-cms-operations.png`; closeout session không đổi layout,
   spacing, typography hay visual language của console.
+- `/admin/media` và `/admin/media/:id`: admin CMS module, đối chiếu trực tiếp
+  `docs/ui_image/06-admin-cms-operations.png`. List giữ hierarchy sidebar/filter/
+  table/badge/pagination; detail và narrow-screen record list là suy luận có kiểm
+  soát từ cùng visual language vì ảnh không có frame riêng cho các state này.
+
+Media decision và explicit upload non-goal:
+`../docs/adr/ADR-004-MEDIA-ASSET-OPERATIONS-AND-ADMIN-LIBRARY.md`.

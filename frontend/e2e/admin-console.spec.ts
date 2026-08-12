@@ -511,6 +511,105 @@ test('matches the admin operations shell and adaptive inventory contract', async
   ).toHaveCount(0);
 });
 
+test('navigates the secure Media library, filters assets and opens safe detail', async ({
+  page,
+  request,
+}, testInfo: TestInfo) => {
+  const consoleIssues = captureConsoleIssues(page);
+  await login(page);
+  await page.getByRole('link', { name: 'Media' }).first().click();
+  await expect(page).toHaveURL(/\/admin\/media/u);
+  await expect(
+    page.getByRole('heading', { name: 'Media library' }),
+  ).toBeVisible();
+  await assertNoHorizontalOverflow(page);
+
+  await page.getByLabel('Type').selectOption('audio');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page).toHaveURL(/type=audio/u);
+
+  const desktopTable = page.locator('.media-table');
+  const compactList = page.getByRole('list', {
+    name: 'Media for narrow screens',
+  });
+  if (testInfo.project.name.startsWith('desktop-')) {
+    await expect(desktopTable).toBeVisible();
+    await expect(compactList).toBeHidden();
+    await expect(desktopTable.getByText('nihao-listening.mp3')).toBeVisible();
+  } else {
+    await expect(desktopTable).toBeHidden();
+    await expect(compactList).toBeVisible();
+    await expect(compactList.getByText('nihao-listening.mp3')).toBeVisible();
+  }
+
+  await page
+    .getByRole('link', { name: /open media/i })
+    .first()
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'nihao-listening.mp3' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Technical metadata', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'References', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Lifecycle operations', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/cdn\.example|private-test-provider|checksum-/i),
+  ).toHaveCount(0);
+  await assertNoHorizontalOverflow(page);
+
+  const metadataFacts = page.locator('.fact-list--two-columns > div');
+  const [typeFact, mimeFact] = await Promise.all([
+    metadataFacts.nth(0).boundingBox(),
+    metadataFacts.nth(1).boundingBox(),
+  ]);
+  expect(typeFact).not.toBeNull();
+  expect(mimeFact).not.toBeNull();
+  const viewportWidth = await page.evaluate(() => window.innerWidth);
+  if (viewportWidth > 760) {
+    expect(
+      mimeFact!.x - (typeFact!.x + typeFact!.width),
+    ).toBeGreaterThanOrEqual(20);
+    expect(Math.abs(mimeFact!.y - typeFact!.y)).toBeLessThanOrEqual(1);
+  } else {
+    const mimeRowSpacing = await metadataFacts.nth(1).evaluate((element) => {
+      const styles = window.getComputedStyle(element);
+      return {
+        borderTopWidth: Number.parseFloat(styles.borderTopWidth),
+        paddingTop: Number.parseFloat(styles.paddingTop),
+      };
+    });
+    expect(mimeFact!.y).toBeGreaterThanOrEqual(typeFact!.y + typeFact!.height);
+    expect(mimeRowSpacing.borderTopWidth).toBeGreaterThanOrEqual(1);
+    expect(mimeRowSpacing.paddingTop).toBeGreaterThanOrEqual(10);
+  }
+
+  if (testInfo.project.name === 'desktop-1440') {
+    const crossOrigin = await request.post(
+      new URL(`${page.url()}/quarantine`)
+        .toString()
+        .replace(
+          /\/admin\/media\/(\d+)\/quarantine/u,
+          '/api/admin/media/$1/quarantine',
+        ),
+      { headers: { origin: 'https://attacker.example' } },
+    );
+    expect(crossOrigin.status()).toBe(403);
+    await page.getByRole('button', { name: 'Quarantine asset' }).click();
+    await expect(page.getByText('Quarantined')).toBeVisible();
+  }
+
+  await expect(page).toHaveTitle(/Media detail · HSK Content Workbench/u);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+  expect(consoleIssues).toEqual([]);
+});
+
 test('supports keyboard flow, responsive layout, and automated accessibility', async ({
   page,
 }) => {

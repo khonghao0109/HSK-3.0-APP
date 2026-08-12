@@ -316,12 +316,14 @@ Nguyen tac:
 - Lesson Activity Attempt & Progress V1 voi server scoring, immutable snapshot/event, derived progress va resume.
 - Secure Admin Session & Exercise Read Console V1 voi BFF HttpOnly cookie,
   role/account revalidation va real-backend browser test.
+- Media Asset Operations/Admin Library V1 voi safe inventory/detail,
+  quarantine/soft archive va exact-origin BFF.
 
 ### Chua day du
 
 - Nhieu module backend moi o muc skeleton (chua co controller/service logic day du).
 - Public learner frontend va AI service chua hoan thien runtime; admin frontend
-  moi chi co Exercise read console.
+  moi co Exercise read console va Media operations/library V1.
 - Chua co CI/CD, observability, security hardening day du.
 - Exercise V1 frozen artifact da pass full release gate; speaking publish/scoring, generic import va CMS entity khac van la backlog.
 
@@ -492,9 +494,30 @@ Decision rationale va rollback boundary: `docs/adr/ADR-002-EXERCISE-AUTHORING-VE
 - `backend/scripts/test/seed-frontend-admin-console.ts` chi seed mot lan tren fresh
   disposable DB; guard cho phep migration-owned DataSource nhung yeu cau cac bang
   mutable cua fixture rong, khong truncate/reset/delete.
-- Explicit exclusion: khong co create/review/publish/archive/import UI; Media Library
-  khong tuyen bo da co. Next vertical slice la **Media Asset Operations API & Admin
-  Library V1**; media detail/read/upload/lifecycle API phai co truoc khi bien nhan
-  “Media library” thanh navigation hoat dong.
+- Explicit exclusion cua Exercise console: khong co create/review/publish/archive/
+  import UI. Media navigation hien da hoat dong theo V1 inventory/detail/quarantine/
+  soft archive; secure upload/ingestion va binary delivery van la backlog rieng.
 
 Quyet dinh: `docs/adr/ADR-003-FRONTEND-FOUNDATION-ADMIN-SESSION-BFF.md`.
+
+## 20. Media Asset Operations API & Admin Library V1 — 12/08/2026
+
+- V1 dung schema `Media` hien co; khong migration. Backend co admin list/detail,
+  filter/pagination, provenance/reference va idempotent quarantine/soft archive.
+- Safe projection khong tra `url`, `storageProvider`, `storageKey`, checksum hay raw
+  metadata. Filename chi la bounded NFKC basename sau khi bo path/control character.
+- Lifecycle lock `active admin User FOR SHARE → Media FOR UPDATE`; DB role duoc
+  recheck trong transaction. Concurrent retry hoi tu mot transition va mot safe
+  `AuditLog`; quarantine asset archived tra conflict, khong hard-delete/restore.
+- Frontend co `/admin/media`, `/admin/media/:mediaId` va fixed allowlisted same-origin
+  BFF. Filters/pagination nam trong URL; desktop dung semantic table, tablet/mobile
+  dung labelled record list. UI theo `06-admin-cms-operations.png` va AdminShell
+  navy/jade hien co, khong render action gia.
+- Upload/ingestion la explicit non-goal. Chua co shared private object storage,
+  magic-byte verification, streaming size cap, malware scanner/quarantine worker va
+  immutable delivery contract; local filesystem bi cam vi runtime phai stateless de
+  scale ngang.
+- Public listening visibility tiep tuc la consumer authority: Media mat ready/live
+  se an Exercise moi, con immutable attempt snapshot cu duoc giu theo ADR-002.
+
+Quyet dinh: `docs/adr/ADR-004-MEDIA-ASSET-OPERATIONS-AND-ADMIN-LIBRARY.md`.

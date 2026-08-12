@@ -5,6 +5,9 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/auth\/me$/,
   /^\/api\/v1\/admin\/cms\/exercises(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+$/,
+  /^\/api\/v1\/admin\/cms\/media(?:\?.*)?$/,
+  /^\/api\/v1\/admin\/cms\/media\/\d+$/,
+  /^\/api\/v1\/admin\/cms\/media\/\d+\/(?:archive|quarantine)$/,
 ];
 
 type ClientOptions = {

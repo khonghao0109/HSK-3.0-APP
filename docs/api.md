@@ -9,7 +9,7 @@
 - Timezone lưu DB: `UTC`
 - Versioning: path-based (`/api/v1`)
 
-> Trạng thái 11/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1, Lesson Activity Attempt & Progress V1 và Secure Admin Session & Exercise Read Console V1. Backend refresh/revocation session, profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test/Media, SRS và exam attempt vẫn là backlog. Artifact Exercise backend V1 và frontend read console đều có fresh-disposable-DB gate evidence.
+> Trạng thái 12/08/2026: schema P0 đã sẵn sàng. Runtime có auth với active-account authorization, user read, health, dictionary search, learning read, Onboarding Goal & Learning Plan V1, CMS Lite publish workflow cho Lesson/Topic, Exercise Authoring & Import Validation V1, Lesson Activity Attempt & Progress V1, Secure Admin Session/Exercise Read Console và Media Asset Operations/Admin Library V1. Backend refresh/revocation session, profile/privacy, placement scoring, CMS cho Level/Story/Word/Question/Test, secure Media upload/ingestion, SRS và exam attempt vẫn là backlog. Artifact Exercise backend V1 và frontend read console đều có fresh-disposable-DB gate evidence.
 
 Visibility runtime hiện hành: public level/word chỉ trả record `status=published` và `deletedAt IS NULL`; pinyin search dùng `pinyinNormalized`. Lesson public còn phải đạt readiness contract ở mục 16.4. Các endpoint archive/delete content trong tài liệu này mang nghĩa soft lifecycle, không hard-delete row đã có lịch sử.
 
@@ -900,6 +900,55 @@ V1 gồm scalar Exercise fields, safe Media projection, cùng:
 bộ revision/review history. Không trả storage provider/key, checksum hay original
 filename qua Media projection.
 
-Frontend V1 chỉ đọc. Không có BFF/UI create, revision, review, publish, archive hay
-import; các backend mutation route hiện hữu không được proxy. Media Library là next
-slice **Media Asset Operations API & Admin Library V1**, chưa phải capability hiện tại.
+Exercise console V1 chỉ đọc. Không có BFF/UI create, revision, review, publish,
+archive hay import Exercise; các backend mutation route đó không được proxy. Media
+inventory/detail và hai safety mutation được bổ sung riêng theo contract mục 16.9.
+
+### 16.9 Media Asset Operations API & Admin Library V1
+
+V1 quản trị asset đã tồn tại; không nhận binary upload và không cung cấp delivery
+URL. Mọi backend endpoint yêu cầu Bearer JWT, `role=admin`, account active/chưa
+soft-delete; lifecycle transaction còn recheck database role sau khi khóa actor.
+
+| Backend endpoint | Method | Contract |
+| --- | --- | --- |
+| `/api/v1/admin/cms/media` | `GET` | Inventory phân trang; lọc `type`, `processingStatus`, `lifecycle`, `dataSourceId`, `page`, `limit`. |
+| `/api/v1/admin/cms/media/:mediaId` | `GET` | Safe metadata, provenance, aggregate usage và tối đa 50 LessonExercise reference. |
+| `/api/v1/admin/cms/media/:mediaId/quarantine` | `POST` | Đổi processing state sang `quarantined`; retry idempotent. |
+| `/api/v1/admin/cms/media/:mediaId/archive` | `POST` | Soft archive qua `deletedAt`; retry idempotent, không hard-delete. |
+
+`limit` nằm trong `1..100`; ID dùng positive PostgreSQL int4. List sort ổn định theo
+`updatedAt DESC, id DESC`. `lifecycle=active|archived`; enum type là
+`audio|image|pdf|video`; processing là
+`pending|processing|ready|failed|quarantined`.
+
+Safe projection gồm ID, basename filename đã normalize/bound, type, MIME, size,
+duration, processing/lifecycle, usage count, provenance IDs/name/code/version và
+timestamps. Response tuyệt đối không trả Media URL, storage provider/key, checksum
+hay raw metadata. Detail chỉ liệt kê bounded LessonExercise reference; quan hệ content
+khác trả aggregate count để không biến endpoint thành graph dump.
+
+Mutation lock theo `active admin User FOR SHARE → Media FOR UPDATE`. Quyết định
+idempotent được thực hiện sau lock; chỉ transition thật mới ghi một `AuditLog` an
+toàn. Archive giữ lịch sử và reference. Quarantine asset archived trả `409`;
+nonexistent trả `404`; timeout/connection/concurrent retry trả safe `503`; constraint
+conflict trả `409`.
+
+Browser route tương ứng:
+
+| Frontend/BFF route | Method | Contract |
+| --- | --- | --- |
+| `/admin/media` | document | URL-driven inventory, desktop table, narrow-screen labelled record list, loading/empty/error/retry. |
+| `/admin/media/:mediaId` | document | Protected safe detail, references, not-found/loading và lifecycle controls. |
+| `/api/admin/media` | `GET` | Fixed-allowlist list proxy; HttpOnly session, `no-store`. |
+| `/api/admin/media/:mediaId` | `GET` | Fixed-allowlist detail proxy. |
+| `/api/admin/media/:mediaId/quarantine` | `POST` | Exact canonical origin trước khi backend call. |
+| `/api/admin/media/:mediaId/archive` | `POST` | Exact canonical origin và UI xác nhận hai bước. |
+
+Không có upload route/button trong V1. Repository chưa có shared private object
+storage adapter, streaming byte limit, magic-byte MIME verification, malware scanner
+hay quarantine worker; dùng local disk sẽ phá horizontal scaling. MIME spoofing,
+oversize, SVG/HTML/executable, server hash dedupe và signed delivery phải được đóng
+trong vertical slice ingestion riêng trước khi bật upload.
+
+Quyết định: `docs/adr/ADR-004-MEDIA-ASSET-OPERATIONS-AND-ADMIN-LIBRARY.md`.
