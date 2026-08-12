@@ -1,4 +1,4 @@
-# HSK Content Workbench — Design Brief V1
+# HSK Content Workbench — Admin Operations Design Brief V1.1
 
 ## Product and audience
 
@@ -26,9 +26,11 @@ horizontally scrolling table.
 
 ## Visual direction
 
-**Concept:** HSK Content Workbench. The visual language borrows from ink,
-annotated study material, and editorial proofing without using ornamental
-Chinese clichés.
+**Source of truth:** `docs/ui_image/06-admin-cms-operations.png`. The authenticated
+console follows its compact navy-and-jade operations shell, light workspace,
+dense toolbar/table hierarchy and low-elevation surfaces. Product vocabulary
+and data remain the real English V1 contract; sample Vietnamese records and
+unsupported actions from the reference are not copied.
 
 - **Signature:** a restrained CJK serif `汉` mark beside the HSK 3.0 wordmark,
   paired with mono/tabular metadata for content IDs and versions.
@@ -38,9 +40,9 @@ Chinese clichés.
 - **Typography:** `Noto Serif SC`/`Songti SC` fallbacks for the small brand mark;
   `Noto Sans`/system UI for operational copy; system monospace for identifiers
   and canonical JSON.
-- **Density:** compact enough for content operations while preserving 44px
+- **Density:** compact like the reference operations screens while preserving 44px
   interactive targets and a 4/8px spacing rhythm.
-- **Shape:** modest 6–12px radii, hairline borders, and one low elevation level;
+- **Shape:** modest 6–10px radii, hairline borders, and one low elevation level;
   no decorative gradients or card mosaics.
 - **Motion:** 150–200ms state transitions and a quiet loading skeleton. All
   non-essential motion is disabled by `prefers-reduced-motion`.
@@ -73,3 +75,12 @@ Components consume semantic or component tokens, never raw hex values.
 - No working Media link, upload, or library.
 - No dashboard analytics or marketing hero.
 - No dark theme in V1.
+
+## Responsive operations shell
+
+- `>900px`: persistent 208–220px sidebar, white workspace toolbar and dense
+  semantic data table.
+- `≤900px`: compact navy toolbar replaces the sidebar and the inventory becomes
+  a labelled record list; no page-level horizontal scrolling.
+- `≤430px`: filter and record metadata collapse to one column while preserving
+  status, placement and the detail action.

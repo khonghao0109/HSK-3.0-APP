@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   handleLogin,
   handleLogout,
+  handleSessionRecovery,
   handleSessionMe,
   type SessionHandlerDependencies,
 } from './session-route-handlers';
@@ -177,6 +178,100 @@ describe('session BFF handlers', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  it.each([401, 403])(
+    'classifies backend HTTP %i as an invalid session without mutating the cookie',
+    async (backendStatus) => {
+      const request = new NextRequest(
+        'http://frontend.example.test/api/session/recover',
+        {
+          method: 'POST',
+          headers: {
+            cookie: `hsk_admin_session=${jwt()}`,
+            origin: 'http://frontend.example.test',
+          },
+        },
+      );
+      const response = await handleSessionRecovery(
+        request,
+        dependencies({
+          loadCurrentUser: vi.fn().mockRejectedValue({ status: backendStatus }),
+        }),
+      );
+
+      expect(response.status).toBe(204);
+      expect(response.headers.get('x-session-recovery')).toBe('invalid');
+      expect(response.headers.get('set-cookie')).toBeNull();
+      expect(response.headers.get('cache-control')).toBe('no-store');
+    },
+  );
+
+  it('skips the backend when recovery has no cookie', async () => {
+    const deps = dependencies();
+    const response = await handleSessionRecovery(
+      post('/api/session/recover'),
+      deps,
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('x-session-recovery')).toBe('ready');
+    expect(deps.loadCurrentUser).not.toHaveBeenCalled();
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+
+  it('does not clear a valid session during recovery', async () => {
+    const request = new NextRequest(
+      'http://frontend.example.test/api/session/recover',
+      {
+        method: 'POST',
+        headers: {
+          cookie: `hsk_admin_session=${jwt()}`,
+          origin: 'http://frontend.example.test',
+        },
+      },
+    );
+    const response = await handleSessionRecovery(request, dependencies());
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('x-session-recovery')).toBe('ready');
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+
+  it.each([500, 503])(
+    'fails closed on backend recovery HTTP %i without clearing the cookie',
+    async (backendStatus) => {
+      const request = new NextRequest(
+        'http://frontend.example.test/api/session/recover',
+        {
+          method: 'POST',
+          headers: {
+            cookie: `hsk_admin_session=${jwt()}`,
+            origin: 'http://frontend.example.test',
+          },
+        },
+      );
+      const response = await handleSessionRecovery(
+        request,
+        dependencies({
+          loadCurrentUser: vi.fn().mockRejectedValue({ status: backendStatus }),
+        }),
+      );
+
+      expect(response.status).toBe(204);
+      expect(response.headers.get('x-session-recovery')).toBe('unavailable');
+      expect(response.headers.get('set-cookie')).toBeNull();
+    },
+  );
+
+  it('rejects cross-origin session recovery without clearing the cookie', async () => {
+    const response = await handleSessionRecovery(
+      post('/api/session/recover', undefined, 'https://attacker.example'),
+      dependencies(),
+    );
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+
   it('clears the frontend cookie on same-origin logout', async () => {
     const response = await handleLogout(
       post('/api/session/logout'),
@@ -184,5 +279,16 @@ describe('session BFF handlers', () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get('set-cookie')).toContain('Max-Age=0');
+  });
+
+  it('rejects cross-origin logout without clearing the cookie', async () => {
+    const deps = dependencies();
+    const response = await handleLogout(
+      post('/api/session/logout', undefined, 'https://attacker.example'),
+      deps,
+    );
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get('set-cookie')).toBeNull();
   });
 });

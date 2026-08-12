@@ -41,9 +41,21 @@ describe('ExerciseTable', () => {
     expect(within(row).getByText('Lời chào đầu tiên')).toBeInTheDocument();
     expect(within(row).getByText('Published')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /open exercise 101/i }),
+      within(row).getByRole('link', { name: /open exercise 101/i }),
     ).toHaveAttribute('href', '/admin/exercises/101');
     expect(screen.queryByText('hello')).not.toBeInTheDocument();
+
+    const compactList = screen.getByRole('list', {
+      name: 'Exercises for narrow screens',
+    });
+    const compactRecord = within(compactList).getByRole('listitem', {
+      name: /exercise 101/i,
+    });
+    expect(within(compactRecord).getByText('EX-101')).toBeInTheDocument();
+    expect(within(compactRecord).getByText('Published')).toBeInTheDocument();
+    expect(
+      within(compactRecord).getByRole('link', { name: /open exercise 101/i }),
+    ).toHaveAttribute('href', '/admin/exercises/101');
   });
 
   it('renders a helpful empty state', () => {

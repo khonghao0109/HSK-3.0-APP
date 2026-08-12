@@ -68,7 +68,7 @@ export function AdminShell({
           </span>
         </Link>
         <nav className="side-nav" aria-label="Admin navigation">
-          <p className="side-nav__label">OPERATIONS</p>
+          <p className="side-nav__label">CONTENT OPERATIONS</p>
           <span className="side-nav__item side-nav__item--disabled">
             <Icon name="grid" />
             <span>Overview</span>
@@ -96,29 +96,47 @@ export function AdminShell({
         <div className="sidebar__scope">
           <span className="scope-dot" aria-hidden="true" />
           <div>
-            <strong>Read console V1</strong>
-            <small>Mutation tools are intentionally unavailable.</small>
+            <strong>Read-only console</strong>
+            <small>Authoring actions are not enabled.</small>
           </div>
-        </div>
-        <div className="sidebar__profile">
-          <span className="avatar" aria-hidden="true">
-            {initials}
-          </span>
-          <span className="profile-copy">
-            <strong>{user.name ?? 'Administrator'}</strong>
-            <small>{user.email}</small>
-          </span>
-          <LogoutButton />
         </div>
       </aside>
       <div className="admin-workspace">
-        <header className="mobile-header">
-          <Link className="mobile-brand" href="/admin/exercises">
-            <span>汉</span> HSK Workbench
+        <header
+          className="admin-toolbar mobile-header"
+          aria-label="Admin workspace toolbar"
+        >
+          <Link
+            className="mobile-brand"
+            href="/admin/exercises"
+            aria-label="HSK Content Workbench home"
+          >
+            <span>汉</span> HSK Admin
           </Link>
-          <LogoutButton />
+          <div className="admin-toolbar__context">
+            <Icon name="book" />
+            <span>
+              <small>Content operations</small>
+              <strong>Exercise inventory</strong>
+            </span>
+          </div>
+          <div className="admin-toolbar__account">
+            <span className="avatar" aria-hidden="true">
+              {initials}
+            </span>
+            <span className="profile-copy">
+              <strong>{user.name ?? 'Administrator'}</strong>
+              <small>Administrator</small>
+            </span>
+            <LogoutButton />
+          </div>
         </header>
-        <main className="admin-main" id="admin-content">
+        <main
+          className="admin-main"
+          id="admin-content"
+          aria-label="Admin content"
+          tabIndex={-1}
+        >
           {children}
         </main>
       </div>

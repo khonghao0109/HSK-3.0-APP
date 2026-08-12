@@ -12,6 +12,7 @@ coverage/
 .nyc_output/
 .next/
 **/.next/
+/frontend/next-env.d.ts
 out/
 **/out/
 .turbo/

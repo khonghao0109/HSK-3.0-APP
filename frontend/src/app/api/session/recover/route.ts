@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 
-import { handleLogout } from '@/features/auth/session-route-handlers';
+import { handleSessionRecovery } from '@/features/auth/session-route-handlers';
 import { sessionDependencies } from '@/features/auth/session-dependencies';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  return handleLogout(request, sessionDependencies());
+  return handleSessionRecovery(request, sessionDependencies());
 }

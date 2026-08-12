@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { ExerciseDetail } from '@/features/exercises/exercise-detail';
+import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { loadExercise } from '@/features/exercises/exercise-service';
 import { BackendRequestError } from '@/lib/api/api-error';
 
@@ -21,7 +22,7 @@ export default async function ExerciseDetailPage({
     exercise = await loadExercise(exerciseId);
   } catch (error) {
     if (error instanceof BackendRequestError && error.status === 401)
-      redirect('/api/session/logout');
+      redirectToSessionLogin();
     if (error instanceof BackendRequestError && error.status === 404)
       notFound();
     throw error;

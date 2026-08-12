@@ -47,6 +47,18 @@ function noStore(response: NextResponse): NextResponse {
   return response;
 }
 
+function noContent(): NextResponse {
+  return noStore(new NextResponse(null, { status: 204 }));
+}
+
+function recoveryResponse(
+  state: 'ready' | 'invalid' | 'unavailable',
+): NextResponse {
+  const response = noContent();
+  response.headers.set('x-session-recovery', state);
+  return response;
+}
+
 function isSameOrigin(request: NextRequest, appOrigin: string): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return false;
@@ -129,6 +141,24 @@ export async function handleSessionMe(
     const response = safeResponse(statusFromError(error) === 403 ? 403 : 401);
     setClearedCookie(response, deps);
     return response;
+  }
+}
+
+export async function handleSessionRecovery(
+  request: NextRequest,
+  deps: SessionHandlerDependencies,
+): Promise<NextResponse> {
+  if (!isSameOrigin(request, deps.appOrigin)) return safeResponse(403);
+  const token = request.cookies.get(deps.cookieName)?.value;
+  if (!token) return recoveryResponse('ready');
+  try {
+    const user = authUserSchema.parse(await deps.loadCurrentUser(token));
+    if (user.role !== 'admin') return recoveryResponse('invalid');
+    return recoveryResponse('ready');
+  } catch (error) {
+    const status = statusFromError(error);
+    if ([401, 403].includes(status)) return recoveryResponse('invalid');
+    return recoveryResponse('unavailable');
   }
 }
 

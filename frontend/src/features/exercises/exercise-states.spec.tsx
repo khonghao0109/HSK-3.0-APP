@@ -11,6 +11,9 @@ describe('Exercise route states', () => {
       'aria-busy',
       'true',
     );
+    expect(
+      screen.getByRole('heading', { name: 'Loading exercises', level: 1 }),
+    ).toBeInTheDocument();
   });
 
   it('renders a safe retry state without reflecting the raw error', () => {

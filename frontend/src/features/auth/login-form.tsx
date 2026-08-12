@@ -1,7 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+
+import { recoverSession } from './session-recovery';
+
+type RecoveryStatus = 'not-required' | 'checking' | 'ready' | 'failed';
 
 export function LoginForm({
   sessionEnded = false,
@@ -13,13 +17,75 @@ export function LoginForm({
     sessionEnded ? 'Your session ended. Sign in again to continue.' : null,
   );
   const [pending, setPending] = useState(false);
+  const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>(
+    sessionEnded ? 'checking' : 'not-required',
+  );
+  const mounted = useRef(true);
+  const recoveryController = useRef<AbortController | null>(null);
+  const recoveryPromise = useRef<Promise<boolean> | null>(null);
+  const submitting = useRef(false);
+
+  const startRecovery = useCallback((): Promise<boolean> => {
+    if (recoveryPromise.current) return recoveryPromise.current;
+
+    const controller = new AbortController();
+    recoveryController.current = controller;
+    setRecoveryStatus('checking');
+    const operation = recoverSession(controller.signal)
+      .then(() => {
+        if (mounted.current && recoveryController.current === controller) {
+          setRecoveryStatus('ready');
+        }
+        return true;
+      })
+      .catch(() => {
+        if (
+          mounted.current &&
+          recoveryController.current === controller &&
+          !controller.signal.aborted
+        ) {
+          setRecoveryStatus('failed');
+          setError(
+            'The previous session could not be checked safely. Retry before signing in.',
+          );
+        }
+        return false;
+      });
+    recoveryPromise.current = operation;
+    return operation;
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    if (sessionEnded) void startRecovery();
+    return () => {
+      mounted.current = false;
+      recoveryController.current?.abort();
+      recoveryController.current = null;
+      recoveryPromise.current = null;
+    };
+  }, [sessionEnded, startRecovery]);
+
+  function retryRecovery() {
+    recoveryController.current?.abort();
+    recoveryController.current = null;
+    recoveryPromise.current = null;
+    setError('Your session ended. Sign in again to continue.');
+    void startRecovery();
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setPending(true);
-    setError(null);
     const form = new FormData(event.currentTarget);
     try {
+      if (sessionEnded) {
+        const recovered = await startRecovery();
+        if (!recovered || !mounted.current) return;
+      }
+      setError(null);
       const response = await fetch('/api/session/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -49,9 +115,13 @@ export function LoginForm({
         'The console cannot reach the service. Check your connection and retry.',
       );
     } finally {
-      setPending(false);
+      submitting.current = false;
+      if (mounted.current) setPending(false);
     }
   }
+
+  const checkingSession = recoveryStatus === 'checking';
+  const recoveryFailed = recoveryStatus === 'failed';
 
   return (
     <form className="login-form" onSubmit={submit}>
@@ -81,12 +151,25 @@ export function LoginForm({
           {error}
         </p>
       ) : null}
+      {recoveryFailed ? (
+        <button
+          className="button button--ghost button--full"
+          type="button"
+          onClick={retryRecovery}
+        >
+          Retry session check
+        </button>
+      ) : null}
       <button
         className="button button--primary button--full"
         type="submit"
-        disabled={pending}
+        disabled={pending || recoveryFailed}
       >
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending && checkingSession
+          ? 'Checking session…'
+          : pending
+            ? 'Signing in…'
+            : 'Sign in'}
       </button>
     </form>
   );

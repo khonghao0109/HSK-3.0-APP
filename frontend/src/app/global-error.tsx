@@ -1,11 +1,31 @@
 'use client';
 
+type GlobalErrorRecovery = {
+  reset: () => void;
+  retry?: () => void;
+  unstableRetry?: () => void;
+};
+
+export function selectGlobalErrorRecovery({
+  reset,
+  retry,
+  unstableRetry,
+}: GlobalErrorRecovery): () => void {
+  return unstableRetry ?? retry ?? reset;
+}
+
 export default function GlobalError({
   reset,
+  retry,
+  unstable_retry: unstableRetry,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
+  retry?: () => void;
+  unstable_retry?: () => void;
 }) {
+  const recover = selectGlobalErrorRecovery({ reset, retry, unstableRetry });
+
   return (
     <html lang="en">
       <body>
@@ -19,7 +39,7 @@ export default function GlobalError({
             <button
               className="button button--primary"
               type="button"
-              onClick={reset}
+              onClick={recover}
             >
               Try again
             </button>

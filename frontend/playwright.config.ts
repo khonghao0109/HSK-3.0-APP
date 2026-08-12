@@ -15,7 +15,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run dev -- --hostname 127.0.0.1 --port 3200',
+    command: 'npm run start -- --hostname 127.0.0.1 --port 3200',
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
@@ -26,7 +26,15 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         browserName: 'chromium',
-        viewport: { width: 1440, height: 1000 },
+        viewport: { width: 1440, height: 900 },
+      },
+    },
+    {
+      name: 'desktop-1024',
+      use: {
+        ...devices['Desktop Chrome'],
+        browserName: 'chromium',
+        viewport: { width: 1024, height: 768 },
       },
     },
     {

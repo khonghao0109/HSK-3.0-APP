@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 
 import { ExerciseFilters } from '@/features/exercises/exercise-filters';
+import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { parseExerciseQuery } from '@/features/exercises/exercise-query';
 import { loadExercises } from '@/features/exercises/exercise-service';
 import { ExerciseTable } from '@/features/exercises/exercise-table';
@@ -21,7 +21,7 @@ export default async function ExercisesPage({
     result = await loadExercises(query);
   } catch (error) {
     if (error instanceof BackendRequestError && error.status === 401)
-      redirect('/api/session/logout');
+      redirectToSessionLogin();
     throw error;
   }
   return (

@@ -7,14 +7,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
+    "typegen": "next typegen",
+    "typecheck": "npm run typegen && tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:generated-types": "node scripts/check-generated-types.mjs",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
     "test:e2e:install": "playwright install chromium"
   },
   "engines": {
