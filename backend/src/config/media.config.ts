@@ -11,10 +11,12 @@ export default () => ({
       process.env.MEDIA_INGESTION_ENABLED === undefined
         ? process.env.NODE_ENV === 'test'
         : process.env.MEDIA_INGESTION_ENABLED === 'true',
-    metricsBearerToken:
+    metricsBearerTokens: [
       process.env.MEDIA_METRICS_BEARER_TOKEN ??
-      (process.env.NODE_ENV === 'test'
-        ? 'test-media-metrics-token-at-least-32-chars'
-        : undefined),
+        (process.env.NODE_ENV === 'test'
+          ? 'test-media-metrics-token-at-least-32-chars'
+          : undefined),
+      process.env.MEDIA_METRICS_BEARER_TOKEN_PREVIOUS,
+    ].filter((value): value is string => value !== undefined),
   },
 });

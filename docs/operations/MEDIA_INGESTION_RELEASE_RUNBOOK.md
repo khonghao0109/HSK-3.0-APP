@@ -28,6 +28,12 @@ staging observation period:
 Metrics labels are closed enums only. Never add actor, media, object, file, email,
 query, token, checksum, bucket or endpoint identity as a label.
 
+Storage reads use typed outcomes: real provider transport failure is `unavailable`;
+missing objects, malformed responses and checksum/size/MIME/body mismatches are
+integrity/coherence failures. ClamAV transport/timeout/reset is `unavailable`, while
+invalid framing, oversized, ambiguous and `ERROR` responses are `invalid_response`.
+Neither branch may be inferred from attacker-controlled error text.
+
 ## Safe rollout and kill switch
 
 1. Deploy with `MEDIA_INGESTION_ENABLED=false`. Metrics, signed reads and cleanup
@@ -39,6 +45,13 @@ query, token, checksum, bucket or endpoint identity as a label.
 5. To stop new writes, set the flag false and roll/reload replicas. Do not disable
    cleanup: forward recovery must remain possible.
 6. Application rollback never rolls back migration 17 or deletes ingestion history.
+
+The public Nginx edge must exact-match the metrics path and return `404` before proxy.
+Prometheus uses the headless private service/NetworkPolicy and scrapes each backend
+replica directly. Do not point the job at a load balancer; production counts above
+the two-replica rehearsal use pod service discovery/relabeling. Rotate the bearer
+token by deploying current+previous overlap, moving every scrape target, verifying
+`up`, then removing the previous token. Authorization headers must not enter logs.
 
 ## Cleanup and unknown PUT reconciliation
 
@@ -64,8 +77,13 @@ For `HskMediaCleanupBacklog` or `HskMediaProcessingStuck`:
 
 - Scanner unavailable: keep ingestion disabled, verify ClamAV health/resources and
   exact INSTREAM responses. Ambiguous scans fail closed; never bypass scanning.
+- Scanner invalid response: page Security immediately, preserve bounded protocol
+  evidence without raw payload/response, verify ClamAV version/proxy framing, and
+  keep ingestion disabled until exact OK/FOUND framing is restored.
 - Storage spike: verify TLS, private bucket policy, workload identity, encryption,
   versioning and provider status. Permission errors stay fail-closed.
+- Integrity error: disable affected reads/ingestion, preserve object and database
+  evidence without copying keys/checksums into tickets, and page Media + Security.
 - Coherence violation: disable ingestion immediately; preserve database/object
   evidence and involve Security + Data. Do not rename/delete keys or edit terminal
   facts manually.
@@ -82,12 +100,26 @@ For `HskMediaCleanupBacklog` or `HskMediaProcessingStuck`:
 - Alerts: inject one synthetic counter/gauge condition per rule, verify routing,
   ownership and recovery notification. Retain sanitized outputs as CI/staging artifact.
 
+Run `cd backend && npm run test:ops:media`. It uses pinned versions/checksums from
+`ops/observability/media-toolchain.json`, a complete Nginx wrapper, promtool rule
+tests and a guarded loopback disposable Grafana import. Missing binaries/container
+runtime or Grafana identity is `BLOCKED_EXTERNAL`; static Jest artifact checks never
+upgrade that result to PASS.
+
 ## Current evidence status
 
 Deterministic adapter/database tests are reproducible locally. Live provider,
 scanner, proxy and alert delivery evidence must be attached by Infra/Release before
 production approval; absent credentials or endpoints means `BLOCKED_EXTERNAL`, not
 PASS.
+
+The 2026-08-13 observability/edge closeout added typed storage/scanner outcomes, one
+aggregate database query per scrape, direct two-replica topology, private metrics
+NetworkPolicy, exact credentialed CORS, API security headers, strong separated secret
+validation and bearer overlap rotation. Detailed matrices are in
+`MEDIA_OBSERVABILITY_EDGE_SECURITY_CLOSEOUT.md`. On this workstation
+`npm run test:ops:media` reports `BLOCKED_EXTERNAL` because Nginx, promtool and the
+Grafana CLI are absent; no live artifact or release PASS is claimed.
 
 The frozen migration 17 SHA-256 is
 `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`.

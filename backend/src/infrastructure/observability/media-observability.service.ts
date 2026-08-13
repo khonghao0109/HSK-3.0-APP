@@ -1,4 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -16,7 +17,14 @@ const SCANNER_OUTCOMES = [
   'invalid_response',
 ] as const;
 const STORAGE_OPERATIONS = ['put', 'get', 'head', 'delete'] as const;
-const STORAGE_OUTCOMES = ['success', 'error', 'provider_mismatch'] as const;
+const STORAGE_OUTCOMES = [
+  'success',
+  'error',
+  'not_found',
+  'provider_mismatch',
+  'malformed_response',
+  'integrity_error',
+] as const;
 const SIGNED_ACCESS_OUTCOMES = [
   'success',
   'invalid_grant',
@@ -76,24 +84,21 @@ export class MediaObservabilityService {
   }
 
   async render(): Promise<string> {
-    const staleBefore = new Date(Date.now() - 15 * 60_000);
-    const [cleanupCount, stuckCount, cleanupOldest, stuckOldest] =
-      await Promise.all([
-        this.prisma.mediaIngestion.count({
-          where: { status: 'cleanup_required' },
-        }),
-        this.prisma.mediaIngestion.count({
-          where: { status: 'processing', updatedAt: { lt: staleBefore } },
-        }),
-        this.prisma.mediaIngestion.aggregate({
-          where: { status: 'cleanup_required' },
-          _min: { updatedAt: true },
-        }),
-        this.prisma.mediaIngestion.aggregate({
-          where: { status: 'processing' },
-          _min: { updatedAt: true },
-        }),
-      ]);
+    const [state] = await this.prisma.$queryRaw<MediaDatabaseMetrics[]>(
+      Prisma.sql`SELECT
+        COUNT(*) FILTER (WHERE status = 'cleanup_required')::bigint AS "cleanupCount",
+        COUNT(*) FILTER (
+          WHERE status = 'processing'
+            AND "updatedAt" < CURRENT_TIMESTAMP - INTERVAL '15 minutes'
+        )::bigint AS "stuckCount",
+        COALESCE(EXTRACT(EPOCH FROM (
+          CURRENT_TIMESTAMP - MIN("updatedAt") FILTER (WHERE status = 'cleanup_required')
+        )), 0)::double precision AS "cleanupOldestAgeSeconds",
+        COALESCE(EXTRACT(EPOCH FROM (
+          CURRENT_TIMESTAMP - MIN("updatedAt") FILTER (WHERE status = 'processing')
+        )), 0)::double precision AS "processingOldestAgeSeconds"
+      FROM "MediaIngestion"`,
+    );
     const lines: string[] = [];
     for (const outcome of INGESTION_OUTCOMES) {
       lines.push(
@@ -136,13 +141,13 @@ export class MediaObservabilityService {
         `hsk_media_reconciliation_total{outcome="${outcome}"} ${this.value(`reconciliation:${outcome}`)}`,
       );
     }
-    lines.push(`hsk_media_cleanup_required ${cleanupCount}`);
-    lines.push(`hsk_media_stuck_processing ${stuckCount}`);
+    lines.push(`hsk_media_cleanup_required ${state?.cleanupCount ?? 0}`);
+    lines.push(`hsk_media_stuck_processing ${state?.stuckCount ?? 0}`);
     lines.push(
-      `hsk_media_cleanup_oldest_age_seconds ${ageSeconds(cleanupOldest._min.updatedAt)}`,
+      `hsk_media_cleanup_oldest_age_seconds ${boundedAge(state?.cleanupOldestAgeSeconds)}`,
     );
     lines.push(
-      `hsk_media_processing_oldest_age_seconds ${ageSeconds(stuckOldest._min.updatedAt)}`,
+      `hsk_media_processing_oldest_age_seconds ${boundedAge(state?.processingOldestAgeSeconds)}`,
     );
     for (const outcome of INGESTION_OUTCOMES) {
       appendDuration(
@@ -215,8 +220,13 @@ function formatLabels(labels: Record<string, string>): string {
   return `{${values}}`;
 }
 
-function ageSeconds(value: Date | null): number {
-  return value
-    ? Math.max(0, Math.floor((Date.now() - value.getTime()) / 1000))
-    : 0;
+type MediaDatabaseMetrics = {
+  cleanupCount: bigint;
+  stuckCount: bigint;
+  cleanupOldestAgeSeconds: number;
+  processingOldestAgeSeconds: number;
+};
+
+function boundedAge(value: number | undefined): number {
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value ?? 0)) : 0;
 }

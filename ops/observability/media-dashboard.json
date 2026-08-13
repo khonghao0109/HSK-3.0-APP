@@ -1,13 +1,27 @@
 {
+  "uid": "hsk-media-release",
   "title": "HSK Media Ingestion Release",
   "tags": ["hsk", "media", "release"],
   "timezone": "browser",
-  "schemaVersion": 39,
+  "schemaVersion": 41,
+  "version": 1,
   "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus"
+      }
+    ]
+  },
   "panels": [
     {
       "title": "Ingestion outcomes",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         { "expr": "sum by (outcome) (rate(hsk_media_ingestion_total[5m]))" }
       ]
@@ -15,51 +29,60 @@
     {
       "title": "Scanner outcomes and latency",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         { "expr": "sum by (outcome) (rate(hsk_media_scanner_total[5m]))" },
-        {
-          "expr": "sum(rate(hsk_media_scanner_latency_seconds_sum[5m])) / clamp_min(sum(rate(hsk_media_scanner_latency_seconds_count[5m])), 1)"
-        }
+        { "expr": "sum(rate(hsk_media_scanner_latency_seconds_sum[5m])) / clamp_min(sum(rate(hsk_media_scanner_latency_seconds_count[5m])), 1)" }
       ]
     },
     {
       "title": "Storage operations and latency",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
-        {
-          "expr": "sum by (operation, outcome) (rate(hsk_media_storage_operations_total[5m]))"
-        },
-        {
-          "expr": "sum by (operation) (rate(hsk_media_storage_latency_seconds_sum[5m])) / clamp_min(sum by (operation) (rate(hsk_media_storage_latency_seconds_count[5m])), 1)"
-        }
+        { "expr": "sum by (operation, outcome) (rate(hsk_media_storage_operations_total[5m]))" },
+        { "expr": "sum by (operation) (rate(hsk_media_storage_latency_seconds_sum[5m])) / clamp_min(sum by (operation) (rate(hsk_media_storage_latency_seconds_count[5m])), 1)" }
+      ]
+    },
+    {
+      "title": "Integrity and reconciliation",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum by (outcome) (increase(hsk_media_signed_access_total[5m]))" },
+        { "expr": "sum by (outcome) (increase(hsk_media_reconciliation_total[5m]))" }
       ]
     },
     {
       "title": "Cleanup backlog / oldest age",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "hsk_media_cleanup_required" },
-        { "expr": "hsk_media_cleanup_oldest_age_seconds" }
+        { "expr": "max(hsk_media_cleanup_required)" },
+        { "expr": "max(hsk_media_cleanup_oldest_age_seconds)" }
       ]
     },
     {
       "title": "Stuck processing / oldest age",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "hsk_media_stuck_processing" },
-        { "expr": "hsk_media_processing_oldest_age_seconds" }
+        { "expr": "max(hsk_media_stuck_processing)" },
+        { "expr": "max(hsk_media_processing_oldest_age_seconds)" }
       ]
     },
     {
-      "title": "Signed access and reconciliation",
+      "title": "Replica scrape health",
       "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 8 },
       "targets": [
-        {
-          "expr": "sum by (outcome) (rate(hsk_media_signed_access_total[5m]))"
-        },
-        {
-          "expr": "sum by (outcome) (increase(hsk_media_reconciliation_total[5m]))"
-        }
+        { "expr": "up{job=\"hsk-media-replicas\"}" }
       ]
     }
   ]

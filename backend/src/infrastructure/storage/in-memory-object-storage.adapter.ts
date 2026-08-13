@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import {
+  ObjectStorageError,
+  ObjectStorageErrorKind,
   ObjectStoragePort,
   ObjectStorageWriteError,
   StoredObject,
@@ -13,6 +15,7 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
   private nextPutFailure = false;
   private nextPutFailureAfterWrite = false;
   private nextDeleteFailure = false;
+  private nextGetFailure: ObjectStorageErrorKind | null = null;
   private nextDeleteBarrier:
     | {
         started: () => void;
@@ -46,8 +49,13 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
   }
 
   getPrivateObject(key: string): Promise<StoredObject> {
+    if (this.nextGetFailure) {
+      const kind = this.nextGetFailure;
+      this.nextGetFailure = null;
+      return Promise.reject(new ObjectStorageError(kind));
+    }
     const object = this.objects.get(key);
-    if (!object) return Promise.reject(new Error('Storage object not found.'));
+    if (!object) return Promise.reject(new ObjectStorageError('not_found'));
     return Promise.resolve({ ...object, body: Buffer.from(object.body) });
   }
 
@@ -58,7 +66,7 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
   async deletePrivateObject(key: string): Promise<void> {
     if (this.nextDeleteFailure) {
       this.nextDeleteFailure = false;
-      throw new Error('Synthetic storage delete failure.');
+      throw new ObjectStorageError('unavailable');
     }
     if (this.nextDeleteBarrier) {
       const barrier = this.nextDeleteBarrier;
@@ -83,6 +91,10 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
 
   failNextDelete(): void {
     this.nextDeleteFailure = true;
+  }
+
+  failNextGet(kind: ObjectStorageErrorKind = 'unavailable'): void {
+    this.nextGetFailure = kind;
   }
 
   blockNextDelete(): { started: Promise<void>; release: () => void } {

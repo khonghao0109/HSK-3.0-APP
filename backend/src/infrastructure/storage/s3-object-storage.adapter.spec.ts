@@ -11,7 +11,10 @@ import { ConfigService } from '@nestjs/config';
 import { Readable } from 'node:stream';
 
 import { S3ObjectStorageAdapter } from './s3-object-storage.adapter';
-import { ObjectStorageWriteError } from './object-storage.port';
+import {
+  ObjectStorageError,
+  ObjectStorageWriteError,
+} from './object-storage.port';
 
 describe('S3ObjectStorageAdapter contract', () => {
   const body = Buffer.from('private-media-body');
@@ -146,11 +149,42 @@ describe('S3ObjectStorageAdapter contract', () => {
         Metadata: { sha256: checksum },
       },
     ],
-  ])('rejects %s responses', async (_, response) => {
-    const adapter = createAdapter(jest.fn().mockResolvedValue(response));
+  ])(
+    'classifies %s with a safe typed response error',
+    async (name, response) => {
+      const adapter = createAdapter(jest.fn().mockResolvedValue(response));
+      await expect(
+        adapter.getPrivateObject('media/2026/08/opaque.png'),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          name: ObjectStorageError.name,
+          kind:
+            name === 'oversized object'
+              ? 'integrity_violation'
+              : 'malformed_response',
+        }),
+      );
+    },
+  );
+
+  it('classifies malformed checksum metadata without reflecting it', async () => {
+    const malformed = 'not-a-checksum-secret';
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: stream(body),
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: malformed },
+      }),
+    );
     await expect(
       adapter.getPrivateObject('media/2026/08/opaque.png'),
-    ).rejects.toThrow();
+    ).rejects.toEqual(
+      expect.objectContaining({
+        kind: 'malformed_response',
+        message: 'Private object storage response is malformed.',
+      }),
+    );
   });
 
   it('rejects body length and checksum mismatches', async () => {
@@ -165,7 +199,7 @@ describe('S3ObjectStorageAdapter contract', () => {
     );
     await expect(
       lengthMismatch.getPrivateObject('media/2026/08/opaque.png'),
-    ).rejects.toThrow('integrity');
+    ).rejects.toEqual(expect.objectContaining({ kind: 'integrity_violation' }));
 
     const checksumMismatch = createAdapter(
       jest.fn().mockResolvedValue({
@@ -177,7 +211,7 @@ describe('S3ObjectStorageAdapter contract', () => {
     );
     await expect(
       checksumMismatch.getPrivateObject('media/2026/08/opaque.png'),
-    ).rejects.toThrow('integrity');
+    ).rejects.toEqual(expect.objectContaining({ kind: 'integrity_violation' }));
   });
 
   it('bounds actual streamed bytes even when provider metadata understates size', async () => {
@@ -193,7 +227,32 @@ describe('S3ObjectStorageAdapter contract', () => {
 
     await expect(
       adapter.getPrivateObject('media/2026/08/opaque.png'),
-    ).rejects.toThrow('maximum size');
+    ).rejects.toEqual(expect.objectContaining({ kind: 'integrity_violation' }));
+  });
+
+  it('classifies missing objects separately from provider outages', async () => {
+    const missing = createAdapter(
+      jest.fn().mockRejectedValue(
+        Object.assign(new Error('synthetic provider detail'), {
+          name: 'NoSuchKey',
+          $metadata: { httpStatusCode: 404 },
+        }),
+      ),
+    );
+    await expect(
+      missing.getPrivateObject('media/2026/08/missing.png'),
+    ).rejects.toEqual(expect.objectContaining({ kind: 'not_found' }));
+
+    const unavailable = createAdapter(
+      jest.fn().mockRejectedValue(
+        Object.assign(new Error('synthetic provider detail'), {
+          name: 'TimeoutError',
+        }),
+      ),
+    );
+    await expect(
+      unavailable.getPrivateObject('media/2026/08/unavailable.png'),
+    ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
   });
 
   it('issues a scoped delete and propagates delete failure without logging identity', async () => {
@@ -213,7 +272,7 @@ describe('S3ObjectStorageAdapter contract', () => {
     );
     await expect(
       failed.deletePrivateObject('media/2026/08/secret-key.png'),
-    ).rejects.toThrow('synthetic delete failure');
+    ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -262,7 +321,7 @@ describe('S3ObjectStorageAdapter contract', () => {
       createAdapter(unknownSend).privateObjectExists(
         'media/2026/08/unknown.png',
       ),
-    ).rejects.toThrow('could not be verified');
+    ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
   });
 });
 

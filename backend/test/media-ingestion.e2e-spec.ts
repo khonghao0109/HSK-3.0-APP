@@ -10,6 +10,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
+import { configureApiEdgeSecurity } from '../src/config/runtime-security';
 import { TestMediaMalwareScanner } from '../src/infrastructure/malware/test-media-malware-scanner';
 import { InMemoryObjectStorageAdapter } from '../src/infrastructure/storage/in-memory-object-storage.adapter';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -46,6 +47,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
         exceptionFactory: createSafeValidationException,
       }),
     );
+    configureApiEdgeSecurity(app, moduleFixture.get(ConfigService));
     await app.init();
     prisma = app.get(PrismaService);
     storage = app.get(InMemoryObjectStorageAdapter);
@@ -473,7 +475,29 @@ describe('Secure Media Ingestion V1 E2E', () => {
     });
 
     scanner.failNextScan();
-    await upload(adminToken, png, 'scanner.png', 'image/png').expect(503);
+    const unavailableScanner = await upload(
+      adminToken,
+      png,
+      'scanner.png',
+      'image/png',
+    ).expect(503);
+    expect(unavailableScanner.body).toMatchObject({
+      code: 'MEDIA_SCANNER_UNAVAILABLE',
+    });
+
+    await prisma.mediaUploadRateLimit.deleteMany({
+      where: { actorId: adminId },
+    });
+    scanner.failNextScan('invalid_response');
+    const invalidScanner = await upload(
+      adminToken,
+      png,
+      'scanner-invalid.png',
+      'image/png',
+    ).expect(503);
+    expect(invalidScanner.body).toMatchObject({
+      code: 'MEDIA_SCANNER_INVALID_RESPONSE',
+    });
 
     await installMediaInsertFailureTrigger();
     try {
@@ -670,6 +694,20 @@ describe('Secure Media Ingestion V1 E2E', () => {
     expect(content.headers['content-type']).toBe('image/png');
     expect(content.headers['cache-control']).toBe('private, no-store');
     expect(content.headers['x-content-type-options']).toBe('nosniff');
+    storage.failNextGet('integrity_violation');
+    const integrityFailure = await request(app.getHttpServer())
+      .get(grant.body.data.url)
+      .expect(503);
+    expect(integrityFailure.body).toMatchObject({
+      code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
+    });
+    storage.failNextGet('unavailable');
+    const providerOutage = await request(app.getHttpServer())
+      .get(grant.body.data.url)
+      .expect(503);
+    expect(providerOutage.body).toMatchObject({
+      code: 'MEDIA_STORAGE_UNAVAILABLE',
+    });
     await request(app.getHttpServer())
       .get(
         `/api/v1/media/${mediaId}/content?expires=${Math.floor(Date.now() / 1000) + 300}&signature=${'b'.repeat(64)}`,
@@ -700,21 +738,53 @@ describe('Secure Media Ingestion V1 E2E', () => {
   });
 
   it('12. exposes redacted bounded media metrics only with the scrape credential', async () => {
-    const token = app
+    const [token] = app
       .get(ConfigService)
-      .getOrThrow<string>('media.metricsBearerToken');
+      .getOrThrow<string[]>('media.metricsBearerTokens');
     await request(app.getHttpServer())
       .get('/api/v1/internal/metrics/media')
       .expect(403);
     const response = await request(app.getHttpServer())
       .get('/api/v1/internal/metrics/media')
+      .set('Origin', 'http://127.0.0.1:3001')
       .set('Authorization', `Bearer ${token}`)
       .expect('Content-Type', /text\/plain/u)
       .expect(200);
     expect(response.text).toContain('hsk_media_ingestion_total');
     expect(response.text).toContain('hsk_media_cleanup_required');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://127.0.0.1:3001',
+    );
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['x-frame-options']).toBe('DENY');
+    expect(response.headers['content-security-policy']).toContain(
+      "default-src 'none'",
+    );
+    expect(response.headers).not.toHaveProperty('strict-transport-security');
+    expect(response.text).toMatch(
+      /hsk_media_scanner_total\{outcome="invalid_response"\} [1-9]\d*/u,
+    );
+    expect(response.text).toMatch(
+      /hsk_media_signed_access_total\{outcome="integrity_error"\} [1-9]\d*/u,
+    );
+    expect(response.text).toMatch(
+      /hsk_media_signed_access_total\{outcome="unavailable"\} [1-9]\d*/u,
+    );
+    expect(response.text).toMatch(
+      /hsk_media_reconciliation_total\{outcome="violation"\} [1-9]\d*/u,
+    );
     expect(response.text).not.toMatch(
       /mediaId|storageKey|filename|signature|@/u,
+    );
+
+    const maliciousOrigin = await request(app.getHttpServer())
+      .get('/api/v1/internal/metrics/media')
+      .set('Origin', 'http://127.0.0.1:3001.evil.test')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(maliciousOrigin.headers).not.toHaveProperty(
+      'access-control-allow-origin',
     );
   });
 

@@ -6,7 +6,7 @@ describe('MediaMetricsController', () => {
   it('requires an exact bearer token without reflecting it', async () => {
     const metrics = { render: jest.fn().mockResolvedValue('metric 1\n') };
     const config = {
-      getOrThrow: jest.fn().mockReturnValue('m'.repeat(32)),
+      getOrThrow: jest.fn().mockReturnValue(['m'.repeat(32), 'p'.repeat(32)]),
     };
     const controller = new MediaMetricsController(
       metrics as never,
@@ -17,6 +17,9 @@ describe('MediaMetricsController', () => {
     );
     expect(metrics.render).not.toHaveBeenCalled();
     await expect(controller.scrape(`Bearer ${'m'.repeat(32)}`)).resolves.toBe(
+      'metric 1\n',
+    );
+    await expect(controller.scrape(`Bearer ${'p'.repeat(32)}`)).resolves.toBe(
       'metric 1\n',
     );
   });

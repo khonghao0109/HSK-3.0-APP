@@ -11,6 +11,7 @@ import { createHash } from 'node:crypto';
 
 import {
   MAX_PRIVATE_MEDIA_OBJECT_BYTES,
+  ObjectStorageError,
   ObjectStorageWriteError,
   ObjectStorageWriteOutcome,
   ObjectStoragePort,
@@ -73,29 +74,38 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
   }
 
   async getPrivateObject(key: string): Promise<StoredObject> {
-    const result = await this.client.send(
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-      { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
-    );
+    let result;
+    try {
+      result = await this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+        { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
+      );
+    } catch (error: unknown) {
+      throw new ObjectStorageError(
+        isS3NotFound(error) ? 'not_found' : 'unavailable',
+      );
+    }
     if (
       !result.Body ||
       !result.ContentType ||
       result.ContentLength === undefined ||
-      result.ContentLength < 1 ||
-      result.ContentLength > MAX_PRIVATE_MEDIA_OBJECT_BYTES
+      result.ContentLength < 1
     ) {
-      throw new Error('Storage object response is incomplete.');
+      throw new ObjectStorageError('malformed_response');
+    }
+    if (result.ContentLength > MAX_PRIVATE_MEDIA_OBJECT_BYTES) {
+      throw new ObjectStorageError('integrity_violation');
     }
     const checksum = result.Metadata?.sha256;
     if (!checksum || !/^[a-f0-9]{64}$/u.test(checksum)) {
-      throw new Error('Storage object checksum metadata is invalid.');
+      throw new ObjectStorageError('malformed_response');
     }
     const body = await readBoundedBody(result.Body);
     if (
       body.length !== result.ContentLength ||
       createHash('sha256').update(body).digest('hex') !== checksum
     ) {
-      throw new Error('Storage object integrity does not match its metadata.');
+      throw new ObjectStorageError('integrity_violation');
     }
     return {
       body,
@@ -114,15 +124,19 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
       return true;
     } catch (error: unknown) {
       if (isS3NotFound(error)) return false;
-      throw new Error('Private object presence could not be verified.');
+      throw new ObjectStorageError('unavailable');
     }
   }
 
   async deletePrivateObject(key: string): Promise<void> {
-    await this.client.send(
-      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
-      { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
-    );
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
+        { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
+      );
+    } catch {
+      throw new ObjectStorageError('unavailable');
+    }
   }
 }
 
@@ -154,18 +168,18 @@ async function readBoundedBody(body: unknown): Promise<Buffer> {
     !(Symbol.asyncIterator in body) ||
     typeof body[Symbol.asyncIterator] !== 'function'
   ) {
-    throw new Error('Storage object body is not a bounded byte stream.');
+    throw new ObjectStorageError('malformed_response');
   }
 
   const chunks: Buffer[] = [];
   let totalBytes = 0;
   for await (const chunk of body as AsyncIterable<unknown>) {
     if (!(chunk instanceof Uint8Array)) {
-      throw new Error('Storage object body contains an invalid chunk.');
+      throw new ObjectStorageError('malformed_response');
     }
     totalBytes += chunk.byteLength;
     if (totalBytes > MAX_PRIVATE_MEDIA_OBJECT_BYTES) {
-      throw new Error('Storage object body exceeds the maximum size.');
+      throw new ObjectStorageError('integrity_violation');
     }
     chunks.push(Buffer.from(chunk));
   }

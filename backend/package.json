@@ -28,6 +28,7 @@
     "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",
     "test:db:exercise-integrity": "ts-node scripts/test/run-exercise-authoring-integrity.ts",
     "test:db:media-integrity": "ts-node scripts/test/run-media-ingestion-integrity.ts",
+    "test:ops:media": "ts-node scripts/test/run-media-operations-validation.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts",
     "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts"

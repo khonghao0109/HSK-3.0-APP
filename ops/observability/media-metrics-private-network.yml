@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hsk-backend-media-metrics
+  namespace: hsk
+  labels:
+    app.kubernetes.io/name: hsk-backend
+    hsk.io/traffic: private-metrics
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: false
+  selector:
+    app.kubernetes.io/name: hsk-backend
+  ports:
+    - name: metrics
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hsk-backend-media-metrics-private
+  namespace: hsk
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-backend
+  policyTypes:
+    - Ingress
+  ingress:
+    # Normal application ingress remains reachable from the trusted edge. The
+    # Nginx exact matcher denies the metrics path before proxying it.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hsk-edge
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-nginx
+      ports:
+        - protocol: TCP
+          port: 3000
+    # The monitoring identity reaches each selected pod through the headless
+    # service and still needs the rotated application bearer token.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 3000

@@ -614,3 +614,29 @@ redaction van do Infra/Release hoan tat truoc beta.
   Day chi la deterministic migration evidence. Live S3, ClamAV, reverse proxy va
   alert delivery chua co endpoint/credential that, nen release van
   `BLOCKED_EXTERNAL`.
+
+## 23. Media observability truthfulness & backend edge security — 13/08/2026
+
+- Storage port/read adapter dung typed taxonomy `unavailable`, `not_found`,
+  `provider_mismatch`, `malformed_response`, `integrity_violation`. Signed read fail
+  closed; outage that ghi `unavailable`, con missing/malformed/checksum-size-MIME-body
+  mismatch ghi `integrity_error` + reconciliation violation, khong lo object identity.
+- ClamAV dung typed `unavailable` cho timeout/connection/reset va `invalid_response`
+  cho framing/oversize/ambiguous/ERROR; exact `OK`/`FOUND` van la hai protocol success
+  duy nhat. Raw response/payload khong log.
+- Metric DB gauges dung mot aggregate query moi scrape; counter process-local duoc
+  Prometheus scrape truc tiep tung replica/pod. Public Nginx exact metrics path tra
+  404; headless service + NetworkPolicy chi cho trusted edge/monitoring identities,
+  direct scrape van can token co bounded current/previous rotation.
+- Production `ALLOWED_ORIGINS` la exact HTTPS allowlist, khong wildcard/path/query/
+  userinfo/blank segment. Nest ap dung nosniff/frame/referrer/permissions/API CSP;
+  HSTS chi o TLS edge. JWT, password pepper, media signing va metrics secret phai la
+  base64/hex >=32 decoded bytes, co diversity va khong reuse/placeholder.
+- Real artifact harness pin Nginx 1.30.4, Prometheus 3.13.2 va Grafana 13.1.3 kem
+  SHA-256; chay `nginx -t`+HTTP, promtool rule tests va guarded disposable Grafana
+  import. Workstation hien thieu ca ba tool nen operational artifact/live/release
+  van `BLOCKED_EXTERNAL`, khong duoc goi la PASS.
+- Internal evidence: targeted 8 suite/93 test, unit 46/459, media fencing 13/13 va
+  full E2E 11 suite/160 test PASS; Prisma/TypeScript/build/lint/format, hai drift va
+  dependency audit (0 vulnerability) GREEN. Sau DB disposable task tao da drop,
+  catalog exact-name con 0. Migration 16/17 van giu checksum frozen.

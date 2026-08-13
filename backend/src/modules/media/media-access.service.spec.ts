@@ -1,7 +1,13 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
+import { createHash } from 'node:crypto';
 
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
+import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
 import { createMediaAccessSignature } from './media-access-signature';
 import { MediaAccessService } from './media-access.service';
@@ -28,6 +34,152 @@ describe('MediaAccessService storage-provider affinity', () => {
       expect(storage.getPrivateObject).not.toHaveBeenCalled();
     },
   );
+
+  it.each([
+    ['not_found', 'not_found'],
+    ['malformed_response', 'malformed_response'],
+    ['integrity_violation', 'integrity_error'],
+  ] as const)(
+    'records %s reads as integrity failure instead of provider outage',
+    async (kind, storageOutcome) => {
+      const { config, prisma, storage } = createFixture('s3', 's3');
+      const metrics = createMetrics();
+      storage.getPrivateObject.mockRejectedValueOnce(
+        new ObjectStorageError(kind),
+      );
+      const service = new MediaAccessService(
+        prisma,
+        config,
+        storage,
+        metrics as never,
+      );
+      const expiresAt = Math.floor(Date.now() / 1000) + 60;
+      const signature = createMediaAccessSignature({
+        mediaId: 41,
+        expiresAt,
+        checksum: 'a'.repeat(64),
+        secret: signingSecret,
+      });
+
+      await expect(
+        service.readSignedObject(41, expiresAt, signature),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(metrics.recordStorage).toHaveBeenCalledWith(
+        'get',
+        storageOutcome,
+        expect.any(Number),
+      );
+      expect(metrics.recordSignedAccess).toHaveBeenCalledWith(
+        'integrity_error',
+      );
+      expect(metrics.recordReconciliation).toHaveBeenCalledWith('violation');
+      expect(metrics.recordSignedAccess).not.toHaveBeenCalledWith(
+        'unavailable',
+      );
+    },
+  );
+
+  it('keeps a real provider outage classified as unavailable', async () => {
+    const { config, prisma, storage } = createFixture('s3', 's3');
+    const metrics = createMetrics();
+    storage.getPrivateObject.mockRejectedValueOnce(
+      new ObjectStorageError('unavailable'),
+    );
+    const service = new MediaAccessService(
+      prisma,
+      config,
+      storage,
+      metrics as never,
+    );
+    const expiresAt = Math.floor(Date.now() / 1000) + 60;
+    const signature = createMediaAccessSignature({
+      mediaId: 41,
+      expiresAt,
+      checksum: 'a'.repeat(64),
+      secret: signingSecret,
+    });
+
+    await expect(
+      service.readSignedObject(41, expiresAt, signature),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(metrics.recordStorage).toHaveBeenCalledWith(
+      'get',
+      'error',
+      expect.any(Number),
+    );
+    expect(metrics.recordSignedAccess).toHaveBeenCalledWith('unavailable');
+    expect(metrics.recordReconciliation).not.toHaveBeenCalled();
+  });
+
+  it('keeps an adapter-reported provider mismatch distinct from corruption', async () => {
+    const { config, prisma, storage } = createFixture('s3', 's3');
+    const metrics = createMetrics();
+    storage.getPrivateObject.mockRejectedValueOnce(
+      new ObjectStorageError('provider_mismatch'),
+    );
+    const service = new MediaAccessService(
+      prisma,
+      config,
+      storage,
+      metrics as never,
+    );
+    const expiresAt = Math.floor(Date.now() / 1000) + 60;
+    const signature = createMediaAccessSignature({
+      mediaId: 41,
+      expiresAt,
+      checksum: 'a'.repeat(64),
+      secret: signingSecret,
+    });
+
+    await expect(
+      service.readSignedObject(41, expiresAt, signature),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(metrics.recordStorage).toHaveBeenCalledWith(
+      'get',
+      'provider_mismatch',
+      expect.any(Number),
+    );
+    expect(metrics.recordSignedAccess).toHaveBeenCalledWith(
+      'provider_mismatch',
+    );
+    expect(metrics.recordReconciliation).toHaveBeenCalledWith('violation');
+  });
+
+  it('classifies database/object MIME and size mismatch as integrity failure', async () => {
+    const body = Buffer.from('different');
+    const checksum = createHash('sha256').update(body).digest('hex');
+    const { config, prisma, storage } = createFixture('s3', 's3', {
+      checksum,
+      mimeType: 'image/png',
+      size: body.length - 1,
+    });
+    const metrics = createMetrics();
+    storage.getPrivateObject.mockResolvedValueOnce({
+      body,
+      checksum,
+      contentType: 'audio/mpeg',
+      size: body.length,
+    });
+    const service = new MediaAccessService(
+      prisma,
+      config,
+      storage,
+      metrics as never,
+    );
+    const expiresAt = Math.floor(Date.now() / 1000) + 60;
+    const signature = createMediaAccessSignature({
+      mediaId: 41,
+      expiresAt,
+      checksum,
+      secret: signingSecret,
+    });
+
+    await expect(
+      service.readSignedObject(41, expiresAt, signature),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(metrics.recordSignedAccess).toHaveBeenCalledWith('integrity_error');
+    expect(metrics.recordReconciliation).toHaveBeenCalledWith('violation');
+  });
 
   it('does not misclassify a missing media row as a provider mismatch', async () => {
     const { config, prisma, storage } = createFixture('s3', 's3');
@@ -79,7 +231,15 @@ describe('MediaAccessService storage-provider affinity', () => {
     },
   );
 
-  function createFixture(adapterProvider: string, rowProvider: string) {
+  function createFixture(
+    adapterProvider: string,
+    rowProvider: string,
+    rowOverrides: Partial<{
+      checksum: string;
+      mimeType: string;
+      size: number;
+    }> = {},
+  ) {
     const findUnique = jest.fn().mockResolvedValue({
       id: 41,
       checksum: 'a'.repeat(64),
@@ -91,6 +251,7 @@ describe('MediaAccessService storage-provider affinity', () => {
       processingStatus: 'ready',
       deletedAt: null,
       lessonExercises: [],
+      ...rowOverrides,
     });
     const prisma = {
       media: { findUnique },
@@ -118,6 +279,14 @@ describe('MediaAccessService storage-provider affinity', () => {
       prisma,
       service: new MediaAccessService(prisma, config, storage),
       storage,
+    };
+  }
+
+  function createMetrics() {
+    return {
+      recordSignedAccess: jest.fn(),
+      recordStorage: jest.fn(),
+      recordReconciliation: jest.fn(),
     };
   }
 });

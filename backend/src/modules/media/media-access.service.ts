@@ -15,6 +15,10 @@ import type {
   ObjectStoragePort,
   StoredObject,
 } from '../../infrastructure/storage/object-storage.port';
+import {
+  ObjectStorageError,
+  ObjectStorageErrorKind,
+} from '../../infrastructure/storage/object-storage.port';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
 import {
@@ -82,6 +86,7 @@ export class MediaAccessService {
       ) {
         this.metrics?.recordSignedAccess('provider_mismatch');
         this.metrics?.recordStorage('get', 'provider_mismatch', 0);
+        this.metrics?.recordReconciliation('violation');
       }
       throw new NotFoundException('Media asset is not available.');
     }
@@ -147,6 +152,13 @@ export class MediaAccessService {
           ? 'provider_mismatch'
           : 'invalid_grant',
       );
+      if (
+        media?.storageProvider &&
+        media.storageProvider !== this.storage.provider
+      ) {
+        this.metrics?.recordStorage('get', 'provider_mismatch', 0);
+        this.metrics?.recordReconciliation('violation');
+      }
       throw new ForbiddenException('Media access grant is invalid or expired.');
     }
     const getStartedAt = Date.now();
@@ -160,19 +172,48 @@ export class MediaAccessService {
         createHash('sha256').update(object.body).digest('hex') !==
           media.checksum
       ) {
-        throw new Error('object integrity mismatch');
+        throw new ObjectStorageError('integrity_violation');
       }
       this.metrics?.recordStorage('get', 'success', Date.now() - getStartedAt);
       this.metrics?.recordSignedAccess('success');
       return object;
-    } catch {
-      this.metrics?.recordStorage('get', 'error', Date.now() - getStartedAt);
-      this.metrics?.recordSignedAccess('unavailable');
-      throw new ServiceUnavailableException(
-        'Media content is temporarily unavailable.',
+    } catch (error: unknown) {
+      const kind = storageFailureKind(error);
+      const elapsed = Date.now() - getStartedAt;
+      if (kind === 'unavailable') {
+        this.metrics?.recordStorage('get', 'error', elapsed);
+        this.metrics?.recordSignedAccess('unavailable');
+        throw new ServiceUnavailableException({
+          code: 'MEDIA_STORAGE_UNAVAILABLE',
+          message: 'Media content is temporarily unavailable.',
+        });
+      }
+      if (kind === 'provider_mismatch') {
+        this.metrics?.recordStorage('get', 'provider_mismatch', elapsed);
+        this.metrics?.recordSignedAccess('provider_mismatch');
+        this.metrics?.recordReconciliation('violation');
+        throw new ServiceUnavailableException({
+          code: 'MEDIA_STORAGE_PROVIDER_MISMATCH',
+          message: 'Media content storage provider is unavailable.',
+        });
+      }
+      this.metrics?.recordStorage(
+        'get',
+        kind === 'integrity_violation' ? 'integrity_error' : kind,
+        elapsed,
       );
+      this.metrics?.recordSignedAccess('integrity_error');
+      this.metrics?.recordReconciliation('violation');
+      throw new ServiceUnavailableException({
+        code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
+        message: 'Media content failed integrity verification.',
+      });
     }
   }
+}
+
+function storageFailureKind(error: unknown): ObjectStorageErrorKind {
+  return error instanceof ObjectStorageError ? error.kind : 'unavailable';
 }
 
 function isSupportedPrivateMedia(media: {

@@ -20,13 +20,22 @@ groups:
           summary: Media ingestion is stuck beyond the 15-minute fence
           runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
       - alert: HskMediaScannerUnavailable
-        expr: increase(hsk_media_scanner_total{outcome="unavailable"}[10m]) > 2
+        expr: sum(increase(hsk_media_scanner_total{outcome="unavailable"}[10m])) > 2
         for: 5m
         labels:
           severity: page
           owner: security-platform
         annotations:
           summary: Malware scanner is unavailable
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaScannerInvalidResponse
+        expr: sum(increase(hsk_media_scanner_total{outcome="invalid_response"}[5m])) > 0
+        for: 0m
+        labels:
+          severity: page
+          owner: security-platform
+        annotations:
+          summary: Malware scanner returned an invalid protocol response
           runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
       - alert: HskMediaStorageErrorSpike
         expr: sum(increase(hsk_media_storage_operations_total{outcome="error"}[10m])) > 5
@@ -37,12 +46,30 @@ groups:
         annotations:
           summary: Private object storage errors are elevated
           runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaIntegrityViolation
+        expr: sum(increase(hsk_media_signed_access_total{outcome="integrity_error"}[5m])) > 0 or sum(increase(hsk_media_storage_operations_total{outcome=~"not_found|malformed_response|integrity_error"}[5m])) > 0
+        for: 0m
+        labels:
+          severity: page
+          owner: media-platform
+        annotations:
+          summary: Media object integrity validation failed
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
       - alert: HskMediaCoherenceViolation
-        expr: increase(hsk_media_reconciliation_total{outcome="violation"}[5m]) > 0
+        expr: sum(increase(hsk_media_reconciliation_total{outcome="violation"}[5m])) > 0
         for: 0m
         labels:
           severity: page
           owner: media-platform
         annotations:
           summary: Media database/object coherence verification failed
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaReplicaScrapeFailure
+        expr: up{job="hsk-media-replicas"} == 0
+        for: 5m
+        labels:
+          severity: page
+          owner: platform-sre
+        annotations:
+          summary: Prometheus cannot scrape a backend media replica
           runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md

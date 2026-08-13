@@ -32,6 +32,12 @@ timeouts and workload-identity credentials. Only tests use the in-memory adapter
 Production malware scanning uses ClamAV INSTREAM with a finite response/timeout;
 unavailable or ambiguous scan never produces ready content.
 
+Storage reads expose a fixed typed taxonomy across the port: unavailable, not found,
+provider mismatch, malformed response and integrity violation. Signed reads and
+completed replay never collapse corruption into provider outage. ClamAV likewise
+separates transport unavailability from invalid protocol responses without matching
+raw error messages. Both taxonomies expose only safe fixed text.
+
 ## Identity, state and concurrency
 
 `MediaIngestion` records actor/source, hashed idempotency identity, request hash,
@@ -131,6 +137,14 @@ the full signed query URL. CSP stays same-origin; no broad storage origin is add
   and private bounded-cardinality metrics remain available for forward recovery.
 - Operations artifacts are `ops/observability/*`, `ops/nginx/media-security.conf` and
   `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md`.
+- Metrics counters are replica-local and scraped directly per pod; database gauges
+  use one aggregate query per scrape. Public ingress denies the metrics path, while
+  a headless service plus NetworkPolicy admits only the trusted edge and monitoring
+  identities; direct scrape still requires a bearer token. Rotation uses a bounded
+  current/previous overlap.
+- Production CORS is an exact HTTPS allowlist. API security headers are applied in
+  the Nest bootstrap; HSTS remains solely at the TLS edge. Production startup rejects
+  placeholder, weakly encoded, low-diversity or cross-purpose reused secrets.
 
 ## Verification and release boundary
 
@@ -156,3 +170,9 @@ contracts do not replace a real S3-compatible provider, ClamAV, proxy redaction 
 alert-routing rehearsal. Infra/Release owns those live checks plus private-bucket,
 workload-identity, encryption and retention verification; until their evidence is
 attached, production release status is `BLOCKED_EXTERNAL`.
+
+The observability/edge closeout adds a real executable artifact gate rather than
+promoting string inspection to operational evidence. The gate runs Nginx config and
+HTTP behavior, promtool rules/tests and guarded disposable Grafana import using
+pinned artifacts. Missing `nginx`, `promtool`, `grafana-server` or live platform
+identity remains `BLOCKED_EXTERNAL` and does not weaken the accepted release boundary.

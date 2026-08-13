@@ -1,10 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { createSafeValidationException } from './common/validation/safe-validation-exception.factory';
+import { configureApiEdgeSecurity } from './config/runtime-security';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
 
   // Global prefix
   app.setGlobalPrefix('api/v1');
@@ -23,21 +26,10 @@ async function bootstrap() {
   );
 
   // FIX 2: CORS — chỉ cho phép origin được cấu hình
-  app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    credentials: true,
-  });
+  configureApiEdgeSecurity(app, config);
 
   // FIX 3: Graceful shutdown — NestJS sẽ gọi onApplicationShutdown hooks
   app.enableShutdownHooks();
-
-  // ─── Optional: Helmet (bảo mật HTTP headers) ────────────────────────────
-  // Cần install: npm install helmet
-  // import helmet from 'helmet';
-  // app.use(helmet());
 
   // ─── Optional: Swagger / OpenAPI ─────────────────────────────────────────
   // Cần install: npm install @nestjs/swagger

@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 import {
   Controller,
@@ -13,20 +13,22 @@ import { MediaObservabilityService } from './media-observability.service';
 
 @Controller('internal/metrics/media')
 export class MediaMetricsController {
-  private readonly bearerToken: string;
+  private readonly bearerTokenHashes: Buffer[];
 
   constructor(
     private readonly metrics: MediaObservabilityService,
     config: ConfigService,
   ) {
-    this.bearerToken = config.getOrThrow<string>('media.metricsBearerToken');
+    this.bearerTokenHashes = config
+      .getOrThrow<string[]>('media.metricsBearerTokens')
+      .map(hashToken);
   }
 
   @Get()
   @Header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
   @Header('Cache-Control', 'no-store')
   scrape(@Headers('authorization') authorization: string | undefined) {
-    if (!hasValidBearer(authorization, this.bearerToken)) {
+    if (!hasValidBearer(authorization, this.bearerTokenHashes)) {
       throw new ForbiddenException('Metrics access is not allowed.');
     }
     return this.metrics.render();
@@ -35,12 +37,16 @@ export class MediaMetricsController {
 
 function hasValidBearer(
   authorization: string | undefined,
-  expected: string,
+  trustedHashes: readonly Buffer[],
 ): boolean {
   if (!authorization?.startsWith('Bearer ')) return false;
-  const received = Buffer.from(authorization.slice(7));
-  const trusted = Buffer.from(expected);
-  return (
-    received.length === trusted.length && timingSafeEqual(received, trusted)
+  const received = hashToken(authorization.slice(7));
+  return trustedHashes.reduce(
+    (matched, trusted) => timingSafeEqual(received, trusted) || matched,
+    false,
   );
+}
+
+function hashToken(value: string): Buffer {
+  return createHash('sha256').update(value).digest();
 }

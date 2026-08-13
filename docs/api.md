@@ -1031,4 +1031,18 @@ metrics và cleanup forward-recovery vẫn hoạt động. Metrics private ở
 label enum bounded. Dashboard/alert/runbook nằm trong `ops/observability` và
 `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md`.
 
+Storage read taxonomy phân biệt provider outage, not-found, provider mismatch,
+malformed response và integrity violation. Signed content chỉ ghi `unavailable` cho
+outage thật; object thiếu/malformed hoặc checksum/size/MIME/body không khớp ghi
+`integrity_error` và reconciliation violation rồi trả safe 503. ClamAV phân biệt
+timeout/connection/reset (`unavailable`) với invalid framing/oversize/ambiguous/
+`ERROR` (`invalid_response`); không phân loại từ raw message.
+
+Public reverse proxy exact-match metrics path và trả 404; Prometheus dùng private
+headless topology để scrape trực tiếp từng replica với secret-file bearer token,
+không qua application load balancer. Production CORS dùng exact HTTPS
+`ALLOWED_ORIGINS`; startup reject wildcard/ambiguous origin cùng placeholder, yếu hoặc
+reuse secret. API có nosniff/frame/referrer/permissions/CSP headers; HSTS chỉ ở TLS
+edge. Token rotation cho phép bounded current/previous overlap.
+
 Quyết định: `docs/adr/ADR-005-SECURE-MEDIA-INGESTION-OBJECT-STORAGE-PROCESSING.md`.

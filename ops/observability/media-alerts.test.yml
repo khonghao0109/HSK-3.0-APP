@@ -1,0 +1,135 @@
+rule_files:
+  - media-alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: hsk_media_cleanup_required{instance="backend-media-0"}
+        values: 1x24 0x12
+      - series: hsk_media_cleanup_oldest_age_seconds{instance="backend-media-0"}
+        values: 601x24 0x12
+      - series: hsk_media_stuck_processing{instance="backend-media-0"}
+        values: 1x24 0x12
+      - series: hsk_media_scanner_total{instance="backend-media-0",outcome="unavailable"}
+        values: 0+1x24 24x12
+      - series: hsk_media_scanner_total{instance="backend-media-0",outcome="invalid_response"}
+        values: 0x10 1 1x24
+      - series: hsk_media_storage_operations_total{instance="backend-media-0",operation="get",outcome="error"}
+        values: 0+2x24 48x12
+      - series: hsk_media_storage_operations_total{instance="backend-media-0",operation="get",outcome="integrity_error"}
+        values: 0x10 1 1x24
+      - series: hsk_media_signed_access_total{instance="backend-media-0",outcome="integrity_error"}
+        values: 0x10 1 1x24
+      - series: hsk_media_reconciliation_total{instance="backend-media-0",outcome="violation"}
+        values: 0x10 1 1x24
+      - series: up{instance="backend-media-1",job="hsk-media-replicas"}
+        values: 0x24 1x12
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: HskMediaReplicaScrapeFailure
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: HskMediaReplicaScrapeFailure
+        exp_alerts:
+          - exp_labels:
+              instance: backend-media-1
+              job: hsk-media-replicas
+              severity: page
+              owner: platform-sre
+            exp_annotations:
+              summary: Prometheus cannot scrape a backend media replica
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 9m
+        alertname: HskMediaCleanupBacklog
+        exp_alerts: []
+      - eval_time: 11m
+        alertname: HskMediaCleanupBacklog
+        exp_alerts:
+          - exp_labels:
+              instance: backend-media-0
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media object cleanup has not converged
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 11m
+        alertname: HskMediaProcessingStuck
+        exp_alerts:
+          - exp_labels:
+              instance: backend-media-0
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media ingestion is stuck beyond the 15-minute fence
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 12m
+        alertname: HskMediaScannerInvalidResponse
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: security-platform
+            exp_annotations:
+              summary: Malware scanner returned an invalid protocol response
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 12m
+        alertname: HskMediaIntegrityViolation
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media object integrity validation failed
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 12m
+        alertname: HskMediaCoherenceViolation
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media database/object coherence verification failed
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 16m
+        alertname: HskMediaScannerUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: security-platform
+            exp_annotations:
+              summary: Malware scanner is unavailable
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 16m
+        alertname: HskMediaStorageErrorSpike
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+            exp_annotations:
+              summary: Private object storage errors are elevated
+              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - eval_time: 35m
+        alertname: HskMediaCleanupBacklog
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaProcessingStuck
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaScannerUnavailable
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaScannerInvalidResponse
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaStorageErrorSpike
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaIntegrityViolation
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaCoherenceViolation
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: HskMediaReplicaScrapeFailure
+        exp_alerts: []

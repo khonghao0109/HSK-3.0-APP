@@ -1,5 +1,22 @@
 import * as Joi from 'joi';
 
+import {
+  assertProductionSecrets,
+  DEFAULT_NON_PRODUCTION_ORIGINS,
+  normalizeAllowedOrigins,
+} from './runtime-security';
+
+function allowedOrigins(environment: 'development' | 'production') {
+  return Joi.string().custom((value: unknown, helpers: Joi.CustomHelpers) => {
+    if (typeof value !== 'string') return helpers.error('any.invalid');
+    try {
+      return normalizeAllowedOrigins(value, environment).join(',');
+    } catch {
+      return helpers.error('any.invalid');
+    }
+  });
+}
+
 export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
@@ -11,7 +28,18 @@ export const envValidationSchema = Joi.object({
 
   JWT_SECRETS: Joi.string().required(),
   JWT_ACTIVE_KID: Joi.string().required(),
-  AUTH_PASSWORD_PEPPER: Joi.string().min(16).optional(),
+  AUTH_PASSWORD_PEPPER: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().required(),
+    otherwise: Joi.string().min(16).optional(),
+  }),
+  ALLOWED_ORIGINS: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: allowedOrigins('production').required(),
+    otherwise: allowedOrigins('development').default(
+      DEFAULT_NON_PRODUCTION_ORIGINS,
+    ),
+  }),
 
   MEDIA_STORAGE_BUCKET: Joi.when('NODE_ENV', {
     is: 'test',
@@ -56,6 +84,22 @@ export const envValidationSchema = Joi.object({
       .default('test-media-metrics-token-at-least-32-chars'),
     otherwise: Joi.string().min(32).required(),
   }),
+  MEDIA_METRICS_BEARER_TOKEN_PREVIOUS: Joi.string().min(32).optional(),
 
   JWT_EXPIRES_IN: Joi.string().default('7d'),
+}).custom((environment: unknown, helpers: Joi.CustomHelpers) => {
+  if (!isEnvironmentRecord(environment)) return helpers.error('any.invalid');
+  if (environment.NODE_ENV !== 'production') return environment;
+  try {
+    assertProductionSecrets(environment);
+    return environment;
+  } catch {
+    return helpers.error('any.invalid');
+  }
 });
+
+function isEnvironmentRecord(
+  value: unknown,
+): value is Record<string, string | undefined> {
+  return typeof value === 'object' && value !== null;
+}

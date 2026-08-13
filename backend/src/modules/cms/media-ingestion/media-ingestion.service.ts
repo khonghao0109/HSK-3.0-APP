@@ -16,9 +16,11 @@ import { ConfigService } from '@nestjs/config';
 
 import { MEDIA_MALWARE_SCANNER } from '../../../infrastructure/malware/media-malware-scanner.port';
 import type { MediaMalwareScannerPort } from '../../../infrastructure/malware/media-malware-scanner.port';
+import { MediaScannerError } from '../../../infrastructure/malware/media-malware-scanner.port';
 import { OBJECT_STORAGE } from '../../../infrastructure/storage/object-storage.port';
 import type { ObjectStoragePort } from '../../../infrastructure/storage/object-storage.port';
 import { ObjectStorageWriteError } from '../../../infrastructure/storage/object-storage.port';
+import { ObjectStorageError } from '../../../infrastructure/storage/object-storage.port';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   assertMediaIngestionEnabled,
@@ -206,18 +208,27 @@ export class MediaIngestionService {
     const scanStartedAt = Date.now();
     try {
       scanResult = await this.scanner.scan(processed.buffer);
-    } catch {
-      this.metrics?.recordScanner('unavailable', Date.now() - scanStartedAt);
+    } catch (error: unknown) {
+      const invalidResponse =
+        error instanceof MediaScannerError && error.kind === 'invalid_response';
+      this.metrics?.recordScanner(
+        invalidResponse ? 'invalid_response' : 'unavailable',
+        Date.now() - scanStartedAt,
+      );
       await this.recordFailure(
         claim.id,
         claim.processingToken,
-        'SCANNER_UNAVAILABLE',
+        invalidResponse ? 'SCANNER_INVALID_RESPONSE' : 'SCANNER_UNAVAILABLE',
         actor.id,
         context,
       ).catch(() => undefined);
       throw new ServiceUnavailableException({
-        code: 'MEDIA_SCANNER_UNAVAILABLE',
-        message: 'Media scanning is temporarily unavailable.',
+        code: invalidResponse
+          ? 'MEDIA_SCANNER_INVALID_RESPONSE'
+          : 'MEDIA_SCANNER_UNAVAILABLE',
+        message: invalidResponse
+          ? 'Media scanner response failed validation.'
+          : 'Media scanning is temporarily unavailable.',
       });
     }
     if (!scanResult.clean) {
@@ -906,15 +917,27 @@ export class MediaIngestionService {
         object.contentType !== ingestion.validatedMimeType ||
         sha256(object.body) !== ingestion.checksum
       ) {
-        throw new Error('stored object integrity mismatch');
+        throw new ObjectStorageError('integrity_violation');
       }
       this.metrics?.recordStorage('get', 'success', Date.now() - getStartedAt);
-    } catch {
-      this.metrics?.recordStorage('get', 'error', Date.now() - getStartedAt);
-      this.metrics?.recordReconciliation('violation');
+    } catch (error: unknown) {
+      this.recordStorageReadFailure(error, Date.now() - getStartedAt);
+      const storageFailure =
+        error instanceof ObjectStorageError ? error.kind : 'unavailable';
+      const integrityFailure = storageFailure !== 'unavailable';
+      if (integrityFailure) this.metrics?.recordReconciliation('violation');
+      const providerMismatch = storageFailure === 'provider_mismatch';
       throw new ServiceUnavailableException({
-        code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
-        message: 'Stored media integrity could not be verified.',
+        code: providerMismatch
+          ? 'MEDIA_STORAGE_PROVIDER_MISMATCH'
+          : integrityFailure
+            ? 'MEDIA_STORAGE_INTEGRITY_ERROR'
+            : 'MEDIA_STORAGE_UNAVAILABLE',
+        message: providerMismatch
+          ? 'Stored media provider does not match the active adapter.'
+          : integrityFailure
+            ? 'Stored media integrity could not be verified.'
+            : 'Stored media is temporarily unavailable.',
       });
     }
     const media = await this.prisma.media.findUnique({
@@ -959,6 +982,24 @@ export class MediaIngestionService {
         },
       },
     };
+  }
+
+  private recordStorageReadFailure(error: unknown, milliseconds: number): void {
+    if (error instanceof ObjectStorageError) {
+      this.metrics?.recordStorage(
+        'get',
+        error.kind === 'unavailable'
+          ? 'error'
+          : error.kind === 'integrity_violation'
+            ? 'integrity_error'
+            : error.kind === 'provider_mismatch'
+              ? 'provider_mismatch'
+              : error.kind,
+        milliseconds,
+      );
+      return;
+    }
+    this.metrics?.recordStorage('get', 'error', milliseconds);
   }
 
   private reserveValidatedObject(
