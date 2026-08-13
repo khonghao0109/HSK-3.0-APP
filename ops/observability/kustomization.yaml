@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - media-metrics-private-network.yml
+configMapGenerator:
+  - name: hsk-media-prometheus
+    namespace: monitoring
+    files:
+      - prometheus.yml=media-prometheus.yml
+      - media-alerts.yml=media-alerts.yml
+  - name: hsk-media-alertmanager
+    namespace: monitoring
+    files:
+      - alertmanager.yml=media-alertmanager.yml
+# `media-backend-deployment.patch.yml` intentionally is not applied here: this
+# overlay does not own a backend Deployment base. Release automation must run
+# `kubectl patch --local` (documented in the runbook and operational validator)
+# against the environment-owned Deployment before applying this overlay.

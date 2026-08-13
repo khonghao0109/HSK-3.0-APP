@@ -255,6 +255,42 @@ describe('S3ObjectStorageAdapter contract', () => {
     ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
   });
 
+  it.each([
+    ['NoSuchBucket', 404],
+    ['AccessDenied', 404],
+    ['NotFound', 404],
+    ['NoSuchObject', 404],
+    ['UnknownProviderError', 404],
+    ['NoSuchKey', 403],
+    ['SlowDown', 503],
+    ['TimeoutError', undefined],
+    ['NetworkingError', undefined],
+  ])(
+    'does not classify GET %s/%s as an absent object',
+    async (name, httpStatusCode) => {
+      const providerDetail = `provider-secret-${name}`;
+      const adapter = createAdapter(
+        jest.fn().mockRejectedValue(
+          Object.assign(new Error(providerDetail), {
+            name,
+            ...(httpStatusCode === undefined
+              ? {}
+              : { $metadata: { httpStatusCode } }),
+          }),
+        ),
+      );
+
+      await expect(
+        adapter.getPrivateObject('media/2026/08/private-key.png'),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          kind: 'unavailable',
+          message: 'Private object storage is unavailable.',
+        }),
+      );
+    },
+  );
+
   it('issues a scoped delete and propagates delete failure without logging identity', async () => {
     const send = jest.fn().mockResolvedValueOnce({});
     const adapter = createAdapter(send);
@@ -322,6 +358,92 @@ describe('S3ObjectStorageAdapter contract', () => {
         'media/2026/08/unknown.png',
       ),
     ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
+  });
+
+  it.each([
+    ['NoSuchBucket', 404],
+    ['AccessDenied', 404],
+    ['NoSuchObject', 404],
+    ['UnknownProviderError', 404],
+    ['NotFound', 403],
+    ['NoSuchKey', 403],
+    ['SlowDown', 503],
+    ['TimeoutError', undefined],
+  ])(
+    'keeps HEAD %s/%s unknown instead of reporting absence',
+    async (name, httpStatusCode) => {
+      const adapter = createAdapter(
+        jest.fn().mockRejectedValue(
+          Object.assign(new Error(`provider-secret-${name}`), {
+            name,
+            ...(httpStatusCode === undefined
+              ? {}
+              : { $metadata: { httpStatusCode } }),
+          }),
+        ),
+      );
+
+      await expect(
+        adapter.privateObjectExists('media/2026/08/private-key.png'),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          kind: 'unavailable',
+          message: 'Private object storage is unavailable.',
+        }),
+      );
+    },
+  );
+
+  it.each([
+    ['NoSuchKey', 404],
+    ['NotFound', 404],
+  ])(
+    'accepts only the HEAD object-not-found contract %s/%s as absence',
+    async (name, httpStatusCode) => {
+      const adapter = createAdapter(
+        jest.fn().mockRejectedValue(
+          Object.assign(new Error('synthetic object absence'), {
+            name,
+            $metadata: { httpStatusCode },
+          }),
+        ),
+      );
+      await expect(
+        adapter.privateObjectExists('media/2026/08/absent.png'),
+      ).resolves.toBe(false);
+    },
+  );
+
+  it('maps a streamed provider failure to typed unavailable without leaking detail', async () => {
+    const providerDetail = 'stream-provider-secret';
+    const failingBody = Readable.from(
+      (function* () {
+        yield body.subarray(0, 3);
+        throw new Error(providerDetail);
+      })(),
+    );
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: failingBody,
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      }),
+    );
+
+    let thrown: unknown;
+    try {
+      await adapter.getPrivateObject('media/2026/08/private-key.png');
+    } catch (error: unknown) {
+      thrown = error;
+    }
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        kind: 'unavailable',
+        message: 'Private object storage is unavailable.',
+      }),
+    );
+    expect(String(thrown)).not.toContain(providerDetail);
   });
 });
 

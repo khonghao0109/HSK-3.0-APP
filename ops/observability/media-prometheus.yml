@@ -1,21 +1,54 @@
 global:
   scrape_interval: 30s
+  scrape_timeout: 5s
   evaluation_interval: 30s
 
 rule_files:
-  - /etc/prometheus/rules/media-alerts.yml
+  - media-alerts.yml
+
+alerting:
+  alertmanagers:
+    - scheme: http
+      path_prefix: /
+      kubernetes_sd_configs:
+        - role: endpointslice
+          namespaces:
+            names: [monitoring]
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_endpointslice_service_name]
+          regex: hsk-media-alertmanager
+          action: keep
+        - source_labels: [__meta_kubernetes_endpointslice_port_name]
+          regex: web
+          action: keep
 
 scrape_configs:
   - job_name: hsk-media-replicas
-    metrics_path: /api/v1/internal/metrics/media
+    metrics_path: /metrics
     scheme: http
     authorization:
       type: Bearer
       credentials_file: /run/secrets/hsk_media_metrics_token
-    static_configs:
-      - targets:
-          - backend-media-0.hsk-backend-media-metrics.hsk.svc.cluster.local:3000
-          - backend-media-1.hsk-backend-media-metrics.hsk.svc.cluster.local:3000
-        labels:
-          service: hsk-backend
-          environment: staging
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [hsk]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        regex: hsk-backend
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: media-metrics
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ready]
+        regex: "true"
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - target_label: service
+        replacement: hsk-backend
+    metric_relabel_configs:
+      - action: labeldrop
+        regex: endpoint|container

@@ -1026,9 +1026,13 @@ Signed content trả `Cache-Control: private, no-store` và `nosniff`; proxy/CDN
 được cache. Access log phải redact query `signature` và không ghi full signed URL.
 
 `MEDIA_INGESTION_ENABLED=false` là kill switch fail-closed cho upload mới; signed read,
-metrics và cleanup forward-recovery vẫn hoạt động. Metrics private ở
-`GET /api/v1/internal/metrics/media`, bắt buộc bearer token secret-managed và chỉ dùng
-label enum bounded. Dashboard/alert/runbook nằm trong `ops/observability` và
+metrics và cleanup forward-recovery vẫn hoạt động. Metrics không phải public API.
+Backend mở listener riêng tại `MEDIA_METRICS_HOST` /
+`MEDIA_METRICS_PORT` (production contract `0.0.0.0:9464`) và chỉ phục vụ exact
+`GET /metrics` với bearer `MEDIA_METRICS_BEARER_TOKEN`; token `_PREVIOUS` chỉ dùng
+trong cửa sổ rotation. Public listener và edge trả 404 cho `/metrics` cùng namespace
+metrics cũ. Metric chỉ dùng label enum bounded. Dashboard/alert/runbook nằm trong
+`ops/observability` và
 `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md`.
 
 Storage read taxonomy phân biệt provider outage, not-found, provider mismatch,
@@ -1038,8 +1042,8 @@ outage thật; object thiếu/malformed hoặc checksum/size/MIME/body không kh
 timeout/connection/reset (`unavailable`) với invalid framing/oversize/ambiguous/
 `ERROR` (`invalid_response`); không phân loại từ raw message.
 
-Public reverse proxy exact-match metrics path và trả 404; Prometheus dùng private
-headless topology để scrape trực tiếp từng replica với secret-file bearer token,
+Public reverse proxy deny toàn metrics namespace và trả 404; Prometheus dùng private
+headless topology để scrape trực tiếp từng replica với secret-projected bearer token,
 không qua application load balancer. Production CORS dùng exact HTTPS
 `ALLOWED_ORIGINS`; startup reject wildcard/ambiguous origin cùng placeholder, yếu hoặc
 reuse secret. API có nosniff/frame/referrer/permissions/CSP headers; HSTS chỉ ở TLS

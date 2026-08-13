@@ -1,6 +1,9 @@
+import { createHash } from 'node:crypto';
+
 import {
   API_SECURITY_HEADERS,
   applyApiSecurityHeaders,
+  assertProductionSecrets,
   buildCorsOriginValidator,
   configureApiEdgeSecurity,
   normalizeAllowedOrigins,
@@ -106,5 +109,208 @@ describe('runtime edge security', () => {
       'secret',
     );
     expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  describe('production secret material', () => {
+    const material = (purpose: string) =>
+      createHash('sha256').update(`runtime-security:${purpose}`).digest();
+    const baseEnvironment = () => ({
+      JWT_SECRETS: JSON.stringify({
+        v1: material('jwt-v1').toString('base64'),
+        v2: material('jwt-v2').toString('hex'),
+      }),
+      JWT_ACTIVE_KID: 'v2',
+      AUTH_PASSWORD_PEPPER: material('password-pepper').toString('base64'),
+      MEDIA_SIGNING_SECRET: material('media-signing').toString('hex'),
+      MEDIA_METRICS_BEARER_TOKEN:
+        material('metrics-current').toString('base64'),
+      MEDIA_METRICS_BEARER_TOKEN_PREVIOUS:
+        material('metrics-previous').toString('base64'),
+    });
+
+    it.each([
+      ['raw', 'N7!qP2@vR9#xK4$mT8%zC6&wH3*yL5?uD1'],
+      ['base64', material('positive-base64').toString('base64')],
+      [
+        'base64-unpadded',
+        material('positive-base64-unpadded')
+          .toString('base64')
+          .replace(/=+$/u, ''),
+      ],
+      ['hex', material('positive-hex').toString('hex')],
+    ])('accepts distinct %s CSPRNG-shaped material', (_, candidate) => {
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET: candidate,
+        }),
+      ).not.toThrow();
+    });
+
+    it.each(
+      ['change-me', 'password', 'example', 'test-fixture'].flatMap(
+        (placeholder) => {
+          const decoded = `${placeholder}-must-never-be-used-as-production-secret-material`;
+          return [
+            ['raw', placeholder, decoded],
+            ['base64', placeholder, Buffer.from(decoded).toString('base64')],
+            [
+              'base64-unpadded',
+              placeholder,
+              Buffer.from(decoded).toString('base64').replace(/=+$/u, ''),
+            ],
+            ['hex', placeholder, Buffer.from(decoded).toString('hex')],
+          ];
+        },
+      ),
+    )(
+      'rejects %s-encoded %s material after decoding without reflection',
+      (_encoding, _placeholder, candidate) => {
+        let thrown: unknown;
+        try {
+          assertProductionSecrets({
+            ...baseEnvironment(),
+            MEDIA_SIGNING_SECRET: candidate,
+          });
+        } catch (error: unknown) {
+          thrown = error;
+        }
+        expect(thrown).toEqual(
+          expect.objectContaining({
+            message: 'Production secret configuration is invalid.',
+          }),
+        );
+        expect(String(thrown)).not.toContain(candidate);
+      },
+    );
+
+    it('rejects an unlabelled raw placeholder that is also syntactically base64', () => {
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET: 'password'.repeat(4),
+        }),
+      ).toThrow('Production secret configuration is invalid.');
+    });
+
+    it.each([
+      [
+        'base64url',
+        Buffer.concat([
+          Buffer.from('change-me-placeholder-material-that-is-long-enough-'),
+          Buffer.from([0xfb, 0xff, 0xfe, 0xfa]),
+        ]).toString('base64url'),
+      ],
+      [
+        'base64 with spaces',
+        Buffer.from('change-me-placeholder-material-that-is-long-enough-spaces')
+          .toString('base64')
+          .replace(/.{12}/gu, (chunk) => `${chunk} `),
+      ],
+      [
+        'base64 with newline',
+        (() => {
+          const encoded = Buffer.from(
+            'change-me-placeholder-material-that-is-long-enough-newline',
+          ).toString('base64');
+          return `${encoded.slice(0, 20)}\n${encoded.slice(20)}`;
+        })(),
+      ],
+      [
+        'base64 prefix',
+        `base64:${Buffer.from(
+          'change-me-placeholder-material-that-is-long-enough-prefix',
+        ).toString('base64')}`,
+      ],
+      [
+        '0x hex prefix',
+        `0x${Buffer.from(
+          'change-me-placeholder-material-that-is-long-enough-hex',
+        ).toString('hex')}`,
+      ],
+    ])(
+      'rejects noncanonical or alternate %s placeholder material',
+      (_, candidate) => {
+        expect(() =>
+          assertProductionSecrets({
+            ...baseEnvironment(),
+            MEDIA_SIGNING_SECRET: candidate,
+          }),
+        ).toThrow('Production secret configuration is invalid.');
+      },
+    );
+
+    it('accepts canonical unpadded base64url CSPRNG-shaped material', () => {
+      const candidate = Buffer.concat([
+        material('positive-base64url'),
+        Buffer.from([0xfb, 0xff]),
+      ]).toString('base64url');
+      expect(candidate).toMatch(/[-_]/u);
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET: candidate,
+        }),
+      ).not.toThrow();
+    });
+
+    it.each([
+      `base64:${material('noncanonical-prefix').toString('base64')}`,
+      `0x${material('noncanonical-hex-prefix').toString('hex')}`,
+      `${material('noncanonical-space').toString('base64')} `,
+      `${material('noncanonical-newline').toString('base64')}\n`,
+    ])(
+      'rejects noncanonical encoding grammar even for strong material',
+      (candidate) => {
+        expect(() =>
+          assertProductionSecrets({
+            ...baseEnvironment(),
+            MEDIA_SIGNING_SECRET: candidate,
+          }),
+        ).toThrow('Production secret configuration is invalid.');
+      },
+    );
+
+    it.each([
+      ['raw periodic', 'Ab1!'.repeat(8)],
+      ['base64 periodic', Buffer.from('01234567'.repeat(4)).toString('base64')],
+      [
+        'hex grouped',
+        Buffer.concat([
+          Buffer.alloc(16, 0x41),
+          Buffer.alloc(16, 0x42),
+        ]).toString('hex'),
+      ],
+    ])('rejects low-diversity or deterministic %s material', (_, candidate) => {
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET: candidate,
+        }),
+      ).toThrow('Production secret configuration is invalid.');
+    });
+
+    it('rejects cross-purpose reuse even when the same bytes use different encodings', () => {
+      const reused = material('reused-cross-purpose');
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          JWT_SECRETS: JSON.stringify({ v1: reused.toString('base64') }),
+          JWT_ACTIVE_KID: 'v1',
+          AUTH_PASSWORD_PEPPER: reused.toString('hex'),
+        }),
+      ).toThrow('Production secret configuration is invalid.');
+    });
+
+    it('rejects malformed JWT secret maps with the same sanitized error', () => {
+      for (const JWT_SECRETS of ['null', '[]', '{', '{"v1":42}']) {
+        expect(() =>
+          assertProductionSecrets({
+            ...baseEnvironment(),
+            JWT_SECRETS,
+          }),
+        ).toThrow('Production secret configuration is invalid.');
+      }
+    });
   });
 });

@@ -601,13 +601,11 @@ redaction van do Infra/Release hoan tat truoc beta.
   `ops/nginx` va `docs/operations`. Local deterministic gate khong thay the live
   S3/ClamAV/proxy/alert delivery; thieu ha tang that thi production release la
   BLOCKED_EXTERNAL.
-- Migration 17 frozen SHA-256:
+- Historical migration 17 evidence (the baseline before current migration 18):
   `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`;
-  migration 16 van byte-identical tai `a5bb8bdd...fe2e`. Hai database disposable moi
-  deploy du 17 migration; SQL integrity PASS va ROLLBACK ve 0 ingestion, ca hai drift
-  check rong. Inventory: 60 table, 147 FK, 512 catalog CHECK row, 61 trigger-event
-  row. Full E2E 11 suite/160 test va unit 45 suite/411 test deu PASS; dependency audit
-  production co 0 vulnerability.
+  migration 16 van byte-identical tai `a5bb8bdd...fe2e`. Cac con so test/catalog cua
+  baseline 17 khong duoc dung lam bang chung cho current HEAD; migration 18 va moi
+  gate phai chay lai tren database disposable moi.
 - Preflight migration 17 da rehearse ca fail va success: completed row thieu exact
   immutable provenance audit va source license whitespace deu dung fail-safe truoc
   DDL; exact six-field audit marker cho synthetic fixture cho phep backfill snapshot.
@@ -624,19 +622,21 @@ redaction van do Infra/Release hoan tat truoc beta.
 - ClamAV dung typed `unavailable` cho timeout/connection/reset va `invalid_response`
   cho framing/oversize/ambiguous/ERROR; exact `OK`/`FOUND` van la hai protocol success
   duy nhat. Raw response/payload khong log.
-- Metric DB gauges dung mot aggregate query moi scrape; counter process-local duoc
-  Prometheus scrape truc tiep tung replica/pod. Public Nginx exact metrics path tra
-  404; headless service + NetworkPolicy chi cho trusted edge/monitoring identities,
-  direct scrape van can token co bounded current/previous rotation.
+- Metric DB gauges dung mot aggregate query moi scrape; khi chua co snapshot thanh
+  cong, exporter bao database unavailable va khong phat backlog gauge gia bang 0.
+  Counter process-local duoc Prometheus scrape truc tiep tung replica/pod tren
+  listener rieng exact `GET /metrics` port 9464. Public API va Nginx deny `/metrics`
+  cung namespace cu; headless service + NetworkPolicy + STRICT mTLS chi cho Prometheus
+  identity. Bearer current/previous chi overlap trong rollout rotation.
 - Production `ALLOWED_ORIGINS` la exact HTTPS allowlist, khong wildcard/path/query/
   userinfo/blank segment. Nest ap dung nosniff/frame/referrer/permissions/API CSP;
   HSTS chi o TLS edge. JWT, password pepper, media signing va metrics secret phai la
   base64/hex >=32 decoded bytes, co diversity va khong reuse/placeholder.
-- Real artifact harness pin Nginx 1.30.4, Prometheus 3.13.2 va Grafana 13.1.3 kem
-  SHA-256; chay `nginx -t`+HTTP, promtool rule tests va guarded disposable Grafana
-  import. Workstation hien thieu ca ba tool nen operational artifact/live/release
-  van `BLOCKED_EXTERNAL`, khong duoc goi la PASS.
-- Internal evidence: targeted 8 suite/93 test, unit 46/459, media fencing 13/13 va
-  full E2E 11 suite/160 test PASS; Prisma/TypeScript/build/lint/format, hai drift va
-  dependency audit (0 vulnerability) GREEN. Sau DB disposable task tao da drop,
-  catalog exact-name con 0. Migration 16/17 van giu checksum frozen.
+- Real artifact harness pin checksum cho Nginx/PCRE2, Prometheus/promtool,
+  Alertmanager/amtool, Grafana, kubectl va kubeconform theo Darwin arm64 + Linux
+  amd64. Moi validator bao doc lap PASS/FAIL_INTERNAL/BLOCKED_EXTERNAL va sinh JSON/
+  JUnit da sanitize; khong suy luan PASS tu string assertion hoac tool global.
+- Forward migration 18 `media_lifecycle_telemetry_truthfulness` bo sung timestamp
+  lifecycle on dinh cho age metric. Migration 16/17 van bat bien. So luong test va
+  release status chi duoc ghi tu evidence cua current HEAD sau khi gate thuc su chay;
+  tai lieu nay khong dong bang ket qua cua lan chay cu.

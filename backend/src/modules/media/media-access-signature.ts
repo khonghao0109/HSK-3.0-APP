@@ -5,11 +5,28 @@ type MediaAccessPayload = {
   expiresAt: number;
   checksum: string;
   secret: string;
+  method: string;
+  resource: string;
 };
+
+export const MEDIA_CONTENT_ACCESS_METHOD = 'GET';
+const MEDIA_ACCESS_SIGNATURE_VERSION = 'hsk-media-access-v1';
+
+export function canonicalMediaContentResource(mediaId: number): string {
+  return `/api/v1/media/${mediaId}/content`;
+}
 
 export function createMediaAccessSignature(input: MediaAccessPayload): string {
   return createHmac('sha256', input.secret)
-    .update(`${input.mediaId}:${input.expiresAt}:${input.checksum}`)
+    .update(
+      [
+        MEDIA_ACCESS_SIGNATURE_VERSION,
+        input.method,
+        input.resource,
+        String(input.expiresAt),
+        input.checksum,
+      ].join('\n'),
+    )
     .digest('hex');
 }
 
@@ -19,6 +36,9 @@ export function verifyMediaAccessSignature(
 ): boolean {
   if (
     input.expiresAt <= nowEpochSeconds ||
+    input.method !== MEDIA_CONTENT_ACCESS_METHOD ||
+    input.resource !== canonicalMediaContentResource(input.mediaId) ||
+    !/^[a-f0-9]{64}$/u.test(input.checksum) ||
     !/^[a-f0-9]{64}$/u.test(input.signature)
   ) {
     return false;

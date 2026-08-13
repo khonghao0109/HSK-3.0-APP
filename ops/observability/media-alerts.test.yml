@@ -4,132 +4,249 @@ rule_files:
 evaluation_interval: 1m
 
 tests:
-  - interval: 1m
-    input_series:
-      - series: hsk_media_cleanup_required{instance="backend-media-0"}
-        values: 1x24 0x12
-      - series: hsk_media_cleanup_oldest_age_seconds{instance="backend-media-0"}
-        values: 601x24 0x12
-      - series: hsk_media_stuck_processing{instance="backend-media-0"}
-        values: 1x24 0x12
-      - series: hsk_media_scanner_total{instance="backend-media-0",outcome="unavailable"}
-        values: 0+1x24 24x12
-      - series: hsk_media_scanner_total{instance="backend-media-0",outcome="invalid_response"}
-        values: 0x10 1 1x24
-      - series: hsk_media_storage_operations_total{instance="backend-media-0",operation="get",outcome="error"}
-        values: 0+2x24 48x12
-      - series: hsk_media_storage_operations_total{instance="backend-media-0",operation="get",outcome="integrity_error"}
-        values: 0x10 1 1x24
-      - series: hsk_media_signed_access_total{instance="backend-media-0",outcome="integrity_error"}
-        values: 0x10 1 1x24
-      - series: hsk_media_reconciliation_total{instance="backend-media-0",outcome="violation"}
-        values: 0x10 1 1x24
-      - series: up{instance="backend-media-1",job="hsk-media-replicas"}
-        values: 0x24 1x12
+  - name: no traffic does not consume an availability error budget
+    interval: 1m
+    external_url: https://runbooks.test.invalid
     alert_rule_test:
-      - eval_time: 4m
-        alertname: HskMediaReplicaScrapeFailure
+      - eval_time: 20m
+        alertname: HskMediaIngestionFastBurn
         exp_alerts: []
+      - eval_time: 20m
+        alertname: HskMediaIngestionSlowBurn
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: HskMediaSignedContentSlowBurn
+        exp_alerts: []
+
+  - name: global database gauges aggregate three replicas to one alert and resolve
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_cleanup_required{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 1x4 0x4
+      - series: hsk_media_cleanup_required{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 1x4 0x4
+      - series: hsk_media_cleanup_required{instance="10.0.0.3:9464",pod="backend-2"}
+        values: 1x4 0x4
+      - series: hsk_media_cleanup_oldest_age_seconds{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 601x4 0x4
+      - series: hsk_media_cleanup_oldest_age_seconds{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 601x4 0x4
+      - series: hsk_media_cleanup_oldest_age_seconds{instance="10.0.0.3:9464",pod="backend-2"}
+        values: 601x4 0x4
+      - series: hsk_media_stuck_processing{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 1x4 0x4
+      - series: hsk_media_stuck_processing{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 1x4 0x4
+      - series: hsk_media_stuck_processing{instance="10.0.0.3:9464",pod="backend-2"}
+        values: 1x4 0x4
+      - series: hsk_media_metrics_database_available{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 1x8
+      - series: hsk_media_metrics_database_available{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 1x8
+      - series: hsk_media_metrics_database_available{instance="10.0.0.3:9464",pod="backend-2"}
+        values: 1x8
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: HskMediaCleanupBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media object cleanup exceeded its five-minute SLO
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 2m
+        alertname: HskMediaProcessingStuck
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+            exp_annotations:
+              summary: Media ingestion is stuck beyond the processing fence
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 6m
+        alertname: HskMediaCleanupBacklog
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: HskMediaProcessingStuck
+        exp_alerts: []
+
+  - name: replica health aggregates failures into one logical alert
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: up{job="hsk-media-replicas",instance="10.0.0.1:9464",pod="backend-0"}
+        values: 1x10
+      - series: up{job="hsk-media-replicas",instance="10.0.0.2:9464",pod="backend-1"}
+        values: 0x7 1x3
+      - series: up{job="hsk-media-replicas",instance="10.0.0.3:9464",pod="backend-2"}
+        values: 1x10
+    alert_rule_test:
       - eval_time: 6m
         alertname: HskMediaReplicaScrapeFailure
         exp_alerts:
           - exp_labels:
-              instance: backend-media-1
-              job: hsk-media-replicas
               severity: page
               owner: platform-sre
             exp_annotations:
-              summary: Prometheus cannot scrape a backend media replica
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+              summary: Prometheus cannot scrape one or more backend media replicas
+              runbook_url: __MEDIA_RUNBOOK_URL__
       - eval_time: 9m
-        alertname: HskMediaCleanupBacklog
+        alertname: HskMediaReplicaScrapeFailure
         exp_alerts: []
-      - eval_time: 11m
-        alertname: HskMediaCleanupBacklog
+
+  - name: discovery loss and database collector health fail closed
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_metrics_database_available{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 0x8
+      - series: hsk_media_metrics_database_snapshot_stale{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 1x8
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: HskMediaReplicaTargetUnderMinimum
         exp_alerts:
           - exp_labels:
-              instance: backend-media-0
+              severity: page
+              owner: platform-sre
+            exp_annotations:
+              summary: Prometheus discovered fewer than two backend media replicas
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 5m
+        alertname: HskMediaMetricsDatabaseUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: platform-sre
+            exp_annotations:
+              summary: Media metrics collector cannot obtain a database snapshot
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 5m
+        alertname: HskMediaMetricsSnapshotStale
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: platform-sre
+            exp_annotations:
+              summary: Media metrics collector snapshot is stale
+              runbook_url: __MEDIA_RUNBOOK_URL__
+
+  - name: multi-window burn rates and processing p95 aggregate replicas
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_ingestion_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
+        values: 0+90x30
+      - series: hsk_media_ingestion_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
+        values: 0+90x30
+      - series: hsk_media_ingestion_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="failed"}
+        values: 0+10x30
+      - series: hsk_media_ingestion_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="failed"}
+        values: 0+10x30
+      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
+        values: 0+90x30
+      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
+        values: 0+90x30
+      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
+        values: 0+10x30
+      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
+        values: 0+10x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.1:9464",pod="backend-0",outcome="success",le="5"}
+        values: 0+0x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.1:9464",pod="backend-0",outcome="success",le="10"}
+        values: 0+1x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.1:9464",pod="backend-0",outcome="success",le="30"}
+        values: 0+10x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.1:9464",pod="backend-0",outcome="success",le="+Inf"}
+        values: 0+10x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.2:9464",pod="backend-1",outcome="success",le="5"}
+        values: 0+0x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.2:9464",pod="backend-1",outcome="success",le="10"}
+        values: 0+1x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.2:9464",pod="backend-1",outcome="success",le="30"}
+        values: 0+10x30
+      - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.2:9464",pod="backend-1",outcome="success",le="+Inf"}
+        values: 0+10x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HskMediaIngestionFastBurn
+        exp_alerts:
+          - exp_labels:
               severity: page
               owner: media-platform
+              slo: ingestion-availability
             exp_annotations:
-              summary: Media object cleanup has not converged
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 11m
-        alertname: HskMediaProcessingStuck
-        exp_alerts:
-          - exp_labels:
-              instance: backend-media-0
-              severity: page
-              owner: media-platform
-            exp_annotations:
-              summary: Media ingestion is stuck beyond the 15-minute fence
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 12m
-        alertname: HskMediaScannerInvalidResponse
-        exp_alerts:
-          - exp_labels:
-              severity: page
-              owner: security-platform
-            exp_annotations:
-              summary: Malware scanner returned an invalid protocol response
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 12m
-        alertname: HskMediaIntegrityViolation
-        exp_alerts:
-          - exp_labels:
-              severity: page
-              owner: media-platform
-            exp_annotations:
-              summary: Media object integrity validation failed
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 12m
-        alertname: HskMediaCoherenceViolation
-        exp_alerts:
-          - exp_labels:
-              severity: page
-              owner: media-platform
-            exp_annotations:
-              summary: Media database/object coherence verification failed
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 16m
-        alertname: HskMediaScannerUnavailable
-        exp_alerts:
-          - exp_labels:
-              severity: page
-              owner: security-platform
-            exp_annotations:
-              summary: Malware scanner is unavailable
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 16m
-        alertname: HskMediaStorageErrorSpike
+              summary: Media ingestion is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaIngestionSlowBurn
         exp_alerts:
           - exp_labels:
               severity: ticket
               owner: media-platform
+              slo: ingestion-availability
             exp_annotations:
-              summary: Private object storage errors are elevated
-              runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
-      - eval_time: 35m
-        alertname: HskMediaCleanupBacklog
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaProcessingStuck
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaScannerUnavailable
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaScannerInvalidResponse
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaStorageErrorSpike
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaIntegrityViolation
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaCoherenceViolation
-        exp_alerts: []
-      - eval_time: 35m
-        alertname: HskMediaReplicaScrapeFailure
+              summary: Media ingestion is consuming its error budget persistently
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaSignedContentSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget persistently
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaProcessingLatency
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+              slo: processing-p95
+            exp_annotations:
+              summary: Media processing p95 exceeds eight seconds
+              runbook_url: __MEDIA_RUNBOOK_URL__
+
+  - name: signed-content slow burn aggregates replicas and resolves after the long window
+    interval: 10m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
+        values: 0+90x35 3150+100x45
+      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
+        values: 0+90x35 3150+100x45
+      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
+        values: 0+10x35 350x45
+      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
+        values: 0+10x35 350x45
+    alert_rule_test:
+      - eval_time: 4h
+        alertname: HskMediaSignedContentSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget persistently
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 12h
+        alertname: HskMediaSignedContentSlowBurn
         exp_alerts: []

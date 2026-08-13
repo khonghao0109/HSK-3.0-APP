@@ -2,7 +2,8 @@
 
 - Date: 2026-08-13
 - Owners: Media Platform, Security Platform, Platform SRE
-- Scope: backend and operations artifacts only; no UI or database schema change
+- Scope: backend and operations artifacts; includes forward-only lifecycle migration
+  18; no UI change
 - Status: code gates must be recorded after execution; live infrastructure remains a
   separate release gate
 
@@ -60,22 +61,26 @@ pool pressure.
 
 ## Public/private access and rotation
 
-| Path                             | Public ingress                           | Private monitoring network     | Credential                                    |
-| -------------------------------- | ---------------------------------------- | ------------------------------ | --------------------------------------------- |
-| signed media content             | matched; query-redacted, no shared cache | not required                   | signed HMAC query                             |
-| `/api/v1/internal/metrics/media` | exact-match `404`, even without token    | direct pod/replica scrape only | current bearer token from secret file/manager |
+| Path                              | Public ingress                           | Private monitoring network     | Credential                                      |
+| --------------------------------- | ---------------------------------------- | ------------------------------ | ----------------------------------------------- |
+| signed media content              | matched; query-redacted, no shared cache | not required                   | signed HMAC query                               |
+| `/metrics` on dedicated port 9464 | namespace `404` at public edge           | direct pod/replica scrape only | current/previous bearer from secret-managed env |
 
 `ops/observability/media-metrics-private-network.yml` defines the headless endpoint
-and NetworkPolicy. `media-prometheus.yml` is a deterministic two-replica rehearsal
-topology, never a load-balanced application endpoint. A production replica count
-beyond two must use pod service discovery/relabeling while retaining one target per
-pod. Rotation procedure:
+and NetworkPolicy. `media-prometheus.yml` uses pod discovery/relabeling for one target
+per ready replica, never a load-balanced application endpoint. Actual two/three
+replica execution is a target-environment external gate. Rotation must preserve an
+acceptance overlap because Prometheus hot-refreshes `current`, while backend env is
+read only at startup:
 
-1. provision a new random token in the secret manager and mount it to Prometheus;
-2. deploy backend with new current plus old `MEDIA_METRICS_BEARER_TOKEN_PREVIOUS`;
-3. reload every direct scrape target and verify both targets healthy;
-4. remove the previous token and roll backend replicas;
-5. never log the Authorization header or place the token in repository YAML.
+1. keep `current=OLD`, stage `previous=NEW`, then roll every backend so all replicas
+   accept both values while Prometheus continues using OLD;
+2. atomically swap the projection to `current=NEW`, `previous=OLD`; Prometheus may
+   now hot-refresh to NEW while every backend still accepts both;
+3. roll every backend again with NEW current and OLD previous, then verify every
+   scrape target before removing overlap;
+4. remove `previous`, keep `current=NEW`, roll once more and verify every target;
+5. never log the Authorization header or place either token in repository YAML.
 
 ## Production edge matrix
 
@@ -106,46 +111,52 @@ When prerequisites exist, the harness runs:
   content and public metrics routes, and inspects a query-redacted safe log;
 - `promtool check rules media-alerts.yml` and
   `promtool test rules media-alerts.test.yml`;
-- version-check and dashboard import/read-back/delete against an explicitly guarded,
-  loopback disposable Grafana.
+- pinned disposable Grafana imports and reads back the dashboard, provisions a
+  Prometheus datasource, verifies the rendered HTTPS runbook link and executes every
+  non-empty panel target through the Grafana datasource API. A guaranteed-absent
+  metric separately proves that a successful empty query stays an explicit no-data
+  state rather than being mistaken for a populated panel or a query failure.
 
-The current workstation has no `nginx`, `promtool` or Grafana CLI
-(`grafana-server`/`grafana`); the command therefore exits `2` with
-`BLOCKED_EXTERNAL`. This is not a PASS and does not replace the next live
-infrastructure rehearsal.
+## Application secret lifecycle
+
+Generate JWT secrets, password pepper, media signing keys and metrics bearer tokens
+with an approved CSPRNG at a minimum of 32 random decoded bytes; never derive one
+from another or place generated values in shell history, repository files or release
+logs. Inject them through the environment's secret manager and workload identity,
+then use audited rollout revisions.
+
+- JWT rotation uses the application's declared overlap/key-version contract; revoke
+  old signing material only after issued access/refresh lifetimes and session
+  revocation behavior are verified.
+- Password pepper rotation changes password-verification semantics. It requires an
+  explicit dual-pepper/login rehash plan or a forced credential reset; a blind swap
+  locks out every existing password.
+- `MEDIA_SIGNING_SECRET` is a single active HMAC key in V1. Rotating it invalidates
+  every outstanding signed media grant immediately, so either drain the maximum
+  grant TTL before rollout or accept/document that revocation window and roll all
+  replicas atomically with monitoring for `invalid_grant`.
+- Metrics bearer rotation follows the overlap-safe four-phase sequence below; do not
+  reuse JWT, pepper, media-signing or metrics material across purposes.
+
+The gate acquires only checksum-pinned artifacts or uses a verified cache and emits
+independent sanitized JSON/JUnit status. Missing artifact/network/runbook/provider
+is `BLOCKED_EXTERNAL`; invalid repository behavior is `FAIL_INTERNAL`. No static
+artifact test upgrades either result to PASS.
 
 ## Release boundary
 
 Internal deterministic tests can make the repository `CODE_READY`. Operational
 artifact readiness remains `BLOCKED_EXTERNAL` until the pinned tools execute. Live
-S3, ClamAV, proxy, Alertmanager delivery, two running backend replicas and production
+S3, ClamAV, deployed proxy, production notification delivery, running backend
+replicas and production
 secret-manager/workload-identity verification are separately `BLOCKED_EXTERNAL`.
 No production endpoint or credential was supplied or used by this closeout.
 
-## RED/GREEN evidence
+## Evidence contract
 
-The RED contract run failed before implementation because the runtime-security
-module and typed storage/scanner constructors did not exist, integrity mismatches
-were recorded as unavailable, and metrics used multiple database calls. The process
-also exposed that raw provider errors crossed the in-memory/test boundary. No RED
-failure was treated as expected success.
-
-Final deterministic evidence on 2026-08-13:
-
-| Gate                                                                                 | Result                                                                        |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| taxonomy/config/storage/scanner/metrics/controller/artifact contracts                | 8 suites, 93 tests PASS                                                       |
-| full backend unit                                                                    | 46 suites, 459 tests PASS                                                     |
-| Prisma format/validate/generate, TypeScript build/spec, Nest build, ESLint, Prettier | PASS                                                                          |
-| fresh media SQL integrity                                                            | PASS, transaction rolled back; User/Media/MediaIngestion/AuditLog remain zero |
-| fresh media fencing/concurrency                                                      | 1 suite, 13 tests PASS                                                        |
-| replacement fresh full backend E2E                                                   | 11 suites, 160 tests PASS                                                     |
-| live-schema and migration-history drift                                              | both report no difference                                                     |
-| production dependency audit                                                          | zero vulnerabilities                                                          |
-| high-confidence secret scan and added focused/skip scan                              | no finding                                                                    |
-| Nginx/promtool/Grafana executable gate                                               | `BLOCKED_EXTERNAL` (exit 2; all three toolchains absent)                      |
-
-The first full-E2E invocation lacked the two synthetic test JWT variables and failed
-bootstrap. It was not counted and its database was not reused. The corrected command
-ran on a new database. All six databases created by the closeout were dropped and a
-final exact-name catalog query returned zero.
+Do not copy old suite counts into a release decision. Run every gate on current HEAD
+and retain `backend/test-results/media-operations/media-operations-validation.json`
+plus its JUnit companion. Each validator records status, duration, command IDs,
+per-command exit/duration/log path and verified artifact digests. Live provider,
+deployed mesh/policy, PVC binding, real runbook and production notification-provider
+evidence remain separate external gates.

@@ -10,6 +10,7 @@ DECLARE
   mismatch_media_id INTEGER;
   ingestion_id INTEGER;
   transition_ingestion_id INTEGER;
+  first_cleanup_required_at TIMESTAMP(3);
   rejected BOOLEAN;
   mutation RECORD;
 BEGIN
@@ -61,9 +62,10 @@ BEGIN
       AND column_name IN (
         'sourceCodeSnapshot', 'sourceVersionSnapshot', 'sourceLicenseSnapshot',
         'sourceAttributionSnapshot', 'sourceReferenceUrlSnapshot',
-        'sourceContentHashSnapshot', 'cleanupAbsentObservedAt'
+        'sourceContentHashSnapshot', 'cleanupAbsentObservedAt',
+        'cleanupRequiredAt'
       )
-  ) <> 7 THEN
+  ) <> 8 THEN
     RAISE EXCEPTION 'MediaIngestion provenance/reconciliation columns are incomplete';
   END IF;
 
@@ -219,7 +221,7 @@ BEGIN
   ) VALUES (
     actor_id, source_id, repeat('3', 64), repeat('4', 64), 'processing',
     'transition.png', 'image/png', 8, 'memory-test', 1,
-    CURRENT_TIMESTAMP, '30000000-0000-4000-8000-000000000003', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    CURRENT_TIMESTAMP - INTERVAL '1 hour', '30000000-0000-4000-8000-000000000003', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO transition_ingestion_id;
 
   rejected := FALSE;
@@ -243,6 +245,219 @@ BEGIN
   END;
   IF NOT rejected THEN
     RAISE EXCEPTION 'Processing fencing identity mutation was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "processingStartedAt" = CURRENT_TIMESTAMP - INTERVAL '1 hour'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Active processing lifecycle timestamp mutation was accepted';
+  END IF;
+
+  IF (SELECT "processingStartedAt" FROM "MediaIngestion" WHERE id = transition_ingestion_id)
+    < CURRENT_TIMESTAMP - INTERVAL '1 minute'
+  THEN
+    RAISE EXCEPTION 'Processing lifecycle timestamp was not assigned by the database';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "failureCode" = 'OBJECT_CLEANUP_IN_PROGRESS'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Cleanup-in-progress code without prior cleanup lifecycle was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET status = 'failed', "failureCode" = 'OBJECT_CLEANED'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Object-cleaned terminal state without prior cleanup lifecycle was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET status = 'failed', "failureCode" = 'OBJECT_WRITE_OUTCOME_UNKNOWN'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Unknown object-write outcome outside cleanup_required was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET
+      "storageKey" = 'media/2026/08/218f43cb-9e6c-7f4e-8d23-8e8a0f8d5a9b.png',
+      "failureCode" = 'OBJECT_CLEANUP_REQUIRED',
+      status = 'cleanup_required',
+      "cleanupRequiredAt" = CURRENT_TIMESTAMP - INTERVAL '1 minute'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Forged first cleanup lifecycle timestamp was accepted';
+  END IF;
+
+  UPDATE "MediaIngestion"
+  SET
+    "storageKey" = 'media/2026/08/218f43cb-9e6c-7f4e-8d23-8e8a0f8d5a9b.png',
+    "failureCode" = 'OBJECT_CLEANUP_REQUIRED',
+    status = 'cleanup_required'
+  WHERE id = transition_ingestion_id
+  RETURNING "cleanupRequiredAt" INTO first_cleanup_required_at;
+
+  IF first_cleanup_required_at IS NULL THEN
+    RAISE EXCEPTION 'cleanup_required transition did not receive its lifecycle timestamp';
+  END IF;
+
+  UPDATE "MediaIngestion"
+  SET "failureCode" = 'OBJECT_CLEANUP_SETTLING'
+  WHERE id = transition_ingestion_id;
+
+  UPDATE "MediaIngestion"
+  SET "failureCode" = 'OBJECT_WRITE_OUTCOME_UNKNOWN'
+  WHERE id = transition_ingestion_id;
+
+  UPDATE "MediaIngestion"
+  SET "failureCode" = 'OBJECT_CLEANUP_REQUIRED'
+  WHERE id = transition_ingestion_id;
+
+  IF (SELECT "cleanupRequiredAt" FROM "MediaIngestion" WHERE id = transition_ingestion_id)
+    IS DISTINCT FROM first_cleanup_required_at
+  THEN
+    RAISE EXCEPTION 'Valid cleanup-required codes changed the first lifecycle timestamp';
+  END IF;
+
+  UPDATE "MediaIngestion"
+  SET
+    status = 'processing',
+    "processingToken" = '70000000-0000-4000-8000-000000000007',
+    "processingStartedAt" = CURRENT_TIMESTAMP,
+    "failureCode" = 'OBJECT_CLEANUP_IN_PROGRESS',
+    "updatedAt" = CURRENT_TIMESTAMP + INTERVAL '1 hour'
+  WHERE id = transition_ingestion_id;
+
+  IF (SELECT "cleanupRequiredAt" FROM "MediaIngestion" WHERE id = transition_ingestion_id)
+    IS DISTINCT FROM first_cleanup_required_at
+  THEN
+    RAISE EXCEPTION 'Cleanup claim did not preserve the first cleanup lifecycle timestamp';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "cleanupRequiredAt" = NULL
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Active cleanup lifecycle timestamp was cleared';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "failureCode" = NULL
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Active cleanup lifecycle code was cleared';
+  END IF;
+
+  UPDATE "MediaIngestion"
+  SET
+    status = 'cleanup_required',
+    "failureCode" = 'OBJECT_CLEANUP_REQUIRED',
+    "cleanupAttempts" = 1,
+    "cleanupLastAttemptAt" = CURRENT_TIMESTAMP,
+    "updatedAt" = CURRENT_TIMESTAMP + INTERVAL '2 hours'
+  WHERE id = transition_ingestion_id;
+
+  IF (SELECT "cleanupRequiredAt" FROM "MediaIngestion" WHERE id = transition_ingestion_id)
+    IS DISTINCT FROM first_cleanup_required_at
+  THEN
+    RAISE EXCEPTION 'Cleanup retry made the cleanup backlog age younger';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "failureCode" = NULL
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Cleanup-required lifecycle with a null code was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "failureCode" = 'FORGED_CLEANUP_CODE'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Cleanup-required lifecycle with a forged code was accepted';
+  END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE "MediaIngestion"
+    SET "cleanupRequiredAt" = first_cleanup_required_at + INTERVAL '1 second'
+    WHERE id = transition_ingestion_id;
+  EXCEPTION WHEN check_violation THEN
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Immutable cleanup lifecycle timestamp mutation was accepted';
+  END IF;
+
+  UPDATE "MediaIngestion"
+  SET
+    status = 'processing',
+    "processingToken" = '80000000-0000-4000-8000-000000000008',
+    "failureCode" = 'OBJECT_CLEANUP_IN_PROGRESS',
+    "updatedAt" = CURRENT_TIMESTAMP + INTERVAL '3 hours'
+  WHERE id = transition_ingestion_id;
+
+  UPDATE "MediaIngestion"
+  SET
+    status = 'failed',
+    "failureCode" = 'OBJECT_CLEANED',
+    "cleanupAttempts" = 2,
+    "cleanupLastAttemptAt" = CURRENT_TIMESTAMP,
+    "updatedAt" = CURRENT_TIMESTAMP + INTERVAL '4 hours'
+  WHERE id = transition_ingestion_id;
+
+  IF (SELECT "cleanupRequiredAt" FROM "MediaIngestion" WHERE id = transition_ingestion_id)
+    IS DISTINCT FROM first_cleanup_required_at
+  THEN
+    RAISE EXCEPTION 'Completed cleanup did not preserve the first cleanup lifecycle timestamp';
   END IF;
 
   rejected := FALSE;

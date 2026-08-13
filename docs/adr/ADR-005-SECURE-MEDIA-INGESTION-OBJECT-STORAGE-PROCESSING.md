@@ -152,12 +152,17 @@ Migration 16 remains frozen at SHA-256
 `a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e`.
 The forward-only provenance/provider hardening migration 17 is frozen at
 `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`.
-On 2026-08-13, independent fresh guarded disposable databases deployed all 17
-migrations. Media SQL acceptance passed and rolled back to zero ingestion rows;
-live/schema and migration-history/schema diffs were empty. The resulting inventory
-was 60 tables, 147 foreign keys, 512 catalog check rows and 61 trigger-event rows.
-Full backend E2E passed 11 suites and 160 tests, the no-database gate passed 45 suites
-and 411 tests, and the production dependency audit reported zero vulnerabilities.
+The forward-only lifecycle telemetry truthfulness migration 18 is frozen at
+SHA-256
+`1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
+
+The earlier database rehearsal is a historical, superseded baseline and is not
+current release evidence. Current guarded evidence deployed all 18/18
+migrations on a fresh disposable database. Media integrity acceptance passed and
+its transaction rollback left the database unchanged; both the live-database-to-
+datamodel and migration-history-to-datamodel drift checks were empty. Full backend
+E2E passed 11/11 suites and 160/160 tests. The dual-lock `AuditLog`/
+`MediaIngestion` concurrency scenario was GREEN.
 
 Negative preflight rehearsals proved atomic failure for a completed legacy ingestion
 without the exact immutable provenance audit and for an ambiguous whitespace source

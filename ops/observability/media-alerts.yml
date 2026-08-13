@@ -1,75 +1,179 @@
 groups:
+  - name: hsk-media-slo-recording
+    interval: 30s
+    rules:
+      - record: hsk_media:cleanup_required:max
+        expr: max without(instance, pod) (hsk_media_cleanup_required)
+      - record: hsk_media:cleanup_oldest_age_seconds:max
+        expr: max without(instance, pod) (hsk_media_cleanup_oldest_age_seconds)
+      - record: hsk_media:stuck_processing:max
+        expr: max without(instance, pod) (hsk_media_stuck_processing)
+      - record: hsk_media:processing_oldest_age_seconds:max
+        expr: max without(instance, pod) (hsk_media_processing_oldest_age_seconds)
+      - record: hsk_media:replica_targets:count
+        expr: count(up{job="hsk-media-replicas"}) or vector(0)
+      - record: hsk_media:ingestion_availability:ratio_rate5m
+        expr: 1 - (sum(rate(hsk_media_ingestion_requests_total{outcome=~"failed|cleanup_required"}[5m])) / clamp_min(sum(rate(hsk_media_ingestion_requests_total{outcome=~"success|failed|cleanup_required"}[5m])), 0.000001))
+      - record: hsk_media:ingestion_availability:ratio_rate30m
+        expr: 1 - (sum(rate(hsk_media_ingestion_requests_total{outcome=~"failed|cleanup_required"}[30m])) / clamp_min(sum(rate(hsk_media_ingestion_requests_total{outcome=~"success|failed|cleanup_required"}[30m])), 0.000001))
+      - record: hsk_media:ingestion_availability:ratio_rate1h
+        expr: 1 - (sum(rate(hsk_media_ingestion_requests_total{outcome=~"failed|cleanup_required"}[1h])) / clamp_min(sum(rate(hsk_media_ingestion_requests_total{outcome=~"success|failed|cleanup_required"}[1h])), 0.000001))
+      - record: hsk_media:ingestion_availability:ratio_rate6h
+        expr: 1 - (sum(rate(hsk_media_ingestion_requests_total{outcome=~"failed|cleanup_required"}[6h])) / clamp_min(sum(rate(hsk_media_ingestion_requests_total{outcome=~"success|failed|cleanup_required"}[6h])), 0.000001))
+      - record: hsk_media:signed_availability:ratio_rate5m
+        expr: 1 - (sum(rate(hsk_media_signed_access_total{outcome=~"unavailable|provider_mismatch|integrity_error"}[5m])) / clamp_min(sum(rate(hsk_media_signed_access_total{outcome=~"success|unavailable|provider_mismatch|integrity_error"}[5m])), 0.000001))
+      - record: hsk_media:signed_availability:ratio_rate30m
+        expr: 1 - (sum(rate(hsk_media_signed_access_total{outcome=~"unavailable|provider_mismatch|integrity_error"}[30m])) / clamp_min(sum(rate(hsk_media_signed_access_total{outcome=~"success|unavailable|provider_mismatch|integrity_error"}[30m])), 0.000001))
+      - record: hsk_media:signed_availability:ratio_rate1h
+        expr: 1 - (sum(rate(hsk_media_signed_access_total{outcome=~"unavailable|provider_mismatch|integrity_error"}[1h])) / clamp_min(sum(rate(hsk_media_signed_access_total{outcome=~"success|unavailable|provider_mismatch|integrity_error"}[1h])), 0.000001))
+      - record: hsk_media:signed_availability:ratio_rate6h
+        expr: 1 - (sum(rate(hsk_media_signed_access_total{outcome=~"unavailable|provider_mismatch|integrity_error"}[6h])) / clamp_min(sum(rate(hsk_media_signed_access_total{outcome=~"success|unavailable|provider_mismatch|integrity_error"}[6h])), 0.000001))
+      - record: hsk_media:processing_duration_seconds:p95_rate5m
+        expr: histogram_quantile(0.95, sum by (le) (rate(hsk_media_processing_duration_seconds_bucket{outcome="success"}[5m])))
+      - record: hsk_media:ingestion_error_budget:burn_rate5m
+        expr: (1 - hsk_media:ingestion_availability:ratio_rate5m) / 0.005
+      - record: hsk_media:ingestion_error_budget:burn_rate30m
+        expr: (1 - hsk_media:ingestion_availability:ratio_rate30m) / 0.005
+      - record: hsk_media:ingestion_error_budget:burn_rate1h
+        expr: (1 - hsk_media:ingestion_availability:ratio_rate1h) / 0.005
+      - record: hsk_media:ingestion_error_budget:burn_rate6h
+        expr: (1 - hsk_media:ingestion_availability:ratio_rate6h) / 0.005
+      - record: hsk_media:signed_error_budget:burn_rate5m
+        expr: (1 - hsk_media:signed_availability:ratio_rate5m) / 0.001
+      - record: hsk_media:signed_error_budget:burn_rate30m
+        expr: (1 - hsk_media:signed_availability:ratio_rate30m) / 0.001
+      - record: hsk_media:signed_error_budget:burn_rate1h
+        expr: (1 - hsk_media:signed_availability:ratio_rate1h) / 0.001
+      - record: hsk_media:signed_error_budget:burn_rate6h
+        expr: (1 - hsk_media:signed_availability:ratio_rate6h) / 0.001
+
   - name: hsk-media-release
     rules:
       - alert: HskMediaCleanupBacklog
-        expr: hsk_media_cleanup_required > 0 and hsk_media_cleanup_oldest_age_seconds > 300
-        for: 10m
-        labels:
-          severity: page
-          owner: media-platform
+        expr: hsk_media:cleanup_required:max > 0 and hsk_media:cleanup_oldest_age_seconds:max > 300 and on() min(hsk_media_metrics_database_available) == 1
+        for: 1m
+        labels: { severity: page, owner: media-platform }
         annotations:
-          summary: Media object cleanup has not converged
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          summary: Media object cleanup exceeded its five-minute SLO
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaProcessingStuck
-        expr: hsk_media_stuck_processing > 0
-        for: 10m
-        labels:
-          severity: page
-          owner: media-platform
+        expr: hsk_media:stuck_processing:max > 0 and on() min(hsk_media_metrics_database_available) == 1
+        for: 1m
+        labels: { severity: page, owner: media-platform }
         annotations:
-          summary: Media ingestion is stuck beyond the 15-minute fence
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          summary: Media ingestion is stuck beyond the processing fence
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaScannerUnavailable
         expr: sum(increase(hsk_media_scanner_total{outcome="unavailable"}[10m])) > 2
         for: 5m
-        labels:
-          severity: page
-          owner: security-platform
+        labels: { severity: page, owner: security-platform }
         annotations:
           summary: Malware scanner is unavailable
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaScannerInvalidResponse
         expr: sum(increase(hsk_media_scanner_total{outcome="invalid_response"}[5m])) > 0
         for: 0m
-        labels:
-          severity: page
-          owner: security-platform
+        labels: { severity: page, owner: security-platform }
         annotations:
           summary: Malware scanner returned an invalid protocol response
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaStorageErrorSpike
         expr: sum(increase(hsk_media_storage_operations_total{outcome="error"}[10m])) > 5
         for: 5m
-        labels:
-          severity: ticket
-          owner: media-platform
+        labels: { severity: ticket, owner: media-platform }
         annotations:
           summary: Private object storage errors are elevated
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaIntegrityViolation
         expr: sum(increase(hsk_media_signed_access_total{outcome="integrity_error"}[5m])) > 0 or sum(increase(hsk_media_storage_operations_total{outcome=~"not_found|malformed_response|integrity_error"}[5m])) > 0
         for: 0m
-        labels:
-          severity: page
-          owner: media-platform
+        labels: { severity: page, owner: media-platform }
         annotations:
           summary: Media object integrity validation failed
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaCoherenceViolation
         expr: sum(increase(hsk_media_reconciliation_total{outcome="violation"}[5m])) > 0
         for: 0m
-        labels:
-          severity: page
-          owner: media-platform
+        labels: { severity: page, owner: media-platform }
         annotations:
           summary: Media database/object coherence verification failed
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          runbook_url: __MEDIA_RUNBOOK_URL__
       - alert: HskMediaReplicaScrapeFailure
-        expr: up{job="hsk-media-replicas"} == 0
-        for: 5m
-        labels:
-          severity: page
-          owner: platform-sre
+        expr: count(up{job="hsk-media-replicas"}) - sum(up{job="hsk-media-replicas"}) > 0
+        for: 4m
+        labels: { severity: page, owner: platform-sre }
         annotations:
-          summary: Prometheus cannot scrape a backend media replica
-          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+          summary: Prometheus cannot scrape one or more backend media replicas
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaReplicaTargetUnderMinimum
+        expr: hsk_media:replica_targets:count < 2
+        for: 4m
+        labels: { severity: page, owner: platform-sre }
+        annotations:
+          summary: Prometheus discovered fewer than two backend media replicas
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaMetricsDatabaseUnavailable
+        expr: (min(hsk_media_metrics_database_available) or vector(0)) < 1
+        for: 2m
+        labels: { severity: page, owner: platform-sre }
+        annotations:
+          summary: Media metrics collector cannot obtain a database snapshot
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaMetricsSnapshotStale
+        expr: max(hsk_media_metrics_database_snapshot_stale) > 0
+        for: 2m
+        labels: { severity: page, owner: platform-sre }
+        annotations:
+          summary: Media metrics collector snapshot is stale
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaIngestionFastBurn
+        expr: hsk_media:ingestion_error_budget:burn_rate1h > 14.4 and hsk_media:ingestion_error_budget:burn_rate5m > 14.4
+        for: 2m
+        labels:
+          { severity: page, owner: media-platform, slo: ingestion-availability }
+        annotations:
+          summary: Media ingestion is consuming its error budget rapidly
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaIngestionSlowBurn
+        expr: hsk_media:ingestion_error_budget:burn_rate6h > 6 and hsk_media:ingestion_error_budget:burn_rate30m > 6
+        for: 15m
+        labels:
+          {
+            severity: ticket,
+            owner: media-platform,
+            slo: ingestion-availability,
+          }
+        annotations:
+          summary: Media ingestion is consuming its error budget persistently
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaSignedContentFastBurn
+        expr: hsk_media:signed_error_budget:burn_rate1h > 14.4 and hsk_media:signed_error_budget:burn_rate5m > 14.4
+        for: 2m
+        labels:
+          {
+            severity: page,
+            owner: media-platform,
+            slo: signed-content-availability,
+          }
+        annotations:
+          summary: Signed media delivery is consuming its error budget rapidly
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaSignedContentSlowBurn
+        expr: hsk_media:signed_error_budget:burn_rate6h > 6 and hsk_media:signed_error_budget:burn_rate30m > 6
+        for: 15m
+        labels:
+          {
+            severity: ticket,
+            owner: media-platform,
+            slo: signed-content-availability,
+          }
+        annotations:
+          summary: Signed media delivery is consuming its error budget persistently
+          runbook_url: __MEDIA_RUNBOOK_URL__
+      - alert: HskMediaProcessingLatency
+        expr: hsk_media:processing_duration_seconds:p95_rate5m > 8
+        for: 5m
+        labels: { severity: ticket, owner: media-platform, slo: processing-p95 }
+        annotations:
+          summary: Media processing p95 exceeds eight seconds
+          runbook_url: __MEDIA_RUNBOOK_URL__

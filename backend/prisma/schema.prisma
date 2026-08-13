@@ -584,6 +584,8 @@ model MediaIngestion {
   attemptCount               Int                  @default(0)
   cleanupAttempts            Int                  @default(0)
   cleanupLastAttemptAt       DateTime?
+  /// First transition into cleanup_required. SQL sets it once and keeps it immutable across retries.
+  cleanupRequiredAt          DateTime?
   /// Immutable source provenance is populated and guarded by SQL triggers.
   sourceCodeSnapshot         String
   sourceVersionSnapshot      String
@@ -605,6 +607,8 @@ model MediaIngestion {
   @@index([actorId, startedAt])
   @@index([dataSourceId, startedAt])
   @@index([status, updatedAt])
+  @@index([status, cleanupRequiredAt])
+  @@index([status, processingStartedAt])
   @@index([checksum])
 }
 

@@ -16,6 +16,15 @@ media and source IDs plus all six source snapshot fields. Data/Content owner mus
 approve it from retained licensing evidence. Never manufacture the marker merely to
 pass preflight; unresolved history blocks deployment.
 
+Before migration 18, disable ingestion and quiesce every worker. In a restricted
+operator session, run count-only checks proving zero `processing` rows and audit the
+cleanup status/code/timestamp history; never print object keys, checksums, filenames,
+actor identity or other PII. Deploy migration 18 only after those counts and the
+immutable history agree. A `P0001` abort means preflight rejected inconsistent live
+state: the transaction rolls back and leaves the schema unchanged. Keep ingestion
+disabled, preserve the count-only evidence and reconcile forward; do not bypass the
+guard or edit migration bytes.
+
 Provisional beta objectives, measured over a rolling 28-day window after a seven-day
 staging observation period:
 
@@ -38,20 +47,42 @@ Neither branch may be inferred from attacker-controlled error text.
 
 1. Deploy with `MEDIA_INGESTION_ENABLED=false`. Metrics, signed reads and cleanup
    remain available.
-2. Validate `/api/v1/internal/metrics/media` through the private monitoring network
-   with the secret-managed bearer token. A rejected scrape must not echo the token.
+2. Validate exact `GET /metrics` on the dedicated private port 9464 through the
+   monitoring identity with the secret-managed bearer token. Confirm public edge
+   `/metrics` and the legacy metrics namespace both return 404. A rejected scrape
+   must not echo the token.
 3. Rehearse a disabled upload and expect safe `503 MEDIA_INGESTION_DISABLED`.
 4. Enable one staging replica, upload synthetic allowlisted fixtures, then expand.
 5. To stop new writes, set the flag false and roll/reload replicas. Do not disable
    cleanup: forward recovery must remain possible.
-6. Application rollback never rolls back migration 17 or deletes ingestion history.
+6. Application rollback never rolls back migrations 16–18 or deletes ingestion history.
 
-The public Nginx edge must exact-match the metrics path and return `404` before proxy.
+Prometheus and Alertmanager V1 deliberately use one replica, a `ReadWriteOnce` PVC
+and `Recreate` strategy until HA clustering/deduplication is designed. Expect a brief
+monitoring gap during replacement. Abort if either workload is not Ready within five
+minutes, a PVC does not bind, an alert delivery is lost, a scrape target disappears,
+or the real HTTPS runbook is unreachable. Roll back the image/config digest, retain
+the PVC, and keep ingestion disabled.
+
+The public Nginx edge must deny the complete `/metrics` and legacy metrics namespaces
+and return `404` before generic proxy.
 Prometheus uses the headless private service/NetworkPolicy and scrapes each backend
-replica directly. Do not point the job at a load balancer; production counts above
-the two-replica rehearsal use pod service discovery/relabeling. Rotate the bearer
-token by deploying current+previous overlap, moving every scrape target, verifying
-`up`, then removing the previous token. Authorization headers must not enter logs.
+replica directly. Do not point the job at a load balancer; any production replica
+count uses the validated pod service-discovery/relabeling contract. Bearer rotation
+must preserve overlap because Prometheus hot-refreshes projected `current`, while
+backend `current`/`previous` environment values change only on rollout:
+
+1. Keep `current=OLD`; stage `previous=NEW`, then roll every backend so it accepts
+   both tokens while Prometheus still sends OLD.
+2. Atomically swap to `current=NEW`, `previous=OLD`. Prometheus flips to NEW through
+   the projected file while the already-rolled backend accepts either token.
+3. Roll every backend again with `current=NEW`, `previous=OLD`; verify every `up`
+   target remains continuously healthy.
+4. Remove `previous`, retain `current=NEW`, roll once more, and verify every target.
+
+Abort and restore the preceding overlap phase on any scrape gap. Never overwrite
+`current` with NEW before a backend rollout accepts NEW as `previous`; this is not
+backend hot reload. Authorization headers must not enter logs.
 
 ## Cleanup and unknown PUT reconciliation
 
@@ -100,11 +131,49 @@ For `HskMediaCleanupBacklog` or `HskMediaProcessingStuck`:
 - Alerts: inject one synthetic counter/gauge condition per rule, verify routing,
   ownership and recovery notification. Retain sanitized outputs as CI/staging artifact.
 
-Run `cd backend && npm run test:ops:media`. It uses pinned versions/checksums from
-`ops/observability/media-toolchain.json`, a complete Nginx wrapper, promtool rule
-tests and a guarded loopback disposable Grafana import. Missing binaries/container
-runtime or Grafana identity is `BLOCKED_EXTERNAL`; static Jest artifact checks never
+Alert ownership: `media-platform` pages Media Platform, `platform-sre` pages SRE,
+and `security-platform` pages Security. A page unacknowledged for five minutes
+escalates to the incident commander; tickets enter the next business-day queue.
+Resolved notifications are mandatory evidence.
+
+Set `MEDIA_RUNBOOK_URL` to the real, credential-free HTTPS operator page and run
+`npm run render:ops:media` before applying the observability overlay. Deploy only
+the rendered directory; unresolved `__MEDIA_RUNBOOK_URL__` source markers are an
+abort condition. Run `cd backend && npm run test:ops:media`. It uses pinned
+versions/checksums from
+`ops/observability/media-toolchain.json`, a complete Nginx wrapper and promtool rule
+tests. Disposable Grafana must import and execute all panel queries before its gate
+can pass. Missing artifacts/network/runbook/provider is `BLOCKED_EXTERNAL`; static
+Jest artifact checks never
 upgrade that result to PASS.
+
+The observability overlay does not own the environment backend Deployment. Apply the
+reviewed patch without replacing its application readiness contract:
+
+```bash
+umask 077
+MEDIA_PATCH_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hsk-media-patch.XXXXXX")"
+trap 'rm -rf "$MEDIA_PATCH_DIR"' EXIT
+kubectl -n hsk get deployment hsk-backend -o yaml > "$MEDIA_PATCH_DIR/before.yml"
+kubectl patch --local --type=strategic \
+  -f "$MEDIA_PATCH_DIR/before.yml" \
+  --patch-file ops/observability/media-backend-deployment.patch.yml \
+  -o yaml > "$MEDIA_PATCH_DIR/preview.yml"
+diff -u "$MEDIA_PATCH_DIR/before.yml" "$MEDIA_PATCH_DIR/preview.yml"
+kubectl -n hsk patch deployment hsk-backend --type=strategic \
+  --patch-file ops/observability/media-backend-deployment.patch.yml
+kubectl -n hsk rollout status deployment/hsk-backend --timeout=5m
+```
+
+Before `apply`, review the diff and prove the pre-existing `/api/v1/health`
+readiness probe remains unchanged while the private `media-metrics` port, token
+secret refs, Istio injection and TCP startup probe are added. Abort on any unrelated
+diff, missing secret, failed app readiness or failed metrics startup. Restore the
+previous application revision with `kubectl -n hsk rollout undo
+deployment/hsk-backend` and wait for rollout only if the application rollout fails;
+keep migrations 16–18 and immutable facts forward-only. The trap removes the
+mode-0700 temporary directory; retain only a sanitized diff in the release evidence
+store and never attach the live Deployment object or Secret values.
 
 ## Current evidence status
 
@@ -114,24 +183,25 @@ production approval; absent credentials or endpoints means `BLOCKED_EXTERNAL`, n
 PASS.
 
 The 2026-08-13 observability/edge closeout added typed storage/scanner outcomes, one
-aggregate database query per scrape, direct two-replica topology, private metrics
+aggregate database query per scrape, replica-aware discovery topology, private metrics
 NetworkPolicy, exact credentialed CORS, API security headers, strong separated secret
 validation and bearer overlap rotation. Detailed matrices are in
-`MEDIA_OBSERVABILITY_EDGE_SECURITY_CLOSEOUT.md`. On this workstation
-`npm run test:ops:media` reports `BLOCKED_EXTERNAL` because Nginx, promtool and the
-Grafana CLI are absent; no live artifact or release PASS is claimed.
+`MEDIA_OBSERVABILITY_EDGE_SECURITY_CLOSEOUT.md`. Read the current sanitized JSON/
+JUnit evidence for actual per-validator status; this runbook does not copy an old
+tool inventory or claim a release PASS.
 
 The frozen migration 17 SHA-256 is
 `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`.
 Migration 16 remains byte-identical at
 `a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e`.
-On 2026-08-13, two independent fresh disposable databases deployed all 17
-migrations. The media integrity SQL passed and rolled back with zero ingestion rows;
-both live-database-to-datamodel and migration-history-to-datamodel drift checks
-reported no difference. The final catalog inventory was 60 tables, 147 foreign keys,
-512 catalog check rows and 61 trigger-event rows. Full backend E2E passed 11 suites
-and 160 tests; the no-database gate passed 45 suites and 411 tests; the production
-dependency audit reported zero vulnerabilities.
+Migration 18 is forward-only, carries stable lifecycle timestamps used by current
+cleanup/processing age metrics and is frozen at SHA-256
+`1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
+Current guarded evidence deployed all 18/18 migrations on a fresh disposable
+database. Media integrity acceptance passed and its transaction rollback left the
+database unchanged; both the live-database-to-datamodel and migration-history-to-
+datamodel drift checks were empty. Full backend E2E passed 11/11 suites and 160/160
+tests. The dual-lock `AuditLog`/`MediaIngestion` concurrency scenario was GREEN.
 
 Migration preflight rehearsals were fail-safe. A completed legacy row without an
 exact immutable provenance audit and a source with an ambiguous whitespace license

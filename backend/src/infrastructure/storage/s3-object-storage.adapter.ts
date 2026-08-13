@@ -82,13 +82,14 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
       );
     } catch (error: unknown) {
       throw new ObjectStorageError(
-        isS3NotFound(error) ? 'not_found' : 'unavailable',
+        isS3ObjectNotFound(error, 'get') ? 'not_found' : 'unavailable',
       );
     }
     if (
       !result.Body ||
       !result.ContentType ||
       result.ContentLength === undefined ||
+      !Number.isSafeInteger(result.ContentLength) ||
       result.ContentLength < 1
     ) {
       throw new ObjectStorageError('malformed_response');
@@ -100,7 +101,13 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
     if (!checksum || !/^[a-f0-9]{64}$/u.test(checksum)) {
       throw new ObjectStorageError('malformed_response');
     }
-    const body = await readBoundedBody(result.Body);
+    let body: Buffer;
+    try {
+      body = await readBoundedBody(result.Body);
+    } catch (error: unknown) {
+      if (error instanceof ObjectStorageError) throw error;
+      throw new ObjectStorageError('unavailable');
+    }
     if (
       body.length !== result.ContentLength ||
       createHash('sha256').update(body).digest('hex') !== checksum
@@ -123,7 +130,7 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
       );
       return true;
     } catch (error: unknown) {
-      if (isS3NotFound(error)) return false;
+      if (isS3ObjectNotFound(error, 'head')) return false;
       throw new ObjectStorageError('unavailable');
     }
   }
@@ -140,7 +147,10 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
   }
 }
 
-function isS3NotFound(error: unknown): boolean {
+function isS3ObjectNotFound(
+  error: unknown,
+  operation: 'get' | 'head',
+): boolean {
   if (!error || typeof error !== 'object') return false;
   const name = 'name' in error ? error.name : undefined;
   const metadata =
@@ -153,12 +163,8 @@ function isS3NotFound(error: unknown): boolean {
     metadata && 'httpStatusCode' in metadata
       ? metadata.httpStatusCode
       : undefined;
-  return (
-    name === 'NotFound' ||
-    name === 'NoSuchKey' ||
-    name === 'NoSuchObject' ||
-    statusCode === 404
-  );
+  if (statusCode !== 404) return false;
+  return name === 'NoSuchKey' || (operation === 'head' && name === 'NotFound');
 }
 
 async function readBoundedBody(body: unknown): Promise<Buffer> {

@@ -1,4 +1,62 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hsk-media-prometheus
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hsk-media-prometheus-discovery
+  namespace: hsk
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, watch]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: [endpointslices]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hsk-media-prometheus-discovery
+  namespace: hsk
+subjects:
+  - kind: ServiceAccount
+    name: hsk-media-prometheus
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hsk-media-prometheus-discovery
+---
+# Prometheus also discovers the Alertmanager EndpointSlice in its own namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hsk-media-alertmanager-discovery
+  namespace: monitoring
+rules:
+  - apiGroups: ["discovery.k8s.io"]
+    resources: [endpointslices]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hsk-media-alertmanager-discovery
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: hsk-media-prometheus
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hsk-media-alertmanager-discovery
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: hsk-backend-media-metrics
@@ -12,9 +70,9 @@ spec:
   selector:
     app.kubernetes.io/name: hsk-backend
   ports:
-    - name: metrics
-      port: 3000
-      targetPort: 3000
+    - name: media-metrics
+      port: 9464
+      targetPort: media-metrics
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -25,11 +83,8 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/name: hsk-backend
-  policyTypes:
-    - Ingress
+  policyTypes: [Ingress]
   ingress:
-    # Normal application ingress remains reachable from the trusted edge. The
-    # Nginx exact matcher denies the metrics path before proxying it.
     - from:
         - namespaceSelector:
             matchLabels:
@@ -40,8 +95,6 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
-    # The monitoring identity reaches each selected pod through the headless
-    # service and still needs the rotated application bearer token.
     - from:
         - namespaceSelector:
             matchLabels:
@@ -51,4 +104,277 @@ spec:
               app.kubernetes.io/name: prometheus
       ports:
         - protocol: TCP
-          port: 3000
+          port: 9464
+---
+# Istio peer authentication is the executable encryption contract for both the
+# media metrics scrape and Prometheus-to-Alertmanager traffic. Deployments without
+# Istio must supply an equivalent mTLS policy and update the validation harness.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: hsk-backend-media-metrics-strict-mtls
+  namespace: hsk
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-backend
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: hsk-backend-media-metrics-principal
+  namespace: hsk
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-backend
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/monitoring/sa/hsk-media-prometheus
+      to:
+        - operation:
+            ports: ["9464"]
+            methods: [GET]
+            paths: [/metrics]
+    - from:
+        - source:
+            namespaces: [hsk-edge]
+      to:
+        - operation:
+            ports: ["3000"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hsk-media-alertmanager
+  namespace: monitoring
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsk-media-prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prometheus
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: hsk-media-prometheus
+      containers:
+        - name: prometheus
+          image: quay.io/prometheus/prometheus@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+          ports:
+            - name: web
+              containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+              readOnly: true
+            - name: media-metrics-token
+              mountPath: /run/secrets
+              readOnly: true
+            - name: data
+              mountPath: /prometheus
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: web
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: web
+            periodSeconds: 10
+            timeoutSeconds: 2
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
+      volumes:
+        - name: config
+          configMap:
+            name: hsk-media-prometheus
+        - name: media-metrics-token
+          projected:
+            defaultMode: 256
+            sources:
+              - secret:
+                  name: hsk-media-metrics-token
+                  items:
+                    - key: current
+                      path: hsk_media_metrics_token
+                  optional: false
+        - name: data
+          persistentVolumeClaim:
+            claimName: hsk-media-prometheus-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hsk-media-prometheus-data
+  namespace: monitoring
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hsk-media-alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    app.kubernetes.io/name: hsk-media-alertmanager
+  ports:
+    - name: web
+      port: 9093
+      targetPort: web
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hsk-media-alertmanager-private
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-alertmanager
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 9093
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsk-media-alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-alertmanager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hsk-media-alertmanager
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: hsk-media-alertmanager
+      containers:
+        - name: alertmanager
+          image: quay.io/prometheus/alertmanager@sha256:2b48d20267cc7ddac7063d89f2c4980b64d543c0a4f29b7edaffb9af79203bae
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+          ports:
+            - name: web
+              containerPort: 9093
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: web
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: web
+            periodSeconds: 10
+            timeoutSeconds: 2
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+              readOnly: true
+            - name: notification-secret
+              mountPath: /run/secrets/hsk-alertmanager
+              readOnly: true
+            - name: data
+              mountPath: /alertmanager
+      volumes:
+        - name: config
+          configMap:
+            name: hsk-media-alertmanager
+        - name: notification-secret
+          projected:
+            defaultMode: 256
+            sources:
+              - secret:
+                  name: hsk-media-alertmanager-webhook
+                  optional: false
+        - name: data
+          persistentVolumeClaim:
+            claimName: hsk-media-alertmanager-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hsk-media-alertmanager-data
+  namespace: monitoring
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: hsk-media-alertmanager-strict-mtls
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-alertmanager
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: hsk-media-alertmanager-principal
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-alertmanager
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/monitoring/sa/hsk-media-prometheus
+      to:
+        - operation:
+            ports: ["9093"]

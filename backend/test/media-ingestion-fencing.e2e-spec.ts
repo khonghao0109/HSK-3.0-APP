@@ -19,6 +19,7 @@ import type {
   StoredObject,
 } from '../src/infrastructure/storage/object-storage.port';
 import { ObjectStorageWriteError } from '../src/infrastructure/storage/object-storage.port';
+import { MediaObservabilityService } from '../src/infrastructure/observability/media-observability.service';
 import { MediaFileProcessor } from '../src/modules/cms/media-ingestion/media-file.processor';
 import { MediaIngestionService } from '../src/modules/cms/media-ingestion/media-ingestion.service';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -37,7 +38,7 @@ describe('Media ingestion stale-attempt fencing', () => {
     await prisma.$disconnect();
   });
 
-  it('refuses an expired automatic takeover and preserves the winning object', async () => {
+  it('refuses automatic takeover and preserves the winning object', async () => {
     const { actor, file, key, service, source, storage } =
       await createFixture();
 
@@ -51,11 +52,6 @@ describe('Media ingestion stale-attempt fencing', () => {
       where: { actorId: actor.id },
       select: { id: true, processingToken: true },
     });
-    await prisma.mediaIngestion.update({
-      where: { id: ingestion.id },
-      data: { processingStartedAt: new Date('2000-01-01T00:00:00.000Z') },
-    });
-
     const attemptB = await settle(
       service.ingest(actor, file, source.id, key, {
         correlationId: randomUUID(),
@@ -146,7 +142,7 @@ describe('Media ingestion stale-attempt fencing', () => {
       where: { id: claimedByA.id },
       data: {
         status: 'cleanup_required',
-        failureCode: 'OPERATOR_RECOVERY_TEST',
+        failureCode: 'OBJECT_CLEANUP_REQUIRED',
       },
     });
     const attemptB = await settle(
@@ -857,8 +853,9 @@ describe('Media ingestion stale-attempt fencing', () => {
         storageProvider: lateStorage.provider,
       },
       orderBy: { id: 'desc' },
-      select: { id: true },
+      select: { id: true, cleanupRequiredAt: true },
     });
+    expect(ingestion.cleanupRequiredAt).toBeInstanceOf(Date);
 
     const firstCleanup = await service.retryCleanup(
       fixture.actor,
@@ -876,16 +873,18 @@ describe('Media ingestion stale-attempt fencing', () => {
     const states = await prisma.$queryRaw<
       Array<{
         cleanupAbsentObservedAt: Date | null;
+        cleanupRequiredAt: Date | null;
         failureCode: string | null;
         status: string;
       }>
     >(Prisma.sql`
-      SELECT "cleanupAbsentObservedAt", "failureCode", status::text
+      SELECT "cleanupAbsentObservedAt", "cleanupRequiredAt", "failureCode", status::text
       FROM "MediaIngestion"
       WHERE id = ${ingestion.id}
     `);
     expect(states[0]).toMatchObject({
       cleanupAbsentObservedAt: expect.any(Date),
+      cleanupRequiredAt: ingestion.cleanupRequiredAt,
       failureCode: 'OBJECT_CLEANUP_SETTLING',
       status: 'cleanup_required',
     });
@@ -901,6 +900,15 @@ describe('Media ingestion stale-attempt fencing', () => {
     });
     expect(lateStorage.deleteCount).toBe(2);
     expect(lateStorage.count()).toBe(0);
+    await expect(
+      prisma.mediaIngestion.findUniqueOrThrow({
+        where: { id: ingestion.id },
+        select: { cleanupRequiredAt: true },
+      }),
+    ).resolves.toEqual({ cleanupRequiredAt: ingestion.cleanupRequiredAt });
+    await expect(
+      new MediaObservabilityService(prisma).render(),
+    ).resolves.toMatch(/hsk_media_cleanup_required [1-9]\d*/u);
 
     await ageCleanupObservation(ingestion.id);
     await expect(
@@ -1027,7 +1035,6 @@ describe('Media ingestion stale-attempt fencing', () => {
         storageProvider: fixture.storage.provider,
         storageKey,
         failureCode: 'OBJECT_CLEANUP_REQUIRED',
-        processingStartedAt: new Date(),
         processingToken: randomUUID(),
         attemptCount: 1,
         sourceCodeSnapshot: fixture.source.code,

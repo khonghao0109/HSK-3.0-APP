@@ -1,0 +1,84 @@
+# TYPE hsk_media_ingestion_started_total counter
+# HELP hsk_media_ingestion_started_total Total media ingestion requests accepted for processing.
+hsk_media_ingestion_started_total 100
+# TYPE hsk_media_ingestion_requests_total counter
+# HELP hsk_media_ingestion_requests_total Terminal media ingestion outcomes.
+hsk_media_ingestion_requests_total{outcome="success"} 98
+hsk_media_ingestion_requests_total{outcome="rejected"} 1
+hsk_media_ingestion_requests_total{outcome="failed"} 1
+hsk_media_ingestion_requests_total{outcome="cleanup_required"} 0
+# TYPE hsk_media_processing_duration_seconds histogram
+# HELP hsk_media_processing_duration_seconds End-to-end media processing duration.
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="0.1"} 5
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="0.25"} 20
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="0.5"} 40
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="1"} 70
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="2.5"} 90
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="5"} 95
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="10"} 98
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="30"} 98
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="60"} 98
+hsk_media_processing_duration_seconds_bucket{outcome="success",le="+Inf"} 98
+hsk_media_processing_duration_seconds_sum{outcome="success"} 180
+hsk_media_processing_duration_seconds_count{outcome="success"} 98
+# TYPE hsk_media_signed_access_total counter
+# HELP hsk_media_signed_access_total Signed media delivery outcomes.
+hsk_media_signed_access_total{outcome="success"} 999
+hsk_media_signed_access_total{outcome="invalid_grant"} 1
+hsk_media_signed_access_total{outcome="unavailable"} 1
+hsk_media_signed_access_total{outcome="provider_mismatch"} 0
+hsk_media_signed_access_total{outcome="integrity_error"} 0
+# TYPE hsk_media_cleanup_required gauge
+# HELP hsk_media_cleanup_required Cleanup-required ingestion rows.
+hsk_media_cleanup_required 0
+# TYPE hsk_media_cleanup_oldest_age_seconds gauge
+# HELP hsk_media_cleanup_oldest_age_seconds Age of the oldest cleanup-required ingestion.
+hsk_media_cleanup_oldest_age_seconds 0
+# TYPE hsk_media_stuck_processing gauge
+# HELP hsk_media_stuck_processing Processing ingestion rows beyond the fence.
+hsk_media_stuck_processing 0
+# TYPE hsk_media_processing_oldest_age_seconds gauge
+# HELP hsk_media_processing_oldest_age_seconds Age of the oldest stuck processing ingestion.
+hsk_media_processing_oldest_age_seconds 0
+# TYPE hsk_media_metrics_database_available gauge
+# HELP hsk_media_metrics_database_available Whether the database-backed metrics snapshot is available.
+hsk_media_metrics_database_available 1
+# TYPE hsk_media_metrics_database_snapshot_stale gauge
+# HELP hsk_media_metrics_database_snapshot_stale Whether the rendered database metrics snapshot is stale.
+hsk_media_metrics_database_snapshot_stale 0
+# TYPE hsk_media_metrics_database_cache_age_seconds gauge
+# HELP hsk_media_metrics_database_cache_age_seconds Age of the database-backed metrics cache.
+hsk_media_metrics_database_cache_age_seconds 0
+# TYPE hsk_media_scanner_total counter
+# HELP hsk_media_scanner_total Malware scanner outcomes.
+hsk_media_scanner_total{outcome="success"} 98
+hsk_media_scanner_total{outcome="malware"} 1
+hsk_media_scanner_total{outcome="unavailable"} 0
+hsk_media_scanner_total{outcome="invalid_response"} 0
+# TYPE hsk_media_scanner_latency_seconds summary
+# HELP hsk_media_scanner_latency_seconds Malware scanner latency accumulator.
+hsk_media_scanner_latency_seconds_sum{outcome="success"} 50
+hsk_media_scanner_latency_seconds_count{outcome="success"} 100
+# TYPE hsk_media_storage_operations_total counter
+# HELP hsk_media_storage_operations_total Private object storage operation outcomes.
+hsk_media_storage_operations_total{operation="put",outcome="success"} 100
+hsk_media_storage_operations_total{operation="get",outcome="success"} 100
+hsk_media_storage_operations_total{operation="head",outcome="success"} 100
+hsk_media_storage_operations_total{operation="delete",outcome="success"} 10
+hsk_media_storage_operations_total{operation="verify",outcome="success"} 10
+# TYPE hsk_media_storage_latency_seconds summary
+# HELP hsk_media_storage_latency_seconds Private object storage latency accumulator.
+hsk_media_storage_latency_seconds_sum{operation="put",outcome="success"} 20
+hsk_media_storage_latency_seconds_count{operation="put",outcome="success"} 100
+hsk_media_storage_latency_seconds_sum{operation="get",outcome="success"} 10
+hsk_media_storage_latency_seconds_count{operation="get",outcome="success"} 100
+hsk_media_storage_latency_seconds_sum{operation="head",outcome="success"} 5
+hsk_media_storage_latency_seconds_count{operation="head",outcome="success"} 100
+hsk_media_storage_latency_seconds_sum{operation="delete",outcome="success"} 2
+hsk_media_storage_latency_seconds_count{operation="delete",outcome="success"} 10
+hsk_media_storage_latency_seconds_sum{operation="verify",outcome="success"} 2
+hsk_media_storage_latency_seconds_count{operation="verify",outcome="success"} 10
+# TYPE hsk_media_reconciliation_total counter
+# HELP hsk_media_reconciliation_total Database/object reconciliation outcomes.
+hsk_media_reconciliation_total{outcome="coherent"} 100
+hsk_media_reconciliation_total{outcome="violation"} 0

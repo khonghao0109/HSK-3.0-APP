@@ -1,20 +1,292 @@
 {
-  "nginx": {
-    "version": "1.30.4",
-    "source": "https://nginx.org/en/download.html",
-    "artifact": "https://nginx.org/download/nginx-1.30.4.tar.gz",
-    "sha256": "4261dc90e9e47c1c4041276e9aaa3d48ebe2e664f728e14fa95ae6c67d57a08b"
+  "schemaVersion": 2,
+  "schemaBundles": {
+    "kubernetes-core": {
+      "version": "1.33.3",
+      "files": [
+        {
+          "name": "serviceaccount-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/serviceaccount-v1.json",
+          "sha256": "8193d6c3561475c6d3d5c44e1faedb1df53905373d904bc17015694326d659cf"
+        },
+        {
+          "name": "role-rbac-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/role-rbac-v1.json",
+          "sha256": "dfe8fb03b1642f985b57b12edd1727b6867c13ed4b6761ef81bdd51b1d236711"
+        },
+        {
+          "name": "rolebinding-rbac-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/rolebinding-rbac-v1.json",
+          "sha256": "87ab620d0adddcd2803b92357fce2854af752326df8c5408a7588aae98b3031d"
+        },
+        {
+          "name": "service-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/service-v1.json",
+          "sha256": "8bf019854daed511e7c174896a898173fa65d88ec5937c687a37303d4cc9351b"
+        },
+        {
+          "name": "networkpolicy-networking-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/networkpolicy-networking-v1.json",
+          "sha256": "68f66caa6cb28841e7ab6b2b1cf5ac56085d50730a3813e538dd9204529b5b04"
+        },
+        {
+          "name": "deployment-apps-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/deployment-apps-v1.json",
+          "sha256": "8a4163cd36194edf94abdedff96b5bd8f612f76818a2a3767b35d1c72b8a7868"
+        },
+        {
+          "name": "persistentvolumeclaim-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/persistentvolumeclaim-v1.json",
+          "sha256": "80c8a28ccf546b79da8efe17f91c4a70ab047b4ccbc68c3b8543aa92d30cc5af"
+        },
+        {
+          "name": "configmap-v1.json",
+          "artifact": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/c8f4e61c63bc529749125ac566bccc6986e08d45/v1.33.3-standalone-strict/configmap-v1.json",
+          "sha256": "e0eaddebd677c08aa092b2da2264d86ac4fc34eed112b9fac2945b3f00c1e9b1"
+        }
+      ]
+    }
   },
-  "prometheus": {
-    "version": "3.13.2",
-    "source": "https://github.com/prometheus/prometheus/releases/tag/v3.13.2",
-    "artifact": "https://github.com/prometheus/prometheus/releases/download/v3.13.2/prometheus-3.13.2.linux-amd64.tar.gz",
-    "sha256": "0e8c4d46101bd025ea8265e377d2caabc57f488fc1be1c367f37db69ea41be6f"
-  },
-  "grafana": {
-    "version": "13.1.3",
-    "source": "https://github.com/grafana/grafana/releases/tag/v13.1.3",
-    "artifact": "https://dl.grafana.com/oss/release/grafana-13.1.3.linux-amd64.tar.gz",
-    "sha256": "e0fd22aa63901ebc961ee64195da60eef8624a831683ca10b26c7b068082e92b"
+  "tools": {
+    "istioctl": {
+      "version": "1.30.3",
+      "probe": { "args": ["version", "--remote=false"], "parser": "istioctl" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/istio/istio/releases/download/1.30.3/istioctl-1.30.3-osx-arm64.tar.gz",
+          "sha256": "b52f492e6c2306c9d209d2a30534e546c63f2623d6c150f0153c566c819299f0",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "istioctl"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/istio/istio/releases/download/1.30.3/istioctl-1.30.3-linux-amd64.tar.gz",
+          "sha256": "7b8559fb0a91466a3ff726ad291bedbcf5e4a24f1d9108dbe51a99e11f2010c8",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "istioctl"
+        }
+      ]
+    },
+    "pcre2": {
+      "version": "10.46",
+      "probe": { "args": ["--version"], "parser": "pcre2" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.gz",
+          "sha256": "8d28d7f2c3b970c3a4bf3776bcbb5adfc923183ce74bc8df1ebaad8c1985bd07",
+          "archive": "tar.gz",
+          "archiveRoot": "pcre2-10.46",
+          "executable": "pcre2-config"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.gz",
+          "sha256": "8d28d7f2c3b970c3a4bf3776bcbb5adfc923183ce74bc8df1ebaad8c1985bd07",
+          "archive": "tar.gz",
+          "archiveRoot": "pcre2-10.46",
+          "executable": "pcre2-config"
+        }
+      ]
+    },
+    "nginx": {
+      "version": "1.30.4",
+      "probe": { "args": ["-v"], "parser": "nginx" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://nginx.org/download/nginx-1.30.4.tar.gz",
+          "sha256": "4261dc90e9e47c1c4041276e9aaa3d48ebe2e664f728e14fa95ae6c67d57a08b",
+          "archive": "tar.gz",
+          "archiveRoot": "nginx-1.30.4",
+          "executable": "objs/nginx"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://nginx.org/download/nginx-1.30.4.tar.gz",
+          "sha256": "4261dc90e9e47c1c4041276e9aaa3d48ebe2e664f728e14fa95ae6c67d57a08b",
+          "archive": "tar.gz",
+          "archiveRoot": "nginx-1.30.4",
+          "executable": "objs/nginx"
+        }
+      ]
+    },
+    "prometheus": {
+      "version": "3.13.2",
+      "probe": { "args": ["--version"], "parser": "prometheus" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/prometheus/prometheus/releases/download/v3.13.2/prometheus-3.13.2.darwin-arm64.tar.gz",
+          "sha256": "f68ca4f1dbedd6366bbfdd8ac5d2c0b7ba1f273474acc8d38eb33202fbeec7a4",
+          "archive": "tar.gz",
+          "archiveRoot": "prometheus-3.13.2.darwin-arm64",
+          "executable": "prometheus"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/prometheus/prometheus/releases/download/v3.13.2/prometheus-3.13.2.linux-amd64.tar.gz",
+          "sha256": "0e8c4d46101bd025ea8265e377d2caabc57f488fc1be1c367f37db69ea41be6f",
+          "archive": "tar.gz",
+          "archiveRoot": "prometheus-3.13.2.linux-amd64",
+          "executable": "prometheus"
+        }
+      ]
+    },
+    "promtool": {
+      "version": "3.13.2",
+      "probe": { "args": ["--version"], "parser": "promtool" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/prometheus/prometheus/releases/download/v3.13.2/prometheus-3.13.2.darwin-arm64.tar.gz",
+          "sha256": "f68ca4f1dbedd6366bbfdd8ac5d2c0b7ba1f273474acc8d38eb33202fbeec7a4",
+          "archive": "tar.gz",
+          "archiveRoot": "prometheus-3.13.2.darwin-arm64",
+          "executable": "promtool"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/prometheus/prometheus/releases/download/v3.13.2/prometheus-3.13.2.linux-amd64.tar.gz",
+          "sha256": "0e8c4d46101bd025ea8265e377d2caabc57f488fc1be1c367f37db69ea41be6f",
+          "archive": "tar.gz",
+          "archiveRoot": "prometheus-3.13.2.linux-amd64",
+          "executable": "promtool"
+        }
+      ]
+    },
+    "alertmanager": {
+      "version": "0.33.1",
+      "probe": { "args": ["--version"], "parser": "alertmanager" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/prometheus/alertmanager/releases/download/v0.33.1/alertmanager-0.33.1.darwin-arm64.tar.gz",
+          "sha256": "a94fbe54029aefdf6e9d09db787cd6b7c77da55689990b854a90c57460e63a13",
+          "archive": "tar.gz",
+          "archiveRoot": "alertmanager-0.33.1.darwin-arm64",
+          "executable": "alertmanager"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/prometheus/alertmanager/releases/download/v0.33.1/alertmanager-0.33.1.linux-amd64.tar.gz",
+          "sha256": "93d802cba6a8d27239d747ce117df7648d326ab67394e32247540b030e9842ba",
+          "archive": "tar.gz",
+          "archiveRoot": "alertmanager-0.33.1.linux-amd64",
+          "executable": "alertmanager"
+        }
+      ]
+    },
+    "amtool": {
+      "version": "0.33.1",
+      "probe": { "args": ["--version"], "parser": "amtool" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/prometheus/alertmanager/releases/download/v0.33.1/alertmanager-0.33.1.darwin-arm64.tar.gz",
+          "sha256": "a94fbe54029aefdf6e9d09db787cd6b7c77da55689990b854a90c57460e63a13",
+          "archive": "tar.gz",
+          "archiveRoot": "alertmanager-0.33.1.darwin-arm64",
+          "executable": "amtool"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/prometheus/alertmanager/releases/download/v0.33.1/alertmanager-0.33.1.linux-amd64.tar.gz",
+          "sha256": "93d802cba6a8d27239d747ce117df7648d326ab67394e32247540b030e9842ba",
+          "archive": "tar.gz",
+          "archiveRoot": "alertmanager-0.33.1.linux-amd64",
+          "executable": "amtool"
+        }
+      ]
+    },
+    "grafana": {
+      "version": "13.1.3",
+      "probe": { "args": ["server", "-v"], "parser": "grafana" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://dl.grafana.com/grafana/release/13.1.3/grafana_13.1.3_31135815010_darwin_arm64.tar.gz",
+          "sha256": "cbd4fc856fa5817a7fbc141d1e11cb1d79ca21cea15294cd32d9c82a666d382a",
+          "archive": "tar.gz",
+          "archiveRoot": "grafana-13.1.3",
+          "executable": "bin/grafana"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://dl.grafana.com/grafana/release/13.1.3/grafana_13.1.3_31135815010_linux_amd64.tar.gz",
+          "sha256": "e0fd22aa63901ebc961ee64195da60eef8624a831683ca10b26c7b068082e92b",
+          "archive": "tar.gz",
+          "archiveRoot": "grafana-13.1.3",
+          "executable": "bin/grafana"
+        }
+      ]
+    },
+    "kubectl": {
+      "version": "1.33.3",
+      "probe": { "args": ["version", "--client"], "parser": "kubectl" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://dl.k8s.io/release/v1.33.3/bin/darwin/arm64/kubectl",
+          "sha256": "3de173356753bacb215e6dc7333f896b7f6ab70479362146c6acca6e608b3f53",
+          "archive": "raw",
+          "archiveRoot": ".",
+          "executable": "kubectl"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://dl.k8s.io/release/v1.33.3/bin/linux/amd64/kubectl",
+          "sha256": "fcf65c64f352742dc253a25a7c95617c2aba79843d1b74e585c69fe4884afb0c",
+          "archive": "raw",
+          "archiveRoot": ".",
+          "executable": "kubectl"
+        }
+      ]
+    },
+    "kubeconform": {
+      "version": "0.7.0",
+      "probe": { "args": ["-v"], "parser": "kubeconform" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-darwin-arm64.tar.gz",
+          "sha256": "b5d32b2cb77f9c781c976b20a85e2d0bc8f9184d5d1cfe665a2f31a19f99eeb9",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "kubeconform"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz",
+          "sha256": "c31518ddd122663b3f3aa874cfe8178cb0988de944f29c74a0b9260920d115d3",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "kubeconform"
+        }
+      ]
+    }
   }
 }

@@ -18,5 +18,17 @@ export default () => ({
           : undefined),
       process.env.MEDIA_METRICS_BEARER_TOKEN_PREVIOUS,
     ].filter((value): value is string => value !== undefined),
+    metricsHost: process.env.MEDIA_METRICS_HOST ?? '127.0.0.1',
+    metricsPort: Number(process.env.MEDIA_METRICS_PORT ?? '9464'),
+    metricsDatabaseStatementTimeoutMs: Number(
+      process.env.MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS ?? '750',
+    ),
+    metricsCollectionTimeoutMs: Number(
+      process.env.MEDIA_METRICS_COLLECTION_TIMEOUT_MS ?? '1000',
+    ),
+    metricsCacheTtlMs: Number(process.env.MEDIA_METRICS_CACHE_TTL_MS ?? '5000'),
+    metricsStaleTtlMs: Number(
+      process.env.MEDIA_METRICS_STALE_TTL_MS ?? '60000',
+    ),
   },
 });

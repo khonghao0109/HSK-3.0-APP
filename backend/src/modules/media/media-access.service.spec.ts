@@ -9,11 +9,50 @@ import { createHash } from 'node:crypto';
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
 import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
-import { createMediaAccessSignature } from './media-access-signature';
+import {
+  createMediaAccessSignature,
+  verifyMediaAccessSignature,
+} from './media-access-signature';
 import { MediaAccessService } from './media-access.service';
 
 describe('MediaAccessService storage-provider affinity', () => {
   const signingSecret = 's'.repeat(48);
+  const canonicalRequestTarget = {
+    method: 'GET',
+    path: '/api/v1/media/41/content',
+  };
+  const canonicalSignatureTarget = {
+    method: canonicalRequestTarget.method,
+    resource: canonicalRequestTarget.path,
+  };
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('issues a grant bound to the canonical GET content resource', async () => {
+    const { service } = createFixture('s3', 's3');
+    jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+
+    const result = await service.createAccess({ id: 7, role: 'admin' }, 41);
+    const url = new URL(result.data.url, 'https://app.example.test');
+    const expiresAt = Number(url.searchParams.get('expires'));
+    const signature = url.searchParams.get('signature') ?? '';
+
+    expect(url.pathname).toBe(canonicalRequestTarget.path);
+    expect(expiresAt).toBe(1_700_000_300);
+    expect(
+      verifyMediaAccessSignature(
+        {
+          mediaId: 41,
+          expiresAt,
+          checksum: 'a'.repeat(64),
+          signature,
+          secret: signingSecret,
+          ...canonicalSignatureTarget,
+        },
+        1_700_000_000,
+      ),
+    ).toBe(true);
+  });
 
   it.each([
     ['memory-test', 's3'],
@@ -31,6 +70,39 @@ describe('MediaAccessService storage-provider affinity', () => {
         service.createAccess({ id: 7, role: 'admin' }, 41),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(prisma.media.findUnique).toHaveBeenCalledTimes(1);
+      expect(storage.getPrivateObject).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['HEAD method', { method: 'HEAD', path: '/api/v1/media/41/content' }],
+    ['trailing slash', { method: 'GET', path: '/api/v1/media/41/content/' }],
+    ['mixed case', { method: 'GET', path: '/API/v1/media/41/content' }],
+    ['duplicate slash', { method: 'GET', path: '/api/v1/media//41/content' }],
+    [
+      'path parameter',
+      { method: 'GET', path: '/api/v1/media/41/content;download' },
+    ],
+    [
+      'encoded separator',
+      { method: 'GET', path: '/api/v1/media%2F41/content' },
+    ],
+  ])(
+    'rejects a canonical GET signature reused with %s before object I/O',
+    async (_, requestTarget) => {
+      const { service, storage } = createFixture('s3', 's3');
+      const expiresAt = Math.floor(Date.now() / 1000) + 60;
+      const signature = createMediaAccessSignature({
+        mediaId: 41,
+        expiresAt,
+        checksum: 'a'.repeat(64),
+        secret: signingSecret,
+        ...canonicalSignatureTarget,
+      });
+
+      await expect(
+        service.readSignedObject(41, expiresAt, signature, requestTarget),
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(storage.getPrivateObject).not.toHaveBeenCalled();
     },
   );
@@ -59,10 +131,16 @@ describe('MediaAccessService storage-provider affinity', () => {
         expiresAt,
         checksum: 'a'.repeat(64),
         secret: signingSecret,
+        ...canonicalSignatureTarget,
       });
 
       await expect(
-        service.readSignedObject(41, expiresAt, signature),
+        service.readSignedObject(
+          41,
+          expiresAt,
+          signature,
+          canonicalRequestTarget,
+        ),
       ).rejects.toBeInstanceOf(ServiceUnavailableException);
       expect(metrics.recordStorage).toHaveBeenCalledWith(
         'get',
@@ -97,10 +175,16 @@ describe('MediaAccessService storage-provider affinity', () => {
       expiresAt,
       checksum: 'a'.repeat(64),
       secret: signingSecret,
+      ...canonicalSignatureTarget,
     });
 
     await expect(
-      service.readSignedObject(41, expiresAt, signature),
+      service.readSignedObject(
+        41,
+        expiresAt,
+        signature,
+        canonicalRequestTarget,
+      ),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(metrics.recordStorage).toHaveBeenCalledWith(
       'get',
@@ -129,10 +213,16 @@ describe('MediaAccessService storage-provider affinity', () => {
       expiresAt,
       checksum: 'a'.repeat(64),
       secret: signingSecret,
+      ...canonicalSignatureTarget,
     });
 
     await expect(
-      service.readSignedObject(41, expiresAt, signature),
+      service.readSignedObject(
+        41,
+        expiresAt,
+        signature,
+        canonicalRequestTarget,
+      ),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(metrics.recordStorage).toHaveBeenCalledWith(
       'get',
@@ -172,10 +262,16 @@ describe('MediaAccessService storage-provider affinity', () => {
       expiresAt,
       checksum,
       secret: signingSecret,
+      ...canonicalSignatureTarget,
     });
 
     await expect(
-      service.readSignedObject(41, expiresAt, signature),
+      service.readSignedObject(
+        41,
+        expiresAt,
+        signature,
+        canonicalRequestTarget,
+      ),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(metrics.recordSignedAccess).toHaveBeenCalledWith('integrity_error');
     expect(metrics.recordReconciliation).toHaveBeenCalledWith('violation');
@@ -222,10 +318,16 @@ describe('MediaAccessService storage-provider affinity', () => {
         expiresAt,
         checksum: 'a'.repeat(64),
         secret: signingSecret,
+        ...canonicalSignatureTarget,
       });
 
       await expect(
-        service.readSignedObject(41, expiresAt, signature),
+        service.readSignedObject(
+          41,
+          expiresAt,
+          signature,
+          canonicalRequestTarget,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
       expect(storage.getPrivateObject).not.toHaveBeenCalled();
     },

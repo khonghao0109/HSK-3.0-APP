@@ -97,7 +97,14 @@ export class MediaIngestionService {
         idempotencyHeader,
         context,
       );
-      this.metrics?.recordIngestion('success', Date.now() - startedAt);
+      if (response.data.idempotent) {
+        // A completed replay validates persisted state but performs no media
+        // processing. Count its successful request without biasing processing
+        // latency SLOs toward the much faster replay path.
+        this.metrics?.recordIngestion('success');
+      } else {
+        this.metrics?.recordIngestion('success', Date.now() - startedAt);
+      }
       return response;
     } catch (error: unknown) {
       this.metrics?.recordIngestion(
@@ -385,7 +392,6 @@ export class MediaIngestionService {
     const cleanupToken = randomUUID();
     let claim: MediaIngestion & { storageKey: string };
     let objectWasPresent: boolean;
-    let objectRemains: boolean;
     try {
       claim = await this.claimCleanup(actor.id, ingestionId, cleanupToken);
     } catch (error: unknown) {
@@ -412,40 +418,28 @@ export class MediaIngestionService {
       }
     }
 
+    if (!(await this.ownsProcessingAttempt(claim.id, claim.processingToken))) {
+      throw new ConflictException('Media ingestion cleanup ownership changed.');
+    }
+
     try {
-      if (
-        !(await this.ownsProcessingAttempt(claim.id, claim.processingToken))
-      ) {
-        throw new ConflictException(
-          'Media ingestion cleanup ownership changed.',
+      objectWasPresent = await this.observeStorageOperation('head', () =>
+        this.storage.privateObjectExists(claim.storageKey),
+      );
+      await this.observeStorageOperation('delete', () =>
+        this.storage.deletePrivateObject(claim.storageKey),
+      );
+      await this.observeStorageOperation('verify', async () => {
+        const remains = await this.storage.privateObjectExists(
+          claim.storageKey,
         );
-      }
-      const headStartedAt = Date.now();
-      objectWasPresent = await this.storage.privateObjectExists(
-        claim.storageKey,
-      );
-      this.metrics?.recordStorage(
-        'head',
-        'success',
-        Date.now() - headStartedAt,
-      );
-      const deleteStartedAt = Date.now();
-      await this.storage.deletePrivateObject(claim.storageKey);
-      this.metrics?.recordStorage(
-        'delete',
-        'success',
-        Date.now() - deleteStartedAt,
-      );
-      const verifyStartedAt = Date.now();
-      objectRemains = await this.storage.privateObjectExists(claim.storageKey);
-      this.metrics?.recordStorage(
-        'head',
-        'success',
-        Date.now() - verifyStartedAt,
-      );
-      if (objectRemains) throw new Error('Object deletion was not verified.');
+        if (remains) {
+          this.metrics?.recordReconciliation('violation');
+          throw new ObjectStorageError('integrity_violation');
+        }
+        return remains;
+      });
     } catch {
-      this.metrics?.recordStorage('delete', 'error', 0);
       await this.ensureCleanupFailureRecorded(
         actor.id,
         ingestionId,
@@ -499,6 +493,25 @@ export class MediaIngestionService {
           });
     }
     return cleanupCompletedResponse(ingestionId);
+  }
+
+  private async observeStorageOperation<T>(
+    operation: 'head' | 'delete' | 'verify',
+    invoke: () => Promise<T>,
+  ): Promise<T> {
+    const startedAt = Date.now();
+    try {
+      const result = await invoke();
+      this.metrics?.recordStorage(operation, 'success', Date.now() - startedAt);
+      return result;
+    } catch (error: unknown) {
+      this.metrics?.recordStorage(
+        operation,
+        storageMetricOutcome(error),
+        Date.now() - startedAt,
+      );
+      throw error;
+    }
   }
 
   private claimCleanup(
@@ -1258,7 +1271,9 @@ export class MediaIngestionService {
       if (!(await this.ownsProcessingAttempt(ingestionId, processingToken))) {
         return false;
       }
-      await this.storage.deletePrivateObject(objectKey);
+      await this.observeStorageOperation('delete', () =>
+        this.storage.deletePrivateObject(objectKey),
+      );
       return true;
     } catch {
       return false;
@@ -1419,4 +1434,11 @@ function ingestionMetricOutcome(
     }
   }
   return 'failed';
+}
+
+function storageMetricOutcome(error: unknown) {
+  if (!(error instanceof ObjectStorageError)) return 'error' as const;
+  if (error.kind === 'integrity_violation') return 'integrity_error' as const;
+  if (error.kind === 'unavailable') return 'error' as const;
+  return error.kind;
 }

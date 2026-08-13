@@ -1,0 +1,35 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: media-ticket
+  group_by: [alertname, owner, slo]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity="page"
+      receiver: media-page
+      continue: false
+
+receivers:
+  - name: media-page
+    webhook_configs:
+      - url_file: /run/secrets/hsk-alertmanager/page-webhook-url
+        send_resolved: true
+        http_config:
+          follow_redirects: false
+          enable_http2: true
+  - name: media-ticket
+    webhook_configs:
+      - url_file: /run/secrets/hsk-alertmanager/ticket-webhook-url
+        send_resolved: true
+        http_config:
+          follow_redirects: false
+          enable_http2: true
+
+inhibit_rules:
+  - source_matchers: [severity="page"]
+    target_matchers: [severity="ticket"]
+    equal: [alertname, owner]

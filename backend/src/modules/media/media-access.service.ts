@@ -22,7 +22,9 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
 import {
+  canonicalMediaContentResource,
   createMediaAccessSignature,
+  MEDIA_CONTENT_ACCESS_METHOD,
   verifyMediaAccessSignature,
 } from './media-access-signature';
 
@@ -99,6 +101,8 @@ export class MediaAccessService {
       expiresAt,
       checksum: media.checksum,
       secret: this.signingSecret,
+      method: MEDIA_CONTENT_ACCESS_METHOD,
+      resource: canonicalMediaContentResource(mediaId),
     });
     return {
       success: true as const,
@@ -113,6 +117,7 @@ export class MediaAccessService {
     mediaId: number,
     expiresAt: number,
     signature: string,
+    requestTarget: { method: string; path: string },
   ): Promise<StoredObject> {
     const media = await this.prisma.media.findUnique({
       where: { id: mediaId },
@@ -144,6 +149,8 @@ export class MediaAccessService {
         checksum: media.checksum,
         signature,
         secret: this.signingSecret,
+        method: requestTarget.method,
+        resource: requestTarget.path,
       })
     ) {
       this.metrics?.recordSignedAccess(

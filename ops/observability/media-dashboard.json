@@ -1,11 +1,19 @@
 {
   "uid": "hsk-media-release",
   "title": "HSK Media Ingestion Release",
-  "tags": ["hsk", "media", "release"],
+  "tags": ["hsk", "media", "release", "slo"],
   "timezone": "browser",
   "schemaVersion": 41,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
+  "links": [
+    {
+      "title": "Media ingestion runbook",
+      "type": "link",
+      "url": "__MEDIA_RUNBOOK_URL__",
+      "targetBlank": true
+    }
+  ],
   "templating": {
     "list": [
       {
@@ -18,71 +26,170 @@
   },
   "panels": [
     {
-      "title": "Ingestion outcomes",
+      "title": "Ingestion availability and burn rate",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "sum by (outcome) (rate(hsk_media_ingestion_total[5m]))" }
+        {
+          "refId": "INGEST_AVAILABILITY",
+          "expr": "hsk_media:ingestion_availability:ratio_rate5m"
+        },
+        {
+          "refId": "INGEST_FAST_BURN",
+          "expr": "hsk_media:ingestion_error_budget:burn_rate1h"
+        },
+        {
+          "refId": "INGEST_SLOW_BURN",
+          "expr": "hsk_media:ingestion_error_budget:burn_rate6h"
+        }
+      ]
+    },
+    {
+      "title": "Signed-content availability and burn rate",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "SIGNED_AVAILABILITY",
+          "expr": "hsk_media:signed_availability:ratio_rate5m"
+        },
+        {
+          "refId": "SIGNED_FAST_BURN",
+          "expr": "hsk_media:signed_error_budget:burn_rate1h"
+        },
+        {
+          "refId": "SIGNED_SLOW_BURN",
+          "expr": "hsk_media:signed_error_budget:burn_rate6h"
+        }
+      ]
+    },
+    {
+      "title": "Processing p95",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "PROCESSING_P95",
+          "expr": "hsk_media:processing_duration_seconds:p95_rate5m"
+        }
+      ]
+    },
+    {
+      "title": "Ingestion outcomes",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "INGEST_OUTCOMES",
+          "expr": "sum by (outcome) (rate(hsk_media_ingestion_requests_total[5m]))"
+        }
       ]
     },
     {
       "title": "Scanner outcomes and latency",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "sum by (outcome) (rate(hsk_media_scanner_total[5m]))" },
-        { "expr": "sum(rate(hsk_media_scanner_latency_seconds_sum[5m])) / clamp_min(sum(rate(hsk_media_scanner_latency_seconds_count[5m])), 1)" }
+        {
+          "refId": "SCANNER_OUTCOMES",
+          "expr": "sum by (outcome) (rate(hsk_media_scanner_total[5m]))"
+        },
+        {
+          "refId": "SCANNER_LATENCY",
+          "expr": "sum(rate(hsk_media_scanner_latency_seconds_sum[5m])) / clamp_min(sum(rate(hsk_media_scanner_latency_seconds_count[5m])), 0.000001)"
+        }
       ]
     },
     {
       "title": "Storage operations and latency",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "sum by (operation, outcome) (rate(hsk_media_storage_operations_total[5m]))" },
-        { "expr": "sum by (operation) (rate(hsk_media_storage_latency_seconds_sum[5m])) / clamp_min(sum by (operation) (rate(hsk_media_storage_latency_seconds_count[5m])), 1)" }
+        {
+          "refId": "STORAGE_OUTCOMES",
+          "expr": "sum by (operation, outcome) (rate(hsk_media_storage_operations_total[5m]))"
+        },
+        {
+          "refId": "STORAGE_LATENCY",
+          "expr": "sum by (operation) (rate(hsk_media_storage_latency_seconds_sum[5m])) / clamp_min(sum by (operation) (rate(hsk_media_storage_latency_seconds_count[5m])), 0.000001)"
+        }
       ]
     },
     {
       "title": "Integrity and reconciliation",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "sum by (outcome) (increase(hsk_media_signed_access_total[5m]))" },
-        { "expr": "sum by (outcome) (increase(hsk_media_reconciliation_total[5m]))" }
+        {
+          "refId": "SIGNED_OUTCOMES",
+          "expr": "sum by (outcome) (increase(hsk_media_signed_access_total[5m]))"
+        },
+        {
+          "refId": "RECONCILIATION_OUTCOMES",
+          "expr": "sum by (outcome) (increase(hsk_media_reconciliation_total[5m]))"
+        }
       ]
     },
     {
       "title": "Cleanup backlog / oldest age",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "max(hsk_media_cleanup_required)" },
-        { "expr": "max(hsk_media_cleanup_oldest_age_seconds)" }
+        { "refId": "CLEANUP_COUNT", "expr": "hsk_media:cleanup_required:max" },
+        {
+          "refId": "CLEANUP_AGE",
+          "expr": "hsk_media:cleanup_oldest_age_seconds:max"
+        }
       ]
     },
     {
       "title": "Stuck processing / oldest age",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "max(hsk_media_stuck_processing)" },
-        { "expr": "max(hsk_media_processing_oldest_age_seconds)" }
+        { "refId": "STUCK_COUNT", "expr": "hsk_media:stuck_processing:max" },
+        {
+          "refId": "STUCK_AGE",
+          "expr": "hsk_media:processing_oldest_age_seconds:max"
+        }
       ]
     },
     {
       "title": "Replica scrape health",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 8 },
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "up{job=\"hsk-media-replicas\"}" }
+        { "refId": "REPLICA_UP", "expr": "up{job=\"hsk-media-replicas\"}" }
+      ]
+    },
+    {
+      "title": "Metrics collector health",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "x": 0, "y": 40, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "COLLECTOR_AVAILABLE",
+          "expr": "min(hsk_media_metrics_database_available)"
+        },
+        {
+          "refId": "COLLECTOR_STALE",
+          "expr": "max(hsk_media_metrics_database_snapshot_stale)"
+        },
+        {
+          "refId": "COLLECTOR_CACHE_AGE",
+          "expr": "max(hsk_media_metrics_database_cache_age_seconds)"
+        }
       ]
     }
   ]

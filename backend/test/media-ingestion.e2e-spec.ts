@@ -737,55 +737,11 @@ describe('Secure Media Ingestion V1 E2E', () => {
     ).expect(429);
   });
 
-  it('12. exposes redacted bounded media metrics only with the scrape credential', async () => {
-    const [token] = app
-      .get(ConfigService)
-      .getOrThrow<string[]>('media.metricsBearerTokens');
+  it('12. does not mount media metrics on the public application listener', async () => {
+    await request(app.getHttpServer()).get('/metrics').expect(404);
     await request(app.getHttpServer())
       .get('/api/v1/internal/metrics/media')
-      .expect(403);
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/internal/metrics/media')
-      .set('Origin', 'http://127.0.0.1:3001')
-      .set('Authorization', `Bearer ${token}`)
-      .expect('Content-Type', /text\/plain/u)
-      .expect(200);
-    expect(response.text).toContain('hsk_media_ingestion_total');
-    expect(response.text).toContain('hsk_media_cleanup_required');
-    expect(response.headers['access-control-allow-origin']).toBe(
-      'http://127.0.0.1:3001',
-    );
-    expect(response.headers['access-control-allow-credentials']).toBe('true');
-    expect(response.headers['x-content-type-options']).toBe('nosniff');
-    expect(response.headers['x-frame-options']).toBe('DENY');
-    expect(response.headers['content-security-policy']).toContain(
-      "default-src 'none'",
-    );
-    expect(response.headers).not.toHaveProperty('strict-transport-security');
-    expect(response.text).toMatch(
-      /hsk_media_scanner_total\{outcome="invalid_response"\} [1-9]\d*/u,
-    );
-    expect(response.text).toMatch(
-      /hsk_media_signed_access_total\{outcome="integrity_error"\} [1-9]\d*/u,
-    );
-    expect(response.text).toMatch(
-      /hsk_media_signed_access_total\{outcome="unavailable"\} [1-9]\d*/u,
-    );
-    expect(response.text).toMatch(
-      /hsk_media_reconciliation_total\{outcome="violation"\} [1-9]\d*/u,
-    );
-    expect(response.text).not.toMatch(
-      /mediaId|storageKey|filename|signature|@/u,
-    );
-
-    const maliciousOrigin = await request(app.getHttpServer())
-      .get('/api/v1/internal/metrics/media')
-      .set('Origin', 'http://127.0.0.1:3001.evil.test')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    expect(maliciousOrigin.headers).not.toHaveProperty(
-      'access-control-allow-origin',
-    );
+      .expect(404);
   });
 
   function upload(

@@ -1,12 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 
-import { MediaMetricsController } from './media-metrics.controller';
+import { MediaMetricsServer } from './media-metrics.server';
 import { MediaObservabilityService } from './media-observability.service';
 
 @Global()
 @Module({
-  controllers: [MediaMetricsController],
-  providers: [MediaObservabilityService],
-  exports: [MediaObservabilityService],
+  providers: [MediaMetricsServer, MediaObservabilityService],
+  exports: [MediaMetricsServer, MediaObservabilityService],
 })
 export class MediaObservabilityModule {}

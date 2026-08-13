@@ -141,17 +141,21 @@ permanently running database.
 
 </details>
 
-## Databases created by this closeout
+## Superseded observability/edge rehearsal
 
-| Database                               | Purpose/result                                                                                                              | Cleanup |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `hsk_obs_edge_integrity_20260813_test` | fresh 17-migration deploy; media SQL PASS/ROLLBACK; live drift empty; post-test User/Media/MediaIngestion/AuditLog all zero | dropped |
-| `hsk_obs_edge_fencing_20260813_test`   | fresh 17-migration deploy; media fencing E2E 13/13 PASS                                                                     | dropped |
-| `hsk_obs_edge_e2e_20260813_test`       | fresh deploy; first full E2E invocation rejected missing test JWT config and was not reused                                 | dropped |
-| `hsk_obs_edge_e2e2_20260813_test`      | replacement fresh 17-migration deploy; full backend E2E 11 suites/160 tests PASS                                            | dropped |
-| `hsk_obs_edge_shadow_20260813_test`    | isolated migration-history shadow drift; no difference                                                                      | dropped |
-| `hsk_obs_edge_final_e2e_20260813_test` | final-source fresh 17-migration deploy; full backend E2E 11 suites/160 tests PASS                                           | dropped |
+The disposable databases from the earlier observability/edge rehearsal were
+dropped after their scoped checks. Their results predate lifecycle telemetry
+migration 18 and are intentionally omitted from current release evidence. No
+pre-existing database was reset, truncated, modified or deleted by that cleanup.
 
-The final prefix-scoped catalog query returned `0` for all six exact task names. No
-database was reset or truncated, and no pre-existing database was modified or
-deleted.
+## Current migration 18 verification
+
+The current migration is frozen at SHA-256
+`1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
+On a fresh guarded disposable database, all 18/18 migrations deployed. Media
+integrity acceptance passed and its transaction rollback left the database
+unchanged. Both the live-database-to-datamodel and migration-history-to-datamodel
+drift checks were empty. Full backend E2E passed 11/11 suites and 160/160 tests. The
+dual-lock `AuditLog`/`MediaIngestion` concurrency scenario was GREEN. Database
+identities are intentionally omitted; this manifest does not infer or invent names
+or catalog counts for that verification.

@@ -1,20 +1,34 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { parseToolchainManifest } from '../../../scripts/test/media-operations-validation.helpers';
+
 describe('media operations artifacts', () => {
   it('redacts signed queries and prevents shared caching in the proxy contract', () => {
     const config = read('ops/nginx/media-security.conf');
     const httpConfig = read('ops/nginx/media-security-http.conf');
+    const logFormat = httpConfig.match(
+      /log_format hsk_media_redacted[\s\S]*?;/u,
+    )?.[0];
+    expect(logFormat).toBeDefined();
     expect(httpConfig).toContain('$request_method $uri $server_protocol');
-    expect(`${httpConfig}\n${config}`).not.toContain('$request_uri');
-    expect(`${httpConfig}\n${config}`).not.toContain('$args');
-    expect(`${httpConfig}\n${config}`).not.toContain('$is_args');
-    expect(`${httpConfig}\n${config}`).not.toContain('$query_string');
+    expect(logFormat).not.toContain('$request_uri');
+    expect(logFormat).not.toContain('$args');
+    expect(logFormat).not.toContain('$is_args');
+    expect(logFormat).not.toContain('$query_string');
     expect(config).toContain('proxy_cache off');
     expect(config).toContain('proxy_no_cache 1');
     expect(config).toContain('private, no-store');
-    expect(config).toContain('location = /api/v1/internal/metrics/media');
+    expect(config).toContain(
+      'location ~* "^/api(?:;[^/]*)?/+v1(?:;[^/]*)?/+internal',
+    );
+    expect(config).toContain('location ~* "^/metrics(?:/|;|$)"');
     expect(config).toContain('return 404');
+    expect(httpConfig).toContain(
+      'map "$request_method:$request_uri" $hsk_media_signed_request_canonical',
+    );
+    expect(httpConfig).toContain('~^GET:/api/v1/media/[1-9][0-9]*/content');
+    expect(config).toContain('if ($hsk_media_signed_request_canonical = 0)');
     expect(config).toContain('Strict-Transport-Security');
     expect(config).toContain('$request_id');
   });
@@ -30,24 +44,33 @@ describe('media operations artifacts', () => {
       'HskMediaIntegrityViolation',
       'HskMediaScannerInvalidResponse',
       'HskMediaReplicaScrapeFailure',
+      'HskMediaReplicaTargetUnderMinimum',
+      'HskMediaMetricsDatabaseUnavailable',
+      'HskMediaMetricsSnapshotStale',
+      'HskMediaIngestionFastBurn',
+      'HskMediaIngestionSlowBurn',
+      'HskMediaSignedContentFastBurn',
+      'HskMediaSignedContentSlowBurn',
+      'HskMediaProcessingLatency',
     ]) {
       expect(alerts).toContain(`alert: ${alert}`);
     }
     expect(alerts).not.toMatch(/mediaId|storageKey|filename|signature|email/u);
   });
 
-  it('scrapes two explicit backend replicas directly with secret-file auth', () => {
+  it('discovers any ready backend replica on the dedicated private metrics port', () => {
     const prometheus = read('ops/observability/media-prometheus.yml');
-    expect(prometheus).toContain(
-      'backend-media-0.hsk-backend-media-metrics.hsk.svc.cluster.local:3000',
-    );
-    expect(prometheus).toContain(
-      'backend-media-1.hsk-backend-media-metrics.hsk.svc.cluster.local:3000',
-    );
+    expect(prometheus).toContain('kubernetes_sd_configs:');
+    expect(prometheus).toContain('role: pod');
+    expect(prometheus).toContain('regex: media-metrics');
+    expect(prometheus).toContain('metrics_path: /metrics');
     expect(prometheus).toContain('credentials_file:');
-    expect(prometheus).not.toMatch(/load.?balancer|hsk_backend/u);
+    expect(prometheus).not.toMatch(/backend-media-[0-9]/u);
     const privateNetwork = read(
       'ops/observability/media-metrics-private-network.yml',
+    );
+    const backendPatch = read(
+      'ops/observability/media-backend-deployment.patch.yml',
     );
     expect(privateNetwork).toContain('clusterIP: None');
     expect(privateNetwork).toContain('kind: NetworkPolicy');
@@ -55,17 +78,61 @@ describe('media operations artifacts', () => {
     expect(privateNetwork).toContain('app.kubernetes.io/name: hsk-nginx');
     expect(privateNetwork).toContain('kubernetes.io/metadata.name: monitoring');
     expect(privateNetwork).toContain('app.kubernetes.io/name: prometheus');
+    expect(privateNetwork).toContain('port: 9464');
+    expect(privateNetwork).toContain('kind: ServiceAccount');
+    expect(privateNetwork).toContain('kind: Role');
+    expect(privateNetwork).toContain('kind: RoleBinding');
+    expect(privateNetwork).toContain('kind: PeerAuthentication');
+    expect(privateNetwork).toContain('mode: STRICT');
+    expect(privateNetwork).toContain('kind: AuthorizationPolicy');
+    expect(privateNetwork).toContain('projected:');
+    expect(privateNetwork).toContain('@sha256:');
+    expect(backendPatch).toContain('containerPort: 9464');
+    expect(backendPatch).toContain('name: MEDIA_METRICS_BEARER_TOKEN');
+    expect(backendPatch).toContain('name: MEDIA_METRICS_BEARER_TOKEN_PREVIOUS');
+    expect(backendPatch).toContain('secretKeyRef:');
+    expect(backendPatch).toContain('startupProbe:');
+    expect(backendPatch).toContain('tcpSocket:');
+    expect(backendPatch).not.toContain('readinessProbe:');
+    const runbook = read('docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md');
+    const stageNew = runbook.indexOf('current=OLD`; stage `previous=NEW');
+    const swap = runbook.indexOf('current=NEW`, `previous=OLD');
+    const removePrevious = runbook.indexOf('Remove `previous`');
+    expect(stageNew).toBeGreaterThan(-1);
+    expect(swap).toBeGreaterThan(stageNew);
+    expect(removePrevious).toBeGreaterThan(swap);
+    expect(privateNetwork).toContain('key: current');
+    expect(privateNetwork).not.toContain('key: previous');
   });
 
   it('pins each operational validator release artifact by SHA-256', () => {
-    const manifest = JSON.parse(
-      read('ops/observability/media-toolchain.json'),
-    ) as Record<string, { version: string; artifact: string; sha256: string }>;
-    expect(Object.keys(manifest)).toEqual(['nginx', 'prometheus', 'grafana']);
-    for (const tool of Object.values(manifest)) {
-      expect(tool.version).toMatch(/^\d+\.\d+\.\d+$/u);
-      expect(tool.artifact).toMatch(/^https:\/\//u);
-      expect(tool.sha256).toMatch(/^[a-f0-9]{64}$/u);
+    const manifest = parseToolchainManifest(
+      JSON.parse(read('ops/observability/media-toolchain.json')),
+    );
+    expect(Object.keys(manifest.tools)).toEqual(
+      expect.arrayContaining([
+        'nginx',
+        'istioctl',
+        'prometheus',
+        'promtool',
+        'alertmanager',
+        'amtool',
+        'grafana',
+        'kubectl',
+        'kubeconform',
+      ]),
+    );
+    for (const tool of Object.values(manifest.tools)) {
+      expect(tool.version).toMatch(/^\d+\.\d+(?:\.\d+)?$/u);
+      expect(tool.platforms).toHaveLength(2);
+      for (const artifact of tool.platforms) {
+        if ('artifact' in artifact) {
+          expect(artifact.artifact).toMatch(/^https:\/\//u);
+          expect(artifact.sha256).toMatch(/^[a-f0-9]{64}$/u);
+        } else {
+          expect(artifact.ociDigest).toMatch(/^sha256:[a-f0-9]{64}$/u);
+        }
+      }
     }
   });
 
@@ -77,6 +144,7 @@ describe('media operations artifacts', () => {
         title: string;
         gridPos: { x: number; y: number; w: number; h: number };
         datasource: { uid: string };
+        targets: Array<{ refId: string; expr: string }>;
       }>;
     };
     expect(dashboard.panels.map((panel) => panel.title)).toEqual(
@@ -93,7 +161,15 @@ describe('media operations artifacts', () => {
       expect(panel.datasource.uid).toBe('${DS_PROMETHEUS}');
       expect(panel.gridPos.w).toBeGreaterThan(0);
       expect(panel.gridPos.h).toBeGreaterThan(0);
+      expect(new Set(panel.targets.map(({ refId }) => refId)).size).toBe(
+        panel.targets.length,
+      );
+      expect(panel.targets.every(({ expr }) => expr.length > 0)).toBe(true);
     }
+    const allRefIds = dashboard.panels.flatMap((panel) =>
+      panel.targets.map(({ refId }) => refId),
+    );
+    expect(new Set(allRefIds).size).toBe(allRefIds.length);
     for (const [index, panel] of dashboard.panels.entries()) {
       for (const candidate of dashboard.panels.slice(index + 1)) {
         expect(overlaps(panel.gridPos, candidate.gridPos)).toBe(false);

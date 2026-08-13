@@ -85,10 +85,59 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.string().min(32).required(),
   }),
   MEDIA_METRICS_BEARER_TOKEN_PREVIOUS: Joi.string().min(32).optional(),
+  MEDIA_METRICS_HOST: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string()
+      .ip({ version: ['ipv4', 'ipv6'] })
+      .required(),
+    otherwise: Joi.string()
+      .ip({ version: ['ipv4', 'ipv6'] })
+      .default('127.0.0.1'),
+  }),
+  MEDIA_METRICS_PORT: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.number().integer().min(1).max(65535).required(),
+    otherwise: Joi.number().integer().min(0).max(65535).default(9464),
+  }),
+  MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(50)
+    .max(4000)
+    .default(750),
+  MEDIA_METRICS_COLLECTION_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(10)
+    .max(4500)
+    .default(1000),
+  MEDIA_METRICS_CACHE_TTL_MS: Joi.number()
+    .integer()
+    .min(0)
+    .max(60000)
+    .default(5000),
+  MEDIA_METRICS_STALE_TTL_MS: Joi.number()
+    .integer()
+    .min(1000)
+    .max(300000)
+    .default(60000),
 
   JWT_EXPIRES_IN: Joi.string().default('7d'),
 }).custom((environment: unknown, helpers: Joi.CustomHelpers) => {
   if (!isEnvironmentRecord(environment)) return helpers.error('any.invalid');
+  if (environment.MEDIA_METRICS_PORT === environment.PORT) {
+    return helpers.error('any.invalid');
+  }
+  if (
+    Number(environment.MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS) >=
+    Number(environment.MEDIA_METRICS_COLLECTION_TIMEOUT_MS)
+  ) {
+    return helpers.error('any.invalid');
+  }
+  if (
+    Number(environment.MEDIA_METRICS_CACHE_TTL_MS) >=
+    Number(environment.MEDIA_METRICS_STALE_TTL_MS)
+  ) {
+    return helpers.error('any.invalid');
+  }
   if (environment.NODE_ENV !== 'production') return environment;
   try {
     assertProductionSecrets(environment);

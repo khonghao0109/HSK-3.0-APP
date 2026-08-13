@@ -25,6 +25,8 @@ describe('media environment validation', () => {
     MEDIA_SIGNING_SECRET: signingSecret,
     MEDIA_SCANNER_HOST: 'clamav.internal',
     MEDIA_METRICS_BEARER_TOKEN: metricsToken,
+    MEDIA_METRICS_HOST: '0.0.0.0',
+    MEDIA_METRICS_PORT: 9464,
   };
 
   it.each([
@@ -33,6 +35,8 @@ describe('media environment validation', () => {
     'MEDIA_SIGNING_SECRET',
     'MEDIA_SCANNER_HOST',
     'MEDIA_METRICS_BEARER_TOKEN',
+    'MEDIA_METRICS_HOST',
+    'MEDIA_METRICS_PORT',
     'AUTH_PASSWORD_PEPPER',
     'ALLOWED_ORIGINS',
   ])('requires production boundary %s', (missing) => {
@@ -55,6 +59,33 @@ describe('media environment validation', () => {
       MEDIA_SCANNER_PORT: 3310,
     });
     expect(result.error).toBeUndefined();
+  });
+
+  it('rejects a metrics listener that collides with the public API listener', () => {
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        PORT: 9464,
+        MEDIA_METRICS_PORT: 9464,
+      }).error,
+    ).toBeDefined();
+  });
+
+  it('requires a fresh cache window strictly smaller than the stale fallback window', () => {
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        MEDIA_METRICS_CACHE_TTL_MS: 60_000,
+        MEDIA_METRICS_STALE_TTL_MS: 1_000,
+      }).error,
+    ).toBeDefined();
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        MEDIA_METRICS_CACHE_TTL_MS: 5_000,
+        MEDIA_METRICS_STALE_TTL_MS: 60_000,
+      }).error,
+    ).toBeUndefined();
   });
 
   it('rejects insecure storage endpoints and out-of-contract access TTL', () => {

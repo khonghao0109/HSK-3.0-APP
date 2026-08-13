@@ -35,6 +35,7 @@ export class MediaController {
 
   @Get(':mediaId/content')
   async getContent(
+    @Req() request: Request,
     @Param('mediaId', ParsePositiveSafeIntegerPipe) mediaId: number,
     @Query() query: MediaContentAccessQueryDto,
     @Res() response: Response,
@@ -43,6 +44,10 @@ export class MediaController {
       mediaId,
       query.expires,
       query.signature,
+      {
+        method: request.method,
+        path: request.originalUrl.split('?', 1)[0] ?? '',
+      },
     );
     response.setHeader('Cache-Control', 'private, no-store');
     response.setHeader('Content-Type', object.contentType);

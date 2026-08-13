@@ -1,0 +1,48 @@
+# Strategic-merge patch contract for the externally owned hsk-backend Deployment.
+# Apply only after checking that container `backend` and labels match the target.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsk-backend
+  namespace: hsk
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hsk-backend
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+        - name: backend
+          ports:
+            - name: application
+              containerPort: 3000
+            - name: media-metrics
+              containerPort: 9464
+          env:
+            - name: MEDIA_METRICS_HOST
+              value: 0.0.0.0
+            - name: MEDIA_METRICS_PORT
+              value: "9464"
+            - name: MEDIA_METRICS_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hsk-media-metrics-token
+                  key: current
+                  optional: false
+            - name: MEDIA_METRICS_BEARER_TOKEN_PREVIOUS
+              valueFrom:
+                secretKeyRef:
+                  name: hsk-media-metrics-token
+                  key: previous
+                  optional: true
+          # The workload owner must preserve its existing application readiness
+          # probe. Metrics readiness is verified as an explicit startup probe so
+          # this patch never replaces API/DB readiness semantics.
+          startupProbe:
+            tcpSocket:
+              port: media-metrics
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
