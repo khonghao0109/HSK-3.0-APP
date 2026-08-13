@@ -564,29 +564,38 @@ model Media {
 model MediaIngestion {
   /// Identity/terminal-state immutability and hard-delete rejection are enforced
   /// by SQL-only MediaIngestion_lifecycle_guard.
-  id                   Int                  @id @default(autoincrement())
-  actorId              Int
-  dataSourceId         Int
-  idempotencyKeyHash   String
-  requestFingerprint   String
-  status               MediaIngestionStatus @default(pending)
-  originalFilename     String
-  declaredMimeType     String
-  validatedMimeType    String?
-  size                 Int
-  checksum             String?
-  storageProvider      String
-  storageKey           String?              @unique
-  mediaId              Int?                 @unique
-  failureCode          String?
-  processingStartedAt  DateTime?
-  processingToken      String
-  attemptCount         Int                  @default(0)
-  cleanupAttempts      Int                  @default(0)
-  cleanupLastAttemptAt DateTime?
-  startedAt            DateTime             @default(now())
-  completedAt          DateTime?
-  updatedAt            DateTime             @updatedAt
+  id                         Int                  @id @default(autoincrement())
+  actorId                    Int
+  dataSourceId               Int
+  idempotencyKeyHash         String
+  requestFingerprint         String
+  status                     MediaIngestionStatus @default(pending)
+  originalFilename           String
+  declaredMimeType           String
+  validatedMimeType          String?
+  size                       Int
+  checksum                   String?
+  storageProvider            String
+  storageKey                 String?              @unique
+  mediaId                    Int?                 @unique
+  failureCode                String?
+  processingStartedAt        DateTime?
+  processingToken            String
+  attemptCount               Int                  @default(0)
+  cleanupAttempts            Int                  @default(0)
+  cleanupLastAttemptAt       DateTime?
+  /// Immutable source provenance is populated and guarded by SQL triggers.
+  sourceCodeSnapshot         String
+  sourceVersionSnapshot      String
+  sourceLicenseSnapshot      String
+  sourceAttributionSnapshot  String?
+  sourceReferenceUrlSnapshot String?
+  sourceContentHashSnapshot  String?
+  /// SQL and the cleanup service require two absence observations across a settling window.
+  cleanupAbsentObservedAt    DateTime?
+  startedAt                  DateTime             @default(now())
+  completedAt                DateTime?
+  updatedAt                  DateTime             @updatedAt
 
   actor      User       @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   dataSource DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Restrict, onUpdate: Restrict)

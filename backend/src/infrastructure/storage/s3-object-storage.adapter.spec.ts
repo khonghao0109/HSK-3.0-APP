@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -233,6 +234,35 @@ describe('S3ObjectStorageAdapter contract', () => {
       size: body.length,
     });
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(GetObjectCommand);
+  });
+
+  it('uses HeadObjectCommand to distinguish present, absent, and unknown state', async () => {
+    const presentSend = jest.fn().mockResolvedValue({});
+    await expect(
+      createAdapter(presentSend).privateObjectExists(
+        'media/2026/08/opaque.png',
+      ),
+    ).resolves.toBe(true);
+    expect(presentSend.mock.calls[0]?.[0]).toBeInstanceOf(HeadObjectCommand);
+
+    const absentSend = jest.fn().mockRejectedValue(
+      Object.assign(new Error('provider detail'), {
+        name: 'NotFound',
+        $metadata: { httpStatusCode: 404 },
+      }),
+    );
+    await expect(
+      createAdapter(absentSend).privateObjectExists('media/2026/08/absent.png'),
+    ).resolves.toBe(false);
+
+    const unknownSend = jest
+      .fn()
+      .mockRejectedValue(new Error('synthetic connection failure'));
+    await expect(
+      createAdapter(unknownSend).privateObjectExists(
+        'media/2026/08/unknown.png',
+      ),
+    ).rejects.toThrow('could not be verified');
   });
 });
 

@@ -51,6 +51,10 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
     return Promise.resolve({ ...object, body: Buffer.from(object.body) });
   }
 
+  privateObjectExists(key: string): Promise<boolean> {
+    return Promise.resolve(this.objects.has(key));
+  }
+
   async deletePrivateObject(key: string): Promise<void> {
     if (this.nextDeleteFailure) {
       this.nextDeleteFailure = false;

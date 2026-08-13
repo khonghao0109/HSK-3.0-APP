@@ -25,6 +25,7 @@ export interface ObjectStoragePort {
     contentType: string;
     checksum: string;
   }): Promise<void>;
+  privateObjectExists(key: string): Promise<boolean>;
   getPrivateObject(key: string): Promise<StoredObject>;
   deletePrivateObject(key: string): Promise<void>;
 }

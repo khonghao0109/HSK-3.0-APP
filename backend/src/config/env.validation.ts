@@ -44,6 +44,18 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.string().hostname().required(),
   }),
   MEDIA_SCANNER_PORT: Joi.number().integer().min(1).max(65535).default(3310),
+  MEDIA_INGESTION_ENABLED: Joi.when('NODE_ENV', {
+    is: 'test',
+    then: Joi.boolean().default(true),
+    otherwise: Joi.boolean().default(false),
+  }),
+  MEDIA_METRICS_BEARER_TOKEN: Joi.when('NODE_ENV', {
+    is: 'test',
+    then: Joi.string()
+      .min(32)
+      .default('test-media-metrics-token-at-least-32-chars'),
+    otherwise: Joi.string().min(32).required(),
+  }),
 
   JWT_EXPIRES_IN: Joi.string().default('7d'),
 });

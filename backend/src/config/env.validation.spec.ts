@@ -12,6 +12,7 @@ describe('media environment validation', () => {
     'MEDIA_STORAGE_REGION',
     'MEDIA_SIGNING_SECRET',
     'MEDIA_SCANNER_HOST',
+    'MEDIA_METRICS_BEARER_TOKEN',
   ])('requires production boundary %s', (missing) => {
     const environment: Record<string, string> = {
       ...base,
@@ -20,6 +21,7 @@ describe('media environment validation', () => {
       MEDIA_STORAGE_REGION: 'ap-southeast-1',
       MEDIA_SIGNING_SECRET: 's'.repeat(32),
       MEDIA_SCANNER_HOST: 'clamav.internal',
+      MEDIA_METRICS_BEARER_TOKEN: 'm'.repeat(32),
     };
     delete environment[missing];
     const result = envValidationSchema.validate(environment, {
@@ -38,6 +40,8 @@ describe('media environment validation', () => {
       MEDIA_SIGNING_SECRET: 's'.repeat(32),
       MEDIA_ACCESS_TTL_SECONDS: 300,
       MEDIA_SCANNER_HOST: 'clamav.internal',
+      MEDIA_METRICS_BEARER_TOKEN: 'm'.repeat(32),
+      MEDIA_INGESTION_ENABLED: false,
       MEDIA_SCANNER_PORT: 3310,
     });
     expect(result.error).toBeUndefined();
@@ -64,5 +68,6 @@ describe('media environment validation', () => {
     });
     expect(result.error).toBeUndefined();
     expect(result.value.MEDIA_SIGNING_SECRET).toHaveLength(48);
+    expect(result.value.MEDIA_INGESTION_ENABLED).toBe(true);
   });
 });

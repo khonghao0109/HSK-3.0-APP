@@ -42,7 +42,7 @@ The state machine is:
 pending -> processing -> completed
                    |--> rejected
                    |--> failed
-                   `--> cleanup_required -> failed (cleanup completed)
+                   `--> cleanup_required -> cleanup_required (settling) -> failed
 ```
 
 Claim lock order is active admin `User FOR SHARE`, licensed `DataSource FOR SHARE`,
@@ -77,6 +77,9 @@ commit after the client timeout; the tracked key remains `cleanup_required` unti
 explicit reconciliation. Deterministic finalize failure deletes the object. If that
 deletion cannot be confirmed, state is `cleanup_required` and
 an admin-only retry performs cleanup; it is never silently classified as clean.
+Post-commit hardening requires HEAD/DELETE/HEAD and two verified absence observations
+at least 60 seconds apart before `OBJECT_CLEANED`. A late PUT is deleted and restarts
+the settling window; an ambiguous/cleaned key is never reused.
 Claim, rejection, finalize and cleanup use a request-owned token plus authoritative
 row reread to reconcile lost transaction commit acknowledgements without replaying
 object side effects or duplicating audit. An unreadable outcome returns a safe 503
@@ -93,6 +96,12 @@ Completed ingestion must match a ready/live Media across actor, licensed source,
 provider/key, MIME/type, size/checksum and access URL. Ingested storage identity is
 immutable, while safety `processingStatus` and `deletedAt` remain mutable so existing
 quarantine/archive workflows continue to work.
+
+Migration 17 snapshots source code, version, license, attribution, reference URL and
+content hash into each ingestion. Referenced provenance becomes immutable; corrections
+create a new DataSource version. Claim/finalize hold source locks and require an exact
+snapshot match. The V1 deployment has one configured storage adapter: access, replay,
+cleanup and retry require exact provider equality before storage I/O.
 
 ## Private access
 
@@ -118,20 +127,32 @@ the full signed query URL. CSP stays same-origin; no broad storage origin is add
 - Rollback disables ingestion/access routes but retains migration/history/objects.
   Repair is forward-only; do not hard-delete facts or edit an applied migration.
 - UI is not in scope; no Admin Library redesign or upload button is implied.
+- `MEDIA_INGESTION_ENABLED=false` disables only new ingestion. Cleanup, signed reads
+  and private bounded-cardinality metrics remain available for forward recovery.
+- Operations artifacts are `ops/observability/*`, `ops/nginx/media-security.conf` and
+  `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md`.
 
 ## Verification and release boundary
 
-The frozen migration SHA-256 is
+Migration 16 remains frozen at SHA-256
 `a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e`.
-On 2026-08-12 a fresh guarded disposable database deployed all 16 migrations;
-media SQL acceptance rolled back cleanly, fencing passed 10/10, Media E2E passed
-20/20, the full backend E2E suite passed 155/155 and both live/schema and
-migration-history/schema diffs were empty. The no-DB gate passed 40 suites and
-393 tests; targeted security/adapter contracts passed 8 suites and 58 tests; the
-production dependency audit reported zero vulnerabilities.
+The forward-only provenance/provider hardening migration 17 is frozen at
+`e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`.
+On 2026-08-13, independent fresh guarded disposable databases deployed all 17
+migrations. Media SQL acceptance passed and rolled back to zero ingestion rows;
+live/schema and migration-history/schema diffs were empty. The resulting inventory
+was 60 tables, 147 foreign keys, 512 catalog check rows and 61 trigger-event rows.
+Full backend E2E passed 11 suites and 160 tests, the no-database gate passed 45 suites
+and 411 tests, and the production dependency audit reported zero vulnerabilities.
 
-This is sufficient for a code commit, not production release. Production S3 and
-ClamAV behavior is covered by deterministic adapter contracts, but no live provider
-rehearsal was available in this closeout. Infra/Release owns a private bucket,
-workload-identity, encryption/retention, access-log redaction and ClamAV availability
-rehearsal before beta deployment.
+Negative preflight rehearsals proved atomic failure for a completed legacy ingestion
+without the exact immutable provenance audit and for an ambiguous whitespace source
+license. A positive synthetic fixture with the exact six-field immutable audit
+backfilled the expected snapshot. This validates migration behavior, not the
+legitimacy of real licensing evidence.
+
+This is sufficient for a code commit, not production release. Deterministic adapter
+contracts do not replace a real S3-compatible provider, ClamAV, proxy redaction and
+alert-routing rehearsal. Infra/Release owns those live checks plus private-bucket,
+workload-identity, encryption and retention verification; until their evidence is
+attached, production release status is `BLOCKED_EXTERNAL`.

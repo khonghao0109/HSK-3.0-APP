@@ -6,11 +6,13 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  Optional,
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { MediaIngestion } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 import { MEDIA_MALWARE_SCANNER } from '../../../infrastructure/malware/media-malware-scanner.port';
 import type { MediaMalwareScannerPort } from '../../../infrastructure/malware/media-malware-scanner.port';
@@ -18,6 +20,10 @@ import { OBJECT_STORAGE } from '../../../infrastructure/storage/object-storage.p
 import type { ObjectStoragePort } from '../../../infrastructure/storage/object-storage.port';
 import { ObjectStorageWriteError } from '../../../infrastructure/storage/object-storage.port';
 import { PrismaService } from '../../../prisma/prisma.service';
+import {
+  assertMediaIngestionEnabled,
+  MediaObservabilityService,
+} from '../../../infrastructure/observability/media-observability.service';
 import { lockActiveCmsActor } from '../cms-actor-lock';
 import {
   assertAdminActor,
@@ -36,6 +42,7 @@ import {
 } from './media-ingestion.policy';
 
 export const MEDIA_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+export const MEDIA_CLEANUP_SETTLING_MS = 60_000;
 
 export type UploadedMediaFile = {
   originalname: string;
@@ -46,6 +53,15 @@ export type UploadedMediaFile = {
 
 type MediaIngestionContext = { correlationId: string };
 
+type MediaProvenanceSnapshot = {
+  sourceCodeSnapshot: string;
+  sourceVersionSnapshot: string;
+  sourceLicenseSnapshot: string;
+  sourceAttributionSnapshot: string | null;
+  sourceReferenceUrlSnapshot: string | null;
+  sourceContentHashSnapshot: string | null;
+};
+
 @Injectable()
 export class MediaIngestionService {
   constructor(
@@ -54,6 +70,8 @@ export class MediaIngestionService {
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStoragePort,
     @Inject(MEDIA_MALWARE_SCANNER)
     private readonly scanner: MediaMalwareScannerPort,
+    @Optional() private readonly config?: ConfigService,
+    @Optional() private readonly metrics?: MediaObservabilityService,
   ) {}
 
   async ingest(
@@ -64,6 +82,37 @@ export class MediaIngestionService {
     context: MediaIngestionContext,
   ) {
     assertAdminActor(actor);
+    assertMediaIngestionEnabled(
+      this.config?.get<boolean>('media.ingestionEnabled') ?? true,
+    );
+    const startedAt = Date.now();
+    this.metrics?.recordIngestion('request');
+    try {
+      const response = await this.ingestInternal(
+        actor,
+        file,
+        dataSourceId,
+        idempotencyHeader,
+        context,
+      );
+      this.metrics?.recordIngestion('success', Date.now() - startedAt);
+      return response;
+    } catch (error: unknown) {
+      this.metrics?.recordIngestion(
+        ingestionMetricOutcome(error),
+        Date.now() - startedAt,
+      );
+      throw error;
+    }
+  }
+
+  private async ingestInternal(
+    actor: CmsActor,
+    file: UploadedMediaFile | undefined,
+    dataSourceId: number,
+    idempotencyHeader: string | undefined,
+    context: MediaIngestionContext,
+  ) {
     if (!file) {
       throw new UnprocessableEntityException({
         code: 'FILE_REQUIRED',
@@ -154,9 +203,11 @@ export class MediaIngestionService {
     }
 
     let scanResult: { clean: boolean };
+    const scanStartedAt = Date.now();
     try {
       scanResult = await this.scanner.scan(processed.buffer);
     } catch {
+      this.metrics?.recordScanner('unavailable', Date.now() - scanStartedAt);
       await this.recordFailure(
         claim.id,
         claim.processingToken,
@@ -170,6 +221,7 @@ export class MediaIngestionService {
       });
     }
     if (!scanResult.clean) {
+      this.metrics?.recordScanner('malware', Date.now() - scanStartedAt);
       await this.ensureRejected(
         claim.id,
         claim.processingToken,
@@ -182,6 +234,7 @@ export class MediaIngestionService {
         message: 'Media file was rejected by security scanning.',
       });
     }
+    this.metrics?.recordScanner('success', Date.now() - scanStartedAt);
 
     const objectKey =
       claim.storageKey ??
@@ -212,6 +265,7 @@ export class MediaIngestionService {
       });
     }
 
+    const putStartedAt = Date.now();
     try {
       await this.storage.putPrivateObject({
         key: objectKey,
@@ -219,7 +273,9 @@ export class MediaIngestionService {
         contentType: processed.mimeType,
         checksum: processed.checksum,
       });
+      this.metrics?.recordStorage('put', 'success', Date.now() - putStartedAt);
     } catch (error: unknown) {
+      this.metrics?.recordStorage('put', 'error', Date.now() - putStartedAt);
       const writeOutcome =
         error instanceof ObjectStorageWriteError ? error.outcome : 'unknown';
       const requiresReconciliation = writeOutcome === 'unknown';
@@ -317,6 +373,8 @@ export class MediaIngestionService {
     assertAdminActor(actor);
     const cleanupToken = randomUUID();
     let claim: MediaIngestion & { storageKey: string };
+    let objectWasPresent: boolean;
+    let objectRemains: boolean;
     try {
       claim = await this.claimCleanup(actor.id, ingestionId, cleanupToken);
     } catch (error: unknown) {
@@ -351,8 +409,32 @@ export class MediaIngestionService {
           'Media ingestion cleanup ownership changed.',
         );
       }
+      const headStartedAt = Date.now();
+      objectWasPresent = await this.storage.privateObjectExists(
+        claim.storageKey,
+      );
+      this.metrics?.recordStorage(
+        'head',
+        'success',
+        Date.now() - headStartedAt,
+      );
+      const deleteStartedAt = Date.now();
       await this.storage.deletePrivateObject(claim.storageKey);
+      this.metrics?.recordStorage(
+        'delete',
+        'success',
+        Date.now() - deleteStartedAt,
+      );
+      const verifyStartedAt = Date.now();
+      objectRemains = await this.storage.privateObjectExists(claim.storageKey);
+      this.metrics?.recordStorage(
+        'head',
+        'success',
+        Date.now() - verifyStartedAt,
+      );
+      if (objectRemains) throw new Error('Object deletion was not verified.');
     } catch {
+      this.metrics?.recordStorage('delete', 'error', 0);
       await this.ensureCleanupFailureRecorded(
         actor.id,
         ingestionId,
@@ -363,6 +445,22 @@ export class MediaIngestionService {
         code: 'MEDIA_CLEANUP_REQUIRED',
         message: 'Media cleanup is temporarily unavailable.',
       });
+    }
+
+    const priorAbsenceIsSettled =
+      !objectWasPresent &&
+      claim.cleanupAbsentObservedAt !== null &&
+      Date.now() - claim.cleanupAbsentObservedAt.getTime() >=
+        MEDIA_CLEANUP_SETTLING_MS;
+    if (!priorAbsenceIsSettled) {
+      await this.ensureCleanupDeferred(
+        actor.id,
+        ingestionId,
+        claim,
+        objectWasPresent,
+        context,
+      );
+      return cleanupSettlingResponse(ingestionId);
     }
 
     try {
@@ -415,6 +513,11 @@ export class MediaIngestionService {
           'Media ingestion cleanup is not available.',
         );
       }
+      if (ingestion.storageProvider !== this.storage.provider) {
+        throw new ConflictException(
+          'Media ingestion storage provider is unavailable.',
+        );
+      }
       const claimed = await tx.mediaIngestion.update({
         where: { id: ingestionId },
         data: {
@@ -447,6 +550,7 @@ export class MediaIngestionService {
           failureCode: 'OBJECT_CLEANUP_REQUIRED',
           cleanupAttempts: { increment: 1 },
           cleanupLastAttemptAt: new Date(),
+          cleanupAbsentObservedAt: null,
         },
       });
       if (result.count !== 1) {
@@ -469,6 +573,88 @@ export class MediaIngestionService {
         },
       });
     });
+  }
+
+  private deferCleanupAfterAbsence(
+    actorId: number,
+    ingestionId: number,
+    claim: MediaIngestion & { storageKey: string },
+    resetAbsenceWindow: boolean,
+    context: MediaIngestionContext,
+  ): Promise<void> {
+    return this.prisma.$transaction(async (tx) => {
+      const observedAt =
+        resetAbsenceWindow || claim.cleanupAbsentObservedAt === null
+          ? new Date()
+          : claim.cleanupAbsentObservedAt;
+      const result = await tx.mediaIngestion.updateMany({
+        where: {
+          id: ingestionId,
+          status: 'processing',
+          processingToken: claim.processingToken,
+        },
+        data: {
+          status: 'cleanup_required',
+          failureCode: 'OBJECT_CLEANUP_SETTLING',
+          cleanupAttempts: { increment: 1 },
+          cleanupLastAttemptAt: new Date(),
+          cleanupAbsentObservedAt: observedAt,
+        },
+      });
+      if (result.count !== 1) {
+        throw new ConflictException(
+          'Media ingestion cleanup ownership changed.',
+        );
+      }
+      await tx.auditLog.create({
+        data: {
+          actorId,
+          action: 'media.ingestion_cleanup_settling',
+          targetType: 'media_ingestion',
+          targetId: String(ingestionId),
+          correlationId: context.correlationId,
+          afterSummary: {
+            ingestionId,
+            status: 'cleanup_required',
+            failureCode: 'OBJECT_CLEANUP_SETTLING',
+          },
+        },
+      });
+    });
+  }
+
+  private async ensureCleanupDeferred(
+    actorId: number,
+    ingestionId: number,
+    claim: MediaIngestion & { storageKey: string },
+    resetAbsenceWindow: boolean,
+    context: MediaIngestionContext,
+  ): Promise<void> {
+    try {
+      await this.deferCleanupAfterAbsence(
+        actorId,
+        ingestionId,
+        claim,
+        resetAbsenceWindow,
+        context,
+      );
+    } catch (error: unknown) {
+      const authoritativeState = await this.readIngestionState(ingestionId);
+      if (
+        authoritativeState?.status === 'cleanup_required' &&
+        authoritativeState.processingToken === claim.processingToken &&
+        authoritativeState.failureCode === 'OBJECT_CLEANUP_SETTLING' &&
+        authoritativeState.cleanupAbsentObservedAt !== null
+      ) {
+        return;
+      }
+      throw error instanceof HttpException
+        ? error
+        : new ServiceUnavailableException({
+            code: 'MEDIA_CLEANUP_OUTCOME_UNKNOWN',
+            message: 'Media cleanup outcome requires reconciliation.',
+          });
+    }
   }
 
   private async ensureCleanupFailureRecorded(
@@ -601,8 +787,23 @@ export class MediaIngestionService {
   }): Promise<MediaIngestion> {
     return this.prisma.$transaction(async (tx) => {
       await lockActiveCmsActor(tx, input.actor.id);
-      const sources = await tx.$queryRaw<Array<{ id: number }>>(
-        Prisma.sql`SELECT id FROM "DataSource" WHERE id = ${input.dataSourceId} AND NULLIF(btrim(license), '') IS NOT NULL FOR SHARE`,
+      const sources = await tx.$queryRaw<MediaProvenanceSnapshot[]>(
+        Prisma.sql`SELECT
+          code AS "sourceCodeSnapshot",
+          version AS "sourceVersionSnapshot",
+          license AS "sourceLicenseSnapshot",
+          attribution AS "sourceAttributionSnapshot",
+          "referenceUrl" AS "sourceReferenceUrlSnapshot",
+          "contentHash" AS "sourceContentHashSnapshot"
+        FROM "DataSource"
+        WHERE id = ${input.dataSourceId}
+          AND NULLIF(btrim(code), '') IS NOT NULL
+          AND NULLIF(btrim(version), '') IS NOT NULL
+          AND NULLIF(btrim(license), '') IS NOT NULL
+          AND ("referenceUrl" IS NULL OR NULLIF(btrim("referenceUrl"), '') IS NOT NULL)
+          AND (attribution IS NULL OR NULLIF(btrim(attribution), '') IS NOT NULL)
+          AND ("contentHash" IS NULL OR NULLIF(btrim("contentHash"), '') IS NOT NULL)
+        FOR SHARE`,
       );
       if (sources.length !== 1) {
         throw new UnprocessableEntityException({
@@ -622,6 +823,12 @@ export class MediaIngestionService {
         },
       });
       if (existing) {
+        if (existing.storageProvider !== this.storage.provider) {
+          this.metrics?.recordStorage('put', 'provider_mismatch', 0);
+          throw new ConflictException(
+            'Media ingestion storage provider is unavailable.',
+          );
+        }
         if (existing.requestFingerprint !== input.requestFingerprint) {
           throw new ConflictException('Idempotency-Key is already in use.');
         }
@@ -641,6 +848,11 @@ export class MediaIngestionService {
         if (existing.status === 'processing') {
           throw new ConflictException(
             'Media ingestion is already in progress.',
+          );
+        }
+        if (existing.storageKey || existing.failureCode === 'OBJECT_CLEANED') {
+          throw new ConflictException(
+            'A new Idempotency-Key is required after storage reconciliation.',
           );
         }
         return tx.mediaIngestion.update({
@@ -668,6 +880,7 @@ export class MediaIngestionService {
           processingStartedAt: new Date(),
           processingToken: input.initialProcessingToken,
           attemptCount: 1,
+          ...sources[0],
         },
       });
     });
@@ -677,6 +890,14 @@ export class MediaIngestionService {
     if (!ingestion.mediaId || !ingestion.storageKey || !ingestion.checksum) {
       throw new ConflictException('Completed media ingestion is incoherent.');
     }
+    if (ingestion.storageProvider !== this.storage.provider) {
+      this.metrics?.recordStorage('get', 'provider_mismatch', 0);
+      this.metrics?.recordReconciliation('violation');
+      throw new ConflictException(
+        'Completed media ingestion storage provider is unavailable.',
+      );
+    }
+    const getStartedAt = Date.now();
     try {
       const object = await this.storage.getPrivateObject(ingestion.storageKey);
       if (
@@ -687,7 +908,10 @@ export class MediaIngestionService {
       ) {
         throw new Error('stored object integrity mismatch');
       }
+      this.metrics?.recordStorage('get', 'success', Date.now() - getStartedAt);
     } catch {
+      this.metrics?.recordStorage('get', 'error', Date.now() - getStartedAt);
+      this.metrics?.recordReconciliation('violation');
       throw new ServiceUnavailableException({
         code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
         message: 'Stored media integrity could not be verified.',
@@ -717,8 +941,11 @@ export class MediaIngestionService {
       media.size !== ingestion.size ||
       media.processingStatus !== 'ready' ||
       media.deletedAt !== null
-    )
+    ) {
+      this.metrics?.recordReconciliation('violation');
       throw new ConflictException('Completed media ingestion is incoherent.');
+    }
+    this.metrics?.recordReconciliation('coherent');
     return {
       success: true as const,
       data: {
@@ -769,8 +996,23 @@ export class MediaIngestionService {
   ) {
     return this.prisma.$transaction(async (tx) => {
       await lockActiveCmsActor(tx, actor.id);
-      const sources = await tx.$queryRaw<Array<{ id: number }>>(
-        Prisma.sql`SELECT id FROM "DataSource" WHERE id = ${dataSourceId} AND NULLIF(btrim(license), '') IS NOT NULL FOR SHARE`,
+      const sources = await tx.$queryRaw<MediaProvenanceSnapshot[]>(
+        Prisma.sql`SELECT
+          code AS "sourceCodeSnapshot",
+          version AS "sourceVersionSnapshot",
+          license AS "sourceLicenseSnapshot",
+          attribution AS "sourceAttributionSnapshot",
+          "referenceUrl" AS "sourceReferenceUrlSnapshot",
+          "contentHash" AS "sourceContentHashSnapshot"
+        FROM "DataSource"
+        WHERE id = ${dataSourceId}
+          AND NULLIF(btrim(code), '') IS NOT NULL
+          AND NULLIF(btrim(version), '') IS NOT NULL
+          AND NULLIF(btrim(license), '') IS NOT NULL
+          AND ("referenceUrl" IS NULL OR NULLIF(btrim("referenceUrl"), '') IS NOT NULL)
+          AND (attribution IS NULL OR NULLIF(btrim(attribution), '') IS NOT NULL)
+          AND ("contentHash" IS NULL OR NULLIF(btrim("contentHash"), '') IS NOT NULL)
+        FOR SHARE`,
       );
       if (sources.length !== 1) {
         throw new UnprocessableEntityException({
@@ -783,6 +1025,23 @@ export class MediaIngestionService {
       );
       if (rows.length !== 1) {
         throw new ConflictException('Media ingestion state changed.');
+      }
+      const ingestion = await tx.mediaIngestion.findUniqueOrThrow({
+        where: { id: ingestionId },
+        select: {
+          sourceCodeSnapshot: true,
+          sourceVersionSnapshot: true,
+          sourceLicenseSnapshot: true,
+          sourceAttributionSnapshot: true,
+          sourceReferenceUrlSnapshot: true,
+          sourceContentHashSnapshot: true,
+        },
+      });
+      if (!sameProvenance(sources[0], ingestion)) {
+        throw new UnprocessableEntityException({
+          code: 'MEDIA_SOURCE_NOT_APPROVED',
+          message: 'Media source provenance changed during ingestion.',
+        });
       }
       const temporaryUrl = `urn:hsk:media:${randomUUID()}`;
       const media = await tx.media.create({
@@ -800,6 +1059,7 @@ export class MediaIngestionService {
           dataSourceId,
           metadata: {
             ingestionVersion: 'secure-media-ingestion-v1',
+            provenance: sources[0],
             ...processed.metadata,
           },
           uploadedById: actor.id,
@@ -1023,7 +1283,12 @@ export class MediaIngestionService {
   ): Promise<boolean> {
     return (
       (await this.prisma.mediaIngestion.count({
-        where: { id: ingestionId, status: 'processing', processingToken },
+        where: {
+          id: ingestionId,
+          status: 'processing',
+          processingToken,
+          storageProvider: this.storage.provider,
+        },
       })) === 1
     );
   }
@@ -1072,4 +1337,45 @@ function cleanupCompletedResponse(ingestionId: number) {
     success: true as const,
     data: { ingestionId, cleanupCompleted: true },
   };
+}
+
+function cleanupSettlingResponse(ingestionId: number) {
+  return {
+    success: true as const,
+    data: { ingestionId, cleanupCompleted: false, settling: true },
+  };
+}
+
+function sameProvenance(
+  expected: MediaProvenanceSnapshot | undefined,
+  actual: MediaProvenanceSnapshot,
+): boolean {
+  return (
+    expected !== undefined &&
+    expected.sourceCodeSnapshot === actual.sourceCodeSnapshot &&
+    expected.sourceVersionSnapshot === actual.sourceVersionSnapshot &&
+    expected.sourceLicenseSnapshot === actual.sourceLicenseSnapshot &&
+    expected.sourceAttributionSnapshot === actual.sourceAttributionSnapshot &&
+    expected.sourceReferenceUrlSnapshot === actual.sourceReferenceUrlSnapshot &&
+    expected.sourceContentHashSnapshot === actual.sourceContentHashSnapshot
+  );
+}
+
+function ingestionMetricOutcome(
+  error: unknown,
+): 'rejected' | 'failed' | 'cleanup_required' {
+  if (error instanceof UnprocessableEntityException) return 'rejected';
+  if (error instanceof ServiceUnavailableException) {
+    const response = error.getResponse();
+    if (
+      response &&
+      typeof response === 'object' &&
+      'code' in response &&
+      (response.code === 'MEDIA_CLEANUP_REQUIRED' ||
+        response.code === 'MEDIA_CLEANUP_OUTCOME_UNKNOWN')
+    ) {
+      return 'cleanup_required';
+    }
+  }
+  return 'failed';
 }

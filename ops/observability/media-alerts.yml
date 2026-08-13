@@ -1,0 +1,48 @@
+groups:
+  - name: hsk-media-release
+    rules:
+      - alert: HskMediaCleanupBacklog
+        expr: hsk_media_cleanup_required > 0 and hsk_media_cleanup_oldest_age_seconds > 300
+        for: 10m
+        labels:
+          severity: page
+          owner: media-platform
+        annotations:
+          summary: Media object cleanup has not converged
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaProcessingStuck
+        expr: hsk_media_stuck_processing > 0
+        for: 10m
+        labels:
+          severity: page
+          owner: media-platform
+        annotations:
+          summary: Media ingestion is stuck beyond the 15-minute fence
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaScannerUnavailable
+        expr: increase(hsk_media_scanner_total{outcome="unavailable"}[10m]) > 2
+        for: 5m
+        labels:
+          severity: page
+          owner: security-platform
+        annotations:
+          summary: Malware scanner is unavailable
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaStorageErrorSpike
+        expr: sum(increase(hsk_media_storage_operations_total{outcome="error"}[10m])) > 5
+        for: 5m
+        labels:
+          severity: ticket
+          owner: media-platform
+        annotations:
+          summary: Private object storage errors are elevated
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md
+      - alert: HskMediaCoherenceViolation
+        expr: increase(hsk_media_reconciliation_total{outcome="violation"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: page
+          owner: media-platform
+        annotations:
+          summary: Media database/object coherence verification failed
+          runbook_url: docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md

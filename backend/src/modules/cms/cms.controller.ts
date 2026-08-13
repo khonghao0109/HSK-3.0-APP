@@ -48,6 +48,7 @@ import {
   MediaIngestionService,
   UploadedMediaFile,
 } from './media-ingestion/media-ingestion.service';
+import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
 import { MediaUploadRateLimitGuard } from './media-ingestion/media-upload-rate-limit.guard';
 import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upload-exception.filter';
 import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe';
@@ -68,7 +69,7 @@ export class CmsController {
 
   @Post('media/ingestions')
   @Header('Cache-Control', 'no-store')
-  @UseGuards(MediaUploadRateLimitGuard)
+  @UseGuards(MediaIngestionEnabledGuard, MediaUploadRateLimitGuard)
   @UseFilters(SafeMediaUploadExceptionFilter)
   @UseInterceptors(
     FileInterceptor('file', {

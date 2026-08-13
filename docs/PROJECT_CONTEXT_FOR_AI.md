@@ -331,15 +331,22 @@ Nguyen tac:
 
 1. Uu tien doc `docs/api.md`, `docs/roadmap.md`, `backend/prisma/schema.prisma` truoc khi sua code.
 2. Giu boundary ro:
+
 - Khong dua RAG logic vao `backend`.
 - Khong dua business core vao `ai/`.
+
 3. Khi them endpoint:
+
 - Cap nhat `docs/api.md`.
 - Dong bo DTO/types va test.
+
 4. Khi sua data pipeline:
+
 - Khong sua truc tiep file trong `raw/`.
 - Parse -> normalize -> seed theo dung pipeline.
+
 5. Khi thay doi schema:
+
 - Tao migration Prisma moi.
 - Ghi ro impact toi API.
 
@@ -575,3 +582,35 @@ security/adapter contract `8/8` suite (`58/58` test), production
 dependency audit 0 vulnerability. Day la PASS cho code commit, khong phai production
 release: live S3/ClamAV rehearsal, bucket policy/retention va proxy access-log
 redaction van do Infra/Release hoan tat truoc beta.
+
+## 22. Media post-commit integrity & release controls — 13/08/2026
+
+- Forward migration 17 giu migration 16 bat bien, snapshot DataSource
+  code/version/license/attribution/referenceUrl/contentHash vao MediaIngestion va
+  guard parent mutation. Correction provenance tao DataSource version moi; completed
+  history khong phu thuoc metadata parent co the sua.
+- V1 exact single-provider: Media access, signed read, completed replay, retry cleanup
+  va write retry fail-closed truoc storage I/O neu stored provider khac adapter.
+- Unknown PUT khong bao clean sau mot DELETE. Reconciliation HEAD/DELETE/HEAD, ghi
+  observation absence dau, doi toi thieu 60 giay, recheck; late commit duoc xoa va
+  reset window. Key ambiguous/da cleanup khong reuse, history khong hard-delete.
+- Upload kill switch `MEDIA_INGESTION_ENABLED` mac dinh false ngoai test; cleanup,
+  metrics va signed read tiep tuc cho forward recovery. Metrics endpoint private dung
+  bearer secret va label enum bounded; khong label media/object/file/user/signature.
+- Dashboard/alerts/Nginx query-redaction snippet/runbook o `ops/observability`,
+  `ops/nginx` va `docs/operations`. Local deterministic gate khong thay the live
+  S3/ClamAV/proxy/alert delivery; thieu ha tang that thi production release la
+  BLOCKED_EXTERNAL.
+- Migration 17 frozen SHA-256:
+  `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`;
+  migration 16 van byte-identical tai `a5bb8bdd...fe2e`. Hai database disposable moi
+  deploy du 17 migration; SQL integrity PASS va ROLLBACK ve 0 ingestion, ca hai drift
+  check rong. Inventory: 60 table, 147 FK, 512 catalog CHECK row, 61 trigger-event
+  row. Full E2E 11 suite/160 test va unit 45 suite/411 test deu PASS; dependency audit
+  production co 0 vulnerability.
+- Preflight migration 17 da rehearse ca fail va success: completed row thieu exact
+  immutable provenance audit va source license whitespace deu dung fail-safe truoc
+  DDL; exact six-field audit marker cho synthetic fixture cho phep backfill snapshot.
+  Day chi la deterministic migration evidence. Live S3, ClamAV, reverse proxy va
+  alert delivery chua co endpoint/credential that, nen release van
+  `BLOCKED_EXTERNAL`.

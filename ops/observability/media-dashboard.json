@@ -1,0 +1,66 @@
+{
+  "title": "HSK Media Ingestion Release",
+  "tags": ["hsk", "media", "release"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "panels": [
+    {
+      "title": "Ingestion outcomes",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum by (outcome) (rate(hsk_media_ingestion_total[5m]))" }
+      ]
+    },
+    {
+      "title": "Scanner outcomes and latency",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum by (outcome) (rate(hsk_media_scanner_total[5m]))" },
+        {
+          "expr": "sum(rate(hsk_media_scanner_latency_seconds_sum[5m])) / clamp_min(sum(rate(hsk_media_scanner_latency_seconds_count[5m])), 1)"
+        }
+      ]
+    },
+    {
+      "title": "Storage operations and latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome) (rate(hsk_media_storage_operations_total[5m]))"
+        },
+        {
+          "expr": "sum by (operation) (rate(hsk_media_storage_latency_seconds_sum[5m])) / clamp_min(sum by (operation) (rate(hsk_media_storage_latency_seconds_count[5m])), 1)"
+        }
+      ]
+    },
+    {
+      "title": "Cleanup backlog / oldest age",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "hsk_media_cleanup_required" },
+        { "expr": "hsk_media_cleanup_oldest_age_seconds" }
+      ]
+    },
+    {
+      "title": "Stuck processing / oldest age",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "hsk_media_stuck_processing" },
+        { "expr": "hsk_media_processing_oldest_age_seconds" }
+      ]
+    },
+    {
+      "title": "Signed access and reconciliation",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum by (outcome) (rate(hsk_media_signed_access_total[5m]))"
+        },
+        {
+          "expr": "sum by (outcome) (increase(hsk_media_reconciliation_total[5m]))"
+        }
+      ]
+    }
+  ]
+}

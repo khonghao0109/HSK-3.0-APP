@@ -7,7 +7,7 @@ import {
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import sharp from 'sharp';
 
 import type {
@@ -18,6 +18,7 @@ import type {
   ObjectStoragePort,
   StoredObject,
 } from '../src/infrastructure/storage/object-storage.port';
+import { ObjectStorageWriteError } from '../src/infrastructure/storage/object-storage.port';
 import { MediaFileProcessor } from '../src/modules/cms/media-ingestion/media-file.processor';
 import { MediaIngestionService } from '../src/modules/cms/media-ingestion/media-ingestion.service';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -127,7 +128,7 @@ describe('Media ingestion stale-attempt fencing', () => {
     ).resolves.toBe(0);
   });
 
-  it('fences a stale owner after an explicit recovery state transition', async () => {
+  it('requires cleanup instead of takeover after storage identity is reserved', async () => {
     const { actor, file, key, service, source, storage } =
       await createFixture();
     const attemptA = settle(
@@ -143,7 +144,10 @@ describe('Media ingestion stale-attempt fencing', () => {
 
     await prisma.mediaIngestion.update({
       where: { id: claimedByA.id },
-      data: { status: 'failed', failureCode: 'OPERATOR_RECOVERY_TEST' },
+      data: {
+        status: 'cleanup_required',
+        failureCode: 'OPERATOR_RECOVERY_TEST',
+      },
     });
     const attemptB = await settle(
       service.ingest(actor, file, source.id, key, {
@@ -153,11 +157,8 @@ describe('Media ingestion stale-attempt fencing', () => {
     storage.releaseFirstPut();
     const resultA = await attemptA;
 
-    expect(attemptB.status).toBe('fulfilled');
-    expect(resultA.status).toBe('fulfilled');
-    if (resultA.status === 'fulfilled') {
-      expect(resultA.value.data.idempotent).toBe(true);
-    }
+    expect(attemptB.status).toBe('rejected');
+    expect(resultA.status).toBe('rejected');
     const final = await prisma.mediaIngestion.findUniqueOrThrow({
       where: { id: claimedByA.id },
       select: {
@@ -172,24 +173,17 @@ describe('Media ingestion stale-attempt fencing', () => {
       },
     });
     expect(final).toMatchObject({
-      attemptCount: 2,
-      status: 'completed',
+      attemptCount: 1,
+      status: 'cleanup_required',
       validatedMimeType: 'image/png',
     });
-    expect(final.processingToken).not.toBe(claimedByA.processingToken);
-    expect(final.mediaId).not.toBeNull();
+    expect(final.processingToken).toBe(claimedByA.processingToken);
+    expect(final.mediaId).toBeNull();
     expect(final.storageKey).not.toBeNull();
     expect(storage.count()).toBe(1);
-    const stored = await storage.getPrivateObject(final.storageKey!);
-    expect(stored).toMatchObject({
-      checksum: final.checksum,
-      contentType: final.validatedMimeType,
-      size: final.size,
-    });
-    expect(sha256(stored.body)).toBe(final.checksum);
     await expect(
-      prisma.media.count({ where: { id: final.mediaId! } }),
-    ).resolves.toBe(1);
+      prisma.media.count({ where: { uploadedById: actor.id } }),
+    ).resolves.toBe(0);
     await expect(
       prisma.auditLog.count({
         where: {
@@ -197,7 +191,7 @@ describe('Media ingestion stale-attempt fencing', () => {
           targetId: String(final.mediaId),
         },
       }),
-    ).resolves.toBe(1);
+    ).resolves.toBe(0);
     await expect(
       prisma.auditLog.count({
         where: {
@@ -495,7 +489,13 @@ describe('Media ingestion stale-attempt fencing', () => {
       transactionSpy.mockRestore();
     }
 
-    expect(result.data.cleanupCompleted).toBe(true);
+    expect(result.data.cleanupCompleted).toBe(false);
+    await ageCleanupObservation(ingestion.id);
+    await expect(
+      service.retryCleanup(actor, ingestion.id, {
+        correlationId: randomUUID(),
+      }),
+    ).resolves.toMatchObject({ data: { cleanupCompleted: true } });
     expect(storage.count()).toBe(0);
     await expect(
       prisma.mediaIngestion.findUniqueOrThrow({
@@ -508,7 +508,7 @@ describe('Media ingestion stale-attempt fencing', () => {
         },
       }),
     ).resolves.toEqual({
-      cleanupAttempts: 1,
+      cleanupAttempts: 2,
       failureCode: 'OBJECT_CLEANED',
       mediaId: null,
       status: 'failed',
@@ -556,7 +556,13 @@ describe('Media ingestion stale-attempt fencing', () => {
       transactionSpy.mockRestore();
     }
 
-    expect(result.data.cleanupCompleted).toBe(true);
+    expect(result.data.cleanupCompleted).toBe(false);
+    await ageCleanupObservation(ingestion.id);
+    await expect(
+      service.retryCleanup(actor, ingestion.id, {
+        correlationId: randomUUID(),
+      }),
+    ).resolves.toMatchObject({ data: { cleanupCompleted: true } });
     expect(storage.count()).toBe(0);
     await expect(
       prisma.mediaIngestion.findUniqueOrThrow({
@@ -697,7 +703,7 @@ describe('Media ingestion stale-attempt fencing', () => {
     ).resolves.toBe(1);
   });
 
-  it('compensates safely when source approval is revoked after object write', async () => {
+  it('prevents provenance revocation after ingestion claim', async () => {
     const { actor, file, key, service, source, storage } =
       await createFixture();
     const pending = settle(
@@ -706,41 +712,233 @@ describe('Media ingestion stale-attempt fencing', () => {
       }),
     );
     await storage.firstPutStored;
-    await prisma.dataSource.update({
-      where: { id: source.id },
-      data: { license: null },
-    });
+    await expect(
+      prisma.dataSource.update({
+        where: { id: source.id },
+        data: { license: null },
+      }),
+    ).rejects.toThrow(
+      'Referenced media provenance is immutable; create a new DataSource version.',
+    );
     storage.releaseFirstPut();
     const result = await pending;
 
-    expect(result.status).toBe('rejected');
-    if (result.status === 'rejected') {
-      expect(result.reason).toBeInstanceOf(UnprocessableEntityException);
-      expect(
-        (result.reason as UnprocessableEntityException).getResponse(),
-      ).toMatchObject({ code: 'MEDIA_SOURCE_NOT_APPROVED' });
-    }
+    expect(result.status).toBe('fulfilled');
     const final = await prisma.mediaIngestion.findFirstOrThrow({
       where: { actorId: actor.id },
       select: { failureCode: true, id: true, mediaId: true, status: true },
     });
     expect(final).toMatchObject({
-      failureCode: 'MEDIA_SOURCE_NOT_APPROVED',
-      mediaId: null,
-      status: 'failed',
+      failureCode: null,
+      status: 'completed',
     });
-    expect(storage.count()).toBe(0);
+    expect(storage.count()).toBe(1);
     await expect(
       prisma.media.count({ where: { uploadedById: actor.id } }),
-    ).resolves.toBe(0);
+    ).resolves.toBe(1);
     await expect(
       prisma.auditLog.count({
         where: {
-          action: 'media.ingestion_failed',
-          targetId: String(final.id),
+          action: 'media.ingested',
+          targetId: String(final.mediaId),
         },
       }),
     ).resolves.toBe(1);
+  });
+
+  it('serializes provenance mutation behind the claim lock and rejects the parent update', async () => {
+    const { actor, file, key, service, source, storage } =
+      await createFixture();
+    storage.releaseFirstPut();
+    await service.ingest(actor, file, source.id, key, {
+      correlationId: randomUUID(),
+    });
+    const clientA = new PrismaClient();
+    const clientB = new PrismaClient();
+    const locked = createDeferred<void>();
+    const release = createDeferred<void>();
+    const pidReady = createDeferred<number>();
+    try {
+      const transactionA = settle(
+        clientA.$transaction(async (tx) => {
+          await tx.$queryRaw(
+            Prisma.sql`SELECT id FROM "DataSource" WHERE id = ${source.id} FOR SHARE`,
+          );
+          locked.resolve();
+          await release.promise;
+        }),
+      );
+      await locked.promise;
+      const transactionB = settle(
+        clientB.$transaction(async (tx) => {
+          const [{ pid }] = await tx.$queryRaw<Array<{ pid: number }>>(
+            Prisma.sql`SELECT pg_backend_pid()::int AS pid`,
+          );
+          pidReady.resolve(pid);
+          await tx.dataSource.update({
+            where: { id: source.id },
+            data: { license: 'Concurrent changed license' },
+          });
+        }),
+      );
+      const pid = await pidReady.promise;
+      await expect(waitForDatabaseLock(prisma, pid)).resolves.toBe(true);
+      release.resolve();
+      const [resultA, resultB] = await Promise.all([
+        transactionA,
+        transactionB,
+      ]);
+      expect(resultA.status).toBe('fulfilled');
+      expect(resultB.status).toBe('rejected');
+      if (resultB.status === 'rejected') {
+        expect(String(resultB.reason)).toContain(
+          'Referenced media provenance is immutable; create a new DataSource version.',
+        );
+        expect(String(resultB.reason)).not.toMatch(/55P03|57014|40P01|P2028/u);
+      }
+      await expect(
+        prisma.dataSource.findUniqueOrThrow({
+          where: { id: source.id },
+          select: { license: true },
+        }),
+      ).resolves.toEqual({ license: source.license });
+    } finally {
+      release.resolve();
+      await Promise.all([clientA.$disconnect(), clientB.$disconnect()]);
+    }
+  });
+
+  it('rejects completed replay before storage I/O when the adapter provider differs', async () => {
+    const { actor, file, key, service, source, storage } =
+      await createFixture();
+    storage.releaseFirstPut();
+    await service.ingest(actor, file, source.id, key, {
+      correlationId: randomUUID(),
+    });
+    const mismatchedStorage = new ProviderMismatchStorage(storage);
+    const replayService = new MediaIngestionService(
+      prisma,
+      new MediaFileProcessor(),
+      mismatchedStorage,
+      new AlwaysCleanScanner(),
+    );
+
+    await expect(
+      replayService.ingest(actor, file, source.id, key, {
+        correlationId: randomUUID(),
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(mismatchedStorage.readCount).toBe(0);
+  });
+
+  it('does not declare cleanup complete until an unknown PUT has settled absent', async () => {
+    const fixture = await createFixture();
+    const lateStorage = new LateCommitObjectStorage();
+    const idempotencyKey = `late-put-${randomUUID()}`;
+    const service = new MediaIngestionService(
+      prisma,
+      new MediaFileProcessor(),
+      lateStorage,
+      new AlwaysCleanScanner(),
+    );
+    const upload = await settle(
+      service.ingest(
+        fixture.actor,
+        fixture.file,
+        fixture.source.id,
+        idempotencyKey,
+        { correlationId: randomUUID() },
+      ),
+    );
+    expect(upload.status).toBe('rejected');
+    const ingestion = await prisma.mediaIngestion.findFirstOrThrow({
+      where: {
+        actorId: fixture.actor.id,
+        storageProvider: lateStorage.provider,
+      },
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+
+    const firstCleanup = await service.retryCleanup(
+      fixture.actor,
+      ingestion.id,
+      { correlationId: randomUUID() },
+    );
+    lateStorage.commitLatePut();
+
+    expect(firstCleanup.data).toMatchObject({
+      cleanupCompleted: false,
+      settling: true,
+    });
+    expect(lateStorage.deleteCount).toBe(1);
+    expect(lateStorage.count()).toBe(1);
+    const states = await prisma.$queryRaw<
+      Array<{
+        cleanupAbsentObservedAt: Date | null;
+        failureCode: string | null;
+        status: string;
+      }>
+    >(Prisma.sql`
+      SELECT "cleanupAbsentObservedAt", "failureCode", status::text
+      FROM "MediaIngestion"
+      WHERE id = ${ingestion.id}
+    `);
+    expect(states[0]).toMatchObject({
+      cleanupAbsentObservedAt: expect.any(Date),
+      failureCode: 'OBJECT_CLEANUP_SETTLING',
+      status: 'cleanup_required',
+    });
+
+    const secondCleanup = await service.retryCleanup(
+      fixture.actor,
+      ingestion.id,
+      { correlationId: randomUUID() },
+    );
+    expect(secondCleanup.data).toMatchObject({
+      cleanupCompleted: false,
+      settling: true,
+    });
+    expect(lateStorage.deleteCount).toBe(2);
+    expect(lateStorage.count()).toBe(0);
+
+    await ageCleanupObservation(ingestion.id);
+    await expect(
+      service.retryCleanup(fixture.actor, ingestion.id, {
+        correlationId: randomUUID(),
+      }),
+    ).resolves.toMatchObject({ data: { cleanupCompleted: true } });
+    expect(lateStorage.count()).toBe(0);
+    await expect(
+      prisma.mediaIngestion.findUniqueOrThrow({
+        where: { id: ingestion.id },
+        select: { failureCode: true, mediaId: true, status: true },
+      }),
+    ).resolves.toEqual({
+      failureCode: 'OBJECT_CLEANED',
+      mediaId: null,
+      status: 'failed',
+    });
+    await expect(
+      service.ingest(
+        fixture.actor,
+        fixture.file,
+        fixture.source.id,
+        idempotencyKey,
+        { correlationId: randomUUID() },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+    await expect(
+      prisma.auditLog.count({
+        where: {
+          action: 'media.ingestion_cleanup_completed',
+          targetId: String(ingestion.id),
+        },
+      }),
+    ).resolves.toBe(1);
+    await expect(
+      prisma.media.count({ where: { uploadedById: fixture.actor.id } }),
+    ).resolves.toBe(0);
   });
 
   async function createFixture() {
@@ -762,7 +960,15 @@ describe('Media ingestion stale-attempt fencing', () => {
         license: 'Synthetic test fixture',
         createdById: actor.id,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        code: true,
+        version: true,
+        license: true,
+        attribution: true,
+        referenceUrl: true,
+        contentHash: true,
+      },
     });
     const storage = new BarrierObjectStorage();
     const service = new MediaIngestionService(
@@ -824,10 +1030,25 @@ describe('Media ingestion stale-attempt fencing', () => {
         processingStartedAt: new Date(),
         processingToken: randomUUID(),
         attemptCount: 1,
+        sourceCodeSnapshot: fixture.source.code,
+        sourceVersionSnapshot: fixture.source.version,
+        sourceLicenseSnapshot: fixture.source.license!,
+        sourceAttributionSnapshot: fixture.source.attribution,
+        sourceReferenceUrlSnapshot: fixture.source.referenceUrl,
+        sourceContentHashSnapshot: fixture.source.contentHash,
       },
       select: { id: true },
     });
     return { ...fixture, ingestion };
+  }
+
+  async function ageCleanupObservation(ingestionId: number): Promise<void> {
+    await prisma.$executeRaw(Prisma.sql`
+      UPDATE "MediaIngestion"
+      SET "cleanupAbsentObservedAt" =
+        (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') - INTERVAL '2 minutes'
+      WHERE id = ${ingestionId}
+    `);
   }
 });
 
@@ -892,6 +1113,10 @@ class BarrierObjectStorage implements ObjectStoragePort {
     return Promise.resolve({ ...object, body: Buffer.from(object.body) });
   }
 
+  privateObjectExists(key: string): Promise<boolean> {
+    return Promise.resolve(this.objects.has(key));
+  }
+
   deletePrivateObject(key: string): Promise<void> {
     this.objects.delete(key);
     return Promise.resolve();
@@ -916,10 +1141,107 @@ class BarrierObjectStorage implements ObjectStoragePort {
   }
 }
 
+class ProviderMismatchStorage implements ObjectStoragePort {
+  readonly provider = 's3';
+  readCount = 0;
+
+  constructor(private readonly delegate: BarrierObjectStorage) {}
+
+  putPrivateObject(): Promise<void> {
+    return Promise.reject(new Error('Unexpected storage write.'));
+  }
+
+  getPrivateObject(key: string): Promise<StoredObject> {
+    this.readCount += 1;
+    return this.delegate.getPrivateObject(key);
+  }
+
+  privateObjectExists(): Promise<boolean> {
+    return Promise.reject(new Error('Unexpected storage inspection.'));
+  }
+
+  deletePrivateObject(): Promise<void> {
+    return Promise.reject(new Error('Unexpected storage delete.'));
+  }
+}
+
+class LateCommitObjectStorage implements ObjectStoragePort {
+  readonly provider = 'late-commit-test';
+  deleteCount = 0;
+  private pending: (StoredObject & { key: string }) | undefined;
+  private readonly objects = new Map<string, StoredObject>();
+
+  putPrivateObject(input: {
+    key: string;
+    body: Buffer;
+    contentType: string;
+    checksum: string;
+  }): Promise<void> {
+    this.pending = {
+      key: input.key,
+      body: Buffer.from(input.body),
+      contentType: input.contentType,
+      checksum: input.checksum,
+      size: input.body.length,
+    };
+    return Promise.reject(new ObjectStorageWriteError('unknown'));
+  }
+
+  getPrivateObject(key: string): Promise<StoredObject> {
+    const object = this.objects.get(key);
+    if (!object) return Promise.reject(new Error('Object not found.'));
+    return Promise.resolve({ ...object, body: Buffer.from(object.body) });
+  }
+
+  privateObjectExists(key: string): Promise<boolean> {
+    return Promise.resolve(this.objects.has(key));
+  }
+
+  deletePrivateObject(key: string): Promise<void> {
+    this.deleteCount += 1;
+    this.objects.delete(key);
+    return Promise.resolve();
+  }
+
+  commitLatePut(): void {
+    if (!this.pending) throw new Error('No pending PUT to commit.');
+    const { key, ...object } = this.pending;
+    this.objects.set(key, object);
+    this.pending = undefined;
+  }
+
+  count(): number {
+    return this.objects.size;
+  }
+}
+
 function createDeferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
   const promise = new Promise<T>((innerResolve) => {
     resolve = innerResolve;
   });
   return { promise, resolve };
+}
+
+async function waitForDatabaseLock(
+  prisma: PrismaService,
+  pid: number,
+): Promise<boolean> {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const rows = await prisma.$queryRaw<
+      Array<{ waitEventType: string | null }>
+    >(
+      Prisma.sql`
+        SELECT wait_event_type AS "waitEventType"
+        FROM pg_stat_activity
+        WHERE pid = ${pid}
+      `,
+    );
+    if (rows[0]?.waitEventType === 'Lock') return true;
+    await new Promise<void>((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(
+    'Provenance concurrency test did not observe transaction B waiting on Lock.',
+  );
 }

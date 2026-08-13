@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -104,12 +105,46 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
     };
   }
 
+  async privateObjectExists(key: string): Promise<boolean> {
+    try {
+      await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+        { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
+      );
+      return true;
+    } catch (error: unknown) {
+      if (isS3NotFound(error)) return false;
+      throw new Error('Private object presence could not be verified.');
+    }
+  }
+
   async deletePrivateObject(key: string): Promise<void> {
     await this.client.send(
       new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
       { abortSignal: AbortSignal.timeout(this.requestTimeoutMs) },
     );
   }
+}
+
+function isS3NotFound(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const name = 'name' in error ? error.name : undefined;
+  const metadata =
+    '$metadata' in error &&
+    error.$metadata &&
+    typeof error.$metadata === 'object'
+      ? error.$metadata
+      : undefined;
+  const statusCode =
+    metadata && 'httpStatusCode' in metadata
+      ? metadata.httpStatusCode
+      : undefined;
+  return (
+    name === 'NotFound' ||
+    name === 'NoSuchKey' ||
+    name === 'NoSuchObject' ||
+    statusCode === 404
+  );
 }
 
 async function readBoundedBody(body: unknown): Promise<Buffer> {

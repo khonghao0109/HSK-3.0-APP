@@ -672,13 +672,13 @@ Client không được gửi `status`, `version`, revision number, score/correct
 - Payload canonical tối đa 65.536 byte, depth tối đa 8, string tối đa 4.096 ký tự, array tối đa 100 phần tử; `orderIndex` từ 1 đến 1.000.000.
 - Boolean như `caseSensitive` chỉ nhận JSON boolean thật.
 
-| Type | Exact `content` | Exact authoritative `answer` | Publish V1 |
-| --- | --- | --- | :---: |
-| `mcq` | `{ "options": [{ "id", "text" }, ...] }`, 2–100 stable unique ID | `{ "optionId": "..." }`, ID phải tồn tại | Có |
-| `listening_choice` | Giống `mcq` | Giống `mcq` | Có, bắt buộc ready/live audio |
-| `fill_blank` | `{}` | `{ "acceptedTexts": [...], "caseSensitive"?: boolean }`, 1–100 đáp án | Có |
-| `arrange_sentence` | `{ "tokens": [{ "id", "text" }, ...] }`, 2–100 stable unique ID | `{ "tokenIds": [...] }`, đúng và đủ tập token, không duplicate | Có |
-| `speaking_repeat` | `{ "referenceText"?: "..." }` | `{}` | Không; chỉ lưu draft, publish trả `422` |
+| Type               | Exact `content`                                                  | Exact authoritative `answer`                                          |               Publish V1                |
+| ------------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------- | :-------------------------------------: |
+| `mcq`              | `{ "options": [{ "id", "text" }, ...] }`, 2–100 stable unique ID | `{ "optionId": "..." }`, ID phải tồn tại                              |                   Có                    |
+| `listening_choice` | Giống `mcq`                                                      | Giống `mcq`                                                           |      Có, bắt buộc ready/live audio      |
+| `fill_blank`       | `{}`                                                             | `{ "acceptedTexts": [...], "caseSensitive"?: boolean }`, 1–100 đáp án |                   Có                    |
+| `arrange_sentence` | `{ "tokens": [{ "id", "text" }, ...] }`, 2–100 stable unique ID  | `{ "tokenIds": [...] }`, đúng và đủ tập token, không duplicate        |                   Có                    |
+| `speaking_repeat`  | `{ "referenceText"?: "..." }`                                    | `{}`                                                                  | Không; chỉ lưu draft, publish trả `422` |
 
 Lỗi từ shared shape validator trả `422` với `{ code, path, message }`; mọi field lạ trong authoring/import/DTO dùng generic path `$.$unknown`, không phản chiếu tên property do client kiểm soát. Publish `speaking_repeat` trả safe `422` message và listening media trả `422` với `{ code: "listening_media_not_ready", path: "mediaId", message }`. Không phản chiếu raw answer, SQL, constraint name hoặc Prisma error.
 
@@ -771,15 +771,15 @@ Ví dụ commit dùng header `Idempotency-Key: hsk1-exercise-import-v1` và body
 
 #### Error matrix
 
-| HTTP | Trường hợp | Contract an toàn |
-| ---: | --- | --- |
-| `400` | DTO/path/query sai kiểu, unexpected body field tại HTTP whitelist | Không chạy mutation; field lạ dùng path `$.$unknown` |
-| `401/403` | JWT/account/role admin không hợp lệ | Không tin role claim cũ |
-| `404` | Exercise, revision, DataSource hoặc parent Lesson không tồn tại | Không lộ SQL |
-| `409` | Stale revision, parent/topic mismatch, preview hash đổi, idempotency key reuse khác request, matching import job incomplete/incoherent, persistence FK/CHECK (`P2003`/`23503`/`P2004`/`23514`), race hoặc concurrent conflict | Client reload/preview lại; job incomplete cần manual review |
-| `422` | Shape/domain authoring sai, speaking publish, listening media chưa ready, import có row lỗi kể cả source key đã tồn tại | Có safe `code/path`; không trả raw answer/payload |
-| `503` | Lock/statement/Prisma transaction timeout hoặc connection tạm lỗi | Có thể retry đúng idempotency key |
-| `500` | Lỗi persistence không phân loại | Message generic, không lộ secret/URL/SQL |
+|      HTTP | Trường hợp                                                                                                                                                                                                                    | Contract an toàn                                            |
+| --------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+|     `400` | DTO/path/query sai kiểu, unexpected body field tại HTTP whitelist                                                                                                                                                             | Không chạy mutation; field lạ dùng path `$.$unknown`        |
+| `401/403` | JWT/account/role admin không hợp lệ                                                                                                                                                                                           | Không tin role claim cũ                                     |
+|     `404` | Exercise, revision, DataSource hoặc parent Lesson không tồn tại                                                                                                                                                               | Không lộ SQL                                                |
+|     `409` | Stale revision, parent/topic mismatch, preview hash đổi, idempotency key reuse khác request, matching import job incomplete/incoherent, persistence FK/CHECK (`P2003`/`23503`/`P2004`/`23514`), race hoặc concurrent conflict | Client reload/preview lại; job incomplete cần manual review |
+|     `422` | Shape/domain authoring sai, speaking publish, listening media chưa ready, import có row lỗi kể cả source key đã tồn tại                                                                                                       | Có safe `code/path`; không trả raw answer/payload           |
+|     `503` | Lock/statement/Prisma transaction timeout hoặc connection tạm lỗi                                                                                                                                                             | Có thể retry đúng idempotency key                           |
+|     `500` | Lỗi persistence không phân loại                                                                                                                                                                                               | Message generic, không lộ secret/URL/SQL                    |
 
 Feature-specific integrity và production-path concurrency runners được mô tả ở runbook. Runner định nghĩa 7 race: concurrent revisions, concurrent publish, publish/archive, publish/submit với actor và learner khác nhau, publish/submit cùng actor, archive/submit và import idempotency retry. Artifact frozen đã pass fresh deploy 15 migration, P0/Activity/Exercise SQL acceptance, migrate status và hai chiều drift; P0 `3/3`, CMS `4/4`, Activity `5/5`, Exercise `7/7`, full E2E `8/8` suite (`118/118` test) và Exercise preflight rerun rejection đều GREEN trên các database disposable riêng.
 
@@ -821,13 +821,13 @@ Body duy nhất của attempt:
 
 #### Scoring `lesson-activity-v1`
 
-| Exercise type | Client answer | Rule |
-| --- | --- | --- |
-| `mcq` | `{ "optionId": "..." }` | So stable option ID có tồn tại trong authored options. |
-| `listening_choice` | `{ "optionId": "..." }` | Cùng rule stable option ID; không dùng array index. |
-| `fill_blank` | `{ "text": "..." }` | NFKC → trim → collapse whitespace; mặc định case-insensitive, chỉ case-sensitive khi authoring khai báo. |
-| `arrange_sentence` | `{ "tokenIds": ["..."] }` | Token set phải chính xác và thứ tự phải khớp tuyệt đối. |
-| `speaking_repeat` | — | `422`, chưa có pronunciation engine nên không tạo điểm/fact giả. |
+| Exercise type      | Client answer             | Rule                                                                                                     |
+| ------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `mcq`              | `{ "optionId": "..." }`   | So stable option ID có tồn tại trong authored options.                                                   |
+| `listening_choice` | `{ "optionId": "..." }`   | Cùng rule stable option ID; không dùng array index.                                                      |
+| `fill_blank`       | `{ "text": "..." }`       | NFKC → trim → collapse whitespace; mặc định case-insensitive, chỉ case-sensitive khi authoring khai báo. |
+| `arrange_sentence` | `{ "tokenIds": ["..."] }` | Token set phải chính xác và thứ tự phải khớp tuyệt đối.                                                  |
+| `speaking_repeat`  | —                         | `422`, chưa có pronunciation engine nên không tạo điểm/fact giả.                                         |
 
 V1 dùng binary score `100/0`; `isCorrect` nhất quán với score. Shape authoring mơ hồ/sai trả `422` và rollback toàn bộ. Server snapshot exercise ID/location, version, type, prompt, content, authoritative answer, explanation, safe media projection và scoring version trong immutable attempt. Public response chỉ trả attempt ID/number, result, duration, version, feedback version, explanation, safe media projection và submitted time; không trả `userId`, raw answer, authoritative answer, snapshot hoặc internal metadata.
 
@@ -866,13 +866,13 @@ Client không gửi đáp án đúng, điểm cuối hoặc thời gian có th�
 Đây là same-origin Next.js boundary, không thay base URL backend `/api/v1` và
 không phải generic reverse proxy.
 
-| Frontend route | Method | Mục đích |
-| --- | --- | --- |
-| `/api/session/login` | `POST` | Validate exact Origin + credentials, gọi backend auth login, đặt HttpOnly cookie; response không có token. |
-| `/api/session/me` | `GET` | Đối chiếu cookie với backend `/auth/me`; chỉ trả current admin identity, clear cookie khi invalid. |
-| `/api/session/logout` | `POST` | Validate Origin và clear frontend cookie. |
-| `/api/admin/exercises` | `GET` | Allowlisted admin list; query page/limit/Lesson/Topic/type/status; response browser loại `answer`. |
-| `/api/admin/exercises/:id` | `GET` | Allowlisted protected detail; chỉ admin hiện tại được xem authoritative answer. |
+| Frontend route             | Method | Mục đích                                                                                                   |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| `/api/session/login`       | `POST` | Validate exact Origin + credentials, gọi backend auth login, đặt HttpOnly cookie; response không có token. |
+| `/api/session/me`          | `GET`  | Đối chiếu cookie với backend `/auth/me`; chỉ trả current admin identity, clear cookie khi invalid.         |
+| `/api/session/logout`      | `POST` | Validate Origin và clear frontend cookie.                                                                  |
+| `/api/admin/exercises`     | `GET`  | Allowlisted admin list; query page/limit/Lesson/Topic/type/status; response browser loại `answer`.         |
+| `/api/admin/exercises/:id` | `GET`  | Allowlisted protected detail; chỉ admin hiện tại được xem authoritative answer.                            |
 
 Cookie mặc định `hsk_admin_session` có `HttpOnly`, `SameSite=Lax`, `Path=/`,
 `Secure` ở production và `Max-Age <= JWT exp`. Browser không được lưu token vào
@@ -911,12 +911,12 @@ binary upload và không cung cấp delivery URL. Secure ingestion/delivery đư
 ở mục 16.10, không thay đổi safe projection của Admin Library. Mọi backend endpoint yêu cầu Bearer JWT, `role=admin`, account active/chưa
 soft-delete; lifecycle transaction còn recheck database role sau khi khóa actor.
 
-| Backend endpoint | Method | Contract |
-| --- | --- | --- |
-| `/api/v1/admin/cms/media` | `GET` | Inventory phân trang; lọc `type`, `processingStatus`, `lifecycle`, `dataSourceId`, `page`, `limit`. |
-| `/api/v1/admin/cms/media/:mediaId` | `GET` | Safe metadata, provenance, aggregate usage và tối đa 50 LessonExercise reference. |
-| `/api/v1/admin/cms/media/:mediaId/quarantine` | `POST` | Đổi processing state sang `quarantined`; retry idempotent. |
-| `/api/v1/admin/cms/media/:mediaId/archive` | `POST` | Soft archive qua `deletedAt`; retry idempotent, không hard-delete. |
+| Backend endpoint                              | Method | Contract                                                                                            |
+| --------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------- |
+| `/api/v1/admin/cms/media`                     | `GET`  | Inventory phân trang; lọc `type`, `processingStatus`, `lifecycle`, `dataSourceId`, `page`, `limit`. |
+| `/api/v1/admin/cms/media/:mediaId`            | `GET`  | Safe metadata, provenance, aggregate usage và tối đa 50 LessonExercise reference.                   |
+| `/api/v1/admin/cms/media/:mediaId/quarantine` | `POST` | Đổi processing state sang `quarantined`; retry idempotent.                                          |
+| `/api/v1/admin/cms/media/:mediaId/archive`    | `POST` | Soft archive qua `deletedAt`; retry idempotent, không hard-delete.                                  |
 
 `limit` nằm trong `1..100`; ID dùng positive PostgreSQL int4. List sort ổn định theo
 `updatedAt DESC, id DESC`. `lifecycle=active|archived`; enum type là
@@ -937,14 +937,14 @@ conflict trả `409`.
 
 Browser route tương ứng:
 
-| Frontend/BFF route | Method | Contract |
-| --- | --- | --- |
-| `/admin/media` | document | URL-driven inventory, desktop table, narrow-screen labelled record list, loading/empty/error/retry. |
-| `/admin/media/:mediaId` | document | Protected safe detail, references, not-found/loading và lifecycle controls. |
-| `/api/admin/media` | `GET` | Fixed-allowlist list proxy; HttpOnly session, `no-store`. |
-| `/api/admin/media/:mediaId` | `GET` | Fixed-allowlist detail proxy. |
-| `/api/admin/media/:mediaId/quarantine` | `POST` | Exact canonical origin trước khi backend call. |
-| `/api/admin/media/:mediaId/archive` | `POST` | Exact canonical origin và UI xác nhận hai bước. |
+| Frontend/BFF route                     | Method   | Contract                                                                                            |
+| -------------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `/admin/media`                         | document | URL-driven inventory, desktop table, narrow-screen labelled record list, loading/empty/error/retry. |
+| `/admin/media/:mediaId`                | document | Protected safe detail, references, not-found/loading và lifecycle controls.                         |
+| `/api/admin/media`                     | `GET`    | Fixed-allowlist list proxy; HttpOnly session, `no-store`.                                           |
+| `/api/admin/media/:mediaId`            | `GET`    | Fixed-allowlist detail proxy.                                                                       |
+| `/api/admin/media/:mediaId/quarantine` | `POST`   | Exact canonical origin trước khi backend call.                                                      |
+| `/api/admin/media/:mediaId/archive`    | `POST`   | Exact canonical origin và UI xác nhận hai bước.                                                     |
 
 ADR-004 không có upload route/button. Vertical slice mục 16.10 đã bổ sung private
 storage, bounded validation/scanning và signed delivery ở API; Admin Library vẫn chưa
@@ -958,12 +958,12 @@ Vertical slice này bổ sung production boundary để tạo private `Media`; A
 Library/BFF hiện tại vẫn không có upload UI. Mọi upload yêu cầu JWT admin hiện hành,
 `DataSource` có license nonblank và rate limit PostgreSQL 5 request/admin/phút.
 
-| Backend endpoint | Method | Contract |
-| --- | --- | --- |
-| `/api/v1/admin/cms/media/ingestions?dataSourceId=:id` | `POST multipart/form-data` | Một field `file`, `Idempotency-Key` 32–128 ký tự; tối đa 10 MiB; JPEG/PNG/MP3/WAV. |
-| `/api/v1/admin/cms/media/ingestions/:id/cleanup` | `POST` | Admin retry cleanup khi trạng thái `cleanup_required`. |
-| `/api/v1/media/:mediaId/access` | `GET` | JWT; admin hoặc learner có published Exercise reference; trả signed same-origin URL TTL 60–600 giây. |
-| `/api/v1/media/:mediaId/content?expires=...&signature=...` | `GET` | Capability URL HMAC ngắn hạn; server verify state, expiry, checksum, MIME và size trước khi trả byte. |
+| Backend endpoint                                           | Method                     | Contract                                                                                                                         |
+| ---------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1/admin/cms/media/ingestions?dataSourceId=:id`      | `POST multipart/form-data` | Một field `file`, `Idempotency-Key` 32–128 ký tự; tối đa 10 MiB; JPEG/PNG/MP3/WAV.                                               |
+| `/api/v1/admin/cms/media/ingestions/:id/cleanup`           | `POST`                     | Admin retry reconciliation; `cleanupCompleted=false, settling=true` cho tới hai HEAD xác nhận absence cách nhau ít nhất 60 giây. |
+| `/api/v1/media/:mediaId/access`                            | `GET`                      | JWT; admin hoặc learner có published Exercise reference; trả signed same-origin URL TTL 60–600 giây.                             |
+| `/api/v1/media/:mediaId/content?expires=...&signature=...` | `GET`                      | Capability URL HMAC ngắn hạn; server verify state, expiry, checksum, MIME và size trước khi trả byte.                            |
 
 File allowlist được quyết định từ signature + safe decoder/parser, không tin extension
 hay Content-Type. PNG/JPEG được decode/re-encode bằng Sharp với trần 40 triệu pixel;
@@ -983,13 +983,23 @@ unavailable chuyển `failed`.
 State machine: `pending → processing → completed`; validation/malware có thể sang
 `rejected`; infrastructure failure sang `failed`; object delete không xác nhận được
 sang `cleanup_required`. Unknown PUT outcome không auto-delete vì provider có thể
-commit muộn; tracked key ở `cleanup_required` cho explicit reconciliation. `completed`
+commit muộn; tracked key ở `cleanup_required` cho explicit reconciliation. Cleanup
+dùng `HEAD → DELETE → HEAD`, giữ settling ở lần absence đầu và chỉ ghi
+`OBJECT_CLEANED` sau một lần absence khác cách ít nhất 60 giây. Late commit được phát
+hiện/xóa và reset cửa sổ; key cũ không được reuse. `completed`
 chỉ sau object write + ready Media + database coherence trong một transaction.
 Deterministic finalize failure thử token-fenced delete bù; cleanup không xác nhận được
 không được báo giả là sạch. `MediaIngestion` history/identity và
 terminal state được trigger bảo vệ; completed record phải khớp actor, source,
 provider/key, checksum, size, MIME và ready Media. Immutable storage identity của
 ingested Media có database backstop; quarantine/soft archive vẫn được phép.
+
+Migration 17 snapshot bất biến `DataSource.code/version/license/attribution/
+referenceUrl/contentHash` vào `MediaIngestion`. Parent provenance đã được tham chiếu
+không được sửa; correction tạo DataSource version mới. Claim/finalize khóa source và
+so khớp snapshot. Access, replay, cleanup và write retry bắt buộc stored provider bằng
+adapter V1 đang cấu hình trước mọi storage I/O; mismatch trả lỗi an toàn không lộ
+provider/key/bucket.
 
 Mỗi processing attempt có `processingToken` ngẫu nhiên; reserve/finalize/reject/fail/
 compensation/cleanup chỉ có hiệu lực khi token còn là owner. V1 không tự takeover row
@@ -1014,5 +1024,11 @@ một NUL; thiếu/thừa terminator, response quá lớn hoặc mơ hồ đều
 
 Signed content trả `Cache-Control: private, no-store` và `nosniff`; proxy/CDN không
 được cache. Access log phải redact query `signature` và không ghi full signed URL.
+
+`MEDIA_INGESTION_ENABLED=false` là kill switch fail-closed cho upload mới; signed read,
+metrics và cleanup forward-recovery vẫn hoạt động. Metrics private ở
+`GET /api/v1/internal/metrics/media`, bắt buộc bearer token secret-managed và chỉ dùng
+label enum bounded. Dashboard/alert/runbook nằm trong `ops/observability` và
+`docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md`.
 
 Quyết định: `docs/adr/ADR-005-SECURE-MEDIA-INGESTION-OBJECT-STORAGE-PROCESSING.md`.

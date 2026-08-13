@@ -11,6 +11,7 @@ DECLARE
   ingestion_id INTEGER;
   transition_ingestion_id INTEGER;
   rejected BOOLEAN;
+  mutation RECORD;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'MediaIngestionStatus')
     OR NOT EXISTS (
@@ -52,15 +53,50 @@ BEGIN
     RAISE EXCEPTION 'MediaIngestion completed-media coherence trigger is missing';
   END IF;
 
+  IF (
+    SELECT count(*)
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'MediaIngestion'
+      AND column_name IN (
+        'sourceCodeSnapshot', 'sourceVersionSnapshot', 'sourceLicenseSnapshot',
+        'sourceAttributionSnapshot', 'sourceReferenceUrlSnapshot',
+        'sourceContentHashSnapshot', 'cleanupAbsentObservedAt'
+      )
+  ) <> 7 THEN
+    RAISE EXCEPTION 'MediaIngestion provenance/reconciliation columns are incomplete';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.triggers
+    WHERE trigger_schema = 'public'
+      AND event_object_table = 'DataSource'
+      AND trigger_name = 'DataSource_media_provenance_guard'
+  ) THEN
+    RAISE EXCEPTION 'DataSource media provenance guard is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.triggers
+    WHERE trigger_schema = 'public'
+      AND event_object_table = 'MediaIngestion'
+      AND trigger_name = 'MediaIngestion_00_provenance_snapshot'
+  ) THEN
+    RAISE EXCEPTION 'MediaIngestion provenance snapshot trigger is missing';
+  END IF;
+
   INSERT INTO "User" (email, password, role, status, "createdAt", "updatedAt")
   VALUES ('media-integrity@example.test', 'not-a-real-password', 'admin', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   RETURNING id INTO actor_id;
 
   INSERT INTO "DataSource" (
-    code, name, version, license, "createdById", "createdAt", "updatedAt"
+    code, name, version, "referenceUrl", license, attribution, "contentHash",
+    "createdById", "createdAt", "updatedAt"
   ) VALUES (
     'MEDIA_INTEGRITY', 'Synthetic media integrity source', '2026.08',
-    'Synthetic test fixture', actor_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    'https://example.test/media-integrity', 'Synthetic test fixture',
+    'Synthetic attribution', repeat('7', 64), actor_id,
+    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO source_id;
 
   INSERT INTO "Media" (
@@ -90,6 +126,32 @@ BEGIN
     media_id, 1, CURRENT_TIMESTAMP, '10000000-0000-4000-8000-000000000001', CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   ) RETURNING id INTO ingestion_id;
+
+  FOR mutation IN
+    SELECT * FROM (VALUES
+      ('code', NULL::TEXT), ('code', ''), ('code', 'MEDIA_CHANGED'),
+      ('version', NULL::TEXT), ('version', ''), ('version', '2026.09'),
+      ('license', NULL::TEXT), ('license', ''), ('license', 'Changed license'),
+      ('referenceUrl', NULL::TEXT), ('referenceUrl', ''), ('referenceUrl', 'https://changed.example.test'),
+      ('attribution', NULL::TEXT), ('attribution', ''), ('attribution', 'Changed attribution'),
+      ('contentHash', NULL::TEXT), ('contentHash', ''), ('contentHash', repeat('8', 64))
+    ) AS changes(field_name, new_value)
+  LOOP
+    rejected := FALSE;
+    BEGIN
+      EXECUTE format(
+        'UPDATE "DataSource" SET %I = %L WHERE id = $1',
+        mutation.field_name,
+        mutation.new_value
+      ) USING source_id;
+    EXCEPTION WHEN check_violation THEN
+      rejected := TRUE;
+    END;
+    IF NOT rejected THEN
+      RAISE EXCEPTION 'Referenced DataSource mutation was accepted: %=%',
+        mutation.field_name, mutation.new_value;
+    END IF;
+  END LOOP;
 
   rejected := FALSE;
   BEGIN

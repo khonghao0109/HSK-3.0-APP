@@ -13,6 +13,7 @@ import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
 import { MediaModule } from './modules/media/media.module';
+import { MediaObservabilityModule } from './infrastructure/observability/media-observability.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -33,6 +34,7 @@ import { PrismaModule } from './prisma/prisma.module';
       },
     ]),
     PrismaModule,
+    MediaObservabilityModule,
     AuthModule,
     CmsModule,
     UserModule,

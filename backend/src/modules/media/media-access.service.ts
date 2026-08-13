@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,7 @@ import type {
   StoredObject,
 } from '../../infrastructure/storage/object-storage.port';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
 import {
   createMediaAccessSignature,
   verifyMediaAccessSignature,
@@ -31,6 +33,7 @@ export class MediaAccessService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStoragePort,
+    @Optional() private readonly metrics?: MediaObservabilityService,
   ) {
     this.signingSecret = config.getOrThrow<string>('media.signingSecret');
     this.accessTtlSeconds = config.getOrThrow<number>('media.accessTtlSeconds');
@@ -70,8 +73,16 @@ export class MediaAccessService {
       !media.checksum ||
       !isSupportedPrivateMedia(media) ||
       !media.storageKey ||
-      !media.storageProvider
+      !media.storageProvider ||
+      media.storageProvider !== this.storage.provider
     ) {
+      if (
+        media?.storageProvider &&
+        media.storageProvider !== this.storage.provider
+      ) {
+        this.metrics?.recordSignedAccess('provider_mismatch');
+        this.metrics?.recordStorage('get', 'provider_mismatch', 0);
+      }
       throw new NotFoundException('Media asset is not available.');
     }
     if (actor.role !== 'admin' && media.lessonExercises.length === 0) {
@@ -104,6 +115,7 @@ export class MediaAccessService {
         checksum: true,
         mimeType: true,
         size: true,
+        storageProvider: true,
         storageKey: true,
         type: true,
         processingStatus: true,
@@ -116,6 +128,8 @@ export class MediaAccessService {
       !media.mimeType ||
       !media.size ||
       !media.storageKey ||
+      !media.storageProvider ||
+      media.storageProvider !== this.storage.provider ||
       !isSupportedPrivateMedia(media) ||
       media.processingStatus !== 'ready' ||
       media.deletedAt !== null ||
@@ -127,8 +141,15 @@ export class MediaAccessService {
         secret: this.signingSecret,
       })
     ) {
+      this.metrics?.recordSignedAccess(
+        media?.storageProvider &&
+          media.storageProvider !== this.storage.provider
+          ? 'provider_mismatch'
+          : 'invalid_grant',
+      );
       throw new ForbiddenException('Media access grant is invalid or expired.');
     }
+    const getStartedAt = Date.now();
     try {
       const object = await this.storage.getPrivateObject(media.storageKey);
       if (
@@ -141,8 +162,12 @@ export class MediaAccessService {
       ) {
         throw new Error('object integrity mismatch');
       }
+      this.metrics?.recordStorage('get', 'success', Date.now() - getStartedAt);
+      this.metrics?.recordSignedAccess('success');
       return object;
     } catch {
+      this.metrics?.recordStorage('get', 'error', Date.now() - getStartedAt);
+      this.metrics?.recordSignedAccess('unavailable');
       throw new ServiceUnavailableException(
         'Media content is temporarily unavailable.',
       );

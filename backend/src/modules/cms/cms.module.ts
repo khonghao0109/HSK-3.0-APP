@@ -11,6 +11,7 @@ import { ExerciseImportService } from './exercise-import/exercise-import.service
 import { MediaAdminService } from './media-admin.service';
 import { MediaFileProcessor } from './media-ingestion/media-file.processor';
 import { MediaIngestionService } from './media-ingestion/media-ingestion.service';
+import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
 import { MediaUploadRateLimitGuard } from './media-ingestion/media-upload-rate-limit.guard';
 import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upload-exception.filter';
 
@@ -25,6 +26,7 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
     MediaAdminService,
     MediaFileProcessor,
     MediaIngestionService,
+    MediaIngestionEnabledGuard,
     MediaUploadRateLimitGuard,
     SafeMediaUploadExceptionFilter,
   ],

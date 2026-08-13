@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import sharp from 'sharp';
 import request from 'supertest';
 
@@ -112,6 +113,27 @@ describe('Secure Media Ingestion V1 E2E', () => {
     ).resolves.toBe(ingestionBaseline);
     expect(storage.count()).toBe(storageBaseline);
     await expect(ownedMediaCount()).resolves.toBe(mediaBaseline);
+  });
+
+  it('1b. disables new ingestion without disabling the application', async () => {
+    const config = app.get(ConfigService);
+    const storageBaseline = storage.count();
+    config.set('media.ingestionEnabled', false);
+    try {
+      const response = await upload(
+        adminToken,
+        png,
+        'disabled.png',
+        'image/png',
+      ).expect(503);
+      expect(response.body).toEqual({
+        code: 'MEDIA_INGESTION_DISABLED',
+        message: 'Media ingestion is temporarily disabled.',
+      });
+      expect(storage.count()).toBe(storageBaseline);
+    } finally {
+      config.set('media.ingestionEnabled', true);
+    }
   });
 
   it.each([
@@ -399,13 +421,16 @@ describe('Secure Media Ingestion V1 E2E', () => {
       status: 'cleanup_required',
     });
     expect(uncertainIngestion.storageKey).not.toBeNull();
-    await request(app.getHttpServer())
+    const firstUnknownCleanup = await request(app.getHttpServer())
       .post(
         `/api/v1/admin/cms/media/ingestions/${uncertainIngestion.id}/cleanup`,
       )
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-request-id', randomUUID())
       .expect(201);
+    expect(firstUnknownCleanup.body).toMatchObject({
+      data: { cleanupCompleted: false, settling: true },
+    });
     await expect(
       prisma.mediaIngestion.findUniqueOrThrow({
         where: { id: uncertainIngestion.id },
@@ -418,11 +443,19 @@ describe('Secure Media Ingestion V1 E2E', () => {
       }),
     ).resolves.toEqual({
       cleanupAttempts: 1,
-      failureCode: 'OBJECT_CLEANED',
+      failureCode: 'OBJECT_CLEANUP_SETTLING',
       mediaId: null,
-      status: 'failed',
+      status: 'cleanup_required',
     });
     expect(storage.count()).toBe(storageBaseline);
+    await ageCleanupObservation(uncertainIngestion.id);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/admin/cms/media/ingestions/${uncertainIngestion.id}/cleanup`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-request-id', randomUUID())
+      .expect(201);
     await expect(
       prisma.auditLog.count({
         where: {
@@ -535,9 +568,18 @@ describe('Secure Media Ingestion V1 E2E', () => {
       cleanupKey,
     ).expect(409);
     deleteBarrier.release();
-    await cleanupPromise;
+    const settlingCleanup = await cleanupPromise;
+    expect(settlingCleanup.body).toMatchObject({
+      data: { cleanupCompleted: false, settling: true },
+    });
     expect(storage.count()).toBe(storageBaseline);
     await expect(ownedMediaCount()).resolves.toBe(mediaBaseline);
+    await ageCleanupObservation(cleanupRequired.id);
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/cms/media/ingestions/${cleanupRequired.id}/cleanup`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-request-id', randomUUID())
+      .expect(201);
     await expect(
       prisma.mediaIngestion.findUniqueOrThrow({
         where: { id: cleanupRequired.id },
@@ -549,7 +591,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
         },
       }),
     ).resolves.toEqual({
-      cleanupAttempts: 3,
+      cleanupAttempts: 4,
       failureCode: 'OBJECT_CLEANED',
       mediaId: null,
       status: 'failed',
@@ -563,6 +605,15 @@ describe('Secure Media Ingestion V1 E2E', () => {
       }),
     ).resolves.toBe(1);
   });
+
+  async function ageCleanupObservation(ingestionId: number): Promise<void> {
+    await prisma.$executeRaw`
+      UPDATE "MediaIngestion"
+      SET "cleanupAbsentObservedAt" =
+        (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') - INTERVAL '2 minutes'
+      WHERE id = ${ingestionId}
+    `;
+  }
 
   it('10. serves only an authorized short-lived signed access grant', async () => {
     const unsupported = await prisma.media.create({
@@ -646,6 +697,25 @@ describe('Secure Media Ingestion V1 E2E', () => {
       'rate-limited.png',
       'image/png',
     ).expect(429);
+  });
+
+  it('12. exposes redacted bounded media metrics only with the scrape credential', async () => {
+    const token = app
+      .get(ConfigService)
+      .getOrThrow<string>('media.metricsBearerToken');
+    await request(app.getHttpServer())
+      .get('/api/v1/internal/metrics/media')
+      .expect(403);
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/internal/metrics/media')
+      .set('Authorization', `Bearer ${token}`)
+      .expect('Content-Type', /text\/plain/u)
+      .expect(200);
+    expect(response.text).toContain('hsk_media_ingestion_total');
+    expect(response.text).toContain('hsk_media_cleanup_required');
+    expect(response.text).not.toMatch(
+      /mediaId|storageKey|filename|signature|@/u,
+    );
   });
 
   function upload(

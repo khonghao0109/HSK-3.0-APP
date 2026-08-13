@@ -1,26 +1,28 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.5.0`
-> Áp dụng cho chuỗi migration P0 đến ngày `2026-08-11`.
+> Phiên bản runbook: `1.7.0`
+> Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
 ## 1. Chuỗi migration bắt buộc
 
-| Thứ tự | Migration | Capability |
-| --- | --- | --- |
-| P0-00 | `20260810090000_p0_schema_foundation_level` | Level code/band/curriculum version, dữ liệu HSK7_9, awarded band. |
-| P0-01 | `20260810091000_p0_identity_onboarding_privacy` | Account lifecycle, session/token hash, profile, goal, placement, plan, consent/privacy. |
-| P0-02 | `20260810092000_p0_cms_provenance_import_audit` | CMS ownership/publish, provenance, media metadata, revision/review, audit và import. |
-| P0-03 | `20260810093000_p0_learning_progress_srs` | Progress/activity, attempt snapshot, SRS và cross-level/lesson invariants. |
-| P0-04 | `20260810094000_p0_exam_attempt_snapshot` | Question placement đúng context, attempt/autosave/snapshot/result integrity. |
-| P0-H | `20260810113000_p0_integrity_hardening` | Band integrity, SRS ownership, immutable retention FK và public dictionary prefix indexes. |
-| P0-C | `20260810143000_p0_integrity_concurrency_serialization` | Serialize band/ownership invariant, owner immutable và `ON UPDATE RESTRICT` cho history FK. |
-| CMS-R | `20260810170000_content_review_immutability` | Chặn UPDATE/DELETE `ContentReview` bằng immutable trigger dùng chung. |
-| ACT-I | `20260810210000_lesson_activity_integrity` | Submitted attempt immutable, LearningEvent coherence và bảo vệ parent location của activity history. |
-| EX-A | `20260811120000_exercise_authoring_import_validation_v1` | Exercise provenance/media/actor fields, revision parent/hash, publish readiness và archive-only lifecycle. |
+| Thứ tự | Migration                                                | Capability                                                                                                 |
+| ------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| P0-00  | `20260810090000_p0_schema_foundation_level`              | Level code/band/curriculum version, dữ liệu HSK7_9, awarded band.                                          |
+| P0-01  | `20260810091000_p0_identity_onboarding_privacy`          | Account lifecycle, session/token hash, profile, goal, placement, plan, consent/privacy.                    |
+| P0-02  | `20260810092000_p0_cms_provenance_import_audit`          | CMS ownership/publish, provenance, media metadata, revision/review, audit và import.                       |
+| P0-03  | `20260810093000_p0_learning_progress_srs`                | Progress/activity, attempt snapshot, SRS và cross-level/lesson invariants.                                 |
+| P0-04  | `20260810094000_p0_exam_attempt_snapshot`                | Question placement đúng context, attempt/autosave/snapshot/result integrity.                               |
+| P0-H   | `20260810113000_p0_integrity_hardening`                  | Band integrity, SRS ownership, immutable retention FK và public dictionary prefix indexes.                 |
+| P0-C   | `20260810143000_p0_integrity_concurrency_serialization`  | Serialize band/ownership invariant, owner immutable và `ON UPDATE RESTRICT` cho history FK.                |
+| CMS-R  | `20260810170000_content_review_immutability`             | Chặn UPDATE/DELETE `ContentReview` bằng immutable trigger dùng chung.                                      |
+| ACT-I  | `20260810210000_lesson_activity_integrity`               | Submitted attempt immutable, LearningEvent coherence và bảo vệ parent location của activity history.       |
+| EX-A   | `20260811120000_exercise_authoring_import_validation_v1` | Exercise provenance/media/actor fields, revision parent/hash, publish readiness và archive-only lifecycle. |
+| SEC-M  | `20260812130000_secure_media_ingestion_v1`               | Private media ingestion state, fencing, rate limit và completed↔Media coherence.                           |
+| MED-H  | `20260813120000_media_provenance_provider_hardening`     | Immutable provenance snapshot/parent guard và unknown-PUT absence observation.                             |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 15 migration, trong đó chuỗi P0/runtime reliability gồm 10 migration P0-00..P0-04, P0-H, P0-C, CMS-R, ACT-I và EX-A.
+Toàn project hiện có 17 migration; migration 16 và toàn bộ migration lịch sử giữ nguyên byte, hardening luôn dùng forward migration 17.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -174,15 +176,15 @@ Trước production, restore backup vào database rehearsal tách biệt, áp đ
 
 Kết quả rehearsal tham chiếu ngày `2026-08-10` trên bản sao local:
 
-| Dữ liệu | Trước/sau P0 |
-| --- | ---: |
-| Level | 7 / 7 |
-| Word | 121,856 / 121,856 |
-| WordMeaning | 200,156 / 200,156 |
-| WordLevel | 11,086 / 11,086 |
-| Word có `pinyinNormalized` | 121,856 |
-| Meaning có `meaningOrder` | 200,156 |
-| Meaning được gắn provenance | 200,156 |
+| Dữ liệu                     |      Trước/sau P0 |
+| --------------------------- | ----------------: |
+| Level                       |             7 / 7 |
+| Word                        | 121,856 / 121,856 |
+| WordMeaning                 | 200,156 / 200,156 |
+| WordLevel                   |   11,086 / 11,086 |
+| Word có `pinyinNormalized`  |           121,856 |
+| Meaning có `meaningOrder`   |           200,156 |
+| Meaning được gắn provenance |           200,156 |
 
 Các con số production có thể khác; tiêu chí là bảo toàn row và đạt invariant, không phải khớp số tham chiếu.
 
@@ -399,14 +401,14 @@ Script `test/database/p0-schema.integration.sql` chạy trong transaction rollba
 
 ### 9.1. Error classification và hành động vận hành
 
-| Signal/classification | HTTP runtime | Runner concurrency | Hành động |
-| --- | ---: | --- | --- |
-| Authoring shape/exact key/bounds; speaking publish; media không ready; import row/source key validation | `422` | Chỉ hợp lệ khi scenario kỳ vọng đúng domain; còn lại RED | Sửa payload/content, preview lại |
-| Preview hash thay đổi; stale revision; idempotency key dùng cho request khác; persistence FK/unique/CHECK backstop (`P2003`/`23503`/`P2004`/`23514`) hoặc concurrent conflict | `409` | RED nếu không phải exact expected scenario | Reload state hoặc dùng request/key đúng; không retry mù |
-| `55P03`, `57014`, Prisma `P2028` | `503` | Luôn RED | Retry đúng idempotency key sau khi điều tra lock/timeout |
-| `40001`, `40P01`, Prisma `P2034` | `409` retryable conflict | Luôn RED | Điều tra lock order; retry có giới hạn |
-| Prisma connection code hoặc SQLSTATE class `08` | `503` | Luôn RED | Kiểm tra DB/connectivity; retry cùng key |
-| Unknown persistence error | `500` generic | RED | Giữ correlation ID/log nội bộ; không lộ URL/credential/SQL |
+| Signal/classification                                                                                                                                                         |             HTTP runtime | Runner concurrency                                       | Hành động                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----------------------: | -------------------------------------------------------- | ---------------------------------------------------------- |
+| Authoring shape/exact key/bounds; speaking publish; media không ready; import row/source key validation                                                                       |                    `422` | Chỉ hợp lệ khi scenario kỳ vọng đúng domain; còn lại RED | Sửa payload/content, preview lại                           |
+| Preview hash thay đổi; stale revision; idempotency key dùng cho request khác; persistence FK/unique/CHECK backstop (`P2003`/`23503`/`P2004`/`23514`) hoặc concurrent conflict |                    `409` | RED nếu không phải exact expected scenario               | Reload state hoặc dùng request/key đúng; không retry mù    |
+| `55P03`, `57014`, Prisma `P2028`                                                                                                                                              |                    `503` | Luôn RED                                                 | Retry đúng idempotency key sau khi điều tra lock/timeout   |
+| `40001`, `40P01`, Prisma `P2034`                                                                                                                                              | `409` retryable conflict | Luôn RED                                                 | Điều tra lock order; retry có giới hạn                     |
+| Prisma connection code hoặc SQLSTATE class `08`                                                                                                                               |                    `503` | Luôn RED                                                 | Kiểm tra DB/connectivity; retry cùng key                   |
+| Unknown persistence error                                                                                                                                                     |            `500` generic | RED                                                      | Giữ correlation ID/log nội bộ; không lộ URL/credential/SQL |
 
 Public error chỉ chứa safe status/code/path/message; import row errors không chứa raw payload/answer. Log/harness classifier chỉ dùng SQLSTATE, Prisma code, constraint identifier hoặc HTTP status đã sanitize, không in `DATABASE_URL`/password.
 Field lạ trong authoring/import/DTO dùng generic path `$.$unknown`; response không phản chiếu tên property do client kiểm soát.
@@ -457,10 +459,10 @@ Theo dõi error rate, DB locks, latency query due queue/autosave và connection 
 
 `EXPLAIN (ANALYZE, BUFFERS)` ngày `2026-08-10` trên rehearsal 121.856 Word cho thấy btree mặc định không phục vụ ổn định `LIKE 'prefix%'` và planner dùng sequential scan. Migration hardening thêm hai partial `text_pattern_ops` index chỉ cho Word public (`published`, chưa soft-delete, `isPure=true`).
 
-| Query đại diện, `LIMIT 20` | Trước hardening | Sau hardening | Plan sau |
-| --- | ---: | ---: | --- |
-| `pinyinNormalized LIKE 'ni%'` | 16,107 ms | 0,825 ms | `Word_public_pinyin_prefix_idx` index scan |
-| `hanzi LIKE '你%'` | 12,740 ms | 0,096 ms | `Word_public_hanzi_prefix_idx` index scan |
+| Query đại diện, `LIMIT 20`    | Trước hardening | Sau hardening | Plan sau                                   |
+| ----------------------------- | --------------: | ------------: | ------------------------------------------ |
+| `pinyinNormalized LIKE 'ni%'` |       16,107 ms |      0,825 ms | `Word_public_pinyin_prefix_idx` index scan |
+| `hanzi LIKE '你%'`            |       12,740 ms |      0,096 ms | `Word_public_hanzi_prefix_idx` index scan  |
 
 Đây là single-run local evidence, không thay thế load test staging. DictionaryService không ép `ORDER BY` trái với prefix index trước `LIMIT`; nếu contract cần ranking ổn định, phải benchmark ranking/index mới trước khi thêm.
 
@@ -477,17 +479,17 @@ Các migration này có backfill và enforcement; không cung cấp down migrati
 
 ## 13. Rủi ro còn mở và owner cần chốt
 
-| Rủi ro | Trạng thái/biện pháp |
-| --- | --- |
-| License bảy raw list HSK | Chưa production-cleared; Legal/Product phải xác minh trước publish thương mại. |
-| Nghĩa tiếng Việt | Nullable có chủ đích; cần nguồn hợp lệ hoặc editorial workflow, không machine-copy từ EN. |
-| Xóa tài khoản | Immutable/historical FK đã được harden bằng `RESTRICT`; endpoint hard-delete bị cấm. Vẫn cần triển khai privacy job idempotent theo ADR-001 trước khi bật cho beta. |
-| JSON contract | DB chỉ bảo vệ `jsonb`; API phải dùng DTO/schema versioned và size limit. |
-| Immutable trigger | Prisma không biểu đạt; integration SQL là cổng bắt buộc. |
-| Media retention | Secure ingestion dùng private object identity + signed same-origin access; Infra/Product vẫn phải cấu hình bucket versioning/retention/lifecycle và backup restore rehearsal trước beta. |
-| Import V1 | Chỉ hỗ trợ LessonExercise JSON rows, reject duplicate và all-or-nothing; generic CSV/import status/error-row UI/upsert không nằm trong V1. |
-| Speaking | `speaking_repeat` chỉ author draft; publish/scoring chờ pronunciation engine. |
-| P1/P2 | Payment/social/gamification/offline/AI nâng cao chưa nằm trong cam kết P0. |
+| Rủi ro                   | Trạng thái/biện pháp                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| License bảy raw list HSK | Chưa production-cleared; Legal/Product phải xác minh trước publish thương mại.                                                                                                           |
+| Nghĩa tiếng Việt         | Nullable có chủ đích; cần nguồn hợp lệ hoặc editorial workflow, không machine-copy từ EN.                                                                                                |
+| Xóa tài khoản            | Immutable/historical FK đã được harden bằng `RESTRICT`; endpoint hard-delete bị cấm. Vẫn cần triển khai privacy job idempotent theo ADR-001 trước khi bật cho beta.                      |
+| JSON contract            | DB chỉ bảo vệ `jsonb`; API phải dùng DTO/schema versioned và size limit.                                                                                                                 |
+| Immutable trigger        | Prisma không biểu đạt; integration SQL là cổng bắt buộc.                                                                                                                                 |
+| Media retention          | Secure ingestion dùng private object identity + signed same-origin access; Infra/Product vẫn phải cấu hình bucket versioning/retention/lifecycle và backup restore rehearsal trước beta. |
+| Import V1                | Chỉ hỗ trợ LessonExercise JSON rows, reject duplicate và all-or-nothing; generic CSV/import status/error-row UI/upsert không nằm trong V1.                                               |
+| Speaking                 | `speaking_repeat` chỉ author draft; publish/scoring chờ pronunciation engine.                                                                                                            |
+| P1/P2                    | Payment/social/gamification/offline/AI nâng cao chưa nằm trong cam kết P0.                                                                                                               |
 
 ## 14. Change record tối thiểu
 
@@ -559,3 +561,29 @@ Live S3-compatible/ClamAV rehearsal chưa chạy trong closeout local. Code đư
 commit nhưng **chưa production-release-ready**; Infra/Release phải hoàn tất private
 bucket/workload identity/encryption-retention, proxy log redaction và ClamAV
 availability rehearsal trước beta deployment.
+
+## 16. Media provenance/provider hardening — migration 17
+
+Migration `20260813120000_media_provenance_provider_hardening` thêm sáu snapshot
+provenance bất biến và `cleanupAbsentObservedAt`. Preflight fail-safe dừng trước DDL
+nếu completed ingestion chưa có immutable AuditLog action
+`media.ingestion.provenance_audited` chứa exact ingestion/media/source IDs và sáu
+provenance field, hoặc source đang tham chiếu có
+provenance blank/mơ hồ; không đoán bằng chứng lịch sử. Row chưa completed được backfill
+từ source đang khóa. Trigger insert chụp/đối chiếu snapshot, trigger parent từ chối đổi
+`code/version/license/attribution/referenceUrl/contentHash` khi đã có ingestion; sửa
+provenance phải tạo DataSource version mới.
+
+V1 dùng exact single-provider affinity. Grant/read/replay/retry/compensation từ chối
+provider mismatch trước storage I/O. Unknown PUT cleanup dùng HEAD/DELETE/HEAD và cần
+hai absence observation cách nhau 60 giây; object xuất hiện muộn bị xóa, cửa sổ reset,
+key cũ không được reuse, và terminal `OBJECT_CLEANED` trở thành immutable.
+
+Fresh gate bắt buộc deploy đủ 17 migration trên database disposable mới, chạy media
+SQL/fencing/E2E/full E2E và hai drift. Migration 17 không được deploy lên môi trường có
+completed rows trước khi content/data owner hoàn tất audit provenance có bằng chứng.
+Operational rollout mặc định `MEDIA_INGESTION_ENABLED=false`; cleanup vẫn bật để
+forward recovery. Live provider/scanner/proxy/alert rehearsal theo
+`docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md` là release gate riêng.
+Audit marker phải do Data/Content owner phê duyệt từ bằng chứng nguồn; không tạo marker
+chỉ để vượt preflight.
