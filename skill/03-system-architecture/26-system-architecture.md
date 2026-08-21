@@ -8,7 +8,7 @@ description: "Thiết kế kiến trúc tổng thể và NFR cho HSK 3.0. Sử d
 1. Chuyển mục tiêu sản phẩm thành workload, data classification và quality attributes đo được.
 2. Lập context/container/component diagram; ghi owner, trust/failure/scale boundary và dependency.
 3. Giữ core NestJS modular monolith + PostgreSQL; Next.js là presentation/BFF; AI service tách theo compute/data policy.
-4. Thiết kế stateless instances sau load balancer; session/cache/queue/object dùng durable shared service.
+4. Thiết kế stateless instances sau load balancer; correctness-critical session/queue/object state dùng durable shared service. Correctness-independent cache có thể local/ephemeral khi invalidation và failure behavior an toàn.
 5. Chọn timeout/retry/idempotency/backpressure theo failure path thật; chỉ thêm circuit breaker hoặc distributed component khi evidence cho thấy cần.
 6. Lập capacity/HA/backup/DR model khi quyết định hoặc NFR hiện tại phụ thuộc vào chúng.
 7. Threat model/privacy/observability/runbook theo trust boundary và criticality bị thay đổi.

@@ -11,6 +11,6 @@ description: "Xây shared React component library theo design system và ảnh m
 4. Bao phủ hover/focus/active/disabled/loading/error/read-only và keyboard/touch ≥44px.
 5. Modal quản focus/escape/restore/scroll; form label/error/aria; table sort/pagination/responsive strategy.
 6. Giữ bundle/tree-shaking và Server Component compatibility; client directive chỉ nơi cần.
-7. Unit interaction/a11y + visual/browser regression ở 1440/768/390.
+7. Unit interaction/a11y và, sau implementation, visual/browser regression tại boundary affected trong 320/390/768/1024/1440 theo `frontend/DESIGN.md`.
 
 **Gate:** không duplicate, raw style drift hay prop explosion; docs/example/consumer migration và deprecation rõ.

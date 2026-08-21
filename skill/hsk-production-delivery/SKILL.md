@@ -13,6 +13,8 @@ description: "Route cross-functional HSK 3.0 epics and release decisions across 
 
 Chỉ dùng router này cho công việc xuyên nhiều nhóm. Công việc đơn domain dùng trực tiếp group tương ứng.
 
+Chọn giải pháp nhỏ nhất đủ đúng cho outcome và risk hiện tại. Không thêm abstraction, dependency, service hoặc full gate chỉ vì “production”; security, privacy và data integrity vẫn bắt buộc khi boundary tương ứng bị ảnh hưởng.
+
 ## Routing tối thiểu
 
 1. `01-product-strategy`: outcome, requirement, roadmap, domain/curriculum và product risk.
@@ -41,4 +43,4 @@ Review không tự cho phép mutation. Stage, commit, amend, rebase, push, prote
 
 ## Validation
 
-Chạy validator không dependency bằng `node skill/hsk-production-delivery/scripts/skill-system-validator.mjs --portable-copy`. Chạy mutation/trigger regressions bằng `node --test skill/hsk-production-delivery/scripts/skill-system-validator.test.mjs`.
+Chạy validator không dependency bằng `node skill/hsk-production-delivery/scripts/skill-system-validator.mjs --portable-copy`. Chạy mutation và routing-contract classifier regressions bằng `node --test skill/hsk-production-delivery/scripts/skill-system-validator.test.mjs`. Classifier này chỉ kiểm tra manifest trong repository; Codex runtime không sử dụng nó để chọn skill. Host discovery/invocation phải được xác nhận riêng theo checklist trong inventory reference sau reload/new session.

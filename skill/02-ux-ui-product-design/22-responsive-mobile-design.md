@@ -8,7 +8,7 @@ description: "Thiết kế responsive/adaptive cho web và mobile HSK 3.0. Sử 
 ## Quy trình
 
 1. Giữ hierarchy/visual identity từ ảnh mẫu desktop; xác định core content và primary action.
-2. Thiết kế mobile-first tại 390×844, tablet 768×1024, desktop 1440×900; kiểm tra thêm 320px và landscape khi rủi ro.
+2. Lấy breakpoint từ `frontend/DESIGN.md`; kiểm tra boundary affected gồm 320, 390, 768, 1024 và 1440 khi applicable, thêm landscape khi rủi ro.
 3. Dùng fluid layout, min/max/clamp và breakpoint hệ thống; không chèn breakpoint chữa cháy theo từng thiết bị.
 4. Chọn chiến lược table: priority columns, labelled cards hoặc container scroll có affordance.
 5. Giữ touch target ≥44px, safe area, keyboard viewport, zoom và dynamic text.
@@ -21,4 +21,4 @@ description: "Thiết kế responsive/adaptive cho web và mobile HSK 3.0. Sử 
 - Navigation/back/primary action luôn tiếp cận được.
 - Không ẩn thông tin quan trọng chỉ để vừa màn hình; dùng progressive disclosure có chủ đích.
 - Keyboard, screen reader và orientation không tạo đường cụt.
-- Browser screenshot và overflow assertion có evidence.
+- Sau implementation, browser screenshot và overflow assertion có evidence; review read-only không tự kéo build/browser gate.

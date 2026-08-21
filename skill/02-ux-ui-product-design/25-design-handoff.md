@@ -9,7 +9,7 @@ description: "Bàn giao thiết kế sang engineering với spec, assets, state 
 
 - Bảng route/page → ảnh `docs/ui_image` → component → API/data/permission.
 - Spec layout/grid/breakpoint, token, typography, icon/asset, state và interaction.
-- Responsive behavior cho 1440/768/390, long content, keyboard và reduced motion.
+- Responsive behavior cho các boundary affected trong 320/390/768/1024/1440 theo `frontend/DESIGN.md`, cùng long content, keyboard và reduced motion.
 - State matrix: loading, empty, error, retry, forbidden, disabled, validation, success.
 - Acceptance criteria và analytics event; link prototype/version/quyết định khác mẫu.
 
@@ -19,7 +19,7 @@ description: "Bàn giao thiết kế sang engineering với spec, assets, state 
 2. Chốt contract/data realistic; không dùng mock che field/status chưa có.
 3. Kiểm tra asset license, format, kích thước, alt/caption và optimization.
 4. Engineering lập impact/dependency; design trả lời bằng spec cập nhật, không chỉ chat.
-5. Sau implementation, visual QA trên production build và screenshot ba viewport.
+5. Sau implementation, visual QA trên production build và screenshot các boundary affected; design review read-only không tự kéo build/browser gate.
 6. Đóng diff hoặc ghi exception có owner/deadline.
 
 ## Definition of done

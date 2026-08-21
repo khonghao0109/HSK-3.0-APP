@@ -1,6 +1,0 @@
-interface:
-  display_name: "Anti Overengineering"
-  short_description: "Keep changes proportional to proven risk"
-  default_prompt: "Use $anti-overengineering to keep this proposal at the smallest scope that still meets its proven risks and required gates."
-policy:
-  allow_implicit_invocation: true

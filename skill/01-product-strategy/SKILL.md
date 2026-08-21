@@ -7,7 +7,9 @@ description: "Define HSK product outcomes, requirements, priorities, curriculum 
 
 ## Quy trình
 
-1. Onboard bằng `01`–`03`: mục tiêu, repo/context và CodeGraph/repository evidence.
+01–15 là capability map, không phải checklist tuần tự. Chỉ đọc playbook liên quan trực tiếp tới task; câu hỏi hẹp không chạy full product lifecycle.
+
+1. Khi cần onboard, dùng `01`–`03`: mục tiêu, repo/context và CodeGraph/repository evidence.
 2. Discovery/research bằng `04`–`05`; tách fact, hypothesis và decision.
 3. Chuyển thành requirement/story/acceptance bằng `06`–`07`, gồm NFR production.
 4. Ưu tiên roadmap/stakeholder/risk bằng `08`–`10`; outcome và dependency thay vì feature count.

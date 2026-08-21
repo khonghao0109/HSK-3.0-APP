@@ -120,7 +120,7 @@ function validateSafeActiveInstructions(markdownFiles) {
     [/User already said/i, "forged user statement"],
     [/the user already (?:said|approved|requested)/i, "forged user statement"],
     [/(?:^|[\s`])\.claude(?:\/|[\s`])/i, "non-Codex agent path"],
-    [/skill\/skills\/(?!anti-overengineering)/i, "quarantined skill dependency"],
+    [/skill\/skills\//i, "quarantined skill dependency"],
     [/\bGemini\b/i, "unapproved external generation dependency"],
   ];
   for (const filePath of markdownFiles) {
@@ -141,7 +141,7 @@ function countOccurrences(source, needle) {
   return count;
 }
 
-export function routeTask(prompt) {
+export function classifyRoutingContract(prompt) {
   const text = prompt.toLowerCase();
   const selected = new Set();
   const has = (...terms) => terms.some((term) => text.includes(term));
@@ -177,9 +177,9 @@ export function routeTask(prompt) {
   };
 }
 
-function validateRoutingCases(manifest) {
-  for (const testCase of manifest.routingCases) {
-    const actual = routeTask(testCase.prompt);
+function validateRoutingContractCases(manifest) {
+  for (const testCase of manifest.routingContractCases) {
+    const actual = classifyRoutingContract(testCase.prompt);
     invariant(actual.mode === testCase.mode, `Routing mode mismatch for ${testCase.id}`);
     invariant(JSON.stringify(actual.selected) === JSON.stringify([...testCase.expected].sort()), `Routing selection mismatch for ${testCase.id}: ${actual.selected.join(", ")}`);
     invariant(testCase.forbidden.every((name) => !actual.selected.includes(name)), `Forbidden skill selected for ${testCase.id}`);
@@ -197,8 +197,42 @@ function validateTrackedFiles(repositoryRoot, files, manifest) {
     .trim()
     .split("\n")
     .filter(Boolean);
-  invariant(trackedSupport.every((entry) => entry.startsWith("skill/skills/anti-overengineering/")), "Quarantined support bundle is tracked.");
+  invariant(trackedSupport.length === 0, "Repository support-skill bundle must remain untracked and undiscoverable.");
   invariant(manifest.quarantined.every((entry) => !trackedSupport.some((path) => path.includes(`/${entry.name}/`))), "Quarantined skill leaked into tracked files.");
+}
+
+function validateSemanticContracts(repositoryRoot, markdownFiles) {
+  const read = (relativePath) => readFileSync(join(repositoryRoot, relativePath), "utf8");
+  const requirements = read("skill/01-product-strategy/06-requirements-specification.md");
+  invariant(!requirements.includes("không ngầm coi 7–9 là một cấp"), "Retired HSK 7-9 requirement contract returned.");
+  invariant([
+    "Database/domain dùng một Level `HSK7_9`",
+    "requirement, target và result vẫn giữ band 7, 8 hoặc 9",
+    "product decision, ADR và migration riêng",
+    "không làm mất kết quả cụ thể",
+  ].every((clause) => requirements.includes(clause)), "HSK7_9 requirement contract is incomplete.");
+
+  const product = read("skill/01-product-strategy/SKILL.md");
+  invariant(product.includes("01–15 là capability map, không phải checklist tuần tự."), "Product capability-map contract is missing.");
+  invariant(product.includes("Chỉ đọc playbook liên quan trực tiếp tới task"), "Product playbook proportionality contract is missing.");
+
+  const ux = read("skill/02-ux-ui-product-design/SKILL.md");
+  invariant(ux.includes("REVIEW là read-only mapping/finding"), "UX REVIEW proportionality contract is missing.");
+  invariant(ux.includes("IMPLEMENT chạy affected UI states và production browser QA"), "UX IMPLEMENT evidence contract is missing.");
+  invariant(["320", "390", "768", "1024", "1440"].every((width) => ux.includes(width)), "UX responsive boundary contract is incomplete.");
+
+  const flags = read("skill/09-engineering-governance-dx/92-feature-flags-experimentation.md");
+  invariant(flags.includes("Chỉ experiment/A-B test mới bắt buộc hypothesis, statistical power và stop rule"), "Feature-flag proportionality contract is missing.");
+  invariant(flags.includes("kill switch, entitlement hoặc release-control flag"), "Non-experiment flag contract is missing.");
+
+  const scaling = read("skill/08-devops-cloud-sre/86-scaling-cost-optimization.md");
+  invariant(scaling.includes("Correctness-independent cache được phép local/ephemeral"), "Scaling proportionality contract is missing.");
+  invariant(scaling.includes("Không tự thêm Redis hoặc shared service"), "Scaling dependency-evidence contract is missing.");
+
+  const router = read("skill/hsk-production-delivery/SKILL.md");
+  const baseline = read("skill/hsk-production-delivery/references/production-quality-baseline.md");
+  invariant(router.includes("giải pháp nhỏ nhất đủ đúng") && baseline.includes("local/ephemeral"), "Repository proportionality baseline must not depend on a global skill.");
+  invariant(!markdownFiles.some((filePath) => readFileSync(filePath, "utf8").includes("không ngầm coi 7–9 là một cấp")), "Retired HSK 7-9 contract appears in active instructions.");
 }
 
 export function validateRepository(repositoryRoot = DEFAULT_REPOSITORY_ROOT, options = {}) {
@@ -207,16 +241,19 @@ export function validateRepository(repositoryRoot = DEFAULT_REPOSITORY_ROOT, opt
   const checks = [];
   const record = (name, count) => checks.push({ name, count });
 
-  invariant(manifest.active.length === 12, "Active inventory must contain root, ten groups and anti-overengineering.");
+  invariant(manifest.active.length === 11, "Active repository inventory must contain the root router and ten production groups.");
   invariant(manifest.explicitOnly.length === 0, "No explicit-only helper is justified in this closeout.");
   invariant(manifest.quarantined.length === 12, "Quarantine inventory must contain the twelve generic support skills.");
   const activeNames = manifest.active.map((entry) => entry.name);
   invariant(new Set(activeNames).size === activeNames.length, "Duplicate active skill name.");
+  invariant(!activeNames.includes("anti-overengineering"), "Repository active inventory must not duplicate the host-global anti-overengineering skill.");
+  invariant(!existsSync(join(root, "skill/skills/anti-overengineering")), "Repository source must not duplicate the host-global anti-overengineering skill.");
   record("inventory", manifest.active.length + manifest.quarantined.length);
 
   const discoveryRoot = join(root, manifest.discoveryRoot);
   invariant(existsSync(discoveryRoot), "Canonical discovery root .agents/skills is missing.");
   const discovered = readdirSync(discoveryRoot).sort();
+  invariant(!discovered.includes("anti-overengineering"), "Repository discovery must not include anti-overengineering; the host-global installation is authoritative.");
   invariant(JSON.stringify(discovered) === JSON.stringify([...activeNames].sort()), "Discovery has missing or extra skills.");
 
   const activeFiles = [];
@@ -285,6 +322,8 @@ export function validateRepository(repositoryRoot = DEFAULT_REPOSITORY_ROOT, opt
   validateSafeActiveInstructions(markdownFiles);
   record("active-instruction-safety", markdownFiles.length);
   record("command-paths", validateCommandPaths(root, markdownFiles));
+  validateSemanticContracts(root, markdownFiles);
+  record("semantic-contracts", 5);
 
   const scripts = activeFiles.filter((file) => extname(file) === ".mjs");
   const svgPattern = new RegExp("\\." + "svg\\b", "i");
@@ -303,8 +342,8 @@ export function validateRepository(repositoryRoot = DEFAULT_REPOSITORY_ROOT, opt
   invariant(manifest.quarantined.every((entry) => !discovered.includes(entry.name)), "Quarantined skill is discoverable.");
   record("license-provenance", manifest.active.length + manifest.quarantined.length);
 
-  validateRoutingCases(manifest);
-  record("trigger-evaluation", manifest.routingCases.length);
+  validateRoutingContractCases(manifest);
+  record("routing-contract-classifier", manifest.routingContractCases.length);
 
   if (existsSync(join(root, ".git"))) {
     for (const entry of manifest.active) {
@@ -330,6 +369,7 @@ export function validateRepository(repositoryRoot = DEFAULT_REPOSITORY_ROOT, opt
       productionGroups: manifest.productionGroups.length,
       playbooks: playbookCount,
     },
+    routingEvidence: "repository routing-contract classifier; not Codex runtime invocation",
     checks,
   };
 }

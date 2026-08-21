@@ -13,8 +13,7 @@
     { "name": "07-testing-code-quality", "source": "skill/07-testing-code-quality", "provenance": "HSK project-maintained", "license": "project-internal" },
     { "name": "08-devops-cloud-sre", "source": "skill/08-devops-cloud-sre", "provenance": "HSK project-maintained", "license": "project-internal" },
     { "name": "09-engineering-governance-dx", "source": "skill/09-engineering-governance-dx", "provenance": "HSK project-maintained", "license": "project-internal" },
-    { "name": "10-delivery-production-operations", "source": "skill/10-delivery-production-operations", "provenance": "HSK project-maintained", "license": "project-internal" },
-    { "name": "anti-overengineering", "source": "skill/skills/anti-overengineering", "provenance": "HSK project-maintained", "license": "project-internal" }
+    { "name": "10-delivery-production-operations", "source": "skill/10-delivery-production-operations", "provenance": "HSK project-maintained", "license": "project-internal" }
   ],
   "explicitOnly": [],
   "quarantined": [
@@ -43,7 +42,7 @@
     { "name": "09-engineering-governance-dx", "first": 87, "last": 93 },
     { "name": "10-delivery-production-operations", "first": 94, "last": 98 }
   ],
-  "routingCases": [
+  "routingContractCases": [
     { "id": "schema-review", "prompt": "Review the Prisma schema for data-integrity risks. Do not change code.", "mode": "REVIEW", "expected": ["04-backend-core-domains"], "forbidden": ["02-ux-ui-product-design", "05-frontend-mobile"], "commitAuthorized": false, "fullProductionMatrix": false },
     { "id": "ui-implementation", "prompt": "Implement the responsive admin page from docs/ui_image and preserve accessibility.", "mode": "IMPLEMENT", "expected": ["02-ux-ui-product-design", "05-frontend-mobile"], "forbidden": ["03-system-architecture"], "commitAuthorized": false, "fullProductionMatrix": false },
     { "id": "architecture-adr", "prompt": "Write an ADR for a difficult-to-reverse service boundary decision.", "mode": "REVIEW", "expected": ["03-system-architecture"], "forbidden": ["04-backend-core-domains", "05-frontend-mobile"], "commitAuthorized": false, "fullProductionMatrix": false },

@@ -34,7 +34,8 @@ Tạo đặc tả đủ rõ để product, design, engineering, content và QA c
 
 ## Quy tắc đặc thù HSK
 
-- Ghi rõ HSK version và cách biểu diễn level 1–9; không ngầm coi 7–9 là một cấp.
+- Database/domain dùng một Level `HSK7_9`; requirement, target và result vẫn giữ band 7, 8 hoặc 9 để không làm mất kết quả cụ thể.
+- Không tách `HSK7_9` thành ba Level nếu chưa có product decision, ADR và migration riêng.
 - Ghi rõ ngôn ngữ nghĩa, script simplified/traditional, Pinyin và nguồn/license.
 - Với exam, quy định section, timer, autosave, resume, snapshot, scoring và timeout.
 - Với SRS, quy định grade, due time, timezone và lịch sử review.

@@ -8,7 +8,7 @@ description: "Implement or review HSK Next.js/React client runtime, web UI or ex
 1. Trước UI, đọc `../hsk-production-delivery/references/ui-source-of-truth.md`; map route → ảnh → component và mở ảnh gốc.
 2. Trước Next.js, đọc `frontend/AGENTS.md` và tài liệu local đúng version trong `frontend/node_modules/next/dist/docs`.
 3. Dùng RSC/server-first, typed same-origin BFF và HttpOnly session; client component/state tối thiểu.
-4. Bao phủ loading/empty/error/forbidden/session-expired, responsive 1440/768/390 và WCAG 2.2 AA.
+4. Bao phủ loading/empty/error/forbidden/session-expired, responsive boundary affected trong 320/390/768/1024/1440 theo `frontend/DESIGN.md` và WCAG 2.2 AA.
 5. Đặt performance/bundle/cache budgets, CSP/security headers, observability và E2E client navigation.
 6. Mobile/offline phải có secure storage, sync conflict/idempotency và staged store rollout.
 

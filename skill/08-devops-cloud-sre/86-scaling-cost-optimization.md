@@ -6,7 +6,7 @@ description: "Thiết kế horizontal scaling, capacity và cost optimization d�
 # Scaling & Cost Optimization
 
 1. Đo baseline workload/cost per active user/request/job/GB; tìm bottleneck bằng latency/saturation, không đoán.
-2. Loại state local: session/cache/job/file/lock chuyển shared durable service; idempotency và distributed coordination rõ.
+2. Chỉ correctness-critical session/job/file/lock state mới bắt buộc external/shared durability và coordination. Correctness-independent cache được phép local/ephemeral khi invalidation, freshness và failure behavior an toàn. Không tự thêm Redis hoặc shared service nếu chưa có evidence về correctness, failure isolation hay tải.
 3. Scale app theo concurrency/latency/queue lag; DB theo query/index/pool/read replica/partition khi chứng minh.
 4. Cache/CDN/object lifecycle/batch/async giúp giảm cost nhưng không phá freshness/auth/integrity.
 5. Autoscaling min/max/cooldown/headroom và provider quota; load/soak test trước tăng trần.
