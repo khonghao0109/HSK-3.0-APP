@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK Frontend & Mobile"
+  short_description: "Next.js/mobile an toàn, nhanh và đúng thiết kế"
+  default_prompt: "Use $05-frontend-mobile to build this HSK UI from the official design references."
+policy:
+  allow_implicit_invocation: true

@@ -75,8 +75,14 @@ report.*.*.*.*.json
 /API test/
 .codegraph/
 
-# Local project skills (personal AI workspace)
-/skill/
+# Project skill system. Only the HSK production skills below are canonical and
+# tracked; imported support bundles remain local/quarantined.
+/skill/*
+!/skill/hsk-production-delivery/
+!/skill/[0-9][0-9]-*/
+!/skill/skills/
+/skill/skills/*
+!/skill/skills/anti-overengineering/
 
 # Runtime uploads and logs; keep directory skeletons only
 /backend/uploads/*

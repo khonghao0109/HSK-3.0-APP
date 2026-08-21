@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK DevOps, Cloud & SRE"
+  short_description: "CI/CD, observability, resilience và scale"
+  default_prompt: "Use $08-devops-cloud-sre to productionize this HSK service with safe rollout and rollback."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "canonicalRoot": "skill",
+  "discoveryRoot": ".agents/skills",
+  "active": [
+    { "name": "hsk-production-delivery", "source": "skill/hsk-production-delivery", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "01-product-strategy", "source": "skill/01-product-strategy", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "02-ux-ui-product-design", "source": "skill/02-ux-ui-product-design", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "03-system-architecture", "source": "skill/03-system-architecture", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "04-backend-core-domains", "source": "skill/04-backend-core-domains", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "05-frontend-mobile", "source": "skill/05-frontend-mobile", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "06-data-analytics", "source": "skill/06-data-analytics", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "07-testing-code-quality", "source": "skill/07-testing-code-quality", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "08-devops-cloud-sre", "source": "skill/08-devops-cloud-sre", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "09-engineering-governance-dx", "source": "skill/09-engineering-governance-dx", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "10-delivery-production-operations", "source": "skill/10-delivery-production-operations", "provenance": "HSK project-maintained", "license": "project-internal" },
+    { "name": "anti-overengineering", "source": "skill/skills/anti-overengineering", "provenance": "HSK project-maintained", "license": "project-internal" }
+  ],
+  "explicitOnly": [],
+  "quarantined": [
+    { "name": "backend-patterns", "localSource": "skill/skills/backend-patterns", "license": "unverified", "reason": "Generic stack guidance; not HSK-specific." },
+    { "name": "banner-design", "localSource": "skill/skills/banner-design", "license": "unverified", "reason": "External-generation and missing-dependency contract." },
+    { "name": "brand", "localSource": "skill/skills/brand", "license": "unverified", "reason": "Generic brand automation with unavailable dependencies." },
+    { "name": "design", "localSource": "skill/skills/design", "license": "unverified", "reason": "External asset workflows require separate consent and review." },
+    { "name": "design-system", "localSource": "skill/skills/design-system", "license": "unverified", "reason": "Generic framework and slide assumptions are not the HSK runtime contract." },
+    { "name": "frontend-design", "localSource": "skill/skills/frontend-design", "license": "unverified", "reason": "Generic redesign guidance duplicates the HSK UI group." },
+    { "name": "gpt-taste", "localSource": "skill/skills/gpt-taste", "license": "unverified", "reason": "Mandates randomization, motion libraries and layout choices outside HSK evidence." },
+    { "name": "hallmark", "localSource": "skill/skills/hallmark", "license": "unverified", "reason": "Broken links and generic redesign workflow." },
+    { "name": "redesign-existing-projects", "localSource": "skill/skills/redesign-existing-projects", "license": "unverified", "reason": "Implicit redesign conflicts with reference-preserving HSK UI work." },
+    { "name": "slides", "localSource": "skill/skills/slides", "license": "unverified", "reason": "Presentation support is unrelated to production routing." },
+    { "name": "ui-styling", "localSource": "skill/skills/ui-styling", "license": "local-license-file-unreviewed", "reason": "Generic component and styling assumptions do not match established HSK UI contracts." },
+    { "name": "ui-ux-pro-max", "localSource": "skill/skills/ui-ux-pro-max", "license": "unverified", "reason": "Generic multi-stack database is unnecessary for active HSK routing." }
+  ],
+  "productionGroups": [
+    { "name": "01-product-strategy", "first": 1, "last": 15 },
+    { "name": "02-ux-ui-product-design", "first": 16, "last": 25 },
+    { "name": "03-system-architecture", "first": 26, "last": 37 },
+    { "name": "04-backend-core-domains", "first": 38, "last": 54 },
+    { "name": "05-frontend-mobile", "first": 55, "last": 62 },
+    { "name": "06-data-analytics", "first": 63, "last": 68 },
+    { "name": "07-testing-code-quality", "first": 69, "last": 77 },
+    { "name": "08-devops-cloud-sre", "first": 78, "last": 86 },
+    { "name": "09-engineering-governance-dx", "first": 87, "last": 93 },
+    { "name": "10-delivery-production-operations", "first": 94, "last": 98 }
+  ],
+  "routingCases": [
+    { "id": "schema-review", "prompt": "Review the Prisma schema for data-integrity risks. Do not change code.", "mode": "REVIEW", "expected": ["04-backend-core-domains"], "forbidden": ["02-ux-ui-product-design", "05-frontend-mobile"], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "ui-implementation", "prompt": "Implement the responsive admin page from docs/ui_image and preserve accessibility.", "mode": "IMPLEMENT", "expected": ["02-ux-ui-product-design", "05-frontend-mobile"], "forbidden": ["03-system-architecture"], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "architecture-adr", "prompt": "Write an ADR for a difficult-to-reverse service boundary decision.", "mode": "REVIEW", "expected": ["03-system-architecture"], "forbidden": ["04-backend-core-domains", "05-frontend-mobile"], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "git-review", "prompt": "Review the staged Git diff for secrets and unrelated files; do not commit.", "mode": "REVIEW", "expected": ["09-engineering-governance-dx"], "forbidden": [], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "docs-only", "prompt": "Update this skill-system documentation only.", "mode": "IMPLEMENT", "expected": ["09-engineering-governance-dx"], "forbidden": ["07-testing-code-quality", "08-devops-cloud-sre"], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "security-integrity", "prompt": "Simplify this backend authentication invariant without weakening security or data integrity.", "mode": "IMPLEMENT", "expected": ["04-backend-core-domains", "07-testing-code-quality", "anti-overengineering"], "forbidden": ["02-ux-ui-product-design"], "commitAuthorized": false, "fullProductionMatrix": false },
+    { "id": "technical-promotion", "prompt": "Promote the immutable artifact through technical staging with rollback checks.", "mode": "RELEASE", "expected": ["08-devops-cloud-sre"], "forbidden": ["10-delivery-production-operations"], "commitAuthorized": false, "fullProductionMatrix": true },
+    { "id": "cross-functional-release", "prompt": "Coordinate the cross-functional go/no-go, support plan and release communication.", "mode": "RELEASE", "expected": ["10-delivery-production-operations"], "forbidden": ["02-ux-ui-product-design"], "commitAuthorized": false, "fullProductionMatrix": true }
+  ]
+}

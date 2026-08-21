@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK Backend & Domains"
+  short_description: "Backend integrity, concurrency và domain workflows"
+  default_prompt: "Use $04-backend-core-domains to implement this HSK backend slice with integrity tests."
+policy:
+  allow_implicit_invocation: true

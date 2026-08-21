@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK System Architecture"
+  short_description: "Kiến trúc bảo mật, tin cậy và scale ngang"
+  default_prompt: "Use $03-system-architecture to design this HSK capability for secure horizontal scale."
+policy:
+  allow_implicit_invocation: true

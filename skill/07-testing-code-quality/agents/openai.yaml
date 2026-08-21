@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK Testing & Quality"
+  short_description: "Risk-based test, security và release evidence"
+  default_prompt: "Use $07-testing-code-quality to build a fail-closed verification plan for this change."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK Production Delivery"
+  short_description: "Route cross-functional HSK production work"
+  default_prompt: "Use $hsk-production-delivery to route this cross-functional HSK task to the smallest sufficient production groups."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "HSK Product Strategy"
+  short_description: "Discovery, requirement, roadmap và product risk"
+  default_prompt: "Use $01-product-strategy to turn this idea into an evidence-based HSK product plan."
+policy:
+  allow_implicit_invocation: true
