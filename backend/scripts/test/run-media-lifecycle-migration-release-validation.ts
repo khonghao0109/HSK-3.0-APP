@@ -31,6 +31,7 @@ import {
   assertSafeMigrationAuxiliaryDatabase,
   assertExactMigrationOnlyCounts,
   buildPgOptions,
+  classifyPrismaTimestampDriftAbort,
   databaseFingerprint,
   MEDIA_MIGRATION_NAMES,
   MEDIA_MIGRATION_TIMEOUTS_MS,
@@ -40,6 +41,10 @@ import {
   sha256,
   waitForBoundedChild,
 } from './media-lifecycle-migration-validation.helpers';
+import {
+  BOUNDED_MIGRATION_EXIT_CODES,
+  resolveLocalPrismaCli,
+} from '../operations/bounded-prisma-migrate-deploy';
 import {
   assertDatabaseReleaseEvidence,
   computeReleaseContentDigest as computeSharedReleaseContentDigest,
@@ -68,10 +73,33 @@ type CommandEvidence = {
   gitTreeSha: string;
   releaseContentDigest: string;
   inputTreeDigest: string;
-  expectedAbort?: { exitCode: 3; sqlstate: 'P0001' };
+  expectedAbort?:
+    | { exitCode: 3; prismaCode: 'P3018'; sqlstate: 'P0001' }
+    | { exitCode: 3; sqlstate: 'P0001'; stage: 'direct-migration' }
+    | { exitCode: 75; sqlstate: '55P03'; stage: 'lock-preflight' }
+    | { exitCode: 1; prismaCode: 'P3009' }
+    | {
+        exitCode: 1;
+        engineDiagnostic: 'transaction-aborted';
+        stage: 'prisma-migrate-deploy';
+      };
 };
 
 type CommandResult = CommandEvidence & { stdout: string; stderr: string };
+
+type ExpectedCommandAbort =
+  | {
+      exitCode: number;
+      pattern: RegExp;
+      expectedAbort: NonNullable<CommandEvidence['expectedAbort']>;
+    }
+  | {
+      label: string;
+      classify: (
+        exitCode: number,
+        diagnostic: string,
+      ) => NonNullable<CommandEvidence['expectedAbort']> | undefined;
+    };
 
 type ValidationResult = {
   git: { commit: string; treeSha: string };
@@ -148,6 +176,7 @@ const databaseNames = {
   integration: `${databasePrefix}_integration_test`,
   concurrency: `${databasePrefix}_concurrency_test`,
   lockAbort: `${databasePrefix}_lock_abort_test`,
+  recovery: `${databasePrefix}_recovery_test`,
   e2e: `${databasePrefix}_e2e_test`,
 } as const;
 const databaseUrls = Object.fromEntries(
@@ -300,6 +329,14 @@ async function executeValidation(): Promise<ValidationResult> {
     releaseContentDigest,
   };
   for (const command of commands) bindCommand(command);
+  run(
+    'production-migration-wrapper-build',
+    'npm',
+    ['run', 'build'],
+    backendRoot,
+    { ...baseSubprocessEnvironment(), NODE_ENV: 'test' },
+    120_000,
+  );
   const sourceMigrations = migrationSources();
   const roots = buildHistoricalMigrationRoots();
 
@@ -420,6 +457,7 @@ async function executeValidation(): Promise<ValidationResult> {
 
   const boundedAbort = await runBoundedMigrationLockRehearsal(
     databaseUrls.lockAbort,
+    databaseUrls.recovery,
     roots,
   );
   checks.boundedMigrationAbort = passCheck(boundedAbort);
@@ -529,6 +567,33 @@ function requiredEnvironment(name: string): string {
   return value;
 }
 
+function baseSubprocessEnvironment(): NodeJS.ProcessEnv {
+  const allowed = [
+    'CI',
+    'COLORTERM',
+    'FORCE_COLOR',
+    'HOME',
+    'LANG',
+    'LC_ALL',
+    'LC_CTYPE',
+    'LOGNAME',
+    'NO_COLOR',
+    'PATH',
+    'SHELL',
+    'TEMP',
+    'TERM',
+    'TMP',
+    'TMPDIR',
+    'USER',
+  ] as const;
+  const environment: NodeJS.ProcessEnv = { TZ: 'UTC' };
+  for (const key of allowed) {
+    const value = process.env[key];
+    if (value !== undefined) environment[key] = value;
+  }
+  return environment;
+}
+
 function databaseUrl(databaseName: string): string {
   const value = new URL(adminUrl);
   value.pathname = `/${databaseName}`;
@@ -551,24 +616,19 @@ function psqlUrl(prismaUrl: string): string {
 
 function environment(databaseUrl: string): NodeJS.ProcessEnv {
   return {
-    ...process.env,
+    ...baseSubprocessEnvironment(),
     NODE_ENV: 'test',
-    JWT_SECRETS:
-      process.env.JWT_SECRETS ??
-      JSON.stringify({ 'release-test': disposableJwtKey }),
-    JWT_ACTIVE_KID: process.env.JWT_ACTIVE_KID ?? 'release-test',
-    AUTH_PASSWORD_PEPPER:
-      process.env.AUTH_PASSWORD_PEPPER ?? disposablePasswordPepper,
-    MEDIA_INGESTION_ENABLED: process.env.MEDIA_INGESTION_ENABLED ?? 'true',
-    MEDIA_STORAGE_BUCKET:
-      process.env.MEDIA_STORAGE_BUCKET ?? 'disposable-media-test',
-    MEDIA_STORAGE_REGION: process.env.MEDIA_STORAGE_REGION ?? 'ap-southeast-1',
-    MEDIA_SCANNER_HOST: process.env.MEDIA_SCANNER_HOST ?? '127.0.0.1',
-    MEDIA_SIGNING_SECRET: process.env.MEDIA_SIGNING_SECRET ?? disposableJwtKey,
-    MEDIA_METRICS_BEARER_TOKEN:
-      process.env.MEDIA_METRICS_BEARER_TOKEN ?? disposablePasswordPepper,
-    MEDIA_METRICS_HOST: process.env.MEDIA_METRICS_HOST ?? '127.0.0.1',
-    MEDIA_METRICS_PORT: process.env.MEDIA_METRICS_PORT ?? '0',
+    JWT_SECRETS: JSON.stringify({ 'release-test': disposableJwtKey }),
+    JWT_ACTIVE_KID: 'release-test',
+    AUTH_PASSWORD_PEPPER: disposablePasswordPepper,
+    MEDIA_INGESTION_ENABLED: 'true',
+    MEDIA_STORAGE_BUCKET: 'disposable-media-test',
+    MEDIA_STORAGE_REGION: 'ap-southeast-1',
+    MEDIA_SCANNER_HOST: '127.0.0.1',
+    MEDIA_SIGNING_SECRET: disposableJwtKey,
+    MEDIA_METRICS_BEARER_TOKEN: disposablePasswordPepper,
+    MEDIA_METRICS_HOST: '127.0.0.1',
+    MEDIA_METRICS_PORT: '0',
     DATABASE_URL: boundedPrismaUrl(databaseUrl),
     TEST_DATABASE_URL: psqlUrl(databaseUrl),
     PGOPTIONS: pgOptions,
@@ -621,7 +681,7 @@ function run(
   cwd: string,
   env: NodeJS.ProcessEnv,
   timeoutMs: number,
-  expected?: { exitCode: number; pattern: RegExp },
+  expected?: ExpectedCommandAbort,
 ): CommandResult {
   const commandStarted = Date.now();
   const commandStartedAt = new Date(commandStarted).toISOString();
@@ -643,17 +703,22 @@ function run(
   const stderr = result.stderr ?? '';
   const actualExit = result.status ?? 1;
   const combined = `${stdout}\n${stderr}`;
-  if (
-    expected
-      ? actualExit !== expected.exitCode || !expected.pattern.test(combined)
-      : actualExit !== 0
-  ) {
+  const matchedAbort = expected
+    ? 'classify' in expected
+      ? expected.classify(actualExit, combined)
+      : actualExit === expected.exitCode && expected.pattern.test(combined)
+        ? expected.expectedAbort
+        : undefined
+    : undefined;
+  if (expected ? matchedAbort === undefined : actualExit !== 0) {
     throw new Error(
       `${commandRef} failed: ${redactMigrationDiagnostic(combined)}`,
     );
   }
   const normalized = expected
-    ? `EXPECTED_ABORT ${String(actualExit)} ${expected.pattern.source}\n${combined}`
+    ? `EXPECTED_ABORT ${String(actualExit)} ${
+        'classify' in expected ? expected.label : expected.pattern.source
+      }\n${combined}`
     : combined;
   const recorded = recordCommand(
     commandRef,
@@ -667,10 +732,7 @@ function run(
       exitCode: actualExit,
       startedAt: commandStartedAt,
       completedAt: new Date().toISOString(),
-      expectedAbort:
-        expected?.exitCode === 3
-          ? { exitCode: 3, sqlstate: 'P0001' }
-          : undefined,
+      expectedAbort: matchedAbort,
     },
   );
   return {
@@ -692,7 +754,7 @@ function recordCommand(
     exitCode?: number;
     startedAt?: string;
     completedAt?: string;
-    expectedAbort?: { exitCode: 3; sqlstate: 'P0001' };
+    expectedAbort?: CommandEvidence['expectedAbort'];
   } = {},
 ): CommandResult {
   const id = commandRef;
@@ -808,7 +870,14 @@ function scalarCommand(
   args: string[],
   cwd: string,
 ): string {
-  const result = run(commandRef, executable, args, cwd, process.env, 5_000);
+  const result = run(
+    commandRef,
+    executable,
+    args,
+    cwd,
+    baseSubprocessEnvironment(),
+    5_000,
+  );
   const value = result.stdout.trim();
   if (!/^[a-f0-9]{40}$/u.test(value)) {
     throw new Error(`${commandRef} returned an invalid Git object ID.`);
@@ -832,7 +901,7 @@ function createDatabase(databaseName: string): void {
     ],
     {
       cwd: backendRoot,
-      env: { ...process.env, PGOPTIONS: pgOptions },
+      env: { ...baseSubprocessEnvironment(), PGOPTIONS: pgOptions },
       encoding: 'utf8',
       timeout: 15_000,
     },
@@ -871,7 +940,7 @@ function assertDatabaseAbsent(databaseName: string): void {
     ],
     {
       cwd: backendRoot,
-      env: { ...process.env, PGOPTIONS: pgOptions },
+      env: { ...baseSubprocessEnvironment(), PGOPTIONS: pgOptions },
       encoding: 'utf8',
       timeout: 10_000,
     },
@@ -888,6 +957,16 @@ function prismaDeploy(
   databaseUrl: string,
   customSchema = schemaPath,
 ): CommandResult {
+  if (customSchema === schemaPath) {
+    return run(
+      commandRef,
+      'npm',
+      ['run', 'migrate:deploy:production'],
+      backendRoot,
+      environment(databaseUrl),
+      MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
+    );
+  }
   return run(
     commandRef,
     'npx',
@@ -933,7 +1012,15 @@ function expectedP0001(commandRef: string, databaseUrl: string): CommandResult {
     backendRoot,
     environment(databaseUrl),
     MEDIA_MIGRATION_TIMEOUTS_MS.command,
-    { exitCode: 3, pattern: /P0001.*malformed immutable audit/isu },
+    {
+      exitCode: 3,
+      pattern: /P0001.*malformed immutable audit/isu,
+      expectedAbort: {
+        exitCode: 3,
+        sqlstate: 'P0001',
+        stage: 'direct-migration',
+      },
+    },
   );
 }
 
@@ -1170,6 +1257,7 @@ function buildHistoricalMigrationRoot(
 
 async function runBoundedMigrationLockRehearsal(
   databaseUrl: string,
+  recoveryDatabaseUrl: string,
   roots: { first17SchemaPath: string; first18SchemaPath: string },
 ): Promise<CommandResult> {
   const startedCommand = Date.now();
@@ -1185,7 +1273,7 @@ async function runBoundedMigrationLockRehearsal(
     SET application_name='media_release_migration_lock_holder';
     BEGIN;
     LOCK TABLE "AuditLog" IN ACCESS EXCLUSIVE MODE;
-    SELECT pg_sleep(4);
+    SELECT pg_sleep(8);
     COMMIT;
   `,
   );
@@ -1199,19 +1287,18 @@ async function runBoundedMigrationLockRehearsal(
       ) === 't',
     'Bounded migration lock holder did not reach its barrier.',
   );
-  const attempt = spawnTrackedFile(
-    databaseUrl,
-    resolve(
-      migrationRoot,
-      MEDIA_MIGRATION_NAMES.auditIntegrity,
-      'migration.sql',
-    ),
+  const attempt = spawnBoundedPrismaDeploy(databaseUrl);
+  const attemptResult = await awaitTracked(
+    attempt,
+    MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
   );
-  const attemptResult = await awaitTracked(attempt, 10_000);
   const attemptOutput = `${attemptResult.stdout}\n${attemptResult.stderr}`;
   if (
-    attemptResult.exitCode !== 3 ||
-    !/55P03|lock timeout/iu.test(attemptOutput)
+    attemptResult.exitCode !== BOUNDED_MIGRATION_EXIT_CODES.lockTimeout ||
+    !/\b55P03\b/iu.test(attemptOutput) ||
+    !/Bounded Prisma migration deploy aborted: database lock timeout/iu.test(
+      attemptOutput,
+    )
   ) {
     throw new Error(
       `Bounded migration did not abort on exact lock timeout: ${redactMigrationDiagnostic(
@@ -1219,7 +1306,26 @@ async function runBoundedMigrationLockRehearsal(
       )}`,
     );
   }
-  const holderResult = await awaitTracked(holder, 10_000);
+  const lockAttemptEvidence = recordCommand(
+    'lock-abort-bounded-deploy-attempt',
+    attemptOutput,
+    attemptResult.durationMs,
+    {
+      executable: 'npm',
+      args: ['run', 'migrate:deploy:production'],
+      cwd: backendRoot,
+      env: environment(databaseUrl),
+      exitCode: BOUNDED_MIGRATION_EXIT_CODES.lockTimeout,
+      startedAt: attemptResult.startedAt,
+      completedAt: attemptResult.completedAt,
+      expectedAbort: {
+        exitCode: 75,
+        sqlstate: '55P03',
+        stage: 'lock-preflight',
+      },
+    },
+  );
+  const holderResult = await awaitTracked(holder, 12_000);
   if (holderResult.exitCode !== 0) {
     throw new Error('Bounded migration lock holder did not commit cleanly.');
   }
@@ -1252,20 +1358,426 @@ async function runBoundedMigrationLockRehearsal(
       'Lock-timeout migration19 left partial functions or triggers.',
     );
   }
+  const lockAttemptRows = sqlScalar(
+    'lock-abort-no-failed-row',
+    databaseUrl,
+    `SELECT COUNT(*) FROM "_prisma_migrations"
+     WHERE migration_name='${MEDIA_MIGRATION_NAMES.auditIntegrity}'`,
+  );
+  if (lockAttemptRows !== '0') {
+    throw new Error(
+      'Bounded lock preflight must not create a failed migration row.',
+    );
+  }
   const recovery = prismaDeploy('lock-abort-recovery-deploy', databaseUrl);
   const afterRecovery = readCatalog(
     databaseUrl,
     'lock-abort-catalog-after-recovery',
   );
   assertCatalog(afterRecovery, migrationSources());
+  const lockFinalState = assertResolvedMigrationState(
+    'lock-abort-final-state',
+    databaseUrl,
+    0,
+    1,
+  );
+
+  prismaDeploy(
+    'lock-abort-recovery-first18-deploy',
+    recoveryDatabaseUrl,
+    roots.first18SchemaPath,
+  );
+  assertFirst18State(
+    'lock-abort-recovery-first18-preflight',
+    recoveryDatabaseUrl,
+  );
+  const driftFixture = psqlFile(
+    'lock-abort-recovery-timestamp-drift-fixture',
+    recoveryDatabaseUrl,
+    resolve(
+      backendRoot,
+      'test/database/media-cleanup-audit-integrity-timestamp-drift.fixture.sql',
+    ),
+  );
+  const driftPreflight = assertTimestampDriftFixture(recoveryDatabaseUrl);
+  const failedDeploy = expectedPrismaTimestampDrift(
+    'lock-abort-recovery-failed-deploy',
+    recoveryDatabaseUrl,
+  );
+  const exactDriftAbort = expectedDirectTimestampDrift(
+    'lock-abort-recovery-direct-p0001',
+    recoveryDatabaseUrl,
+  );
+  assertAtomicRollback(recoveryDatabaseUrl, 18, 1);
+  const driftFailedState = assertFailedMigrationRow(
+    'lock-abort-recovery-failed-row',
+    recoveryDatabaseUrl,
+  );
+  const blockedRetry = expectedPrismaFailedRowBlock(recoveryDatabaseUrl);
+  const reconcile = psqlFile(
+    'lock-abort-recovery-reconcile',
+    recoveryDatabaseUrl,
+    resolve(
+      backendRoot,
+      'test/database/media-cleanup-audit-integrity-timestamp-drift-reconcile.fixture.sql',
+    ),
+  );
+  const reconciledState = assertTimestampDriftReconciled(recoveryDatabaseUrl);
+  assertResolvePreconditions(
+    'lock-abort-recovery-resolve-preconditions',
+    recoveryDatabaseUrl,
+    true,
+  );
+  const driftResolve = prismaResolveRolledBack(
+    'lock-abort-recovery-resolve-rolled-back',
+    recoveryDatabaseUrl,
+  );
+  const driftResolvedState = assertResolvedMigrationState(
+    'lock-abort-recovery-resolved-state',
+    recoveryDatabaseUrl,
+    1,
+    0,
+  );
+  const driftRecovery = prismaDeploy(
+    'lock-abort-recovery-forward-deploy',
+    recoveryDatabaseUrl,
+  );
+  const recoveryStatus = migrationStatus(
+    'lock-abort-recovery-migrate-status',
+    recoveryDatabaseUrl,
+  );
+  const recoveryCatalog = readCatalog(
+    recoveryDatabaseUrl,
+    'lock-abort-recovery-final-catalog',
+  );
+  assertCatalog(recoveryCatalog, migrationSources());
+  const driftFinalState = assertResolvedMigrationState(
+    'lock-abort-recovery-final-state',
+    recoveryDatabaseUrl,
+    1,
+    1,
+  );
+  const recoveryDrift = runRecoveryDrift(recoveryDatabaseUrl);
   return recordCommand(
     'bounded-migration-abort',
     [
-      'current_migration=19 sqlstate=55P03 exit=3 atomic_catalog=18 functions=0 triggers=0',
-      `recovery_catalog=19 recovery_log=${recovery.logSha256}`,
+      `current_migration=19 sqlstate=55P03 exit=${String(
+        BOUNDED_MIGRATION_EXIT_CODES.lockTimeout,
+      )} duration_ms=${String(attemptResult.durationMs)} output_sha256=${lockAttemptEvidence.logSha256} atomic_catalog=18 functions=0 triggers=0`,
+      `lock_preflight_rows=${lockAttemptRows} resolve=not-required`,
+      `lock_recovery_catalog=19 recovery_log=${recovery.logSha256} final=${lockFinalState}`,
+      `timestamp_drift_preflight=${driftPreflight} fixture_log=${driftFixture.logSha256}`,
+      `failed_deploy=${failedDeploy.logSha256} direct_p0001=${exactDriftAbort.logSha256} failed_row=${driftFailedState} blocked_retry=${blockedRetry.logSha256} blocked_retry_duration_ms=${String(
+        blockedRetry.durationMs,
+      )}`,
+      `reconcile=${reconcile.logSha256} reconciled=${reconciledState} resolve=${driftResolve.logSha256} resolved=${driftResolvedState}`,
+      `forward=${driftRecovery.logSha256} status=${recoveryStatus.logSha256} final=${driftFinalState} drift=${recoveryDrift}`,
     ].join('\n'),
     Date.now() - startedCommand,
+    {
+      startedAt: new Date(startedCommand).toISOString(),
+      completedAt: new Date().toISOString(),
+    },
   );
+}
+
+function spawnBoundedPrismaDeploy(databaseUrl: string): ChildProcess {
+  return trackChild(
+    spawn('npm', ['run', 'migrate:deploy:production'], {
+      cwd: backendRoot,
+      env: environment(databaseUrl),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }),
+  );
+}
+
+function expectedPrismaTimestampDrift(
+  commandRef: string,
+  databaseUrl: string,
+): CommandResult {
+  return run(
+    commandRef,
+    'npm',
+    ['run', 'migrate:deploy:production'],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
+    {
+      label: 'exact-prisma-timestamp-drift-abort',
+      classify: classifyPrismaTimestampDriftAbort,
+    },
+  );
+}
+
+function expectedDirectTimestampDrift(
+  commandRef: string,
+  databaseUrl: string,
+): CommandResult {
+  return run(
+    commandRef,
+    'psql',
+    [
+      psqlUrl(databaseUrl),
+      '-X',
+      '--set=VERBOSITY=verbose',
+      '-v',
+      'ON_ERROR_STOP=1',
+      '-f',
+      resolve(
+        migrationRoot,
+        MEDIA_MIGRATION_NAMES.auditIntegrity,
+        'migration.sql',
+      ),
+    ],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command,
+    {
+      exitCode: 3,
+      pattern:
+        /P0001.*Media cleanup lifecycle lacks an exact authoritative audit timestamp/isu,
+      expectedAbort: {
+        exitCode: 3,
+        sqlstate: 'P0001',
+        stage: 'direct-migration',
+      },
+    },
+  );
+}
+
+function expectedPrismaFailedRowBlock(databaseUrl: string): CommandResult {
+  return run(
+    'lock-abort-recovery-p3009-retry',
+    'npm',
+    ['run', 'migrate:deploy:production'],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
+    {
+      exitCode: 1,
+      pattern: /\bP3009\b/iu,
+      expectedAbort: { exitCode: 1, prismaCode: 'P3009' },
+    },
+  );
+}
+
+function prismaResolveRolledBack(
+  commandRef: string,
+  databaseUrl: string,
+): CommandResult {
+  return run(
+    commandRef,
+    'npm',
+    ['run', 'migrate:resolve:media-cleanup-audit:production'],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
+  );
+}
+
+function assertFailedMigrationRow(
+  commandRef: string,
+  databaseUrl: string,
+): string {
+  const checksum = migrationSources().find(
+    ({ name }) => name === MEDIA_MIGRATION_NAMES.auditIntegrity,
+  )?.checksum;
+  if (!checksum) throw new Error('Migration 19 source checksum is absent.');
+  const value = sqlScalar(
+    commandRef,
+    databaseUrl,
+    `SELECT
+      COUNT(*)::text || '|' ||
+      COALESCE(bool_and(checksum='${checksum}'), false)::text || '|' ||
+      COALESCE(bool_and(finished_at IS NULL), false)::text || '|' ||
+      COALESCE(bool_and(rolled_back_at IS NULL), false)::text || '|' ||
+      COALESCE(bool_and(started_at IS NOT NULL), false)::text || '|' ||
+      COALESCE(bool_and(logs IS NULL OR length(logs) > 0), false)::text || '|' ||
+      COALESCE(bool_and(logs IS NOT NULL), false)::text
+    FROM "_prisma_migrations"
+    WHERE migration_name='${MEDIA_MIGRATION_NAMES.auditIntegrity}'`,
+  );
+  if (
+    value !== '1|true|true|true|true|true|false' &&
+    value !== '1|true|true|true|true|true|true' &&
+    value !== '1|t|t|t|t|t|f' &&
+    value !== '1|t|t|t|t|t|t'
+  ) {
+    throw new Error(
+      'Prisma failed migration row is absent or has unsafe retained-log state.',
+    );
+  }
+  return value;
+}
+
+function assertResolvePreconditions(
+  commandRef: string,
+  databaseUrl: string,
+  requiresExactAudit: boolean,
+): void {
+  const value = sqlScalar(
+    commandRef,
+    databaseUrl,
+    `SELECT
+      (SELECT COUNT(*) FROM "_prisma_migrations"
+       WHERE migration_name='${MEDIA_MIGRATION_NAMES.auditIntegrity}'
+         AND finished_at IS NULL AND rolled_back_at IS NULL)::text || '|' ||
+      (SELECT COUNT(*) FROM "_prisma_migrations"
+       WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL)::text || '|' ||
+      (SELECT COUNT(*) FROM pg_proc WHERE proname IN (
+        'hsk_is_valid_media_cleanup_audit',
+        'hsk_is_valid_current_media_cleanup_audit',
+        'hsk_guard_media_cleanup_audit',
+        'hsk_require_media_cleanup_audit'
+      ))::text || '|' ||
+      (SELECT COUNT(*) FROM pg_trigger WHERE tgname IN (
+        'AuditLog_media_cleanup_integrity',
+        'MediaIngestion_cleanup_audit_required'
+      ))::text || '|' ||
+      (SELECT COUNT(*) FROM "MediaIngestion" ingestion
+       WHERE ingestion."idempotencyKeyHash"=repeat('2', 64)
+         AND EXISTS (
+           SELECT 1 FROM "AuditLog" audit
+           WHERE audit."targetType"='media_ingestion'
+             AND audit."targetId"=ingestion.id::text
+             AND audit."createdAt"=ingestion."cleanupRequiredAt"
+             AND audit."afterSummary" ->> 'status'='cleanup_required'
+         ))::text`,
+  );
+  const expected = requiresExactAudit ? '1|18|0|0|1' : '1|18|0|0|0';
+  if (value !== expected) {
+    throw new Error('Migration resolve preconditions are not satisfied.');
+  }
+}
+
+function assertResolvedMigrationState(
+  commandRef: string,
+  databaseUrl: string,
+  rolledBackRows: number,
+  successfulRows: number,
+): string {
+  const value = sqlScalar(
+    commandRef,
+    databaseUrl,
+    `SELECT
+      COUNT(*) FILTER (WHERE rolled_back_at IS NOT NULL)::text || '|' ||
+      COUNT(*) FILTER (WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL)::text
+    FROM "_prisma_migrations"
+    WHERE migration_name='${MEDIA_MIGRATION_NAMES.auditIntegrity}'`,
+  );
+  if (value !== `${String(rolledBackRows)}|${String(successfulRows)}`) {
+    throw new Error('Prisma migration resolve/deploy state is invalid.');
+  }
+  return value;
+}
+
+function assertTimestampDriftFixture(databaseUrl: string): string {
+  const value = sqlScalar(
+    'lock-abort-recovery-timestamp-drift-preflight',
+    databaseUrl,
+    `SELECT
+      COUNT(*)::text || '|' ||
+      COALESCE(bool_and(
+        audit.action='media.ingestion_cleanup_failed'
+        AND audit."targetType"='media_ingestion'
+        AND audit."targetId"=ingestion.id::text
+        AND audit."afterSummary" ->> 'ingestionId'=ingestion.id::text
+        AND audit."afterSummary" ->> 'status'='cleanup_required'
+        AND audit."afterSummary" ->> 'failureCode'='OBJECT_CLEANUP_REQUIRED'
+        AND audit."createdAt" >= ingestion."cleanupRequiredAt"
+        AND audit."createdAt" <= clock_timestamp()::timestamp(3)
+      ), false)::text || '|' ||
+      COALESCE(bool_and(audit."createdAt" <> ingestion."cleanupRequiredAt"), false)::text
+    FROM "MediaIngestion" ingestion
+    JOIN "AuditLog" audit ON audit."targetId"=ingestion.id::text
+    WHERE ingestion."idempotencyKeyHash"=repeat('2', 64)`,
+  );
+  if (value !== '1|true|true' && value !== '1|t|t') {
+    throw new Error('Timestamp-drift fixture is malformed or not exact.');
+  }
+  return value;
+}
+
+function assertTimestampDriftReconciled(databaseUrl: string): string {
+  const value = sqlScalar(
+    'lock-abort-recovery-reconciled-state',
+    databaseUrl,
+    `SELECT
+      COUNT(*)::text || '|' ||
+      COUNT(*) FILTER (
+        WHERE audit."createdAt"=ingestion."cleanupRequiredAt"
+          AND audit.action='media.ingestion_failed'
+      )::text || '|' ||
+      COUNT(*) FILTER (
+        WHERE audit."createdAt"<>ingestion."cleanupRequiredAt"
+          AND audit.action='media.ingestion_cleanup_failed'
+      )::text
+    FROM "MediaIngestion" ingestion
+    JOIN "AuditLog" audit ON audit."targetId"=ingestion.id::text
+    WHERE ingestion."idempotencyKeyHash"=repeat('2', 64)`,
+  );
+  if (value !== '2|1|1') {
+    throw new Error('Forward timestamp-drift reconciliation is not exact.');
+  }
+  return value;
+}
+
+function migrationStatus(
+  commandRef: string,
+  databaseUrl: string,
+): CommandResult {
+  const result = run(
+    commandRef,
+    process.execPath,
+    [resolveLocalPrismaCli(), 'migrate', 'status', '--schema', schemaPath],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command,
+  );
+  if (!/Database schema is up to date!/u.test(result.stdout)) {
+    throw new Error('Recovered migration status is not up to date.');
+  }
+  return result;
+}
+
+function runRecoveryDrift(databaseUrl: string): string {
+  const history = run(
+    'lock-abort-recovery-drift-history',
+    process.execPath,
+    [
+      resolveLocalPrismaCli(),
+      'migrate',
+      'diff',
+      '--from-migrations',
+      migrationRoot,
+      '--to-schema-datamodel',
+      schemaPath,
+      '--shadow-database-url',
+      shadowUrl,
+      '--exit-code',
+    ],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command,
+  );
+  const live = run(
+    'lock-abort-recovery-drift-live',
+    process.execPath,
+    [
+      resolveLocalPrismaCli(),
+      'migrate',
+      'diff',
+      '--from-url',
+      databaseUrl,
+      '--to-schema-datamodel',
+      schemaPath,
+      '--exit-code',
+    ],
+    backendRoot,
+    environment(databaseUrl),
+    MEDIA_MIGRATION_TIMEOUTS_MS.command,
+  );
+  return `${history.logSha256}:${live.logSha256}`;
 }
 
 function spawnTracked(databaseUrl: string, sql: string): ChildProcess {
@@ -1284,28 +1796,6 @@ function spawnTracked(databaseUrl: string, sql: string): ChildProcess {
       {
         cwd: backendRoot,
         env: concurrencyEnvironment(databaseUrl),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      },
-    ),
-  );
-}
-
-function spawnTrackedFile(databaseUrl: string, file: string): ChildProcess {
-  return trackChild(
-    spawn(
-      'psql',
-      [
-        psqlUrl(databaseUrl),
-        '-X',
-        '--set=VERBOSITY=verbose',
-        '-v',
-        'ON_ERROR_STOP=1',
-        '-f',
-        file,
-      ],
-      {
-        cwd: backendRoot,
-        env: environment(databaseUrl),
         stdio: ['ignore', 'pipe', 'pipe'],
       },
     ),
@@ -1719,7 +2209,7 @@ function computeBoundReleaseContentDigest(label: 'initial' | 'final'): string {
     'git',
     ['status', '--porcelain=v1', '-z', '--untracked-files=all'],
     repositoryRoot,
-    process.env,
+    baseSubprocessEnvironment(),
     5_000,
   );
   return computeSharedReleaseContentDigest(repositoryRoot, status.stdout)
@@ -1793,7 +2283,7 @@ async function cleanupTaskResources(): Promise<string[]> {
           [`--maintenance-db=${psqlUrl(adminUrl)}`, databaseName],
           {
             cwd: backendRoot,
-            env: { ...process.env, PGOPTIONS: pgOptions },
+            env: { ...baseSubprocessEnvironment(), PGOPTIONS: pgOptions },
             encoding: 'utf8',
             timeout: 15_000,
           },

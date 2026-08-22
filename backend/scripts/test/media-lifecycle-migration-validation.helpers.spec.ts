@@ -1,14 +1,31 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 
+import {
+  BOUNDED_MIGRATION_EXIT_CODES,
+  BOUNDED_MIGRATION_TIMEOUTS_MS,
+  buildBoundedMigrationEnvironment,
+  classifyBoundedMigrationExitCode,
+  isPrismaFailedMigrationRetryBlock,
+  normalizeBoundedMigrationDomainPreflight,
+  redactBoundedMigrationDiagnostic,
+  resolveLocalPrismaCli,
+  validateBoundedMigrationTimeouts,
+} from '../operations/bounded-prisma-migrate-deploy';
+import {
+  MEDIA_CLEANUP_AUDIT_MIGRATION,
+  buildMediaCleanupAuditResolveInvocation,
+} from '../operations/bounded-prisma-migrate-resolve-rolled-back';
 import {
   assertExactMigrationOnlyCounts,
   assertSafeMigrationAuxiliaryDatabase,
   assertSafeEvidence,
   assertSafeEvidencePath,
   buildPgOptions,
+  classifyPrismaTimestampDriftAbort,
   classifyMigrationFailure,
   databaseFingerprint,
   MEDIA_MIGRATION_NAMES,
@@ -19,6 +36,238 @@ import {
   sha256,
   waitForBoundedChild,
 } from './media-lifecycle-migration-validation.helpers';
+
+void test('owns the production Prisma deploy timeout and environment contract', () => {
+  const secret = 'caller-controlled-password';
+  const environment = buildBoundedMigrationEnvironment({
+    DATABASE_URL: `postgresql://operator:${secret}@db.internal:5432/hsk?schema=public&options=-c%20lock_timeout%3D0`,
+    PGOPTIONS: '-c lock_timeout=0 -c statement_timeout=0',
+  });
+  const databaseUrl = new URL(environment.DATABASE_URL ?? '');
+
+  assert.equal(
+    databaseUrl.searchParams.get('options'),
+    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms',
+  );
+  assert.equal(
+    environment.PGOPTIONS,
+    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms',
+  );
+  assert.equal(databaseUrl.searchParams.getAll('options').length, 1);
+  assert.doesNotMatch(
+    redactBoundedMigrationDiagnostic(environment.DATABASE_URL),
+    new RegExp(secret, 'u'),
+  );
+  const packageJson = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
+  ) as { scripts?: Record<string, string> };
+  assert.equal(
+    packageJson.scripts?.['migrate:deploy:production'],
+    'node dist/scripts/operations/bounded-prisma-migrate-deploy.js',
+  );
+  assert.equal(
+    packageJson.scripts?.['migrate:resolve:media-cleanup-audit:production'],
+    'node dist/scripts/operations/bounded-prisma-migrate-resolve-rolled-back.js',
+  );
+  assert.doesNotMatch(
+    `${packageJson.scripts?.['migrate:deploy:production']} ${packageJson.scripts?.['migrate:resolve:media-cleanup-audit:production']}`,
+    /ts-node|npx/iu,
+  );
+  const wrapperSource = readFileSync(
+    resolve(
+      process.cwd(),
+      'scripts/operations/bounded-prisma-migrate-deploy.ts',
+    ),
+    'utf8',
+  );
+  assert.match(wrapperSource, /'migrate',\s*'deploy'/u);
+  assert.match(
+    wrapperSource,
+    /BOUNDED_MIGRATION_DOMAIN_PREFLIGHT P3018 P0001/u,
+  );
+  assert.match(wrapperSource, /BOUNDED_MIGRATION_LOCK_TIMEOUT P3018 55P03/u);
+  assert.match(wrapperSource, /20260813193000_media_cleanup_audit_integrity/u);
+  assert.match(
+    wrapperSource,
+    /c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252/u,
+  );
+  assert.ok(
+    wrapperSource.indexOf('to_regclass(\'\\"MediaIngestion\\"\')') <
+      wrapperSource.indexOf('to_regclass(\'\\"AuditLog\\"\')'),
+    'Lock preflight must preserve the migration application lock order.',
+  );
+  assert.doesNotMatch(wrapperSource, /'migrate',\s*'resolve'|'reset'|'push'/u);
+});
+
+void test('owns an exact fixed-argv production resolve command for migration 19', () => {
+  assert.equal(
+    MEDIA_CLEANUP_AUDIT_MIGRATION,
+    '20260813193000_media_cleanup_audit_integrity',
+  );
+  const invocation = buildMediaCleanupAuditResolveInvocation(process.cwd());
+  assert.equal(invocation.executable, process.execPath);
+  assert.equal(invocation.args[0], require.resolve('prisma/build/index.js'));
+  assert.deepEqual(invocation.args.slice(1), [
+    'migrate',
+    'resolve',
+    '--rolled-back',
+    MEDIA_CLEANUP_AUDIT_MIGRATION,
+    '--schema',
+    resolve(process.cwd(), 'prisma/schema.prisma'),
+  ]);
+});
+
+void test('fails closed when bounded migration timeout ordering is invalid', () => {
+  assert.doesNotThrow(() =>
+    validateBoundedMigrationTimeouts(BOUNDED_MIGRATION_TIMEOUTS_MS),
+  );
+  assert.throws(
+    () =>
+      validateBoundedMigrationTimeouts({
+        ...BOUNDED_MIGRATION_TIMEOUTS_MS,
+        lock: BOUNDED_MIGRATION_TIMEOUTS_MS.statement,
+      }),
+    /lock timeout must be smaller than statement timeout/iu,
+  );
+  assert.throws(
+    () => buildBoundedMigrationEnvironment({}),
+    /DATABASE_URL is required/iu,
+  );
+  assert.throws(
+    () =>
+      buildBoundedMigrationEnvironment({
+        DATABASE_URL: 'mysql://operator:secret@db.internal/hsk',
+      }),
+    /valid PostgreSQL URL/iu,
+  );
+});
+
+void test('uses the repository-local Prisma CLI and a distinct lock-timeout exit', () => {
+  const prismaCli = resolveLocalPrismaCli();
+  assert.equal(prismaCli, require.resolve('prisma/build/index.js'));
+  assert.equal(
+    classifyBoundedMigrationExitCode(
+      'P3018 Database error code: 55P03 lock timeout',
+      1,
+      false,
+    ),
+    BOUNDED_MIGRATION_EXIT_CODES.lockTimeout,
+  );
+  for (const diagnostic of [
+    'unrelated diagnostic: lock timeout policy invalid',
+    'P3018 without a database SQLSTATE',
+    '55P03 without a Prisma migration failure',
+  ]) {
+    assert.equal(classifyBoundedMigrationExitCode(diagnostic, 1, false), 1);
+  }
+  assert.equal(classifyBoundedMigrationExitCode('P3018 P0001', 1, false), 1);
+  assert.equal(
+    classifyBoundedMigrationExitCode(
+      'P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+      1,
+      false,
+    ),
+    BOUNDED_MIGRATION_EXIT_CODES.domainPreflight,
+  );
+  assert.equal(
+    classifyBoundedMigrationExitCode('', null, true),
+    BOUNDED_MIGRATION_EXIT_CODES.commandTimeout,
+  );
+  assert.equal(
+    isPrismaFailedMigrationRetryBlock(
+      'P3009 found failed migrations in the target database',
+      1,
+    ),
+    true,
+  );
+  assert.equal(isPrismaFailedMigrationRetryBlock('P3009', 0), false);
+  assert.equal(isPrismaFailedMigrationRetryBlock('P3018 P0001', 1), false);
+});
+
+void test('normalizes only an exact bounded timestamp-drift classification', () => {
+  assert.equal(
+    normalizeBoundedMigrationDomainPreflight(
+      'P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+    ),
+    'BOUNDED_MIGRATION_DOMAIN_PREFLIGHT P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+  );
+  for (const diagnostic of [
+    'P3018 P0001',
+    'P3018 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+    'P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+  ]) {
+    assert.equal(
+      normalizeBoundedMigrationDomainPreflight(diagnostic),
+      undefined,
+    );
+  }
+
+  const wrapperSource = readFileSync(
+    resolve(
+      process.cwd(),
+      'scripts/operations/bounded-prisma-migrate-deploy.ts',
+    ),
+    'utf8',
+  );
+  assert.match(
+    wrapperSource,
+    /process\.stderr\.write\(`\$\{domainPreflightMarker\}\\n`\)/u,
+  );
+});
+
+void test('pins a timestamp-drift fixture that reaches the authoritative timestamp branch', () => {
+  const fixture = readFileSync(
+    join(
+      process.cwd(),
+      'test/database/media-cleanup-audit-integrity-timestamp-drift.fixture.sql',
+    ),
+    'utf8',
+  );
+  assert.match(fixture, /media\.ingestion_cleanup_failed/u);
+  assert.match(fixture, /cleanup_required_at \+ INTERVAL '1 millisecond'/u);
+  assert.match(fixture, /OBJECT_CLEANUP_REQUIRED/u);
+  assert.doesNotMatch(fixture, /media\.ingestion_failed/u);
+});
+
+void test('accepts only the two exact Prisma timestamp-drift abort shapes', () => {
+  assert.deepEqual(
+    classifyPrismaTimestampDriftAbort(
+      1,
+      'Error: ERROR: current transaction is aborted, commands ignored until end of transaction block',
+    ),
+    {
+      exitCode: 1,
+      engineDiagnostic: 'transaction-aborted',
+      stage: 'prisma-migrate-deploy',
+    },
+  );
+  assert.deepEqual(
+    classifyPrismaTimestampDriftAbort(
+      3,
+      'BOUNDED_MIGRATION_DOMAIN_PREFLIGHT P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+    ),
+    { exitCode: 3, prismaCode: 'P3018', sqlstate: 'P0001' },
+  );
+
+  for (const [exitCode, diagnostic] of [
+    [0, 'current transaction is aborted'],
+    [1, 'P3018 P0001'],
+    [3, 'P3018 P0001'],
+    [
+      3,
+      'P3018 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+    ],
+    [
+      3,
+      'P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp',
+    ],
+  ] as const) {
+    assert.equal(
+      classifyPrismaTimestampDriftAbort(exitCode, diagnostic),
+      undefined,
+    );
+  }
+});
 
 void test('builds bounded PostgreSQL session timeouts for migration deploy', () => {
   assert.equal(

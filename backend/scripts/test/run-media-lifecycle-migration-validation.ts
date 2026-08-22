@@ -11,6 +11,7 @@ import {
 import { dirname, join, resolve } from 'node:path';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
+import { BOUNDED_MIGRATION_EXIT_CODES } from '../operations/bounded-prisma-migrate-deploy';
 import {
   assertExactMigrationOnlyCounts,
   assertSafeMigrationAuxiliaryDatabase,
@@ -62,6 +63,14 @@ const started = Date.now();
 const commands: CommandEvidence[] = [];
 let commandSequence = 0;
 const database = assertDisposableTestDatabase();
+const guardedPrimary = assertSafeMigrationAuxiliaryDatabase(
+  database.testDatabaseUrl,
+  database.testDatabaseUrl,
+  'MEDIA_MIGRATION_ADMIN_DATABASE_URL',
+);
+if (guardedPrimary.databaseName !== database.databaseName) {
+  throw new Error('Disposable database identities do not match.');
+}
 const databaseIdentity = databaseFingerprint(database.testDatabaseUrl);
 if (!databaseIdentity.guardedTestSuffix) {
   throw new Error('Disposable database guard did not produce a test suffix.');
@@ -100,9 +109,9 @@ assertCatalogChecksum(beforeMigrations, startingMigration);
 
 const deploy = runCommand(
   'bounded-upgrade-deploy',
-  'npx',
-  ['prisma', 'migrate', 'deploy'],
-  MEDIA_MIGRATION_TIMEOUTS_MS.command,
+  'npm',
+  ['run', 'migrate:deploy:production'],
+  MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
   {},
   expectedOutcome === 'lock_timeout' ? 'lock_timeout' : undefined,
 );
@@ -110,7 +119,14 @@ const combinedDeployOutput = `${deploy.stdout}\n${deploy.stderr}`;
 
 if (expectedOutcome === 'lock_timeout') {
   const failureKind = classifyMigrationFailure(combinedDeployOutput);
-  if (deploy.status === 0 || failureKind !== 'lock_timeout') {
+  if (
+    deploy.status !== BOUNDED_MIGRATION_EXIT_CODES.lockTimeout ||
+    failureKind !== 'lock_timeout' ||
+    !/\b55P03\b/u.test(combinedDeployOutput) ||
+    !/Bounded Prisma migration deploy aborted: database lock timeout/iu.test(
+      combinedDeployOutput,
+    )
+  ) {
     throw new Error(
       `Expected exact lock timeout; observed status=${String(
         deploy.status,
@@ -264,6 +280,13 @@ function runCommand(
   const durationMs = Date.now() - commandStarted;
   const status = result.status ?? 1;
   const classification = classifyMigrationFailure(`${stdout}\n${stderr}`);
+  const exactExpectedLockAbort =
+    expectedFailure === 'lock_timeout' &&
+    status === BOUNDED_MIGRATION_EXIT_CODES.lockTimeout &&
+    /\b55P03\b/u.test(`${stdout}\n${stderr}`) &&
+    /Bounded Prisma migration deploy aborted: database lock timeout/iu.test(
+      `${stdout}\n${stderr}`,
+    );
   const evidenceId = `media-migration-${String(++commandSequence).padStart(
     3,
     '0',
@@ -274,7 +297,7 @@ function runCommand(
     outcome:
       status === 0
         ? 'PASS'
-        : expectedFailure === classification
+        : exactExpectedLockAbort && classification === 'lock_timeout'
           ? 'EXPECTED_ABORT'
           : 'FAIL',
     exitCode: result.status,
@@ -616,12 +639,16 @@ function gitScalar(commandRef: string, args: string[]): string {
 function sourceBinding(migrations: MigrationRow[]) {
   const relativePaths = [
     'package.json',
+    'scripts/operations/bounded-prisma-migrate-deploy.ts',
+    'scripts/operations/bounded-prisma-migrate-resolve-rolled-back.ts',
     'scripts/test/media-lifecycle-migration-validation.helpers.ts',
     'scripts/test/media-lifecycle-migration-validation.helpers.spec.ts',
     'scripts/test/run-media-lifecycle-migration-validation.ts',
     'test/database/media-cleanup-audit-integrity-adversarial.fixture.sql',
     'test/database/media-cleanup-audit-integrity-future.fixture.sql',
     'test/database/media-cleanup-audit-integrity.integration.sql',
+    'test/database/media-cleanup-audit-integrity-timestamp-drift-reconcile.fixture.sql',
+    'test/database/media-cleanup-audit-integrity-timestamp-drift.fixture.sql',
     'test/database/media-lifecycle-telemetry-cleanup-upgrade.fixture.sql',
   ];
   const files = relativePaths.map((relativePath) => ({

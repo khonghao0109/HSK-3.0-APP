@@ -123,6 +123,7 @@ describe('media operations artifacts', () => {
         'alertmanager',
         'amtool',
         'grafana',
+        'grype',
         'kubectl',
         'kubeconform',
       ]),
@@ -153,8 +154,22 @@ describe('media operations artifacts', () => {
       expect(image.platforms[0]?.runtimeRef).toBe(
         `${image.repository}@${image.platforms[0]?.digest}`,
       );
-      expect(image.attestations.signature.required).toBe(true);
+      expect(image.attestations.releaseAcceptance).toMatchObject({
+        required: true,
+        model: 'hsk-release-acceptance',
+        verifier: 'cosign-keyless-blob',
+      });
+      expect(image.attestations.upstreamPublisherSignature.status).toBe(
+        'absent',
+      );
       expect(image.attestations.sbom.required).toBe(true);
+      expect(image.attestations.vulnerability.failOn).toEqual([
+        'Critical',
+        'High',
+      ]);
+      expect(image.attestations.license.policySha256).toMatch(
+        /^[a-f0-9]{64}$/u,
+      );
     }
   });
 

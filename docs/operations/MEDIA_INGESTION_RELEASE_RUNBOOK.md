@@ -3,6 +3,18 @@
 Owner: Media Platform. Security partner: Security Platform. Severity: cleanup,
 scanner and coherence pages are SEV-2 until triage proves lower impact.
 
+Hosted runbook instances must preserve these machine-verifiable metadata lines and
+the recovery marker. Change the revision whenever operational content changes:
+
+```text
+HSK_MEDIA_INGESTION_RUNBOOK_V1
+service: media-ingestion
+runbook-id: media-ingestion-production
+owner: platform-sre
+revision: 2026-08-22
+HSK_MEDIA_RECOVERY_ROLLBACK_V1
+```
+
 ## Release boundary
 
 Code readiness and production readiness are separate. Production stays blocked until
@@ -34,6 +46,59 @@ races on a disposable upgrade database. A `P0001` or `55P03` leaves the migratio
 transaction unapplied: keep writers disabled, reconcile the immutable history
 forward, and rerun the guarded aggregate database harness rather than editing applied
 migration bytes.
+
+### Bounded production migration and failed-row recovery
+
+The only primary production deploy command is repository-owned and accepts no caller
+arguments:
+
+```bash
+cd backend
+npm run migrate:deploy:production
+```
+
+Inject `DATABASE_URL` from the production workload identity/secret manager without
+printing it. The command resolves the repository-local Prisma CLI, replaces both a
+caller-supplied URL `options` value and `PGOPTIONS`, and enforces `lock_timeout=2s`,
+`statement_timeout=30s`, `idle_in_transaction_session_timeout=35s` and a 45-second
+process deadline. Exit `75` means an exact database lock timeout; exit `124` means the
+outer command deadline elapsed; exit `3` is used only when Prisma actually surfaces
+both `P3018` and database preflight `P0001`. Prisma 5.22 can instead retain an
+unfinished migration row with `logs IS NULL` while returning exit `1` and only
+`current transaction is aborted`; that diagnostic must remain an abort and must not
+be relabelled as `P3018`. Every result is an abort unless the exit is zero. The wrapper
+never runs `reset`, `db push` or `migrate resolve`.
+
+If Prisma records migration 19 as failed, keep every writer quiesced and preserve only
+sanitized count/boolean/checksum evidence. Verify one unfinished, unrolled-back row for
+`20260813193000_media_cleanup_audit_integrity` with checksum
+`c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`, exactly 18
+successful migrations and zero migration-19 functions/triggers. A second deploy must
+remain blocked by `P3009`. A retained Prisma log may be absent, so do not infer a
+SQLSTATE from an empty field. Corroborate the exact source checksum, preflight
+predicate, atomic schema state and sanitized operator evidence before reconciling
+forward; never update/delete immutable audit history merely to pass the preflight.
+
+Only after the exact failed row, full transaction rollback and reconciled invariant are
+independently confirmed may an operator mark that attempt rolled back:
+
+```bash
+cd backend
+npm run migrate:resolve:media-cleanup-audit:production
+npm run migrate:deploy:production
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
+```
+
+The compiled resolve command accepts no arguments, uses the repository-local Prisma
+CLI, overwrites URL `options` and `PGOPTIONS` with the same 2/30/35-second database
+timeouts, applies the same 45-second process deadline and can only mark
+`20260813193000_media_cleanup_audit_integrity` rolled back. It redacts diagnostics and
+propagates every non-zero Prisma exit.
+
+Do not run the resolve command for an unknown error, a checksum mismatch, any partial
+DDL, an unreconciled lifecycle/audit invariant or a row already finished/rolled back.
+After recovery, require the exact 19-migration catalog, an up-to-date status and empty
+migration-history-to-datamodel plus live-to-datamodel drift before enabling writers.
 
 Provisional beta objectives, measured over a rolling 28-day window after a seven-day
 staging observation period:
@@ -210,23 +275,149 @@ cd backend
 MEDIA_OPS_TOOL_CACHE=/secure/ci-cache/media-ops \
 MEDIA_RUNBOOK_URL=https://runbooks.example.internal/media-ingestion \
 MEDIA_OPS_DB_EVIDENCE_JSON="$PWD/test-results/media-lifecycle-migration-validation/evidence.json" \
+MEDIA_OPS_DB_EVIDENCE_BUNDLE=/secure/ci/media-database-release-evidence.sigstore.json \
+MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON=/secure/ci/media-oci-release-acceptance.json \
+MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE=/secure/ci/media-oci-release-acceptance.sigstore.json \
 MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON=/secure/ci/media-capacity-backup-evidence.json \
+MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE=/secure/ci/media-capacity-backup-evidence.sigstore.json \
 npm run test:ops:media:linux-amd64
 ```
 
 Darwin arm64 may run `npm run test:ops:media:reference`, but that evidence is not a
 release substitute. The Linux profile fails closed unless every non-DB quality gate,
-the guarded aggregate DB evidence, OCI index/child digest, approved cosign workflow
-identity, signed SPDX attestation and all operations validators pass. An external
-block is a non-green release result.
+the guarded aggregate DB evidence, OCI index/child digest, approved tag-scoped HSK
+release-acceptance identity, hash-bound SPDX/vulnerability/license reports and all
+operations validators pass. This HSK signature accepts the exact inspected bytes for
+the release; it is not an upstream publisher signature. An external block is a
+non-green release result.
 
-The capacity/backup artifact is a secret-free, release-bound JSON record. It binds
-the current commit/tree/content digest and a hashed cluster identity; proves the 50
+Cosign must verify the detached bundle against issuer
+`https://token.actions.githubusercontent.com` and exact identity
+`https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0`
+before the runner parses OCI, capacity, database or prerequisite-inventory JSON.
+Verification additionally requires certificate workflow name
+`Media release evidence`, repository `khonghao0109/HSK-3.0-APP`, ref
+`refs/tags/v3.0.0`, trigger `push` and SHA equal to the exact release commit. An
+empty, wildcard, branch or
+wrong-repository identity is invalid. The OCI manifest must name all three exact
+index and Linux amd64 child digests in ADR-006 and bind exact Syft SPDX, Grype and
+license report/policy hashes. Security Platform owns policy and waivers; Release
+Engineering owns the protected tag workflow and 90-day retained evidence. Rotate by
+reviewing a new exact tag identity and producing fresh current-release evidence;
+never broaden the regex or relabel HSK acceptance as upstream provenance.
+
+The release verifier consumes both payload and pre-existing bundle paths from the
+protected runner and has no `id-token: write` permission. It must never call
+`cosign sign` or `sign-blob` on supplied evidence. A signing collector is acceptable
+only when it directly executes the pinned scanner/live rehearsal and signs the
+result after those commands succeed. No such collector run is part of this closeout,
+so missing bundles are expected `BLOCKED_EXTERNAL` rather than something the
+verifier repairs or self-signs.
+
+For the six live-environment prerequisites, provide one pre-signed package through
+all three variables below; do not provide only a subset:
+
+```text
+MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON=/protected/input/live-package/manifest.json
+MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE=/protected/input/live-package.sigstore.json
+MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT=/protected/input/live-package
+```
+
+The protected workflow validates the corresponding secret-backed paths before
+exporting these runner variables. The manifest must use schema version 1 and ID
+`hsk-media-live-production-evidence-v1`; repeat the exact approved issuer and identity;
+bind the current commit, tree and release-content digest; use canonical fresh
+`observedAt`/`expiresAt` values; and bind one production environment through cluster
+and namespace identity hashes, an exact `sha256:<64>` deployment revision and the
+derived `hsk-media-live-environment-v1` fingerprint. Observation may be no more than
+60 seconds in the future, and observation, expiry and validation time must fit within
+the seven-day V1 freshness window. Its artifact registry must have
+exactly one entry for each of:
+
+- `media-live-s3-provider`;
+- `media-live-clamav`;
+- `media-deployed-proxy-mesh-policy`;
+- `media-production-alert-delivery`;
+- `media-backend-replica-discovery`;
+- `media-secret-manager-workload-identity`.
+
+Every entry must use its tracked evidence type, a unique safe relative JSON path and
+a unique raw SHA-256. The referenced record is limited to 256 KiB and must repeat the
+exact producer, release, environment and freshness binding from the signed manifest.
+It must contain `status: PASS`, a credential-free production HTTPS evidence URI,
+SHA-256 hashes for sanitized command provenance and logs, and every exact semantic
+check below. Evidence URIs must be distinct across the six records. Each check has
+only `{id, status, evidenceSha256}`, must be `PASS`, and missing, extra or duplicate
+IDs are rejected:
+
+- `media-live-s3-provider`: `private-access-policy`, `tls-transport`,
+  `encryption-at-rest`, `versioning-lifecycle`, `put-head-get-delete`,
+  `checksum-byte-readback`, `oversize-stream-rejected`,
+  `denied-missing-timeout-reset`, `unknown-put-settled`;
+- `media-live-clamav`: `engine-database-version`, `clean-formats-accepted`,
+  `eicar-found`, `transport-failures-rejected`, `malformed-oversized-rejected`,
+  `concurrent-scan-backpressure`;
+- `media-deployed-proxy-mesh-policy`: `nginx-policy-deployed`,
+  `private-no-store-enforced`, `query-signature-redaction`,
+  `strict-mtls-enforced`, `network-policy-deny-by-default`,
+  `authorized-workload-allowed`;
+- `media-production-alert-delivery`: `production-alert-fired`,
+  `owner-route-matched`, `firing-notification-delivered`,
+  `resolved-notification-delivered`, `escalation-path-verified`;
+- `media-backend-replica-discovery`: `minimum-two-ready-replicas`,
+  `headless-service-discovery`, `distinct-pod-targets`,
+  `each-replica-metrics-scrape`, `replacement-reconverged`;
+- `media-secret-manager-workload-identity`: `workload-identity-authenticated`,
+  `static-credential-absent`, `secret-manager-read-authorized`,
+  `short-lived-token`, `rotation-overlap-rehearsed`,
+  `provider-audit-event-retained`.
+
+The runner reads the manifest (maximum 1 MiB), bundle (maximum 4 MiB) and reports
+through stable canonical-root boundaries. It verifies the bundle with the exact
+GitHub issuer/identity and certificate workflow/repository/ref/SHA/trigger claims
+before parsing any JSON, then verifies every raw report hash and semantic contract.
+Accepted bytes are retained as the live manifest, bundle and
+one normalized `live-rehearsals/artifacts/<prerequisite-id>.json` record per ID in
+the protected evidence tree. Missing package variables or referenced files are
+`BLOCKED_EXTERNAL`; stale, malformed, tampered, path-unsafe,
+release/environment-mismatched or semantically incomplete externally supplied input
+is also rejected as `BLOCKED_EXTERNAL` and can never register PASS. A missing or
+incorrect internal verifier registration is `FAIL_INTERNAL`.
+
+This is verifier support, not production evidence. The current workflow still does
+not collect or sign the six live rehearsals, and no real package is supplied by this
+closeout. The external owners must implement and authorize that collector separately;
+until then all six prerequisite statuses remain `BLOCKED_EXTERNAL`.
+
+After signature and semantic checks pass, the verifier retains exact copies of
+each accepted primary JSON and Sigstore bundle under
+`backend/test-results/media-operations/trusted-inputs/`. These copies, command
+logs, structured summaries and their hashes are frozen into the protected CI tar.
+Do not substitute a temporary verification directory or ignored local tar for that
+retained artifact.
+
+`media-immutable-evidence-attestation` is a post-gate output, not an input to the
+same archive. The runner sets `postGateAttestationReady=true` only when that exact
+item is the sole `BLOCKED_EXTERNAL` result. The workflow may then attest the frozen
+tar; any other external block or internal failure keeps the validation job
+non-green, and the final enforce job requires a successful attestation.
+
+Database evidence follows the same trust-before-parse rule: the signed JSON binds
+its sanitized command logs, JUnit, migration catalog and current release, and the
+runner verifies its detached bundle over a private snapshot before reading those
+claims. A local JSON result without that producer bundle remains
+`BLOCKED_EXTERNAL` even when the disposable harness itself passed.
+
+The capacity/backup artifact is a secret-free, release-bound JSON record. Its
+detached Sigstore bundle is verified before JSON parsing. It binds the current
+commit/tree/content digest and a derived hashed cluster identity; proves the 50
 GiB Prometheus PVC is bound, at most 80% used and safely expandable; records measured
 compressed GiB/day and the exact `GiB/day × 32 × 1.25` projection at or below 40
 GiB; and proves an encrypted >=32-day backup, a snapshot no older than 24 hours and a
-successful restore rehearsal no older than 90 days. Missing, stale or unbound bytes
-block the release profile.
+successful restore rehearsal no older than 90 days. The cluster fingerprint is
+recomputed from the signed provider/PVC/snapshot/restore provenance digests rather
+than trusted as a self-declared string. Missing, unsigned, stale, tampered or unbound
+bytes block the release profile; a self-declared `restoreSucceeded` is insufficient.
 
 Prometheus retains 32 days on a 50 GiB RWO PVC. Before apply, calculate measured
 compressed ingest `GiB/day × 32 × 1.25`; abort above 40 GiB or without safe volume

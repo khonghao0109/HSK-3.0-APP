@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "inventoryId": "hsk-media-production-prerequisites-v1",
+  "prerequisites": [
+    {
+      "id": "media-oci-supply-chain",
+      "owner": "security-platform",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "oci-signature-sbom-vulnerability-license-attestation",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-capacity-backup-restore",
+      "owner": "platform-sre",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-capacity-backup-restore-attestation",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 86400,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-production-runbook",
+      "owner": "media-platform",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "https-runbook-content-attestation",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 86400,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-live-s3-provider",
+      "owner": "media-platform",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-s3-provider-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-live-clamav",
+      "owner": "security-platform",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-clamav-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-deployed-proxy-mesh-policy",
+      "owner": "platform-sre",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-deployed-security-policy-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-production-alert-delivery",
+      "owner": "platform-sre",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-alert-firing-routing-resolution-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-backend-replica-discovery",
+      "owner": "platform-sre",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-runtime-replica-discovery-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-secret-manager-workload-identity",
+      "owner": "security-platform",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-secret-manager-workload-identity-rehearsal",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 604800,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-database-migration-recovery",
+      "owner": "database-reliability",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "signed-database-migration-recovery-attestation",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 86400,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    },
+    {
+      "id": "media-immutable-evidence-attestation",
+      "owner": "release-engineering",
+      "required": true,
+      "boundary": "external",
+      "status": "BLOCKED_EXTERNAL",
+      "evidence": {
+        "type": "protected-ci-evidence-artifact-attestation",
+        "uri": null,
+        "sha256": null
+      },
+      "producer": { "issuer": null, "identity": null },
+      "freshness": {
+        "maxAgeSeconds": 86400,
+        "observedAt": null,
+        "expiresAt": null
+      },
+      "binding": {
+        "gitCommit": null,
+        "gitTreeSha": null,
+        "releaseContentDigest": null
+      },
+      "failureSemantics": {
+        "missing": "BLOCKED_EXTERNAL",
+        "invalid": "BLOCKED_EXTERNAL",
+        "stale": "BLOCKED_EXTERNAL",
+        "validator": "FAIL_INTERNAL"
+      }
+    }
+  ]
+}

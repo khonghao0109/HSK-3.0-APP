@@ -61,13 +61,34 @@
         }
       ],
       "attestations": {
-        "signature": {
+        "releaseAcceptance": {
           "required": true,
-          "verifier": "cosign-keyless",
+          "model": "hsk-release-acceptance",
+          "verifier": "cosign-keyless-blob",
           "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": []
+          "approvedIdentities": [
+            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
+          ]
         },
-        "sbom": { "required": true, "format": "spdx-json" }
+        "upstreamPublisherSignature": { "status": "absent" },
+        "sbom": {
+          "required": true,
+          "format": "spdx-json",
+          "minimumPackages": 1
+        },
+        "vulnerability": {
+          "required": true,
+          "format": "grype-json",
+          "scanner": "grype",
+          "failOn": ["Critical", "High"],
+          "maxDatabaseAgeHours": 120
+        },
+        "license": {
+          "required": true,
+          "format": "hsk-license-json",
+          "policyPath": "ops/observability/media-oci-license-policy.json",
+          "policySha256": "fce3681d6911e1901305d6223fe3b13ca1aa571766d9a99ab4b2031713848a25"
+        }
       }
     },
     "grafana": {
@@ -83,13 +104,34 @@
         }
       ],
       "attestations": {
-        "signature": {
+        "releaseAcceptance": {
           "required": true,
-          "verifier": "cosign-keyless",
+          "model": "hsk-release-acceptance",
+          "verifier": "cosign-keyless-blob",
           "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": []
+          "approvedIdentities": [
+            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
+          ]
         },
-        "sbom": { "required": true, "format": "spdx-json" }
+        "upstreamPublisherSignature": { "status": "absent" },
+        "sbom": {
+          "required": true,
+          "format": "spdx-json",
+          "minimumPackages": 1
+        },
+        "vulnerability": {
+          "required": true,
+          "format": "grype-json",
+          "scanner": "grype",
+          "failOn": ["Critical", "High"],
+          "maxDatabaseAgeHours": 120
+        },
+        "license": {
+          "required": true,
+          "format": "hsk-license-json",
+          "policyPath": "ops/observability/media-oci-license-policy.json",
+          "policySha256": "fce3681d6911e1901305d6223fe3b13ca1aa571766d9a99ab4b2031713848a25"
+        }
       }
     },
     "prometheus": {
@@ -105,13 +147,34 @@
         }
       ],
       "attestations": {
-        "signature": {
+        "releaseAcceptance": {
           "required": true,
-          "verifier": "cosign-keyless",
+          "model": "hsk-release-acceptance",
+          "verifier": "cosign-keyless-blob",
           "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": []
+          "approvedIdentities": [
+            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
+          ]
         },
-        "sbom": { "required": true, "format": "spdx-json" }
+        "upstreamPublisherSignature": { "status": "absent" },
+        "sbom": {
+          "required": true,
+          "format": "spdx-json",
+          "minimumPackages": 1
+        },
+        "vulnerability": {
+          "required": true,
+          "format": "grype-json",
+          "scanner": "grype",
+          "failOn": ["Critical", "High"],
+          "maxDatabaseAgeHours": 120
+        },
+        "license": {
+          "required": true,
+          "format": "hsk-license-json",
+          "policyPath": "ops/observability/media-oci-license-policy.json",
+          "policySha256": "fce3681d6911e1901305d6223fe3b13ca1aa571766d9a99ab4b2031713848a25"
+        }
       }
     }
   },
@@ -377,6 +440,30 @@
           "archive": "raw",
           "archiveRoot": ".",
           "executable": "cosign-linux-amd64"
+        }
+      ]
+    },
+    "grype": {
+      "version": "0.116.1",
+      "probe": { "args": ["version"], "parser": "grype" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/anchore/grype/releases/download/v0.116.1/grype_0.116.1_darwin_arm64.tar.gz",
+          "sha256": "f493f169cbaae48bade169532b20235fc16653d2a044a5bc6fe6f69a3923f975",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "grype"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/anchore/grype/releases/download/v0.116.1/grype_0.116.1_linux_amd64.tar.gz",
+          "sha256": "0122df7b655981abe547ad3d2190d65551dac6a2bfc80b4dc2a989b5d0587458",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "grype"
         }
       ]
     },

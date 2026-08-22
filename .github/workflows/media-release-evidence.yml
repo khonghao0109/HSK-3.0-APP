@@ -1,0 +1,431 @@
+name: Media release evidence
+
+on:
+  push:
+    tags:
+      - v3.0.0
+
+permissions: {}
+
+concurrency:
+  group: media-release-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Build fail-closed evidence
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - media-release
+    environment: media-production-release
+    permissions:
+      contents: read
+    outputs:
+      attestation-ready: ${{ steps.release-gate.outputs.attestation-ready }}
+      gate-exit-code: ${{ steps.release-gate.outputs.exit-code }}
+      runner-exit-code: ${{ steps.release-gate.outputs.runner-exit-code }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out exact release commit
+        id: checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          clean: true
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Initialize minimal diagnostic evidence
+        id: diagnostic
+        if: always()
+        run: |
+          set -euo pipefail
+          evidence_dir="${GITHUB_WORKSPACE}/backend/test-results/media-operations"
+          expected_dir="${GITHUB_WORKSPACE}/backend/test-results/media-operations"
+          test "${evidence_dir}" = "${expected_dir}"
+          if [[ -L "${evidence_dir}" ]]; then
+            echo "Evidence directory must not be a symbolic link." >&2
+            exit 1
+          fi
+          rm -rf -- "${evidence_dir}"
+          install -d -m 0700 "${evidence_dir}"
+          printf 'workflow_stage=initialized\n' > "${evidence_dir}/workflow-diagnostic.txt"
+          chmod 0600 "${evidence_dir}/workflow-diagnostic.txt"
+
+      - name: Verify current tag and checked-out HEAD
+        id: tag_head
+        if: always() && steps.checkout.outcome == 'success' && steps.diagnostic.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = "tag"
+          test "${GITHUB_REF}" = "refs/tags/v3.0.0"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse "${GITHUB_REF}^{commit}")" = "${GITHUB_SHA}"
+          test "$(uname -s)" = "Linux"
+          test "$(uname -m)" = "x86_64"
+
+      - name: Set up Node.js
+        id: node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.5.0
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install exact backend dependencies
+        id: dependencies
+        working-directory: backend
+        run: npm ci --ignore-scripts
+
+      - name: Validate supplied evidence paths
+        id: materialize
+        env:
+          APPROVED_EVIDENCE_BASE_PATH: ${{ vars.MEDIA_OPS_RELEASE_EVIDENCE_BASE_PATH }}
+          CAPACITY_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE_PATH }}
+          CAPACITY_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON_PATH }}
+          DATABASE_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_DB_EVIDENCE_BUNDLE_PATH }}
+          DATABASE_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_DB_EVIDENCE_JSON_PATH }}
+          LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH }}
+          LIVE_REHEARSAL_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON_PATH }}
+          LIVE_REHEARSAL_EVIDENCE_ROOT_PATH: ${{ secrets.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT_PATH }}
+          OCI_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE_PATH }}
+          OCI_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON_PATH }}
+          OCI_EVIDENCE_ROOT_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT_PATH }}
+          PREREQUISITE_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE_PATH }}
+          PREREQUISITE_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON_PATH }}
+        run: |
+          set -euo pipefail
+          umask 077
+          approved_base=""
+          if [[ -n "${APPROVED_EVIDENCE_BASE_PATH}" ]]; then
+            if [[ "${APPROVED_EVIDENCE_BASE_PATH}" != /* ]] || \
+               [[ "${APPROVED_EVIDENCE_BASE_PATH}" = *$'\n'* ]] || \
+               [[ "${APPROVED_EVIDENCE_BASE_PATH}" = *$'\r'* ]] || \
+               [[ -L "${APPROVED_EVIDENCE_BASE_PATH}" ]] || \
+               [[ ! -d "${APPROVED_EVIDENCE_BASE_PATH}" ]]; then
+              echo "Approved evidence base must be an absolute real directory." >&2
+              exit 1
+            fi
+            approved_base="$(realpath -e -- "${APPROVED_EVIDENCE_BASE_PATH}")"
+            if [[ "${approved_base}" != "${APPROVED_EVIDENCE_BASE_PATH}" ]] || \
+               [[ "${approved_base}" = "/" ]]; then
+              echo "Approved evidence base must be canonical and narrower than the filesystem root." >&2
+              exit 1
+            fi
+          fi
+
+          supplied_path_count=0
+          for candidate in \
+            "${CAPACITY_EVIDENCE_BUNDLE_PATH}" \
+            "${CAPACITY_EVIDENCE_JSON_PATH}" \
+            "${DATABASE_EVIDENCE_BUNDLE_PATH}" \
+            "${DATABASE_EVIDENCE_JSON_PATH}" \
+            "${LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH}" \
+            "${LIVE_REHEARSAL_EVIDENCE_JSON_PATH}" \
+            "${LIVE_REHEARSAL_EVIDENCE_ROOT_PATH}" \
+            "${OCI_EVIDENCE_BUNDLE_PATH}" \
+            "${OCI_EVIDENCE_JSON_PATH}" \
+            "${OCI_EVIDENCE_ROOT_PATH}" \
+            "${PREREQUISITE_EVIDENCE_BUNDLE_PATH}" \
+            "${PREREQUISITE_EVIDENCE_JSON_PATH}"
+          do
+            if [[ -n "${candidate}" ]]; then
+              supplied_path_count=$((supplied_path_count + 1))
+            fi
+          done
+          if (( supplied_path_count > 0 )) && [[ -z "${approved_base}" ]]; then
+            echo "Approved evidence base is required when any evidence path is supplied." >&2
+            exit 1
+          fi
+
+          validated_path=""
+          validate_file() {
+            local label="$1"
+            local candidate="$2"
+            local maximum_bytes="$3"
+            local canonical size
+            if [[ "${candidate}" != /* ]] || \
+               [[ "${candidate}" = *$'\n'* ]] || \
+               [[ "${candidate}" = *$'\r'* ]] || \
+               [[ -L "${candidate}" ]] || [[ ! -f "${candidate}" ]]; then
+              echo "${label} must be an absolute regular non-symlink file." >&2
+              exit 1
+            fi
+            canonical="$(realpath -e -- "${candidate}")"
+            if [[ "${canonical}" != "${candidate}" ]]; then
+              echo "${label} must use its exact canonical path." >&2
+              exit 1
+            fi
+            size="$(stat --format='%s' -- "${canonical}")"
+            if (( size <= 0 || size > maximum_bytes )); then
+              echo "${label} exceeds its bounded size contract." >&2
+              exit 1
+            fi
+            if [[ -n "${approved_base}" ]]; then
+              case "${canonical}" in
+                "${approved_base}"/*) ;;
+                *) echo "${label} is outside the approved evidence base." >&2; exit 1 ;;
+              esac
+            fi
+            validated_path="${canonical}"
+          }
+
+          validate_directory() {
+            local label="$1"
+            local candidate="$2"
+            local canonical
+            if [[ "${candidate}" != /* ]] || \
+               [[ "${candidate}" = *$'\n'* ]] || \
+               [[ "${candidate}" = *$'\r'* ]] || \
+               [[ -L "${candidate}" ]] || [[ ! -d "${candidate}" ]]; then
+              echo "${label} must be an absolute real directory." >&2
+              exit 1
+            fi
+            canonical="$(realpath -e -- "${candidate}")"
+            if [[ "${canonical}" != "${candidate}" ]]; then
+              echo "${label} must use its exact canonical path." >&2
+              exit 1
+            fi
+            if [[ -n "${approved_base}" ]]; then
+              case "${canonical}" in
+                "${approved_base}"|"${approved_base}"/*) ;;
+                *) echo "${label} is outside the approved evidence base." >&2; exit 1 ;;
+              esac
+            fi
+            validated_path="${canonical}"
+          }
+
+          oci_evidence_json=""
+          oci_evidence_root=""
+          if [[ -n "${OCI_EVIDENCE_JSON_PATH}" ]]; then
+            validate_file "OCI release evidence" "${OCI_EVIDENCE_JSON_PATH}" 1048576
+            oci_evidence_json="${validated_path}"
+            echo "MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON=${oci_evidence_json}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${OCI_EVIDENCE_BUNDLE_PATH}" ]]; then
+            validate_file "OCI release evidence Sigstore bundle" "${OCI_EVIDENCE_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${OCI_EVIDENCE_ROOT_PATH}" ]]; then
+            validate_directory "OCI release evidence root" "${OCI_EVIDENCE_ROOT_PATH}"
+            oci_evidence_root="${validated_path}"
+            echo "MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT=${oci_evidence_root}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${oci_evidence_json}" && -n "${oci_evidence_root}" ]]; then
+            case "${oci_evidence_json}" in
+              "${oci_evidence_root}"/*) ;;
+              *) echo "OCI release evidence JSON is outside its evidence root." >&2; exit 1 ;;
+            esac
+          fi
+          if [[ -n "${CAPACITY_EVIDENCE_JSON_PATH}" ]]; then
+            validate_file "capacity and backup evidence" "${CAPACITY_EVIDENCE_JSON_PATH}" 1048576
+            echo "MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${CAPACITY_EVIDENCE_BUNDLE_PATH}" ]]; then
+            validate_file "capacity and backup evidence Sigstore bundle" "${CAPACITY_EVIDENCE_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${DATABASE_EVIDENCE_JSON_PATH}" ]]; then
+            validate_file "database release evidence" "${DATABASE_EVIDENCE_JSON_PATH}" 1048576
+            echo "MEDIA_OPS_DB_EVIDENCE_JSON=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${DATABASE_EVIDENCE_BUNDLE_PATH}" ]]; then
+            validate_file "database release evidence Sigstore bundle" "${DATABASE_EVIDENCE_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_DB_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          live_rehearsal_evidence_json=""
+          live_rehearsal_evidence_root=""
+          if [[ -n "${LIVE_REHEARSAL_EVIDENCE_JSON_PATH}" ]]; then
+            validate_file "live rehearsal evidence manifest" "${LIVE_REHEARSAL_EVIDENCE_JSON_PATH}" 1048576
+            live_rehearsal_evidence_json="${validated_path}"
+            echo "MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON=${live_rehearsal_evidence_json}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH}" ]]; then
+            validate_file "live rehearsal evidence Sigstore bundle" "${LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${LIVE_REHEARSAL_EVIDENCE_ROOT_PATH}" ]]; then
+            validate_directory "live rehearsal evidence root" "${LIVE_REHEARSAL_EVIDENCE_ROOT_PATH}"
+            live_rehearsal_evidence_root="${validated_path}"
+            echo "MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT=${live_rehearsal_evidence_root}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${live_rehearsal_evidence_json}" && -n "${live_rehearsal_evidence_root}" ]]; then
+            case "${live_rehearsal_evidence_json}" in
+              "${live_rehearsal_evidence_root}"/*) ;;
+              *) echo "Live rehearsal evidence manifest is outside its evidence root." >&2; exit 1 ;;
+            esac
+          fi
+          if [[ -n "${PREREQUISITE_EVIDENCE_JSON_PATH}" ]]; then
+            validate_file "production prerequisite inventory" "${PREREQUISITE_EVIDENCE_JSON_PATH}" 1048576
+            echo "MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${PREREQUISITE_EVIDENCE_BUNDLE_PATH}" ]]; then
+            validate_file "production prerequisite inventory Sigstore bundle" "${PREREQUISITE_EVIDENCE_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Run Linux amd64 release validator
+        id: release-gate
+        if: always()
+        working-directory: backend
+        env:
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          DIAGNOSTIC_OUTCOME: ${{ steps.diagnostic.outcome }}
+          MATERIALIZE_OUTCOME: ${{ steps.materialize.outcome }}
+          NODE_OUTCOME: ${{ steps.node.outcome }}
+          TAG_HEAD_OUTCOME: ${{ steps.tag_head.outcome }}
+          MEDIA_OPS_ALLOW_DOWNLOAD: "true"
+          MEDIA_RUNBOOK_URL: ${{ secrets.MEDIA_RUNBOOK_URL }}
+          NODE_ENV: production
+          TZ: UTC
+        run: |
+          set -euo pipefail
+          evidence_dir="${GITHUB_WORKSPACE}/backend/test-results/media-operations"
+          install -d -m 0700 "${evidence_dir}"
+
+          workflow_failure=0
+          for outcome in \
+            "${CHECKOUT_OUTCOME}" \
+            "${DIAGNOSTIC_OUTCOME}" \
+            "${TAG_HEAD_OUTCOME}" \
+            "${NODE_OUTCOME}" \
+            "${DEPENDENCIES_OUTCOME}" \
+            "${MATERIALIZE_OUTCOME}"
+          do
+            if [[ "${outcome}" != "success" ]]; then
+              workflow_failure=1
+            fi
+          done
+          if [[ "${workflow_failure}" -ne 0 ]]; then
+            runner_exit_code=1
+          else
+            set +e
+            npm run test:ops:media:linux-amd64
+            runner_exit_code=$?
+            set -e
+          fi
+
+          attestation_ready=false
+          evidence_json="${evidence_dir}/media-operations-validation.json"
+          if [[ -f "${evidence_json}" ]]; then
+            attestation_ready="$(node -e '
+              const fs = require("node:fs");
+              const value = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              process.stdout.write(value.postGateAttestationReady === true ? "true" : "false");
+            ' "${evidence_json}")"
+          fi
+          gate_exit_code="${runner_exit_code}"
+          if [[ "${runner_exit_code}" = "2" && "${attestation_ready}" = "true" ]]; then
+            gate_exit_code=0
+          fi
+
+          {
+            printf 'checkout=%s\n' "${CHECKOUT_OUTCOME}"
+            printf 'diagnostic=%s\n' "${DIAGNOSTIC_OUTCOME}"
+            printf 'tag_head=%s\n' "${TAG_HEAD_OUTCOME}"
+            printf 'node=%s\n' "${NODE_OUTCOME}"
+            printf 'dependencies=%s\n' "${DEPENDENCIES_OUTCOME}"
+            printf 'materialize=%s\n' "${MATERIALIZE_OUTCOME}"
+            printf 'runner_exit_code=%s\n' "${runner_exit_code}"
+            printf 'attestation_ready=%s\n' "${attestation_ready}"
+            printf 'gate_exit_code=%s\n' "${gate_exit_code}"
+          } > "${evidence_dir}/workflow-diagnostic.txt"
+          chmod 0600 "${evidence_dir}/workflow-diagnostic.txt"
+          echo "attestation-ready=${attestation_ready}" >> "${GITHUB_OUTPUT}"
+          echo "exit-code=${gate_exit_code}" >> "${GITHUB_OUTPUT}"
+          echo "runner-exit-code=${runner_exit_code}" >> "${GITHUB_OUTPUT}"
+          exit "${gate_exit_code}"
+
+      - name: Package exact evidence bytes
+        if: always()
+        env:
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          GATE_OUTCOME: ${{ steps.release-gate.outcome }}
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence_dir="${GITHUB_WORKSPACE}/backend/test-results/media-operations"
+          if [[ -L "${evidence_dir}" ]]; then
+            echo "Evidence directory must not be a symbolic link." >&2
+            exit 1
+          fi
+          install -d -m 0700 "${evidence_dir}"
+          if [[ ! -f "${evidence_dir}/workflow-diagnostic.txt" ]]; then
+            {
+              printf 'checkout=%s\n' "${CHECKOUT_OUTCOME}"
+              printf 'gate=%s\n' "${GATE_OUTCOME}"
+              printf 'gate_exit_code=1\n'
+            } > "${evidence_dir}/workflow-diagnostic.txt"
+            chmod 0600 "${evidence_dir}/workflow-diagnostic.txt"
+          fi
+          tar --sort=name --format=posix \
+            --mtime='UTC 1970-01-01' \
+            --owner=0 --group=0 --numeric-owner \
+            --pax-option=delete=atime,delete=ctime \
+            -cf media-release-evidence.tar \
+            -C backend/test-results media-operations
+          sha256sum media-release-evidence.tar > media-release-evidence.tar.sha256
+
+      - name: Retain evidence whether pass or fail
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: media-release-evidence-${{ github.sha }}
+          path: |
+            media-release-evidence.tar
+            media-release-evidence.tar.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+  attest:
+    name: Attest only passing evidence
+    needs: validate
+    if: needs.validate.outputs.gate-exit-code == '0'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download frozen evidence artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: media-release-evidence-${{ github.sha }}
+
+      - name: Verify retained archive checksum
+        run: sha256sum --check media-release-evidence.tar.sha256
+
+      - name: Publish GitHub artifact attestation
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: media-release-evidence.tar
+
+  enforce:
+    name: Enforce release verdict
+    needs:
+      - validate
+      - attest
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Fail unless validation and attestation passed
+        env:
+          ATTEST_RESULT: ${{ needs.attest.result }}
+          ATTESTATION_READY: ${{ needs.validate.outputs.attestation-ready }}
+          GATE_EXIT_CODE: ${{ needs.validate.outputs.gate-exit-code }}
+          RUNNER_EXIT_CODE: ${{ needs.validate.outputs.runner-exit-code }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+        run: |
+          test "${VALIDATE_RESULT}" = "success"
+          test "${GATE_EXIT_CODE}" = "0"
+          test "${ATTEST_RESULT}" = "success"
+          if [[ "${RUNNER_EXIT_CODE}" = "2" ]]; then
+            test "${ATTESTATION_READY}" = "true"
+          else
+            test "${RUNNER_EXIT_CODE}" = "0"
+          fi

@@ -20,13 +20,12 @@ import {
 } from 'node:https';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
 import {
   assertArchiveEntriesSafe,
   assertCommandEvidenceContract,
-  assertCosignSignaturePayload,
   assertDatabaseReleaseEvidence,
   assertCapacityBackupEvidence,
   assertOciRegistryResolution,
@@ -38,7 +37,6 @@ import {
   assertEveryAlertRunbookUrl,
   assertFunctionalEvidence,
   assertGrafanaNoDataResult,
-  assertGrafanaQueryResult,
   assertGrafanaDashboardTargetContract,
   assertGzipArchive,
   assertGrafanaPrivateApiOnlyContract,
@@ -47,30 +45,36 @@ import {
   assertMonitoringSingleReplicaRollout,
   inspectTarGzipFile,
   invalidateEvidenceSummaries,
+  isPostGateAttestationReady,
   resetMediaOperationsEvidenceLogs,
   resolveMediaOperationsEvidenceRoot,
   assertPrometheusRuntimeAlertRunbookUrl,
+  assertProductionRunbookResponse,
   requireCredentialFreeHttpsRunbookUrl,
   readBoundedResponseBody,
+  waitForGrafanaMetricDatapoint,
   assertSafeTemporaryCleanupRoot,
   assertStartupProbePreserved,
   assertReleaseContentStable,
   assertReleaseHeadStable,
   classifyValidators,
+  computeGlobalGitState,
   computeReleaseContentDigest,
   computeMigrationCatalogEvidence,
   computeTreeDigest,
   contentAddressedCacheFilename,
-  extractSpdxAttestationPredicate,
   parseExactVersion,
   parseToolchainManifest,
   redactDiagnostic,
+  readStableBoundedFileWithinRoot,
   renderValidatorJUnit,
   requireExactVersion,
   runProcess,
   selectArtifact,
   sha256,
   verifySha256,
+  verifyThenParseJsonEvidence,
+  writeStableExclusiveFileWithinRoot,
   MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST,
 } from './media-operations-validation.helpers';
 import type {
@@ -84,6 +88,28 @@ import type {
   OciImageDefinition,
   OciRegistryResolution,
 } from './media-operations-validation.helpers';
+import {
+  REQUIRED_MEDIA_PRODUCTION_PREREQUISITE_IDS,
+  parseMediaProductionPrerequisiteInventory,
+  parseVerifiedExternalPrerequisiteInventoryCandidate,
+} from './media-production-prerequisites';
+import {
+  LIVE_MEDIA_PRODUCTION_EVIDENCE_POLICY,
+  LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS,
+  MediaLiveProductionEvidenceError,
+  assertMediaLiveProductionEvidencePolicy,
+  parseVerifiedMediaLiveProductionEvidence,
+} from './media-live-production-evidence';
+import type {
+  MediaProductionPrerequisiteInventory,
+  RequiredMediaProductionPrerequisiteId,
+  VerifiedMediaProductionPrerequisiteEvidence,
+} from './media-production-prerequisites';
+import {
+  CURRENT_MEDIA_OCI_IMAGE_EXPECTATIONS,
+  MediaOciReleaseEvidenceError,
+  assertMediaOciReleaseEvidence,
+} from './media-oci-release-evidence';
 
 const repositoryRoot = resolve(process.cwd(), '..');
 const defaultEvidenceRoot = join(
@@ -116,6 +142,24 @@ let commandEvidenceBinding = {
   inputTreeDigest: '0'.repeat(64),
 };
 const verifiedExecutableVersions = new Map<string, string>();
+const verifiedProductionEvidenceByPrerequisite = new Map<
+  RequiredMediaProductionPrerequisiteId,
+  VerifiedMediaProductionPrerequisiteEvidence
+>();
+let trustedExternalProductionPrerequisiteInventory:
+  | {
+      inventory: MediaProductionPrerequisiteInventory;
+      value: unknown;
+      payloadSha256: string;
+      bundleSha256: string;
+    }
+  | undefined;
+let finalizedProductionPrerequisiteInventory:
+  | MediaProductionPrerequisiteInventory
+  | undefined;
+let trackedProductionPrerequisiteInventory:
+  | MediaProductionPrerequisiteInventory
+  | undefined;
 const spawnedEvidence = new WeakMap<
   ReturnType<typeof spawn>,
   {
@@ -135,6 +179,35 @@ const spawnedEvidence = new WeakMap<
 >();
 
 class ExternalBlock extends Error {}
+
+const RELEASE_EVIDENCE_ISSUER = 'https://token.actions.githubusercontent.com';
+const RELEASE_EVIDENCE_IDENTITY =
+  'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0';
+const RELEASE_EVIDENCE_WORKFLOW_NAME = 'Media release evidence';
+const RELEASE_EVIDENCE_WORKFLOW_REF = 'refs/tags/v3.0.0';
+const RELEASE_EVIDENCE_WORKFLOW_REPOSITORY = 'khonghao0109/HSK-3.0-APP';
+const RELEASE_EVIDENCE_WORKFLOW_TRIGGER = 'push';
+
+interface ReleaseBinding {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+}
+
+function releaseEvidenceCertificateClaims(binding: ReleaseBinding): string[] {
+  return [
+    '--certificate-github-workflow-name',
+    RELEASE_EVIDENCE_WORKFLOW_NAME,
+    '--certificate-github-workflow-ref',
+    RELEASE_EVIDENCE_WORKFLOW_REF,
+    '--certificate-github-workflow-repository',
+    RELEASE_EVIDENCE_WORKFLOW_REPOSITORY,
+    '--certificate-github-workflow-sha',
+    binding.commit,
+    '--certificate-github-workflow-trigger',
+    RELEASE_EVIDENCE_WORKFLOW_TRIGGER,
+  ];
+}
 
 interface EvidenceTimer {
   startedAt: string;
@@ -182,6 +255,7 @@ async function main(): Promise<void> {
   mkdirSync(evidenceRoot, { recursive: true });
   invalidateEvidenceSummaries(evidenceRoot, repositoryRoot);
   resetMediaOperationsEvidenceLogs(evidenceRoot, repositoryRoot);
+  resetRetainedTrustedEvidence();
   activeValidator = 'evidence';
   const beforeStatus = recordedProcess(
     'git',
@@ -216,6 +290,11 @@ async function main(): Promise<void> {
   };
   bindExistingCommandEvidence();
   const manifest = loadManifest();
+  const releaseBinding: ReleaseBinding = {
+    commit: beforeCommit.stdout.trim(),
+    treeSha: beforeTree.stdout.trim(),
+    releaseContentDigest: initialReleaseContent.digest,
+  };
   const internal =
     (
       run: () => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>,
@@ -253,27 +332,31 @@ async function main(): Promise<void> {
       run: internal(() => validateToolchain(manifest)),
     },
     {
+      id: 'production-prerequisite-inventory-trust',
+      run: releaseOnly(() =>
+        validateProductionPrerequisiteInventoryTrust(manifest, releaseBinding),
+      ),
+    },
+    {
       id: 'oci-image-supply-chain',
-      run: releaseOnly(() => validateOciSupplyChain(manifest)),
+      run: releaseOnly(() => validateOciSupplyChain(manifest, releaseBinding)),
     },
     {
       id: 'release-prerequisite-quality',
       run: releaseOnly(() =>
-        validateReleaseQualityPrerequisites({
-          commit: beforeCommit.stdout.trim(),
-          treeSha: beforeTree.stdout.trim(),
-          releaseContentDigest: initialReleaseContent.digest,
-        }),
+        validateReleaseQualityPrerequisites(manifest, releaseBinding),
       ),
     },
     {
       id: 'production-retention-capacity-backup',
       run: releaseOnly(() =>
-        validateCapacityBackupEvidence({
-          commit: beforeCommit.stdout.trim(),
-          treeSha: beforeTree.stdout.trim(),
-          releaseContentDigest: initialReleaseContent.digest,
-        }),
+        validateCapacityBackupEvidence(manifest, releaseBinding),
+      ),
+    },
+    {
+      id: 'production-live-rehearsal-evidence',
+      run: releaseOnly(() =>
+        validateLiveProductionEvidence(manifest, releaseBinding),
       ),
     },
     {
@@ -302,8 +385,18 @@ async function main(): Promise<void> {
     },
     {
       id: 'production-runbook-url',
-      run: () => validateRunbookUrl(manifest),
+      run: () => validateRunbookUrl(manifest, releaseBinding),
     },
+    {
+      id: 'production-prerequisite-evidence-contract',
+      run: releaseOnly(() =>
+        finalizeProductionPrerequisiteEvidence(releaseBinding),
+      ),
+    },
+    ...REQUIRED_MEDIA_PRODUCTION_PREREQUISITE_IDS.map((prerequisiteId) => ({
+      id: `production-prerequisite/${prerequisiteId}`,
+      run: () => validateProductionPrerequisite(prerequisiteId),
+    })),
   ];
   const results: ValidatorResult[] = [];
   for (const validator of validators) {
@@ -354,6 +447,7 @@ async function main(): Promise<void> {
     repositoryRoot,
     worktree.stdout,
   );
+  const globalGitState = computeGlobalGitState(worktree.stdout);
   assertReleaseContentStable(initialReleaseContent, releaseContent);
   const logManifest = commandEvidence.map(({ id, logPath, logSha256 }) => {
     const actual = sha256(readFileSync(join(evidenceRoot, logPath)));
@@ -365,7 +459,7 @@ async function main(): Promise<void> {
     return { id, logPath, sha256: actual };
   });
   const logManifestBytes = Buffer.from(
-    `${JSON.stringify({ runId, logs: logManifest }, null, 2)}\n`,
+    `${JSON.stringify({ schemaVersion: 1, runId, logs: logManifest }, null, 2)}\n`,
   );
   writeFileSync(
     join(evidenceRoot, 'media-operations-log-manifest.json'),
@@ -374,8 +468,35 @@ async function main(): Promise<void> {
       mode: 0o600,
     },
   );
+  const junitBytes = Buffer.from(
+    renderValidatorJUnit(classified.results, {
+      runId,
+      commit: commit.stdout.trim(),
+      treeSha: tree.stdout.trim(),
+      releaseProfile: executionProfile === 'release-linux-amd64',
+    }),
+  );
+  const structuredSummary = {
+    total: classified.results.length,
+    pass: classified.results.filter(({ status }) => status === 'PASS').length,
+    failInternal: classified.results.filter(
+      ({ status }) => status === 'FAIL_INTERNAL',
+    ).length,
+    blockedExternal: classified.results.filter(
+      ({ status }) => status === 'BLOCKED_EXTERNAL',
+    ).length,
+  };
+  const postGateAttestationReady = isPostGateAttestationReady(
+    classified.results,
+  );
+  const prerequisiteResults = classified.results.filter(({ id }) =>
+    id.startsWith('production-prerequisite/'),
+  );
+  const retainedTrustedInputTree = computeTreeDigest(
+    retainedTrustedEvidenceRoot(),
+  );
   const evidence = {
-    schemaVersion: 3,
+    schemaVersion: 5,
     runId,
     startedAt,
     completedAt: new Date().toISOString(),
@@ -388,7 +509,13 @@ async function main(): Promise<void> {
     platform: process.platform,
     architecture: process.arch,
     executionProfile,
+    runner: {
+      contractVersion: 'media-release-evidence-v5',
+      sourceSha256: sha256(readFileSync(__filename)),
+      nodeVersion: process.version,
+    },
     releaseTree: productionRenderedTree,
+    retainedTrustedInputTree,
     databaseReleaseEvidence,
     opsSourceTree,
     logManifest: {
@@ -396,10 +523,35 @@ async function main(): Promise<void> {
       sha256: sha256(logManifestBytes),
       count: logManifest.length,
     },
+    structuredArtifacts: {
+      junit: {
+        path: 'media-operations-validation.junit.xml',
+        sha256: sha256(junitBytes),
+        ...structuredSummary,
+      },
+      nestedQualityChecks: {
+        jest: 'exit-code-only',
+        secretScan: 'exit-code-only',
+      },
+    },
+    productionPrerequisites: {
+      automatedInRunner: prerequisiteResults.length,
+      totalLiveEnvironmentBlockers: prerequisiteResults.filter(
+        ({ status }) => status === 'BLOCKED_EXTERNAL',
+      ).length,
+      failInternal: prerequisiteResults.filter(
+        ({ status }) => status === 'FAIL_INTERNAL',
+      ).length,
+      pass: prerequisiteResults.filter(({ status }) => status === 'PASS')
+        .length,
+      results: prerequisiteResults,
+    },
+    postGateAttestationReady,
     releaseContentDigest: releaseContent.digest,
     releaseContentPathCount: releaseContent.pathCount,
-    gitDirty: releaseContent.gitDirty,
-    gitIndexDirty: releaseContent.gitIndexDirty,
+    releaseContentDirty: releaseContent.releaseContentDirty,
+    releaseContentIndexDirty: releaseContent.releaseContentIndexDirty,
+    ...globalGitState,
     exitCode: classified.exitCode,
     results: classified.results,
     commands: commandEvidence,
@@ -412,12 +564,7 @@ async function main(): Promise<void> {
   );
   writeFileSync(
     join(evidenceRoot, 'media-operations-validation.junit.xml'),
-    renderValidatorJUnit(classified.results, {
-      runId,
-      commit: commit.stdout.trim(),
-      treeSha: tree.stdout.trim(),
-      releaseProfile: executionProfile === 'release-linux-amd64',
-    }),
+    junitBytes,
     { mode: 0o600 },
   );
   for (const result of classified.results) {
@@ -439,6 +586,630 @@ function loadManifest(): ToolchainManifest {
   );
 }
 
+async function validateProductionPrerequisiteInventoryTrust(
+  manifest: ToolchainManifest,
+  binding: ReleaseBinding,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  verifiedProductionEvidenceByPrerequisite.clear();
+  trustedExternalProductionPrerequisiteInventory = undefined;
+  finalizedProductionPrerequisiteInventory = undefined;
+  const requirements = loadTrackedProductionPrerequisiteInventory();
+  trackedProductionPrerequisiteInventory = requirements;
+
+  const configured =
+    process.env.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON;
+  const configuredBundle =
+    process.env.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE;
+  if (!configured && !configuredBundle) {
+    throw new ExternalBlock(
+      'Signed external production prerequisite inventory and Sigstore bundle are absent.',
+    );
+  }
+  if (!configured || !configuredBundle) {
+    throw new ExternalBlock(
+      'Production prerequisite inventory requires both the signed JSON path and its matching Sigstore bundle path.',
+    );
+  }
+  const inventoryPath = resolve(configured);
+  const bundlePath = resolve(configuredBundle);
+  if (inventoryPath === bundlePath) {
+    throw new ExternalBlock(
+      'Production prerequisite inventory and Sigstore bundle must be distinct files.',
+    );
+  }
+  const inventoryBytes = readBoundedProductionPrerequisiteEvidence(
+    inventoryPath,
+    1024 * 1024,
+    'production prerequisite inventory',
+  );
+  const bundleBytes = readBoundedProductionPrerequisiteEvidence(
+    bundlePath,
+    4 * 1024 * 1024,
+    'production prerequisite Sigstore bundle',
+  );
+  const verificationRoot = mkdtempSync(
+    join(tmpdir(), 'hsk-media-prerequisite-trust-'),
+  );
+  const verifiedInventoryPath = join(verificationRoot, 'inventory.json');
+  const verifiedBundlePath = join(verificationRoot, 'inventory.sigstore.json');
+  writeFileSync(verifiedInventoryPath, inventoryBytes, { mode: 0o600 });
+  writeFileSync(verifiedBundlePath, bundleBytes, { mode: 0o600 });
+  let cosign: VerifiedTool | undefined;
+  try {
+    cosign = await acquireTool(manifest, 'cosign');
+    verifyToolVersion(cosign);
+    const trusted = await verifyThenParseJsonEvidence(
+      inventoryBytes,
+      () => {
+        const verification = recordedProcess(
+          cosign!.executable,
+          [
+            'verify-blob',
+            '--bundle',
+            verifiedBundlePath,
+            '--certificate-identity',
+            RELEASE_EVIDENCE_IDENTITY,
+            '--certificate-oidc-issuer',
+            RELEASE_EVIDENCE_ISSUER,
+            ...releaseEvidenceCertificateClaims(binding),
+            verifiedInventoryPath,
+          ],
+          { timeoutMs: 60_000 },
+        );
+        if (verification.kind !== 'success') {
+          throw new ExternalBlock(
+            'Production prerequisite inventory Sigstore verification failed.',
+          );
+        }
+        return Promise.resolve({
+          payloadSha256: sha256(inventoryBytes),
+          bundleSha256: sha256(bundleBytes),
+          issuer: RELEASE_EVIDENCE_ISSUER,
+          identity: RELEASE_EVIDENCE_IDENTITY,
+          verifiedAt: new Date().toISOString(),
+        });
+      },
+      {
+        issuer: RELEASE_EVIDENCE_ISSUER,
+        identity: RELEASE_EVIDENCE_IDENTITY,
+        nowMs: Date.now(),
+        maxAgeMs: 5 * 60_000,
+      },
+    );
+    const inventory = parseVerifiedExternalPrerequisiteInventoryCandidate(
+      trusted.value,
+      {
+        nowMs: Date.now(),
+        expectedBinding: expectedPrerequisiteBinding(binding),
+        requirements,
+      },
+    );
+    retainTrustedEvidence(
+      'production-prerequisites/inventory.json',
+      inventoryBytes,
+    );
+    retainTrustedEvidence(
+      'production-prerequisites/inventory.sigstore.json',
+      bundleBytes,
+    );
+    trustedExternalProductionPrerequisiteInventory = {
+      inventory,
+      value: trusted.value,
+      payloadSha256: trusted.trust.payloadSha256,
+      bundleSha256: trusted.trust.bundleSha256,
+    };
+    return {
+      status: 'PASS',
+      artifacts: [
+        {
+          name: 'production-prerequisites/signed-inventory',
+          digest: trusted.trust.payloadSha256,
+        },
+        {
+          name: 'production-prerequisites/sigstore-bundle',
+          digest: trusted.trust.bundleSha256,
+        },
+      ],
+    };
+  } catch (error: unknown) {
+    if (error instanceof ExternalBlock) throw error;
+    throw new ExternalBlock(
+      `Signed production prerequisite inventory was rejected: ${safeError(error)}.`,
+    );
+  } finally {
+    if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
+    rmSync(verificationRoot, { recursive: true, force: true });
+  }
+}
+
+async function validateLiveProductionEvidence(
+  manifest: ToolchainManifest,
+  binding: ReleaseBinding,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  assertMediaLiveProductionEvidencePolicy();
+  const registeredPolicyIds = Object.keys(
+    LIVE_MEDIA_PRODUCTION_EVIDENCE_POLICY,
+  );
+  if (
+    registeredPolicyIds.length !==
+      LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS.length ||
+    LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS.some(
+      (id) => !registeredPolicyIds.includes(id),
+    ) ||
+    registeredPolicyIds.some(
+      (id) =>
+        !(LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS as readonly string[]).includes(
+          id,
+        ),
+    )
+  ) {
+    throw new Error(
+      'Live production evidence verifier registry is incomplete or has unsupported IDs.',
+    );
+  }
+  const specializedVerifierIds = new Set<RequiredMediaProductionPrerequisiteId>(
+    [
+      'media-oci-supply-chain',
+      'media-capacity-backup-restore',
+      'media-production-runbook',
+      'media-database-migration-recovery',
+      ...LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS,
+    ],
+  );
+  const expectedPreAttestationIds =
+    REQUIRED_MEDIA_PRODUCTION_PREREQUISITE_IDS.filter(
+      (id) => id !== 'media-immutable-evidence-attestation',
+    );
+  if (
+    specializedVerifierIds.size !== expectedPreAttestationIds.length ||
+    expectedPreAttestationIds.some((id) => !specializedVerifierIds.has(id))
+  ) {
+    throw new Error(
+      'Specialized production evidence verifier registry does not cover every pre-attestation prerequisite.',
+    );
+  }
+
+  const trustedInventory = trustedExternalProductionPrerequisiteInventory;
+  if (!trustedInventory) {
+    throw new ExternalBlock(
+      'Detached-signature-verified prerequisite inventory is unavailable for live rehearsal evidence.',
+    );
+  }
+  const livePassIds = trustedInventory.inventory.prerequisites
+    .filter(
+      ({ id, status }) =>
+        status === 'PASS' &&
+        (LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS as readonly string[]).includes(
+          id,
+        ),
+    )
+    .map(({ id }) => id);
+  const configured = process.env.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON;
+  const configuredBundle = process.env.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE;
+  const configuredRoot = process.env.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT;
+  if (!configured && !configuredBundle && !configuredRoot) {
+    if (livePassIds.length === 0) {
+      return { status: 'PASS' };
+    }
+    throw new ExternalBlock(
+      `Signed live rehearsal evidence is absent for declared PASS prerequisites: ${livePassIds.join(', ')}.`,
+    );
+  }
+  if (!configured || !configuredBundle || !configuredRoot) {
+    throw new ExternalBlock(
+      'Live rehearsal evidence requires the signed JSON manifest, matching Sigstore bundle and artifact root together.',
+    );
+  }
+
+  const evidenceRootPath = resolve(configuredRoot);
+  const manifestPath = resolve(configured);
+  const bundlePath = resolve(configuredBundle);
+  if (manifestPath === bundlePath) {
+    throw new ExternalBlock(
+      'Live rehearsal evidence manifest and Sigstore bundle must be distinct files.',
+    );
+  }
+  let manifestBytes: Buffer;
+  try {
+    manifestBytes = readStableBoundedFileWithinRoot(
+      evidenceRootPath,
+      relative(evidenceRootPath, manifestPath),
+      1024 * 1024,
+      'live rehearsal evidence manifest',
+    );
+    if (manifestBytes.length === 0) {
+      throw new Error('Live rehearsal evidence manifest is empty.');
+    }
+  } catch (error: unknown) {
+    throw new ExternalBlock(
+      `Live rehearsal evidence manifest is absent or unsafe: ${safeError(error)}.`,
+    );
+  }
+  const bundleBytes = readBoundedProductionPrerequisiteEvidence(
+    bundlePath,
+    4 * 1024 * 1024,
+    'live rehearsal evidence Sigstore bundle',
+  );
+  const verificationRoot = mkdtempSync(
+    join(tmpdir(), 'hsk-media-live-rehearsal-trust-'),
+  );
+  const verifiedManifestPath = join(verificationRoot, 'manifest.json');
+  const verifiedBundlePath = join(verificationRoot, 'manifest.sigstore.json');
+  writeFileSync(verifiedManifestPath, manifestBytes, { mode: 0o600 });
+  writeFileSync(verifiedBundlePath, bundleBytes, { mode: 0o600 });
+  let cosign: VerifiedTool | undefined;
+  try {
+    cosign = await acquireTool(manifest, 'cosign');
+    verifyToolVersion(cosign);
+    let trusted: Awaited<ReturnType<typeof verifyThenParseJsonEvidence>>;
+    try {
+      trusted = await verifyThenParseJsonEvidence(
+        manifestBytes,
+        () => {
+          const verification = recordedProcess(
+            cosign!.executable,
+            [
+              'verify-blob',
+              '--bundle',
+              verifiedBundlePath,
+              '--certificate-identity',
+              RELEASE_EVIDENCE_IDENTITY,
+              '--certificate-oidc-issuer',
+              RELEASE_EVIDENCE_ISSUER,
+              ...releaseEvidenceCertificateClaims(binding),
+              verifiedManifestPath,
+            ],
+            { timeoutMs: 60_000 },
+          );
+          if (verification.kind !== 'success') {
+            throw new ExternalBlock(
+              'Live rehearsal evidence Sigstore verification failed.',
+            );
+          }
+          return Promise.resolve({
+            payloadSha256: sha256(manifestBytes),
+            bundleSha256: sha256(bundleBytes),
+            issuer: RELEASE_EVIDENCE_ISSUER,
+            identity: RELEASE_EVIDENCE_IDENTITY,
+            verifiedAt: new Date().toISOString(),
+          });
+        },
+        {
+          issuer: RELEASE_EVIDENCE_ISSUER,
+          identity: RELEASE_EVIDENCE_IDENTITY,
+          nowMs: Date.now(),
+          maxAgeMs: 5 * 60_000,
+        },
+      );
+    } catch (error: unknown) {
+      if (error instanceof ExternalBlock) throw error;
+      if (
+        error instanceof Error &&
+        error.message === 'Verified evidence payload is not valid JSON.'
+      ) {
+        throw new ExternalBlock(
+          'Signed live rehearsal evidence manifest is not valid JSON.',
+        );
+      }
+      throw error;
+    }
+
+    let verified: ReturnType<typeof parseVerifiedMediaLiveProductionEvidence>;
+    try {
+      verified = parseVerifiedMediaLiveProductionEvidence(
+        manifestBytes,
+        evidenceRootPath,
+        {
+          nowMs: Date.now(),
+          expectedBinding: expectedPrerequisiteBinding(binding),
+          trustedProducer: {
+            issuer: RELEASE_EVIDENCE_ISSUER,
+            identity: RELEASE_EVIDENCE_IDENTITY,
+          },
+          verifiedSignature: {
+            payloadSha256: trusted.trust.payloadSha256,
+            issuer: trusted.trust.issuer,
+            identity: trusted.trust.identity,
+          },
+        },
+      );
+      for (const { verification } of verified.artifacts) {
+        const prerequisite = trustedInventory.inventory.prerequisites.find(
+          ({ id }) => id === verification.prerequisiteId,
+        );
+        if (
+          prerequisite?.status === 'PASS' &&
+          (prerequisite.freshness.observedAt !== verified.observedAt ||
+            prerequisite.freshness.expiresAt !== verified.expiresAt)
+        ) {
+          throw new MediaLiveProductionEvidenceError(
+            `${verification.prerequisiteId} inventory freshness does not match its signed live rehearsal package.`,
+          );
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof MediaLiveProductionEvidenceError) {
+        throw new ExternalBlock(
+          `Signed live rehearsal evidence was rejected: ${safeError(error)}.`,
+        );
+      }
+      throw error;
+    }
+
+    retainTrustedEvidence('live-rehearsals/manifest.json', manifestBytes);
+    retainTrustedEvidence(
+      'live-rehearsals/manifest.sigstore.json',
+      bundleBytes,
+    );
+    for (const { bytes, verification } of verified.artifacts) {
+      retainTrustedEvidence(
+        `live-rehearsals/artifacts/${verification.prerequisiteId}.json`,
+        bytes,
+      );
+      registerVerifiedProductionPrerequisiteEvidence(
+        verification.prerequisiteId,
+        {
+          type: verification.evidenceType,
+          uri: verification.evidenceUri,
+          sha256: verification.evidenceSha256,
+          issuer: verification.producerIssuer,
+          identity: verification.producerIdentity,
+          binding,
+        },
+      );
+    }
+    return {
+      status: 'PASS',
+      commandIds: ['cosign-verify-live-production-rehearsal-evidence'],
+      artifacts: [
+        {
+          name: 'live-rehearsals/signed-manifest',
+          digest: verified.manifestSha256,
+        },
+        {
+          name: 'live-rehearsals/sigstore-bundle',
+          digest: trusted.trust.bundleSha256,
+        },
+        ...verified.artifacts.map(({ verification }) => ({
+          name: `live-rehearsals/${verification.prerequisiteId}`,
+          digest: verification.evidenceSha256,
+        })),
+      ],
+    };
+  } finally {
+    if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
+    rmSync(verificationRoot, { recursive: true, force: true });
+  }
+}
+
+function finalizeProductionPrerequisiteEvidence(
+  binding: ReleaseBinding,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  const trusted = trustedExternalProductionPrerequisiteInventory;
+  if (!trusted) {
+    throw new ExternalBlock(
+      'No detached-signature-verified external production prerequisite inventory is available.',
+    );
+  }
+  const requirements = trackedProductionPrerequisiteInventory;
+  if (!requirements) {
+    throw new Error(
+      'Tracked production prerequisite requirements were not initialized.',
+    );
+  }
+  const missingVerificationIds = trusted.inventory.prerequisites
+    .filter(({ status }) => status === 'PASS')
+    .map(({ id }) => id as RequiredMediaProductionPrerequisiteId)
+    .filter((id) => !verifiedProductionEvidenceByPrerequisite.has(id));
+  if (missingVerificationIds.length > 0) {
+    throw new ExternalBlock(
+      `External prerequisite PASS rows lack specialized verification: ${missingVerificationIds.join(', ')}.`,
+    );
+  }
+  try {
+    finalizedProductionPrerequisiteInventory =
+      parseMediaProductionPrerequisiteInventory(trusted.value, {
+        nowMs: Date.now(),
+        expectedBinding: expectedPrerequisiteBinding(binding),
+        source: 'verified-external',
+        requirements,
+        verifiedEvidenceByPrerequisite:
+          verifiedProductionEvidenceByPrerequisite,
+      });
+  } catch (error: unknown) {
+    throw new ExternalBlock(
+      `External production prerequisite evidence contract was rejected: ${safeError(error)}.`,
+    );
+  }
+  return Promise.resolve({
+    status: 'PASS',
+    artifacts: [
+      {
+        name: 'production-prerequisites/finalized-inventory',
+        digest: trusted.payloadSha256,
+      },
+      ...[...verifiedProductionEvidenceByPrerequisite.values()].map(
+        ({ prerequisiteId, evidenceSha256 }) => ({
+          name: `production-prerequisites/${prerequisiteId}`,
+          digest: evidenceSha256,
+        }),
+      ),
+    ],
+  });
+}
+
+function validateProductionPrerequisite(
+  prerequisiteId: RequiredMediaProductionPrerequisiteId,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  if (
+    trustedExternalProductionPrerequisiteInventory &&
+    !finalizedProductionPrerequisiteInventory
+  ) {
+    throw new ExternalBlock(
+      'External production prerequisite inventory did not complete specialized verification.',
+    );
+  }
+  const inventory =
+    finalizedProductionPrerequisiteInventory ??
+    trackedProductionPrerequisiteInventory ??
+    loadTrackedProductionPrerequisiteInventory();
+  const prerequisite = inventory.prerequisites.find(
+    ({ id }) => id === prerequisiteId,
+  );
+  if (!prerequisite) {
+    throw new Error(`Production prerequisite is absent: ${prerequisiteId}.`);
+  }
+  if (prerequisite.status === 'BLOCKED_EXTERNAL') {
+    throw new ExternalBlock(
+      `${prerequisite.id} awaits trusted current evidence from ${prerequisite.owner}.`,
+    );
+  }
+  if (prerequisite.status === 'FAIL_INTERNAL') {
+    throw new Error(
+      `${prerequisite.id} declares an unresolved internal prerequisite.`,
+    );
+  }
+  return Promise.resolve({
+    status: 'PASS',
+    artifacts: [
+      {
+        name: prerequisite.id,
+        digest: prerequisite.evidence.sha256!,
+      },
+    ],
+  });
+}
+
+function loadTrackedProductionPrerequisiteInventory(): MediaProductionPrerequisiteInventory {
+  const source = JSON.parse(
+    readFileSync(
+      resolve(
+        repositoryRoot,
+        'ops/observability/media-production-prerequisites.json',
+      ),
+      'utf8',
+    ),
+  ) as unknown;
+  return parseMediaProductionPrerequisiteInventory(source, {
+    source: 'tracked',
+  });
+}
+
+function retainedTrustedEvidenceRoot(): string {
+  return join(evidenceRoot, 'trusted-inputs');
+}
+
+function resetRetainedTrustedEvidence(): void {
+  const root = retainedTrustedEvidenceRoot();
+  if (existsSync(root)) {
+    const info = lstatSync(root);
+    if (info.isSymbolicLink() || !info.isDirectory()) {
+      throw new Error('Retained trusted evidence root is unsafe.');
+    }
+    rmSync(root, { recursive: true, force: true });
+  }
+  mkdirSync(root, { recursive: true, mode: 0o700 });
+}
+
+function retainTrustedEvidence(relativePath: string, bytes: Buffer): void {
+  const components = relativePath.split('/');
+  if (
+    relativePath.length > 512 ||
+    components.some(
+      (component) =>
+        component === '' ||
+        component === '.' ||
+        component === '..' ||
+        !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(component),
+    )
+  ) {
+    throw new Error('Retained trusted evidence path is invalid.');
+  }
+  const root = retainedTrustedEvidenceRoot();
+  writeStableExclusiveFileWithinRoot(
+    root,
+    relativePath,
+    bytes,
+    'Retained trusted evidence',
+  );
+}
+
+function readBoundedProductionPrerequisiteEvidence(
+  path: string,
+  maximumBytes: number,
+  label: string,
+): Buffer {
+  try {
+    const resolvedPath = resolve(path);
+    const bytes = readStableBoundedFileWithinRoot(
+      dirname(resolvedPath),
+      basename(resolvedPath),
+      maximumBytes,
+      label,
+    );
+    if (bytes.length === 0) {
+      throw new ExternalBlock(
+        `${label} must be a bounded non-empty regular file.`,
+      );
+    }
+    return bytes;
+  } catch (error: unknown) {
+    if (error instanceof ExternalBlock) throw error;
+    throw new ExternalBlock(`${label} is absent or unsafe.`);
+  }
+}
+
+function expectedPrerequisiteBinding(binding: ReleaseBinding): {
+  gitCommit: string;
+  gitTreeSha: string;
+  releaseContentDigest: string;
+} {
+  return {
+    gitCommit: binding.commit,
+    gitTreeSha: binding.treeSha,
+    releaseContentDigest: binding.releaseContentDigest,
+  };
+}
+
+function registerVerifiedProductionPrerequisiteEvidence(
+  prerequisiteId: RequiredMediaProductionPrerequisiteId,
+  evidence: {
+    type: string;
+    uri?: string;
+    sha256: string;
+    issuer: string;
+    identity: string;
+    binding: ReleaseBinding;
+  },
+): void {
+  const trusted = trustedExternalProductionPrerequisiteInventory;
+  if (!trusted) return;
+  const prerequisite = trusted.inventory.prerequisites.find(
+    ({ id }) => id === prerequisiteId,
+  );
+  if (!prerequisite || prerequisite.status !== 'PASS') return;
+  if (verifiedProductionEvidenceByPrerequisite.has(prerequisiteId)) {
+    throw new Error(
+      `Specialized production prerequisite evidence was registered twice: ${prerequisiteId}.`,
+    );
+  }
+  const evidenceUri = evidence.uri ?? prerequisite.evidence.uri;
+  if (!evidenceUri) {
+    throw new Error(
+      `Specialized production prerequisite evidence has no URI: ${prerequisiteId}.`,
+    );
+  }
+  verifiedProductionEvidenceByPrerequisite.set(prerequisiteId, {
+    prerequisiteId,
+    evidenceType: evidence.type,
+    evidenceUri,
+    evidenceSha256: evidence.sha256,
+    producerIssuer: evidence.issuer,
+    producerIdentity: evidence.identity,
+    binding: expectedPrerequisiteBinding(evidence.binding),
+  });
+}
+
 async function validateToolchain(
   manifest: ToolchainManifest,
 ): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
@@ -455,6 +1226,7 @@ async function validateToolchain(
       'kubectl',
       'kubeconform',
       'cosign',
+      'grype',
       'syft',
     ]) {
       const tool = await acquireTool(manifest, name);
@@ -485,109 +1257,184 @@ async function validateToolchain(
 
 async function validateOciSupplyChain(
   manifest: ToolchainManifest,
+  binding: {
+    commit: string;
+    treeSha: string;
+    releaseContentDigest: string;
+  },
 ): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   let cosign: VerifiedTool | undefined;
-  let syft: VerifiedTool | undefined;
+  let verificationRoot: string | undefined;
   try {
-    cosign = await acquireTool(manifest, 'cosign');
-    syft = await acquireTool(manifest, 'syft');
-    verifyToolVersion(cosign);
-    verifyToolVersion(syft);
-    const artifacts: Array<{ name: string; version?: string; digest: string }> =
-      [];
-    const resolvedImages: Array<[string, OciImageDefinition]> = [];
     for (const [name, image] of Object.entries(manifest.images)) {
       const platform = image.platforms[0];
       if (!platform) throw new Error(`${name} has no Linux amd64 image.`);
+      const expected =
+        CURRENT_MEDIA_OCI_IMAGE_EXPECTATIONS[
+          name as keyof typeof CURRENT_MEDIA_OCI_IMAGE_EXPECTATIONS
+        ];
+      if (
+        !expected ||
+        image.repository !== expected.repository ||
+        image.version !== expected.version ||
+        image.indexDigest !== expected.indexDigest ||
+        platform.digest !== expected.platformDigest ||
+        platform.runtimeRef !== expected.runtimeRef
+      ) {
+        throw new Error(
+          `${name} toolchain policy does not match the audited current OCI expectation.`,
+        );
+      }
       const registryResolution = await resolveOciRegistryImage(image);
       assertOciRegistryResolution(image, registryResolution);
-      resolvedImages.push([name, image]);
     }
-    for (const [name, image] of resolvedImages) {
-      const platform = image.platforms[0];
-      if (!platform) throw new Error(`${name} has no Linux amd64 image.`);
-      const policy = image.attestations.signature;
-      const identity = policy.approvedIdentities[0];
-      if (!identity || policy.approvedIdentities.length !== 1) {
-        throw new ExternalBlock(
-          `${name} has no single approved release workflow identity; signatures cannot be claimed.`,
+
+    const licensePolicyBytes = readFileSync(
+      resolve(
+        repositoryRoot,
+        'ops/observability/media-oci-license-policy.json',
+      ),
+    );
+    for (const image of Object.values(manifest.images)) {
+      if (
+        image.attestations.license.policySha256 !== sha256(licensePolicyBytes)
+      ) {
+        throw new Error(
+          'OCI license policy digest does not match source bytes.',
         );
       }
-      const signature = recordedProcess(
-        cosign.executable,
-        [
-          'verify',
-          '--output',
-          'json',
-          '--certificate-oidc-issuer',
-          policy.issuer,
-          '--certificate-identity',
-          identity,
-          platform.runtimeRef,
-        ],
-        { timeoutMs: 120_000 },
+    }
+
+    const configured = process.env.MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON;
+    const configuredBundle = process.env.MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE;
+    if (!configured || !configuredBundle) {
+      throw new ExternalBlock(
+        'Signed HSK OCI release-acceptance manifest and Sigstore bundle are absent.',
       );
-      if (signature.kind !== 'success') {
-        throw new ExternalBlock(
-          `${name} OCI signature is unavailable or does not bind the exact Linux amd64 digest.`,
+    }
+    const manifestPath = resolve(configured);
+    const bundlePath = resolve(configuredBundle);
+    const bytes = readBoundedProductionPrerequisiteEvidence(
+      manifestPath,
+      1024 * 1024,
+      'OCI release evidence manifest',
+    );
+    const bundleBytes = readBoundedProductionPrerequisiteEvidence(
+      bundlePath,
+      4 * 1024 * 1024,
+      'OCI release evidence Sigstore bundle',
+    );
+    verificationRoot = mkdtempSync(join(tmpdir(), 'hsk-media-oci-trust-'));
+    const verifiedManifestPath = join(verificationRoot, 'manifest.json');
+    const verifiedBundlePath = join(verificationRoot, 'manifest.sigstore.json');
+    writeFileSync(verifiedManifestPath, bytes, { mode: 0o600 });
+    writeFileSync(verifiedBundlePath, bundleBytes, { mode: 0o600 });
+    const policy = manifest.images.alertmanager.attestations.releaseAcceptance;
+    const identity = policy.approvedIdentities[0];
+    if (
+      policy.issuer !== RELEASE_EVIDENCE_ISSUER ||
+      identity !== RELEASE_EVIDENCE_IDENTITY
+    ) {
+      throw new Error('OCI release-acceptance trust policy is not exact.');
+    }
+    cosign = await acquireTool(manifest, 'cosign');
+    verifyToolVersion(cosign);
+    const trusted = await verifyThenParseJsonEvidence(
+      bytes,
+      () => {
+        const verification = recordedProcess(
+          cosign!.executable,
+          [
+            'verify-blob',
+            '--bundle',
+            verifiedBundlePath,
+            '--certificate-identity',
+            identity,
+            '--certificate-oidc-issuer',
+            policy.issuer,
+            ...releaseEvidenceCertificateClaims(binding),
+            verifiedManifestPath,
+          ],
+          { timeoutMs: 120_000 },
         );
-      }
-      assertCosignSignaturePayload(output(signature), platform.digest);
-      const attestation = recordedProcess(
-        cosign.executable,
-        [
-          'verify-attestation',
-          '--type',
-          'spdxjson',
-          '--output',
-          'json',
-          '--certificate-oidc-issuer',
-          policy.issuer,
-          '--certificate-identity',
-          identity,
-          platform.runtimeRef,
-        ],
-        { timeoutMs: 120_000 },
-      );
-      if (attestation.kind !== 'success') {
-        throw new ExternalBlock(
-          `${name} signed SPDX SBOM attestation is unavailable.`,
-        );
-      }
-      const predicate = extractSpdxAttestationPredicate(
-        output(attestation),
-        platform.digest,
-      );
-      const sbomRoot = mkdtempSync(join(tmpdir(), 'hsk-media-sbom-'));
-      try {
-        const source = join(sbomRoot, `${name}.spdx.json`);
-        const normalized = join(sbomRoot, `${name}.normalized.spdx.json`);
-        writeFileSync(source, `${JSON.stringify(predicate)}\n`, {
-          mode: 0o600,
-        });
-        const syftValidation = recordedProcess(
-          syft.executable,
-          ['convert', source, '-o', `spdx-json=${normalized}`],
-          { timeoutMs: 60_000 },
-        );
-        requireCommand(syftValidation, `${name} signed SPDX SBOM conversion`);
-        if (!existsSync(normalized) || statSync(normalized).size === 0) {
-          throw new Error(`${name} signed SPDX SBOM did not normalize.`);
+        if (verification.kind !== 'success') {
+          throw new ExternalBlock(
+            'HSK OCI release-acceptance Sigstore verification failed.',
+          );
         }
-      } finally {
-        rmSync(sbomRoot, { recursive: true, force: true });
+        return Promise.resolve({
+          payloadSha256: sha256(bytes),
+          bundleSha256: sha256(bundleBytes),
+          issuer: policy.issuer,
+          identity,
+          verifiedAt: new Date().toISOString(),
+        });
+      },
+      {
+        issuer: policy.issuer,
+        identity,
+        nowMs: Date.now(),
+        maxAgeMs: 5 * 60_000,
+      },
+    );
+    let summary;
+    try {
+      summary = assertMediaOciReleaseEvidence(
+        {
+          bytes,
+          value: trusted.value,
+          issuer: trusted.trust.issuer,
+          identity: trusted.trust.identity,
+        },
+        {
+          evidenceRoot: resolve(
+            process.env.MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT ??
+              dirname(manifestPath),
+          ),
+          ...binding,
+          trustedIssuer: policy.issuer,
+          trustedIdentity: identity,
+          images: structuredClone(CURRENT_MEDIA_OCI_IMAGE_EXPECTATIONS),
+          now: Date.now(),
+          retainValidatedReport: (relativePath, reportBytes) =>
+            retainTrustedEvidence(`oci/reports/${relativePath}`, reportBytes),
+        },
+      );
+    } catch (error: unknown) {
+      if (
+        error instanceof MediaOciReleaseEvidenceError &&
+        error.classification === 'BLOCKED_EXTERNAL'
+      ) {
+        throw new ExternalBlock(error.message);
       }
-      artifacts.push({
-        name: `oci/${name}/linux-amd64`,
-        version: image.version,
-        digest: platform.digest,
-      });
+      throw error;
     }
+    retainTrustedEvidence('oci/release-acceptance.json', bytes);
+    retainTrustedEvidence('oci/release-acceptance.sigstore.json', bundleBytes);
+    registerVerifiedProductionPrerequisiteEvidence('media-oci-supply-chain', {
+      type: 'oci-signature-sbom-vulnerability-license-attestation',
+      sha256: summary.manifestSha256,
+      issuer: trusted.trust.issuer,
+      identity: trusted.trust.identity,
+      binding,
+    });
     return {
       status: 'PASS',
-      commandIds: ['cosign-signature-and-spdx-attestation'],
+      commandIds: ['cosign-verify-hsk-release-acceptance'],
       artifacts: [
-        ...artifacts,
+        {
+          name: 'oci/release-acceptance-manifest',
+          digest: summary.manifestSha256,
+        },
+        {
+          name: 'oci/release-acceptance-sigstore-bundle',
+          digest: trusted.trust.bundleSha256,
+        },
+        ...summary.images.map((image) => ({
+          name: `oci/${image.name}/linux-amd64`,
+          version: manifest.images[image.name].version,
+          digest: image.platformDigest,
+        })),
         {
           name: 'oci-policy-fingerprint',
           digest: sha256(
@@ -595,7 +1442,7 @@ async function validateOciSupplyChain(
               Object.values(manifest.images)
                 .map(
                   ({ attestations }) =>
-                    `${attestations.signature.issuer}\0${attestations.signature.approvedIdentities.join('\0')}`,
+                    `${attestations.releaseAcceptance.issuer}\0${attestations.releaseAcceptance.approvedIdentities.join('\0')}\0${attestations.license.policySha256}`,
                 )
                 .join('\0'),
             ),
@@ -605,7 +1452,8 @@ async function validateOciSupplyChain(
     };
   } finally {
     if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
-    if (syft) removeVerifiedTemporaryRoot(syft.cleanupRoot);
+    if (verificationRoot)
+      rmSync(verificationRoot, { recursive: true, force: true });
   }
 }
 
@@ -723,11 +1571,14 @@ async function resolveOciRegistryImage(
   }
 }
 
-function validateReleaseQualityPrerequisites(binding: {
-  commit: string;
-  treeSha: string;
-  releaseContentDigest: string;
-}): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+async function validateReleaseQualityPrerequisites(
+  manifest: ToolchainManifest,
+  binding: {
+    commit: string;
+    treeSha: string;
+    releaseContentDigest: string;
+  },
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   const commands: Array<[string, string[]]> = [
     ['npx', ['prisma', 'format']],
     ['npx', ['prisma', 'validate']],
@@ -739,15 +1590,20 @@ function validateReleaseQualityPrerequisites(binding: {
     ['npm', ['run', 'test:security:secrets']],
     ['npm', ['audit', '--omit=dev']],
   ];
+  const qualityEnvironment = releaseQualityEnvironment();
   for (const [command, args] of commands) {
     const result = recordedProcess(command, args, {
       cwd: resolve(repositoryRoot, 'backend'),
+      env: qualityEnvironment,
       timeoutMs: 15 * 60_000,
     });
     requireCommand(result, `release prerequisite ${command} ${args.join(' ')}`);
   }
-  const databaseEvidence = validateDatabaseEvidenceHook(binding);
-  return Promise.resolve({
+  const databaseEvidence = await validateDatabaseEvidenceHook(
+    manifest,
+    binding,
+  );
+  return {
     status: 'PASS',
     commandIds: ['backend-quality-prerequisites', 'guarded-database-evidence'],
     artifacts: [
@@ -756,14 +1612,47 @@ function validateReleaseQualityPrerequisites(binding: {
         digest: databaseEvidence.evidenceSha256,
       },
     ],
-  });
+  };
 }
 
-function validateDatabaseEvidenceHook(binding: {
-  commit: string;
-  treeSha: string;
-  releaseContentDigest: string;
-}): DatabaseReleaseEvidenceSummary {
+function releaseQualityEnvironment(): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = {
+    DATABASE_URL:
+      'postgresql://release-validator@127.0.0.1:1/hsk_media_release_validation_test?schema=public',
+    NODE_ENV: 'test',
+    NPM_CONFIG_USERCONFIG: '/dev/null',
+    TZ: 'UTC',
+  };
+  const inheritedKeys = [
+    'CI',
+    'COLORTERM',
+    'FORCE_COLOR',
+    'HOME',
+    'LANG',
+    'LC_ALL',
+    'LC_CTYPE',
+    'LOGNAME',
+    'NO_COLOR',
+    'PATH',
+    'SHELL',
+    'SSL_CERT_FILE',
+    'TEMP',
+    'TERM',
+    'TMP',
+    'TMPDIR',
+    'USER',
+  ] as const;
+  for (const key of inheritedKeys) {
+    const value = process.env[key];
+    if (value !== undefined) environment[key] = value;
+  }
+  return environment;
+}
+
+async function validateDatabaseEvidenceHook(
+  manifest: ToolchainManifest,
+  binding: ReleaseBinding,
+): Promise<DatabaseReleaseEvidenceSummary> {
   const path = resolve(
     process.env.MEDIA_OPS_DB_EVIDENCE_JSON ??
       join(
@@ -774,70 +1663,237 @@ function validateDatabaseEvidenceHook(binding: {
   if (!existsSync(path)) {
     throw new ExternalBlock('Guarded database evidence artifact is absent.');
   }
+  const configuredBundle = process.env.MEDIA_OPS_DB_EVIDENCE_BUNDLE;
+  if (!configuredBundle) {
+    throw new ExternalBlock(
+      'Guarded database evidence Sigstore bundle is absent.',
+    );
+  }
+  const bundlePath = resolve(configuredBundle);
   const catalog = computeMigrationCatalogEvidence(
     resolve(repositoryRoot, 'backend/prisma/migrations'),
   );
   const latestMigrations = catalog.entries.slice(-2);
-  const evidenceBytes = readFileSync(path);
-  const validated = assertDatabaseReleaseEvidence(
-    JSON.parse(evidenceBytes.toString('utf8')) as unknown,
-    {
-      ...binding,
-      evidenceRoot: dirname(path),
-      catalogCount: catalog.catalogCount,
-      catalogChecksum: catalog.catalogChecksum,
-      latestMigrations,
-    },
+  const evidenceBytes = readBoundedProductionPrerequisiteEvidence(
+    path,
+    8 * 1024 * 1024,
+    'guarded database release evidence',
   );
+  const bundleBytes = readBoundedProductionPrerequisiteEvidence(
+    bundlePath,
+    4 * 1024 * 1024,
+    'guarded database release evidence Sigstore bundle',
+  );
+  const verificationRoot = mkdtempSync(join(tmpdir(), 'hsk-media-db-trust-'));
+  const verifiedEvidencePath = join(verificationRoot, 'database-evidence.json');
+  const verifiedBundlePath = join(
+    verificationRoot,
+    'database-evidence.sigstore.json',
+  );
+  writeFileSync(verifiedEvidencePath, evidenceBytes, { mode: 0o600 });
+  writeFileSync(verifiedBundlePath, bundleBytes, { mode: 0o600 });
+  let cosign: VerifiedTool | undefined;
+  let trusted:
+    | Awaited<ReturnType<typeof verifyThenParseJsonEvidence>>
+    | undefined;
+  try {
+    cosign = await acquireTool(manifest, 'cosign');
+    verifyToolVersion(cosign);
+    trusted = await verifyThenParseJsonEvidence(
+      evidenceBytes,
+      () => {
+        const verification = recordedProcess(
+          cosign!.executable,
+          [
+            'verify-blob',
+            '--bundle',
+            verifiedBundlePath,
+            '--certificate-identity',
+            RELEASE_EVIDENCE_IDENTITY,
+            '--certificate-oidc-issuer',
+            RELEASE_EVIDENCE_ISSUER,
+            ...releaseEvidenceCertificateClaims(binding),
+            verifiedEvidencePath,
+          ],
+          { timeoutMs: 60_000 },
+        );
+        if (verification.kind !== 'success') {
+          throw new ExternalBlock(
+            'Guarded database evidence Sigstore verification failed.',
+          );
+        }
+        return Promise.resolve({
+          payloadSha256: sha256(evidenceBytes),
+          bundleSha256: sha256(bundleBytes),
+          issuer: RELEASE_EVIDENCE_ISSUER,
+          identity: RELEASE_EVIDENCE_IDENTITY,
+          verifiedAt: new Date().toISOString(),
+        });
+      },
+      {
+        issuer: RELEASE_EVIDENCE_ISSUER,
+        identity: RELEASE_EVIDENCE_IDENTITY,
+        nowMs: Date.now(),
+        maxAgeMs: 5 * 60_000,
+      },
+    );
+  } finally {
+    if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
+    rmSync(verificationRoot, { recursive: true, force: true });
+  }
+  if (!trusted) {
+    throw new Error('Guarded database evidence trust result is absent.');
+  }
+  const validated = assertDatabaseReleaseEvidence(trusted.value, {
+    ...binding,
+    evidenceRoot: dirname(path),
+    catalogCount: catalog.catalogCount,
+    catalogChecksum: catalog.catalogChecksum,
+    latestMigrations,
+    retainValidatedFile: (relativePath, artifactBytes) =>
+      retainTrustedEvidence(
+        `database/artifacts/${relativePath}`,
+        artifactBytes,
+      ),
+  });
+  retainTrustedEvidence('database/release-evidence.json', evidenceBytes);
+  retainTrustedEvidence('database/release-evidence.sigstore.json', bundleBytes);
   databaseReleaseEvidence = {
     ...validated,
-    evidenceSha256: sha256(evidenceBytes),
+    evidenceSha256: trusted.trust.payloadSha256,
   };
+  registerVerifiedProductionPrerequisiteEvidence(
+    'media-database-migration-recovery',
+    {
+      type: 'signed-database-migration-recovery-attestation',
+      sha256: databaseReleaseEvidence.evidenceSha256,
+      issuer: trusted.trust.issuer,
+      identity: trusted.trust.identity,
+      binding,
+    },
+  );
   return databaseReleaseEvidence;
 }
 
-function validateCapacityBackupEvidence(binding: {
-  commit: string;
-  treeSha: string;
-  releaseContentDigest: string;
-}): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+async function validateCapacityBackupEvidence(
+  manifest: ToolchainManifest,
+  binding: {
+    commit: string;
+    treeSha: string;
+    releaseContentDigest: string;
+  },
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   const configured = process.env.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON;
-  if (!configured) {
+  const configuredBundle =
+    process.env.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE;
+  if (!configured || !configuredBundle) {
     throw new ExternalBlock(
-      'MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON is required for live 32-day capacity, encrypted backup and restore proof.',
+      'Signed capacity evidence JSON and Sigstore bundle are required for live 32-day capacity, encrypted backup and restore proof.',
     );
   }
   const path = resolve(configured);
-  if (!existsSync(path)) {
-    throw new ExternalBlock(
-      'Capacity and backup evidence artifact is unavailable.',
-    );
-  }
-  const info = lstatSync(path);
-  if (info.isSymbolicLink() || !info.isFile() || info.size > 1024 * 1024) {
-    throw new Error(
-      'Capacity and backup evidence must be a bounded regular file.',
-    );
-  }
-  const bytes = readFileSync(path);
-  const validated = assertCapacityBackupEvidence(
-    JSON.parse(bytes.toString('utf8')) as unknown,
-    binding,
+  const bundlePath = resolve(configuredBundle);
+  const bytes = readBoundedProductionPrerequisiteEvidence(
+    path,
+    1024 * 1024,
+    'capacity and backup evidence payload',
   );
-  return Promise.resolve({
-    status: 'PASS',
-    commandIds: ['live-capacity-backup-restore-evidence'],
-    artifacts: [
-      {
-        name: `capacity-backup/${validated.runId}`,
-        digest: sha256(bytes),
+  const bundleBytes = readBoundedProductionPrerequisiteEvidence(
+    bundlePath,
+    4 * 1024 * 1024,
+    'capacity and backup evidence Sigstore bundle',
+  );
+  let cosign: VerifiedTool | undefined;
+  const verificationRoot = mkdtempSync(
+    join(tmpdir(), 'hsk-media-capacity-trust-'),
+  );
+  const verifiedPayloadPath = join(verificationRoot, 'capacity.json');
+  const verifiedBundlePath = join(verificationRoot, 'capacity.sigstore.json');
+  writeFileSync(verifiedPayloadPath, bytes, { mode: 0o600 });
+  writeFileSync(verifiedBundlePath, bundleBytes, { mode: 0o600 });
+  try {
+    cosign = await acquireTool(manifest, 'cosign');
+    verifyToolVersion(cosign);
+    const trusted = await verifyThenParseJsonEvidence(
+      bytes,
+      () => {
+        const verification = recordedProcess(
+          cosign!.executable,
+          [
+            'verify-blob',
+            '--bundle',
+            verifiedBundlePath,
+            '--certificate-identity',
+            RELEASE_EVIDENCE_IDENTITY,
+            '--certificate-oidc-issuer',
+            RELEASE_EVIDENCE_ISSUER,
+            ...releaseEvidenceCertificateClaims(binding),
+            verifiedPayloadPath,
+          ],
+          { timeoutMs: 60_000 },
+        );
+        if (verification.kind !== 'success') {
+          throw new ExternalBlock(
+            'Capacity evidence Sigstore verification failed.',
+          );
+        }
+        return Promise.resolve({
+          payloadSha256: sha256(bytes),
+          bundleSha256: sha256(bundleBytes),
+          issuer: RELEASE_EVIDENCE_ISSUER,
+          identity: RELEASE_EVIDENCE_IDENTITY,
+          verifiedAt: new Date().toISOString(),
+        });
       },
       {
-        name: 'capacity-backup/cluster-fingerprint',
-        digest: validated.clusterFingerprintSha256,
+        issuer: RELEASE_EVIDENCE_ISSUER,
+        identity: RELEASE_EVIDENCE_IDENTITY,
+        nowMs: Date.now(),
+        maxAgeMs: 5 * 60_000,
       },
-    ],
-  });
+    );
+    const validated = assertCapacityBackupEvidence(trusted.value, binding);
+    retainTrustedEvidence('capacity-backup/evidence.json', bytes);
+    retainTrustedEvidence(
+      'capacity-backup/evidence.sigstore.json',
+      bundleBytes,
+    );
+    registerVerifiedProductionPrerequisiteEvidence(
+      'media-capacity-backup-restore',
+      {
+        type: 'signed-capacity-backup-restore-attestation',
+        sha256: trusted.trust.payloadSha256,
+        issuer: trusted.trust.issuer,
+        identity: trusted.trust.identity,
+        binding,
+      },
+    );
+    return {
+      status: 'PASS',
+      commandIds: ['cosign-verify-capacity-backup-restore-evidence'],
+      artifacts: [
+        {
+          name: `capacity-backup/${validated.runId}`,
+          digest: trusted.trust.payloadSha256,
+        },
+        {
+          name: 'capacity-backup/sigstore-bundle',
+          digest: trusted.trust.bundleSha256,
+        },
+        {
+          name: 'capacity-backup/cluster-fingerprint',
+          digest: validated.clusterFingerprintSha256,
+        },
+        {
+          name: 'capacity-backup/provider-provenance',
+          digest: validated.provenanceSha256,
+        },
+      ],
+    };
+  } finally {
+    if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
+    rmSync(verificationRoot, { recursive: true, force: true });
+  }
 }
 
 async function validateNginx(
@@ -1904,28 +2960,29 @@ async function validateGrafana(
     );
     let executedTargetCount = 0;
     for (const { refId, expr } of targets) {
-      const query = await grafanaJson(
-        grafanaPort,
-        '/api/ds/query',
-        'POST',
-        {
-          from: String(Date.now() - 5 * 60_000),
-          to: String(Date.now()),
-          queries: [
-            {
-              refId,
-              expr,
-              datasource: { type: 'prometheus', uid: datasourceUid },
-              format: 'time_series',
-              intervalMs: 1_000,
-              maxDataPoints: 300,
-            },
-          ],
-        },
-        credentials,
-      );
-      const result = isRecord(query.results) ? query.results[refId] : undefined;
-      assertGrafanaQueryResult(result, refId);
+      await waitForGrafanaMetricDatapoint(async () => {
+        const query = await grafanaJson(
+          grafanaPort as number,
+          '/api/ds/query',
+          'POST',
+          {
+            from: String(Date.now() - 5 * 60_000),
+            to: String(Date.now()),
+            queries: [
+              {
+                refId,
+                expr,
+                datasource: { type: 'prometheus', uid: datasourceUid },
+                format: 'time_series',
+                intervalMs: 1_000,
+                maxDataPoints: 300,
+              },
+            ],
+          },
+          credentials,
+        );
+        return isRecord(query.results) ? query.results[refId] : undefined;
+      }, refId);
       executedTargetCount += 1;
     }
     if (targets.length === 0 || executedTargetCount !== targets.length) {
@@ -2020,6 +3077,7 @@ async function validateGrafana(
 
 async function validateRunbookUrl(
   manifest: ToolchainManifest,
+  binding: ReleaseBinding,
 ): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   const configured = process.env.MEDIA_RUNBOOK_URL;
   if (!configured) {
@@ -2212,13 +3270,20 @@ async function validateRunbookUrl(
       redirect: 'error',
       signal: controller.signal,
     });
-    if (!response.ok)
-      throw new ExternalBlock(`Runbook returned HTTP ${response.status}.`);
+    const verified = await assertProductionRunbookResponse(response);
+    registerVerifiedProductionPrerequisiteEvidence('media-production-runbook', {
+      type: 'https-runbook-content-attestation',
+      uri: runbookUrl,
+      sha256: verified.bodySha256,
+      issuer: RELEASE_EVIDENCE_ISSUER,
+      identity: RELEASE_EVIDENCE_IDENTITY,
+      binding,
+    });
     recordProbeEvidence(
       'production-runbook-https-get',
       reachabilityStarted,
       true,
-      `Credential-free HTTPS runbook returned ${response.status}.`,
+      `Credential-free HTTPS runbook ${verified.runbookId} revision ${verified.revision} returned exact HTTP 200 with body sha256:${verified.bodySha256}.`,
     );
   } catch (error: unknown) {
     recordProbeEvidence(

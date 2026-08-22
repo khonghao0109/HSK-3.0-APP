@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import {
+  generateKeyPairSync,
+  sign as signBytes,
+  verify as verifySignature,
+} from 'node:crypto';
+import {
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -10,6 +15,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -22,6 +28,7 @@ import {
   assertCosignSignaturePayload,
   assertDatabaseReleaseEvidence,
   assertCapacityBackupEvidence,
+  assertProductionRunbookResponse,
   assertExecutionProfile,
   assertExecutableFromVerifiedRoot,
   assertExactMediaNetworkTopology,
@@ -42,6 +49,8 @@ import {
   assertIstioProbeRewriteContract,
   inspectTarGzipArchive,
   invalidateEvidenceSummaries,
+  isPostGateAttestationReady,
+  MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST,
   resetMediaOperationsEvidenceLogs,
   resolveMediaOperationsEvidenceRoot,
   assertOciDigest,
@@ -50,6 +59,7 @@ import {
   extractSpdxAttestationPredicate,
   classifyValidators,
   computeReleaseContentDigest,
+  computeGlobalGitState,
   computeMigrationCatalogEvidence,
   computeTreeDigest,
   contentAddressedCacheFilename,
@@ -58,16 +68,48 @@ import {
   requireCredentialFreeHttpsRunbookUrl,
   readBoundedResponseBody,
   parseToolchainManifest,
+  verifyThenParseJsonEvidence,
   redactDiagnostic,
   renderValidatorJUnit,
   runProcess,
   selectArtifact,
   sha256,
   verifySha256,
+  readStableBoundedFileWithinRoot,
+  waitForGrafanaMetricDatapoint,
+  writeStableExclusiveFileWithinRoot,
 } from './media-operations-validation.helpers';
 
 const requireModule = createRequire(__filename);
 const yaml = requireModule('js-yaml') as { loadAll(source: string): unknown[] };
+
+const validOciAttestations = {
+  releaseAcceptance: {
+    required: true,
+    model: 'hsk-release-acceptance',
+    verifier: 'cosign-keyless-blob',
+    issuer: 'https://token.actions.githubusercontent.com',
+    approvedIdentities: [
+      'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0',
+    ],
+  },
+  upstreamPublisherSignature: { status: 'absent' },
+  sbom: { required: true, format: 'spdx-json', minimumPackages: 1 },
+  vulnerability: {
+    required: true,
+    format: 'grype-json',
+    scanner: 'grype',
+    failOn: ['Critical', 'High'],
+    maxDatabaseAgeHours: 120,
+  },
+  license: {
+    required: true,
+    format: 'hsk-license-json',
+    policyPath: 'ops/observability/media-oci-license-policy.json',
+    policySha256:
+      'fce3681d6911e1901305d6223fe3b13ca1aa571766d9a99ab4b2031713848a25',
+  },
+};
 
 const validManifest = {
   schemaVersion: 3,
@@ -122,17 +164,7 @@ const validManifest = {
           runtimeRef: `quay.io/prometheus/alertmanager@sha256:${'2'.repeat(64)}`,
         },
       ],
-      attestations: {
-        signature: {
-          required: true,
-          verifier: 'cosign-keyless',
-          issuer: 'https://token.actions.githubusercontent.com',
-          approvedIdentities: [
-            'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-operations.yml@refs/tags/v1.2.3',
-          ],
-        },
-        sbom: { required: true, format: 'spdx-json' },
-      },
+      attestations: structuredClone(validOciAttestations),
     },
     grafana: {
       repository: 'docker.io/grafana/grafana',
@@ -146,17 +178,7 @@ const validManifest = {
           runtimeRef: `docker.io/grafana/grafana@sha256:${'4'.repeat(64)}`,
         },
       ],
-      attestations: {
-        signature: {
-          required: true,
-          verifier: 'cosign-keyless',
-          issuer: 'https://token.actions.githubusercontent.com',
-          approvedIdentities: [
-            'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-operations.yml@refs/tags/v1.2.3',
-          ],
-        },
-        sbom: { required: true, format: 'spdx-json' },
-      },
+      attestations: structuredClone(validOciAttestations),
     },
     prometheus: {
       repository: 'quay.io/prometheus/prometheus',
@@ -170,17 +192,7 @@ const validManifest = {
           runtimeRef: `quay.io/prometheus/prometheus@sha256:${'e'.repeat(64)}`,
         },
       ],
-      attestations: {
-        signature: {
-          required: true,
-          verifier: 'cosign-keyless',
-          issuer: 'https://token.actions.githubusercontent.com',
-          approvedIdentities: [
-            'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-operations.yml@refs/tags/v1.2.3',
-          ],
-        },
-        sbom: { required: true, format: 'spdx-json' },
-      },
+      attestations: structuredClone(validOciAttestations),
     },
   },
 };
@@ -220,24 +232,39 @@ void test('rejects mutable or mismatched OCI runtime image identities', () => {
       manifest.images.prometheus.platforms[0].architecture = 'arm64';
     },
     (manifest: typeof validManifest) => {
-      manifest.images.prometheus.attestations.signature.required = false;
+      manifest.images.prometheus.attestations.releaseAcceptance.required = false;
     },
     (manifest: typeof validManifest) => {
-      manifest.images.prometheus.attestations.signature.approvedIdentities = [
-        '^.*$',
+      manifest.images.prometheus.attestations.releaseAcceptance.approvedIdentities =
+        ['^.*$'];
+    },
+    (manifest: typeof validManifest) => {
+      manifest.images.prometheus.attestations.releaseAcceptance.approvedIdentities =
+        ['^abc$'];
+    },
+    (manifest: typeof validManifest) => {
+      manifest.images.prometheus.attestations.releaseAcceptance.approvedIdentities =
+        [];
+    },
+    (manifest: typeof validManifest) => {
+      manifest.images.prometheus.attestations.upstreamPublisherSignature.status =
+        'verified';
+    },
+    (manifest: typeof validManifest) => {
+      manifest.images.prometheus.attestations.vulnerability.failOn = [
+        'Critical',
       ];
     },
     (manifest: typeof validManifest) => {
-      manifest.images.prometheus.attestations.signature.approvedIdentities = [
-        '^abc$',
-      ];
+      manifest.images.prometheus.attestations.license.policySha256 =
+        'not-a-digest';
     },
   ]) {
     const candidate = structuredClone(validManifest);
     mutate(candidate);
     assert.throws(
       () => parseToolchainManifest(candidate),
-      /OCI|digest|linux amd64|attestation|signature|identity/i,
+      /OCI|digest|linux amd64|attestation|signature|identity|vulnerability|license|policy/i,
     );
   }
 });
@@ -514,7 +541,11 @@ void test('requires exact OCI digest equality', () => {
   );
 });
 
-void test('parses exact cosign and syft versions', () => {
+void test('parses exact cosign, Grype and Syft versions', () => {
+  assert.equal(
+    parseExactVersion('grype', 'Application: grype\nVersion:    0.116.1'),
+    '0.116.1',
+  );
   assert.equal(
     parseExactVersion(
       'cosign',
@@ -1035,6 +1066,36 @@ void test('keeps validator outcomes independent and fail-closed', () => {
   );
 });
 
+void test('allows only the immutable artifact attestation to remain for the post-gate job', () => {
+  const immutable = {
+    id: 'production-prerequisite/media-immutable-evidence-attestation',
+    status: 'BLOCKED_EXTERNAL' as const,
+    durationMs: 1,
+  };
+  assert.equal(
+    isPostGateAttestationReady([
+      { id: 'internal', status: 'PASS', durationMs: 1 },
+      immutable,
+    ]),
+    true,
+  );
+  assert.equal(isPostGateAttestationReady([immutable, immutable]), false);
+  assert.equal(
+    isPostGateAttestationReady([
+      immutable,
+      { id: 'external', status: 'BLOCKED_EXTERNAL', durationMs: 1 },
+    ]),
+    false,
+  );
+  assert.equal(
+    isPostGateAttestationReady([
+      immutable,
+      { id: 'internal', status: 'FAIL_INTERNAL', durationMs: 1 },
+    ]),
+    false,
+  );
+});
+
 void test('sanitizes URL credentials, query secrets and authorization values', () => {
   const unsafe =
     'https://alice:password@example.test/path?token=token-value&access_token=access-value&refresh_token=refresh-value&password=password-value Authorization=Bearer-value secret=secret-value MEDIA_SIGNING_SECRET="media-value" AWS_SECRET_ACCESS_KEY=aws-value JWT_SECRETS=jwt-value client_secret=client-value api_key=api-value private_key=private-value session=session-value cookie=cookie-value {"authorization":"json-value"}';
@@ -1390,6 +1451,78 @@ void test('requires one exact credential-free HTTPS runbook URL on every alert',
   }
 });
 
+void test('validates production runbook response content, not only a 2xx status', async () => {
+  const validBody = [
+    'HSK_MEDIA_INGESTION_RUNBOOK_V1',
+    'service: media-ingestion',
+    'runbook-id: media-ingestion-production',
+    'owner: platform-sre',
+    'revision: 2026-08-22',
+    'HSK_MEDIA_RECOVERY_ROLLBACK_V1',
+  ].join('\n');
+
+  await withHttpFixture(
+    { status: 200, contentType: 'text/plain; charset=utf-8', body: validBody },
+    async (url) => {
+      const result = await assertProductionRunbookResponse(
+        await fetch(url, { redirect: 'manual' }),
+      );
+      assert.equal(result.runbookId, 'media-ingestion-production');
+      assert.equal(result.owner, 'platform-sre');
+      assert.equal(result.revision, '2026-08-22');
+      assert.match(result.bodySha256, /^[a-f0-9]{64}$/u);
+    },
+  );
+
+  for (const fixture of [
+    { status: 204, contentType: 'text/plain', body: '' },
+    { status: 200, contentType: 'text/plain', body: '' },
+    { status: 200, contentType: 'application/json', body: validBody },
+    { status: 200, contentType: 'text/plain', body: 'wrong page' },
+    {
+      status: 200,
+      contentType: 'text/plain',
+      body: validBody.replace('owner: platform-sre', 'owner: unknown'),
+    },
+    {
+      status: 200,
+      contentType: 'text/plain',
+      body: validBody.replace('HSK_MEDIA_RECOVERY_ROLLBACK_V1', ''),
+    },
+    {
+      status: 200,
+      contentType: 'text/plain',
+      body: `${validBody}\n${'x'.repeat(256 * 1024)}`,
+    },
+  ]) {
+    await withHttpFixture(fixture, async (url) => {
+      await assert.rejects(
+        assertProductionRunbookResponse(
+          await fetch(url, { redirect: 'manual' }),
+        ),
+        /runbook|HTTP 200|content type|body|owner|rollback|large/i,
+      );
+    });
+  }
+
+  await withHttpFixture(
+    {
+      status: 302,
+      contentType: 'text/plain',
+      body: validBody,
+      headers: { location: '/other' },
+    },
+    async (url) => {
+      await assert.rejects(
+        assertProductionRunbookResponse(
+          await fetch(url, { redirect: 'manual' }),
+        ),
+        /HTTP 200|redirect/i,
+      );
+    },
+  );
+});
+
 void test('requires exact runbook URLs in Prometheus runtime alert rules', () => {
   const expected = 'https://runbooks.example.com/media-ingestion';
   const response = {
@@ -1475,6 +1608,95 @@ void test('requires Grafana status 200 and a non-time metric datapoint', () => {
   );
 });
 
+void test('waits boundedly for delayed Grafana datapoints and preserves fail-closed errors', async () => {
+  const metricFrame = {
+    schema: { fields: [{ name: 'Value', type: 'number' }] },
+    data: { values: [[1]] },
+  };
+  let elapsedMs = 0;
+  let attempts = 0;
+  assert.equal(
+    await waitForGrafanaMetricDatapoint(
+      () => {
+        attempts += 1;
+        return attempts < 3
+          ? { status: 200, frames: [] }
+          : { status: 200, frames: [metricFrame] };
+      },
+      'PROCESSING_P95',
+      {
+        timeoutMs: 250,
+        pollIntervalMs: 100,
+        now: () => elapsedMs,
+        sleep: (delayMs) => {
+          elapsedMs += delayMs;
+          return Promise.resolve();
+        },
+      },
+    ),
+    3,
+  );
+  assert.equal(elapsedMs, 200);
+
+  elapsedMs = 0;
+  attempts = 0;
+  await assert.rejects(
+    waitForGrafanaMetricDatapoint(
+      () => {
+        attempts += 1;
+        return { status: 200, frames: [] };
+      },
+      'PROCESSING_P95',
+      {
+        timeoutMs: 250,
+        pollIntervalMs: 100,
+        now: () => elapsedMs,
+        sleep: (delayMs) => {
+          elapsedMs += delayMs;
+          return Promise.resolve();
+        },
+      },
+    ),
+    /PROCESSING_P95 has no metric datapoint.*250ms/iu,
+  );
+  assert.equal(elapsedMs, 250);
+  assert.equal(attempts, 3);
+
+  elapsedMs = 0;
+  attempts = 0;
+  await assert.rejects(
+    waitForGrafanaMetricDatapoint(
+      () => {
+        attempts += 1;
+        return { status: 503, frames: [] };
+      },
+      'PROCESSING_P95',
+      {
+        timeoutMs: 250,
+        pollIntervalMs: 100,
+        now: () => elapsedMs,
+        sleep: () => Promise.resolve(),
+      },
+    ),
+    /did not return status 200/iu,
+  );
+  assert.equal(attempts, 1);
+  assert.equal(elapsedMs, 0);
+
+  const runner = readFileSync(
+    resolve(__dirname, 'run-media-operations-validation.ts'),
+    'utf8',
+  );
+  assert.match(
+    runner,
+    /for \(const \{ refId, expr \} of targets\) \{[\s\S]*?await waitForGrafanaMetricDatapoint\(/u,
+  );
+  assert.match(
+    runner,
+    /assertGrafanaNoDataResult\(noDataResult, noDataRefId\);/u,
+  );
+});
+
 void test('requires a unique stable Grafana target contract from imported readback', () => {
   const dashboard = {
     panels: [
@@ -1556,9 +1778,11 @@ void test('binds evidence to stable in-scope dirty and untracked bytes', () => {
   try {
     mkdirSync(join(root, 'backend'), { recursive: true });
     mkdirSync(join(root, 'frontend'), { recursive: true });
+    mkdirSync(join(root, '.github/workflows'), { recursive: true });
     mkdirSync(join(root, 'docs/reports'), { recursive: true });
     writeFileSync(join(root, 'backend/owned.ts'), 'one');
     writeFileSync(join(root, 'frontend/unrelated.ts'), 'ignored');
+    writeFileSync(join(root, '.github/workflows/media-release.yml'), 'one');
     writeFileSync(join(root, 'docs/roadmap.md'), 'roadmap one');
     writeFileSync(join(root, 'docs/roadmap_prod.jpg'), 'image one');
     writeFileSync(join(root, 'docs/roadmap_prod_v2.png'), 'image two');
@@ -1567,11 +1791,16 @@ void test('binds evidence to stable in-scope dirty and untracked bytes', () => {
       'report one',
     );
     const status =
-      ' M backend/owned.ts\0?? frontend/unrelated.ts\0 M docs/roadmap.md\0?? docs/roadmap_prod.jpg\0?? docs/roadmap_prod_v2.png\0 M docs/reports/10-delivery-production-operations-report.md\0';
+      ' M backend/owned.ts\0?? frontend/unrelated.ts\0 M .github/workflows/media-release.yml\0 M docs/roadmap.md\0?? docs/roadmap_prod.jpg\0?? docs/roadmap_prod_v2.png\0 M docs/reports/10-delivery-production-operations-report.md\0';
     const first = computeReleaseContentDigest(root, status);
-    assert.equal(first.pathCount, 1);
-    assert.equal(first.gitDirty, true);
-    assert.equal(first.gitIndexDirty, false);
+    assert.equal(first.pathCount, 2);
+    assert.equal(first.releaseContentDirty, true);
+    assert.equal(first.releaseContentIndexDirty, false);
+    assert.deepEqual(computeGlobalGitState(status), {
+      globalWorktreeDirty: true,
+      globalIndexDirty: false,
+      globalDirtyPathCount: 7,
+    });
     assert.doesNotThrow(() => assertReleaseContentStable(first, first));
     writeFileSync(join(root, 'backend/owned.ts'), 'two');
     const second = computeReleaseContentDigest(root, status);
@@ -1601,6 +1830,503 @@ void test('binds evidence to stable in-scope dirty and untracked bytes', () => {
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+void test('verifies detached evidence bytes before parsing trusted JSON', async () => {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const identity =
+    'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v1.2.3';
+  const issuer = 'https://token.actions.githubusercontent.com';
+  const now = Date.parse('2026-08-22T08:00:00.000Z');
+  const bytes = Buffer.from(
+    JSON.stringify({ schemaVersion: 1, restoreSucceeded: true }),
+  );
+  const signature = signBytes(null, bytes, privateKey);
+  const verify = (payload: Buffer) => {
+    if (!verifySignature(null, payload, publicKey, signature)) {
+      return Promise.reject(new Error('detached signature is invalid'));
+    }
+    return Promise.resolve({
+      payloadSha256: sha256(payload),
+      bundleSha256: 'f'.repeat(64),
+      issuer,
+      identity,
+      verifiedAt: '2026-08-22T07:55:00.000Z',
+    });
+  };
+
+  const trusted = await verifyThenParseJsonEvidence(bytes, verify, {
+    issuer,
+    identity,
+    nowMs: now,
+    maxAgeMs: 60 * 60 * 1000,
+  });
+  assert.deepEqual(trusted.value, {
+    schemaVersion: 1,
+    restoreSucceeded: true,
+  });
+  assert.equal(trusted.trust.payloadSha256, sha256(bytes));
+
+  await assert.rejects(
+    verifyThenParseJsonEvidence(
+      Buffer.from('{"schemaVersion":1,"restoreSucceeded":false}'),
+      verify,
+      { issuer, identity, nowMs: now, maxAgeMs: 60 * 60 * 1000 },
+    ),
+    /signature/i,
+  );
+  await assert.rejects(
+    verifyThenParseJsonEvidence(
+      bytes,
+      () => Promise.reject(new Error('unsigned evidence')),
+      { issuer, identity, nowMs: now, maxAgeMs: 60 * 60 * 1000 },
+    ),
+    /unsigned/i,
+  );
+  await assert.rejects(
+    verifyThenParseJsonEvidence(
+      bytes,
+      async (payload) => ({
+        ...(await verify(payload)),
+        identity: `${identity}-attacker`,
+      }),
+      { issuer, identity, nowMs: now, maxAgeMs: 60 * 60 * 1000 },
+    ),
+    /identity/i,
+  );
+  await assert.rejects(
+    verifyThenParseJsonEvidence(
+      bytes,
+      async (payload) => ({
+        ...(await verify(payload)),
+        issuer: 'https://issuer.example.invalid',
+      }),
+      { issuer, identity, nowMs: now, maxAgeMs: 60 * 60 * 1000 },
+    ),
+    /issuer/i,
+  );
+  await assert.rejects(
+    verifyThenParseJsonEvidence(
+      bytes,
+      async (payload) => ({
+        ...(await verify(payload)),
+        verifiedAt: '2026-08-20T00:00:00.000Z',
+      }),
+      { issuer, identity, nowMs: now, maxAgeMs: 60 * 60 * 1000 },
+    ),
+    /stale/i,
+  );
+});
+
+void test('pins a protected self-hosted release-evidence verifier workflow', () => {
+  const workflow = readFileSync(
+    resolve(
+      __dirname,
+      '../../..',
+      '.github/workflows/media-release-evidence.yml',
+    ),
+    'utf8',
+  );
+  const uses = Array.from(
+    workflow.matchAll(/^\s*uses:\s*([^\s#]+)/gmu),
+    (match) => match[1],
+  );
+  const validateStart = workflow.indexOf('\n  validate:');
+  const attestStart = workflow.indexOf('\n  attest:');
+  assert.ok(validateStart >= 0 && attestStart > validateStart);
+  const validateWorkflow = workflow.slice(validateStart, attestStart);
+
+  assert.ok(uses.length >= 4);
+  assert.ok(
+    uses.every((entry) => /@[a-f0-9]{40}$/u.test(entry)),
+    'Every GitHub Action must use an immutable full commit SHA.',
+  );
+  assert.match(workflow, /tags:\s*\n\s*- v3\.0\.0/u);
+  assert.match(
+    validateWorkflow,
+    /runs-on:\s*\n\s*- self-hosted\s*\n\s*- linux\s*\n\s*- x64\s*\n\s*- media-release/u,
+  );
+  assert.match(validateWorkflow, /environment:\s*media-production-release/u);
+  assert.doesNotMatch(validateWorkflow, /id-token:\s*write/u);
+  assert.doesNotMatch(validateWorkflow, /runs-on:\s*ubuntu-/u);
+  for (const binding of [
+    'GITHUB_REF_TYPE',
+    'GITHUB_REF',
+    'GITHUB_SHA',
+    'git rev-parse HEAD',
+    'git rev-parse "${GITHUB_REF}^{commit}"',
+  ]) {
+    assert.ok(
+      validateWorkflow.includes(binding),
+      `Release workflow is missing tag/HEAD binding: ${binding}.`,
+    );
+  }
+
+  const validationCommand = validateWorkflow.indexOf(
+    'npm run test:ops:media:linux-amd64',
+  );
+  assert.ok(validationCommand > 0);
+  assert.doesNotMatch(
+    validateWorkflow,
+    /\bcosign\s+sign(?:-blob)?\b|Keyless-sign supplied release payloads/u,
+    'The verifier workflow must never mint trust for caller-supplied evidence.',
+  );
+  assert.doesNotMatch(validateWorkflow, /continue-on-error|\|\|\s*true/u);
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE_PATH/u,
+  );
+  assert.match(validateWorkflow, /secrets\.MEDIA_OPS_DB_EVIDENCE_JSON_PATH/u);
+  assert.match(validateWorkflow, /secrets\.MEDIA_OPS_DB_EVIDENCE_BUNDLE_PATH/u);
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE_PATH/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /secrets\.MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT_PATH/u,
+  );
+  assert.match(validateWorkflow, /vars\.MEDIA_OPS_RELEASE_EVIDENCE_BASE_PATH/u);
+  assert.match(
+    validateWorkflow,
+    /Approved evidence base is required when any evidence path is supplied/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /must be an absolute regular non-symlink file/u,
+  );
+  assert.match(validateWorkflow, /must use its exact canonical path/u);
+  assert.match(validateWorkflow, /outside the approved evidence base/u);
+  assert.doesNotMatch(
+    validateWorkflow,
+    /MEDIA_OPS_PRODUCTION_PREREQUISITE_ARCHIVE|immutable pre-run prerequisite archive/u,
+    'An arbitrary pre-run file cannot satisfy protected artifact attestation.',
+  );
+  for (const binding of [
+    'MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE=${validated_path}',
+    'MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE=${validated_path}',
+    'MEDIA_OPS_DB_EVIDENCE_BUNDLE=${validated_path}',
+    'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE=${validated_path}',
+    'MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE=${validated_path}',
+  ]) {
+    const bindingIndex = validateWorkflow.indexOf(binding);
+    assert.ok(
+      bindingIndex > 0 && bindingIndex < validationCommand,
+      `Pre-signed evidence bundle is not wired before verification: ${binding}.`,
+    );
+  }
+  assert.match(
+    validateWorkflow,
+    /if \[\[ -n "\$\{OCI_EVIDENCE_JSON_PATH\}" \]\]/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /if \[\[ -n "\$\{CAPACITY_EVIDENCE_JSON_PATH\}" \]\]/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /if \[\[ -n "\$\{LIVE_REHEARSAL_EVIDENCE_JSON_PATH\}" \]\]/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /Live rehearsal evidence manifest is outside its evidence root/u,
+  );
+  assert.doesNotMatch(
+    validateWorkflow,
+    /signing_required|SIGNING_OUTCOME|TOOL_OUTCOME/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /name:\s*Initialize minimal diagnostic evidence/u,
+  );
+  assert.ok(
+    validateWorkflow.indexOf('Initialize minimal diagnostic evidence') <
+      validateWorkflow.indexOf('Set up Node.js'),
+  );
+  assert.match(
+    validateWorkflow,
+    /name:\s*Run Linux amd64 release validator\s*\n\s*id:\s*release-gate\s*\n\s*if:\s*always\(\)/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /name:\s*Package exact evidence bytes\s*\n\s*if:\s*always\(\)/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /name:\s*Retain evidence whether pass or fail\s*\n\s*if:\s*always\(\)/u,
+  );
+  assert.match(validateWorkflow, /tar\s+[\s\S]*--sort=name/u);
+  assert.match(validateWorkflow, /--mtime='UTC 1970-01-01'/u);
+  assert.match(validateWorkflow, /--owner=0\s+--group=0\s+--numeric-owner/u);
+  assert.match(workflow, /retention-days:\s*90/u);
+  assert.match(
+    workflow,
+    /if:\s*needs\.validate\.outputs\.gate-exit-code == '0'/u,
+  );
+  assert.match(
+    validateWorkflow,
+    /runner_exit_code=1[\s\S]*npm run test:ops:media:linux-amd64[\s\S]*runner_exit_code=\$\?[\s\S]*value\.postGateAttestationReady === true[\s\S]*"\$\{runner_exit_code\}" = "2" && "\$\{attestation_ready\}" = "true"[\s\S]*gate_exit_code=0/u,
+  );
+  assert.match(workflow, /runner-exit-code:\s*\$\{\{/u);
+  assert.match(workflow, /attestation-ready:\s*\$\{\{/u);
+  assert.match(
+    workflow,
+    /if \[\[ "\$\{RUNNER_EXIT_CODE\}" = "2" \]\]; then[\s\S]*test "\$\{ATTESTATION_READY\}" = "true"[\s\S]*else[\s\S]*test "\$\{RUNNER_EXIT_CODE\}" = "0"/u,
+  );
+  assert.match(workflow, /id-token:\s*write/u);
+  assert.match(workflow, /attestations:\s*write/u);
+  assert.doesNotMatch(workflow, /pull_request|permissions:\s*write-all/u);
+});
+
+void test('runs release quality prerequisites with a hermetic parse-only database profile', () => {
+  const runner = readFileSync(
+    resolve(__dirname, 'run-media-operations-validation.ts'),
+    'utf8',
+  );
+  const validationStart = runner.indexOf(
+    'async function validateReleaseQualityPrerequisites',
+  );
+  const databaseHookStart = runner.indexOf(
+    'async function validateDatabaseEvidenceHook',
+  );
+  assert.ok(
+    validationStart >= 0 && databaseHookStart > validationStart,
+    'Release quality prerequisite boundary is missing.',
+  );
+  const qualitySection = runner.slice(validationStart, databaseHookStart);
+  assert.match(qualitySection, /env:\s*qualityEnvironment/u);
+  assert.match(
+    qualitySection,
+    /postgresql:\/\/release-validator@127\.0\.0\.1:1\/hsk_media_release_validation_test\?schema=public/u,
+  );
+  assert.match(qualitySection, /NPM_CONFIG_USERCONFIG:\s*'\/dev\/null'/u);
+  assert.doesNotMatch(qualitySection, /NPM_CONFIG_GLOBALCONFIG/u);
+  assert.doesNotMatch(qualitySection, /\.\.\.process\.env/u);
+  for (const secretKey of [
+    'AUTH_PASSWORD_PEPPER',
+    'JWT_SECRETS',
+    'MEDIA_METRICS_BEARER_TOKEN',
+    'MEDIA_SIGNING_SECRET',
+  ]) {
+    assert.equal(qualitySection.includes(secretKey), false);
+  }
+  for (const evidenceKey of ['DATABASE_URL', 'NPM_CONFIG_USERCONFIG']) {
+    assert.equal(
+      MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST.has(evidenceKey),
+      true,
+    );
+  }
+});
+
+void test('pins every detached bundle to exact GitHub workflow certificate claims', () => {
+  const runner = readFileSync(
+    resolve(__dirname, 'run-media-operations-validation.ts'),
+    'utf8',
+  );
+  assert.equal(
+    Array.from(
+      runner.matchAll(/\.\.\.releaseEvidenceCertificateClaims\(binding\)/gu),
+    ).length,
+    5,
+  );
+  for (const claim of [
+    '--certificate-github-workflow-name',
+    '--certificate-github-workflow-ref',
+    '--certificate-github-workflow-repository',
+    '--certificate-github-workflow-sha',
+    '--certificate-github-workflow-trigger',
+  ]) {
+    assert.ok(runner.includes(claim), `Missing Cosign claim pin: ${claim}.`);
+  }
+  assert.match(
+    runner,
+    /RELEASE_EVIDENCE_WORKFLOW_REF = 'refs\/tags\/v3\.0\.0'/u,
+  );
+  assert.match(
+    runner,
+    /RELEASE_EVIDENCE_WORKFLOW_REPOSITORY = 'khonghao0109\/HSK-3\.0-APP'/u,
+  );
+  assert.match(
+    runner,
+    /--certificate-github-workflow-sha',[\s\S]*binding\.commit/u,
+  );
+});
+
+void test('retains trust-verified payload and bundle bytes in the attested tree', () => {
+  const runner = readFileSync(
+    resolve(__dirname, 'run-media-operations-validation.ts'),
+    'utf8',
+  );
+  for (const path of [
+    'production-prerequisites/inventory.json',
+    'production-prerequisites/inventory.sigstore.json',
+    'oci/release-acceptance.json',
+    'oci/release-acceptance.sigstore.json',
+    'database/release-evidence.json',
+    'database/release-evidence.sigstore.json',
+    'capacity-backup/evidence.json',
+    'capacity-backup/evidence.sigstore.json',
+  ]) {
+    assert.ok(
+      runner.includes(`'${path}'`),
+      `Trusted input is not retained: ${path}.`,
+    );
+  }
+  assert.match(runner, /resetRetainedTrustedEvidence\(\);/u);
+  assert.match(runner, /writeStableExclusiveFileWithinRoot\(/u);
+});
+
+void test('reads bounded evidence from a stable descriptor and rejects leaf or ancestor swaps', () => {
+  const root = mkdtempSync(join(tmpdir(), 'hsk-media-stable-read-'));
+  const outside = mkdtempSync(join(tmpdir(), 'hsk-media-stable-read-outside-'));
+  try {
+    const direct = join(root, 'direct.json');
+    const outsideFile = join(outside, 'outside.json');
+    writeFileSync(direct, '{"trusted":true}\n');
+    writeFileSync(outsideFile, '{"outside":true}\n');
+    assert.equal(
+      readStableBoundedFileWithinRoot(
+        root,
+        'direct.json',
+        1024,
+        'stable read fixture',
+      ).toString('utf8'),
+      '{"trusted":true}\n',
+    );
+    assert.throws(
+      () =>
+        readStableBoundedFileWithinRoot(
+          root,
+          'direct.json',
+          1024,
+          'stable read leaf race',
+          {
+            beforeDescriptorOpen: () => {
+              rmSync(direct);
+              symlinkSync(outsideFile, direct, 'file');
+            },
+          },
+        ),
+      /symbolic|ELOOP/iu,
+    );
+
+    rmSync(direct, { force: true });
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeFileSync(join(nested, 'report.json'), '{"trusted":true}\n');
+    writeFileSync(join(outside, 'report.json'), '{"outside":true}\n');
+    assert.throws(
+      () =>
+        readStableBoundedFileWithinRoot(
+          root,
+          'nested/report.json',
+          1024,
+          'stable read ancestor race',
+          {
+            beforeDescriptorOpen: () => {
+              rmSync(nested, { recursive: true, force: true });
+              symlinkSync(outside, nested, 'dir');
+            },
+          },
+        ),
+      /outside|escaped|changed/iu,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+void test('publishes retained evidence through a stable exclusive descriptor', () => {
+  const root = mkdtempSync(join(tmpdir(), 'hsk-media-stable-write-'));
+  const outside = mkdtempSync(
+    join(tmpdir(), 'hsk-media-stable-write-outside-'),
+  );
+  try {
+    writeStableExclusiveFileWithinRoot(
+      root,
+      'normal/evidence.json',
+      Buffer.from('{"trusted":true}\n'),
+      'stable write fixture',
+    );
+    assert.equal(
+      readFileSync(join(root, 'normal/evidence.json'), 'utf8'),
+      '{"trusted":true}\n',
+    );
+
+    const racedParent = join(root, 'raced-parent');
+    mkdirSync(racedParent);
+    assert.throws(
+      () =>
+        writeStableExclusiveFileWithinRoot(
+          root,
+          'raced-parent/evidence.json',
+          Buffer.from('must-not-escape'),
+          'stable write ancestor race',
+          {
+            beforeDescriptorOpen: () => {
+              rmSync(racedParent, { recursive: true, force: true });
+              symlinkSync(outside, racedParent, 'dir');
+            },
+          },
+        ),
+      /symbolic|directory|ELOOP|ENOTDIR/iu,
+    );
+    assert.equal(existsSync(join(outside, 'evidence.json')), false);
+
+    rmSync(racedParent, { force: true });
+    const outsideFile = join(outside, 'outside.json');
+    const racedLeaf = join(root, 'raced-leaf.json');
+    writeFileSync(outsideFile, 'outside-must-remain');
+    assert.throws(
+      () =>
+        writeStableExclusiveFileWithinRoot(
+          root,
+          'raced-leaf.json',
+          Buffer.from('must-not-escape'),
+          'stable write leaf race',
+          {
+            afterDescriptorOpen: () => {
+              rmSync(racedLeaf, { force: true });
+              symlinkSync(outsideFile, racedLeaf, 'file');
+            },
+          },
+        ),
+      /changed type|outside|escaped/iu,
+    );
+    assert.equal(readFileSync(outsideFile, 'utf8'), 'outside-must-remain');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
   }
 });
 
@@ -1660,6 +2386,7 @@ void test('computes a deterministic migration catalog from source bytes', () => 
 void test('rejects fabricated DB booleans and accepts only release-bound command evidence', () => {
   const now = Date.parse('2026-08-13T12:00:00.000Z');
   const evidenceRoot = mkdtempSync(join(tmpdir(), 'hsk-media-db-evidence-'));
+  const retained = new Map<string, Buffer>();
   const expected = {
     commit: 'a'.repeat(40),
     treeSha: 'b'.repeat(40),
@@ -1672,6 +2399,9 @@ void test('rejects fabricated DB booleans and accepts only release-bound command
       { name: 'migration-19', checksum: 'e'.repeat(64) },
     ],
     nowMs: now,
+    retainValidatedFile: (relativePath: string, bytes: Buffer) => {
+      retained.set(relativePath, bytes);
+    },
   };
   const checks = Object.fromEntries(
     [
@@ -1803,6 +2533,12 @@ void test('rejects fabricated DB booleans and accepts only release-bound command
     assert.doesNotThrow(() =>
       assertDatabaseReleaseEvidence(evidence, expected),
     );
+    assert.equal(retained.size, commands.length + 2);
+    assert.equal(sha256(retained.get('evidence.junit.xml')!), sha256(junit));
+    assert.equal(
+      sha256(retained.get('log-manifest.json')!),
+      sha256(logManifest),
+    );
     assert.throws(
       () =>
         assertDatabaseReleaseEvidence(
@@ -1854,7 +2590,7 @@ void test('rejects fabricated DB booleans and accepts only release-bound command
   }
 });
 
-void test('requires release-bound 32-day capacity and restorable backup evidence', () => {
+void test('requires release-bound 32-day capacity and restorable backup evidence', async () => {
   const now = Date.parse('2026-08-13T12:00:00.000Z');
   const expected = {
     commit: 'a'.repeat(40),
@@ -1862,13 +2598,31 @@ void test('requires release-bound 32-day capacity and restorable backup evidence
     releaseContentDigest: 'c'.repeat(64),
     nowMs: now,
   };
+  const provenance = {
+    commandsSha256: '4'.repeat(64),
+    providerEvidenceSha256: '5'.repeat(64),
+    pvcUidSha256: '6'.repeat(64),
+    snapshotIdSha256: '7'.repeat(64),
+    restoreTargetFingerprintSha256: '8'.repeat(64),
+  };
+  const clusterFingerprintSha256 = sha256(
+    Buffer.from(
+      [
+        provenance.providerEvidenceSha256,
+        provenance.pvcUidSha256,
+        provenance.snapshotIdSha256,
+        provenance.restoreTargetFingerprintSha256,
+      ].join('\0'),
+    ),
+  );
   const evidence = {
     schemaVersion: 1,
     runId: '12345678-abcd-4567-8123-123456789abc',
     measuredAt: '2026-08-13T11:30:00.000Z',
     git: { commit: expected.commit, treeSha: expected.treeSha },
     releaseContentDigest: expected.releaseContentDigest,
-    clusterFingerprintSha256: 'd'.repeat(64),
+    clusterFingerprintSha256,
+    provenance,
     prometheus: {
       pvcBound: true,
       capacityGiB: 50,
@@ -1890,6 +2644,7 @@ void test('requires release-bound 32-day capacity and restorable backup evidence
   assert.deepEqual(assertCapacityBackupEvidence(evidence, expected), {
     runId: evidence.runId,
     clusterFingerprintSha256: evidence.clusterFingerprintSha256,
+    provenanceSha256: sha256(Buffer.from(Object.values(provenance).join('\0'))),
     requiredGiB: 20,
     capacityGiB: 50,
     backupRetentionDays: 32,
@@ -1910,6 +2665,24 @@ void test('requires release-bound 32-day capacity and restorable backup evidence
     (candidate: typeof evidence) => {
       candidate.git.treeSha = 'e'.repeat(40);
     },
+    (candidate: typeof evidence) => {
+      candidate.git.commit = 'e'.repeat(40);
+    },
+    (candidate: typeof evidence) => {
+      candidate.releaseContentDigest = 'e'.repeat(64);
+    },
+    (candidate: typeof evidence) => {
+      candidate.measuredAt = '2026-08-20T00:00:00.000Z';
+    },
+    (candidate: typeof evidence) => {
+      candidate.backup.restoreSucceeded = false;
+    },
+    (candidate: typeof evidence) => {
+      candidate.clusterFingerprintSha256 = 'd'.repeat(64);
+    },
+    (candidate: typeof evidence) => {
+      candidate.provenance.providerEvidenceSha256 = 'e'.repeat(64);
+    },
   ]) {
     const candidate = structuredClone(evidence);
     mutate(candidate);
@@ -1918,7 +2691,68 @@ void test('requires release-bound 32-day capacity and restorable backup evidence
       /capacity|backup|release-bound/i,
     );
   }
+
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const payload = Buffer.from(JSON.stringify(evidence));
+  const signature = signBytes(null, payload, privateKey);
+  const issuer = 'https://token.actions.githubusercontent.com';
+  const identity =
+    'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0';
+  const trusted = await verifyThenParseJsonEvidence(
+    payload,
+    (candidate) => {
+      if (!verifySignature(null, candidate, publicKey, signature)) {
+        return Promise.reject(
+          new Error('capacity evidence signature is invalid'),
+        );
+      }
+      return Promise.resolve({
+        payloadSha256: sha256(candidate),
+        bundleSha256: 'f'.repeat(64),
+        issuer,
+        identity,
+        verifiedAt: '2026-08-13T11:59:00.000Z',
+      });
+    },
+    { issuer, identity, nowMs: now, maxAgeMs: 5 * 60_000 },
+  );
+  assert.equal(
+    assertCapacityBackupEvidence(trusted.value, expected)
+      .clusterFingerprintSha256,
+    clusterFingerprintSha256,
+  );
 });
+
+async function withHttpFixture(
+  fixture: {
+    status: number;
+    contentType: string;
+    body: string;
+    headers?: Record<string, string>;
+  },
+  check: (url: string) => Promise<void>,
+): Promise<void> {
+  const server = createServer((_request, response) => {
+    response.writeHead(fixture.status, {
+      'content-type': fixture.contentType,
+      ...fixture.headers,
+    });
+    response.end(fixture.body);
+  });
+  await new Promise<void>((resolveListen, rejectListen) => {
+    server.once('error', rejectListen);
+    server.listen(0, '127.0.0.1', () => resolveListen());
+  });
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    await check(`http://127.0.0.1:${String(address.port)}/runbook`);
+  } finally {
+    await new Promise<void>((resolveClose, rejectClose) => {
+      server.close((error) => (error ? rejectClose(error) : resolveClose()));
+    });
+  }
+}
 
 function tarGzip(
   name: string,

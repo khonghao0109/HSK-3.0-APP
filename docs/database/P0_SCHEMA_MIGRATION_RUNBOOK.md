@@ -193,8 +193,8 @@ Các con số production có thể khác; tiêu chí là bảo toàn row và đ�
 Trong maintenance window, từ `backend`:
 
 ```bash
-npx prisma migrate deploy
-npx prisma migrate status
+npm run migrate:deploy:production
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
 ```
 
 `migrate deploy` phải báo cả mười migration P0/runtime reliability thành công. Không chạy lại bằng tay từng đoạn SQL sau khi Prisma đã ghi migration thành công.
@@ -365,8 +365,8 @@ createdb hsk_exercise_authoring_disposable_test
 export NODE_ENV=test
 export TEST_DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/hsk_exercise_authoring_disposable_test"
 export DATABASE_URL="${TEST_DATABASE_URL}?schema=public"
-npx prisma migrate deploy
-npx prisma migrate status
+npm run migrate:deploy:production
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
 npm run test:db:exercise-integrity
 npm run test:db:exercise-concurrency
 ```
@@ -506,8 +506,8 @@ Không migration lịch sử nào được sửa và không dùng `db push`.
 Fresh release gate phải dùng database `_test` mới, deploy đủ 16 migration rồi chạy:
 
 ```bash
-npx prisma migrate deploy
-npx prisma migrate status
+npm run migrate:deploy:production
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
 npm run test:db:media-integrity
 npm run test:e2e -- --runInBand test/media-ingestion.e2e-spec.ts
 npx prisma migrate diff --from-migrations prisma/migrations \
@@ -616,12 +616,19 @@ npm run test:db:media-migration:release
 The runner creates exact random `_test` targets from `template0`, applies bounded
 `lock_timeout`, `statement_timeout` and idle-transaction timeout, and removes only the
 database names it created. Required checks are fresh 00→19, legacy 17→18→19 with exact
-backfill, malformed/future P0001 atomic rollback, integration, writer lock observation,
-both audit/lifecycle race orders, current migration-19 lock abort and forward recovery,
-all-source checksum audit, migrate status, both drift directions, a representative
-1,000-audit indexed lookup and full E2E. A failed or interrupted run invalidates its
-prior summaries before executing; JSON/JUnit/log manifest are accepted only after the
-producer consumes its own exact artifact bytes.
+backfill, malformed/future P0001 atomic rollback, a structurally valid audit with an
+exact authoritative timestamp mismatch, a real unfinished Prisma failed row with its
+actual transaction-aborted diagnostic, a direct execution of the exact migration SQL
+proving the timestamp branch returns `P0001`, and a `P3009` retry block, explicit
+forward reconciliation plus the compiled fixed-argument
+`npm run migrate:resolve:media-cleanup-audit:production` command, integration, writer
+lock observation, both audit/lifecycle race orders,
+current migration-19 lock abort and forward recovery, all-source checksum audit,
+migrate status, both drift directions, a representative 1,000-audit indexed lookup and
+full E2E. Current-schema deploys use `npm run migrate:deploy:production`; only the
+task-owned historical 17/18 roots use the internal bounded Prisma invocation. A failed
+or interrupted run invalidates its prior summaries before executing; JSON/JUnit/log
+manifest are accepted only after the producer consumes its own exact artifact bytes.
 
 The latest local aggregate result passed all 12 checks, deployed 19/19 and ran full
 E2E 11/11 suites (163/163 tests). Local artifacts under

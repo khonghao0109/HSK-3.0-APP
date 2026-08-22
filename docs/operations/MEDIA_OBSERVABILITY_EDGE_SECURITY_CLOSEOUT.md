@@ -176,19 +176,40 @@ artifact test upgrades either result to PASS.
 
 Internal deterministic tests can make the repository `CODE_READY`. Only an actual
 Linux x86_64 execution of `npm run test:ops:media:linux-amd64` can make the
-operations harness release-authoritative; Darwin arm64 is reference-only. OCI
-signature/SBOM identity, live runbook, capacity and backup gaps remain
-`BLOCKED_EXTERNAL`, and release-profile external blocks are non-green failures. Live
-S3, ClamAV, deployed proxy, production notification delivery, running backend
-replicas and production
-secret-manager/workload-identity verification are separately `BLOCKED_EXTERNAL`.
-No production endpoint or credential was supplied or used by this closeout.
+operations harness release-authoritative; Darwin arm64 is reference-only. The
+machine source of truth is
+`ops/observability/media-production-prerequisites.json`; its validator emits one
+result per stable prerequisite ID and never infers a live fact from documentation.
+OCI HSK release acceptance, live runbook, capacity/backup/restore, live S3, live
+ClamAV, deployed proxy/mesh policy, production alert firing/routing/resolution,
+running replica discovery, secret-manager/workload identity, database
+migration/recovery evidence and immutable retained evidence attestation are all
+separate required gates. Missing owner-supplied evidence remains
+`BLOCKED_EXTERNAL`; release-profile external blocks are non-green failures. No
+production endpoint or credential was supplied or used by this closeout.
+
+The immutable evidence attestation is created only after the current tar is frozen;
+it is not a pre-existing input to itself. The runner sets
+`postGateAttestationReady` only when that exact prerequisite is the sole remaining
+external block. The protected workflow converts no other exit-2 combination to a
+successful validation stage, then requires the archive attestation before its final
+enforce job can pass.
 
 ## Evidence contract
 
 Do not copy old suite counts into a release decision. Run every gate on current HEAD
 and retain `backend/test-results/media-operations/media-operations-validation.json`
 plus its JUnit companion. Each validator records status, duration, command IDs,
-per-command exit/duration/log path and verified artifact digests. Live provider,
-deployed mesh/policy, PVC binding, real runbook and production notification-provider
-evidence remain separate external gates.
+per-command exit/duration/log path and verified artifact digests. The evidence schema
+also binds runner source/version, Git commit/tree/release-content digest, Linux
+platform, global and release-content dirty state, structured JUnit summaries and a
+hash manifest for retained logs. Ignored local `test-results` are diagnostic bytes,
+not immutable release evidence. Only the protected CI archive plus successful
+artifact attestation can satisfy that prerequisite; until such a run exists it stays
+`BLOCKED_EXTERNAL`.
+Primary JSON payloads and detached Sigstore bundles that pass both trust and
+semantic verification are copied into the archived `trusted-inputs` tree before
+private verification roots are deleted, enabling independent detached-signature
+reverification from the retained artifact. The machine summary records the sorted
+trusted-input tree digest and path list separately from the rendered deployment
+tree digest.
