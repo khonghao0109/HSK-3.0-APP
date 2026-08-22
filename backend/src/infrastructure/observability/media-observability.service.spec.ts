@@ -22,7 +22,7 @@ describe('media operations controls and metrics', () => {
       },
     ]);
     const metrics = new MediaObservabilityService(prisma as never);
-    metrics.recordIngestion('success', 230);
+    metrics.beginIngestionRequest().complete('success', 230);
     metrics.recordStorage('put', 'success', 23);
     metrics.recordStorage('get', 'provider_mismatch', 0);
     metrics.recordScanner('unavailable', 12);
@@ -155,16 +155,60 @@ describe('media operations controls and metrics', () => {
     expect(internal.value('database:timeout')).toBe(1);
   });
 
+  it('gives staggered waiters the same absolute collection-timeout outcome', async () => {
+    jest.useFakeTimers();
+    try {
+      const pending = deferred<unknown[]>();
+      const { prisma } = databaseFixture(pending.promise);
+      const config = {
+        get: jest.fn((key: string) =>
+          key === 'media.metricsCollectionTimeoutMs'
+            ? 30
+            : key === 'media.metricsCacheTtlMs'
+              ? 0
+              : undefined,
+        ),
+      };
+      const metrics = new MediaObservabilityService(
+        prisma as never,
+        config as never,
+      );
+
+      const first = metrics.render();
+      await Promise.resolve();
+      await jest.advanceTimersByTimeAsync(29);
+      const staggered = metrics.render();
+      await Promise.resolve();
+      await jest.advanceTimersByTimeAsync(1);
+      pending.resolve([emptyDatabaseState()]);
+      await Promise.resolve();
+
+      const [firstOutput, staggeredOutput] = await Promise.all([
+        first,
+        staggered,
+      ]);
+      expect(firstOutput).toContain('hsk_media_metrics_database_available 0');
+      expect(staggeredOutput).toContain(
+        'hsk_media_metrics_database_available 0',
+      );
+      const internal = metrics as unknown as { value(key: string): number };
+      expect(internal.value('database:timeout')).toBe(1);
+      expect(internal.value('database:success')).toBe(0);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('exports a terminal-only processing histogram and explicit ingestion denominator', async () => {
     const { prisma } = databaseFixture([emptyDatabaseState()]);
     const metrics = new MediaObservabilityService(prisma as never);
-    metrics.recordIngestion('request');
-    metrics.recordIngestion('success', 501);
-    metrics.recordIngestion('failed', 12_000);
+    metrics.beginIngestionRequest().complete('success', 501);
+    metrics.beginIngestionRequest().complete('failed', 12_000);
 
     const output = await metrics.render();
 
-    expect(output).toContain('hsk_media_ingestion_started_total 1');
+    expect(output).toContain('hsk_media_ingestion_started_total 2');
     expect(output).toContain(
       'hsk_media_ingestion_requests_total{outcome="success"} 1',
     );
@@ -182,13 +226,79 @@ describe('media operations controls and metrics', () => {
     );
   });
 
+  it('tracks started, terminal and inflight ingestion requests exactly once', async () => {
+    const { prisma } = databaseFixture([emptyDatabaseState()]);
+    const metrics = new MediaObservabilityService(prisma as never);
+
+    const completed = metrics.beginIngestionRequest();
+    const hung = metrics.beginIngestionRequest();
+    completed.complete('disabled');
+    completed.complete('success', 1);
+
+    const output = await metrics.render();
+
+    expect(output).toContain('hsk_media_ingestion_started_total 2');
+    expect(output).toContain('hsk_media_ingestion_inflight 1');
+    expect(output).toContain(
+      'hsk_media_ingestion_requests_total{outcome="disabled"} 1',
+    );
+    expect(output).toContain(
+      'hsk_media_ingestion_requests_total{outcome="success"} 0',
+    );
+    expect(output).toContain(
+      'hsk_media_processing_duration_seconds_count{outcome="success"} 0',
+    );
+
+    hung.complete('failed', 42);
+    const settled = await metrics.render();
+    expect(settled).toContain('hsk_media_ingestion_inflight 0');
+    expect(settled).toContain(
+      'hsk_media_ingestion_requests_total{outcome="failed"} 1',
+    );
+  });
+
+  it('tracks signed-content started, terminal and inflight independently', async () => {
+    const { prisma } = databaseFixture([emptyDatabaseState()]);
+    const metrics = new MediaObservabilityService(prisma as never);
+
+    const completed = metrics.beginSignedContentRequest();
+    metrics.beginSignedContentRequest();
+    completed.complete('unavailable');
+    completed.complete('success');
+
+    const output = await metrics.render();
+
+    expect(output).toContain('hsk_media_signed_content_started_total 2');
+    expect(output).toContain('hsk_media_signed_content_inflight 1');
+    expect(output).toContain(
+      'hsk_media_signed_content_requests_total{outcome="unavailable"} 1',
+    );
+    expect(output).toContain(
+      'hsk_media_signed_content_requests_total{outcome="success"} 0',
+    );
+  });
+
+  it('exports a stable process start timestamp for reset-aware rules', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(1_700_000_123_456);
+    const { prisma } = databaseFixture([emptyDatabaseState()]);
+    const metrics = new MediaObservabilityService(prisma as never);
+    now.mockReturnValue(1_800_000_000_000);
+
+    const output = await metrics.render();
+
+    expect(output).toContain(
+      'hsk_media_process_start_time_seconds 1700000123.456',
+    );
+    now.mockRestore();
+  });
+
   it('keeps counters replica-local so Prometheus can aggregate direct targets', async () => {
     const { prisma: replicaDatabase } = databaseFixture([emptyDatabaseState()]);
     const first = new MediaObservabilityService(replicaDatabase as never);
     const second = new MediaObservabilityService(replicaDatabase as never);
-    first.recordIngestion('success');
-    second.recordIngestion('success');
-    second.recordIngestion('success');
+    first.beginIngestionRequest().complete('success');
+    second.beginIngestionRequest().complete('success');
+    second.beginIngestionRequest().complete('success');
 
     const values = await Promise.all([first.render(), second.render()]);
     const total = values.reduce(

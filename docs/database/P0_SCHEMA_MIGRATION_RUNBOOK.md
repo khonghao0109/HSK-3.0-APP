@@ -587,3 +587,46 @@ forward recovery. Live provider/scanner/proxy/alert rehearsal theo
 `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md` là release gate riêng.
 Audit marker phải do Data/Content owner phê duyệt từ bằng chứng nguồn; không tạo marker
 chỉ để vượt preflight.
+
+## 17. Media lifecycle/audit integrity — migrations 18–19
+
+Migration 18 remains immutable at SHA-256
+`1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca` and owns
+`processingStartedAt`/`cleanupRequiredAt`. Migration 19 is the forward-only audit
+integrity correction at SHA-256
+`c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`.
+It locks `MediaIngestion` then `AuditLog`, validates every cleanup-related immutable
+audit, rejects malformed/cross-code/old/future facts, locks the parent on future audit
+writes and requires the first cleanup audit in the same transaction as the lifecycle
+transition. The application passes the exact DB-owned lifecycle timestamp back into
+that first audit; no process clock, timezone conversion or historical timestamp repair
+is permitted.
+
+Run the bounded aggregate gate only against a loopback PostgreSQL 16 control database
+and a separate guarded `public` shadow database whose names end in `_test`:
+
+```bash
+cd backend
+NODE_ENV=test \
+MEDIA_MIGRATION_ADMIN_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/postgres_test?schema=public' \
+MEDIA_MIGRATION_SHADOW_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_shadow_test?schema=public' \
+npm run test:db:media-migration:release
+```
+
+The runner creates exact random `_test` targets from `template0`, applies bounded
+`lock_timeout`, `statement_timeout` and idle-transaction timeout, and removes only the
+database names it created. Required checks are fresh 00→19, legacy 17→18→19 with exact
+backfill, malformed/future P0001 atomic rollback, integration, writer lock observation,
+both audit/lifecycle race orders, current migration-19 lock abort and forward recovery,
+all-source checksum audit, migrate status, both drift directions, a representative
+1,000-audit indexed lookup and full E2E. A failed or interrupted run invalidates its
+prior summaries before executing; JSON/JUnit/log manifest are accepted only after the
+producer consumes its own exact artifact bytes.
+
+The latest local aggregate result passed all 12 checks, deployed 19/19 and ran full
+E2E 11/11 suites (163/163 tests). Local artifacts under
+`backend/test-results/media-lifecycle-migration-validation/` are ignored evidence, not
+an immutable release attestation. Any `P0001`, `55P03`, checksum/drift mismatch, stale
+artifact, unsafe database target or unbounded waiter is an abort. Keep writers
+quiesced, preserve count-only diagnostics and recover forward; never edit migrations
+00–19 or bypass their guards.

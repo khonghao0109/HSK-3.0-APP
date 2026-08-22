@@ -12,6 +12,7 @@ spec:
         app.kubernetes.io/name: hsk-backend
       annotations:
         sidecar.istio.io/inject: "true"
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
       containers:
         - name: backend
@@ -37,12 +38,6 @@ spec:
                   name: hsk-media-metrics-token
                   key: previous
                   optional: true
-          # The workload owner must preserve its existing application readiness
-          # probe. Metrics readiness is verified as an explicit startup probe so
-          # this patch never replaces API/DB readiness semantics.
-          startupProbe:
-            tcpSocket:
-              port: media-metrics
-            periodSeconds: 5
-            timeoutSeconds: 2
-            failureThreshold: 12
+          # This portable patch deliberately does not own readiness, liveness or
+          # startup probes. The workload owner preserves its existing single
+          # startup handler and verifies the dedicated listener before rollout.

@@ -1,9 +1,10 @@
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   chmodSync,
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -19,11 +20,18 @@ import {
 } from 'node:https';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
 
 import {
   assertArchiveEntriesSafe,
   assertCommandEvidenceContract,
+  assertCosignSignaturePayload,
+  assertDatabaseReleaseEvidence,
+  assertCapacityBackupEvidence,
+  assertOciRegistryResolution,
+  resolveVerifiedOciIndex,
+  assertExecutionProfile,
   assertExecutableFromVerifiedRoot,
   assertExtractedTreeSafe,
   assertExactMediaNetworkTopology,
@@ -31,18 +39,29 @@ import {
   assertFunctionalEvidence,
   assertGrafanaNoDataResult,
   assertGrafanaQueryResult,
+  assertGrafanaDashboardTargetContract,
   assertGzipArchive,
+  assertGrafanaPrivateApiOnlyContract,
+  assertGrafanaProvisioningMountContract,
+  assertIstioProbeRewriteContract,
+  assertMonitoringSingleReplicaRollout,
   inspectTarGzipFile,
   invalidateEvidenceSummaries,
   resetMediaOperationsEvidenceLogs,
   resolveMediaOperationsEvidenceRoot,
   assertPrometheusRuntimeAlertRunbookUrl,
   requireCredentialFreeHttpsRunbookUrl,
+  readBoundedResponseBody,
   assertSafeTemporaryCleanupRoot,
+  assertStartupProbePreserved,
   assertReleaseContentStable,
   assertReleaseHeadStable,
   classifyValidators,
   computeReleaseContentDigest,
+  computeMigrationCatalogEvidence,
+  computeTreeDigest,
+  contentAddressedCacheFilename,
+  extractSpdxAttestationPredicate,
   parseExactVersion,
   parseToolchainManifest,
   redactDiagnostic,
@@ -50,7 +69,9 @@ import {
   requireExactVersion,
   runProcess,
   selectArtifact,
+  sha256,
   verifySha256,
+  MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST,
 } from './media-operations-validation.helpers';
 import type {
   ShaArtifact,
@@ -58,6 +79,10 @@ import type {
   ToolchainManifest,
   ValidatorResult,
   CommandEvidence,
+  ExecutionProfile,
+  DatabaseReleaseEvidenceSummary,
+  OciImageDefinition,
+  OciRegistryResolution,
 } from './media-operations-validation.helpers';
 
 const repositoryRoot = resolve(process.cwd(), '..');
@@ -68,6 +93,11 @@ const defaultEvidenceRoot = join(
 let evidenceRoot = defaultEvidenceRoot;
 const toolCache = process.env.MEDIA_OPS_TOOL_CACHE;
 const allowDownload = process.env.MEDIA_OPS_ALLOW_DOWNLOAD === 'true';
+const executionProfile: ExecutionProfile = process.argv.includes(
+  '--profile=release-linux-amd64',
+)
+  ? 'release-linux-amd64'
+  : 'reference';
 const requireModule = createRequire(__filename);
 const yaml = requireModule('js-yaml') as {
   loadAll(source: string): unknown[];
@@ -75,18 +105,52 @@ const yaml = requireModule('js-yaml') as {
 const commandEvidence: CommandEvidence[] = [];
 let activeValidator = 'bootstrap';
 let commandSequence = 0;
+let productionRenderedTree:
+  | { digest: string; pathCount: number; paths: string[] }
+  | undefined;
+let databaseReleaseEvidence: DatabaseReleaseEvidenceSummary | undefined;
+let commandEvidenceBinding = {
+  gitCommit: '0'.repeat(40),
+  gitTreeSha: '0'.repeat(40),
+  releaseContentDigest: '0'.repeat(64),
+  inputTreeDigest: '0'.repeat(64),
+};
+const verifiedExecutableVersions = new Map<string, string>();
 const spawnedEvidence = new WeakMap<
   ReturnType<typeof spawn>,
   {
     id: string;
     validator: string;
     executable: string;
-    started: number;
+    monotonicStarted: number;
     logPath: string;
+    command: string;
+    args: string[];
+    cwd: string;
+    envKeys: string[];
+    startedAt: string;
+    toolVersion: string;
+    binding: typeof commandEvidenceBinding;
   }
 >();
 
 class ExternalBlock extends Error {}
+
+interface EvidenceTimer {
+  startedAt: string;
+  monotonicStarted: number;
+}
+
+function startEvidenceTimer(): EvidenceTimer {
+  return {
+    startedAt: new Date().toISOString(),
+    monotonicStarted: performance.now(),
+  };
+}
+
+function elapsedMilliseconds(timer: EvidenceTimer): number {
+  return Math.max(0, Math.round(performance.now() - timer.monotonicStarted));
+}
 
 interface VerifiedTool {
   executable: string;
@@ -103,6 +167,7 @@ interface HttpResult {
 }
 
 async function main(): Promise<void> {
+  const runId = randomUUID();
   const startedAt = new Date().toISOString();
   const safeDefault = resolveMediaOperationsEvidenceRoot(
     repositoryRoot,
@@ -129,53 +194,134 @@ async function main(): Promise<void> {
     timeoutMs: 5_000,
   });
   requireCommand(beforeCommit, 'initial release commit');
+  const beforeTree = recordedProcess('git', ['rev-parse', 'HEAD^{tree}'], {
+    cwd: repositoryRoot,
+    timeoutMs: 5_000,
+  });
+  requireCommand(beforeTree, 'initial Git tree');
+  const kernel = recordedProcess('uname', ['-srv'], {
+    timeoutMs: 5_000,
+  });
+  requireCommand(kernel, 'host kernel identity');
   const initialReleaseContent = computeReleaseContentDigest(
     repositoryRoot,
     beforeStatus.stdout,
   );
+  const opsSourceTree = computeTreeDigest(resolve(repositoryRoot, 'ops'));
+  commandEvidenceBinding = {
+    gitCommit: beforeCommit.stdout.trim(),
+    gitTreeSha: beforeTree.stdout.trim(),
+    releaseContentDigest: initialReleaseContent.digest,
+    inputTreeDigest: opsSourceTree.digest,
+  };
+  bindExistingCommandEvidence();
   const manifest = loadManifest();
+  const internal =
+    (
+      run: () => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>,
+    ): (() => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>) =>
+    async () => {
+      try {
+        assertExecutionProfile(
+          executionProfile,
+          process.platform,
+          process.arch,
+        );
+      } catch (error: unknown) {
+        throw new ExternalBlock(safeError(error));
+      }
+      return run();
+    };
+  const releaseOnly =
+    (
+      run: () => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>,
+    ): (() => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>) =>
+    async () => {
+      if (executionProfile !== 'release-linux-amd64') {
+        throw new ExternalBlock(
+          'Release-only gate was not executed by the non-release reference profile.',
+        );
+      }
+      return internal(run)();
+    };
   const validators: Array<{
     id: string;
     run: () => Promise<Omit<ValidatorResult, 'id' | 'durationMs'>>;
   }> = [
     {
       id: 'manifest-and-version-probes',
-      run: () => validateToolchain(manifest),
+      run: internal(() => validateToolchain(manifest)),
     },
-    { id: 'nginx-edge-routing', run: () => validateNginx(manifest) },
+    {
+      id: 'oci-image-supply-chain',
+      run: releaseOnly(() => validateOciSupplyChain(manifest)),
+    },
+    {
+      id: 'release-prerequisite-quality',
+      run: releaseOnly(() =>
+        validateReleaseQualityPrerequisites({
+          commit: beforeCommit.stdout.trim(),
+          treeSha: beforeTree.stdout.trim(),
+          releaseContentDigest: initialReleaseContent.digest,
+        }),
+      ),
+    },
+    {
+      id: 'production-retention-capacity-backup',
+      run: releaseOnly(() =>
+        validateCapacityBackupEvidence({
+          commit: beforeCommit.stdout.trim(),
+          treeSha: beforeTree.stdout.trim(),
+          releaseContentDigest: initialReleaseContent.digest,
+        }),
+      ),
+    },
+    {
+      id: 'nginx-edge-routing',
+      run: internal(() => validateNginx(manifest)),
+    },
     {
       id: 'prometheus-rules-and-exposition',
-      run: () => validatePrometheus(manifest),
+      run: internal(() => validatePrometheus(manifest)),
     },
-    { id: 'alertmanager-routing', run: () => validateAlertmanager(manifest) },
+    {
+      id: 'alertmanager-routing',
+      run: internal(() => validateAlertmanager(manifest)),
+    },
     {
       id: 'kubernetes-core-schema',
-      run: () => validateKubernetesSchema(manifest),
+      run: internal(() => validateKubernetesSchema(manifest)),
     },
     {
       id: 'kubernetes-topology-and-mtls',
-      run: () => validateKubernetesTopology(manifest),
+      run: internal(() => validateKubernetesTopology(manifest)),
     },
-    { id: 'grafana-disposable-runtime', run: () => validateGrafana(manifest) },
-    { id: 'production-runbook-url', run: validateRunbookUrl },
+    {
+      id: 'grafana-disposable-runtime',
+      run: internal(() => validateGrafana(manifest)),
+    },
+    {
+      id: 'production-runbook-url',
+      run: () => validateRunbookUrl(manifest),
+    },
   ];
   const results: ValidatorResult[] = [];
   for (const validator of validators) {
     activeValidator = validator.id;
-    const start = Date.now();
+    const timer = startEvidenceTimer();
     const firstCommand = commandEvidence.length;
     try {
       const result = await validator.run();
       results.push({
         id: validator.id,
-        durationMs: Date.now() - start,
+        durationMs: elapsedMilliseconds(timer),
         ...result,
         commandIds: commandEvidence.slice(firstCommand).map(({ id }) => id),
       });
     } catch (error: unknown) {
       results.push({
         id: validator.id,
-        durationMs: Date.now() - start,
+        durationMs: elapsedMilliseconds(timer),
         status:
           error instanceof ExternalBlock ? 'BLOCKED_EXTERNAL' : 'FAIL_INTERNAL',
         reason: safeError(error),
@@ -191,6 +337,12 @@ async function main(): Promise<void> {
     timeoutMs: 5_000,
   });
   requireCommand(commit, 'final release commit');
+  const tree = recordedProcess('git', ['rev-parse', 'HEAD^{tree}'], {
+    cwd: repositoryRoot,
+    timeoutMs: 5_000,
+  });
+  requireCommand(tree, 'final Git tree');
+  assertReleaseHeadStable(beforeTree.stdout.trim(), tree.stdout.trim());
   assertReleaseHeadStable(beforeCommit.stdout.trim(), commit.stdout.trim());
   const worktree = recordedProcess(
     'git',
@@ -203,16 +355,47 @@ async function main(): Promise<void> {
     worktree.stdout,
   );
   assertReleaseContentStable(initialReleaseContent, releaseContent);
+  const logManifest = commandEvidence.map(({ id, logPath, logSha256 }) => {
+    const actual = sha256(readFileSync(join(evidenceRoot, logPath)));
+    if (actual !== logSha256) {
+      throw new Error(
+        `Command evidence log changed before publication: ${id}.`,
+      );
+    }
+    return { id, logPath, sha256: actual };
+  });
+  const logManifestBytes = Buffer.from(
+    `${JSON.stringify({ runId, logs: logManifest }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(evidenceRoot, 'media-operations-log-manifest.json'),
+    logManifestBytes,
+    {
+      mode: 0o600,
+    },
+  );
   const evidence = {
-    schemaVersion: 2,
+    schemaVersion: 3,
+    runId,
     startedAt,
     completedAt: new Date().toISOString(),
     commit:
       commit.kind === 'success' && /^[a-f0-9]{40}$/u.test(commit.stdout.trim())
         ? commit.stdout.trim()
         : 'unavailable',
+    treeSha: tree.stdout.trim(),
+    kernel: output(kernel),
     platform: process.platform,
     architecture: process.arch,
+    executionProfile,
+    releaseTree: productionRenderedTree,
+    databaseReleaseEvidence,
+    opsSourceTree,
+    logManifest: {
+      path: 'media-operations-log-manifest.json',
+      sha256: sha256(logManifestBytes),
+      count: logManifest.length,
+    },
     releaseContentDigest: releaseContent.digest,
     releaseContentPathCount: releaseContent.pathCount,
     gitDirty: releaseContent.gitDirty,
@@ -229,7 +412,12 @@ async function main(): Promise<void> {
   );
   writeFileSync(
     join(evidenceRoot, 'media-operations-validation.junit.xml'),
-    renderValidatorJUnit(classified.results),
+    renderValidatorJUnit(classified.results, {
+      runId,
+      commit: commit.stdout.trim(),
+      treeSha: tree.stdout.trim(),
+      releaseProfile: executionProfile === 'release-linux-amd64',
+    }),
     { mode: 0o600 },
   );
   for (const result of classified.results) {
@@ -266,6 +454,8 @@ async function validateToolchain(
       'istioctl',
       'kubectl',
       'kubeconform',
+      'cosign',
+      'syft',
     ]) {
       const tool = await acquireTool(manifest, name);
       temporaryRoots.add(tool.cleanupRoot);
@@ -291,6 +481,363 @@ async function validateToolchain(
       removeVerifiedTemporaryRoot(root);
     }
   }
+}
+
+async function validateOciSupplyChain(
+  manifest: ToolchainManifest,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  let cosign: VerifiedTool | undefined;
+  let syft: VerifiedTool | undefined;
+  try {
+    cosign = await acquireTool(manifest, 'cosign');
+    syft = await acquireTool(manifest, 'syft');
+    verifyToolVersion(cosign);
+    verifyToolVersion(syft);
+    const artifacts: Array<{ name: string; version?: string; digest: string }> =
+      [];
+    const resolvedImages: Array<[string, OciImageDefinition]> = [];
+    for (const [name, image] of Object.entries(manifest.images)) {
+      const platform = image.platforms[0];
+      if (!platform) throw new Error(`${name} has no Linux amd64 image.`);
+      const registryResolution = await resolveOciRegistryImage(image);
+      assertOciRegistryResolution(image, registryResolution);
+      resolvedImages.push([name, image]);
+    }
+    for (const [name, image] of resolvedImages) {
+      const platform = image.platforms[0];
+      if (!platform) throw new Error(`${name} has no Linux amd64 image.`);
+      const policy = image.attestations.signature;
+      const identity = policy.approvedIdentities[0];
+      if (!identity || policy.approvedIdentities.length !== 1) {
+        throw new ExternalBlock(
+          `${name} has no single approved release workflow identity; signatures cannot be claimed.`,
+        );
+      }
+      const signature = recordedProcess(
+        cosign.executable,
+        [
+          'verify',
+          '--output',
+          'json',
+          '--certificate-oidc-issuer',
+          policy.issuer,
+          '--certificate-identity',
+          identity,
+          platform.runtimeRef,
+        ],
+        { timeoutMs: 120_000 },
+      );
+      if (signature.kind !== 'success') {
+        throw new ExternalBlock(
+          `${name} OCI signature is unavailable or does not bind the exact Linux amd64 digest.`,
+        );
+      }
+      assertCosignSignaturePayload(output(signature), platform.digest);
+      const attestation = recordedProcess(
+        cosign.executable,
+        [
+          'verify-attestation',
+          '--type',
+          'spdxjson',
+          '--output',
+          'json',
+          '--certificate-oidc-issuer',
+          policy.issuer,
+          '--certificate-identity',
+          identity,
+          platform.runtimeRef,
+        ],
+        { timeoutMs: 120_000 },
+      );
+      if (attestation.kind !== 'success') {
+        throw new ExternalBlock(
+          `${name} signed SPDX SBOM attestation is unavailable.`,
+        );
+      }
+      const predicate = extractSpdxAttestationPredicate(
+        output(attestation),
+        platform.digest,
+      );
+      const sbomRoot = mkdtempSync(join(tmpdir(), 'hsk-media-sbom-'));
+      try {
+        const source = join(sbomRoot, `${name}.spdx.json`);
+        const normalized = join(sbomRoot, `${name}.normalized.spdx.json`);
+        writeFileSync(source, `${JSON.stringify(predicate)}\n`, {
+          mode: 0o600,
+        });
+        const syftValidation = recordedProcess(
+          syft.executable,
+          ['convert', source, '-o', `spdx-json=${normalized}`],
+          { timeoutMs: 60_000 },
+        );
+        requireCommand(syftValidation, `${name} signed SPDX SBOM conversion`);
+        if (!existsSync(normalized) || statSync(normalized).size === 0) {
+          throw new Error(`${name} signed SPDX SBOM did not normalize.`);
+        }
+      } finally {
+        rmSync(sbomRoot, { recursive: true, force: true });
+      }
+      artifacts.push({
+        name: `oci/${name}/linux-amd64`,
+        version: image.version,
+        digest: platform.digest,
+      });
+    }
+    return {
+      status: 'PASS',
+      commandIds: ['cosign-signature-and-spdx-attestation'],
+      artifacts: [
+        ...artifacts,
+        {
+          name: 'oci-policy-fingerprint',
+          digest: sha256(
+            Buffer.from(
+              Object.values(manifest.images)
+                .map(
+                  ({ attestations }) =>
+                    `${attestations.signature.issuer}\0${attestations.signature.approvedIdentities.join('\0')}`,
+                )
+                .join('\0'),
+            ),
+          ),
+        },
+      ],
+    };
+  } finally {
+    if (cosign) removeVerifiedTemporaryRoot(cosign.cleanupRoot);
+    if (syft) removeVerifiedTemporaryRoot(syft.cleanupRoot);
+  }
+}
+
+async function resolveOciRegistryImage(
+  image: OciImageDefinition,
+): Promise<OciRegistryResolution> {
+  const started = startEvidenceTimer();
+  const slash = image.repository.indexOf('/');
+  if (slash < 1) throw new Error('OCI repository has no registry host.');
+  const declaredHost = image.repository.slice(0, slash);
+  const registryHost =
+    declaredHost === 'docker.io' ? 'registry-1.docker.io' : declaredHost;
+  const repositoryPath = image.repository.slice(slash + 1);
+  const manifestUrl = `https://${registryHost}/v2/${repositoryPath}/manifests/${image.indexDigest}`;
+  const accept =
+    'application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json';
+  const fetchManifest = async (authorization?: string): Promise<Response> =>
+    fetch(manifestUrl, {
+      redirect: 'error',
+      headers: {
+        Accept: accept,
+        ...(authorization ? { Authorization: authorization } : {}),
+      },
+      signal: AbortSignal.timeout(30_000),
+    });
+  try {
+    let response = await fetchManifest();
+    if (response.status === 401) {
+      const challenge = response.headers.get('www-authenticate') ?? '';
+      const realm = /realm="([^"]+)"/u.exec(challenge)?.[1];
+      const service = /service="([^"]+)"/u.exec(challenge)?.[1];
+      const scope = /scope="([^"]+)"/u.exec(challenge)?.[1];
+      if (!realm || !service || !scope) {
+        throw new ExternalBlock('OCI registry bearer challenge is malformed.');
+      }
+      const realmUrl = new URL(realm);
+      const expectedRealmHost =
+        declaredHost === 'docker.io' ? 'auth.docker.io' : 'quay.io';
+      if (
+        realmUrl.protocol !== 'https:' ||
+        realmUrl.hostname !== expectedRealmHost ||
+        realmUrl.username ||
+        realmUrl.password ||
+        realmUrl.hash
+      ) {
+        throw new Error(
+          'OCI registry token realm is not credential-free HTTPS.',
+        );
+      }
+      realmUrl.searchParams.set('service', service);
+      realmUrl.searchParams.set('scope', scope);
+      const tokenResponse = await fetch(realmUrl, {
+        redirect: 'error',
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!tokenResponse.ok) {
+        throw new ExternalBlock(
+          `OCI registry token endpoint returned HTTP ${tokenResponse.status}.`,
+        );
+      }
+      const tokenBytes = await readBoundedResponseBody(
+        tokenResponse,
+        128 * 1024,
+      );
+      let tokenJson: unknown;
+      try {
+        tokenJson = JSON.parse(tokenBytes.toString('utf8')) as unknown;
+      } catch {
+        throw new Error('OCI registry token response is not valid JSON.');
+      }
+      if (!isRecord(tokenJson)) {
+        throw new Error('OCI registry token response is malformed.');
+      }
+      const token =
+        typeof tokenJson.token === 'string'
+          ? tokenJson.token
+          : typeof tokenJson.access_token === 'string'
+            ? tokenJson.access_token
+            : undefined;
+      if (!token || token.length > 16_384) {
+        throw new Error('OCI registry token response has no bounded token.');
+      }
+      response = await fetchManifest(`Bearer ${token}`);
+    }
+    if (!response.ok) {
+      throw new ExternalBlock(
+        `OCI registry manifest returned HTTP ${response.status}.`,
+      );
+    }
+    const bytes = await readBoundedResponseBody(response, 4 * 1024 * 1024);
+    const headerDigest = response.headers.get('docker-content-digest');
+    const resolution = resolveVerifiedOciIndex(image, bytes, headerDigest);
+    recordProbeEvidence(
+      `oci-registry-${image.repository.replace(/[^a-z0-9]/giu, '-')}`,
+      started,
+      true,
+      'OCI registry index and Linux amd64 child resolved.',
+    );
+    return resolution;
+  } catch (error: unknown) {
+    recordProbeEvidence(
+      `oci-registry-${image.repository.replace(/[^a-z0-9]/giu, '-')}`,
+      started,
+      false,
+      `OCI registry resolution failed (${error instanceof Error ? error.name : 'unknown'}).`,
+    );
+    if (error instanceof ExternalBlock) throw error;
+    if (
+      error instanceof TypeError ||
+      (error instanceof Error && error.name === 'TimeoutError')
+    ) {
+      throw new ExternalBlock('OCI registry resolution is unavailable.');
+    }
+    throw error;
+  }
+}
+
+function validateReleaseQualityPrerequisites(binding: {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+}): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  const commands: Array<[string, string[]]> = [
+    ['npx', ['prisma', 'format']],
+    ['npx', ['prisma', 'validate']],
+    ['npx', ['prisma', 'generate']],
+    ['npm', ['run', 'build']],
+    ['npm', ['run', 'lint:check']],
+    ['npm', ['run', 'format:check']],
+    ['npm', ['test', '--', '--runInBand']],
+    ['npm', ['run', 'test:security:secrets']],
+    ['npm', ['audit', '--omit=dev']],
+  ];
+  for (const [command, args] of commands) {
+    const result = recordedProcess(command, args, {
+      cwd: resolve(repositoryRoot, 'backend'),
+      timeoutMs: 15 * 60_000,
+    });
+    requireCommand(result, `release prerequisite ${command} ${args.join(' ')}`);
+  }
+  const databaseEvidence = validateDatabaseEvidenceHook(binding);
+  return Promise.resolve({
+    status: 'PASS',
+    commandIds: ['backend-quality-prerequisites', 'guarded-database-evidence'],
+    artifacts: [
+      {
+        name: 'guarded-database-release-evidence',
+        digest: databaseEvidence.evidenceSha256,
+      },
+    ],
+  });
+}
+
+function validateDatabaseEvidenceHook(binding: {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+}): DatabaseReleaseEvidenceSummary {
+  const path = resolve(
+    process.env.MEDIA_OPS_DB_EVIDENCE_JSON ??
+      join(
+        repositoryRoot,
+        'backend/test-results/media-lifecycle-migration-validation/evidence.json',
+      ),
+  );
+  if (!existsSync(path)) {
+    throw new ExternalBlock('Guarded database evidence artifact is absent.');
+  }
+  const catalog = computeMigrationCatalogEvidence(
+    resolve(repositoryRoot, 'backend/prisma/migrations'),
+  );
+  const latestMigrations = catalog.entries.slice(-2);
+  const evidenceBytes = readFileSync(path);
+  const validated = assertDatabaseReleaseEvidence(
+    JSON.parse(evidenceBytes.toString('utf8')) as unknown,
+    {
+      ...binding,
+      evidenceRoot: dirname(path),
+      catalogCount: catalog.catalogCount,
+      catalogChecksum: catalog.catalogChecksum,
+      latestMigrations,
+    },
+  );
+  databaseReleaseEvidence = {
+    ...validated,
+    evidenceSha256: sha256(evidenceBytes),
+  };
+  return databaseReleaseEvidence;
+}
+
+function validateCapacityBackupEvidence(binding: {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+}): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
+  const configured = process.env.MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON;
+  if (!configured) {
+    throw new ExternalBlock(
+      'MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON is required for live 32-day capacity, encrypted backup and restore proof.',
+    );
+  }
+  const path = resolve(configured);
+  if (!existsSync(path)) {
+    throw new ExternalBlock(
+      'Capacity and backup evidence artifact is unavailable.',
+    );
+  }
+  const info = lstatSync(path);
+  if (info.isSymbolicLink() || !info.isFile() || info.size > 1024 * 1024) {
+    throw new Error(
+      'Capacity and backup evidence must be a bounded regular file.',
+    );
+  }
+  const bytes = readFileSync(path);
+  const validated = assertCapacityBackupEvidence(
+    JSON.parse(bytes.toString('utf8')) as unknown,
+    binding,
+  );
+  return Promise.resolve({
+    status: 'PASS',
+    commandIds: ['live-capacity-backup-restore-evidence'],
+    artifacts: [
+      {
+        name: `capacity-backup/${validated.runId}`,
+        digest: sha256(bytes),
+      },
+      {
+        name: 'capacity-backup/cluster-fingerprint',
+        digest: validated.clusterFingerprintSha256,
+      },
+    ],
+  });
 }
 
 async function validateNginx(
@@ -319,7 +866,7 @@ async function validateNginx(
     requireCommand(configure, 'nginx configure');
     const build = recordedProcess('make', ['-j2'], {
       cwd: nginxSource.root,
-      timeoutMs: 180_000,
+      timeoutMs: 600_000,
     });
     requireCommand(build, 'nginx build', true);
     const nginxExecutable = join(nginxSource.root, 'objs/nginx');
@@ -338,6 +885,7 @@ async function validateNginx(
     mkdirSync(join(temporary, 'logs'), { recursive: true });
     const locationPath = join(temporary, 'media-security.conf');
     const accessLogPath = join(temporary, 'media_access.log');
+    const safeErrorLogPath = join(temporary, 'media_error.log');
     writeFileSync(
       locationPath,
       readFileSync(
@@ -345,7 +893,9 @@ async function validateNginx(
         'utf8',
       )
         .split('/var/log/nginx/media_access.log')
-        .join(accessLogPath),
+        .join(accessLogPath)
+        .split('/var/log/nginx/media_error.log')
+        .join(safeErrorLogPath),
       { mode: 0o600 },
     );
     const configPath = join(temporary, 'nginx.conf');
@@ -367,7 +917,7 @@ async function validateNginx(
       ['-c', configPath, '-p', `${temporary}/`, '-g', 'daemon off;'],
       { stdio: 'ignore' },
     );
-    const httpMatrixStarted = Date.now();
+    const httpMatrixStarted = startEvidenceTimer();
     await waitForStatus(proxyPort, '/health', 200);
     if (upstreamHits !== 1)
       throw new Error('Generic upstream probe was not reached.');
@@ -458,6 +1008,21 @@ async function validateNginx(
     if (!log.includes('/api/v1/media/1/content') || !log.includes('200')) {
       throw new Error('Nginx safe access evidence is incomplete.');
     }
+    if (existsSync(safeErrorLogPath)) {
+      const diagnosticLog = readFileSync(safeErrorLogPath, 'utf8');
+      for (const forbidden of [
+        signature,
+        'expires=',
+        'token=',
+        'must-not-leak',
+      ]) {
+        if (diagnosticLog.includes(forbidden)) {
+          throw new Error(
+            'Nginx forensic diagnostics leaked signed query data.',
+          );
+        }
+      }
+    }
     recordProbeEvidence(
       'nginx-http-adversarial-matrix',
       httpMatrixStarted,
@@ -517,7 +1082,7 @@ async function validatePrometheus(
     ];
     for (const [, args, evidence] of commands) {
       const result = recordedProcess(promtool.executable, args, {
-        timeoutMs: 30_000,
+        timeoutMs: evidence === 'promtool-test-rules' ? 120_000 : 30_000,
       });
       requireCommand(result, `promtool ${args.join(' ')}`);
       assertFunctionalEvidence(
@@ -669,7 +1234,7 @@ async function validateAlertmanager(
       '--web.enable-lifecycle',
       '--rules.alert.resend-delay=1s',
     ];
-    const routingStarted = Date.now();
+    const routingStarted = startEvidenceTimer();
     prometheusProcess = spawnRecorded(
       'prometheus-alert-runtime',
       prometheus.executable,
@@ -882,9 +1447,29 @@ async function validateKubernetesTopology(
   manifest: ToolchainManifest,
 ): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   let kubectl: VerifiedTool | undefined;
+  let kubeconform: VerifiedTool | undefined;
+  const temporary = mkdtempSync(join(tmpdir(), 'hsk-media-topology-patch-'));
   try {
     kubectl = await acquireTool(manifest, 'kubectl');
+    kubeconform = await acquireTool(manifest, 'kubeconform');
     verifyToolVersion(kubectl);
+    verifyToolVersion(kubeconform);
+    const bundle = manifest.schemaBundles['kubernetes-core'];
+    const deploymentSchema = bundle?.files.find(
+      ({ name }) => name === 'deployment-apps-v1.json',
+    );
+    if (!bundle || !deploymentSchema) {
+      throw new Error('Pinned Deployment schema is absent.');
+    }
+    writeFileSync(
+      join(temporary, deploymentSchema.name),
+      await verifiedRemoteBytes(
+        'topology-deployment-schema',
+        deploymentSchema.artifact,
+        deploymentSchema.sha256,
+      ),
+      { mode: 0o600 },
+    );
     const render = recordedProcess(
       kubectl.executable,
       ['kustomize', resolve(repositoryRoot, 'ops/observability')],
@@ -904,40 +1489,82 @@ async function validateKubernetesTopology(
       ),
       'backend patch',
     );
-    const syntheticBase =
-      'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: hsk-backend\n  namespace: hsk\nspec:\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: hsk-backend\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: hsk-backend\n    spec:\n      containers:\n        - name: backend\n          image: example.invalid/backend@sha256:' +
-      '0'.repeat(64) +
-      '\n          readinessProbe:\n            httpGet:\n              path: /api/v1/health\n              port: 3000\n';
-    const patchResult = recordedProcess(
-      kubectl.executable,
-      [
-        'patch',
-        '--local=true',
-        '--type=strategic',
-        '-f',
-        '-',
-        `--patch-file=${resolve(repositoryRoot, 'ops/observability/media-backend-deployment.patch.yml')}`,
-        '-o',
-        'yaml',
-      ],
-      { timeoutMs: 20_000, input: syntheticBase },
-    );
-    requireCommand(patchResult, 'kubectl local backend deployment patch');
-    if (
-      !patchResult.stdout.includes('readinessProbe:') ||
-      !patchResult.stdout.includes('path: /api/v1/health') ||
-      !patchResult.stdout.includes('startupProbe:') ||
-      !patchResult.stdout.includes('name: media-metrics')
-    ) {
-      throw new Error(
-        'Backend patch application degrades application readiness or misses metrics startup.',
+    const startupHandlers = [
+      '          startupProbe:\n            httpGet:\n              path: /startup\n              port: 3000\n',
+      '          startupProbe:\n            exec:\n              command: [node, startup.js]\n',
+      '          startupProbe:\n            tcpSocket:\n              port: 3000\n',
+    ];
+    for (const [index, startupProbe] of startupHandlers.entries()) {
+      const syntheticBase =
+        'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: hsk-backend\n  namespace: hsk\nspec:\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: hsk-backend\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: hsk-backend\n    spec:\n      containers:\n        - name: backend\n          image: example.invalid/backend@sha256:' +
+        '0'.repeat(64) +
+        '\n          readinessProbe:\n            httpGet:\n              path: /api/v1/health\n              port: 3000\n' +
+        startupProbe;
+      const patchResult = recordedProcess(
+        kubectl.executable,
+        [
+          'patch',
+          '--local=true',
+          '--type=strategic',
+          '-f',
+          '-',
+          `--patch-file=${resolve(repositoryRoot, 'ops/observability/media-backend-deployment.patch.yml')}`,
+          '-o',
+          'yaml',
+        ],
+        { timeoutMs: 20_000, input: syntheticBase },
       );
+      requireCommand(
+        patchResult,
+        `kubectl local backend deployment patch variant ${index + 1}`,
+      );
+      const baseResource = firstRecord(
+        yaml.loadAll(syntheticBase),
+        'synthetic backend base',
+      );
+      const patchedResource = firstRecord(
+        yaml.loadAll(patchResult.stdout),
+        'patched synthetic backend',
+      );
+      assertStartupProbePreserved(
+        backendContainer(baseResource),
+        backendContainer(patchedResource),
+      );
+      const patchedPath = join(temporary, `patched-${index + 1}.yml`);
+      writeFileSync(patchedPath, patchResult.stdout, { mode: 0o600 });
+      const schemaValidation = recordedProcess(
+        kubeconform.executable,
+        [
+          '-strict',
+          '-summary',
+          '-kubernetes-version',
+          bundle.version,
+          '-schema-location',
+          join(temporary, '{{.ResourceKind}}{{.KindSuffix}}.json'),
+          patchedPath,
+        ],
+        { timeoutMs: 20_000 },
+      );
+      requireCommand(
+        schemaValidation,
+        `kubeconform strict schema validation for patched variant ${index + 1}`,
+      );
+      assertFunctionalEvidence('kubeconform-summary', output(schemaValidation));
+      if (
+        !patchResult.stdout.includes('readinessProbe:') ||
+        !patchResult.stdout.includes('path: /api/v1/health') ||
+        !patchResult.stdout.includes('name: media-metrics')
+      ) {
+        throw new Error(
+          'Backend patch application degrades readiness or misses the metrics port.',
+        );
+      }
     }
-    assertTopology(resources, patch);
+    assertTopology(resources, patch, manifest);
     const istioResources = resources.filter((resource) =>
       String(resource.apiVersion).startsWith('security.istio.io/'),
     );
-    if (istioResources.length !== 4) {
+    if (istioResources.length !== 8) {
       throw new Error(
         'STRICT mTLS and identity authorization resources are incomplete.',
       );
@@ -945,13 +1572,15 @@ async function validateKubernetesTopology(
     return {
       status: 'PASS',
       commandIds: [
-        'kubectl-local-strategic-backend-patch',
+        'kubectl-local-strategic-backend-patch-startup-handler-matrix',
         'kubernetes-topology-semantic-contract',
       ],
       artifacts: [{ name: 'kubectl', digest: kubectl.digest }],
     };
   } finally {
+    rmSync(temporary, { recursive: true, force: true });
     if (kubectl) removeVerifiedTemporaryRoot(kubectl.cleanupRoot);
+    if (kubeconform) removeVerifiedTemporaryRoot(kubeconform.cleanupRoot);
   }
 }
 
@@ -984,6 +1613,8 @@ async function validateGrafana(
   let grafanaPort: number | undefined;
   let runbook: ReturnType<typeof createHttpsServer> | undefined;
   const dashboardUid = 'hsk-media-release-validation';
+  const grafanaAdminUser = 'hsk-ops-admin';
+  const grafanaAdminPassword = randomBytes(32).toString('base64url');
   try {
     grafana = await acquireTool(manifest, 'grafana');
     prometheus = await acquireTool(manifest, 'prometheus');
@@ -1094,6 +1725,93 @@ async function validateGrafana(
     mkdirSync(grafanaData, { recursive: true });
     mkdirSync(grafanaLogs, { recursive: true });
     mkdirSync(grafanaPlugins, { recursive: true });
+    const datasourceUid = 'hsk-media-prometheus';
+    const provisioningRoot = join(temporary, 'grafana-provisioning');
+    const datasourceRoot = join(provisioningRoot, 'datasources');
+    const dashboardProviderRoot = join(provisioningRoot, 'dashboards');
+    const dashboardRoot = join(temporary, 'grafana-dashboards');
+    for (const path of [datasourceRoot, dashboardProviderRoot, dashboardRoot]) {
+      mkdirSync(path, { recursive: true, mode: 0o700 });
+    }
+    const sourceDatasourcePath = resolve(
+      repositoryRoot,
+      'ops/observability/media-grafana-datasource.yml',
+    );
+    const sourceProviderPath = resolve(
+      repositoryRoot,
+      'ops/observability/media-grafana-dashboard-provider.yml',
+    );
+    const sourceDatasource = readFileSync(sourceDatasourcePath, 'utf8');
+    const sourceProvider = readFileSync(sourceProviderPath, 'utf8');
+    const productionPrometheusUrl =
+      'http://hsk-media-prometheus.monitoring.svc.cluster.local:9090';
+    const productionDashboardRoot = '/var/lib/grafana/dashboards';
+    if (
+      countOccurrences(sourceDatasource, productionPrometheusUrl) !== 1 ||
+      countOccurrences(sourceDatasource, `uid: ${datasourceUid}`) !== 1 ||
+      countOccurrences(sourceProvider, productionDashboardRoot) !== 1
+    ) {
+      throw new Error(
+        'Grafana source provisioning is not the exact production contract.',
+      );
+    }
+    const disposableDatasource = sourceDatasource.replace(
+      productionPrometheusUrl,
+      `http://127.0.0.1:${prometheusPort}`,
+    );
+    const disposableProvider = sourceProvider.replace(
+      productionDashboardRoot,
+      dashboardRoot,
+    );
+    if (
+      countOccurrences(
+        disposableDatasource,
+        `http://127.0.0.1:${prometheusPort}`,
+      ) !== 1 ||
+      countOccurrences(disposableProvider, dashboardRoot) !== 1
+    ) {
+      throw new Error(
+        'Grafana disposable provisioning replacement is ambiguous.',
+      );
+    }
+    writeFileSync(
+      join(datasourceRoot, 'datasource.yml'),
+      disposableDatasource,
+      {
+        mode: 0o600,
+      },
+    );
+    writeFileSync(
+      join(dashboardProviderRoot, 'provider.yml'),
+      disposableProvider,
+      {
+        mode: 0o600,
+      },
+    );
+    const sourceDashboard = JSON.parse(
+      readFileSync(
+        resolve(repositoryRoot, 'ops/observability/media-dashboard.json'),
+        'utf8',
+      ),
+    ) as Record<string, unknown>;
+    const sourceDashboardText = JSON.stringify(sourceDashboard);
+    if (
+      sourceDashboardText.includes('${DS_PROMETHEUS}') ||
+      !sourceDashboardText.includes('hsk-media-prometheus')
+    ) {
+      throw new Error(
+        'Grafana dashboard must bind the exact provisioned datasource UID.',
+      );
+    }
+    const dashboard = JSON.parse(
+      sourceDashboardText.split('__MEDIA_RUNBOOK_URL__').join(runbookUrl),
+    ) as Record<string, unknown>;
+    dashboard.uid = dashboardUid;
+    writeFileSync(
+      join(dashboardRoot, 'media-dashboard.json'),
+      `${JSON.stringify(dashboard)}\n`,
+      { mode: 0o600 },
+    );
     grafanaProcess = spawnRecorded(
       'grafana-runtime',
       grafana.executable,
@@ -1111,9 +1829,10 @@ async function validateGrafana(
           GF_PATHS_DATA: grafanaData,
           GF_PATHS_LOGS: grafanaLogs,
           GF_PATHS_PLUGINS: grafanaPlugins,
-          GF_AUTH_ANONYMOUS_ENABLED: 'true',
-          GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin',
-          GF_AUTH_DISABLE_LOGIN_FORM: 'true',
+          GF_PATHS_PROVISIONING: provisioningRoot,
+          GF_AUTH_ANONYMOUS_ENABLED: 'false',
+          GF_SECURITY_ADMIN_USER: grafanaAdminUser,
+          GF_SECURITY_ADMIN_PASSWORD: grafanaAdminPassword,
           GF_USERS_ALLOW_SIGN_UP: 'false',
           GF_ANALYTICS_REPORTING_ENABLED: 'false',
           GF_ANALYTICS_CHECK_FOR_UPDATES: 'false',
@@ -1121,50 +1840,50 @@ async function validateGrafana(
         },
       },
     );
-    await waitForStatus(grafanaPort, '/api/health', 200);
-    const grafanaApiStarted = Date.now();
-    const datasourceUid = 'hsk-media-prometheus-validation';
-    const created = await grafanaJson(grafanaPort, '/api/datasources', 'POST', {
-      name: 'HSK Media Prometheus Validation',
-      uid: datasourceUid,
-      type: 'prometheus',
-      access: 'proxy',
-      url: `http://127.0.0.1:${prometheusPort}`,
-      isDefault: false,
-      jsonData: { httpMethod: 'GET', prometheusType: 'Prometheus' },
-    });
+    await waitForStatus(grafanaPort, '/api/health', 200, 60_000);
+    const grafanaApiStarted = startEvidenceTimer();
+    const credentials = {
+      user: grafanaAdminUser,
+      password: grafanaAdminPassword,
+    };
+    const anonymous = await rawHttp(grafanaPort, '/api/dashboards/home', 'GET');
+    if (anonymous.status !== 401) {
+      throw new Error('Grafana operator API is anonymously accessible.');
+    }
+    const created = await grafanaJson(
+      grafanaPort,
+      `/api/datasources/uid/${datasourceUid}`,
+      'GET',
+      undefined,
+      credentials,
+    );
     datasourceId = numberProperty(created, 'id');
     const health = await grafanaJson(
       grafanaPort,
       `/api/datasources/uid/${datasourceUid}/health`,
       'GET',
+      undefined,
+      credentials,
     );
     if (!['OK', 'success'].includes(String(health.status))) {
       throw new Error('Grafana Prometheus datasource health check failed.');
     }
-    const sourceDashboard = JSON.parse(
-      readFileSync(
-        resolve(repositoryRoot, 'ops/observability/media-dashboard.json'),
-        'utf8',
-      ),
-    ) as Record<string, unknown>;
-    const dashboard = JSON.parse(
-      JSON.stringify(sourceDashboard)
-        .split('${DS_PROMETHEUS}')
-        .join(datasourceUid)
-        .split('__MEDIA_RUNBOOK_URL__')
-        .join(runbookUrl),
-    ) as Record<string, unknown>;
-    dashboard.uid = dashboardUid;
-    await grafanaJson(grafanaPort, '/api/dashboards/db', 'POST', {
-      dashboard,
-      overwrite: false,
-    });
-    const readBack = await grafanaJson(
-      grafanaPort,
-      `/api/dashboards/uid/${dashboardUid}`,
-      'GET',
-    );
+    let readBack: Record<string, unknown> | undefined;
+    await waitFor(async () => {
+      try {
+        readBack = await grafanaJson(
+          grafanaPort as number,
+          `/api/dashboards/uid/${dashboardUid}`,
+          'GET',
+          undefined,
+          credentials,
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    }, 15_000);
+    if (!readBack) throw new Error('Provisioned Grafana dashboard is absent.');
     const serialized = JSON.stringify(readBack);
     if (
       serialized.includes('${DS_PROMETHEUS}') ||
@@ -1175,31 +1894,21 @@ async function validateGrafana(
         'Grafana dashboard retains an unresolved deployment variable.',
       );
     }
-    if (!Array.isArray(dashboard.panels) || dashboard.panels.length === 0) {
-      throw new Error('Grafana dashboard must define at least one panel.');
-    }
-    const panels = dashboard.panels;
-    let expectedTargetCount = 0;
+    const readBackDashboard = isRecord(readBack.dashboard)
+      ? readBack.dashboard
+      : undefined;
+    const targets = assertGrafanaDashboardTargetContract(
+      dashboard,
+      readBackDashboard,
+      datasourceUid,
+    );
     let executedTargetCount = 0;
-    for (const panel of panels) {
-      if (
-        !isRecord(panel) ||
-        !Array.isArray(panel.targets) ||
-        panel.targets.length === 0
-      ) {
-        throw new Error('Every Grafana panel must define non-empty targets.');
-      }
-      expectedTargetCount += panel.targets.length;
-      for (const target of panel.targets) {
-        if (!isRecord(target)) {
-          throw new Error('Grafana panel target must be an object.');
-        }
-        const refId = typeof target.refId === 'string' ? target.refId : '';
-        const expr = typeof target.expr === 'string' ? target.expr : '';
-        if (!refId || !expr) {
-          throw new Error('Grafana panel target lacks a string refId or expr.');
-        }
-        const query = await grafanaJson(grafanaPort, '/api/ds/query', 'POST', {
+    for (const { refId, expr } of targets) {
+      const query = await grafanaJson(
+        grafanaPort,
+        '/api/ds/query',
+        'POST',
+        {
           from: String(Date.now() - 5 * 60_000),
           to: String(Date.now()),
           queries: [
@@ -1212,18 +1921,14 @@ async function validateGrafana(
               maxDataPoints: 300,
             },
           ],
-        });
-        const result = isRecord(query.results)
-          ? query.results[refId]
-          : undefined;
-        assertGrafanaQueryResult(result, refId);
-        executedTargetCount += 1;
-      }
+        },
+        credentials,
+      );
+      const result = isRecord(query.results) ? query.results[refId] : undefined;
+      assertGrafanaQueryResult(result, refId);
+      executedTargetCount += 1;
     }
-    if (
-      expectedTargetCount === 0 ||
-      executedTargetCount !== expectedTargetCount
-    ) {
+    if (targets.length === 0 || executedTargetCount !== targets.length) {
       throw new Error('Grafana target execution coverage is incomplete.');
     }
     const noDataRefId = 'GUARANTEED_ABSENT';
@@ -1245,6 +1950,7 @@ async function validateGrafana(
           },
         ],
       },
+      credentials,
     );
     const noDataResult = isRecord(noDataQuery.results)
       ? noDataQuery.results[noDataRefId]
@@ -1285,6 +1991,8 @@ async function validateGrafana(
         grafanaPort,
         `/api/dashboards/uid/${dashboardUid}`,
         'DELETE',
+        undefined,
+        { user: grafanaAdminUser, password: grafanaAdminPassword },
       ).catch(() => undefined);
     }
     if (
@@ -1296,6 +2004,8 @@ async function validateGrafana(
         grafanaPort,
         `/api/datasources/${datasourceId}`,
         'DELETE',
+        undefined,
+        { user: grafanaAdminUser, password: grafanaAdminPassword },
       ).catch(() => undefined);
     }
     if (grafanaProcess) await stopProcess(grafanaProcess);
@@ -1308,9 +2018,9 @@ async function validateGrafana(
   }
 }
 
-async function validateRunbookUrl(): Promise<
-  Omit<ValidatorResult, 'id' | 'durationMs'>
-> {
+async function validateRunbookUrl(
+  manifest: ToolchainManifest,
+): Promise<Omit<ValidatorResult, 'id' | 'durationMs'>> {
   const configured = process.env.MEDIA_RUNBOOK_URL;
   if (!configured) {
     throw new ExternalBlock(
@@ -1361,9 +2071,141 @@ async function validateRunbookUrl(): Promise<
     'utf8',
   );
   assertEveryAlertRunbookUrl(yaml.loadAll(renderedAlertRules), runbookUrl);
+  productionRenderedTree = computeTreeDigest(renderRoot);
+  commandEvidenceBinding = {
+    ...commandEvidenceBinding,
+    inputTreeDigest: productionRenderedTree.digest,
+  };
+  const verifiedTools: VerifiedTool[] = [];
+  try {
+    for (const toolName of [
+      'promtool',
+      'amtool',
+      'kubectl',
+      'kubeconform',
+      'istioctl',
+    ]) {
+      const tool = await acquireTool(manifest, toolName);
+      verifiedTools.push(tool);
+      verifyToolVersion(tool);
+    }
+    const tool = (name: string): VerifiedTool => {
+      const match = verifiedTools.find(
+        ({ definition }) => definition === manifest.tools[name],
+      );
+      if (!match) throw new Error(`Rendered-tree validator lacks ${name}.`);
+      return match;
+    };
+    for (const [name, args, evidenceKind] of [
+      [
+        'rendered Prometheus rules',
+        ['check', 'rules', join(renderRoot, 'media-alerts.yml')],
+        'promtool-check',
+      ],
+      [
+        'rendered Prometheus rule tests',
+        ['test', 'rules', join(renderRoot, 'media-alerts.test.yml')],
+        'promtool-test-rules',
+      ],
+    ] as const) {
+      const check = recordedProcess(tool('promtool').executable, args, {
+        cwd: renderRoot,
+        timeoutMs: 60_000,
+      });
+      requireCommand(check, name);
+      assertFunctionalEvidence(evidenceKind, output(check));
+    }
+    const alertmanagerCheck = recordedProcess(
+      tool('amtool').executable,
+      ['check-config', join(renderRoot, 'media-alertmanager.yml')],
+      { timeoutMs: 30_000 },
+    );
+    requireCommand(alertmanagerCheck, 'rendered Alertmanager config');
+    assertFunctionalEvidence('amtool-config', output(alertmanagerCheck));
+    const renderedKubernetes = recordedProcess(
+      tool('kubectl').executable,
+      ['kustomize', renderRoot],
+      { timeoutMs: 30_000 },
+    );
+    requireCommand(renderedKubernetes, 'rendered Kubernetes release tree');
+    const renderedManifest = join(renderRoot, '.rendered-topology.yml');
+    writeFileSync(renderedManifest, renderedKubernetes.stdout, { mode: 0o600 });
+    const coreResources = yaml
+      .loadAll(renderedKubernetes.stdout)
+      .filter(isRecord)
+      .filter(
+        (resource) =>
+          !String(resource.apiVersion).startsWith('security.istio.io/'),
+      );
+    const schemaRoot = mkdtempSync(
+      join(tmpdir(), 'hsk-media-rendered-schema-'),
+    );
+    try {
+      const bundle = manifest.schemaBundles['kubernetes-core'];
+      if (!bundle) throw new Error('Kubernetes schema bundle is absent.');
+      for (const schema of bundle.files) {
+        const bytes = await verifiedRemoteBytes(
+          `rendered-${schema.name}`,
+          schema.artifact,
+          schema.sha256,
+        );
+        writeFileSync(join(schemaRoot, schema.name), bytes, { mode: 0o600 });
+      }
+      const coreManifest = join(schemaRoot, 'core.yml');
+      writeFileSync(
+        coreManifest,
+        coreResources
+          .map((resource) => JSON.stringify(resource))
+          .join('\n---\n'),
+        { mode: 0o600 },
+      );
+      const schema = recordedProcess(
+        tool('kubeconform').executable,
+        [
+          '-strict',
+          '-summary',
+          '-kubernetes-version',
+          bundle.version,
+          '-schema-location',
+          join(schemaRoot, '{{.ResourceKind}}{{.KindSuffix}}.json'),
+          coreManifest,
+        ],
+        { timeoutMs: 60_000 },
+      );
+      requireCommand(schema, 'rendered Kubernetes core schema');
+      assertFunctionalEvidence('kubeconform-summary', output(schema));
+      const found = Number(
+        /Summary:\s+(\d+) resources?/iu.exec(output(schema))?.[1],
+      );
+      if (found !== coreResources.length) {
+        throw new Error(
+          'Rendered kubeconform coverage does not include every core resource.',
+        );
+      }
+    } finally {
+      rmSync(schemaRoot, { recursive: true, force: true });
+    }
+    const istio = recordedProcess(
+      tool('istioctl').executable,
+      [
+        'analyze',
+        '--use-kube=false',
+        '--failure-threshold=Warning',
+        renderedManifest,
+      ],
+      { timeoutMs: 60_000 },
+    );
+    requireCommand(istio, 'rendered Istio topology');
+    assertFunctionalEvidence('istio-analyze', output(istio));
+    rmSync(renderedManifest, { force: true });
+  } finally {
+    for (const tool of verifiedTools) {
+      removeVerifiedTemporaryRoot(tool.cleanupRoot);
+    }
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8_000);
-  const reachabilityStarted = Date.now();
+  const reachabilityStarted = startEvidenceTimer();
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -1417,6 +2259,7 @@ async function acquireTool(
     throw new Error(`${name} executable is absent from verified artifact.`);
   chmodSync(executable, 0o700);
   assertExecutableFromVerifiedRoot(executable, extracted.root);
+  verifiedExecutableVersions.set(resolve(executable), definition.version);
   return {
     executable,
     root: extracted.root,
@@ -1485,11 +2328,48 @@ async function artifactBytes(
   artifact: ShaArtifact,
 ): Promise<Buffer> {
   const filename = basename(new URL(artifact.artifact).pathname) || name;
-  const cached = toolCache ? join(toolCache, filename) : undefined;
+  const cacheFilename = contentAddressedCacheFilename(
+    artifact.artifact,
+    artifact.sha256,
+  );
+  const cached = toolCache ? join(toolCache, cacheFilename) : undefined;
   if (cached && existsSync(cached)) {
     if (statSync(cached).size > 512 * 1024 * 1024)
       throw new Error(`${name} cached artifact exceeds the 512 MiB limit.`);
-    return readFileSync(cached);
+    const bytes = readFileSync(cached);
+    try {
+      verifySha256(bytes, artifact.sha256);
+    } catch {
+      const quarantine = join(
+        toolCache as string,
+        `.quarantine-${cacheFilename}-${Date.now()}-${process.pid}`,
+      );
+      renameSync(cached, quarantine);
+      throw new Error(
+        `${name} content-addressed cache entry was quarantined after digest mismatch.`,
+      );
+    }
+    return bytes;
+  }
+  const legacy = toolCache ? join(toolCache, filename) : undefined;
+  if (legacy && existsSync(legacy)) {
+    if (statSync(legacy).size > 512 * 1024 * 1024)
+      throw new Error(`${name} cached artifact exceeds the 512 MiB limit.`);
+    const bytes = readFileSync(legacy);
+    try {
+      verifySha256(bytes, artifact.sha256);
+    } catch {
+      const quarantine = join(
+        toolCache as string,
+        `.quarantine-legacy-${filename}-${Date.now()}-${process.pid}`,
+      );
+      renameSync(legacy, quarantine);
+      throw new Error(
+        `${name} legacy cache entry was quarantined after digest mismatch.`,
+      );
+    }
+    persistVerifiedCache(artifact, bytes);
+    return bytes;
   }
   if (!allowDownload) {
     throw new ExternalBlock(
@@ -1565,7 +2445,10 @@ async function verifiedRemoteBytes(
 function persistVerifiedCache(artifact: ShaArtifact, bytes: Buffer): void {
   if (!toolCache) return;
   mkdirSync(toolCache, { recursive: true, mode: 0o700 });
-  const filename = basename(new URL(artifact.artifact).pathname);
+  const filename = contentAddressedCacheFilename(
+    artifact.artifact,
+    artifact.sha256,
+  );
   const destination = join(toolCache, filename);
   if (existsSync(destination)) return;
   const temporary = join(
@@ -1594,8 +2477,13 @@ function verifyToolVersion(tool: VerifiedTool): void {
 function assertTopology(
   resources: Record<string, unknown>[],
   patch: Record<string, unknown>,
+  manifest: ToolchainManifest,
 ): void {
   assertExactMediaNetworkTopology(resources);
+  assertGrafanaPrivateApiOnlyContract(resources);
+  assertGrafanaProvisioningMountContract(resources);
+  assertMonitoringSingleReplicaRollout(resources);
+  assertIstioProbeRewriteContract(resources, patch);
   const resource = (kind: string, name: string): Record<string, unknown> => {
     const match = resources.find(
       (candidate) =>
@@ -1608,38 +2496,102 @@ function assertTopology(
   };
   const prometheus = resource('Deployment', 'hsk-media-prometheus');
   const alertmanager = resource('Deployment', 'hsk-media-alertmanager');
+  const grafana = resource('Deployment', 'hsk-media-grafana');
   const network = resource(
     'NetworkPolicy',
     'hsk-backend-media-metrics-private',
   );
   const metricsService = resource('Service', 'hsk-backend-media-metrics');
   resource('ServiceAccount', 'hsk-media-prometheus');
-  resource('Role', 'hsk-media-prometheus-discovery');
-  resource('RoleBinding', 'hsk-media-prometheus-discovery');
+  resource('ServiceAccount', 'hsk-media-grafana');
+  resource('ServiceAccount', 'hsk-media-operator');
   resource('PeerAuthentication', 'hsk-backend-media-metrics-strict-mtls');
   resource('PeerAuthentication', 'hsk-media-alertmanager-strict-mtls');
+  resource('PeerAuthentication', 'hsk-media-prometheus-strict-mtls');
+  resource('PeerAuthentication', 'hsk-media-grafana-strict-mtls');
   resource('AuthorizationPolicy', 'hsk-backend-media-metrics-principal');
   resource('AuthorizationPolicy', 'hsk-media-alertmanager-principal');
+  resource('AuthorizationPolicy', 'hsk-media-prometheus-principal');
+  resource('AuthorizationPolicy', 'hsk-media-grafana-principal');
   resource('NetworkPolicy', 'hsk-media-alertmanager-private');
+  resource('NetworkPolicy', 'hsk-media-prometheus-private');
+  resource('NetworkPolicy', 'hsk-media-grafana-private');
   resource('PersistentVolumeClaim', 'hsk-media-prometheus-data');
   resource('PersistentVolumeClaim', 'hsk-media-alertmanager-data');
+  resource('Deployment', 'hsk-media-grafana');
+  resource('PersistentVolumeClaim', 'hsk-media-grafana-data');
   if (
     nestedValue(prometheus, ['spec', 'replicas']) !== 1 ||
-    nestedValue(alertmanager, ['spec', 'replicas']) !== 1
+    nestedValue(alertmanager, ['spec', 'replicas']) !== 1 ||
+    nestedValue(grafana, ['spec', 'replicas']) !== 1
   ) {
     throw new Error(
       'Monitoring V1 must be single replica until HA clustering is configured.',
     );
   }
+  for (const [name, deployment, containerName] of [
+    ['prometheus', prometheus, 'prometheus'],
+    ['alertmanager', alertmanager, 'alertmanager'],
+    ['grafana', grafana, 'grafana'],
+  ] as const) {
+    const definition = manifest.images[name];
+    const expectedImage = definition?.platforms[0]?.runtimeRef;
+    const containers = nestedValue(deployment, [
+      'spec',
+      'template',
+      'spec',
+      'containers',
+    ]);
+    const container: unknown = Array.isArray(containers)
+      ? (containers as unknown[]).find(
+          (candidate) =>
+            isRecord(candidate) && candidate.name === containerName,
+        )
+      : undefined;
+    if (!isRecord(container) || container.image !== expectedImage) {
+      throw new Error(
+        `${name} workload does not use the exact manifest image.`,
+      );
+    }
+    if (
+      nestedValue(deployment, [
+        'spec',
+        'template',
+        'spec',
+        'automountServiceAccountToken',
+      ]) !== false ||
+      nestedValue(container, [
+        'securityContext',
+        'allowPrivilegeEscalation',
+      ]) !== false ||
+      nestedValue(container, ['securityContext', 'readOnlyRootFilesystem']) !==
+        true ||
+      !nestedValue(container, ['resources', 'requests']) ||
+      !nestedValue(container, ['resources', 'limits'])
+    ) {
+      throw new Error(`${name} workload security/resources are incomplete.`);
+    }
+  }
+  if (
+    !JSON.stringify(prometheus).includes('--storage.tsdb.retention.time=32d') ||
+    !JSON.stringify(
+      resource('PersistentVolumeClaim', 'hsk-media-prometheus-data'),
+    ).includes('50Gi')
+  ) {
+    throw new Error(
+      'Prometheus cannot truthfully retain the required 28d SLI.',
+    );
+  }
   if (
     nestedString(prometheus, ['spec', 'strategy', 'type']) !== 'Recreate' ||
-    nestedString(alertmanager, ['spec', 'strategy', 'type']) !== 'Recreate'
+    nestedString(alertmanager, ['spec', 'strategy', 'type']) !== 'Recreate' ||
+    nestedString(grafana, ['spec', 'strategy', 'type']) !== 'Recreate'
   ) {
     throw new Error(
       'Single-replica RWO monitoring workloads require Recreate rollout.',
     );
   }
-  for (const deployment of [prometheus, alertmanager]) {
+  for (const deployment of [prometheus, alertmanager, grafana]) {
     if (
       nestedString(deployment, [
         'spec',
@@ -1658,7 +2610,9 @@ function assertTopology(
     !JSON.stringify(prometheus).includes('hsk-media-prometheus-data') ||
     !JSON.stringify(prometheus).includes('/prometheus') ||
     !JSON.stringify(alertmanager).includes('hsk-media-alertmanager-data') ||
-    !JSON.stringify(alertmanager).includes('/alertmanager')
+    !JSON.stringify(alertmanager).includes('/alertmanager') ||
+    !JSON.stringify(grafana).includes('hsk-media-grafana-data') ||
+    !JSON.stringify(grafana).includes('/var/lib/grafana')
   ) {
     throw new Error(
       'Monitoring restart state is not mounted from explicit PVCs.',
@@ -1709,7 +2663,6 @@ function assertTopology(
     'MEDIA_METRICS_BEARER_TOKEN_PREVIOUS',
     'secretKeyRef',
     'media-metrics',
-    'startupProbe',
   ]) {
     if (!serializedPatch.includes(expected))
       throw new Error(`Backend patch is missing ${expected}.`);
@@ -1719,6 +2672,32 @@ function assertTopology(
       'Metrics patch must preserve the externally owned application readiness probe.',
     );
   }
+  if (serializedPatch.includes('startupProbe')) {
+    throw new Error(
+      'Portable metrics patch must not create or replace startupProbe.',
+    );
+  }
+}
+
+function backendContainer(
+  deployment: Record<string, unknown>,
+): Record<string, unknown> {
+  const containers = nestedValue(deployment, [
+    'spec',
+    'template',
+    'spec',
+    'containers',
+  ]);
+  if (!Array.isArray(containers)) {
+    throw new Error('Backend Deployment has no containers array.');
+  }
+  const container: unknown = (containers as unknown[]).find(
+    (candidate) => isRecord(candidate) && candidate.name === 'backend',
+  );
+  if (!container || !isRecord(container)) {
+    throw new Error('Backend Deployment has no backend container.');
+  }
+  return container;
 }
 
 function nestedValue(input: Record<string, unknown>, path: string[]): unknown {
@@ -1841,14 +2820,21 @@ async function grafanaJson(
   path: string,
   method: 'GET' | 'POST' | 'DELETE',
   body?: unknown,
+  credentials?: { user: string; password: string },
 ): Promise<Record<string, unknown>> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
     const response = await fetch(`http://127.0.0.1:${port}${path}`, {
       method,
-      headers:
-        body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: {
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(credentials
+          ? {
+              Authorization: `Basic ${Buffer.from(`${credentials.user}:${credentials.password}`).toString('base64')}`,
+            }
+          : {}),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
@@ -1892,21 +2878,18 @@ function recordedProcess(
   args: readonly string[],
   options: Parameters<typeof runProcess>[2],
 ): ReturnType<typeof runProcess> {
-  const started = Date.now();
+  const timer = startEvidenceTimer();
   const result = runProcess(command, args, options);
+  const completedAt = new Date().toISOString();
   const sequence = String(++commandSequence).padStart(3, '0');
   const executable = basename(command);
   const id = `${activeValidator}/${sequence}/${executable}`;
   const logDirectory = join(evidenceRoot, 'logs');
   mkdirSync(logDirectory, { recursive: true, mode: 0o700 });
   const logPath = `logs/${sequence}-${activeValidator.replace(/[^a-z0-9-]/giu, '-')}-${executable.replace(/[^a-z0-9.-]/giu, '-')}.log`;
-  writeFileSync(
-    join(evidenceRoot, logPath),
-    `${redactDiagnostic(output(result))}\n`,
-    {
-      mode: 0o600,
-    },
-  );
+  const logBytes = Buffer.from(`${redactDiagnostic(output(result))}\n`);
+  writeFileSync(join(evidenceRoot, logPath), logBytes, { mode: 0o600 });
+  const identity = executableEvidence(command);
   commandEvidence.push({
     id,
     validator: activeValidator,
@@ -1919,15 +2902,31 @@ function recordedProcess(
           : result.kind === 'timeout'
             ? 124
             : 127,
-    durationMs: Date.now() - started,
+    durationMs: elapsedMilliseconds(timer),
     logPath,
+    logSha256: sha256(logBytes),
+    safeArgs: args.map((argument) => redactDiagnostic(argument)),
+    cwd: resolve(options.cwd ?? process.cwd()),
+    startedAt: timer.startedAt,
+    completedAt,
+    platform: process.platform,
+    architecture: process.arch,
+    inputSha256:
+      options.input === undefined
+        ? undefined
+        : sha256(Buffer.from(options.input)),
+    envKeys: safeEnvironmentKeys(options.env ?? process.env),
+    executableIdentity: identity.path,
+    executableSha256: identity.digest,
+    toolVersion: identity.version,
+    ...commandEvidenceBinding,
   });
   return result;
 }
 
 function recordProbeEvidence(
   probeId: string,
-  started: number,
+  timer: EvidenceTimer,
   success: boolean,
   diagnostic: string,
 ): void {
@@ -1935,23 +2934,80 @@ function recordProbeEvidence(
   const safeProbe = probeId.replace(/[^a-z0-9.-]/giu, '-');
   const logPath = `logs/${sequence}-${activeValidator}-${safeProbe}.log`;
   mkdirSync(join(evidenceRoot, 'logs'), { recursive: true, mode: 0o700 });
-  writeFileSync(
-    join(evidenceRoot, logPath),
-    `${redactDiagnostic(diagnostic)}\n`,
-    { mode: 0o600 },
-  );
+  const logBytes = Buffer.from(`${redactDiagnostic(diagnostic)}\n`);
+  writeFileSync(join(evidenceRoot, logPath), logBytes, { mode: 0o600 });
   commandEvidence.push({
     id: `${activeValidator}/${sequence}/${safeProbe}`,
     validator: activeValidator,
     executable: 'http-probe',
     exitCode: success ? 0 : 1,
-    durationMs: Date.now() - started,
+    durationMs: elapsedMilliseconds(timer),
     logPath,
+    logSha256: sha256(logBytes),
+    safeArgs: [],
+    cwd: process.cwd(),
+    startedAt: timer.startedAt,
+    completedAt: new Date().toISOString(),
+    platform: process.platform,
+    architecture: process.arch,
+    envKeys: [],
+    executableIdentity: 'internal:http-probe',
+    executableSha256: sha256(Buffer.from('internal:http-probe:v1')),
+    toolVersion: 'internal-v1',
+    ...commandEvidenceBinding,
   });
+}
+
+function safeEnvironmentKeys(env: NodeJS.ProcessEnv): string[] {
+  return Object.keys(env)
+    .filter((key) => MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST.has(key))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function executableEvidence(command: string): {
+  path: string;
+  digest: string;
+  version: string;
+} {
+  const candidates = command.includes('/')
+    ? [resolve(command)]
+    : (process.env.PATH ?? '')
+        .split(':')
+        .filter(Boolean)
+        .map((directory) => join(directory, command));
+  const executable = candidates.find(
+    (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
+  );
+  if (!executable) {
+    const path = `missing:${basename(command)}`;
+    return {
+      path,
+      digest: sha256(Buffer.from(path)),
+      version: 'unavailable-v1',
+    };
+  }
+  return {
+    path: executable,
+    digest: sha256(readFileSync(executable)),
+    version:
+      verifiedExecutableVersions.get(resolve(executable)) ??
+      `sha256:${sha256(readFileSync(executable))}`,
+  };
+}
+
+function bindExistingCommandEvidence(): void {
+  for (const command of commandEvidence) {
+    Object.assign(command, commandEvidenceBinding);
+  }
 }
 
 function output(result: ReturnType<typeof runProcess>): string {
   return `${result.stdout}\n${result.stderr}`.trim();
+}
+
+function countOccurrences(value: string, needle: string): number {
+  if (!needle) throw new Error('Occurrence needle must not be empty.');
+  return value.split(needle).length - 1;
 }
 
 async function listen(
@@ -1986,10 +3042,11 @@ async function waitForStatus(
   port: number,
   path: string,
   status: number,
+  timeoutMs = 10_000,
 ): Promise<void> {
   await waitFor(
     async () => (await rawHttp(port, path, 'GET')).status === status,
-    10_000,
+    timeoutMs,
   );
 }
 
@@ -1997,8 +3054,8 @@ async function waitFor(
   predicate: () => boolean | Promise<boolean>,
   timeoutMs: number,
 ): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
     try {
       if (await predicate()) return;
     } catch {
@@ -2084,6 +3141,7 @@ function spawnRecorded(
   args: readonly string[],
   options: Parameters<typeof spawn>[2],
 ): ReturnType<typeof spawn> {
+  const timer = startEvidenceTimer();
   const processHandle = spawn(command, [...args], options);
   const sequence = String(++commandSequence).padStart(3, '0');
   const logDirectory = join(evidenceRoot, 'logs');
@@ -2098,8 +3156,15 @@ function spawnRecorded(
     id: `${activeValidator}/${sequence}/${id}`,
     validator: activeValidator,
     executable: basename(command),
-    started: Date.now(),
+    monotonicStarted: timer.monotonicStarted,
     logPath,
+    command,
+    args: args.map((argument) => redactDiagnostic(argument)),
+    cwd: typeof options.cwd === 'string' ? resolve(options.cwd) : process.cwd(),
+    envKeys: safeEnvironmentKeys(options.env ?? process.env),
+    startedAt: timer.startedAt,
+    toolVersion: executableEvidence(command).version,
+    binding: { ...commandEvidenceBinding },
   });
   return processHandle;
 }
@@ -2110,6 +3175,11 @@ function finalizeSpawnEvidence(
 ): void {
   const pending = spawnedEvidence.get(processHandle);
   if (!pending) return;
+  const logBytes = Buffer.from(
+    `Disposable runtime stopped with exit=${processHandle.exitCode ?? 'signal'}.\n`,
+  );
+  writeFileSync(join(evidenceRoot, pending.logPath), logBytes, { mode: 0o600 });
+  const identity = executableEvidence(pending.command);
   commandEvidence.push({
     id: pending.id,
     validator: pending.validator,
@@ -2118,16 +3188,26 @@ function finalizeSpawnEvidence(
       intentional && processHandle.signalCode
         ? 0
         : (processHandle.exitCode ?? 1),
-    durationMs: Date.now() - pending.started,
+    durationMs: Math.max(
+      0,
+      Math.round(performance.now() - pending.monotonicStarted),
+    ),
     logPath: pending.logPath,
+    logSha256: sha256(logBytes),
+    safeArgs: pending.args,
+    cwd: pending.cwd,
+    startedAt: pending.startedAt,
+    completedAt: new Date().toISOString(),
+    platform: process.platform,
+    architecture: process.arch,
+    envKeys: pending.envKeys,
+    executableIdentity: identity.path,
+    executableSha256: identity.digest,
+    toolVersion: pending.toolVersion,
+    ...pending.binding,
     expectedStop: intentional,
     signal: processHandle.signalCode ?? undefined,
   });
-  writeFileSync(
-    join(evidenceRoot, pending.logPath),
-    `Disposable runtime stopped with exit=${processHandle.exitCode ?? 'signal'}.\n`,
-    { mode: 0o600 },
-  );
   spawnedEvidence.delete(processHandle);
 }
 
@@ -2167,7 +3247,7 @@ function incrementSyntheticCounters(source: string, increment: number): string {
 
 async function postEmpty(port: number, path: string): Promise<void> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3_000);
+  const timeout = setTimeout(() => controller.abort(), 10_000);
   try {
     const response = await fetch(`http://127.0.0.1:${port}${path}`, {
       method: 'POST',
@@ -2175,6 +3255,10 @@ async function postEmpty(port: number, path: string): Promise<void> {
     });
     if (!response.ok)
       throw new Error(`Lifecycle POST returned ${response.status}.`);
+  } catch (error: unknown) {
+    throw new Error(
+      `Lifecycle POST ${path} failed (${error instanceof Error ? error.name : 'unknown error'}).`,
+    );
   } finally {
     clearTimeout(timeout);
   }

@@ -21,6 +21,110 @@ tests:
         alertname: HskMediaSignedContentSlowBurn
         exp_alerts: []
 
+  - name: invalid signed grants remain security telemetry without poisoning availability
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_signed_content_started_total{instance="public-edge"}
+        values: 0+100x30
+      - series: hsk_media_signed_content_requests_total{instance="public-edge",outcome="invalid_grant"}
+        values: 0+100x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: HskMediaSignedContentSlowBurn
+        exp_alerts: []
+
+  - name: rejected and disabled ingestion attempts remain telemetry without poisoning valid availability
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_ingestion_started_total{instance="public-edge"}
+        values: 0+100x30
+      - series: hsk_media_ingestion_requests_total{instance="public-edge",outcome="rejected"}
+        values: 0+70x30
+      - series: hsk_media_ingestion_requests_total{instance="public-edge",outcome="disabled"}
+        values: 0+30x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HskMediaIngestionFastBurn
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: HskMediaIngestionSlowBurn
+        exp_alerts: []
+
+  - name: eligible ingestion failures and cleanup-required outcomes burn valid availability
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_ingestion_started_total{instance="backend-0"}
+        values: 0+100x30
+      - series: hsk_media_ingestion_requests_total{instance="backend-0",outcome="success"}
+        values: 0+80x30
+      - series: hsk_media_ingestion_requests_total{instance="backend-0",outcome="failed"}
+        values: 0+10x30
+      - series: hsk_media_ingestion_requests_total{instance="backend-0",outcome="cleanup_required"}
+        values: 0+10x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HskMediaIngestionFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+              slo: ingestion-availability
+            exp_annotations:
+              summary: Media ingestion is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaIngestionSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+              slo: ingestion-availability
+            exp_annotations:
+              summary: Media ingestion is consuming its error budget persistently
+              runbook_url: __MEDIA_RUNBOOK_URL__
+
+  - name: eligible signed provider integrity and availability failures burn the SLO
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_signed_content_started_total{instance="backend-0"}
+        values: 0+100x30
+      - series: hsk_media_signed_content_requests_total{instance="backend-0",outcome="success"}
+        values: 0+90x30
+      - series: hsk_media_signed_content_requests_total{instance="backend-0",outcome="unavailable"}
+        values: 0+4x30
+      - series: hsk_media_signed_content_requests_total{instance="backend-0",outcome="provider_mismatch"}
+        values: 0+3x30
+      - series: hsk_media_signed_content_requests_total{instance="backend-0",outcome="integrity_error"}
+        values: 0+3x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 20m
+        alertname: HskMediaSignedContentSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget persistently
+              runbook_url: __MEDIA_RUNBOOK_URL__
+
   - name: global database gauges aggregate three replicas to one alert and resolve
     interval: 1m
     external_url: https://runbooks.test.invalid
@@ -140,6 +244,10 @@ tests:
     interval: 1m
     external_url: https://runbooks.test.invalid
     input_series:
+      - series: hsk_media_ingestion_started_total{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 0+100x30
+      - series: hsk_media_ingestion_started_total{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 0+100x30
       - series: hsk_media_ingestion_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
         values: 0+90x30
       - series: hsk_media_ingestion_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
@@ -148,13 +256,17 @@ tests:
         values: 0+10x30
       - series: hsk_media_ingestion_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="failed"}
         values: 0+10x30
-      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
+      - series: hsk_media_signed_content_started_total{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 0+100x30
+      - series: hsk_media_signed_content_started_total{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 0+100x30
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
         values: 0+90x30
-      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
         values: 0+90x30
-      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
         values: 0+10x30
-      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
         values: 0+10x30
       - series: hsk_media_processing_duration_seconds_bucket{instance="10.0.0.1:9464",pod="backend-0",outcome="success",le="5"}
         values: 0+0x30
@@ -228,13 +340,17 @@ tests:
     interval: 10m
     external_url: https://runbooks.test.invalid
     input_series:
-      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
+      - series: hsk_media_signed_content_started_total{instance="10.0.0.1:9464",pod="backend-0"}
+        values: 0+100x80
+      - series: hsk_media_signed_content_started_total{instance="10.0.0.2:9464",pod="backend-1"}
+        values: 0+100x80
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="success"}
         values: 0+90x35 3150+100x45
-      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="success"}
         values: 0+90x35 3150+100x45
-      - series: hsk_media_signed_access_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.1:9464",pod="backend-0",outcome="unavailable"}
         values: 0+10x35 350x45
-      - series: hsk_media_signed_access_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
+      - series: hsk_media_signed_content_requests_total{instance="10.0.0.2:9464",pod="backend-1",outcome="unavailable"}
         values: 0+10x35 350x45
     alert_rule_test:
       - eval_time: 4h
@@ -249,4 +365,128 @@ tests:
               runbook_url: __MEDIA_RUNBOOK_URL__
       - eval_time: 12h
         alertname: HskMediaSignedContentSlowBurn
+        exp_alerts: []
+
+  - name: started without terminal outcomes alerts separately from availability
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_ingestion_started_total{instance="backend-0"}
+        values: 0+10x20
+      - series: hsk_media_ingestion_requests_total{instance="backend-0",outcome="success"}
+        values: 0+8x20
+      - series: hsk_media_ingestion_inflight{instance="backend-0"}
+        values: 2x20
+      - series: hsk_media_signed_content_started_total{instance="backend-0"}
+        values: 0+10x20
+      - series: hsk_media_signed_content_requests_total{instance="backend-0",outcome="success"}
+        values: 0+8x20
+      - series: hsk_media_signed_content_inflight{instance="backend-0"}
+        values: 2x20
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: HskMediaIngestionTerminalDeficit
+        exp_alerts:
+          - exp_labels: { severity: page, owner: media-platform }
+            exp_annotations:
+              summary: Started media ingestion requests are not reaching terminal outcomes
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 16m
+        alertname: HskMediaSignedContentTerminalDeficit
+        exp_alerts:
+          - exp_labels: { severity: page, owner: media-platform }
+            exp_annotations:
+              summary: Started signed-content requests are not reaching terminal outcomes
+              runbook_url: __MEDIA_RUNBOOK_URL__
+
+  - name: process start gauge detects repeated restart and resolves
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_process_start_time_seconds{instance="backend-0"}
+        values: 100 100 200 200 300 300 400x5 400x20
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: HskMediaProcessRestartLoop
+        exp_alerts:
+          - exp_labels: { severity: page, owner: platform-sre }
+            exp_annotations:
+              summary: Media backend processes are restarting repeatedly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 25m
+        alertname: HskMediaProcessRestartLoop
+        exp_alerts: []
+
+  - name: pod replacement counts missing terminal outcomes as failures and resolves
+    interval: 1m
+    external_url: https://runbooks.test.invalid
+    input_series:
+      - series: hsk_media_ingestion_started_total{instance="backend-old",pod="backend-old"}
+        values: 0 1 stale
+      - series: hsk_media_signed_content_started_total{instance="backend-old",pod="backend-old"}
+        values: 0 1 stale
+      - series: hsk_media_process_start_time_seconds{instance="backend-old",pod="backend-old"}
+        values: 100 100 stale
+      - series: hsk_media_process_start_time_seconds{instance="backend-new",pod="backend-new"}
+        values: stale stale 200x45
+      - series: hsk_media_ingestion_inflight{instance="backend-new",pod="backend-new"}
+        values: stale stale 0x45
+      - series: hsk_media_signed_content_inflight{instance="backend-new",pod="backend-new"}
+        values: stale stale 0x45
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: HskMediaIngestionFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+              slo: ingestion-availability
+            exp_annotations:
+              summary: Media ingestion is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 4m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              owner: media-platform
+              slo: signed-content-availability
+            exp_annotations:
+              summary: Signed media delivery is consuming its error budget rapidly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 4m
+        alertname: HskMediaIngestionTerminalDeficit
+        exp_alerts:
+          - exp_labels: { severity: page, owner: media-platform }
+            exp_annotations:
+              summary: Started media ingestion requests are not reaching terminal outcomes
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 4m
+        alertname: HskMediaSignedContentTerminalDeficit
+        exp_alerts:
+          - exp_labels: { severity: page, owner: media-platform }
+            exp_annotations:
+              summary: Started signed-content requests are not reaching terminal outcomes
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 7m
+        alertname: HskMediaProcessRestartLoop
+        exp_alerts:
+          - exp_labels: { severity: page, owner: platform-sre }
+            exp_annotations:
+              summary: Media backend processes are restarting repeatedly
+              runbook_url: __MEDIA_RUNBOOK_URL__
+      - eval_time: 40m
+        alertname: HskMediaIngestionFastBurn
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: HskMediaSignedContentFastBurn
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: HskMediaIngestionTerminalDeficit
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: HskMediaSignedContentTerminalDeficit
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: HskMediaProcessRestartLoop
         exp_alerts: []

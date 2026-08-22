@@ -49,6 +49,10 @@ import {
   UploadedMediaFile,
 } from './media-ingestion/media-ingestion.service';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
+import {
+  getMediaIngestionObservation,
+  MediaIngestionBoundaryInterceptor,
+} from './media-ingestion/media-ingestion-boundary.interceptor';
 import { MediaUploadRateLimitGuard } from './media-ingestion/media-upload-rate-limit.guard';
 import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upload-exception.filter';
 import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe';
@@ -72,6 +76,7 @@ export class CmsController {
   @UseGuards(MediaIngestionEnabledGuard, MediaUploadRateLimitGuard)
   @UseFilters(SafeMediaUploadExceptionFilter)
   @UseInterceptors(
+    MediaIngestionBoundaryInterceptor,
     FileInterceptor('file', {
       preservePath: true,
       limits: {
@@ -97,7 +102,10 @@ export class CmsController {
       file,
       query.dataSourceId,
       idempotencyKey,
-      { correlationId: correlationId(requestId) },
+      {
+        correlationId: correlationId(requestId),
+        observation: getMediaIngestionObservation(request),
+      },
     );
   }
 

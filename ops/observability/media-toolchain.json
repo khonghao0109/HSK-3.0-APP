@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "schemaBundles": {
     "kubernetes-core": {
       "version": "1.33.3",
@@ -45,6 +45,74 @@
           "sha256": "e0eaddebd677c08aa092b2da2264d86ac4fc34eed112b9fac2945b3f00c1e9b1"
         }
       ]
+    }
+  },
+  "images": {
+    "alertmanager": {
+      "repository": "quay.io/prometheus/alertmanager",
+      "version": "0.33.1",
+      "indexDigest": "sha256:9e082985f56f4c8c9f724e18f2288c6708f472e56a5286b8863d080434ea065d",
+      "platforms": [
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "digest": "sha256:a89f8d4520954079275441eecdb71444328bd90633dd4eddfc33b9ed657f349b",
+          "runtimeRef": "quay.io/prometheus/alertmanager@sha256:a89f8d4520954079275441eecdb71444328bd90633dd4eddfc33b9ed657f349b"
+        }
+      ],
+      "attestations": {
+        "signature": {
+          "required": true,
+          "verifier": "cosign-keyless",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "approvedIdentities": []
+        },
+        "sbom": { "required": true, "format": "spdx-json" }
+      }
+    },
+    "grafana": {
+      "repository": "docker.io/grafana/grafana",
+      "version": "13.1.3",
+      "indexDigest": "sha256:ab5cb380e3ff3172d6c8bd2e7cfd31cce977d2881b260e1f5bc089bf0b759b43",
+      "platforms": [
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "digest": "sha256:e27e68cfd5795c1bea54950766078a02e84dfa3bafe0a4d0e5382f713dfd8e4e",
+          "runtimeRef": "docker.io/grafana/grafana@sha256:e27e68cfd5795c1bea54950766078a02e84dfa3bafe0a4d0e5382f713dfd8e4e"
+        }
+      ],
+      "attestations": {
+        "signature": {
+          "required": true,
+          "verifier": "cosign-keyless",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "approvedIdentities": []
+        },
+        "sbom": { "required": true, "format": "spdx-json" }
+      }
+    },
+    "prometheus": {
+      "repository": "quay.io/prometheus/prometheus",
+      "version": "3.13.2",
+      "indexDigest": "sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69",
+      "platforms": [
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "digest": "sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7",
+          "runtimeRef": "quay.io/prometheus/prometheus@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7"
+        }
+      ],
+      "attestations": {
+        "signature": {
+          "required": true,
+          "verifier": "cosign-keyless",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "approvedIdentities": []
+        },
+        "sbom": { "required": true, "format": "spdx-json" }
+      }
     }
   },
   "tools": {
@@ -257,7 +325,7 @@
           "os": "linux",
           "architecture": "x64",
           "artifact": "https://dl.k8s.io/release/v1.33.3/bin/linux/amd64/kubectl",
-          "sha256": "fcf65c64f352742dc253a25a7c95617c2aba79843d1b74e585c69fe4884afb0c",
+          "sha256": "2fcf65c64f352742dc253a25a7c95617c2aba79843d1b74e585c69fe4884afb0",
           "archive": "raw",
           "archiveRoot": ".",
           "executable": "kubectl"
@@ -285,6 +353,54 @@
           "archive": "tar.gz",
           "archiveRoot": ".",
           "executable": "kubeconform"
+        }
+      ]
+    },
+    "cosign": {
+      "version": "3.0.6",
+      "probe": { "args": ["version"], "parser": "cosign" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/sigstore/cosign/releases/download/v3.0.6/cosign-darwin-arm64",
+          "sha256": "5fadd012ae6381a6a29ff86a7d39aa873878852f1073fc90b15995961ecfb084",
+          "archive": "raw",
+          "archiveRoot": ".",
+          "executable": "cosign-darwin-arm64"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/sigstore/cosign/releases/download/v3.0.6/cosign-linux-amd64",
+          "sha256": "c956e5dfcac53d52bcf058360d579472f0c1d2d9b69f55209e256fe7783f4c74",
+          "archive": "raw",
+          "archiveRoot": ".",
+          "executable": "cosign-linux-amd64"
+        }
+      ]
+    },
+    "syft": {
+      "version": "1.50.0",
+      "probe": { "args": ["version"], "parser": "syft" },
+      "platforms": [
+        {
+          "os": "darwin",
+          "architecture": "arm64",
+          "artifact": "https://github.com/anchore/syft/releases/download/v1.50.0/syft_1.50.0_darwin_arm64.tar.gz",
+          "sha256": "e32fdb9d47823fa633748a1efca2528fd77c37469ea93c9e40ab835da44e4cce",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "syft"
+        },
+        {
+          "os": "linux",
+          "architecture": "x64",
+          "artifact": "https://github.com/anchore/syft/releases/download/v1.50.0/syft_1.50.0_linux_amd64.tar.gz",
+          "sha256": "bf7b29ff57f06da30918266a0e1c2885a8f99784798d1bdb1628886aa015d788",
+          "archive": "tar.gz",
+          "archiveRoot": ".",
+          "executable": "syft"
         }
       ]
     }

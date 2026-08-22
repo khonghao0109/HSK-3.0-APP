@@ -960,7 +960,7 @@ Library/BFF hiện tại vẫn không có upload UI. Mọi upload yêu cầu JWT
 
 | Backend endpoint                                           | Method                     | Contract                                                                                                                         |
 | ---------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/v1/admin/cms/media/ingestions?dataSourceId=:id`      | `POST multipart/form-data` | Một field `file`, `Idempotency-Key` 32–128 ký tự; tối đa 10 MiB; JPEG/PNG/MP3/WAV.                                               |
+| `/api/v1/admin/cms/media/ingestions?dataSourceId=:id`      | `POST multipart/form-data` | Một field `file`, `Idempotency-Key` 32–128 ký tự; tối đa 10 MiB; JPEG/PNG/MP3/WAV; body deadline mặc định 30 giây.                |
 | `/api/v1/admin/cms/media/ingestions/:id/cleanup`           | `POST`                     | Admin retry reconciliation; `cleanupCompleted=false, settling=true` cho tới hai HEAD xác nhận absence cách nhau ít nhất 60 giây. |
 | `/api/v1/media/:mediaId/access`                            | `GET`                      | JWT; admin hoặc learner có published Exercise reference; trả signed same-origin URL TTL 60–600 giây.                             |
 | `/api/v1/media/:mediaId/content?expires=...&signature=...` | `GET`                      | Capability URL HMAC ngắn hạn; server verify state, expiry, checksum, MIME và size trước khi trả byte.                            |
@@ -975,10 +975,16 @@ encoded separator bị chặn. Object key là UUID opaque dạng
 `media/YYYY/MM/<uuid>.<ext>` và không lộ qua response/audit.
 
 Production storage là private S3-compatible bucket qua adapter, server-side AES256,
-trusted checksum metadata, provider timeout 8 giây và không public ACL. Test dùng
+trusted checksum metadata, một absolute deadline 8 giây cho cả `send` và toàn Body
+stream, cancellation/destroy/iterator cleanup, và không public ACL. Test dùng
 in-memory adapter chỉ khi `NODE_ENV=test`. Production malware boundary dùng ClamAV
-INSTREAM, timeout 10 giây và fail-closed; scan không sạch chuyển `rejected`, scanner
+INSTREAM, absolute deadline 10 giây phủ connect/upload backpressure/response/parser và
+fail-closed; scan không sạch chuyển `rejected`, scanner
 unavailable chuyển `failed`.
+
+Upload boundary bắt đầu sau eligibility/rate-limit và trước multipart parsing. Nó tính
+đúng một terminal outcome cho success/reject/disabled/failure/cleanup-required, đóng
+connection an toàn khi body vượt deadline và không để request treo biến mất khỏi SLI.
 
 State machine: `pending → processing → completed`; validation/malware có thể sang
 `rejected`; infrastructure failure sang `failed`; object delete không xác nhận được
@@ -1010,6 +1016,9 @@ row-lock và chuyển có chủ đích sang `cleanup_required`/`failed` trước
 Claim/reject/finalize/cleanup reconcile lost transaction commit acknowledgement bằng
 request-owned token và authoritative row reread; outcome không đọc được trả safe
 `503`, không đoán, lặp object side effect hoặc tạo audit trùng.
+Cleanup transition và immutable audit nằm trong cùng transaction. Audit đầu tiên dùng
+exact `cleanupRequiredAt` do PostgreSQL trả về; audit cleanup tiếp theo dùng DB clock
+của transaction, không dùng clock/timezone của process.
 
 Exact retry scope key theo actor và bind actor, source, sanitized filename, declared MIME, raw size và raw
 SHA-256 vào hashed idempotency identity. Completed replay re-read object và Media,

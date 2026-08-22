@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 
 import { createHash, randomUUID } from 'node:crypto';
+import { request as httpRequest } from 'node:http';
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -11,6 +12,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { configureApiEdgeSecurity } from '../src/config/runtime-security';
+import { MediaObservabilityService } from '../src/infrastructure/observability/media-observability.service';
 import { TestMediaMalwareScanner } from '../src/infrastructure/malware/test-media-malware-scanner';
 import { InMemoryObjectStorageAdapter } from '../src/infrastructure/storage/in-memory-object-storage.adapter';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -48,7 +50,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       }),
     );
     configureApiEdgeSecurity(app, moduleFixture.get(ConfigService));
-    await app.init();
+    await app.listen(0, '127.0.0.1');
     prisma = app.get(PrismaService);
     storage = app.get(InMemoryObjectStorageAdapter);
     scanner = app.get(TestMediaMalwareScanner);
@@ -744,6 +746,41 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .expect(404);
   });
 
+  it('13. terminates an authenticated stalled multipart body at the configured absolute deadline', async () => {
+    const config = app.get(ConfigService);
+    const metrics = app.get(MediaObservabilityService);
+    const before = await metrics.render();
+    config.set('media.uploadTimeoutMs', 50);
+    try {
+      const response = await stalledUpload();
+      expect(response.status).toBe(408);
+      expect(JSON.parse(response.body)).toEqual({
+        code: 'MEDIA_UPLOAD_TIMEOUT',
+        message: 'Media upload did not complete within the allowed time.',
+      });
+      const after = await metrics.render();
+      expect(metricValue(after, 'hsk_media_ingestion_started_total')).toBe(
+        metricValue(before, 'hsk_media_ingestion_started_total') + 1,
+      );
+      expect(
+        metricValue(
+          after,
+          'hsk_media_ingestion_requests_total{outcome="failed"}',
+        ),
+      ).toBe(
+        metricValue(
+          before,
+          'hsk_media_ingestion_requests_total{outcome="failed"}',
+        ) + 1,
+      );
+      expect(metricValue(after, 'hsk_media_ingestion_inflight')).toBe(
+        metricValue(before, 'hsk_media_ingestion_inflight'),
+      );
+    } finally {
+      config.set('media.uploadTimeoutMs', 30_000);
+    }
+  });
+
   function upload(
     token: string | undefined,
     body: Buffer,
@@ -779,6 +816,47 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .set('x-request-id', randomUUID())
       .set('Content-Type', `multipart/form-data; boundary=${boundary}`)
       .send(payload);
+  }
+
+  function stalledUpload(): Promise<{ body: string; status: number }> {
+    const server = app.getHttpServer();
+    const address = server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('Test HTTP listener is unavailable.');
+    }
+    const boundary = `hsk-stalled-${randomUUID()}`;
+    return new Promise((resolve, reject) => {
+      const operation = httpRequest({
+        host: '127.0.0.1',
+        port: address.port,
+        method: 'POST',
+        path: `/api/v1/admin/cms/media/ingestions?dataSourceId=${sourceId}`,
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Idempotency-Key': `media-ingest-${randomUUID()}`,
+          'Transfer-Encoding': 'chunked',
+          'x-request-id': randomUUID(),
+        },
+      });
+      operation.once('error', reject);
+      operation.once('response', (response) => {
+        const chunks: Buffer[] = [];
+        response.on('data', (chunk: Buffer) => chunks.push(chunk));
+        response.once('error', reject);
+        response.once('end', () =>
+          resolve({
+            body: Buffer.concat(chunks).toString('utf8'),
+            status: response.statusCode ?? 0,
+          }),
+        );
+      });
+      operation.write(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="stalled.png"\r\nContent-Type: image/png\r\n\r\n`,
+      );
+      // Deliberately leave the chunked multipart body open. The production
+      // boundary must end it; this client never calls end().
+    });
   }
 
   function ownedMediaCount(): Promise<number> {
@@ -828,5 +906,17 @@ describe('Secure Media Ingestion V1 E2E', () => {
     await prisma.$executeRawUnsafe(
       'DROP FUNCTION IF EXISTS hsk_test_reject_media_insert()',
     );
+  }
+
+  function metricValue(exposition: string, metric: string): number {
+    const line = exposition
+      .split('\n')
+      .find((candidate) => candidate.startsWith(`${metric} `));
+    if (!line) throw new Error(`Expected metric is absent: ${metric}.`);
+    const value = Number(line.slice(metric.length + 1));
+    if (!Number.isFinite(value)) {
+      throw new Error(`Expected metric is not finite: ${metric}.`);
+    }
+    return value;
   }
 });

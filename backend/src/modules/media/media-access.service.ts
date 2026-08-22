@@ -119,102 +119,121 @@ export class MediaAccessService {
     signature: string,
     requestTarget: { method: string; path: string },
   ): Promise<StoredObject> {
-    const media = await this.prisma.media.findUnique({
-      where: { id: mediaId },
-      select: {
-        checksum: true,
-        mimeType: true,
-        size: true,
-        storageProvider: true,
-        storageKey: true,
-        type: true,
-        processingStatus: true,
-        deletedAt: true,
-      },
-    });
-    if (
-      !media ||
-      !media.checksum ||
-      !media.mimeType ||
-      !media.size ||
-      !media.storageKey ||
-      !media.storageProvider ||
-      media.storageProvider !== this.storage.provider ||
-      !isSupportedPrivateMedia(media) ||
-      media.processingStatus !== 'ready' ||
-      media.deletedAt !== null ||
-      !verifyMediaAccessSignature({
-        mediaId,
-        expiresAt,
-        checksum: media.checksum,
-        signature,
-        secret: this.signingSecret,
-        method: requestTarget.method,
-        resource: requestTarget.path,
-      })
-    ) {
-      this.metrics?.recordSignedAccess(
-        media?.storageProvider &&
-          media.storageProvider !== this.storage.provider
-          ? 'provider_mismatch'
-          : 'invalid_grant',
-      );
-      if (
-        media?.storageProvider &&
-        media.storageProvider !== this.storage.provider
-      ) {
-        this.metrics?.recordStorage('get', 'provider_mismatch', 0);
-        this.metrics?.recordReconciliation('violation');
-      }
-      throw new ForbiddenException('Media access grant is invalid or expired.');
-    }
-    const getStartedAt = Date.now();
+    const observation = this.metrics?.beginSignedContentRequest();
+    let metricOutcome:
+      | 'success'
+      | 'invalid_grant'
+      | 'unavailable'
+      | 'provider_mismatch'
+      | 'integrity_error' = 'unavailable';
     try {
-      const object = await this.storage.getPrivateObject(media.storageKey);
+      const media = await this.prisma.media.findUnique({
+        where: { id: mediaId },
+        select: {
+          checksum: true,
+          mimeType: true,
+          size: true,
+          storageProvider: true,
+          storageKey: true,
+          type: true,
+          processingStatus: true,
+          deletedAt: true,
+        },
+      });
       if (
-        object.checksum !== media.checksum ||
-        object.body.length !== object.size ||
-        object.size !== media.size ||
-        object.contentType !== media.mimeType ||
-        createHash('sha256').update(object.body).digest('hex') !==
-          media.checksum
+        !media ||
+        !media.checksum ||
+        !media.mimeType ||
+        !media.size ||
+        !media.storageKey ||
+        !media.storageProvider ||
+        media.storageProvider !== this.storage.provider ||
+        !isSupportedPrivateMedia(media) ||
+        media.processingStatus !== 'ready' ||
+        media.deletedAt !== null ||
+        !verifyMediaAccessSignature({
+          mediaId,
+          expiresAt,
+          checksum: media.checksum,
+          signature,
+          secret: this.signingSecret,
+          method: requestTarget.method,
+          resource: requestTarget.path,
+        })
       ) {
-        throw new ObjectStorageError('integrity_violation');
+        metricOutcome =
+          media?.storageProvider &&
+          media.storageProvider !== this.storage.provider
+            ? 'provider_mismatch'
+            : 'invalid_grant';
+        if (
+          media?.storageProvider &&
+          media.storageProvider !== this.storage.provider
+        ) {
+          this.metrics?.recordStorage('get', 'provider_mismatch', 0);
+          this.metrics?.recordReconciliation('violation');
+        }
+        throw new ForbiddenException(
+          'Media access grant is invalid or expired.',
+        );
       }
-      this.metrics?.recordStorage('get', 'success', Date.now() - getStartedAt);
-      this.metrics?.recordSignedAccess('success');
-      return object;
-    } catch (error: unknown) {
-      const kind = storageFailureKind(error);
-      const elapsed = Date.now() - getStartedAt;
-      if (kind === 'unavailable') {
-        this.metrics?.recordStorage('get', 'error', elapsed);
-        this.metrics?.recordSignedAccess('unavailable');
-        throw new ServiceUnavailableException({
-          code: 'MEDIA_STORAGE_UNAVAILABLE',
-          message: 'Media content is temporarily unavailable.',
-        });
-      }
-      if (kind === 'provider_mismatch') {
-        this.metrics?.recordStorage('get', 'provider_mismatch', elapsed);
-        this.metrics?.recordSignedAccess('provider_mismatch');
+      const getStartedAt = Date.now();
+      try {
+        const object = await this.storage.getPrivateObject(media.storageKey);
+        if (
+          object.checksum !== media.checksum ||
+          object.body.length !== object.size ||
+          object.size !== media.size ||
+          object.contentType !== media.mimeType ||
+          createHash('sha256').update(object.body).digest('hex') !==
+            media.checksum
+        ) {
+          throw new ObjectStorageError('integrity_violation');
+        }
+        this.metrics?.recordStorage(
+          'get',
+          'success',
+          Date.now() - getStartedAt,
+        );
+        metricOutcome = 'success';
+        return object;
+      } catch (error: unknown) {
+        const kind = storageFailureKind(error);
+        const elapsed = Date.now() - getStartedAt;
+        if (kind === 'unavailable') {
+          this.metrics?.recordStorage('get', 'error', elapsed);
+          metricOutcome = 'unavailable';
+          throw new ServiceUnavailableException({
+            code: 'MEDIA_STORAGE_UNAVAILABLE',
+            message: 'Media content is temporarily unavailable.',
+          });
+        }
+        if (kind === 'provider_mismatch') {
+          this.metrics?.recordStorage('get', 'provider_mismatch', elapsed);
+          metricOutcome = 'provider_mismatch';
+          this.metrics?.recordReconciliation('violation');
+          throw new ServiceUnavailableException({
+            code: 'MEDIA_STORAGE_PROVIDER_MISMATCH',
+            message: 'Media content storage provider is unavailable.',
+          });
+        }
+        this.metrics?.recordStorage(
+          'get',
+          kind === 'integrity_violation' ? 'integrity_error' : kind,
+          elapsed,
+        );
+        metricOutcome = 'integrity_error';
         this.metrics?.recordReconciliation('violation');
         throw new ServiceUnavailableException({
-          code: 'MEDIA_STORAGE_PROVIDER_MISMATCH',
-          message: 'Media content storage provider is unavailable.',
+          code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
+          message: 'Media content failed integrity verification.',
         });
       }
-      this.metrics?.recordStorage(
-        'get',
-        kind === 'integrity_violation' ? 'integrity_error' : kind,
-        elapsed,
-      );
-      this.metrics?.recordSignedAccess('integrity_error');
-      this.metrics?.recordReconciliation('violation');
-      throw new ServiceUnavailableException({
-        code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
-        message: 'Media content failed integrity verification.',
-      });
+    } finally {
+      observation?.complete(metricOutcome);
+      // Compatibility series for existing dashboards during the one-release
+      // migration to explicit started/terminal signed-content metrics.
+      this.metrics?.recordSignedAccess(metricOutcome);
     }
   }
 }

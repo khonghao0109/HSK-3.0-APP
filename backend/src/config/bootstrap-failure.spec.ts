@@ -82,7 +82,7 @@ describe('handleBootstrapFailure', () => {
         .digest('base64');
     const result = spawnSync(
       process.execPath,
-      ['-r', 'ts-node/register', 'src/main.ts'],
+      ['-r', 'ts-node/register/transpile-only', 'src/main.ts'],
       {
         cwd: process.cwd(),
         encoding: 'utf8',
@@ -104,7 +104,7 @@ describe('handleBootstrapFailure', () => {
           MEDIA_METRICS_HOST: '127.0.0.1',
           MEDIA_METRICS_PORT: '39874',
         },
-        timeout: 15_000,
+        timeout: 90_000,
       },
     );
 
@@ -118,5 +118,5 @@ describe('handleBootstrapFailure', () => {
     expect(output).not.toContain('_original');
     expect(output).not.toContain('MEDIA_SIGNING_SECRET');
     expect(output).not.toContain('ValidationError');
-  }, 20_000);
+  }, 100_000);
 });

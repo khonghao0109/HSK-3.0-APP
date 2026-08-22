@@ -1,5 +1,5 @@
 # TYPE hsk_media_ingestion_started_total counter
-# HELP hsk_media_ingestion_started_total Total media ingestion requests accepted for processing.
+# HELP hsk_media_ingestion_started_total Eligible media ingestion requests entering the measured boundary.
 hsk_media_ingestion_started_total 100
 # TYPE hsk_media_ingestion_requests_total counter
 # HELP hsk_media_ingestion_requests_total Terminal media ingestion outcomes.
@@ -7,6 +7,10 @@ hsk_media_ingestion_requests_total{outcome="success"} 98
 hsk_media_ingestion_requests_total{outcome="rejected"} 1
 hsk_media_ingestion_requests_total{outcome="failed"} 1
 hsk_media_ingestion_requests_total{outcome="cleanup_required"} 0
+hsk_media_ingestion_requests_total{outcome="disabled"} 0
+# TYPE hsk_media_ingestion_inflight gauge
+# HELP hsk_media_ingestion_inflight Media ingestion requests currently in flight.
+hsk_media_ingestion_inflight 0
 # TYPE hsk_media_processing_duration_seconds histogram
 # HELP hsk_media_processing_duration_seconds End-to-end media processing duration.
 hsk_media_processing_duration_seconds_bucket{outcome="success",le="0.1"} 5
@@ -28,6 +32,22 @@ hsk_media_signed_access_total{outcome="invalid_grant"} 1
 hsk_media_signed_access_total{outcome="unavailable"} 1
 hsk_media_signed_access_total{outcome="provider_mismatch"} 0
 hsk_media_signed_access_total{outcome="integrity_error"} 0
+# TYPE hsk_media_signed_content_started_total counter
+# HELP hsk_media_signed_content_started_total Total signed-content requests entering the service boundary.
+hsk_media_signed_content_started_total 1001
+# TYPE hsk_media_signed_content_requests_total counter
+# HELP hsk_media_signed_content_requests_total Terminal signed-content outcomes.
+hsk_media_signed_content_requests_total{outcome="success"} 999
+hsk_media_signed_content_requests_total{outcome="invalid_grant"} 1
+hsk_media_signed_content_requests_total{outcome="unavailable"} 1
+hsk_media_signed_content_requests_total{outcome="provider_mismatch"} 0
+hsk_media_signed_content_requests_total{outcome="integrity_error"} 0
+# TYPE hsk_media_signed_content_inflight gauge
+# HELP hsk_media_signed_content_inflight Signed-content requests currently in flight.
+hsk_media_signed_content_inflight 0
+# TYPE hsk_media_process_start_time_seconds gauge
+# HELP hsk_media_process_start_time_seconds Stable Unix start time for this media process.
+hsk_media_process_start_time_seconds 1786590000
 # TYPE hsk_media_cleanup_required gauge
 # HELP hsk_media_cleanup_required Cleanup-required ingestion rows.
 hsk_media_cleanup_required 0

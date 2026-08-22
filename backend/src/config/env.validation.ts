@@ -77,6 +77,11 @@ export const envValidationSchema = Joi.object({
     then: Joi.boolean().default(true),
     otherwise: Joi.boolean().default(false),
   }),
+  MEDIA_UPLOAD_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(1000)
+    .max(120000)
+    .default(30000),
   MEDIA_METRICS_BEARER_TOKEN: Joi.when('NODE_ENV', {
     is: 'test',
     then: Joi.string()

@@ -148,14 +148,18 @@ dropped after their scoped checks. Their results predate lifecycle telemetry
 migration 18 and are intentionally omitted from current release evidence. No
 pre-existing database was reset, truncated, modified or deleted by that cleanup.
 
-## Current migration 18 verification
+## Current migration 19 verification
 
-The current migration is frozen at SHA-256
+Migration 18 remains frozen at SHA-256
 `1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
-On a fresh guarded disposable database, all 18/18 migrations deployed. Media
-integrity acceptance passed and its transaction rollback left the database
-unchanged. Both the live-database-to-datamodel and migration-history-to-datamodel
-drift checks were empty. Full backend E2E passed 11/11 suites and 160/160 tests. The
-dual-lock `AuditLog`/`MediaIngestion` concurrency scenario was GREEN. Database
-identities are intentionally omitted; this manifest does not infer or invent names
-or catalog counts for that verification.
+The current forward migration 19 is frozen at SHA-256
+`c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`.
+The guarded aggregate runner creates eight independently named `_test` databases from
+`template0`, deploys fresh 00→19, upgrades 17→18→19 with positive backfill fixtures,
+rehearses malformed/future audit P0001 rollback, bounded migration lock abort/recovery,
+writer blocking and both audit/lifecycle race orders. It verifies all 19 source↔DB
+checksums, status, both drift directions, a 1,000-row indexed audit lookup and full
+backend E2E (11/11 suites, 163/163 tests), then drops only its exact generated targets.
+The current JSON/JUnit/log manifest under
+`backend/test-results/media-lifecycle-migration-validation/` is ignored local evidence;
+release CI must retain an immutable copy bound to the final commit/tree/content digest.

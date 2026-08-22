@@ -11,6 +11,7 @@ export default () => ({
       process.env.MEDIA_INGESTION_ENABLED === undefined
         ? process.env.NODE_ENV === 'test'
         : process.env.MEDIA_INGESTION_ENABLED === 'true',
+    uploadTimeoutMs: Number(process.env.MEDIA_UPLOAD_TIMEOUT_MS ?? '30000'),
     metricsBearerTokens: [
       process.env.MEDIA_METRICS_BEARER_TOKEN ??
         (process.env.NODE_ENV === 'test'

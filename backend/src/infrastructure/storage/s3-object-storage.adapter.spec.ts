@@ -12,6 +12,7 @@ import { Readable } from 'node:stream';
 
 import { S3ObjectStorageAdapter } from './s3-object-storage.adapter';
 import {
+  MAX_PRIVATE_MEDIA_OBJECT_BYTES,
   ObjectStorageError,
   ObjectStorageWriteError,
 } from './object-storage.port';
@@ -123,6 +124,340 @@ describe('S3ObjectStorageAdapter contract', () => {
       }),
     );
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('enforces its deadline even when a client send ignores the abort signal', async () => {
+    let requestSignal: AbortSignal | undefined;
+    const send = jest.fn(
+      (_command: PutObjectCommand, options: { abortSignal: AbortSignal }) => {
+        requestSignal = options.abortSignal;
+        return new Promise((resolve) => setTimeout(() => resolve({}), 80));
+      },
+    );
+    const adapter = createAdapter(send, 15);
+
+    await expect(
+      adapter.putPrivateObject({
+        key: 'media/2026/08/absolute-timeout.png',
+        body,
+        contentType: 'image/png',
+        checksum,
+      }),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        name: ObjectStorageWriteError.name,
+        outcome: 'unknown',
+      }),
+    );
+
+    expect(requestSignal?.aborted).toBe(true);
+  });
+
+  it('uses one absolute deadline across send and the entire response stream', async () => {
+    let iteratorReturned = 0;
+    const delayedBody = {
+      [Symbol.asyncIterator]() {
+        let emitted = false;
+        return {
+          async next() {
+            if (emitted) return { done: true as const, value: undefined };
+            emitted = true;
+            await delay(35);
+            return { done: false as const, value: body };
+          },
+          return() {
+            iteratorReturned += 1;
+            return Promise.resolve({ done: true as const, value: undefined });
+          },
+        };
+      },
+    };
+    const send = jest.fn(async () => {
+      await delay(10);
+      return {
+        Body: delayedBody,
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      };
+    });
+    const adapter = createAdapter(send, 25);
+
+    await expect(
+      adapter.getPrivateObject('media/2026/08/slow-stream.png'),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        name: ObjectStorageError.name,
+        kind: 'unavailable',
+      }),
+    );
+
+    expect(iteratorReturned).toBe(1);
+  });
+
+  it('cancels a response body that cannot produce the next chunk before deadline', async () => {
+    const destroy = jest.fn();
+    const delayedBody = {
+      destroy,
+      [Symbol.asyncIterator]() {
+        let emitted = false;
+        return {
+          async next() {
+            if (emitted) return { done: true as const, value: undefined };
+            emitted = true;
+            await delay(60);
+            return { done: false as const, value: body };
+          },
+        };
+      },
+    };
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: delayedBody,
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      }),
+      15,
+    );
+
+    await expect(
+      adapter.getPrivateObject('media/2026/08/blocked-stream.png'),
+    ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels a late GET body when client send resolves after the absolute deadline', async () => {
+    const destroy = jest.fn();
+    const adapter = createAdapter(
+      jest.fn(async () => {
+        await delay(40);
+        return {
+          Body: {
+            destroy,
+            [Symbol.asyncIterator]() {
+              let emitted = false;
+              return {
+                next() {
+                  if (emitted) {
+                    return Promise.resolve({
+                      done: true as const,
+                      value: undefined,
+                    });
+                  }
+                  emitted = true;
+                  return Promise.resolve({ done: false as const, value: body });
+                },
+              };
+            },
+          },
+          ContentType: 'image/png',
+          ContentLength: body.length,
+          Metadata: { sha256: checksum },
+        };
+      }),
+      10,
+    );
+
+    await expect(
+      adapter.getPrivateObject('media/2026/08/late-response.png'),
+    ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
+    await delay(50);
+
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns an unread async iterator when metadata validation rejects the response', async () => {
+    const iteratorReturn = jest
+      .fn()
+      .mockResolvedValue({ done: true as const, value: undefined });
+    const responseBody = {
+      [Symbol.asyncIterator]: jest.fn(() => ({
+        next: jest.fn().mockResolvedValue({
+          done: false as const,
+          value: body,
+        }),
+        return: iteratorReturn,
+      })),
+    };
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: responseBody,
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      }),
+    );
+
+    await expect(
+      adapter.getPrivateObject('media/2026/08/malformed-metadata.png'),
+    ).rejects.toEqual(expect.objectContaining({ kind: 'malformed_response' }));
+
+    expect(responseBody[Symbol.asyncIterator]).toHaveBeenCalledTimes(1);
+    expect(iteratorReturn).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels a body whose async iterator factory throws and returns a safe malformed response', async () => {
+    const providerDetail = 'synthetic throwing iterator provider detail';
+    const destroy = jest.fn();
+    const iteratorFactory = jest.fn(() => {
+      throw new Error(providerDetail);
+    });
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: {
+          destroy,
+          [Symbol.asyncIterator]: iteratorFactory,
+        },
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      }),
+    );
+
+    let thrown: unknown;
+    try {
+      await adapter.getPrivateObject('media/2026/08/throwing-iterator.png');
+    } catch (error: unknown) {
+      thrown = error;
+    }
+
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        kind: 'malformed_response',
+        message: 'Private object storage response is malformed.',
+      }),
+    );
+    expect(String(thrown)).not.toContain(providerDetail);
+    expect(iteratorFactory).toHaveBeenCalledTimes(1);
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels an invalid iterator and invokes its return hook exactly once', async () => {
+    const providerDetail = 'synthetic invalid iterator provider detail';
+    const destroy = jest.fn();
+    const iteratorReturn = jest
+      .fn()
+      .mockResolvedValue({ done: true as const, value: undefined });
+    const iteratorFactory = jest.fn(() => ({
+      return: iteratorReturn,
+      providerDetail,
+    }));
+    const adapter = createAdapter(
+      jest.fn().mockResolvedValue({
+        Body: {
+          destroy,
+          [Symbol.asyncIterator]: iteratorFactory,
+        },
+        ContentType: 'image/png',
+        ContentLength: body.length,
+        Metadata: { sha256: checksum },
+      }),
+    );
+
+    let thrown: unknown;
+    try {
+      await adapter.getPrivateObject('media/2026/08/invalid-iterator.png');
+    } catch (error: unknown) {
+      thrown = error;
+    }
+
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        kind: 'malformed_response',
+        message: 'Private object storage response is malformed.',
+      }),
+    );
+    expect(String(thrown)).not.toContain(providerDetail);
+    expect(iteratorFactory).toHaveBeenCalledTimes(1);
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(iteratorReturn).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      scenario: 'an integrity-violating oversized chunk',
+      steps: [
+        {
+          done: false as const,
+          value: Buffer.alloc(MAX_PRIVATE_MEDIA_OBJECT_BYTES + 1),
+        },
+      ],
+    },
+    {
+      scenario: 'the successful end of a complete stream',
+      steps: [
+        { done: false as const, value: body },
+        { done: true as const, value: undefined },
+      ],
+    },
+  ])(
+    'keeps deadline taxonomy and cleanup exact when it races $scenario',
+    async ({ steps }) => {
+      const iteratorReturn = jest
+        .fn()
+        .mockResolvedValue({ done: true as const, value: undefined });
+      let requestSignal: AbortSignal | undefined;
+      let stepIndex = 0;
+      const next = jest.fn(() => {
+        const step = steps[stepIndex];
+        stepIndex += 1;
+        if (stepIndex < steps.length) return Promise.resolve(step);
+        return new Promise<(typeof steps)[number]>((resolve) => {
+          requestSignal?.addEventListener('abort', () => resolve(step), {
+            once: true,
+          });
+        });
+      });
+      const adapter = createAdapter(
+        jest.fn(
+          (
+            _command: GetObjectCommand,
+            options: { abortSignal: AbortSignal },
+          ) => {
+            requestSignal = options.abortSignal;
+            return Promise.resolve({
+              Body: {
+                [Symbol.asyncIterator]: () => ({
+                  next,
+                  return: iteratorReturn,
+                }),
+              },
+              ContentType: 'image/png',
+              ContentLength: body.length,
+              Metadata: { sha256: checksum },
+            });
+          },
+        ),
+        25,
+      );
+
+      await expect(
+        adapter.getPrivateObject('media/2026/08/deadline-race.png'),
+      ).rejects.toEqual(expect.objectContaining({ kind: 'unavailable' }));
+      expect(requestSignal?.aborted).toBe(true);
+      expect(iteratorReturn).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('clears a completed request deadline instead of aborting a retained signal later', async () => {
+    let requestSignal: AbortSignal | undefined;
+    const send = jest.fn(
+      (_command: PutObjectCommand, options: { abortSignal: AbortSignal }) => {
+        requestSignal = options.abortSignal;
+        return Promise.resolve({});
+      },
+    );
+    const adapter = createAdapter(send, 15);
+
+    await adapter.putPrivateObject({
+      key: 'media/2026/08/fast.png',
+      body,
+      contentType: 'image/png',
+      checksum,
+    });
+    await delay(30);
+
+    expect(requestSignal?.aborted).toBe(false);
   });
 
   it.each([
@@ -465,4 +800,8 @@ function createAdapter(send: jest.Mock, requestTimeoutMs = 8_000) {
 
 function stream(value: Buffer) {
   return Readable.from([value]);
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

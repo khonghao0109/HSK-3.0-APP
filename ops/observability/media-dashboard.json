@@ -14,21 +14,12 @@
       "targetBlank": true
     }
   ],
-  "templating": {
-    "list": [
-      {
-        "name": "DS_PROMETHEUS",
-        "type": "datasource",
-        "query": "prometheus",
-        "label": "Prometheus"
-      }
-    ]
-  },
+  "templating": { "list": [] },
   "panels": [
     {
       "title": "Ingestion availability and burn rate",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
@@ -48,7 +39,7 @@
     {
       "title": "Signed-content availability and burn rate",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
@@ -68,7 +59,7 @@
     {
       "title": "Processing p95",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
@@ -80,7 +71,7 @@
     {
       "title": "Ingestion outcomes",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
@@ -92,7 +83,7 @@
     {
       "title": "Scanner outcomes and latency",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
@@ -108,7 +99,7 @@
     {
       "title": "Storage operations and latency",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
@@ -124,12 +115,12 @@
     {
       "title": "Integrity and reconciliation",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
       "targets": [
         {
           "refId": "SIGNED_OUTCOMES",
-          "expr": "sum by (outcome) (increase(hsk_media_signed_access_total[5m]))"
+          "expr": "sum by (outcome) (increase(hsk_media_signed_content_requests_total[5m]))"
         },
         {
           "refId": "RECONCILIATION_OUTCOMES",
@@ -140,7 +131,7 @@
     {
       "title": "Cleanup backlog / oldest age",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
       "targets": [
         { "refId": "CLEANUP_COUNT", "expr": "hsk_media:cleanup_required:max" },
@@ -153,7 +144,7 @@
     {
       "title": "Stuck processing / oldest age",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
       "targets": [
         { "refId": "STUCK_COUNT", "expr": "hsk_media:stuck_processing:max" },
@@ -166,7 +157,7 @@
     {
       "title": "Replica scrape health",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
       "targets": [
         { "refId": "REPLICA_UP", "expr": "up{job=\"hsk-media-replicas\"}" }
@@ -175,7 +166,7 @@
     {
       "title": "Metrics collector health",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
       "gridPos": { "x": 0, "y": 40, "w": 24, "h": 8 },
       "targets": [
         {
@@ -189,6 +180,66 @@
         {
           "refId": "COLLECTOR_CACHE_AGE",
           "expr": "max(hsk_media_metrics_database_cache_age_seconds)"
+        }
+      ]
+    },
+    {
+      "title": "28d ingestion availability",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
+      "gridPos": { "x": 0, "y": 48, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "refId": "INGEST_AVAILABILITY_28D",
+          "expr": "hsk_media:ingestion_availability:ratio_28d"
+        }
+      ]
+    },
+    {
+      "title": "28d signed-content availability",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
+      "gridPos": { "x": 8, "y": 48, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "refId": "SIGNED_AVAILABILITY_28D",
+          "expr": "hsk_media:signed_availability:ratio_28d"
+        }
+      ]
+    },
+    {
+      "title": "Inflight and terminal deficit",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
+      "gridPos": { "x": 16, "y": 48, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "refId": "INGEST_INFLIGHT",
+          "expr": "sum(hsk_media_ingestion_inflight)"
+        },
+        {
+          "refId": "SIGNED_INFLIGHT",
+          "expr": "sum(hsk_media_signed_content_inflight)"
+        },
+        {
+          "refId": "INGEST_TERMINAL_DEFICIT",
+          "expr": "hsk_media:ingestion_terminal_deficit:increase30m"
+        },
+        {
+          "refId": "SIGNED_TERMINAL_DEFICIT",
+          "expr": "hsk_media:signed_terminal_deficit:increase30m"
+        }
+      ]
+    },
+    {
+      "title": "Process restarts",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "hsk-media-prometheus" },
+      "gridPos": { "x": 0, "y": 54, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "refId": "PROCESS_RESTARTS",
+          "expr": "hsk_media:process_restarts:count15m"
         }
       ]
     }

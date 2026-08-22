@@ -27,6 +27,7 @@ import {
   MediaObservabilityService,
 } from '../../../infrastructure/observability/media-observability.service';
 import { lockActiveCmsActor } from '../cms-actor-lock';
+import { CmsTransactionCoordinator } from '../cms-transaction-coordinator';
 import {
   assertAdminActor,
   classifyCmsPersistenceError,
@@ -42,6 +43,7 @@ import {
   normalizeUploadFilename,
   validateMediaIdempotencyKey,
 } from './media-ingestion.policy';
+import { getMediaIngestionObservation } from './media-ingestion-boundary.interceptor';
 
 export const MEDIA_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
 export const MEDIA_CLEANUP_SETTLING_MS = 60_000;
@@ -53,7 +55,10 @@ export type UploadedMediaFile = {
   buffer: Buffer;
 };
 
-type MediaIngestionContext = { correlationId: string };
+type MediaIngestionContext = {
+  correlationId: string;
+  observation?: ReturnType<typeof getMediaIngestionObservation>;
+};
 
 type MediaProvenanceSnapshot = {
   sourceCodeSnapshot: string;
@@ -74,6 +79,8 @@ export class MediaIngestionService {
     private readonly scanner: MediaMalwareScannerPort,
     @Optional() private readonly config?: ConfigService,
     @Optional() private readonly metrics?: MediaObservabilityService,
+    @Optional()
+    private readonly transactionCoordinator?: CmsTransactionCoordinator,
   ) {}
 
   async ingest(
@@ -83,13 +90,21 @@ export class MediaIngestionService {
     idempotencyHeader: string | undefined,
     context: MediaIngestionContext,
   ) {
-    assertAdminActor(actor);
-    assertMediaIngestionEnabled(
-      this.config?.get<boolean>('media.ingestionEnabled') ?? true,
-    );
     const startedAt = Date.now();
-    this.metrics?.recordIngestion('request');
+    const observation =
+      context.observation ?? this.metrics?.beginIngestionRequest();
+    let metricOutcome:
+      | 'success'
+      | 'rejected'
+      | 'failed'
+      | 'cleanup_required'
+      | 'disabled' = 'failed';
+    let processingMilliseconds: number | undefined;
     try {
+      assertAdminActor(actor);
+      assertMediaIngestionEnabled(
+        this.config?.get<boolean>('media.ingestionEnabled') ?? true,
+      );
       const response = await this.ingestInternal(
         actor,
         file,
@@ -97,21 +112,21 @@ export class MediaIngestionService {
         idempotencyHeader,
         context,
       );
-      if (response.data.idempotent) {
-        // A completed replay validates persisted state but performs no media
-        // processing. Count its successful request without biasing processing
-        // latency SLOs toward the much faster replay path.
-        this.metrics?.recordIngestion('success');
-      } else {
-        this.metrics?.recordIngestion('success', Date.now() - startedAt);
-      }
+      metricOutcome = 'success';
+      // A completed replay validates persisted state but performs no media
+      // processing. Count its successful request without biasing processing
+      // latency SLOs toward the much faster replay path.
+      processingMilliseconds = response.data.idempotent
+        ? undefined
+        : Date.now() - startedAt;
       return response;
     } catch (error: unknown) {
-      this.metrics?.recordIngestion(
-        ingestionMetricOutcome(error),
-        Date.now() - startedAt,
-      );
+      metricOutcome = ingestionMetricOutcome(error);
+      processingMilliseconds =
+        metricOutcome === 'disabled' ? undefined : Date.now() - startedAt;
       throw error;
+    } finally {
+      observation?.complete(metricOutcome, processingMilliseconds);
     }
   }
 
@@ -399,7 +414,10 @@ export class MediaIngestionService {
       if (classification !== 'connection' && classification !== 'timeout') {
         throw error;
       }
-      const authoritativeState = await this.readIngestionState(ingestionId);
+      const authoritativeState = await this.readCleanupState(ingestionId);
+      if (authoritativeState === undefined) {
+        throw cleanupOutcomeUnknown();
+      }
       if (
         authoritativeState?.status === 'processing' &&
         authoritativeState.processingToken === cleanupToken &&
@@ -410,15 +428,33 @@ export class MediaIngestionService {
           ...authoritativeState,
           storageKey: authoritativeState.storageKey,
         };
+      } else if (authoritativeState?.status === 'cleanup_required') {
+        // The claim did not remain committed for this request. The row is
+        // authoritatively retryable and no object side effect has started.
+        throw cleanupRequiredUnavailable();
       } else {
-        throw new ServiceUnavailableException({
-          code: 'MEDIA_CLEANUP_OUTCOME_UNKNOWN',
-          message: 'Media cleanup outcome requires reconciliation.',
-        });
+        throw new ConflictException(
+          'Media ingestion cleanup ownership changed.',
+        );
       }
     }
 
-    if (!(await this.ownsProcessingAttempt(claim.id, claim.processingToken))) {
+    let ownsClaim: boolean;
+    try {
+      ownsClaim = await this.ownsProcessingAttempt(
+        claim.id,
+        claim.processingToken,
+      );
+    } catch {
+      await this.recoverCleanupClaimAfterVerificationFailure(
+        actor.id,
+        ingestionId,
+        claim,
+        context,
+      );
+      throw cleanupRequiredUnavailable();
+    }
+    if (!ownsClaim) {
       throw new ConflictException('Media ingestion cleanup ownership changed.');
     }
 
@@ -471,7 +507,7 @@ export class MediaIngestionService {
     try {
       await this.completeCleanup(actor.id, ingestionId, claim, context);
     } catch (error: unknown) {
-      const authoritativeState = await this.readIngestionState(ingestionId);
+      const authoritativeState = await this.readCleanupState(ingestionId);
       if (
         authoritativeState?.status === 'failed' &&
         authoritativeState.processingToken === claim.processingToken &&
@@ -495,6 +531,36 @@ export class MediaIngestionService {
     return cleanupCompletedResponse(ingestionId);
   }
 
+  private async recoverCleanupClaimAfterVerificationFailure(
+    actorId: number,
+    ingestionId: number,
+    claim: MediaIngestion & { storageKey: string },
+    context: MediaIngestionContext,
+  ): Promise<void> {
+    try {
+      await this.recordCleanupFailure(actorId, ingestionId, claim, context);
+      return;
+    } catch {
+      const authoritativeState = await this.readCleanupState(ingestionId);
+      if (authoritativeState === undefined) throw cleanupOutcomeUnknown();
+      if (
+        authoritativeState?.status === 'cleanup_required' &&
+        authoritativeState.processingToken === claim.processingToken &&
+        authoritativeState.failureCode === 'OBJECT_CLEANUP_REQUIRED'
+      ) {
+        return;
+      }
+      if (
+        authoritativeState?.status === 'processing' &&
+        authoritativeState.processingToken === claim.processingToken &&
+        authoritativeState.failureCode === 'OBJECT_CLEANUP_IN_PROGRESS'
+      ) {
+        throw cleanupOutcomeUnknown();
+      }
+      throw new ConflictException('Media ingestion cleanup ownership changed.');
+    }
+  }
+
   private async observeStorageOperation<T>(
     operation: 'head' | 'delete' | 'verify',
     invoke: () => Promise<T>,
@@ -514,6 +580,16 @@ export class MediaIngestionService {
     }
   }
 
+  private async readCleanupState(
+    ingestionId: number,
+  ): Promise<MediaIngestion | undefined> {
+    try {
+      return (await this.readIngestionState(ingestionId)) ?? undefined;
+    } catch {
+      throw cleanupOutcomeUnknown();
+    }
+  }
+
   private claimCleanup(
     actorId: number,
     ingestionId: number,
@@ -521,9 +597,23 @@ export class MediaIngestionService {
   ): Promise<MediaIngestion & { storageKey: string }> {
     return this.prisma.$transaction(async (tx) => {
       await lockActiveCmsActor(tx, actorId);
+      await this.transactionCoordinator?.checkpoint({
+        operation: 'media_ingestion.cleanup',
+        phase: 'before_lock',
+        entityType: 'media_ingestion',
+        entityId: ingestionId,
+        transaction: tx,
+      });
       const rows = await tx.$queryRaw<Array<{ id: number }>>(
         Prisma.sql`SELECT id FROM "MediaIngestion" WHERE id = ${ingestionId} FOR UPDATE`,
       );
+      await this.transactionCoordinator?.checkpoint({
+        operation: 'media_ingestion.cleanup',
+        phase: 'after_lock',
+        entityType: 'media_ingestion',
+        entityId: ingestionId,
+        transaction: tx,
+      });
       if (rows.length !== 1) {
         throw new ConflictException(
           'Media ingestion cleanup is not available.',
@@ -582,6 +672,7 @@ export class MediaIngestionService {
           'Media ingestion cleanup ownership changed.',
         );
       }
+      const auditCreatedAt = await this.readDatabaseTimestamp(tx);
       await tx.auditLog.create({
         data: {
           actorId,
@@ -589,6 +680,7 @@ export class MediaIngestionService {
           targetType: 'media_ingestion',
           targetId: String(ingestionId),
           correlationId: context.correlationId,
+          createdAt: auditCreatedAt,
           afterSummary: {
             ingestionId,
             status: 'cleanup_required',
@@ -630,6 +722,7 @@ export class MediaIngestionService {
           'Media ingestion cleanup ownership changed.',
         );
       }
+      const auditCreatedAt = await this.readDatabaseTimestamp(tx);
       await tx.auditLog.create({
         data: {
           actorId,
@@ -637,6 +730,7 @@ export class MediaIngestionService {
           targetType: 'media_ingestion',
           targetId: String(ingestionId),
           correlationId: context.correlationId,
+          createdAt: auditCreatedAt,
           afterSummary: {
             ingestionId,
             status: 'cleanup_required',
@@ -663,7 +757,7 @@ export class MediaIngestionService {
         context,
       );
     } catch (error: unknown) {
-      const authoritativeState = await this.readIngestionState(ingestionId);
+      const authoritativeState = await this.readCleanupState(ingestionId);
       if (
         authoritativeState?.status === 'cleanup_required' &&
         authoritativeState.processingToken === claim.processingToken &&
@@ -690,7 +784,7 @@ export class MediaIngestionService {
     try {
       await this.recordCleanupFailure(actorId, ingestionId, claim, context);
     } catch (error: unknown) {
-      const authoritativeState = await this.readIngestionState(ingestionId);
+      const authoritativeState = await this.readCleanupState(ingestionId);
       if (
         authoritativeState?.status === 'cleanup_required' &&
         authoritativeState.processingToken === claim.processingToken &&
@@ -1249,6 +1343,21 @@ export class MediaIngestionService {
         },
       });
       if (result.count !== 1) return;
+      const cleanupRequiredAt =
+        status === 'cleanup_required'
+          ? (
+              await tx.mediaIngestion.findUniqueOrThrow({
+                where: { id: ingestionId },
+                select: { cleanupRequiredAt: true },
+              })
+            ).cleanupRequiredAt
+          : null;
+      if (status === 'cleanup_required' && cleanupRequiredAt === null) {
+        throw new ServiceUnavailableException({
+          code: 'MEDIA_CLEANUP_OUTCOME_UNKNOWN',
+          message: 'Media cleanup outcome requires reconciliation.',
+        });
+      }
       await tx.auditLog.create({
         data: {
           actorId,
@@ -1257,6 +1366,9 @@ export class MediaIngestionService {
           targetId: String(ingestionId),
           correlationId: context.correlationId,
           afterSummary: { ingestionId, status, failureCode },
+          ...(cleanupRequiredAt === null
+            ? {}
+            : { createdAt: cleanupRequiredAt }),
         },
       });
     });
@@ -1349,6 +1461,22 @@ export class MediaIngestionService {
     );
   }
 
+  private async readDatabaseTimestamp(
+    tx: Prisma.TransactionClient,
+  ): Promise<Date> {
+    const rows = await tx.$queryRaw<Array<{ createdAt: Date }>>(
+      Prisma.sql`SELECT CURRENT_TIMESTAMP::timestamp(3) AS "createdAt"`,
+    );
+    const createdAt = rows[0]?.createdAt;
+    if (!(createdAt instanceof Date) || Number.isNaN(createdAt.getTime())) {
+      throw new ServiceUnavailableException({
+        code: 'MEDIA_CLEANUP_OUTCOME_UNKNOWN',
+        message: 'Media cleanup outcome requires reconciliation.',
+      });
+    }
+    return createdAt;
+  }
+
   private async readIngestionState(
     ingestionId: number,
   ): Promise<MediaIngestion | null | undefined> {
@@ -1402,6 +1530,20 @@ function cleanupSettlingResponse(ingestionId: number) {
   };
 }
 
+function cleanupRequiredUnavailable(): ServiceUnavailableException {
+  return new ServiceUnavailableException({
+    code: 'MEDIA_CLEANUP_REQUIRED',
+    message: 'Media cleanup is temporarily unavailable.',
+  });
+}
+
+function cleanupOutcomeUnknown(): ServiceUnavailableException {
+  return new ServiceUnavailableException({
+    code: 'MEDIA_CLEANUP_OUTCOME_UNKNOWN',
+    message: 'Media cleanup outcome requires reconciliation.',
+  });
+}
+
 function sameProvenance(
   expected: MediaProvenanceSnapshot | undefined,
   actual: MediaProvenanceSnapshot,
@@ -1419,7 +1561,7 @@ function sameProvenance(
 
 function ingestionMetricOutcome(
   error: unknown,
-): 'rejected' | 'failed' | 'cleanup_required' {
+): 'rejected' | 'failed' | 'cleanup_required' | 'disabled' {
   if (error instanceof UnprocessableEntityException) return 'rejected';
   if (error instanceof ServiceUnavailableException) {
     const response = error.getResponse();
@@ -1427,9 +1569,11 @@ function ingestionMetricOutcome(
       response &&
       typeof response === 'object' &&
       'code' in response &&
-      (response.code === 'MEDIA_CLEANUP_REQUIRED' ||
+      (response.code === 'MEDIA_INGESTION_DISABLED' ||
+        response.code === 'MEDIA_CLEANUP_REQUIRED' ||
         response.code === 'MEDIA_CLEANUP_OUTCOME_UNKNOWN')
     ) {
+      if (response.code === 'MEDIA_INGESTION_DISABLED') return 'disabled';
       return 'cleanup_required';
     }
   }

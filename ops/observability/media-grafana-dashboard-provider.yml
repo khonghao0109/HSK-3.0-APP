@@ -1,0 +1,12 @@
+apiVersion: 1
+providers:
+  - name: HSK Media Operations
+    orgId: 1
+    folder: HSK Media
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

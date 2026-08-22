@@ -28,6 +28,37 @@ describe('MediaAccessService storage-provider affinity', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
+  it('starts signed-content accounting before the database boundary and settles unavailable once', async () => {
+    const { config, prisma, storage } = createFixture('s3', 's3');
+    const complete = jest.fn();
+    const metrics = {
+      beginSignedContentRequest: jest.fn(() => ({ complete })),
+      recordSignedAccess: jest.fn(),
+    };
+    prisma.media.findUnique.mockRejectedValueOnce(
+      new Error('synthetic database outage'),
+    );
+    const service = new MediaAccessService(
+      prisma,
+      config,
+      storage,
+      metrics as never,
+    );
+
+    await expect(
+      service.readSignedObject(
+        41,
+        1,
+        'synthetic-signature',
+        canonicalRequestTarget,
+      ),
+    ).rejects.toThrow('synthetic database outage');
+
+    expect(metrics.beginSignedContentRequest).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledWith('unavailable');
+  });
+
   it('issues a grant bound to the canonical GET content resource', async () => {
     const { service } = createFixture('s3', 's3');
     jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
@@ -385,10 +416,13 @@ describe('MediaAccessService storage-provider affinity', () => {
   }
 
   function createMetrics() {
+    const complete = jest.fn();
     return {
+      beginSignedContentRequest: jest.fn(() => ({ complete })),
       recordSignedAccess: jest.fn(),
       recordStorage: jest.fn(),
       recordReconciliation: jest.fn(),
+      complete,
     };
   }
 });

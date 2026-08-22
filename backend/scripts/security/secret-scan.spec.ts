@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -87,6 +93,8 @@ void test('does not confuse runtime expressions, password hashes or UUID fencing
     ['processingToken', 'input.initialProcessingToken,'].join(': '),
     'const token = loginRes.body.accessToken as string;',
     'const token = process.env.GRAFANA_API_TOKEN!;',
+    'const url = `postgresql://service:${encodedSecret}@localhost/app`;',
+    'const ownerUrl = "https://example.com:443/path@owner";',
     "password: '$argon2id$exercise-concurrency-test-hash',",
     "processingToken: '60000000-0000-4000-8000-000000000006',",
   ].join('\n');
@@ -100,6 +108,58 @@ void test('still flags credential URLs on production-looking hosts even with com
     scanSecretText('backend/config.ts', `DATABASE_URL=${url}`)[0]?.kind,
     'credential_url',
   );
+});
+
+void test('flags credential userinfo across empty fields, reserved hosts, encodings, addresses and URL suffixes', () => {
+  const strong = ['R3al', 'Credential', '987!', '@value'].join('');
+  const encoded = encodeURIComponent(strong);
+  const candidates = [
+    `postgresql://:${encoded}@db.internal:5432/app`,
+    ['postgresql://', ':password', '@db.internal:5432/app'].join(''),
+    ['postgresql://service', '@db.internal:5432/app'].join(':'),
+    `redis://service:${encoded}@localhost:6379/0`,
+    `redis://service:${encoded}@cache.test:6379/0`,
+    `https://service:${encoded}@example.com/private`,
+    `https://service:${encoded}@10.20.30.40/private`,
+    `https://service:${encoded}@[2001:db8::10]/private`,
+    `https://service:${encoded}@media.internal/private?mode=read#primary`,
+  ];
+
+  for (const candidate of candidates) {
+    assert.deepEqual(
+      scanSecretText('backend/config.ts', `ENDPOINT=${candidate}`).map(
+        ({ kind, line }) => ({ kind, line }),
+      ),
+      [{ kind: 'credential_url', line: 1 }],
+      candidate.replace(strong, '[REDACTED]').replace(encoded, '[REDACTED]'),
+    );
+  }
+});
+
+void test('fails closed on malformed credential URL syntax and keeps output secret-free', () => {
+  const decodedSecret = ['R3al', 'Malformed', 'Credential', '987!'].join('');
+  const encodedSecret = encodeURIComponent(decodedSecret);
+  const malformed = [
+    `postgresql://service:${encodedSecret}@[2001:db8::10`,
+    `postgresql://service:%ZZ${encodedSecret}@db.internal/app`,
+    `postgresql://service:${encodedSecret}@`,
+    `postgresql://service:${encodedSecret}#fragment@db.internal/app`,
+    `postgresql://service:${encodedSecret}?query@db.internal/app`,
+    `postgresql://service:${encodedSecret}/path@db.internal/app`,
+  ];
+
+  for (const candidate of malformed) {
+    const [finding] = scanSecretText(
+      'backend/config.ts',
+      `DATABASE_URL=${candidate}`,
+    );
+    assert.equal(finding?.kind, 'credential_url');
+    assert.ok(finding);
+    const formatted = formatSecretFinding(finding);
+    assert.equal(formatted.includes(candidate), false);
+    assert.equal(formatted.includes(encodedSecret), false);
+    assert.equal(formatted.includes(decodedSecret), false);
+  }
 });
 
 void test('sanitizes findings and never returns the matched secret value', () => {
@@ -214,6 +274,29 @@ void test('scans staged index bytes even when the tracked worktree copy is clean
       })),
       [{ path: '.env', kind: 'secret_assignment', line: 1 }],
     );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+void test('does not follow tracked symlinks while scanning repository bytes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'hsk-secret-scan-symlink-'));
+  try {
+    execFileSync('git', ['init', '--quiet'], { cwd: root });
+    mkdirSync(join(root, 'ignored'));
+    writeFileSync(join(root, '.gitignore'), 'ignored/\n', 'utf8');
+    const secret = Buffer.from(
+      Array.from({ length: 32 }, (_, index) => (index * 43 + 17) % 256),
+    ).toString('base64url');
+    writeFileSync(
+      join(root, 'ignored', 'outside-inventory.env'),
+      `MEDIA_SIGNING_SECRET=${secret}\n`,
+      'utf8',
+    );
+    symlinkSync('ignored/outside-inventory.env', join(root, 'tracked-link'));
+    execFileSync('git', ['add', '.gitignore', 'tracked-link'], { cwd: root });
+
+    assert.deepEqual(scanGitSecretFiles(root, emptyAllowlist), []);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

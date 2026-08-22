@@ -14,6 +14,7 @@ const INGESTION_OUTCOMES = [
   'rejected',
   'failed',
   'cleanup_required',
+  'disabled',
 ] as const;
 const SCANNER_OUTCOMES = [
   'success',
@@ -43,6 +44,13 @@ const TERMINAL_INGESTION_OUTCOMES = [
   'rejected',
   'failed',
   'cleanup_required',
+  'disabled',
+] as const;
+const PROCESSING_DURATION_OUTCOMES = [
+  'success',
+  'rejected',
+  'failed',
+  'cleanup_required',
 ] as const;
 const PROCESSING_DURATION_BUCKETS_SECONDS = [
   0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60,
@@ -53,11 +61,16 @@ export const MEDIA_METRICS_COLLECTION_TIMEOUT_MS = 1_000;
 export const MEDIA_METRICS_CACHE_TTL_MS = 5_000;
 export const MEDIA_METRICS_STALE_TTL_MS = 60_000;
 
-type IngestionOutcome = (typeof INGESTION_OUTCOMES)[number];
 type ScannerOutcome = (typeof SCANNER_OUTCOMES)[number];
 type StorageOperation = (typeof STORAGE_OPERATIONS)[number];
 type StorageOutcome = (typeof STORAGE_OUTCOMES)[number];
 type SignedAccessOutcome = (typeof SIGNED_ACCESS_OUTCOMES)[number];
+type TerminalIngestionOutcome = (typeof TERMINAL_INGESTION_OUTCOMES)[number];
+type ProcessingDurationOutcome = (typeof PROCESSING_DURATION_OUTCOMES)[number];
+
+export type MediaRequestObservation<T extends string> = {
+  complete(outcome: T, milliseconds?: number): void;
+};
 
 @Injectable()
 export class MediaObservabilityService {
@@ -71,6 +84,9 @@ export class MediaObservabilityService {
   private readonly collectionTimeoutMs: number;
   private readonly cacheTtlMs: number;
   private readonly staleTtlMs: number;
+  private readonly processStartTimeSeconds = Date.now() / 1_000;
+  private ingestionInflight = 0;
+  private signedContentInflight = 0;
   private databaseCache: DatabaseCache | undefined;
   private activeCollection: ActiveCollection | undefined;
 
@@ -108,13 +124,31 @@ export class MediaObservabilityService {
     );
   }
 
-  recordIngestion(outcome: IngestionOutcome, milliseconds?: number): void {
-    assertAllowed(INGESTION_OUTCOMES, outcome);
-    this.increment(`ingestion:${outcome}`);
-    if (milliseconds !== undefined) {
-      this.observe(`processing:${outcome}`, milliseconds);
-      this.observeProcessing(outcome, milliseconds);
-    }
+  beginIngestionRequest(): MediaRequestObservation<TerminalIngestionOutcome> {
+    this.increment('ingestion:request');
+    this.ingestionInflight += 1;
+    return onceObservation((outcome, milliseconds) => {
+      assertAllowed(TERMINAL_INGESTION_OUTCOMES, outcome);
+      this.ingestionInflight = Math.max(0, this.ingestionInflight - 1);
+      this.increment(`ingestion:${outcome}`);
+      if (
+        milliseconds !== undefined &&
+        isAllowed(PROCESSING_DURATION_OUTCOMES, outcome)
+      ) {
+        this.observe(`processing:${outcome}`, milliseconds);
+        this.observeProcessing(outcome, milliseconds);
+      }
+    });
+  }
+
+  beginSignedContentRequest(): MediaRequestObservation<SignedAccessOutcome> {
+    this.increment('signed:started');
+    this.signedContentInflight += 1;
+    return onceObservation((outcome) => {
+      assertAllowed(SIGNED_ACCESS_OUTCOMES, outcome);
+      this.signedContentInflight = Math.max(0, this.signedContentInflight - 1);
+      this.increment(`signed:terminal:${outcome}`);
+    });
   }
 
   recordScanner(outcome: ScannerOutcome, milliseconds: number): void {
@@ -149,12 +183,24 @@ export class MediaObservabilityService {
     const state = database.state;
     const lines: string[] = [];
     lines.push(
-      '# HELP hsk_media_ingestion_started_total Media ingestion requests accepted by the service.',
+      '# HELP hsk_media_process_start_time_seconds Unix timestamp when this metrics process started.',
+    );
+    lines.push('# TYPE hsk_media_process_start_time_seconds gauge');
+    lines.push(
+      `hsk_media_process_start_time_seconds ${this.processStartTimeSeconds}`,
+    );
+    lines.push(
+      '# HELP hsk_media_ingestion_started_total Eligible media ingestion requests entering the measured boundary.',
     );
     lines.push('# TYPE hsk_media_ingestion_started_total counter');
     lines.push(
       `hsk_media_ingestion_started_total ${this.value('ingestion:request')}`,
     );
+    lines.push(
+      '# HELP hsk_media_ingestion_inflight Media ingestion requests started but not terminal in this process.',
+    );
+    lines.push('# TYPE hsk_media_ingestion_inflight gauge');
+    lines.push(`hsk_media_ingestion_inflight ${this.ingestionInflight}`);
     lines.push(
       '# HELP hsk_media_ingestion_requests_total Terminal media ingestion request outcomes.',
     );
@@ -227,6 +273,29 @@ export class MediaObservabilityService {
       );
     }
     lines.push(
+      '# HELP hsk_media_signed_content_started_total Signed content requests entering the service boundary.',
+    );
+    lines.push('# TYPE hsk_media_signed_content_started_total counter');
+    lines.push(
+      `hsk_media_signed_content_started_total ${this.value('signed:started')}`,
+    );
+    lines.push(
+      '# HELP hsk_media_signed_content_requests_total Terminal signed content request outcomes.',
+    );
+    lines.push('# TYPE hsk_media_signed_content_requests_total counter');
+    for (const outcome of SIGNED_ACCESS_OUTCOMES) {
+      lines.push(
+        `hsk_media_signed_content_requests_total{outcome="${outcome}"} ${this.value(`signed:terminal:${outcome}`)}`,
+      );
+    }
+    lines.push(
+      '# HELP hsk_media_signed_content_inflight Signed content requests started but not terminal in this process.',
+    );
+    lines.push('# TYPE hsk_media_signed_content_inflight gauge');
+    lines.push(
+      `hsk_media_signed_content_inflight ${this.signedContentInflight}`,
+    );
+    lines.push(
       '# HELP hsk_media_reconciliation_total Media storage and database reconciliation outcomes.',
     );
     lines.push('# TYPE hsk_media_reconciliation_total counter');
@@ -295,7 +364,7 @@ export class MediaObservabilityService {
       '# HELP hsk_media_processing_duration_seconds End-to-end media ingestion processing duration by terminal outcome.',
     );
     lines.push('# TYPE hsk_media_processing_duration_seconds histogram');
-    for (const outcome of TERMINAL_INGESTION_OUTCOMES) {
+    for (const outcome of PROCESSING_DURATION_OUTCOMES) {
       appendHistogram(
         lines,
         'hsk_media_processing_duration_seconds',
@@ -317,20 +386,14 @@ export class MediaObservabilityService {
 
     const collection = this.activeCollection ?? this.startCollection();
     try {
-      const state = await withTimeout(
-        collection.promise,
-        this.collectionTimeoutMs,
-      );
+      const state = await collection.promise;
       return renderedSnapshot(
         { state, collectedAtMs: Date.now() },
         true,
         false,
         Date.now(),
       );
-    } catch (error: unknown) {
-      if (error instanceof MetricsCollectionTimeoutError) {
-        this.recordCollectionOutcome(collection, 'timeout');
-      }
+    } catch {
       const cache = this.databaseCache;
       const fallbackNow = Date.now();
       if (cache && fallbackNow - cache.collectedAtMs <= this.staleTtlMs) {
@@ -346,8 +409,9 @@ export class MediaObservabilityService {
   }
 
   private startCollection(): ActiveCollection {
+    const databaseOperation = this.collectDatabaseMetrics();
     const collection: ActiveCollection = {
-      promise: this.collectDatabaseMetrics(),
+      promise: withTimeout(databaseOperation, this.collectionTimeoutMs),
       outcome: undefined,
     };
     this.activeCollection = collection;
@@ -360,8 +424,29 @@ export class MediaObservabilityService {
         if (this.activeCollection === collection)
           this.activeCollection = undefined;
       },
+      (error: unknown) => {
+        this.recordCollectionOutcome(
+          collection,
+          error instanceof MetricsCollectionTimeoutError ? 'timeout' : 'error',
+        );
+        if (
+          !(error instanceof MetricsCollectionTimeoutError) &&
+          this.activeCollection === collection
+        ) {
+          this.activeCollection = undefined;
+        }
+      },
+    );
+    // A timed-out driver call may still be resolving underneath the shared
+    // absolute deadline. Retain that failed collection until the underlying
+    // operation settles so later scrapes cannot accumulate pool waiters or
+    // reinterpret the same operation as successful.
+    void databaseOperation.then(
       () => {
-        this.recordCollectionOutcome(collection, 'error');
+        if (this.activeCollection === collection)
+          this.activeCollection = undefined;
+      },
+      () => {
         if (this.activeCollection === collection)
           this.activeCollection = undefined;
       },
@@ -427,7 +512,10 @@ export class MediaObservabilityService {
     });
   }
 
-  private observeProcessing(outcome: IngestionOutcome, milliseconds: number) {
+  private observeProcessing(
+    outcome: ProcessingDurationOutcome,
+    milliseconds: number,
+  ) {
     if (!Number.isFinite(milliseconds) || milliseconds < 0) return;
     const histogram = this.processingHistogram(outcome);
     histogram.count += 1;
@@ -447,7 +535,7 @@ export class MediaObservabilityService {
     return this.durations.get(key) ?? { count: 0, milliseconds: 0 };
   }
 
-  private processingHistogram(outcome: IngestionOutcome): Histogram {
+  private processingHistogram(outcome: ProcessingDurationOutcome): Histogram {
     const existing = this.processingHistograms.get(outcome);
     if (existing) return existing;
     const created = {
@@ -476,6 +564,13 @@ function assertAllowed<T extends string>(
   if (!allowed.includes(value as T)) {
     throw new Error('Unsupported media metric label.');
   }
+}
+
+function isAllowed<T extends string>(
+  allowed: readonly T[],
+  value: string,
+): value is T {
+  return allowed.includes(value as T);
 }
 
 function appendDuration(
@@ -622,4 +717,17 @@ function boundedConfig(
 
 function boundedAge(value: number | undefined): number {
   return Number.isFinite(value) ? Math.max(0, Math.floor(value ?? 0)) : 0;
+}
+
+function onceObservation<T extends string>(
+  settle: (outcome: T, milliseconds?: number) => void,
+): MediaRequestObservation<T> {
+  let completed = false;
+  return {
+    complete(outcome, milliseconds) {
+      if (completed) return;
+      completed = true;
+      settle(outcome, milliseconds);
+    },
+  };
 }

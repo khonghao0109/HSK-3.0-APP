@@ -2,14 +2,62 @@ import { ObjectStorageError } from '../../../infrastructure/storage/object-stora
 import { MediaIngestionService } from './media-ingestion.service';
 
 describe('MediaIngestionService storage-stage telemetry', () => {
+  it('reuses the pre-multipart request observation without starting a second denominator', async () => {
+    const boundaryComplete = jest.fn();
+    const metrics = { beginIngestionRequest: jest.fn() };
+    const service = new MediaIngestionService(
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      undefined,
+      metrics as never,
+    );
+    (
+      service as unknown as {
+        ingestInternal: () => Promise<{
+          success: true;
+          data: { idempotent: false };
+        }>;
+      }
+    ).ingestInternal = jest.fn().mockResolvedValue({
+      success: true,
+      data: { idempotent: false },
+    });
+
+    await service.ingest(
+      { id: 7, role: 'admin' },
+      {
+        originalname: 'synthetic.png',
+        mimetype: 'image/png',
+        size: 1,
+        buffer: Buffer.from([1]),
+      },
+      3,
+      'idempotency-key',
+      {
+        correlationId: 'correlation-id',
+        observation: { complete: boundaryComplete },
+      },
+    );
+
+    expect(metrics.beginIngestionRequest).not.toHaveBeenCalled();
+    expect(boundaryComplete).toHaveBeenCalledTimes(1);
+    expect(boundaryComplete).toHaveBeenCalledWith(
+      'success',
+      expect.any(Number),
+    );
+  });
+
   it.each([
     ['completed replay', true, false],
     ['new ingestion', false, true],
   ] as const)(
     'counts a successful %s but records processing duration only for real processing',
     async (_case, idempotent, expectsDuration) => {
+      const complete = jest.fn();
       const metrics = {
-        recordIngestion: jest.fn(),
+        beginIngestionRequest: jest.fn(() => ({ complete })),
       };
       const service = new MediaIngestionService(
         {} as never,
@@ -46,19 +94,53 @@ describe('MediaIngestionService storage-stage telemetry', () => {
         ),
       ).resolves.toMatchObject({ data: { idempotent } });
 
-      expect(metrics.recordIngestion).toHaveBeenNthCalledWith(1, 'request');
+      expect(metrics.beginIngestionRequest).toHaveBeenCalledTimes(1);
       if (expectsDuration) {
-        expect(metrics.recordIngestion).toHaveBeenNthCalledWith(
-          2,
-          'success',
-          expect.any(Number),
-        );
+        expect(complete).toHaveBeenCalledWith('success', expect.any(Number));
       } else {
-        expect(metrics.recordIngestion).toHaveBeenNthCalledWith(2, 'success');
+        expect(complete).toHaveBeenCalledWith('success', undefined);
       }
-      expect(metrics.recordIngestion).toHaveBeenCalledTimes(2);
+      expect(complete).toHaveBeenCalledTimes(1);
     },
   );
+
+  it('counts a kill-switch rejection as a started and disabled terminal request', async () => {
+    const complete = jest.fn();
+    const metrics = {
+      beginIngestionRequest: jest.fn(() => ({ complete })),
+    };
+    const config = {
+      get: jest.fn((key: string) =>
+        key === 'media.ingestionEnabled' ? false : undefined,
+      ),
+    };
+    const service = new MediaIngestionService(
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      config as never,
+      metrics as never,
+    );
+
+    await expect(
+      service.ingest(
+        { id: 7, role: 'admin' },
+        undefined,
+        3,
+        'idempotency-key',
+        { correlationId: 'correlation-id' },
+      ),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'MEDIA_INGESTION_DISABLED',
+      },
+    });
+
+    expect(metrics.beginIngestionRequest).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledWith('disabled', undefined);
+  });
 
   it.each([
     ['head', new ObjectStorageError('unavailable'), 'error'],

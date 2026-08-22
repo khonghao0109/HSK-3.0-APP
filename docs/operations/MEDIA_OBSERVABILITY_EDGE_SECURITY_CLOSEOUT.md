@@ -43,21 +43,31 @@ Raw scanner responses and file payloads are never logged.
 
 ## Metrics producer and consumer matrix
 
-| Code path                             | Metric                                                | Dashboard                      | Alert / response                           |
-| ------------------------------------- | ----------------------------------------------------- | ------------------------------ | ------------------------------------------ |
-| ingestion request/final state         | `hsk_media_ingestion_total`, processing latency       | Ingestion outcomes             | SLO investigation                          |
-| ClamAV exact parser                   | `hsk_media_scanner_total`, scanner latency            | Scanner outcomes and latency   | unavailable and invalid-response alerts    |
-| S3 adapter and media access/replay    | `hsk_media_storage_operations_total`, storage latency | Storage operations and latency | storage spike or immediate integrity alert |
-| signed content service                | `hsk_media_signed_access_total`                       | Integrity and reconciliation   | immediate integrity alert                  |
-| replay/access coherence checks        | `hsk_media_reconciliation_total`                      | Integrity and reconciliation   | immediate coherence alert                  |
-| one aggregate PostgreSQL scrape query | cleanup/stuck counts and oldest age                   | Cleanup/Stuck panels           | cleanup/stuck alerts                       |
-| Prometheus target health              | `up{job="hsk-media-replicas"}`                        | Replica scrape health          | replica scrape failure                     |
+| Code path                              | Metric                                                                                                                                     | Dashboard                      | Alert / response                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------------------------------- |
+| ingestion request boundary/final state | `hsk_media_ingestion_started_total`, `hsk_media_ingestion_requests_total`, inflight and terminal-only processing latency                   | Ingestion outcomes / 28d SLI   | availability burn and terminal-deficit alerts           |
+| ClamAV exact parser                    | `hsk_media_scanner_total`, scanner latency                                                                                                 | Scanner outcomes and latency   | unavailable and invalid-response alerts                 |
+| S3 adapter and media access/replay     | `hsk_media_storage_operations_total`, storage latency                                                                                      | Storage operations and latency | storage spike or immediate integrity alert              |
+| signed content request boundary        | `hsk_media_signed_content_started_total`, `hsk_media_signed_content_requests_total`, inflight; legacy access counter is compatibility-only | Signed delivery / 28d SLI      | availability burn, terminal deficit and integrity alert |
+| replay/access coherence checks         | `hsk_media_reconciliation_total`                                                                                                           | Integrity and reconciliation   | immediate coherence alert                               |
+| one aggregate PostgreSQL scrape query  | cleanup/stuck counts and oldest age                                                                                                        | Cleanup/Stuck panels           | cleanup/stuck alerts                                    |
+| Prometheus target health               | `up{job="hsk-media-replicas"}`                                                                                                             | Replica scrape health          | replica scrape failure                                  |
 
 Counters are intentionally process-local. Prometheus attaches `instance` and scrapes
-each replica directly, then aggregates with `sum`. A restart resets one replica's
-counter; `increase` and the per-replica `up` alert prevent a reset from becoming a
-false global page. Database gauges use one aggregate SQL query per scrape to bound
-pool pressure.
+each replica directly, then aggregates with `sum`. Ingestion availability derives an
+eligible denominator by subtracting terminal `rejected` and `disabled` attempts; those
+attempts remain outcome telemetry but cannot poison successful valid-ingestion
+availability. Its eligible failures are only terminal `failed` and
+`cleanup_required`, plus a positive all-started-minus-all-terminals deficit.
+Signed-content availability derives an eligible denominator by subtracting terminal
+`invalid_grant` attempts; those untrusted public requests remain security telemetry
+but cannot poison the service SLO. Signed failures are only `unavailable`,
+`provider_mismatch`, `integrity_error`, plus the same positive terminal deficit. The
+deficit principle keeps a pod crash
+after request entry from improving either SLI. A 30-minute deficit alert does not
+depend on the replacement pod retaining an in-memory inflight gauge; target loss and
+process-start series disappearance detect pod replacement separately. Database gauges
+use one aggregate SQL query per scrape to bound pool pressure.
 
 ## Public/private access and rotation
 
@@ -67,8 +77,9 @@ pool pressure.
 | `/metrics` on dedicated port 9464 | namespace `404` at public edge           | direct pod/replica scrape only | current/previous bearer from secret-managed env |
 
 `ops/observability/media-metrics-private-network.yml` defines the headless endpoint
-and NetworkPolicy. `media-prometheus.yml` uses pod discovery/relabeling for one target
-per ready replica, never a load-balanced application endpoint. Actual two/three
+and NetworkPolicy. `media-prometheus.yml` uses DNS discovery against the headless
+Service so each ready pod address becomes a scrape target, never a load-balanced
+application endpoint. Actual two/three
 replica execution is a target-environment external gate. Rotation must preserve an
 acceptance overlap because Prometheus hot-refreshes `current`, while backend env is
 read only at startup:
@@ -111,11 +122,29 @@ When prerequisites exist, the harness runs:
   content and public metrics routes, and inspects a query-redacted safe log;
 - `promtool check rules media-alerts.yml` and
   `promtool test rules media-alerts.test.yml`;
-- pinned disposable Grafana imports and reads back the dashboard, provisions a
-  Prometheus datasource, verifies the rendered HTTPS runbook link and executes every
-  non-empty panel target through the Grafana datasource API. A guaranteed-absent
+- pinned disposable Grafana provisions and reads back the dashboard from the same
+  file-provider contract as production, uses the fixed `hsk-media-prometheus`
+  datasource UID, verifies the rendered HTTPS runbook link and executes every
+  non-empty panel target through the authenticated Grafana datasource API. A guaranteed-absent
   metric separately proves that a successful empty query stays an explicit no-data
   state rather than being mistaken for a populated panel or a query failure.
+
+Grafana V1 is intentionally private API-only. NetworkPolicy and Istio authorize only
+the `hsk-media-operator` workload identity for `/api/health`, `/api/dashboards/*`
+and `/api/ds/*`; no `/`, `/login`, `/public/*` or `/d/*` browser route is allowed or
+claimed. Operators consume the provisioned dashboard through approved automation
+running with that identity. A human UI requires a separately reviewed authenticated
+gateway/workload and updated positive/negative path tests.
+
+The deployment reserves a 50 GiB Prometheus PVC and retains 32 days. Before rollout,
+measure real compressed TSDB ingest and calculate `GiB/day × 32 × 1.25`; abort if
+the result exceeds 40 GiB or the StorageClass cannot expand safely. The PVC is not a
+backup. Production approval also requires an encrypted snapshot/export target,
+retention policy and restore rehearsal. Missing capacity or backup evidence is
+`BLOCKED_EXTERNAL`. The release profile consumes a bounded, secret-free artifact
+from `MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON` and independently checks release
+binding, measured projection, 80% headroom, snapshot recency and restore recency;
+documentation alone cannot turn this gate green.
 
 ## Application secret lifecycle
 
@@ -145,8 +174,11 @@ artifact test upgrades either result to PASS.
 
 ## Release boundary
 
-Internal deterministic tests can make the repository `CODE_READY`. Operational
-artifact readiness remains `BLOCKED_EXTERNAL` until the pinned tools execute. Live
+Internal deterministic tests can make the repository `CODE_READY`. Only an actual
+Linux x86_64 execution of `npm run test:ops:media:linux-amd64` can make the
+operations harness release-authoritative; Darwin arm64 is reference-only. OCI
+signature/SBOM identity, live runbook, capacity and backup gaps remain
+`BLOCKED_EXTERNAL`, and release-profile external blocks are non-green failures. Live
 S3, ClamAV, deployed proxy, production notification delivery, running backend
 replicas and production
 secret-manager/workload-identity verification are separately `BLOCKED_EXTERNAL`.

@@ -637,6 +637,17 @@ redaction van do Infra/Release hoan tat truoc beta.
   amd64. Moi validator bao doc lap PASS/FAIL_INTERNAL/BLOCKED_EXTERNAL va sinh JSON/
   JUnit da sanitize; khong suy luan PASS tu string assertion hoac tool global.
 - Forward migration 18 `media_lifecycle_telemetry_truthfulness` bo sung timestamp
-  lifecycle on dinh cho age metric. Migration 16/17 van bat bien. So luong test va
-  release status chi duoc ghi tu evidence cua current HEAD sau khi gate thuc su chay;
-  tai lieu nay khong dong bang ket qua cua lan chay cu.
+  lifecycle on dinh cho age metric. Forward migration 19
+  `media_cleanup_audit_integrity` khoa `MediaIngestion` roi `AuditLog`, fail-closed
+  malformed/future audit, bind exact first cleanup timestamp va cai deferred future
+  guard. Migration 16–18 khong sua; migration 19 SHA-256 hien tai la
+  `c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`.
+- Aggregate DB runner tao 8 database `_test` fresh, deploy/upgrade, negative atomic
+  rollback, lock timeout/recovery, hai race order, integration, checksum toan bo 19
+  migration, two-way drift, benchmark 1,000 audit va full E2E. Artifact local trong
+  `backend/test-results/media-lifecycle-migration-validation/` khong thay the immutable
+  CI attestation.
+- Upload observation bat dau truoc multipart parser voi absolute body deadline mac dinh
+  30 giay. S3 co mot 8 giay end-to-end deadline; ClamAV co mot 10 giay absolute
+  connect/upload/response/parser deadline. Cleanup lost-ack reread/recovery khong leak
+  raw Prisma error va khong takeover owner khac.

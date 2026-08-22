@@ -140,6 +140,10 @@ export function scanGitSecretFiles(
   for (const entry of indexEntries) {
     assertSafeRepositoryPath(entry.path);
     if (!isEligibleSecretScanPath(entry.path)) continue;
+    // A Git symlink stores only its repository-relative target path. Never
+    // follow it while scanning; the target is inventoried independently when
+    // it belongs to this repository.
+    if (entry.mode === '120000') continue;
     if (entry.mode !== '100644' && entry.mode !== '100755') {
       throw new SecretScanInputError('unsupported_file_type', entry.path);
     }
@@ -182,6 +186,7 @@ export function scanSecretFiles(
     if (!existsSync(absolutePath)) continue;
 
     const linkMetadata = lstatSync(absolutePath);
+    if (linkMetadata.isSymbolicLink()) continue;
     if (!linkMetadata.isFile()) {
       throw new SecretScanInputError('unsupported_file_type', path);
     }
@@ -250,34 +255,97 @@ function containsCredentialUrl(line: string): boolean {
   const urls = line.match(/[a-z][a-z0-9+.-]*:\/\/[^\s"'<>]+/giu) ?? [];
   return urls.some((candidate) => {
     const rawCandidate = candidate.replace(/[),.;]+$/u, '');
-    if (containsExplicitPlaceholder(rawCandidate)) return false;
+    if (/\$\{|\{\{|<[^>]+>/u.test(rawCandidate)) return false;
+    const authority = credentialAuthority(rawCandidate);
+    if (!authority) return false;
+    if (!authority.includes('@')) {
+      const malformedUserInfo = malformedCredentialUserInfo(rawCandidate);
+      if (!malformedUserInfo) return false;
+      return !isDocumentedCredentialPlaceholder(malformedUserInfo);
+    }
+    const userInfo = authority.slice(0, authority.lastIndexOf('@'));
+    const separator = userInfo.indexOf(':');
+    // A delimiter denotes a credential-bearing URL even if one side is empty:
+    // empty credentials are often deployment interpolation failures and must
+    // not be silently accepted by a release secret gate.
+    if (separator < 0) return false;
+    if (
+      userInfo.slice(0, separator).length === 0 ||
+      userInfo.slice(separator + 1).length === 0
+    ) {
+      return true;
+    }
+    if (isDocumentedCredentialPlaceholder(userInfo)) return false;
     try {
-      const parsed = new URL(rawCandidate);
-      return (
-        parsed.username.length > 0 &&
-        parsed.password.length > 0 &&
-        !isReservedSyntheticHost(parsed.hostname)
-      );
+      // Parsing validates ordinary, percent-encoded, IPv4/IPv6 and suffixed
+      // URLs. Detection is intentionally host-agnostic: localhost and reserved
+      // documentation domains can still contain accidentally committed secrets.
+      new URL(rawCandidate);
+      return true;
     } catch {
-      return false;
+      // Fail closed when credential syntax is recognizable but the surrounding
+      // URL is malformed. Findings contain only a keyed fingerprint, never bytes.
+      return true;
     }
   });
 }
 
-function isReservedSyntheticHost(hostname: string): boolean {
-  const normalized = hostname.toLowerCase();
-  return (
-    normalized === 'localhost' ||
-    normalized === '127.0.0.1' ||
-    normalized === '[::1]' ||
-    normalized === 'example.com' ||
-    normalized === 'example.net' ||
-    normalized === 'example.org' ||
-    normalized.endsWith('.example.com') ||
-    normalized.endsWith('.example.net') ||
-    normalized.endsWith('.example.org') ||
-    normalized.endsWith('.test') ||
-    normalized.endsWith('.invalid')
+function credentialAuthority(candidate: string): string | undefined {
+  const schemeEnd = candidate.indexOf('://');
+  if (schemeEnd < 1) return undefined;
+  const authorityStart = schemeEnd + 3;
+  const remainder = candidate.slice(authorityStart);
+  const terminator = remainder.search(/[/?#]/u);
+  return terminator < 0 ? remainder : remainder.slice(0, terminator);
+}
+
+function malformedCredentialUserInfo(candidate: string): string | undefined {
+  const schemeEnd = candidate.indexOf('://');
+  if (schemeEnd < 1) return undefined;
+  const remainder = candidate.slice(schemeEnd + 3);
+  const terminator = remainder.search(/[/?#]/u);
+  const at = remainder.lastIndexOf('@');
+  if (terminator < 0 || at <= terminator) return undefined;
+
+  const apparentUserInfo = remainder.slice(0, terminator);
+  if (!apparentUserInfo.includes(':')) return undefined;
+
+  try {
+    // A valid host:port followed by an '@' in its path/query/fragment is not
+    // userinfo. Only fail closed when the delimiter-before-@ form is itself an
+    // invalid URL and therefore cannot be safely interpreted as a normal host.
+    new URL(candidate);
+    return undefined;
+  } catch {
+    return apparentUserInfo;
+  }
+}
+
+function isDocumentedCredentialPlaceholder(userInfo: string): boolean {
+  const separator = userInfo.indexOf(':');
+  if (separator < 0) return false;
+  const username = decodeCredentialComponent(userInfo.slice(0, separator));
+  const password = decodeCredentialComponent(userInfo.slice(separator + 1));
+  if (username === undefined || password === undefined) return false;
+  // Password-position placeholders are sufficient: usernames are commonly
+  // realistic service identities in examples and negative error-leak tests.
+  // Empty fields are never placeholders and remain findings.
+  return isCredentialPlaceholderComponent(password);
+}
+
+function decodeCredentialComponent(value: string): string | undefined {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function isCredentialPlaceholderComponent(value: string): boolean {
+  if (!value) return false;
+  const normalized = value.toLowerCase();
+  return /^(?:user(?:name)?|password|pass|secret|bootstrap[-_]?probe|do[-_]?not[-_]?leak(?:[-_][a-z0-9_-]+)*|change[-_]?me(?:[-_][a-z0-9_-]+)*|dummy(?:[-_][a-z0-9_-]+)*|example(?:[-_][a-z0-9_-]+)*|fake(?:[-_][a-z0-9_-]+)*|placeholder(?:[-_][a-z0-9_-]+)*|redacted(?:[-_][a-z0-9_-]+)*|synthetic(?:[-_][a-z0-9_-]+)*|test(?:[-_][a-z0-9_-]+)*|your[-_][a-z0-9_-]+)$/u.test(
+    normalized,
   );
 }
 

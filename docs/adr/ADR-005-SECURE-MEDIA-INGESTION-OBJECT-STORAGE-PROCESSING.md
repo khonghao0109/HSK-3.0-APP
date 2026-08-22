@@ -15,7 +15,8 @@ orphan and operational recovery risks.
 
 ## Decision
 
-The API owns a bounded multipart ingestion boundary. It authenticates and rechecks
+The API owns a bounded multipart ingestion boundary with a default 30-second absolute
+request-body deadline (production configuration is bounded to 1–120 seconds). It authenticates and rechecks
 an active admin, requires licensed `DataSource` provenance, hashes the idempotency key
 and request fingerprint, validates bytes, scans the trusted processed representation,
 writes a private shared object and only then commits a ready `Media` plus completed
@@ -27,9 +28,11 @@ MP3 duration/metadata use `music-metadata`. Active formats and executable/polygl
 signatures fail closed. Larger/streaming video and PDF are not inferred into V1.
 
 Production object storage uses the provider-independent port and S3-compatible
-adapter with private writes, AES256 server-side encryption, SHA-256 metadata, finite
-timeouts and workload-identity credentials. Only tests use the in-memory adapter.
-Production malware scanning uses ClamAV INSTREAM with a finite response/timeout;
+adapter with private writes, AES256 server-side encryption, SHA-256 metadata, one
+absolute 8-second deadline across request and streamed response body, and
+workload-identity credentials. Only tests use the in-memory adapter.
+Production malware scanning uses ClamAV INSTREAM with one absolute 10-second deadline
+covering connect, backpressure-aware upload, response and parsing;
 unavailable or ambiguous scan never produces ready content.
 
 Storage reads expose a fixed typed taxonomy across the port: unavailable, not found,
@@ -90,6 +93,10 @@ Claim, rejection, finalize and cleanup use a request-owned token plus authoritat
 row reread to reconcile lost transaction commit acknowledgements without replaying
 object side effects or duplicating audit. An unreadable outcome returns a safe 503
 and requires reconciliation rather than guessing.
+The first cleanup transition and its immutable audit are committed together. The audit
+reuses the exact `cleanupRequiredAt` returned by PostgreSQL; later cleanup facts use a
+timestamp read from the same database transaction, avoiding process/session timezone
+inference while refusing old, future or invented history.
 S3 reads stream with an actual-byte 10 MiB cap independent of provider-declared
 `ContentLength`. ClamAV accepts only exact NUL-terminated `OK`/`FOUND` responses;
 missing, extra, oversized or ambiguous protocol responses fail closed. Processing,
@@ -155,14 +162,19 @@ The forward-only provenance/provider hardening migration 17 is frozen at
 The forward-only lifecycle telemetry truthfulness migration 18 is frozen at
 SHA-256
 `1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
+The forward-only cleanup audit integrity migration 19 is frozen at SHA-256
+`c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`.
 
 The earlier database rehearsal is a historical, superseded baseline and is not
-current release evidence. Current guarded evidence deployed all 18/18
-migrations on a fresh disposable database. Media integrity acceptance passed and
-its transaction rollback left the database unchanged; both the live-database-to-
-datamodel and migration-history-to-datamodel drift checks were empty. Full backend
-E2E passed 11/11 suites and 160/160 tests. The dual-lock `AuditLog`/
-`MediaIngestion` concurrency scenario was GREEN.
+current release evidence. Current guarded aggregate evidence deployed all 19/19
+migrations on a fresh disposable PostgreSQL 16 database, upgraded a first-17 catalog
+through migrations 18–19 with exact legacy backfill, and rejected malformed/future
+immutable audit fixtures atomically. Media integrity, bounded lock abort/recovery and
+both audit/lifecycle race orders passed; both the live-database-to-datamodel and
+migration-history-to-datamodel drift checks were empty. Full backend E2E passed 11/11
+suites and 163/163 tests. The machine-readable artifact is local evidence under
+`backend/test-results/media-lifecycle-migration-validation/`; it is ignored and is not
+an immutable CI attestation.
 
 Negative preflight rehearsals proved atomic failure for a completed legacy ingestion
 without the exact immutable provenance audit and for an ambiguous whitespace source

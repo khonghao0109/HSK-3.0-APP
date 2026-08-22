@@ -1,0 +1,12 @@
+apiVersion: 1
+datasources:
+  - name: HSK Media Prometheus
+    uid: hsk-media-prometheus
+    type: prometheus
+    access: proxy
+    url: http://hsk-media-prometheus.monitoring.svc.cluster.local:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 30s

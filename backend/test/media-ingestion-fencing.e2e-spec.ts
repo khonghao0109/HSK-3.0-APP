@@ -22,6 +22,10 @@ import { ObjectStorageWriteError } from '../src/infrastructure/storage/object-st
 import { MediaObservabilityService } from '../src/infrastructure/observability/media-observability.service';
 import { MediaFileProcessor } from '../src/modules/cms/media-ingestion/media-file.processor';
 import { MediaIngestionService } from '../src/modules/cms/media-ingestion/media-ingestion.service';
+import {
+  CmsTransactionCheckpoint,
+  CmsTransactionCoordinator,
+} from '../src/modules/cms/cms-transaction-coordinator';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -138,12 +142,33 @@ describe('Media ingestion stale-attempt fencing', () => {
       select: { id: true, processingToken: true },
     });
 
-    await prisma.mediaIngestion.update({
-      where: { id: claimedByA.id },
-      data: {
-        status: 'cleanup_required',
-        failureCode: 'OBJECT_CLEANUP_REQUIRED',
-      },
+    await prisma.$transaction(async (tx) => {
+      const cleanupTransition = await tx.mediaIngestion.update({
+        where: { id: claimedByA.id },
+        data: {
+          status: 'cleanup_required',
+          failureCode: 'OBJECT_CLEANUP_REQUIRED',
+        },
+        select: { cleanupRequiredAt: true },
+      });
+      if (cleanupTransition.cleanupRequiredAt === null) {
+        throw new Error('Cleanup transition did not receive a DB timestamp.');
+      }
+      await tx.auditLog.create({
+        data: {
+          actorId: actor.id,
+          action: 'media.ingestion_failed',
+          targetType: 'media_ingestion',
+          targetId: String(claimedByA.id),
+          correlationId: randomUUID(),
+          createdAt: cleanupTransition.cleanupRequiredAt,
+          afterSummary: {
+            ingestionId: claimedByA.id,
+            status: 'cleanup_required',
+            failureCode: 'OBJECT_CLEANUP_REQUIRED',
+          },
+        },
+      });
     });
     const attemptB = await settle(
       service.ingest(actor, file, source.id, key, {
@@ -195,7 +220,7 @@ describe('Media ingestion stale-attempt fencing', () => {
           targetId: String(claimedByA.id),
         },
       }),
-    ).resolves.toBe(0);
+    ).resolves.toBe(1);
   });
 
   it('reconciles a committed finalize after a lost commit acknowledgement', async () => {
@@ -578,6 +603,134 @@ describe('Media ingestion stale-attempt fencing', () => {
         },
       }),
     ).resolves.toBe(1);
+  });
+
+  it('returns a committed cleanup claim to a persisted retryable state when ownership verification fails', async () => {
+    const { actor, service, storage, ingestion } = await createCleanupFixture();
+    const ownershipRead = jest
+      .spyOn(prisma.mediaIngestion, 'count')
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Synthetic ownership verification failure.'), {
+          code: 'P1001',
+        }),
+      );
+
+    try {
+      await expect(
+        service.retryCleanup(actor, ingestion.id, {
+          correlationId: randomUUID(),
+        }),
+      ).rejects.toMatchObject({
+        response: {
+          code: 'MEDIA_CLEANUP_REQUIRED',
+          message: 'Media cleanup is temporarily unavailable.',
+        },
+      });
+    } finally {
+      ownershipRead.mockRestore();
+    }
+
+    await expect(
+      prisma.mediaIngestion.findUniqueOrThrow({
+        where: { id: ingestion.id },
+        select: { failureCode: true, status: true },
+      }),
+    ).resolves.toEqual({
+      failureCode: 'OBJECT_CLEANUP_REQUIRED',
+      status: 'cleanup_required',
+    });
+    expect(storage.count()).toBe(1);
+    await expect(
+      prisma.auditLog.count({
+        where: {
+          action: 'media.ingestion_cleanup_failed',
+          targetId: String(ingestion.id),
+        },
+      }),
+    ).resolves.toBe(1);
+
+    await expect(
+      service.retryCleanup(actor, ingestion.id, {
+        correlationId: randomUUID(),
+      }),
+    ).resolves.toMatchObject({
+      data: { cleanupCompleted: false, settling: true },
+    });
+    expect(storage.count()).toBe(0);
+  });
+
+  it('serializes cleanup claims on the real ingestion row lock before fenced object work', async () => {
+    const { actor, ingestion, source, storage } = await createCleanupFixture();
+    const coordinator = new CleanupLockCoordinator();
+    const service = new MediaIngestionService(
+      prisma,
+      new MediaFileProcessor(),
+      storage,
+      new AlwaysCleanScanner(),
+      undefined,
+      undefined,
+      coordinator,
+    );
+    const clientA = new PrismaClient();
+    const locked = createDeferred<void>();
+    const release = createDeferred<void>();
+    try {
+      const transactionA = settle(
+        clientA.$transaction(async (tx) => {
+          await tx.$queryRaw(
+            Prisma.sql`SELECT id FROM "MediaIngestion" WHERE id = ${ingestion.id} FOR UPDATE`,
+          );
+          locked.resolve();
+          await release.promise;
+        }),
+      );
+      await locked.promise;
+      const transactionB = settle(
+        service.retryCleanup(actor, ingestion.id, {
+          correlationId: randomUUID(),
+        }),
+      );
+      const pid = await coordinator.pid.promise;
+
+      await expect(waitForDatabaseLock(prisma, pid)).resolves.toBe(true);
+      release.resolve();
+      const [resultA, resultB] = await Promise.all([
+        transactionA,
+        transactionB,
+      ]);
+
+      expect(resultA.status).toBe('fulfilled');
+      expect(resultB.status).toBe('fulfilled');
+      if (resultB.status === 'fulfilled') {
+        expect(resultB.value).toMatchObject({
+          data: { cleanupCompleted: false, settling: true },
+        });
+      }
+      expect(storage.count()).toBe(0);
+      await expect(
+        prisma.mediaIngestion.findUniqueOrThrow({
+          where: { id: ingestion.id },
+          select: { failureCode: true, status: true },
+        }),
+      ).resolves.toEqual({
+        failureCode: 'OBJECT_CLEANUP_SETTLING',
+        status: 'cleanup_required',
+      });
+      await expect(
+        prisma.auditLog.count({
+          where: {
+            action: 'media.ingestion_cleanup_settling',
+            targetId: String(ingestion.id),
+          },
+        }),
+      ).resolves.toBe(1);
+      await expect(
+        prisma.dataSource.findUniqueOrThrow({ where: { id: source.id } }),
+      ).resolves.toBeDefined();
+    } finally {
+      release.resolve();
+      await clientA.$disconnect();
+    }
   });
 
   it('continues ingestion after a lost claim commit acknowledgement', async () => {
@@ -1020,31 +1173,52 @@ describe('Media ingestion stale-attempt fencing', () => {
       contentType: fixture.file.mimetype,
       checksum,
     });
-    const ingestion = await prisma.mediaIngestion.create({
-      data: {
-        actorId: fixture.actor.id,
-        dataSourceId: fixture.source.id,
-        idempotencyKeyHash: sha256(Buffer.from(fixture.key)),
-        requestFingerprint: sha256(Buffer.from(randomUUID())),
-        status: 'cleanup_required',
-        originalFilename: fixture.file.originalname,
-        declaredMimeType: fixture.file.mimetype,
-        validatedMimeType: fixture.file.mimetype,
-        size: fixture.file.size,
-        checksum,
-        storageProvider: fixture.storage.provider,
-        storageKey,
-        failureCode: 'OBJECT_CLEANUP_REQUIRED',
-        processingToken: randomUUID(),
-        attemptCount: 1,
-        sourceCodeSnapshot: fixture.source.code,
-        sourceVersionSnapshot: fixture.source.version,
-        sourceLicenseSnapshot: fixture.source.license!,
-        sourceAttributionSnapshot: fixture.source.attribution,
-        sourceReferenceUrlSnapshot: fixture.source.referenceUrl,
-        sourceContentHashSnapshot: fixture.source.contentHash,
-      },
-      select: { id: true },
+    const ingestion = await prisma.$transaction(async (tx) => {
+      const created = await tx.mediaIngestion.create({
+        data: {
+          actorId: fixture.actor.id,
+          dataSourceId: fixture.source.id,
+          idempotencyKeyHash: sha256(Buffer.from(fixture.key)),
+          requestFingerprint: sha256(Buffer.from(randomUUID())),
+          status: 'cleanup_required',
+          originalFilename: fixture.file.originalname,
+          declaredMimeType: fixture.file.mimetype,
+          validatedMimeType: fixture.file.mimetype,
+          size: fixture.file.size,
+          checksum,
+          storageProvider: fixture.storage.provider,
+          storageKey,
+          failureCode: 'OBJECT_CLEANUP_REQUIRED',
+          processingToken: randomUUID(),
+          attemptCount: 1,
+          sourceCodeSnapshot: fixture.source.code,
+          sourceVersionSnapshot: fixture.source.version,
+          sourceLicenseSnapshot: fixture.source.license!,
+          sourceAttributionSnapshot: fixture.source.attribution,
+          sourceReferenceUrlSnapshot: fixture.source.referenceUrl,
+          sourceContentHashSnapshot: fixture.source.contentHash,
+        },
+        select: { id: true, cleanupRequiredAt: true },
+      });
+      if (created.cleanupRequiredAt === null) {
+        throw new Error('Cleanup fixture did not receive a DB timestamp.');
+      }
+      await tx.auditLog.create({
+        data: {
+          actorId: fixture.actor.id,
+          action: 'media.ingestion_failed',
+          targetType: 'media_ingestion',
+          targetId: String(created.id),
+          correlationId: randomUUID(),
+          createdAt: created.cleanupRequiredAt,
+          afterSummary: {
+            ingestionId: created.id,
+            status: 'cleanup_required',
+            failureCode: 'OBJECT_CLEANUP_REQUIRED',
+          },
+        },
+      });
+      return created;
     });
     return { ...fixture, ingestion };
   }
@@ -1077,6 +1251,25 @@ function sha256(value: Buffer): string {
 class AlwaysCleanScanner implements MediaMalwareScannerPort {
   scan(): Promise<MediaScanResult> {
     return Promise.resolve({ clean: true });
+  }
+}
+
+class CleanupLockCoordinator extends CmsTransactionCoordinator {
+  readonly pid = createDeferred<number>();
+
+  override async checkpoint(
+    checkpoint: CmsTransactionCheckpoint,
+  ): Promise<void> {
+    if (
+      checkpoint.operation !== 'media_ingestion.cleanup' ||
+      checkpoint.phase !== 'before_lock'
+    ) {
+      return;
+    }
+    const [{ pid }] = await checkpoint.transaction.$queryRaw<
+      Array<{ pid: number }>
+    >(Prisma.sql`SELECT pg_backend_pid()::int AS pid`);
+    this.pid.resolve(pid);
   }
 }
 

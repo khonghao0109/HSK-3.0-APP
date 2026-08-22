@@ -10,17 +10,8 @@ alerting:
   alertmanagers:
     - scheme: http
       path_prefix: /
-      kubernetes_sd_configs:
-        - role: endpointslice
-          namespaces:
-            names: [monitoring]
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_endpointslice_service_name]
-          regex: hsk-media-alertmanager
-          action: keep
-        - source_labels: [__meta_kubernetes_endpointslice_port_name]
-          regex: web
-          action: keep
+      static_configs:
+        - targets: [hsk-media-alertmanager.monitoring.svc.cluster.local:9093]
 
 scrape_configs:
   - job_name: hsk-media-replicas
@@ -29,24 +20,12 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials_file: /run/secrets/hsk_media_metrics_token
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names: [hsk]
+    dns_sd_configs:
+      - names: [hsk-backend-media-metrics.hsk.svc.cluster.local]
+        type: A
+        port: 9464
+        refresh_interval: 30s
     relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
-        regex: hsk-backend
-        action: keep
-      - source_labels: [__meta_kubernetes_pod_container_port_name]
-        regex: media-metrics
-        action: keep
-      - source_labels: [__meta_kubernetes_pod_ready]
-        regex: "true"
-        action: keep
-      - source_labels: [__meta_kubernetes_pod_name]
-        target_label: pod
-      - source_labels: [__meta_kubernetes_namespace]
-        target_label: namespace
       - target_label: service
         replacement: hsk-backend
     metric_relabel_configs:

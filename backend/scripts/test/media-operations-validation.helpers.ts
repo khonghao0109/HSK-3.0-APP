@@ -30,6 +30,7 @@ export type ArchiveKind = 'tar.gz' | 'raw';
 export type VersionParser =
   | 'alertmanager'
   | 'amtool'
+  | 'cosign'
   | 'grafana'
   | 'istioctl'
   | 'kubeconform'
@@ -37,7 +38,8 @@ export type VersionParser =
   | 'nginx'
   | 'prometheus'
   | 'promtool'
-  | 'pcre2';
+  | 'pcre2'
+  | 'syft';
 export type FunctionalEvidenceKind =
   | 'amtool-config'
   | 'istio-analyze'
@@ -84,9 +86,95 @@ export interface ToolDefinition {
 }
 
 export interface ToolchainManifest {
-  schemaVersion: 2;
+  schemaVersion: 3;
   tools: Record<string, ToolDefinition>;
   schemaBundles: Record<string, SchemaBundle>;
+  images: Record<string, OciImageDefinition>;
+}
+
+export interface OciImagePlatform {
+  os: 'linux';
+  architecture: 'x64';
+  digest: string;
+  runtimeRef: string;
+}
+
+export interface OciImageDefinition {
+  repository: string;
+  version: string;
+  indexDigest: string;
+  platforms: [OciImagePlatform];
+  attestations: {
+    signature: {
+      required: true;
+      verifier: 'cosign-keyless';
+      issuer: string;
+      approvedIdentities: string[];
+    };
+    sbom: { required: true; format: 'spdx-json' };
+  };
+}
+
+export interface OciRegistryResolution {
+  repository: string;
+  indexDigest: string;
+  platform: {
+    os: string;
+    architecture: string;
+    digest: string;
+  };
+}
+
+export type ExecutionProfile = 'reference' | 'release-linux-amd64';
+
+export interface TreeDigestEvidence {
+  digest: string;
+  pathCount: number;
+  paths: string[];
+}
+
+export interface DatabaseEvidenceExpectation {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+  evidenceRoot: string;
+  catalogCount: number;
+  catalogChecksum: string;
+  latestMigrations: Array<{ name: string; checksum: string }>;
+  nowMs?: number;
+}
+
+export interface DatabaseReleaseEvidenceSummary {
+  runId: string;
+  evidenceSha256: string;
+  database: {
+    hostFingerprintSha256: string;
+    port: number;
+    databaseName: string;
+    guardedTestSuffix: true;
+    serverVersion: string;
+  };
+  migrations: {
+    catalogCount: number;
+    catalogChecksumSha256: string;
+    latestNames: string[];
+    latestChecksums: string[];
+  };
+}
+
+export interface CapacityBackupEvidenceExpectation {
+  commit: string;
+  treeSha: string;
+  releaseContentDigest: string;
+  nowMs?: number;
+}
+
+export interface CapacityBackupEvidenceSummary {
+  runId: string;
+  clusterFingerprintSha256: string;
+  requiredGiB: number;
+  capacityGiB: number;
+  backupRetentionDays: number;
 }
 
 export interface SchemaFile {
@@ -116,6 +204,22 @@ export interface CommandEvidence {
   exitCode: number;
   durationMs: number;
   logPath: string;
+  logSha256: string;
+  safeArgs: string[];
+  cwd: string;
+  startedAt: string;
+  completedAt: string;
+  platform: string;
+  architecture: string;
+  inputSha256?: string;
+  envKeys: string[];
+  executableIdentity: string;
+  executableSha256: string;
+  toolVersion: string;
+  gitCommit: string;
+  gitTreeSha: string;
+  releaseContentDigest: string;
+  inputTreeDigest: string;
   expectedStop?: boolean;
   signal?: string;
 }
@@ -142,11 +246,39 @@ const TOOL_VERSION = /^\d+\.\d+(?:\.\d+)?$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const OCI_DIGEST = /^sha256:[a-f0-9]{64}$/;
 
+// Exact concurrent, out-of-scope paths. Do not replace these with a broad glob.
+const RELEASE_CONTENT_EXCLUSIONS = new Set([
+  'docs/roadmap.md',
+  'docs/reports/10-delivery-production-operations-report.md',
+  'docs/roadmap_prod.jpg',
+  'docs/roadmap_prod_v2.png',
+]);
+
+export const MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST = new Set([
+  'LANG',
+  'LC_ALL',
+  'MEDIA_OBSERVABILITY_RENDER_DIR',
+  'MEDIA_OPS_ALLOW_DOWNLOAD',
+  'MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON',
+  'MEDIA_OPS_DB_EVIDENCE_JSON',
+  'MEDIA_OPS_EVIDENCE_DIR',
+  'MEDIA_OPS_TOOL_CACHE',
+  'MEDIA_RUNBOOK_URL',
+  'NODE_ENV',
+  'PATH',
+  'SSL_CERT_FILE',
+  'TZ',
+]);
+
 export function parseToolchainManifest(input: unknown): ToolchainManifest {
   const root = record(input, 'manifest');
-  exactKeys(root, ['schemaVersion', 'tools', 'schemaBundles'], 'manifest');
-  if (root.schemaVersion !== 2) {
-    throw new Error('Manifest schemaVersion must be 2.');
+  exactKeys(
+    root,
+    ['schemaVersion', 'tools', 'schemaBundles', 'images'],
+    'manifest',
+  );
+  if (root.schemaVersion !== 3) {
+    throw new Error('Manifest schemaVersion must be 3.');
   }
   const rawTools = record(root.tools, 'manifest.tools');
   if (Object.keys(rawTools).length === 0) {
@@ -251,7 +383,63 @@ export function parseToolchainManifest(input: unknown): ToolchainManifest {
     });
     schemaBundles[bundleName] = { version, files };
   }
-  return { schemaVersion: 2, tools, schemaBundles };
+  const rawImages = record(root.images, 'manifest.images');
+  exactKeys(
+    rawImages,
+    ['alertmanager', 'grafana', 'prometheus'],
+    'manifest.images',
+  );
+  const images: Record<string, OciImageDefinition> = {};
+  for (const [imageName, value] of Object.entries(rawImages)) {
+    if (!/^[a-z][a-z0-9-]*$/u.test(imageName)) {
+      throw new Error(`Manifest OCI image name is invalid: ${imageName}.`);
+    }
+    images[imageName] = parseOciImageDefinition(value, imageName);
+  }
+  return { schemaVersion: 3, tools, schemaBundles, images };
+}
+
+export function assertExecutionProfile(
+  profile: ExecutionProfile,
+  platform: NodeJS.Platform,
+  architecture: string,
+): void {
+  if (profile === 'release-linux-amd64') {
+    if (platform !== 'linux' || architecture !== 'x64') {
+      throw new Error(
+        'The release-linux-amd64 profile requires an actual Linux amd64 host.',
+      );
+    }
+    return;
+  }
+  if (profile !== 'reference') {
+    throw new Error('Unsupported media operations execution profile.');
+  }
+}
+
+export function assertStartupProbePreserved(
+  baseContainer: Record<string, unknown>,
+  patchedContainer: Record<string, unknown>,
+): void {
+  const before = baseContainer.startupProbe;
+  const after = patchedContainer.startupProbe;
+  if (before === undefined && after !== undefined) {
+    throw new Error('Backend patch must not create or replace startupProbe.');
+  }
+  if (JSON.stringify(stable(before)) !== JSON.stringify(stable(after))) {
+    throw new Error('Backend startupProbe contract was not preserved exactly.');
+  }
+  if (after !== undefined) {
+    const probe = record(after, 'startupProbe');
+    const handlers = ['exec', 'httpGet', 'tcpSocket', 'grpc'].filter(
+      (key) => probe[key] !== undefined,
+    );
+    if (handlers.length !== 1) {
+      throw new Error(
+        'Backend startupProbe contract must contain exactly one handler.',
+      );
+    }
+  }
 }
 
 export function selectArtifact(
@@ -284,6 +472,20 @@ export function verifySha256(bytes: Uint8Array, expected: string): string {
   return actual;
 }
 
+export function contentAddressedCacheFilename(
+  artifactUrl: string,
+  expectedSha256: string,
+): string {
+  if (!SHA256.test(expectedSha256)) {
+    throw new Error('Cache artifact digest must be a pinned SHA-256.');
+  }
+  const filename = basename(new URL(artifactUrl).pathname);
+  if (!filename || filename === '.' || filename === '..') {
+    throw new Error('Cache artifact URL has no safe filename.');
+  }
+  return `${expectedSha256}-${filename}`;
+}
+
 export function assertOciDigest(actual: string, expected: string): void {
   if (!OCI_DIGEST.test(actual) || !OCI_DIGEST.test(expected)) {
     throw new Error('OCI digest is malformed.');
@@ -291,6 +493,216 @@ export function assertOciDigest(actual: string, expected: string): void {
   if (actual !== expected) {
     throw new Error('OCI digest mismatch.');
   }
+}
+
+export function assertOciRegistryResolution(
+  image: OciImageDefinition,
+  resolved: OciRegistryResolution,
+): void {
+  const platform = image.platforms[0];
+  if (
+    resolved.repository !== image.repository ||
+    resolved.indexDigest !== image.indexDigest ||
+    resolved.platform.os !== 'linux' ||
+    resolved.platform.architecture !== 'x64' ||
+    resolved.platform.digest !== platform.digest ||
+    platform.runtimeRef !== `${image.repository}@${resolved.platform.digest}`
+  ) {
+    throw new Error('OCI registry index/platform digest resolution mismatch.');
+  }
+}
+
+export function resolveVerifiedOciIndex(
+  image: OciImageDefinition,
+  rawIndex: Uint8Array,
+  responseDigest: string | null,
+): OciRegistryResolution {
+  if (rawIndex.byteLength === 0 || rawIndex.byteLength > 4 * 1024 * 1024) {
+    throw new Error('OCI registry index is empty or exceeds the 4 MiB limit.');
+  }
+  const computed = `sha256:${sha256(rawIndex)}`;
+  if (
+    computed !== image.indexDigest ||
+    (responseDigest !== null && responseDigest !== image.indexDigest)
+  ) {
+    throw new Error('OCI registry index digest does not match exact bytes.');
+  }
+  let body: unknown;
+  try {
+    body = JSON.parse(Buffer.from(rawIndex).toString('utf8')) as unknown;
+  } catch {
+    throw new Error('OCI registry response is not valid JSON.');
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw new Error('OCI registry response is not an image index.');
+  }
+  const manifests = (body as Record<string, unknown>).manifests;
+  const mediaType = (body as Record<string, unknown>).mediaType;
+  if (
+    (body as Record<string, unknown>).schemaVersion !== 2 ||
+    ![
+      'application/vnd.oci.image.index.v1+json',
+      'application/vnd.docker.distribution.manifest.list.v2+json',
+    ].includes(String(mediaType)) ||
+    !Array.isArray(manifests)
+  ) {
+    throw new Error('OCI registry response is not an image index.');
+  }
+  const matching = manifests.filter(
+    (candidate) =>
+      candidate !== null &&
+      typeof candidate === 'object' &&
+      !Array.isArray(candidate) &&
+      (candidate as Record<string, unknown>).platform !== null &&
+      typeof (candidate as Record<string, unknown>).platform === 'object' &&
+      !Array.isArray((candidate as Record<string, unknown>).platform) &&
+      (
+        (candidate as Record<string, unknown>).platform as Record<
+          string,
+          unknown
+        >
+      ).os === 'linux' &&
+      (
+        (candidate as Record<string, unknown>).platform as Record<
+          string,
+          unknown
+        >
+      ).architecture === 'amd64',
+  );
+  if (matching.length !== 1) {
+    throw new Error('OCI registry index must have one Linux amd64 child.');
+  }
+  const childDigest = (matching[0] as Record<string, unknown>).digest;
+  if (typeof childDigest !== 'string' || !OCI_DIGEST.test(childDigest)) {
+    throw new Error('OCI registry Linux amd64 child digest is invalid.');
+  }
+  return {
+    repository: image.repository,
+    indexDigest: computed,
+    platform: { os: 'linux', architecture: 'x64', digest: childDigest },
+  };
+}
+
+export function assertCosignSignaturePayload(
+  output: string,
+  expectedDigest: string,
+): void {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(output) as unknown;
+  } catch {
+    throw new Error('Cosign signature output is not valid JSON.');
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error('Cosign signature output has no verified signatures.');
+  }
+  const bound = parsed.some((value) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return false;
+    }
+    return (
+      nested(value, ['critical', 'image', 'docker-manifest-digest']) ===
+      expectedDigest
+    );
+  });
+  if (!OCI_DIGEST.test(expectedDigest) || !bound) {
+    throw new Error('Cosign signature does not bind the exact image digest.');
+  }
+}
+
+export async function readBoundedResponseBody(
+  response: Response,
+  maximumBytes: number,
+): Promise<Buffer> {
+  if (!Number.isSafeInteger(maximumBytes) || maximumBytes <= 0) {
+    throw new Error('Response body limit must be a positive safe integer.');
+  }
+  const declaredHeader = response.headers.get('content-length');
+  if (declaredHeader !== null) {
+    if (!/^\d+$/u.test(declaredHeader)) {
+      throw new Error('Response Content-Length is malformed.');
+    }
+    const declared = Number(declaredHeader);
+    if (!Number.isSafeInteger(declared) || declared > maximumBytes) {
+      throw new Error('Response body exceeds its bounded limit.');
+    }
+  }
+  if (!response.body) throw new Error('Response body is absent.');
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    total += chunk.value.byteLength;
+    if (total > maximumBytes) {
+      await reader.cancel();
+      throw new Error('Response body exceeds its bounded limit.');
+    }
+    chunks.push(chunk.value);
+  }
+  return Buffer.concat(chunks, total);
+}
+
+export function extractSpdxAttestationPredicate(
+  verificationOutput: string,
+  expectedDigest: string,
+): Record<string, unknown> {
+  if (!OCI_DIGEST.test(expectedDigest)) {
+    throw new Error('Expected OCI digest is invalid.');
+  }
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(verificationOutput);
+  } catch {
+    throw new Error('Cosign attestation output is not JSON.');
+  }
+  const entries = Array.isArray(decoded) ? decoded : [decoded];
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const payload = (entry as Record<string, unknown>).payload;
+    if (typeof payload !== 'string') continue;
+    let statement: unknown;
+    try {
+      statement = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+    } catch {
+      continue;
+    }
+    if (!statement || typeof statement !== 'object' || Array.isArray(statement))
+      continue;
+    const envelope = statement as Record<string, unknown>;
+    if (
+      envelope.predicateType !== 'https://spdx.dev/Document' ||
+      !Array.isArray(envelope.subject)
+    ) {
+      continue;
+    }
+    const expectedHex = expectedDigest.slice('sha256:'.length);
+    const bound = envelope.subject.some((subject) => {
+      if (!subject || typeof subject !== 'object' || Array.isArray(subject))
+        return false;
+      const digest = (subject as Record<string, unknown>).digest;
+      return (
+        digest !== null &&
+        typeof digest === 'object' &&
+        !Array.isArray(digest) &&
+        (digest as Record<string, unknown>).sha256 === expectedHex
+      );
+    });
+    const predicate = envelope.predicate;
+    if (
+      bound &&
+      predicate !== null &&
+      typeof predicate === 'object' &&
+      !Array.isArray(predicate) &&
+      /^SPDX-2\./u.test(
+        String((predicate as Record<string, unknown>).spdxVersion),
+      )
+    ) {
+      return predicate as Record<string, unknown>;
+    }
+  }
+  throw new Error('Signed SPDX predicate is absent or bound to another image.');
 }
 
 export function assertGzipArchive(bytes: Uint8Array): void {
@@ -606,6 +1018,152 @@ export function assertExactMediaNetworkTopology(
     },
   );
   exactStructure(
+    nested(named('NetworkPolicy', 'hsk-media-prometheus-private'), ['spec']),
+    {
+      podSelector: {
+        matchLabels: { 'app.kubernetes.io/name': 'prometheus' },
+      },
+      policyTypes: ['Ingress', 'Egress'],
+      ingress: [
+        {
+          from: [
+            {
+              podSelector: {
+                matchLabels: { 'app.kubernetes.io/name': 'hsk-media-grafana' },
+              },
+            },
+            {
+              podSelector: {
+                matchLabels: { 'app.kubernetes.io/name': 'hsk-media-operator' },
+              },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 9090 }],
+        },
+      ],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { 'kubernetes.io/metadata.name': 'hsk' },
+              },
+              podSelector: {
+                matchLabels: { 'app.kubernetes.io/name': 'hsk-backend' },
+              },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 9464 }],
+        },
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: {
+                  'app.kubernetes.io/name': 'hsk-media-alertmanager',
+                },
+              },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 9093 }],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  'kubernetes.io/metadata.name': 'kube-system',
+                },
+              },
+              podSelector: { matchLabels: { 'k8s-app': 'kube-dns' } },
+            },
+          ],
+          ports: [
+            { protocol: 'UDP', port: 53 },
+            { protocol: 'TCP', port: 53 },
+          ],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  'kubernetes.io/metadata.name': 'istio-system',
+                },
+              },
+              podSelector: { matchLabels: { app: 'istiod' } },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 15012 }],
+        },
+      ],
+    },
+  );
+  exactStructure(
+    nested(named('NetworkPolicy', 'hsk-media-grafana-private'), ['spec']),
+    {
+      podSelector: {
+        matchLabels: { 'app.kubernetes.io/name': 'hsk-media-grafana' },
+      },
+      policyTypes: ['Ingress', 'Egress'],
+      ingress: [
+        {
+          from: [
+            {
+              podSelector: {
+                matchLabels: {
+                  'app.kubernetes.io/name': 'hsk-media-operator',
+                },
+              },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 3000 }],
+        },
+      ],
+      egress: [
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { 'app.kubernetes.io/name': 'prometheus' },
+              },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 9090 }],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  'kubernetes.io/metadata.name': 'kube-system',
+                },
+              },
+              podSelector: { matchLabels: { 'k8s-app': 'kube-dns' } },
+            },
+          ],
+          ports: [
+            { protocol: 'UDP', port: 53 },
+            { protocol: 'TCP', port: 53 },
+          ],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  'kubernetes.io/metadata.name': 'istio-system',
+                },
+              },
+              podSelector: { matchLabels: { app: 'istiod' } },
+            },
+          ],
+          ports: [{ protocol: 'TCP', port: 15012 }],
+        },
+      ],
+    },
+  );
+  exactStructure(
     nested(
       named('AuthorizationPolicy', 'hsk-backend-media-metrics-principal'),
       ['spec'],
@@ -671,6 +1229,78 @@ export function assertExactMediaNetworkTopology(
     },
   );
   exactStructure(
+    nested(named('AuthorizationPolicy', 'hsk-media-prometheus-principal'), [
+      'spec',
+    ]),
+    {
+      selector: {
+        matchLabels: { 'app.kubernetes.io/name': 'prometheus' },
+      },
+      action: 'ALLOW',
+      rules: [
+        {
+          from: [
+            {
+              source: {
+                principals: [
+                  'cluster.local/ns/monitoring/sa/hsk-media-grafana',
+                  'cluster.local/ns/monitoring/sa/hsk-media-operator',
+                ],
+              },
+            },
+          ],
+          to: [
+            {
+              operation: {
+                ports: ['9090'],
+                methods: ['GET', 'POST'],
+                paths: [
+                  '/-/healthy',
+                  '/-/ready',
+                  '/api/v1/query',
+                  '/api/v1/query_range',
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  );
+  exactStructure(
+    nested(named('AuthorizationPolicy', 'hsk-media-grafana-principal'), [
+      'spec',
+    ]),
+    {
+      selector: {
+        matchLabels: { 'app.kubernetes.io/name': 'hsk-media-grafana' },
+      },
+      action: 'ALLOW',
+      rules: [
+        {
+          from: [
+            {
+              source: {
+                principals: [
+                  'cluster.local/ns/monitoring/sa/hsk-media-operator',
+                ],
+              },
+            },
+          ],
+          to: [
+            {
+              operation: {
+                ports: ['3000'],
+                methods: ['GET', 'POST', 'DELETE'],
+                paths: ['/api/health', '/api/dashboards/*', '/api/ds/*'],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  );
+  exactStructure(
     nested(
       named('PeerAuthentication', 'hsk-backend-media-metrics-strict-mtls'),
       ['spec'],
@@ -695,6 +1325,238 @@ export function assertExactMediaNetworkTopology(
       mtls: { mode: 'STRICT' },
     },
   );
+  exactStructure(
+    nested(named('PeerAuthentication', 'hsk-media-prometheus-strict-mtls'), [
+      'spec',
+    ]),
+    {
+      selector: {
+        matchLabels: { 'app.kubernetes.io/name': 'prometheus' },
+      },
+      mtls: { mode: 'STRICT' },
+    },
+  );
+  exactStructure(
+    nested(named('PeerAuthentication', 'hsk-media-grafana-strict-mtls'), [
+      'spec',
+    ]),
+    {
+      selector: {
+        matchLabels: { 'app.kubernetes.io/name': 'hsk-media-grafana' },
+      },
+      mtls: { mode: 'STRICT' },
+    },
+  );
+}
+
+export function assertMonitoringSingleReplicaRollout(
+  resources: Array<Record<string, unknown>>,
+): void {
+  for (const name of [
+    'hsk-media-prometheus',
+    'hsk-media-alertmanager',
+    'hsk-media-grafana',
+  ]) {
+    const deployment = resources.find(
+      (candidate) =>
+        candidate.kind === 'Deployment' &&
+        nested(candidate, ['metadata', 'name']) === name,
+    );
+    if (
+      !deployment ||
+      nested(deployment, ['spec', 'replicas']) !== 1 ||
+      nested(deployment, ['spec', 'strategy', 'type']) !== 'Recreate'
+    ) {
+      throw new Error(
+        `${name} must use one replica and Recreate for its RWO volume.`,
+      );
+    }
+  }
+}
+
+export function assertIstioProbeRewriteContract(
+  resources: Array<Record<string, unknown>>,
+  backendPatch: Record<string, unknown>,
+): void {
+  for (const name of [
+    'hsk-media-prometheus',
+    'hsk-media-alertmanager',
+    'hsk-media-grafana',
+  ]) {
+    const deployment = resources.find(
+      (candidate) =>
+        candidate.kind === 'Deployment' &&
+        nested(candidate, ['metadata', 'name']) === name,
+    );
+    if (
+      !deployment ||
+      nested(deployment, [
+        'spec',
+        'template',
+        'metadata',
+        'annotations',
+        'sidecar.istio.io/inject',
+      ]) !== 'true' ||
+      nested(deployment, [
+        'spec',
+        'template',
+        'metadata',
+        'annotations',
+        'sidecar.istio.io/rewriteAppHTTPProbers',
+      ]) !== 'true'
+    ) {
+      throw new Error(
+        `${name} must inject Istio and rewrite kubelet HTTP probes.`,
+      );
+    }
+  }
+  if (
+    nested(backendPatch, [
+      'spec',
+      'template',
+      'metadata',
+      'annotations',
+      'sidecar.istio.io/inject',
+    ]) !== 'true' ||
+    nested(backendPatch, [
+      'spec',
+      'template',
+      'metadata',
+      'annotations',
+      'sidecar.istio.io/rewriteAppHTTPProbers',
+    ]) !== 'true'
+  ) {
+    throw new Error(
+      'Backend patch must inject Istio and rewrite kubelet HTTP probes.',
+    );
+  }
+}
+
+export function assertGrafanaPrivateApiOnlyContract(
+  resources: Array<Record<string, unknown>>,
+): void {
+  const named = (kind: string, name: string): Record<string, unknown> => {
+    const value = resources.find(
+      (candidate) =>
+        candidate.kind === kind &&
+        nested(candidate, ['metadata', 'name']) === name,
+    );
+    if (!value) throw new Error(`Missing Grafana contract ${kind}/${name}.`);
+    return value;
+  };
+  const network = nested(named('NetworkPolicy', 'hsk-media-grafana-private'), [
+    'spec',
+  ]);
+  const authorization = nested(
+    named('AuthorizationPolicy', 'hsk-media-grafana-principal'),
+    ['spec'],
+  );
+  const serialized = JSON.stringify({ network, authorization });
+  for (const required of [
+    'hsk-media-operator',
+    '/api/health',
+    '/api/dashboards/*',
+    '/api/ds/*',
+  ]) {
+    if (!serialized.includes(required)) {
+      throw new Error(`Grafana private API contract is missing ${required}.`);
+    }
+  }
+  for (const forbidden of [
+    'hsk-operations-access-proxy',
+    '"/"',
+    '/login',
+    '/public/*',
+    '/d/*',
+    '/api/live/*',
+  ]) {
+    if (serialized.includes(forbidden)) {
+      throw new Error(
+        'Grafana contract must remain private API-only without UI claims.',
+      );
+    }
+  }
+}
+
+export function assertGrafanaProvisioningMountContract(
+  resources: Array<Record<string, unknown>>,
+): void {
+  const deployment = resources.find(
+    (candidate) =>
+      candidate.kind === 'Deployment' &&
+      nested(candidate, ['metadata', 'name']) === 'hsk-media-grafana',
+  );
+  if (!deployment) throw new Error('Grafana Deployment is absent.');
+  const containers = nested(deployment, [
+    'spec',
+    'template',
+    'spec',
+    'containers',
+  ]);
+  const container = Array.isArray(containers)
+    ? (containers as unknown[]).find(
+        (candidate) =>
+          candidate !== null &&
+          typeof candidate === 'object' &&
+          !Array.isArray(candidate) &&
+          (candidate as Record<string, unknown>).name === 'grafana',
+      )
+    : undefined;
+  if (!container || typeof container !== 'object' || Array.isArray(container)) {
+    throw new Error('Grafana container is absent.');
+  }
+  const mounts = nested(container, ['volumeMounts']);
+  const volumes = nested(deployment, ['spec', 'template', 'spec', 'volumes']);
+  const requiredMounts = [
+    {
+      name: 'provisioning',
+      mountPath: '/etc/grafana/provisioning/datasources',
+      readOnly: true,
+    },
+    {
+      name: 'dashboard',
+      mountPath: '/var/lib/grafana/dashboards/media-dashboard.json',
+      subPath: 'media-dashboard.json',
+      readOnly: true,
+    },
+    {
+      name: 'dashboard',
+      mountPath: '/etc/grafana/provisioning/dashboards/provider.yml',
+      subPath: 'provider.yml',
+      readOnly: true,
+    },
+  ];
+  if (
+    !Array.isArray(mounts) ||
+    !requiredMounts.every((required) =>
+      mounts.some(
+        (mount) =>
+          mount !== null &&
+          typeof mount === 'object' &&
+          !Array.isArray(mount) &&
+          JSON.stringify(stable(mount)) === JSON.stringify(stable(required)),
+      ),
+    ) ||
+    !Array.isArray(volumes) ||
+    !volumes.some(
+      (volume) =>
+        nested(volume, ['name']) === 'provisioning' &&
+        typeof nested(volume, ['configMap', 'name']) === 'string' &&
+        /^hsk-media-grafana-datasource(?:-[a-z0-9]{10})?$/u.test(
+          String(nested(volume, ['configMap', 'name'])),
+        ),
+    ) ||
+    !volumes.some(
+      (volume) =>
+        nested(volume, ['name']) === 'dashboard' &&
+        typeof nested(volume, ['configMap', 'name']) === 'string' &&
+        /^hsk-media-grafana-dashboard(?:-[a-z0-9]{10})?$/u.test(
+          String(nested(volume, ['configMap', 'name'])),
+        ),
+    )
+  ) {
+    throw new Error('Grafana provisioning mounts are not exact.');
+  }
 }
 
 export function parseExactVersion(
@@ -707,6 +1569,7 @@ export function parseExactVersion(
   const patterns: Record<VersionParser, RegExp> = {
     alertmanager: /^alertmanager, version (\d+\.\d+\.\d+)(?:\s.*)?$/m,
     amtool: /^amtool, version (\d+\.\d+\.\d+)(?:\s.*)?$/m,
+    cosign: /^GitVersion:\s+v(\d+\.\d+\.\d+)$/m,
     grafana: /^Version (\d+\.\d+\.\d+)(?:\s.*)?$/m,
     istioctl: /^client version: (\d+\.\d+\.\d+)$/m,
     kubeconform: /^v(\d+\.\d+\.\d+)$/m,
@@ -715,6 +1578,7 @@ export function parseExactVersion(
     prometheus: /^prometheus, version (\d+\.\d+\.\d+)(?:\s.*)?$/m,
     promtool: /^promtool, version (\d+\.\d+\.\d+)(?:\s.*)?$/m,
     pcre2: /^(\d+\.\d+)$/m,
+    syft: /^Version:\s+(\d+\.\d+\.\d+)$/m,
   };
   const match = patterns[parser].exec(output.trim());
   if (!match || !TOOL_VERSION.test(match[1])) {
@@ -820,19 +1684,66 @@ export function assertCommandEvidenceContract(
     results.map((result) => [result.id, result]),
   );
   const identifiers = new Set<string>();
-  for (const command of commands) {
-    if (
-      !command.id ||
-      !command.validator ||
-      !/^[a-z0-9][a-z0-9.-]*$/iu.test(command.executable) ||
-      !Number.isSafeInteger(command.exitCode) ||
-      command.exitCode < 0 ||
-      !Number.isSafeInteger(command.durationMs) ||
-      command.durationMs < 0 ||
-      !/^logs\/[a-z0-9][a-z0-9.-]*\.log$/iu.test(command.logPath) ||
-      command.logPath.includes('..')
-    ) {
-      throw new Error('Machine command evidence has an invalid field.');
+  for (const [commandIndex, command] of commands.entries()) {
+    const fieldChecks: Array<readonly [string, boolean]> = [
+      ['id', Boolean(command.id)],
+      ['validator', Boolean(command.validator)],
+      ['executable', /^[a-z0-9][a-z0-9.-]*$/iu.test(command.executable)],
+      [
+        'exitCode',
+        Number.isSafeInteger(command.exitCode) && command.exitCode >= 0,
+      ],
+      [
+        'durationMs',
+        Number.isSafeInteger(command.durationMs) && command.durationMs >= 0,
+      ],
+      [
+        'logPath',
+        /^logs\/[a-z0-9][a-z0-9.-]*\.log$/iu.test(command.logPath) &&
+          !command.logPath.includes('..'),
+      ],
+      ['logSha256', SHA256.test(command.logSha256)],
+      [
+        'safeArgs',
+        Array.isArray(command.safeArgs) &&
+          command.safeArgs.every((value) => typeof value === 'string'),
+      ],
+      [
+        'envKeys',
+        Array.isArray(command.envKeys) &&
+          command.envKeys.every(
+            (value) =>
+              /^[A-Z][A-Z0-9_]*$/u.test(value) &&
+              MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST.has(value),
+          ),
+      ],
+      ['cwd', Boolean(command.cwd)],
+      ['startedAt', Boolean(command.startedAt)],
+      ['completedAt', Boolean(command.completedAt)],
+      ['platform', Boolean(command.platform)],
+      ['architecture', Boolean(command.architecture)],
+      ['executableIdentity', Boolean(command.executableIdentity)],
+      ['executableSha256', SHA256.test(command.executableSha256)],
+      [
+        'toolVersion',
+        /^(?:\d+\.\d+(?:\.\d+)?|sha256:[a-f0-9]{64}|internal-v1|unavailable-v1)$/u.test(
+          command.toolVersion,
+        ),
+      ],
+      ['gitCommit', /^[a-f0-9]{40}$/u.test(command.gitCommit)],
+      ['gitTreeSha', /^[a-f0-9]{40}$/u.test(command.gitTreeSha)],
+      ['releaseContentDigest', SHA256.test(command.releaseContentDigest)],
+      ['inputTreeDigest', SHA256.test(command.inputTreeDigest)],
+      [
+        'inputSha256',
+        command.inputSha256 === undefined || SHA256.test(command.inputSha256),
+      ],
+    ];
+    const invalidField = fieldChecks.find(([, valid]) => !valid)?.[0];
+    if (invalidField) {
+      throw new Error(
+        `Machine command evidence at index ${String(commandIndex)} has an invalid field: ${invalidField}.`,
+      );
     }
     const validatorResult = resultByValidator.get(command.validator);
     if (
@@ -870,6 +1781,10 @@ export function assertCommandEvidenceContract(
       command.validator,
       command.executable,
       command.logPath,
+      command.cwd,
+      command.executableIdentity,
+      ...command.safeArgs,
+      ...command.envKeys,
     ]) {
       if (redactDiagnostic(value) !== value) {
         throw new Error('Machine command evidence contains a secret value.');
@@ -1145,6 +2060,7 @@ export function computeReleaseContentDigest(
     .filter(({ path }) =>
       ['backend/', 'docs/', 'ops/'].some((prefix) => path.startsWith(prefix)),
     )
+    .filter(({ path }) => !RELEASE_CONTENT_EXCLUSIONS.has(path))
     .filter(({ path }) => !path.startsWith('backend/test-results/'))
     .sort((left, right) => left.path.localeCompare(right.path));
   const digest = createHash('sha256');
@@ -1174,6 +2090,95 @@ export function computeReleaseContentDigest(
   };
 }
 
+export function computeTreeDigest(root: string): TreeDigestEvidence {
+  const canonicalRoot = realpathSync(root);
+  if (!lstatSync(canonicalRoot).isDirectory()) {
+    throw new Error('Rendered release tree root must be a directory.');
+  }
+  const paths: string[] = [];
+  const visit = (directory: string): void => {
+    for (const entry of readdirSync(directory).sort((left, right) =>
+      left.localeCompare(right),
+    )) {
+      const absolute = join(directory, entry);
+      const info = lstatSync(absolute);
+      if (info.isSymbolicLink()) {
+        throw new Error(
+          'Rendered release tree must not contain a symbolic link.',
+        );
+      }
+      if (info.isDirectory()) {
+        visit(absolute);
+        continue;
+      }
+      if (!info.isFile()) {
+        throw new Error('Rendered release tree contains a special file.');
+      }
+      const pathFromRoot = relative(canonicalRoot, absolute);
+      if (!isStrictDescendant(pathFromRoot)) {
+        throw new Error('Rendered release tree path escaped its root.');
+      }
+      paths.push(pathFromRoot.split(sep).join('/'));
+    }
+  };
+  visit(canonicalRoot);
+  paths.sort((left, right) => left.localeCompare(right));
+  const digest = createHash('sha256');
+  for (const path of paths) {
+    const bytes = readFileSync(join(canonicalRoot, path));
+    digest.update(path);
+    digest.update('\0');
+    digest.update(String(bytes.length));
+    digest.update('\0');
+    digest.update(bytes);
+    digest.update('\0');
+  }
+  return { digest: digest.digest('hex'), pathCount: paths.length, paths };
+}
+
+export function computeMigrationCatalogEvidence(migrationsRoot: string): {
+  catalogCount: number;
+  catalogChecksum: string;
+  entries: Array<{ name: string; checksum: string }>;
+} {
+  const canonicalRoot = realpathSync(migrationsRoot);
+  const rootStat = lstatSync(canonicalRoot);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    throw new Error('Migration catalog root must be a real directory.');
+  }
+  const entries = readdirSync(canonicalRoot)
+    .filter((name) => name !== 'migration_lock.toml')
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => {
+      if (!/^[0-9]{14}_[a-z0-9_]+$/u.test(name)) {
+        throw new Error(
+          `Migration catalog contains an invalid entry: ${name}.`,
+        );
+      }
+      const directory = join(canonicalRoot, name);
+      const sql = join(directory, 'migration.sql');
+      const directoryStat = lstatSync(directory);
+      const sqlStat = lstatSync(sql);
+      if (
+        directoryStat.isSymbolicLink() ||
+        !directoryStat.isDirectory() ||
+        sqlStat.isSymbolicLink() ||
+        !sqlStat.isFile()
+      ) {
+        throw new Error('Migration catalog contains a link or special file.');
+      }
+      return { name, checksum: sha256(readFileSync(sql)) };
+    });
+  const bytes = Buffer.from(
+    entries.map(({ name, checksum }) => `${name}\0${checksum}\n`).join(''),
+  );
+  return {
+    catalogCount: entries.length,
+    catalogChecksum: sha256(bytes),
+    entries,
+  };
+}
+
 export function assertReleaseContentStable(
   before: ReleaseContentEvidence,
   after: ReleaseContentEvidence,
@@ -1195,14 +2200,690 @@ export function assertReleaseHeadStable(before: string, after: string): void {
   }
 }
 
+export function assertDatabaseReleaseEvidence(
+  input: unknown,
+  expected: DatabaseEvidenceExpectation,
+): DatabaseReleaseEvidenceSummary {
+  const root = record(input, 'database release evidence');
+  exactKeys(
+    root,
+    [
+      'schemaVersion',
+      'runId',
+      'startedAt',
+      'completedAt',
+      'git',
+      'releaseContentDigest',
+      'database',
+      'migrations',
+      'checks',
+      'commands',
+      'artifacts',
+      'auxiliary',
+      'outcome',
+      'durationMs',
+    ],
+    'database release evidence',
+  );
+  const serialized = JSON.stringify(root);
+  if (
+    /postgres(?:ql)?:\/\//iu.test(serialized) ||
+    /\/\/[^/@\s:]+:[^/@\s]+@/u.test(serialized) ||
+    /"(?:databaseUrl|testDatabaseUrl|password|passwd|pwd|username|user|secret|token)"\s*:/iu.test(
+      serialized,
+    )
+  ) {
+    throw new Error('Database evidence contains a URL, user or secret field.');
+  }
+  const git = record(root.git, 'database release evidence.git');
+  const database = record(root.database, 'database release evidence.database');
+  const migrations = record(
+    root.migrations,
+    'database release evidence.migrations',
+  );
+  const artifacts = record(
+    root.artifacts,
+    'database release evidence.artifacts',
+  );
+  const auxiliary = record(
+    root.auxiliary,
+    'database release evidence.auxiliary',
+  );
+  exactKeys(git, ['commit', 'treeSha'], 'database release evidence.git');
+  exactKeys(
+    database,
+    [
+      'hostFingerprintSha256',
+      'port',
+      'databaseName',
+      'guardedTestSuffix',
+      'serverVersion',
+    ],
+    'database release evidence.database',
+  );
+  exactKeys(
+    auxiliary,
+    [
+      'futureTimestampAbortCommandId',
+      'boundedMigrationAbortCommandId',
+      'auditLifecycleRaceCommandId',
+      'concurrency',
+      'benchmark',
+      'databaseCount',
+      'shadowDatabaseName',
+    ],
+    'database release evidence.auxiliary',
+  );
+  const auxiliaryConcurrency = record(
+    auxiliary.concurrency,
+    'database release evidence.auxiliary.concurrency',
+  );
+  exactKeys(
+    auxiliaryConcurrency,
+    ['blockedOnLock', 'finalAuditCount'],
+    'database release evidence.auxiliary.concurrency',
+  );
+  const auxiliaryBenchmark = record(
+    auxiliary.benchmark,
+    'database release evidence.auxiliary.benchmark',
+  );
+  exactKeys(
+    auxiliaryBenchmark,
+    ['fixtureRows', 'planningTimeMs', 'executionTimeMs'],
+    'database release evidence.auxiliary.benchmark',
+  );
+  exactKeys(
+    migrations,
+    ['catalogCount', 'catalogChecksumSha256', 'latestNames', 'latestChecksums'],
+    'database release evidence.migrations',
+  );
+  exactKeys(
+    artifacts,
+    ['junit', 'logManifest'],
+    'database release evidence.artifacts',
+  );
+  const startedAt = Date.parse(string(root.startedAt, 'startedAt'));
+  const completedAt = Date.parse(string(root.completedAt, 'completedAt'));
+  const now = expected.nowMs ?? Date.now();
+  if (
+    root.schemaVersion !== 1 ||
+    root.outcome !== 'pass' ||
+    !/^[0-9a-f-]{16,64}$/u.test(string(root.runId, 'runId')) ||
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(completedAt) ||
+    completedAt < startedAt ||
+    completedAt > now + 60_000 ||
+    now - completedAt > 24 * 60 * 60_000 ||
+    git.commit !== expected.commit ||
+    git.treeSha !== expected.treeSha ||
+    root.releaseContentDigest !== expected.releaseContentDigest
+  ) {
+    throw new Error('Database evidence is stale or not bound to this release.');
+  }
+  if (
+    !Number.isSafeInteger(root.durationMs) ||
+    Number(root.durationMs) <= 0 ||
+    auxiliaryConcurrency.blockedOnLock !== true ||
+    auxiliaryConcurrency.finalAuditCount !== 1 ||
+    !Number.isSafeInteger(auxiliaryBenchmark.fixtureRows) ||
+    Number(auxiliaryBenchmark.fixtureRows) < 1_000 ||
+    !Number.isFinite(auxiliaryBenchmark.planningTimeMs) ||
+    Number(auxiliaryBenchmark.planningTimeMs) < 0 ||
+    !Number.isFinite(auxiliaryBenchmark.executionTimeMs) ||
+    Number(auxiliaryBenchmark.executionTimeMs) < 0 ||
+    !Number.isSafeInteger(auxiliary.databaseCount) ||
+    Number(auxiliary.databaseCount) < 8 ||
+    auxiliary.shadowDatabaseName !== 'hsk_media_shadow_test'
+  ) {
+    throw new Error('Database evidence auxiliary results are invalid.');
+  }
+  if (
+    !SHA256.test(String(database.hostFingerprintSha256)) ||
+    !Number.isSafeInteger(database.port) ||
+    database.guardedTestSuffix !== true ||
+    !/^[a-z0-9_]+(?:_test|_ci)$/u.test(String(database.databaseName)) ||
+    !/^16\.\d+(?:\.\d+)?$/u.test(String(database.serverVersion))
+  ) {
+    throw new Error('Database evidence failed the disposable PG16 guard.');
+  }
+  if (
+    migrations.catalogCount !== expected.catalogCount ||
+    migrations.catalogChecksumSha256 !== expected.catalogChecksum ||
+    !Array.isArray(migrations.latestNames) ||
+    !Array.isArray(migrations.latestChecksums) ||
+    JSON.stringify(migrations.latestNames) !==
+      JSON.stringify(expected.latestMigrations.map(({ name }) => name)) ||
+    JSON.stringify(migrations.latestChecksums) !==
+      JSON.stringify(expected.latestMigrations.map(({ checksum }) => checksum))
+  ) {
+    throw new Error('Database evidence migration catalog is not exact.');
+  }
+  if (!Array.isArray(root.commands) || root.commands.length === 0) {
+    throw new Error('Database evidence has no command records.');
+  }
+  const commands = new Map<string, Record<string, unknown>>();
+  const orderedManifestCommands: Array<{
+    id: string;
+    logPath: string;
+    logSha256: string;
+  }> = [];
+  for (const [index, value] of root.commands.entries()) {
+    const command = record(value, `database evidence commands[${index}]`);
+    exactKeys(
+      command,
+      [
+        'id',
+        'commandRef',
+        'platform',
+        'logPath',
+        'logSha256',
+        'exitCode',
+        'durationMs',
+        'outcome',
+        'role',
+        'executable',
+        'executableIdentity',
+        'executableSha256',
+        'toolVersion',
+        'safeArgs',
+        'cwd',
+        'envKeys',
+        'startedAt',
+        'completedAt',
+        'gitCommit',
+        'gitTreeSha',
+        'releaseContentDigest',
+        'inputTreeDigest',
+        'expectedAbort',
+      ],
+      `database evidence commands[${index}]`,
+    );
+    const id = string(command.id, `database evidence commands[${index}].id`);
+    const commandRef = string(
+      command.commandRef,
+      `database evidence commands[${index}].commandRef`,
+    );
+    const platform = string(
+      command.platform,
+      `database evidence commands[${index}].platform`,
+    );
+    const logPath = safeRelativePath(
+      string(command.logPath, `database evidence commands[${index}].logPath`),
+      `database evidence commands[${index}].logPath`,
+    );
+    const logSha256 = string(
+      command.logSha256,
+      `database evidence commands[${index}].logSha256`,
+    );
+    const role = string(
+      command.role,
+      `database evidence commands[${index}].role`,
+    );
+    const commandStartedAt = Date.parse(
+      string(
+        command.startedAt,
+        `database evidence commands[${index}].startedAt`,
+      ),
+    );
+    const commandCompletedAt = Date.parse(
+      string(
+        command.completedAt,
+        `database evidence commands[${index}].completedAt`,
+      ),
+    );
+    const expectedAbort =
+      command.expectedAbort === undefined
+        ? undefined
+        : record(
+            command.expectedAbort,
+            `database evidence commands[${index}].expectedAbort`,
+          );
+    if (
+      commands.has(id) ||
+      command.outcome !== 'PASS' ||
+      (expectedAbort === undefined
+        ? command.exitCode !== 0
+        : command.exitCode !== expectedAbort.exitCode) ||
+      !Number.isSafeInteger(command.durationMs) ||
+      Number(command.durationMs) < 0 ||
+      !/^[A-Za-z0-9][A-Za-z0-9._:/ -]{2,160}$/u.test(commandRef) ||
+      commandRef.includes('://') ||
+      !['darwin/arm64', 'linux/x64'].includes(platform) ||
+      !['check', 'auxiliary'].includes(role) ||
+      !/^logs\/[A-Za-z0-9][A-Za-z0-9._-]*\.log$/u.test(logPath) ||
+      !SHA256.test(logSha256) ||
+      !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(
+        string(
+          command.executable,
+          `database evidence commands[${index}].executable`,
+        ),
+      ) ||
+      !isNonEmptyString(command.executableIdentity) ||
+      !SHA256.test(String(command.executableSha256)) ||
+      !/^(?:sha256:[a-f0-9]{64}|internal-v1)$/u.test(
+        String(command.toolVersion),
+      ) ||
+      !Array.isArray(command.safeArgs) ||
+      !command.safeArgs.every(
+        (argument) =>
+          typeof argument === 'string' &&
+          argument.length <= 512 &&
+          redactSensitiveDiagnostic(argument) === argument,
+      ) ||
+      !isNonEmptyString(command.cwd) ||
+      !Array.isArray(command.envKeys) ||
+      !command.envKeys.every(
+        (key) =>
+          typeof key === 'string' &&
+          [
+            'DATABASE_URL',
+            'MEDIA_INGESTION_ENABLED',
+            'MEDIA_METRICS_PORT',
+            'NODE_ENV',
+            'PGOPTIONS',
+            'TEST_DATABASE_URL',
+          ].includes(key),
+      ) ||
+      !Number.isFinite(commandStartedAt) ||
+      !Number.isFinite(commandCompletedAt) ||
+      commandCompletedAt < commandStartedAt ||
+      command.gitCommit !== git.commit ||
+      command.gitTreeSha !== git.treeSha ||
+      command.releaseContentDigest !== root.releaseContentDigest ||
+      command.inputTreeDigest !== root.releaseContentDigest
+    ) {
+      throw new Error('Database evidence command record is invalid.');
+    }
+    if (expectedAbort !== undefined) {
+      exactKeys(
+        expectedAbort,
+        ['exitCode', 'sqlstate'],
+        `database evidence commands[${index}].expectedAbort`,
+      );
+      if (expectedAbort.exitCode !== 3 || expectedAbort.sqlstate !== 'P0001') {
+        throw new Error('Database evidence expected abort is invalid.');
+      }
+    }
+    const logBytes = readBoundEvidenceFile(
+      expected.evidenceRoot,
+      logPath,
+      2 * 1024 * 1024,
+    );
+    const logText = logBytes.toString('utf8');
+    if (
+      sha256(logBytes) !== logSha256 ||
+      redactSensitiveDiagnostic(logText) !== logText
+    ) {
+      throw new Error(
+        'Database evidence command log is forged or unsanitized.',
+      );
+    }
+    commands.set(id, command);
+    orderedManifestCommands.push({ id, logPath, logSha256 });
+  }
+  const checks = record(root.checks, 'database release evidence.checks');
+  const requiredChecks = [
+    'freshMigrationDeploy',
+    'upgradeMigrationDeploy',
+    'adversarialFixture',
+    'integration',
+    'concurrency',
+    'migrateStatus',
+    'checksumAudit',
+    'drift',
+    'fullE2E',
+    'futureTimestampFixture',
+    'auditLifecycleRace',
+    'boundedMigrationAbort',
+  ];
+  exactKeys(checks, requiredChecks, 'database release evidence.checks');
+  const referencedCommands = new Set<string>();
+  for (const name of requiredChecks) {
+    const check = record(checks[name], `database evidence check ${name}`);
+    exactKeys(
+      check,
+      ['outcome', 'commandId'],
+      `database evidence check ${name}`,
+    );
+    const commandId = string(check.commandId, `${name}.commandId`);
+    if (
+      check.outcome !== 'PASS' ||
+      !commands.has(commandId) ||
+      commands.get(commandId)?.role !== 'check'
+    ) {
+      throw new Error(`Database evidence check is not executable: ${name}.`);
+    }
+    referencedCommands.add(commandId);
+  }
+  const auxiliaryBindings = [
+    ['futureTimestampFixture', 'futureTimestampAbortCommandId'],
+    ['auditLifecycleRace', 'auditLifecycleRaceCommandId'],
+    ['boundedMigrationAbort', 'boundedMigrationAbortCommandId'],
+  ] as const;
+  for (const [checkName, field] of auxiliaryBindings) {
+    const check = record(
+      checks[checkName],
+      `database evidence check ${checkName}`,
+    );
+    if (auxiliary[field] !== check.commandId) {
+      throw new Error(`Database auxiliary binding is invalid: ${field}.`);
+    }
+  }
+  for (const [id, command] of commands) {
+    if (command.role === 'check' && !referencedCommands.has(id)) {
+      throw new Error('Database check command is not referenced by a check.');
+    }
+    if (
+      command.role === 'auxiliary' &&
+      !/^(?:git-|create-|drop-|fresh-migration-only-preflight$|upgrade-(?:first17-|cleanup-required-fixture$|object-cleaned-fixture$|migration-deploy$|positive-backfill-)|adversarial-(?:first18-|fixture-setup$)|future-(?:first18-|fixture-setup$)|atomic-rollback-|integration-migration-|concurrency-(?:migration-|final-count$)|audit-race-(?:fixture-setup$|final-state$|reverse-final-state$)|lock-abort-|migration-catalog$|drift-(?:history-|live-)|benchmark$|server-version$|e2e-migration-)/u.test(
+        id,
+      )
+    ) {
+      throw new Error(
+        'Database auxiliary command identity is not allowlisted.',
+      );
+    }
+  }
+  const junit = databaseEvidenceArtifact(artifacts, 'junit');
+  const logManifestArtifact = databaseEvidenceArtifact(
+    artifacts,
+    'logManifest',
+  );
+  const junitBytes = readBoundEvidenceFile(
+    expected.evidenceRoot,
+    junit.path,
+    4 * 1024 * 1024,
+  );
+  const logManifestBytes = readBoundEvidenceFile(
+    expected.evidenceRoot,
+    logManifestArtifact.path,
+    4 * 1024 * 1024,
+  );
+  if (
+    sha256(junitBytes) !== junit.sha256 ||
+    sha256(logManifestBytes) !== logManifestArtifact.sha256
+  ) {
+    throw new Error('Database evidence artifact digest does not match bytes.');
+  }
+  const junitText = junitBytes.toString('utf8');
+  const junitTests = Number(
+    /<testsuite\b[^>]*\btests="(\d+)"/u.exec(junitText)?.[1],
+  );
+  const junitCheckNames = Array.from(
+    junitText.matchAll(/<testcase\b[^>]*\bname="([A-Za-z0-9_-]+)"/gu),
+    (match) => match[1],
+  ).sort((left, right) => left.localeCompare(right));
+  const expectedJunitCheckNames = [...requiredChecks].sort((left, right) =>
+    left.localeCompare(right),
+  );
+  if (
+    !/<testsuite\b[^>]*\bfailures="0"/u.test(junitText) ||
+    /<failure\b/u.test(junitText) ||
+    redactSensitiveDiagnostic(junitText) !== junitText ||
+    junitTests !== requiredChecks.length ||
+    JSON.stringify(junitCheckNames) !== JSON.stringify(expectedJunitCheckNames)
+  ) {
+    throw new Error(
+      'Database JUnit artifact does not prove the exact passing check matrix.',
+    );
+  }
+  const logManifest = record(
+    JSON.parse(logManifestBytes.toString('utf8')) as unknown,
+    'database log manifest',
+  );
+  exactKeys(
+    logManifest,
+    ['schemaVersion', 'runId', 'commands'],
+    'database log manifest',
+  );
+  if (
+    logManifest.schemaVersion !== 1 ||
+    logManifest.runId !== root.runId ||
+    JSON.stringify(logManifest.commands) !==
+      JSON.stringify(orderedManifestCommands)
+  ) {
+    throw new Error('Database log manifest is not exactly bound to commands.');
+  }
+  return {
+    runId: String(root.runId),
+    evidenceSha256: sha256(Buffer.from(JSON.stringify(root))),
+    database: {
+      hostFingerprintSha256: String(database.hostFingerprintSha256),
+      port: Number(database.port),
+      databaseName: String(database.databaseName),
+      guardedTestSuffix: true,
+      serverVersion: String(database.serverVersion),
+    },
+    migrations: {
+      catalogCount: Number(migrations.catalogCount),
+      catalogChecksumSha256: String(migrations.catalogChecksumSha256),
+      latestNames: [...(migrations.latestNames as string[])],
+      latestChecksums: [...(migrations.latestChecksums as string[])],
+    },
+  };
+}
+
+export function assertCapacityBackupEvidence(
+  input: unknown,
+  expected: CapacityBackupEvidenceExpectation,
+): CapacityBackupEvidenceSummary {
+  const root = record(input, 'capacity and backup evidence');
+  exactKeys(
+    root,
+    [
+      'schemaVersion',
+      'runId',
+      'measuredAt',
+      'git',
+      'releaseContentDigest',
+      'clusterFingerprintSha256',
+      'prometheus',
+      'backup',
+      'outcome',
+    ],
+    'capacity and backup evidence',
+  );
+  const serialized = JSON.stringify(root);
+  if (
+    /database_url|postgres(?:ql)?:\/\/|password|username|\buser\b|secret|token|credential|https?:\/\//iu.test(
+      serialized,
+    )
+  ) {
+    throw new Error('Capacity and backup evidence contains sensitive fields.');
+  }
+  const git = record(root.git, 'capacity and backup evidence.git');
+  const prometheus = record(
+    root.prometheus,
+    'capacity and backup evidence.prometheus',
+  );
+  const backup = record(root.backup, 'capacity and backup evidence.backup');
+  exactKeys(git, ['commit', 'treeSha'], 'capacity and backup evidence.git');
+  exactKeys(
+    prometheus,
+    [
+      'pvcBound',
+      'capacityGiB',
+      'usedGiB',
+      'compressedIngestGiBPerDay',
+      'projectedRequiredGiB',
+      'storageClassExpansionAllowed',
+    ],
+    'capacity and backup evidence.prometheus',
+  );
+  exactKeys(
+    backup,
+    [
+      'encrypted',
+      'retentionDays',
+      'latestSnapshotAt',
+      'restoreRehearsedAt',
+      'restoreSucceeded',
+      'restoreDurationSeconds',
+    ],
+    'capacity and backup evidence.backup',
+  );
+  const measuredAt = Date.parse(string(root.measuredAt, 'measuredAt'));
+  const snapshotAt = Date.parse(
+    string(backup.latestSnapshotAt, 'latestSnapshotAt'),
+  );
+  const restoredAt = Date.parse(
+    string(backup.restoreRehearsedAt, 'restoreRehearsedAt'),
+  );
+  const now = expected.nowMs ?? Date.now();
+  const runId = string(root.runId, 'runId');
+  if (
+    root.schemaVersion !== 1 ||
+    root.outcome !== 'pass' ||
+    !/^[0-9a-f-]{16,64}$/u.test(runId) ||
+    !SHA256.test(String(root.clusterFingerprintSha256)) ||
+    !Number.isFinite(measuredAt) ||
+    measuredAt > now + 60_000 ||
+    now - measuredAt > 24 * 60 * 60_000 ||
+    git.commit !== expected.commit ||
+    git.treeSha !== expected.treeSha ||
+    root.releaseContentDigest !== expected.releaseContentDigest
+  ) {
+    throw new Error(
+      'Capacity and backup evidence is stale or not release-bound.',
+    );
+  }
+  const capacityGiB = finiteNumber(prometheus.capacityGiB, 'capacityGiB');
+  const usedGiB = finiteNumber(prometheus.usedGiB, 'usedGiB');
+  const ingestGiBPerDay = finiteNumber(
+    prometheus.compressedIngestGiBPerDay,
+    'compressedIngestGiBPerDay',
+  );
+  const projectedRequiredGiB = finiteNumber(
+    prometheus.projectedRequiredGiB,
+    'projectedRequiredGiB',
+  );
+  const expectedRequiredGiB = ingestGiBPerDay * 32 * 1.25;
+  if (
+    prometheus.pvcBound !== true ||
+    prometheus.storageClassExpansionAllowed !== true ||
+    capacityGiB < 50 ||
+    usedGiB < 0 ||
+    usedGiB > capacityGiB * 0.8 ||
+    ingestGiBPerDay <= 0 ||
+    Math.abs(projectedRequiredGiB - expectedRequiredGiB) > 0.001 ||
+    projectedRequiredGiB > capacityGiB * 0.8
+  ) {
+    throw new Error('Prometheus 32-day capacity evidence exceeds its budget.');
+  }
+  const retentionDays = finiteNumber(backup.retentionDays, 'retentionDays');
+  const restoreDurationSeconds = finiteNumber(
+    backup.restoreDurationSeconds,
+    'restoreDurationSeconds',
+  );
+  if (
+    backup.encrypted !== true ||
+    backup.restoreSucceeded !== true ||
+    retentionDays < 32 ||
+    restoreDurationSeconds <= 0 ||
+    !Number.isFinite(snapshotAt) ||
+    snapshotAt > now + 60_000 ||
+    now - snapshotAt > 24 * 60 * 60_000 ||
+    !Number.isFinite(restoredAt) ||
+    restoredAt > now + 60_000 ||
+    now - restoredAt > 90 * 24 * 60 * 60_000
+  ) {
+    throw new Error('Encrypted backup and restore evidence is not current.');
+  }
+  return {
+    runId,
+    clusterFingerprintSha256: String(root.clusterFingerprintSha256),
+    requiredGiB: projectedRequiredGiB,
+    capacityGiB,
+    backupRetentionDays: retentionDays,
+  };
+}
+
+function finiteNumber(value: unknown, path: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${path} must be a finite number.`);
+  }
+  return value;
+}
+
+function databaseEvidenceArtifact(
+  artifacts: Record<string, unknown>,
+  name: 'junit' | 'logManifest',
+): { path: string; sha256: string } {
+  const artifact = record(
+    artifacts[name],
+    `database release evidence.artifacts.${name}`,
+  );
+  exactKeys(artifact, ['path', 'sha256'], `database artifact ${name}`);
+  const path = safeRelativePath(
+    string(artifact.path, `database artifact ${name}.path`),
+    `database artifact ${name}.path`,
+  );
+  const expectedPath =
+    name === 'junit' ? 'evidence.junit.xml' : 'log-manifest.json';
+  if (path !== expectedPath) {
+    throw new Error(`Database evidence artifact path is invalid: ${name}.`);
+  }
+  const digest = string(artifact.sha256, `database artifact ${name}.sha256`);
+  if (!SHA256.test(digest)) {
+    throw new Error(`Database evidence artifact digest is invalid: ${name}.`);
+  }
+  return { path, sha256: digest };
+}
+
+function readBoundEvidenceFile(
+  evidenceRoot: string,
+  relativePath: string,
+  maximumBytes: number,
+): Buffer {
+  if (!isAbsolute(evidenceRoot) || !existsSync(evidenceRoot)) {
+    throw new Error(
+      'Database evidence root must be an existing absolute path.',
+    );
+  }
+  const rootStat = lstatSync(evidenceRoot);
+  const canonicalRoot = realpathSync(evidenceRoot);
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error('Database evidence root must be a real directory.');
+  }
+  const candidate = resolve(canonicalRoot, relativePath);
+  if (!isStrictDescendant(relative(canonicalRoot, candidate))) {
+    throw new Error('Database evidence artifact escapes its evidence root.');
+  }
+  let cursor = canonicalRoot;
+  for (const component of relative(canonicalRoot, candidate).split(sep)) {
+    cursor = join(cursor, component);
+    if (!existsSync(cursor) || lstatSync(cursor).isSymbolicLink()) {
+      throw new Error(
+        'Database evidence artifact is absent or traverses a link.',
+      );
+    }
+  }
+  const stat = lstatSync(candidate);
+  if (!stat.isFile() || stat.size > maximumBytes) {
+    throw new Error(
+      'Database evidence artifact is not a bounded regular file.',
+    );
+  }
+  return readFileSync(candidate);
+}
+
 export function renderValidatorJUnit(
   results: readonly ValidatorResult[],
+  metadata: {
+    runId?: string;
+    commit?: string;
+    treeSha?: string;
+    releaseProfile?: boolean;
+  } = {},
 ): string {
   const failures = results.filter(
-    ({ status }) => status === 'FAIL_INTERNAL',
+    ({ status }) =>
+      status === 'FAIL_INTERNAL' ||
+      (metadata.releaseProfile === true && status === 'BLOCKED_EXTERNAL'),
   ).length;
   const skipped = results.filter(
-    ({ status }) => status === 'BLOCKED_EXTERNAL',
+    ({ status }) =>
+      status === 'BLOCKED_EXTERNAL' && metadata.releaseProfile !== true,
   ).length;
   const cases = results
     .map((result) => {
@@ -1212,12 +2893,29 @@ export function renderValidatorJUnit(
         return `  <testcase name="${name}" time="${time}"><failure message="${xml(result.reason ?? 'Internal failure')}"/></testcase>`;
       }
       if (result.status === 'BLOCKED_EXTERNAL') {
+        if (metadata.releaseProfile === true) {
+          return `  <testcase name="${name}" time="${time}"><failure message="${xml(result.reason ?? 'Release prerequisite blocked externally')}"/></testcase>`;
+        }
         return `  <testcase name="${name}" time="${time}"><skipped message="${xml(result.reason ?? 'External prerequisite unavailable')}"/></testcase>`;
       }
       return `  <testcase name="${name}" time="${time}"/>`;
     })
     .join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="media-operations" tests="${results.length}" failures="${failures}" skipped="${skipped}">\n${cases}\n</testsuite>\n`;
+  const properties = Object.entries({
+    runId: metadata.runId,
+    commit: metadata.commit,
+    treeSha: metadata.treeSha,
+  })
+    .filter((entry): entry is [string, string] => Boolean(entry[1]))
+    .map(
+      ([name, value]) =>
+        `    <property name="${xml(name)}" value="${xml(value)}"/>`,
+    )
+    .join('\n');
+  const propertyBlock = properties
+    ? `\n  <properties>\n${properties}\n  </properties>`
+    : '';
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="media-operations" tests="${results.length}" failures="${failures}" skipped="${skipped}">${propertyBlock}\n${cases}\n</testsuite>\n`;
 }
 
 export function assertGrafanaQueryResult(result: unknown, refId: string): void {
@@ -1302,7 +3000,108 @@ export function assertGrafanaNoDataResult(
   }
 }
 
+export interface GrafanaDashboardTargetContract {
+  refId: string;
+  expr: string;
+}
+
+export function assertGrafanaDashboardTargetContract(
+  sourceDashboard: unknown,
+  importedDashboard: unknown,
+  datasourceUid: string,
+): GrafanaDashboardTargetContract[] {
+  if (!/^[a-z][a-z0-9-]{2,63}$/u.test(datasourceUid)) {
+    throw new Error('Grafana datasource UID is not a stable identifier.');
+  }
+  const sourceTargets = grafanaDashboardTargets(
+    sourceDashboard,
+    datasourceUid,
+    'source',
+  );
+  const importedTargets = grafanaDashboardTargets(
+    importedDashboard,
+    datasourceUid,
+    'readback',
+  );
+  if (JSON.stringify(importedTargets) !== JSON.stringify(sourceTargets)) {
+    throw new Error(
+      'Grafana imported readback target contract differs from source.',
+    );
+  }
+  return importedTargets;
+}
+
+function grafanaDashboardTargets(
+  dashboardInput: unknown,
+  datasourceUid: string,
+  origin: 'source' | 'readback',
+): GrafanaDashboardTargetContract[] {
+  const dashboard = record(dashboardInput, `Grafana ${origin} dashboard`);
+  if (!Array.isArray(dashboard.panels) || dashboard.panels.length === 0) {
+    throw new Error(`Grafana ${origin} dashboard has no panels.`);
+  }
+  const targets: GrafanaDashboardTargetContract[] = [];
+  const refIds = new Set<string>();
+  for (const [panelIndex, panelInput] of dashboard.panels.entries()) {
+    const panel = record(
+      panelInput,
+      `Grafana ${origin} dashboard panel ${panelIndex}`,
+    );
+    const datasource = record(
+      panel.datasource,
+      `Grafana ${origin} dashboard panel ${panelIndex} datasource`,
+    );
+    exactKeys(
+      datasource,
+      ['type', 'uid'],
+      `Grafana ${origin} dashboard panel ${panelIndex} datasource`,
+    );
+    if (datasource.type !== 'prometheus' || datasource.uid !== datasourceUid) {
+      throw new Error(
+        `Grafana ${origin} panel does not use the exact provisioned datasource.`,
+      );
+    }
+    if (!Array.isArray(panel.targets) || panel.targets.length === 0) {
+      throw new Error(
+        `Grafana ${origin} dashboard panel has no query targets.`,
+      );
+    }
+    for (const [targetIndex, targetInput] of panel.targets.entries()) {
+      const target = record(
+        targetInput,
+        `Grafana ${origin} target ${panelIndex}:${targetIndex}`,
+      );
+      const refId = string(
+        target.refId,
+        `Grafana ${origin} target ${panelIndex}:${targetIndex}.refId`,
+      );
+      const expr = string(
+        target.expr,
+        `Grafana ${origin} target ${panelIndex}:${targetIndex}.expr`,
+      );
+      if (!/^[A-Z][A-Z0-9_]{2,63}$/u.test(refId)) {
+        throw new Error(
+          'Grafana target refId must be a stable uppercase identifier.',
+        );
+      }
+      if (refIds.has(refId)) {
+        throw new Error(`Duplicate Grafana target refId: ${refId}.`);
+      }
+      if (!expr.trim() || expr.length > 4_096) {
+        throw new Error(`Grafana target ${refId} has an invalid expression.`);
+      }
+      refIds.add(refId);
+      targets.push({ refId, expr });
+    }
+  }
+  return targets;
+}
+
 export function redactDiagnostic(value: string): string {
+  return redactSensitiveDiagnostic(value).slice(0, 1_024);
+}
+
+function redactSensitiveDiagnostic(value: string): string {
   return value
     .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/gi, '$1[REDACTED]@')
     .replace(
@@ -1314,8 +3113,7 @@ export function redactDiagnostic(value: string): string {
       '"$1":"[REDACTED]"',
     )
     .replace(/\bauthorization\s*:\s*[^\r\n]+/gi, 'authorization: [REDACTED]')
-    .replace(/\bbearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
-    .slice(0, 1_024);
+    .replace(/\bbearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]');
 }
 
 function xml(value: string): string {
@@ -1423,6 +3221,123 @@ function credentialFreeHttpsUrl(value: unknown, path: string): string {
   return url;
 }
 
+function parseOciImageDefinition(
+  input: unknown,
+  imageName: string,
+): OciImageDefinition {
+  const path = `manifest.images.${imageName}`;
+  const image = record(input, path);
+  exactKeys(
+    image,
+    ['repository', 'version', 'indexDigest', 'platforms', 'attestations'],
+    path,
+  );
+  const repository = string(image.repository, `${path}.repository`);
+  const repositories: Record<string, string> = {
+    alertmanager: 'quay.io/prometheus/alertmanager',
+    grafana: 'docker.io/grafana/grafana',
+    prometheus: 'quay.io/prometheus/prometheus',
+  };
+  if (
+    !/^[a-z0-9.-]+(?::[0-9]+)?\/[a-z0-9][a-z0-9._/-]*$/u.test(repository) ||
+    repository.includes('..') ||
+    repositories[imageName] !== repository
+  ) {
+    throw new Error(`${path}.repository is not an exact OCI repository.`);
+  }
+  const version = string(image.version, `${path}.version`);
+  if (!TOOL_VERSION.test(version)) {
+    throw new Error(`${path}.version must be an exact numeric version.`);
+  }
+  const indexDigest = string(image.indexDigest, `${path}.indexDigest`);
+  if (!OCI_DIGEST.test(indexDigest)) {
+    throw new Error(`${path}.indexDigest must be an exact OCI digest.`);
+  }
+  if (!Array.isArray(image.platforms) || image.platforms.length !== 1) {
+    throw new Error(`${path} must define exactly one Linux amd64 platform.`);
+  }
+  const platformPath = `${path}.platforms[0]`;
+  const rawPlatform = record(image.platforms[0], platformPath);
+  exactKeys(
+    rawPlatform,
+    ['os', 'architecture', 'digest', 'runtimeRef'],
+    platformPath,
+  );
+  if (rawPlatform.os !== 'linux' || rawPlatform.architecture !== 'x64') {
+    throw new Error(`${path} must define exactly the Linux amd64 platform.`);
+  }
+  const digest = string(rawPlatform.digest, `${platformPath}.digest`);
+  const runtimeRef = string(
+    rawPlatform.runtimeRef,
+    `${platformPath}.runtimeRef`,
+  );
+  if (!OCI_DIGEST.test(digest) || runtimeRef !== `${repository}@${digest}`) {
+    throw new Error(`${path} has a mismatched OCI runtime digest/reference.`);
+  }
+  const attestations = record(image.attestations, `${path}.attestations`);
+  exactKeys(attestations, ['signature', 'sbom'], `${path}.attestations`);
+  const signature = record(
+    attestations.signature,
+    `${path}.attestations.signature`,
+  );
+  exactKeys(
+    signature,
+    ['required', 'verifier', 'issuer', 'approvedIdentities'],
+    `${path}.attestations.signature`,
+  );
+  if (signature.required !== true || signature.verifier !== 'cosign-keyless') {
+    throw new Error(
+      `${path} requires a fail-closed cosign signature attestation.`,
+    );
+  }
+  const issuer = string(
+    signature.issuer,
+    `${path}.attestations.signature.issuer`,
+  );
+  if (issuer !== 'https://token.actions.githubusercontent.com') {
+    throw new Error(`${path} uses an unapproved exact OIDC issuer.`);
+  }
+  if (
+    !Array.isArray(signature.approvedIdentities) ||
+    !signature.approvedIdentities.every(
+      (identity) =>
+        typeof identity === 'string' &&
+        /^https:\/\/github\.com\/khonghao0109\/HSK-3\.0-APP\/\.github\/workflows\/[a-z0-9][a-z0-9_-]*\.ya?ml@refs\/tags\/v\d+\.\d+\.\d+$/u.test(
+          identity,
+        ),
+    )
+  ) {
+    throw new Error(
+      `${path} contains a broad or unapproved workflow identity.`,
+    );
+  }
+  const approvedIdentities = signature.approvedIdentities as unknown[];
+  const sbom = record(attestations.sbom, `${path}.attestations.sbom`);
+  exactKeys(sbom, ['required', 'format'], `${path}.attestations.sbom`);
+  if (sbom.required !== true || sbom.format !== 'spdx-json') {
+    throw new Error(
+      `${path} requires a fail-closed SPDX JSON SBOM attestation.`,
+    );
+  }
+  return {
+    repository,
+    version,
+    indexDigest,
+    platforms: [{ os: 'linux', architecture: 'x64', digest, runtimeRef }],
+    attestations: {
+      signature: {
+        required: true,
+        verifier: 'cosign-keyless',
+        issuer,
+        approvedIdentities: approvedIdentities.map((identity) =>
+          String(identity),
+        ),
+      },
+      sbom: { required: true, format: 'spdx-json' },
+    },
+  };
+}
+
 function exactKeys(
   input: Record<string, unknown>,
   allowed: readonly string[],
@@ -1522,6 +3437,7 @@ function isVersionParser(value: string): value is VersionParser {
   return [
     'alertmanager',
     'amtool',
+    'cosign',
     'grafana',
     'istioctl',
     'kubeconform',
@@ -1530,6 +3446,7 @@ function isVersionParser(value: string): value is VersionParser {
     'prometheus',
     'promtool',
     'pcre2',
+    'syft',
   ].includes(value);
 }
 

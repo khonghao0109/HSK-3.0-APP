@@ -1,4 +1,13 @@
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 
@@ -20,6 +29,18 @@ const outputRoot = resolve(
       'backend/test-results/media-observability-rendered',
     ),
 );
+if (existsSync(outputRoot)) {
+  const info = lstatSync(outputRoot);
+  if (info.isSymbolicLink() || !info.isDirectory()) {
+    throw new Error('Rendered observability root must be a real directory.');
+  }
+  if (readdirSync(outputRoot).length > 0) {
+    throw new Error('Rendered observability root must be empty.');
+  }
+} else {
+  mkdirSync(outputRoot, { recursive: true, mode: 0o700 });
+}
+chmodSync(outputRoot, 0o700);
 
 for (const relativePath of [
   'ops/observability/media-alerts.yml',
@@ -51,6 +72,8 @@ for (const filename of [
   'media-alertmanager.yml',
   'media-backend-deployment.patch.yml',
   'media-exporter.sample.prom',
+  'media-grafana-datasource.yml',
+  'media-grafana-dashboard-provider.yml',
   'media-metrics-private-network.yml',
   'media-prometheus.yml',
 ]) {

@@ -25,6 +25,16 @@ state: the transaction rolls back and leaves the schema unchanged. Keep ingestio
 disabled, preserve the count-only evidence and reconcile forward; do not bypass the
 guard or edit migration bytes.
 
+Before migration 19, keep ingestion and cleanup workers quiesced. Count every
+cleanup-related immutable audit and reject malformed target IDs, summary/status/code
+tuples, timestamp drift or future `cleanupRequiredAt`; never print row payloads or
+identifiers. The migration takes bounded locks on `MediaIngestion` and `AuditLog` in
+that order. Rehearse exact lock-timeout rollback and both audit-first/lifecycle-first
+races on a disposable upgrade database. A `P0001` or `55P03` leaves the migration
+transaction unapplied: keep writers disabled, reconcile the immutable history
+forward, and rerun the guarded aggregate database harness rather than editing applied
+migration bytes.
+
 Provisional beta objectives, measured over a rolling 28-day window after a seven-day
 staging observation period:
 
@@ -36,6 +46,19 @@ staging observation period:
 
 Metrics labels are closed enums only. Never add actor, media, object, file, email,
 query, token, checksum, bucket or endpoint identity as a label.
+
+The signed-content 99.9% SLI counts only requests eligible after excluding terminal
+`invalid_grant` attempts from its started denominator. Invalid, tampered or expired
+public grants remain visible in security telemetry but cannot consume the service
+error budget. `unavailable`, `provider_mismatch`, `integrity_error` and a started
+request without any terminal outcome are availability failures.
+
+The ingestion 99.5% SLI likewise excludes terminal `rejected` and `disabled`
+attempts from its valid-request denominator and counts only terminal `failed` and
+`cleanup_required` outcomes as eligible failures. Rejected or disabled attempts stay
+in outcome telemetry. A started ingestion request with no terminal outcome still
+consumes availability budget through the all-started/all-terminal deficit, regardless
+of eligibility.
 
 Storage reads use typed outcomes: real provider transport failure is `unavailable`;
 missing objects, malformed responses and checksum/size/MIME/body mismatches are
@@ -55,7 +78,7 @@ Neither branch may be inferred from attacker-controlled error text.
 4. Enable one staging replica, upload synthetic allowlisted fixtures, then expand.
 5. To stop new writes, set the flag false and roll/reload replicas. Do not disable
    cleanup: forward recovery must remain possible.
-6. Application rollback never rolls back migrations 16–18 or deletes ingestion history.
+6. Application rollback never rolls back migrations 16–19 or deletes ingestion history.
 
 Prometheus and Alertmanager V1 deliberately use one replica, a `ReadWriteOnce` PVC
 and `Recreate` strategy until HA clustering/deduplication is designed. Expect a brief
@@ -142,8 +165,9 @@ the rendered directory; unresolved `__MEDIA_RUNBOOK_URL__` source markers are an
 abort condition. Run `cd backend && npm run test:ops:media`. It uses pinned
 versions/checksums from
 `ops/observability/media-toolchain.json`, a complete Nginx wrapper and promtool rule
-tests. Disposable Grafana must import and execute all panel queries before its gate
-can pass. Missing artifacts/network/runbook/provider is `BLOCKED_EXTERNAL`; static
+tests. Disposable Grafana must provision the exact rendered dashboard and fixed
+datasource UID, then execute all panel queries before its gate can pass. Missing
+artifacts/network/runbook/provider is `BLOCKED_EXTERNAL`; static
 Jest artifact checks never
 upgrade that result to PASS.
 
@@ -165,15 +189,57 @@ kubectl -n hsk patch deployment hsk-backend --type=strategic \
 kubectl -n hsk rollout status deployment/hsk-backend --timeout=5m
 ```
 
-Before `apply`, review the diff and prove the pre-existing `/api/v1/health`
-readiness probe remains unchanged while the private `media-metrics` port, token
-secret refs, Istio injection and TCP startup probe are added. Abort on any unrelated
-diff, missing secret, failed app readiness or failed metrics startup. Restore the
+Before `apply`, review the diff and prove all pre-existing readiness, liveness and
+startup probes remain byte-for-byte unchanged while only the private
+`media-metrics` port, token secret refs and Istio injection are added. The portable
+patch must never create a startup probe or combine `exec`, `httpGet`, `tcpSocket` or
+`grpc` handlers. Abort on any unrelated diff, missing secret, failed app readiness or
+failed metrics startup. Keep `sidecar.istio.io/rewriteAppHTTPProbers: "true"` on the
+backend patch and every Prometheus/Alertmanager/Grafana pod template; STRICT mTLS
+without probe rewriting is an abort condition. Restore the
 previous application revision with `kubectl -n hsk rollout undo
 deployment/hsk-backend` and wait for rollout only if the application rollout fails;
-keep migrations 16–18 and immutable facts forward-only. The trap removes the
+keep migrations 16–19 and immutable facts forward-only. The trap removes the
 mode-0700 temporary directory; retain only a sanitized diff in the release evidence
 store and never attach the live Deployment object or Secret values.
+
+Run the release profile only in approved Linux x86_64 CI:
+
+```bash
+cd backend
+MEDIA_OPS_TOOL_CACHE=/secure/ci-cache/media-ops \
+MEDIA_RUNBOOK_URL=https://runbooks.example.internal/media-ingestion \
+MEDIA_OPS_DB_EVIDENCE_JSON="$PWD/test-results/media-lifecycle-migration-validation/evidence.json" \
+MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_JSON=/secure/ci/media-capacity-backup-evidence.json \
+npm run test:ops:media:linux-amd64
+```
+
+Darwin arm64 may run `npm run test:ops:media:reference`, but that evidence is not a
+release substitute. The Linux profile fails closed unless every non-DB quality gate,
+the guarded aggregate DB evidence, OCI index/child digest, approved cosign workflow
+identity, signed SPDX attestation and all operations validators pass. An external
+block is a non-green release result.
+
+The capacity/backup artifact is a secret-free, release-bound JSON record. It binds
+the current commit/tree/content digest and a hashed cluster identity; proves the 50
+GiB Prometheus PVC is bound, at most 80% used and safely expandable; records measured
+compressed GiB/day and the exact `GiB/day × 32 × 1.25` projection at or below 40
+GiB; and proves an encrypted >=32-day backup, a snapshot no older than 24 hours and a
+successful restore rehearsal no older than 90 days. Missing, stale or unbound bytes
+block the release profile.
+
+Prometheus retains 32 days on a 50 GiB RWO PVC. Before apply, calculate measured
+compressed ingest `GiB/day × 32 × 1.25`; abort above 40 GiB or without safe volume
+expansion. Attach encrypted snapshot/export retention and a successful disposable
+restore rehearsal. Local PVC retention alone is not backup. `Recreate` is required
+for Prometheus, Alertmanager and Grafana and intentionally creates a brief monitoring
+gap; abort if the workload is not Ready within five minutes.
+
+Grafana is private API-only in this overlay. Approved automation uses the
+`hsk-media-operator` workload identity for health/dashboard/datasource APIs. The
+browser UI is not exposed. Do not broaden NetworkPolicy or add `/`, `/login`, `/d/*`
+or `/public/*` until an authenticated access-gateway design and path matrix have a
+separate review.
 
 ## Current evidence status
 
@@ -194,14 +260,14 @@ The frozen migration 17 SHA-256 is
 `e333c0b0f265138e7c9ba16d17fc77d9586933bdd21ba70fda33f6fffe515773`.
 Migration 16 remains byte-identical at
 `a5bb8bdd6f8408b3360fe987e8d4fb7bf15f22c94f84e3fdac03dc4e93ebfe2e`.
-Migration 18 is forward-only, carries stable lifecycle timestamps used by current
-cleanup/processing age metrics and is frozen at SHA-256
-`1a7ceb056e71b46ed05d2c42139bcc3db6c9b5412e788c4a3800c3fa9f27dcca`.
-Current guarded evidence deployed all 18/18 migrations on a fresh disposable
-database. Media integrity acceptance passed and its transaction rollback left the
-database unchanged; both the live-database-to-datamodel and migration-history-to-
-datamodel drift checks were empty. Full backend E2E passed 11/11 suites and 160/160
-tests. The dual-lock `AuditLog`/`MediaIngestion` concurrency scenario was GREEN.
+Migration 18 is forward-only and carries stable lifecycle timestamps used by current
+cleanup/processing age metrics. Migration 19 validates cleanup audit authority and
+installs the future-write lifecycle guards. The release profile independently
+recomputes the entire 19-migration source catalog and exact latest checksums, then
+accepts only a current release-bound aggregate database artifact covering fresh and
+upgrade deploys, negative fixtures, bounded lock abort, both lifecycle race orders,
+integration, concurrency, status, checksum, two-way drift and full E2E. This runbook
+does not copy a pre-run PASS count; read the current JSON/JUnit evidence.
 
 Migration preflight rehearsals were fail-safe. A completed legacy row without an
 exact immutable provenance audit and a source with an ambiguous whitespace license

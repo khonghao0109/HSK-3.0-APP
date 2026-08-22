@@ -3,58 +3,21 @@ kind: ServiceAccount
 metadata:
   name: hsk-media-prometheus
   namespace: monitoring
+automountServiceAccountToken: false
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: hsk-media-prometheus-discovery
-  namespace: hsk
-rules:
-  - apiGroups: [""]
-    resources: [pods]
-    verbs: [get, list, watch]
-  - apiGroups: ["discovery.k8s.io"]
-    resources: [endpointslices]
-    verbs: [get, list, watch]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: hsk-media-prometheus-discovery
-  namespace: hsk
-subjects:
-  - kind: ServiceAccount
-    name: hsk-media-prometheus
-    namespace: monitoring
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: hsk-media-prometheus-discovery
----
-# Prometheus also discovers the Alertmanager EndpointSlice in its own namespace.
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: hsk-media-alertmanager-discovery
+  name: hsk-media-operator
   namespace: monitoring
-rules:
-  - apiGroups: ["discovery.k8s.io"]
-    resources: [endpointslices]
-    verbs: [get, list, watch]
+automountServiceAccountToken: false
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: hsk-media-alertmanager-discovery
+  name: hsk-media-grafana
   namespace: monitoring
-subjects:
-  - kind: ServiceAccount
-    name: hsk-media-prometheus
-    namespace: monitoring
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: hsk-media-alertmanager-discovery
+automountServiceAccountToken: false
 ---
 apiVersion: v1
 kind: Service
@@ -153,6 +116,116 @@ kind: ServiceAccount
 metadata:
   name: hsk-media-alertmanager
   namespace: monitoring
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hsk-media-prometheus
+  namespace: monitoring
+spec:
+  selector:
+    app.kubernetes.io/name: prometheus
+  ports:
+    - name: web
+      port: 9090
+      targetPort: web
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hsk-media-prometheus-private
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-media-grafana
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-media-operator
+      ports:
+        - protocol: TCP
+          port: 9090
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hsk
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-backend
+      ports:
+        - protocol: TCP
+          port: 9464
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-media-alertmanager
+      ports:
+        - protocol: TCP
+          port: 9093
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+          podSelector:
+            matchLabels:
+              app: istiod
+      ports:
+        - protocol: TCP
+          port: 15012
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: hsk-media-prometheus-strict-mtls
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: hsk-media-prometheus-principal
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/monitoring/sa/hsk-media-grafana
+              - cluster.local/ns/monitoring/sa/hsk-media-operator
+      to:
+        - operation:
+            ports: ["9090"]
+            methods: [GET, POST]
+            paths: [/-/healthy, /-/ready, /api/v1/query, /api/v1/query_range]
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -172,14 +245,22 @@ spec:
         app.kubernetes.io/name: prometheus
       annotations:
         sidecar.istio.io/inject: "true"
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
       serviceAccountName: hsk-media-prometheus
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: prometheus
           image: quay.io/prometheus/prometheus@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7
           args:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=32d
           ports:
             - name: web
               containerPort: 9090
@@ -208,6 +289,11 @@ spec:
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { cpu: "1", memory: 1Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
       volumes:
         - name: config
           configMap:
@@ -235,7 +321,7 @@ spec:
   accessModes: [ReadWriteOnce]
   resources:
     requests:
-      storage: 10Gi
+      storage: 50Gi
 ---
 apiVersion: v1
 kind: Service
@@ -287,11 +373,18 @@ spec:
         app.kubernetes.io/name: hsk-media-alertmanager
       annotations:
         sidecar.istio.io/inject: "true"
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
       serviceAccountName: hsk-media-alertmanager
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: alertmanager
-          image: quay.io/prometheus/alertmanager@sha256:2b48d20267cc7ddac7063d89f2c4980b64d543c0a4f29b7edaffb9af79203bae
+          image: quay.io/prometheus/alertmanager@sha256:a89f8d4520954079275441eecdb71444328bd90633dd4eddfc33b9ed657f349b
           args:
             - --config.file=/etc/alertmanager/alertmanager.yml
             - --storage.path=/alertmanager
@@ -313,6 +406,11 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
           volumeMounts:
             - name: config
               mountPath: /etc/alertmanager
@@ -378,3 +476,204 @@ spec:
       to:
         - operation:
             ports: ["9093"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hsk-media-grafana
+  namespace: monitoring
+spec:
+  selector:
+    app.kubernetes.io/name: hsk-media-grafana
+  ports:
+    - name: web
+      port: 3000
+      targetPort: web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsk-media-grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-grafana
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hsk-media-grafana
+      annotations:
+        sidecar.istio.io/inject: "true"
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    spec:
+      serviceAccountName: hsk-media-grafana
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: grafana
+          image: docker.io/grafana/grafana@sha256:e27e68cfd5795c1bea54950766078a02e84dfa3bafe0a4d0e5382f713dfd8e4e
+          ports:
+            - name: web
+              containerPort: 3000
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hsk-media-grafana-admin
+                  key: username
+                  optional: false
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hsk-media-grafana-admin
+                  key: password
+                  optional: false
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: web
+            periodSeconds: 10
+            timeoutSeconds: 2
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: dashboard
+              mountPath: /var/lib/grafana/dashboards/media-dashboard.json
+              subPath: media-dashboard.json
+              readOnly: true
+            - name: dashboard
+              mountPath: /etc/grafana/provisioning/dashboards/provider.yml
+              subPath: provider.yml
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/grafana
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: provisioning
+          configMap:
+            name: hsk-media-grafana-datasource
+        - name: dashboard
+          configMap:
+            name: hsk-media-grafana-dashboard
+        - name: data
+          persistentVolumeClaim:
+            claimName: hsk-media-grafana-data
+        - name: tmp
+          emptyDir: {}
+      # Secret hsk-media-grafana-admin is injected by the environment secret
+      # manager; plaintext credentials never belong in this overlay.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hsk-media-grafana-private
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-grafana
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: hsk-media-operator
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+          podSelector:
+            matchLabels:
+              app: istiod
+      ports:
+        - protocol: TCP
+          port: 15012
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: hsk-media-grafana-strict-mtls
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-grafana
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: hsk-media-grafana-principal
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hsk-media-grafana
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/monitoring/sa/hsk-media-operator
+      to:
+        - operation:
+            ports: ["3000"]
+            methods: [GET, POST, DELETE]
+            paths: [/api/health, /api/dashboards/*, /api/ds/*]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hsk-media-grafana-data
+  namespace: monitoring
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi

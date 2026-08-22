@@ -26,7 +26,7 @@ describe('media environment validation', () => {
     MEDIA_SCANNER_HOST: 'clamav.internal',
     MEDIA_METRICS_BEARER_TOKEN: metricsToken,
     MEDIA_METRICS_HOST: '0.0.0.0',
-    MEDIA_METRICS_PORT: 9464,
+    MEDIA_METRICS_PORT: '9464',
   };
 
   it.each([
@@ -84,6 +84,27 @@ describe('media environment validation', () => {
         ...production,
         MEDIA_METRICS_CACHE_TTL_MS: 5_000,
         MEDIA_METRICS_STALE_TTL_MS: 60_000,
+      }).error,
+    ).toBeUndefined();
+  });
+
+  it('enforces a bounded absolute multipart upload deadline', () => {
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        MEDIA_UPLOAD_TIMEOUT_MS: 999,
+      }).error,
+    ).toBeDefined();
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        MEDIA_UPLOAD_TIMEOUT_MS: 120_001,
+      }).error,
+    ).toBeDefined();
+    expect(
+      envValidationSchema.validate({
+        ...production,
+        MEDIA_UPLOAD_TIMEOUT_MS: 30_000,
       }).error,
     ).toBeUndefined();
   });

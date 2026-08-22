@@ -31,6 +31,10 @@ describe('media operations artifacts', () => {
     expect(config).toContain('if ($hsk_media_signed_request_canonical = 0)');
     expect(config).toContain('Strict-Transport-Security');
     expect(config).toContain('$request_id');
+    expect(config).not.toContain('error_log /dev/null');
+    expect(config).toMatch(
+      /error_log\s+\/var\/log\/nginx\/media_error\.log\s+emerg;/u,
+    );
   });
 
   it('defines every required bounded-cardinality release alert', () => {
@@ -60,9 +64,11 @@ describe('media operations artifacts', () => {
 
   it('discovers any ready backend replica on the dedicated private metrics port', () => {
     const prometheus = read('ops/observability/media-prometheus.yml');
-    expect(prometheus).toContain('kubernetes_sd_configs:');
-    expect(prometheus).toContain('role: pod');
-    expect(prometheus).toContain('regex: media-metrics');
+    expect(prometheus).toContain('dns_sd_configs:');
+    expect(prometheus).toContain(
+      'hsk-backend-media-metrics.hsk.svc.cluster.local',
+    );
+    expect(prometheus).toContain('port: 9464');
     expect(prometheus).toContain('metrics_path: /metrics');
     expect(prometheus).toContain('credentials_file:');
     expect(prometheus).not.toMatch(/backend-media-[0-9]/u);
@@ -80,8 +86,8 @@ describe('media operations artifacts', () => {
     expect(privateNetwork).toContain('app.kubernetes.io/name: prometheus');
     expect(privateNetwork).toContain('port: 9464');
     expect(privateNetwork).toContain('kind: ServiceAccount');
-    expect(privateNetwork).toContain('kind: Role');
-    expect(privateNetwork).toContain('kind: RoleBinding');
+    expect(privateNetwork).not.toContain('kind: Role\n');
+    expect(privateNetwork).not.toContain('kind: RoleBinding\n');
     expect(privateNetwork).toContain('kind: PeerAuthentication');
     expect(privateNetwork).toContain('mode: STRICT');
     expect(privateNetwork).toContain('kind: AuthorizationPolicy');
@@ -91,8 +97,7 @@ describe('media operations artifacts', () => {
     expect(backendPatch).toContain('name: MEDIA_METRICS_BEARER_TOKEN');
     expect(backendPatch).toContain('name: MEDIA_METRICS_BEARER_TOKEN_PREVIOUS');
     expect(backendPatch).toContain('secretKeyRef:');
-    expect(backendPatch).toContain('startupProbe:');
-    expect(backendPatch).toContain('tcpSocket:');
+    expect(backendPatch).not.toContain('startupProbe:');
     expect(backendPatch).not.toContain('readinessProbe:');
     const runbook = read('docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md');
     const stageNew = runbook.indexOf('current=OLD`; stage `previous=NEW');
@@ -134,6 +139,56 @@ describe('media operations artifacts', () => {
         }
       }
     }
+    expect(Object.keys(manifest.images)).toEqual([
+      'alertmanager',
+      'grafana',
+      'prometheus',
+    ]);
+    for (const image of Object.values(manifest.images)) {
+      expect(image.platforms).toHaveLength(1);
+      expect(image.platforms[0]).toMatchObject({
+        os: 'linux',
+        architecture: 'x64',
+      });
+      expect(image.platforms[0]?.runtimeRef).toBe(
+        `${image.repository}@${image.platforms[0]?.digest}`,
+      );
+      expect(image.attestations.signature.required).toBe(true);
+      expect(image.attestations.sbom.required).toBe(true);
+    }
+  });
+
+  it('ships an isolated, hardened, 28-day-capable observability topology', () => {
+    const topology = read(
+      'ops/observability/media-metrics-private-network.yml',
+    );
+    expect(topology).toContain('--storage.tsdb.retention.time=32d');
+    expect(topology).toContain('storage: 50Gi');
+    expect(topology).toContain('name: hsk-media-prometheus-private');
+    expect(topology).toContain('policyTypes: [Ingress, Egress]');
+    expect(topology).toContain('name: hsk-media-prometheus-principal');
+    expect(topology).toContain('name: hsk-media-prometheus-strict-mtls');
+    expect(topology).toContain('name: hsk-media-grafana');
+    expect(topology).toContain('name: hsk-media-grafana-private');
+    expect(topology).toContain('name: hsk-media-grafana-principal');
+    expect(topology).toContain('name: hsk-media-grafana-strict-mtls');
+    expect(topology).toContain('name: hsk-media-grafana-admin');
+    expect(topology).toContain('name: GF_SECURITY_ADMIN_PASSWORD');
+    expect(topology).toContain('subPath: provider.yml');
+    expect(topology).toContain('app.kubernetes.io/name: hsk-media-operator');
+    expect(topology).not.toContain('hsk-operations-access-proxy');
+    expect(topology).not.toContain('/d/*');
+    expect(topology).not.toContain('/login');
+    const provider = read(
+      'ops/observability/media-grafana-dashboard-provider.yml',
+    );
+    expect(provider).toContain('type: file');
+    expect(provider).toContain('path: /var/lib/grafana/dashboards');
+    expect(topology).toContain('automountServiceAccountToken: false');
+    expect(topology).toContain('allowPrivilegeEscalation: false');
+    expect(topology).toContain('readOnlyRootFilesystem: true');
+    expect(topology).toContain('seccompProfile:');
+    expect(topology).toContain('type: RuntimeDefault');
   });
 
   it('ships a parseable dashboard covering all release signals', () => {
@@ -155,10 +210,14 @@ describe('media operations artifacts', () => {
         'Cleanup backlog / oldest age',
         'Stuck processing / oldest age',
         'Integrity and reconciliation',
+        '28d ingestion availability',
+        '28d signed-content availability',
+        'Inflight and terminal deficit',
+        'Process restarts',
       ]),
     );
     for (const panel of dashboard.panels) {
-      expect(panel.datasource.uid).toBe('${DS_PROMETHEUS}');
+      expect(panel.datasource.uid).toBe('hsk-media-prometheus');
       expect(panel.gridPos.w).toBeGreaterThan(0);
       expect(panel.gridPos.h).toBeGreaterThan(0);
       expect(new Set(panel.targets.map(({ refId }) => refId)).size).toBe(

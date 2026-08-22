@@ -16,12 +16,18 @@ export type CmsTransactionOperation =
   | 'exercise.review'
   | 'exercise.publish'
   | 'exercise.archive'
-  | 'exercise_import.commit';
+  | 'exercise_import.commit'
+  | 'media_ingestion.cleanup';
 
 export type CmsTransactionCheckpoint = {
   operation: CmsTransactionOperation;
   phase: 'before_lock' | 'after_lock';
-  entityType: 'lesson' | 'topic' | 'lesson_exercise' | 'exercise_import';
+  entityType:
+    | 'lesson'
+    | 'topic'
+    | 'lesson_exercise'
+    | 'exercise_import'
+    | 'media_ingestion';
   entityId: number;
   parentLessonId?: number;
   transaction: Prisma.TransactionClient;
