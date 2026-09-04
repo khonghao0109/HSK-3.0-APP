@@ -80,6 +80,39 @@ jobs:
         working-directory: backend
         run: npm ci --ignore-scripts
 
+      - name: Acquire checksum-pinned Cosign for the real cryptographic gate
+        id: cosign
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          umask 077
+          tool_cache="${RUNNER_TEMP}/hsk-media-tool-cache"
+          install -d -m 0700 "${tool_cache}"
+          metadata="$(node -e '
+            const manifest = require("../ops/observability/media-toolchain.json");
+            const artifact = manifest.tools.cosign.platforms.find(
+              (entry) => entry.os === "linux" && entry.architecture === "x64",
+            );
+            if (!artifact || typeof artifact.artifact !== "string") process.exit(1);
+            process.stdout.write(`${artifact.artifact}\t${artifact.sha256}\n`);
+          ')"
+          IFS=$'\t' read -r artifact_url artifact_sha256 <<< "${metadata}"
+          artifact_name="${artifact_url##*/}"
+          artifact_path="${tool_cache}/${artifact_sha256}-${artifact_name}"
+          temporary_path="${tool_cache}/.download-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ -f "${artifact_path}" ]]; then
+            printf '%s  %s\n' "${artifact_sha256}" "${artifact_path}" | sha256sum --check --status
+          else
+            curl --fail --location --proto '=https' --tlsv1.2 \
+              --output "${temporary_path}" "${artifact_url}"
+            printf '%s  %s\n' "${artifact_sha256}" "${temporary_path}" | sha256sum --check --status
+            chmod 0700 "${temporary_path}"
+            mv -- "${temporary_path}" "${artifact_path}"
+          fi
+          chmod 0700 "${artifact_path}"
+          echo "MEDIA_OPS_TOOL_CACHE=${tool_cache}" >> "${GITHUB_ENV}"
+          echo "MEDIA_OPS_COSIGN_BINARY=${artifact_path}" >> "${GITHUB_ENV}"
+
       - name: Validate supplied evidence paths
         id: materialize
         env:
@@ -94,11 +127,19 @@ jobs:
           OCI_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE_PATH }}
           OCI_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON_PATH }}
           OCI_EVIDENCE_ROOT_PATH: ${{ secrets.MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT_PATH }}
+          OCI_WAIVER_APPROVAL_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_OCI_WAIVER_APPROVAL_BUNDLE_PATH }}
+          OCI_WAIVER_APPROVAL_JSON_PATH: ${{ secrets.MEDIA_OPS_OCI_WAIVER_APPROVAL_JSON_PATH }}
           PREREQUISITE_EVIDENCE_BUNDLE_PATH: ${{ secrets.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE_PATH }}
           PREREQUISITE_EVIDENCE_JSON_PATH: ${{ secrets.MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON_PATH }}
         run: |
           set -euo pipefail
           umask 077
+          external_failure() {
+            printf 'classification=external\n' >> "${GITHUB_OUTPUT}"
+            exit 1
+          }
+          command -v realpath >/dev/null
+          command -v stat >/dev/null
           approved_base=""
           if [[ -n "${APPROVED_EVIDENCE_BASE_PATH}" ]]; then
             if [[ "${APPROVED_EVIDENCE_BASE_PATH}" != /* ]] || \
@@ -107,13 +148,16 @@ jobs:
                [[ -L "${APPROVED_EVIDENCE_BASE_PATH}" ]] || \
                [[ ! -d "${APPROVED_EVIDENCE_BASE_PATH}" ]]; then
               echo "Approved evidence base must be an absolute real directory." >&2
-              exit 1
+              external_failure
             fi
-            approved_base="$(realpath -e -- "${APPROVED_EVIDENCE_BASE_PATH}")"
+            if ! approved_base="$(realpath -e -- "${APPROVED_EVIDENCE_BASE_PATH}")"; then
+              echo "Approved evidence base disappeared during validation." >&2
+              external_failure
+            fi
             if [[ "${approved_base}" != "${APPROVED_EVIDENCE_BASE_PATH}" ]] || \
                [[ "${approved_base}" = "/" ]]; then
               echo "Approved evidence base must be canonical and narrower than the filesystem root." >&2
-              exit 1
+              external_failure
             fi
           fi
 
@@ -129,6 +173,8 @@ jobs:
             "${OCI_EVIDENCE_BUNDLE_PATH}" \
             "${OCI_EVIDENCE_JSON_PATH}" \
             "${OCI_EVIDENCE_ROOT_PATH}" \
+            "${OCI_WAIVER_APPROVAL_BUNDLE_PATH}" \
+            "${OCI_WAIVER_APPROVAL_JSON_PATH}" \
             "${PREREQUISITE_EVIDENCE_BUNDLE_PATH}" \
             "${PREREQUISITE_EVIDENCE_JSON_PATH}"
           do
@@ -138,7 +184,7 @@ jobs:
           done
           if (( supplied_path_count > 0 )) && [[ -z "${approved_base}" ]]; then
             echo "Approved evidence base is required when any evidence path is supplied." >&2
-            exit 1
+            external_failure
           fi
 
           validated_path=""
@@ -152,22 +198,28 @@ jobs:
                [[ "${candidate}" = *$'\r'* ]] || \
                [[ -L "${candidate}" ]] || [[ ! -f "${candidate}" ]]; then
               echo "${label} must be an absolute regular non-symlink file." >&2
-              exit 1
+              external_failure
             fi
-            canonical="$(realpath -e -- "${candidate}")"
+            if ! canonical="$(realpath -e -- "${candidate}")"; then
+              echo "${label} disappeared during canonicalization." >&2
+              external_failure
+            fi
             if [[ "${canonical}" != "${candidate}" ]]; then
               echo "${label} must use its exact canonical path." >&2
-              exit 1
+              external_failure
             fi
-            size="$(stat --format='%s' -- "${canonical}")"
+            if ! size="$(stat --format='%s' -- "${canonical}")"; then
+              echo "${label} disappeared during size validation." >&2
+              external_failure
+            fi
             if (( size <= 0 || size > maximum_bytes )); then
               echo "${label} exceeds its bounded size contract." >&2
-              exit 1
+              external_failure
             fi
             if [[ -n "${approved_base}" ]]; then
               case "${canonical}" in
                 "${approved_base}"/*) ;;
-                *) echo "${label} is outside the approved evidence base." >&2; exit 1 ;;
+                *) echo "${label} is outside the approved evidence base." >&2; external_failure ;;
               esac
             fi
             validated_path="${canonical}"
@@ -182,17 +234,20 @@ jobs:
                [[ "${candidate}" = *$'\r'* ]] || \
                [[ -L "${candidate}" ]] || [[ ! -d "${candidate}" ]]; then
               echo "${label} must be an absolute real directory." >&2
-              exit 1
+              external_failure
             fi
-            canonical="$(realpath -e -- "${candidate}")"
+            if ! canonical="$(realpath -e -- "${candidate}")"; then
+              echo "${label} disappeared during canonicalization." >&2
+              external_failure
+            fi
             if [[ "${canonical}" != "${candidate}" ]]; then
               echo "${label} must use its exact canonical path." >&2
-              exit 1
+              external_failure
             fi
             if [[ -n "${approved_base}" ]]; then
               case "${canonical}" in
                 "${approved_base}"|"${approved_base}"/*) ;;
-                *) echo "${label} is outside the approved evidence base." >&2; exit 1 ;;
+                *) echo "${label} is outside the approved evidence base." >&2; external_failure ;;
               esac
             fi
             validated_path="${canonical}"
@@ -214,10 +269,18 @@ jobs:
             oci_evidence_root="${validated_path}"
             echo "MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT=${oci_evidence_root}" >> "${GITHUB_ENV}"
           fi
+          if [[ -n "${OCI_WAIVER_APPROVAL_JSON_PATH}" ]]; then
+            validate_file "OCI waiver approval evidence" "${OCI_WAIVER_APPROVAL_JSON_PATH}" 1048576
+            echo "MEDIA_OPS_OCI_WAIVER_APPROVAL_JSON=${validated_path}" >> "${GITHUB_ENV}"
+          fi
+          if [[ -n "${OCI_WAIVER_APPROVAL_BUNDLE_PATH}" ]]; then
+            validate_file "OCI waiver approval Sigstore bundle" "${OCI_WAIVER_APPROVAL_BUNDLE_PATH}" 4194304
+            echo "MEDIA_OPS_OCI_WAIVER_APPROVAL_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
+          fi
           if [[ -n "${oci_evidence_json}" && -n "${oci_evidence_root}" ]]; then
             case "${oci_evidence_json}" in
               "${oci_evidence_root}"/*) ;;
-              *) echo "OCI release evidence JSON is outside its evidence root." >&2; exit 1 ;;
+              *) echo "OCI release evidence JSON is outside its evidence root." >&2; external_failure ;;
             esac
           fi
           if [[ -n "${CAPACITY_EVIDENCE_JSON_PATH}" ]]; then
@@ -255,7 +318,7 @@ jobs:
           if [[ -n "${live_rehearsal_evidence_json}" && -n "${live_rehearsal_evidence_root}" ]]; then
             case "${live_rehearsal_evidence_json}" in
               "${live_rehearsal_evidence_root}"/*) ;;
-              *) echo "Live rehearsal evidence manifest is outside its evidence root." >&2; exit 1 ;;
+              *) echo "Live rehearsal evidence manifest is outside its evidence root." >&2; external_failure ;;
             esac
           fi
           if [[ -n "${PREREQUISITE_EVIDENCE_JSON_PATH}" ]]; then
@@ -266,6 +329,22 @@ jobs:
             validate_file "production prerequisite inventory Sigstore bundle" "${PREREQUISITE_EVIDENCE_BUNDLE_PATH}" 4194304
             echo "MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE=${validated_path}" >> "${GITHUB_ENV}"
           fi
+          printf 'classification=success\n' >> "${GITHUB_OUTPUT}"
+
+      - name: Verify release content still matches exact HEAD
+        id: source_head
+        if: always() && steps.checkout.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = "tag"
+          test "${GITHUB_REF}" = "refs/tags/v3.0.0"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse "${GITHUB_REF}^{commit}")" = "${GITHUB_SHA}"
+          release_status="$(git status --porcelain=v1 --untracked-files=all -- .github/workflows backend docs ops)"
+          if [[ -n "${release_status}" ]]; then
+            echo "Release content must match exact HEAD before repository scripts execute." >&2
+            exit 1
+          fi
 
       - name: Run Linux amd64 release validator
         id: release-gate
@@ -275,10 +354,23 @@ jobs:
           CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
           DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
           DIAGNOSTIC_OUTCOME: ${{ steps.diagnostic.outcome }}
+          MATERIALIZE_CLASSIFICATION: ${{ steps.materialize.outputs.classification }}
           MATERIALIZE_OUTCOME: ${{ steps.materialize.outcome }}
           NODE_OUTCOME: ${{ steps.node.outcome }}
+          COSIGN_OUTCOME: ${{ steps.cosign.outcome }}
+          SOURCE_HEAD_OUTCOME: ${{ steps.source_head.outcome }}
           TAG_HEAD_OUTCOME: ${{ steps.tag_head.outcome }}
           MEDIA_OPS_ALLOW_DOWNLOAD: "true"
+          MEDIA_OPS_EXPECTED_RELEASE_COMMIT: ${{ github.sha }}
+          MEDIA_OPS_EXPECTED_RELEASE_TAG_REF: ${{ github.ref }}
+          MEDIA_OPS_LIVE_EXPECTED_CLUSTER_IDENTITY_SHA256: ${{ vars.MEDIA_OPS_LIVE_EXPECTED_CLUSTER_IDENTITY_SHA256 }}
+          MEDIA_OPS_LIVE_EXPECTED_NAMESPACE_IDENTITY_SHA256: ${{ vars.MEDIA_OPS_LIVE_EXPECTED_NAMESPACE_IDENTITY_SHA256 }}
+          MEDIA_OPS_LIVE_EXPECTED_DEPLOYMENT_REVISION: ${{ vars.MEDIA_OPS_LIVE_EXPECTED_DEPLOYMENT_REVISION }}
+          MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_AUDIENCE: ${{ vars.MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_AUDIENCE }}
+          MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_SUBJECT: ${{ vars.MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_SUBJECT }}
+          MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT: ${{ vars.MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT }}
+          MEDIA_OPS_LIVE_COLLECTOR_RUN_ID: ${{ vars.MEDIA_OPS_LIVE_COLLECTOR_RUN_ID }}
+          MEDIA_RUNBOOK_APPROVED_HOSTNAME: ${{ vars.MEDIA_RUNBOOK_APPROVED_HOSTNAME }}
           MEDIA_RUNBOOK_URL: ${{ secrets.MEDIA_RUNBOOK_URL }}
           NODE_ENV: production
           TZ: UTC
@@ -294,12 +386,17 @@ jobs:
             "${TAG_HEAD_OUTCOME}" \
             "${NODE_OUTCOME}" \
             "${DEPENDENCIES_OUTCOME}" \
-            "${MATERIALIZE_OUTCOME}"
+            "${COSIGN_OUTCOME}" \
+            "${SOURCE_HEAD_OUTCOME}"
           do
             if [[ "${outcome}" != "success" ]]; then
               workflow_failure=1
             fi
           done
+          if [[ "${MATERIALIZE_OUTCOME}" != "success" && \
+                "${MATERIALIZE_CLASSIFICATION}" != "external" ]]; then
+            workflow_failure=1
+          fi
           if [[ "${workflow_failure}" -ne 0 ]]; then
             runner_exit_code=1
           else
@@ -329,7 +426,10 @@ jobs:
             printf 'tag_head=%s\n' "${TAG_HEAD_OUTCOME}"
             printf 'node=%s\n' "${NODE_OUTCOME}"
             printf 'dependencies=%s\n' "${DEPENDENCIES_OUTCOME}"
+            printf 'cosign=%s\n' "${COSIGN_OUTCOME}"
+            printf 'source_head=%s\n' "${SOURCE_HEAD_OUTCOME}"
             printf 'materialize=%s\n' "${MATERIALIZE_OUTCOME}"
+            printf 'materialize_classification=%s\n' "${MATERIALIZE_CLASSIFICATION}"
             printf 'runner_exit_code=%s\n' "${runner_exit_code}"
             printf 'attestation_ready=%s\n' "${attestation_ready}"
             printf 'gate_exit_code=%s\n' "${gate_exit_code}"

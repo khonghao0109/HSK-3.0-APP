@@ -1,3 +1,6 @@
+import { assertMediaEvidenceProducerExecution } from '../operations/media-evidence-producer-policy';
+import type { MediaEvidenceProducerExecutionContract } from '../operations/media-evidence-producer-policy';
+
 export const REQUIRED_MEDIA_PRODUCTION_PREREQUISITE_IDS = [
   'media-oci-supply-chain',
   'media-capacity-backup-restore',
@@ -74,6 +77,13 @@ export interface VerifiedMediaProductionPrerequisiteEvidence {
   };
 }
 
+export class MediaProductionPrerequisiteContractError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MediaProductionPrerequisiteContractError';
+  }
+}
+
 type ExpectedReleaseBinding = {
   gitCommit: string;
   gitTreeSha: string;
@@ -83,6 +93,7 @@ type ExpectedReleaseBinding = {
 type CommonInventoryParseOptions = {
   nowMs?: number;
   expectedBinding?: ExpectedReleaseBinding;
+  expectedProducerExecution?: MediaEvidenceProducerExecutionContract;
 };
 
 type TrackedInventoryOptions = CommonInventoryParseOptions & {
@@ -188,6 +199,31 @@ export function parseVerifiedExternalPrerequisiteInventoryCandidate(
   options: CommonInventoryParseOptions & {
     expectedBinding: ExpectedReleaseBinding;
     requirements: MediaProductionPrerequisiteInventory;
+    expectedProducerExecution: MediaEvidenceProducerExecutionContract;
+  },
+): MediaProductionPrerequisiteInventory {
+  try {
+    return parseVerifiedExternalPrerequisiteInventoryCandidateUnchecked(
+      input,
+      options,
+    );
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      Object.getPrototypeOf(error) === Error.prototype
+    ) {
+      throw new MediaProductionPrerequisiteContractError(error.message);
+    }
+    throw error;
+  }
+}
+
+function parseVerifiedExternalPrerequisiteInventoryCandidateUnchecked(
+  input: unknown,
+  options: CommonInventoryParseOptions & {
+    expectedBinding: ExpectedReleaseBinding;
+    requirements: MediaProductionPrerequisiteInventory;
+    expectedProducerExecution: MediaEvidenceProducerExecutionContract;
   },
 ): MediaProductionPrerequisiteInventory {
   const inventory = parseInventoryCandidate(input, options);
@@ -237,9 +273,17 @@ function parseInventoryCandidate(
   const root = record(input, 'inventory');
   exactKeys(
     root,
-    ['schemaVersion', 'inventoryId', 'prerequisites'],
+    options.expectedProducerExecution
+      ? ['schemaVersion', 'inventoryId', 'producerExecution', 'prerequisites']
+      : ['schemaVersion', 'inventoryId', 'prerequisites'],
     'inventory',
   );
+  if (options.expectedProducerExecution) {
+    assertMediaEvidenceProducerExecution(
+      root.producerExecution,
+      options.expectedProducerExecution,
+    );
+  }
   if (
     root.schemaVersion !== 1 ||
     root.inventoryId !== 'hsk-media-production-prerequisites-v1'

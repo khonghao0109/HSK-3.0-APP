@@ -23,6 +23,16 @@ const expectedBinding = {
   gitTreeSha: 'c'.repeat(40),
   releaseContentDigest: 'd'.repeat(64),
 };
+const producerExecution = {
+  producerPolicyKey: 'production-prerequisite-inventory' as const,
+  collectorCommand: 'npm run collect:production-prerequisite-inventory',
+  collectorVersion: '1.0.0',
+  environment: 'media-production-release',
+  evidenceTypes: ['production-prerequisite-inventory'],
+  rawEvidenceSet: ['specialized-prerequisite-results'],
+  freshnessSeconds: 604_800,
+  verifier: 'production-prerequisite-inventory-verifier',
+};
 const requirementsInventory = parseMediaProductionPrerequisiteInventory(
   sourceInventory(),
   { nowMs, source: 'tracked' },
@@ -198,7 +208,7 @@ void test('rejects invalid IDs, ownership and evidence policy scalars', () => {
 });
 
 void test('tracked inventory can never self-declare PASS evidence', () => {
-  const candidate = sourceInventory();
+  const candidate = signedSourceInventory();
   Object.assign(candidate.prerequisites[0], validPassEvidence());
   const parsedCandidate = parseVerifiedExternalPrerequisiteInventoryCandidate(
     candidate,
@@ -206,13 +216,16 @@ void test('tracked inventory can never self-declare PASS evidence', () => {
       nowMs,
       expectedBinding,
       requirements: requirementsInventory,
+      expectedProducerExecution: producerExecution,
     },
   );
   assert.equal(parsedCandidate.prerequisites[0].status, 'PASS');
 
+  const trackedCandidate = structuredClone(candidate);
+  delete trackedCandidate.producerExecution;
   assert.throws(
     () =>
-      parseMediaProductionPrerequisiteInventory(candidate, {
+      parseMediaProductionPrerequisiteInventory(trackedCandidate, {
         nowMs,
         expectedBinding,
       }),
@@ -239,7 +252,7 @@ void test('external inventory cannot redefine tracked prerequisite policy', () =
       item.failureSemantics.stale = 'FAIL_INTERNAL';
     },
   ]) {
-    const candidate = sourceInventory();
+    const candidate = signedSourceInventory();
     mutate(candidate.prerequisites[0]);
     assert.throws(
       () =>
@@ -247,10 +260,23 @@ void test('external inventory cannot redefine tracked prerequisite policy', () =
           nowMs,
           expectedBinding,
           requirements: requirementsInventory,
+          expectedProducerExecution: producerExecution,
         }),
       /tracked prerequisite requirements/i,
     );
   }
+  const mismatch = signedSourceInventory();
+  mismatch.producerExecution!.verifier = 'attacker-verifier';
+  assert.throws(
+    () =>
+      parseVerifiedExternalPrerequisiteInventoryCandidate(mismatch, {
+        nowMs,
+        expectedBinding,
+        requirements: requirementsInventory,
+        expectedProducerExecution: producerExecution,
+      }),
+    /producer execution contract/i,
+  );
 });
 
 void test('accepts only complete fresh release-bound PASS evidence with an exact per-ID verification', () => {
@@ -470,12 +496,15 @@ void test('finalizes all six live prerequisites from distinct specialized verifi
     assert.ok(prerequisite);
     Object.assign(
       prerequisite,
-      validPassEvidence({
-        type: LIVE_MEDIA_PRODUCTION_EVIDENCE_POLICY[prerequisiteId]
-          .evidenceType,
-        uri: `https://evidence.example.com/media/${prerequisiteId}.json`,
-        sha256: String(index + 1).repeat(64),
-      }),
+      validPassEvidence(
+        {
+          type: LIVE_MEDIA_PRODUCTION_EVIDENCE_POLICY[prerequisiteId]
+            .evidenceType,
+          uri: `https://evidence.example.com/media/${prerequisiteId}.json`,
+          sha256: String(index + 1).repeat(64),
+        },
+        prerequisite.freshness.maxAgeSeconds,
+      ),
     );
     const verification = verificationFor(prerequisite);
     verifications.set(verification.prerequisiteId, verification);
@@ -537,6 +566,8 @@ void test('runner verifies external inventory before parsing and has specialized
     'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON',
     'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE',
     'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT',
+    'MEDIA_OPS_LIVE_COLLECTOR_RUN_ID',
+    'MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT',
   ]) {
     assert.match(helpers, new RegExp(`'${environmentKey}'`, 'u'));
     assert.match(runner, new RegExp(environmentKey, 'u'));
@@ -560,7 +591,11 @@ void test('runner verifies external inventory before parsing and has specialized
   );
   assert.match(
     trustFunction,
-    /--certificate-identity[\s\S]*RELEASE_EVIDENCE_IDENTITY/u,
+    /--certificate-identity[\s\S]*producer\.identity[\s\S]*mediaEvidenceProducerCertificateClaims\(producer\)/u,
+  );
+  assert.match(
+    trustFunction,
+    /requireAcceptedMediaEvidenceProducer\([\s\S]*'production-prerequisite-inventory'/u,
   );
   for (const verifiedSnapshot of [
     'verifiedManifestPath',
@@ -582,7 +617,7 @@ void test('runner verifies external inventory before parsing and has specialized
   );
   assert.match(
     helpers,
-    /openSync\([\s\S]*O_NOFOLLOW[\s\S]*readFileSync\(descriptor\)/u,
+    /openSync\([\s\S]*O_NOFOLLOW[\s\S]*Buffer\.allocUnsafe\(before\.size \+ 1\)[\s\S]*readSync\(/u,
   );
 
   for (const prerequisiteId of [
@@ -673,12 +708,20 @@ function sourceInventory(): InventoryFixture {
   ) as InventoryFixture;
 }
 
+function signedSourceInventory(): InventoryFixture {
+  return {
+    ...sourceInventory(),
+    producerExecution: structuredClone(producerExecution),
+  };
+}
+
 function validPassEvidence(
   evidence: PrerequisiteFixture['evidence'] = {
     type: 'oci-signature-sbom-vulnerability-license-attestation',
     uri: 'https://evidence.example.com/media/oci.json',
     sha256: 'a'.repeat(64),
   },
+  maxAgeSeconds = 432000,
 ): Partial<PrerequisiteFixture> {
   return {
     status: 'PASS',
@@ -689,7 +732,7 @@ function validPassEvidence(
         'https://github.com/example/hsk/.github/workflows/media.yml@refs/tags/v1.0.0',
     },
     freshness: {
-      maxAgeSeconds: 604800,
+      maxAgeSeconds,
       observedAt: '2026-08-22T11:00:00.000Z',
       expiresAt: '2026-08-23T11:00:00.000Z',
     },
@@ -728,6 +771,7 @@ function verificationFor(
 type InventoryFixture = {
   schemaVersion: number;
   inventoryId: string;
+  producerExecution?: typeof producerExecution;
   prerequisites: PrerequisiteFixture[];
 };
 

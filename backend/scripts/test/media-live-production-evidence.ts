@@ -2,7 +2,14 @@ import {
   readStableBoundedFileWithinRoot,
   sha256,
 } from './media-operations-validation.helpers';
+import type { StableFileBoundaryTestHooks } from './media-operations-validation.helpers';
 import type { VerifiedMediaProductionPrerequisiteEvidence } from './media-production-prerequisites';
+import { assertMediaEvidenceProducerExecution } from '../operations/media-evidence-producer-policy';
+import type { MediaEvidenceProducerExecutionContract } from '../operations/media-evidence-producer-policy';
+import {
+  CallerControlledEvidenceFileViolation,
+  InternalVerifierFailure,
+} from '../operations/media-release-evidence-errors';
 
 export class MediaLiveProductionEvidenceError extends Error {}
 
@@ -96,11 +103,24 @@ export const MEDIA_LIVE_PRODUCTION_EVIDENCE_MAX_ARTIFACT_BYTES = 256 * 1024;
 
 const SHA1 = /^[a-f0-9]{40}$/u;
 const SHA256 = /^[a-f0-9]{64}$/u;
+const ZERO_SHA256 = /^0{64}$/u;
 const OCI_DIGEST = /^sha256:[a-f0-9]{64}$/u;
 const STABLE_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
-const MANIFEST_ID = 'hsk-media-live-production-evidence-v1';
+const GITHUB_RUN_ID = /^[1-9][0-9]{0,19}$/u;
+const MANIFEST_ID = 'hsk-media-live-production-evidence-v2';
 const MAX_FRESHNESS_MS = 7 * 24 * 60 * 60 * 1000;
 const FUTURE_TOLERANCE_MS = 60_000;
+const REQUIRED_CLAMAV_CLEAN_FORMATS = [
+  'audio/mpeg',
+  'audio/wav',
+  'image/jpeg',
+  'image/png',
+] as const;
+const LIVE_ALERT_NAME = 'HskMediaValidationSyntheticPage';
+const LIVE_ALERT_OWNER_ROUTE = 'platform-sre';
+const WORKLOAD_AUDIENCE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$/u;
+const WORKLOAD_SUBJECT =
+  /^system:serviceaccount:[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?:[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?$/u;
 
 export interface MediaLiveProductionReleaseBinding {
   gitCommit: string;
@@ -120,6 +140,26 @@ export interface MediaLiveProductionEnvironmentBinding {
   fingerprintSha256: string;
 }
 
+export interface MediaLiveProductionCollectorRun {
+  runId: string;
+  runAttempt: number;
+}
+
+export interface MediaLiveProductionWorkloadIdentity {
+  audience: string;
+  subject: string;
+}
+
+export interface VerifiedMediaLiveProductionRawArtifact {
+  id: string;
+  prerequisiteId: LiveMediaProductionPrerequisiteId;
+  relativePath: string;
+  mediaType: 'application/json';
+  sizeBytes: number;
+  sha256: string;
+  bytes: Buffer;
+}
+
 export interface VerifiedMediaLiveProductionEvidenceArtifact {
   relativePath: string;
   bytes: Buffer;
@@ -134,18 +174,25 @@ export interface VerifiedMediaLiveProductionEvidence {
   producer: MediaLiveProductionEvidenceProducer;
   binding: MediaLiveProductionReleaseBinding;
   environment: MediaLiveProductionEnvironmentBinding;
+  collectorRun: MediaLiveProductionCollectorRun;
   observedAt: string;
   expiresAt: string;
+  rawArtifacts: VerifiedMediaLiveProductionRawArtifact[];
   artifacts: VerifiedMediaLiveProductionEvidenceArtifact[];
 }
 
 export interface ParseVerifiedMediaLiveProductionEvidenceOptions {
   nowMs?: number;
   expectedBinding: MediaLiveProductionReleaseBinding;
+  expectedEnvironment: MediaLiveProductionEnvironmentBinding;
+  expectedWorkloadIdentity: MediaLiveProductionWorkloadIdentity;
+  expectedProducerExecution: MediaEvidenceProducerExecutionContract;
+  expectedCollectorRun?: MediaLiveProductionCollectorRun;
   trustedProducer: MediaLiveProductionEvidenceProducer;
   verifiedSignature: MediaLiveProductionEvidenceProducer & {
     payloadSha256: string;
   };
+  stableFileBoundaryTestHooks?: StableFileBoundaryTestHooks;
 }
 
 /**
@@ -230,26 +277,60 @@ export function parseVerifiedMediaLiveProductionEvidence(
       'schemaVersion',
       'manifestId',
       'producer',
+      'producerExecution',
+      'collectorRun',
       'binding',
       'environment',
       'observedAt',
       'expiresAt',
+      'rawArtifacts',
       'artifacts',
     ],
     'signed live evidence manifest',
   );
-  if (root.schemaVersion !== 1 || root.manifestId !== MANIFEST_ID) {
+  if (root.schemaVersion !== 2 || root.manifestId !== MANIFEST_ID) {
     throw new MediaLiveProductionEvidenceError(
       'Signed live evidence manifest identity is invalid.',
     );
   }
+  try {
+    assertMediaEvidenceProducerExecution(
+      root.producerExecution,
+      options.expectedProducerExecution,
+    );
+  } catch {
+    throw new MediaLiveProductionEvidenceError(
+      'Signed live producer execution contract does not match the accepted policy.',
+    );
+  }
   const producer = parseProducer(root.producer, 'manifest.producer');
   assertSameProducer(producer, trustedProducer, 'trusted producer');
+  const collectorRun = parseCollectorRun(
+    root.collectorRun,
+    'manifest.collectorRun',
+  );
+  const expectedCollectorRun = resolveExpectedCollectorRun(options);
+  assertSameCollectorRun(
+    collectorRun,
+    expectedCollectorRun,
+    'expected collector execution; replayed evidence is forbidden',
+  );
   const binding = parseReleaseBinding(root.binding, 'manifest.binding');
   assertSameBinding(binding, options.expectedBinding, 'exact release');
   const environment = parseEnvironmentBinding(
     root.environment,
     'manifest.environment',
+  );
+  const expectedEnvironment = parseExpectedEnvironmentBinding(
+    options.expectedEnvironment,
+  );
+  assertSameEnvironment(
+    environment,
+    expectedEnvironment,
+    'expected production environment',
+  );
+  const expectedWorkloadIdentity = parseExpectedWorkloadIdentity(
+    options.expectedWorkloadIdentity,
   );
   const nowMs = options.nowMs ?? Date.now();
   if (!Number.isFinite(nowMs)) {
@@ -258,6 +339,31 @@ export function parseVerifiedMediaLiveProductionEvidence(
   const observedAt = requiredString(root.observedAt, 'manifest.observedAt');
   const expiresAt = requiredString(root.expiresAt, 'manifest.expiresAt');
   assertFreshness(observedAt, expiresAt, nowMs);
+
+  if (
+    !Array.isArray(root.rawArtifacts) ||
+    root.rawArtifacts.length !== LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS.length
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      'Live evidence manifest must contain exactly six bounded raw artifacts.',
+    );
+  }
+  const rawReferences = root.rawArtifacts.map((entry, index) =>
+    parseRawArtifactReference(entry, index),
+  );
+  assertCompleteRawArtifactRegistry(rawReferences);
+  const rawArtifacts = rawReferences.map((reference) =>
+    loadAndVerifyRawArtifact(
+      evidenceRoot,
+      reference,
+      collectorRun,
+      expectedWorkloadIdentity,
+      options.stableFileBoundaryTestHooks,
+    ),
+  );
+  const rawArtifactsById = new Map(
+    rawArtifacts.map((artifact) => [artifact.id, artifact] as const),
+  );
 
   if (
     !Array.isArray(root.artifacts) ||
@@ -274,26 +380,21 @@ export function parseVerifiedMediaLiveProductionEvidence(
 
   const evidenceUris = new Set<string>();
   const artifacts = references.map((reference) => {
-    let bytes: Buffer;
-    try {
-      bytes = readStableBoundedFileWithinRoot(
-        evidenceRoot,
-        reference.relativePath,
-        MEDIA_LIVE_PRODUCTION_EVIDENCE_MAX_ARTIFACT_BYTES,
-        `Live evidence artifact ${reference.prerequisiteId}`,
-      );
-    } catch (error: unknown) {
-      throw new MediaLiveProductionEvidenceError(
-        `Live evidence artifact ${reference.prerequisiteId} is absent or unsafe: ${error instanceof Error ? error.message : 'unknown error'}.`,
-      );
-    }
+    const bytes = readStableLiveEvidenceFile(
+      evidenceRoot,
+      reference.relativePath,
+      MEDIA_LIVE_PRODUCTION_EVIDENCE_MAX_ARTIFACT_BYTES,
+      `Live evidence artifact ${reference.prerequisiteId}`,
+      options.stableFileBoundaryTestHooks,
+    );
     if (bytes.length === 0 || sha256(bytes) !== reference.sha256) {
       throw new MediaLiveProductionEvidenceError(
         `${reference.prerequisiteId} live evidence artifact digest does not match.`,
       );
     }
-    const raw = parseLiveArtifact(bytes, reference, {
+    const raw = parseLiveArtifact(bytes, reference, rawArtifactsById, {
       producer,
+      collectorRun,
       binding,
       environment,
       observedAt,
@@ -329,10 +430,182 @@ export function parseVerifiedMediaLiveProductionEvidence(
     producer,
     binding,
     environment,
+    collectorRun,
     observedAt,
     expiresAt,
+    rawArtifacts,
     artifacts,
   };
+}
+
+interface RawArtifactReference {
+  id: string;
+  prerequisiteId: LiveMediaProductionPrerequisiteId;
+  relativePath: string;
+  mediaType: 'application/json';
+  sizeBytes: number;
+  sha256: string;
+}
+
+function parseRawArtifactReference(
+  input: unknown,
+  index: number,
+): RawArtifactReference {
+  const path = `manifest.rawArtifacts[${String(index)}]`;
+  const value = record(input, path);
+  exactKeys(
+    value,
+    [
+      'id',
+      'prerequisiteId',
+      'relativePath',
+      'mediaType',
+      'sizeBytes',
+      'sha256',
+    ],
+    path,
+  );
+  const id = requiredString(value.id, `${path}.id`);
+  if (!STABLE_ID.test(id)) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path}.id must be a stable artifact ID.`,
+    );
+  }
+  const prerequisiteId = requiredString(
+    value.prerequisiteId,
+    `${path}.prerequisiteId`,
+  );
+  if (!isLivePrerequisiteId(prerequisiteId)) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path} has an unsupported live prerequisite ID.`,
+    );
+  }
+  const relativePath = requiredString(
+    value.relativePath,
+    `${path}.relativePath`,
+  );
+  assertSafeRelativeJsonPath(relativePath, `${path}.relativePath`);
+  if (value.mediaType !== 'application/json') {
+    throw new MediaLiveProductionEvidenceError(
+      `${path}.mediaType must be application/json.`,
+    );
+  }
+  if (
+    typeof value.sizeBytes !== 'number' ||
+    !Number.isSafeInteger(value.sizeBytes) ||
+    value.sizeBytes <= 0 ||
+    value.sizeBytes > MEDIA_LIVE_PRODUCTION_EVIDENCE_MAX_ARTIFACT_BYTES
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path}.sizeBytes is outside the bounded raw evidence limit.`,
+    );
+  }
+  return {
+    id,
+    prerequisiteId,
+    relativePath,
+    mediaType: 'application/json',
+    sizeBytes: value.sizeBytes,
+    sha256: requiredSha256(value.sha256, `${path}.sha256`),
+  };
+}
+
+function assertCompleteRawArtifactRegistry(
+  references: readonly RawArtifactReference[],
+): void {
+  const identifiers = new Set<string>();
+  const prerequisiteIds = new Set<string>();
+  const paths = new Set<string>();
+  for (const reference of references) {
+    if (identifiers.has(reference.id)) {
+      throw new MediaLiveProductionEvidenceError(
+        `Live raw evidence registry has a duplicate artifact ID: ${reference.id}.`,
+      );
+    }
+    if (prerequisiteIds.has(reference.prerequisiteId)) {
+      throw new MediaLiveProductionEvidenceError(
+        `Live raw evidence registry has a duplicate prerequisite: ${reference.prerequisiteId}.`,
+      );
+    }
+    if (paths.has(reference.relativePath)) {
+      throw new MediaLiveProductionEvidenceError(
+        'Live raw evidence artifacts require distinct relative paths.',
+      );
+    }
+    identifiers.add(reference.id);
+    prerequisiteIds.add(reference.prerequisiteId);
+    paths.add(reference.relativePath);
+  }
+  const missing = LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS.filter(
+    (id) => !prerequisiteIds.has(id),
+  );
+  if (missing.length > 0) {
+    throw new MediaLiveProductionEvidenceError(
+      `Live raw evidence registry is incomplete: ${missing.join(', ')}.`,
+    );
+  }
+}
+
+function loadAndVerifyRawArtifact(
+  evidenceRoot: string,
+  reference: RawArtifactReference,
+  collectorRun: MediaLiveProductionCollectorRun,
+  expectedWorkloadIdentity: MediaLiveProductionWorkloadIdentity,
+  stableFileBoundaryTestHooks?: StableFileBoundaryTestHooks,
+): VerifiedMediaLiveProductionRawArtifact {
+  const bytes = readStableLiveEvidenceFile(
+    evidenceRoot,
+    reference.relativePath,
+    MEDIA_LIVE_PRODUCTION_EVIDENCE_MAX_ARTIFACT_BYTES,
+    `Raw evidence artifact ${reference.id}`,
+    stableFileBoundaryTestHooks,
+  );
+  if (
+    bytes.length !== reference.sizeBytes ||
+    sha256(bytes) !== reference.sha256
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `Raw evidence artifact ${reference.id} size or digest does not match.`,
+    );
+  }
+  parseRawDomainEvidence(
+    bytes,
+    reference,
+    collectorRun,
+    expectedWorkloadIdentity,
+  );
+  return {
+    ...reference,
+    bytes,
+  };
+}
+
+function readStableLiveEvidenceFile(
+  evidenceRoot: string,
+  relativePath: string,
+  maximumBytes: number,
+  label: string,
+  hooks?: StableFileBoundaryTestHooks,
+): Buffer {
+  try {
+    return readStableBoundedFileWithinRoot(
+      evidenceRoot,
+      relativePath,
+      maximumBytes,
+      label,
+      hooks,
+    );
+  } catch (error: unknown) {
+    if (error instanceof CallerControlledEvidenceFileViolation) {
+      throw new MediaLiveProductionEvidenceError(
+        `${label} is absent or unsafe: ${error.message}.`,
+      );
+    }
+    if (error instanceof InternalVerifierFailure) throw error;
+    throw new InternalVerifierFailure(
+      `${label} stable file verifier failed internally.`,
+    );
+  }
 }
 
 interface ArtifactReference {
@@ -394,7 +667,6 @@ function assertCompleteArtifactRegistry(
 ): void {
   const identifiers = new Set<string>();
   const paths = new Set<string>();
-  const digests = new Set<string>();
   for (const reference of references) {
     if (identifiers.has(reference.prerequisiteId)) {
       throw new MediaLiveProductionEvidenceError(
@@ -406,14 +678,8 @@ function assertCompleteArtifactRegistry(
         'Live evidence artifacts require distinct relative paths.',
       );
     }
-    if (digests.has(reference.sha256)) {
-      throw new MediaLiveProductionEvidenceError(
-        'Live evidence artifacts require distinct raw digests.',
-      );
-    }
     identifiers.add(reference.prerequisiteId);
     paths.add(reference.relativePath);
-    digests.add(reference.sha256);
   }
   const missing = LIVE_MEDIA_PRODUCTION_PREREQUISITE_IDS.filter(
     (id) => !identifiers.has(id),
@@ -428,8 +694,10 @@ function assertCompleteArtifactRegistry(
 function parseLiveArtifact(
   bytes: Buffer,
   reference: ArtifactReference,
+  rawArtifacts: ReadonlyMap<string, VerifiedMediaLiveProductionRawArtifact>,
   expected: {
     producer: MediaLiveProductionEvidenceProducer;
+    collectorRun: MediaLiveProductionCollectorRun;
     binding: MediaLiveProductionReleaseBinding;
     environment: MediaLiveProductionEnvironmentBinding;
     observedAt: string;
@@ -455,14 +723,17 @@ function parseLiveArtifact(
       'binding',
       'environment',
       'freshness',
+      'collectorRun',
+      'commandProvenanceArtifactId',
       'commandProvenanceSha256',
+      'sanitizedLogArtifactId',
       'sanitizedLogSha256',
       'checks',
     ],
     path,
   );
   if (
-    value.schemaVersion !== 1 ||
+    value.schemaVersion !== 2 ||
     value.prerequisiteId !== reference.prerequisiteId ||
     value.evidenceType !== reference.evidenceType ||
     value.status !== 'PASS'
@@ -483,7 +754,20 @@ function parseLiveArtifact(
     value.environment,
     `${path}.environment`,
   );
-  assertSameEnvironment(environment, expected.environment);
+  assertSameEnvironment(
+    environment,
+    expected.environment,
+    'signed environment',
+  );
+  const collectorRun = parseCollectorRun(
+    value.collectorRun,
+    `${path}.collectorRun`,
+  );
+  assertSameCollectorRun(
+    collectorRun,
+    expected.collectorRun,
+    'signed manifest collector run; replayed evidence is forbidden',
+  );
 
   const freshness = record(value.freshness, `${path}.freshness`);
   exactKeys(freshness, ['observedAt', 'expiresAt'], `${path}.freshness`);
@@ -496,14 +780,20 @@ function parseLiveArtifact(
     );
   }
 
-  const commandProvenanceSha256 = requiredSha256(
+  const commandProvenanceSha256 = resolveReferencedRawArtifact(
+    rawArtifacts,
+    value.commandProvenanceArtifactId,
     value.commandProvenanceSha256,
-    `${path}.commandProvenanceSha256`,
-  );
-  const sanitizedLogSha256 = requiredSha256(
+    reference.prerequisiteId,
+    `${path}.commandProvenance`,
+  ).sha256;
+  const sanitizedLogSha256 = resolveReferencedRawArtifact(
+    rawArtifacts,
+    value.sanitizedLogArtifactId,
     value.sanitizedLogSha256,
-    `${path}.sanitizedLogSha256`,
-  );
+    reference.prerequisiteId,
+    `${path}.sanitizedLog`,
+  ).sha256;
   if (!Array.isArray(value.checks)) {
     throw new MediaLiveProductionEvidenceError(
       `${path}.checks must be an array.`,
@@ -512,6 +802,7 @@ function parseLiveArtifact(
   const checkEvidenceSha256 = parseSemanticChecks(
     value.checks,
     reference.prerequisiteId,
+    rawArtifacts,
   );
   return {
     evidenceUri,
@@ -524,6 +815,7 @@ function parseLiveArtifact(
 function parseSemanticChecks(
   input: readonly unknown[],
   prerequisiteId: LiveMediaProductionPrerequisiteId,
+  rawArtifacts: ReadonlyMap<string, VerifiedMediaLiveProductionRawArtifact>,
 ): Readonly<Record<string, string>> {
   const required = LIVE_MEDIA_PRODUCTION_EVIDENCE_POLICY[prerequisiteId]
     .requiredCheckIds as readonly string[];
@@ -537,7 +829,11 @@ function parseSemanticChecks(
   for (const [index, entry] of input.entries()) {
     const path = `${prerequisiteId}.checks[${String(index)}]`;
     const check = record(entry, path);
-    exactKeys(check, ['id', 'status', 'evidenceSha256'], path);
+    exactKeys(
+      check,
+      ['id', 'status', 'evidenceArtifactId', 'evidenceSha256'],
+      path,
+    );
     const id = requiredString(check.id, `${path}.id`);
     if (!allowed.has(id)) {
       throw new MediaLiveProductionEvidenceError(
@@ -554,10 +850,13 @@ function parseSemanticChecks(
         `${prerequisiteId} semantic check must be PASS: ${id}.`,
       );
     }
-    evidence[id] = requiredSha256(
+    evidence[id] = resolveReferencedRawArtifact(
+      rawArtifacts,
+      check.evidenceArtifactId,
       check.evidenceSha256,
-      `${path}.evidenceSha256`,
-    );
+      prerequisiteId,
+      `${path}.evidence`,
+    ).sha256;
   }
   const missing = required.filter(
     (id) => !Object.prototype.hasOwnProperty.call(evidence, id),
@@ -568,6 +867,32 @@ function parseSemanticChecks(
     );
   }
   return evidence;
+}
+
+function resolveReferencedRawArtifact(
+  rawArtifacts: ReadonlyMap<string, VerifiedMediaLiveProductionRawArtifact>,
+  artifactIdValue: unknown,
+  sha256Value: unknown,
+  prerequisiteId: LiveMediaProductionPrerequisiteId,
+  path: string,
+): VerifiedMediaLiveProductionRawArtifact {
+  const artifactId = requiredString(artifactIdValue, `${path}ArtifactId`);
+  const declaredSha256 = requiredSha256(sha256Value, `${path}Sha256`);
+  const artifact = rawArtifacts.get(artifactId);
+  if (!artifact) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path} references missing raw evidence artifact ${artifactId}.`,
+    );
+  }
+  if (
+    artifact.prerequisiteId !== prerequisiteId ||
+    artifact.sha256 !== declaredSha256
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path} does not match its referenced raw evidence artifact.`,
+    );
+  }
+  return artifact;
 }
 
 export function assertMediaLiveProductionEvidencePolicy(): void {
@@ -590,6 +915,453 @@ export function assertMediaLiveProductionEvidencePolicy(): void {
     ) {
       throw new Error(`Live evidence policy is invalid for ${id}.`);
     }
+  }
+}
+
+function resolveExpectedCollectorRun(
+  options: ParseVerifiedMediaLiveProductionEvidenceOptions,
+): MediaLiveProductionCollectorRun {
+  const configured = options.expectedCollectorRun;
+  const candidate =
+    configured ??
+    (process.env.MEDIA_OPS_LIVE_COLLECTOR_RUN_ID &&
+    process.env.MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT
+      ? {
+          runId: process.env.MEDIA_OPS_LIVE_COLLECTOR_RUN_ID,
+          runAttempt: Number(process.env.MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT),
+        }
+      : undefined);
+  if (
+    !candidate ||
+    !GITHUB_RUN_ID.test(candidate.runId) ||
+    !Number.isSafeInteger(candidate.runAttempt) ||
+    candidate.runAttempt < 1 ||
+    candidate.runAttempt > 10_000
+  ) {
+    throw new Error(
+      'Expected live evidence collector run binding is missing or invalid.',
+    );
+  }
+  return { ...candidate };
+}
+
+function parseCollectorRun(
+  input: unknown,
+  path: string,
+): MediaLiveProductionCollectorRun {
+  const value = record(input, path);
+  exactKeys(value, ['runId', 'runAttempt'], path);
+  const runId = requiredString(value.runId, `${path}.runId`);
+  if (
+    !GITHUB_RUN_ID.test(runId) ||
+    typeof value.runAttempt !== 'number' ||
+    !Number.isSafeInteger(value.runAttempt) ||
+    value.runAttempt < 1 ||
+    value.runAttempt > 10_000
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `${path} is not a valid immutable collector run binding.`,
+    );
+  }
+  return { runId, runAttempt: value.runAttempt };
+}
+
+function assertSameCollectorRun(
+  actual: MediaLiveProductionCollectorRun,
+  expected: MediaLiveProductionCollectorRun,
+  label: string,
+): void {
+  if (
+    actual.runId !== expected.runId ||
+    actual.runAttempt !== expected.runAttempt
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `Live evidence does not match the ${label}.`,
+    );
+  }
+}
+
+const RAW_EVIDENCE_KINDS = {
+  'media-live-s3-provider': 'live-s3-provider',
+  'media-live-clamav': 'live-clamav',
+  'media-deployed-proxy-mesh-policy': 'deployed-proxy-mesh-policy',
+  'media-production-alert-delivery': 'production-alert-delivery',
+  'media-backend-replica-discovery': 'backend-replica-discovery',
+  'media-secret-manager-workload-identity': 'secret-manager-workload-identity',
+} as const satisfies Record<LiveMediaProductionPrerequisiteId, string>;
+
+function parseRawDomainEvidence(
+  bytes: Buffer,
+  reference: RawArtifactReference,
+  expectedCollectorRun: MediaLiveProductionCollectorRun,
+  expectedWorkloadIdentity: MediaLiveProductionWorkloadIdentity,
+): void {
+  const path = `rawEvidence.${reference.id}`;
+  const value = parseJsonObject(bytes, path);
+  exactKeys(
+    value,
+    [
+      'schemaVersion',
+      'evidenceKind',
+      'collectorRun',
+      'command',
+      'sanitizedLog',
+      'semantics',
+    ],
+    path,
+  );
+  if (
+    value.schemaVersion !== 1 ||
+    value.evidenceKind !== RAW_EVIDENCE_KINDS[reference.prerequisiteId]
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `${reference.prerequisiteId} raw evidence identity is invalid.`,
+    );
+  }
+  const collectorRun = parseCollectorRun(
+    value.collectorRun,
+    `${path}.collectorRun`,
+  );
+  assertSameCollectorRun(
+    collectorRun,
+    expectedCollectorRun,
+    'signed manifest collector run; replayed evidence is forbidden',
+  );
+
+  const command = record(value.command, `${path}.command`);
+  exactKeys(command, ['name', 'version', 'exitCode'], `${path}.command`);
+  const commandName = requiredString(command.name, `${path}.command.name`);
+  const commandVersion = requiredString(
+    command.version,
+    `${path}.command.version`,
+  );
+  if (
+    commandName !== `collect-${reference.prerequisiteId}` ||
+    !/^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$/u.test(commandVersion) ||
+    command.exitCode !== 0
+  ) {
+    throw new MediaLiveProductionEvidenceError(
+      `${reference.prerequisiteId} raw rehearsal command provenance is invalid.`,
+    );
+  }
+
+  const sanitizedLog = record(value.sanitizedLog, `${path}.sanitizedLog`);
+  exactKeys(
+    sanitizedLog,
+    ['redacted', 'secretsDetected'],
+    `${path}.sanitizedLog`,
+  );
+  if (sanitizedLog.redacted !== true || sanitizedLog.secretsDetected !== 0) {
+    throw new MediaLiveProductionEvidenceError(
+      `${reference.prerequisiteId} raw rehearsal log is not safely sanitized.`,
+    );
+  }
+
+  const semantics = record(value.semantics, `${path}.semantics`);
+  switch (reference.prerequisiteId) {
+    case 'media-live-s3-provider':
+      assertS3Semantics(semantics, path);
+      return;
+    case 'media-live-clamav':
+      assertClamavSemantics(semantics, path);
+      return;
+    case 'media-deployed-proxy-mesh-policy':
+      assertMeshSemantics(semantics, path);
+      return;
+    case 'media-production-alert-delivery':
+      assertAlertSemantics(semantics, path);
+      return;
+    case 'media-backend-replica-discovery':
+      assertReplicaSemantics(semantics, path);
+      return;
+    case 'media-secret-manager-workload-identity':
+      assertWorkloadIdentitySemantics(
+        semantics,
+        path,
+        expectedWorkloadIdentity,
+      );
+      return;
+  }
+}
+
+function assertS3Semantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'publicAccessBlocked',
+      'tlsVersion',
+      'encryption',
+      'versioning',
+      'lifecycleRules',
+      'putStatus',
+      'headStatus',
+      'getStatus',
+      'deleteStatus',
+      'checksumMatched',
+      'byteReadbackMatched',
+      'oversizeRejected',
+      'deniedRejected',
+      'missingRejected',
+      'timeoutRejected',
+      'resetRejected',
+      'unknownPutSettled',
+    ],
+    path,
+  );
+  if (
+    value.publicAccessBlocked !== true ||
+    !['TLSv1.2', 'TLSv1.3'].includes(String(value.tlsVersion)) ||
+    !['aws:kms', 'AES256'].includes(String(value.encryption)) ||
+    value.versioning !== 'Enabled' ||
+    !isPositiveInteger(value.lifecycleRules) ||
+    value.putStatus !== 200 ||
+    value.headStatus !== 200 ||
+    value.getStatus !== 200 ||
+    value.deleteStatus !== 204 ||
+    value.checksumMatched !== true ||
+    value.byteReadbackMatched !== true ||
+    value.oversizeRejected !== true ||
+    value.deniedRejected !== true ||
+    value.missingRejected !== true ||
+    value.timeoutRejected !== true ||
+    value.resetRejected !== true ||
+    value.unknownPutSettled !== true
+  ) {
+    invalidDomainSemantics('S3 provider');
+  }
+}
+
+function assertClamavSemantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'engineVersion',
+      'databaseVersion',
+      'cleanFormatsAccepted',
+      'eicarFound',
+      'transportFailuresRejected',
+      'malformedRejected',
+      'oversizedRejected',
+      'concurrencyLimit',
+      'backpressureObserved',
+    ],
+    path,
+  );
+  const cleanFormats = value.cleanFormatsAccepted;
+  if (
+    !isVersionString(value.engineVersion) ||
+    !isVersionString(value.databaseVersion) ||
+    !Array.isArray(cleanFormats) ||
+    cleanFormats.length !== REQUIRED_CLAMAV_CLEAN_FORMATS.length ||
+    cleanFormats.some((format) => !isExactNonEmptyString(format)) ||
+    new Set(cleanFormats).size !== cleanFormats.length ||
+    REQUIRED_CLAMAV_CLEAN_FORMATS.some(
+      (requiredFormat) => !cleanFormats.includes(requiredFormat),
+    ) ||
+    value.eicarFound !== true ||
+    value.transportFailuresRejected !== true ||
+    value.malformedRejected !== true ||
+    value.oversizedRejected !== true ||
+    !isPositiveInteger(value.concurrencyLimit) ||
+    value.backpressureObserved !== true
+  ) {
+    invalidDomainSemantics('ClamAV');
+  }
+}
+
+function assertMeshSemantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'nginxPolicyRevision',
+      'privateNoStoreEnforced',
+      'querySignatureRedacted',
+      'mtlsMode',
+      'networkPolicyDefaultDeny',
+      'authorizedWorkloadAllowed',
+    ],
+    path,
+  );
+  if (
+    typeof value.nginxPolicyRevision !== 'string' ||
+    !OCI_DIGEST.test(value.nginxPolicyRevision) ||
+    value.privateNoStoreEnforced !== true ||
+    value.querySignatureRedacted !== true ||
+    value.mtlsMode !== 'STRICT' ||
+    value.networkPolicyDefaultDeny !== true ||
+    value.authorizedWorkloadAllowed !== true
+  ) {
+    invalidDomainSemantics('deployed proxy and mesh policy');
+  }
+}
+
+function assertAlertSemantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'alertName',
+      'firingObserved',
+      'ownerRoute',
+      'firingNotificationReceipt',
+      'resolvedNotificationReceipt',
+      'escalationReceipt',
+    ],
+    path,
+  );
+  const receipts = [
+    value.firingNotificationReceipt,
+    value.resolvedNotificationReceipt,
+    value.escalationReceipt,
+  ];
+  if (
+    value.alertName !== LIVE_ALERT_NAME ||
+    value.firingObserved !== true ||
+    value.ownerRoute !== LIVE_ALERT_OWNER_ROUTE ||
+    receipts.some((receipt) => !isExactNonEmptyString(receipt)) ||
+    new Set(receipts).size !== receipts.length
+  ) {
+    invalidDomainSemantics('production alert delivery');
+  }
+}
+
+function assertReplicaSemantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'readyReplicas',
+      'headlessServiceEndpoints',
+      'distinctPodTargets',
+      'scrapedReplicaTargets',
+      'replacementReconverged',
+    ],
+    path,
+  );
+  if (
+    !isIntegerAtLeast(value.readyReplicas, 2) ||
+    !isIntegerAtLeast(value.headlessServiceEndpoints, 2) ||
+    !isIntegerAtLeast(value.distinctPodTargets, 2) ||
+    !isIntegerAtLeast(value.scrapedReplicaTargets, 2) ||
+    value.replacementReconverged !== true
+  ) {
+    invalidDomainSemantics('backend replica discovery');
+  }
+}
+
+function assertWorkloadIdentitySemantics(
+  value: Record<string, unknown>,
+  parentPath: string,
+  expected: MediaLiveProductionWorkloadIdentity,
+): void {
+  const path = `${parentPath}.semantics`;
+  exactKeys(
+    value,
+    [
+      'issuer',
+      'audience',
+      'subject',
+      'staticCredentialsPresent',
+      'secretReadAuthorized',
+      'tokenTtlSeconds',
+      'rotationOverlapVerified',
+      'auditEventId',
+    ],
+    path,
+  );
+  if (
+    !isCredentialFreeProductionHttps(value.issuer) ||
+    value.audience !== expected.audience ||
+    value.subject !== expected.subject ||
+    value.staticCredentialsPresent !== false ||
+    value.secretReadAuthorized !== true ||
+    !isIntegerAtLeast(value.tokenTtlSeconds, 1) ||
+    value.tokenTtlSeconds > 3600 ||
+    value.rotationOverlapVerified !== true ||
+    !isExactNonEmptyString(value.auditEventId)
+  ) {
+    invalidDomainSemantics('secret-manager workload identity');
+  }
+}
+
+function parseExpectedWorkloadIdentity(
+  input: MediaLiveProductionWorkloadIdentity,
+): MediaLiveProductionWorkloadIdentity {
+  if (
+    !input ||
+    !WORKLOAD_AUDIENCE.test(input.audience) ||
+    !WORKLOAD_SUBJECT.test(input.subject)
+  ) {
+    throw new Error('Expected workload identity configuration is invalid.');
+  }
+  return { audience: input.audience, subject: input.subject };
+}
+
+function invalidDomainSemantics(domain: string): never {
+  throw new MediaLiveProductionEvidenceError(
+    `${domain} raw rehearsal semantic evidence is incomplete or invalid.`,
+  );
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && typeof value === 'number' && value > 0;
+}
+
+function isIntegerAtLeast(value: unknown, minimum: number): value is number {
+  return (
+    typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum
+  );
+}
+
+function isVersionString(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$/u.test(value)
+  );
+}
+
+function isExactNonEmptyString(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 512 &&
+    value.trim() === value
+  );
+}
+
+function isCredentialFreeProductionHttps(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === 'https:' &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.search &&
+      !parsed.hash &&
+      !parsed.hostname.endsWith('.invalid') &&
+      !['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -679,6 +1451,18 @@ function parseEnvironmentBinding(
   return environment;
 }
 
+function parseExpectedEnvironmentBinding(
+  input: unknown,
+): MediaLiveProductionEnvironmentBinding {
+  try {
+    return parseEnvironmentBinding(input, 'expected production environment');
+  } catch {
+    throw new Error(
+      'Expected production environment configuration is invalid.',
+    );
+  }
+}
+
 function assertFreshness(
   observedAt: string,
   expiresAt: string,
@@ -733,6 +1517,7 @@ function assertSameBinding(
 function assertSameEnvironment(
   actual: MediaLiveProductionEnvironmentBinding,
   expected: MediaLiveProductionEnvironmentBinding,
+  label: string,
 ): void {
   if (
     actual.clusterIdentitySha256 !== expected.clusterIdentitySha256 ||
@@ -741,7 +1526,7 @@ function assertSameEnvironment(
     actual.fingerprintSha256 !== expected.fingerprintSha256
   ) {
     throw new MediaLiveProductionEvidenceError(
-      'Raw live evidence does not match the signed environment.',
+      `Raw live evidence does not match the ${label}.`,
     );
   }
 }
@@ -891,9 +1676,9 @@ function requiredString(value: unknown, path: string): string {
 
 function requiredSha256(value: unknown, path: string): string {
   const digest = requiredString(value, path);
-  if (!SHA256.test(digest)) {
+  if (!SHA256.test(digest) || ZERO_SHA256.test(digest)) {
     throw new MediaLiveProductionEvidenceError(
-      `${path} must be a lowercase SHA-256 digest.`,
+      `${path} must be a nonzero lowercase SHA-256 digest; a zero digest cannot prove raw evidence.`,
     );
   }
   return digest;

@@ -2,6 +2,11 @@
 
 Status: Accepted for code; live environment approval remains external.
 
+> Producer identity, live raw-evidence V2, error taxonomy, runbook network
+> boundary, waiver governance and production migration recovery are superseded by
+> ADR-007. The metrics topology and hermetic tool decisions in this ADR remain in
+> force.
+
 ## Decision
 
 Media metrics use a dedicated listener on port 9464 with exact `GET /metrics` and

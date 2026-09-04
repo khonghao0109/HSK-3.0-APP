@@ -65,10 +65,7 @@
           "required": true,
           "model": "hsk-release-acceptance",
           "verifier": "cosign-keyless-blob",
-          "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": [
-            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
-          ]
+          "producerPolicyKey": "oci-release"
         },
         "upstreamPublisherSignature": { "status": "absent" },
         "sbom": {
@@ -108,10 +105,7 @@
           "required": true,
           "model": "hsk-release-acceptance",
           "verifier": "cosign-keyless-blob",
-          "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": [
-            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
-          ]
+          "producerPolicyKey": "oci-release"
         },
         "upstreamPublisherSignature": { "status": "absent" },
         "sbom": {
@@ -151,10 +145,7 @@
           "required": true,
           "model": "hsk-release-acceptance",
           "verifier": "cosign-keyless-blob",
-          "issuer": "https://token.actions.githubusercontent.com",
-          "approvedIdentities": [
-            "https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0"
-          ]
+          "producerPolicyKey": "oci-release"
         },
         "upstreamPublisherSignature": { "status": "absent" },
         "sbom": {

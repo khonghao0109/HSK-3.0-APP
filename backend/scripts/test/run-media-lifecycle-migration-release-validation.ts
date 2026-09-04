@@ -46,6 +46,12 @@ import {
   resolveLocalPrismaCli,
 } from '../operations/bounded-prisma-migrate-deploy';
 import {
+  assertMediaCleanupAuditResolvePostconditions,
+  assertMediaCleanupAuditResolvePreconditions,
+  readMediaCleanupAuditResolveState,
+  summarizeMediaCleanupAuditResolveState,
+} from '../operations/bounded-prisma-migrate-resolve-rolled-back';
+import {
   assertDatabaseReleaseEvidence,
   computeReleaseContentDigest as computeSharedReleaseContentDigest,
 } from './media-operations-validation.helpers';
@@ -400,6 +406,7 @@ async function executeValidation(): Promise<ValidationResult> {
       'test/database/media-cleanup-audit-integrity-adversarial.fixture.sql',
     ),
   );
+  assertProductionResolveRejectsUnreconciledInvariant(databaseUrls.adversarial);
   const adversarial = expectedP0001(
     'adversarial-fixture',
     databaseUrls.adversarial,
@@ -421,6 +428,7 @@ async function executeValidation(): Promise<ValidationResult> {
       'test/database/media-cleanup-audit-integrity-future.fixture.sql',
     ),
   );
+  assertProductionResolveRejectsUnreconciledInvariant(databaseUrls.future);
   const future = expectedP0001('future-timestamp-fixture', databaseUrls.future);
   assertAtomicRollback(databaseUrls.future, 18, 1);
   checks.futureTimestampFixture = passCheck(future);
@@ -1423,20 +1431,17 @@ async function runBoundedMigrationLockRehearsal(
     ),
   );
   const reconciledState = assertTimestampDriftReconciled(recoveryDatabaseUrl);
-  assertResolvePreconditions(
+  const resolvePreconditionState = assertProductionResolvePreconditions(
     'lock-abort-recovery-resolve-preconditions',
     recoveryDatabaseUrl,
-    true,
   );
   const driftResolve = prismaResolveRolledBack(
     'lock-abort-recovery-resolve-rolled-back',
     recoveryDatabaseUrl,
   );
-  const driftResolvedState = assertResolvedMigrationState(
+  const driftResolvedState = assertProductionResolvePostconditions(
     'lock-abort-recovery-resolved-state',
     recoveryDatabaseUrl,
-    1,
-    0,
   );
   const driftRecovery = prismaDeploy(
     'lock-abort-recovery-forward-deploy',
@@ -1470,7 +1475,7 @@ async function runBoundedMigrationLockRehearsal(
       `failed_deploy=${failedDeploy.logSha256} direct_p0001=${exactDriftAbort.logSha256} failed_row=${driftFailedState} blocked_retry=${blockedRetry.logSha256} blocked_retry_duration_ms=${String(
         blockedRetry.durationMs,
       )}`,
-      `reconcile=${reconcile.logSha256} reconciled=${reconciledState} resolve=${driftResolve.logSha256} resolved=${driftResolvedState}`,
+      `reconcile=${reconcile.logSha256} reconciled=${reconciledState} resolve_precondition=${resolvePreconditionState} resolve=${driftResolve.logSha256} resolved=${driftResolvedState}`,
       `forward=${driftRecovery.logSha256} status=${recoveryStatus.logSha256} final=${driftFinalState} drift=${recoveryDrift}`,
     ].join('\n'),
     Date.now() - startedCommand,
@@ -1610,44 +1615,59 @@ function assertFailedMigrationRow(
   return value;
 }
 
-function assertResolvePreconditions(
+function assertProductionResolvePreconditions(
   commandRef: string,
   databaseUrl: string,
-  requiresExactAudit: boolean,
-): void {
-  const value = sqlScalar(
-    commandRef,
-    databaseUrl,
-    `SELECT
-      (SELECT COUNT(*) FROM "_prisma_migrations"
-       WHERE migration_name='${MEDIA_MIGRATION_NAMES.auditIntegrity}'
-         AND finished_at IS NULL AND rolled_back_at IS NULL)::text || '|' ||
-      (SELECT COUNT(*) FROM "_prisma_migrations"
-       WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL)::text || '|' ||
-      (SELECT COUNT(*) FROM pg_proc WHERE proname IN (
-        'hsk_is_valid_media_cleanup_audit',
-        'hsk_is_valid_current_media_cleanup_audit',
-        'hsk_guard_media_cleanup_audit',
-        'hsk_require_media_cleanup_audit'
-      ))::text || '|' ||
-      (SELECT COUNT(*) FROM pg_trigger WHERE tgname IN (
-        'AuditLog_media_cleanup_integrity',
-        'MediaIngestion_cleanup_audit_required'
-      ))::text || '|' ||
-      (SELECT COUNT(*) FROM "MediaIngestion" ingestion
-       WHERE ingestion."idempotencyKeyHash"=repeat('2', 64)
-         AND EXISTS (
-           SELECT 1 FROM "AuditLog" audit
-           WHERE audit."targetType"='media_ingestion'
-             AND audit."targetId"=ingestion.id::text
-             AND audit."createdAt"=ingestion."cleanupRequiredAt"
-             AND audit."afterSummary" ->> 'status'='cleanup_required'
-         ))::text`,
+): string {
+  const startedAt = Date.now();
+  const state = readMediaCleanupAuditResolveState(
+    environment(databaseUrl),
+    backendRoot,
   );
-  const expected = requiresExactAudit ? '1|18|0|0|1' : '1|18|0|0|0';
-  if (value !== expected) {
-    throw new Error('Migration resolve preconditions are not satisfied.');
+  assertMediaCleanupAuditResolvePreconditions(state);
+  const summary = summarizeMediaCleanupAuditResolveState(state);
+  recordCommand(commandRef, summary, Date.now() - startedAt);
+  return summary;
+}
+
+function assertProductionResolveRejectsUnreconciledInvariant(
+  databaseUrl: string,
+): void {
+  const state = readMediaCleanupAuditResolveState(
+    environment(databaseUrl),
+    backendRoot,
+  );
+  if (state.authoritativeInvariantViolationCount < 1) {
+    throw new Error(
+      'Production resolve state query did not detect unreconciled lifecycle/audit evidence.',
+    );
   }
+  let rejected = false;
+  try {
+    assertMediaCleanupAuditResolvePreconditions(state);
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) {
+    throw new Error(
+      'Production resolve precondition accepted unreconciled lifecycle/audit evidence.',
+    );
+  }
+}
+
+function assertProductionResolvePostconditions(
+  commandRef: string,
+  databaseUrl: string,
+): string {
+  const startedAt = Date.now();
+  const state = readMediaCleanupAuditResolveState(
+    environment(databaseUrl),
+    backendRoot,
+  );
+  assertMediaCleanupAuditResolvePostconditions(state);
+  const summary = summarizeMediaCleanupAuditResolveState(state);
+  recordCommand(commandRef, summary, Date.now() - startedAt);
+  return summary;
 }
 
 function assertResolvedMigrationState(

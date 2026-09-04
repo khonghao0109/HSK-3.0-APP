@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { resolve4, resolve6 } from 'node:dns/promises';
 import { createGunzip, gunzipSync } from 'node:zlib';
 import {
   closeSync,
@@ -19,7 +20,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { BlockList, isIP } from 'node:net';
 import { performance } from 'node:perf_hooks';
+import { request as requestHttps } from 'node:https';
 import {
   basename,
   dirname,
@@ -30,6 +33,14 @@ import {
   sep,
 } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { Readable } from 'node:stream';
+
+import { assertMediaEvidenceProducerExecution } from '../operations/media-evidence-producer-policy';
+import type { MediaEvidenceProducerExecutionContract } from '../operations/media-evidence-producer-policy';
+import {
+  CallerControlledEvidenceFileViolation,
+  rethrowStableEvidenceReadFailure,
+} from '../operations/media-release-evidence-errors';
 
 export type GateStatus = 'PASS' | 'FAIL_INTERNAL' | 'BLOCKED_EXTERNAL';
 export type SupportedOs = 'darwin' | 'linux';
@@ -56,6 +67,35 @@ export type FunctionalEvidenceKind =
   | 'nginx-config'
   | 'promtool-check'
   | 'promtool-test-rules';
+
+export interface ProductionRunbookDnsAddress {
+  address: string;
+  family: 4 | 6;
+}
+
+export type ProductionRunbookDnsResolver = (
+  hostname: string,
+) => Promise<readonly ProductionRunbookDnsAddress[]>;
+
+export interface PinnedProductionRunbookTarget {
+  url: string;
+  hostname: string;
+  servername: string;
+  address: string;
+  family: 4 | 6;
+  port: 443;
+  path: string;
+}
+
+export type ProductionRunbookTransport = (
+  target: PinnedProductionRunbookTarget,
+  signal?: AbortSignal,
+) => Promise<Response>;
+
+export interface ProductionRunbookReleaseBinding {
+  releaseTag: string;
+  commit: string;
+}
 
 export interface VersionProbe {
   args: string[];
@@ -118,8 +158,7 @@ export interface OciImageDefinition {
       required: true;
       model: 'hsk-release-acceptance';
       verifier: 'cosign-keyless-blob';
-      issuer: string;
-      approvedIdentities: [string];
+      producerPolicyKey: 'oci-release';
     };
     upstreamPublisherSignature: { status: 'absent' };
     sbom: { required: true; format: 'spdx-json'; minimumPackages: 1 };
@@ -151,6 +190,11 @@ export interface OciRegistryResolution {
 
 export type ExecutionProfile = 'reference' | 'release-linux-amd64';
 
+export interface ProtectedReleaseHeadExpectation {
+  commit: string;
+  tagRef: string;
+}
+
 export interface TreeDigestEvidence {
   digest: string;
   pathCount: number;
@@ -171,6 +215,7 @@ export interface DatabaseEvidenceExpectation {
   catalogCount: number;
   catalogChecksum: string;
   latestMigrations: Array<{ name: string; checksum: string }>;
+  expectedProducerExecution?: MediaEvidenceProducerExecutionContract;
   nowMs?: number;
   retainValidatedFile?: (relativePath: string, bytes: Buffer) => void;
 }
@@ -197,6 +242,7 @@ export interface CapacityBackupEvidenceExpectation {
   commit: string;
   treeSha: string;
   releaseContentDigest: string;
+  expectedProducerExecution?: MediaEvidenceProducerExecutionContract;
   nowMs?: number;
 }
 
@@ -284,6 +330,13 @@ export interface DetachedEvidenceExpectation {
   maxAgeMs: number;
 }
 
+export class MediaEvidenceContractError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MediaEvidenceContractError';
+  }
+}
+
 export type ProcessResult =
   | { kind: 'success'; status: 0; stdout: string; stderr: string }
   | {
@@ -293,24 +346,84 @@ export type ProcessResult =
       stderr: string;
     }
   | { kind: 'missing'; stdout: string; stderr: string }
-  | { kind: 'timeout'; stdout: string; stderr: string };
+  | { kind: 'timeout'; stdout: string; stderr: string }
+  | { kind: 'spawn-error'; stdout: string; stderr: string }
+  | { kind: 'signal'; signal: string; stdout: string; stderr: string };
 
 const TOOL_VERSION = /^\d+\.\d+(?:\.\d+)?$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const OCI_DIGEST = /^sha256:[a-f0-9]{64}$/;
+const RELEASE_TAG = /^v\d+\.\d+\.\d+$/;
+const INTERNAL_HOSTNAME_SUFFIXES = [
+  '.corp',
+  '.home',
+  '.home.arpa',
+  '.internal',
+  '.intranet',
+  '.invalid',
+  '.lan',
+  '.local',
+  '.localdomain',
+  '.localhost',
+  '.private',
+  '.test',
+] as const;
+
+const NON_GLOBAL_IPV4 = new BlockList();
+for (const [network, prefix] of [
+  ['0.0.0.0', 8],
+  ['10.0.0.0', 8],
+  ['100.64.0.0', 10],
+  ['127.0.0.0', 8],
+  ['169.254.0.0', 16],
+  ['172.16.0.0', 12],
+  ['192.0.0.0', 24],
+  ['192.0.2.0', 24],
+  ['192.88.99.0', 24],
+  ['192.168.0.0', 16],
+  ['198.18.0.0', 15],
+  ['198.51.100.0', 24],
+  ['203.0.113.0', 24],
+  ['224.0.0.0', 4],
+  ['240.0.0.0', 4],
+] as const) {
+  NON_GLOBAL_IPV4.addSubnet(network, prefix, 'ipv4');
+}
+
+const GLOBAL_UNICAST_IPV6 = new BlockList();
+GLOBAL_UNICAST_IPV6.addSubnet('2000::', 3, 'ipv6');
+
+const NON_GLOBAL_IPV6_WITHIN_GLOBAL_UNICAST = new BlockList();
+for (const [network, prefix] of [
+  ['2001::', 23],
+  ['2001:db8::', 32],
+  ['2002::', 16],
+  ['3ffe::', 16],
+  ['3fff::', 20],
+] as const) {
+  NON_GLOBAL_IPV6_WITHIN_GLOBAL_UNICAST.addSubnet(network, prefix, 'ipv6');
+}
 
 // Exact concurrent, out-of-scope paths. Do not replace these with a broad glob.
 const RELEASE_CONTENT_EXCLUSIONS = new Set([
-  'docs/roadmap.md',
-  'docs/reports/10-delivery-production-operations-report.md',
-  'docs/roadmap_prod.jpg',
-  'docs/roadmap_prod_v2.png',
+  'docs/PLAN.md',
+  'docs/product/roadmap.md',
+  'docs/archive/reports/10-delivery-production-operations-report.md',
+  'docs/product/assets/roadmap_prod.jpg',
+  'docs/product/assets/roadmap_prod_v2.png',
 ]);
+const RELEASE_CONTENT_OUTPUT_PREFIXES = [
+  'backend/node_modules/',
+  'backend/dist/',
+  'backend/coverage/',
+  'backend/test-results/',
+] as const;
 
 export const MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST = new Set([
   'DATABASE_URL',
   'LANG',
   'LC_ALL',
+  'MATERIALIZE_CLASSIFICATION',
   'MEDIA_OBSERVABILITY_RENDER_DIR',
   'MEDIA_OPS_ALLOW_DOWNLOAD',
   'MEDIA_OPS_CAPACITY_BACKUP_EVIDENCE_BUNDLE',
@@ -318,15 +431,27 @@ export const MEDIA_OPERATIONS_EVIDENCE_ENV_ALLOWLIST = new Set([
   'MEDIA_OPS_DB_EVIDENCE_JSON',
   'MEDIA_OPS_DB_EVIDENCE_BUNDLE',
   'MEDIA_OPS_EVIDENCE_DIR',
+  'MEDIA_OPS_EXPECTED_RELEASE_COMMIT',
+  'MEDIA_OPS_EXPECTED_RELEASE_TAG_REF',
   'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_BUNDLE',
+  'MEDIA_OPS_LIVE_COLLECTOR_RUN_ATTEMPT',
+  'MEDIA_OPS_LIVE_COLLECTOR_RUN_ID',
+  'MEDIA_OPS_LIVE_EXPECTED_CLUSTER_IDENTITY_SHA256',
+  'MEDIA_OPS_LIVE_EXPECTED_DEPLOYMENT_REVISION',
+  'MEDIA_OPS_LIVE_EXPECTED_NAMESPACE_IDENTITY_SHA256',
+  'MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_AUDIENCE',
+  'MEDIA_OPS_LIVE_EXPECTED_WORKLOAD_SUBJECT',
   'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_JSON',
   'MEDIA_OPS_LIVE_REHEARSAL_EVIDENCE_ROOT',
   'MEDIA_OPS_OCI_RELEASE_EVIDENCE_BUNDLE',
   'MEDIA_OPS_OCI_RELEASE_EVIDENCE_JSON',
   'MEDIA_OPS_OCI_RELEASE_EVIDENCE_ROOT',
+  'MEDIA_OPS_OCI_WAIVER_APPROVAL_BUNDLE',
+  'MEDIA_OPS_OCI_WAIVER_APPROVAL_JSON',
   'MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_BUNDLE',
   'MEDIA_OPS_PRODUCTION_PREREQUISITE_EVIDENCE_JSON',
   'MEDIA_OPS_TOOL_CACHE',
+  'MEDIA_RUNBOOK_APPROVED_HOSTNAME',
   'MEDIA_RUNBOOK_URL',
   'NODE_ENV',
   'NPM_CONFIG_USERCONFIG',
@@ -1789,6 +1914,12 @@ export function runProcess(
   ) {
     return { kind: 'timeout', stdout, stderr };
   }
+  if (result.error) {
+    return { kind: 'spawn-error', stdout, stderr };
+  }
+  if (result.signal) {
+    return { kind: 'signal', signal: result.signal, stdout, stderr };
+  }
   if (result.status !== 0) {
     return { kind: 'exit', status: result.status, stdout, stderr };
   }
@@ -2076,24 +2207,277 @@ export function requireCredentialFreeHttpsRunbookUrl(
   } catch {
     throw new Error('Runbook URL must be an absolute HTTPS URL.');
   }
+  const hostname = parsed.hostname.startsWith('[')
+    ? parsed.hostname.slice(1, -1)
+    : parsed.hostname;
+  const loopback =
+    hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  const internalHostname =
+    !hostname.includes('.') ||
+    INTERNAL_HOSTNAME_SUFFIXES.some(
+      (suffix) => hostname === suffix.slice(1) || hostname.endsWith(suffix),
+    );
+  const networkAddress = isIP(hostname) !== 0;
   if (
     parsed.protocol !== 'https:' ||
     parsed.username ||
     parsed.password ||
     parsed.search ||
     parsed.hash ||
-    parsed.hostname.endsWith('.invalid') ||
     value.includes('__MEDIA_RUNBOOK_URL__') ||
-    (!options.allowLoopback &&
-      ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname))
+    ((networkAddress || internalHostname) &&
+      !(options.allowLoopback && loopback))
   ) {
     throw new Error('Runbook URL must be credential-free production HTTPS.');
   }
   return parsed.toString();
 }
 
+function requireApprovedProductionRunbookHostname(value: unknown): string {
+  if (
+    typeof value !== 'string' ||
+    !value ||
+    value.trim() !== value ||
+    value !== value.toLowerCase() ||
+    !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/u.test(
+      value,
+    ) ||
+    INTERNAL_HOSTNAME_SUFFIXES.some(
+      (suffix) => value === suffix.slice(1) || value.endsWith(suffix),
+    )
+  ) {
+    throw new Error(
+      'Approved runbook hostname must be one exact canonical production DNS hostname.',
+    );
+  }
+  return value;
+}
+
+export function requireApprovedProductionRunbookUrl(
+  value: unknown,
+  approvedHostname: unknown,
+): string {
+  const approved = requireApprovedProductionRunbookHostname(approvedHostname);
+  const runbookUrl = requireCredentialFreeHttpsRunbookUrl(value);
+  const parsed = new URL(runbookUrl);
+  if (parsed.hostname !== approved || parsed.port) {
+    throw new Error(
+      'Production runbook URL must use the exact approved hostname and HTTPS port 443.',
+    );
+  }
+  return runbookUrl;
+}
+
+function isDnsNoDataError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === 'ENODATA' || code === 'ENOTFOUND' || code === 'ENODOMAIN';
+}
+
+const defaultProductionRunbookResolver: ProductionRunbookDnsResolver = async (
+  hostname,
+) => {
+  const [ipv4, ipv6] = await Promise.allSettled([
+    resolve4(hostname),
+    resolve6(hostname),
+  ]);
+  const addresses: ProductionRunbookDnsAddress[] = [];
+  if (ipv4.status === 'fulfilled') {
+    addresses.push(
+      ...ipv4.value.map((address) => ({ address, family: 4 as const })),
+    );
+  } else if (!isDnsNoDataError(ipv4.reason)) {
+    throw new Error('Production runbook A-record resolution failed.');
+  }
+  if (ipv6.status === 'fulfilled') {
+    addresses.push(
+      ...ipv6.value.map((address) => ({ address, family: 6 as const })),
+    );
+  } else if (!isDnsNoDataError(ipv6.reason)) {
+    throw new Error('Production runbook AAAA-record resolution failed.');
+  }
+  return addresses;
+};
+
+function assertGlobalProductionRunbookAddress(
+  entry: ProductionRunbookDnsAddress,
+): void {
+  const detectedFamily = isIP(entry.address);
+  if (
+    (entry.family !== 4 && entry.family !== 6) ||
+    detectedFamily !== entry.family ||
+    entry.address.includes('%')
+  ) {
+    throw new Error('Production runbook DNS returned a malformed address.');
+  }
+  if (
+    (entry.family === 4 && NON_GLOBAL_IPV4.check(entry.address, 'ipv4')) ||
+    (entry.family === 6 &&
+      (!GLOBAL_UNICAST_IPV6.check(entry.address, 'ipv6') ||
+        NON_GLOBAL_IPV6_WITHIN_GLOBAL_UNICAST.check(entry.address, 'ipv6')))
+  ) {
+    throw new Error('Production runbook DNS returned a non-global address.');
+  }
+}
+
+export async function resolveApprovedProductionRunbookTarget(
+  value: unknown,
+  approvedHostname: unknown,
+  resolver: ProductionRunbookDnsResolver = defaultProductionRunbookResolver,
+): Promise<PinnedProductionRunbookTarget> {
+  const url = requireApprovedProductionRunbookUrl(value, approvedHostname);
+  const parsed = new URL(url);
+  const addresses = await resolver(parsed.hostname);
+  if (addresses.length === 0 || addresses.length > 64) {
+    throw new Error(
+      'Production runbook DNS must return a bounded non-empty A/AAAA answer set.',
+    );
+  }
+  for (const address of addresses) {
+    assertGlobalProductionRunbookAddress(address);
+  }
+  const unique = new Map<string, ProductionRunbookDnsAddress>();
+  for (const address of addresses) {
+    unique.set(`${address.family}:${address.address}`, address);
+  }
+  const selected = [...unique.values()].sort((left, right) => {
+    if (left.family !== right.family) return left.family - right.family;
+    if (left.address === right.address) return 0;
+    return left.address < right.address ? -1 : 1;
+  })[0];
+  if (!selected) {
+    throw new Error('Production runbook DNS returned no usable address.');
+  }
+  return {
+    url,
+    hostname: parsed.hostname,
+    servername: parsed.hostname,
+    address: selected.address,
+    family: selected.family,
+    port: 443,
+    path: parsed.pathname,
+  };
+}
+
+const pinnedProductionRunbookTransport: ProductionRunbookTransport = (
+  target,
+  signal,
+) =>
+  new Promise<Response>((resolveResponse, rejectResponse) => {
+    const request = requestHttps(
+      {
+        protocol: 'https:',
+        hostname: target.hostname,
+        servername: target.servername,
+        port: target.port,
+        path: target.path,
+        method: 'GET',
+        signal,
+        agent: false,
+        rejectUnauthorized: true,
+        minVersion: 'TLSv1.2',
+        lookup: (_hostname, options, callback) => {
+          if (typeof options === 'object' && options.all) {
+            callback(null, [
+              { address: target.address, family: target.family },
+            ]);
+            return;
+          }
+          callback(null, target.address, target.family);
+        },
+      },
+      (response) => {
+        const status = response.statusCode;
+        if (status === undefined) {
+          response.destroy();
+          rejectResponse(
+            new Error('Production runbook response has no HTTP status.'),
+          );
+          return;
+        }
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            for (const item of value) headers.append(name, item);
+          } else if (value !== undefined) {
+            headers.set(name, value);
+          }
+        }
+        const body = [204, 205, 304].includes(status)
+          ? null
+          : (Readable.toWeb(response) as ReadableStream<Uint8Array>);
+        resolveResponse(new Response(body, { status, headers }));
+      },
+    );
+    request.once('error', rejectResponse);
+    request.end();
+  });
+
+export async function fetchApprovedProductionRunbook(
+  value: unknown,
+  options: {
+    approvedHostname: unknown;
+    signal?: AbortSignal;
+    resolver?: ProductionRunbookDnsResolver;
+    transport?: ProductionRunbookTransport;
+  },
+): Promise<Response> {
+  if (options.signal?.aborted) {
+    throw new Error('Production runbook DNS resolution aborted.');
+  }
+  const target = await awaitProductionRunbookOperation(
+    resolveApprovedProductionRunbookTarget(
+      value,
+      options.approvedHostname,
+      options.resolver,
+    ),
+    options.signal,
+    'DNS resolution',
+  );
+  return awaitProductionRunbookOperation(
+    (options.transport ?? pinnedProductionRunbookTransport)(
+      target,
+      options.signal,
+    ),
+    options.signal,
+    'HTTPS request',
+  );
+}
+
+function awaitProductionRunbookOperation<T>(
+  operation: Promise<T>,
+  signal: AbortSignal | undefined,
+  stage: string,
+): Promise<T> {
+  if (!signal) return operation;
+  if (signal.aborted) {
+    return Promise.reject(new Error(`Production runbook ${stage} aborted.`));
+  }
+  return new Promise<T>((resolveOperation, rejectOperation) => {
+    const abort = (): void => {
+      rejectOperation(new Error(`Production runbook ${stage} aborted.`));
+    };
+    signal.addEventListener('abort', abort, { once: true });
+    operation.then(
+      (value) => {
+        signal.removeEventListener('abort', abort);
+        resolveOperation(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', abort);
+        rejectOperation(
+          error instanceof Error
+            ? error
+            : new Error(`Production runbook ${stage} failed.`),
+        );
+      },
+    );
+  });
+}
+
 export async function assertProductionRunbookResponse(
   response: Response,
+  expectedBinding: ProductionRunbookReleaseBinding,
 ): Promise<{
   runbookId: 'media-ingestion-production';
   owner: 'platform-sre';
@@ -2136,16 +2520,23 @@ export async function assertProductionRunbookResponse(
       );
     }
   }
-  const revision = /^revision:\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*$/mu.exec(
-    text,
-  )?.[1];
-  if (!revision) {
-    throw new Error('Production runbook is missing a stable revision marker.');
+  if (
+    !RELEASE_TAG.test(expectedBinding.releaseTag) ||
+    !/^[a-f0-9]{40}$/u.test(expectedBinding.commit)
+  ) {
+    throw new Error('Production runbook release binding is malformed.');
+  }
+  const expectedRevision = `${expectedBinding.releaseTag}@${expectedBinding.commit}`;
+  const revisions = [...text.matchAll(/^revision:[\t ]*([^\s]+)[\t ]*\r?$/gmu)];
+  if (revisions.length !== 1 || revisions[0]?.[1] !== expectedRevision) {
+    throw new Error(
+      'Production runbook revision does not bind the exact release tag and commit.',
+    );
   }
   return {
     runbookId: 'media-ingestion-production',
     owner: 'platform-sre',
-    revision,
+    revision: expectedRevision,
     bodySha256: sha256(body),
   };
 }
@@ -2253,11 +2644,14 @@ export function assertPrometheusRuntimeAlertRunbookUrl(
   return alertCount;
 }
 
-function parseGitPorcelainStatus(
-  status: string,
-): Array<{ status: string; path: string }> {
+interface GitPorcelainEntry {
+  status: string;
+  path: string;
+}
+
+function parseGitPorcelainStatus(status: string): GitPorcelainEntry[] {
   const raw = status.split('\0');
-  const entries: Array<{ status: string; path: string }> = [];
+  const entries: GitPorcelainEntry[] = [];
   for (let index = 0; index < raw.length; index += 1) {
     const record = raw[index];
     if (!record) continue;
@@ -2289,40 +2683,159 @@ export function computeReleaseContentDigest(
   status: string,
 ): ReleaseContentEvidence {
   const entries = parseGitPorcelainStatus(status);
-  const selected = entries
+  const dirtyEntries = entries
     .filter(({ path }) =>
       ['backend/', 'docs/', 'ops/', '.github/workflows/'].some((prefix) =>
         path.startsWith(prefix),
       ),
     )
-    .filter(({ path }) => !RELEASE_CONTENT_EXCLUSIONS.has(path))
-    .filter(({ path }) => !path.startsWith('backend/test-results/'))
+    .filter(({ path }) => !isReleaseContentExcluded(path))
     .sort((left, right) => left.path.localeCompare(right.path));
+  const selectedPaths = releaseContentPaths(repositoryRoot, entries);
+  const selectedPathSet = new Set(selectedPaths);
   const digest = createHash('sha256');
-  for (const entry of selected) {
-    const absolute = resolve(repositoryRoot, entry.path);
-    digest.update(entry.status);
+  for (const path of selectedPaths) {
+    const absolute = resolve(repositoryRoot, path);
+    const bytes = readFileSync(absolute);
+    digest.update('FILE');
     digest.update('\0');
-    digest.update(entry.path);
+    digest.update(path);
     digest.update('\0');
-    if (existsSync(absolute) && statSync(absolute).isFile()) {
-      const bytes = readFileSync(absolute);
-      digest.update(String(bytes.length));
-      digest.update('\0');
-      digest.update(bytes);
-    } else {
-      digest.update('DELETED');
-    }
+    digest.update(String(bytes.length));
+    digest.update('\0');
+    digest.update(bytes);
+    digest.update('\0');
+  }
+  const deleted = [
+    ...new Set(
+      dirtyEntries
+        .filter(
+          ({ path }) =>
+            !selectedPathSet.has(path) &&
+            !existsSync(resolve(repositoryRoot, path)),
+        )
+        .map(({ path }) => path),
+    ),
+  ].sort();
+  for (const path of deleted) {
+    digest.update('DELETED');
+    digest.update('\0');
+    digest.update(path);
     digest.update('\0');
   }
   return {
     digest: digest.digest('hex'),
-    pathCount: selected.length,
-    releaseContentDirty: selected.length > 0,
-    releaseContentIndexDirty: selected.some(
+    pathCount: selectedPaths.length + deleted.length,
+    releaseContentDirty: dirtyEntries.length > 0,
+    releaseContentIndexDirty: dirtyEntries.some(
       ({ status: code }) => code[0] !== ' ' && code[0] !== '?',
     ),
   };
+}
+
+function releaseContentPaths(
+  repositoryRoot: string,
+  statusEntries: readonly GitPorcelainEntry[],
+): string[] {
+  const scopeRoots = ['.github/workflows', 'backend', 'docs', 'ops'] as const;
+  const inScope = (path: string): boolean =>
+    scopeRoots.some((root) => path === root || path.startsWith(`${root}/`));
+  const included = (path: string): boolean =>
+    inScope(path) && !isReleaseContentExcluded(path);
+
+  const gitDirectory = resolve(repositoryRoot, '.git');
+  if (existsSync(gitDirectory)) {
+    const tracked = spawnSync(
+      'git',
+      ['-C', repositoryRoot, 'ls-files', '-z', '--', ...scopeRoots],
+      {
+        encoding: 'utf8',
+        timeout: 5_000,
+        maxBuffer: 4 * 1024 * 1024,
+        shell: false,
+      },
+    );
+    if (tracked.error || tracked.status !== 0 || tracked.signal) {
+      throw new Error('Unable to enumerate tracked release content.');
+    }
+    const paths = new Set(
+      String(tracked.stdout)
+        .split('\0')
+        .filter((path) => path.length > 0 && included(path)),
+    );
+    for (const entry of statusEntries) {
+      if (
+        entry.status === '??' &&
+        included(entry.path) &&
+        existsSync(resolve(repositoryRoot, entry.path))
+      ) {
+        paths.add(entry.path);
+      }
+    }
+    const declaredDeletions = new Set(
+      statusEntries
+        .filter(({ status, path }) => /D/u.test(status) && included(path))
+        .map(({ path }) => path),
+    );
+    for (const path of [...paths]) {
+      const absolute = resolve(repositoryRoot, path);
+      if (!existsSync(absolute)) {
+        if (!declaredDeletions.has(path)) {
+          throw new Error(
+            `Tracked release content disappeared without a deletion record: ${path}.`,
+          );
+        }
+        paths.delete(path);
+        continue;
+      }
+      const info = lstatSync(absolute);
+      if (info.isSymbolicLink() || !info.isFile()) {
+        throw new Error(
+          `Release content must be a regular non-symlink file: ${path}.`,
+        );
+      }
+    }
+    return [...paths].sort();
+  }
+
+  // Test fixtures without a Git repository use the same bounded source roots.
+  const paths: string[] = [];
+  const visit = (relativePath: string): void => {
+    const absolute = resolve(repositoryRoot, relativePath);
+    if (!existsSync(absolute)) return;
+    const info = lstatSync(absolute);
+    if (info.isSymbolicLink()) {
+      throw new Error(
+        `Release content must not traverse a symbolic link: ${relativePath}.`,
+      );
+    }
+    if (info.isDirectory()) {
+      for (const child of readdirSync(absolute).sort()) {
+        visit(relativePath ? `${relativePath}/${child}` : child);
+      }
+      return;
+    }
+    if (!info.isFile()) {
+      throw new Error(
+        `Release content contains a special file: ${relativePath}.`,
+      );
+    }
+    if (isReleaseContentExcluded(relativePath)) {
+      return;
+    }
+    paths.push(relativePath);
+  };
+  for (const root of ['.github/workflows', 'backend', 'docs', 'ops']) {
+    visit(root);
+  }
+  return paths.sort();
+}
+
+function isReleaseContentExcluded(path: string): boolean {
+  return (
+    RELEASE_CONTENT_EXCLUSIONS.has(path) ||
+    RELEASE_CONTENT_OUTPUT_PREFIXES.some((prefix) => path.startsWith(prefix))
+  );
 }
 
 type FileIdentity = { dev: number; ino: number };
@@ -2331,26 +2844,69 @@ function sameFileIdentity(left: FileIdentity, right: FileIdentity): boolean {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
+function fileSystemErrorCode(error: unknown): string | undefined {
+  return error && typeof error === 'object'
+    ? (error as NodeJS.ErrnoException).code
+    : undefined;
+}
+
+function missingEvidenceFileBoundary(message: string): never {
+  throw new CallerControlledEvidenceFileViolation('missing', message);
+}
+
+function invalidEvidenceFileBoundary(message: string): never {
+  throw new CallerControlledEvidenceFileViolation('invalid', message);
+}
+
+function rethrowChangedEvidencePath(error: unknown, message: string): never {
+  const code = fileSystemErrorCode(error);
+  if (code === 'ELOOP') {
+    invalidEvidenceFileBoundary(`${message} Symbolic-link traversal detected.`);
+  }
+  if (code === 'ENOENT' || code === 'ENOTDIR') {
+    invalidEvidenceFileBoundary(message);
+  }
+  throw error;
+}
+
 function stableCanonicalDirectory(
   root: string,
   label: string,
 ): { canonicalRoot: string; identity: FileIdentity } {
-  if (!isAbsolute(root) || !existsSync(root)) {
-    throw new Error(`${label} must be an existing absolute directory.`);
+  if (!isAbsolute(root)) {
+    invalidEvidenceFileBoundary(`${label} must be an absolute directory.`);
   }
   const resolvedRoot = resolve(root);
-  const before = lstatSync(resolvedRoot);
-  if (before.isSymbolicLink() || !before.isDirectory()) {
-    throw new Error(`${label} must be a real directory.`);
+  let before: ReturnType<typeof lstatSync>;
+  try {
+    before = lstatSync(resolvedRoot);
+  } catch (error: unknown) {
+    if (fileSystemErrorCode(error) === 'ENOENT') {
+      missingEvidenceFileBoundary(`${label} is absent.`);
+    }
+    throw error;
   }
-  const canonicalRoot = realpathSync(resolvedRoot);
-  const after = lstatSync(canonicalRoot);
+  if (before.isSymbolicLink() || !before.isDirectory()) {
+    invalidEvidenceFileBoundary(`${label} must be a real directory.`);
+  }
+  let canonicalRoot: string;
+  try {
+    canonicalRoot = realpathSync(resolvedRoot);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(error, `${label} changed during validation.`);
+  }
+  let after: ReturnType<typeof lstatSync>;
+  try {
+    after = lstatSync(canonicalRoot);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(error, `${label} changed during validation.`);
+  }
   if (
     after.isSymbolicLink() ||
     !after.isDirectory() ||
     !sameFileIdentity(before, after)
   ) {
-    throw new Error(`${label} changed during validation.`);
+    invalidEvidenceFileBoundary(`${label} changed during validation.`);
   }
   return { canonicalRoot, identity: before };
 }
@@ -2360,13 +2916,18 @@ function assertRootIdentity(
   expected: FileIdentity,
   label: string,
 ): void {
-  const current = lstatSync(canonicalRoot);
+  let current: ReturnType<typeof lstatSync>;
+  try {
+    current = lstatSync(canonicalRoot);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(error, `${label} changed during file access.`);
+  }
   if (
     current.isSymbolicLink() ||
     !current.isDirectory() ||
     !sameFileIdentity(current, expected)
   ) {
-    throw new Error(`${label} changed during file access.`);
+    invalidEvidenceFileBoundary(`${label} changed during file access.`);
   }
 }
 
@@ -2376,12 +2937,12 @@ function strictCandidate(
   label: string,
 ): { candidate: string; pathFromRoot: string } {
   if (relativePath.includes('\0')) {
-    throw new Error(`${label} path contains a null byte.`);
+    invalidEvidenceFileBoundary(`${label} path contains a null byte.`);
   }
   const candidate = resolve(canonicalRoot, relativePath);
   const pathFromRoot = relative(canonicalRoot, candidate);
   if (!isStrictDescendant(pathFromRoot)) {
-    throw new Error(`${label} path escapes its root.`);
+    invalidEvidenceFileBoundary(`${label} path escapes its root.`);
   }
   return { candidate, pathFromRoot };
 }
@@ -2395,15 +2956,25 @@ function assertExistingPathComponents(
   let cursor = canonicalRoot;
   for (const [index, component] of components.entries()) {
     cursor = join(cursor, component);
-    if (!existsSync(cursor)) {
-      throw new Error(`${label} is absent.`);
+    let info: ReturnType<typeof lstatSync>;
+    try {
+      info = lstatSync(cursor);
+    } catch (error: unknown) {
+      if (fileSystemErrorCode(error) === 'ENOENT') {
+        missingEvidenceFileBoundary(`${label} is absent.`);
+      }
+      rethrowChangedEvidencePath(
+        error,
+        `${label} path changed during validation.`,
+      );
     }
-    const info = lstatSync(cursor);
     if (info.isSymbolicLink()) {
-      throw new Error(`${label} traverses a symbolic link.`);
+      invalidEvidenceFileBoundary(`${label} traverses a symbolic link.`);
     }
     if (index < components.length - 1 && !info.isDirectory()) {
-      throw new Error(`${label} traverses a non-directory component.`);
+      invalidEvidenceFileBoundary(
+        `${label} traverses a non-directory component.`,
+      );
     }
   }
 }
@@ -2418,41 +2989,70 @@ function assertDescriptorPathBinding(
   label: string,
 ): void {
   assertRootIdentity(canonicalRoot, rootIdentity, label);
-  const pathInfo = lstatSync(candidate);
+  let pathInfo: ReturnType<typeof lstatSync>;
+  try {
+    pathInfo = lstatSync(candidate);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(
+      error,
+      `${label} path changed type during file access.`,
+    );
+  }
   if (
     pathInfo.isSymbolicLink() ||
     (expectedKind === 'file' ? !pathInfo.isFile() : !pathInfo.isDirectory())
   ) {
-    throw new Error(`${label} path changed type during file access.`);
+    invalidEvidenceFileBoundary(
+      `${label} path changed type during file access.`,
+    );
   }
-  const canonicalCandidate = realpathSync(candidate);
+  let canonicalCandidate: string;
+  try {
+    canonicalCandidate = realpathSync(candidate);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(
+      error,
+      `${label} changed during canonicalization.`,
+    );
+  }
   const pathFromRoot = relative(canonicalRoot, canonicalCandidate);
   if (
     canonicalCandidate !== candidate ||
     (canonicalCandidate !== canonicalRoot && !isStrictDescendant(pathFromRoot))
   ) {
-    throw new Error(`${label} resolved outside its canonical root.`);
+    invalidEvidenceFileBoundary(
+      `${label} resolved outside its canonical root.`,
+    );
   }
-  const currentPath = statSync(candidate);
+  let currentPath: ReturnType<typeof statSync>;
+  try {
+    currentPath = statSync(candidate);
+  } catch (error: unknown) {
+    rethrowChangedEvidencePath(
+      error,
+      `${label} path changed after its descriptor was opened.`,
+    );
+  }
   const currentDescriptor = fstatSync(descriptor);
   if (
     !sameFileIdentity(expectedIdentity, currentDescriptor) ||
     !sameFileIdentity(expectedIdentity, currentPath)
   ) {
-    throw new Error(`${label} path changed after its descriptor was opened.`);
+    invalidEvidenceFileBoundary(
+      `${label} path changed after its descriptor was opened.`,
+    );
   }
   if (process.platform === 'linux') {
     const descriptorLink = `/proc/self/fd/${String(descriptor)}`;
-    if (!existsSync(descriptorLink)) {
-      throw new Error(`${label} descriptor path is unavailable.`);
-    }
     const descriptorTarget = realpathSync(descriptorLink);
     const descriptorFromRoot = relative(canonicalRoot, descriptorTarget);
     if (
       descriptorTarget !== canonicalRoot &&
       !isStrictDescendant(descriptorFromRoot)
     ) {
-      throw new Error(`${label} descriptor escaped its canonical root.`);
+      invalidEvidenceFileBoundary(
+        `${label} descriptor escaped its canonical root.`,
+      );
     }
   }
 }
@@ -2481,10 +3081,17 @@ export function readStableBoundedFileWithinRoot(
 
   let descriptor: number | undefined;
   try {
-    descriptor = openSync(
-      candidate,
-      fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW,
-    );
+    try {
+      descriptor = openSync(
+        candidate,
+        fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW,
+      );
+    } catch (error: unknown) {
+      rethrowChangedEvidencePath(
+        error,
+        `${label} changed before its descriptor was opened.`,
+      );
+    }
     const before = fstatSync(descriptor);
     if (
       !before.isFile() ||
@@ -2492,7 +3099,9 @@ export function readStableBoundedFileWithinRoot(
       before.size > maximumBytes ||
       before.nlink !== 1
     ) {
-      throw new Error(`${label} must be a bounded single-link regular file.`);
+      invalidEvidenceFileBoundary(
+        `${label} must be a bounded single-link regular file.`,
+      );
     }
     hooks.afterDescriptorOpen?.();
     assertDescriptorPathBinding(
@@ -2504,7 +3113,20 @@ export function readStableBoundedFileWithinRoot(
       'file',
       label,
     );
-    const bytes = readFileSync(descriptor);
+    const bounded = Buffer.allocUnsafe(before.size + 1);
+    let bytesRead = 0;
+    while (bytesRead < bounded.length) {
+      const count = readSync(
+        descriptor,
+        bounded,
+        bytesRead,
+        bounded.length - bytesRead,
+        null,
+      );
+      if (count === 0) break;
+      bytesRead += count;
+    }
+    const bytes = bounded.subarray(0, bytesRead);
     const after = fstatSync(descriptor);
     if (
       bytes.length !== before.size ||
@@ -2514,7 +3136,9 @@ export function readStableBoundedFileWithinRoot(
       after.nlink !== 1 ||
       !sameFileIdentity(before, after)
     ) {
-      throw new Error(`${label} changed while its stable descriptor was read.`);
+      invalidEvidenceFileBoundary(
+        `${label} changed while its stable descriptor was read.`,
+      );
     }
     assertDescriptorPathBinding(
       descriptor,
@@ -2528,6 +3152,26 @@ export function readStableBoundedFileWithinRoot(
     return bytes;
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
+  }
+}
+
+export function readStableBoundedExternalEvidenceFile(
+  root: string,
+  relativePath: string,
+  maximumBytes: number,
+  label: string,
+  hooks: StableFileBoundaryTestHooks = {},
+): Buffer {
+  try {
+    return readStableBoundedFileWithinRoot(
+      root,
+      relativePath,
+      maximumBytes,
+      label,
+      hooks,
+    );
+  } catch (error: unknown) {
+    rethrowStableEvidenceReadFailure(error, label);
   }
 }
 
@@ -2768,6 +3412,58 @@ export function assertReleaseContentStable(
   }
 }
 
+export function assertReleaseContentMatchesHeadForProfile(
+  profile: ExecutionProfile,
+  evidence: ReleaseContentEvidence,
+): void {
+  if (
+    profile === 'release-linux-amd64' &&
+    (evidence.releaseContentDirty || evidence.releaseContentIndexDirty)
+  ) {
+    throw new Error(
+      'The release-linux-amd64 profile requires release content from exact HEAD.',
+    );
+  }
+}
+
+export function resolveProtectedReleaseHeadExpectation(
+  profile: ExecutionProfile,
+  expectedCommit: string | undefined,
+  expectedTagRef: string | undefined,
+  releaseTagRef: string,
+): ProtectedReleaseHeadExpectation | undefined {
+  if (profile !== 'release-linux-amd64') return undefined;
+  if (
+    !expectedCommit ||
+    !/^[a-f0-9]{40}$/u.test(expectedCommit) ||
+    !expectedTagRef ||
+    expectedTagRef !== releaseTagRef ||
+    !/^refs\/tags\/v\d+\.\d+\.\d+$/u.test(releaseTagRef)
+  ) {
+    throw new Error(
+      'The release-linux-amd64 profile requires an exact protected release expectation.',
+    );
+  }
+  return { commit: expectedCommit, tagRef: expectedTagRef };
+}
+
+export function assertProtectedReleaseHeadMatches(
+  expectation: ProtectedReleaseHeadExpectation,
+  headCommit: string,
+  tagCommit: string,
+): void {
+  if (
+    !/^[a-f0-9]{40}$/u.test(headCommit) ||
+    !/^[a-f0-9]{40}$/u.test(tagCommit) ||
+    headCommit !== expectation.commit ||
+    tagCommit !== expectation.commit
+  ) {
+    throw new Error(
+      'Git HEAD and tag must match the protected release commit and tag.',
+    );
+  }
+}
+
 export function assertReleaseHeadStable(before: string, after: string): void {
   const commit = /^[a-f0-9]{40}$/u;
   if (!commit.test(before) || !commit.test(after) || before !== after) {
@@ -2779,12 +3475,30 @@ export function assertDatabaseReleaseEvidence(
   input: unknown,
   expected: DatabaseEvidenceExpectation,
 ): DatabaseReleaseEvidenceSummary {
+  try {
+    return assertDatabaseReleaseEvidenceUnchecked(input, expected);
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      Object.getPrototypeOf(error) === Error.prototype
+    ) {
+      throw new MediaEvidenceContractError(error.message);
+    }
+    throw error;
+  }
+}
+
+function assertDatabaseReleaseEvidenceUnchecked(
+  input: unknown,
+  expected: DatabaseEvidenceExpectation,
+): DatabaseReleaseEvidenceSummary {
   const validatedFiles = new Map<string, Buffer>();
   const root = record(input, 'database release evidence');
   exactKeys(
     root,
     [
       'schemaVersion',
+      ...(expected.expectedProducerExecution ? ['producerExecution'] : []),
       'runId',
       'startedAt',
       'completedAt',
@@ -2801,6 +3515,12 @@ export function assertDatabaseReleaseEvidence(
     ],
     'database release evidence',
   );
+  if (expected.expectedProducerExecution) {
+    assertMediaEvidenceProducerExecution(
+      root.producerExecution,
+      expected.expectedProducerExecution,
+    );
+  }
   const serialized = JSON.stringify(root);
   if (
     /postgres(?:ql)?:\/\//iu.test(serialized) ||
@@ -3316,11 +4036,29 @@ export function assertCapacityBackupEvidence(
   input: unknown,
   expected: CapacityBackupEvidenceExpectation,
 ): CapacityBackupEvidenceSummary {
+  try {
+    return assertCapacityBackupEvidenceUnchecked(input, expected);
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      Object.getPrototypeOf(error) === Error.prototype
+    ) {
+      throw new MediaEvidenceContractError(error.message);
+    }
+    throw error;
+  }
+}
+
+function assertCapacityBackupEvidenceUnchecked(
+  input: unknown,
+  expected: CapacityBackupEvidenceExpectation,
+): CapacityBackupEvidenceSummary {
   const root = record(input, 'capacity and backup evidence');
   exactKeys(
     root,
     [
       'schemaVersion',
+      ...(expected.expectedProducerExecution ? ['producerExecution'] : []),
       'runId',
       'measuredAt',
       'git',
@@ -3333,6 +4071,12 @@ export function assertCapacityBackupEvidence(
     ],
     'capacity and backup evidence',
   );
+  if (expected.expectedProducerExecution) {
+    assertMediaEvidenceProducerExecution(
+      root.producerExecution,
+      expected.expectedProducerExecution,
+    );
+  }
   const serialized = JSON.stringify(root);
   if (
     /database_url|postgres(?:ql)?:\/\/|password|username|\buser\b|secret|token|credential|https?:\/\//iu.test(
@@ -4025,36 +4769,19 @@ function parseOciImageDefinition(
   );
   exactKeys(
     releaseAcceptance,
-    ['required', 'model', 'verifier', 'issuer', 'approvedIdentities'],
+    ['required', 'model', 'verifier', 'producerPolicyKey'],
     `${path}.attestations.releaseAcceptance`,
   );
   if (
     releaseAcceptance.required !== true ||
     releaseAcceptance.model !== 'hsk-release-acceptance' ||
-    releaseAcceptance.verifier !== 'cosign-keyless-blob'
+    releaseAcceptance.verifier !== 'cosign-keyless-blob' ||
+    releaseAcceptance.producerPolicyKey !== 'oci-release'
   ) {
     throw new Error(
       `${path} requires a fail-closed HSK release-acceptance attestation.`,
     );
   }
-  const issuer = string(
-    releaseAcceptance.issuer,
-    `${path}.attestations.releaseAcceptance.issuer`,
-  );
-  if (issuer !== 'https://token.actions.githubusercontent.com') {
-    throw new Error(`${path} uses an unapproved exact OIDC issuer.`);
-  }
-  if (
-    !Array.isArray(releaseAcceptance.approvedIdentities) ||
-    releaseAcceptance.approvedIdentities.length !== 1 ||
-    releaseAcceptance.approvedIdentities[0] !==
-      'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0'
-  ) {
-    throw new Error(
-      `${path} contains a broad or unapproved workflow identity.`,
-    );
-  }
-  const approvedIdentity = String(releaseAcceptance.approvedIdentities[0]);
   const upstreamPublisherSignature = record(
     attestations.upstreamPublisherSignature,
     `${path}.attestations.upstreamPublisherSignature`,
@@ -4131,8 +4858,7 @@ function parseOciImageDefinition(
         required: true,
         model: 'hsk-release-acceptance',
         verifier: 'cosign-keyless-blob',
-        issuer,
-        approvedIdentities: [approvedIdentity],
+        producerPolicyKey: 'oci-release',
       },
       upstreamPublisherSignature: { status: 'absent' },
       sbom: { required: true, format: 'spdx-json', minimumPackages: 1 },

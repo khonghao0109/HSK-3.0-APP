@@ -1,9 +1,16 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, realpathSync } from 'node:fs';
+import { lstatSync, realpathSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { readStableBoundedFileWithinRoot } from './media-operations-validation.helpers';
+import type { StableFileBoundaryTestHooks } from './media-operations-validation.helpers';
+import { assertMediaEvidenceProducerExecution } from '../operations/media-evidence-producer-policy';
+import type { MediaEvidenceProducerExecutionContract } from '../operations/media-evidence-producer-policy';
+import {
+  CallerControlledEvidenceFileViolation,
+  InternalVerifierFailure,
+} from '../operations/media-release-evidence-errors';
 
 const SHA256 = /^[a-f0-9]{64}$/u;
 const OCI_DIGEST = /^sha256:[a-f0-9]{64}$/u;
@@ -14,13 +21,19 @@ const SAFE_NAME = /^[a-z][a-z0-9-]{0,63}$/u;
 const SPDX_ID = /^[A-Za-z0-9][A-Za-z0-9.+-]{0,127}$/u;
 const TRUSTED_ISSUER = 'https://token.actions.githubusercontent.com';
 const TRUSTED_IDENTITY =
-  /^https:\/\/github\.com\/khonghao0109\/HSK-3\.0-APP\/\.github\/workflows\/media-release-evidence\.yml@refs\/tags\/v\d+\.\d+\.\d+$/u;
+  /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/\.github\/workflows\/[A-Za-z0-9_.-]+\.ya?ml@refs\/tags\/v\d+\.\d+\.\d+$/u;
+const FINAL_VERIFIER_IDENTITY =
+  'https://github.com/khonghao0109/HSK-3.0-APP/.github/workflows/media-release-evidence.yml@refs/tags/v3.0.0';
 const MAX_MANIFEST_BYTES = 1024 * 1024;
 const MAX_REPORT_BYTES = 16 * 1024 * 1024;
 const MAX_ARRAY_ENTRIES = 100_000;
 const MAX_WAIVERS = 1_000;
+const MAX_WAIVER_APPROVALS = MAX_WAIVERS * 6;
 const GRYPE_DB_MAX_AGE_MS = 120 * 60 * 60 * 1000;
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
+const RELEASE_EVIDENCE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
+const CRITICAL_WAIVER_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const HIGH_WAIVER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const CURRENT_MEDIA_OCI_EVIDENCE_TOOL_PINS = {
   syft: {
@@ -164,6 +177,24 @@ export interface TrustVerifiedMediaOciReleaseManifest {
   identity: string;
 }
 
+export interface TrustVerifiedMediaOciWaiverApproval {
+  /** Exact approval bytes already verified by the independent trust layer. */
+  bytes: Uint8Array;
+  /** JSON value parsed from the same verified bytes by the caller. */
+  value: unknown;
+  /** Certificate facts returned by the trust verifier, never signed booleans. */
+  issuer: string;
+  identity: string;
+}
+
+export interface MediaOciWaiverApprovalExpectation {
+  /** Exact accepted risk-approval producer facts sourced from producer policy. */
+  trustedIssuer: string;
+  trustedIdentity: string;
+  expectedProducerExecution: MediaEvidenceProducerExecutionContract;
+  verified: TrustVerifiedMediaOciWaiverApproval;
+}
+
 export interface MediaOciReleaseEvidenceExpectation {
   evidenceRoot: string;
   commit: string;
@@ -172,8 +203,11 @@ export interface MediaOciReleaseEvidenceExpectation {
   trustedIssuer: string;
   trustedIdentity: string;
   images: MediaOciImageExpectations;
+  expectedProducerExecution: MediaEvidenceProducerExecutionContract;
   now: Date | number;
+  waiverApproval?: MediaOciWaiverApprovalExpectation;
   retainValidatedReport?: (relativePath: string, bytes: Buffer) => void;
+  stableFileBoundaryTestHooks?: StableFileBoundaryTestHooks;
 }
 
 export interface MediaOciReleaseImageEvidenceSummary {
@@ -208,17 +242,67 @@ interface ToolPin {
 }
 
 interface VulnerabilityWaiver {
-  finding: { id: string; package: string; version: string };
+  finding: {
+    id: string;
+    package: string;
+    version: string;
+    artifactType: string;
+    severity: 'High' | 'Critical';
+  };
+  issuedAt: string;
+  approver: string;
   owner: string;
+  ticketId: string;
   reason: string;
   expiresAt: string;
+  binding: WaiverBinding;
 }
 
 interface LicenseWaiver {
   finding: { spdxId: string; licenseId: string };
+  issuedAt: string;
+  approver: string;
   owner: string;
+  ticketId: string;
   reason: string;
   expiresAt: string;
+  binding: WaiverBinding;
+}
+
+interface WaiverBinding {
+  releaseTag: string;
+  gitCommit: string;
+  gitTreeSha: string;
+  releaseContentDigest: string;
+  imageDigest: string;
+  reportSha256: string;
+}
+
+interface WaiverReleaseContext {
+  binding: {
+    releaseTag: string;
+    commit: string;
+    treeSha: string;
+    releaseContentDigest: string;
+  };
+  evidenceExpiresAtMs: number;
+  approvals: WaiverApprovalAuthorizer;
+}
+
+type WaiverApprovalEntry =
+  | { waiverType: 'vulnerability'; waiver: VulnerabilityWaiver }
+  | { waiverType: 'license'; waiver: LicenseWaiver };
+
+interface ParsedWaiverApproval {
+  producer: { issuer: string; identity: string };
+  binding: {
+    releaseTag: string;
+    gitCommit: string;
+    gitTreeSha: string;
+    releaseContentDigest: string;
+  };
+  freshness: { observedAt: string; expiresAt: string };
+  approvals: WaiverApprovalEntry[];
 }
 
 interface ParsedImageEvidence {
@@ -272,6 +356,7 @@ interface ParsedManifest {
     releaseContentDigest: string;
     releaseTag: string;
   };
+  freshness: { observedAt: string; expiresAt: string };
   images: ParsedImageEvidence[];
 }
 
@@ -280,20 +365,54 @@ interface LoadedJson {
   value: unknown;
 }
 
+function fileSystemErrorCode(error: unknown): string | undefined {
+  return error && typeof error === 'object'
+    ? (error as NodeJS.ErrnoException).code
+    : undefined;
+}
+
 class EvidenceReader {
   private readonly cache = new Map<string, LoadedJson>();
   readonly root: string;
 
-  constructor(root: string) {
-    if (!isAbsolute(root) || !existsSync(root)) {
+  constructor(
+    root: string,
+    private readonly stableFileBoundaryTestHooks?: StableFileBoundaryTestHooks,
+  ) {
+    if (!isAbsolute(root)) {
       unavailable('OCI release evidence root is absent or not absolute.');
     }
     const resolvedRoot = resolve(root);
-    const rootInfo = lstatSync(resolvedRoot);
+    let rootInfo: ReturnType<typeof lstatSync>;
+    try {
+      rootInfo = lstatSync(resolvedRoot);
+    } catch (error: unknown) {
+      const code = fileSystemErrorCode(error);
+      if (code === 'ENOENT') {
+        unavailable('OCI release evidence root is absent or not absolute.');
+      }
+      if (code === 'ENOTDIR' || code === 'ELOOP') {
+        fail('OCI release evidence root must be a real directory.');
+      }
+      throw new InternalVerifierFailure(
+        'OCI release evidence root verifier failed internally.',
+      );
+    }
     if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) {
       fail('OCI release evidence root must be a real directory.');
     }
-    const canonicalRoot = realpathSync(resolvedRoot);
+    let canonicalRoot: string;
+    try {
+      canonicalRoot = realpathSync(resolvedRoot);
+    } catch (error: unknown) {
+      const code = fileSystemErrorCode(error);
+      if (code === 'ENOENT' || code === 'ENOTDIR' || code === 'ELOOP') {
+        fail('OCI release evidence root changed during validation.');
+      }
+      throw new InternalVerifierFailure(
+        'OCI release evidence root verifier failed internally.',
+      );
+    }
     if (canonicalRoot !== resolvedRoot) {
       fail('OCI release evidence root must not use a symlink alias.');
     }
@@ -314,9 +433,6 @@ class EvidenceReader {
     if (!strictDescendant(this.root, candidate)) {
       fail(`${label}.path escapes the evidence root.`);
     }
-    if (!existsSync(candidate)) {
-      unavailable(`${label} is absent from the release evidence.`);
-    }
     let bytes: Buffer;
     try {
       bytes = readStableBoundedFileWithinRoot(
@@ -324,16 +440,22 @@ class EvidenceReader {
         relativePath,
         MAX_REPORT_BYTES,
         label,
+        this.stableFileBoundaryTestHooks,
       );
     } catch (error: unknown) {
       if (
-        error instanceof Error &&
-        (error.message === `${label} is absent.` ||
-          (error as NodeJS.ErrnoException).code === 'ENOENT')
+        error instanceof CallerControlledEvidenceFileViolation &&
+        error.kind === 'missing'
       ) {
         unavailable(`${label} is absent from the release evidence.`);
       }
-      fail(error instanceof Error ? error.message : `${label} is unsafe.`);
+      if (error instanceof CallerControlledEvidenceFileViolation) {
+        fail(error.message);
+      }
+      if (error instanceof InternalVerifierFailure) throw error;
+      throw new InternalVerifierFailure(
+        `${label} stable file verifier failed internally.`,
+      );
     }
     if (bytes.length === 0) {
       fail(`${label} must be non-empty.`);
@@ -383,6 +505,14 @@ export function assertMediaOciReleaseEvidence(
     fail('Trust verifier returned an unexpected issuer or identity.');
   }
   const manifest = parseMediaOciReleaseManifest(verified.value);
+  try {
+    assertMediaEvidenceProducerExecution(
+      record(verified.value, 'manifest').producerExecution,
+      expectation.expectedProducerExecution,
+    );
+  } catch {
+    fail('Signed OCI producer execution contract does not match policy.');
+  }
   if (
     manifest.acceptance.issuer !== verified.issuer ||
     manifest.acceptance.identity !== verified.identity
@@ -400,7 +530,21 @@ export function assertMediaOciReleaseEvidence(
   if (manifest.binding.releaseTag !== releaseTag) {
     fail('Signed OCI release evidence is bound to another release tag.');
   }
-  const reader = new EvidenceReader(expectation.evidenceRoot);
+  const evidenceExpiresAtMs = assertReleaseEvidenceFreshness(
+    manifest.freshness,
+    nowMs,
+  );
+  const waiverApprovals = resolveWaiverApprovalAuthorizer(
+    manifest,
+    verified,
+    expectation,
+    nowMs,
+    evidenceExpiresAtMs,
+  );
+  const reader = new EvidenceReader(
+    expectation.evidenceRoot,
+    expectation.stableFileBoundaryTestHooks,
+  );
   const byName = new Map(manifest.images.map((image) => [image.name, image]));
   if (byName.size !== 3) {
     fail('Signed OCI release evidence must define each image exactly once.');
@@ -424,9 +568,14 @@ export function assertMediaOciReleaseEvidence(
       if (!image) fail(`Signed OCI release evidence is missing ${name}.`);
       const expected = expectation.images[name];
       assertImageExpectation(image, expected);
-      return validateImageReports(image, expected, reader, nowMs);
+      return validateImageReports(image, expected, reader, nowMs, {
+        binding: manifest.binding,
+        evidenceExpiresAtMs,
+        approvals: waiverApprovals,
+      });
     },
   );
+  waiverApprovals.assertFullyConsumed();
   if (expectation.retainValidatedReport) {
     for (const report of reader.validatedFiles()) {
       expectation.retainValidatedReport(report.relativePath, report.bytes);
@@ -443,7 +592,15 @@ export function parseMediaOciReleaseManifest(value: unknown): ParsedManifest {
   const root = record(value, 'manifest');
   exactKeys(
     root,
-    ['schemaVersion', 'kind', 'acceptance', 'binding', 'images'],
+    [
+      'schemaVersion',
+      'kind',
+      'producerExecution',
+      'acceptance',
+      'binding',
+      'freshness',
+      'images',
+    ],
     'manifest',
   );
   if (
@@ -476,7 +633,11 @@ export function parseMediaOciReleaseManifest(value: unknown): ParsedManifest {
     acceptance.identity,
     'manifest.acceptance.identity',
   );
-  if (issuer !== TRUSTED_ISSUER || !TRUSTED_IDENTITY.test(identity)) {
+  if (
+    issuer !== TRUSTED_ISSUER ||
+    !TRUSTED_IDENTITY.test(identity) ||
+    identity === FINAL_VERIFIER_IDENTITY
+  ) {
     fail('OCI release evidence contains an unsupported signing identity.');
   }
   const binding = record(root.binding, 'manifest.binding');
@@ -506,6 +667,8 @@ export function parseMediaOciReleaseManifest(value: unknown): ParsedManifest {
   if (!Array.isArray(root.images) || root.images.length !== 3) {
     fail('OCI release evidence must contain exactly three images.');
   }
+  const freshness = record(root.freshness, 'manifest.freshness');
+  exactKeys(freshness, ['observedAt', 'expiresAt'], 'manifest.freshness');
   return {
     schemaVersion: 1,
     kind: 'hsk-media-oci-release-acceptance',
@@ -517,6 +680,16 @@ export function parseMediaOciReleaseManifest(value: unknown): ParsedManifest {
       identity,
     },
     binding: { commit, treeSha, releaseContentDigest, releaseTag },
+    freshness: {
+      observedAt: exactString(
+        freshness.observedAt,
+        'manifest.freshness.observedAt',
+      ),
+      expiresAt: exactString(
+        freshness.expiresAt,
+        'manifest.freshness.expiresAt',
+      ),
+    },
     images: root.images.map((image, index) => parseImage(image, index)),
   };
 }
@@ -738,9 +911,26 @@ function parseVulnerabilityWaivers(
   return waivers.map((candidate, index) => {
     const waiverPath = `${path}[${index}]`;
     const waiver = record(candidate, waiverPath);
-    exactKeys(waiver, ['finding', 'owner', 'reason', 'expiresAt'], waiverPath);
+    exactKeys(
+      waiver,
+      [
+        'finding',
+        'issuedAt',
+        'approver',
+        'owner',
+        'ticketId',
+        'reason',
+        'expiresAt',
+        'binding',
+      ],
+      waiverPath,
+    );
     const finding = record(waiver.finding, `${waiverPath}.finding`);
-    exactKeys(finding, ['id', 'package', 'version'], `${waiverPath}.finding`);
+    exactKeys(
+      finding,
+      ['id', 'package', 'version', 'artifactType', 'severity'],
+      `${waiverPath}.finding`,
+    );
     const id = boundedString(finding.id, `${waiverPath}.finding.id`, 200);
     const packageName = boundedString(
       finding.package,
@@ -752,8 +942,20 @@ function parseVulnerabilityWaivers(
       `${waiverPath}.finding.version`,
       200,
     );
+    const artifactType = boundedString(
+      finding.artifactType,
+      `${waiverPath}.finding.artifactType`,
+      100,
+    );
+    const severity = exactString(
+      finding.severity,
+      `${waiverPath}.finding.severity`,
+    );
+    if (severity !== 'High' && severity !== 'Critical') {
+      fail(`${waiverPath}.finding.severity must be High or Critical.`);
+    }
     assertExactWaiverFinding(
-      [id, packageName, version],
+      [id, packageName, version, artifactType, severity],
       `${waiverPath}.finding`,
     );
     return {
@@ -761,10 +963,16 @@ function parseVulnerabilityWaivers(
         id,
         package: packageName,
         version,
+        artifactType,
+        severity,
       },
+      issuedAt: exactString(waiver.issuedAt, `${waiverPath}.issuedAt`),
+      approver: boundedString(waiver.approver, `${waiverPath}.approver`, 200),
       owner: boundedString(waiver.owner, `${waiverPath}.owner`, 200),
+      ticketId: boundedString(waiver.ticketId, `${waiverPath}.ticketId`, 200),
       reason: boundedString(waiver.reason, `${waiverPath}.reason`, 2_000),
       expiresAt: exactString(waiver.expiresAt, `${waiverPath}.expiresAt`),
+      binding: parseWaiverBinding(waiver.binding, `${waiverPath}.binding`),
     };
   });
 }
@@ -774,7 +982,20 @@ function parseLicenseWaivers(value: unknown, path: string): LicenseWaiver[] {
   return waivers.map((candidate, index) => {
     const waiverPath = `${path}[${index}]`;
     const waiver = record(candidate, waiverPath);
-    exactKeys(waiver, ['finding', 'owner', 'reason', 'expiresAt'], waiverPath);
+    exactKeys(
+      waiver,
+      [
+        'finding',
+        'issuedAt',
+        'approver',
+        'owner',
+        'ticketId',
+        'reason',
+        'expiresAt',
+        'binding',
+      ],
+      waiverPath,
+    );
     const finding = record(waiver.finding, `${waiverPath}.finding`);
     exactKeys(finding, ['spdxId', 'licenseId'], `${waiverPath}.finding`);
     const spdxId = boundedString(
@@ -793,11 +1014,53 @@ function parseLicenseWaivers(value: unknown, path: string): LicenseWaiver[] {
         spdxId,
         licenseId,
       },
+      issuedAt: exactString(waiver.issuedAt, `${waiverPath}.issuedAt`),
+      approver: boundedString(waiver.approver, `${waiverPath}.approver`, 200),
       owner: boundedString(waiver.owner, `${waiverPath}.owner`, 200),
+      ticketId: boundedString(waiver.ticketId, `${waiverPath}.ticketId`, 200),
       reason: boundedString(waiver.reason, `${waiverPath}.reason`, 2_000),
       expiresAt: exactString(waiver.expiresAt, `${waiverPath}.expiresAt`),
+      binding: parseWaiverBinding(waiver.binding, `${waiverPath}.binding`),
     };
   });
+}
+
+function parseWaiverBinding(value: unknown, path: string): WaiverBinding {
+  const binding = record(value, path);
+  exactKeys(
+    binding,
+    [
+      'releaseTag',
+      'gitCommit',
+      'gitTreeSha',
+      'releaseContentDigest',
+      'imageDigest',
+      'reportSha256',
+    ],
+    path,
+  );
+  const parsed = {
+    releaseTag: exactString(binding.releaseTag, `${path}.releaseTag`),
+    gitCommit: exactString(binding.gitCommit, `${path}.gitCommit`),
+    gitTreeSha: exactString(binding.gitTreeSha, `${path}.gitTreeSha`),
+    releaseContentDigest: exactString(
+      binding.releaseContentDigest,
+      `${path}.releaseContentDigest`,
+    ),
+    imageDigest: exactString(binding.imageDigest, `${path}.imageDigest`),
+    reportSha256: exactString(binding.reportSha256, `${path}.reportSha256`),
+  };
+  if (
+    !RELEASE_TAG.test(parsed.releaseTag) ||
+    !GIT_SHA.test(parsed.gitCommit) ||
+    !GIT_SHA.test(parsed.gitTreeSha) ||
+    !SHA256.test(parsed.releaseContentDigest) ||
+    !OCI_DIGEST.test(parsed.imageDigest) ||
+    !SHA256.test(parsed.reportSha256)
+  ) {
+    fail(`${path} is malformed.`);
+  }
+  return parsed;
 }
 
 function assertImageExpectation(
@@ -835,6 +1098,7 @@ function validateImageReports(
   expected: MediaOciImageExpectation,
   reader: EvidenceReader,
   nowMs: number,
+  releaseContext: WaiverReleaseContext,
 ): MediaOciReleaseImageEvidenceSummary {
   if (
     image.reports.license.policy.sha256 !==
@@ -859,6 +1123,7 @@ function validateImageReports(
     expected,
     vulnerabilityPolicy,
     nowMs,
+    releaseContext,
   );
   const licensePolicy = reader.read(
     image.reports.license.policy,
@@ -880,6 +1145,7 @@ function validateImageReports(
     parsedLicensePolicy,
     spdxPackages,
     nowMs,
+    releaseContext,
   );
   return {
     name: image.name,
@@ -953,6 +1219,7 @@ function validateVulnerabilityReport(
   expected: MediaOciImageExpectation,
   policy: LoadedJson,
   nowMs: number,
+  releaseContext: WaiverReleaseContext,
 ): { count: number; waived: number } {
   const path = `${image.name} vulnerability report`;
   const report = record(value, path);
@@ -1019,7 +1286,21 @@ function validateVulnerabilityReport(
   );
   const waivers = new Map<string, VulnerabilityWaiver>();
   for (const waiver of image.waivers.vulnerabilities) {
-    assertActiveWaiver(waiver, nowMs, `${image.name} vulnerability waiver`);
+    releaseContext.approvals.authorize(
+      { waiverType: 'vulnerability', waiver },
+      `${image.name} vulnerability waiver`,
+    );
+    assertActiveWaiver(
+      waiver,
+      nowMs,
+      waiver.finding.severity === 'Critical'
+        ? CRITICAL_WAIVER_MAX_AGE_MS
+        : HIGH_WAIVER_MAX_AGE_MS,
+      `${image.name} vulnerability waiver`,
+      releaseContext,
+      image.platform.digest,
+      image.reports.vulnerability.sha256,
+    );
     const key = vulnerabilityFindingKey(waiver.finding);
     if (waivers.has(key))
       fail(`${image.name} has duplicate vulnerability waivers.`);
@@ -1050,11 +1331,17 @@ function validateVulnerabilityReport(
         `${matchPath}.artifact.version`,
         200,
       ),
+      artifactType: boundedString(
+        artifact.type,
+        `${matchPath}.artifact.type`,
+        100,
+      ),
+      severity,
     };
-    boundedString(artifact.type, `${matchPath}.artifact.type`, 100);
     if (severity === 'High' || severity === 'Critical') {
       const key = vulnerabilityFindingKey(finding);
-      if (!waivers.has(key)) {
+      const waiver = waivers.get(key);
+      if (!waiver) {
         fail(`${image.name} has an unwaived ${severity} vulnerability: ${id}.`);
       }
       used.add(key);
@@ -1126,6 +1413,7 @@ function validateLicenseReport(
   policy: ParsedLicensePolicy,
   spdxPackages: Map<string, { name: string; version: string }>,
   nowMs: number,
+  releaseContext: WaiverReleaseContext,
 ): { packageCount: number; waived: number } {
   const path = `${image.name} license report`;
   const report = record(value, path);
@@ -1152,7 +1440,19 @@ function validateLicenseReport(
   if (packages.length === 0) fail(`${path}.packages must not be empty.`);
   const waivers = new Map<string, LicenseWaiver>();
   for (const waiver of image.waivers.licenses) {
-    assertActiveWaiver(waiver, nowMs, `${image.name} license waiver`);
+    releaseContext.approvals.authorize(
+      { waiverType: 'license', waiver },
+      `${image.name} license waiver`,
+    );
+    assertActiveWaiver(
+      waiver,
+      nowMs,
+      HIGH_WAIVER_MAX_AGE_MS,
+      `${image.name} license waiver`,
+      releaseContext,
+      image.platform.digest,
+      image.reports.license.sha256,
+    );
     const key = licenseFindingKey(waiver.finding);
     if (waivers.has(key)) fail(`${image.name} has duplicate license waivers.`);
     waivers.set(key, waiver);
@@ -1239,16 +1539,153 @@ function assertToolExecution(
   }
 }
 
+class WaiverApprovalAuthorizer {
+  private readonly unused = new Set<string>();
+
+  constructor(approvals: readonly WaiverApprovalEntry[]) {
+    for (const approval of approvals) {
+      const key = waiverApprovalKey(approval);
+      if (this.unused.has(key)) {
+        fail('Risk approval evidence contains a duplicate waiver approval.');
+      }
+      this.unused.add(key);
+    }
+  }
+
+  authorize(waiver: WaiverApprovalEntry, path: string): void {
+    if (!this.unused.delete(waiverApprovalKey(waiver))) {
+      fail(`${path} has no exact independent risk approval.`);
+    }
+  }
+
+  assertFullyConsumed(): void {
+    if (this.unused.size > 0) {
+      fail('Risk approval evidence contains unused waiver approvals.');
+    }
+  }
+}
+
+function waiverApprovalKey(entry: WaiverApprovalEntry): string {
+  const finding =
+    entry.waiverType === 'vulnerability'
+      ? [
+          entry.waiver.finding.id,
+          entry.waiver.finding.package,
+          entry.waiver.finding.version,
+          entry.waiver.finding.artifactType,
+          entry.waiver.finding.severity,
+        ]
+      : [entry.waiver.finding.spdxId, entry.waiver.finding.licenseId];
+  const { waiver } = entry;
+  return JSON.stringify([
+    entry.waiverType,
+    ...finding,
+    waiver.issuedAt,
+    waiver.expiresAt,
+    waiver.approver,
+    waiver.owner,
+    waiver.ticketId,
+    waiver.reason,
+    waiver.binding.releaseTag,
+    waiver.binding.gitCommit,
+    waiver.binding.gitTreeSha,
+    waiver.binding.releaseContentDigest,
+    waiver.binding.imageDigest,
+    waiver.binding.reportSha256,
+  ]);
+}
+
 function assertActiveWaiver(
-  waiver: { owner: string; reason: string; expiresAt: string },
+  waiver: {
+    issuedAt: string;
+    approver: string;
+    owner: string;
+    ticketId: string;
+    reason: string;
+    expiresAt: string;
+    binding: WaiverBinding;
+  },
   nowMs: number,
+  maximumTtlMs: number,
+  path: string,
+  releaseContext: WaiverReleaseContext,
+  imageDigest: string,
+  reportSha256: string,
+): void {
+  if (
+    !SAFE_NAME.test(waiver.owner) ||
+    !SAFE_NAME.test(waiver.approver) ||
+    !/^[A-Z][A-Z0-9-]{1,63}-[0-9]{1,12}$/u.test(waiver.ticketId) ||
+    waiver.reason.trim().length === 0 ||
+    [waiver.owner, waiver.approver, waiver.ticketId].some((value) =>
+      value.includes('*'),
+    )
+  ) {
+    fail(
+      `${path} must have an exact owner, approver, ticket and non-empty reason.`,
+    );
+  }
+  const issued = exactTimestamp(waiver.issuedAt, `${path}.issuedAt`);
+  const expiry = exactTimestamp(waiver.expiresAt, `${path}.expiresAt`);
+  if (
+    issued > nowMs + CLOCK_SKEW_MS ||
+    expiry <= nowMs ||
+    expiry <= issued ||
+    expiry - issued > maximumTtlMs ||
+    expiry > releaseContext.evidenceExpiresAtMs
+  ) {
+    fail(`${path} is expired or exceeds its bounded evidence/TTL window.`);
+  }
+  assertWaiverBinding(
+    waiver.binding,
+    releaseContext.binding,
+    imageDigest,
+    reportSha256,
+    path,
+  );
+}
+
+function assertWaiverBinding(
+  actual: WaiverBinding,
+  release: WaiverReleaseContext['binding'],
+  imageDigest: string,
+  reportSha256: string,
   path: string,
 ): void {
-  if (waiver.owner.includes('*') || waiver.reason.trim().length === 0) {
-    fail(`${path} must have an exact owner and non-empty reason.`);
+  if (
+    actual.releaseTag !== release.releaseTag ||
+    actual.gitCommit !== release.commit ||
+    actual.gitTreeSha !== release.treeSha ||
+    actual.releaseContentDigest !== release.releaseContentDigest ||
+    actual.imageDigest !== imageDigest ||
+    actual.reportSha256 !== reportSha256
+  ) {
+    fail(`${path} is bound to another release, artifact, or report.`);
   }
-  const expiry = exactTimestamp(waiver.expiresAt, `${path}.expiresAt`);
-  if (expiry <= nowMs) fail(`${path} is expired.`);
+}
+
+function assertReleaseEvidenceFreshness(
+  freshness: { observedAt: string; expiresAt: string },
+  nowMs: number,
+): number {
+  const observed = exactTimestamp(
+    freshness.observedAt,
+    'manifest.freshness.observedAt',
+  );
+  const expires = exactTimestamp(
+    freshness.expiresAt,
+    'manifest.freshness.expiresAt',
+  );
+  if (
+    observed > nowMs + CLOCK_SKEW_MS ||
+    expires <= nowMs ||
+    expires <= observed ||
+    expires - observed > RELEASE_EVIDENCE_MAX_AGE_MS ||
+    nowMs - observed > RELEASE_EVIDENCE_MAX_AGE_MS
+  ) {
+    fail('OCI release evidence is stale or has invalid freshness.');
+  }
+  return expires;
 }
 
 function assertExactWaiverFinding(
@@ -1260,9 +1697,302 @@ function assertExactWaiverFinding(
   }
 }
 
+function resolveWaiverApprovalAuthorizer(
+  manifest: ParsedManifest,
+  verifiedManifest: TrustVerifiedMediaOciReleaseManifest,
+  expectation: MediaOciReleaseEvidenceExpectation,
+  nowMs: number,
+  evidenceExpiresAtMs: number,
+): WaiverApprovalAuthorizer {
+  const waiverCount = manifest.images.reduce(
+    (total, image) =>
+      total +
+      image.waivers.vulnerabilities.length +
+      image.waivers.licenses.length,
+    0,
+  );
+  const approvalExpectation = expectation.waiverApproval;
+  if (!approvalExpectation) {
+    if (waiverCount > 0) {
+      fail(
+        'OCI waivers require separate trust-verified risk approval evidence.',
+      );
+    }
+    return new WaiverApprovalAuthorizer([]);
+  }
+
+  const { trustedIssuer, trustedIdentity, verified } = approvalExpectation;
+  if (
+    approvalExpectation.expectedProducerExecution.producerPolicyKey !==
+      'oci-risk-approval' ||
+    approvalExpectation.expectedProducerExecution.freshnessSeconds !==
+      RELEASE_EVIDENCE_MAX_AGE_MS / 1000
+  ) {
+    internal(
+      'Risk approval expectation must use the exact five-day producer policy.',
+    );
+  }
+  if (
+    trustedIssuer !== TRUSTED_ISSUER ||
+    !TRUSTED_IDENTITY.test(trustedIdentity) ||
+    trustedIdentity === FINAL_VERIFIER_IDENTITY
+  ) {
+    fail('Risk approval producer expectation is broad or unsupported.');
+  }
+  if (
+    trustedIdentity === expectation.trustedIdentity ||
+    trustedIdentity === verifiedManifest.identity ||
+    verified.identity === verifiedManifest.identity
+  ) {
+    fail('Risk approval must come from an independent producer.');
+  }
+  const parsedBytes = parseVerifiedWaiverApprovalBytes(verified.bytes);
+  if (!isDeepStrictEqual(parsedBytes, verified.value)) {
+    fail('Trust-verified risk approval bytes and parsed value do not match.');
+  }
+  if (
+    verified.issuer !== trustedIssuer ||
+    verified.identity !== trustedIdentity
+  ) {
+    fail(
+      'Risk approval trust verifier returned an unexpected issuer or identity.',
+    );
+  }
+  try {
+    assertMediaEvidenceProducerExecution(
+      record(verified.value, 'riskApproval').producerExecution,
+      approvalExpectation.expectedProducerExecution,
+    );
+  } catch {
+    fail(
+      'Signed risk approval producer execution contract does not match policy.',
+    );
+  }
+
+  const approval = parseMediaOciWaiverApproval(verified.value);
+  if (
+    approval.producer.issuer !== verified.issuer ||
+    approval.producer.identity !== verified.identity
+  ) {
+    fail('Signed risk approval producer does not match trust verifier facts.');
+  }
+  if (
+    tagFromIdentity(trustedIdentity) !== manifest.binding.releaseTag ||
+    approval.binding.releaseTag !== manifest.binding.releaseTag ||
+    approval.binding.gitCommit !== manifest.binding.commit ||
+    approval.binding.gitTreeSha !== manifest.binding.treeSha ||
+    approval.binding.releaseContentDigest !==
+      manifest.binding.releaseContentDigest
+  ) {
+    fail('Risk approval evidence is bound to another release.');
+  }
+  const approvalWindow = assertRiskApprovalFreshness(
+    approval.freshness,
+    nowMs,
+    evidenceExpiresAtMs,
+  );
+  for (const entry of approval.approvals) {
+    const issuedAtMs = exactTimestamp(
+      entry.waiver.issuedAt,
+      'riskApproval.approvals[].issuedAt',
+    );
+    const expiresAtMs = exactTimestamp(
+      entry.waiver.expiresAt,
+      'riskApproval.approvals[].expiresAt',
+    );
+    if (
+      issuedAtMs > approvalWindow.observedAtMs + CLOCK_SKEW_MS ||
+      expiresAtMs > approvalWindow.expiresAtMs
+    ) {
+      fail(
+        'Risk approval entry falls outside its signed approval freshness window.',
+      );
+    }
+  }
+  return new WaiverApprovalAuthorizer(approval.approvals);
+}
+
+function assertRiskApprovalFreshness(
+  freshness: ParsedWaiverApproval['freshness'],
+  nowMs: number,
+  evidenceExpiresAtMs: number,
+): { observedAtMs: number; expiresAtMs: number } {
+  const observedAtMs = exactTimestamp(
+    freshness.observedAt,
+    'riskApproval.freshness.observedAt',
+  );
+  const expiresAtMs = exactTimestamp(
+    freshness.expiresAt,
+    'riskApproval.freshness.expiresAt',
+  );
+  if (
+    observedAtMs > nowMs + CLOCK_SKEW_MS ||
+    expiresAtMs <= nowMs ||
+    expiresAtMs <= observedAtMs ||
+    expiresAtMs - observedAtMs > RELEASE_EVIDENCE_MAX_AGE_MS ||
+    nowMs - observedAtMs > RELEASE_EVIDENCE_MAX_AGE_MS ||
+    expiresAtMs > evidenceExpiresAtMs
+  ) {
+    fail(
+      'Risk approval evidence is stale or exceeds its five-day/OCI freshness window.',
+    );
+  }
+  return { observedAtMs, expiresAtMs };
+}
+
+function parseVerifiedWaiverApprovalBytes(bytes: Uint8Array): unknown {
+  if (!(bytes instanceof Uint8Array) || bytes.byteLength === 0) {
+    unavailable('Trust-verified risk approval evidence is absent.');
+  }
+  if (bytes.byteLength > MAX_MANIFEST_BYTES) {
+    fail('Trust-verified risk approval evidence exceeds 1 MiB.');
+  }
+  try {
+    return JSON.parse(Buffer.from(bytes).toString('utf8')) as unknown;
+  } catch {
+    fail('Trust-verified risk approval evidence is not valid JSON.');
+  }
+}
+
+function parseMediaOciWaiverApproval(value: unknown): ParsedWaiverApproval {
+  const root = record(value, 'riskApproval');
+  exactKeys(
+    root,
+    [
+      'schemaVersion',
+      'kind',
+      'producerExecution',
+      'producer',
+      'binding',
+      'freshness',
+      'approvals',
+    ],
+    'riskApproval',
+  );
+  if (
+    root.schemaVersion !== 1 ||
+    root.kind !== 'hsk-media-oci-waiver-approvals'
+  ) {
+    fail('Risk approval evidence schema/kind is unsupported.');
+  }
+  const producer = record(root.producer, 'riskApproval.producer');
+  exactKeys(producer, ['issuer', 'identity'], 'riskApproval.producer');
+  const binding = parseRiskApprovalReleaseBinding(root.binding);
+  const freshnessValue = record(root.freshness, 'riskApproval.freshness');
+  exactKeys(
+    freshnessValue,
+    ['observedAt', 'expiresAt'],
+    'riskApproval.freshness',
+  );
+  const freshness = {
+    observedAt: exactString(
+      freshnessValue.observedAt,
+      'riskApproval.freshness.observedAt',
+    ),
+    expiresAt: exactString(
+      freshnessValue.expiresAt,
+      'riskApproval.freshness.expiresAt',
+    ),
+  };
+  const approvals = boundedArray(
+    root.approvals,
+    'riskApproval.approvals',
+    MAX_WAIVER_APPROVALS,
+  ).map((candidate, index) => parseWaiverApprovalEntry(candidate, index));
+  return {
+    producer: {
+      issuer: exactString(producer.issuer, 'riskApproval.producer.issuer'),
+      identity: exactString(
+        producer.identity,
+        'riskApproval.producer.identity',
+      ),
+    },
+    binding,
+    freshness,
+    approvals,
+  };
+}
+
+function parseRiskApprovalReleaseBinding(
+  value: unknown,
+): ParsedWaiverApproval['binding'] {
+  const path = 'riskApproval.binding';
+  const binding = record(value, path);
+  exactKeys(
+    binding,
+    ['releaseTag', 'gitCommit', 'gitTreeSha', 'releaseContentDigest'],
+    path,
+  );
+  const parsed = {
+    releaseTag: exactString(binding.releaseTag, `${path}.releaseTag`),
+    gitCommit: exactString(binding.gitCommit, `${path}.gitCommit`),
+    gitTreeSha: exactString(binding.gitTreeSha, `${path}.gitTreeSha`),
+    releaseContentDigest: exactString(
+      binding.releaseContentDigest,
+      `${path}.releaseContentDigest`,
+    ),
+  };
+  if (
+    !RELEASE_TAG.test(parsed.releaseTag) ||
+    !GIT_SHA.test(parsed.gitCommit) ||
+    !GIT_SHA.test(parsed.gitTreeSha) ||
+    !SHA256.test(parsed.releaseContentDigest)
+  ) {
+    fail(`${path} is malformed.`);
+  }
+  return parsed;
+}
+
+function parseWaiverApprovalEntry(
+  value: unknown,
+  index: number,
+): WaiverApprovalEntry {
+  const path = `riskApproval.approvals[${String(index)}]`;
+  const entry = record(value, path);
+  exactKeys(
+    entry,
+    [
+      'waiverType',
+      'finding',
+      'issuedAt',
+      'approver',
+      'owner',
+      'ticketId',
+      'reason',
+      'expiresAt',
+      'binding',
+    ],
+    path,
+  );
+  const waiverType = exactString(entry.waiverType, `${path}.waiverType`);
+  const waiverValue = {
+    finding: entry.finding,
+    issuedAt: entry.issuedAt,
+    approver: entry.approver,
+    owner: entry.owner,
+    ticketId: entry.ticketId,
+    reason: entry.reason,
+    expiresAt: entry.expiresAt,
+    binding: entry.binding,
+  };
+  if (waiverType === 'vulnerability') {
+    return {
+      waiverType,
+      waiver: parseVulnerabilityWaivers([waiverValue], path)[0],
+    };
+  }
+  if (waiverType === 'license') {
+    return {
+      waiverType,
+      waiver: parseLicenseWaivers([waiverValue], path)[0],
+    };
+  }
+  fail(`${path}.waiverType is unsupported.`);
+}
+
 function assertExpectedImagesExact(images: MediaOciImageExpectations): void {
   if (!isDeepStrictEqual(images, CURRENT_MEDIA_OCI_IMAGE_EXPECTATIONS)) {
-    fail('Caller supplied stale or non-current OCI image expectations.');
+    internal('Caller supplied stale or non-current OCI image expectations.');
   }
 }
 
@@ -1274,13 +2004,14 @@ function assertBindingExpectation(
     !GIT_SHA.test(expectation.treeSha) ||
     !SHA256.test(expectation.releaseContentDigest)
   ) {
-    fail('Caller supplied malformed release binding expectations.');
+    internal('Caller supplied malformed release binding expectations.');
   }
   if (
     expectation.trustedIssuer !== TRUSTED_ISSUER ||
-    !TRUSTED_IDENTITY.test(expectation.trustedIdentity)
+    !TRUSTED_IDENTITY.test(expectation.trustedIdentity) ||
+    expectation.trustedIdentity === FINAL_VERIFIER_IDENTITY
   ) {
-    fail('Caller supplied a broad or unsupported trust identity.');
+    internal('Caller supplied a broad or unsupported trust identity.');
   }
 }
 
@@ -1373,8 +2104,10 @@ function vulnerabilityFindingKey(finding: {
   id: string;
   package: string;
   version: string;
+  artifactType: string;
+  severity: string;
 }): string {
-  return `${finding.id}\0${finding.package}\0${finding.version}`;
+  return `${finding.id}\0${finding.package}\0${finding.version}\0${finding.artifactType}\0${finding.severity}`;
 }
 
 function licenseFindingKey(finding: {
@@ -1398,7 +2131,7 @@ function exactTimestamp(value: string, path: string): number {
 function normalizeNow(value: Date | number): number {
   const milliseconds = value instanceof Date ? value.getTime() : value;
   if (!Number.isFinite(milliseconds) || milliseconds < 0) {
-    fail('OCI release evidence expectation has an invalid current time.');
+    internal('OCI release evidence expectation has an invalid current time.');
   }
   return milliseconds;
 }
@@ -1465,6 +2198,10 @@ function boundedArray(
 }
 
 function fail(message: string): never {
+  throw new MediaOciReleaseEvidenceError(message, 'BLOCKED_EXTERNAL');
+}
+
+function internal(message: string): never {
   throw new MediaOciReleaseEvidenceError(message, 'FAIL_INTERNAL');
 }
 

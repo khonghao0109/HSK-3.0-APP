@@ -15,7 +15,7 @@
       },
       "producer": { "issuer": null, "identity": null },
       "freshness": {
-        "maxAgeSeconds": 604800,
+        "maxAgeSeconds": 432000,
         "observedAt": null,
         "expiresAt": null
       },
