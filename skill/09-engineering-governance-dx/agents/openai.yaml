@@ -1,6 +1,0 @@
-interface:
-  display_name: "HSK Engineering Governance"
-  short_description: "Git, docs, dependencies, debt và DX"
-  default_prompt: "Use $09-engineering-governance-dx to make this change reviewable, traceable, and maintainable."
-policy:
-  allow_implicit_invocation: true

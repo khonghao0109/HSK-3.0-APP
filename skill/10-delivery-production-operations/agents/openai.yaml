@@ -1,6 +1,0 @@
-interface:
-  display_name: "HSK Production Operations"
-  short_description: "Delivery, release, support, safety và continuity"
-  default_prompt: "Use $10-delivery-production-operations to take this HSK release safely through production operations."
-policy:
-  allow_implicit_invocation: true

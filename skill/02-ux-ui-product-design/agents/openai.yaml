@@ -1,6 +1,0 @@
-interface:
-  display_name: "HSK UX/UI Product Design"
-  short_description: "Thiết kế UI bám ảnh mẫu và WCAG AA"
-  default_prompt: "Use $02-ux-ui-product-design to design this HSK flow from the official UI references."
-policy:
-  allow_implicit_invocation: true
