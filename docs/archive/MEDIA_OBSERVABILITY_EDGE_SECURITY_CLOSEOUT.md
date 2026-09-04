@@ -1,3 +1,5 @@
+> **ARCHIVED 04/09/2026.** Tài liệu này đã bị thay thế và không phản ánh trạng thái hiện tại. Xem `docs/archive/README.md` và `docs/PLAN.md`. Liên kết tương đối bên trong có thể đã lỗi thời.
+
 # Media Observability & Edge Security Closeout
 
 - Date: 2026-08-13

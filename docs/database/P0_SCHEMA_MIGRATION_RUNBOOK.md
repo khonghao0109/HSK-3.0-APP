@@ -1,6 +1,6 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.7.0`
+> Phiên bản runbook: `1.8.0`
 > Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
@@ -20,9 +20,11 @@
 | EX-A   | `20260811120000_exercise_authoring_import_validation_v1` | Exercise provenance/media/actor fields, revision parent/hash, publish readiness và archive-only lifecycle. |
 | SEC-M  | `20260812130000_secure_media_ingestion_v1`               | Private media ingestion state, fencing, rate limit và completed↔Media coherence.                           |
 | MED-H  | `20260813120000_media_provenance_provider_hardening`     | Immutable provenance snapshot/parent guard và unknown-PUT absence observation.                             |
+| MED-T  | `20260813163000_media_lifecycle_telemetry_truthfulness`  | Terminal-state/fencing/DB-owned timestamp cho MediaIngestion; failureCode và telemetry truthfulness.        |
+| MED-A  | `20260813193000_media_cleanup_audit_integrity`           | Ràng buộc AuditLog ↔ MediaIngestion cleanup (deferred constraint trigger); preflight từ chối row processing. |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 17 migration; migration 16 và toàn bộ migration lịch sử giữ nguyên byte, hardening luôn dùng forward migration 17.
+Toàn project hiện có 19 migration (đến `20260813193000_media_cleanup_audit_integrity`); migration đã áp giữ nguyên byte, hardening luôn dùng forward migration mới. Các con số 15/16/17 ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -371,7 +373,7 @@ npm run test:db:exercise-integrity
 npm run test:db:exercise-concurrency
 ```
 
-Muốn chạy lại concurrency phải drop/recreate đúng database disposable hoặc tạo database disposable mới, rồi `migrate deploy` đủ **15 migration**. Không truncate, delete fixture, `db push` hay `migrate reset`. E2E dùng database disposable khác và chỉ deploy migration, không seed.
+Muốn chạy lại concurrency phải drop/recreate đúng database disposable hoặc tạo database disposable mới, rồi `migrate deploy` đủ **toàn bộ migration hiện có (19)**. Không truncate, delete fixture, `db push` hay `migrate reset`. E2E dùng database disposable khác và chỉ deploy migration, không seed.
 
 `test:db:concurrency` chỉ chạy một lần trên database fresh migration-only. Trước fixture INSERT đầu tiên, runner yêu cầu `User`, `Level`, `Test`, `Result`, `ReviewCard` và `ReviewEvent` đều rỗng. Nếu bất kỳ table nào có dữ liệu, runner dừng với thông báo `Concurrency test requires a fresh migration-only disposable database.`; runner không truncate, delete, reset hoặc tự dọn dữ liệu. Muốn chạy lại phải drop database disposable cũ, tạo database disposable mới và chạy đủ `prisma migrate deploy`.
 
@@ -629,6 +631,39 @@ full E2E. Current-schema deploys use `npm run migrate:deploy:production`; only t
 task-owned historical 17/18 roots use the internal bounded Prisma invocation. A failed
 or interrupted run invalidates its prior summaries before executing; JSON/JUnit/log
 manifest are accepted only after the producer consumes its own exact artifact bytes.
+
+The production resolve command now owns the recovery precondition rather than relying
+on an operator checklist. In one bounded Prisma Client transaction it locks
+`_prisma_migrations`, `MediaIngestion` and `AuditLog`, then queries one exact
+migration-19 row/checksum, one unresolved target and one unresolved row total, 18
+successful migrations, zero migration-19 functions/triggers, the immutable source
+checksum and zero authoritative lifecycle/audit violations, including malformed
+cleanup audit facts. Test mode accepts only the exact loopback `*_test`
+`TEST_DATABASE_URL`. Production mode accepts only `schema=public` plus
+`MEDIA_MIGRATION_EXPECTED_TARGET_SHA256` matching SHA-256 of normalized
+`host:port/database/public`. The wrapper conditionally updates exactly the guarded row
+by ID, migration name, checksum and unfinished/unrolled-back state, then proves the
+exact postcondition before commit. Unsafe target or state exits `78` without mutation;
+query/mutation/postcondition failure exits `70`; deadline expiry before a committed
+outcome exits `124`. Any failure detected before the callback returns rejects and
+rolls back the transaction. Once the callback returns its exact commit decision, the
+wrapper awaits Prisma's commit result; an acknowledged commit remains success even if
+a late signal/deadline arrived during `COMMIT`. A forcibly interrupted commit phase is
+reconciled by rerunning the same guarded state check. Logs contain only sanitized
+count/boolean/checksum facts.
+
+`migrate:deploy:production` classifies the current process output first. Current
+`P3009` always stays retry-block exit `1`, whether retained migration logs are null or
+contain an older `P0001`/`55P03`. Retained log inspection is allowed only when the
+current invocation is the exact transaction-aborted recovery branch.
+
+Production preflight, deploy and retained-log queries share one detached process-group
+supervisor. Deadline or SIGINT/SIGTERM sends TERM then KILL to the whole group and
+waits until every descendant is absent; if the kernel cannot confirm group exit, the
+supervisor remains pending rather than returning while a Prisma/schema-engine
+descendant is alive. Resolve has no external child or advisory-lock bypass: abrupt
+wrapper termination closes its database session and PostgreSQL rolls back the single
+guarded transaction.
 
 The latest local aggregate result passed all 12 checks, deployed 19/19 and ran full
 E2E 11/11 suites (163/163 tests). Local artifacts under

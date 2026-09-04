@@ -210,7 +210,7 @@ HSK System
 
 Onboarding Goal & Learning Plan V1 dùng JWT owner, khóa row `User` cho write concurrency, date-only schedule và chỉ chọn Lesson ready. Status phân biệt plan active với plan usable theo snapshot Lesson ready chính xác, đồng thời trả `content_unavailable` khi level chưa có content dùng được. CMS Lite append immutable `ContentRevision`/`ContentReview`, giữ nguyên live content khi có draft revision mới và ghi audit summary an toàn. Exercise V1 publish theo lock order `active admin User FOR SHARE → Lesson/Topic/LessonExercise FOR UPDATE → Media FOR SHARE khi listening` với role/lifecycle được enforce, shared NFKC/exact-key/bounded validator, chỉ publish latest-approved revision dưới parent live/coherent, bắt buộc ready/live audio có URL nonempty/no-whitespace cho listening và import theo preview hash + atomic/idempotent commit từ 1 đến 100 rows. Import lock actor rồi DataSource và parent IDs `FOR UPDATE` theo thứ tự ổn định; interactive transaction dùng `maxWait=5.000 ms` và `timeout=30.000 ms`. Lesson Activity V1 serialize write theo User, chấm `mcq`, `listening_choice`, `fill_blank`, `arrange_sentence` trên server, lưu immutable snapshot/event, derive progress và resume pointer; không nhận score/progress/userId từ client. `speaking_repeat` chỉ được lưu draft và chưa được publish/chấm. Các cờ boolean chỉ nhận JSON boolean thật. Placement test/scoring, SRS và premium entitlement chưa có runtime.
 
-Chi tiết contract mục tiêu nằm trong [api.md](./api.md). Khi thêm endpoint mới, cần cập nhật cả tài liệu API, DTO và test tương ứng.
+Chi tiết contract mục tiêu nằm trong [api.md](../api/api.md). Khi thêm endpoint mới, cần cập nhật cả tài liệu API, DTO và test tương ứng.
 
 ## 4. Quy tắc phân quyền và dữ liệu
 

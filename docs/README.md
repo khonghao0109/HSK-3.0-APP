@@ -1,107 +1,83 @@
-# HSK 3.0 APP
+# Tài liệu HSK 3.0 APP
 
-Nen tang on thi HSK 1-9 (phien ban 3.0), huong toi production voi kien truc tach ro `frontend + backend + ai`.
+Nền tảng học, ôn và thi HSK 1–9 (bảy nhóm curriculum `HSK1`…`HSK6`, `HSK7_9`).
+Monorepo gồm `backend/` (NestJS 11 + Prisma 5 + PostgreSQL), `frontend/`
+(Next.js 16 App Router), `ai/` (chưa có runtime), `ops/` (nginx, observability).
 
-## Muc tieu du an
+Cập nhật cấu trúc tài liệu: 04/09/2026.
 
-- Ho tro nguoi hoc on luyen HSK theo cap do.
-- Cung cap luong hoc tu kien thuc den thi thu va xem ket qua.
-- Quan tri noi dung va bao cao qua trang admin.
-- Tich hop tro ly AI (RAG) de giai thich tu vung, ngu phap, bai hoc.
+## Đọc theo thứ tự
 
-## Kien truc tong quan
+1. [PLAN.md](./PLAN.md) — tiến độ dự án theo giai đoạn và từng bước, có tích xanh.
+   Đây là nơi duy nhất ghi "đã làm / đang làm / chưa làm".
+2. [product/roadmap.md](./product/roadmap.md) — tầm nhìn, ma trận năng lực, thứ tự
+   milestone M0–M7, KPI, risk register.
+3. [architecture/overview.md](./architecture/overview.md) — kiến trúc, layout repo,
+   module, quy ước API/bảo mật, biến môi trường, lệnh chạy, quy tắc cho dev và AI agent.
+4. [api/api.md](./api/api.md) — hợp đồng HTTP: Part A là endpoint đã có code,
+   Part B là endpoint dự kiến.
+5. [adr/](./adr/) — quyết định kiến trúc ADR-001…008. Đọc ADR trước khi sửa vùng liên quan.
+
+## Cấu trúc thư mục
 
 ```text
-hsk-system/
-  frontend/   # giao dien user + admin
-  backend/    # core API (NestJS + Prisma + PostgreSQL)
-  ai/         # RAG/embeddings service doc lap
-  docs/       # tai lieu du an (API, roadmap, context cho AI)
+docs/
+  README.md                     # file này
+  PLAN.md                       # tiến độ theo giai đoạn/bước
+  product/
+    roadmap.md                  # tầm nhìn và milestone
+    functional-hierarchy.md     # cây chức năng User/Admin, ưu tiên P0/P1/P2
+    assets/                     # ảnh kiến trúc concept
+  architecture/
+    overview.md                 # kiến trúc và quy ước hiện hành
+  api/
+    api.md                      # hợp đồng HTTP đã có / dự kiến
+  adr/                          # ADR-001 … ADR-008
+  database/
+    P0_DATA_DICTIONARY.md       # ngữ nghĩa bảng/cột và invariant
+    P0_ERD.md                   # ERD logic theo bounded context
+    P0_SCHEMA_MIGRATION_RUNBOOK.md  # cách chạy, kiểm chứng và phục hồi migration
+  operations/
+    MEDIA_INGESTION_RELEASE_RUNBOOK.md  # vận hành/release Media
+  process/
+    engineering-process.md      # nguyên tắc, gate, Definition of Done
+  reviews/
+    2026-09-04-codebase-review.md   # kết quả review toàn dự án, mã finding A-01…G-02
+  ui_image/                     # 36 mockup page-level, nguồn thiết kế UI
+  archive/                      # tài liệu lịch sử đã bị thay thế, chỉ để tra cứu
 ```
 
-## Chuc nang chinh
+## Nguồn sự thật theo thứ tự
 
-- Nguoi dung:
-  - Dang ky, dang nhap.
-  - Hoc theo level/bai hoc/chu de/cau chuyen.
-  - Lam bai thi, nop bai, xem ket qua.
-  - Theo doi tien do hoc va lich su.
-- Admin:
-  - Quan ly nguoi dung.
-  - Quan ly noi dung hoc, de thi, tai lieu.
-  - Xem thong ke va bao cao.
-- AI:
-  - Tra cuu kien thuc theo ngu canh hoc.
-  - Ho tro giai thich va goi y hoc tap.
+1. Code runtime, `backend/prisma/schema.prisma`, migration và test trên HEAD hiện tại.
+2. ADR và runbook viết từ chính HEAD đó.
+3. `PLAN.md` cho trạng thái, `product/roadmap.md` cho thứ tự delivery.
+4. `ui_image/` cho thiết kế UI khi triển khai màn hình.
 
-## Cong nghe su dung
+Schema, mockup hay tài liệu "sẵn sàng" không được tính là chức năng đã hoàn thành.
+Chỉ tích xanh trong `PLAN.md` khi có entry point, contract và test trong repo.
 
-- Backend: `NestJS`, `Prisma`, `PostgreSQL`, `Jest`
-- Frontend: bo khung app router + feature-based structure
-- AI: `rag-api` service + pipelines (`dictionary`, `embeddings`, `materials`)
-- DevOps target: Docker, Nginx, Redis, Cloud storage (S3/Cloudinary)
+## Quy tắc bảo trì tài liệu
 
-## Data pipeline
+- Thay đổi endpoint, DTO hoặc hành vi thì sửa `api/api.md` và `PLAN.md` trong cùng PR.
+- Quyết định khó đảo ngược (auth, storage, event, provider, hạ tầng) đi kèm một ADR mới,
+  đánh số tiếp theo; không sửa nội dung ADR đã Accepted, hãy viết ADR thay thế.
+- Tài liệu lỗi thời chuyển vào `archive/` kèm một dòng ghi rõ bị thay thế bởi gì;
+  không để hai tài liệu cùng nói về một trạng thái.
+- Không sao chép số liệu test, checksum hay số migration vào nhiều nơi; dẫn link tới
+  runbook hoặc `PLAN.md`.
 
-Dictionary pipeline tai `backend/scripts/dictionary/`:
-
-1. `raw/` -> `parse.ts`
-2. `parsed/` -> `normalize.ts`
-3. `normalized/` -> `seed.ts` -> database
-
-## Tai lieu quan trong
-
-- API spec: `docs/api.md`
-- Product roadmap: `docs/roadmap.md`
-- Full AI project context: `docs/PROJECT_CONTEXT_FOR_AI.md`
-- Phan cap chuc nang: `docs/FUNCTIONAL_HIERARCHY.md`
-- Lo trinh hoan thien database: `docs/DATABASE_SCHEMA_COMPLETION_PLAN.md`
-- P0 data dictionary: `docs/database/P0_DATA_DICTIONARY.md`
-- P0 ERD (thay the `docs/erd.png` legacy): `docs/database/P0_ERD.md`
-- P0 schema migration runbook: `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`
-- ADR account deletion/immutable retention: `docs/adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`
-- Ke hoach tong the tu 0 den Production: `docs/PRODUCT_IMPLEMENTATION_MASTER_PLAN.md`
-- Quy trinh trien khai 10 nhom: `docs/implementation-process/`
-- Bao cao tien do 10 nhom: `docs/reports/`
-
-## Quick start
-
-### 1) Clone source
+## Bắt đầu nhanh
 
 ```bash
-git clone https://github.com/khonghao0109/HSK-3.0-APP.git
-cd HSK-3.0-APP
+# Backend
+cd backend && npm install && cp .env.example .env   # điền DATABASE_URL, JWT_SECRETS...
+npm run start:dev                                   # http://localhost:3000/api/v1
+
+# Frontend (cần backend chạy ở BACKEND_API_URL)
+cd frontend && npm install && cp .env.example .env
+npm run dev
 ```
 
-### 2) Backend
-
-```bash
-cd backend
-npm install
-npm run start:dev
-```
-
-Backend mac dinh chay tai `http://localhost:3000/api/v1`.
-
-### 3) Environment
-
-- Copy `.env.example` thanh `.env` cho tung service (`backend`, `frontend`, `ai`).
-- Dien bien moi truong bat buoc (DB, JWT, API keys).
-
-## Trang thai hien tai
-
-- Da hoan thien bo khung kien truc production-grade.
-- Da co Prisma schema Web MVP P0, P0-00 den P0-04 va forward migration integrity hardening; runtime API van dang duoc hoan thien theo vertical slice.
-- Da co docs API/roadmap/context.
-- Dang tiep tuc hoan thien business modules va UI.
-
-## Dinh huong tiep theo
-
-1. Hoan thien Auth + Users + Learning modules.
-2. Hoan thien Exam flow (question/test/result + submit scoring).
-3. Hoan thien Materials + Admin dashboard.
-4. Tich hop AI chat gateway va RAG service.
-
----
-
-Neu ban la dev/AI agent moi, hay doc `docs/PROJECT_CONTEXT_FOR_AI.md` truoc khi code.
+Chi tiết lệnh kiểm thử, tên database disposable và cách chạy e2e nằm trong
+[architecture/overview.md](./architecture/overview.md) mục "Lệnh chạy và kiểm thử".

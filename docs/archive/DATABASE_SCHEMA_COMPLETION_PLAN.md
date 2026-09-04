@@ -1,3 +1,5 @@
+> **ARCHIVED 04/09/2026.** Tài liệu này đã bị thay thế và không phản ánh trạng thái hiện tại. Xem `docs/archive/README.md` và `docs/PLAN.md`. Liên kết tương đối bên trong có thể đã lỗi thời.
+
 # Lộ trình hoàn thiện Database Schema — HSK System
 
 > Phiên bản: 2.1 — P0 integrity hardening
@@ -19,13 +21,13 @@ Chuỗi migration hiện có 11 migration, trong đó 6 migration P0 theo capabi
 | 5 | `p0_exam_attempt_snapshot` | Placement đúng theo test, attempt/autosave/snapshot/scoring và result uniqueness |
 | 6 | `p0_integrity_hardening` | Band theo Level, SRS ownership, immutable retention FK và public prefix indexes |
 
-Schema P0 hardening có 57 business tables, 138 foreign keys, 72 CHECK constraints và 24 trigger nghiệp vụ trên PostgreSQL rehearsal. ERD và data dictionary versioned nằm tại [database/P0_ERD.md](./database/P0_ERD.md) và [database/P0_DATA_DICTIONARY.md](./database/P0_DATA_DICTIONARY.md). Chính sách retention/xóa tài khoản nằm tại [ADR-001](./adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md).
+Schema P0 hardening có 57 business tables, 138 foreign keys, 72 CHECK constraints và 24 trigger nghiệp vụ trên PostgreSQL rehearsal. ERD và data dictionary versioned nằm tại [database/P0_ERD.md](../database/P0_ERD.md) và [database/P0_DATA_DICTIONARY.md](../database/P0_DATA_DICTIONARY.md). Chính sách retention/xóa tài khoản nằm tại [ADR-001](../adr/ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md).
 
 Các model P0 hiện là **data contract**; runtime API cho session, onboarding, CMS, SRS và exam vẫn phải được triển khai theo vertical slice. Không mô tả schema-ready là feature runtime hoàn chỉnh.
 
 ## 1. Mục tiêu và phạm vi
 
-Tài liệu này xác định trình tự để schema PostgreSQL đáp ứng **toàn bộ module P0, P1 và P2** trong [FUNCTIONAL_HIERARCHY.md](./FUNCTIONAL_HIERARCHY.md).
+Tài liệu này xác định trình tự để schema PostgreSQL đáp ứng **toàn bộ module P0, P1 và P2** trong [FUNCTIONAL_HIERARCHY.md](../product/functional-hierarchy.md).
 
 Trong tài liệu này, “schema hoàn thiện 100%” nghĩa là:
 
@@ -353,7 +355,7 @@ AI service trong `ai/` sở hữu database riêng; khuyến nghị PostgreSQL + 
 5. Nếu bảng đã có data lớn: deploy field nullable trước, backfill bằng job batch idempotent, validate, sau đó mới đặt `NOT NULL`/unique constraint.
 6. Chạy `npx prisma generate`, unit test, integration test và test seed mới.
 7. Chạy `npx prisma migrate deploy` trên staging database rỗng và staging database có dữ liệu đại diện.
-8. Cập nhật [api.md](./api.md), [PROJECT_CONTEXT_FOR_AI.md](./PROJECT_CONTEXT_FOR_AI.md), seed script và tài liệu vận hành.
+8. Cập nhật [api.md](../api/api.md), [PROJECT_CONTEXT_FOR_AI.md](../architecture/overview.md), seed script và tài liệu vận hành.
 9. Chỉ deploy production sau khi backup, migration check và monitoring được xác nhận.
 
 ## 6. Checklist hoàn tất schema 100%

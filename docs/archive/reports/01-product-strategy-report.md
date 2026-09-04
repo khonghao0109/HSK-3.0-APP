@@ -1,3 +1,5 @@
+> **ARCHIVED 04/09/2026.** Tài liệu này đã bị thay thế và không phản ánh trạng thái hiện tại. Xem `docs/archive/README.md` và `docs/PLAN.md`. Liên kết tương đối bên trong có thể đã lỗi thời.
+
 # Báo cáo hoàn thiện nhóm 01 — Khởi tạo & Product Strategy
 
 ## 1. Thông tin báo cáo
@@ -9,7 +11,7 @@
 | Ngày kiểm tra | 08/08/2026 |
 | Trạng thái | **Hoàn thiện nội dung 15/15 skill** |
 | Thư mục skill | `skill/01-product-strategy/` — chỉ lưu local do `/skill/` đã được thêm vào `.gitignore` |
-| Quy trình áp dụng | [01-product-strategy.md](../implementation-process/01-product-strategy.md) |
+| Quy trình áp dụng | [01-product-strategy.md](../../process/engineering-process.md) |
 
 ## 2. Tóm tắt điều hành
 
@@ -61,7 +63,7 @@ Mỗi file có metadata kích hoạt, mục tiêu, đầu vào hoặc phạm vi,
 4. **Chọn thứ tự và quản trị:** dùng skill 08–10 để chốt roadmap, decision và risk.
 5. **Chốt nghiệp vụ học tập:** dùng skill 11–13 cho domain, HSK curriculum và content operations.
 6. **Chốt tính bền vững/an toàn:** dùng skill 14–15 cho monetization, entitlement, privacy và license.
-7. **Sign-off:** dùng [quy trình nhóm 01](../implementation-process/01-product-strategy.md) làm checklist bàn giao sang nhóm 02/03.
+7. **Sign-off:** dùng [quy trình nhóm 01](../../process/engineering-process.md) làm checklist bàn giao sang nhóm 02/03.
 
 ## 6. Mức độ phù hợp với dự án hiện tại
 

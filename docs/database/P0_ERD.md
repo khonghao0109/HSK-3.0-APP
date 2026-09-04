@@ -1,7 +1,7 @@
 # P0 ERD — HSK 3.0 APP
 
 > ERD logic phiên bản `2.1.0-p0-hardening`, chốt ngày `2026-08-10`.
-> File `docs/erd.png` là sơ đồ legacy và đã bị tài liệu này thay thế. Prisma schema/migration vẫn là nguồn kỹ thuật chuẩn khi có khác biệt.
+> Sơ đồ legacy `erd.png` đã bị xoá (04/09/2026); tài liệu này là ERD duy nhất. Prisma schema/migration vẫn là nguồn kỹ thuật chuẩn khi có khác biệt; các bảng từ migration 16–19 chưa được vẽ.
 
 ERD được tách theo bounded context để review được. Các cột dưới đây chỉ hiển thị PK/FK và trường nhận diện chính; data dictionary chứa đầy đủ semantics và invariant.
 

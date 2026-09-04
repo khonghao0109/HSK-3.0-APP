@@ -1,3 +1,5 @@
+> **ARCHIVED 04/09/2026.** Tài liệu này đã bị thay thế và không phản ánh trạng thái hiện tại. Xem `docs/archive/README.md` và `docs/PLAN.md`. Liên kết tương đối bên trong có thể đã lỗi thời.
+
 # Kế hoạch tổng thể triển khai HSK System từ số 0 đến Production
 
 > Phiên bản tài liệu: 1.0
@@ -6,7 +8,7 @@
 >
 > Phạm vi: Product Strategy → UX/UI → Architecture → Data/Content → Backend → Web/Mobile → AI → Quality → DevOps → Production Operations
 >
-> Nguồn sự thật liên quan: [PROJECT_CONTEXT_FOR_AI.md](./PROJECT_CONTEXT_FOR_AI.md), [FUNCTIONAL_HIERARCHY.md](./FUNCTIONAL_HIERARCHY.md), [DATABASE_SCHEMA_COMPLETION_PLAN.md](./DATABASE_SCHEMA_COMPLETION_PLAN.md), [api.md](./api.md), [roadmap.md](./roadmap.md)
+> Nguồn sự thật liên quan: [PROJECT_CONTEXT_FOR_AI.md](../architecture/overview.md), [FUNCTIONAL_HIERARCHY.md](../product/functional-hierarchy.md), [DATABASE_SCHEMA_COMPLETION_PLAN.md](./DATABASE_SCHEMA_COMPLETION_PLAN.md), [api.md](../api/api.md), [roadmap.md](../product/roadmap.md)
 
 ## 0. Mục đích và cách sử dụng tài liệu
 
@@ -428,7 +430,7 @@ Thiết kế trải nghiệm user/admin đầy đủ trạng thái và kiểm ch
 
 ### 9.3 Các bước
 
-1. Kiểm kê chức năng trong [FUNCTIONAL_HIERARCHY.md](./FUNCTIONAL_HIERARCHY.md) và content objects.
+1. Kiểm kê chức năng trong [FUNCTIONAL_HIERARCHY.md](../product/functional-hierarchy.md) và content objects.
 2. Tạo sitemap, route map và permission matrix cho guest/user/admin.
 3. Vẽ flow cho auth/onboarding, lesson, dictionary, SRS, exam, profile và CMS.
 4. Với mỗi flow, thiết kế loading, empty, partial, error, retry, offline, unauthorized, expired và destructive state.
