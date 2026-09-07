@@ -87,10 +87,10 @@ Vào: GĐ0. Ra: mọi PR vào `main` có CI xanh; `npm run test:e2e` chạy từ
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | H.1 | Dọn worktree thành commit theo chủ đề; typo `npm.cd` revert | ✅ | 04/09: `b222926`, `29e1e4b`, `6f74f5b` |
-| H.2a | `ci.yml` backend: `npm ci --ignore-scripts`, `prisma validate`, lint, format, tsc, jest | ⬜ | A-01 |
-| H.2b | `ci.yml` backend e2e với Postgres service; tên DB kết thúc `test` | ⬜ | guard `assert-disposable-test-database.ts` |
-| H.2c | `ci.yml` frontend: lint, typecheck, vitest, `test:generated-types` | ⬜ | |
-| H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | |
+| H.2a | `ci.yml` backend: `npm ci --ignore-scripts`, `prisma validate`, lint, format, tsc, jest | 🟡 | 07/09: `f7c6d9b`, `665074d`. Chạy tay từ clone mới: 596/596 unit pass. Chờ run xanh trên GitHub |
+| H.2b | `ci.yml` backend e2e với Postgres service; tên DB kết thúc `test` | 🟡 | 07/09: `f7c6d9b`. Chạy tay theo đúng shape của CI: 163/163 pass. Service container chưa chạy thật |
+| H.2c | `ci.yml` frontend: lint, typecheck, vitest, `test:generated-types` | 🟡 | 07/09: `f7c6d9b`. Chạy tay từ clone mới: 101/101 vitest pass, generated-types PASS. Chờ run xanh |
+| H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | Cần chủ repo chạy tay; lệnh `gh api` ghi trong báo cáo GĐ1. Checks: `backend`, `backend-e2e`, `frontend` |
 | H.3a | `docker-compose.yml`: Postgres 16 (profile mặc định), MinIO/ClamAV/Mailpit (profile `dev`) | ✅ | 07/09: `b011518`. Chọn `docker-compose.yml` + profile thay tên `docker-compose.test.yml` để `docker compose up -d` không cần cờ `-f` |
 | H.3b | `pretest:e2e` tạo DB disposable + migrate; docs một lệnh chạy e2e | ✅ | 07/09: `b011518`, `41f471d`, `1751aff`. Clone mới, không set biến nào: 163/163 pass, lặp lại vẫn 163/163 |
 | H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
@@ -341,7 +341,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | # | Bước | Trạng thái | Finding / ghi chú |
 | --- | --- | --- | --- |
 | H.1 | Tách worktree +8.744 dòng thành commit nhỏ; sửa typo `npm.cd` | ✅ | F-04, E-04 đóng 04/09: `b222926`, `29e1e4b`, `6f74f5b`; typo revert về bản đã commit |
-| H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | ⬜ | A-01 |
+| H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | 🟡 | A-01. 07/09: `f7c6d9b`, `665074d`. Ba job đã viết và chạy tay từ clone mới; chỉ ✅ khi có run xanh trên GitHub và H.2d bật xong |
 | H.3 | `docker-compose.yml` (Postgres 16 + profile `dev` cho MinIO/ClamAV/Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ✅ | F-01 đóng phần e2e 07/09: `b011518`, `41f471d`, `1751aff`. e2e phải `--runInBand`: 11 suite dùng chung DB và cùng upsert Level theo `code` |
 | H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ⬜ | A-02, ADR-008 §2 |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ⬜ | B-01 |
@@ -531,3 +531,4 @@ khi vertical slice bắt đầu.
 | 04/09/2026 | Thêm mục 1 "Lộ trình hoàn thành dự án": GĐ0–GĐ10, 128 task nhỏ, tick theo bằng chứng. H.1 ✅ sau 3 commit; thêm H.15; baseline HEAD `6f74f5b`; đổi số mục 2–8. |
 | 07/09/2026 | GĐ1 PR1: H.15 ✅ root README mô tả monorepo (`6f6d2fe`); H.13 🟡 pin Node 24 qua `.nvmrc` + `engines`, `.npmrc save-exact`, `renovate.json` (`6d38f40`). TypeScript 6 backend tách PR riêng theo ADR-008 §12. |
 | 07/09/2026 | GĐ1 PR2: H.3a + H.3b ✅. `docker-compose.yml` + `pretest:e2e` dựng DB disposable, `prisma generate` và `migrate deploy`. Chạy thật từ clone mới không cần cấu hình: 163/163 pass, chạy lại lần hai vẫn 163/163. Phát hiện e2e phải chạy `--runInBand` vì các suite đua fixture trên Level dùng chung. |
+| 07/09/2026 | GĐ1 PR3: H.2a + H.2b + H.2c 🟡. Thêm `.github/workflows/ci.yml` (ba job, action pin theo SHA, Node từ `.nvmrc`, cache npm theo từng lockfile). Chạy tay đủ chuỗi lệnh của từng job từ clone mới: backend 596/596, frontend 101/101, e2e 163/163. Chưa có run trên GitHub và chưa lint bằng actionlint (không có trên máy). |
