@@ -71,6 +71,11 @@ Chỉ tích xanh trong `PLAN.md` khi có entry point, contract và test trong re
 ## Bắt đầu nhanh
 
 ```bash
+# Dependency local: PostgreSQL 16 (profile mặc định của docker-compose.yml ở gốc repo)
+docker compose up -d --wait
+# Thêm MinIO, ClamAV, Mailpit khi cần chạy media/email thật:
+# docker compose --profile dev up -d --wait
+
 # Backend
 cd backend && npm install && cp .env.example .env   # điền DATABASE_URL, JWT_SECRETS...
 npm run start:dev                                   # http://localhost:3000/api/v1
@@ -80,5 +85,9 @@ cd frontend && npm install && cp .env.example .env
 npm run dev
 ```
 
-Chi tiết lệnh kiểm thử, tên database disposable và cách chạy e2e nằm trong
+E2E backend chạy bằng một lệnh, không cần cấu hình thêm: `docker compose up -d --wait`
+rồi `cd backend && npm run test:e2e` — `pretest:e2e` tự dựng database disposable và
+`prisma migrate deploy`.
+
+Chi tiết lệnh kiểm thử, tên database disposable và cách trỏ vào Postgres sẵn có nằm trong
 [architecture/overview.md](./architecture/overview.md) mục "Lệnh chạy và kiểm thử".

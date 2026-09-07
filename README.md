@@ -13,7 +13,7 @@ production chưa có. Trạng thái từng bước ghi ở [docs/PLAN.md](./docs
 | --- | --- |
 | `backend/` | NestJS 11 + Prisma 5 + PostgreSQL. API `/api/v1`. Module: `auth`, `cms`, `dictionary`, `health`, `learning`, `media`, `onboarding`, `user`. |
 | `frontend/` | Next.js 16 App Router + React 19. Admin console; BFF server-only giữ token, browser không giữ bearer (ADR-003). CSS variables, không Tailwind (ADR-008). |
-| `ai/services/rag-api/` | Service RAG TypeScript tách riêng, mới ở mức scaffold. Không đưa RAG logic vào `backend/`. |
+| `ai/` | Chỗ dành cho service RAG TypeScript tách riêng (`services/rag-api/`, ADR-008 §6). Hiện toàn file rỗng, chưa có runtime. Không đưa RAG logic vào `backend/`. |
 | `ops/` | Cấu hình nginx và observability (Prometheus, Alertmanager, Grafana) cho Media. |
 | `docs/` | Toàn bộ tài liệu: kế hoạch, roadmap, kiến trúc, API contract, ADR, database, vận hành. |
 

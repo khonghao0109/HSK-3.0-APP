@@ -41,9 +41,10 @@ HSK-3.0-APP/
   .github/workflows/  # media-release-evidence.yml (chỉ chạy khi push tag v3.0.0)
 ```
 
-Không có root `package.json`, Dockerfile, docker-compose, `.nvmrc`. Mỗi package dùng npm
-lockfile riêng (ADR-003). Root `package.json` với npm workspaces chỉ xuất hiện cùng
-`mobile/` và `packages/contracts/` (ADR-008 §1).
+Chưa có root `package.json` và Dockerfile. `.nvmrc` (Node 24) và `docker-compose.yml`
+(PostgreSQL 16 ở profile mặc định; MinIO, ClamAV, Mailpit ở profile `dev`) nằm ở gốc
+repo. Mỗi package dùng npm lockfile riêng (ADR-003). Root `package.json` với npm
+workspaces chỉ xuất hiện cùng `mobile/` và `packages/contracts/` (ADR-008 §1).
 
 ## 3. Backend
 
@@ -221,7 +222,7 @@ Backend (`cd backend`):
 | `npm run start:dev` | có | dev server |
 | `npm run lint:check`, `npm run format:check`, `npx tsc --noEmit` | không | |
 | `npm test` | không | jest unit, rootDir `src`, 51 suite |
-| `npm run test:e2e` | có, disposable | `NODE_ENV=test`, `DATABASE_URL` và `TEST_DATABASE_URL` trỏ cùng DB tên hợp lệ; migrate trước bằng `npm run build && npm run migrate:deploy:production` |
+| `npm run test:e2e` | có, disposable | `pretest:e2e` tự dựng DB và migrate; xem "Chạy e2e bằng một lệnh" bên dưới |
 | `npm run test:db:p0`, `test:db:concurrency`, `test:db:cms-concurrency`, `test:db:activity-*`, `test:db:exercise-*`, `test:db:media-*` | có, fresh migration-only | runner concurrency để lại fixture; mỗi lần chạy lại cần DB mới |
 | `npm run test:ops:media:unit`, `npm run test:security:secrets` | không | node:test |
 | `npm run test:ops:media` | tải tool | release harness, chỉ PASS ở profile linux-amd64 |
@@ -231,7 +232,36 @@ Frontend (`cd frontend`): `npm run dev`, `npm run lint`, `npm run typecheck`
 (chạy `next typegen` trước), `npm test` (vitest), `npm run test:e2e` (build + Playwright,
 cần backend thật ở `BACKEND_API_URL` và DB đã seed console), `npm run test:generated-types`.
 
-Chưa có docker-compose; xem PLAN.md hạng mục F-01.
+### Chạy e2e bằng một lệnh
+
+```bash
+docker compose up -d --wait                 # PostgreSQL 16, file ở gốc repo
+cd backend && npm ci --ignore-scripts && npm run test:e2e
+```
+
+`pretest:e2e` (`backend/scripts/test/prepare-e2e-database.ts`) điền mặc định
+`NODE_ENV=test` cùng `DATABASE_URL`/`TEST_DATABASE_URL`/`JWT_SECRETS` khớp compose,
+dựng lại database mặc định `hsk_e2e_test`, sinh Prisma Client (vì
+`npm ci --ignore-scripts` bỏ qua postinstall) rồi chạy `prisma migrate deploy`.
+
+Muốn dùng Postgres sẵn có thì set `DATABASE_URL` (và `TEST_DATABASE_URL` nếu URL mang
+`?schema=public`) tới database có tên kết thúc bằng `test`, `e2e`, `verify`,
+`disposable` hoặc `hardening`. Khi người gọi tự chỉ định database như vậy — CI cũng đi
+đường này — script chỉ tạo database còn thiếu và không xoá gì; việc dựng lại chỉ áp dụng
+cho database mặc định nội bộ mà tooling tự sở hữu. Không dùng `migrate reset`, `db push`
+hay truncate ở bất kỳ nhánh nào.
+
+e2e chạy `--runInBand`: mười một suite dùng chung một database và cùng `upsert` Level
+theo `code`, chạy song song sẽ đua fixture và làm hỏng các assertion đếm.
+
+Chỉ PostgreSQL là bắt buộc cho e2e: với `NODE_ENV=test`, `StorageModule` dùng adapter
+in-memory và `MalwareModule` dùng test scanner, nên MinIO và ClamAV không nằm trên đường
+chạy e2e. MinIO, ClamAV và Mailpit nằm ở profile `dev` của compose, chỉ phục vụ việc chạy
+ứng dụng thật ở máy local: `docker compose --profile dev up -d --wait`.
+
+Compose nằm ở `docker-compose.yml` gốc repo chứ không phải `docker-compose.test.yml` như
+tên trong PLAN.md, để `docker compose up -d` chạy được không cần cờ `-f` và để không phải
+duy trì hai file compose khi thêm service dev về sau.
 
 ## 10. Quy tắc cho dev và AI agent
 
