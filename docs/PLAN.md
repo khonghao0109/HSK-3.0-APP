@@ -42,7 +42,7 @@ cam kết.
 | GĐ | Giai đoạn | Điều kiện ra | Task xong / tổng | Ước lượng | Trạng thái |
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
-| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 2 / 9 | 1–2 tuần | 🟡 |
+| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 0 / 14 | 2–3 tuần | ⬜ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **32 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **34 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 
@@ -91,8 +91,8 @@ Vào: GĐ0. Ra: mọi PR vào `main` có CI xanh; `npm run test:e2e` chạy từ
 | H.2b | `ci.yml` backend e2e với Postgres service; tên DB kết thúc `test` | ⬜ | guard `assert-disposable-test-database.ts` |
 | H.2c | `ci.yml` frontend: lint, typecheck, vitest, `test:generated-types` | ⬜ | |
 | H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | |
-| H.3a | `docker-compose.test.yml`: Postgres 16, MinIO, ClamAV, Mailpit | ⬜ | F-01, ADR-008 §11 |
-| H.3b | `pretest:e2e` tạo DB disposable + migrate; docs một lệnh chạy e2e | ⬜ | |
+| H.3a | `docker-compose.yml`: Postgres 16 (profile mặc định), MinIO/ClamAV/Mailpit (profile `dev`) | ✅ | 07/09: `b011518`. Chọn `docker-compose.yml` + profile thay tên `docker-compose.test.yml` để `docker compose up -d` không cần cờ `-f` |
+| H.3b | `pretest:e2e` tạo DB disposable + migrate; docs một lệnh chạy e2e | ✅ | 07/09: `b011518`, `41f471d`, `1751aff`. Clone mới, không set biến nào: 163/163 pass, lặp lại vẫn 163/163 |
 | H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
 | H.15 | Root `README.md`: thay boilerplate NestJS bằng mô tả monorepo, trỏ `docs/README.md` | ✅ | 07/09: `6f6d2fe` |
 
@@ -342,7 +342,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | --- | --- | --- | --- |
 | H.1 | Tách worktree +8.744 dòng thành commit nhỏ; sửa typo `npm.cd` | ✅ | F-04, E-04 đóng 04/09: `b222926`, `29e1e4b`, `6f74f5b`; typo revert về bản đã commit |
 | H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | ⬜ | A-01 |
-| H.3 | `docker-compose.test.yml` (Postgres 16, MinIO, ClamAV, Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ⬜ | F-01, ADR-008 §11 |
+| H.3 | `docker-compose.yml` (Postgres 16 + profile `dev` cho MinIO/ClamAV/Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ✅ | F-01 đóng phần e2e 07/09: `b011518`, `41f471d`, `1751aff`. e2e phải `--runInBand`: 11 suite dùng chung DB và cùng upsert Level theo `code` |
 | H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ⬜ | A-02, ADR-008 §2 |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ⬜ | B-01 |
 | H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |
@@ -530,3 +530,4 @@ khi vertical slice bắt đầu.
 | 04/09/2026 | Đồng bộ docs về quyết định mobile: roadmap §3.2/§3.3/§5 bỏ câu "chưa chốt Flutter"; ADR-008 §1 nêu vị trí `mobile/` + `packages/contracts/`, workspaces và tiền đề; overview §2/§5 và M7.7 cập nhật theo. |
 | 04/09/2026 | Thêm mục 1 "Lộ trình hoàn thành dự án": GĐ0–GĐ10, 128 task nhỏ, tick theo bằng chứng. H.1 ✅ sau 3 commit; thêm H.15; baseline HEAD `6f74f5b`; đổi số mục 2–8. |
 | 07/09/2026 | GĐ1 PR1: H.15 ✅ root README mô tả monorepo (`6f6d2fe`); H.13 🟡 pin Node 24 qua `.nvmrc` + `engines`, `.npmrc save-exact`, `renovate.json` (`6d38f40`). TypeScript 6 backend tách PR riêng theo ADR-008 §12. |
+| 07/09/2026 | GĐ1 PR2: H.3a + H.3b ✅. `docker-compose.yml` + `pretest:e2e` dựng DB disposable, `prisma generate` và `migrate deploy`. Chạy thật từ clone mới không cần cấu hình: 163/163 pass, chạy lại lần hai vẫn 163/163. Phát hiện e2e phải chạy `--runInBand` vì các suite đua fixture trên Level dùng chung. |
