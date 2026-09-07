@@ -20,7 +20,7 @@
     "test:e2e:install": "playwright install chromium"
   },
   "engines": {
-    "node": ">=22 <27",
+    "node": ">=24 <25",
     "npm": ">=10"
   },
   "dependencies": {
