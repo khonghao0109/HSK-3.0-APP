@@ -7,7 +7,7 @@
  * Đây là credential local dùng một lần cho database disposable, không phải secret.
  * Mọi lệnh ghi vào DB vẫn đi qua `assertDisposableTestDatabase()`.
  */
-const DEFAULT_DATABASE_URL =
+export const DEFAULT_DATABASE_URL =
   'postgresql://hsk:test-local-postgres@127.0.0.1:5432/hsk_e2e_test';
 const DEFAULT_JWT_SECRETS =
   '{"e2e":"test-e2e-jwt-secret-at-least-32-characters"}';
@@ -16,6 +16,12 @@ const DEFAULT_JWT_ACTIVE_KID = 'e2e';
 export type E2eEnvironment = {
   databaseUrl: string;
   testDatabaseUrl: string;
+  /**
+   * True khi cả hai biến database đều chưa được set và e2e đang chạy trên
+   * database mặc định do chính tooling này sở hữu. Chỉ khi đó `pretest:e2e` mới
+   * được phép dựng lại database; caller tự chỉ định URL (CI) thì không.
+   */
+  usesBuiltInDatabase: boolean;
 };
 
 /**
@@ -42,7 +48,10 @@ export function applyE2eEnvironmentDefaults(
   const configuredDatabaseUrl = environment.DATABASE_URL;
   const configuredTestDatabaseUrl = environment.TEST_DATABASE_URL;
 
-  if (!configuredDatabaseUrl && !configuredTestDatabaseUrl) {
+  const usesBuiltInDatabase =
+    !configuredDatabaseUrl && !configuredTestDatabaseUrl;
+
+  if (usesBuiltInDatabase) {
     environment.DATABASE_URL = DEFAULT_DATABASE_URL;
     environment.TEST_DATABASE_URL = DEFAULT_DATABASE_URL;
   } else if (configuredDatabaseUrl && !configuredTestDatabaseUrl) {
@@ -63,5 +72,5 @@ export function applyE2eEnvironmentDefaults(
     throw new Error('E2E requires DATABASE_URL and TEST_DATABASE_URL');
   }
 
-  return { databaseUrl, testDatabaseUrl };
+  return { databaseUrl, testDatabaseUrl, usesBuiltInDatabase };
 }

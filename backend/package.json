@@ -28,7 +28,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "pretest:e2e": "ts-node scripts/test/prepare-e2e-database.ts",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "test:db:p0": "ts-node scripts/test/run-p0-schema-integration.ts",
     "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
