@@ -1,134 +1,51 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# HSK 3.0 APP
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Nền tảng học, ôn và thi HSK 1–9 (bảy nhóm curriculum `HSK1`…`HSK6`, `HSK7_9`).
+Monorepo, mỗi service có `package.json` và `package-lock.json` riêng — không dùng
+npm workspaces ở thời điểm này.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Trạng thái: **PRE-BETA**. Backend và admin console đã có nền; learner app và hạ tầng
+production chưa có. Trạng thái từng bước ghi ở [docs/PLAN.md](./docs/PLAN.md).
 
-## Description
+## Thư mục
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Thư mục | Nội dung |
+| --- | --- |
+| `backend/` | NestJS 11 + Prisma 5 + PostgreSQL. API `/api/v1`. Module: `auth`, `cms`, `dictionary`, `health`, `learning`, `media`, `onboarding`, `user`. |
+| `frontend/` | Next.js 16 App Router + React 19. Admin console; BFF server-only giữ token, browser không giữ bearer (ADR-003). CSS variables, không Tailwind (ADR-008). |
+| `ai/services/rag-api/` | Service RAG TypeScript tách riêng, mới ở mức scaffold. Không đưa RAG logic vào `backend/`. |
+| `ops/` | Cấu hình nginx và observability (Prometheus, Alertmanager, Grafana) cho Media. |
+| `docs/` | Toàn bộ tài liệu: kế hoạch, roadmap, kiến trúc, API contract, ADR, database, vận hành. |
 
-### Project Overview
+## Chạy nhanh
 
-HSK System is a Chinese-learning platform focused on HSK practice and assessment.  
-The repository is organized as a monorepo with:
-- `backend`: NestJS API, authentication, user management, dictionary and health modules
-- `frontend`: client application
-- `docs`: project documentation and planning notes
-
-### Technologies
-
-- Backend framework: `NestJS` + `TypeScript`
-- Database: `PostgreSQL`
-- ORM: `Prisma`
-- Authentication: `JWT` (`@nestjs/jwt`, `passport`, `passport-jwt`)
-- Password security: `argon2id` + optional `pepper`
-- Validation: `class-validator`, `class-transformer`, `Joi` (env validation)
-- Rate limit: `@nestjs/throttler`
-- Testing: `Jest`, `Supertest` (unit + e2e)
-
-### Feature Overview
-
-- Auth:
-  - Register (`POST /api/v1/auth/register`)
-  - Login (`POST /api/v1/auth/login`)
-  - Current user profile (`GET /api/v1/auth/me`)
-- User:
-  - Current user profile (`GET /api/v1/users/me`)
-  - Admin-only user list (`GET /api/v1/users`)
-- Security:
-  - JWT-based protected routes (`JwtAuthGuard`)
-  - Role-based authorization (`Roles` decorator + `RolesGuard`)
-  - Weak-password blacklist, failed-login soft lockout, request throttling
-- System:
-  - Health check module
-  - Dictionary module scaffold for learning content
-
-## Project setup
+Cần Node theo [.nvmrc](./.nvmrc) (24 LTS) và PostgreSQL 16.
 
 ```bash
-$ npm install
+# Backend — http://localhost:3000/api/v1
+cd backend && npm install && cp .env.example .env   # điền DATABASE_URL, JWT_SECRETS…
+npm run start:dev
+
+# Frontend — cần backend chạy ở BACKEND_API_URL
+cd frontend && npm install && cp .env.example .env
+npm run dev
 ```
 
-## Compile and run the project
+Gate trước khi mở PR, chạy trong thư mục service bị ảnh hưởng:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd backend  && npm run lint:check && npm run format:check && npm run build && npm test
+cd frontend && npm run lint && npm run typecheck && npm test
 ```
 
-## Run tests
+## Tài liệu
 
-```bash
-# unit tests
-$ npm run test
+Điểm vào duy nhất: **[docs/README.md](./docs/README.md)** — bản đồ tài liệu, thứ tự đọc
+và quy tắc bảo trì. Tiến độ ở [docs/PLAN.md](./docs/PLAN.md); lệnh kiểm thử đầy đủ và
+cách chạy e2e ở [docs/architecture/overview.md](./docs/architecture/overview.md).
 
-# e2e tests
-$ npm run test:e2e
+Quy tắc làm việc cho người và AI agent: [AGENTS.md](./AGENTS.md).
 
-# test coverage
-$ npm run test:cov
-```
+## Giấy phép
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Private, chưa cấp phép công khai (`UNLICENSED`).
