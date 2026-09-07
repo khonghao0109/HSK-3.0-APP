@@ -39,6 +39,10 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Validate Prisma schema
+        env:
+          # `prisma validate` chỉ đọc schema nhưng vẫn đòi env("DATABASE_URL")
+          # resolve được. Giá trị này không được kết nối tới bao giờ.
+          DATABASE_URL: postgresql://validate@127.0.0.1:5432/schema_validate
         run: npx prisma validate
 
       # `--ignore-scripts` bỏ qua postinstall của @prisma/client, nên Prisma Client

@@ -38,7 +38,7 @@ HSK-3.0-APP/
     nginx/            # media-security.conf, media-security-http.conf
     observability/    # prometheus, alertmanager, grafana, kustomize, toolchain, evidence policy
   docs/               # xem docs/README.md
-  .github/workflows/  # media-release-evidence.yml (chỉ chạy khi push tag v3.0.0)
+  .github/workflows/  # ci.yml (PR/push vào main); media-release-evidence.yml (chỉ khi push tag v3.0.0)
 ```
 
 Chưa có root `package.json` và Dockerfile. `.nvmrc` (Node 24) và `docker-compose.yml`
