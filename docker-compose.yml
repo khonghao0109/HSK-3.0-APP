@@ -1,0 +1,79 @@
+# Dependency cho dev local và e2e (H.3a, ADR-008 §11).
+#
+# Chọn `docker-compose.yml` + profile thay vì `docker-compose.test.yml` (tên trong
+# PLAN.md) để `docker compose up -d` chạy được không cần cờ `-f`, và để khi thêm
+# service dev về sau không phải duy trì hai file compose song song.
+#
+# Postgres ở profile mặc định vì `npm run test:e2e` chỉ cần Postgres: với
+# NODE_ENV=test, StorageModule dùng adapter in-memory và MalwareModule dùng test
+# scanner, nên MinIO và ClamAV không nằm trên đường chạy e2e. Ba service còn lại ở
+# profile `dev`, dành cho việc chạy ứng dụng thật ở máy local.
+#
+#   docker compose up -d --wait                 # chỉ Postgres — đủ cho e2e
+#   docker compose --profile dev up -d --wait   # thêm MinIO, ClamAV, Mailpit
+#
+# Toàn bộ credential dưới đây là giá trị local dùng một lần, không dùng ở bất kỳ
+# môi trường nào khác.
+
+name: hsk-3-0-app
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hsk
+      POSTGRES_PASSWORD: test-local-postgres
+      POSTGRES_DB: hsk_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hsk -d hsk_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    profiles: ['dev']
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: hsk-local
+      MINIO_ROOT_PASSWORD: test-local-minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  clamav:
+    profiles: ['dev']
+    image: clamav/clamav:stable
+    ports:
+      - '3310:3310'
+    volumes:
+      - clamav-data:/var/lib/clamav
+    healthcheck:
+      test: ['CMD', 'clamdcheck.sh']
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+
+  mailpit:
+    profiles: ['dev']
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  postgres-data:
+  minio-data:
+  clamav-data:

@@ -6,6 +6,7 @@
     "customExportConditions": ["node", "node-addons"]
   },
   "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["<rootDir>/utils/e2e-environment.setup.ts"],
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "tsconfig.spec.json" }]
   }
