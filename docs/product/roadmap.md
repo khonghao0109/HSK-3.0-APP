@@ -65,12 +65,15 @@ Lời hứa của Web MVP:
 - Exam engine, review scheduler, pronunciation, reader, materials, analytics và support runtime.
 - Redis/BullMQ chỉ thêm khi workload, retry, ordering và shared-state boundary chứng minh nhu cầu.
 - AI/RAG giữ service và database boundary riêng; chỉ triển khai sau provenance, evaluation, citation, privacy và safety gate.
-- Mobile/offline là P2; chưa chốt Flutter. React Native/Expo hoặc lựa chọn khác cần ADR và product evidence.
+- Mobile/offline là P2. Stack đã chốt: React Native + Expo + TypeScript (ADR-008 §1,
+  quyết định Product Owner 04/09/2026). Package `mobile/` chưa tồn tại; chỉ bắt đầu khi
+  Web MVP outcome và các tiền đề ở PLAN M7.7 đạt.
 - CI/CD, container/IaC, staging, immutable artifact promotion, project-wide observability, backup/restore và DR.
 
 ### 3.3 Những điểm đã sửa so với concept ban đầu
 
-- Dùng Next.js/React cho web, không tuyên bố Flutter/Android đã có.
+- Dùng Next.js/React cho web; mobile chốt React Native + Expo (ADR-008 §1) nhưng chưa có
+  code, không tuyên bố Flutter/Android hay app mobile đã có.
 - Password hashing hiện dùng Argon2id, không phải Bcrypt.
 - Storage production hướng tới S3-compatible private object storage; không tuyên bố Cloudinary integration.
 - Browser đi qua same-origin BFF, không cầm bearer token.
@@ -149,7 +152,7 @@ Lời hứa của Web MVP:
 | AI/RAG                   | PLANNED P2    | Licensed corpus, ACL, citations, golden eval, provider DPA/retention, safety và cost guard |
 | Hanzi/OCR                | PLANNED P2    | Product validation, licensed data/model, privacy và evaluation                             |
 | Subscription/payment     | DEFERRED P2   | Business model, legal/tax/refund/reconciliation và entitlement design                      |
-| Mobile/offline/community | DEFERRED P2   | Web MVP outcome, device need, sync/conflict model, moderation và store strategy            |
+| Mobile/offline/community | DEFERRED P2   | Stack đã chốt RN + Expo (ADR-008 §1); chờ Web MVP outcome, device need, sync/conflict model, moderation và store strategy |
 
 ## 6. Lộ trình delivery theo dependency
 

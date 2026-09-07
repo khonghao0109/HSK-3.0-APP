@@ -1,6 +1,7 @@
 # ADR-008: Chốt công nghệ cho các hạng mục còn bỏ ngỏ
 
-Status: Proposed — chờ Product Owner/Tech Lead duyệt. Ngày: 04/09/2026. Baseline: branch macdev, HEAD 3211bf8.
+Status: Proposed — chờ Product Owner/Tech Lead duyệt. Riêng mục 1 (mobile) đã được
+Product Owner chốt ngày 04/09/2026. Ngày: 04/09/2026. Baseline: branch macdev, HEAD 3211bf8.
 
 ## Context
 
@@ -27,14 +28,27 @@ Bằng chứng dùng để quyết định:
 
 ## Decision
 
-### 1. Mobile (quyết định của Product Owner)
+### 1. Mobile (quyết định của Product Owner, chốt 04/09/2026)
 
 - **React Native + Expo + TypeScript.** Expo Router, `expo-secure-store` cho
   token, `expo-sqlite` cho offline (P2), Expo Updates cho OTA không chứa native
   breaking change. E2E: Maestro. Flutter loại bỏ.
-- Hệ quả: khi tạo package mobile, chuyển sang **npm workspaces** (giữ npm, không
-  Turborepo, đúng ADR-003) và tách `packages/contracts` chứa Zod schema dùng chung
-  cho web, BFF và mobile. Trước thời điểm đó giữ lockfile riêng từng service.
+- Vị trí code: package `mobile/` ở root repo, ngang hàng `backend/` và `frontend/`;
+  contract dùng chung tách vào `packages/contracts/`. Không đổi tên `backend/` và
+  `frontend/` thành `apps/*`: harness release-evidence, script kiểm tra type và docs
+  đang hardcode đường dẫn hiện tại.
+- Khi tạo `mobile/`, chuyển sang **npm workspaces** (giữ npm, không Turborepo, đúng
+  ADR-003) với root `package.json`; thống nhất một phiên bản React, TypeScript và Zod
+  cho web, mobile và `packages/contracts` vì Expo và Next.js không được kéo hai bản
+  React. Trước thời điểm đó giữ lockfile riêng từng service. Nguồn cho
+  `packages/contracts` là các file `frontend/src/features/*/*-contract.ts` hiện có.
+- Mobile gọi thẳng backend bằng bearer token trong SecureStore, không đi qua BFF web
+  (ADR-003 chỉ áp dụng cho browser). Tiền đề backend phải xong trước dòng code mobile
+  đầu tiên: refresh/revoke session (PLAN M1.4), rate limit theo user thay `req.ip`
+  (PLAN H.4, mục 2), envelope thống nhất và OpenAPI (PLAN H.10, mục 5), CI trên PR
+  (PLAN H.2).
+- Thứ tự: PLAN M7.7, chỉ bắt đầu sau Web MVP outcome (roadmap §3.2 và bảng DEFERRED P2
+  ở §5).
 
 ### 2. Cache và queue: PostgreSQL trước, Redis hoãn có điều kiện
 
@@ -186,5 +200,6 @@ Bằng chứng dùng để quyết định:
   phí và năng lực managed service sẽ khác và cần cập nhật ADR này.
 - Tài liệu đã cập nhật theo ADR này ngày 04/09/2026: master plan chuyển vào
   `docs/archive/`, PROJECT_CONTEXT gộp vào `docs/architecture/overview.md`,
-  `docs/README.md` viết lại. Còn phải sửa `docs/product/roadmap.md` §3.2 khi ADR được
-  Accepted.
+  `docs/README.md` viết lại. `docs/product/roadmap.md` §3.2, §3.3 và bảng §5,
+  `docs/architecture/overview.md` §2 và §5, `docs/PLAN.md` M7.7 đã đồng bộ với mục 1
+  (mobile) cùng ngày. Các mục còn lại của ADR không mâu thuẫn với roadmap hiện tại.

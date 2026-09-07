@@ -32,6 +32,8 @@ HSK-3.0-APP/
     src/lib/          # api client, auth cookie, config, security (CSP)
     e2e/              # Playwright + axe
   ai/                 # placeholder rỗng (4 file 0 byte); xem ADR-008 §6
+  mobile/             # CHƯA TỒN TẠI. Dự kiến M7.7: React Native + Expo (ADR-008 §1)
+  packages/contracts/ # CHƯA TỒN TẠI. Tách từ frontend/src/features/*/*-contract.ts khi có mobile
   ops/
     nginx/            # media-security.conf, media-security-http.conf
     observability/    # prometheus, alertmanager, grafana, kustomize, toolchain, evidence policy
@@ -40,7 +42,8 @@ HSK-3.0-APP/
 ```
 
 Không có root `package.json`, Dockerfile, docker-compose, `.nvmrc`. Mỗi package dùng npm
-lockfile riêng (ADR-003).
+lockfile riêng (ADR-003). Root `package.json` với npm workspaces chỉ xuất hiện cùng
+`mobile/` và `packages/contracts/` (ADR-008 §1).
 
 ## 3. Backend
 
@@ -178,6 +181,9 @@ Không có biến `NEXT_PUBLIC_*`.
 - Route hiện có: `/login`, `/forbidden`, `/admin/exercises[/[id]]`, `/admin/media[/[id]]`;
   root redirect tới `/admin/exercises`. Chưa có learner UI.
 - Thiết kế: 36 mockup trong [../ui_image/README.md](../ui_image/README.md).
+- Mobile: React Native + Expo tại `mobile/` (ADR-008 §1), chưa có code. Mobile không đi
+  qua BFF; gọi backend trực tiếp với bearer token trong `expo-secure-store`. Bắt đầu ở
+  PLAN M7.7 sau khi M1.4, H.2, H.4, H.10 xong.
 
 ## 6. Dữ liệu và scripts
 

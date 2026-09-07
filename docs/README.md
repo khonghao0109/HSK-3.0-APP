@@ -3,6 +3,7 @@
 Nền tảng học, ôn và thi HSK 1–9 (bảy nhóm curriculum `HSK1`…`HSK6`, `HSK7_9`).
 Monorepo gồm `backend/` (NestJS 11 + Prisma 5 + PostgreSQL), `frontend/`
 (Next.js 16 App Router), `ai/` (chưa có runtime), `ops/` (nginx, observability).
+Mobile chốt React Native + Expo (ADR-008 §1), sẽ nằm ở `mobile/` từ M7.7; chưa có code.
 
 Cập nhật cấu trúc tài liệu: 04/09/2026.
 
