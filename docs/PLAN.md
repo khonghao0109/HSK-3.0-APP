@@ -1,6 +1,6 @@
 # PLAN — Tiến độ dự án HSK 3.0
 
-> Cập nhật: 04/09/2026 · Baseline: branch `macdev`, HEAD `6f74f5b` (worktree chỉ còn thay đổi docs)
+> Cập nhật: 13/09/2026 · Baseline: branch `macdev`, HEAD `808a97a`
 > · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; chưa có learner app,
 > chưa có CI, chưa có hạ tầng production.
 
@@ -63,7 +63,7 @@ GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 | --- | --- | --- | --- |
 | 0.1 | Backend NestJS 11: config Joi, ValidationPipe whitelist, CORS allowlist, prefix `/api/v1` | ✅ | `ad12828`…, `backend/src/main.ts` |
 | 0.2 | Auth: register/login/me, JWT HS256 có `kid` rotation, Argon2id + pepper, kiểm tra tài khoản active mỗi request | ✅ | `97d7027`, `test/auth.e2e-spec.ts` |
-| 0.3 | Seed 7 Level HSK1…HSK7_9; dictionary pipeline CC-CEDICT + HSK list (121.856 word) | ✅ | `06f663e`, `cfdfc11`, `backend/scripts/dictionary` |
+| 0.3 | Seed 7 Level HSK1…HSK7_9 và từ điển CC-CEDICT + HSK list (121.856 word, 11.086 mapping) qua `scripts/dictionary/seed.ts` (`npm run seed:dictionary`) | ✅ | `06f663e`, `cfdfc11`; DB dev 13/09: 7 Level, 121.856 Word, 200.156 WordMeaning |
 | 0.4 | Learning read API: levels, lessons, topics, stories; chỉ trả `published`, chưa soft-delete | ✅ | `977b79f`…`3065da2`, `learning.e2e-spec.ts` |
 | 0.5 | Schema P0: 59 model, 27 enum, 19 migration SQL, trigger bất biến, lock order, integrity/concurrency SQL test | ✅ | `17292eb`, `eaadb4f`, `test/database/*.sql` |
 | 0.6 | Onboarding goal + learning plan API | ✅ | `4b80507`, `622dcfa` |
@@ -138,9 +138,9 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT | ⬜ | R1; quyết định #2 |
-| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | chặn bởi #2 |
-| M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | |
+| M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT | ⬜ | R1; quyết định #2. DB dev 13/09: 7 `DataSource` HSK không có license, `referenceUrl` trỏ file trong repo |
+| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | chặn bởi #2. DB dev 13/09: 200.156 `WordMeaning` đều tiếng Anh, 0 `meaningVi` |
+| M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | DB dev 13/09: 35 Lesson, 70 Topic, 14 Story đều là seed "Temporary" từ `seed:learning` |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token 15 phút | ⬜ | B-03 |
 | M1.4b | Endpoint logout/revoke; BFF admin dùng refresh | ⬜ | tiền đề mobile |
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ⬜ | ADR-008 §9 |
@@ -290,7 +290,7 @@ Số liệu hiện tại (đo 04/09/2026):
 | # | Slice | Ngày | Commit | Bằng chứng |
 | --- | --- | --- | --- | --- |
 | 1 | Khởi tạo backend NestJS, auth module cơ bản | 05–07/05/2026 | `ad12828` … `2465fe8` | `backend/src/modules/auth` |
-| 2 | Seed level, dictionary pipeline, migration đầu | 06/05 | `06f663e`, `cfdfc11` | `backend/scripts/dictionary`, `scripts/levels` |
+| 2 | Seed level + dictionary (một script), dictionary pipeline, migration đầu | 06/05 | `06f663e`, `cfdfc11` | `backend/scripts/dictionary/seed.ts` upsert Level rồi insert Word; `scripts/levels/seed.ts` là file rỗng 0 byte từ commit đầu, không dùng |
 | 3 | Learning read API level/lesson/topic/story, response format | 08–22/05 | `977b79f` … `3065da2` | `backend/src/modules/learning` |
 | 4 | P0 schema foundation: 59 model, migration P0-00…P0-04, integrity/concurrency hardening | 10/08 | `17292eb`, `eaadb4f` | `backend/prisma/migrations/202608*`, `test/database/p0-schema.integration.sql` |
 | 5 | Auth active-account JWT authorization (status/deletedAt từ DB mỗi request) | 10/08 | `97d7027` | `jwt.strategy.ts`, `test/auth.e2e-spec.ts` |
@@ -362,9 +362,9 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 
 | # | Bước | Trạng thái | Bằng chứng / ghi chú |
 | --- | --- | --- | --- |
-| M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT (CC BY-SA 4.0) | ⬜ | Roadmap R1; `DataSource` đã có bảng và provenance snapshot |
-| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | Rubric chất lượng: archive master plan §13.4 |
-| M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | |
+| M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT (CC BY-SA 4.0) | ⬜ | Roadmap R1; `DataSource` đã có bảng và provenance snapshot. Kiểm tra DB dev 13/09: CC-CEDICT có license CC BY-SA 4.0, 7 nguồn HSK list chưa có license |
+| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | Rubric chất lượng: archive master plan §13.4. Kiểm tra DB dev 13/09: 0 nghĩa tiếng Việt trên 200.156 nghĩa |
+| M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | Kiểm tra DB dev 13/09: toàn bộ 35 Lesson, 70 Topic, 14 Story là placeholder "Temporary" |
 | M1.4 | Session refresh/revoke dùng `UserSession`; access 15 phút | ⬜ | B-03; schema ✅ |
 | M1.5 | Email verification + password reset qua `MailerPort` (SES / Mailpit) | ⬜ | ADR-008 §9; token schema ✅ |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
@@ -532,3 +532,4 @@ khi vertical slice bắt đầu.
 | 07/09/2026 | GĐ1 PR1: H.15 ✅ root README mô tả monorepo (`6f6d2fe`); H.13 🟡 pin Node 24 qua `.nvmrc` + `engines`, `.npmrc save-exact`, `renovate.json` (`6d38f40`). TypeScript 6 backend tách PR riêng theo ADR-008 §12. |
 | 07/09/2026 | GĐ1 PR2: H.3a + H.3b ✅. `docker-compose.yml` + `pretest:e2e` dựng DB disposable, `prisma generate` và `migrate deploy`. Chạy thật từ clone mới không cần cấu hình: 163/163 pass, chạy lại lần hai vẫn 163/163. Phát hiện e2e phải chạy `--runInBand` vì các suite đua fixture trên Level dùng chung. |
 | 07/09/2026 | GĐ1 PR3: H.2a + H.2b + H.2c 🟡. Thêm `.github/workflows/ci.yml` (ba job, action pin theo SHA, Node từ `.nvmrc`, cache npm theo từng lockfile). Chạy tay đủ chuỗi lệnh của từng job từ clone mới: backend 596/596, frontend 101/101, e2e 163/163. Chưa có run trên GitHub và chưa lint bằng actionlint (không có trên máy). |
+| 13/09/2026 | Kiểm tra DB dev `hsk_system`: chỉ có từ điển (121.856 Word, 200.156 nghĩa tiếng Anh, 11.086 mapping level) và 35 lesson placeholder; 0 user/exercise/media. Áp dụng 7 migration còn thiếu (12 → 19) sau rehearsal trên bản sao disposable; tạo `backend/.env` (gitignore) và sửa `.env.example`: `JWT_SECRETS` phải là JSON trong nháy đơn vì dotenv không unescape `\"` (bản cũ làm backend fail-closed khi `cp .env.example .env`); backend khởi động trên DB đã migrate, `GET /api/v1/health` 200; thêm `npm run seed:dictionary`; sửa tham chiếu seed ở 0.3, slice 2, overview §6/§9; ghi bằng chứng dữ liệu vào M1.1–M1.3. |

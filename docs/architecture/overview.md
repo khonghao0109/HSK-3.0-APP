@@ -192,8 +192,12 @@ Không có biến `NEXT_PUBLIC_*`.
   4.0), `parse.ts`, `normalize.ts`, `map-level.ts`, `build-final.ts`, `convert-hsk.ts`,
   `seed.ts`; output `parsed/` (121.856 word, 200.156 nghĩa tiếng Anh, 11.086 mapping
   word-level). Nghĩa tiếng Việt và license HSK list chưa xác minh (roadmap R1).
-- `backend/scripts/levels/seed.ts`, `backend/scripts/learning/seed-*.ts`,
-  `backend/scripts/test/seed-frontend-admin-console.ts` (fixture cho Playwright).
+- Thứ tự seed: `npm run seed:dictionary` (upsert 7 Level rồi insert Word, WordMeaning,
+  WordSource, WordLevel theo batch 1.000 từ `parsed/final_words.json`; phần Word không
+  idempotent, chỉ chạy trên DB chưa có Word) → `npm run seed:learning` (5 lesson
+  placeholder mỗi level, 20 từ mỗi lesson, 2 topic và story mẫu; upsert theo slug).
+  Không có script seed Level riêng: `backend/scripts/levels/seed.ts` là file rỗng.
+  `backend/scripts/test/seed-frontend-admin-console.ts` là fixture cho Playwright.
 - `backend/scripts/operations/`: wrapper `prisma migrate deploy` có timeout,
   resolver migration 19, render observability.
 - `backend/scripts/security/`: secret scan + allowlist theo fingerprint.
@@ -226,7 +230,7 @@ Backend (`cd backend`):
 | `npm run test:db:p0`, `test:db:concurrency`, `test:db:cms-concurrency`, `test:db:activity-*`, `test:db:exercise-*`, `test:db:media-*` | có, fresh migration-only | runner concurrency để lại fixture; mỗi lần chạy lại cần DB mới |
 | `npm run test:ops:media:unit`, `npm run test:security:secrets` | không | node:test |
 | `npm run test:ops:media` | tải tool | release harness, chỉ PASS ở profile linux-amd64 |
-| `npm run seed:learning`, `npm run test:seed:frontend-console` | có | seed |
+| `npm run seed:dictionary`, `npm run seed:learning`, `npm run test:seed:frontend-console` | có | seed; dictionary trước, learning sau |
 
 Frontend (`cd frontend`): `npm run dev`, `npm run lint`, `npm run typecheck`
 (chạy `next typegen` trước), `npm test` (vitest), `npm run test:e2e` (build + Playwright,
