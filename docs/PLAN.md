@@ -43,7 +43,7 @@ cam kết.
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
-| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 6 / 14 | 2–3 tuần | 🟡 |
+| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 7 / 14 | 2–3 tuần | 🟡 |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 20 | 5–7 tuần | 🟡 backend xong |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **40 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **41 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 
@@ -108,9 +108,9 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 | H.6 | Xoá nhánh so sánh password plaintext | ✅ | B-02. 14/09: `039b6af`. `verifyPassword` chỉ nhận `$argon2id$`, bỏ upgrade hash inline; bằng chứng `backend/src/modules/auth/auth.service.spec.ts` (stored password format), `backend/test/auth.e2e-spec.ts` |
 | H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. 14/09: `3db5ae1`. email lạ và account inactive verify Argon2id với hash mồi rồi `401` chung; chỉ account khoá trả `403`, BFF gắn `kind: account_locked`, form login hiện lý do; register trùng (kể cả race `P2002`) → `409`; bằng chứng `backend/test/auth.e2e-spec.ts`, `frontend/src/features/auth/login-form.spec.tsx` |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ✅ | B-05. 14/09: `99fb219`. `GET /users` nhận `page`/`limit` (`PaginationQueryDto`, limit ≤ 100), trả `{ items, total, page, limit, totalPages }`, bỏ user có `deletedAt`; `getProfile` chỉ đọc account `active` chưa soft-delete (404); `page` chặn ≤ 2147483647 cho mọi list dùng DTO chung (trước đó `page=1e20` → 500); bằng chứng `backend/test/users.e2e-spec.ts`, `backend/src/modules/user/user.service.spec.ts` |
-| H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | 🟡 | B-04. 14/09 chưa commit: adapter chọn theo `media.storageProvider`/`media.scannerProvider` (mặc định `s3`/`clamav` ở mọi môi trường); `assertMediaProviders` trong config validation chỉ nhận `memory`/`test` khi `NODE_ENV=test`, còn lại process không khởi động; bucket/region/scanner host bắt buộc theo provider thay vì theo `NODE_ENV`; bỏ signing secret, metrics token và `MEDIA_INGESTION_ENABLED=true` mặc định dưới `NODE_ENV=test`, e2e khai báo tường minh trong `backend/test/utils/e2e-environment.ts`. Còn lại của B-04: throttle 1.000/phút dưới `NODE_ENV=test`. Bằng chứng `backend/src/infrastructure/media-adapter-wiring.spec.ts`, `backend/src/config/env.validation.spec.ts`, `backend/src/config/runtime-security.spec.ts` |
-| H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | ⬜ | A-03 |
-| H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | ⬜ | |
+| H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ✅ | B-04. 14/09: `e6e6620`. adapter chọn theo `media.storageProvider`/`media.scannerProvider` (mặc định `s3`/`clamav` ở mọi môi trường); `assertMediaProviders` trong config validation chỉ nhận `memory`/`test` khi `NODE_ENV=test`, còn lại process không khởi động; bucket/region/scanner host bắt buộc theo provider thay vì theo `NODE_ENV`; bỏ signing secret, metrics token và `MEDIA_INGESTION_ENABLED=true` mặc định dưới `NODE_ENV=test`, e2e khai báo tường minh trong `backend/test/utils/e2e-environment.ts`. Còn lại của B-04: throttle 1.000/phút dưới `NODE_ENV=test`. Bằng chứng `backend/src/infrastructure/media-adapter-wiring.spec.ts`, `backend/src/config/env.validation.spec.ts`, `backend/src/config/runtime-security.spec.ts` |
+| H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | 🟡 | A-03. 14/09 chưa commit: `TransformInterceptor` bọc `{ success, data, meta: { requestId, timestamp, pagination? } }` (service trả `{ success, data, meta }` được bóc, phân trang vào `meta.pagination`; `@RawResponse()` cho bytes media); `GlobalExceptionFilter` trả `{ success: false, error: { code, message, details? }, meta }`, lỗi không phải HttpException → `500` chung, message parser/404 không trích input; `RequestIdMiddleware` nhận UUID hoặc 32 hex nginx, echo `X-Request-ID`, audit CMS dùng cùng id. Bằng chứng `backend/test/response-envelope.e2e-spec.ts`, `backend/src/common/{middleware,interceptors,filters}/*.spec.ts`; Playwright với backend thật pass |
+| H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | 🟡 | Làm cùng H.10a: đổi envelope mà không sửa BFF thì login gãy. `frontend/src/lib/api/backend-envelope.ts` parse envelope backend, BFF giữ shape trả browser; `docs/api/api.md` §1, A.1–A.3, A.5, A.10–A.12 |
 | H.10c | Cài `@nestjs/swagger`, xuất `openapi.json` trong CI, `openapi-typescript` cho frontend | ⬜ | ADR-008 §5 |
 | H.11a | Migration: bỏ `BEGIN/COMMIT` (25P02); resolver migration tham số hoá | ⬜ | C-01, C-02. Từ H.4b có 20 migration: `assertCatalog` (release validation) và test catalog trong `media-lifecycle-migration-validation.helpers.spec.ts` còn đòi đúng 19 |
 | H.11b | Pin UTC/timestamptz; unique index goal/plan | ⬜ | C-05, C-04 |
@@ -348,7 +348,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.6 | Xoá nhánh so sánh password plaintext | ✅ | B-02. `039b6af` |
 | H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. Xem GĐ2 H.7 |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ✅ | B-05. Xem GĐ2 H.8 |
-| H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | 🟡 | B-04. Xem GĐ2 H.9 |
+| H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ✅ | B-04. Xem GĐ2 H.9 |
 | H.10 | Envelope toàn cục: APP_INTERCEPTOR + APP_FILTER, echo `x-request-id`; cập nhật api.md §1; sau đó bật OpenAPI | ⬜ | A-03, ADR-008 §5 |
 | H.11 | Migration: bỏ `BEGIN/COMMIT`, resolver tham số hoá, pin UTC, unique index goal/plan | ⬜ | C-01, C-02, C-05, C-04 |
 | H.12 | Prisma `$disconnect`; `canonicalJson` maxDepth; idempotency TTL | ⬜ | D-06, D-01, D-02 |
@@ -539,3 +539,4 @@ khi vertical slice bắt đầu.
 | 14/09/2026 | GĐ2: H.6 ✅ (`039b6af`, đã push). H.7 🟡: chống dò email qua mã lỗi và thời gian login (hash mồi Argon2id), register trùng → `409`, form login tách 403 khoá khỏi 403 không phải admin. |
 | 14/09/2026 | GĐ2: H.7 ✅ (`3db5ae1`, đã push). H.8 🟡: `GET /users` phân trang và bỏ user soft-delete, `GET /users/me` chỉ trả account active; `PaginationQueryDto.page` ≤ 2147483647 để `page` quá lớn trả `400` thay vì `500`. |
 | 14/09/2026 | GĐ2: H.8 ✅ (`99fb219`, đã push). H.9 🟡: provider media tường minh (`MEDIA_STORAGE_PROVIDER`, `MEDIA_SCANNER_PROVIDER`), adapter giả chỉ hợp lệ khi `NODE_ENV=test`, không còn secret/ingestion mặc định suy từ `NODE_ENV=test`. |
+| 14/09/2026 | GĐ2: H.9 ✅ (`e6e6620`, đã push). H.10a 🟡 + H.10b 🟡: envelope response/lỗi toàn cục, `X-Request-ID`, BFF parse envelope; `GET /users` chuyển phân trang sang `meta.pagination`, `/health` bỏ `success` tự gắn. |

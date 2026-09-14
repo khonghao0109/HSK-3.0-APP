@@ -585,7 +585,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     )
       .send({})
       .expect(201);
-    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data).toEqual(first.body.data);
     await expect(
       prisma.learningEvent.count({
         where: { userId, type: 'lesson_started', lessonId },
@@ -609,7 +609,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     )
       .send({})
       .expect(201);
-    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data).toEqual(first.body.data);
     await post(`/learning/topics/${topicId}/start`, 'topic-start-spoof')
       .send({ userId, completionPercent: 100 })
       .expect(400);
@@ -661,7 +661,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     )
       .send({ durationSeconds: 10, answer: { optionId: 'hello' } })
       .expect(201);
-    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data).toEqual(first.body.data);
     expect(first.body.data).toMatchObject({
       attemptNumber: 1,
       isCorrect: true,
@@ -848,7 +848,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     )
       .send({})
       .expect(201);
-    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data).toEqual(first.body.data);
     await expect(
       prisma.learningPlanItem.findUnique({ where: { id: planItemId } }),
     ).resolves.toMatchObject({ status: 'completed' });
@@ -1011,7 +1011,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     )
       .send({ answer: { optionId: 'heard-hello' }, durationSeconds: 3 })
       .expect(201);
-    expect(retry.body).toEqual(first.body);
+    expect(retry.body.data).toEqual(first.body.data);
     expect(retry.body.data.media.url).toBe(
       `https://cdn.example.test/activity-listening-${suffix}.mp3`,
     );
@@ -1130,8 +1130,8 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       })
       .expect(201);
     return {
-      token: response.body.accessToken as string,
-      userId: response.body.user.id as number,
+      token: response.body.data.accessToken as string,
+      userId: response.body.data.user.id as number,
     };
   }
 });

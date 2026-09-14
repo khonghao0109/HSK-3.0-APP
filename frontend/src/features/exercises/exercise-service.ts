@@ -7,8 +7,8 @@ import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
 import {
-  exerciseDetailResponseSchema,
-  exerciseListResponseSchema,
+  backendExerciseDetailSchema,
+  backendExerciseListSchema,
   type AdminExerciseDetail,
   type ExerciseListResponse,
 } from './exercise-contract';
@@ -32,7 +32,7 @@ export async function loadExercises(
 ): Promise<ExerciseListResponse> {
   const token = await sessionToken();
   const params = serializeExerciseQuery(query);
-  return exerciseListResponseSchema.parse(
+  return backendExerciseListSchema.parse(
     await backend.request(`/api/v1/admin/cms/exercises?${params.toString()}`, {
       token,
     }),
@@ -43,7 +43,7 @@ export async function loadExercise(
   exerciseId: number,
 ): Promise<AdminExerciseDetail> {
   const token = await sessionToken();
-  return exerciseDetailResponseSchema.parse(
+  return backendExerciseDetailSchema.parse(
     await backend.request(`/api/v1/admin/cms/exercises/${exerciseId}`, {
       token,
     }),

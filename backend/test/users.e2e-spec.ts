@@ -32,7 +32,7 @@ describe('Users E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email: emailFor(label), password })
       .expect(201);
-    return response.body.accessToken as string;
+    return response.body.data.accessToken as string;
   };
 
   const listUsers = (query = '') =>
@@ -123,13 +123,13 @@ describe('Users E2E', () => {
       const { body } = await listUsers(`?page=${page}&limit=${limit}`).expect(
         200,
       );
-      expect(body).toMatchObject({
+      expect(body.meta.pagination).toEqual({
         total: expected.length,
         page,
         limit,
         totalPages,
       });
-      seen.push(...(body.items as UserItem[]));
+      seen.push(...(body.data as UserItem[]));
     }
 
     expect(seen).toEqual(expected);
@@ -165,31 +165,41 @@ describe('Users E2E', () => {
       const { body } = await listUsers(`?page=${page}&limit=${limit}`).expect(
         200,
       );
-      expect(body).toEqual({
-        items: expected.slice((page - 1) * limit, page * limit),
-        total: expected.length,
-        page,
-        limit,
-        totalPages,
+      expect(body).toMatchObject({
+        success: true,
+        data: expected.slice((page - 1) * limit, page * limit),
+        meta: {
+          pagination: { total: expected.length, page, limit, totalPages },
+        },
       });
     }
     const { body: lastAllowed } = await listUsers(
       '?page=2147483647&limit=100',
     ).expect(200);
-    expect(lastAllowed).toMatchObject({ items: [], page: 2147483647 });
+    expect(lastAllowed).toMatchObject({
+      data: [],
+      meta: { pagination: { page: 2147483647 } },
+    });
   });
 
   it('defaults to page 1 with 20 users', async () => {
     const expected = await visibleUsers();
 
-    const { body } = await listUsers().expect(200);
+    const response = await listUsers().expect(200);
 
-    expect(body).toEqual({
-      items: expected.slice(0, 20),
-      total: expected.length,
-      page: 1,
-      limit: 20,
-      totalPages: Math.ceil(expected.length / 20),
+    expect(response.body).toEqual({
+      success: true,
+      data: expected.slice(0, 20),
+      meta: {
+        requestId: response.headers['x-request-id'],
+        timestamp: expect.any(String),
+        pagination: {
+          total: expected.length,
+          page: 1,
+          limit: 20,
+          totalPages: Math.ceil(expected.length / 20),
+        },
+      },
     });
   });
 
@@ -206,7 +216,10 @@ describe('Users E2E', () => {
   ])('rejects a %s with 400', async (_label, query) => {
     const { body } = await listUsers(query).expect(400);
 
-    expect(body).toMatchObject({ code: 'REQUEST_VALIDATION_FAILED' });
+    expect(body).toMatchObject({
+      success: false,
+      error: { code: 'REQUEST_VALIDATION_FAILED' },
+    });
   });
 
   it('keeps GET /users admin-only', async () => {
@@ -222,11 +235,13 @@ describe('Users E2E', () => {
   it('stops serving /users/me once the account is soft-deleted', async () => {
     const token = await register('leaving');
 
-    const { body: profile } = await http()
-      .get('/api/v1/users/me')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    expect(Object.keys(profile as UserItem).sort()).toEqual([
+    const profile = (
+      await http()
+        .get('/api/v1/users/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+    ).body.data as UserItem;
+    expect(Object.keys(profile).sort()).toEqual([
       'createdAt',
       'email',
       'id',
@@ -248,13 +263,13 @@ describe('Users E2E', () => {
     // The newest account sorts last, so it would be on the last page.
     const { body: first } = await listUsers('?limit=100').expect(200);
     const { body: last } = await listUsers(
-      `?page=${first.totalPages as number}&limit=100`,
+      `?page=${first.meta.pagination.totalPages as number}&limit=100`,
     ).expect(200);
-    expect(last.total).toBe(
+    expect(last.meta.pagination.total).toBe(
       await prisma.user.count({ where: { deletedAt: null } }),
     );
-    expect((last.items as UserItem[]).map((user) => user.id)).not.toContain(
-      (profile as UserItem).id,
+    expect((last.data as UserItem[]).map((user) => user.id)).not.toContain(
+      profile.id,
     );
   });
 });

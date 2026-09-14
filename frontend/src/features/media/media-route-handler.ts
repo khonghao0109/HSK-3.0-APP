@@ -5,9 +5,9 @@ import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
 import {
-  mediaDetailResponseSchema,
-  mediaListResponseSchema,
-  mediaMutationResponseSchema,
+  backendMediaDetailSchema,
+  backendMediaListSchema,
+  backendMediaMutationSchema,
 } from './media-contract';
 import { parseMediaQuery, serializeMediaQuery } from './media-query';
 
@@ -50,7 +50,7 @@ export async function handleMediaList(request: NextRequest) {
     Object.fromEntries(request.nextUrl.searchParams),
   );
   try {
-    const response = mediaListResponseSchema.parse(
+    const response = backendMediaListSchema.parse(
       await backend.request(
         `/api/v1/admin/cms/media?${serializeMediaQuery(query).toString()}`,
         { token: session },
@@ -69,7 +69,7 @@ export async function handleMediaDetail(request: NextRequest, mediaId: string) {
   const session = token(request);
   if (!session) return failure(401);
   try {
-    const response = mediaDetailResponseSchema.parse(
+    const response = backendMediaDetailSchema.parse(
       await backend.request(`/api/v1/admin/cms/media/${mediaId}`, {
         token: session,
       }),
@@ -92,7 +92,7 @@ export async function handleMediaMutation(
   const session = token(request);
   if (!session) return failure(401);
   try {
-    const response = mediaMutationResponseSchema.parse(
+    const response = backendMediaMutationSchema.parse(
       await backend.request(`/api/v1/admin/cms/media/${mediaId}/${operation}`, {
         token: session,
         method: 'POST',

@@ -211,10 +211,14 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       .send({ lessonId, topicId, ...choicePayload(), [secretKey]: true })
       .expect(400);
     expect(invalid.body).toMatchObject({
-      code: 'REQUEST_VALIDATION_FAILED',
-      errors: expect.arrayContaining([
-        expect.objectContaining({ path: '$.$unknown' }),
-      ]),
+      error: {
+        code: 'REQUEST_VALIDATION_FAILED',
+        details: {
+          errors: expect.arrayContaining([
+            expect.objectContaining({ path: '$.$unknown' }),
+          ]),
+        },
+      },
     });
     expect(JSON.stringify(invalid.body)).not.toContain(secretKey);
 
@@ -320,7 +324,11 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
         latestRevision: expect.objectContaining({ id: revision1Id }),
       }),
     ]);
-    expect(list.body.meta).toMatchObject({ page: 1, limit: 10, total: 1 });
+    expect(list.body.meta.pagination).toMatchObject({
+      page: 1,
+      limit: 10,
+      total: 1,
+    });
 
     const detail = await request(app.getHttpServer())
       .get(`/api/v1/admin/cms/exercises/${exerciseId}`)
@@ -405,7 +413,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       .set('Idempotency-Key', 'authoring-v1-attempt-01')
       .send({ answer: { optionId: 'hello' }, durationSeconds: 3 })
       .expect(201);
-    expect(oldRetry.body).toEqual(attemptV1.body);
+    expect(oldRetry.body.data).toEqual(attemptV1.body.data);
 
     const v2Attempt = await request(app.getHttpServer())
       .post(`/api/v1/learning/exercises/${exerciseId}/attempts`)
@@ -440,7 +448,9 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     const rejected = await adminPost(
       `/admin/cms/exercises/${speakingExerciseId}/revisions/${speakingRevisionId}/publish`,
     ).expect(422);
-    expect(rejected.body.message).toMatch(/speaking_repeat.*unsupported/i);
+    expect(rejected.body.error.message).toMatch(
+      /speaking_repeat.*unsupported/i,
+    );
     expect(JSON.stringify(rejected.body)).not.toContain('referenceText');
   });
 
@@ -463,7 +473,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
         orderIndex: 29,
       })
       .expect(409);
-    expect(missingMedia.body.message).toBe(
+    expect(missingMedia.body.error.message).toBe(
       'LessonExercise violates a database integrity constraint.',
     );
     expect(JSON.stringify(missingMedia.body)).not.toContain('foreign key');
@@ -510,7 +520,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       const rejected = await adminPost(
         `/admin/cms/exercises/${created.data.exercise.id}/revisions/${created.data.revision.id}/publish`,
       ).expect(422);
-      expect(rejected.body.message).toMatch(/audio media.*ready/i);
+      expect(rejected.body.error.message).toMatch(/audio media.*ready/i);
       expect(JSON.stringify(rejected.body)).not.toContain(media.url);
     }
 
@@ -695,8 +705,8 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       .send({ email, password, name: `Exercise ${label}` })
       .expect(201);
     return {
-      userId: response.body.user.id as number,
-      token: response.body.accessToken as string,
+      userId: response.body.data.user.id as number,
+      token: response.body.data.accessToken as string,
     };
   }
 
@@ -705,7 +715,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(201);
-    return response.body.accessToken as string;
+    return response.body.data.accessToken as string;
   }
 });
 

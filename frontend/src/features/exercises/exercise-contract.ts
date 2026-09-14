@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  backendEnvelope,
+  backendPage,
+  paginationSchema,
+} from '@/lib/api/backend-envelope';
+
 export const exerciseTypes = [
   'mcq',
   'fill_blank',
@@ -90,21 +96,23 @@ export const adminExerciseDetailSchema = adminExerciseSchema
   .omit({ latestRevision: true })
   .extend({ revisions: z.array(revisionSchema) });
 
+// BFF → browser shapes.
 export const exerciseListResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(adminExerciseSchema),
-  meta: z.object({
-    page: z.number().int().positive(),
-    limit: z.number().int().positive(),
-    total: z.number().int().nonnegative(),
-    totalPages: z.number().int().nonnegative(),
-  }),
+  meta: paginationSchema,
 });
 
 export const exerciseDetailResponseSchema = z.object({
   success: z.literal(true),
   data: adminExerciseDetailSchema,
 });
+
+// Backend → BFF: the global envelope, resolved to the BFF shapes above.
+export const backendExerciseListSchema = backendPage(adminExerciseSchema);
+export const backendExerciseDetailSchema = backendEnvelope(
+  adminExerciseDetailSchema,
+);
 
 export type AdminExercise = z.infer<typeof adminExerciseSchema>;
 export type AdminExerciseDetail = z.infer<typeof adminExerciseDetailSchema>;

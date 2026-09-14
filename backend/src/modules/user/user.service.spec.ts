@@ -64,11 +64,9 @@ describe('UserService', () => {
       await expect(
         service.getAllUsers({ page: 3, limit: 20 }),
       ).resolves.toEqual({
-        items,
-        total: 45,
-        page: 3,
-        limit: 20,
-        totalPages: 3,
+        success: true,
+        data: items,
+        meta: { page: 3, limit: 20, total: 45, totalPages: 3 },
       });
       expect(transaction).toHaveBeenCalledTimes(1);
       expect(findMany).toHaveBeenCalledTimes(1);
@@ -89,7 +87,7 @@ describe('UserService', () => {
 
         await expect(
           service.getAllUsers({ page: 1, limit }),
-        ).resolves.toMatchObject({ total, totalPages });
+        ).resolves.toMatchObject({ meta: { total, totalPages } });
       },
     );
 

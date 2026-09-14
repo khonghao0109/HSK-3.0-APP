@@ -81,15 +81,17 @@ không suy ra từ `NODE_ENV` (H.9, finding B-04).
   `status`/`deletedAt`/`role` từ DB mỗi request nên khoá tài khoản có hiệu lực ngay.
 - Validation toàn cục: `whitelist`, `forbidNonWhitelisted`, `transform`; field lạ →
   400 với path `$.$unknown`; boolean chỉ nhận JSON boolean thật.
-- Envelope: learning, onboarding, activity, CMS, media trả `{ success: true, data,
-  meta? }`; auth, users, dictionary trả object/array trần; health trả shape riêng.
-  Chưa có interceptor toàn cục (xem [../api/api.md](../api/api.md) §1).
-- Lỗi: body mặc định của Nest `{ statusCode, message, error }`; validation trả
-  `{ code, message, errors }`; một số lỗi domain trả `{ code, message }`.
-- Pagination: `page ≥ 1`, `limit 1..100` mặc định 20, `meta { page, limit, total,
-  totalPages }`; không có `sortBy/sortOrder`.
+- Envelope (H.10a): `TransformInterceptor` và `GlobalExceptionFilter` toàn cục bọc mọi
+  response JSON thành `{ success: true, data, meta: { requestId, timestamp,
+  pagination? } }` hoặc `{ success: false, error: { code, message, details? }, meta }`;
+  chỉ bytes signed media content không bọc. `RequestIdMiddleware` echo `X-Request-ID`
+  (xem [../api/api.md](../api/api.md) §1).
+- Lỗi không phải `HttpException` → `500` chung, không lộ message Prisma/SQL; validation
+  trả `error.code = REQUEST_VALIDATION_FAILED` với `details.errors`.
+- Pagination: `page` 1..2147483647, `limit 1..100` mặc định 20, `meta.pagination
+  { page, limit, total, totalPages }`; không có `sortBy/sortOrder`.
 - Idempotency: header `Idempotency-Key` cho activity write (8–128 ký tự), exercise
-  import commit (8–128) và media ingestion (32–128); replay trả kết quả gốc, cùng key
+  import commit (8–128) và media ingestion (32–128); replay trả `data` gốc, cùng key
   khác body → 409.
 - Mọi `POST` trả `201` kể cả replay (chưa dùng `@HttpCode`).
 - Throttle toàn cục 20 req/phút/IP (register 100, login 200); xem finding A-02.

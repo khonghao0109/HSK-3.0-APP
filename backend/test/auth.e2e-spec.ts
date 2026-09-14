@@ -52,22 +52,32 @@ describe('Auth E2E', () => {
       .send({ email: userEmail, password, name: 'E2E User' })
       .expect(201);
 
-    expect(registerRes.body).toHaveProperty('accessToken');
+    expect(registerRes.body.data).toHaveProperty('accessToken');
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: userEmail, password })
       .expect(201);
 
-    expect(loginRes.body).toHaveProperty('accessToken');
-    const token = loginRes.body.accessToken as string;
+    expect(loginRes.body).toEqual({
+      success: true,
+      data: {
+        user: expect.objectContaining({ email: userEmail }),
+        accessToken: expect.any(String),
+      },
+      meta: {
+        requestId: loginRes.headers['x-request-id'],
+        timestamp: expect.any(String),
+      },
+    });
+    const token = loginRes.body.data.accessToken as string;
 
     const meRes = await request(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(meRes.body.user.email).toBe(userEmail);
+    expect(meRes.body.data.user.email).toBe(userEmail);
   });
 
   it('GET /users with user role should return 403', async () => {
@@ -76,7 +86,7 @@ describe('Auth E2E', () => {
       .send({ email: userEmail, password })
       .expect(201);
 
-    const userToken = loginRes.body.accessToken as string;
+    const userToken = loginRes.body.data.accessToken as string;
 
     await request(app.getHttpServer())
       .get('/api/v1/users')
@@ -100,15 +110,15 @@ describe('Auth E2E', () => {
       .send({ email: adminEmail, password })
       .expect(201);
 
-    const adminToken = loginRes.body.accessToken as string;
+    const adminToken = loginRes.body.data.accessToken as string;
 
     const usersRes = await request(app.getHttpServer())
       .get('/api/v1/users')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    expect(usersRes.body).toMatchObject({ page: 1, limit: 20 });
-    expect(Array.isArray(usersRes.body.items)).toBe(true);
+    expect(usersRes.body.meta.pagination).toMatchObject({ page: 1, limit: 20 });
+    expect(Array.isArray(usersRes.body.data)).toBe(true);
   });
 
   it('returns 409 for a duplicate registration, including concurrent ones', async () => {
@@ -130,7 +140,10 @@ describe('Auth E2E', () => {
     ]);
     expect(
       responses.find((response) => response.status === 409)?.body,
-    ).toMatchObject({ statusCode: 409, message: 'Email already exists' });
+    ).toMatchObject({
+      success: false,
+      error: { code: 'CONFLICT', message: 'Email already exists' },
+    });
   });
 
   it('answers unknown and suspended accounts with the generic 401 after an Argon2 verification', async () => {
@@ -158,7 +171,10 @@ describe('Auth E2E', () => {
           .post('/api/v1/auth/login')
           .send({ email, password })
           .expect(401);
-        expect(response.body).toMatchObject({ message: 'Invalid credentials' });
+        expect(response.body).toMatchObject({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Invalid credentials' },
+        });
         expect(verifyPassword).toHaveBeenCalledTimes(1);
         expect(verifyPassword.mock.calls[0]?.[1]).toMatch(/^\$argon2id\$/u);
       }

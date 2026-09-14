@@ -9,6 +9,7 @@ import { createSafeValidationException } from '../src/common/validation/safe-val
 import { normalizePinyin } from '../src/common/utils/normalize-pinyin';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { envelopeMeta } from './utils/api-envelope';
 
 type LessonDetailResponseBody = {
   success: boolean;
@@ -512,7 +513,7 @@ describe('Learning Lesson Detail E2E', () => {
       .query({ query: 'Ke3 Jian4' })
       .expect(200);
 
-    const pinyins = (response.body as Array<{ pinyin: string }>).map(
+    const pinyins = (response.body.data as Array<{ pinyin: string }>).map(
       (word) => word.pinyin,
     );
     expect(pinyins).toContain(publicVisibilityPinyin);
@@ -536,7 +537,7 @@ describe('Learning Lesson Detail E2E', () => {
         },
       ],
     });
-    expect(response.body.meta).toEqual({
+    expect(response.body.meta.pagination).toEqual({
       page: 1,
       limit: 20,
       total: 1,
@@ -551,7 +552,7 @@ describe('Learning Lesson Detail E2E', () => {
 
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(1);
-    expect(response.body.meta).toEqual({
+    expect(response.body.meta.pagination).toEqual({
       page: 1,
       limit: 1,
       total: 1,
@@ -586,7 +587,7 @@ describe('Learning Lesson Detail E2E', () => {
     expect(
       response.body.data.map((topic: { title: string }) => topic.title),
     ).toEqual(['First Topic', 'Second Topic']);
-    expect(response.body.meta).toEqual({
+    expect(response.body.meta.pagination).toEqual({
       page: 1,
       limit: 20,
       total: 2,
@@ -673,12 +674,7 @@ describe('Learning Lesson Detail E2E', () => {
           slug: storySlug,
         },
       ],
-      meta: {
-        page: 1,
-        limit: 20,
-        total: 1,
-        totalPages: 1,
-      },
+      meta: envelopeMeta({ page: 1, limit: 20, total: 1, totalPages: 1 }),
     });
   });
 
@@ -689,7 +685,7 @@ describe('Learning Lesson Detail E2E', () => {
 
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(1);
-    expect(response.body.meta).toEqual({
+    expect(response.body.meta.pagination).toEqual({
       page: 1,
       limit: 1,
       total: 1,

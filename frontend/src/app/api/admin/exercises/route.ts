@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { exerciseListResponseSchema } from '@/features/exercises/exercise-contract';
+import { backendExerciseListSchema } from '@/features/exercises/exercise-contract';
 import {
   parseExerciseQuery,
   serializeExerciseQuery,
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     Object.fromEntries(request.nextUrl.searchParams),
   );
   try {
-    const response = exerciseListResponseSchema.parse(
+    const response = backendExerciseListSchema.parse(
       await backend.request(
         `/api/v1/admin/cms/exercises?${serializeExerciseQuery(query).toString()}`,
         { token },

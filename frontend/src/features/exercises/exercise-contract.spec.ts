@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  backendExerciseDetailSchema,
+  backendExerciseListSchema,
   exerciseDetailResponseSchema,
   exerciseListResponseSchema,
 } from './exercise-contract';
+
+const BACKEND_META = {
+  requestId: '7d1f4a9e-3b2c-4d5e-8f60-1a2b3c4d5e6f',
+  timestamp: '2026-09-14T05:00:00.000Z',
+};
 
 function exercise() {
   return {
@@ -36,6 +43,33 @@ function exercise() {
 }
 
 describe('Exercise read API runtime contract', () => {
+  it('resolves the backend envelope to the BFF list and detail shapes', () => {
+    const pagination = { page: 1, limit: 20, total: 1, totalPages: 1 };
+    const list = backendExerciseListSchema.parse({
+      success: true,
+      data: [{ ...exercise(), latestRevision: null }],
+      meta: { ...BACKEND_META, pagination },
+    });
+    expect(list.meta).toEqual(pagination);
+    expect(exerciseListResponseSchema.parse(list)).toEqual(list);
+
+    const detail = backendExerciseDetailSchema.parse({
+      success: true,
+      data: { ...exercise(), revisions: [] },
+      meta: BACKEND_META,
+    });
+    expect(detail).toEqual({
+      success: true,
+      data: expect.objectContaining({ revisions: [] }),
+    });
+    expect(
+      backendExerciseDetailSchema.safeParse({
+        success: true,
+        data: { ...exercise(), revisions: [] },
+      }).success,
+    ).toBe(false);
+  });
+
   it('accepts the minimal list and detail projections used by the console', () => {
     expect(
       exerciseListResponseSchema.parse({

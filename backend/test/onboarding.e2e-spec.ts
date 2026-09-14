@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { envelopeMeta } from './utils/api-envelope';
 
 type GoalResponse = {
   success: true;
@@ -176,15 +177,15 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email, password, name: 'Onboarding User A' })
       .expect(201);
-    expect(registerResponse.body.accessToken).toEqual(expect.any(String));
+    expect(registerResponse.body.data.accessToken).toEqual(expect.any(String));
 
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(201);
 
-    token = loginResponse.body.accessToken as string;
-    userId = loginResponse.body.user.id as number;
+    token = loginResponse.body.data.accessToken as string;
+    userId = loginResponse.body.data.user.id as number;
   });
 
   it('2. starts at set_goal', async () => {
@@ -202,6 +203,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
         hasCompletedPlacement: false,
         nextStep: 'set_goal',
       },
+      meta: envelopeMeta(),
     });
   });
 
@@ -499,13 +501,17 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email: userBEmail, password })
       .expect(201);
-    const userBToken = login.body.accessToken as string;
+    const userBToken = login.body.data.accessToken as string;
 
     const current = await request(app.getHttpServer())
       .get('/api/v1/onboarding/goals/current')
       .set('Authorization', `Bearer ${userBToken}`)
       .expect(200);
-    expect(current.body).toEqual({ success: true, data: null });
+    expect(current.body).toEqual({
+      success: true,
+      data: null,
+      meta: envelopeMeta(),
+    });
 
     await request(app.getHttpServer())
       .post('/api/v1/onboarding/goals')
@@ -552,10 +558,14 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .expect(400);
 
     expect(register.body).toMatchObject({
-      code: 'REQUEST_VALIDATION_FAILED',
-      errors: expect.arrayContaining([
-        expect.objectContaining({ path: '$.$unknown' }),
-      ]),
+      error: {
+        code: 'REQUEST_VALIDATION_FAILED',
+        details: {
+          errors: expect.arrayContaining([
+            expect.objectContaining({ path: '$.$unknown' }),
+          ]),
+        },
+      },
     });
     expect(JSON.stringify(register.body)).not.toContain('anonymizedEmail');
 
@@ -563,7 +573,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email: anonymizedEmail, password })
       .expect(201);
-    const anonymizedToken = validRegister.body.accessToken as string;
+    const anonymizedToken = validRegister.body.data.accessToken as string;
 
     await prisma.user.update({
       where: { email: anonymizedEmail },

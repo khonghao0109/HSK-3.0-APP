@@ -72,7 +72,7 @@ describe('Strict JSON boolean contract E2E', () => {
       })
       .expect(201);
     await prisma.user.update({
-      where: { id: admin.body.user.id as number },
+      where: { id: admin.body.data.user.id as number },
       data: { role: 'admin' },
     });
     adminToken = (
@@ -83,7 +83,7 @@ describe('Strict JSON boolean contract E2E', () => {
           password,
         })
         .expect(201)
-    ).body.accessToken as string;
+    ).body.data.accessToken as string;
 
     userToken = (
       await request(app.getHttpServer())
@@ -93,7 +93,7 @@ describe('Strict JSON boolean contract E2E', () => {
           password,
         })
         .expect(201)
-    ).body.accessToken as string;
+    ).body.data.accessToken as string;
   });
 
   afterAll(async () => {

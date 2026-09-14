@@ -104,13 +104,13 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email: normalEmail, password, name: 'CMS Normal User' })
       .expect(201);
-    normalToken = normalRegistration.body.accessToken as string;
+    normalToken = normalRegistration.body.data.accessToken as string;
 
     const adminRegistration = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({ email: adminEmail, password, name: 'CMS Admin' })
       .expect(201);
-    adminId = adminRegistration.body.user.id as number;
+    adminId = adminRegistration.body.data.user.id as number;
     await prisma.user.update({
       where: { id: adminId },
       data: { role: 'admin' },
@@ -119,7 +119,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password })
       .expect(201);
-    adminToken = adminLogin.body.accessToken as string;
+    adminToken = adminLogin.body.data.accessToken as string;
 
     await request(app.getHttpServer())
       .get('/api/v1/admin/cms/lessons')
@@ -144,6 +144,17 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       revision: { revision: 1 },
     });
 
+    // No x-request-id was sent: the generated id is echoed and audited.
+    const requestId = response.headers['x-request-id'];
+    expect(response.body.meta.requestId).toBe(requestId);
+    await expect(
+      prisma.auditLog.findFirstOrThrow({
+        where: { targetType: 'lesson', targetId: String(lessonId) },
+        orderBy: { id: 'asc' },
+        select: { correlationId: true },
+      }),
+    ).resolves.toEqual({ correlationId: requestId });
+
     const publicLessons = await request(app.getHttpServer())
       .get('/api/v1/learning/lessons')
       .query({ levelId })
@@ -166,7 +177,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .post('/api/v1/learning-plans')
       .set('Authorization', `Bearer ${normalToken}`)
       .expect(409);
-    expect(noPlan.body.message).toMatch(/No published lessons/i);
+    expect(noPlan.body.error.message).toMatch(/No published lessons/i);
   });
 
   it('3. publishes a Topic under a draft Lesson without exposing it publicly', async () => {
@@ -214,7 +225,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       )
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
-    expect(response.body.message).toMatch(/published Topic or Story/i);
+    expect(response.body.error.message).toMatch(/published Topic or Story/i);
   });
 
   it('5. publishes only the latest approved ready Lesson revision', async () => {
@@ -327,7 +338,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       )
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
-    expect(response.body.message).toMatch(/latest content revision/i);
+    expect(response.body.error.message).toMatch(/latest content revision/i);
   });
 
   it('10. serializes concurrent revision creation without lost updates', async () => {
@@ -382,7 +393,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       )
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
-    expect(response.body.message).toMatch(/must approve/i);
+    expect(response.body.error.message).toMatch(/must approve/i);
   });
 
   it('12. filters draft/deleted child content and never returns exercise answer', async () => {
@@ -530,7 +541,11 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
         latestRevision: expect.objectContaining({ id: latestLessonRevisionId }),
       }),
     ]);
-    expect(list.body.meta).toMatchObject({ page: 1, limit: 10, total: 1 });
+    expect(list.body.meta.pagination).toMatchObject({
+      page: 1,
+      limit: 10,
+      total: 1,
+    });
 
     const detail = await request(app.getHttpServer())
       .get(`/api/v1/admin/cms/lessons/${lessonId}`)

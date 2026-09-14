@@ -71,7 +71,7 @@ describe('Login lockout and email throttle (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({ email, password: PASSWORD })
       .expect(201);
-    return { id: response.body.user.id as number, email };
+    return { id: response.body.data.user.id as number, email };
   }
 
   function statusCounts(statuses: number[]): Record<number, number> {

@@ -15,8 +15,8 @@ export class HealthService {
     // thêm dynamic param. $queryRaw với tagged template luôn parameterized.
     await this.prisma.$queryRaw`SELECT 1`;
 
+    // The global envelope adds `success`; this is only the `data` payload.
     return {
-      success: true,
       database: 'connected',
       env: this.configService.get<string>('app.env'),
       port: this.configService.get<number>('app.port'),

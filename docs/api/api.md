@@ -23,26 +23,43 @@ spec sinh thay vì viết tay.
 - Validation: `whitelist`, `forbidNonWhitelisted`, `transform`. Field lạ → `400` với
   path `$.$unknown`. Boolean chỉ nhận JSON boolean thật. ID trên path phải là số nguyên
   dương `1..2147483647`, sai → `400`.
-- Envelope: **không có interceptor toàn cục.** Learning, Onboarding, Activity/Progress,
-  CMS, Media Admin/Ingestion và Media access trả `{ "success": true, "data": …,
-  "meta"?: … }`. Auth, Users và Dictionary trả object/array trần. Health trả
-  `{ success, database, env, port }`. Client không được giả định một envelope duy nhất
-  (backlog A-03).
-- `meta` chỉ xuất hiện ở list phân trang: `{ page, limit, total, totalPages }`. Không có
-  `meta.requestId`/`timestamp`. Header `x-request-id` (UUID) chỉ được đọc vào audit log
-  ở route CMS, không echo ra response.
-- Lỗi: body mặc định NestJS `{ statusCode, message, error }`. Validation `400` trả
-  `{ code: "REQUEST_VALIDATION_FAILED", message, errors: [{ path, codes }] }`. Một số lỗi
-  domain trả `{ code, message }` (ví dụ `MEDIA_STORAGE_*` 503, `listening_media_not_ready`
-  422, `UPLOAD_TOO_LARGE` 413). Message không phản chiếu SQL/Prisma.
+- Envelope (H.10a, A-03): mọi response JSON, thành công hay lỗi, đi qua
+  `TransformInterceptor` và `GlobalExceptionFilter` toàn cục. Bảng "Response" bên dưới
+  chỉ mô tả `data`.
+
+  ```json
+  { "success": true, "data": {},
+    "meta": { "requestId": "<id>", "timestamp": "2026-09-14T05:00:00.000Z",
+              "pagination": { "page": 1, "limit": 20, "total": 41, "totalPages": 3 } } }
+  ```
+
+  `meta.pagination` chỉ có ở list phân trang (bảng ghi `+ meta`). Handler trả `undefined`
+  → `data: null`. Ngoại lệ duy nhất là bytes của `GET /media/:id/content` (A.11) và
+  listener metrics riêng (không phải route Nest): không bọc JSON.
+- Lỗi: `{ "success": false, "error": { "code", "message", "details"? }, "meta":
+  { "requestId", "timestamp" } }`. `code` là mã domain khi exception có (ví dụ
+  `REQUEST_VALIDATION_FAILED`, `MEDIA_STORAGE_*`, `listening_media_not_ready`,
+  `UPLOAD_TOO_LARGE`), còn lại là tên HTTP status (`BAD_REQUEST`, `UNAUTHORIZED`,
+  `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `TOO_MANY_REQUESTS`…). Field khác của lỗi domain
+  nằm trong `details`: validation `400` → `details.errors: [{ path, codes }]`, lỗi
+  authoring `422` → `details.path`, import → `details.errors`. Lỗi không phải
+  `HttpException` (Prisma, driver, lỗi lập trình) → `500 INTERNAL_SERVER_ERROR`
+  `"Internal server error."`; message gốc không vào response lẫn log (log chỉ tên class
+  và requestId). JSON hỏng hoặc path không decode được → `400 MALFORMED_REQUEST`, không
+  trích body/path; body quá lớn → `413 PAYLOAD_TOO_LARGE`; route không tồn tại → `404`
+  `"Cannot <METHOD> <path>"` đã bỏ query string.
+- Request id: nhận `x-request-id` nếu là UUID (8-4-4-4-12 hex) hoặc 32 hex
+  (`$request_id` của nginx), ngược lại sinh UUIDv4. Luôn echo ở header `X-Request-ID`
+  và `meta.requestId`, kể cả lỗi từ guard (`401`/`403`/`429`). Audit log CMS ghi đúng id
+  này vào `correlationId`.
 - Pagination: `page` 1..2147483647 mặc định 1, `limit` 1..100 mặc định 20; ngoài khoảng,
   không phải số nguyên hoặc query lạ → `400`. Không có `sortBy`/`sortOrder`; thứ tự cố
   định theo endpoint.
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với body
-  `{ statusCode: 429, message: "ThrottlerException: Too Many Requests" }`. Khoá
+- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với
+  `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
   `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
   `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
@@ -51,8 +68,8 @@ spec sinh thay vì viết tay.
   được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
   (fail-closed), không bỏ qua giới hạn.
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
-  exercise import 8–128; media ingestion 32–128. Cùng key cùng body → kết quả gốc; cùng
-  key khác body → `409`.
+  exercise import 8–128; media ingestion 32–128. Cùng key cùng body → `data` gốc (`meta`
+  là của request replay); cùng key khác body → `409`.
 
 ## Part A — Đã triển khai
 
@@ -65,8 +82,9 @@ Cột Auth: `public` (không token), `JWT` (account `active`, chưa soft-delete)
 | --- | --- | --- |
 | `GET` | `/health` | public |
 
-Response `200`: `{ "success": true, "database": "connected", "env": "production", "port": 3000 }`.
-DB lỗi → `500` mặc định. (Backlog: chỉ trả `{ status }`, tách liveness/readiness.)
+`data` `200`: `{ "database": "connected", "env": "production", "port": 3000 }`.
+DB lỗi → `500 INTERNAL_SERVER_ERROR`. (Backlog B-10: chỉ trả `{ status }`, tách
+liveness/readiness.)
 
 ### A.2 Auth
 
@@ -107,26 +125,27 @@ Thứ tự kiểm tra login (H.5, B-01):
 Dưới `NODE_ENV=test` giới hạn IP của login nới thành 1.000/phút cho e2e từ loopback,
 như giới hạn toàn cục.
 
-Response register/login (`201`, không envelope, không `tokenType`/`expiresIn`):
+`data` của register/login (`201`, không `tokenType`/`expiresIn`):
 
 ```json
 { "user": { "id": 1, "email": "user@example.com", "role": "user", "name": null }, "accessToken": "<jwt>" }
 ```
 
-Response `GET /auth/me` (`200`): `{ "user": { "id": 1, "email": "user@example.com", "role": "user" } }`.
+`data` của `GET /auth/me` (`200`): `{ "user": { "id": 1, "email": "user@example.com", "role": "user" } }`.
 
 ### A.3 Users
 
 | Method | Path | Auth | Query | Response |
 | --- | --- | --- | --- | --- |
 | `GET` | `/users/me` | JWT | — | `{ id, email, name, role, createdAt }` |
-| `GET` | `/users` | admin | `page`, `limit` | `{ items, total, page, limit, totalPages }` |
+| `GET` | `/users` | admin | `page`, `limit` | `[{ id, email, name, role, createdAt }]` + `meta` |
 
-- `GET /users` (H.8, B-05): object trần, không envelope. `items` có shape như `/users/me`,
-  sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có `deletedAt` khỏi cả `items`
-  và `total`; user `suspended`/`deletion_pending` chưa có `deletedAt` vẫn hiện.
-  `totalPages = ceil(total / limit)` (`0` khi rỗng); `page` vượt `totalPages` → `200` với
-  `items: []`. Non-admin → `403`.
+- `GET /users` (H.8, B-05): sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có
+  `deletedAt` khỏi cả `data` và `meta.pagination.total`; user
+  `suspended`/`deletion_pending` chưa có `deletedAt` vẫn hiện. `totalPages =
+  ceil(total / limit)` (`0` khi rỗng); `page` vượt `totalPages` → `200` với `data: []`.
+  Non-admin → `403`. H.10a chuyển phân trang từ object trần `{ items, total, … }` sang
+  `meta.pagination`.
 - `GET /users/me` chỉ đọc account `status = active` và `deletedAt IS NULL`. Account đã
   soft-delete hoặc không active bị JWT strategy chặn `401` trước; nếu account đổi trạng
   thái giữa strategy và service thì service trả `404 "User not found."`.
@@ -187,7 +206,7 @@ Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc `pinyinN
 Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]` (không `400`). Tối
 đa 20 kết quả; chỉ Word `published`, `isPure = true`, có ít nhất một meaning.
 
-Response `200` (mảng trần, không `id`):
+`data` `200` là mảng, không `id`:
 
 ```json
 [{ "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
@@ -196,7 +215,7 @@ Response `200` (mảng trần, không `id`):
 
 ### A.6 Onboarding và Learning plan (JWT)
 
-Envelope `{ success: true, data }`. `userId` luôn lấy từ JWT. Write khoá row `User`
+Envelope §1. `userId` luôn lấy từ JWT. Write khoá row `User`
 `FOR UPDATE`.
 
 | Method | Path | Body | `data` | Status |
@@ -227,7 +246,7 @@ dữ liệu cần repair.
 
 ### A.7 Lesson activity và Progress (JWT)
 
-Envelope `{ success: true, data }`. Mọi `POST` cần header `Idempotency-Key`; thiếu/sai →
+Envelope §1. Mọi `POST` cần header `Idempotency-Key`; thiếu/sai →
 `400`; trả `201` kể cả replay. Body `{}` trừ attempt.
 
 | Method | Path | Body | `data` |
@@ -262,7 +281,7 @@ public; `409` cùng key khác request; `422` shape sai; `503` timeout.
 
 ### A.8 Admin CMS — Lesson / Topic (admin)
 
-Envelope `{ success: true, data, meta? }`. Mọi `POST` trả `201` kể cả `idempotent = true`.
+Envelope §1 (list có `meta.pagination`). Mọi `POST` trả `201` kể cả `idempotent = true`.
 State machine: draft revision → review (`approved | changes_requested | rejected`) → publish
 revision đã approved mới nhất → archive. Revision/review/audit append-only.
 
@@ -342,8 +361,8 @@ usageCount, dataSourceId, uploadedById, updatedById, deletedAt, createdAt, updat
 dataSource: { id, code, name, version } }` — không URL, storageKey, checksum.
 
 Ingestion: `MEDIA_INGESTION_ENABLED=false` → từ chối; 5 request/admin/phút → `429`; quá
-size → `413 { statusCode, code: "UPLOAD_TOO_LARGE", message }`; multipart hỏng → `400
-{ code: "MULTIPART_INVALID" }`; file bị reject → `400/422`; đang processing hoặc cùng key
+size → `413` `error.code` `UPLOAD_TOO_LARGE`; multipart hỏng → `400`
+`error.code` `MULTIPART_INVALID`; file bị reject → `400/422`; đang processing hoặc cùng key
 khác request → `409`; scanner/storage timeout → `503`. Pipeline: validate bytes → ClamAV →
 sharp/music-metadata → ghi object private → commit Media + MediaIngestion + audit. Chi
 tiết ADR-005 và runbook.
@@ -352,8 +371,8 @@ tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200 { success: true, data: { expiresAt, url } }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
-| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL, TTL 60–600 giây) | bytes với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`; grant sai/hết hạn → `403`; `503` với `code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL, TTL 60–600 giây) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
 
 Signature = HMAC-SHA256 trên `method`, canonical path, `expiresAt`, checksum; so sánh
 timing-safe; body được hash lại trước khi trả (finding B-07 về việc không gắn user).
@@ -363,7 +382,10 @@ timing-safe; body được hash lại trước khi trả (finding B-07 về vi�
 Không thay base URL backend, không phải generic proxy. Mọi route mutation kiểm exact
 `Origin`. Cookie `hsk_admin_session`: HttpOnly, SameSite=Lax, Path=/, Secure ở
 production, `Max-Age ≤ JWT exp`. Fetch tới backend `no-store`, timeout 8 giây, chỉ trả
-safe error kind/message/requestId.
+safe error kind/message/requestId. BFF parse envelope §1 của backend bằng zod
+(`frontend/src/lib/api/backend-envelope.ts`; thiếu `meta.requestId` hay sai shape thì
+request thất bại an toàn: route admin `503`, session login `500` và không set cookie) rồi trả browser shape riêng không đổi: `{ success: true, data }`, list
+thêm `meta` là object phân trang; `meta` của backend không ra browser.
 
 | Route | Method | Mục đích |
 | --- | --- | --- |

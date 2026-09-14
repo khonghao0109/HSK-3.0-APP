@@ -16,11 +16,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { isUUID } from 'class-validator';
 import { Request } from 'express';
 
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { isAcceptedRequestId } from '../../common/middleware/request-id.middleware';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
 import { CmsActor } from './cms-workflow';
@@ -430,6 +430,8 @@ export class CmsController {
   }
 }
 
+// RequestIdMiddleware has already replaced the header with the id echoed in
+// X-Request-ID, so audit rows correlate with the response the client saw.
 function correlationId(requestId: string | undefined): string {
-  return requestId && isUUID(requestId) ? requestId : randomUUID();
+  return isAcceptedRequestId(requestId) ? requestId : randomUUID();
 }

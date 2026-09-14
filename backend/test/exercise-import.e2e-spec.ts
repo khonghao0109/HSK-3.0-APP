@@ -243,7 +243,9 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
       validPreview.body.data.previewHash as string,
       'exercise-import-hash-mismatch-01',
     ).expect(409);
-    expect(mismatch.body.message).toMatch(/preview.*match|payload.*changed/i);
+    expect(mismatch.body.error.message).toMatch(
+      /preview.*match|payload.*changed/i,
+    );
     expect(await importCounts()).toEqual(before);
 
     const invalidPayload = mixedPayload();
@@ -369,7 +371,7 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
       differentPreview.body.data.previewHash as string,
       'exercise-import-commit-0001',
     ).expect(409);
-    expect(rejected.body.message).toMatch(/Idempotency-Key.*different/i);
+    expect(rejected.body.error.message).toMatch(/Idempotency-Key.*different/i);
     expect(await importCounts()).toEqual(before);
   });
 
@@ -427,7 +429,7 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
     const rejected = await commit(payload, previewHash, idempotencyKey).expect(
       409,
     );
-    expect(rejected.body.message).toMatch(/incomplete.*manual review/i);
+    expect(rejected.body.error.message).toMatch(/incomplete.*manual review/i);
     await expect(
       prisma.lessonExercise.count({
         where: { sourceKey: `import-incomplete-${suffix}` },
@@ -468,7 +470,7 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
       incoherentHash,
       incoherentKey,
     ).expect(409);
-    expect(incoherent.body.message).toMatch(/incomplete.*manual review/i);
+    expect(incoherent.body.error.message).toMatch(/incomplete.*manual review/i);
     await expect(
       prisma.lessonExercise.count({
         where: { sourceKey: `import-expected-${suffix}` },
@@ -627,8 +629,8 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
       .send({ email, password, name: `Import ${label}` })
       .expect(201);
     return {
-      userId: response.body.user.id as number,
-      token: response.body.accessToken as string,
+      userId: response.body.data.user.id as number,
+      token: response.body.data.accessToken as string,
     };
   }
 
@@ -637,6 +639,6 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(201);
-    return response.body.accessToken as string;
+    return response.body.data.accessToken as string;
   }
 });

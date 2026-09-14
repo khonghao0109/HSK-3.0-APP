@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  backendEnvelope,
+  backendPage,
+  paginationSchema,
+} from '@/lib/api/backend-envelope';
+
 export const mediaTypes = ['audio', 'image', 'pdf', 'video'] as const;
 export const mediaProcessingStatuses = [
   'pending',
@@ -52,15 +58,11 @@ const mediaUsageSchema = z.object({
   }),
 });
 
+// BFF → browser shapes.
 export const mediaListResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(adminMediaSchema),
-  meta: z.object({
-    page: z.number().int().positive(),
-    limit: z.number().int().positive(),
-    total: z.number().int().nonnegative(),
-    totalPages: z.number().int().nonnegative(),
-  }),
+  meta: paginationSchema,
 });
 
 export const mediaDetailResponseSchema = z.object({
@@ -75,6 +77,15 @@ export const mediaMutationResponseSchema = z.object({
     media: adminMediaSchema,
   }),
 });
+
+// Backend → BFF: the global envelope, resolved to the BFF shapes above.
+export const backendMediaListSchema = backendPage(adminMediaSchema);
+export const backendMediaDetailSchema = backendEnvelope(
+  adminMediaSchema.extend({ usage: mediaUsageSchema }),
+);
+export const backendMediaMutationSchema = backendEnvelope(
+  z.object({ idempotent: z.boolean(), media: adminMediaSchema }),
+);
 
 export type AdminMedia = z.infer<typeof adminMediaSchema>;
 export type AdminMediaDetail = z.infer<

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { RawResponse } from '../../common/decorators/raw-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { MediaContentAccessQueryDto } from './dto/media-access-query.dto';
@@ -34,6 +35,7 @@ export class MediaController {
   }
 
   @Get(':mediaId/content')
+  @RawResponse()
   async getContent(
     @Req() request: Request,
     @Param('mediaId', ParsePositiveSafeIntegerPipe) mediaId: number,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { exerciseDetailResponseSchema } from '@/features/exercises/exercise-contract';
+import { backendExerciseDetailSchema } from '@/features/exercises/exercise-contract';
 import { normalizeApiFailure } from '@/lib/api/api-error';
 import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
@@ -24,7 +24,7 @@ export async function GET(
       { status: 401 },
     );
   try {
-    const response = exerciseDetailResponseSchema.parse(
+    const response = backendExerciseDetailSchema.parse(
       await backend.request(`/api/v1/admin/cms/exercises/${exerciseId}`, {
         token,
       }),
