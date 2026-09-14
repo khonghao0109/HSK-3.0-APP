@@ -31,6 +31,10 @@ describe('media operations artifacts', () => {
     expect(config).toContain('if ($hsk_media_signed_request_canonical = 0)');
     expect(config).toContain('Strict-Transport-Security');
     expect(config).toContain('$request_id');
+    expect(config).toContain(
+      'proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;',
+    );
+    expect(config).toContain('proxy_set_header X-Real-IP $remote_addr;');
     expect(config).not.toContain('error_log /dev/null');
     expect(config).toMatch(
       /error_log\s+\/var\/log\/nginx\/media_error\.log\s+emerg;/u,

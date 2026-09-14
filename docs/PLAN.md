@@ -102,7 +102,7 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| H.4a | `trust proxy`, nginx `X-Forwarded-For`; throttler tracker `req.user.id ?? req.ip` | ⬜ | A-02 |
+| H.4a | `trust proxy`, nginx `X-Forwarded-For`; throttler tracker `req.user.id ?? req.ip` | 🟡 | A-02. 13/09 chưa commit: `TRUST_PROXY_HOPS` (mặc định 1); `CustomThrottlerGuard` tự xác minh bearer JWT vì APP_GUARD chạy trước `JwtAuthGuard` (`req.user` chưa có); `login`/`register` giữ bucket IP; BFF forward XFF nguyên chuỗi; nginx route media. jest 612, e2e 163, vitest 108 pass. Bộ đếm vẫn in-memory (H.4b) |
 | H.4b | Rate limit theo user bằng bảng Postgres theo mẫu `MediaUploadRateLimit` | ⬜ | ADR-008 §2 |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ⬜ | B-01 |
 | H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |

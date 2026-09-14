@@ -61,6 +61,22 @@ describe('media environment validation', () => {
     expect(result.error).toBeUndefined();
   });
 
+  it('trusts one proxy hop by default and rejects non-hop-count values', () => {
+    expect(envValidationSchema.validate(production).value).toMatchObject({
+      TRUST_PROXY_HOPS: 1,
+    });
+    expect(
+      envValidationSchema.validate({ ...production, TRUST_PROXY_HOPS: '0' })
+        .error,
+    ).toBeUndefined();
+    for (const value of ['-1', '1.5', 'true', 'loopback']) {
+      expect(
+        envValidationSchema.validate({ ...production, TRUST_PROXY_HOPS: value })
+          .error,
+      ).toBeDefined();
+    }
+  });
+
   it('rejects a metrics listener that collides with the public API listener', () => {
     expect(
       envValidationSchema.validate({

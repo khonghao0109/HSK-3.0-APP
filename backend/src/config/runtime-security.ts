@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { INestApplication } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { isUtf8 } from 'node:buffer';
 import { createHash } from 'node:crypto';
 
@@ -96,6 +97,20 @@ export function configureApiEdgeSecurity(
     credentials: true,
   });
   app.use(applyApiSecurityHeaders);
+}
+
+/**
+ * `req.ip` becomes the address `TRUST_PROXY_HOPS` entries from the right of
+ * X-Forwarded-For. Default 1 matches both deployed paths: nginx -> backend,
+ * and nginx -> BFF -> backend where the BFF forwards nginx's chain verbatim.
+ * The backend listener must stay private, otherwise clients can forge the
+ * header.
+ */
+export function configureTrustProxy(
+  app: Pick<NestExpressApplication, 'set'>,
+  config: Pick<ConfigService, 'getOrThrow'>,
+): void {
+  app.set('trust proxy', config.getOrThrow<number>('app.trustProxyHops'));
 }
 
 export function assertProductionSecrets(environment: {

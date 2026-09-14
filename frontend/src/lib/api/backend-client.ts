@@ -15,6 +15,8 @@ type ClientOptions = {
   timeoutMs: number;
   fetchImpl?: typeof fetch;
   requestIdFactory?: () => string;
+  /** X-Forwarded-For value of the incoming browser request, if any. */
+  forwardedFor?: () => Promise<string | undefined>;
 };
 
 type RequestOptions = {
@@ -27,6 +29,21 @@ function isAllowedPath(path: string): boolean {
   return (
     path.startsWith('/') && ALLOWED_PATHS.some((pattern) => pattern.test(path))
   );
+}
+
+/**
+ * The chain is forwarded verbatim, never reduced to its first entry: the
+ * backend trusts one hop and reads the right-most address, which nginx
+ * appended. The left part is client-controlled.
+ */
+export function clientForwardedFor(
+  headers: Pick<Headers, 'get'>,
+): string | undefined {
+  for (const name of ['x-forwarded-for', 'x-real-ip']) {
+    const value = headers.get(name)?.trim();
+    if (value) return value;
+  }
+  return undefined;
 }
 
 export function createBackendClient(options: ClientOptions) {
@@ -45,6 +62,7 @@ export function createBackendClient(options: ClientOptions) {
         );
       }
       const requestId = requestIdFactory();
+      const forwardedFor = await options.forwardedFor?.();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), options.timeoutMs);
       try {
@@ -54,6 +72,7 @@ export function createBackendClient(options: ClientOptions) {
         });
         if (request.token)
           headers.set('authorization', `Bearer ${request.token}`);
+        if (forwardedFor) headers.set('x-forwarded-for', forwardedFor);
         if (request.body !== undefined)
           headers.set('content-type', 'application/json');
         const response = await fetchImpl(new URL(path, options.baseUrl), {

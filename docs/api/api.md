@@ -40,9 +40,12 @@ spec sinh thay vì viết tay.
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút/IP (`register` 100, `login` 200); `429` với body
-  `{ statusCode: 429, message: "ThrottlerException: Too Many Requests" }`. Khoá theo
-  `req.ip`, chưa có trust proxy (finding A-02).
+- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 200); `429` với body
+  `{ statusCode: 429, message: "ThrottlerException: Too Many Requests" }`. Khoá
+  `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
+  `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
+  `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm vẫn
+  in-memory theo replica (H.4b).
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
   exercise import 8–128; media ingestion 32–128. Cùng key cùng body → kết quả gốc; cùng
   key khác body → `409`.

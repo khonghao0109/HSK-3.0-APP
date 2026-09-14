@@ -1,24 +1,24 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  ConsoleLogger,
-  type INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
+import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { createSafeValidationException } from './common/validation/safe-validation-exception.factory';
 import { handleBootstrapFailure } from './config/bootstrap-failure';
-import { configureApiEdgeSecurity } from './config/runtime-security';
+import {
+  configureApiEdgeSecurity,
+  configureTrustProxy,
+} from './config/runtime-security';
 import { MediaMetricsServer } from './infrastructure/observability/media-metrics.server';
 
 async function bootstrap() {
-  let app: INestApplication | undefined;
+  let app: NestExpressApplication | undefined;
   try {
     // Nest's default initialization zone logs the raw error object before the
     // outer bootstrap handler can sanitize it. Configuration validation errors
     // can carry the rejected environment in `_original`, so initialization is
     // deliberately silent and rethrows instead of aborting the process.
-    app = await NestFactory.create(AppModule, {
+    app = await NestFactory.create<NestExpressApplication>(AppModule, {
       abortOnError: false,
       logger: false,
     });
@@ -45,6 +45,8 @@ async function bootstrap() {
 
     // FIX 2: CORS — chỉ cho phép origin được cấu hình
     configureApiEdgeSecurity(app, config);
+    // Rate limiting keys anonymous traffic on the real client IP behind nginx/BFF.
+    configureTrustProxy(app, config);
 
     // FIX 3: Graceful shutdown — NestJS sẽ gọi onApplicationShutdown hooks
     app.enableShutdownHooks();

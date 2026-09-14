@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
+import { ipTracker } from '../../common/guards/custom-throttler.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 import { AuthService } from './auth.service';
@@ -23,13 +24,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 100, ttl: 60_000 } })
+  @Throttle({ default: { limit: 100, ttl: 60_000, getTracker: ipTracker } })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
-  @Throttle({ default: { limit: 200, ttl: 60_000 } })
+  @Throttle({ default: { limit: 200, ttl: 60_000, getTracker: ipTracker } })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }

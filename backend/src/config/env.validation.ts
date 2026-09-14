@@ -23,6 +23,7 @@ export const envValidationSchema = Joi.object({
     .default('development'),
 
   PORT: Joi.number().default(3000),
+  TRUST_PROXY_HOPS: Joi.number().integer().min(0).default(1),
 
   DATABASE_URL: Joi.string().required(),
 
