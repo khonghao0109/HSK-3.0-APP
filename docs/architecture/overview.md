@@ -70,8 +70,9 @@ Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-v
 
 Thư mục `infrastructure/`: `storage` (port `ObjectStoragePort`, adapter S3 và in-memory),
 `malware` (port scanner, adapter ClamAV INSTREAM và test), `observability` (metrics
-listener riêng, cardinality cố định). Adapter được chọn theo `NODE_ENV === 'test'`
-(xem finding B-04 trong review).
+listener riêng, cardinality cố định). Adapter được chọn tường minh theo
+`MEDIA_STORAGE_PROVIDER` (`s3` | `memory`) và `MEDIA_SCANNER_PROVIDER` (`clamav` | `test`),
+không suy ra từ `NODE_ENV` (H.9, finding B-04).
 
 ### 3.3 Quy ước API thực tế
 
@@ -124,6 +125,9 @@ listener riêng, cardinality cố định). Adapter được chọn theo `NODE_E
   Permissions-Policy, CSP `default-src 'none'`. HSTS chỉ ở TLS edge.
 - Bootstrap fail-closed: lỗi cấu hình không log object env; metrics listener riêng bind
   trước public listener.
+- `assertMediaProviders` (chạy trong config validation, trước khi dựng module): adapter
+  giả `memory`/`test` chỉ hợp lệ khi `NODE_ENV=test` và phải được đặt tên; production,
+  development hay thiếu `NODE_ENV` mà dùng chúng thì process không khởi động.
 - Password: argon2id (64 MiB, t=3) + `AUTH_PASSWORD_PEPPER`.
 
 ### 3.6 Biến môi trường
@@ -141,14 +145,16 @@ Backend (`backend/.env.example`):
 | `JWT_EXPIRES_IN` | mặc định `7d` | |
 | `AUTH_PASSWORD_PEPPER` | production | ≥ 16 ký tự ngoài production |
 | `ALLOWED_ORIGINS` | production | mặc định loopback 3001 ngoài production |
-| `MEDIA_STORAGE_BUCKET`, `MEDIA_STORAGE_REGION` | ngoài test | S3-compatible |
+| `MEDIA_STORAGE_PROVIDER` | mặc định `s3` | `memory` chỉ khi `NODE_ENV=test` |
+| `MEDIA_SCANNER_PROVIDER` | mặc định `clamav` | `test` (chỉ nhận EICAR) chỉ khi `NODE_ENV=test` |
+| `MEDIA_STORAGE_BUCKET`, `MEDIA_STORAGE_REGION` | khi provider `s3` | S3-compatible |
 | `MEDIA_STORAGE_ENDPOINT` | tuỳ chọn | phải HTTPS |
-| `MEDIA_SIGNING_SECRET` | ngoài test | ≥ 32 |
+| `MEDIA_SIGNING_SECRET` | có | ≥ 32 |
 | `MEDIA_ACCESS_TTL_SECONDS` | mặc định 300 | 60–600 |
-| `MEDIA_SCANNER_HOST`, `MEDIA_SCANNER_PORT` | ngoài test | ClamAV, mặc định 3310 |
+| `MEDIA_SCANNER_HOST`, `MEDIA_SCANNER_PORT` | host khi provider `clamav` | ClamAV, mặc định 3310 |
 | `MEDIA_INGESTION_ENABLED` | mặc định false | kill switch upload |
 | `MEDIA_UPLOAD_TIMEOUT_MS` | mặc định 30000 | 1000–120000 |
-| `MEDIA_METRICS_BEARER_TOKEN` (+`_PREVIOUS`) | ngoài test | scrape token |
+| `MEDIA_METRICS_BEARER_TOKEN` (+`_PREVIOUS`) | có | scrape token |
 | `MEDIA_METRICS_HOST`, `MEDIA_METRICS_PORT` | production | listener riêng, khác `PORT` |
 | `MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS` < `MEDIA_METRICS_COLLECTION_TIMEOUT_MS` | mặc định 750/1000 | |
 | `MEDIA_METRICS_CACHE_TTL_MS` < `MEDIA_METRICS_STALE_TTL_MS` | mặc định 5000/60000 | |
@@ -244,7 +250,9 @@ cd backend && npm ci --ignore-scripts && npm run test:e2e
 ```
 
 `pretest:e2e` (`backend/scripts/test/prepare-e2e-database.ts`) điền mặc định
-`NODE_ENV=test` cùng `DATABASE_URL`/`TEST_DATABASE_URL`/`JWT_SECRETS` khớp compose,
+`NODE_ENV=test` cùng `DATABASE_URL`/`TEST_DATABASE_URL`/`JWT_SECRETS` khớp compose và
+cấu hình media dùng một lần (provider `memory`/`test`, ingestion bật, signing secret và
+metrics token giả),
 dựng lại database mặc định `hsk_e2e_test`, sinh Prisma Client (vì
 `npm ci --ignore-scripts` bỏ qua postinstall) rồi chạy `prisma migrate deploy`.
 
@@ -258,9 +266,9 @@ hay truncate ở bất kỳ nhánh nào.
 e2e chạy `--runInBand`: mười một suite dùng chung một database và cùng `upsert` Level
 theo `code`, chạy song song sẽ đua fixture và làm hỏng các assertion đếm.
 
-Chỉ PostgreSQL là bắt buộc cho e2e: với `NODE_ENV=test`, `StorageModule` dùng adapter
-in-memory và `MalwareModule` dùng test scanner, nên MinIO và ClamAV không nằm trên đường
-chạy e2e. MinIO, ClamAV và Mailpit nằm ở profile `dev` của compose, chỉ phục vụ việc chạy
+Chỉ PostgreSQL là bắt buộc cho e2e: `backend/test/utils/e2e-environment.ts` đặt tường
+minh `MEDIA_STORAGE_PROVIDER=memory` và `MEDIA_SCANNER_PROVIDER=test` (chỉ khi biến chưa
+được set), nên MinIO và ClamAV không nằm trên đường chạy e2e. MinIO, ClamAV và Mailpit nằm ở profile `dev` của compose, chỉ phục vụ việc chạy
 ứng dụng thật ở máy local: `docker compose --profile dev up -d --wait`.
 
 Compose nằm ở `docker-compose.yml` gốc repo chứ không phải `docker-compose.test.yml` như

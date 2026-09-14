@@ -4,10 +4,11 @@
 # PLAN.md) để `docker compose up -d` chạy được không cần cờ `-f`, và để khi thêm
 # service dev về sau không phải duy trì hai file compose song song.
 #
-# Postgres ở profile mặc định vì `npm run test:e2e` chỉ cần Postgres: với
-# NODE_ENV=test, StorageModule dùng adapter in-memory và MalwareModule dùng test
-# scanner, nên MinIO và ClamAV không nằm trên đường chạy e2e. Ba service còn lại ở
-# profile `dev`, dành cho việc chạy ứng dụng thật ở máy local.
+# Postgres ở profile mặc định vì `npm run test:e2e` chỉ cần Postgres: e2e đặt tường
+# minh MEDIA_STORAGE_PROVIDER=memory và MEDIA_SCANNER_PROVIDER=test
+# (backend/test/utils/e2e-environment.ts), nên MinIO và ClamAV không nằm trên đường
+# chạy e2e. Ba service còn lại ở profile `dev`, dành cho việc chạy ứng dụng thật ở máy
+# local.
 #
 #   docker compose up -d --wait                 # chỉ Postgres — đủ cho e2e
 #   docker compose --profile dev up -d --wait   # thêm MinIO, ClamAV, Mailpit

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   API_SECURITY_HEADERS,
   applyApiSecurityHeaders,
+  assertMediaProviders,
   assertProductionSecrets,
   buildCorsOriginValidator,
   configureApiEdgeSecurity,
@@ -109,6 +110,57 @@ describe('runtime edge security', () => {
       'secret',
     );
     expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  describe('media providers', () => {
+    const providers = (
+      NODE_ENV: string | undefined,
+      MEDIA_STORAGE_PROVIDER: string | undefined,
+      MEDIA_SCANNER_PROVIDER: string | undefined,
+    ) => ({ NODE_ENV, MEDIA_STORAGE_PROVIDER, MEDIA_SCANNER_PROVIDER });
+
+    it.each(['production', 'development', 'test', undefined])(
+      'accepts S3 with ClamAV under NODE_ENV=%s',
+      (nodeEnv) => {
+        expect(() =>
+          assertMediaProviders(providers(nodeEnv, 's3', 'clamav')),
+        ).not.toThrow();
+      },
+    );
+
+    it.each([
+      ['memory', 'test'],
+      ['memory', 'clamav'],
+      ['s3', 'test'],
+    ])(
+      'accepts storage %s with scanner %s only under NODE_ENV=test',
+      (storage, scanner) => {
+        expect(() =>
+          assertMediaProviders(providers('test', storage, scanner)),
+        ).not.toThrow();
+        for (const nodeEnv of ['production', 'development', undefined]) {
+          expect(() =>
+            assertMediaProviders(providers(nodeEnv, storage, scanner)),
+          ).toThrow('Media provider configuration is invalid.');
+        }
+      },
+    );
+
+    it.each([
+      [undefined, 'clamav'],
+      ['s3', undefined],
+      ['minio', 'clamav'],
+      ['S3', 'clamav'],
+      ['s3', 'noop'],
+      ['memory', ''],
+    ])(
+      'fails closed on missing or unknown providers %j / %j, even under test',
+      (storage, scanner) => {
+        expect(() =>
+          assertMediaProviders(providers('test', storage, scanner)),
+        ).toThrow(/^Media provider configuration is invalid\.$/u);
+      },
+    );
   });
 
   describe('production secret material', () => {

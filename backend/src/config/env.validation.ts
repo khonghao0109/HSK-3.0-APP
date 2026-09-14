@@ -1,6 +1,11 @@
 import * as Joi from 'joi';
 
 import {
+  MEDIA_SCANNER_PROVIDERS,
+  MEDIA_STORAGE_PROVIDERS,
+} from './media.config';
+import {
+  assertMediaProviders,
   assertProductionSecrets,
   DEFAULT_NON_PRODUCTION_ORIGINS,
   normalizeAllowedOrigins,
@@ -42,54 +47,45 @@ export const envValidationSchema = Joi.object({
     ),
   }),
 
-  MEDIA_STORAGE_BUCKET: Joi.when('NODE_ENV', {
-    is: 'test',
+  // Real adapters unless a test double is named; see assertMediaProviders.
+  MEDIA_STORAGE_PROVIDER: Joi.string()
+    .valid(...MEDIA_STORAGE_PROVIDERS)
+    .default('s3'),
+  MEDIA_SCANNER_PROVIDER: Joi.string()
+    .valid(...MEDIA_SCANNER_PROVIDERS)
+    .default('clamav'),
+  MEDIA_STORAGE_BUCKET: Joi.when('MEDIA_STORAGE_PROVIDER', {
+    is: 'memory',
     then: Joi.string().optional(),
     otherwise: Joi.string().min(3).max(63).required(),
   }),
-  MEDIA_STORAGE_REGION: Joi.when('NODE_ENV', {
-    is: 'test',
+  MEDIA_STORAGE_REGION: Joi.when('MEDIA_STORAGE_PROVIDER', {
+    is: 'memory',
     then: Joi.string().optional(),
     otherwise: Joi.string().required(),
   }),
   MEDIA_STORAGE_ENDPOINT: Joi.string()
     .uri({ scheme: ['https'] })
     .optional(),
-  MEDIA_SIGNING_SECRET: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.string()
-      .min(32)
-      .default('test-media-signing-secret-at-least-32-characters'),
-    otherwise: Joi.string().min(32).required(),
-  }),
+  MEDIA_SIGNING_SECRET: Joi.string().min(32).required(),
   MEDIA_ACCESS_TTL_SECONDS: Joi.number()
     .integer()
     .min(60)
     .max(600)
     .default(300),
-  MEDIA_SCANNER_HOST: Joi.when('NODE_ENV', {
+  MEDIA_SCANNER_HOST: Joi.when('MEDIA_SCANNER_PROVIDER', {
     is: 'test',
     then: Joi.string().optional(),
     otherwise: Joi.string().hostname().required(),
   }),
   MEDIA_SCANNER_PORT: Joi.number().integer().min(1).max(65535).default(3310),
-  MEDIA_INGESTION_ENABLED: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.boolean().default(true),
-    otherwise: Joi.boolean().default(false),
-  }),
+  MEDIA_INGESTION_ENABLED: Joi.boolean().default(false),
   MEDIA_UPLOAD_TIMEOUT_MS: Joi.number()
     .integer()
     .min(1000)
     .max(120000)
     .default(30000),
-  MEDIA_METRICS_BEARER_TOKEN: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.string()
-      .min(32)
-      .default('test-media-metrics-token-at-least-32-chars'),
-    otherwise: Joi.string().min(32).required(),
-  }),
+  MEDIA_METRICS_BEARER_TOKEN: Joi.string().min(32).required(),
   MEDIA_METRICS_BEARER_TOKEN_PREVIOUS: Joi.string().min(32).optional(),
   MEDIA_METRICS_HOST: Joi.when('NODE_ENV', {
     is: 'production',
@@ -142,6 +138,11 @@ export const envValidationSchema = Joi.object({
     Number(environment.MEDIA_METRICS_CACHE_TTL_MS) >=
     Number(environment.MEDIA_METRICS_STALE_TTL_MS)
   ) {
+    return helpers.error('any.invalid');
+  }
+  try {
+    assertMediaProviders(environment);
+  } catch {
     return helpers.error('any.invalid');
   }
   if (environment.NODE_ENV !== 'production') return environment;

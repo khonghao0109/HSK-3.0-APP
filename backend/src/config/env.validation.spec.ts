@@ -134,17 +134,109 @@ describe('media environment validation', () => {
     expect(insecure.error).toBeDefined();
   });
 
-  it('allows test-only adapters without production infrastructure values', () => {
-    const result = envValidationSchema.validate({
+  describe('media providers', () => {
+    const testSecrets = {
+      MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
+      MEDIA_METRICS_BEARER_TOKEN: 'test-media-metrics-token-at-least-32-chars',
+    };
+    const testDoubles = {
       ...base,
+      ...testSecrets,
       NODE_ENV: 'test',
+      MEDIA_STORAGE_PROVIDER: 'memory',
+      MEDIA_SCANNER_PROVIDER: 'test',
+    };
+    const development = { ...production, NODE_ENV: 'development' };
+    const missingNodeEnv: Record<string, string> = { ...production };
+    delete missingNodeEnv.NODE_ENV;
+
+    it('defaults to S3 and ClamAV', () => {
+      for (const environment of [production, development]) {
+        const result = envValidationSchema.validate(environment);
+        expect(result.error).toBeUndefined();
+        expect(result.value).toMatchObject({
+          MEDIA_STORAGE_PROVIDER: 's3',
+          MEDIA_SCANNER_PROVIDER: 'clamav',
+        });
+      }
     });
-    expect(result.error).toBeUndefined();
-    expect(result.value.MEDIA_SIGNING_SECRET).toHaveLength(48);
-    expect(result.value.MEDIA_INGESTION_ENABLED).toBe(true);
-    expect(result.value.ALLOWED_ORIGINS).toBe(
-      'http://localhost:3001,http://127.0.0.1:3001',
+
+    it('accepts named test doubles under NODE_ENV=test without storage or scanner infrastructure', () => {
+      const result = envValidationSchema.validate(testDoubles);
+
+      expect(result.error).toBeUndefined();
+      expect(result.value).toMatchObject({
+        MEDIA_STORAGE_PROVIDER: 'memory',
+        MEDIA_SCANNER_PROVIDER: 'test',
+        MEDIA_INGESTION_ENABLED: false,
+        ALLOWED_ORIGINS: 'http://localhost:3001,http://127.0.0.1:3001',
+      });
+    });
+
+    it.each([
+      ['production', production],
+      ['development', development],
+      ['a missing NODE_ENV', missingNodeEnv],
+    ])('refuses in-memory storage and the test scanner under %s', (_, env) => {
+      for (const override of [
+        { MEDIA_STORAGE_PROVIDER: 'memory' },
+        { MEDIA_SCANNER_PROVIDER: 'test' },
+        { MEDIA_STORAGE_PROVIDER: 'memory', MEDIA_SCANNER_PROVIDER: 'test' },
+      ]) {
+        expect(
+          envValidationSchema.validate({ ...env, ...override }).error,
+        ).toBeDefined();
+      }
+    });
+
+    it.each(['minio', 'S3', 'noop', ''])(
+      'rejects the unknown provider value %j',
+      (value) => {
+        expect(
+          envValidationSchema.validate({
+            ...testDoubles,
+            MEDIA_STORAGE_PROVIDER: value,
+          }).error,
+        ).toBeDefined();
+        expect(
+          envValidationSchema.validate({
+            ...testDoubles,
+            MEDIA_SCANNER_PROVIDER: value,
+          }).error,
+        ).toBeDefined();
+      },
     );
+
+    it('no longer infers test doubles or media secrets from NODE_ENV=test', () => {
+      const result = envValidationSchema.validate(
+        { ...base, NODE_ENV: 'test' },
+        { abortEarly: false },
+      );
+
+      for (const required of [
+        'MEDIA_STORAGE_BUCKET',
+        'MEDIA_STORAGE_REGION',
+        'MEDIA_SCANNER_HOST',
+        'MEDIA_SIGNING_SECRET',
+        'MEDIA_METRICS_BEARER_TOKEN',
+      ]) {
+        expect(result.error?.message).toContain(required);
+      }
+    });
+
+    it('requires storage and scanner infrastructure for the real adapters under NODE_ENV=test', () => {
+      const result = envValidationSchema.validate(
+        {
+          ...testDoubles,
+          MEDIA_STORAGE_PROVIDER: 's3',
+          MEDIA_SCANNER_PROVIDER: 'clamav',
+        },
+        { abortEarly: false },
+      );
+
+      expect(result.error?.message).toContain('MEDIA_STORAGE_BUCKET');
+      expect(result.error?.message).toContain('MEDIA_SCANNER_HOST');
+    });
   });
 
   it.each([
@@ -190,6 +282,20 @@ describe('media environment validation', () => {
     [
       'metrics placeholder',
       { MEDIA_METRICS_BEARER_TOKEN: 'change-me-at-least-32-characters' },
+    ],
+    [
+      'e2e signing secret',
+      {
+        MEDIA_SIGNING_SECRET:
+          'test-media-signing-secret-at-least-32-characters',
+      },
+    ],
+    [
+      'e2e metrics token',
+      {
+        MEDIA_METRICS_BEARER_TOKEN:
+          'test-media-metrics-token-at-least-32-chars',
+      },
     ],
   ])('rejects production %s without reflecting the secret', (_, override) => {
     const result = envValidationSchema.validate(

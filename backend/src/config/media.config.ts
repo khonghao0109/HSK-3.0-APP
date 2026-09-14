@@ -1,5 +1,12 @@
+/** `memory` keeps objects in process memory and loses them on restart. */
+export const MEDIA_STORAGE_PROVIDERS = ['s3', 'memory'] as const;
+/** `test` recognizes only the EICAR signature; it is not a malware scanner. */
+export const MEDIA_SCANNER_PROVIDERS = ['clamav', 'test'] as const;
+
 export default () => ({
   media: {
+    storageProvider: process.env.MEDIA_STORAGE_PROVIDER ?? 's3',
+    scannerProvider: process.env.MEDIA_SCANNER_PROVIDER ?? 'clamav',
     bucket: process.env.MEDIA_STORAGE_BUCKET,
     region: process.env.MEDIA_STORAGE_REGION,
     endpoint: process.env.MEDIA_STORAGE_ENDPOINT,
@@ -7,16 +14,10 @@ export default () => ({
     accessTtlSeconds: Number(process.env.MEDIA_ACCESS_TTL_SECONDS ?? '300'),
     scannerHost: process.env.MEDIA_SCANNER_HOST,
     scannerPort: Number(process.env.MEDIA_SCANNER_PORT ?? '3310'),
-    ingestionEnabled:
-      process.env.MEDIA_INGESTION_ENABLED === undefined
-        ? process.env.NODE_ENV === 'test'
-        : process.env.MEDIA_INGESTION_ENABLED === 'true',
+    ingestionEnabled: process.env.MEDIA_INGESTION_ENABLED === 'true',
     uploadTimeoutMs: Number(process.env.MEDIA_UPLOAD_TIMEOUT_MS ?? '30000'),
     metricsBearerTokens: [
-      process.env.MEDIA_METRICS_BEARER_TOKEN ??
-        (process.env.NODE_ENV === 'test'
-          ? 'test-media-metrics-token-at-least-32-chars'
-          : undefined),
+      process.env.MEDIA_METRICS_BEARER_TOKEN,
       process.env.MEDIA_METRICS_BEARER_TOKEN_PREVIOUS,
     ].filter((value): value is string => value !== undefined),
     metricsHost: process.env.MEDIA_METRICS_HOST ?? '127.0.0.1',

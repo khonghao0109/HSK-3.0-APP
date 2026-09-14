@@ -12,6 +12,18 @@ export const DEFAULT_DATABASE_URL =
 const DEFAULT_JWT_SECRETS =
   '{"e2e":"test-e2e-jwt-secret-at-least-32-characters"}';
 const DEFAULT_JWT_ACTIVE_KID = 'e2e';
+/**
+ * Adapter giả và giá trị media dùng một lần, khai báo tường minh (H.9): backend
+ * không còn tự suy ra chúng từ `NODE_ENV=test`. Config validation chỉ nhận
+ * `memory`/`test` khi `NODE_ENV=test`, nên không lọt được sang môi trường khác.
+ */
+const DEFAULT_MEDIA_ENVIRONMENT = {
+  MEDIA_STORAGE_PROVIDER: 'memory',
+  MEDIA_SCANNER_PROVIDER: 'test',
+  MEDIA_INGESTION_ENABLED: 'true',
+  MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
+  MEDIA_METRICS_BEARER_TOKEN: 'test-media-metrics-token-at-least-32-chars',
+} as const;
 
 export type E2eEnvironment = {
   databaseUrl: string;
@@ -63,6 +75,10 @@ export function applyE2eEnvironmentDefaults(
   if (!environment.JWT_SECRETS) {
     environment.JWT_SECRETS = DEFAULT_JWT_SECRETS;
     environment.JWT_ACTIVE_KID = DEFAULT_JWT_ACTIVE_KID;
+  }
+
+  for (const [key, value] of Object.entries(DEFAULT_MEDIA_ENVIRONMENT)) {
+    environment[key] ??= value;
   }
 
   const databaseUrl = environment.DATABASE_URL;

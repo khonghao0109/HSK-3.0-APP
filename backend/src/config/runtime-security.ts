@@ -113,6 +113,31 @@ export function configureTrustProxy(
   app.set('trust proxy', config.getOrThrow<number>('app.trustProxyHops'));
 }
 
+/**
+ * In-memory storage loses every object on restart and the test scanner lets
+ * anything but EICAR through, so both are test doubles: they are used only
+ * when named in MEDIA_STORAGE_PROVIDER / MEDIA_SCANNER_PROVIDER and only under
+ * NODE_ENV=test. Config validation runs this before any module is built, so a
+ * process configured otherwise (production, development, or NODE_ENV missing)
+ * never starts.
+ */
+export function assertMediaProviders(environment: {
+  NODE_ENV?: string;
+  MEDIA_STORAGE_PROVIDER?: string;
+  MEDIA_SCANNER_PROVIDER?: string;
+}): void {
+  const storage = environment.MEDIA_STORAGE_PROVIDER;
+  const scanner = environment.MEDIA_SCANNER_PROVIDER;
+  if (storage === 's3' && scanner === 'clamav') return;
+
+  const knownProviders =
+    (storage === 's3' || storage === 'memory') &&
+    (scanner === 'clamav' || scanner === 'test');
+  if (environment.NODE_ENV === 'test' && knownProviders) return;
+
+  throw new Error('Media provider configuration is invalid.');
+}
+
 export function assertProductionSecrets(environment: {
   JWT_SECRETS?: string;
   JWT_ACTIVE_KID?: string;
