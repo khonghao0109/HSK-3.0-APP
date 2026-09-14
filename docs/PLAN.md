@@ -43,7 +43,7 @@ cam kết.
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
-| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 0 / 14 | 2–3 tuần | ⬜ |
+| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 1 / 14 | 2–3 tuần | 🟡 |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 20 | 5–7 tuần | 🟡 backend xong |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **34 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **35 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 
@@ -102,8 +102,8 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| H.4a | `trust proxy`, nginx `X-Forwarded-For`; throttler tracker `req.user.id ?? req.ip` | 🟡 | A-02. 13/09 chưa commit: `TRUST_PROXY_HOPS` (mặc định 1); `CustomThrottlerGuard` tự xác minh bearer JWT vì APP_GUARD chạy trước `JwtAuthGuard` (`req.user` chưa có); `login`/`register` giữ bucket IP; BFF forward XFF nguyên chuỗi; nginx route media. jest 612, e2e 163, vitest 108 pass. Bộ đếm vẫn in-memory (H.4b) |
-| H.4b | Rate limit theo user bằng bảng Postgres theo mẫu `MediaUploadRateLimit` | ⬜ | ADR-008 §2 |
+| H.4a | `trust proxy`, nginx `X-Forwarded-For`; throttler tracker `req.user.id ?? req.ip` | ✅ | A-02. 14/09: `9272c58`. `TRUST_PROXY_HOPS` (mặc định 1); `CustomThrottlerGuard` tự xác minh bearer JWT vì APP_GUARD chạy trước `JwtAuthGuard` (`req.user` chưa có); `login`/`register` giữ bucket IP; BFF forward XFF nguyên chuỗi; nginx route media. jest 612, e2e 163, vitest 108 pass |
+| H.4b | Rate limit theo user bằng bảng Postgres theo mẫu `MediaUploadRateLimit` | 🟡 | ADR-008 §2. 14/09 chưa commit: migration 20 `20260914090000_rate_limit_counter` (bảng purgeable `RateLimitCounter`); `PostgresThrottlerStorage` upsert nguyên tử một câu lệnh, đồng hồ DB, cleanup batch `SKIP LOCKED` mỗi 60 s; bằng chứng đồng thời/đa replica: `backend/test/rate-limit-storage.e2e-spec.ts`. Harness `test:db:media-migration*` còn hard-code 19 migration → H.11a |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ⬜ | B-01 |
 | H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |
 | H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | ⬜ | B-06 |
@@ -112,7 +112,7 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 | H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | ⬜ | A-03 |
 | H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | ⬜ | |
 | H.10c | Cài `@nestjs/swagger`, xuất `openapi.json` trong CI, `openapi-typescript` cho frontend | ⬜ | ADR-008 §5 |
-| H.11a | Migration: bỏ `BEGIN/COMMIT` (25P02); resolver migration tham số hoá | ⬜ | C-01, C-02 |
+| H.11a | Migration: bỏ `BEGIN/COMMIT` (25P02); resolver migration tham số hoá | ⬜ | C-01, C-02. Từ H.4b có 20 migration: `assertCatalog` (release validation) và test catalog trong `media-lifecycle-migration-validation.helpers.spec.ts` còn đòi đúng 19 |
 | H.11b | Pin UTC/timestamptz; unique index goal/plan | ⬜ | C-05, C-04 |
 | H.12 | Prisma `$disconnect`; `canonicalJson` maxDepth; idempotency TTL | ⬜ | D-06, D-01, D-02 |
 | H.14 | Frontend: xoá/redact 5 route BFF không dùng; focus archive; logout kiểm `ok`; `/api/session/me` chỉ xoá cookie khi 401/403 | ⬜ | E-01, E-02 |
@@ -343,7 +343,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.1 | Tách worktree +8.744 dòng thành commit nhỏ; sửa typo `npm.cd` | ✅ | F-04, E-04 đóng 04/09: `b222926`, `29e1e4b`, `6f74f5b`; typo revert về bản đã commit |
 | H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | 🟡 | A-01. 07/09: `f7c6d9b`, `665074d`. Ba job đã viết và chạy tay từ clone mới; chỉ ✅ khi có run xanh trên GitHub và H.2d bật xong |
 | H.3 | `docker-compose.yml` (Postgres 16 + profile `dev` cho MinIO/ClamAV/Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ✅ | F-01 đóng phần e2e 07/09: `b011518`, `41f471d`, `1751aff`. e2e phải `--runInBand`: 11 suite dùng chung DB và cùng upsert Level theo `code` |
-| H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ⬜ | A-02, ADR-008 §2 |
+| H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | 🟡 | A-02, ADR-008 §2. H.4a ✅ `9272c58`; H.4b 🟡 |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ⬜ | B-01 |
 | H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |
 | H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | ⬜ | B-06 |
@@ -533,3 +533,4 @@ khi vertical slice bắt đầu.
 | 07/09/2026 | GĐ1 PR2: H.3a + H.3b ✅. `docker-compose.yml` + `pretest:e2e` dựng DB disposable, `prisma generate` và `migrate deploy`. Chạy thật từ clone mới không cần cấu hình: 163/163 pass, chạy lại lần hai vẫn 163/163. Phát hiện e2e phải chạy `--runInBand` vì các suite đua fixture trên Level dùng chung. |
 | 07/09/2026 | GĐ1 PR3: H.2a + H.2b + H.2c 🟡. Thêm `.github/workflows/ci.yml` (ba job, action pin theo SHA, Node từ `.nvmrc`, cache npm theo từng lockfile). Chạy tay đủ chuỗi lệnh của từng job từ clone mới: backend 596/596, frontend 101/101, e2e 163/163. Chưa có run trên GitHub và chưa lint bằng actionlint (không có trên máy). |
 | 13/09/2026 | Kiểm tra DB dev `hsk_system`: chỉ có từ điển (121.856 Word, 200.156 nghĩa tiếng Anh, 11.086 mapping level) và 35 lesson placeholder; 0 user/exercise/media. Áp dụng 7 migration còn thiếu (12 → 19) sau rehearsal trên bản sao disposable; tạo `backend/.env` (gitignore) và sửa `.env.example`: `JWT_SECRETS` phải là JSON trong nháy đơn vì dotenv không unescape `\"` (bản cũ làm backend fail-closed khi `cp .env.example .env`); backend khởi động trên DB đã migrate, `GET /api/v1/health` 200; thêm `npm run seed:dictionary`; sửa tham chiếu seed ở 0.3, slice 2, overview §6/§9; ghi bằng chứng dữ liệu vào M1.1–M1.3. |
+| 14/09/2026 | GĐ2: H.4a ✅ (`9272c58`): `TRUST_PROXY_HOPS`, tracker `user:<id>` từ bearer JWT đã xác minh hoặc `ip:<req.ip>`, BFF forward `X-Forwarded-For`, nginx route media. H.4b 🟡: migration 20 `RateLimitCounter` + `PostgresThrottlerStorage` cho throttler toàn cục, dùng chung giữa các replica. DB dev `hsk_system` cần `prisma migrate deploy` để nhận migration 20. |

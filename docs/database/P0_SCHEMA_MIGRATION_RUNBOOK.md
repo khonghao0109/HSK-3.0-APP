@@ -22,9 +22,10 @@
 | MED-H  | `20260813120000_media_provenance_provider_hardening`     | Immutable provenance snapshot/parent guard và unknown-PUT absence observation.                             |
 | MED-T  | `20260813163000_media_lifecycle_telemetry_truthfulness`  | Terminal-state/fencing/DB-owned timestamp cho MediaIngestion; failureCode và telemetry truthfulness.        |
 | MED-A  | `20260813193000_media_cleanup_audit_integrity`           | Ràng buộc AuditLog ↔ MediaIngestion cleanup (deferred constraint trigger); preflight từ chối row processing. |
+| RL-C   | `20260914090000_rate_limit_counter`                      | Bảng purgeable `RateLimitCounter` cho throttler toàn cục dùng chung giữa các replica (mục 18).             |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 19 migration (đến `20260813193000_media_cleanup_audit_integrity`); migration đã áp giữ nguyên byte, hardening luôn dùng forward migration mới. Các con số 15/16/17 ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 20 migration (đến `20260914090000_rate_limit_counter`); migration đã áp giữ nguyên byte, hardening luôn dùng forward migration mới. Các con số 15/16/17 ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -672,3 +673,34 @@ an immutable release attestation. Any `P0001`, `55P03`, checksum/drift mismatch,
 artifact, unsafe database target or unbounded waiter is an abort. Keep writers
 quiesced, preserve count-only diagnostics and recover forward; never edit migrations
 00–19 or bypass their guards.
+
+## 18. Rate limit counter — migration 20
+
+Migration `20260914090000_rate_limit_counter` (H.4b, ADR-008 §2) chỉ thêm bảng
+`RateLimitCounter` (`key` PK, `points` CHECK `>= 1`, `expireAt TIMESTAMPTZ(3)`) và
+index `expireAt`. Không backfill, không đụng bảng/trigger hiện có, không có
+`BEGIN/COMMIT` tường minh; deploy bằng `npm run migrate:deploy:production` như các
+migration khác.
+
+Bảng không phải history hay immutable fact: row hết hạn tương đương không có row, nên
+được xoá thường xuyên (cleanup batch `FOR UPDATE SKIP LOCKED` mỗi 60 giây ở mỗi
+replica) và `TRUNCATE` khi sự cố không làm mất dữ liệu nghiệp vụ, chỉ reset bộ đếm.
+`key` là SHA-256 do throttler sinh, không lưu IP hay user id dạng rõ.
+
+Thứ tự rollout: migration trước, code sau. Backend chạy trên database chưa có bảng sẽ
+trả lỗi cho mọi request đi qua throttler (fail-closed). Rollback code không cần gỡ
+bảng.
+
+Gate trên database disposable mới:
+
+```bash
+cd backend
+npm run test:e2e   # gồm test/rate-limit-storage.e2e-spec.ts: hit đồng thời, 2 replica, cửa sổ, cleanup
+npx prisma migrate diff --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DATABASE_URL" --exit-code
+```
+
+Harness `npm run test:db:media-migration:release` và test catalog trong
+`scripts/test/media-lifecycle-migration-validation.helpers.spec.ts` còn đòi đúng 19
+migration nên sẽ fail cho tới khi H.11a tham số hoá (C-02). Không sửa migration 00–19
+để làm harness pass.

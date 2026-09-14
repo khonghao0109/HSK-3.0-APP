@@ -44,8 +44,11 @@ spec sinh thay vì viết tay.
   `{ statusCode: 429, message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
   `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
-  `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm vẫn
-  in-memory theo replica (H.4b).
+  `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
+  cửa sổ cố định lưu ở bảng PostgreSQL `RateLimitCounter`, dùng chung mọi replica;
+  vượt giới hạn thì khoá hết thời gian `ttl` (60 giây), hit trong lúc bị khoá không
+  được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
+  (fail-closed), không bỏ qua giới hạn.
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
   exercise import 8–128; media ingestion 32–128. Cùng key cùng body → kết quả gốc; cùng
   key khác body → `409`.

@@ -15,6 +15,8 @@ import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
 import { MediaModule } from './modules/media/media.module';
 import { MediaObservabilityModule } from './infrastructure/observability/media-observability.module';
+import { PostgresThrottlerStorage } from './infrastructure/rate-limit/postgres-throttler.storage';
+import { RateLimitModule } from './infrastructure/rate-limit/rate-limit.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -26,14 +28,22 @@ import { PrismaModule } from './prisma/prisma.module';
       load: [appConfig, databaseConfig, jwtConfig, mediaConfig],
       validationSchema: envValidationSchema,
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60_000,
-        // Browser E2E deliberately exercises many authenticated navigations from
-        // one loopback address. Production keeps the fail-closed global limit.
-        limit: process.env.NODE_ENV === 'test' ? 1_000 : 20,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [RateLimitModule],
+      inject: [PostgresThrottlerStorage],
+      useFactory: (storage: PostgresThrottlerStorage) => ({
+        throttlers: [
+          {
+            ttl: 60_000,
+            // Browser E2E deliberately exercises many authenticated navigations from
+            // one loopback address. Production keeps the fail-closed global limit.
+            limit: process.env.NODE_ENV === 'test' ? 1_000 : 20,
+          },
+        ],
+        // Counters live in PostgreSQL so all replicas enforce one limit.
+        storage,
+      }),
+    }),
     PrismaModule,
     MediaObservabilityModule,
     AuthModule,

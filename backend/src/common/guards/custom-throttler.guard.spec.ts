@@ -50,7 +50,9 @@ async function createApp(trustProxyHops = 1): Promise<INestApplication> {
   }).compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureTrustProxy(app, app.get(ConfigService));
-  await app.init();
+  // Bind once on loopback. Otherwise supertest listens on `::` per request and
+  // on macOS may reach another local process holding the same port on 127.0.0.1.
+  await app.listen(0, '127.0.0.1');
   return app;
 }
 
