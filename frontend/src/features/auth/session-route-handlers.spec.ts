@@ -99,6 +99,33 @@ describe('session BFF handlers', () => {
     );
     expect(response.status).toBe(403);
     expect(response.headers.get('set-cookie')).toBeNull();
+    expect(await response.json()).toMatchObject({
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('marks a backend 403 on login as a locked account, distinct from forbidden', async () => {
+    const response = await handleLogin(
+      post('/api/session/login', {
+        email: 'admin@example.test',
+        password: 'secret1',
+      }),
+      dependencies({
+        login: vi.fn().mockRejectedValue({
+          status: 403,
+          body: { message: 'Account temporarily locked. secret-detail' },
+        }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const text = await response.text();
+    expect(text).not.toContain('secret-detail');
+    expect(JSON.parse(text)).toMatchObject({
+      success: false,
+      error: { kind: 'account_locked' },
+    });
   });
 
   it('maps backend rate limiting without reflecting the backend body', async () => {

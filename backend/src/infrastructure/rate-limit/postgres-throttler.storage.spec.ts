@@ -29,33 +29,33 @@ describe('PostgresThrottlerStorage', () => {
   it('reports an admitted hit with the window expiry', async () => {
     queryRaw.mockResolvedValue([{ points: 20, secondsToExpire: 42 }]);
 
-    await expect(
-      storage.increment('key', 60_000, 20, 60_000, 'default'),
-    ).resolves.toEqual({
-      totalHits: 20,
-      timeToExpire: 42,
-      isBlocked: false,
-      timeToBlockExpire: 0,
-    });
+    await expect(storage.increment('key', 60_000, 20, 60_000)).resolves.toEqual(
+      {
+        totalHits: 20,
+        timeToExpire: 42,
+        isBlocked: false,
+        timeToBlockExpire: 0,
+      },
+    );
   });
 
   it('reports a blocked hit once points exceed the limit', async () => {
     queryRaw.mockResolvedValue([{ points: 21, secondsToExpire: 60 }]);
 
-    await expect(
-      storage.increment('key', 60_000, 20, 60_000, 'default'),
-    ).resolves.toEqual({
-      totalHits: 21,
-      timeToExpire: 60,
-      isBlocked: true,
-      timeToBlockExpire: 60,
-    });
+    await expect(storage.increment('key', 60_000, 20, 60_000)).resolves.toEqual(
+      {
+        totalHits: 21,
+        timeToExpire: 60,
+        isBlocked: true,
+        timeToBlockExpire: 60,
+      },
+    );
   });
 
   it('binds key and durations as parameters in a single upsert', async () => {
     queryRaw.mockResolvedValue([{ points: 1, secondsToExpire: 60 }]);
 
-    await storage.increment("k'; DROP TABLE x; --", 60_000, 20, 30_000, 'n');
+    await storage.increment("k'; DROP TABLE x; --", 60_000, 20, 30_000);
 
     expect(queryRaw).toHaveBeenCalledTimes(1);
     const [sql] = queryRaw.mock.calls[0] as [
@@ -76,9 +76,9 @@ describe('PostgresThrottlerStorage', () => {
   ] as const)(
     'rejects an invalid %s before querying',
     async (_label, [ttl, limit, block]) => {
-      await expect(
-        storage.increment('key', ttl, limit, block, 'default'),
-      ).rejects.toThrow('Rate limit');
+      await expect(storage.increment('key', ttl, limit, block)).rejects.toThrow(
+        'Rate limit',
+      );
       expect(queryRaw).not.toHaveBeenCalled();
     },
   );
@@ -86,9 +86,9 @@ describe('PostgresThrottlerStorage', () => {
   it('propagates storage failures so the guard fails closed', async () => {
     queryRaw.mockRejectedValue(new Error('connection lost'));
 
-    await expect(
-      storage.increment('key', 60_000, 20, 60_000, 'default'),
-    ).rejects.toThrow('connection lost');
+    await expect(storage.increment('key', 60_000, 20, 60_000)).rejects.toThrow(
+      'connection lost',
+    );
   });
 
   it('resets one counter by its bound key', async () => {

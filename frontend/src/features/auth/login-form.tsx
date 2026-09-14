@@ -7,6 +7,25 @@ import { recoverSession } from './session-recovery';
 
 type RecoveryStatus = 'not-required' | 'checking' | 'ready' | 'failed';
 
+export const LOGIN_ERROR_MESSAGES = {
+  invalidCredentials: 'Email or password is incorrect.',
+  accountLocked:
+    'This account is temporarily locked after too many failed sign-ins. Try again later.',
+  rateLimited: 'Too many sign-in attempts. Wait a moment and try again.',
+} as const;
+
+function isAccountLocked(body: unknown): boolean {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'error' in body &&
+    typeof body.error === 'object' &&
+    body.error !== null &&
+    'kind' in body.error &&
+    body.error.kind === 'account_locked'
+  );
+}
+
 export function LoginForm({
   sessionEnded = false,
 }: {
@@ -100,13 +119,19 @@ export function LoginForm({
         return;
       }
       if (response.status === 403) {
-        router.replace('/forbidden');
+        // 403 is either a locked account (show why) or a non-admin identity.
+        const body: unknown = await response.json().catch(() => null);
+        if (isAccountLocked(body)) {
+          setError(LOGIN_ERROR_MESSAGES.accountLocked);
+        } else {
+          router.replace('/forbidden');
+        }
         return;
       }
       if (response.status === 429) {
-        setError('Too many sign-in attempts. Wait a moment and try again.');
+        setError(LOGIN_ERROR_MESSAGES.rateLimited);
       } else if (response.status === 401) {
-        setError('Email or password is incorrect.');
+        setError(LOGIN_ERROR_MESSAGES.invalidCredentials);
       } else {
         setError('Sign-in is unavailable right now. Try again shortly.');
       }

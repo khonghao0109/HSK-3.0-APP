@@ -7,6 +7,7 @@ import * as argon2 from 'argon2';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { AuthService } from '../src/modules/auth/auth.service';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
@@ -36,7 +37,7 @@ describe('Auth E2E', () => {
         exceptionFactory: createSafeValidationException,
       }),
     );
-    await app.init();
+    await app.listen(0, '127.0.0.1');
 
     prisma = app.get(PrismaService);
   });
@@ -107,6 +108,62 @@ describe('Auth E2E', () => {
       .expect(200);
 
     expect(Array.isArray(usersRes.body)).toBe(true);
+  });
+
+  it('returns 409 for a duplicate registration, including concurrent ones', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email: userEmail.toUpperCase(), password })
+      .expect(409);
+
+    const racedEmail = `e2e_race_${Date.now()}@example.com`;
+    const responses = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(app.getHttpServer())
+          .post('/api/v1/auth/register')
+          .send({ email: racedEmail, password }),
+      ),
+    );
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      201, 409, 409, 409, 409,
+    ]);
+    expect(
+      responses.find((response) => response.status === 409)?.body,
+    ).toMatchObject({ statusCode: 409, message: 'Email already exists' });
+  });
+
+  it('answers unknown and suspended accounts with the generic 401 after an Argon2 verification', async () => {
+    const verifyPassword = jest.spyOn(
+      AuthService.prototype as any,
+      'verifyPassword',
+    );
+    try {
+      const suspendedEmail = `e2e_suspended_${Date.now()}@example.com`;
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: suspendedEmail, password })
+        .expect(201);
+      await prisma.user.update({
+        where: { email: suspendedEmail },
+        data: { status: 'suspended' },
+      });
+
+      for (const email of [
+        `e2e_unknown_${Date.now()}@example.com`,
+        suspendedEmail,
+      ]) {
+        verifyPassword.mockClear();
+        const response = await request(app.getHttpServer())
+          .post('/api/v1/auth/login')
+          .send({ email, password })
+          .expect(401);
+        expect(response.body).toMatchObject({ message: 'Invalid credentials' });
+        expect(verifyPassword).toHaveBeenCalledTimes(1);
+        expect(verifyPassword.mock.calls[0]?.[1]).toMatch(/^\$argon2id\$/u);
+      }
+    } finally {
+      verifyPassword.mockRestore();
+    }
   });
 
   it('rejects stored passwords that are not Argon2id and leaves them untouched', async () => {

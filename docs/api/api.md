@@ -77,11 +77,13 @@ DB lỗi → `500` mặc định. (Backlog: chỉ trả `{ status }`, tách live
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
 Email canonicalize `trim().toLowerCase()`; DB unique theo `lower(email)`. Password trong
-blacklist → `400 "Password is too weak."`; email đã tồn tại → `401 "Email already exists"`
-(backlog: đổi thành `409` chung).
+blacklist → `400 "Password is too weak."`; email đã tồn tại → `409 "Email already exists"`,
+kể cả khi hai request đăng ký cùng email chạy song song (unique index `P2002` cũng map về
+`409`).
 
-Body login: `{ "email", "password" }`. Sai credential → `401`; account không `active`,
-đã soft-delete hoặc đang khoá (5 lần sai → khoá 15 phút) → `403`.
+Body login: `{ "email", "password" }`. Email không tồn tại, account không `active` hoặc
+đã soft-delete, sai mật khẩu → cùng `401 "Invalid credentials"`. Chỉ account đang khoá
+(5 lần sai → khoá 15 phút) → `403`.
 
 Thứ tự kiểm tra login (H.5, B-01):
 
@@ -89,7 +91,10 @@ Thứ tự kiểm tra login (H.5, B-01):
    lần thử tính một điểm vào `RateLimitCounter` (key SHA-256 của
    `login:email:<email>`), quá 5 trong 15 phút → `429` như body throttle chung, kể cả
    email không tồn tại. Login thành công xoá bộ đếm này nên chỉ lần sai tích luỹ.
-2. Account không `active` → `403` (không tính vào lockout).
+2. Email không tồn tại hoặc account không `active`/đã soft-delete → verify Argon2id với
+   một hash mồi (cùng tham số và pepper, tạo từ secret ngẫu nhiên lúc khởi động) rồi
+   `401`, không tính vào lockout. Thời gian phản hồi ngang với sai mật khẩu nên không dò
+   được email đã đăng ký (H.7, B-06).
 3. Lockout: một câu `UPDATE` nguyên tử giữ chỗ lượt thử (tăng `failedLoginAttempts`,
    lượt thứ 5 đặt `lockUntil` = now + 15 phút) trước khi verify Argon2; account đang
    khoá không được giữ chỗ → `403` mà không hash mật khẩu. Thành công đặt lại

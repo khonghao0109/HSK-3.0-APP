@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
+  type OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ThrottlerException } from '@nestjs/throttler';
 import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -24,13 +26,20 @@ export const LOGIN_EMAIL_FAILURE_LIMIT = 5;
 const LOGIN_EMAIL_WINDOW_MS = 15 * 60_000;
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  private dummyPasswordHash?: Promise<string>;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly rateLimitStorage: PostgresThrottlerStorage,
   ) {}
+
+  /** Hash the timing decoy at boot so the first failed login is not slower. */
+  async onModuleInit(): Promise<void> {
+    await this.getDummyPasswordHash();
+  }
 
   async register(registerDto: RegisterDto) {
     const email = this.normalizeEmail(registerDto.email);
@@ -40,25 +49,36 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new UnauthorizedException('Email already exists');
+      throw new ConflictException('Email already exists');
     }
 
     this.assertPasswordNotBlacklisted(registerDto.password);
     const passwordHash = await this.hashPassword(registerDto.password);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        password: passwordHash,
-        name: registerDto.name,
-      },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        name: true,
-      },
-    });
+    const user = await this.prisma.user
+      .create({
+        data: {
+          email,
+          password: passwordHash,
+          name: registerDto.name,
+        },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          name: true,
+        },
+      })
+      .catch((error: unknown) => {
+        // A concurrent registration won the unique email index.
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          throw new ConflictException('Email already exists');
+        }
+        throw error;
+      });
 
     const accessToken = await this.signToken(user.id, user.email, user.role);
 
@@ -84,12 +104,15 @@ export class AuthService {
       },
     });
 
-    if (!user) {
+    // Unknown and inactive accounts get the same 401 as a wrong password, after
+    // a full Argon2id verification against a decoy, so neither the status code
+    // nor the response time reveals whether the email is registered.
+    if (!user || user.status !== 'active' || user.deletedAt !== null) {
+      await this.verifyPassword(
+        loginDto.password,
+        await this.getDummyPasswordHash(),
+      );
       throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (user.status !== 'active' || user.deletedAt !== null) {
-      throw new ForbiddenException('Account is not active.');
     }
 
     if (!(await this.reserveLoginAttempt(user.id))) {
@@ -181,6 +204,18 @@ export class AuthService {
       RETURNING "id"
     `);
     return claimed.length === 1;
+  }
+
+  /**
+   * Argon2id hash of a random secret with the same parameters and pepper as
+   * real passwords, so verifying against it costs the same. Nothing can match
+   * it: the secret is never stored or returned.
+   */
+  private getDummyPasswordHash(): Promise<string> {
+    this.dummyPasswordHash ??= this.hashPassword(
+      randomBytes(32).toString('base64url'),
+    );
+    return this.dummyPasswordHash;
   }
 
   private assertPasswordNotBlacklisted(password: string) {

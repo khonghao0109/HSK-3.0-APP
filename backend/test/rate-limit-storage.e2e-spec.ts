@@ -91,7 +91,7 @@ describe('PostgreSQL rate limit storage (e2e)', () => {
 
     const records = await Promise.all(
       Array.from({ length: CONCURRENT_HITS }, () =>
-        storage.increment(key, TTL_MS, LIMIT, TTL_MS, 'default'),
+        storage.increment(key, TTL_MS, LIMIT, TTL_MS),
       ),
     );
 
@@ -128,17 +128,17 @@ describe('PostgreSQL rate limit storage (e2e)', () => {
     const key = `${keyPrefix}-window`;
     for (let hit = 1; hit <= 2; hit += 1) {
       await expect(
-        storage.increment(key, TTL_MS, 2, 5_000, 'default'),
+        storage.increment(key, TTL_MS, 2, 5_000),
       ).resolves.toMatchObject({ totalHits: hit, isBlocked: false });
     }
 
-    const blocked = await storage.increment(key, TTL_MS, 2, 5_000, 'default');
+    const blocked = await storage.increment(key, TTL_MS, 2, 5_000);
     expect(blocked).toMatchObject({ totalHits: 3, isBlocked: true });
     expect(blocked.timeToBlockExpire).toBeGreaterThan(0);
     expect(blocked.timeToBlockExpire).toBeLessThanOrEqual(5);
     const blockedRow = await counter(key);
 
-    await storage.increment(key, TTL_MS, 2, 5_000, 'default');
+    await storage.increment(key, TTL_MS, 2, 5_000);
     await expect(counter(key)).resolves.toEqual(blockedRow);
 
     await prisma.$executeRaw`
@@ -147,7 +147,7 @@ describe('PostgreSQL rate limit storage (e2e)', () => {
       WHERE "key" = ${key}
     `;
     await expect(
-      storage.increment(key, TTL_MS, 2, 5_000, 'default'),
+      storage.increment(key, TTL_MS, 2, 5_000),
     ).resolves.toMatchObject({ totalHits: 1, isBlocked: false });
   });
 

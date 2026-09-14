@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
+import {
+  BackendRequestError,
+  normalizeApiFailure,
+  type ApiFailureKind,
+} from '@/lib/api/api-error';
 import {
   createClearedSessionCookie,
   createSessionCookie,
@@ -37,6 +41,27 @@ function safeResponse(status: number, requestId?: string): NextResponse {
       },
     },
     { status: failure.status },
+  );
+  response.headers.set('cache-control', 'no-store');
+  return response;
+}
+
+/**
+ * The backend answers login with 403 only for a temporarily locked account;
+ * unknown, inactive and wrong-password logins share 401. The console's own
+ * 403s (cross-origin, non-admin) keep kind `forbidden`.
+ */
+function accountLockedResponse(): NextResponse {
+  const kind: ApiFailureKind = 'account_locked';
+  const response = NextResponse.json(
+    {
+      success: false,
+      error: {
+        kind,
+        message: 'This account is temporarily locked. Try again later.',
+      },
+    },
+    { status: 403 },
   );
   response.headers.set('cache-control', 'no-store');
   return response;
@@ -121,6 +146,7 @@ export async function handleLogin(
   } catch (error) {
     if (error instanceof SessionTokenError) return safeResponse(503);
     const status = statusFromError(error);
+    if (status === 403) return accountLockedResponse();
     return safeResponse(
       [400, 401, 403, 422, 429, 503].includes(status) ? status : 500,
     );

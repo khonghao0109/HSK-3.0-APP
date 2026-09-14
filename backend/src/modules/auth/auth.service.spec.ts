@@ -1,7 +1,12 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerException } from '@nestjs/throttler';
+import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash } from 'node:crypto';
 
@@ -16,9 +21,10 @@ type SqlCall = [{ sql: string; values: unknown[] }];
 describe('AuthService login throttling and lockout', () => {
   const findUnique = jest.fn();
   const update = jest.fn();
+  const create = jest.fn();
   const queryRaw = jest.fn();
   const prisma = {
-    user: { findUnique, update },
+    user: { findUnique, update, create },
     $queryRaw: queryRaw,
   } as unknown as PrismaService;
   const increment = jest.fn();
@@ -119,23 +125,115 @@ describe('AuthService login throttling and lockout', () => {
     expect(reset).not.toHaveBeenCalled();
   });
 
-  it('keeps unknown emails on the email budget without touching lockout', async () => {
-    findUnique.mockResolvedValue(null);
+  describe('unknown and inactive accounts', () => {
+    const realHashPrefix = /^\$argon2id\$v=19\$m=65536,t=3,p=1\$/u;
 
-    await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+    it.each([
+      ['an unknown email', null],
+      ['a suspended account', { ...activeUser, status: 'suspended' }],
+      [
+        'a soft-deleted account',
+        { ...activeUser, status: 'anonymized', deletedAt: new Date() },
+      ],
+    ])(
+      'answers %s with the generic 401 after a full decoy verification',
+      async (_label, found) => {
+        findUnique.mockResolvedValue(found);
+        verifyPassword.mockResolvedValue(false);
 
-    expect(increment).toHaveBeenCalledTimes(1);
-    expect(queryRaw).not.toHaveBeenCalled();
-    expect(verifyPassword).not.toHaveBeenCalled();
+        await expect(login()).rejects.toThrow(
+          new UnauthorizedException('Invalid credentials'),
+        );
+
+        expect(increment).toHaveBeenCalledTimes(1);
+        expect(verifyPassword).toHaveBeenCalledTimes(1);
+        const [password, decoy] = verifyPassword.mock.calls[0] as [
+          string,
+          string,
+        ];
+        expect(password).toBe('secret-pass');
+        // Same algorithm and cost parameters as a stored password hash.
+        expect(decoy).toMatch(realHashPrefix);
+        expect(decoy).not.toBe(activeUser.password);
+        expect(queryRaw).not.toHaveBeenCalled();
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+
+    it('rejects even the correct password of an inactive account', async () => {
+      findUnique.mockResolvedValue({ ...activeUser, status: 'suspended' });
+      verifyPassword.mockResolvedValue(true);
+
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('hashes the decoy once at module init and reuses it', async () => {
+      const hashPassword = jest.spyOn(
+        service as unknown as { hashPassword: () => Promise<string> },
+        'hashPassword',
+      );
+      findUnique.mockResolvedValue(null);
+      verifyPassword.mockResolvedValue(false);
+
+      await service.onModuleInit();
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(hashPassword).toHaveBeenCalledTimes(1);
+      const decoys = verifyPassword.mock.calls.map((call) => call[1] as string);
+      expect(new Set(decoys).size).toBe(1);
+    });
   });
 
-  it('does not claim an attempt for an inactive account', async () => {
-    findUnique.mockResolvedValue({ ...activeUser, status: 'suspended' });
+  describe('register', () => {
+    const input = {
+      email: ' New@Example.com ',
+      password: 'Unique-pass-42',
+      name: 'New',
+    };
 
-    await expect(login()).rejects.toBeInstanceOf(ForbiddenException);
+    it('returns 409 for an email that already exists', async () => {
+      findUnique.mockResolvedValue({ id: 3 });
 
-    expect(queryRaw).not.toHaveBeenCalled();
-    expect(verifyPassword).not.toHaveBeenCalled();
+      await expect(service.register(input)).rejects.toThrow(
+        new ConflictException('Email already exists'),
+      );
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it('returns 409 when a concurrent registration wins the unique index', async () => {
+      findUnique.mockResolvedValue(null);
+      jest
+        .spyOn(
+          service as unknown as { hashPassword: () => Promise<string> },
+          'hashPassword',
+        )
+        .mockResolvedValue('$argon2id$v=19$m=65536,t=3,p=1$stub');
+      create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: Prisma.prismaVersion.client,
+        }),
+      );
+
+      await expect(service.register(input)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+    });
+
+    it('does not turn other database errors into 409', async () => {
+      findUnique.mockResolvedValue(null);
+      jest
+        .spyOn(
+          service as unknown as { hashPassword: () => Promise<string> },
+          'hashPassword',
+        )
+        .mockResolvedValue('$argon2id$v=19$m=65536,t=3,p=1$stub');
+      create.mockRejectedValue(new Error('connection lost'));
+
+      await expect(service.register(input)).rejects.toThrow('connection lost');
+    });
   });
 
   it('clears lockout and the email failure counter after a successful login', async () => {

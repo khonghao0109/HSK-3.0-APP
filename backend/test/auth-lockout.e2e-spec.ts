@@ -96,7 +96,8 @@ describe('Login lockout and email throttle (e2e)', () => {
       401: LOGIN_EMAIL_FAILURE_LIMIT,
       429: CONCURRENT_ATTEMPTS - LOGIN_EMAIL_FAILURE_LIMIT,
     });
-    expect(verifyPassword).not.toHaveBeenCalled();
+    // Each admitted attempt still pays one decoy Argon2 verification (H.7).
+    expect(verifyPassword).toHaveBeenCalledTimes(LOGIN_EMAIL_FAILURE_LIMIT);
   });
 
   it('claims lockout attempts atomically under concurrent wrong passwords', async () => {
