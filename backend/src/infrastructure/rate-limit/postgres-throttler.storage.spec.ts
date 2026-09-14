@@ -91,6 +91,18 @@ describe('PostgresThrottlerStorage', () => {
     ).rejects.toThrow('connection lost');
   });
 
+  it('resets one counter by its bound key', async () => {
+    executeRaw.mockResolvedValue(1);
+
+    await storage.reset('login-key');
+
+    const [sql] = executeRaw.mock.calls[0] as [
+      { sql: string; values: unknown[] },
+    ];
+    expect(sql.sql).toContain('DELETE FROM "RateLimitCounter"');
+    expect(sql.values).toEqual(['login-key']);
+  });
+
   it('purges in batches until a batch is not full', async () => {
     executeRaw
       .mockResolvedValueOnce(1_000)

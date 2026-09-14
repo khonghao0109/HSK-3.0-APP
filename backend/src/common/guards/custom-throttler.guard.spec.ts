@@ -9,7 +9,10 @@ import type { Request } from 'express';
 import request from 'supertest';
 
 import { configureTrustProxy } from '../../config/runtime-security';
-import { AuthController } from '../../modules/auth/auth.controller';
+import {
+  AuthController,
+  LOGIN_IP_LIMIT_PER_MINUTE,
+} from '../../modules/auth/auth.controller';
 import { AuthService } from '../../modules/auth/auth.service';
 
 import { CustomThrottlerGuard } from './custom-throttler.guard';
@@ -73,7 +76,15 @@ function token(
 describe('CustomThrottlerGuard', () => {
   let app: INestApplication;
 
+  const nodeEnv = process.env.NODE_ENV;
+
+  beforeEach(() => {
+    // Exercise production limits; the login limit relaxes under NODE_ENV=test.
+    process.env.NODE_ENV = 'production';
+  });
+
   afterEach(async () => {
+    process.env.NODE_ENV = nodeEnv;
     await app?.close();
   });
 
@@ -161,16 +172,16 @@ describe('CustomThrottlerGuard', () => {
     });
 
     it.each([
-      ['login', 200],
+      ['login', LOGIN_IP_LIMIT_PER_MINUTE],
       ['register', 100],
     ])(
       'keeps POST /auth/%s on the IP bucket despite valid tokens',
       async (route, routeLimit) => {
         app = await createApp();
-        const call = (sub: number) =>
+        const call = (sub: number, ip = '198.51.100.2') =>
           request(app.getHttpServer())
             .post(`/auth/${route}`)
-            .set('X-Forwarded-For', '198.51.100.2')
+            .set('X-Forwarded-For', ip)
             .set('Authorization', `Bearer ${token(sub)}`);
 
         for (let sub = 1; sub <= routeLimit; sub += 1) {
@@ -178,6 +189,7 @@ describe('CustomThrottlerGuard', () => {
         }
 
         await call(routeLimit + 1).expect(429);
+        await call(routeLimit + 2, '198.51.100.3').expect(201);
       },
     );
   });

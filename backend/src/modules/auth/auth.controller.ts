@@ -19,6 +19,16 @@ type AuthenticatedRequest = Request & {
   user: AuthenticatedUser;
 };
 
+export const LOGIN_IP_LIMIT_PER_MINUTE = 10;
+
+/**
+ * Resolved per request. Backend and browser E2E log in many times from one
+ * loopback address, as the global limit in AppModule already allows.
+ */
+export function loginIpLimit(): number {
+  return process.env.NODE_ENV === 'test' ? 1_000 : LOGIN_IP_LIMIT_PER_MINUTE;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -30,7 +40,9 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ default: { limit: 200, ttl: 60_000, getTracker: ipTracker } })
+  @Throttle({
+    default: { limit: loginIpLimit, ttl: 60_000, getTracker: ipTracker },
+  })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }

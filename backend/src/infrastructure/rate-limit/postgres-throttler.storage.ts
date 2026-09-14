@@ -102,6 +102,13 @@ export class PostgresThrottlerStorage
     };
   }
 
+  /** Clears one counter, e.g. a failure counter after a successful login. */
+  async reset(key: string): Promise<void> {
+    await this.prisma.$executeRaw(
+      Prisma.sql`DELETE FROM "RateLimitCounter" WHERE "key" = ${key}`,
+    );
+  }
+
   /**
    * Deletes expired counters in bounded batches. SKIP LOCKED leaves rows that
    * a concurrent increment holds, so replicas can run this at the same time.

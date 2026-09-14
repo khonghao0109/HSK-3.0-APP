@@ -40,7 +40,7 @@ spec sinh thay vì viết tay.
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 200); `429` với body
+- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với body
   `{ statusCode: 429, message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
   `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
@@ -72,7 +72,7 @@ DB lỗi → `500` mặc định. (Backlog: chỉ trả `{ status }`, tách live
 | Method | Path | Auth | Rate limit |
 | --- | --- | --- | --- |
 | `POST` | `/auth/register` | public | 100/phút/IP |
-| `POST` | `/auth/login` | public | 200/phút/IP |
+| `POST` | `/auth/login` | public | 10/phút/IP; 5 lần sai/15 phút/email |
 | `GET` | `/auth/me` | JWT | global |
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
@@ -82,6 +82,21 @@ blacklist → `400 "Password is too weak."`; email đã tồn tại → `401 "Em
 
 Body login: `{ "email", "password" }`. Sai credential → `401`; account không `active`,
 đã soft-delete hoặc đang khoá (5 lần sai → khoá 15 phút) → `403`.
+
+Thứ tự kiểm tra login (H.5, B-01):
+
+1. Throttle theo email đã chuẩn hoá `trim().toLowerCase()`, trước khi tra user: mỗi
+   lần thử tính một điểm vào `RateLimitCounter` (key SHA-256 của
+   `login:email:<email>`), quá 5 trong 15 phút → `429` như body throttle chung, kể cả
+   email không tồn tại. Login thành công xoá bộ đếm này nên chỉ lần sai tích luỹ.
+2. Account không `active` → `403` (không tính vào lockout).
+3. Lockout: một câu `UPDATE` nguyên tử giữ chỗ lượt thử (tăng `failedLoginAttempts`,
+   lượt thứ 5 đặt `lockUntil` = now + 15 phút) trước khi verify Argon2; account đang
+   khoá không được giữ chỗ → `403` mà không hash mật khẩu. Thành công đặt lại
+   `failedLoginAttempts = 0`, `lockUntil = null`; khoá hết hạn thì đếm lại từ đầu.
+
+Dưới `NODE_ENV=test` giới hạn IP của login nới thành 1.000/phút cho e2e từ loopback,
+như giới hạn toàn cục.
 
 Response register/login (`201`, không envelope, không `tokenType`/`expiresIn`):
 
