@@ -43,7 +43,7 @@ cam kết.
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
-| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 2 / 14 | 2–3 tuần | 🟡 |
+| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 3 / 14 | 2–3 tuần | 🟡 |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 20 | 5–7 tuần | 🟡 backend xong |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **36 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **37 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 
@@ -104,8 +104,8 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 | --- | --- | --- | --- |
 | H.4a | `trust proxy`, nginx `X-Forwarded-For`; throttler tracker `req.user.id ?? req.ip` | ✅ | A-02. 14/09: `9272c58`. `TRUST_PROXY_HOPS` (mặc định 1); `CustomThrottlerGuard` tự xác minh bearer JWT vì APP_GUARD chạy trước `JwtAuthGuard` (`req.user` chưa có); `login`/`register` giữ bucket IP; BFF forward XFF nguyên chuỗi; nginx route media. jest 612, e2e 163, vitest 108 pass |
 | H.4b | Rate limit theo user bằng bảng Postgres theo mẫu `MediaUploadRateLimit` | ✅ | ADR-008 §2. 14/09: `a0b1950`. migration 20 `20260914090000_rate_limit_counter` (bảng purgeable `RateLimitCounter`); `PostgresThrottlerStorage` upsert nguyên tử một câu lệnh, đồng hồ DB, cleanup batch `SKIP LOCKED` mỗi 60 s; bằng chứng đồng thời/đa replica: `backend/test/rate-limit-storage.e2e-spec.ts`. Harness `test:db:media-migration*` còn hard-code 19 migration → H.11a |
-| H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | 🟡 | B-01. 14/09 chưa commit: câu `UPDATE` giữ chỗ lượt thử trước Argon2 (khoá thì không hash), `login` 10/phút/IP, 5 lần sai/15 phút/email qua `PostgresThrottlerStorage`; bằng chứng `backend/test/auth-lockout.e2e-spec.ts`, `backend/src/modules/auth/auth.service.spec.ts` |
-| H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |
+| H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ✅ | B-01. 14/09: `ac7faa4`. câu `UPDATE` giữ chỗ lượt thử trước Argon2 (khoá thì không hash), `login` 10/phút/IP, 5 lần sai/15 phút/email qua `PostgresThrottlerStorage`; bằng chứng `backend/test/auth-lockout.e2e-spec.ts`, `backend/src/modules/auth/auth.service.spec.ts` |
+| H.6 | Xoá nhánh so sánh password plaintext | 🟡 | B-02. 14/09 chưa commit: `verifyPassword` chỉ nhận `$argon2id$`, bỏ upgrade hash inline; bằng chứng `backend/src/modules/auth/auth.service.spec.ts` (stored password format), `backend/test/auth.e2e-spec.ts` |
 | H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | ⬜ | B-06 |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ⬜ | B-05 |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ⬜ | B-04 |
@@ -344,8 +344,8 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | 🟡 | A-01. 07/09: `f7c6d9b`, `665074d`. Ba job đã viết và chạy tay từ clone mới; chỉ ✅ khi có run xanh trên GitHub và H.2d bật xong |
 | H.3 | `docker-compose.yml` (Postgres 16 + profile `dev` cho MinIO/ClamAV/Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ✅ | F-01 đóng phần e2e 07/09: `b011518`, `41f471d`, `1751aff`. e2e phải `--runInBand`: 11 suite dùng chung DB và cùng upsert Level theo `code` |
 | H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ✅ | A-02, ADR-008 §2. H.4a `9272c58`; H.4b `a0b1950` |
-| H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | 🟡 | B-01. Xem GĐ2 H.5 |
-| H.6 | Xoá nhánh so sánh password plaintext | ⬜ | B-02 |
+| H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ✅ | B-01. `ac7faa4` |
+| H.6 | Xoá nhánh so sánh password plaintext | 🟡 | B-02. Xem GĐ2 H.6 |
 | H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | ⬜ | B-06 |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ⬜ | B-05 |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ⬜ | B-04 |
@@ -535,3 +535,4 @@ khi vertical slice bắt đầu.
 | 13/09/2026 | Kiểm tra DB dev `hsk_system`: chỉ có từ điển (121.856 Word, 200.156 nghĩa tiếng Anh, 11.086 mapping level) và 35 lesson placeholder; 0 user/exercise/media. Áp dụng 7 migration còn thiếu (12 → 19) sau rehearsal trên bản sao disposable; tạo `backend/.env` (gitignore) và sửa `.env.example`: `JWT_SECRETS` phải là JSON trong nháy đơn vì dotenv không unescape `\"` (bản cũ làm backend fail-closed khi `cp .env.example .env`); backend khởi động trên DB đã migrate, `GET /api/v1/health` 200; thêm `npm run seed:dictionary`; sửa tham chiếu seed ở 0.3, slice 2, overview §6/§9; ghi bằng chứng dữ liệu vào M1.1–M1.3. |
 | 14/09/2026 | GĐ2: H.4a ✅ (`9272c58`): `TRUST_PROXY_HOPS`, tracker `user:<id>` từ bearer JWT đã xác minh hoặc `ip:<req.ip>`, BFF forward `X-Forwarded-For`, nginx route media. H.4b 🟡: migration 20 `RateLimitCounter` + `PostgresThrottlerStorage` cho throttler toàn cục, dùng chung giữa các replica. DB dev `hsk_system` cần `prisma migrate deploy` để nhận migration 20. |
 | 14/09/2026 | GĐ2: H.4b ✅ (`a0b1950`, đã push cùng H.4a). H.5 🟡: lockout giữ chỗ nguyên tử trước Argon2, `login` 10/phút/IP, throttle 5 lần sai/15 phút theo email băm SHA-256. |
+| 14/09/2026 | GĐ2: H.5 ✅ (`ac7faa4`, đã push). H.6 🟡: bỏ so sánh plaintext và upgrade hash inline khi login; mật khẩu lưu không phải Argon2id luôn bị từ chối. Rà fixture: user đăng nhập qua API đều tạo bằng register hoặc seed Argon2id; các giá trị giả trong `test/database/*.sql` và script concurrency chỉ ghi DB, không đăng nhập. |

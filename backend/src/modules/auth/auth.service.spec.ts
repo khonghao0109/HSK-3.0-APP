@@ -2,6 +2,7 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerException } from '@nestjs/throttler';
+import * as argon2 from 'argon2';
 import { createHash } from 'node:crypto';
 
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
@@ -167,5 +168,64 @@ describe('AuthService login throttling and lockout', () => {
     } finally {
       process.env.NODE_ENV = previous;
     }
+  });
+
+  describe('stored password format', () => {
+    const submitted = 'secret-pass';
+    // Cheap parameters keep the test fast; verify reads them from the hash.
+    const cheap = { memoryCost: 1024, timeCost: 1, parallelism: 1 };
+    let argon2idHash: string;
+    let argon2iHash: string;
+
+    beforeAll(async () => {
+      argon2idHash = await argon2.hash(submitted, {
+        ...cheap,
+        type: argon2.argon2id,
+      });
+      argon2iHash = await argon2.hash(submitted, {
+        ...cheap,
+        type: argon2.argon2i,
+      });
+    });
+
+    it.each([
+      ['the submitted plaintext itself', () => submitted],
+      ['a valid Argon2i hash of the password', () => argon2iHash],
+      [
+        'a bcrypt hash',
+        () => '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+      ],
+      ['an empty value', () => ''],
+      [
+        'an Argon2id hash with a non-canonical prefix',
+        () => argon2idHash.replace('$argon2id$', '$ARGON2ID$'),
+      ],
+    ])(
+      'rejects a stored password that is %s and never re-hashes it',
+      async (_label, stored) => {
+        findUnique.mockResolvedValue({ ...activeUser, password: stored() });
+
+        await expect(login(undefined, submitted)).rejects.toThrow(
+          new UnauthorizedException('Invalid credentials'),
+        );
+
+        expect(update).not.toHaveBeenCalled();
+        expect(reset).not.toHaveBeenCalled();
+      },
+    );
+
+    it('accepts a real Argon2id hash without rewriting the stored password', async () => {
+      findUnique.mockResolvedValue({ ...activeUser, password: argon2idHash });
+
+      await expect(login(undefined, submitted)).resolves.toMatchObject({
+        accessToken: 'signed-token',
+      });
+
+      expect(update).toHaveBeenCalledTimes(1);
+      const [[{ data }]] = update.mock.calls as [
+        [{ data: Record<string, unknown> }],
+      ];
+      expect(data).not.toHaveProperty('password');
+    });
   });
 });

@@ -107,17 +107,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const upgradedPassword = !user.password.startsWith('$argon2id$')
-      ? await this.hashPassword(loginDto.password)
-      : undefined;
-
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         failedLoginAttempts: 0,
         lockUntil: null,
         lastLoginAt: new Date(),
-        ...(upgradedPassword ? { password: upgradedPassword } : {}),
       },
     });
     await this.rateLimitStorage.reset(emailThrottleKey);
@@ -213,18 +208,21 @@ export class AuthService {
     });
   }
 
+  /**
+   * Accepts only Argon2id hashes. A stored value in any other form (plaintext,
+   * another Argon2 variant, a foreign algorithm) never matches, is not
+   * re-hashed, and the account needs a password reset.
+   */
   private async verifyPassword(
     password: string,
     hash: string,
   ): Promise<boolean> {
-    const passwordWithPepper = `${password}${this.getPepper()}`;
-
     if (!hash.startsWith('$argon2id$')) {
-      return hash === password;
+      return false;
     }
 
     try {
-      return await argon2.verify(hash, passwordWithPepper);
+      return await argon2.verify(hash, `${password}${this.getPepper()}`);
     } catch {
       return false;
     }

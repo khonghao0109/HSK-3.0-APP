@@ -1,7 +1,9 @@
 /// <reference types="jest" />
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as argon2 from 'argon2';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
@@ -105,5 +107,36 @@ describe('Auth E2E', () => {
       .expect(200);
 
     expect(Array.isArray(usersRes.body)).toBe(true);
+  });
+
+  it('rejects stored passwords that are not Argon2id and leaves them untouched', async () => {
+    const plaintext = 'Legacy-plaintext-1';
+    const pepper = app.get(ConfigService).get<string>('AUTH_PASSWORD_PEPPER');
+    const argon2iHash = await argon2.hash(`${plaintext}${pepper ?? ''}`, {
+      type: argon2.argon2i,
+      memoryCost: 1024,
+      timeCost: 1,
+      parallelism: 1,
+    });
+
+    for (const [label, stored] of [
+      ['plaintext', plaintext],
+      ['argon2i', argon2iHash],
+    ]) {
+      const email = `e2e_legacy_${label}_${Date.now()}@example.com`;
+      await prisma.user.create({ data: { email, password: stored } });
+
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email, password: plaintext })
+        .expect(401);
+
+      await expect(
+        prisma.user.findUniqueOrThrow({
+          where: { email },
+          select: { password: true, lastLoginAt: true },
+        }),
+      ).resolves.toEqual({ password: stored, lastLoginAt: null });
+    }
   });
 });

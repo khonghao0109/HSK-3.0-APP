@@ -94,6 +94,9 @@ Thứ tự kiểm tra login (H.5, B-01):
    lượt thứ 5 đặt `lockUntil` = now + 15 phút) trước khi verify Argon2; account đang
    khoá không được giữ chỗ → `403` mà không hash mật khẩu. Thành công đặt lại
    `failedLoginAttempts = 0`, `lockUntil = null`; khoá hết hạn thì đếm lại từ đầu.
+4. Verify chỉ chấp nhận hash Argon2id (`$argon2id$`, có pepper). Giá trị lưu ở dạng khác
+   (plaintext, Argon2i/Argon2d, bcrypt…) luôn → `401`, không so sánh chuỗi và không tự
+   hash lại; account đó cần reset password (H.6, B-02).
 
 Dưới `NODE_ENV=test` giới hạn IP của login nới thành 1.000/phút cho e2e từ loopback,
 như giới hạn toàn cục.
