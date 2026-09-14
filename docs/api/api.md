@@ -35,8 +35,9 @@ spec sinh thay vì viết tay.
   `{ code: "REQUEST_VALIDATION_FAILED", message, errors: [{ path, codes }] }`. Một số lỗi
   domain trả `{ code, message }` (ví dụ `MEDIA_STORAGE_*` 503, `listening_media_not_ready`
   422, `UPLOAD_TOO_LARGE` 413). Message không phản chiếu SQL/Prisma.
-- Pagination: `page ≥ 1`, `limit 1..100` mặc định 20. Không có `sortBy`/`sortOrder`; thứ
-  tự cố định theo endpoint.
+- Pagination: `page` 1..2147483647 mặc định 1, `limit` 1..100 mặc định 20; ngoài khoảng,
+  không phải số nguyên hoặc query lạ → `400`. Không có `sortBy`/`sortOrder`; thứ tự cố
+  định theo endpoint.
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
@@ -116,10 +117,30 @@ Response `GET /auth/me` (`200`): `{ "user": { "id": 1, "email": "user@example.co
 
 ### A.3 Users
 
-| Method | Path | Auth | Response |
-| --- | --- | --- | --- |
-| `GET` | `/users/me` | JWT | `{ id, email, name, role, createdAt }` |
-| `GET` | `/users` | admin | mảng cùng shape, sort `id ASC`, chưa phân trang (finding B-05) |
+| Method | Path | Auth | Query | Response |
+| --- | --- | --- | --- | --- |
+| `GET` | `/users/me` | JWT | — | `{ id, email, name, role, createdAt }` |
+| `GET` | `/users` | admin | `page`, `limit` | `{ items, total, page, limit, totalPages }` |
+
+- `GET /users` (H.8, B-05): object trần, không envelope. `items` có shape như `/users/me`,
+  sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có `deletedAt` khỏi cả `items`
+  và `total`; user `suspended`/`deletion_pending` chưa có `deletedAt` vẫn hiện.
+  `totalPages = ceil(total / limit)` (`0` khi rỗng); `page` vượt `totalPages` → `200` với
+  `items: []`. Non-admin → `403`.
+- `GET /users/me` chỉ đọc account `status = active` và `deletedAt IS NULL`. Account đã
+  soft-delete hoặc không active bị JWT strategy chặn `401` trước; nếu account đổi trạng
+  thái giữa strategy và service thì service trả `404 "User not found."`.
+- Không trả `password`, `failedLoginAttempts`, `lockUntil` hay trạng thái credential khác.
+
+```json
+{
+  "items": [{ "id": 1, "email": "user@example.com", "name": null, "role": "user", "createdAt": "2026-09-14T03:00:00.000Z" }],
+  "total": 41,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 3
+}
+```
 
 ### A.4 Public learning content
 

@@ -43,7 +43,7 @@ cam kết.
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
-| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 4 / 14 | 2–3 tuần | 🟡 |
+| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 5 / 14 | 2–3 tuần | 🟡 |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 20 | 5–7 tuần | 🟡 backend xong |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **38 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **39 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
 
@@ -106,8 +106,8 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 | H.4b | Rate limit theo user bằng bảng Postgres theo mẫu `MediaUploadRateLimit` | ✅ | ADR-008 §2. 14/09: `a0b1950`. migration 20 `20260914090000_rate_limit_counter` (bảng purgeable `RateLimitCounter`); `PostgresThrottlerStorage` upsert nguyên tử một câu lệnh, đồng hồ DB, cleanup batch `SKIP LOCKED` mỗi 60 s; bằng chứng đồng thời/đa replica: `backend/test/rate-limit-storage.e2e-spec.ts`. Harness `test:db:media-migration*` còn hard-code 19 migration → H.11a |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ✅ | B-01. 14/09: `ac7faa4`. câu `UPDATE` giữ chỗ lượt thử trước Argon2 (khoá thì không hash), `login` 10/phút/IP, 5 lần sai/15 phút/email qua `PostgresThrottlerStorage`; bằng chứng `backend/test/auth-lockout.e2e-spec.ts`, `backend/src/modules/auth/auth.service.spec.ts` |
 | H.6 | Xoá nhánh so sánh password plaintext | ✅ | B-02. 14/09: `039b6af`. `verifyPassword` chỉ nhận `$argon2id$`, bỏ upgrade hash inline; bằng chứng `backend/src/modules/auth/auth.service.spec.ts` (stored password format), `backend/test/auth.e2e-spec.ts` |
-| H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | 🟡 | B-06. 14/09 chưa commit: email lạ và account inactive verify Argon2id với hash mồi rồi `401` chung; chỉ account khoá trả `403`, BFF gắn `kind: account_locked`, form login hiện lý do; register trùng (kể cả race `P2002`) → `409`; bằng chứng `backend/test/auth.e2e-spec.ts`, `frontend/src/features/auth/login-form.spec.tsx` |
-| H.8 | `GET /users` phân trang + lọc soft-delete | ⬜ | B-05 |
+| H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. 14/09: `3db5ae1`. email lạ và account inactive verify Argon2id với hash mồi rồi `401` chung; chỉ account khoá trả `403`, BFF gắn `kind: account_locked`, form login hiện lý do; register trùng (kể cả race `P2002`) → `409`; bằng chứng `backend/test/auth.e2e-spec.ts`, `frontend/src/features/auth/login-form.spec.tsx` |
+| H.8 | `GET /users` phân trang + lọc soft-delete | 🟡 | B-05. 14/09 chưa commit: `GET /users` nhận `page`/`limit` (`PaginationQueryDto`, limit ≤ 100), trả `{ items, total, page, limit, totalPages }`, bỏ user có `deletedAt`; `getProfile` chỉ đọc account `active` chưa soft-delete (404); `page` chặn ≤ 2147483647 cho mọi list dùng DTO chung (trước đó `page=1e20` → 500); bằng chứng `backend/test/users.e2e-spec.ts`, `backend/src/modules/user/user.service.spec.ts` |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ⬜ | B-04 |
 | H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | ⬜ | A-03 |
 | H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | ⬜ | |
@@ -346,8 +346,8 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ✅ | A-02, ADR-008 §2. H.4a `9272c58`; H.4b `a0b1950` |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ✅ | B-01. `ac7faa4` |
 | H.6 | Xoá nhánh so sánh password plaintext | ✅ | B-02. `039b6af` |
-| H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | 🟡 | B-06. Xem GĐ2 H.7 |
-| H.8 | `GET /users` phân trang + lọc soft-delete | ⬜ | B-05 |
+| H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. Xem GĐ2 H.7 |
+| H.8 | `GET /users` phân trang + lọc soft-delete | 🟡 | B-05. Xem GĐ2 H.8 |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ⬜ | B-04 |
 | H.10 | Envelope toàn cục: APP_INTERCEPTOR + APP_FILTER, echo `x-request-id`; cập nhật api.md §1; sau đó bật OpenAPI | ⬜ | A-03, ADR-008 §5 |
 | H.11 | Migration: bỏ `BEGIN/COMMIT`, resolver tham số hoá, pin UTC, unique index goal/plan | ⬜ | C-01, C-02, C-05, C-04 |
@@ -537,3 +537,4 @@ khi vertical slice bắt đầu.
 | 14/09/2026 | GĐ2: H.4b ✅ (`a0b1950`, đã push cùng H.4a). H.5 🟡: lockout giữ chỗ nguyên tử trước Argon2, `login` 10/phút/IP, throttle 5 lần sai/15 phút theo email băm SHA-256. |
 | 14/09/2026 | GĐ2: H.5 ✅ (`ac7faa4`, đã push). H.6 🟡: bỏ so sánh plaintext và upgrade hash inline khi login; mật khẩu lưu không phải Argon2id luôn bị từ chối. Rà fixture: user đăng nhập qua API đều tạo bằng register hoặc seed Argon2id; các giá trị giả trong `test/database/*.sql` và script concurrency chỉ ghi DB, không đăng nhập. |
 | 14/09/2026 | GĐ2: H.6 ✅ (`039b6af`, đã push). H.7 🟡: chống dò email qua mã lỗi và thời gian login (hash mồi Argon2id), register trùng → `409`, form login tách 403 khoá khỏi 403 không phải admin. |
+| 14/09/2026 | GĐ2: H.7 ✅ (`3db5ae1`, đã push). H.8 🟡: `GET /users` phân trang và bỏ user soft-delete, `GET /users/me` chỉ trả account active; `PaginationQueryDto.page` ≤ 2147483647 để `page` quá lớn trả `400` thay vì `500`. |

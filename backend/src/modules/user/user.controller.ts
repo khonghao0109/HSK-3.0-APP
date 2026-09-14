@@ -1,7 +1,8 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
@@ -29,7 +30,7 @@ export class UserController {
 
   @Get()
   @Roles('admin')
-  getAllUsers() {
-    return this.userService.getAllUsers();
+  getAllUsers(@Query() query: PaginationQueryDto) {
+    return this.userService.getAllUsers(query);
   }
 }

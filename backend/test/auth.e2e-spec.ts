@@ -107,7 +107,8 @@ describe('Auth E2E', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    expect(Array.isArray(usersRes.body)).toBe(true);
+    expect(usersRes.body).toMatchObject({ page: 1, limit: 20 });
+    expect(Array.isArray(usersRes.body.items)).toBe(true);
   });
 
   it('returns 409 for a duplicate registration, including concurrent ones', async () => {
