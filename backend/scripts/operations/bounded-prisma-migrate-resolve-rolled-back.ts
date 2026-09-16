@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { PrismaClient } from '@prisma/client';
@@ -14,10 +14,17 @@ import {
 export const MEDIA_CLEANUP_AUDIT_MIGRATION =
   '20260813193000_media_cleanup_audit_integrity' as const;
 export const MEDIA_CLEANUP_AUDIT_CHECKSUM =
-  'c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252' as const;
+  '7b1e8e12bb6040bee629e702d217f54880d41dd7ffb962e3bf89b4cdca6adb08' as const;
 
-// This is the immutable migration-19 predicate expanded inline because a failed
-// transaction must leave all migration-19 functions absent.
+const MIGRATION_NAME_PATTERN = /^\d{14}_[a-z0-9_]+$/u;
+// Prisma wraps each migration.sql in one implicit transaction. Explicit
+// transaction control inside the file breaks that atomicity (25P02), so a
+// resolve target must not contain it.
+const EXPLICIT_TRANSACTION_CONTROL =
+  /^\s*(?:BEGIN|COMMIT|ROLLBACK|START\s+TRANSACTION)(?:\s+(?:WORK|TRANSACTION))?\s*;/imu;
+
+// The cleanup-audit predicate is expanded inline because a failed
+// media-cleanup-audit migration must leave all of its functions absent.
 const VALID_CLEANUP_AUDIT_PREDICATE = String.raw`EXISTS (
   SELECT 1
   FROM "MediaIngestion" candidate
@@ -118,29 +125,67 @@ const VALID_CLEANUP_AUDIT_PREDICATE = String.raw`EXISTS (
     )
 )`;
 
-const RESOLVE_STATE_QUERY = String.raw`
-SELECT
-  (SELECT id FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}'
-    ORDER BY started_at, id LIMIT 1) AS "targetMigrationId",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}') AS "targetMigrationRowCount",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}'
-      AND finished_at IS NULL AND rolled_back_at IS NULL) AS "unresolvedTargetMigrationRowCount",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS "unresolvedMigrationRowCount",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}'
-      AND finished_at IS NOT NULL AND rolled_back_at IS NULL) AS "finishedTargetMigrationRowCount",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}'
-      AND rolled_back_at IS NOT NULL) AS "rolledBackTargetMigrationRowCount",
-  (SELECT COUNT(*) FROM "_prisma_migrations"
-    WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS "successfulMigrationCount",
-  COALESCE((SELECT bool_and(checksum='${MEDIA_CLEANUP_AUDIT_CHECKSUM}')
-    FROM "_prisma_migrations"
-    WHERE migration_name='${MEDIA_CLEANUP_AUDIT_MIGRATION}'), false) AS "targetChecksumMatches",
+export type RolledBackResolveTarget = {
+  migrationName: string;
+  sourceChecksum: string;
+  predecessorMigrationCount: number;
+  guardsMediaCleanupAudit: boolean;
+};
+
+export function readRolledBackResolveTarget(
+  backendRoot: string,
+  migrationName: string,
+): RolledBackResolveTarget {
+  if (!MIGRATION_NAME_PATTERN.test(migrationName)) {
+    throw new Error('Migration resolve target name is invalid.');
+  }
+  const migrationsRoot = resolve(backendRoot, 'prisma/migrations');
+  const catalog = readdirSync(migrationsRoot)
+    .filter((entry) => MIGRATION_NAME_PATTERN.test(entry))
+    .sort((left, right) => left.localeCompare(right));
+  const predecessorMigrationCount = catalog.indexOf(migrationName);
+  if (predecessorMigrationCount < 0) {
+    throw new Error('Migration resolve target is not in the source catalog.');
+  }
+  const source = readFileSync(
+    resolve(migrationsRoot, migrationName, 'migration.sql'),
+  );
+  if (EXPLICIT_TRANSACTION_CONTROL.test(source.toString('utf8'))) {
+    throw new Error(
+      'Migration resolve target contains explicit transaction control.',
+    );
+  }
+  const sourceChecksum = sha256(source);
+  const guardsMediaCleanupAudit =
+    migrationName === MEDIA_CLEANUP_AUDIT_MIGRATION;
+  if (
+    guardsMediaCleanupAudit &&
+    sourceChecksum !== MEDIA_CLEANUP_AUDIT_CHECKSUM
+  ) {
+    throw new Error('Migration resolve target source checksum is not pinned.');
+  }
+  return {
+    migrationName,
+    sourceChecksum,
+    predecessorMigrationCount,
+    guardsMediaCleanupAudit,
+  };
+}
+
+function assertRolledBackResolveTargetShape(
+  target: RolledBackResolveTarget,
+): void {
+  if (
+    !MIGRATION_NAME_PATTERN.test(target.migrationName) ||
+    !/^[a-f0-9]{64}$/u.test(target.sourceChecksum) ||
+    !Number.isSafeInteger(target.predecessorMigrationCount) ||
+    target.predecessorMigrationCount < 0
+  ) {
+    throw new Error('Migration resolve target is invalid.');
+  }
+}
+
+const MEDIA_CLEANUP_AUDIT_RESIDUE_QUERY = String.raw`
   (SELECT COUNT(*)
     FROM pg_proc procedure
     JOIN pg_namespace namespace ON namespace.oid=procedure.pronamespace
@@ -150,7 +195,7 @@ SELECT
         'hsk_is_valid_current_media_cleanup_audit',
         'hsk_guard_media_cleanup_audit',
         'hsk_require_media_cleanup_audit'
-      )) AS "migration19FunctionCount",
+      )) AS "cleanupAuditFunctionCount",
   (SELECT COUNT(*)
     FROM pg_trigger trigger
     JOIN pg_class relation ON relation.oid=trigger.tgrelid
@@ -163,7 +208,7 @@ SELECT
         OR
         (relation.relname='MediaIngestion'
           AND trigger.tgname='MediaIngestion_cleanup_audit_required')
-      )) AS "migration19TriggerCount",
+      )) AS "cleanupAuditTriggerCount",
   (SELECT
     (SELECT COUNT(*)
       FROM "AuditLog" audit
@@ -191,12 +236,56 @@ SELECT
         ))) AS "authoritativeInvariantViolationCount"
 `;
 
-const RESOLVE_STATE_SCRIPT = String.raw`
+// Other targets have no domain residue probe: PostgreSQL rolls back the whole
+// implicit migration transaction, and their tables may not exist yet.
+const NO_DOMAIN_RESIDUE_QUERY = String.raw`
+  0 AS "cleanupAuditFunctionCount",
+  0 AS "cleanupAuditTriggerCount",
+  0 AS "authoritativeInvariantViolationCount"
+`;
+
+function buildResolveStateQuery(target: RolledBackResolveTarget): string {
+  assertRolledBackResolveTargetShape(target);
+  const name = target.migrationName;
+  return String.raw`
+SELECT
+  (SELECT id FROM "_prisma_migrations"
+    WHERE migration_name='${name}'
+    ORDER BY started_at, id LIMIT 1) AS "targetMigrationId",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE migration_name='${name}') AS "targetMigrationRowCount",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE migration_name='${name}'
+      AND finished_at IS NULL AND rolled_back_at IS NULL) AS "unresolvedTargetMigrationRowCount",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS "unresolvedMigrationRowCount",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE migration_name='${name}'
+      AND finished_at IS NOT NULL AND rolled_back_at IS NULL) AS "finishedTargetMigrationRowCount",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE migration_name='${name}'
+      AND rolled_back_at IS NOT NULL) AS "rolledBackTargetMigrationRowCount",
+  (SELECT COUNT(*) FROM "_prisma_migrations"
+    WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS "successfulMigrationCount",
+  COALESCE((SELECT bool_and(checksum='${target.sourceChecksum}')
+    FROM "_prisma_migrations"
+    WHERE migration_name='${name}'), false) AS "targetChecksumMatches",
+${
+  target.guardsMediaCleanupAudit
+    ? MEDIA_CLEANUP_AUDIT_RESIDUE_QUERY
+    : NO_DOMAIN_RESIDUE_QUERY
+}`;
+}
+
+function buildResolveStateScript(target: RolledBackResolveTarget): string {
+  return String.raw`
 const { PrismaClient } = require('@prisma/client');
 const client = new PrismaClient();
 (async () => {
   try {
-    const rows = await client.$queryRawUnsafe(${JSON.stringify(RESOLVE_STATE_QUERY)});
+    const rows = await client.$queryRawUnsafe(${JSON.stringify(
+      buildResolveStateQuery(target),
+    )});
     if (rows.length !== 1) throw new Error('unexpected resolve state row count');
     const row = Object.fromEntries(
       Object.entries(rows[0]).map(([key, value]) => [
@@ -212,8 +301,11 @@ const client = new PrismaClient();
   }
 })();
 `;
+}
 
-export type MediaCleanupAuditResolveState = {
+export type MigrationResolveState = {
+  targetMigrationName: string;
+  expectedSuccessfulMigrationCount: number;
   targetMigrationId: string | null;
   targetMigrationRowCount: number;
   unresolvedTargetMigrationRowCount: number;
@@ -223,46 +315,54 @@ export type MediaCleanupAuditResolveState = {
   successfulMigrationCount: number;
   targetChecksumMatches: boolean;
   sourceChecksumMatches: boolean;
-  migration19FunctionCount: number;
-  migration19TriggerCount: number;
+  cleanupAuditFunctionCount: number;
+  cleanupAuditTriggerCount: number;
   authoritativeInvariantViolationCount: number;
 };
 
-export type MediaCleanupAuditResolveDependencies = {
+type ResolveStateRow = Omit<
+  MigrationResolveState,
+  | 'targetMigrationName'
+  | 'expectedSuccessfulMigrationCount'
+  | 'sourceChecksumMatches'
+>;
+
+export type MigrationResolveDependencies = {
   now: () => number;
   runGuardedResolve: (
     environment: NodeJS.ProcessEnv,
     backendRoot: string,
     deadlineAt: number,
-    signal?: AbortSignal,
-  ) => Promise<MediaCleanupAuditResolveWorkerOutcome>;
+    signal: AbortSignal | undefined,
+    target: RolledBackResolveTarget,
+  ) => Promise<MigrationResolveWorkerOutcome>;
 };
 
-export type MediaCleanupAuditResolveWorkerOutcome =
-  | { kind: 'unsafe'; state?: MediaCleanupAuditResolveState }
+export type MigrationResolveWorkerOutcome =
+  | { kind: 'unsafe'; state?: MigrationResolveState }
   | { kind: 'internal' }
   | { kind: 'deadline' }
   | { kind: 'cancelled' }
-  | { kind: 'committed'; state: MediaCleanupAuditResolveState };
+  | { kind: 'committed'; state: MigrationResolveState };
 
-export type MediaCleanupAuditResolveTransactionDecision =
-  | Exclude<MediaCleanupAuditResolveWorkerOutcome, { kind: 'committed' }>
-  | { kind: 'commit'; state: MediaCleanupAuditResolveState };
+export type MigrationResolveTransactionDecision =
+  | Exclude<MigrationResolveWorkerOutcome, { kind: 'committed' }>
+  | { kind: 'commit'; state: MigrationResolveState };
 
-export type MediaCleanupAuditResolveTransaction = {
+export type MigrationResolveTransaction = {
   $queryRawUnsafe: <T = unknown>(query: string) => Promise<T>;
   $executeRawUnsafe: (query: string, ...values: unknown[]) => Promise<number>;
 };
 
-export type MediaCleanupAuditResolveWorkerDependencies = {
+export type MigrationResolveWorkerDependencies = {
   now: () => number;
-  readSourceChecksum: () => string;
+  readSourceChecksum: (migrationName: string) => string;
   runInTransaction: (
     operation: (
-      transaction: MediaCleanupAuditResolveTransaction,
-    ) => Promise<MediaCleanupAuditResolveTransactionDecision>,
+      transaction: MigrationResolveTransaction,
+    ) => Promise<MigrationResolveTransactionDecision>,
     timeoutMs: number,
-  ) => Promise<MediaCleanupAuditResolveTransactionDecision>;
+  ) => Promise<MigrationResolveTransactionDecision>;
 };
 
 function sha256(value: string | Buffer): string {
@@ -301,13 +401,11 @@ function normalizedDatabaseTarget(databaseUrl: string): string {
   return `${target.hostname}:${target.port}/${target.databaseName}/${target.schema}`;
 }
 
-export function mediaCleanupAuditResolveTargetSha256(
-  databaseUrl: string,
-): string {
+export function migrationResolveTargetSha256(databaseUrl: string): string {
   return sha256(normalizedDatabaseTarget(databaseUrl));
 }
 
-export function assertMediaCleanupAuditResolveTarget(
+export function assertMigrationResolveTarget(
   environment: NodeJS.ProcessEnv,
 ): void {
   const databaseUrl = environment.DATABASE_URL;
@@ -348,7 +446,7 @@ export function assertMediaCleanupAuditResolveTarget(
   if (
     !expectedTargetSha256 ||
     !/^[a-f0-9]{64}$/u.test(expectedTargetSha256) ||
-    expectedTargetSha256 !== mediaCleanupAuditResolveTargetSha256(databaseUrl)
+    expectedTargetSha256 !== migrationResolveTargetSha256(databaseUrl)
   ) {
     throw new Error(
       'Migration resolve target guard rejected the production target fingerprint.',
@@ -356,9 +454,7 @@ export function assertMediaCleanupAuditResolveTarget(
   }
 }
 
-function isResolveState(
-  value: unknown,
-): value is Omit<MediaCleanupAuditResolveState, 'sourceChecksumMatches'> {
+function isResolveState(value: unknown): value is ResolveStateRow {
   if (!value || typeof value !== 'object') return false;
   const state = value as Record<string, unknown>;
   const counts = [
@@ -368,8 +464,8 @@ function isResolveState(
     'finishedTargetMigrationRowCount',
     'rolledBackTargetMigrationRowCount',
     'successfulMigrationCount',
-    'migration19FunctionCount',
-    'migration19TriggerCount',
+    'cleanupAuditFunctionCount',
+    'cleanupAuditTriggerCount',
     'authoritativeInvariantViolationCount',
   ];
   return (
@@ -384,10 +480,25 @@ function isResolveState(
   );
 }
 
+function withResolveTarget(
+  row: ResolveStateRow,
+  target: RolledBackResolveTarget,
+  sourceChecksumMatches: boolean,
+): MigrationResolveState {
+  // Expected values come from the source catalog, never from the database row.
+  return {
+    ...row,
+    targetMigrationName: target.migrationName,
+    expectedSuccessfulMigrationCount: target.predecessorMigrationCount,
+    sourceChecksumMatches,
+  };
+}
+
 function resolveStateFromRows(
   rows: unknown,
+  target: RolledBackResolveTarget,
   sourceChecksumMatches: boolean,
-): MediaCleanupAuditResolveState {
+): MigrationResolveState {
   if (!Array.isArray(rows) || rows.length !== 1 || !rows[0]) {
     throw new Error('Migration resolve state query returned invalid data.');
   }
@@ -400,14 +511,16 @@ function resolveStateFromRows(
   if (!isResolveState(normalized)) {
     throw new Error('Migration resolve state query returned invalid data.');
   }
-  return { ...normalized, sourceChecksumMatches };
+  return withResolveTarget(normalized, target, sourceChecksumMatches);
 }
 
-export function readMediaCleanupAuditResolveState(
+export function readMigrationResolveState(
   environment: NodeJS.ProcessEnv,
   backendRoot: string,
-): MediaCleanupAuditResolveState {
-  const result = spawnSync(process.execPath, ['-e', RESOLVE_STATE_SCRIPT], {
+  target: RolledBackResolveTarget,
+): MigrationResolveState {
+  const script = buildResolveStateScript(target);
+  const result = spawnSync(process.execPath, ['-e', script], {
     cwd: backendRoot,
     env: environment,
     encoding: 'utf8',
@@ -429,39 +542,36 @@ export function readMediaCleanupAuditResolveState(
     throw new Error('Migration resolve state query returned invalid data.');
   }
 
-  const sourcePath = resolve(
-    backendRoot,
-    'prisma/migrations',
-    MEDIA_CLEANUP_AUDIT_MIGRATION,
-    'migration.sql',
-  );
   const sourceChecksumMatches =
-    sha256(readFileSync(sourcePath)) === MEDIA_CLEANUP_AUDIT_CHECKSUM;
-  return { ...parsed, sourceChecksumMatches };
+    sha256(readFileSync(sourceMigrationPath(backendRoot, target))) ===
+    target.sourceChecksum;
+  return withResolveTarget(parsed, target, sourceChecksumMatches);
 }
 
-export function summarizeMediaCleanupAuditResolveState(
-  state: MediaCleanupAuditResolveState,
+export function summarizeMigrationResolveState(
+  state: MigrationResolveState,
 ): string {
   return [
+    `target=${state.targetMigrationName}`,
     `target_rows=${String(state.targetMigrationRowCount)}`,
     `unresolved_target=${String(state.unresolvedTargetMigrationRowCount)}`,
     `unresolved_total=${String(state.unresolvedMigrationRowCount)}`,
     `finished_target=${String(state.finishedTargetMigrationRowCount)}`,
     `rolled_back_target=${String(state.rolledBackTargetMigrationRowCount)}`,
     `successful=${String(state.successfulMigrationCount)}`,
+    `expected_successful=${String(state.expectedSuccessfulMigrationCount)}`,
     `target_checksum=${state.targetChecksumMatches ? 'match' : 'mismatch'}`,
     `source_checksum=${state.sourceChecksumMatches ? 'match' : 'mismatch'}`,
-    `functions=${String(state.migration19FunctionCount)}`,
-    `triggers=${String(state.migration19TriggerCount)}`,
+    `functions=${String(state.cleanupAuditFunctionCount)}`,
+    `triggers=${String(state.cleanupAuditTriggerCount)}`,
     `invariant_violations=${String(
       state.authoritativeInvariantViolationCount,
     )}`,
   ].join(' ');
 }
 
-export function assertMediaCleanupAuditResolvePreconditions(
-  state: MediaCleanupAuditResolveState,
+export function assertMigrationResolvePreconditions(
+  state: MigrationResolveState,
 ): void {
   if (
     state.targetMigrationId === null ||
@@ -470,23 +580,24 @@ export function assertMediaCleanupAuditResolvePreconditions(
     state.unresolvedMigrationRowCount !== 1 ||
     state.finishedTargetMigrationRowCount !== 0 ||
     state.rolledBackTargetMigrationRowCount !== 0 ||
-    state.successfulMigrationCount !== 18 ||
+    !Number.isSafeInteger(state.expectedSuccessfulMigrationCount) ||
+    state.successfulMigrationCount !== state.expectedSuccessfulMigrationCount ||
     state.targetChecksumMatches !== true ||
     state.sourceChecksumMatches !== true ||
-    state.migration19FunctionCount !== 0 ||
-    state.migration19TriggerCount !== 0 ||
+    state.cleanupAuditFunctionCount !== 0 ||
+    state.cleanupAuditTriggerCount !== 0 ||
     state.authoritativeInvariantViolationCount !== 0
   ) {
     throw new Error(
-      `Migration resolve precondition rejected state: ${summarizeMediaCleanupAuditResolveState(
+      `Migration resolve precondition rejected state: ${summarizeMigrationResolveState(
         state,
       )}`,
     );
   }
 }
 
-export function assertMediaCleanupAuditResolvePostconditions(
-  state: MediaCleanupAuditResolveState,
+export function assertMigrationResolvePostconditions(
+  state: MigrationResolveState,
   expectedTargetMigrationId?: string | null,
 ): void {
   if (
@@ -498,15 +609,16 @@ export function assertMediaCleanupAuditResolvePostconditions(
     state.unresolvedMigrationRowCount !== 0 ||
     state.finishedTargetMigrationRowCount !== 0 ||
     state.rolledBackTargetMigrationRowCount !== 1 ||
-    state.successfulMigrationCount !== 18 ||
+    !Number.isSafeInteger(state.expectedSuccessfulMigrationCount) ||
+    state.successfulMigrationCount !== state.expectedSuccessfulMigrationCount ||
     state.targetChecksumMatches !== true ||
     state.sourceChecksumMatches !== true ||
-    state.migration19FunctionCount !== 0 ||
-    state.migration19TriggerCount !== 0 ||
+    state.cleanupAuditFunctionCount !== 0 ||
+    state.cleanupAuditTriggerCount !== 0 ||
     state.authoritativeInvariantViolationCount !== 0
   ) {
     throw new Error(
-      `Migration resolve postcondition rejected state: ${summarizeMediaCleanupAuditResolveState(
+      `Migration resolve postcondition rejected state: ${summarizeMigrationResolveState(
         state,
       )}`,
     );
@@ -532,11 +644,15 @@ WHERE id = $1
 `;
 const RESOLVE_TRANSACTION_SHUTDOWN_RESERVE_MS = 250;
 
-function sourceMigrationPath(backendRoot: string): string {
+function sourceMigrationPath(
+  backendRoot: string,
+  target: RolledBackResolveTarget,
+): string {
+  assertRolledBackResolveTargetShape(target);
   return resolve(
     backendRoot,
     'prisma/migrations',
-    MEDIA_CLEANUP_AUDIT_MIGRATION,
+    target.migrationName,
     'migration.sql',
   );
 }
@@ -561,25 +677,32 @@ function remainingDeadlineMs(
 function defaultResolveWorkerDependencies(
   environment: NodeJS.ProcessEnv,
   backendRoot: string,
-): MediaCleanupAuditResolveWorkerDependencies {
+): MigrationResolveWorkerDependencies {
   return {
     now: Date.now,
-    readSourceChecksum: () =>
-      sha256(readFileSync(sourceMigrationPath(backendRoot))),
+    readSourceChecksum: (migrationName) =>
+      sha256(
+        readFileSync(
+          resolve(
+            backendRoot,
+            'prisma/migrations',
+            migrationName,
+            'migration.sql',
+          ),
+        ),
+      ),
     runInTransaction: async (operation, timeoutMs) => {
       const client = new PrismaClient({
         datasources: { db: { url: environment.DATABASE_URL } },
       });
-      let decision: MediaCleanupAuditResolveTransactionDecision | undefined;
+      let decision: MigrationResolveTransactionDecision | undefined;
       let committedMutation = false;
       let transactionFailed = false;
       let transactionError: unknown;
       try {
         decision = await client.$transaction(
           async (transaction) =>
-            operation(
-              transaction as unknown as MediaCleanupAuditResolveTransaction,
-            ),
+            operation(transaction as unknown as MigrationResolveTransaction),
           {
             maxWait: Math.min(BOUNDED_MIGRATION_TIMEOUTS_MS.lock, timeoutMs),
             timeout: timeoutMs,
@@ -622,16 +745,23 @@ function isAdvisoryLockResult(
   );
 }
 
-export async function runGuardedMediaCleanupAuditResolveWorker(
+export async function runGuardedMigrationResolveWorker(
   environment: NodeJS.ProcessEnv,
   backendRoot: string,
   deadlineAt: number,
-  dependencies?: MediaCleanupAuditResolveWorkerDependencies,
-  signal?: AbortSignal,
-): Promise<MediaCleanupAuditResolveWorkerOutcome> {
+  dependencies: MigrationResolveWorkerDependencies | undefined,
+  signal: AbortSignal | undefined,
+  target: RolledBackResolveTarget,
+): Promise<MigrationResolveWorkerOutcome> {
   if (signal?.aborted) return { kind: 'cancelled' };
   if (!Number.isSafeInteger(deadlineAt) || deadlineAt <= 0) {
     return { kind: 'internal' };
+  }
+  let stateQuery: string;
+  try {
+    stateQuery = buildResolveStateQuery(target);
+  } catch {
+    return { kind: 'unsafe' };
   }
   const effectiveDependencies =
     dependencies ?? defaultResolveWorkerDependencies(environment, backendRoot);
@@ -655,27 +785,30 @@ export async function runGuardedMediaCleanupAuditResolveWorker(
           await transaction.$executeRawUnsafe(
             PRISMA_MIGRATION_HISTORY_GUARD_LOCK,
           );
-          await transaction.$executeRawUnsafe(MEDIA_INGESTION_GUARD_LOCK);
-          await transaction.$executeRawUnsafe(AUDIT_LOG_GUARD_LOCK);
+          if (target.guardsMediaCleanupAudit) {
+            await transaction.$executeRawUnsafe(MEDIA_INGESTION_GUARD_LOCK);
+            await transaction.$executeRawUnsafe(AUDIT_LOG_GUARD_LOCK);
+          }
         } catch (error: unknown) {
           if (isPostgresLockTimeout(error)) return { kind: 'unsafe' };
           return { kind: 'internal' };
         }
 
         const sourceChecksumMatches =
-          effectiveDependencies.readSourceChecksum() ===
-          MEDIA_CLEANUP_AUDIT_CHECKSUM;
-        let preconditionState: MediaCleanupAuditResolveState;
+          effectiveDependencies.readSourceChecksum(target.migrationName) ===
+          target.sourceChecksum;
+        let preconditionState: MigrationResolveState;
         try {
           preconditionState = resolveStateFromRows(
-            await transaction.$queryRawUnsafe(RESOLVE_STATE_QUERY),
+            await transaction.$queryRawUnsafe(stateQuery),
+            target,
             sourceChecksumMatches,
           );
         } catch {
           return { kind: 'internal' };
         }
         try {
-          assertMediaCleanupAuditResolvePreconditions(preconditionState);
+          assertMigrationResolvePreconditions(preconditionState);
         } catch {
           return { kind: 'unsafe', state: preconditionState };
         }
@@ -691,8 +824,8 @@ export async function runGuardedMediaCleanupAuditResolveWorker(
         const mutatedRows = await transaction.$executeRawUnsafe(
           MARK_TARGET_MIGRATION_ROLLED_BACK_QUERY,
           preconditionState.targetMigrationId,
-          MEDIA_CLEANUP_AUDIT_MIGRATION,
-          MEDIA_CLEANUP_AUDIT_CHECKSUM,
+          target.migrationName,
+          target.sourceChecksum,
         );
         if (mutatedRows !== 1) {
           throw new Error(
@@ -718,11 +851,12 @@ export async function runGuardedMediaCleanupAuditResolveWorker(
         }
 
         const postconditionState = resolveStateFromRows(
-          await transaction.$queryRawUnsafe(RESOLVE_STATE_QUERY),
-          effectiveDependencies.readSourceChecksum() ===
-            MEDIA_CLEANUP_AUDIT_CHECKSUM,
+          await transaction.$queryRawUnsafe(stateQuery),
+          target,
+          effectiveDependencies.readSourceChecksum(target.migrationName) ===
+            target.sourceChecksum,
         );
-        assertMediaCleanupAuditResolvePostconditions(
+        assertMigrationResolvePostconditions(
           postconditionState,
           preconditionState.targetMigrationId,
         );
@@ -762,43 +896,58 @@ export async function runGuardedMediaCleanupAuditResolveWorker(
   }
 }
 
-export function selectMediaCleanupAuditResolveProcessExitCode(
+export function selectMigrationResolveProcessExitCode(
   resolveExitCode: number,
   signalExitCode?: number,
 ): number {
   return resolveExitCode === 0 ? 0 : (signalExitCode ?? resolveExitCode);
 }
 
-function defaultResolveDependencies(): MediaCleanupAuditResolveDependencies {
+function defaultResolveDependencies(): MigrationResolveDependencies {
   return {
     now: Date.now,
-    runGuardedResolve: (environment, backendRoot, deadlineAt, signal) =>
-      runGuardedMediaCleanupAuditResolveWorker(
+    runGuardedResolve: (environment, backendRoot, deadlineAt, signal, target) =>
+      runGuardedMigrationResolveWorker(
         environment,
         backendRoot,
         deadlineAt,
         undefined,
         signal,
+        target,
       ),
   };
 }
 
-export async function runBoundedMediaCleanupAuditResolveRolledBack(
+export async function runBoundedMigrationResolveRolledBack(
   environment: NodeJS.ProcessEnv = process.env,
   backendRoot = process.cwd(),
-  dependencies?: MediaCleanupAuditResolveDependencies,
+  dependencies?: MigrationResolveDependencies,
   signal?: AbortSignal,
   absoluteDeadlineAt?: number,
+  targetMigrationName?: string,
 ): Promise<number> {
   const effectiveDependencies = dependencies ?? defaultResolveDependencies();
   const deadlineAt =
     absoluteDeadlineAt ??
     effectiveDependencies.now() + BOUNDED_MIGRATION_TIMEOUTS_MS.command;
   try {
-    assertMediaCleanupAuditResolveTarget(environment);
+    assertMigrationResolveTarget(environment);
   } catch {
     process.stderr.write(
       'Bounded Prisma migration resolve aborted: target guard rejected the request.\n',
+    );
+    return Promise.resolve(BOUNDED_MIGRATION_EXIT_CODES.resolvePrecondition);
+  }
+
+  let target: RolledBackResolveTarget;
+  try {
+    if (targetMigrationName === undefined) {
+      throw new Error('Migration resolve target is required.');
+    }
+    target = readRolledBackResolveTarget(backendRoot, targetMigrationName);
+  } catch {
+    process.stderr.write(
+      'Bounded Prisma migration resolve aborted: target migration is missing, unknown, unpinned or contains explicit transaction control.\n',
     );
     return Promise.resolve(BOUNDED_MIGRATION_EXIT_CODES.resolvePrecondition);
   }
@@ -834,13 +983,14 @@ export async function runBoundedMediaCleanupAuditResolveRolledBack(
   if (signal?.aborted) externalAbort();
   signal?.addEventListener('abort', externalAbort, { once: true });
 
-  let outcome: MediaCleanupAuditResolveWorkerOutcome;
+  let outcome: MigrationResolveWorkerOutcome;
   try {
     outcome = await effectiveDependencies.runGuardedResolve(
       boundedEnvironment,
       backendRoot,
       deadlineAt,
       cancellation.signal,
+      target,
     );
   } catch {
     outcome = deadlineExpired ? { kind: 'deadline' } : { kind: 'internal' };
@@ -850,7 +1000,7 @@ export async function runBoundedMediaCleanupAuditResolveRolledBack(
   }
   if (outcome.kind === 'committed') {
     process.stdout.write(
-      `Bounded Prisma migration resolve verified: ${summarizeMediaCleanupAuditResolveState(
+      `Bounded Prisma migration resolve verified: ${summarizeMigrationResolveState(
         outcome.state,
       )}.\n`,
     );
@@ -876,7 +1026,7 @@ export async function runBoundedMediaCleanupAuditResolveRolledBack(
   }
   if (outcome.kind === 'unsafe') {
     const summary = outcome.state
-      ? ` (${summarizeMediaCleanupAuditResolveState(outcome.state)})`
+      ? ` (${summarizeMigrationResolveState(outcome.state)})`
       : '';
     process.stderr.write(
       `Bounded Prisma migration resolve aborted: unsafe precondition${summary}.\n`,
@@ -887,10 +1037,23 @@ export async function runBoundedMediaCleanupAuditResolveRolledBack(
   return BOUNDED_MIGRATION_EXIT_CODES.internalFailure;
 }
 
+export function parseRolledBackResolveArguments(
+  args: readonly string[],
+): string | undefined {
+  if (args.length === 2 && args[0] === '--target-migration') return args[1];
+  if (args.length === 1 && args[0].startsWith('--target-migration=')) {
+    return args[0].slice('--target-migration='.length);
+  }
+  return undefined;
+}
+
 async function main(): Promise<number> {
-  if (process.argv.slice(2).length !== 0) {
+  const targetMigrationName = parseRolledBackResolveArguments(
+    process.argv.slice(2),
+  );
+  if (targetMigrationName === undefined) {
     process.stderr.write(
-      'Bounded Prisma migration resolve accepts no caller-controlled arguments.\n',
+      'Usage: bounded Prisma migration resolve requires --target-migration <migration_name>.\n',
     );
     return Promise.resolve(BOUNDED_MIGRATION_EXIT_CODES.usage);
   }
@@ -908,17 +1071,15 @@ async function main(): Promise<number> {
   process.on('SIGTERM', cancelForSigterm);
   const deadlineAt = Date.now() + BOUNDED_MIGRATION_TIMEOUTS_MS.command;
   try {
-    const result = await runBoundedMediaCleanupAuditResolveRolledBack(
+    const result = await runBoundedMigrationResolveRolledBack(
       process.env,
       process.cwd(),
       undefined,
       cancellation.signal,
       deadlineAt,
+      targetMigrationName,
     );
-    return selectMediaCleanupAuditResolveProcessExitCode(
-      result,
-      signalExitCode,
-    );
+    return selectMigrationResolveProcessExitCode(result, signalExitCode);
   } catch {
     process.stderr.write(
       'Bounded Prisma migration resolve aborted: unexpected internal failure.\n',

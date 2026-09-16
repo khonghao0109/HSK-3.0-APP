@@ -2,8 +2,6 @@
 -- Migration 18 remains immutable; this migration validates every relevant
 -- immutable audit before installing the same policy for future writes.
 
-BEGIN;
-
 -- Match application write order and freeze both sources of the invariant while
 -- validating historical rows and installing the future-write guards.
 LOCK TABLE "MediaIngestion" IN SHARE ROW EXCLUSIVE MODE;
@@ -329,5 +327,3 @@ AFTER INSERT OR UPDATE OF status, "failureCode", "cleanupRequiredAt"
 ON "MediaIngestion"
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION hsk_require_media_cleanup_audit();
-
-COMMIT;

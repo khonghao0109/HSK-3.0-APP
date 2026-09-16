@@ -1,8 +1,6 @@
 -- Secure Media Ingestion V1 coordination and idempotency state.
 -- Forward-only: no historical migration is modified.
 
-BEGIN;
-
 CREATE TYPE "MediaIngestionStatus" AS ENUM (
   'pending',
   'processing',
@@ -297,5 +295,3 @@ WHEN (
   OR OLD."uploadedById" IS DISTINCT FROM NEW."uploadedById"
 )
 EXECUTE FUNCTION hsk_guard_ingested_media_identity();
-
-COMMIT;

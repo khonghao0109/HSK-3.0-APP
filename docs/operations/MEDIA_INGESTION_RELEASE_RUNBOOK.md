@@ -62,19 +62,22 @@ Inject `DATABASE_URL` from the production workload identity/secret manager witho
 printing it. The command resolves the repository-local Prisma CLI, replaces both a
 caller-supplied URL `options` value and `PGOPTIONS`, and enforces `lock_timeout=2s`,
 `statement_timeout=30s`, `idle_in_transaction_session_timeout=35s` and a 45-second
-process deadline. Exit `75` means an exact database lock timeout; exit `124` means the
-outer command deadline elapsed; exit `3` is used only when Prisma actually surfaces
-both `P3018` and database preflight `P0001`. Prisma 5.22 can instead retain an
-unfinished migration row with `logs IS NULL` while returning exit `1` and only
-`current transaction is aborted`; that diagnostic must remain an abort and must not
-be relabelled as `P3018`. Every result is an abort unless the exit is zero. The wrapper
+process deadline. `MIGRATION_STATEMENT_TIMEOUT_MS` may widen only the statement,
+idle-transaction and command bounds for a measured large migration; the lock timeout
+stays 2 seconds (P0 runbook §19.3). Exit `75` means an exact database lock timeout;
+exit `124` means the outer command deadline elapsed; exit `3` is used only when Prisma
+actually surfaces both `P3018` and database preflight `P0001`. Since H.11a no migration
+carries explicit `BEGIN/COMMIT`, so Prisma reports `P3018`/`P0001` directly and retains
+its log. A legacy `current transaction is aborted` diagnostic (exit `1`) must still
+remain an abort and must not be relabelled as `P3018`. Every result is an abort unless the exit is zero. The wrapper
 never runs `reset`, `db push` or `migrate resolve`.
 
 If Prisma records migration 19 as failed, keep every writer quiesced and preserve only
 sanitized count/boolean/checksum evidence. Verify one unfinished, unrolled-back row for
 `20260813193000_media_cleanup_audit_integrity` with checksum
-`c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252`, exactly 18
-successful migrations and zero migration-19 functions/triggers. A second deploy must
+`7b1e8e12bb6040bee629e702d217f54880d41dd7ffb962e3bf89b4cdca6adb08` (H.11a), exactly
+the migrations that precede it in the source catalog marked successful and zero
+cleanup-audit functions/triggers. A second deploy must
 remain blocked by `P3009`. A retained Prisma log may be absent, so do not infer a
 SQLSTATE from an empty field. Corroborate the exact source checksum, preflight
 predicate, atomic schema state and sanitized operator evidence before reconciling
@@ -88,20 +91,22 @@ cd backend
 export NODE_ENV=production
 # Inject DATABASE_URL and the approved target fingerprint from the secret/change system.
 export MEDIA_MIGRATION_EXPECTED_TARGET_SHA256='<sha256-of-host-port-database-public>'
-npm run migrate:resolve:media-cleanup-audit:production
+npm run migrate:resolve:rolled-back:production -- --target-migration 20260813193000_media_cleanup_audit_integrity
 npm run migrate:deploy:production
 ./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
 ```
 
-The compiled resolve command accepts no arguments, uses the repository-local Prisma
-Client, overwrites URL `options` and `PGOPTIONS` with the same 2/30/35-second database
-timeouts, applies the same 45-second command deadline and can only mark
-`20260813193000_media_cleanup_audit_integrity` rolled back. In one bounded transaction
-it acquires Prisma's advisory lock plus `SHARE ROW EXCLUSIVE` locks on
-`_prisma_migrations`, `MediaIngestion` and `AuditLog`; verifies the production target,
-one exact unfinished/unrolled-back row and checksum, no other unresolved row, exactly
-18 successful migrations, the immutable source checksum, zero migration-19
-functions/triggers and zero authoritative lifecycle/audit violations; conditionally
+The compiled resolve command requires exactly `--target-migration <name>`, uses the
+repository-local Prisma Client, overwrites URL `options` and `PGOPTIONS` with the same
+2/30/35-second database timeouts and applies the same 45-second command deadline. It
+rejects a target that is not in `prisma/migrations/`, contains explicit transaction
+control or, for the cleanup-audit migration, differs from the pinned checksum. For the
+cleanup-audit target, in one bounded transaction it acquires Prisma's advisory lock plus
+`SHARE ROW EXCLUSIVE` locks on `_prisma_migrations`, `MediaIngestion` and `AuditLog`;
+verifies the production target, one exact unfinished/unrolled-back row and checksum, no
+other unresolved row, a successful-migration count equal to the target's predecessors in
+the source catalog, the pinned source checksum, zero cleanup-audit functions/triggers
+and zero authoritative lifecycle/audit violations; conditionally
 updates that exact row; and verifies the postcondition before commit. The update must
 affect exactly one row. Cancellation, deadline, zero-row update, query failure or
 postcondition failure detected before the callback returns rejects and rolls back the
@@ -118,7 +123,7 @@ under the detached process-group supervisor; resolve does not spawn a process gr
 
 Do not run the resolve command for an unknown error, a checksum mismatch, any partial
 DDL, an unreconciled lifecycle/audit invariant or a row already finished/rolled back.
-After recovery, require the exact 19-migration catalog, an up-to-date status and empty
+After recovery, require the exact source migration catalog, an up-to-date status and empty
 migration-history-to-datamodel plus live-to-datamodel drift before enabling writers.
 
 Provisional beta objectives, measured over a rolling 28-day window after a seven-day

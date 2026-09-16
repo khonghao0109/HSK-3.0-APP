@@ -46,10 +46,11 @@ import {
   resolveLocalPrismaCli,
 } from '../operations/bounded-prisma-migrate-deploy';
 import {
-  assertMediaCleanupAuditResolvePostconditions,
-  assertMediaCleanupAuditResolvePreconditions,
-  readMediaCleanupAuditResolveState,
-  summarizeMediaCleanupAuditResolveState,
+  assertMigrationResolvePostconditions,
+  assertMigrationResolvePreconditions,
+  readMigrationResolveState,
+  readRolledBackResolveTarget,
+  summarizeMigrationResolveState,
 } from '../operations/bounded-prisma-migrate-resolve-rolled-back';
 import {
   assertDatabaseReleaseEvidence,
@@ -411,7 +412,11 @@ async function executeValidation(): Promise<ValidationResult> {
     'adversarial-fixture',
     databaseUrls.adversarial,
   );
-  assertAtomicRollback(databaseUrls.adversarial, 18, 2);
+  assertAtomicRollback(
+    databaseUrls.adversarial,
+    migrationsBefore(MEDIA_MIGRATION_NAMES.auditIntegrity),
+    2,
+  );
   checks.adversarialFixture = passCheck(adversarial);
 
   prismaDeploy(
@@ -430,7 +435,11 @@ async function executeValidation(): Promise<ValidationResult> {
   );
   assertProductionResolveRejectsUnreconciledInvariant(databaseUrls.future);
   const future = expectedP0001('future-timestamp-fixture', databaseUrls.future);
-  assertAtomicRollback(databaseUrls.future, 18, 1);
+  assertAtomicRollback(
+    databaseUrls.future,
+    migrationsBefore(MEDIA_MIGRATION_NAMES.auditIntegrity),
+    1,
+  );
   checks.futureTimestampFixture = passCheck(future);
 
   prismaDeploy('integration-migration-deploy', databaseUrls.integration);
@@ -1007,6 +1016,7 @@ function expectedP0001(commandRef: string, databaseUrl: string): CommandResult {
     [
       psqlUrl(databaseUrl),
       '-X',
+      '--single-transaction',
       '--set=VERBOSITY=verbose',
       '-v',
       'ON_ERROR_STOP=1',
@@ -1127,6 +1137,23 @@ function migrationSources(): Array<{ name: string; checksum: string }> {
   return readMigrationSourceCatalog(migrationRoot).migrations;
 }
 
+function migrationsBefore(migrationName: string): number {
+  const index = migrationSources().findIndex(
+    ({ name }) => name === migrationName,
+  );
+  if (index < 0) {
+    throw new Error(`Migration ${migrationName} is absent from the catalog.`);
+  }
+  return index;
+}
+
+function auditIntegrityResolveTarget() {
+  return readRolledBackResolveTarget(
+    backendRoot,
+    MEDIA_MIGRATION_NAMES.auditIntegrity,
+  );
+}
+
 function catalogChecksum(
   migrations: Array<{ name: string; checksum: string }>,
 ): string {
@@ -1142,9 +1169,11 @@ function assertCatalog(
   catalog: Array<{ name: string; checksum: string }>,
   source: Array<{ name: string; checksum: string }>,
 ): void {
-  if (catalog.length !== 19 || source.length !== 19) {
+  if (source.length === 0 || catalog.length !== source.length) {
     throw new Error(
-      'Migration catalog must contain exactly 19 applied migrations.',
+      `Migration catalog must contain exactly the ${String(
+        source.length,
+      )} source migrations.`,
     );
   }
   for (const [index, migration] of source.entries()) {
@@ -1184,7 +1213,8 @@ function assertFirst18State(commandRef: string, databaseUrl: string): void {
        WHERE table_schema='public' AND table_name='MediaIngestion'
          AND column_name='cleanupRequiredAt')::text`,
   );
-  if (value !== '18|1') {
+  const expected = migrationsBefore(MEDIA_MIGRATION_NAMES.auditIntegrity);
+  if (value !== `${String(expected)}|1`) {
     throw new Error(
       'Negative migration fixture requires exact migration18 state.',
     );
@@ -1226,22 +1256,26 @@ function buildHistoricalMigrationRoots(): {
   return {
     first17SchemaPath: buildHistoricalMigrationRoot(
       'first17',
-      new Set([
-        MEDIA_MIGRATION_NAMES.lifecycle,
-        MEDIA_MIGRATION_NAMES.auditIntegrity,
-      ]),
+      MEDIA_MIGRATION_NAMES.provenance,
     ),
     first18SchemaPath: buildHistoricalMigrationRoot(
       'first18',
-      new Set([MEDIA_MIGRATION_NAMES.auditIntegrity]),
+      MEDIA_MIGRATION_NAMES.lifecycle,
     ),
   };
 }
 
+// Copies the source catalog prefix ending at lastIncluded, so later migrations
+// (including ones added after the media lifecycle work) stay pending.
 function buildHistoricalMigrationRoot(
   label: 'first17' | 'first18',
-  excluded: ReadonlySet<string>,
+  lastIncluded: string,
 ): string {
+  const included = new Set(
+    migrationSources()
+      .slice(0, migrationsBefore(lastIncluded) + 1)
+      .map(({ name }) => name),
+  );
   const temporary = mkdtempSync(join(tmpdir(), `hsk-media-${label}-`));
   temporaryRoots.push(temporary);
   const migrations = resolve(temporary, 'migrations');
@@ -1252,7 +1286,7 @@ function buildHistoricalMigrationRoot(
     resolve(migrations, 'migration_lock.toml'),
   );
   for (const entry of readdirSync(migrationRoot)) {
-    if (entry === 'migration_lock.toml' || excluded.has(entry)) {
+    if (entry === 'migration_lock.toml' || !included.has(entry)) {
       continue;
     }
     const source = resolve(migrationRoot, entry);
@@ -1341,7 +1375,10 @@ async function runBoundedMigrationLockRehearsal(
     databaseUrl,
     'lock-abort-catalog-after-abort',
   );
-  if (beforeRecovery.length !== 18) {
+  if (
+    beforeRecovery.length !==
+    migrationsBefore(MEDIA_MIGRATION_NAMES.auditIntegrity)
+  ) {
     throw new Error(
       'Lock-timeout migration attempt did not roll back atomically.',
     );
@@ -1363,7 +1400,7 @@ async function runBoundedMigrationLockRehearsal(
   );
   if (atomicState !== '0|0') {
     throw new Error(
-      'Lock-timeout migration19 left partial functions or triggers.',
+      'Lock-timeout audit-integrity migration left partial functions or triggers.',
     );
   }
   const lockAttemptRows = sqlScalar(
@@ -1416,7 +1453,11 @@ async function runBoundedMigrationLockRehearsal(
     'lock-abort-recovery-direct-p0001',
     recoveryDatabaseUrl,
   );
-  assertAtomicRollback(recoveryDatabaseUrl, 18, 1);
+  assertAtomicRollback(
+    recoveryDatabaseUrl,
+    migrationsBefore(MEDIA_MIGRATION_NAMES.auditIntegrity),
+    1,
+  );
   const driftFailedState = assertFailedMigrationRow(
     'lock-abort-recovery-failed-row',
     recoveryDatabaseUrl,
@@ -1466,11 +1507,11 @@ async function runBoundedMigrationLockRehearsal(
   return recordCommand(
     'bounded-migration-abort',
     [
-      `current_migration=19 sqlstate=55P03 exit=${String(
+      `current_migration=${MEDIA_MIGRATION_NAMES.auditIntegrity} sqlstate=55P03 exit=${String(
         BOUNDED_MIGRATION_EXIT_CODES.lockTimeout,
-      )} duration_ms=${String(attemptResult.durationMs)} output_sha256=${lockAttemptEvidence.logSha256} atomic_catalog=18 functions=0 triggers=0`,
+      )} duration_ms=${String(attemptResult.durationMs)} output_sha256=${lockAttemptEvidence.logSha256} atomic_catalog=${String(beforeRecovery.length)} functions=0 triggers=0`,
       `lock_preflight_rows=${lockAttemptRows} resolve=not-required`,
-      `lock_recovery_catalog=19 recovery_log=${recovery.logSha256} final=${lockFinalState}`,
+      `lock_recovery_catalog=${String(afterRecovery.length)} recovery_log=${recovery.logSha256} final=${lockFinalState}`,
       `timestamp_drift_preflight=${driftPreflight} fixture_log=${driftFixture.logSha256}`,
       `failed_deploy=${failedDeploy.logSha256} direct_p0001=${exactDriftAbort.logSha256} failed_row=${driftFailedState} blocked_retry=${blockedRetry.logSha256} blocked_retry_duration_ms=${String(
         blockedRetry.durationMs,
@@ -1524,6 +1565,7 @@ function expectedDirectTimestampDrift(
     [
       psqlUrl(databaseUrl),
       '-X',
+      '--single-transaction',
       '--set=VERBOSITY=verbose',
       '-v',
       'ON_ERROR_STOP=1',
@@ -1573,7 +1615,13 @@ function prismaResolveRolledBack(
   return run(
     commandRef,
     'npm',
-    ['run', 'migrate:resolve:media-cleanup-audit:production'],
+    [
+      'run',
+      'migrate:resolve:rolled-back:production',
+      '--',
+      '--target-migration',
+      MEDIA_MIGRATION_NAMES.auditIntegrity,
+    ],
     backendRoot,
     environment(databaseUrl),
     MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
@@ -1587,7 +1635,9 @@ function assertFailedMigrationRow(
   const checksum = migrationSources().find(
     ({ name }) => name === MEDIA_MIGRATION_NAMES.auditIntegrity,
   )?.checksum;
-  if (!checksum) throw new Error('Migration 19 source checksum is absent.');
+  if (!checksum) {
+    throw new Error('Audit-integrity migration source checksum is absent.');
+  }
   const value = sqlScalar(
     commandRef,
     databaseUrl,
@@ -1620,12 +1670,13 @@ function assertProductionResolvePreconditions(
   databaseUrl: string,
 ): string {
   const startedAt = Date.now();
-  const state = readMediaCleanupAuditResolveState(
+  const state = readMigrationResolveState(
     environment(databaseUrl),
     backendRoot,
+    auditIntegrityResolveTarget(),
   );
-  assertMediaCleanupAuditResolvePreconditions(state);
-  const summary = summarizeMediaCleanupAuditResolveState(state);
+  assertMigrationResolvePreconditions(state);
+  const summary = summarizeMigrationResolveState(state);
   recordCommand(commandRef, summary, Date.now() - startedAt);
   return summary;
 }
@@ -1633,9 +1684,10 @@ function assertProductionResolvePreconditions(
 function assertProductionResolveRejectsUnreconciledInvariant(
   databaseUrl: string,
 ): void {
-  const state = readMediaCleanupAuditResolveState(
+  const state = readMigrationResolveState(
     environment(databaseUrl),
     backendRoot,
+    auditIntegrityResolveTarget(),
   );
   if (state.authoritativeInvariantViolationCount < 1) {
     throw new Error(
@@ -1644,7 +1696,7 @@ function assertProductionResolveRejectsUnreconciledInvariant(
   }
   let rejected = false;
   try {
-    assertMediaCleanupAuditResolvePreconditions(state);
+    assertMigrationResolvePreconditions(state);
   } catch {
     rejected = true;
   }
@@ -1660,12 +1712,13 @@ function assertProductionResolvePostconditions(
   databaseUrl: string,
 ): string {
   const startedAt = Date.now();
-  const state = readMediaCleanupAuditResolveState(
+  const state = readMigrationResolveState(
     environment(databaseUrl),
     backendRoot,
+    auditIntegrityResolveTarget(),
   );
-  assertMediaCleanupAuditResolvePostconditions(state);
-  const summary = summarizeMediaCleanupAuditResolveState(state);
+  assertMigrationResolvePostconditions(state);
+  const summary = summarizeMigrationResolveState(state);
   recordCommand(commandRef, summary, Date.now() - startedAt);
   return summary;
 }

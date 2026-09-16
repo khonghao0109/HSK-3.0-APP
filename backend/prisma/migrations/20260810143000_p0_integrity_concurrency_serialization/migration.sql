@@ -2,8 +2,6 @@
 -- Forward-only fix: serialize cross-table validation and prevent parent-key
 -- cascades from rewriting immutable/history facts.
 
-BEGIN;
-
 -- Refuse to harden over an already-invalid state. Deploy this migration while
 -- application writers are paused; ALTER TABLE below also takes the required
 -- relation locks before the migration commits.
@@ -319,5 +317,3 @@ ALTER TABLE "PronunciationAttempt" ADD CONSTRAINT "PronunciationAttempt_userId_f
 ALTER TABLE "Result" DROP CONSTRAINT "Result_userId_fkey";
 ALTER TABLE "Result" ADD CONSTRAINT "Result_userId_fkey"
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
-
-COMMIT;

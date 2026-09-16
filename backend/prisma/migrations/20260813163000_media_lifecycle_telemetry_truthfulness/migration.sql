@@ -1,8 +1,6 @@
 -- Truthful lifecycle telemetry for cleanup and processing backlog age.
 -- Forward-only: all previously applied media migrations remain immutable.
 
-BEGIN;
-
 -- Hold DML-conflicting locks in application write order from preflight through
 -- constraint/trigger install. Media lifecycle transactions mutate ingestion
 -- before appending AuditLog; locking both prevents either fact from changing
@@ -508,5 +506,3 @@ FOR EACH ROW EXECUTE FUNCTION hsk_guard_media_ingestion_lifecycle();
 
 COMMENT ON COLUMN "MediaIngestion"."cleanupRequiredAt" IS
   'Immutable first transition into cleanup_required; preserved across cleanup retry claims and terminal reconciliation.';
-
-COMMIT;

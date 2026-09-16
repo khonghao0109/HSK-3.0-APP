@@ -1,6 +1,6 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.8.0`
+> Phiên bản runbook: `1.9.0`
 > Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
@@ -25,7 +25,7 @@
 | RL-C   | `20260914090000_rate_limit_counter`                      | Bảng purgeable `RateLimitCounter` cho throttler toàn cục dùng chung giữa các replica (mục 18).             |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 20 migration (đến `20260914090000_rate_limit_counter`); migration đã áp giữ nguyên byte, hardening luôn dùng forward migration mới. Các con số 15/16/17 ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 20 migration (đến `20260914090000_rate_limit_counter`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -227,7 +227,7 @@ npm run migrate:deploy:production
 
 ### 6.4. Exercise Authoring, media và import atomicity
 
-- EX-A là migration forward-only, bọc `BEGIN/COMMIT`; preflight ở mục 4 chạy trước mọi `ALTER TABLE`. Không chỉnh migration lịch sử để xử lý legacy Exercise.
+- EX-A là migration forward-only, chạy trong transaction ngầm của Prisma (từ H.11a không còn `BEGIN/COMMIT` tường minh, mục 19); preflight ở mục 4 chạy trước mọi `ALTER TABLE`. Không chỉnh migration lịch sử để xử lý legacy Exercise.
 - `LessonExercise` thêm `mediaId`, `dataSourceId`, `sourceKey`, `createdById`, `updatedById`, `publishedById`, `publishedAt`. Lesson/Topic/Media/DataSource dùng `ON DELETE RESTRICT`; Lesson/Topic/Media/DataSource còn dùng `ON UPDATE RESTRICT`. Actor FK dùng `SET NULL` khi xóa user để giữ content history.
 - Unique `(dataSourceId, sourceKey)` và CHECK source key/provenance ngăn duplicate/ambiguous source identity. `Media_url_nonblank_check` bắt buộc URL có ít nhất một ký tự và không chứa whitespace. Published Exercise bắt buộc có `publishedAt`; `status=archived` phải tương đương `deletedAt IS NOT NULL`; chỉ listening được có `mediaId`; revision `entityType=lesson_exercise` bắt buộc nonblank `contentHash`.
 - Trigger `LessonExercise_publish_readiness` từ chối `speaking_repeat` publish và chỉ cho listening publish khi media là audio `ready`, chưa soft-delete, URL nonempty/no-whitespace. Service khóa Media readiness bằng `FOR SHARE` trước publish. Trigger `LessonExercise_live_parent` chặn insert/move/publish dưới Lesson/Topic archived hoặc incoherent nhưng cho phép chuyển Exercise sang archived để cleanup. Trigger `ContentRevision_lesson_exercise_parent` chặn polymorphic revision dangling. Trigger `LessonExercise_revision_parent_restrict` từ chối mọi hard-delete Exercise.
@@ -374,7 +374,7 @@ npm run test:db:exercise-integrity
 npm run test:db:exercise-concurrency
 ```
 
-Muốn chạy lại concurrency phải drop/recreate đúng database disposable hoặc tạo database disposable mới, rồi `migrate deploy` đủ **toàn bộ migration hiện có (19)**. Không truncate, delete fixture, `db push` hay `migrate reset`. E2E dùng database disposable khác và chỉ deploy migration, không seed.
+Muốn chạy lại concurrency phải drop/recreate đúng database disposable hoặc tạo database disposable mới, rồi `migrate deploy` đủ **toàn bộ migration hiện có** (hiện là 20). Không truncate, delete fixture, `db push` hay `migrate reset`. E2E dùng database disposable khác và chỉ deploy migration, không seed.
 
 `test:db:concurrency` chỉ chạy một lần trên database fresh migration-only. Trước fixture INSERT đầu tiên, runner yêu cầu `User`, `Level`, `Test`, `Result`, `ReviewCard` và `ReviewEvent` đều rỗng. Nếu bất kỳ table nào có dữ liệu, runner dừng với thông báo `Concurrency test requires a fresh migration-only disposable database.`; runner không truncate, delete, reset hoặc tự dọn dữ liệu. Muốn chạy lại phải drop database disposable cũ, tạo database disposable mới và chạy đủ `prisma migrate deploy`.
 
@@ -666,6 +666,10 @@ descendant is alive. Resolve has no external child or advisory-lock bypass: abru
 wrapper termination closes its database session and PostgreSQL rolls back the single
 guarded transaction.
 
+_Cập nhật H.11a (2026-09-16): checksum migration 18–19 ở trên và các con số 18/19
+trong mục này là trạng thái trước H.11a. Pin hiện tại, resolver `--target-migration`
+và catalog động nằm ở mục 19._
+
 The latest local aggregate result passed all 12 checks, deployed 19/19 and ran full
 E2E 11/11 suites (163/163 tests). Local artifacts under
 `backend/test-results/media-lifecycle-migration-validation/` are ignored evidence, not
@@ -700,7 +704,125 @@ npx prisma migrate diff --from-migrations prisma/migrations \
   --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DATABASE_URL" --exit-code
 ```
 
-Harness `npm run test:db:media-migration:release` và test catalog trong
-`scripts/test/media-lifecycle-migration-validation.helpers.spec.ts` còn đòi đúng 19
-migration nên sẽ fail cho tới khi H.11a tham số hoá (C-02). Không sửa migration 00–19
-để làm harness pass.
+Từ H.11a, harness `test:db:media-migration*` và test catalog đọc danh mục migration
+động từ `prisma/migrations/` (mục 19), nên thêm migration mới không cần sửa con số cứng.
+
+## 19. Transaction do Prisma quản lý và resolver tham số hoá (H.11a)
+
+### 19.1. Bỏ `BEGIN/COMMIT` tường minh (C-01)
+
+Prisma 5.22 gửi toàn bộ `migration.sql` trong một simple query; PostgreSQL chạy chuỗi đó
+như **một transaction ngầm** và rollback toàn bộ khi có lỗi. Trước H.11a, sáu migration
+tự khai báo `BEGIN;`/`COMMIT;`. Khi preflight `RAISE EXCEPTION`, session rơi vào
+`25P02` và Prisma chỉ báo `current transaction is aborted`, mất `P3018`/`P0001` gốc và
+`logs` rỗng. Thực nghiệm trên DB disposable (Prisma 5.22, PostgreSQL 16) xác nhận: bỏ
+`BEGIN/COMMIT` thì Prisma báo đúng `P3018` + `P0001` + message, lưu `logs`, và không để
+lại object nào của migration lỗi.
+
+| Migration                                                | SHA-256 sau H.11a                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------ |
+| `20260810143000_p0_integrity_concurrency_serialization`  | `b9eb12dfaa54d02cf7366b7e384ca63043c92054b590fb75029233529422d48e` |
+| `20260811120000_exercise_authoring_import_validation_v1` | `d86f09816956c1eb79727aa728afb606afead36d34ea839bdbb11dd165b01a1c` |
+| `20260812130000_secure_media_ingestion_v1`               | `1d37f544444a250e295d1b4f4ebf84d882b696d5ffcf9de4a8d8cd441294661a` |
+| `20260813120000_media_provenance_provider_hardening`     | `956494b9501868060acbd83b3015fd3b903cb466e7a584fd53d393e1fcde1e87` |
+| `20260813163000_media_lifecycle_telemetry_truthfulness`  | `af2179c0076d42c29569169bda299f3025f12356a21720a8522ab78cf62311ca` |
+| `20260813193000_media_cleanup_audit_integrity`           | `7b1e8e12bb6040bee629e702d217f54880d41dd7ffb962e3bf89b4cdca6adb08` |
+
+Mỗi file chỉ bỏ dòng `BEGIN;`, `COMMIT;` và dòng trống liền kề; thứ tự câu lệnh giữ
+nguyên. Preflight `DO $$ … RAISE EXCEPTION … $$` vẫn là câu lệnh đầu tiên ở P0-C, EX-A và
+MED-H. MED-T và MED-A phải `LOCK TABLE "MediaIngestion"` rồi `"AuditLog"` trước preflight
+để đóng băng dữ liệu được kiểm tra; MED-A còn tạo `hsk_is_valid_media_cleanup_audit` trước
+preflight vì preflight gọi function đó. SEC-M không có preflight. `LOCK TABLE` hợp lệ
+trong transaction ngầm (đã kiểm chứng).
+
+Quy tắc từ nay:
+
+- Không viết `BEGIN`, `COMMIT`, `ROLLBACK` hay `START TRANSACTION` trong `migration.sql`.
+  Test `keeps every migration free of explicit transaction control (25P02)` chặn hồi quy.
+- Không dùng lệnh không chạy được trong transaction block (ví dụ
+  `CREATE INDEX CONCURRENTLY`) trong migration Prisma; cần thì tách thành change record
+  riêng có runbook.
+- Chạy trực tiếp một `migration.sql` bằng `psql` (rehearsal, bằng chứng P0001) phải dùng
+  `psql --single-transaction -v ON_ERROR_STOP=1 -f …`; thiếu cờ này mỗi câu lệnh sẽ
+  autocommit và lỗi giữa chừng để lại object dở dang.
+
+Tác động tới database đã áp bản cũ: `_prisma_migrations.checksum` giữ checksum cũ.
+`prisma migrate deploy` và `prisma migrate status` không so checksum migration đã áp
+(đã kiểm chứng: vẫn báo `Database schema is up to date!`), nên deploy tiếp không bị chặn.
+`prisma migrate dev` sẽ báo migration bị sửa sau khi áp; database local dùng `migrate dev`
+cần tạo lại. Bằng chứng release cũ bind checksum cũ không còn khớp source và phải chạy lại.
+Nếu một environment dùng chung đã áp bản cũ, ghi checksum cũ/mới vào change record
+trước khi deploy commit này.
+
+### 19.2. Resolver tham số hoá (C-02)
+
+Lệnh `migrate:resolve:media-cleanup-audit:production` được đổi tên thành lệnh tổng quát và
+bắt buộc chỉ định migration đích:
+
+```bash
+cd backend
+export NODE_ENV=production
+# Inject DATABASE_URL và target fingerprint đã duyệt từ secret/change system.
+export MEDIA_MIGRATION_EXPECTED_TARGET_SHA256='<sha256-of-host-port-database-public>'
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma   # đọc tên migration lỗi
+npm run migrate:resolve:rolled-back:production -- --target-migration <migration_name>
+npm run migrate:deploy:production
+./node_modules/.bin/prisma migrate status --schema prisma/schema.prisma
+```
+
+Thiếu hoặc thừa tham số: exit `64`. Trước khi mở kết nối, resolver đọc
+`prisma/migrations/` và từ chối (exit `78`, không mutation) nếu tên không hợp lệ, không có
+trong catalog, file chứa transaction control tường minh, hoặc đích là MED-A mà checksum
+source khác pin `7b1e8e12…adb08`. Sau đó, trong một transaction có giới hạn, resolver giữ
+advisory lock của Prisma và lock `_prisma_migrations`, rồi yêu cầu:
+
+- đúng một row của migration đích, chưa finished/rolled back, và không có row unresolved nào
+  khác;
+- checksum row trong DB bằng SHA-256 của `migration.sql` hiện tại (đọc lại dưới lock);
+- số migration thành công bằng **số migration đứng trước đích trong catalog source**, không
+  còn hard-code 18;
+- riêng MED-A: lock thêm `MediaIngestion` → `AuditLog`, không còn function/trigger
+  cleanup-audit và không vi phạm invariant lifecycle/audit.
+
+Với migration khác, atomicity dựa vào transaction ngầm của PostgreSQL (19.1); resolver
+không probe object domain vì bảng có thể chưa tồn tại. Mutation chỉ cập nhật đúng row theo
+ID + tên + checksum rồi kiểm tra postcondition trước commit. Exit code giữ nguyên:
+`78` precondition/target, `70` lỗi nội bộ, `124` hết deadline.
+
+### 19.3. Timeout deploy linh hoạt
+
+`migrate:deploy:production` mặc định dùng `lock_timeout=2s`, `statement_timeout=30s`,
+`idle_in_transaction_session_timeout=35s` và deadline lệnh 45 giây. Migration tạo index lớn
+hoặc rewrite bảng lớn có thể đặt:
+
+```bash
+MIGRATION_STATEMENT_TIMEOUT_MS=600000 npm run migrate:deploy:production
+```
+
+Giá trị phải là số nguyên mili giây trong khoảng `(2000, 3600000]`; sai định dạng hoặc
+chuỗi rỗng làm deploy dừng trước khi kết nối. `lock_timeout` **không** nới: deploy vẫn
+abort nhanh thay vì xếp hàng sau writer. Idle-in-transaction = statement + 5 giây, deadline
+lệnh = statement + 15 giây và áp cho **cả lần deploy** (mọi migration pending), không phải
+từng migration. Chỉ nới timeout khi đã đo trên bản sao dữ liệu và ghi giá trị vào change
+record. Resolver không đọc biến này.
+
+### 19.4. Harness migration
+
+- `test:db:media-migration` tính trạng thái bắt đầu là prefix catalog đến
+  `20260813120000_media_provenance_provider_hardening` và yêu cầu deploy áp **toàn bộ**
+  migration còn lại theo đúng thứ tự source (hiện 3 migration: MED-T, MED-A, RL-C).
+- `test:db:media-migration:release` so catalog với số migration source thật, dựng root lịch
+  sử "first17/first18" bằng prefix catalog (không lẫn migration mới hơn), tính số migration
+  kỳ vọng sau rollback từ vị trí của MED-A và gọi resolver với
+  `--target-migration 20260813193000_media_cleanup_audit_integrity`.
+- Chuẩn bị DB cho `test:db:media-migration`: tạo DB disposable, deploy prefix đến
+  `20260813120000_media_provenance_provider_hardening` bằng một root schema tạm, rồi chạy:
+
+```bash
+cd backend
+NODE_ENV=test \
+DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_upgrade_test' \
+TEST_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_upgrade_test' \
+MEDIA_MIGRATION_SHADOW_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_shadow_test' \
+npm run test:db:media-migration
+```

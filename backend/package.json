@@ -18,7 +18,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
     "migrate:deploy:production": "node dist/scripts/operations/bounded-prisma-migrate-deploy.js",
-    "migrate:resolve:media-cleanup-audit:production": "node dist/scripts/operations/bounded-prisma-migrate-resolve-rolled-back.js",
+    "migrate:resolve:rolled-back:production": "node dist/scripts/operations/bounded-prisma-migrate-resolve-rolled-back.js",
     "seed:dictionary": "ts-node scripts/dictionary/seed.ts",
     "seed:learning": "ts-node scripts/learning/seed-learning.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

@@ -17,12 +17,21 @@ export const BOUNDED_MIGRATION_EXIT_CODES = {
   commandTimeout: 124,
 } as const;
 
-type BoundedMigrationTimeouts = {
+export type BoundedMigrationTimeouts = {
   lock: number;
   statement: number;
   idleInTransaction: number;
   command: number;
 };
+
+export const MIGRATION_STATEMENT_TIMEOUT_ENV = 'MIGRATION_STATEMENT_TIMEOUT_MS';
+const MAXIMUM_MIGRATION_STATEMENT_TIMEOUT_MS = 3_600_000;
+const IDLE_IN_TRANSACTION_MARGIN_MS =
+  BOUNDED_MIGRATION_TIMEOUTS_MS.idleInTransaction -
+  BOUNDED_MIGRATION_TIMEOUTS_MS.statement;
+const COMMAND_MARGIN_MS =
+  BOUNDED_MIGRATION_TIMEOUTS_MS.command -
+  BOUNDED_MIGRATION_TIMEOUTS_MS.statement;
 
 const POSTGRES_URL = /postgres(?:ql)?:\/\/[^\s'"`]+/giu;
 const PASSWORD_ASSIGNMENT =
@@ -33,7 +42,7 @@ const PRISMA_TRANSACTION_ABORT =
 const MEDIA_CLEANUP_AUDIT_MIGRATION =
   '20260813193000_media_cleanup_audit_integrity';
 const MEDIA_CLEANUP_AUDIT_CHECKSUM =
-  'c4a772f832cba6b5dd02385727e17153ec1cf672dd3f67ec90da83dba5026252';
+  '7b1e8e12bb6040bee629e702d217f54880d41dd7ffb962e3bf89b4cdca6adb08';
 const DOMAIN_PREFLIGHT_MARKER =
   'BOUNDED_MIGRATION_DOMAIN_PREFLIGHT P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp';
 const LOCK_PREFLIGHT_SCRIPT = String.raw`
@@ -407,6 +416,38 @@ export function validateBoundedMigrationTimeouts(
   }
 }
 
+// A migration that builds a large index or rewrites a large table may need a
+// longer statement timeout. The lock timeout never widens: a deploy must still
+// abort quickly instead of queueing behind application writers.
+export function resolveBoundedMigrationTimeouts(
+  environment: NodeJS.ProcessEnv,
+): BoundedMigrationTimeouts {
+  const override = environment[MIGRATION_STATEMENT_TIMEOUT_ENV];
+  if (override === undefined) return BOUNDED_MIGRATION_TIMEOUTS_MS;
+  const statement = /^[1-9][0-9]{0,6}$/u.test(override)
+    ? Number(override)
+    : Number.NaN;
+  if (
+    !Number.isSafeInteger(statement) ||
+    statement <= BOUNDED_MIGRATION_TIMEOUTS_MS.lock ||
+    statement > MAXIMUM_MIGRATION_STATEMENT_TIMEOUT_MS
+  ) {
+    throw new Error(
+      `${MIGRATION_STATEMENT_TIMEOUT_ENV} must be an integer greater than ${String(
+        BOUNDED_MIGRATION_TIMEOUTS_MS.lock,
+      )} and at most ${String(MAXIMUM_MIGRATION_STATEMENT_TIMEOUT_MS)} milliseconds.`,
+    );
+  }
+  const timeouts = {
+    lock: BOUNDED_MIGRATION_TIMEOUTS_MS.lock,
+    statement,
+    idleInTransaction: statement + IDLE_IN_TRANSACTION_MARGIN_MS,
+    command: statement + COMMAND_MARGIN_MS,
+  };
+  validateBoundedMigrationTimeouts(timeouts);
+  return timeouts;
+}
+
 export function buildBoundedPgOptions(
   timeouts: BoundedMigrationTimeouts = BOUNDED_MIGRATION_TIMEOUTS_MS,
 ): string {
@@ -542,13 +583,15 @@ export async function runBoundedPrismaMigrateDeploy(
   signal?: AbortSignal,
   absoluteDeadlineAt?: number,
 ): Promise<number> {
-  validateBoundedMigrationTimeouts(BOUNDED_MIGRATION_TIMEOUTS_MS);
+  const timeouts = resolveBoundedMigrationTimeouts(environment);
   const effectiveDependencies =
     dependencies ?? defaultBoundedMigrationDeployDependencies();
   const deadlineAt =
-    absoluteDeadlineAt ??
-    effectiveDependencies.now() + BOUNDED_MIGRATION_TIMEOUTS_MS.command;
-  const boundedEnvironment = buildBoundedMigrationEnvironment(environment);
+    absoluteDeadlineAt ?? effectiveDependencies.now() + timeouts.command;
+  const boundedEnvironment = buildBoundedMigrationEnvironment(
+    environment,
+    timeouts,
+  );
   const schemaPath = resolve(process.cwd(), 'prisma/schema.prisma');
   const preflightRemainingMs = remainingBoundedMigrationDeadlineMs(
     deadlineAt,
@@ -741,8 +784,9 @@ async function main(): Promise<number> {
   };
   process.on('SIGINT', cancelForSigint);
   process.on('SIGTERM', cancelForSigterm);
-  const deadlineAt = Date.now() + BOUNDED_MIGRATION_TIMEOUTS_MS.command;
   try {
+    const deadlineAt =
+      Date.now() + resolveBoundedMigrationTimeouts(process.env).command;
     const result = await runBoundedPrismaMigrateDeploy(
       process.env,
       undefined,

@@ -11,7 +11,10 @@ import {
 import { dirname, join, resolve } from 'node:path';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
-import { BOUNDED_MIGRATION_EXIT_CODES } from '../operations/bounded-prisma-migrate-deploy';
+import {
+  BOUNDED_MIGRATION_EXIT_CODES,
+  resolveBoundedMigrationTimeouts,
+} from '../operations/bounded-prisma-migrate-deploy';
 import {
   assertExactMigrationOnlyCounts,
   assertSafeMigrationAuxiliaryDatabase,
@@ -24,6 +27,7 @@ import {
   MEDIA_MIGRATION_TIMEOUTS_MS,
   parseCountRow,
   parseLockRow,
+  readMigrationSourceCatalog,
   redactMigrationDiagnostic,
   sha256,
 } from './media-lifecycle-migration-validation.helpers';
@@ -88,6 +92,17 @@ const evidencePath = assertSafeEvidencePath(
     resolve(evidenceRoot, 'upgrade-evidence.json'),
 );
 const pgOptions = buildPgOptions();
+const deployTimeouts = resolveBoundedMigrationTimeouts(process.env);
+const sourceCatalog = readMigrationSourceCatalog(migrationsRoot).migrations;
+const startingMigrationCount =
+  sourceCatalog.findIndex(
+    ({ name }) => name === MEDIA_MIGRATION_NAMES.provenance,
+  ) + 1;
+if (startingMigrationCount === 0) {
+  throw new Error(
+    `Migration catalog does not contain ${MEDIA_MIGRATION_NAMES.provenance}.`,
+  );
+}
 
 const preflightCounts = readPreflightCounts();
 assertExactMigrationOnlyCounts(preflightCounts);
@@ -100,10 +115,8 @@ const git = {
   treeSha: gitScalar('git-tree', ['rev-parse', 'HEAD^{tree}']),
 };
 
-const sourceMigrations = [
-  migrationSource(MEDIA_MIGRATION_NAMES.lifecycle),
-  migrationSource(MEDIA_MIGRATION_NAMES.auditIntegrity),
-];
+// Every migration after the media provenance baseline is deployed by this run.
+const sourceMigrations = sourceCatalog.slice(startingMigrationCount);
 const startingMigration = migrationSource(MEDIA_MIGRATION_NAMES.provenance);
 assertCatalogChecksum(beforeMigrations, startingMigration);
 
@@ -111,7 +124,7 @@ const deploy = runCommand(
   'bounded-upgrade-deploy',
   'npm',
   ['run', 'migrate:deploy:production'],
-  MEDIA_MIGRATION_TIMEOUTS_MS.command + 5_000,
+  deployTimeouts.command + 5_000,
   {},
   expectedOutcome === 'lock_timeout' ? 'lock_timeout' : undefined,
 );
@@ -150,7 +163,7 @@ if (expectedOutcome === 'lock_timeout') {
     sourceBinding: sourceBinding([startingMigration, ...sourceMigrations]),
     outcome: 'expected_lock_timeout',
     database: { ...databaseIdentity, serverVersion },
-    timeoutsMs: MEDIA_MIGRATION_TIMEOUTS_MS,
+    timeoutsMs: deployTimeouts,
     preflightCounts,
     migrations: migrationEvidence(
       beforeMigrations,
@@ -220,7 +233,7 @@ writeEvidence({
   sourceBinding: sourceBinding([startingMigration, ...sourceMigrations]),
   outcome: 'pass',
   database: { ...databaseIdentity, serverVersion },
-  timeoutsMs: MEDIA_MIGRATION_TIMEOUTS_MS,
+  timeoutsMs: deployTimeouts,
   preflightCounts,
   migrations: migrationEvidence(
     beforeMigrations,
@@ -420,11 +433,13 @@ function migrationSource(name: string): MigrationRow {
 
 function assertExactStartingCatalog(rows: MigrationRow[]): void {
   if (
-    rows.length !== 17 ||
-    rows[rows.length - 1]?.name !== MEDIA_MIGRATION_NAMES.provenance
+    rows.length !== startingMigrationCount ||
+    rows.some(({ name }, index) => name !== sourceCatalog[index]?.name)
   ) {
     throw new Error(
-      `Media migration validation requires exactly 17 applied migrations ending at ${MEDIA_MIGRATION_NAMES.provenance}.`,
+      `Media migration validation requires exactly ${String(
+        startingMigrationCount,
+      )} applied migrations ending at ${MEDIA_MIGRATION_NAMES.provenance}.`,
     );
   }
 }
@@ -445,11 +460,11 @@ function assertFinalCatalog(
   source: MigrationRow[],
 ): void {
   if (
-    after.length !== before.length + 2 ||
-    after[after.length - 1]?.name !== MEDIA_MIGRATION_NAMES.auditIntegrity
+    after.length !== before.length + source.length ||
+    after.some(({ name }, index) => name !== sourceCatalog[index]?.name)
   ) {
     throw new Error(
-      'Bounded deploy did not apply exactly the forward migration.',
+      'Bounded deploy did not apply exactly the forward migrations.',
     );
   }
   for (const migration of source) assertCatalogChecksum(after, migration);
