@@ -8,10 +8,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
 import { RawResponse } from '../../common/decorators/raw-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { MediaContentAccessQueryDto } from './dto/media-access-query.dto';
 import { MediaAccessService } from './media-access.service';
@@ -26,6 +28,7 @@ export class MediaController {
 
   @Get(':mediaId/access')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Header('Cache-Control', 'no-store')
   createAccess(
     @Req() request: AuthenticatedRequest,
@@ -36,6 +39,10 @@ export class MediaController {
 
   @Get(':mediaId/content')
   @RawResponse()
+  @ApiOkResponse({
+    description: 'Raw media bytes; errors still use the JSON error envelope.',
+    content: { '*/*': { schema: { type: 'string', format: 'binary' } } },
+  })
   async getContent(
     @Req() request: Request,
     @Param('mediaId', ParsePositiveSafeIntegerPipe) mediaId: number,

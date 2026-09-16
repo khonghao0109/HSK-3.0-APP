@@ -86,6 +86,9 @@ không suy ra từ `NODE_ENV` (H.9, finding B-04).
   pagination? } }` hoặc `{ success: false, error: { code, message, details? }, meta }`;
   chỉ bytes signed media content không bọc. `RequestIdMiddleware` echo `X-Request-ID`
   (xem [../api/api.md](../api/api.md) §1).
+- Contract máy đọc (H.10c): `backend/openapi.json` sinh từ code bằng `@nestjs/swagger`
+  (CLI plugin), CI kiểm không lệch; frontend sinh type bằng `openapi-typescript`, không
+  sinh fetch client (xem [../api/api.md](../api/api.md) §0).
 - Lỗi không phải `HttpException` → `500` chung, không lộ message Prisma/SQL; validation
   trả `error.code = REQUEST_VALIDATION_FAILED` với `details.errors`.
 - Pagination: `page` 1..2147483647, `limit 1..100` mặc định 20, `meta.pagination

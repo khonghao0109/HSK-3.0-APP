@@ -3,6 +3,9 @@ import {
   normalizeAllowedOrigins,
 } from './runtime-security';
 
+/** Set in main.ts; the OpenAPI generator uses the same value. */
+export const API_GLOBAL_PREFIX = 'api/v1';
+
 export default () => ({
   app: {
     port: parseInt(process.env.PORT ?? '3000', 10),

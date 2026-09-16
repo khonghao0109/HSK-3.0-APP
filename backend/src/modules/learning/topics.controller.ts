@@ -3,6 +3,7 @@ import {
   ApiSuccessResponse,
   PaginationMeta,
 } from '../../common/interfaces/api-response.interface';
+import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { GetTopicsQueryDto } from './dto/get-topics-query.dto';
 import { TopicItemDto } from './dto/topic-response.dto';
 import { LearningService } from './learning.service';
@@ -12,6 +13,7 @@ export class TopicsController {
   constructor(private readonly learningService: LearningService) {}
 
   @Get()
+  @ApiEnvelope([TopicItemDto], { paginated: true })
   async getTopics(
     @Query() query: GetTopicsQueryDto,
   ): Promise<ApiSuccessResponse<TopicItemDto[], PaginationMeta>> {

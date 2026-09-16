@@ -62,6 +62,12 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # backend/openapi.json là contract commit trong repo (ADR-008 §5). Bước này
+      # sinh lại từ code (nest build + Swagger plugin, không cần database) và fail
+      # khi file commit bị lệch.
+      - name: OpenAPI spec up to date
+        run: npm run openapi:check
+
   backend-e2e:
     name: backend-e2e
     runs-on: ubuntu-latest

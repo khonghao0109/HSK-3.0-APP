@@ -1,18 +1,26 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { Role } from '@prisma/client';
 import { Request } from 'express';
 
 import { ipTracker } from '../../common/guards/custom-throttler.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
+import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 
 import { AuthService } from './auth.service';
+import {
+  AuthMeResponseDto,
+  AuthTokenResponseDto,
+} from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 type AuthenticatedUser = {
   id: number;
   email: string;
-  role: string;
+  role: Role;
 };
 
 type AuthenticatedRequest = Request & {
@@ -35,7 +43,8 @@ export class AuthController {
 
   @Post('register')
   @Throttle({ default: { limit: 100, ttl: 60_000, getTracker: ipTracker } })
-  register(@Body() registerDto: RegisterDto) {
+  @ApiEnvelope(AuthTokenResponseDto)
+  register(@Body() registerDto: RegisterDto): Promise<AuthTokenResponseDto> {
     return this.authService.register(registerDto);
   }
 
@@ -43,13 +52,16 @@ export class AuthController {
   @Throttle({
     default: { limit: loginIpLimit, ttl: 60_000, getTracker: ipTracker },
   })
-  login(@Body() loginDto: LoginDto) {
+  @ApiEnvelope(AuthTokenResponseDto)
+  login(@Body() loginDto: LoginDto): Promise<AuthTokenResponseDto> {
     return this.authService.login(loginDto);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Get('me')
-  getProfile(@Req() req: AuthenticatedRequest) {
+  @ApiEnvelope(AuthMeResponseDto)
+  getProfile(@Req() req: AuthenticatedRequest): AuthMeResponseDto {
     return {
       user: req.user,
     };

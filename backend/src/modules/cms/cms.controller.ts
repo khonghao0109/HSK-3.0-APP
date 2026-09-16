@@ -16,18 +16,31 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import { isAcceptedRequestId } from '../../common/middleware/request-id.middleware';
+import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
+import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
 import { CmsActor } from './cms-workflow';
 import { CmsService } from './cms.service';
+import {
+  AdminExerciseDetailDto,
+  AdminExerciseDto,
+} from './dto/admin-exercise-response.dto';
 import { AdminExercisesQueryDto } from './dto/admin-exercises-query.dto';
 import { AdminLessonsQueryDto } from './dto/admin-lessons-query.dto';
 import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
+import {
+  AdminMediaDetailDto,
+  AdminMediaDto,
+  AdminMediaLifecycleResultDto,
+} from './dto/admin-media-response.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import {
@@ -59,9 +72,17 @@ import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe';
 
 type AuthenticatedRequest = Request & { user: CmsActor };
 
+const IDEMPOTENCY_KEY_HEADER = {
+  name: 'Idempotency-Key',
+  required: true,
+  description:
+    'Replaying a key with the same request returns the original result.',
+};
+
 @Controller('admin/cms')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
+@ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class CmsController {
   constructor(
     private readonly cmsService: CmsService,
@@ -73,6 +94,7 @@ export class CmsController {
 
   @Post('media/ingestions')
   @Header('Cache-Control', 'no-store')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   @UseGuards(MediaIngestionEnabledGuard, MediaUploadRateLimitGuard)
   @UseFilters(SafeMediaUploadExceptionFilter)
   @UseInterceptors(
@@ -123,29 +145,32 @@ export class CmsController {
 
   @Get('media')
   @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminMediaDto], { paginated: true })
   listMedia(
     @Req() request: AuthenticatedRequest,
     @Query() query: AdminMediaQueryDto,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminMediaDto[]>> {
     return this.mediaAdminService.listMedia(request.user, query);
   }
 
   @Get('media/:mediaId')
   @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminMediaDetailDto)
   getMedia(
     @Req() request: AuthenticatedRequest,
     @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminMediaDetailDto>> {
     return this.mediaAdminService.getMedia(request.user, mediaId);
   }
 
   @Post('media/:mediaId/quarantine')
   @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminMediaLifecycleResultDto)
   quarantineMedia(
     @Req() request: AuthenticatedRequest,
     @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
     @Headers('x-request-id') requestId?: string,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminMediaLifecycleResultDto>> {
     return this.mediaAdminService.quarantineMedia(request.user, mediaId, {
       correlationId: correlationId(requestId),
     });
@@ -153,29 +178,32 @@ export class CmsController {
 
   @Post('media/:mediaId/archive')
   @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminMediaLifecycleResultDto)
   archiveMedia(
     @Req() request: AuthenticatedRequest,
     @Param('mediaId', ParsePositiveIntPipe) mediaId: number,
     @Headers('x-request-id') requestId?: string,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminMediaLifecycleResultDto>> {
     return this.mediaAdminService.archiveMedia(request.user, mediaId, {
       correlationId: correlationId(requestId),
     });
   }
 
   @Get('exercises')
+  @ApiEnvelope([AdminExerciseDto], { paginated: true })
   listExercises(
     @Req() request: AuthenticatedRequest,
     @Query() query: AdminExercisesQueryDto,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminExerciseDto[]>> {
     return this.exerciseAuthoringService.listExercises(request.user, query);
   }
 
   @Get('exercises/:exerciseId')
+  @ApiEnvelope(AdminExerciseDetailDto)
   getExercise(
     @Req() request: AuthenticatedRequest,
     @Param('exerciseId', ParsePositiveIntPipe) exerciseId: number,
-  ) {
+  ): Promise<ApiSuccessResponse<AdminExerciseDetailDto>> {
     return this.exerciseAuthoringService.getExercise(request.user, exerciseId);
   }
 
@@ -259,6 +287,7 @@ export class CmsController {
   }
 
   @Post('exercise-imports')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   commitExerciseImport(
     @Req() request: AuthenticatedRequest,
     @Body() dto: CommitExerciseImportDto,

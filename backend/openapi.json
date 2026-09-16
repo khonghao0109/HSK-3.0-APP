@@ -1,0 +1,5962 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AuthTokenResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AuthTokenResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AuthMeResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media/ingestions": {
+      "post": {
+        "operationId": "CmsController_ingestMedia",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "dataSourceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media/ingestions/{ingestionId}/cleanup": {
+      "post": {
+        "operationId": "CmsController_retryMediaIngestionCleanup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "ingestionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media": {
+      "get": {
+        "operationId": "CmsController_listMedia",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "audio",
+                "image",
+                "pdf",
+                "video"
+              ]
+            }
+          },
+          {
+            "name": "processingStatus",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "processing",
+                "ready",
+                "failed",
+                "quarantined"
+              ]
+            }
+          },
+          {
+            "name": "lifecycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "dataSourceId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminMediaDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media/{mediaId}": {
+      "get": {
+        "operationId": "CmsController_getMedia",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminMediaDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media/{mediaId}/quarantine": {
+      "post": {
+        "operationId": "CmsController_quarantineMedia",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminMediaLifecycleResultDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/media/{mediaId}/archive": {
+      "post": {
+        "operationId": "CmsController_archiveMedia",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminMediaLifecycleResultDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises": {
+      "get": {
+        "operationId": "CmsController_listExercises",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "lessonId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "topicId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mcq",
+                "fill_blank",
+                "listening_choice",
+                "arrange_sentence",
+                "speaking_repeat"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminExerciseDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      },
+      "post": {
+        "operationId": "CmsController_createExercise",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExerciseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises/{exerciseId}": {
+      "get": {
+        "operationId": "CmsController_getExercise",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminExerciseDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises/{exerciseId}/revisions": {
+      "post": {
+        "operationId": "CmsController_createExerciseRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExerciseRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises/{exerciseId}/revisions/{revisionId}/reviews": {
+      "post": {
+        "operationId": "CmsController_reviewExerciseRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises/{exerciseId}/revisions/{revisionId}/publish": {
+      "post": {
+        "operationId": "CmsController_publishExerciseRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercises/{exerciseId}/archive": {
+      "post": {
+        "operationId": "CmsController_archiveExercise",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercise-imports/preview": {
+      "post": {
+        "operationId": "CmsController_previewExerciseImport",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewExerciseImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/exercise-imports": {
+      "post": {
+        "operationId": "CmsController_commitExerciseImport",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitExerciseImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons": {
+      "get": {
+        "operationId": "CmsController_listLessons",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 200,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      },
+      "post": {
+        "operationId": "CmsController_createLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLessonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}": {
+      "get": {
+        "operationId": "CmsController_getLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}/revisions": {
+      "post": {
+        "operationId": "CmsController_createLessonRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLessonRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}/revisions/{revisionId}/reviews": {
+      "post": {
+        "operationId": "CmsController_reviewLessonRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}/revisions/{revisionId}/publish": {
+      "post": {
+        "operationId": "CmsController_publishLessonRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}/archive": {
+      "post": {
+        "operationId": "CmsController_archiveLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics/{topicId}": {
+      "get": {
+        "operationId": "CmsController_getTopic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics": {
+      "post": {
+        "operationId": "CmsController_createTopic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTopicDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics/{topicId}/revisions": {
+      "post": {
+        "operationId": "CmsController_createTopicRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTopicRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics/{topicId}/revisions/{revisionId}/reviews": {
+      "post": {
+        "operationId": "CmsController_reviewTopicRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics/{topicId}/revisions/{revisionId}/publish": {
+      "post": {
+        "operationId": "CmsController_publishTopicRevision",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "revisionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/topics/{topicId}/archive": {
+      "post": {
+        "operationId": "CmsController_archiveTopic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "UserController_getMe",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "UserController_getAllUsers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/v1/dictionary": {
+      "get": {
+        "operationId": "DictionaryController_search",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Dictionary"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/learning/test": {
+      "get": {
+        "operationId": "LearningController_test",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/learning/levels": {
+      "get": {
+        "operationId": "LearningController_getLevels",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LevelItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/learning/lessons": {
+      "get": {
+        "operationId": "LearningController_getLessons",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LessonItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/learning/lessons/{id}": {
+      "get": {
+        "operationId": "LearningController_getLessonDetail",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LessonDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/learning/topics": {
+      "get": {
+        "operationId": "LearningController_getTopics",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TopicItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/learning/stories": {
+      "get": {
+        "operationId": "LearningController_getStories",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StoryItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Learning"
+        ]
+      }
+    },
+    "/api/v1/levels": {
+      "get": {
+        "operationId": "LevelsController_getLevels",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LevelItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Levels"
+        ]
+      }
+    },
+    "/api/v1/lessons": {
+      "get": {
+        "operationId": "LessonsController_getLessons",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LessonItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Lessons"
+        ]
+      }
+    },
+    "/api/v1/lessons/{id}": {
+      "get": {
+        "operationId": "LessonsController_getLessonDetail",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LessonDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Lessons"
+        ]
+      }
+    },
+    "/api/v1/topics": {
+      "get": {
+        "operationId": "TopicsController_getTopics",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TopicItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Topics"
+        ]
+      }
+    },
+    "/api/v1/stories": {
+      "get": {
+        "operationId": "StoriesController_getStories",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StoryItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Stories"
+        ]
+      }
+    },
+    "/api/v1/learning/lessons/{lessonId}/start": {
+      "post": {
+        "operationId": "LessonActivityController_startLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyLessonActivityWriteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/learning/lessons/{lessonId}/activity": {
+      "get": {
+        "operationId": "LessonActivityController_getLessonActivity",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/learning/lessons/{lessonId}/complete": {
+      "post": {
+        "operationId": "LessonActivityController_completeLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyLessonActivityWriteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/learning/topics/{topicId}/start": {
+      "post": {
+        "operationId": "LessonActivityController_startTopic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyLessonActivityWriteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/learning/topics/{topicId}/complete": {
+      "post": {
+        "operationId": "LessonActivityController_completeTopic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyLessonActivityWriteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/learning/exercises/{exerciseId}/attempts": {
+      "post": {
+        "operationId": "LessonActivityController_submitAttempt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitLessonExerciseAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      },
+      "get": {
+        "operationId": "LessonActivityController_getAttempts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "exerciseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LessonActivity"
+        ]
+      }
+    },
+    "/api/v1/progress/lessons": {
+      "get": {
+        "operationId": "ProgressController_list",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Progress"
+        ]
+      }
+    },
+    "/api/v1/progress/lessons/{lessonId}": {
+      "get": {
+        "operationId": "ProgressController_detail",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Progress"
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}/access": {
+      "get": {
+        "operationId": "MediaController_createAccess",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}/content": {
+      "get": {
+        "operationId": "MediaController_getContent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "expires",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "signature",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw media bytes; errors still use the JSON error envelope.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/onboarding/status": {
+      "get": {
+        "operationId": "OnboardingController_getStatus",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ]
+      }
+    },
+    "/api/v1/onboarding/goals/current": {
+      "get": {
+        "operationId": "OnboardingController_getCurrentGoal",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ]
+      }
+    },
+    "/api/v1/onboarding/goals": {
+      "post": {
+        "operationId": "OnboardingController_setGoal",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ]
+      }
+    },
+    "/api/v1/learning-plans/current": {
+      "get": {
+        "operationId": "LearningPlansController_getCurrentLearningPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningPlans"
+        ]
+      }
+    },
+    "/api/v1/learning-plans": {
+      "post": {
+        "operationId": "LearningPlansController_generateLearningPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningPlans"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "HSK System API",
+    "description": "Generated from the backend code. Envelope, errors and request id: docs/api/api.md §1.",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "AuthAccountDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "email",
+          "role"
+        ]
+      },
+      "AuthTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthAccountDto"
+          },
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "accessToken"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ]
+      },
+      "AuthMeResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "AdminDataSourceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "version"
+        ]
+      },
+      "AdminMediaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "filename": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sanitized original filename."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "audio",
+              "image",
+              "pdf",
+              "video"
+            ]
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "size": {
+            "type": "number",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          },
+          "processingStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "ready",
+              "failed",
+              "quarantined"
+            ]
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "archived",
+              "active"
+            ]
+          },
+          "usageCount": {
+            "type": "number"
+          },
+          "dataSourceId": {
+            "type": "number",
+            "nullable": true
+          },
+          "uploadedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "updatedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dataSource": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminDataSourceDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "type",
+          "mimeType",
+          "size",
+          "duration",
+          "processingStatus",
+          "lifecycle",
+          "usageCount",
+          "dataSourceId",
+          "uploadedById",
+          "updatedById",
+          "deletedAt",
+          "createdAt",
+          "updatedAt",
+          "dataSource"
+        ]
+      },
+      "AdminMediaExerciseUsageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "lessonId": {
+            "type": "number"
+          },
+          "topicId": {
+            "type": "number",
+            "nullable": true
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "lessonId",
+          "topicId",
+          "prompt",
+          "status"
+        ]
+      },
+      "AdminMediaUsageCountsDto": {
+        "type": "object",
+        "properties": {
+          "lessonExercises": {
+            "type": "number"
+          },
+          "otherContent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lessonExercises",
+          "otherContent"
+        ]
+      },
+      "AdminMediaUsageDto": {
+        "type": "object",
+        "properties": {
+          "lessonExercises": {
+            "description": "First 50 by id.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminMediaExerciseUsageDto"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/AdminMediaUsageCountsDto"
+          }
+        },
+        "required": [
+          "lessonExercises",
+          "counts"
+        ]
+      },
+      "AdminMediaDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "filename": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sanitized original filename."
+          },
+          "type": {
+            "enum": [
+              "audio",
+              "image",
+              "pdf",
+              "video"
+            ],
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "size": {
+            "type": "number",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          },
+          "processingStatus": {
+            "enum": [
+              "pending",
+              "processing",
+              "ready",
+              "failed",
+              "quarantined"
+            ],
+            "type": "string"
+          },
+          "lifecycle": {
+            "enum": [
+              "archived",
+              "active"
+            ],
+            "type": "string"
+          },
+          "usageCount": {
+            "type": "number"
+          },
+          "dataSourceId": {
+            "type": "number",
+            "nullable": true
+          },
+          "uploadedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "updatedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dataSource": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminDataSourceDto"
+              }
+            ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/AdminMediaUsageDto"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "type",
+          "mimeType",
+          "size",
+          "duration",
+          "processingStatus",
+          "lifecycle",
+          "usageCount",
+          "dataSourceId",
+          "uploadedById",
+          "updatedById",
+          "deletedAt",
+          "createdAt",
+          "updatedAt",
+          "dataSource",
+          "usage"
+        ]
+      },
+      "AdminMediaLifecycleResultDto": {
+        "type": "object",
+        "properties": {
+          "idempotent": {
+            "type": "boolean"
+          },
+          "media": {
+            "$ref": "#/components/schemas/AdminMediaDto"
+          }
+        },
+        "required": [
+          "idempotent",
+          "media"
+        ]
+      },
+      "AdminContentReviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "reviewerId": {
+            "type": "number",
+            "nullable": true
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "changes_requested",
+              "rejected"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reviewerId",
+          "decision",
+          "note",
+          "createdAt"
+        ]
+      },
+      "AdminExerciseRevisionDto": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "enum": [
+              "lesson_exercise"
+            ],
+            "type": "string"
+          },
+          "snapshot": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "id": {
+            "type": "number"
+          },
+          "entityId": {
+            "type": "number"
+          },
+          "revision": {
+            "type": "number"
+          },
+          "contentHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorId": {
+            "type": "number",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminContentReviewDto"
+            }
+          }
+        },
+        "required": [
+          "entityType",
+          "snapshot",
+          "id",
+          "entityId",
+          "revision",
+          "contentHash",
+          "authorId",
+          "createdAt",
+          "reviews"
+        ]
+      },
+      "AdminExerciseLessonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug"
+        ]
+      },
+      "AdminExerciseTopicDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "AdminExerciseMediaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "audio",
+              "image",
+              "pdf",
+              "video"
+            ]
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          },
+          "processingStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "ready",
+              "failed",
+              "quarantined"
+            ]
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "type",
+          "mimeType",
+          "duration",
+          "processingStatus",
+          "deletedAt"
+        ]
+      },
+      "AdminExerciseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "latestRevision": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminExerciseRevisionDto"
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "lessonId": {
+            "type": "number"
+          },
+          "topicId": {
+            "type": "number",
+            "nullable": true
+          },
+          "mediaId": {
+            "type": "number",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "listening_choice",
+              "arrange_sentence",
+              "speaking_repeat"
+            ]
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "number"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "dataSourceId": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "number",
+            "nullable": true
+          },
+          "updatedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "publishedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "lesson": {
+            "$ref": "#/components/schemas/AdminExerciseLessonDto"
+          },
+          "topic": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminExerciseTopicDto"
+              }
+            ]
+          },
+          "dataSource": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminDataSourceDto"
+              }
+            ]
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminExerciseMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "content",
+          "answer",
+          "latestRevision",
+          "id",
+          "lessonId",
+          "topicId",
+          "mediaId",
+          "type",
+          "prompt",
+          "explanation",
+          "version",
+          "orderIndex",
+          "status",
+          "dataSourceId",
+          "sourceKey",
+          "createdById",
+          "updatedById",
+          "publishedById",
+          "publishedAt",
+          "deletedAt",
+          "createdAt",
+          "updatedAt",
+          "lesson",
+          "topic",
+          "dataSource",
+          "media"
+        ]
+      },
+      "AdminExerciseDetailDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "revisions": {
+            "description": "Newest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminExerciseRevisionDto"
+            }
+          },
+          "id": {
+            "type": "number"
+          },
+          "lessonId": {
+            "type": "number"
+          },
+          "topicId": {
+            "type": "number",
+            "nullable": true
+          },
+          "mediaId": {
+            "type": "number",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "listening_choice",
+              "arrange_sentence",
+              "speaking_repeat"
+            ]
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "number"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "dataSourceId": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "number",
+            "nullable": true
+          },
+          "updatedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "publishedById": {
+            "type": "number",
+            "nullable": true
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "lesson": {
+            "$ref": "#/components/schemas/AdminExerciseLessonDto"
+          },
+          "topic": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminExerciseTopicDto"
+              }
+            ]
+          },
+          "dataSource": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminDataSourceDto"
+              }
+            ]
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminExerciseMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "content",
+          "answer",
+          "revisions",
+          "id",
+          "lessonId",
+          "topicId",
+          "mediaId",
+          "type",
+          "prompt",
+          "explanation",
+          "version",
+          "orderIndex",
+          "status",
+          "dataSourceId",
+          "sourceKey",
+          "createdById",
+          "updatedById",
+          "publishedById",
+          "publishedAt",
+          "deletedAt",
+          "createdAt",
+          "updatedAt",
+          "lesson",
+          "topic",
+          "dataSource",
+          "media"
+        ]
+      },
+      "CreateExerciseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "lessonId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "topicId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "listening_choice",
+              "arrange_sentence",
+              "speaking_repeat"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 4096
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "mediaId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "content",
+          "answer",
+          "lessonId",
+          "type",
+          "prompt",
+          "orderIndex"
+        ]
+      },
+      "CreateExerciseRevisionDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "listening_choice",
+              "arrange_sentence",
+              "speaking_repeat"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 4096
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "mediaId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "content",
+          "answer",
+          "type",
+          "prompt",
+          "orderIndex"
+        ]
+      },
+      "ReviewRevisionDto": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "enum": [
+              "approved",
+              "changes_requested",
+              "rejected"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "PreviewExerciseImportDto": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "maxItems": 100
+          },
+          "dataSourceId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "rows",
+          "dataSourceId",
+          "fileName"
+        ]
+      },
+      "CommitExerciseImportDto": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "maxItems": 100
+          },
+          "dataSourceId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "previewHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rows",
+          "dataSourceId",
+          "fileName",
+          "previewHash"
+        ]
+      },
+      "CreateLessonDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "required": [
+          "levelId",
+          "title",
+          "orderIndex",
+          "slug"
+        ]
+      },
+      "CreateLessonRevisionDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "required": [
+          "title",
+          "orderIndex",
+          "slug"
+        ]
+      },
+      "CreateTopicDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "lessonId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 500
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "vocabulary",
+              "grammar",
+              "key_text",
+              "quiz",
+              "ai_speaking"
+            ]
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "isPremium": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "content",
+          "lessonId",
+          "title",
+          "type",
+          "orderIndex",
+          "isPremium",
+          "isLocked"
+        ]
+      },
+      "CreateTopicRevisionDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 500
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "vocabulary",
+              "grammar",
+              "key_text",
+              "quiz",
+              "ai_speaking"
+            ]
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "isPremium": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "content",
+          "title",
+          "type",
+          "orderIndex",
+          "isPremium",
+          "isLocked"
+        ]
+      },
+      "LevelItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "orderIndex"
+        ]
+      },
+      "LessonItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "orderIndex",
+          "slug"
+        ]
+      },
+      "LessonDetailLevelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "orderIndex"
+        ]
+      },
+      "LessonDetailTopicDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "title",
+          "orderIndex"
+        ]
+      },
+      "LessonDetailWordMeaningDto": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "nullable": true
+          },
+          "vi": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "en",
+          "vi"
+        ]
+      },
+      "LessonDetailWordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "traditional": {
+            "type": "string",
+            "nullable": true
+          },
+          "pinyin": {
+            "type": "string"
+          },
+          "pinyinTone": {
+            "type": "string",
+            "nullable": true
+          },
+          "meanings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDetailWordMeaningDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "hanzi",
+          "traditional",
+          "pinyin",
+          "pinyinTone",
+          "meanings"
+        ]
+      },
+      "LessonDetailStoryDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "title",
+          "slug"
+        ]
+      },
+      "LessonDetailExerciseMediaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "type",
+          "mimeType",
+          "duration"
+        ]
+      },
+      "LessonDetailExerciseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonDetailExerciseMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "type",
+          "prompt",
+          "version",
+          "orderIndex",
+          "media"
+        ]
+      },
+      "LessonDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/LessonDetailLevelDto"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDetailTopicDto"
+            }
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDetailWordDto"
+            }
+          },
+          "stories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDetailStoryDto"
+            }
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDetailExerciseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "level",
+          "topics",
+          "words",
+          "stories",
+          "exercises"
+        ]
+      },
+      "TopicItemDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "id": {
+            "type": "number"
+          },
+          "lessonId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "lessonId",
+          "title",
+          "orderIndex"
+        ]
+      },
+      "StoryItemDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "id": {
+            "type": "number"
+          },
+          "levelId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "levelId",
+          "title",
+          "slug"
+        ]
+      },
+      "EmptyLessonActivityWriteDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SubmitLessonExerciseAttemptDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "durationSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400
+          }
+        },
+        "required": [
+          "answer"
+        ]
+      },
+      "CreateGoalDto": {
+        "type": "object",
+        "properties": {
+          "targetLevelId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "targetBand": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 9
+          },
+          "dailyMinutes": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "reminderEnabled": {
+            "type": "boolean"
+          },
+          "reminderTime": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "startDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "required": [
+          "targetLevelId",
+          "dailyMinutes",
+          "reminderEnabled",
+          "startDate"
+        ]
+      },
+      "ApiResponseMetaDto": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Same value as the `X-Request-ID` response header."
+          }
+        },
+        "required": [
+          "timestamp",
+          "requestId"
+        ]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages"
+        ]
+      },
+      "ApiPageResponseMetaDto": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Same value as the `X-Request-ID` response header."
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "timestamp",
+          "requestId",
+          "pagination"
+        ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable code, for example `UNAUTHORIZED`."
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ApiErrorEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDto"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiResponseMetaDto"
+          }
+        },
+        "required": [
+          "success",
+          "error",
+          "meta"
+        ]
+      }
+    },
+    "parameters": {
+      "RequestId": {
+        "name": "X-Request-ID",
+        "in": "header",
+        "required": false,
+        "description": "UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "ErrorEnvelope": {
+        "description": "Error envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiErrorEnvelopeDto"
+            }
+          }
+        }
+      }
+    }
+  }
+}

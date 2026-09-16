@@ -3,7 +3,9 @@ import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { setupOpenApiDocs } from './common/openapi/openapi-document';
 import { createSafeValidationException } from './common/validation/safe-validation-exception.factory';
+import { API_GLOBAL_PREFIX } from './config/app.config';
 import { handleBootstrapFailure } from './config/bootstrap-failure';
 import {
   configureApiEdgeSecurity,
@@ -28,7 +30,12 @@ async function bootstrap() {
     const config = app.get(ConfigService);
 
     // Global prefix
-    app.setGlobalPrefix('api/v1');
+    app.setGlobalPrefix(API_GLOBAL_PREFIX);
+
+    // Swagger UI at /api/docs in development only. Registered before the edge
+    // security middleware below, whose CSP would block the UI. The committed
+    // contract is backend/openapi.json (npm run openapi:generate).
+    setupOpenApiDocs(app, config.getOrThrow<string>('app.env'));
 
     // FIX 1: Global ValidationPipe — reject unknown fields, auto-transform types
     app.useGlobalPipes(
@@ -50,18 +57,6 @@ async function bootstrap() {
 
     // FIX 3: Graceful shutdown — NestJS sẽ gọi onApplicationShutdown hooks
     app.enableShutdownHooks();
-
-    // ─── Optional: Swagger / OpenAPI ─────────────────────────────────────────
-    // Cần install: npm install @nestjs/swagger
-    // import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-    // const swaggerConfig = new DocumentBuilder()
-    //   .setTitle('HSK System API')
-    //   .setDescription('API cho nền tảng ôn luyện HSK 9 cấp')
-    //   .setVersion('1.0')
-    //   .addBearerAuth()
-    //   .build();
-    // const document = SwaggerModule.createDocument(app, swaggerConfig);
-    // SwaggerModule.setup('api/docs', app, document);
 
     const port = config.getOrThrow<number>('app.port');
     // Initialize the dependency graph first, then bind the private listener.

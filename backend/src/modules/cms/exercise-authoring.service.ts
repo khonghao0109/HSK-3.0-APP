@@ -11,10 +11,7 @@ import { ContentEntityType, ExerciseType, Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 
-import {
-  ApiSuccessResponse,
-  PaginationMeta,
-} from '../../common/interfaces/api-response.interface';
+import { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import {
   LessonExerciseAuthoringValidationError,
   LessonExerciseAuthoringValue,
@@ -37,6 +34,7 @@ import {
   CmsTransactionOperation,
 } from './cms-transaction-coordinator';
 import { lockActiveCmsActor } from './cms-actor-lock';
+import { AdminExerciseDto } from './dto/admin-exercise-response.dto';
 import { AdminExercisesQueryDto } from './dto/admin-exercises-query.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
@@ -63,6 +61,10 @@ const EXERCISE_REVISION_SELECT = {
     },
   },
 } satisfies Prisma.ContentRevisionSelect;
+
+type ExerciseRevisionRecord = Prisma.ContentRevisionGetPayload<{
+  select: typeof EXERCISE_REVISION_SELECT;
+}>;
 
 export const EXERCISE_ADMIN_SELECT = {
   id: true,
@@ -140,7 +142,7 @@ export class ExerciseAuthoringService {
   async listExercises(
     actor: CmsActor,
     query: AdminExercisesQueryDto,
-  ): Promise<ApiSuccessResponse<unknown[], PaginationMeta>> {
+  ): Promise<ApiSuccessResponse<AdminExerciseDto[]>> {
     assertAdminActor(actor);
     const where: Prisma.LessonExerciseWhereInput = {
       ...(query.lessonId ? { lessonId: query.lessonId } : {}),
@@ -713,8 +715,11 @@ export class ExerciseAuthoringService {
     return requested;
   }
 
-  private async getLatestRevisionMap(exerciseIds: number[]) {
-    if (exerciseIds.length === 0) return new Map<number, unknown>();
+  private async getLatestRevisionMap(
+    exerciseIds: number[],
+  ): Promise<Map<number, ExerciseRevisionRecord>> {
+    const result = new Map<number, ExerciseRevisionRecord>();
+    if (exerciseIds.length === 0) return result;
     const revisions = await this.prisma.contentRevision.findMany({
       where: {
         entityType: ContentEntityType.lesson_exercise,
@@ -723,7 +728,6 @@ export class ExerciseAuthoringService {
       orderBy: [{ entityId: 'asc' }, { revision: 'desc' }, { id: 'desc' }],
       select: EXERCISE_REVISION_SELECT,
     });
-    const result = new Map<number, (typeof revisions)[number]>();
     for (const revision of revisions) {
       if (!result.has(revision.entityId)) {
         result.set(revision.entityId, revision);

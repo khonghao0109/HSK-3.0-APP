@@ -1,3 +1,7 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../common/openapi/json-schemas';
+
 export class LessonItemDto {
   id!: number;
   title!: string;
@@ -9,7 +13,10 @@ export class LessonItemDto {
 export class LessonDetailTopicDto {
   id!: number;
   title!: string;
+
+  @ApiProperty(JSON_OBJECT_OR_ARRAY_SCHEMA)
   content!: unknown;
+
   orderIndex!: number;
 }
 
@@ -30,7 +37,10 @@ export class LessonDetailWordDto {
 export class LessonDetailStoryDto {
   id!: number;
   title!: string;
+
+  @ApiProperty(JSON_OBJECT_OR_ARRAY_SCHEMA)
   content!: unknown;
+
   slug!: string;
 }
 
@@ -38,7 +48,10 @@ export class LessonDetailExerciseDto {
   id!: number;
   type!: string;
   prompt!: string;
+
+  @ApiProperty(JSON_OBJECT_OR_ARRAY_SCHEMA)
   content!: unknown;
+
   version!: number;
   orderIndex!: number;
   media!: LessonDetailExerciseMediaDto | null;

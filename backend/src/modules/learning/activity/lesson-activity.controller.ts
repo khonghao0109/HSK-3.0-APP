@@ -8,9 +8,11 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
 import {
   EmptyLessonActivityWriteDto,
@@ -18,16 +20,25 @@ import {
 } from './dto/lesson-activity-write.dto';
 import { LessonActivityService } from './lesson-activity.service';
 
+const IDEMPOTENCY_KEY_HEADER = {
+  name: 'Idempotency-Key',
+  required: true,
+  description:
+    'Replaying a key with the same request returns the original result.',
+};
+
 type AuthenticatedRequest = Request & {
   user: { id: number; email: string; role: string };
 };
 
 @Controller('learning')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class LessonActivityController {
   constructor(private readonly activityService: LessonActivityService) {}
 
   @Post('lessons/:lessonId/start')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   startLesson(
     @Req() request: AuthenticatedRequest,
     @Param('lessonId', ParsePositiveSafeIntegerPipe) lessonId: number,
@@ -51,6 +62,7 @@ export class LessonActivityController {
   }
 
   @Post('lessons/:lessonId/complete')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   completeLesson(
     @Req() request: AuthenticatedRequest,
     @Param('lessonId', ParsePositiveSafeIntegerPipe) lessonId: number,
@@ -66,6 +78,7 @@ export class LessonActivityController {
   }
 
   @Post('topics/:topicId/start')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   startTopic(
     @Req() request: AuthenticatedRequest,
     @Param('topicId', ParsePositiveSafeIntegerPipe) topicId: number,
@@ -81,6 +94,7 @@ export class LessonActivityController {
   }
 
   @Post('topics/:topicId/complete')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   completeTopic(
     @Req() request: AuthenticatedRequest,
     @Param('topicId', ParsePositiveSafeIntegerPipe) topicId: number,
@@ -96,6 +110,7 @@ export class LessonActivityController {
   }
 
   @Post('exercises/:exerciseId/attempts')
+  @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   submitAttempt(
     @Req() request: AuthenticatedRequest,
     @Param('exerciseId', ParsePositiveSafeIntegerPipe) exerciseId: number,

@@ -1,6 +1,6 @@
 # PLAN — Tiến độ dự án HSK 3.0
 
-> Cập nhật: 13/09/2026 · Baseline: branch `macdev`, HEAD `808a97a`
+> Cập nhật: 14/09/2026 · Baseline: branch `macdev`, HEAD `37e0198`
 > · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; chưa có learner app,
 > chưa có CI, chưa có hạ tầng production.
 
@@ -43,19 +43,63 @@ cam kết.
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
-| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 7 / 14 | 2–3 tuần | 🟡 |
+| GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 9 / 14 | 2–3 tuần | 🟡 |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
-| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 14 | 3–4 tuần | ⬜ |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 20 | 5–7 tuần | 🟡 backend xong |
+| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 15 | 3–4 tuần | ⬜ |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 21 | 5–7 tuần | 🟡 backend xong |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
-| GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 7 | 4–6 tuần | ⬜ |
+| GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **41 / 128 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **43 / 131 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
-GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm.
+GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
+M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
+
+### 1.2 Dữ liệu: có gì, đủ sau bước nào, còn thiếu gì
+
+Kiểm tra DB dev `hsk_system` ngày 13/09/2026 (19/19 migration). Không có bước nào mà sau đó
+database "đủ toàn bộ dữ liệu": schema và công cụ nhập liệu đủ theo giai đoạn, còn nội dung
+thật là track biên soạn chạy song song và chỉ được gate ở M6.7. Chỉ tiêu dưới đây là đề
+xuất, chờ quyết định #12.
+
+| Lớp dữ liệu | Hôm nay | Đủ sau bước | GĐ |
+| --- | --- | --- | --- |
+| Schema Web MVP | 59 model; thiếu `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | M3.4a | GĐ6 |
+| Schema tính năng M7 (OAuth, Material, Entitlement, QuestionRevision) | chưa có | backlog mục 5, theo từng tính năng | GĐ10 |
+| Từ điển tiếng Anh | 121.856 Word, 200.156 WordMeaning (CC-CEDICT, CC BY-SA 4.0) | đã đủ | GĐ0 ✅ |
+| Mapping từ theo cấp HSK | 11.086 WordLevel; 7 DataSource HSK chưa có license | M1.1 | GĐ4 |
+| Nghĩa tiếng Việt | 0 | M1.2a workflow → M1.2b 2.263 từ HSK1–HSK3 | GĐ4, song song tới GĐ8 |
+| Ví dụ câu, audio, stroke cho từ | 0; `Word.audioId`/`imageId` đều null | M3.4a/b schema và API; dữ liệu theo M2.9; media cần M5.2, M6.9 | GĐ6, GĐ8, GĐ9 |
+| Bài học, topic, story thật | 0; 35 Lesson, 70 Topic, 14 Story placeholder | M1.3 xoá placeholder; M2.9 nội dung HSK1–HSK3 | GĐ4, GĐ5 |
+| Bài tập trong bài học | 0 LessonExercise | M2.9 (API authoring/import đã có; UI M5.1b) | GĐ5, GĐ8 |
+| Câu placement | 0 | M2.3a code; câu lấy từ M4.6 | GĐ5, GĐ7 |
+| Ngân hàng câu hỏi, đề thi | 0 trên 14 bảng Exam | M4.1 công cụ; M4.6 dữ liệu HSK1–HSK3 | GĐ7 |
+| Media (audio, ảnh) | 0 Media; S3/ClamAV thật chưa có | M5.2 upload UI; M6.9 rehearsal ⛔ | GĐ8, GĐ9 |
+| Dữ liệu vận hành: User, Progress, ReviewCard, ExamAttempt | 0 | sinh ra từ beta M6.8; không có mốc "đủ" | GĐ9 trở đi |
+
+Mốc gộp:
+
+- Đủ schema Web MVP: sau **M3.4a** (GĐ6).
+- Đủ công cụ nhập mọi loại nội dung: sau **M5.4** (GĐ8).
+- Đủ nội dung cho beta (HSK1–HSK3): khi **M1.2b, M2.9, M4.6** đạt chỉ tiêu, kiểm ở **M6.7** (GĐ9).
+
+**Sau khi hết PLAN, data vẫn còn thiếu:**
+
+1. Nghĩa tiếng Việt cho 8.823 từ HSK4–HSK7_9 và 110.770 từ CC-CEDICT ngoài HSK: chỉ có
+   tiếng Anh, chưa có bước nào.
+2. Bài học, bài tập, đề thi cho HSK4–HSK7_9: chỉ lên kế hoạch sau beta; riêng HSK7–9 chưa
+   có nguồn chính thức và mô hình riêng (quyết định #1).
+3. Audio phát âm, ví dụ câu, stroke animation cho 11.086 từ HSK: chưa có nguồn hoặc license
+   (TTS hay thu âm), nằm trong quyết định #12.
+4. Media thật trên S3/ClamAV: 0 cho tới khi M6.9 hết ⛔.
+5. Reader materials, corpus pronunciation, corpus AI có license: M7.1, M7.2, M7.4.
+6. Dữ liệu vận hành và baseline metric (quyết định #7): dashboard M5.5 không có gì để đo cho
+   tới sau beta.
+7. Provenance/license 7 HSK word list: tới khi M1.1 xong, 11.086 mapping và mọi nội dung
+   dựa vào nó vẫn ở trạng thái chưa xác minh.
 
 ### GĐ0 — Nền tảng đã xây ✅
 
@@ -109,9 +153,9 @@ Vào: GĐ1 có CI. Ra: P0/P1 trong review đóng; response envelope thống nh�
 | H.7 | 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. 14/09: `3db5ae1`. email lạ và account inactive verify Argon2id với hash mồi rồi `401` chung; chỉ account khoá trả `403`, BFF gắn `kind: account_locked`, form login hiện lý do; register trùng (kể cả race `P2002`) → `409`; bằng chứng `backend/test/auth.e2e-spec.ts`, `frontend/src/features/auth/login-form.spec.tsx` |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ✅ | B-05. 14/09: `99fb219`. `GET /users` nhận `page`/`limit` (`PaginationQueryDto`, limit ≤ 100), trả `{ items, total, page, limit, totalPages }`, bỏ user có `deletedAt`; `getProfile` chỉ đọc account `active` chưa soft-delete (404); `page` chặn ≤ 2147483647 cho mọi list dùng DTO chung (trước đó `page=1e20` → 500); bằng chứng `backend/test/users.e2e-spec.ts`, `backend/src/modules/user/user.service.spec.ts` |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ✅ | B-04. 14/09: `e6e6620`. adapter chọn theo `media.storageProvider`/`media.scannerProvider` (mặc định `s3`/`clamav` ở mọi môi trường); `assertMediaProviders` trong config validation chỉ nhận `memory`/`test` khi `NODE_ENV=test`, còn lại process không khởi động; bucket/region/scanner host bắt buộc theo provider thay vì theo `NODE_ENV`; bỏ signing secret, metrics token và `MEDIA_INGESTION_ENABLED=true` mặc định dưới `NODE_ENV=test`, e2e khai báo tường minh trong `backend/test/utils/e2e-environment.ts`. Còn lại của B-04: throttle 1.000/phút dưới `NODE_ENV=test`. Bằng chứng `backend/src/infrastructure/media-adapter-wiring.spec.ts`, `backend/src/config/env.validation.spec.ts`, `backend/src/config/runtime-security.spec.ts` |
-| H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | 🟡 | A-03. 14/09 chưa commit: `TransformInterceptor` bọc `{ success, data, meta: { requestId, timestamp, pagination? } }` (service trả `{ success, data, meta }` được bóc, phân trang vào `meta.pagination`; `@RawResponse()` cho bytes media); `GlobalExceptionFilter` trả `{ success: false, error: { code, message, details? }, meta }`, lỗi không phải HttpException → `500` chung, message parser/404 không trích input; `RequestIdMiddleware` nhận UUID hoặc 32 hex nginx, echo `X-Request-ID`, audit CMS dùng cùng id. Bằng chứng `backend/test/response-envelope.e2e-spec.ts`, `backend/src/common/{middleware,interceptors,filters}/*.spec.ts`; Playwright với backend thật pass |
-| H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | 🟡 | Làm cùng H.10a: đổi envelope mà không sửa BFF thì login gãy. `frontend/src/lib/api/backend-envelope.ts` parse envelope backend, BFF giữ shape trả browser; `docs/api/api.md` §1, A.1–A.3, A.5, A.10–A.12 |
-| H.10c | Cài `@nestjs/swagger`, xuất `openapi.json` trong CI, `openapi-typescript` cho frontend | ⬜ | ADR-008 §5 |
+| H.10a | APP_INTERCEPTOR + APP_FILTER envelope toàn cục; echo `x-request-id` | ✅ | A-03. 14/09: `37e0198`. `TransformInterceptor` bọc `{ success, data, meta: { requestId, timestamp, pagination? } }` (service trả `{ success, data, meta }` được bóc, phân trang vào `meta.pagination`; `@RawResponse()` cho bytes media); `GlobalExceptionFilter` trả `{ success: false, error: { code, message, details? }, meta }`, lỗi không phải HttpException → `500` chung, message parser/404 không trích input; `RequestIdMiddleware` nhận UUID hoặc 32 hex nginx, echo `X-Request-ID`, audit CMS dùng cùng id. Bằng chứng `backend/test/response-envelope.e2e-spec.ts`, `backend/src/common/{middleware,interceptors,filters}/*.spec.ts`; Playwright với backend thật pass |
+| H.10b | Cập nhật `api.md` §1 và Zod contract frontend theo envelope mới | ✅ | 14/09: `37e0198`, làm cùng H.10a: đổi envelope mà không sửa BFF thì login gãy. `frontend/src/lib/api/backend-envelope.ts` parse envelope backend, BFF giữ shape trả browser; `docs/api/api.md` §1, A.1–A.3, A.5, A.10–A.12 |
+| H.10c | Cài `@nestjs/swagger`, xuất `openapi.json` trong CI, `openapi-typescript` cho frontend | 🟡 | ADR-008 §5. 14/09 chưa commit: `@nestjs/swagger` 11.4.7 + CLI plugin; `backend/openapi.json` commit trong repo, `npm run openapi:generate` sinh ở preview mode (không cần DB), CI backend `npm run openapi:check` fail khi lệch. Mọi operation có envelope §1, lỗi `default`, `X-Request-ID` tuỳ chọn, security `JWT` đúng route có `JwtAuthGuard`; `data` có schema cho call BFF và public learning, endpoint khác `data` chưa có schema. Swagger UI `/api/docs` chỉ `NODE_ENV=development`. Frontend `openapi-typescript` 7.13.0 → `src/lib/api/backend-generated-types.ts` (chỉ type, không fetch client). Bằng chứng `backend/src/common/openapi/openapi-document.spec.ts`, `frontend/src/lib/api/backend-openapi-contract.spec.ts` (type fresh, response document của call BFF qua được Zod) |
 | H.11a | Migration: bỏ `BEGIN/COMMIT` (25P02); resolver migration tham số hoá | ⬜ | C-01, C-02. Từ H.4b có 20 migration: `assertCatalog` (release validation) và test catalog trong `media-lifecycle-migration-validation.helpers.spec.ts` còn đòi đúng 19 |
 | H.11b | Pin UTC/timestamptz; unique index goal/plan | ⬜ | C-05, C-04 |
 | H.12 | Prisma `$disconnect`; `canonicalJson` maxDepth; idempotency TTL | ⬜ | D-06, D-01, D-02 |
@@ -134,12 +178,13 @@ Vào: GĐ1 có CI để gate chạy trên Linux AMD64. Ra: không còn P0/P1 med
 
 ### GĐ4 — Content/legal + Identity/Privacy, M1 (3–4 tuần)
 
-Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có bằng chứng end-to-end; RC không dùng fixture.
+Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có bằng chứng end-to-end; RC không dùng fixture. M1.2b là track biên soạn, không phải điều kiện ra GĐ4.
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT | ⬜ | R1; quyết định #2. DB dev 13/09: 7 `DataSource` HSK không có license, `referenceUrl` trỏ file trong repo |
-| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | chặn bởi #2. DB dev 13/09: 200.156 `WordMeaning` đều tiếng Anh, 0 `meaningVi` |
+| M1.2a | Workflow nghĩa tiếng Việt: import theo `DataSource`, reviewer duyệt, rollback theo batch | ⬜ | chặn bởi #2. DB dev 13/09: 200.156 `WordMeaning` đều tiếng Anh, 0 `meaningVi` |
+| M1.2b | Nhập nghĩa tiếng Việt đã duyệt cho 2.263 từ HSK1–HSK3 trước beta (HSK1 530, HSK2 765, HSK3 968) | ⬜ | chỉ tiêu 🔵 #12; chạy song song GĐ5–GĐ8, gate ở M6.7; 8.823 từ HSK4–HSK7_9 sau beta |
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | DB dev 13/09: 35 Lesson, 70 Topic, 14 Story đều là seed "Temporary" từ `seed:learning` |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token 15 phút | ⬜ | B-03 |
 | M1.4b | Endpoint logout/revoke; BFF admin dùng refresh | ⬜ | tiền đề mobile |
@@ -178,6 +223,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.6b | UI tra từ, chi tiết, lưu từ | ⬜ | 03/01,02 |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ⬜ | `frontend/DESIGN.md` |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
+| M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
 
 ### GĐ6 — SRS + Dictionary completion, M3 (3–4 tuần)
@@ -207,6 +253,7 @@ Vào: GĐ5 xong. Ra: thi trọn flow, snapshot không đổi khi content sửa, 
 | M4.3 | Server scoring, skill breakdown, explanation policy | ⬜ | |
 | M4.4 | Concurrency/capacity test theo workload duyệt | ⬜ | |
 | M4.5 | Learner exam/review/result UI | ⬜ | 04/01–04 |
+| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp theo cấu trúc chính thức; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | chỉ tiêu 🔵 #12; nhập qua M4.1/M5.4; HSK4–HSK7_9 sau beta, HSK7–9 chờ #1 |
 
 ### GĐ8 — Admin ops, analytics, support, trust, M5 (4–6 tuần; M5.1–M5.2 song song GĐ5)
 
@@ -241,7 +288,7 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | M6.4 | Staging production-like, environment parity | ⬜ | |
 | M6.5 | OTel + Sentry + pino; SLI/SLO; dashboards; alerts; incident runbooks | 🟡 | media ✅; toàn hệ thống ⬜ |
 | M6.6 | Backup/PITR, restore drill, RPO/RTO; retention object storage | ⬜ | |
-| M6.7 | Gate capacity, security/privacy, accessibility, dependency/license | ⬜ | |
+| M6.7 | Gate capacity, security/privacy, accessibility, dependency/license, độ phủ nội dung (M1.2b, M2.9, M4.6 đạt chỉ tiêu #12) | ⬜ | |
 | M6.8 | Beta rollout tăng dần, observation window, go/no-go | ⬜ | |
 | M6.9 | Live Media Infrastructure Rehearsal | ⛔ | BLOCKED_EXTERNAL |
 
@@ -265,9 +312,9 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | M0 Media internal closeout | Media không còn P0/P1, gate tái lập trên Linux AMD64 | 🟡 | 2 / 5 (exit 0 / 4) |
 | H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 1 / 15 |
 | M1 Content/legal + Identity/Privacy | Dữ liệu và tài khoản đủ an toàn để mở beta | ⬜ | 0 / 8 |
-| M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 13 |
+| M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 5 |
-| M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 5 |
+| M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
 | M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 5 / 13 |
 | M6 Production foundation + Beta | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
 | M7+ Later | Reader, pronunciation, AI, mobile, payment | ⬜ | 0 / 8 |
@@ -349,7 +396,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.7 | Một 401 chung, verify giả với hash tĩnh; register trả 409 | ✅ | B-06. Xem GĐ2 H.7 |
 | H.8 | `GET /users` phân trang + lọc soft-delete | ✅ | B-05. Xem GĐ2 H.8 |
 | H.9 | `MEDIA_STORAGE_PROVIDER`/`MEDIA_SCANNER_PROVIDER` tường minh, assert lúc boot | ✅ | B-04. Xem GĐ2 H.9 |
-| H.10 | Envelope toàn cục: APP_INTERCEPTOR + APP_FILTER, echo `x-request-id`; cập nhật api.md §1; sau đó bật OpenAPI | ⬜ | A-03, ADR-008 §5 |
+| H.10 | Envelope toàn cục: APP_INTERCEPTOR + APP_FILTER, echo `x-request-id`; cập nhật api.md §1; sau đó bật OpenAPI | 🟡 | A-03, ADR-008 §5. H.10a + H.10b `37e0198`; H.10c chờ review |
 | H.11 | Migration: bỏ `BEGIN/COMMIT`, resolver tham số hoá, pin UTC, unique index goal/plan | ⬜ | C-01, C-02, C-05, C-04 |
 | H.12 | Prisma `$disconnect`; `canonicalJson` maxDepth; idempotency TTL | ⬜ | D-06, D-01, D-02 |
 | H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
@@ -363,7 +410,7 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | # | Bước | Trạng thái | Bằng chứng / ghi chú |
 | --- | --- | --- | --- |
 | M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT (CC BY-SA 4.0) | ⬜ | Roadmap R1; `DataSource` đã có bảng và provenance snapshot. Kiểm tra DB dev 13/09: CC-CEDICT có license CC BY-SA 4.0, 7 nguồn HSK list chưa có license |
-| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback | ⬜ | Rubric chất lượng: archive master plan §13.4. Kiểm tra DB dev 13/09: 0 nghĩa tiếng Việt trên 200.156 nghĩa |
+| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback (M1.2a), rồi nhập nghĩa đã duyệt cho 2.263 từ HSK1–HSK3 trước beta (M1.2b) | ⬜ | Rubric chất lượng: archive master plan §13.4. Chỉ tiêu 🔵 #12. Kiểm tra DB dev 13/09: 0 nghĩa tiếng Việt trên 200.156 nghĩa |
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | Kiểm tra DB dev 13/09: toàn bộ 35 Lesson, 70 Topic, 14 Story là placeholder "Temporary" |
 | M1.4 | Session refresh/revoke dùng `UserSession`; access 15 phút | ⬜ | B-03; schema ✅ |
 | M1.5 | Email verification + password reset qua `MailerPort` (SES / Mailpit) | ⬜ | ADR-008 §9; token schema ✅ |
@@ -400,6 +447,7 @@ UI và phần backend còn thiếu:
 | M2.6 | Dictionary search/detail/save-word cơ bản (backend detail + save API còn thiếu) | ⬜ | `03-dictionary-review-reader/01,02` |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline states | ⬜ | `frontend/DESIGN.md` |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
+| M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 
 Exit: flow end-to-end trên production build với backend thật ở staging ⬜ · không bearer
 token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/security/visual QA ⬜.
@@ -423,6 +471,7 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 | M4.3 | Server scoring, result/skill breakdown, explanation policy | ⬜ | |
 | M4.4 | Concurrency/capacity test theo workload được duyệt | ⬜ | |
 | M4.5 | Learner exam/review/result UI | ⬜ | `04-exam-pronunciation-profile/01–04` |
+| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | Chỉ tiêu 🔵 #12; nhập qua M4.1 và M5.4; HSK7–9 chờ quyết định #1 |
 
 Đặc tả chi tiết: archive master plan §17. Exit: snapshot không đổi khi content sửa ⬜ ·
 submit/retry không double result ⬜ · SLO staging ⬜.
@@ -465,7 +514,7 @@ owner/SLA ⬜ · dashboard có reconciliation/runbook ⬜.
 | M6.4 | Staging production-like, environment parity | ⬜ | |
 | M6.5 | OTel + Sentry + pino; SLI/SLO journey; dashboards; alerts; incident runbooks | 🟡 | Media metrics/alerts/dashboard ✅ (`ops/observability`); toàn hệ thống ⬜ |
 | M6.6 | PostgreSQL backup/PITR, restore drill, RPO/RTO; object-storage retention | ⬜ | |
-| M6.7 | Gate capacity, security/privacy, accessibility, dependency/license | ⬜ | |
+| M6.7 | Gate capacity, security/privacy, accessibility, dependency/license, độ phủ nội dung (M1.2b, M2.9, M4.6 đạt chỉ tiêu #12) | ⬜ | |
 | M6.8 | Progressive beta rollout, observation window, go/no-go | ⬜ | |
 | M6.9 | Live Media Infrastructure Rehearsal | ⛔ | BLOCKED_EXTERNAL |
 
@@ -512,6 +561,7 @@ khi vertical slice bắt đầu.
 | 9 | Công thức điểm bài học: loại bài chưa làm khỏi mẫu số hay không (D-03) | Product Owner | ⬜ |
 | 10 | Chấp nhận ADR-008 (stack còn lại) | Product Owner + Tech Lead | 🔵 |
 | 11 | Đóng băng harness release-evidence theo ADR-008 §8 và review A-04 | Tech Lead | 🔵 |
+| 12 | Chỉ tiêu nội dung trước beta: số từ có nghĩa tiếng Việt (M1.2b), số bài học và bài tập mỗi cấp (M2.9), số câu hỏi và đề mỗi cấp (M4.6); nguồn và license cho audio từ vựng | Product Owner + Content | 🔵 đề xuất 14/09 trong mục 1.2 |
 
 ## 7. Việc cần làm ngay (2 tuần tới)
 
@@ -540,3 +590,5 @@ khi vertical slice bắt đầu.
 | 14/09/2026 | GĐ2: H.7 ✅ (`3db5ae1`, đã push). H.8 🟡: `GET /users` phân trang và bỏ user soft-delete, `GET /users/me` chỉ trả account active; `PaginationQueryDto.page` ≤ 2147483647 để `page` quá lớn trả `400` thay vì `500`. |
 | 14/09/2026 | GĐ2: H.8 ✅ (`99fb219`, đã push). H.9 🟡: provider media tường minh (`MEDIA_STORAGE_PROVIDER`, `MEDIA_SCANNER_PROVIDER`), adapter giả chỉ hợp lệ khi `NODE_ENV=test`, không còn secret/ingestion mặc định suy từ `NODE_ENV=test`. |
 | 14/09/2026 | GĐ2: H.9 ✅ (`e6e6620`, đã push). H.10a 🟡 + H.10b 🟡: envelope response/lỗi toàn cục, `X-Request-ID`, BFF parse envelope; `GET /users` chuyển phân trang sang `meta.pagination`, `/health` bỏ `success` tự gắn. |
+| 14/09/2026 | Thêm mục 1.2 "Dữ liệu: có gì, đủ sau bước nào, còn thiếu gì" với danh sách data còn thiếu sau khi hết PLAN; thêm bước sản xuất nội dung M1.2b, M2.9, M4.6 (chỉ tiêu đề xuất, quyết định #12) và tiêu chí độ phủ nội dung vào M6.7. Tổng task 128 → 131. |
+| 14/09/2026 | GĐ2: H.10a + H.10b ✅ (`37e0198`, đã push). H.10c 🟡: `backend/openapi.json` sinh từ code (Swagger CLI plugin, preview mode không cần DB) với envelope, lỗi `default`, `X-Request-ID`, bearer `JWT`; CI kiểm file commit không lệch; frontend sinh type bằng `openapi-typescript` và kiểm response đã document của call BFF qua được Zod. |

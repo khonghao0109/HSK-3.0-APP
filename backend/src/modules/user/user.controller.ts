@@ -1,9 +1,11 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
 import { UserService } from './user.service';
@@ -20,6 +22,7 @@ type AuthenticatedRequest = Request & {
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

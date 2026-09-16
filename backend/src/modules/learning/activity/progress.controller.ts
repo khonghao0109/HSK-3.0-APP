@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
 import { LessonActivityService } from './lesson-activity.service';
 
@@ -11,6 +13,7 @@ type AuthenticatedRequest = Request & {
 
 @Controller('progress')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class ProgressController {
   constructor(private readonly activityService: LessonActivityService) {}
 

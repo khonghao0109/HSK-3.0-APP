@@ -10,8 +10,26 @@ Cập nhật 04/09/2026 theo HEAD `3211bf8`. Tài liệu chia hai phần:
   [../product/roadmap.md](../product/roadmap.md) §6. Không được coi là hợp đồng.
 
 Khi thêm hoặc đổi endpoint, sửa Part A, DTO, test và `docs/PLAN.md` trong cùng PR.
-Kế hoạch sinh OpenAPI từ code nằm ở ADR-008 §5; khi có `openapi.json`, Part A trỏ tới
-spec sinh thay vì viết tay.
+
+**OpenAPI (H.10c, ADR-008 §5).** [`backend/openapi.json`](../../backend/openapi.json)
+(OpenAPI 3.0) sinh từ code và là contract máy đọc của Part A: path, param, header, body
+DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phần code không suy ra
+được: quy tắc nghiệp vụ, mã lỗi domain, idempotency, rate limit.
+
+- Sinh lại: `npm run openapi:generate` trong `backend/` (cần `nest build` để Swagger plugin
+  suy schema DTO; không cần database), commit cùng thay đổi controller/DTO. CI backend chạy
+  `npm run openapi:check` và fail khi file commit bị lệch.
+- `data` có schema đầy đủ cho các endpoint có response DTO: `auth/register`, `auth/login`,
+  `auth/me`, admin exercise list/detail, admin media list/detail/archive/quarantine (mọi
+  call của BFF) và public learning (`levels`, `lessons`, `topics`, `stories`). Endpoint
+  khác mới có envelope, `data` để trống schema (bất kỳ JSON), shape xem Part A.
+- Frontend: `npm run typegen:backend` sinh `frontend/src/lib/api/backend-generated-types.ts`
+  bằng `openapi-typescript`, chỉ dùng làm type. Không sinh fetch client (ADR-003): allowlist
+  path trong `backend-client.ts` và Zod parse tại BFF giữ nguyên; test
+  `backend-openapi-contract.spec.ts` bắt type sinh phải fresh và mọi response đã document
+  của call BFF phải qua được Zod schema tương ứng.
+- Swagger UI `/api/docs` (JSON `/api/docs-json`) chỉ bật khi `NODE_ENV=development`; tắt
+  ở `test` và `production`.
 
 ## 1. Quy ước thực tế
 
@@ -399,7 +417,9 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 
 ## Part B — Dự kiến
 
-Chưa có controller. Cột milestone theo roadmap §6.
+Chưa có controller. Cột milestone theo roadmap §6. Endpoint đã triển khai: Part A và
+spec sinh [`backend/openapi.json`](../../backend/openapi.json); endpoint dưới đây khi có
+code sẽ tự vào spec đó.
 
 | Method | Path | Mục đích | Milestone |
 | --- | --- | --- | --- |
@@ -417,7 +437,6 @@ Chưa có controller. Cột milestone theo roadmap §6.
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |
 | `POST` | `/support/tickets`, `/reports` | Support / Trust & Safety | M5 |
-| — | `/api/docs` (OpenAPI sinh từ code) | Tài liệu API | M6 |
 | CRUD | `/materials`, `/materials/upload` | Tài liệu học | M7+ |
 | `POST` | `/ai/chat`, `/ai/retrieve` | AI gateway (ADR-008 §6) | M7+ |
 

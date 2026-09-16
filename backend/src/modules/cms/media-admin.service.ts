@@ -8,10 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import {
-  ApiSuccessResponse,
-  PaginationMeta,
-} from '../../common/interfaces/api-response.interface';
+import { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import { PrismaService } from '../../prisma/prisma.service';
 
 import {
@@ -21,6 +18,7 @@ import {
 } from './cms-workflow';
 import { lockActiveCmsActor } from './cms-actor-lock';
 import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
+import { AdminMediaDto } from './dto/admin-media-response.dto';
 import {
   mediaLifecycleDecision,
   MediaLifecycleOperation,
@@ -80,7 +78,7 @@ export class MediaAdminService {
   async listMedia(
     actor: CmsActor,
     query: AdminMediaQueryDto,
-  ): Promise<ApiSuccessResponse<unknown[], PaginationMeta>> {
+  ): Promise<ApiSuccessResponse<AdminMediaDto[]>> {
     assertAdminActor(actor);
     const where: Prisma.MediaWhereInput = {
       ...(query.type ? { type: query.type } : {}),

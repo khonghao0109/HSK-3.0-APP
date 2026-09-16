@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { backendEnvelope } from '@/lib/api/backend-envelope';
+
 export const authUserSchema = z.object({
   id: z.number().int().positive(),
   email: z.string().email(),
@@ -18,6 +20,10 @@ export const loginResponseSchema = z.object({
 });
 
 export const meResponseSchema = z.object({ user: authUserSchema });
+
+// Backend → BFF: the global envelope, resolved to `{ success: true, data }`.
+export const backendLoginSchema = backendEnvelope(loginResponseSchema);
+export const backendMeSchema = backendEnvelope(meResponseSchema);
 
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;

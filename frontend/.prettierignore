@@ -1,5 +1,6 @@
 .next
 next-env.d.ts
+src/lib/api/backend-generated-types.ts
 coverage
 node_modules
 package-lock.json
