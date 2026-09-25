@@ -1180,6 +1180,12 @@ describe('Media ingestion stale-attempt fencing', () => {
           dataSourceId: fixture.source.id,
           idempotencyKeyHash: sha256(Buffer.from(fixture.key)),
           requestFingerprint: sha256(Buffer.from(randomUUID())),
+          // Prisma generates @default(now()) client-side, after this interactive
+          // transaction began, while the lifecycle trigger stamps
+          // cleanupRequiredAt with the DB transaction start. In a UTC session
+          // that can be 1 ms earlier and violate cleanupRequiredAt >= startedAt;
+          // the old non-UTC local session hid this behind a +7 h offset.
+          startedAt: new Date(Date.now() - 60_000),
           status: 'cleanup_required',
           originalFilename: fixture.file.originalname,
           declaredMimeType: fixture.file.mimetype,

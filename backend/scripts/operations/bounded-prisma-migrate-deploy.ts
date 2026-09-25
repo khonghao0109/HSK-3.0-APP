@@ -456,6 +456,9 @@ export function buildBoundedPgOptions(
     `-c lock_timeout=${String(timeouts.lock)}ms`,
     `-c statement_timeout=${String(timeouts.statement)}ms`,
     `-c idle_in_transaction_session_timeout=${String(timeouts.idleInTransaction)}ms`,
+    // Migrations compare timestamp(3) columns with clock_timestamp(); the
+    // session must not inherit a non-UTC server TimeZone.
+    '-c TimeZone=UTC',
   ].join(' ');
 }
 

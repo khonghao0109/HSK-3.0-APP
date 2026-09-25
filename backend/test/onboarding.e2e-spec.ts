@@ -492,6 +492,87 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     currentPlanId = first.body.data.id as number;
   });
 
+  it('14b. enforces one active goal and plan per user for writers outside the service lock', async () => {
+    const bypassUser = await prisma.user.create({
+      data: {
+        email: `onboarding-index-${suffix}@example.com`,
+        password: 'synthetic-not-a-secret',
+      },
+      select: { id: true },
+    });
+    const startDate = new Date('2026-08-12T00:00:00.000Z');
+
+    const goalWrites = await Promise.allSettled(
+      [30, 45].map((dailyMinutes) =>
+        prisma.userGoal.create({
+          data: {
+            userId: bypassUser.id,
+            targetLevelId: levelId,
+            targetBand: 4,
+            dailyMinutes,
+            startDate,
+            isActive: true,
+          },
+        }),
+      ),
+    );
+    const planWrites = await Promise.allSettled(
+      [0, 1].map(() =>
+        prisma.learningPlan.create({
+          data: {
+            userId: bypassUser.id,
+            targetLevelId: levelId,
+            targetBand: 4,
+            status: 'active',
+            startDate,
+          },
+        }),
+      ),
+    );
+
+    for (const writes of [goalWrites, planWrites]) {
+      expect(
+        writes.filter(({ status }) => status === 'fulfilled'),
+      ).toHaveLength(1);
+      const rejected = writes.filter(
+        (write): write is PromiseRejectedResult => write.status === 'rejected',
+      );
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0].reason).toMatchObject({ code: 'P2002' });
+    }
+    expect(
+      await prisma.userGoal.count({
+        where: { userId: bypassUser.id, isActive: true },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.learningPlan.count({
+        where: { userId: bypassUser.id, status: 'active' },
+      }),
+    ).toBe(1);
+
+    // Inactive history is not constrained by the partial indexes.
+    await prisma.userGoal.create({
+      data: {
+        userId: bypassUser.id,
+        targetLevelId: levelId,
+        targetBand: 4,
+        dailyMinutes: 60,
+        startDate,
+        isActive: false,
+      },
+    });
+    await prisma.learningPlan.create({
+      data: {
+        userId: bypassUser.id,
+        targetLevelId: levelId,
+        targetBand: 4,
+        status: 'cancelled',
+        startDate,
+      },
+    });
+  });
+
   it('15. prevents User B from reading or targeting User A onboarding state', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')

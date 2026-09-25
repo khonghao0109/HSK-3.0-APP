@@ -1,6 +1,6 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.9.0`
+> Phiên bản runbook: `1.10.0`
 > Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
@@ -23,9 +23,10 @@
 | MED-T  | `20260813163000_media_lifecycle_telemetry_truthfulness`  | Terminal-state/fencing/DB-owned timestamp cho MediaIngestion; failureCode và telemetry truthfulness.        |
 | MED-A  | `20260813193000_media_cleanup_audit_integrity`           | Ràng buộc AuditLog ↔ MediaIngestion cleanup (deferred constraint trigger); preflight từ chối row processing. |
 | RL-C   | `20260914090000_rate_limit_counter`                      | Bảng purgeable `RateLimitCounter` cho throttler toàn cục dùng chung giữa các replica (mục 18).             |
+| ONB-U  | `20260916090000_user_active_goal_plan_unique`            | Partial unique index: tối đa một `UserGoal` active và một `LearningPlan` active mỗi user (mục 20).         |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 20 migration (đến `20260914090000_rate_limit_counter`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 21 migration (đến `20260916090000_user_active_goal_plan_unique`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -810,7 +811,7 @@ record. Resolver không đọc biến này.
 
 - `test:db:media-migration` tính trạng thái bắt đầu là prefix catalog đến
   `20260813120000_media_provenance_provider_hardening` và yêu cầu deploy áp **toàn bộ**
-  migration còn lại theo đúng thứ tự source (hiện 3 migration: MED-T, MED-A, RL-C).
+  migration còn lại theo đúng thứ tự source (hiện 4 migration: MED-T, MED-A, RL-C, ONB-U).
 - `test:db:media-migration:release` so catalog với số migration source thật, dựng root lịch
   sử "first17/first18" bằng prefix catalog (không lẫn migration mới hơn), tính số migration
   kỳ vọng sau rollback từ vị trí của MED-A và gọi resolver với
@@ -826,3 +827,71 @@ TEST_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_upgrade_test' \
 MEDIA_MIGRATION_SHADOW_DATABASE_URL='postgresql://USER@127.0.0.1:PORT/hsk_media_shadow_test' \
 npm run test:db:media-migration
 ```
+
+## 20. Active goal/plan uniqueness và session UTC (H.11b)
+
+### 20.1. Migration 21 — `20260916090000_user_active_goal_plan_unique` (C-04)
+
+Nghiệp vụ: mỗi user có tối đa một `UserGoal` với `isActive = true` và một `LearningPlan`
+với `status = 'active'`. `OnboardingService` vẫn serialize writer bằng
+`User FOR UPDATE`; migration thêm backstop ở database cho mọi writer khác (script, SQL
+vận hành, code tương lai):
+
+```sql
+CREATE UNIQUE INDEX "UserGoal_userId_active_key" ON "UserGoal" ("userId") WHERE "isActive" = true;
+CREATE UNIQUE INDEX "LearningPlan_userId_active_key" ON "LearningPlan" ("userId") WHERE "status" = 'active';
+```
+
+Thứ tự trong file: `LOCK TABLE "UserGoal"` rồi `"LearningPlan"` `IN SHARE MODE` (chặn
+insert/update giữa preflight và build index), preflight `P0001` đếm số user có nhiều hơn
+một goal/plan active (chỉ in số lượng, không in ID), rồi hai index. Không có
+`BEGIN/COMMIT` (mục 19.1). `SHARE` chặn writer của hai bảng trong lúc build index; với
+bảng lớn cần maintenance window và cân nhắc `MIGRATION_STATEMENT_TIMEOUT_MS` (mục 19.3).
+
+Nếu preflight fail (`P3018` + `P0001`, index không được tạo, row `_prisma_migrations`
+unfinished, retry bị `P3009`):
+
+1. Giữ writer onboarding tắt; lấy danh sách user vi phạm bằng query đếm tương tự preflight.
+2. Data owner duyệt sửa: goal cũ hơn → `isActive = false`, plan cũ hơn →
+   `status = 'cancelled'`. Không hard-delete.
+3. `npm run migrate:resolve:rolled-back:production -- --target-migration 20260916090000_user_active_goal_plan_unique`
+4. `npm run migrate:deploy:production` và `prisma migrate status`.
+
+Đã rehearsal trên disposable database ngày 2026-09-16: dữ liệu có 2 goal active → deploy
+báo `P3018`/`P0001`, không có index, row lỗi giữ log, retry `P3009`; sau khi sửa dữ liệu,
+resolver xác minh `expected_successful=20` và deploy tiếp thành công.
+
+Quy ước partial unique index: Prisma 5.22 không biểu diễn được predicate `WHERE` trong
+`schema.prisma`, nên index chỉ nằm trong migration SQL, như các index
+`Word_public_*_prefix_idx`. `migrate diff` hai chiều vẫn rỗng (đã kiểm chứng). Đặt tên
+`<Model>_<cột>_<điều kiện>_key`, và tài liệu hoá predicate trong runbook.
+
+Hành vi API: hai request đồng thời đổi goal hoặc tạo plan vẫn chạy tuần tự nhờ lock và
+cùng trả `201` (e2e onboarding test 13/14). Nếu index chặn một ghi đồng thời (Prisma
+`P2002`), service trả `409 Conflict` với thông điệp retry thay vì `500`. E2E `14b` chứng minh
+hai insert đồng thời bỏ qua service chỉ thành công một, cái còn lại nhận `P2002`, và row
+inactive/cancelled không bị ràng buộc.
+
+### 20.2. Session PostgreSQL luôn UTC (C-05)
+
+Cột thời gian là `timestamp(3)` không time zone, còn trigger/migration so sánh với
+`clock_timestamp()::timestamp(3)`, phép cast này theo `TimeZone` của session. Server
+PostgreSQL có thể không chạy UTC (cluster local Homebrew đang cấu hình
+`Asia/Ho_Chi_Minh`), nên:
+
+- `PrismaService` và `database.config.ts` luôn gắn `options=-c TimeZone=UTC` vào
+  `DATABASE_URL` (`src/prisma/utc-session-database-url.ts`). Các startup option khác được giữ,
+  còn mọi `TimeZone`/`timezone` do caller truyền đều bị thay bằng UTC. Options truyền qua
+  constructor (các concurrency runner) cũng được ghim.
+- `migrate:deploy:production` và resolver thêm `-c TimeZone=UTC` vào URL `options` và
+  `PGOPTIONS` cùng các timeout.
+- Không đổi kiểu cột sang `timestamptz` hay viết lại trigger trong H.11b; mọi phiên ghi của
+  ứng dụng và migration đã được ghim UTC. Client khác (psql vận hành, BI) phải tự
+  `SET TIME ZONE 'UTC'` hoặc dùng `PGTZ=UTC`.
+- Không tự thêm `connection_limit`: giá trị pool phải dựa trên đo tải (ADR-008). Nếu
+  `DATABASE_URL` đã có tham số này thì được giữ nguyên.
+
+Test: `src/prisma/utc-session-database-url.spec.ts` (unit) và
+`test/database-session-timezone.e2e-spec.ts`: phiên Prisma trả `current_setting('TimeZone') = 'UTC'`,
+kể cả khi URL cố ý truyền `-c TimeZone=Asia/Ho_Chi_Minh`, và
+`clock_timestamp()::timestamp(3)` khớp đồng hồ UTC của Node.

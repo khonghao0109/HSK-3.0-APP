@@ -382,11 +382,11 @@ void test('owns the production Prisma deploy timeout and environment contract', 
 
   assert.equal(
     databaseUrl.searchParams.get('options'),
-    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms',
+    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms -c TimeZone=UTC',
   );
   assert.equal(
     environment.PGOPTIONS,
-    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms',
+    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms -c TimeZone=UTC',
   );
   assert.equal(databaseUrl.searchParams.getAll('options').length, 1);
   assert.equal(environment.PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK, undefined);
@@ -1488,7 +1488,7 @@ void test('accepts only the two exact Prisma timestamp-drift abort shapes', () =
 void test('builds bounded PostgreSQL session timeouts for migration deploy', () => {
   assert.equal(
     buildPgOptions(),
-    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms',
+    '-c lock_timeout=2000ms -c statement_timeout=30000ms -c idle_in_transaction_session_timeout=35000ms -c TimeZone=UTC',
   );
 });
 
@@ -1742,7 +1742,7 @@ void test('widens statement-bound deadlines only through the bounded override', 
         widened,
       ).DATABASE_URL ?? '',
     ).searchParams.get('options'),
-    '-c lock_timeout=2000ms -c statement_timeout=600000ms -c idle_in_transaction_session_timeout=605000ms',
+    '-c lock_timeout=2000ms -c statement_timeout=600000ms -c idle_in_transaction_session_timeout=605000ms -c TimeZone=UTC',
   );
   for (const value of [
     '',
