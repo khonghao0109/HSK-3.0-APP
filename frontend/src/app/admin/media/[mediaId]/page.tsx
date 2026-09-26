@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { MediaDetail } from '@/features/media/media-detail';
@@ -22,6 +22,10 @@ export default async function MediaDetailPage({
   } catch (error) {
     if (error instanceof BackendRequestError && error.status === 401)
       redirectToSessionLogin();
+    // Layouts do not re-render on client navigation, so the admin layout's
+    // role check can be stale; the backend's per-request 403 is authoritative.
+    if (error instanceof BackendRequestError && error.status === 403)
+      redirect('/forbidden');
     if (error instanceof BackendRequestError && error.status === 404)
       notFound();
     throw error;

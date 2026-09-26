@@ -41,16 +41,21 @@ describe('generated Next.js type artifacts', () => {
   });
 
   it('keeps unauthenticated RSC redirects on a page route', () => {
+    // Pages repeat the check because the layout does not re-render on client
+    // navigation (Next.js partial rendering), so its role check can be stale.
     const protectedFiles = [
       'src/app/admin/layout.tsx',
       'src/app/admin/exercises/page.tsx',
       'src/app/admin/exercises/[exerciseId]/page.tsx',
+      'src/app/admin/media/page.tsx',
+      'src/app/admin/media/[mediaId]/page.tsx',
     ];
 
     for (const file of protectedFiles) {
       const source = readFileSync(resolve(frontendRoot, file), 'utf8');
       expect(source).not.toContain("redirect('/api/session/logout')");
       expect(source).toContain('redirectToSessionLogin');
+      expect(source).toContain("redirect('/forbidden')");
     }
 
     const logoutRoute = readFileSync(

@@ -164,9 +164,16 @@ export async function handleSessionMe(
     if (user.role !== 'admin') return safeResponse(403);
     return noStore(NextResponse.json({ success: true, user }));
   } catch (error) {
-    const response = safeResponse(statusFromError(error) === 403 ? 403 : 401);
-    setClearedCookie(response, deps);
-    return response;
+    const status = statusFromError(error);
+    // Only an authentication verdict ends the session. A backend restart,
+    // timeout or unreadable body is transient and keeps the cookie, so an
+    // outage does not log a valid admin out (E-01).
+    if (status === 401 || status === 403) {
+      const response = safeResponse(status);
+      setClearedCookie(response, deps);
+      return response;
+    }
+    return safeResponse([502, 503, 504].includes(status) ? 503 : 500);
   }
 }
 

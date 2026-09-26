@@ -410,10 +410,16 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/session/login` | `POST` | Origin + credentials → backend login → set cookie; response không có token |
 | `/api/session/logout` | `POST` | Origin → xoá cookie |
 | `/api/session/recover` | `POST` | Xoá cookie khi backend trả 401/403 (fail-closed) |
-| `/api/session/me` | `GET` | Đối chiếu cookie với `/auth/me`; hiện không có consumer (E-01) |
-| `/api/admin/exercises`, `/api/admin/exercises/:id` | `GET` | Allowlisted read; response lột `answer` top-level; không có consumer (E-01) |
-| `/api/admin/media`, `/api/admin/media/:id` | `GET` | Allowlisted read; không có consumer (E-01) |
+| `/api/session/me` | `GET` | Đối chiếu cookie với `/auth/me`. Chỉ xoá cookie khi backend trả 401/403; 5xx, timeout hay body sai giữ cookie và trả `503` (502/503/504) hoặc `500` (E-01). Không có UI consumer; Playwright dùng để kiểm header bảo mật |
 | `/api/admin/media/:id/quarantine`, `/archive` | `POST` | Mutation an toàn có Origin check; UI dùng |
+
+Trang admin đọc dữ liệu bằng Server Component gọi thẳng backend (`exercise-service.ts`,
+`media-service.ts`), không qua BFF route. Bốn route `GET` `/api/admin/exercises`,
+`/api/admin/exercises/:id`, `/api/admin/media`, `/api/admin/media/:id` không có consumer
+nên đã bị xoá (H.14, E-01) để thu hẹp bề mặt tấn công; thêm lại route đọc cho client
+component phải kèm redact `answer`/snapshot và `media.url` cùng test. Layout admin không
+render lại khi điều hướng client, nên mỗi trang admin tự map lỗi backend `401` → login và
+`403` → `/forbidden`.
 
 ## Part B — Dự kiến
 

@@ -205,6 +205,46 @@ describe('session BFF handlers', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  it('clears the session when /auth/me rejects the token as forbidden', async () => {
+    const response = await handleSessionMe(
+      new NextRequest('http://frontend.example.test/api/session/me', {
+        headers: { cookie: `hsk_admin_session=${jwt()}` },
+      }),
+      dependencies({
+        loadCurrentUser: vi.fn().mockRejectedValue({ status: 403 }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    expect(response.headers.get('set-cookie')).toContain('Max-Age=0');
+  });
+
+  it.each([
+    ['backend 500', { status: 500 }, 500],
+    ['backend 502', { status: 502 }, 503],
+    ['backend 503', { status: 503 }, 503],
+    ['upstream timeout', { status: 503, kind: 'timeout' }, 503],
+    ['network failure without status', new TypeError('fetch failed'), 500],
+    ['unreadable user body', { id: 'not-a-number' }, 500],
+  ])(
+    'keeps the session cookie on a transient %s',
+    async (_label, failure, expectedStatus) => {
+      const loadCurrentUser =
+        failure instanceof Error || 'status' in failure
+          ? vi.fn().mockRejectedValue(failure)
+          : vi.fn().mockResolvedValue(failure);
+      const response = await handleSessionMe(
+        new NextRequest('http://frontend.example.test/api/session/me', {
+          headers: { cookie: `hsk_admin_session=${jwt()}` },
+        }),
+        dependencies({ loadCurrentUser }),
+      );
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers.get('set-cookie')).toBeNull();
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(await response.json()).toMatchObject({ success: false });
+    },
+  );
+
   it.each([401, 403])(
     'classifies backend HTTP %i as an invalid session without mutating the cookie',
     async (backendStatus) => {
