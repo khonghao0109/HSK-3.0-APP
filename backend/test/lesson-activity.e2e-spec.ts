@@ -1107,6 +1107,88 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     ).rejects.toBeDefined();
   });
 
+  it('20. replays inside the idempotency TTL and refuses an expired key', async () => {
+    const learner = await register('activity-ttl');
+    const postAs = (key: string) =>
+      request(app.getHttpServer())
+        .post(`/api/v1/learning/lessons/${lessonId}/start`)
+        .set('Authorization', `Bearer ${learner.token}`)
+        .set('Idempotency-Key', key)
+        .send({});
+
+    const first = await postAs('activity-ttl-fresh-001').expect(201);
+    const replay = await postAs('activity-ttl-fresh-001').expect(201);
+    expect(replay.body.data).toEqual(first.body.data);
+
+    // The immutable-event triggers refuse UPDATE, so the aged key is stored as
+    // an already-expired row instead of back-dating the replayed one.
+    const expiredAt = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    await prisma.learningEvent.create({
+      data: {
+        userId: learner.userId,
+        type: 'lesson_started',
+        lessonId,
+        idempotencyKey: 'activity-ttl-expired-001',
+        occurredAt: expiredAt,
+        createdAt: expiredAt,
+      },
+    });
+
+    const expired = await postAs('activity-ttl-expired-001').expect(400);
+    expect(expired.body).toMatchObject({
+      success: false,
+      error: {
+        message: 'Idempotency-Key has expired. Please use a fresh key.',
+      },
+    });
+    await expect(
+      prisma.learningEvent.count({ where: { userId: learner.userId } }),
+    ).resolves.toBe(2);
+  });
+
+  it('21. rejects an over-nested answer without a server fault', async () => {
+    // Above the depth where the previously unbounded canonical-JSON walk threw
+    // RangeError: Maximum call stack size exceeded and surfaced as a 500.
+    let answer: unknown = 'leaf';
+    for (let level = 0; level < 5_000; level += 1) answer = { nested: answer };
+
+    const response = await post(
+      `/learning/exercises/${mcqId}/attempts`,
+      'deep-answer-key-01',
+    )
+      .send({ answer, durationSeconds: 3 })
+      .expect(400);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Payload exceeds maximum nesting depth of 32.' },
+    });
+
+    // Between the edge bound and the canonical-JSON bound the request reaches
+    // the idempotency hash, which rejects it just as clearly.
+    let mildlyNested: unknown = 'leaf';
+    for (let level = 0; level < 20; level += 1) {
+      mildlyNested = { nested: mildlyNested };
+    }
+    const nestedResponse = await post(
+      `/learning/exercises/${mcqId}/attempts`,
+      'deep-answer-key-03',
+    )
+      .send({ answer: mildlyNested, durationSeconds: 3 })
+      .expect(400);
+    expect(nestedResponse.body).toMatchObject({
+      success: false,
+      error: { message: 'Payload exceeds maximum nesting depth of 16.' },
+    });
+
+    // The request left no activity behind and the process still serves traffic.
+    await expect(
+      prisma.learningEvent.count({
+        where: { userId, idempotencyKey: 'deep-answer-key-01' },
+      }),
+    ).resolves.toBe(0);
+    await get('/progress/lessons').expect(200);
+  });
+
   function post(path: string, key?: string) {
     const builder = request(app.getHttpServer())
       .post(`/api/v1${path}`)

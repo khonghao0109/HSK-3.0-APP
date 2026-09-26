@@ -21,6 +21,7 @@ import {
 } from '../public-exercise.policy';
 import { SubmitLessonExerciseAttemptDto } from './dto/lesson-activity-write.dto';
 import {
+  assertIdempotencyKeyWithinTtl,
   buildActivityRequestHash,
   parseIdempotencyKey,
 } from './lesson-activity-idempotency';
@@ -112,6 +113,7 @@ type StoredEvent = {
   exerciseId: number | null;
   attemptId: number | null;
   occurredAt: Date;
+  createdAt: Date;
 };
 
 type ActivityFacts = {
@@ -1029,10 +1031,14 @@ export class LessonActivityService {
     userId: number,
     idempotencyKey: string,
   ): Promise<StoredEvent | null> {
-    return tx.learningEvent.findUnique({
+    const event = await tx.learningEvent.findUnique({
       where: { userId_idempotencyKey: { userId, idempotencyKey } },
       select: this.eventSelect(),
     });
+    // An expired key is refused rather than replayed: the stored write stays
+    // authoritative, and the client must retry with a fresh key.
+    if (event) assertIdempotencyKeyWithinTtl(event.createdAt);
+    return event;
   }
 
   private assertEvent(
@@ -1092,6 +1098,7 @@ export class LessonActivityService {
       exerciseId: true,
       attemptId: true,
       occurredAt: true,
+      createdAt: true,
     } as const;
   }
 

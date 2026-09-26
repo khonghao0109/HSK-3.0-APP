@@ -9,6 +9,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { JsonBodyDepthMiddleware } from './common/middleware/json-body-depth.middleware';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
@@ -75,6 +76,8 @@ import { PrismaModule } from './prisma/prisma.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware).forRoutes('{*splat}');
+    consumer
+      .apply(RequestIdMiddleware, JsonBodyDepthMiddleware)
+      .forRoutes('{*splat}');
   }
 }

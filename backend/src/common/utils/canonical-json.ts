@@ -1,14 +1,44 @@
 import { createHash } from 'node:crypto';
 
-export function canonicalJson(value: unknown): string {
-  return serializeCanonicalValue(value);
+// Serialization recurses once per nested container, so unvalidated input (an
+// activity `answer`, a CMS snapshot) must not be allowed to drive the stack.
+// The bound is a backstop: callers that own a stricter contract, such as
+// LESSON_EXERCISE_AUTHORING_LIMITS.maxDepth, still reject earlier.
+export const CANONICAL_JSON_MAX_DEPTH = 16;
+
+export class CanonicalJsonDepthError extends TypeError {
+  constructor(readonly maxDepth: number) {
+    super(`Canonical JSON exceeds the maximum nesting depth of ${maxDepth}.`);
+    this.name = 'CanonicalJsonDepthError';
+  }
 }
 
-export function sha256CanonicalJson(value: unknown): string {
-  return createHash('sha256').update(canonicalJson(value)).digest('hex');
+export function canonicalJson(
+  value: unknown,
+  maxDepth: number = CANONICAL_JSON_MAX_DEPTH,
+): string {
+  if (!Number.isInteger(maxDepth) || maxDepth < 1) {
+    throw new TypeError(
+      'Canonical JSON maximum depth must be a positive integer.',
+    );
+  }
+  return serializeCanonicalValue(value, maxDepth, maxDepth);
 }
 
-function serializeCanonicalValue(value: unknown): string {
+export function sha256CanonicalJson(
+  value: unknown,
+  maxDepth: number = CANONICAL_JSON_MAX_DEPTH,
+): string {
+  return createHash('sha256')
+    .update(canonicalJson(value, maxDepth))
+    .digest('hex');
+}
+
+function serializeCanonicalValue(
+  value: unknown,
+  remainingDepth: number,
+  maxDepth: number,
+): string {
   if (value === null) return 'null';
 
   if (typeof value === 'string' || typeof value === 'boolean') {
@@ -25,10 +55,16 @@ function serializeCanonicalValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    return `[${value.map((item) => serializeCanonicalValue(item)).join(',')}]`;
+    assertRemainingDepth(remainingDepth, maxDepth);
+    return `[${value
+      .map((item) =>
+        serializeCanonicalValue(item, remainingDepth - 1, maxDepth),
+      )
+      .join(',')}]`;
   }
 
   if (typeof value === 'object') {
+    assertRemainingDepth(remainingDepth, maxDepth);
     const prototype = Object.getPrototypeOf(value) as unknown;
     if (prototype !== Object.prototype && prototype !== null) {
       throw new TypeError('Canonical JSON only supports plain objects.');
@@ -42,12 +78,22 @@ function serializeCanonicalValue(value: unknown): string {
         if (entryValue === undefined) {
           throw new TypeError('Canonical JSON does not support undefined.');
         }
-        return `${JSON.stringify(key)}:${serializeCanonicalValue(entryValue)}`;
+        return `${JSON.stringify(key)}:${serializeCanonicalValue(
+          entryValue,
+          remainingDepth - 1,
+          maxDepth,
+        )}`;
       });
     return `{${entries.join(',')}}`;
   }
 
   throw new TypeError(`Canonical JSON does not support ${typeof value}.`);
+}
+
+function assertRemainingDepth(remainingDepth: number, maxDepth: number): void {
+  if (remainingDepth <= 0) {
+    throw new CanonicalJsonDepthError(maxDepth);
+  }
 }
 
 function compareUtf16CodeUnits(left: string, right: string): number {

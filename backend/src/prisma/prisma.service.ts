@@ -1,7 +1,7 @@
 import {
-  INestApplication,
   Inject,
   Injectable,
+  OnModuleDestroy,
   OnModuleInit,
   Optional,
 } from '@nestjs/common';
@@ -12,7 +12,10 @@ import { withUtcSessionTimeZone } from './utc-session-database-url';
 export const PRISMA_CLIENT_OPTIONS = Symbol('PRISMA_CLIENT_OPTIONS');
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor(
     @Optional()
     @Inject(PRISMA_CLIENT_OPTIONS)
@@ -25,10 +28,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect();
   }
 
-  enableShutdownHooks(app: INestApplication) {
-    process.on('beforeExit', () => {
-      void app.close();
-    });
+  // Nest runs this on app.close() and, with enableShutdownHooks() in main.ts,
+  // on SIGTERM/SIGINT; it releases the pooled PostgreSQL connections instead of
+  // leaving them for the process to drop.
+  async onModuleDestroy() {
+    await this.$disconnect();
   }
 }
 
