@@ -126,6 +126,74 @@ describe('S3ObjectStorageAdapter contract', () => {
     expect(send).toHaveBeenCalledTimes(1);
   });
 
+  it('aborts a storage request when external signal aborts before timeout', async () => {
+    const controller = new AbortController();
+    const send = jest.fn(
+      (_command: PutObjectCommand, options: { abortSignal: AbortSignal }) =>
+        new Promise((_, reject) => {
+          options.abortSignal.addEventListener('abort', () => {
+            reject(
+              Object.assign(new Error('synthetic client abort'), {
+                name: 'AbortError',
+              }),
+            );
+          });
+        }),
+    );
+    const adapter = createAdapter(send, 5_000);
+
+    const putPromise = adapter.putPrivateObject(
+      {
+        key: 'media/2026/08/external-abort.png',
+        body,
+        contentType: 'image/png',
+        checksum,
+      },
+      { signal: controller.signal },
+    );
+
+    setTimeout(() => controller.abort(), 10);
+
+    await expect(putPromise).rejects.toEqual(
+      expect.objectContaining({
+        name: ObjectStorageWriteError.name,
+        outcome: 'unknown',
+      }),
+    );
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('aborts a storage request immediately when external signal is already aborted', async () => {
+    const send = jest.fn(
+      (_command: PutObjectCommand, options: { abortSignal: AbortSignal }) => {
+        if (options.abortSignal.aborted) {
+          return Promise.reject(
+            Object.assign(new Error('aborted'), { name: 'AbortError' }),
+          );
+        }
+        return Promise.resolve({});
+      },
+    );
+    const adapter = createAdapter(send, 5_000);
+
+    await expect(
+      adapter.putPrivateObject(
+        {
+          key: 'media/2026/08/pre-aborted.png',
+          body,
+          contentType: 'image/png',
+          checksum,
+        },
+        { signal: AbortSignal.abort() },
+      ),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        name: ObjectStorageWriteError.name,
+        outcome: 'unknown',
+      }),
+    );
+  });
+
   it('enforces its deadline even when a client send ignores the abort signal', async () => {
     let requestSignal: AbortSignal | undefined;
     const send = jest.fn(

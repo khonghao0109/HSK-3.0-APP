@@ -41,12 +41,15 @@ export class ObjectStorageWriteError extends Error {
 
 export interface ObjectStoragePort {
   readonly provider: string;
-  putPrivateObject(input: {
-    key: string;
-    body: Buffer;
-    contentType: string;
-    checksum: string;
-  }): Promise<void>;
+  putPrivateObject(
+    input: {
+      key: string;
+      body: Buffer;
+      contentType: string;
+      checksum: string;
+    },
+    options?: { signal?: AbortSignal },
+  ): Promise<void>;
   privateObjectExists(key: string): Promise<boolean>;
   getPrivateObject(key: string): Promise<StoredObject>;
   deletePrivateObject(key: string): Promise<void>;

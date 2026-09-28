@@ -23,12 +23,18 @@ export class InMemoryObjectStorageAdapter implements ObjectStoragePort {
       }
     | undefined;
 
-  putPrivateObject(input: {
-    key: string;
-    body: Buffer;
-    contentType: string;
-    checksum: string;
-  }): Promise<void> {
+  putPrivateObject(
+    input: {
+      key: string;
+      body: Buffer;
+      contentType: string;
+      checksum: string;
+    },
+    options?: { signal?: AbortSignal },
+  ): Promise<void> {
+    if (options?.signal?.aborted) {
+      return Promise.reject(new ObjectStorageWriteError('unknown'));
+    }
     if (this.nextPutFailure) {
       this.nextPutFailure = false;
       return Promise.reject(

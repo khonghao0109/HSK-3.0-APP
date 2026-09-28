@@ -49,13 +49,19 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
     this.requestTimeoutMs = requestTimeoutMs;
   }
 
-  async putPrivateObject(input: {
-    key: string;
-    body: Buffer;
-    contentType: string;
-    checksum: string;
-  }): Promise<void> {
+  async putPrivateObject(
+    input: {
+      key: string;
+      body: Buffer;
+      contentType: string;
+      checksum: string;
+    },
+    options?: { signal?: AbortSignal },
+  ): Promise<void> {
     const deadline = new StorageOperationDeadline(this.requestTimeoutMs);
+    const combinedSignal = options?.signal
+      ? AbortSignal.any([deadline.signal, options.signal])
+      : deadline.signal;
     try {
       await deadline.race(
         this.client.send(
@@ -71,7 +77,7 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
             ServerSideEncryption: 'AES256',
             Metadata: { sha256: input.checksum },
           }),
-          { abortSignal: deadline.signal },
+          { abortSignal: combinedSignal },
         ),
       );
     } catch (error: unknown) {
