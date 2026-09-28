@@ -167,14 +167,14 @@ Vào: GĐ1 có CI để gate chạy trên Linux AMD64. Ra: không còn P0/P1 med
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M0.1 | Deadline/cancellation ClamAV 10 s, S3 8 s | ✅ | D-04 còn lại ở M0.E |
+| M0.1 | Deadline/cancellation ClamAV 10 s, S3 8 s | ✅ | |
 | M0.2 | Cleanup recovery, secret scan, availability SLI | ✅ | |
 | M0.3 | Forward-only migration, bounded lock deploy | 🟡 | script đã commit `6f74f5b`; H.11a ✅ `46396d7` (C-01, C-02 đóng) |
 | M0.4 | Validate K8s artifact, OCI identity, Linux AMD64 | 🟡 | gate chặn bởi producer policy; phụ thuộc #11 |
 | M0.5 | Owner, risk/decision register, evidence contract | 🟡 | roadmap đã commit; owner chưa gán |
 | #10 | Duyệt ADR-008 | 🔵 | Product Owner + Tech Lead |
 | #11 | Đóng băng harness release-evidence hay giữ (ADR-008 §8, A-04) | 🔵 | quyết định M0.4 ở lại hay chuyển M6.2 |
-| M0.E | Đóng P2 media còn lại: B-07 TTL signed URL và secret previous, D-04 AbortSignal upload; full gate GREEN | 🟡 | 28/09: B-07 grant learner cố định 60 s, `MEDIA_SIGNING_SECRET_PREVIOUS` chỉ verify (`f51c71b`); còn D-04 và full gate |
+| M0.E | Đóng P2 media còn lại: B-07 TTL signed URL và secret previous, D-04 AbortSignal upload; full gate GREEN | 🟡 | 28/09: B-07 (`f51c71b`); D-04 huỷ upload khi client ngắt/timeout + giới hạn concurrency `MEDIA_INGESTION_MAX_CONCURRENCY` 503; còn full gate Linux AMD64 (#11) |
 
 ### GĐ4 — Content/legal + Identity/Privacy, M1 (3–4 tuần)
 
@@ -363,7 +363,7 @@ Outcome: Media không còn P0/P1 nội bộ và có bằng chứng tái lập tr
 
 | # | Bước | Trạng thái | Bằng chứng / còn thiếu |
 | --- | --- | --- | --- |
-| M0.1 | Absolute deadline/cancellation cho ClamAV và S3 body stream | ✅ | `s3-object-storage.adapter.ts` deadline 8 s, `clamav-media-malware-scanner.ts` 10 s. Còn D-04: interceptor upload không huỷ công việc phía sau |
+| M0.1 | Absolute deadline/cancellation cho ClamAV và S3 body stream | ✅ | `s3-object-storage.adapter.ts` deadline 8 s, `clamav-media-malware-scanner.ts` 10 s. (D-04 đóng ở M0.E) |
 | M0.2 | Cleanup recovery, secret scanner false-negative, availability SLI truthful | ✅ | `media-ingestion.cleanup-recovery.spec.ts`, `scripts/security/secret-scan.ts`, `ops/observability/media-alerts.yml` |
 | M0.3 | Forward-only migration/preflight và bounded lock deployment | 🟡 | `scripts/operations/bounded-prisma-migrate-*.ts` đã commit `6f74f5b`; C-01, C-02 đóng ở H.11a `46396d7` |
 | M0.4 | Validate rendered Kubernetes artifact, OCI identity, Linux AMD64 | 🟡 | Harness có; gate không thể pass vì producer policy `HOST_ACCEPTANCE_REQUIRED` |
@@ -373,7 +373,7 @@ Exit criteria:
 
 | Điều kiện | Trạng thái |
 | --- | --- |
-| Không còn P0/P1 trong scope Media | ⬜ (B-04 đóng ở H.9 `e6e6620` trừ throttle 1.000/phút dưới `NODE_ENV=test`; B-07 xong TTL và secret previous `f51c71b`, gắn user chưa quyết; D-04 còn mở) |
+| Không còn P0/P1 trong scope Media | ⬜ (B-04 đóng ở H.9 `e6e6620` trừ throttle 1.000/phút dưới `NODE_ENV=test`; B-07 xong TTL và secret previous `f51c71b`, gắn user chưa quyết; D-04 đóng ở M0.E) |
 | Full internal gate GREEN trên Linux AMD64 | ⬜ |
 | Không trộn local evidence với immutable CI attestation | 🟡 |
 | Live Media Infrastructure Rehearsal | ⛔ BLOCKED_EXTERNAL (chưa có S3/ClamAV/proxy thật) |
@@ -567,8 +567,7 @@ khi vertical slice bắt đầu.
 
 1. H.2d: chủ repo bật branch protection `main`, rồi merge PR #5 khi ba check xanh.
 2. H.13 ✅: TypeScript 6 backend 6.0.3 exact (`58d5c5e`, run `36378049255`) → đóng GĐ1 (8/9, chỉ còn H.2d).
-3. GĐ3 M0.E: D-04 AbortSignal upload và full gate; song song duyệt ADR-008 (#10) và #11 để
-   biết M0.4 đi đâu.
+3. GĐ3 M0.E: D-04 đóng; song song duyệt ADR-008 (#10) và #11 để biết M0.4 đi đâu.
 4. GĐ4 theo đường găng: M1.4 session refresh/revoke (B-03), M1.5 mail; M1.1 chờ quyết định #2.
 5. M2.1 + M2.2 chỉ bắt đầu khi GĐ4 xong M1.4, M1.5 (điều kiện vào GĐ5).
 
@@ -596,3 +595,4 @@ khi vertical slice bắt đầu.
 | 26/09/2026 | GĐ2: H.14 ✅ sau khi Tech Lead duyệt. GĐ2 hoàn thành 14/14; tổng 48/131. |
 | 28/09/2026 | GĐ1: mở PR #5 `macdev` → `main` để CI chạy lần đầu trên GitHub (trước đó 0 run vì `ci.yml` chỉ chạy trên PR/push `main`). Run `36374888359` fail 1 e2e: payload lồng 5.000 cấp bị superagent serialize thành chuỗi placeholder trên Node 24; sửa `b79b8ed`. Run `36375778246` xanh cả `backend`, `backend-e2e`, `frontend` → H.2a, H.2b, H.2c ✅. H.2d ⬜: `main` chưa có branch protection. M0.E 🟡: `f51c71b` (B-07 TTL learner 60 s, `MEDIA_SIGNING_SECRET_PREVIOUS`). `270fb54`: secret scan fail từ `9272c58` do fixture không theo mẫu placeholder. Đồng bộ header, mục 1.1, 2, 4 (M0.3, exit M0, H.2), 7. Tổng 51/131. |
 | 28/09/2026 | GĐ1: H.13 ✅ (`58d5c5e`) nâng TypeScript backend lên 6.0.3 exact khớp frontend (ADR-008 §12), khai báo `rootDir: .` trong `backend/tsconfig.json` xử lý TS5011; PR #5 run `36378049255` xanh cả 3 job `backend`, `backend-e2e`, `frontend`. GĐ1 đạt 8/9 (chỉ còn H.2d do chủ repo bật branch protection); tổng 52/131. |
+| 28/09/2026 | GĐ3: M0.E phần D-04 (huỷ công việc upload media khi client ngắt/timeout và giới hạn concurrency ingestion per process với `MEDIA_INGESTION_MAX_CONCURRENCY`, 503 `MEDIA_INGESTION_BUSY` + `Retry-After: 1`, bồi hoàn S3 object an toàn state machine). M0.E vẫn giữ 🟡 vì full gate Linux AMD64 bị chặn bởi #11. Tổng 52/131. |

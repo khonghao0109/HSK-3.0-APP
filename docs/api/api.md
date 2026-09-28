@@ -378,12 +378,7 @@ Response có `Cache-Control: no-store`.
 usageCount, dataSourceId, uploadedById, updatedById, deletedAt, createdAt, updatedAt,
 dataSource: { id, code, name, version } }` — không URL, storageKey, checksum.
 
-Ingestion: `MEDIA_INGESTION_ENABLED=false` → từ chối; 5 request/admin/phút → `429`; quá
-size → `413` `error.code` `UPLOAD_TOO_LARGE`; multipart hỏng → `400`
-`error.code` `MULTIPART_INVALID`; file bị reject → `400/422`; đang processing hoặc cùng key
-khác request → `409`; scanner/storage timeout → `503`. Pipeline: validate bytes → ClamAV →
-sharp/music-metadata → ghi object private → commit Media + MediaIngestion + audit. Chi
-tiết ADR-005 và runbook.
+Ingestion: `MEDIA_INGESTION_ENABLED=false` → từ chối; giới hạn concurrency trong process qua `MEDIA_INGESTION_MAX_CONCURRENCY` (1–16, mặc định 4): khi đầy slot → fail fast trả `503` với `error.code` `MEDIA_INGESTION_BUSY` và header `Retry-After: 1`, không đọc body; 5 request/admin/phút → `429`; quá size → `413` `error.code` `UPLOAD_TOO_LARGE`; multipart hỏng hoặc client ngắt kết nối → `400` `error.code` `MULTIPART_INVALID` hoặc `MEDIA_UPLOAD_ABORTED`; upload timeout → `408` `MEDIA_UPLOAD_TIMEOUT`; file bị reject → `400/422`; đang processing hoặc cùng key khác request → `409`; scanner/storage timeout → `503`. Khi request chết (client ngắt hoặc timeout): công việc bị huỷ qua `AbortSignal`, huỷ socket scanner, huỷ S3 upload, và tự động bồi hoàn object nếu đã ghi để tránh object mồ côi. Pipeline: acquire concurrency slot → validate bytes → ClamAV → sharp/music-metadata → ghi object private → commit Media + MediaIngestion + audit. Chi tiết ADR-005 và runbook.
 
 ### A.11 Media signed access
 
