@@ -1,8 +1,8 @@
 # PLAN — Tiến độ dự án HSK 3.0
 
-> Cập nhật: 14/09/2026 · Baseline: branch `macdev`, HEAD `37e0198`
-> · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; chưa có learner app,
-> chưa có CI, chưa có hạ tầng production.
+> Cập nhật: 28/09/2026 · Baseline: branch `macdev`, HEAD `b79b8ed` (PR #5 vào `main`, chưa merge)
+> · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; CI chạy trên PR vào `main`
+> (run xanh đầu tiên ở PR #5); chưa có branch protection, learner app, hạ tầng production.
 
 Ký hiệu:
 
@@ -42,7 +42,7 @@ cam kết.
 | GĐ | Giai đoạn | Điều kiện ra | Task xong / tổng | Ước lượng | Trạng thái |
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
-| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 4 / 9 | 1–2 tuần | 🟡 |
+| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 7 / 9 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 15 | 3–4 tuần | ⬜ |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **48 / 131 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **51 / 131 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -131,10 +131,10 @@ Vào: GĐ0. Ra: mọi PR vào `main` có CI xanh; `npm run test:e2e` chạy từ
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | H.1 | Dọn worktree thành commit theo chủ đề; typo `npm.cd` revert | ✅ | 04/09: `b222926`, `29e1e4b`, `6f74f5b` |
-| H.2a | `ci.yml` backend: `npm ci --ignore-scripts`, `prisma validate`, lint, format, tsc, jest | 🟡 | 07/09: `f7c6d9b`, `665074d`. Chạy tay từ clone mới: 596/596 unit pass. Chờ run xanh trên GitHub |
-| H.2b | `ci.yml` backend e2e với Postgres service; tên DB kết thúc `test` | 🟡 | 07/09: `f7c6d9b`. Chạy tay theo đúng shape của CI: 163/163 pass. Service container chưa chạy thật |
-| H.2c | `ci.yml` frontend: lint, typecheck, vitest, `test:generated-types` | 🟡 | 07/09: `f7c6d9b`. Chạy tay từ clone mới: 101/101 vitest pass, generated-types PASS. Chờ run xanh |
-| H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | Cần chủ repo chạy tay; lệnh `gh api` ghi trong báo cáo GĐ1. Checks: `backend`, `backend-e2e`, `frontend` |
+| H.2a | `ci.yml` backend: `npm ci --ignore-scripts`, `prisma validate`, lint, format, tsc, jest | ✅ | 07/09: `f7c6d9b`, `665074d`. 28/09: job `backend` xanh trên GitHub, PR #5 run `36375778246` |
+| H.2b | `ci.yml` backend e2e với Postgres service; tên DB kết thúc `test` | ✅ | 07/09: `f7c6d9b`. 28/09: run đầu `36374888359` fail 1 case vì superagent serialize payload lồng 5.000 cấp thành chuỗi placeholder trên Node 24 (sửa `b79b8ed`); job `backend-e2e` xanh ở run `36375778246` |
+| H.2c | `ci.yml` frontend: lint, typecheck, vitest, `test:generated-types` | ✅ | 07/09: `f7c6d9b`. 28/09: job `frontend` xanh, PR #5 run `36375778246` |
+| H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | 28/09: GitHub trả `Branch not protected`. Cần chủ repo bật: required checks `backend`, `backend-e2e`, `frontend` từ app GitHub Actions, strict (nhánh phải cập nhật), áp cả admin, bắt buộc PR (0 approval vì một dev), cấm force-push và xoá nhánh |
 | H.3a | `docker-compose.yml`: Postgres 16 (profile mặc định), MinIO/ClamAV/Mailpit (profile `dev`) | ✅ | 07/09: `b011518`. Chọn `docker-compose.yml` + profile thay tên `docker-compose.test.yml` để `docker compose up -d` không cần cờ `-f` |
 | H.3b | `pretest:e2e` tạo DB disposable + migrate; docs một lệnh chạy e2e | ✅ | 07/09: `b011518`, `41f471d`, `1751aff`. Clone mới, không set biến nào: 163/163 pass, lặp lại vẫn 163/163 |
 | H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
@@ -174,7 +174,7 @@ Vào: GĐ1 có CI để gate chạy trên Linux AMD64. Ra: không còn P0/P1 med
 | M0.5 | Owner, risk/decision register, evidence contract | 🟡 | roadmap đã commit; owner chưa gán |
 | #10 | Duyệt ADR-008 | 🔵 | Product Owner + Tech Lead |
 | #11 | Đóng băng harness release-evidence hay giữ (ADR-008 §8, A-04) | 🔵 | quyết định M0.4 ở lại hay chuyển M6.2 |
-| M0.E | Đóng P2 media còn lại: B-07 TTL signed URL và secret previous, D-04 AbortSignal upload; full gate GREEN | ⬜ | |
+| M0.E | Đóng P2 media còn lại: B-07 TTL signed URL và secret previous, D-04 AbortSignal upload; full gate GREEN | 🟡 | 28/09: B-07 grant learner cố định 60 s, `MEDIA_SIGNING_SECRET_PREVIOUS` chỉ verify (`f51c71b`); còn D-04 và full gate |
 
 ### GĐ4 — Content/legal + Identity/Privacy, M1 (3–4 tuần)
 
@@ -310,7 +310,7 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | Milestone | Outcome | Trạng thái | Bước xong / tổng |
 | --- | --- | --- | --- |
 | M0 Media internal closeout | Media không còn P0/P1, gate tái lập trên Linux AMD64 | 🟡 | 2 / 5 (exit 0 / 4) |
-| H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 1 / 15 |
+| H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 13 / 15 |
 | M1 Content/legal + Identity/Privacy | Dữ liệu và tài khoản đủ an toàn để mở beta | ⬜ | 0 / 8 |
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 5 |
@@ -319,18 +319,18 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | M6 Production foundation + Beta | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
 | M7+ Later | Reader, pronunciation, AI, mobile, payment | ⬜ | 0 / 8 |
 
-Số liệu hiện tại (đo 04/09/2026):
+Số liệu hiện tại (đo 04/09/2026; dòng Kiểm thử, CI, Nhánh cập nhật 28/09):
 
 | Chỉ số | Giá trị |
 | --- | --- |
 | Backend runtime | 8 module, ≈60 endpoint, 15.087 dòng src + 7.695 dòng spec |
-| Kiểm thử hermetic | jest 51 suite / 596 test ✅ · node:test ops 129 ✅ · secret scan ✅ · vitest 23 file / 101 test ✅ · lint/format/typecheck ✅ |
-| Kiểm thử cần DB | 11 file e2e (~129 case) + 16 file SQL — không chạy được từ checkout mới (F-01) |
+| Kiểm thử hermetic | Chạy trong CI job `backend`, `frontend` (xanh ở PR #5, run `36375778246`); secret scan và `test:ops:media:unit` chưa có trong CI, chạy tay |
+| Kiểm thử cần DB | e2e chạy một lệnh (H.3) và trong CI job `backend-e2e`; SQL `test:db:*` vẫn chạy tay trên DB disposable |
 | Schema | 59 model · 27 enum · 19 migration · 23 model có runtime |
 | Frontend | login + admin exercises/media (read, quarantine/archive); 0/30 màn learner |
 | AI | 0 byte |
-| CI | 1 workflow, chỉ chạy khi push tag `v3.0.0`, hiện không thể pass (A-01) |
-| Worktree | Sạch sau 3 commit 04/09 (`b222926`, `29e1e4b`, `6f74f5b`); F-04 đóng |
+| CI | `ci.yml` 3 job trên PR và push vào `main`, run xanh đầu tiên 28/09 ở PR #5; `media-release-evidence.yml` vẫn chỉ chạy theo tag (A-04, quyết định #11) |
+| Nhánh | `main` đứng ở `9e9a82c` (22/08); PR #5 đưa `macdev` (GĐ1–GĐ2) vào `main`, chưa merge |
 
 ## 3. Đã hoàn thành theo slice
 
@@ -365,7 +365,7 @@ Outcome: Media không còn P0/P1 nội bộ và có bằng chứng tái lập tr
 | --- | --- | --- | --- |
 | M0.1 | Absolute deadline/cancellation cho ClamAV và S3 body stream | ✅ | `s3-object-storage.adapter.ts` deadline 8 s, `clamav-media-malware-scanner.ts` 10 s. Còn D-04: interceptor upload không huỷ công việc phía sau |
 | M0.2 | Cleanup recovery, secret scanner false-negative, availability SLI truthful | ✅ | `media-ingestion.cleanup-recovery.spec.ts`, `scripts/security/secret-scan.ts`, `ops/observability/media-alerts.yml` |
-| M0.3 | Forward-only migration/preflight và bounded lock deployment | 🟡 | `scripts/operations/bounded-prisma-migrate-*.ts` đã commit `6f74f5b`; còn C-01 (BEGIN/COMMIT), C-02 (resolver dùng một lần) |
+| M0.3 | Forward-only migration/preflight và bounded lock deployment | 🟡 | `scripts/operations/bounded-prisma-migrate-*.ts` đã commit `6f74f5b`; C-01, C-02 đóng ở H.11a `46396d7` |
 | M0.4 | Validate rendered Kubernetes artifact, OCI identity, Linux AMD64 | 🟡 | Harness có; gate không thể pass vì producer policy `HOST_ACCEPTANCE_REQUIRED` |
 | M0.5 | Roadmap, owner, risk/decision register, release evidence contract | 🟡 | Roadmap 13/08 đã commit `29e1e4b`; owner chưa gán; evidence contract ADR-007 |
 
@@ -373,7 +373,7 @@ Exit criteria:
 
 | Điều kiện | Trạng thái |
 | --- | --- |
-| Không còn P0/P1 trong scope Media | ⬜ (B-04, B-07, D-04 còn mở) |
+| Không còn P0/P1 trong scope Media | ⬜ (B-04 đóng ở H.9 `e6e6620` trừ throttle 1.000/phút dưới `NODE_ENV=test`; B-07 xong TTL và secret previous `f51c71b`, gắn user chưa quyết; D-04 còn mở) |
 | Full internal gate GREEN trên Linux AMD64 | ⬜ |
 | Không trộn local evidence với immutable CI attestation | 🟡 |
 | Live Media Infrastructure Rehearsal | ⛔ BLOCKED_EXTERNAL (chưa có S3/ClamAV/proxy thật) |
@@ -388,7 +388,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | # | Bước | Trạng thái | Finding / ghi chú |
 | --- | --- | --- | --- |
 | H.1 | Tách worktree +8.744 dòng thành commit nhỏ; sửa typo `npm.cd` | ✅ | F-04, E-04 đóng 04/09: `b222926`, `29e1e4b`, `6f74f5b`; typo revert về bản đã commit |
-| H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | 🟡 | A-01. 07/09: `f7c6d9b`, `665074d`. Ba job đã viết và chạy tay từ clone mới; chỉ ✅ khi có run xanh trên GitHub và H.2d bật xong |
+| H.2 | `ci.yml` trên PR: backend prisma validate + lint + tsc + jest + e2e (Postgres service); frontend lint + typecheck + vitest; required checks | 🟡 | A-01. 07/09: `f7c6d9b`, `665074d`. 28/09: ba job xanh trên GitHub (PR #5, run `36375778246`); còn H.2d |
 | H.3 | `docker-compose.yml` (Postgres 16 + profile `dev` cho MinIO/ClamAV/Mailpit) + `pretest:e2e` tạo DB disposable và migrate | ✅ | F-01 đóng phần e2e 07/09: `b011518`, `41f471d`, `1751aff`. e2e phải `--runInBand`: 11 suite dùng chung DB và cùng upsert Level theo `code` |
 | H.4 | `trust proxy`, nginx X-Forwarded-For, tracker theo `req.user.id ?? req.ip`, rate limit theo user bằng bảng Postgres | ✅ | A-02, ADR-008 §2. H.4a `9272c58`; H.4b `a0b1950` |
 | H.5 | Lockout tăng nguyên tử; login ~10 req/phút/IP + throttle theo email | ✅ | B-01. `ac7faa4` |
@@ -565,12 +565,12 @@ khi vertical slice bắt đầu.
 
 ## 7. Việc cần làm ngay (2 tuần tới)
 
-1. H.1 ✅ (04/09). H.15 ✅ và H.13 🟡 (07/09): còn TypeScript 6 backend sau khi có CI.
-2. H.2 + H.3: CI trên PR và compose test; đây là lưới an toàn cho mọi bước sau.
-3. H.4 → H.9: đóng P0/P1 bảo mật (mỗi mục là một PR nhỏ).
-4. H.10: chốt envelope, sau đó bật OpenAPI (ADR-008 §5).
-5. Duyệt ADR-008 và quyết định #11 để biết M0.4 đi đâu.
-6. Bắt đầu M2.1 + M2.2 như vertical slice đầu tiên cho người học.
+1. H.2d: chủ repo bật branch protection `main`, rồi merge PR #5 khi ba check xanh.
+2. H.13: TypeScript 6 backend (ADR-008 §12 yêu cầu CI xanh trước, nay đã có) → đóng GĐ1.
+3. GĐ3 M0.E: D-04 AbortSignal upload và full gate; song song duyệt ADR-008 (#10) và #11 để
+   biết M0.4 đi đâu.
+4. GĐ4 theo đường găng: M1.4 session refresh/revoke (B-03), M1.5 mail; M1.1 chờ quyết định #2.
+5. M2.1 + M2.2 chỉ bắt đầu khi GĐ4 xong M1.4, M1.5 (điều kiện vào GĐ5).
 
 ## 8. Nhật ký cập nhật
 
@@ -594,3 +594,4 @@ khi vertical slice bắt đầu.
 | 14/09/2026 | GĐ2: H.10a + H.10b ✅ (`37e0198`, đã push). H.10c 🟡: `backend/openapi.json` sinh từ code (Swagger CLI plugin, preview mode không cần DB) với envelope, lỗi `default`, `X-Request-ID`, bearer `JWT`; CI kiểm file commit không lệch; frontend sinh type bằng `openapi-typescript` và kiểm response đã document của call BFF qua được Zod. |
 | 26/09/2026 | GĐ2: H.10c (`f2448d3`), H.11a (`46396d7`), H.11b (`e350948`), H.12 (`56168cb`) ✅ sau khi Tech Lead duyệt và đã push; GĐ2 13/14. H.14 🟡 chờ review (task cuối GĐ2): xoá 4 route BFF đọc thừa, `/api/session/me` giữ cookie khi 5xx, focus archive, logout kiểm `ok`, trang admin map 403. |
 | 26/09/2026 | GĐ2: H.14 ✅ sau khi Tech Lead duyệt. GĐ2 hoàn thành 14/14; tổng 48/131. |
+| 28/09/2026 | GĐ1: mở PR #5 `macdev` → `main` để CI chạy lần đầu trên GitHub (trước đó 0 run vì `ci.yml` chỉ chạy trên PR/push `main`). Run `36374888359` fail 1 e2e: payload lồng 5.000 cấp bị superagent serialize thành chuỗi placeholder trên Node 24; sửa `b79b8ed`. Run `36375778246` xanh cả `backend`, `backend-e2e`, `frontend` → H.2a, H.2b, H.2c ✅. H.2d ⬜: `main` chưa có branch protection. M0.E 🟡: `f51c71b` (B-07 TTL learner 60 s, `MEDIA_SIGNING_SECRET_PREVIOUS`). `270fb54`: secret scan fail từ `9272c58` do fixture không theo mẫu placeholder. Đồng bộ header, mục 1.1, 2, 4 (M0.3, exit M0, H.2), 7. Tổng 51/131. |
