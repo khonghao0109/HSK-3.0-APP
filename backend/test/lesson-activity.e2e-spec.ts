@@ -1149,14 +1149,18 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   it('21. rejects an over-nested answer without a server fault', async () => {
     // Above the depth where the previously unbounded canonical-JSON walk threw
     // RangeError: Maximum call stack size exceeded and surfaced as a 500.
-    let answer: unknown = 'leaf';
-    for (let level = 0; level < 5_000; level += 1) answer = { nested: answer };
+    // The body is built as text: superagent's recursive serializer runs near
+    // the stack limit at this depth and silently sends a placeholder string
+    // instead of the payload on some Node versions.
+    const depth = 5_000;
+    const body = `{"answer":${'{"nested":'.repeat(depth)}"leaf"${'}'.repeat(depth)},"durationSeconds":3}`;
 
     const response = await post(
       `/learning/exercises/${mcqId}/attempts`,
       'deep-answer-key-01',
     )
-      .send({ answer, durationSeconds: 3 })
+      .set('Content-Type', 'application/json')
+      .send(body)
       .expect(400);
     expect(response.body).toMatchObject({
       success: false,
