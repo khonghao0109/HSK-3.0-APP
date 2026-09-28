@@ -63,7 +63,6 @@ import {
 } from './media-ingestion/media-ingestion.service';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
 import {
-  getMediaIngestionAbortSignal,
   getMediaIngestionObservation,
   MediaIngestionBoundaryInterceptor,
 } from './media-ingestion/media-ingestion-boundary.interceptor';
@@ -128,7 +127,6 @@ export class CmsController {
       {
         correlationId: correlationId(requestId),
         observation: getMediaIngestionObservation(request),
-        signal: getMediaIngestionAbortSignal(request),
       },
     );
   }

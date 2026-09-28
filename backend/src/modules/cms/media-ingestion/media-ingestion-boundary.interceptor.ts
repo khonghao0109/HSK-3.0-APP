@@ -29,6 +29,8 @@ import {
 import { MediaIngestionConcurrencyLimiter } from './media-ingestion-concurrency.limiter';
 
 export const MEDIA_UPLOAD_TIMEOUT_MS = 30_000;
+export const MEDIA_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+const MEDIA_BUSY_DRAIN_MAX_BYTES = MEDIA_UPLOAD_MAX_BYTES + 1024 * 1024; // 1 MiB overhead for multipart padding and headers
 
 type IngestionTerminalOutcome =
   | 'success'
@@ -38,11 +40,9 @@ type IngestionTerminalOutcome =
   | 'disabled';
 
 const observationKey = Symbol('media-ingestion-request-observation');
-const abortSignalKey = Symbol('media-ingestion-abort-signal');
 
 type BoundaryRequest = Request & {
   [observationKey]?: MediaRequestObservation<IngestionTerminalOutcome>;
-  [abortSignalKey]?: AbortSignal;
 };
 
 @Injectable()
@@ -59,15 +59,47 @@ export class MediaIngestionBoundaryInterceptor implements NestInterceptor {
     const response = http.getResponse<Response>();
 
     if (!this.limiter.tryAcquire()) {
-      response.setHeader('Retry-After', '1');
-      closeAfterResponse(request, response);
       const busyException = new ServiceUnavailableException({
         code: 'MEDIA_INGESTION_BUSY',
         message: 'Media ingestion service is busy. Please try again later.',
       });
+
+      response.setHeader('Retry-After', '1');
+
+      const clHeader = request.headers['content-length'];
+      const cl = clHeader ? parseInt(clHeader, 10) : NaN;
+      const transferEncoding = request.headers['transfer-encoding'];
+      const isChunked =
+        typeof transferEncoding === 'string' &&
+        transferEncoding.includes('chunked');
+
+      const hasBody = isChunked || (!isNaN(cl) && cl > 0);
       const observation = this.metrics?.beginIngestionRequest();
-      observation?.complete('failed');
-      return throwError(() => busyException);
+
+      if (!hasBody) {
+        // No body to drain — return 503 immediately without destroying the socket.
+        observation?.complete('failed');
+        return throwError(() => busyException);
+      }
+
+      if (!isNaN(cl) && cl > MEDIA_BUSY_DRAIN_MAX_BYTES) {
+        // Content-Length exceeds drain limit — fail fast, close after response.
+        closeAfterResponse(request, response);
+        observation?.complete('failed');
+        return throwError(() => busyException);
+      }
+
+      const timeoutMs = boundedUploadTimeout(
+        this.config.get<number>('media.uploadTimeoutMs'),
+      );
+
+      return drainBusyRequest(
+        request,
+        response,
+        timeoutMs,
+        observation,
+        busyException,
+      );
     }
 
     let slotReleased = false;
@@ -77,23 +109,6 @@ export class MediaIngestionBoundaryInterceptor implements NestInterceptor {
         this.limiter.release();
       }
     };
-
-    const abortController = new AbortController();
-    request[abortSignalKey] = abortController.signal;
-
-    const onResponseClose = () => {
-      if (!response.writableEnded) {
-        abortController.abort(new Error('MEDIA_UPLOAD_ABORTED'));
-      }
-    };
-    response.once('close', onResponseClose);
-
-    const onRequestClose = () => {
-      if (!request.complete) {
-        abortController.abort(new Error('MEDIA_UPLOAD_ABORTED'));
-      }
-    };
-    request.once('close', onRequestClose);
 
     const observation = this.metrics?.beginIngestionRequest();
     let completed = false;
@@ -112,7 +127,6 @@ export class MediaIngestionBoundaryInterceptor implements NestInterceptor {
       request,
       response,
       boundedUploadTimeout(this.config.get<number>('media.uploadTimeoutMs')),
-      abortController,
     );
     return race(deadline, next.handle()).pipe(
       tap(() => complete('success')),
@@ -123,11 +137,6 @@ export class MediaIngestionBoundaryInterceptor implements NestInterceptor {
       // Covers a client disconnect or an interceptor that completes without a
       // controller value.
       finalize(() => {
-        response.off('close', onResponseClose);
-        request.off('close', onRequestClose);
-        if (!response.writableEnded && !abortController.signal.aborted) {
-          abortController.abort(new Error('MEDIA_UPLOAD_ABORTED'));
-        }
         releaseSlot();
         complete('failed');
       }),
@@ -141,17 +150,10 @@ export function getMediaIngestionObservation(
   return (request as BoundaryRequest)[observationKey];
 }
 
-export function getMediaIngestionAbortSignal(
-  request: Request,
-): AbortSignal | undefined {
-  return (request as BoundaryRequest)[abortSignalKey];
-}
-
 function uploadDeadline(
   request: BoundaryRequest,
   response: Response,
   timeoutMs: number,
-  abortController: AbortController,
 ): Observable<never> {
   if (request.complete || request.readableEnded) return NEVER;
 
@@ -163,7 +165,6 @@ function uploadDeadline(
     };
     const abort = () => {
       clearTimeout(timer);
-      abortController.abort(new Error('MEDIA_UPLOAD_ABORTED'));
       subscriber.error(
         new BadRequestException({
           code: 'MEDIA_UPLOAD_ABORTED',
@@ -173,7 +174,6 @@ function uploadDeadline(
     };
     const timer = setTimeout(() => {
       if (uploadEnded) return;
-      abortController.abort(new Error('MEDIA_UPLOAD_TIMEOUT'));
       closeAfterResponse(request, response);
       subscriber.error(
         new RequestTimeoutException({
@@ -237,4 +237,84 @@ function boundedUploadTimeout(value: number | undefined): number {
   return Number.isSafeInteger(value) && (value ?? 0) > 0
     ? Math.min(value ?? MEDIA_UPLOAD_TIMEOUT_MS, 120_000)
     : MEDIA_UPLOAD_TIMEOUT_MS;
+}
+
+function drainBusyRequest(
+  request: BoundaryRequest,
+  response: Response,
+  timeoutMs: number,
+  observation: MediaRequestObservation<IngestionTerminalOutcome> | undefined,
+  busyException: ServiceUnavailableException,
+): Observable<never> {
+  return new Observable<never>((subscriber) => {
+    let totalReceived = 0;
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      closeAfterResponse(request, response);
+      subscriber.error(busyException);
+    }, timeoutMs);
+    timer.unref?.();
+
+    const onData = (chunk: Buffer) => {
+      totalReceived += chunk.length;
+      if (totalReceived > MEDIA_BUSY_DRAIN_MAX_BYTES && !finished) {
+        finished = true;
+        cleanup();
+        closeAfterResponse(request, response);
+        subscriber.error(busyException);
+      }
+    };
+
+    const onEnd = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      closeAfterResponse(request, response);
+      subscriber.error(busyException);
+    };
+
+    const onAborted = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      // Client socket is already gone; error instead of complete to avoid
+      // EmptyError from lastValueFrom in the Nest interceptor chain.
+      subscriber.error(
+        new BadRequestException({
+          code: 'MEDIA_UPLOAD_ABORTED',
+          message: 'Media upload request was interrupted.',
+        }),
+      );
+    };
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      request.off('data', onData);
+      request.off('end', onEnd);
+      request.off('aborted', onAborted);
+      request.off('close', onAborted);
+    };
+
+    if (request.readableEnded) {
+      onEnd();
+    } else {
+      request.on('data', onData);
+      request.on('end', onEnd);
+      request.on('aborted', onAborted);
+      request.on('close', onAborted);
+      request.resume();
+    }
+
+    return () => {
+      if (!finished) {
+        finished = true;
+        cleanup();
+      }
+      observation?.complete('failed');
+    };
+  });
 }

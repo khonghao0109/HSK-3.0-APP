@@ -72,7 +72,6 @@ function isSafeValidationBody(value: string | object): boolean {
     typeof value === 'object' &&
     value !== null &&
     'code' in value &&
-    (value.code === 'REQUEST_VALIDATION_FAILED' ||
-      value.code === 'MEDIA_UPLOAD_ABORTED')
+    value.code === 'REQUEST_VALIDATION_FAILED'
   );
 }

@@ -1,14 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
 
 import {
-  BadRequestException,
   ConflictException,
   HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
   Optional,
-  RequestTimeoutException,
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -60,36 +58,7 @@ export type UploadedMediaFile = {
 type MediaIngestionContext = {
   correlationId: string;
   observation?: ReturnType<typeof getMediaIngestionObservation>;
-  signal?: AbortSignal;
 };
-
-function isUploadTimeout(signal?: AbortSignal): boolean {
-  if (!signal?.aborted) return false;
-  const reason: unknown = signal.reason;
-  return (
-    reason === 'MEDIA_UPLOAD_TIMEOUT' ||
-    (reason instanceof Error &&
-      (reason.message === 'MEDIA_UPLOAD_TIMEOUT' ||
-        reason.name === 'MEDIA_UPLOAD_TIMEOUT'))
-  );
-}
-
-function createAbortException(signal?: AbortSignal): HttpException {
-  if (isUploadTimeout(signal)) {
-    return new RequestTimeoutException({
-      code: 'MEDIA_UPLOAD_TIMEOUT',
-      message: 'Media upload did not complete within the allowed time.',
-    });
-  }
-  return new BadRequestException({
-    code: 'MEDIA_UPLOAD_ABORTED',
-    message: 'Media upload request was interrupted.',
-  });
-}
-
-function getAbortFailureCode(signal?: AbortSignal): string {
-  return isUploadTimeout(signal) ? 'UPLOAD_TIMEOUT' : 'UPLOAD_ABORTED';
-}
 
 type MediaProvenanceSnapshot = {
   sourceCodeSnapshot: string;
@@ -168,9 +137,6 @@ export class MediaIngestionService {
     idempotencyHeader: string | undefined,
     context: MediaIngestionContext,
   ) {
-    if (context.signal?.aborted) {
-      throw createAbortException(context.signal);
-    }
     if (!file) {
       throw new UnprocessableEntityException({
         code: 'FILE_REQUIRED',
@@ -220,17 +186,6 @@ export class MediaIngestionService {
       return this.completedReplay(claim);
     }
 
-    if (context.signal?.aborted) {
-      await this.recordFailure(
-        claim.id,
-        claim.processingToken,
-        getAbortFailureCode(context.signal),
-        actor.id,
-        context,
-      ).catch(() => undefined);
-      throw createAbortException(context.signal);
-    }
-
     let processed: ProcessedMediaFile;
     try {
       processed = await this.fileProcessor.process({
@@ -271,34 +226,11 @@ export class MediaIngestionService {
       });
     }
 
-    if (context.signal?.aborted) {
-      await this.recordFailure(
-        claim.id,
-        claim.processingToken,
-        getAbortFailureCode(context.signal),
-        actor.id,
-        context,
-      ).catch(() => undefined);
-      throw createAbortException(context.signal);
-    }
-
     let scanResult: { clean: boolean };
     const scanStartedAt = Date.now();
     try {
-      scanResult = await this.scanner.scan(processed.buffer, {
-        signal: context.signal,
-      });
+      scanResult = await this.scanner.scan(processed.buffer);
     } catch (error: unknown) {
-      if (context.signal?.aborted) {
-        await this.recordFailure(
-          claim.id,
-          claim.processingToken,
-          getAbortFailureCode(context.signal),
-          actor.id,
-          context,
-        ).catch(() => undefined);
-        throw createAbortException(context.signal);
-      }
       const invalidResponse =
         error instanceof MediaScannerError && error.kind === 'invalid_response';
       this.metrics?.recordScanner(
@@ -337,17 +269,6 @@ export class MediaIngestionService {
     }
     this.metrics?.recordScanner('success', Date.now() - scanStartedAt);
 
-    if (context.signal?.aborted) {
-      await this.recordFailure(
-        claim.id,
-        claim.processingToken,
-        getAbortFailureCode(context.signal),
-        actor.id,
-        context,
-      ).catch(() => undefined);
-      throw createAbortException(context.signal);
-    }
-
     const objectKey =
       claim.storageKey ??
       buildMediaObjectKey(
@@ -377,28 +298,14 @@ export class MediaIngestionService {
       });
     }
 
-    if (context.signal?.aborted) {
-      await this.recordFailure(
-        claim.id,
-        claim.processingToken,
-        getAbortFailureCode(context.signal),
-        actor.id,
-        context,
-      ).catch(() => undefined);
-      throw createAbortException(context.signal);
-    }
-
     const putStartedAt = Date.now();
     try {
-      await this.storage.putPrivateObject(
-        {
-          key: objectKey,
-          body: processed.buffer,
-          contentType: processed.mimeType,
-          checksum: processed.checksum,
-        },
-        { signal: context.signal },
-      );
+      await this.storage.putPrivateObject({
+        key: objectKey,
+        body: processed.buffer,
+        contentType: processed.mimeType,
+        checksum: processed.checksum,
+      });
       this.metrics?.recordStorage('put', 'success', Date.now() - putStartedAt);
     } catch (error: unknown) {
       this.metrics?.recordStorage('put', 'error', Date.now() - putStartedAt);
@@ -421,31 +328,6 @@ export class MediaIngestionService {
           : 'MEDIA_STORAGE_UNAVAILABLE',
         message: 'Media ingestion did not complete; retry later.',
       });
-    }
-
-    if (context.signal?.aborted) {
-      const cleanupSucceeded = await this.compensateObject(
-        claim.id,
-        claim.processingToken,
-        objectKey,
-      );
-      await this.ensureFinalizeFailureRecorded(
-        claim.id,
-        claim.processingToken,
-        cleanupSucceeded
-          ? getAbortFailureCode(context.signal)
-          : 'OBJECT_CLEANUP_REQUIRED',
-        cleanupSucceeded,
-        actor.id,
-        context,
-      );
-      if (!cleanupSucceeded) {
-        throw new ServiceUnavailableException({
-          code: 'MEDIA_CLEANUP_REQUIRED',
-          message: 'Media ingestion did not complete; retry later.',
-        });
-      }
-      throw createAbortException(context.signal);
     }
 
     try {
@@ -494,9 +376,8 @@ export class MediaIngestionService {
         claim.processingToken,
         objectKey,
       );
-      const domainFailureCode = context.signal?.aborted
-        ? getAbortFailureCode(context.signal)
-        : error instanceof UnprocessableEntityException
+      const domainFailureCode =
+        error instanceof UnprocessableEntityException
           ? 'MEDIA_SOURCE_NOT_APPROVED'
           : 'DATABASE_WRITE_FAILED';
       await this.ensureFinalizeFailureRecorded(
@@ -507,9 +388,6 @@ export class MediaIngestionService {
         actor.id,
         context,
       );
-      if (context.signal?.aborted && cleanupSucceeded) {
-        throw createAbortException(context.signal);
-      }
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException({
         code: cleanupSucceeded

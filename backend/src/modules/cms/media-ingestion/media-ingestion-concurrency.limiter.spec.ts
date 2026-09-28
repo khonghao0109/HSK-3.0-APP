@@ -4,9 +4,7 @@ import { MediaIngestionConcurrencyLimiter } from './media-ingestion-concurrency.
 
 describe('MediaIngestionConcurrencyLimiter', () => {
   it('defaults to 4 concurrent slots when configuration is missing or invalid', () => {
-    const config = {
-      get: jest.fn(() => undefined),
-    } as unknown as ConfigService;
+    const config = new ConfigService({});
     const limiter = new MediaIngestionConcurrencyLimiter(config);
 
     expect(limiter.limit).toBe(4);
@@ -16,11 +14,9 @@ describe('MediaIngestionConcurrencyLimiter', () => {
   it.each([1, 2, 8, 16])(
     'accepts a valid bounded concurrency limit of %i',
     (limit) => {
-      const config = {
-        get: jest.fn((key: string) =>
-          key === 'media.maxConcurrency' ? limit : undefined,
-        ),
-      } as unknown as ConfigService;
+      const config = new ConfigService({
+        media: { maxConcurrency: limit },
+      });
       const limiter = new MediaIngestionConcurrencyLimiter(config);
 
       expect(limiter.limit).toBe(limit);
@@ -28,26 +24,26 @@ describe('MediaIngestionConcurrencyLimiter', () => {
   );
 
   it('falls back to 4 when configured limit is out of 1-16 bounds or non-integer', () => {
-    const limiterNegative = new MediaIngestionConcurrencyLimiter({
-      get: () => 0,
-    } as unknown as ConfigService);
+    const limiterNegative = new MediaIngestionConcurrencyLimiter(
+      new ConfigService({ media: { maxConcurrency: 0 } }),
+    );
     expect(limiterNegative.limit).toBe(4);
 
-    const limiterOver = new MediaIngestionConcurrencyLimiter({
-      get: () => 17,
-    } as unknown as ConfigService);
+    const limiterOver = new MediaIngestionConcurrencyLimiter(
+      new ConfigService({ media: { maxConcurrency: 17 } }),
+    );
     expect(limiterOver.limit).toBe(4);
 
-    const limiterFloat = new MediaIngestionConcurrencyLimiter({
-      get: () => 3.5,
-    } as unknown as ConfigService);
+    const limiterFloat = new MediaIngestionConcurrencyLimiter(
+      new ConfigService({ media: { maxConcurrency: 3.5 } }),
+    );
     expect(limiterFloat.limit).toBe(4);
   });
 
   it('acquires up to the concurrency limit and rejects further attempts until released', () => {
-    const config = {
-      get: jest.fn(() => 2),
-    } as unknown as ConfigService;
+    const config = new ConfigService({
+      media: { maxConcurrency: 2 },
+    });
     const limiter = new MediaIngestionConcurrencyLimiter(config);
 
     expect(limiter.tryAcquire()).toBe(true);
