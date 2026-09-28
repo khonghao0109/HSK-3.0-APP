@@ -1,6 +1,6 @@
 # PLAN — Tiến độ dự án HSK 3.0
 
-> Cập nhật: 28/09/2026 · Baseline: branch `macdev`, HEAD `b79b8ed` (PR #5 vào `main`, chưa merge)
+> Cập nhật: 28/09/2026 · Baseline: branch `macdev`, HEAD `58d5c5e` (PR #5 vào `main`, chưa merge)
 > · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; CI chạy trên PR vào `main`
 > (run xanh đầu tiên ở PR #5); chưa có branch protection, learner app, hạ tầng production.
 
@@ -42,7 +42,7 @@ cam kết.
 | GĐ | Giai đoạn | Điều kiện ra | Task xong / tổng | Ước lượng | Trạng thái |
 | --- | --- | --- | --- | --- | --- |
 | GĐ0 | Nền tảng đã xây (05/05 → 04/09/2026) | Đã đạt | 18 / 18 | — | ✅ |
-| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 7 / 9 | 1–2 tuần | 🟡 |
+| GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 8 / 9 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 0 / 15 | 3–4 tuần | ⬜ |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **51 / 131 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **52 / 131 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -137,7 +137,7 @@ Vào: GĐ0. Ra: mọi PR vào `main` có CI xanh; `npm run test:e2e` chạy từ
 | H.2d | Branch protection `main`: required checks, không push thẳng | ⬜ | 28/09: GitHub trả `Branch not protected`. Cần chủ repo bật: required checks `backend`, `backend-e2e`, `frontend` từ app GitHub Actions, strict (nhánh phải cập nhật), áp cả admin, bắt buộc PR (0 approval vì một dev), cấm force-push và xoá nhánh |
 | H.3a | `docker-compose.yml`: Postgres 16 (profile mặc định), MinIO/ClamAV/Mailpit (profile `dev`) | ✅ | 07/09: `b011518`. Chọn `docker-compose.yml` + profile thay tên `docker-compose.test.yml` để `docker compose up -d` không cần cờ `-f` |
 | H.3b | `pretest:e2e` tạo DB disposable + migrate; docs một lệnh chạy e2e | ✅ | 07/09: `b011518`, `41f471d`, `1751aff`. Clone mới, không set biến nào: 163/163 pass, lặp lại vẫn 163/163 |
-| H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
+| H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | ✅ | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). 28/09: `58d5c5e` nâng TypeScript backend lên 6.0.3 exact khớp frontend (ADR-008 §12); PR #5 run `36378049255` xanh 3 job (`backend`, `backend-e2e`, `frontend`) |
 | H.15 | Root `README.md`: thay boilerplate NestJS bằng mô tả monorepo, trỏ `docs/README.md` | ✅ | 07/09: `6f6d2fe` |
 
 ### GĐ2 — Đóng lỗ hổng bảo mật và tính đúng đắn (2–3 tuần, mỗi task một PR)
@@ -310,7 +310,7 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | Milestone | Outcome | Trạng thái | Bước xong / tổng |
 | --- | --- | --- | --- |
 | M0 Media internal closeout | Media không còn P0/P1, gate tái lập trên Linux AMD64 | 🟡 | 2 / 5 (exit 0 / 4) |
-| H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 13 / 15 |
+| H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 14 / 15 |
 | M1 Content/legal + Identity/Privacy | Dữ liệu và tài khoản đủ an toàn để mở beta | ⬜ | 0 / 8 |
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 5 |
@@ -399,7 +399,7 @@ Outcome: mọi PR có CI xanh, e2e chạy được bằng một lệnh, P0/P1 tr
 | H.10 | Envelope toàn cục: APP_INTERCEPTOR + APP_FILTER, echo `x-request-id`; cập nhật api.md §1; sau đó bật OpenAPI | ✅ | A-03, ADR-008 §5. H.10a + H.10b `37e0198`; H.10c `f2448d3` |
 | H.11 | Migration: bỏ `BEGIN/COMMIT`, resolver tham số hoá, pin UTC, unique index goal/plan | ✅ | C-01, C-02, C-05, C-04. H.11a `46396d7`; H.11b `e350948` |
 | H.12 | Prisma `$disconnect`; `canonicalJson` maxDepth; idempotency TTL | ✅ | D-06, D-01, D-02. `56168cb` (Tech Lead duyệt). `PrismaService` dùng `OnModuleDestroy` (bỏ dead code `enableShutdownHooks`); chặn độ sâu JSON hai lớp — middleware biên `REQUEST_JSON_MAX_DEPTH=32` (duyệt không đệ quy, vì `ValidationPipe` vỡ stack trước khi tới `canonicalJson`) và `CANONICAL_JSON_MAX_DEPTH=16`; idempotency key hết hạn sau 24 h trả 400 |
-| H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | 🟡 | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). Còn TypeScript 6 backend — ADR-008 §12 yêu cầu CI xanh trước |
+| H.13 | `.nvmrc` Node 24, `.npmrc save-exact`, TypeScript 6 cả hai package, Renovate | ✅ | 07/09: `6d38f40` (.nvmrc, engines, .npmrc, renovate.json). 28/09: `58d5c5e` nâng TypeScript backend lên 6.0.3 exact khớp frontend (ADR-008 §12), thêm `rootDir: .` giải quyết TS5011; PR #5 run `36378049255` xanh 3 job |
 | H.14 | Frontend: xoá 5 route BFF không dùng hoặc redact; focus archive; logout kiểm `ok`; `/api/session/me` chỉ xoá cookie khi 401/403 | ✅ | E-01, E-02. 26/09 (Tech Lead duyệt): xoá 4 route BFF đọc không consumer (`/api/admin/exercises[/:id]`, `/api/admin/media[/:id]`); `/api/session/me` giữ lại (Playwright dùng), chỉ xoá cookie khi 401/403, 5xx/mạng trả 500/503 giữ cookie; focus archive/quarantine không rơi về `<body>`; logout chỉ rời trang khi `ok`; 4 trang admin map 403 → `/forbidden` vì layout không render lại khi điều hướng client |
 | H.15 | Root `README.md`: thay boilerplate NestJS bằng mô tả monorepo, trỏ `docs/README.md` | ✅ | F-05 đóng một phần 07/09: `6f6d2fe` |
 
@@ -566,7 +566,7 @@ khi vertical slice bắt đầu.
 ## 7. Việc cần làm ngay (2 tuần tới)
 
 1. H.2d: chủ repo bật branch protection `main`, rồi merge PR #5 khi ba check xanh.
-2. H.13: TypeScript 6 backend (ADR-008 §12 yêu cầu CI xanh trước, nay đã có) → đóng GĐ1.
+2. H.13 ✅: TypeScript 6 backend 6.0.3 exact (`58d5c5e`, run `36378049255`) → đóng GĐ1 (8/9, chỉ còn H.2d).
 3. GĐ3 M0.E: D-04 AbortSignal upload và full gate; song song duyệt ADR-008 (#10) và #11 để
    biết M0.4 đi đâu.
 4. GĐ4 theo đường găng: M1.4 session refresh/revoke (B-03), M1.5 mail; M1.1 chờ quyết định #2.
@@ -595,3 +595,4 @@ khi vertical slice bắt đầu.
 | 26/09/2026 | GĐ2: H.10c (`f2448d3`), H.11a (`46396d7`), H.11b (`e350948`), H.12 (`56168cb`) ✅ sau khi Tech Lead duyệt và đã push; GĐ2 13/14. H.14 🟡 chờ review (task cuối GĐ2): xoá 4 route BFF đọc thừa, `/api/session/me` giữ cookie khi 5xx, focus archive, logout kiểm `ok`, trang admin map 403. |
 | 26/09/2026 | GĐ2: H.14 ✅ sau khi Tech Lead duyệt. GĐ2 hoàn thành 14/14; tổng 48/131. |
 | 28/09/2026 | GĐ1: mở PR #5 `macdev` → `main` để CI chạy lần đầu trên GitHub (trước đó 0 run vì `ci.yml` chỉ chạy trên PR/push `main`). Run `36374888359` fail 1 e2e: payload lồng 5.000 cấp bị superagent serialize thành chuỗi placeholder trên Node 24; sửa `b79b8ed`. Run `36375778246` xanh cả `backend`, `backend-e2e`, `frontend` → H.2a, H.2b, H.2c ✅. H.2d ⬜: `main` chưa có branch protection. M0.E 🟡: `f51c71b` (B-07 TTL learner 60 s, `MEDIA_SIGNING_SECRET_PREVIOUS`). `270fb54`: secret scan fail từ `9272c58` do fixture không theo mẫu placeholder. Đồng bộ header, mục 1.1, 2, 4 (M0.3, exit M0, H.2), 7. Tổng 51/131. |
+| 28/09/2026 | GĐ1: H.13 ✅ (`58d5c5e`) nâng TypeScript backend lên 6.0.3 exact khớp frontend (ADR-008 §12), khai báo `rootDir: .` trong `backend/tsconfig.json` xử lý TS5011; PR #5 run `36378049255` xanh cả 3 job `backend`, `backend-e2e`, `frontend`. GĐ1 đạt 8/9 (chỉ còn H.2d do chủ repo bật branch protection); tổng 52/131. |
