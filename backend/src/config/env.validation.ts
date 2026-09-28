@@ -68,6 +68,9 @@ export const envValidationSchema = Joi.object({
     .uri({ scheme: ['https'] })
     .optional(),
   MEDIA_SIGNING_SECRET: Joi.string().min(32).required(),
+  // Verify-only overlap secret for a bounded rotation window (B-07).
+  MEDIA_SIGNING_SECRET_PREVIOUS: Joi.string().min(32).optional(),
+  // Admin preview grants; learner grants are fixed at 60 s.
   MEDIA_ACCESS_TTL_SECONDS: Joi.number()
     .integer()
     .min(60)

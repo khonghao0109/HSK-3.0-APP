@@ -63,6 +63,8 @@ void test('detects common secret names with high-confidence hex, base64 and base
     `JWT_SECRET=${base64UrlSecret}`,
     `JWT_SECRETS=${JSON.stringify({ active: base64Secret })}`,
     `refresh_token=${base64Secret}`,
+    `MEDIA_SIGNING_SECRET_PREVIOUS=${base64Secret}`,
+    `MEDIA_METRICS_BEARER_TOKEN_PREVIOUS=${hexSecret}`,
   ].join('\n');
 
   assert.deepEqual(
@@ -72,6 +74,8 @@ void test('detects common secret names with high-confidence hex, base64 and base
       { kind: 'secret_assignment', line: 2 },
       { kind: 'secret_assignment', line: 3 },
       { kind: 'secret_assignment', line: 4 },
+      { kind: 'secret_assignment', line: 5 },
+      { kind: 'secret_assignment', line: 6 },
     ],
   );
 });
@@ -83,6 +87,7 @@ void test('does not report documented fake fixtures and placeholders', () => {
     'password = "<inject-from-secret-manager>"',
     'JWT_SECRETS="{\\"v1\\":\\"change-me-at-least-32-characters\\"}"',
     'MEDIA_SIGNING_SECRET=change-me',
+    '# MEDIA_SIGNING_SECRET_PREVIOUS="previous-secret-manager-value"',
   ].join('\n');
   assert.deepEqual(scanSecretText('backend/.env.example', input), []);
 });

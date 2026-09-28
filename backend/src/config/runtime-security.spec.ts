@@ -354,6 +354,24 @@ describe('runtime edge security', () => {
       ).toThrow('Production secret configuration is invalid.');
     });
 
+    it('accepts a distinct previous media signing secret and rejects one equal to the current secret', () => {
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET_PREVIOUS: material(
+            'media-signing-previous',
+          ).toString('hex'),
+        }),
+      ).not.toThrow();
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET_PREVIOUS:
+            material('media-signing').toString('base64'),
+        }),
+      ).toThrow('Production secret configuration is invalid.');
+    });
+
     it('rejects malformed JWT secret maps with the same sanitized error', () => {
       for (const JWT_SECRETS of ['null', '[]', '{', '{"v1":42}']) {
         expect(() =>

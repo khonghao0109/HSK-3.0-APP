@@ -143,6 +143,7 @@ export function assertProductionSecrets(environment: {
   JWT_ACTIVE_KID?: string;
   AUTH_PASSWORD_PEPPER?: string;
   MEDIA_SIGNING_SECRET?: string;
+  MEDIA_SIGNING_SECRET_PREVIOUS?: string;
   MEDIA_METRICS_BEARER_TOKEN?: string;
   MEDIA_METRICS_BEARER_TOKEN_PREVIOUS?: string;
 }): void {
@@ -162,6 +163,9 @@ export function assertProductionSecrets(environment: {
     ...Object.values(parsedJwtSecrets),
     environment.AUTH_PASSWORD_PEPPER,
     environment.MEDIA_SIGNING_SECRET,
+    ...(environment.MEDIA_SIGNING_SECRET_PREVIOUS
+      ? [environment.MEDIA_SIGNING_SECRET_PREVIOUS]
+      : []),
     environment.MEDIA_METRICS_BEARER_TOKEN,
     ...(environment.MEDIA_METRICS_BEARER_TOKEN_PREVIOUS
       ? [environment.MEDIA_METRICS_BEARER_TOKEN_PREVIOUS]

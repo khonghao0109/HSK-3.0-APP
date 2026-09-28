@@ -390,10 +390,13 @@ tiết ADR-005 và runbook.
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
 | `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
-| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL, TTL 60–600 giây) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 60 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
 
 Signature = HMAC-SHA256 trên `method`, canonical path, `expiresAt`, checksum; so sánh
-timing-safe; body được hash lại trước khi trả (finding B-07 về việc không gắn user).
+timing-safe; body được hash lại trước khi trả. Grant luôn ký bằng `MEDIA_SIGNING_SECRET`;
+khi xoay secret, đặt secret cũ vào `MEDIA_SIGNING_SECRET_PREVIOUS` (chỉ dùng để verify)
+cho tới khi hết TTL dài nhất rồi gỡ, nên URL đã phát không gãy giữa chừng. Grant vẫn chưa
+gắn user (phần còn lại của finding B-07).
 
 ### A.12 Frontend BFF (same-origin Next.js)
 

@@ -95,6 +95,45 @@ describe('Media access signature', () => {
     ).toBe(false);
   });
 
+  it('verifies grants signed with the previous secret only while it is configured and unexpired', () => {
+    const previousSecret = 'test-previous-media-signing-secret-32-characters';
+    const grant = {
+      mediaId: 42,
+      expiresAt: 1_800_000_000,
+      checksum: 'a'.repeat(64),
+      ...canonicalRequest,
+    };
+    const signature = createMediaAccessSignature({
+      ...grant,
+      secret: previousSecret,
+    });
+
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, signature, secret, previousSecret },
+        1_799_999_999,
+      ),
+    ).toBe(true);
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, signature, secret },
+        1_799_999_999,
+      ),
+    ).toBe(false);
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, signature, secret, previousSecret },
+        1_800_000_000,
+      ),
+    ).toBe(false);
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, method: 'HEAD', signature, secret, previousSecret },
+        1_799_999_999,
+      ),
+    ).toBe(false);
+  });
+
   it('rejects expired, cross-asset and malformed grants without throwing', () => {
     const signature = createMediaAccessSignature({
       mediaId: 42,

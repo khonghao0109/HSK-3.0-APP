@@ -30,10 +30,18 @@ import {
 
 type AuthenticatedMediaActor = { id: number; role: string };
 
+/**
+ * A learner grant is a bearer capability URL, so it stays valid only long
+ * enough to start loading the asset; a copied link dies within a minute (B-07).
+ * Admins keep `media.accessTtlSeconds` for previews.
+ */
+export const LEARNER_MEDIA_ACCESS_TTL_SECONDS = 60;
+
 @Injectable()
 export class MediaAccessService {
   private readonly signingSecret: string;
-  private readonly accessTtlSeconds: number;
+  private readonly previousSigningSecret: string | undefined;
+  private readonly adminAccessTtlSeconds: number;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -42,7 +50,12 @@ export class MediaAccessService {
     @Optional() private readonly metrics?: MediaObservabilityService,
   ) {
     this.signingSecret = config.getOrThrow<string>('media.signingSecret');
-    this.accessTtlSeconds = config.getOrThrow<number>('media.accessTtlSeconds');
+    this.previousSigningSecret = config.get<string>(
+      'media.signingSecretPrevious',
+    );
+    this.adminAccessTtlSeconds = config.getOrThrow<number>(
+      'media.accessTtlSeconds',
+    );
   }
 
   async createAccess(actor: AuthenticatedMediaActor, mediaId: number) {
@@ -95,7 +108,11 @@ export class MediaAccessService {
     if (actor.role !== 'admin' && media.lessonExercises.length === 0) {
       throw new ForbiddenException('Media asset access is not allowed.');
     }
-    const expiresAt = Math.floor(Date.now() / 1000) + this.accessTtlSeconds;
+    const ttlSeconds =
+      actor.role === 'admin'
+        ? this.adminAccessTtlSeconds
+        : LEARNER_MEDIA_ACCESS_TTL_SECONDS;
+    const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
     const signature = createMediaAccessSignature({
       mediaId,
       expiresAt,
@@ -157,6 +174,7 @@ export class MediaAccessService {
           checksum: media.checksum,
           signature,
           secret: this.signingSecret,
+          previousSecret: this.previousSigningSecret,
           method: requestTarget.method,
           resource: requestTarget.path,
         })

@@ -13,7 +13,10 @@ import {
   createMediaAccessSignature,
   verifyMediaAccessSignature,
 } from './media-access-signature';
-import { MediaAccessService } from './media-access.service';
+import {
+  LEARNER_MEDIA_ACCESS_TTL_SECONDS,
+  MediaAccessService,
+} from './media-access.service';
 
 describe('MediaAccessService storage-provider affinity', () => {
   const signingSecret = 's'.repeat(48);
@@ -84,6 +87,99 @@ describe('MediaAccessService storage-provider affinity', () => {
       ),
     ).toBe(true);
   });
+
+  it('issues learner grants for 60 seconds regardless of the admin TTL', async () => {
+    const { service } = createFixture('s3', 's3', {
+      lessonExercises: [{ id: 5 }],
+    });
+    jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+
+    const result = await service.createAccess({ id: 8, role: 'learner' }, 41);
+    const url = new URL(result.data.url, 'https://app.example.test');
+
+    expect(Number(url.searchParams.get('expires'))).toBe(
+      1_700_000_000 + LEARNER_MEDIA_ACCESS_TTL_SECONDS,
+    );
+    expect(LEARNER_MEDIA_ACCESS_TTL_SECONDS).toBe(60);
+    expect(result.data.expiresAt).toBe(
+      new Date((1_700_000_000 + 60) * 1000).toISOString(),
+    );
+  });
+
+  it('signs new grants with the current secret even when a previous secret is configured', async () => {
+    const previousSecret = 'p'.repeat(48);
+    const { service } = createFixture('s3', 's3', {}, previousSecret);
+    jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+
+    const result = await service.createAccess({ id: 7, role: 'admin' }, 41);
+    const url = new URL(result.data.url, 'https://app.example.test');
+    const grant = {
+      mediaId: 41,
+      expiresAt: Number(url.searchParams.get('expires')),
+      checksum: 'a'.repeat(64),
+      signature: url.searchParams.get('signature') ?? '',
+      ...canonicalSignatureTarget,
+    };
+
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, secret: signingSecret },
+        1_700_000_000,
+      ),
+    ).toBe(true);
+    expect(
+      verifyMediaAccessSignature(
+        { ...grant, secret: previousSecret },
+        1_700_000_000,
+      ),
+    ).toBe(false);
+  });
+
+  it.each([
+    ['serves', 'p'.repeat(48)],
+    ['rejects', undefined],
+  ])(
+    '%s a grant signed with the previous secret when previous=%s',
+    async (outcome, previousSigningSecret) => {
+      const body = Buffer.from('png-body');
+      const checksum = createHash('sha256').update(body).digest('hex');
+      const { prisma, config, storage } = createFixture(
+        's3',
+        's3',
+        { checksum, mimeType: 'image/png', size: body.length },
+        previousSigningSecret,
+      );
+      storage.getPrivateObject.mockResolvedValueOnce({
+        body,
+        checksum,
+        contentType: 'image/png',
+        size: body.length,
+      });
+      const service = new MediaAccessService(prisma, config, storage);
+      const expiresAt = Math.floor(Date.now() / 1000) + 60;
+      const signature = createMediaAccessSignature({
+        mediaId: 41,
+        expiresAt,
+        checksum,
+        secret: 'p'.repeat(48),
+        ...canonicalSignatureTarget,
+      });
+
+      const read = service.readSignedObject(
+        41,
+        expiresAt,
+        signature,
+        canonicalRequestTarget,
+      );
+
+      if (outcome === 'serves') {
+        await expect(read).resolves.toEqual(expect.objectContaining({ body }));
+      } else {
+        await expect(read).rejects.toBeInstanceOf(ForbiddenException);
+        expect(storage.getPrivateObject).not.toHaveBeenCalled();
+      }
+    },
+  );
 
   it.each([
     ['memory-test', 's3'],
@@ -371,7 +467,9 @@ describe('MediaAccessService storage-provider affinity', () => {
       checksum: string;
       mimeType: string;
       size: number;
+      lessonExercises: { id: number }[];
     }> = {},
+    previousSigningSecret?: string,
   ) {
     const findUnique = jest.fn().mockResolvedValue({
       id: 41,
@@ -395,6 +493,10 @@ describe('MediaAccessService storage-provider affinity', () => {
       getOrThrow: jest.fn((key: string) => {
         if (key === 'media.signingSecret') return signingSecret;
         if (key === 'media.accessTtlSeconds') return 300;
+        throw new Error(`Unexpected configuration key: ${key}`);
+      }),
+      get: jest.fn((key: string) => {
+        if (key === 'media.signingSecretPrevious') return previousSigningSecret;
         throw new Error(`Unexpected configuration key: ${key}`);
       }),
     } as unknown as ConfigService;
