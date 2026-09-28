@@ -17,7 +17,7 @@ import { AuthService } from '../../modules/auth/auth.service';
 
 import { CustomThrottlerGuard } from './custom-throttler.guard';
 
-const JWT_SECRET = 'unit-test-throttler-jwt-secret-32-characters';
+const JWT_SECRET = 'test-throttler-jwt-secret-at-least-32-characters';
 const LIMIT = 2;
 
 @Controller()
