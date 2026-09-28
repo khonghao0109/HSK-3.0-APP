@@ -10,6 +10,7 @@ import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
 import { MediaFileProcessor } from './media-ingestion/media-file.processor';
+import { MediaIngestionConcurrencyLimiter } from './media-ingestion/media-ingestion-concurrency.limiter';
 import { MediaIngestionService } from './media-ingestion/media-ingestion.service';
 import { MediaIngestionBoundaryInterceptor } from './media-ingestion/media-ingestion-boundary.interceptor';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
@@ -26,6 +27,7 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
     ExerciseImportService,
     MediaAdminService,
     MediaFileProcessor,
+    MediaIngestionConcurrencyLimiter,
     MediaIngestionService,
     MediaIngestionBoundaryInterceptor,
     MediaIngestionEnabledGuard,
@@ -37,6 +39,7 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
     ExerciseAuthoringService,
     ExerciseImportService,
     MediaAdminService,
+    MediaIngestionConcurrencyLimiter,
     MediaIngestionService,
   ],
 })

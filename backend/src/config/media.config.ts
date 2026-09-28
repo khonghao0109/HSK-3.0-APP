@@ -16,6 +16,7 @@ export default () => ({
     scannerHost: process.env.MEDIA_SCANNER_HOST,
     scannerPort: Number(process.env.MEDIA_SCANNER_PORT ?? '3310'),
     ingestionEnabled: process.env.MEDIA_INGESTION_ENABLED === 'true',
+    maxConcurrency: Number(process.env.MEDIA_INGESTION_MAX_CONCURRENCY ?? '4'),
     uploadTimeoutMs: Number(process.env.MEDIA_UPLOAD_TIMEOUT_MS ?? '30000'),
     metricsBearerTokens: [
       process.env.MEDIA_METRICS_BEARER_TOKEN,

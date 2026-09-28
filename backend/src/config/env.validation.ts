@@ -83,6 +83,11 @@ export const envValidationSchema = Joi.object({
   }),
   MEDIA_SCANNER_PORT: Joi.number().integer().min(1).max(65535).default(3310),
   MEDIA_INGESTION_ENABLED: Joi.boolean().default(false),
+  MEDIA_INGESTION_MAX_CONCURRENCY: Joi.number()
+    .integer()
+    .min(1)
+    .max(16)
+    .default(4),
   MEDIA_UPLOAD_TIMEOUT_MS: Joi.number()
     .integer()
     .min(1000)

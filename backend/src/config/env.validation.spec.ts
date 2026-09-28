@@ -61,6 +61,28 @@ describe('media environment validation', () => {
     expect(result.error).toBeUndefined();
   });
 
+  it('defaults media ingestion max concurrency to 4 and enforces 1-16 bounds', () => {
+    expect(envValidationSchema.validate(production).value).toMatchObject({
+      MEDIA_INGESTION_MAX_CONCURRENCY: 4,
+    });
+    for (const valid of [1, 2, 8, 16]) {
+      const res = envValidationSchema.validate({
+        ...production,
+        MEDIA_INGESTION_MAX_CONCURRENCY: valid,
+      });
+      expect(res.error).toBeUndefined();
+      expect(res.value.MEDIA_INGESTION_MAX_CONCURRENCY).toBe(valid);
+    }
+    for (const invalid of [0, 17, 3.5, -1, 'invalid']) {
+      expect(
+        envValidationSchema.validate({
+          ...production,
+          MEDIA_INGESTION_MAX_CONCURRENCY: invalid,
+        }).error,
+      ).toBeDefined();
+    }
+  });
+
   it('trusts one proxy hop by default and rejects non-hop-count values', () => {
     expect(envValidationSchema.validate(production).value).toMatchObject({
       TRUST_PROXY_HOPS: 1,
