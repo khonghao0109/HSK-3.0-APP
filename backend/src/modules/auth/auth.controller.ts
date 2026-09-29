@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Role } from '@prisma/client';
 import { Request } from 'express';
@@ -31,6 +31,7 @@ type AuthenticatedUser = {
   id: number;
   email: string;
   role: Role;
+  sid: number;
 };
 
 type AuthenticatedRequest = Request & {
@@ -86,11 +87,27 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Session successfully revoked.',
+  })
+  async logout(@Req() req: AuthenticatedRequest): Promise<void> {
+    await this.authService.logout(req.user.sid);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Get('me')
   @ApiEnvelope(AuthMeResponseDto)
   getProfile(@Req() req: AuthenticatedRequest): AuthMeResponseDto {
     return {
-      user: req.user,
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+      },
     };
   }
 }

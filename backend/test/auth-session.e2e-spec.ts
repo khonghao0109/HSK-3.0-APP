@@ -9,6 +9,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
+import { AuthService } from '../src/modules/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -184,7 +185,7 @@ describe('Auth Session & Refresh Token E2E', () => {
     expect(malformedRes.status).toBe(401);
   });
 
-  // P13 & P9: Reuse detection revokes all sessions of user and rejects future requests
+  // P13 & P9 (T1): Reuse detection revokes all sessions of user when rotated token is reused outside grace period
   it('reusing rotated token returns 401 and revokes ALL user sessions with refresh_reuse', async () => {
     const email = `session_p13_${Date.now()}@example.com`;
 
@@ -203,14 +204,22 @@ describe('Auth Session & Refresh Token E2E', () => {
 
     const tokenA2 = refreshRes.body.data.accessToken as string;
 
-    // Reuse old token R1 -> triggers reuse detection
+    // T1: Shift session1 outside grace period (-11s revokedAt, -1 hour createdAt for CHECK)
+    const hash1 = createHash('sha256').update(tokenR1).digest('hex');
+    await prisma.$executeRaw`
+      UPDATE "UserSession"
+      SET "createdAt" = CURRENT_TIMESTAMP - INTERVAL '1 hour',
+          "revokedAt" = CURRENT_TIMESTAMP - INTERVAL '11 seconds'
+      WHERE "tokenHash" = ${hash1}
+    `;
+
+    // Reuse old token R1 outside grace period -> triggers reuse detection
     await request(app.getHttpServer())
       .post('/api/v1/auth/refresh')
       .send({ refreshToken: tokenR1 })
       .expect(401);
 
     // P9 & F6: Assert DB state after 401: session1 is rotated, session2 is refresh_reuse
-    const hash1 = createHash('sha256').update(tokenR1).digest('hex');
     const tokenR2 = refreshRes.body.data.refreshToken as string;
     const hash2 = createHash('sha256').update(tokenR2).digest('hex');
 
@@ -233,8 +242,55 @@ describe('Auth Session & Refresh Token E2E', () => {
       .expect(401);
   });
 
-  // P14: Concurrent refresh with identical token results in exactly one 200 and one 401, leaving no active session
-  it('concurrent refresh: 2 parallel requests yield exactly one 200 and one 401, leaving 0 active sessions', async () => {
+  // T2: Reusing rotated token within grace period returns 401, leaving successor session active
+  it('reusing rotated token within grace period returns 401, leaving successor session active', async () => {
+    const email = `session_t2_${Date.now()}@example.com`;
+
+    const registerRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password, name: 'T2 User' })
+      .expect(201);
+
+    const tokenR1 = registerRes.body.data.refreshToken as string;
+
+    // First rotation succeeds
+    const refreshRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: tokenR1 })
+      .expect(200);
+
+    const tokenA2 = refreshRes.body.data.accessToken as string;
+    const tokenR2 = refreshRes.body.data.refreshToken as string;
+
+    // Reuse old token R1 IMMEDIATELY (within 10s grace period) -> 401
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: tokenR1 })
+      .expect(401);
+
+    // Successor session S2 is still active (revokedAt is null)
+    const hash2 = createHash('sha256').update(tokenR2).digest('hex');
+    const session2 = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hash2 },
+    });
+    expect(session2.revokedAt).toBeNull();
+    expect(session2.revocationReason).toBeNull();
+
+    // Access token A2 still returns 200 on /auth/me
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${tokenA2}`)
+      .expect(200);
+
+    // Refresh using successor token R2 succeeds (returns 200)
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: tokenR2 })
+      .expect(200);
+  });
+
+  // P14 (T3): Concurrent refresh with identical token results in exactly one 200 and one 401, winner successor remains active
+  it('concurrent refresh: 2 parallel requests yield exactly one 200 and one 401, leaving winner successor active', async () => {
     const email = `session_p14_${Date.now()}@example.com`;
 
     const registerRes = await request(app.getHttpServer())
@@ -258,7 +314,7 @@ describe('Auth Session & Refresh Token E2E', () => {
     const statuses = [resA.status, resB.status].sort();
     expect(statuses).toEqual([200, 401]);
 
-    // Check DB: no active session remains (the loser detected rotation and revoked all active sessions)
+    // Check DB: exactly 1 active session remains (the winner's successor)
     const activeSessions = await prisma.userSession.findMany({
       where: {
         userId,
@@ -266,18 +322,28 @@ describe('Auth Session & Refresh Token E2E', () => {
         expiresAt: { gt: new Date() },
       },
     });
-    expect(activeSessions.length).toBe(0);
+    expect(activeSessions.length).toBe(1);
 
-    // The access token issued to the winning response is also dead
+    // No session has refresh_reuse
+    const reuseSessions = await prisma.userSession.findMany({
+      where: {
+        userId,
+        revocationReason: 'refresh_reuse',
+      },
+    });
+    expect(reuseSessions.length).toBe(0);
+
+    // The access token issued to the winning response is still valid
     const winningRes = resA.status === 200 ? resA : resB;
     const winningAccessToken = winningRes.body.data.accessToken as string;
     await request(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${winningAccessToken}`)
-      .expect(401);
+      .expect(200);
   });
 
-  it('deterministic C1 race: forced lock interleaving proves reuse revokes winning session', async () => {
+  // T3: Deterministic C1 race wrapped in try/finally, proves grace leaves winning successor active
+  it('deterministic C1 race: forced lock interleaving proves grace leaves winning successor active', async () => {
     const email = `session_f2_${Date.now()}@example.com`;
 
     const registerRes = await request(app.getHttpServer())
@@ -312,90 +378,98 @@ describe('Auth Session & Refresh Token E2E', () => {
 
     await lockAcquiredPromise;
 
-    // 2. Dispatch refresh A (do not await, but trigger execution via .then)
-    const reqAPromise = request(app.getHttpServer())
-      .post('/api/v1/auth/refresh')
-      .send({ refreshToken: rawRefreshToken })
-      .then((res) => res);
+    let resA!: request.Response;
+    let resB!: request.Response;
 
-    // Poll pg_stat_activity until backend A reaches wait_event_type = 'Lock'
-    const startTime = Date.now();
-    const deadline = startTime + 10000;
-    let backendBlocked = false;
+    try {
+      // 2. Dispatch refresh A (do not await, but trigger execution via .then)
+      const reqAPromise = request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: rawRefreshToken })
+        .then((res) => res);
 
-    while (Date.now() < deadline) {
-      const rows = await prisma.$queryRaw<
-        Array<{
-          pid: number;
-          state: string;
-          wait_event_type: string | null;
-          wait_event: string | null;
-          query: string;
-        }>
-      >`
-          SELECT pid, state, wait_event_type, wait_event, query
-          FROM pg_stat_activity
-          WHERE datname = current_database()
-            AND pid != pg_backend_pid()
-        `;
+      // Poll pg_stat_activity until backend A reaches wait_event_type = 'Lock'
+      const startTime = Date.now();
+      const deadline = startTime + 10000;
+      let backendBlocked = false;
 
-      const blocked = rows.filter((r) => r.wait_event_type === 'Lock');
-      if (blocked.length > 0) {
-        backendBlocked = true;
-        break;
+      while (Date.now() < deadline) {
+        const rows = await prisma.$queryRaw<
+          Array<{
+            pid: number;
+            state: string;
+            wait_event_type: string | null;
+            wait_event: string | null;
+            query: string;
+          }>
+        >`
+            SELECT pid, state, wait_event_type, wait_event, query
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+              AND pid != pg_backend_pid()
+          `;
+
+        const blocked = rows.filter((r) => r.wait_event_type === 'Lock');
+        if (blocked.length > 0) {
+          backendBlocked = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20));
       }
-      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      expect(backendBlocked).toBe(true);
+
+      // 3. Dispatch refresh B with the same refresh token
+      let bCompletedEarly = false;
+      const reqBPromise = request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: rawRefreshToken })
+        .then((res) => {
+          bCompletedEarly = true;
+          return res;
+        });
+
+      const pollStart = Date.now();
+      const pollDeadline = pollStart + 10000;
+      let bReachedState = false;
+
+      while (Date.now() < pollDeadline) {
+        if (bCompletedEarly) {
+          bReachedState = true;
+          break;
+        }
+        const blockedBackends = await prisma.$queryRaw<
+          Array<{ pid: number; wait_event_type: string | null }>
+        >`
+            SELECT pid, wait_event_type
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+              AND pid != pg_backend_pid()
+              AND wait_event_type = 'Lock'
+          `;
+        if (blockedBackends.length >= 2) {
+          bReachedState = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+
+      expect(bReachedState).toBe(true);
+
+      // Release table lock
+      releaseLock();
+      await lockTxPromise;
+
+      [resA, resB] = await Promise.all([reqAPromise, reqBPromise]);
+    } finally {
+      releaseLock();
+      await lockTxPromise.catch(() => undefined);
     }
-
-    expect(backendBlocked).toBe(true);
-
-    // 3. Dispatch refresh B with the same refresh token
-    let bCompletedEarly = false;
-    const reqBPromise = request(app.getHttpServer())
-      .post('/api/v1/auth/refresh')
-      .send({ refreshToken: rawRefreshToken })
-      .then((res) => {
-        bCompletedEarly = true;
-        return res;
-      });
-
-    const pollStart = Date.now();
-    const pollDeadline = pollStart + 10000;
-    let bReachedState = false;
-
-    while (Date.now() < pollDeadline) {
-      if (bCompletedEarly) {
-        bReachedState = true;
-        break;
-      }
-      const blockedBackends = await prisma.$queryRaw<
-        Array<{ pid: number; wait_event_type: string | null }>
-      >`
-          SELECT pid, wait_event_type
-          FROM pg_stat_activity
-          WHERE datname = current_database()
-            AND pid != pg_backend_pid()
-            AND wait_event_type = 'Lock'
-        `;
-      if (blockedBackends.length >= 2) {
-        bReachedState = true;
-        break;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    }
-
-    expect(bReachedState).toBe(true);
-
-    // Release table lock
-    releaseLock();
-    await lockTxPromise;
-
-    const [resA, resB] = await Promise.all([reqAPromise, reqBPromise]);
 
     const statuses = [resA.status, resB.status].sort();
     expect(statuses).toEqual([200, 401]);
 
-    // 4. Assert: NO active session remains for this user
+    // 4. Assert: Winner's successor session remains active
     const activeSessions = await prisma.userSession.findMany({
       where: {
         userId,
@@ -403,14 +477,22 @@ describe('Auth Session & Refresh Token E2E', () => {
         expiresAt: { gt: new Date() },
       },
     });
-    expect(activeSessions.length).toBe(0);
+    expect(activeSessions.length).toBe(1);
+
+    const reuseSessions = await prisma.userSession.findMany({
+      where: {
+        userId,
+        revocationReason: 'refresh_reuse',
+      },
+    });
+    expect(reuseSessions.length).toBe(0);
 
     const winningRes = resA.status === 200 ? resA : resB;
     const winningAccessToken = winningRes.body.data.accessToken as string;
     await request(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${winningAccessToken}`)
-      .expect(401);
+      .expect(200);
   }, 20000);
 
   // P15 & P9: Expired session returns 401; suspended user causes 401 and marks session account_inactive
@@ -484,5 +566,101 @@ describe('Auth Session & Refresh Token E2E', () => {
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${suspendedAccessToken}`)
       .expect(401);
+  });
+
+  // T4: Logout returns 204, revokes session in DB, keeps other sessions active, and rejects second logout with 401
+  it('logout returns 204, revokes session in DB, keeps other user sessions active, and rejects second logout with 401', async () => {
+    const email = `session_logout_${Date.now()}@example.com`;
+
+    // 1. Register user -> Session 1 (tokenA1)
+    const regRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password, name: 'Logout User' })
+      .expect(201);
+    const tokenA1 = regRes.body.data.accessToken as string;
+
+    // 2. Login user second time -> Session 2 (tokenA2)
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password })
+      .expect(201);
+    const tokenA2 = loginRes.body.data.accessToken as string;
+
+    // Logout without token -> 401
+    await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(401);
+
+    // Logout with tokenA1 -> 204 with no body
+    const logoutRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${tokenA1}`)
+      .expect(204);
+    expect(logoutRes.body).toEqual({});
+
+    // Access token A1 now returns 401 on /auth/me
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${tokenA1}`)
+      .expect(401);
+
+    // DB check: session for A1 has revocationReason = 'logout'
+    const payload1 = jwtService.decode<{ sid: number }>(tokenA1);
+    const session1 = await prisma.userSession.findUniqueOrThrow({
+      where: { id: payload1.sid },
+    });
+    expect(session1.revokedAt).not.toBeNull();
+    expect(session1.revocationReason).toBe('logout');
+
+    // Session 2 (tokenA2) remains active and returns 200 on /auth/me
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${tokenA2}`)
+      .expect(200);
+
+    // Second logout with tokenA1 -> 401 (guard rejects revoked session)
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${tokenA1}`)
+      .expect(401);
+
+    // Direct check for "revokedAt" IS NULL condition: logout does not overwrite already-revoked session
+    await prisma.$executeRaw`
+      UPDATE "UserSession"
+      SET "createdAt" = CURRENT_TIMESTAMP - INTERVAL '1 hour',
+          "revokedAt" = CURRENT_TIMESTAMP - INTERVAL '10 seconds',
+          "revocationReason" = 'rotated'
+      WHERE "id" = ${session1.id}
+    `;
+    const authService = app.get(AuthService);
+    await authService.logout(session1.id);
+    const sessionAfterLogout = await prisma.userSession.findUniqueOrThrow({
+      where: { id: session1.id },
+    });
+    expect(sessionAfterLogout.revocationReason).toBe('rotated');
+  });
+
+  // T5: /auth/me returns data.user with exactly id, email, role keys, omitting sid
+  it('/auth/me returns data.user with exactly id, email, and role keys, omitting sid', async () => {
+    const email = `session_t5_${Date.now()}@example.com`;
+
+    const registerRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password, name: 'T5 User' })
+      .expect(201);
+
+    const accessToken = registerRes.body.data.accessToken as string;
+
+    const meRes = await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(Object.keys(meRes.body.data.user).sort()).toEqual([
+      'email',
+      'id',
+      'role',
+    ]);
+    expect(meRes.body.data.user.id).toBe(registerRes.body.data.user.id);
+    expect(meRes.body.data.user.email).toBe(email);
+    expect(meRes.body.data.user).not.toHaveProperty('sid');
   });
 });

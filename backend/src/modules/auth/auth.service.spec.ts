@@ -357,13 +357,24 @@ describe('AuthService login throttling and lockout', () => {
       );
     });
 
-    it('revokes all active sessions with refresh_reuse when rotated token is reused', async () => {
+    it('does not revoke active sessions when rotated token is reused within grace period', async () => {
       queryRaw.mockResolvedValueOnce([]); // claim 0 rows
-      userSessionFindUnique.mockResolvedValueOnce({
-        id: 101,
-        userId: 7,
-        revocationReason: 'rotated',
-      });
+      queryRaw.mockResolvedValueOnce([
+        { id: 101, userId: 7, isWithinGrace: true },
+      ]);
+
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        new UnauthorizedException('Invalid refresh token'),
+      );
+
+      expect(executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('revokes all active sessions with refresh_reuse when rotated token is reused outside grace period', async () => {
+      queryRaw.mockResolvedValueOnce([]); // claim 0 rows
+      queryRaw.mockResolvedValueOnce([
+        { id: 101, userId: 7, isWithinGrace: false },
+      ]);
 
       await expect(service.refresh(rawToken)).rejects.toThrow(
         new UnauthorizedException('Invalid refresh token'),
@@ -377,13 +388,27 @@ describe('AuthService login throttling and lockout', () => {
 
     it('returns 401 without revoking user sessions when token is unknown or expired', async () => {
       queryRaw.mockResolvedValueOnce([]); // claim 0 rows
-      userSessionFindUnique.mockResolvedValueOnce(null);
+      queryRaw.mockResolvedValueOnce([]); // not found or not rotated
 
       await expect(service.refresh(rawToken)).rejects.toThrow(
         new UnauthorizedException('Invalid refresh token'),
       );
 
       expect(executeRaw).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logout', () => {
+    it('revokes session matching sid when revokedAt is null with reason logout', async () => {
+      await service.logout(101);
+
+      expect(executeRaw).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.stringContaining('logout'),
+          expect.stringContaining('"revokedAt" IS NULL'),
+        ]),
+        101,
+      );
     });
   });
 

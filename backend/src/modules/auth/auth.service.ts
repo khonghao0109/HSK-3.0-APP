@@ -24,6 +24,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
 export const LOGIN_EMAIL_FAILURE_LIMIT = 5;
 const LOGIN_EMAIL_WINDOW_MS = 15 * 60_000;
+export const REFRESH_REUSE_GRACE_SECONDS = 10;
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -327,40 +328,7 @@ export class AuthService implements OnModuleInit {
           return { kind: 'account_inactive' };
         }
 
-        const newRawRefreshToken = randomBytes(32).toString('base64url');
-        const newTokenHash = createHash('sha256')
-          .update(newRawRefreshToken)
-          .digest('hex');
-        const ttlDays = this.getRefreshTokenTtlDays();
-
-        const createdSessions = await tx.$queryRaw<
-          Array<{
-            id: number;
-            userId: number;
-            tokenHash: string;
-            expiresAt: Date;
-            createdAt: Date;
-            lastSeenAt: Date;
-          }>
-        >`
-          INSERT INTO "UserSession" (
-            "userId",
-            "tokenHash",
-            "expiresAt",
-            "createdAt",
-            "lastSeenAt"
-          )
-          VALUES (
-            ${user.id},
-            ${newTokenHash},
-            CURRENT_TIMESTAMP + (${ttlDays} * INTERVAL '1 day'),
-            CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP
-          )
-          RETURNING "id", "userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt"
-        `;
-
-        const newSession = createdSessions[0];
+        const newSession = await this.insertSession(tx, user.id);
 
         return {
           kind: 'issued',
@@ -374,7 +342,7 @@ export class AuthService implements OnModuleInit {
             id: newSession.id,
             expiresAt: newSession.expiresAt,
           },
-          rawRefreshToken: newRawRefreshToken,
+          rawRefreshToken: newSession.rawRefreshToken,
         };
       },
     );
@@ -399,27 +367,44 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const existingSession = await this.prisma.userSession.findUnique({
-      where: { tokenHash },
-      select: {
-        id: true,
-        userId: true,
-        revocationReason: true,
-      },
-    });
+    const rotatedSessions = await this.prisma.$queryRaw<
+      Array<{
+        id: number;
+        userId: number;
+        isWithinGrace: boolean;
+      }>
+    >`
+      SELECT "id",
+             "userId",
+             ("revokedAt" > CURRENT_TIMESTAMP - (${REFRESH_REUSE_GRACE_SECONDS} * INTERVAL '1 second')) AS "isWithinGrace"
+      FROM "UserSession"
+      WHERE "tokenHash" = ${tokenHash}
+        AND "revocationReason" = 'rotated'
+    `;
 
-    if (existingSession && existingSession.revocationReason === 'rotated') {
+    if (rotatedSessions.length > 0 && !rotatedSessions[0].isWithinGrace) {
       await this.prisma.$executeRaw`
         UPDATE "UserSession"
         SET "revokedAt" = CURRENT_TIMESTAMP,
             "revocationReason" = 'refresh_reuse',
             "lastSeenAt" = CURRENT_TIMESTAMP
-        WHERE "userId" = ${existingSession.userId}
+        WHERE "userId" = ${rotatedSessions[0].userId}
           AND "revokedAt" IS NULL
       `;
     }
 
     throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  async logout(sid: number): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE "UserSession"
+      SET "revokedAt" = CURRENT_TIMESTAMP,
+          "revocationReason" = 'logout',
+          "lastSeenAt" = CURRENT_TIMESTAMP
+      WHERE "id" = ${sid}
+        AND "revokedAt" IS NULL
+    `;
   }
 
   private getRefreshTokenTtlDays(): number {
@@ -434,36 +419,57 @@ export class AuthService implements OnModuleInit {
       : 30;
   }
 
-  private async createSessionAndSignToken(user: {
+  private async insertSession(
+    client: PrismaService | Prisma.TransactionClient,
+    userId: number,
+  ): Promise<{
     id: number;
-    email: string;
-    role: Role;
-    name: string | null;
-  }) {
+    expiresAt: Date;
+    rawRefreshToken: string;
+  }> {
     const rawRefreshToken = randomBytes(32).toString('base64url');
     const tokenHash = createHash('sha256')
       .update(rawRefreshToken)
       .digest('hex');
     const ttlDays = this.getRefreshTokenTtlDays();
 
-    const sessions = await this.prisma.$queryRaw<
+    const createdSessions = await client.$queryRaw<
       Array<{
         id: number;
-        userId: number;
-        tokenHash: string;
         expiresAt: Date;
-        createdAt: Date;
-        lastSeenAt: Date;
-        revokedAt: Date | null;
-        revocationReason: string | null;
       }>
     >`
-      INSERT INTO "UserSession" ("userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt")
-      VALUES (${user.id}, ${tokenHash}, CURRENT_TIMESTAMP + (${ttlDays} * INTERVAL '1 day'), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      RETURNING "id", "userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt", "revokedAt", "revocationReason"
+      INSERT INTO "UserSession" (
+        "userId",
+        "tokenHash",
+        "expiresAt",
+        "createdAt",
+        "lastSeenAt"
+      )
+      VALUES (
+        ${userId},
+        ${tokenHash},
+        CURRENT_TIMESTAMP + (${ttlDays} * INTERVAL '1 day'),
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+      RETURNING "id", "expiresAt"
     `;
 
-    const session = sessions[0];
+    return {
+      id: createdSessions[0].id,
+      expiresAt: createdSessions[0].expiresAt,
+      rawRefreshToken,
+    };
+  }
+
+  private async createSessionAndSignToken(user: {
+    id: number;
+    email: string;
+    role: Role;
+    name: string | null;
+  }) {
+    const session = await this.insertSession(this.prisma, user.id);
     const accessToken = await this.signToken(
       user.id,
       user.email,
@@ -479,7 +485,7 @@ export class AuthService implements OnModuleInit {
         name: user.name,
       },
       accessToken,
-      refreshToken: rawRefreshToken,
+      refreshToken: session.rawRefreshToken,
       refreshTokenExpiresAt: session.expiresAt.toISOString(),
     };
   }

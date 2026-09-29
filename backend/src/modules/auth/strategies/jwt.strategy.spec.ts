@@ -51,6 +51,7 @@ describe('JwtStrategy', () => {
       id: 7,
       email: 'current@example.com',
       role: 'admin',
+      sid: 101,
     });
 
     expect(findFirst).toHaveBeenCalledWith({
