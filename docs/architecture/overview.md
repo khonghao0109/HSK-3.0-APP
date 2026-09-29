@@ -147,7 +147,7 @@ Backend (`backend/.env.example`):
 | `TEST_DATABASE_URL` | khi chạy test DB | cùng host/db với `DATABASE_URL`, không query param; tên DB phải khớp `(test\|e2e\|verify\|disposable\|hardening)` |
 | `JWT_SECRETS` | có | JSON `{ "kid": "secret" }` |
 | `JWT_ACTIVE_KID` | có | kid dùng để ký |
-| `JWT_EXPIRES_IN` | mặc định `7d` | |
+| `JWT_EXPIRES_IN` | mặc định `15m` | |
 | `AUTH_PASSWORD_PEPPER` | production | ≥ 16 ký tự ngoài production |
 | `ALLOWED_ORIGINS` | production | mặc định loopback 3001 ngoài production |
 | `MEDIA_STORAGE_PROVIDER` | mặc định `s3` | `memory` chỉ khi `NODE_ENV=test` |

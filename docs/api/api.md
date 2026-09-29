@@ -148,8 +148,8 @@ như giới hạn toàn cục.
 Body refresh: `{ "refreshToken": string }` (32 byte `randomBytes` mã hoá base64url, đúng 43 ký tự).
 Throttle 30/phút/IP (1.000/phút dưới test). DB chỉ lưu SHA-256 hex của token trong `UserSession`.
 Access token gắn session qua payload `sid` = `UserSession.id`. `JwtStrategy` từ chối (401) nếu
-session bị revoke hoặc hết hạn. Thời hạn access token mặc định vẫn là 7 ngày (`7d`) cho tới task
-M1.4c (khi hạ xuống 15 phút cùng BFF cookie).
+session bị revoke hoặc hết hạn. Thời hạn access token mặc định là 15 phút (`15m`), được BFF proxy
+âm thầm làm mới khi còn dưới 2 phút.
 
 Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hiện dùng lại (reuse detection):
 - Claim nguyên tử một session hợp lệ bằng SQL UPDATE với `CURRENT_TIMESTAMP`, đặt lý do revoke là `rotated`.
