@@ -77,6 +77,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       }),
     );
     await app.init();
+    await app.listen(0, '127.0.0.1');
     prisma = app.get(PrismaService);
 
     const level = await prisma.level.create({
