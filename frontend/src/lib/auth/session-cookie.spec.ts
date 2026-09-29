@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createClearedSessionCookie,
+  createRefreshSessionCookie,
   createSessionCookie,
+  getRefreshCookieName,
+  readJwtExpiry,
   SessionTokenError,
 } from './session-cookie';
 
@@ -64,10 +67,68 @@ describe('session cookie', () => {
 
   it.each(['invalid', jwt(nowSeconds), jwt(nowSeconds - 1)])(
     'rejects malformed or expired token %s',
-    (token) => {
+    (token: string) => {
       expect(() =>
         createSessionCookie(token, {
           cookieName: 'hsk_admin_session',
+          nowMs: nowSeconds * 1000,
+          production: false,
+        }),
+      ).toThrow(SessionTokenError);
+    },
+  );
+
+  it('derives refresh cookie name with _refresh suffix', () => {
+    expect(getRefreshCookieName('hsk_admin_session')).toBe(
+      'hsk_admin_session_refresh',
+    );
+  });
+
+  it('reads jwt expiry or returns null for malformed tokens', () => {
+    expect(readJwtExpiry(jwt(nowSeconds + 500))).toBe(nowSeconds + 500);
+    expect(readJwtExpiry('not-a-jwt')).toBeNull();
+    expect(readJwtExpiry('a.b')).toBeNull();
+    expect(
+      readJwtExpiry(
+        `a.${Buffer.from(JSON.stringify({ exp: 'not-a-number' })).toString('base64url')}.c`,
+      ),
+    ).toBeNull();
+  });
+
+  it('creates refresh cookie with correct maxAge and attributes', () => {
+    const expiresAt = new Date((nowSeconds + 86400) * 1000).toISOString();
+    const cookie = createRefreshSessionCookie(
+      'sample-refresh-token',
+      expiresAt,
+      {
+        cookieName: 'hsk_admin_session_refresh',
+        nowMs: nowSeconds * 1000,
+        production: true,
+      },
+    );
+    expect(cookie).toEqual({
+      name: 'hsk_admin_session_refresh',
+      value: 'sample-refresh-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: true,
+        path: '/',
+        maxAge: 86400,
+      },
+    });
+  });
+
+  it.each([
+    new Date(nowSeconds * 1000).toISOString(),
+    new Date((nowSeconds - 10) * 1000).toISOString(),
+    'not-a-date',
+  ])(
+    'rejects refresh cookie with non-positive maxAge or invalid date: %s',
+    (expiresAt: string) => {
+      expect(() =>
+        createRefreshSessionCookie('sample-refresh-token', expiresAt, {
+          cookieName: 'hsk_admin_session_refresh',
           nowMs: nowSeconds * 1000,
           production: false,
         }),

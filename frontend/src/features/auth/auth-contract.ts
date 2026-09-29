@@ -17,14 +17,25 @@ export const loginInputSchema = z.object({
 export const loginResponseSchema = z.object({
   user: authUserSchema,
   accessToken: z.string().min(1),
+  refreshToken: z.string().min(1).optional(),
+  refreshTokenExpiresAt: z.string().min(1).optional(),
+});
+
+export const refreshResponseSchema = z.object({
+  user: authUserSchema,
+  accessToken: z.string().min(1),
+  refreshToken: z.string().min(1),
+  refreshTokenExpiresAt: z.string().min(1),
 });
 
 export const meResponseSchema = z.object({ user: authUserSchema });
 
 // Backend → BFF: the global envelope, resolved to `{ success: true, data }`.
 export const backendLoginSchema = backendEnvelope(loginResponseSchema);
+export const backendRefreshSchema = backendEnvelope(refreshResponseSchema);
 export const backendMeSchema = backendEnvelope(meResponseSchema);
 
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
+export type RefreshResponse = z.infer<typeof refreshResponseSchema>;

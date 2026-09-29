@@ -130,7 +130,7 @@ export const envValidationSchema = Joi.object({
     .max(300000)
     .default(60000),
 
-  JWT_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_EXPIRES_IN: Joi.string().default('15m'),
   AUTH_REFRESH_TOKEN_TTL_DAYS: Joi.number()
     .integer()
     .min(1)

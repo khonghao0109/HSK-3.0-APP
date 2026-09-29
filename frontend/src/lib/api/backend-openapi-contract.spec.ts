@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import {
   backendLoginSchema,
   backendMeSchema,
+  backendRefreshSchema,
 } from '@/features/auth/auth-contract';
 import {
   backendExerciseDetailSchema,
@@ -101,6 +102,10 @@ describe('backend OpenAPI contract', () => {
     type Login = BackendBody<'/api/v1/auth/login', 'post', 201>;
     expectTypeOf<Login>().not.toBeNever();
     expectTypeOf<Login>().toExtend<z.input<typeof backendLoginSchema>>();
+
+    type Refresh = BackendBody<'/api/v1/auth/refresh', 'post', 200>;
+    expectTypeOf<Refresh>().not.toBeNever();
+    expectTypeOf<Refresh>().toExtend<z.input<typeof backendRefreshSchema>>();
 
     type Me = BackendBody<'/api/v1/auth/me', 'get', 200>;
     expectTypeOf<Me>().not.toBeNever();

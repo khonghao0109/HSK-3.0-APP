@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest';
 
 import { config, proxy } from './proxy';
 
-describe('CSP nonce proxy', () => {
-  it('returns a distinct valid nonce for every request', () => {
-    const first = proxy(new NextRequest('https://frontend.example.test/login'));
-    const second = proxy(
+describe('CSP nonce proxy and session refresh router', () => {
+  it('returns a distinct valid nonce for every request', async () => {
+    const first = await proxy(
+      new NextRequest('https://frontend.example.test/login'),
+    );
+    const second = await proxy(
       new NextRequest('https://frontend.example.test/admin/exercises'),
     );
     const firstPolicy = first.headers.get('content-security-policy');
@@ -21,9 +23,17 @@ describe('CSP nonce proxy', () => {
     expect(first.headers.get('x-middleware-request-x-nonce')).toBe(firstNonce);
   });
 
+  it('does not set CSP on API requests', async () => {
+    const response = await proxy(
+      new NextRequest('https://frontend.example.test/api/session/me'),
+    );
+    expect(response.headers.get('content-security-policy')).toBeNull();
+  });
+
   it.each([
-    '/api/session/me',
-    '/api/session/recover',
+    '/api/session/login',
+    '/api/session/logout',
+    '/_next/static/x.js',
     '/_next/static/chunks/app.js',
     '/_next/image?url=%2Flogo.png&w=64&q=75',
     '/favicon.ico',
@@ -33,6 +43,15 @@ describe('CSP nonce proxy', () => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(false);
   });
 
+  it.each([
+    '/admin/media',
+    '/api/admin/media/1/archive',
+    '/api/session/me',
+    '/api/session/recover',
+  ])('runs for targeted request %s', (url) => {
+    expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
+  });
+
   it.each([{ 'next-router-prefetch': '1' }, { purpose: 'prefetch' }])(
     'does not run for router prefetch headers %o',
     (headers) => {
@@ -40,7 +59,7 @@ describe('CSP nonce proxy', () => {
         doesProxyMatch({
           config,
           nextConfig: {},
-          url: '/login',
+          url: '/admin',
           headers,
         }),
       ).toBe(false);

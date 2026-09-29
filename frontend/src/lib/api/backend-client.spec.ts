@@ -130,4 +130,35 @@ describe('server-only backend client', () => {
       client.request('/api/v1/admin/cms/media/41/upload', { method: 'POST' }),
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
+
+  it('allowlists auth refresh and logout endpoints, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/auth/refresh', {
+      method: 'POST',
+      body: { refreshToken: 'dummy' },
+    });
+    await client.request('/api/v1/auth/logout', {
+      method: 'POST',
+      token: 'dummy-token',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    await expect(
+      client.request('/api/v1/auth/refresh/x', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+    await expect(
+      client.request('/api/v1/auth/logout?x=1', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+    await expect(
+      client.request('/api/v1/auth/refreshx', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+  });
 });
