@@ -45,7 +45,7 @@ cam kết.
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 9 / 10 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
-| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 2 / 16 | 3–4 tuần | 🟡 |
+| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 3 / 16 | 3–4 tuần | 🟡 |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 21 | 5–7 tuần | 🟡 backend xong |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **55 / 133 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **56 / 133 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -189,7 +189,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | DB dev 13/09: 35 Lesson, 70 Topic, 14 Story đều là seed "Temporary" từ `seed:learning` |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |
-| M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ⬜ | tiền đề mobile |
+| M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ⬜ | ADR-008 §9 |
 | M1.5b | Email verification (token hash) | ⬜ | |
 | M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
@@ -417,7 +417,7 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | Kiểm tra DB dev 13/09: toàn bộ 35 Lesson, 70 Topic, 14 Story là placeholder "Temporary" |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03; schema ✅. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03; schema ✅. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |
-| M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ⬜ | tiền đề mobile |
+| M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
 | M1.5 | Email verification + password reset qua `MailerPort` (SES / Mailpit) | ⬜ | ADR-008 §9; token schema ✅ |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
 | M1.7 | Privacy: consent API, export job, deletion/anonymize worker (pg-boss) | ⬜ | C-03, ADR-001; schema ✅ |
@@ -604,3 +604,4 @@ khi vertical slice bắt đầu.
 | 29/09/2026 | GĐ1: H.16 ✅ đã đóng (`28cd345`, kèm `48ad32b`, PR #5 run `36514585300`): xác định nguyên nhân flaky do supertest tự `listen(0)`/`close()` mỗi request khi app chỉ `init()`, response lỗi đến từ process khác trên loopback (không có `x-request-id`); đo được: mặc định 3/116 fail, tắt keep-alive 3/100 fail, listen một lần 0/200 fail; áp dụng cho cả 8 suite `init()`-only; triển khai 2 điều kiện review D-04 (L1 xoá rate limit trong loop poll + L2 dời check `abortedIngestion` sau 201 trong `media-ingestion-concurrency.e2e-spec.ts`); 10 lượt e2e toàn bộ liên tiếp pass và full gate backend GREEN. GĐ1 đạt 9/10, tổng 53/132. |
 | 29/09/2026 | GĐ4: M1.4a ✅ đã đóng (`1b27a45`, PR #5 run `36521807782`): refresh token xoay vòng lưu hash sha256 trong `UserSession`, claim nguyên tử với `CURRENT_TIMESTAMP`, phát hiện dùng lại thu hồi toàn bộ session, access token gắn `sid`; giữ access token 7d, hạ 15 phút chuyển sang M1.4b cùng BFF refresh. |
 | 29/09/2026 | GĐ4: M1.4b ✅ đã đóng (`08a78ea`, PR #5 run `36533471666`): POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh vô hại giữa các tab; tách M1.4c cho BFF proxy refresh và cookie. Tổng 55/133. |
+| 29/09/2026 | GĐ4: M1.4c ✅ đã đóng (`01f468c`, PR #5 run `36547912748`): BFF proxy âm thầm refresh access token khi còn dưới 2 phút với single-flight sha256 map, cookie refresh song song với session cookie, route handler /api/session/logout gọi backend logout thật (204) để revoke session, hạ mặc định access token backend xuống 15m (`15m`). Tổng 56/133. |
