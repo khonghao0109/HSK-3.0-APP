@@ -416,16 +416,11 @@ describe('Media Ingestion Concurrency Limiting E2E', () => {
       writeAndAbort();
     });
 
-    // (a) Không có dòng MediaIngestion nào ứng với Idempotency-Key của request bị huỷ
-    const abortedIngestion = await prisma.mediaIngestion.findFirst({
-      where: { idempotencyKeyHash: hashKey(abortKey) },
-    });
-    expect(abortedIngestion).toBeNull();
-
-    // (b) Ngay sau đó, một upload hợp lệ nhận 201 (slot đã được trả)
+    // (a) Ngay sau đó, một upload hợp lệ nhận 201 (slot đã được trả)
     const deadline = Date.now() + 2000;
     let nextUploadRes: request.Response | null = null;
     while (Date.now() < deadline) {
+      await prisma.mediaUploadRateLimit.deleteMany();
       const validKey = `valid-after-abort-${randomUUID()}`;
       nextUploadRes = await upload(
         adminToken,
@@ -438,6 +433,12 @@ describe('Media Ingestion Concurrency Limiting E2E', () => {
       await new Promise((r) => setTimeout(r, 50));
     }
     expect(nextUploadRes?.status).toBe(201);
+
+    // (b) Không có dòng MediaIngestion nào ứng với Idempotency-Key của request bị huỷ
+    const abortedIngestion = await prisma.mediaIngestion.findFirst({
+      where: { idempotencyKeyHash: hashKey(abortKey) },
+    });
+    expect(abortedIngestion).toBeNull();
   });
 
   function hashKey(key: string): string {
