@@ -110,6 +110,7 @@ liveness/readiness.)
 | --- | --- | --- | --- |
 | `POST` | `/auth/register` | public | 100/phút/IP |
 | `POST` | `/auth/login` | public | 10/phút/IP; 5 lần sai/15 phút/email |
+| `POST` | `/auth/refresh` | public | 30/phút/IP |
 | `GET` | `/auth/me` | JWT | global |
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
@@ -140,13 +141,37 @@ Thứ tự kiểm tra login (H.5, B-01):
    (plaintext, Argon2i/Argon2d, bcrypt…) luôn → `401`, không so sánh chuỗi và không tự
    hash lại; account đó cần reset password (H.6, B-02).
 
-Dưới `NODE_ENV=test` giới hạn IP của login nới thành 1.000/phút cho e2e từ loopback,
+Dưới `NODE_ENV=test` giới hạn IP của login và refresh nới thành 1.000/phút cho e2e từ loopback,
 như giới hạn toàn cục.
 
-`data` của register/login (`201`, không `tokenType`/`expiresIn`):
+Body refresh: `{ "refreshToken": string }` (32 byte `randomBytes` mã hoá base64url, đúng 43 ký tự).
+Throttle 30/phút/IP (1.000/phút dưới test). DB chỉ lưu SHA-256 hex của token trong `UserSession`.
+Access token gắn session qua payload `sid` = `UserSession.id`. `JwtStrategy` từ chối (401) nếu
+session bị revoke hoặc hết hạn. Thời hạn access token mặc định vẫn là 7 ngày (`7d`) cho tới task
+M1.4b (khi hạ xuống 15 phút cùng BFF cookie).
+
+Cơ chế xoay vòng (rotation) và phát hiện dùng lại (reuse detection):
+- Claim nguyên tử một session hợp lệ bằng SQL UPDATE với `CURRENT_TIMESTAMP`, đặt lý do revoke là `rotated`.
+- Nếu claim thành công 1 dòng: user phải active và chưa soft-delete. Nếu không: revoke session đó với lý do
+  `account_inactive` và trả 401. Nếu hợp lệ: tạo session mới (TTL `AUTH_REFRESH_TOKEN_TTL_DAYS`, mặc định 30 ngày)
+  và trả cặp token mới.
+- Nếu claim 0 dòng: tra lại token hash. Nếu token đã bị revoke với lý do `rotated` (bị dùng lại), server
+  thu hồi TOÀN BỘ session còn lại của user với lý do `refresh_reuse`, rồi trả 401. Nếu không tồn tại hoặc hết hạn:
+  trả 401.
+- Mọi nhánh 401 của refresh trả chung thông điệp `Invalid refresh token` để không lộ trạng thái nội bộ.
+- Client bắt buộc phải serialize các request refresh (không gửi đồng thời): nếu 2 request refresh song song
+  gửi cùng một token, một request claim trước thắng và request thứ hai bị coi là dùng lại token khiến toàn bộ
+  session của user bị thu hồi.
+
+`data` của register/login (`201`) và refresh (`200`):
 
 ```json
-{ "user": { "id": 1, "email": "user@example.com", "role": "user", "name": null }, "accessToken": "<jwt>" }
+{
+  "user": { "id": 1, "email": "user@example.com", "role": "user", "name": null },
+  "accessToken": "<jwt>",
+  "refreshToken": "<base64url-43-chars>",
+  "refreshTokenExpiresAt": "2026-10-29T12:00:00.000Z"
+}
 ```
 
 `data` của `GET /auth/me` (`200`): `{ "user": { "id": 1, "email": "user@example.com", "role": "user" } }`.
