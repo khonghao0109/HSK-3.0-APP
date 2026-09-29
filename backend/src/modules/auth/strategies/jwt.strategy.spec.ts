@@ -6,9 +6,9 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
-  const findUnique = jest.fn();
+  const findFirst = jest.fn();
   const prisma = {
-    user: { findUnique },
+    userSession: { findFirst },
   } as unknown as PrismaService;
   const configService = {
     get: jest.fn((key: string) => {
@@ -32,12 +32,12 @@ describe('JwtStrategy', () => {
   });
 
   it('accepts an active account and uses current database identity fields', async () => {
-    findUnique.mockResolvedValue({
-      id: 7,
-      email: 'current@example.com',
-      role: 'admin',
-      status: 'active',
-      deletedAt: null,
+    findFirst.mockResolvedValue({
+      user: {
+        id: 7,
+        email: 'current@example.com',
+        role: 'admin',
+      },
     });
 
     await expect(
@@ -45,52 +45,103 @@ describe('JwtStrategy', () => {
         sub: 7,
         email: 'stale@example.com',
         role: 'user',
+        sid: 101,
       }),
     ).resolves.toEqual({
       id: 7,
       email: 'current@example.com',
       role: 'admin',
     });
+
+    expect(findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 101,
+        userId: 7,
+        revokedAt: null,
+        expiresAt: { gt: expect.any(Date) as unknown },
+        user: {
+          id: 7,
+          status: 'active',
+          deletedAt: null,
+        },
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
   });
 
   it.each(['suspended', 'deletion_pending', 'anonymized'] as const)(
     'rejects a token after the account becomes %s',
-    async (status) => {
-      findUnique.mockResolvedValue({
-        id: 7,
-        email: 'user@example.com',
-        role: 'user',
-        status,
-        deletedAt: status === 'anonymized' ? new Date() : null,
-      });
+    async () => {
+      findFirst.mockResolvedValue(null);
 
       await expect(
-        strategy.validate({ sub: 7, email: 'user@example.com', role: 'user' }),
+        strategy.validate({
+          sub: 7,
+          email: 'user@example.com',
+          role: 'user',
+          sid: 101,
+        }),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     },
   );
 
   it('rejects a deleted or missing account without exposing which state occurred', async () => {
-    findUnique.mockResolvedValueOnce({
-      id: 7,
-      email: 'user@example.com',
-      role: 'user',
-      status: 'active',
-      deletedAt: new Date(),
-    });
+    findFirst.mockResolvedValueOnce(null);
 
     const validation = strategy.validate({
       sub: 7,
       email: 'user@example.com',
       role: 'user',
+      sid: 101,
     });
     await expect(validation).rejects.toMatchObject({
       message: 'Account is not available.',
     });
 
-    findUnique.mockResolvedValueOnce(null);
+    findFirst.mockResolvedValueOnce(null);
     await expect(
-      strategy.validate({ sub: 8, email: 'missing@example.com', role: 'user' }),
+      strategy.validate({
+        sub: 8,
+        email: 'missing@example.com',
+        role: 'user',
+        sid: 102,
+      }),
     ).rejects.toMatchObject({ message: 'Account is not available.' });
   });
+
+  it('rejects a token missing sid', async () => {
+    await expect(
+      strategy.validate({
+        sub: 7,
+        email: 'user@example.com',
+        role: 'user',
+      }),
+    ).rejects.toThrow(new UnauthorizedException('Account is not available.'));
+
+    expect(findFirst).not.toHaveBeenCalled();
+  });
+
+  it.each(['101', 0, -1, 1.5, NaN, Infinity, null, undefined, 2147483648])(
+    'rejects non-safe-integer positive sid: %s',
+    async (sid) => {
+      await expect(
+        strategy.validate({
+          sub: 7,
+          email: 'user@example.com',
+          role: 'user',
+          sid,
+        }),
+      ).rejects.toThrow(new UnauthorizedException('Account is not available.'));
+
+      expect(findFirst).not.toHaveBeenCalled();
+    },
+  );
 });

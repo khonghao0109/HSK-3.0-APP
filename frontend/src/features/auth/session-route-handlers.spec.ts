@@ -70,6 +70,44 @@ describe('session BFF handlers', () => {
     expect(await response.text()).not.toContain('signature');
   });
 
+  it('does not expose refreshToken in browser login response and keeps cookie access-token-only', async () => {
+    const rawRefreshToken = 'placeholder-refresh-token-43-chars-base64_';
+    const accessToken = jwt();
+    const deps = dependencies({
+      login: vi.fn().mockResolvedValue({
+        user: { id: 1, email: 'admin@example.test', role: 'admin', name: 'Lan' },
+        accessToken,
+        refreshToken: rawRefreshToken,
+        refreshTokenExpiresAt: new Date().toISOString(),
+      }),
+    });
+
+    const response = await handleLogin(
+      post('/api/session/login', {
+        email: 'admin@example.test',
+        password: 'secret1',
+      }),
+      deps,
+    );
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      success: boolean;
+      user: unknown;
+      refreshToken?: unknown;
+    };
+    expect(body).toEqual({
+      success: true,
+      user: { id: 1, email: 'admin@example.test', role: 'admin', name: 'Lan' },
+    });
+    expect(body.refreshToken).toBeUndefined();
+    expect(JSON.stringify(body)).not.toContain(rawRefreshToken);
+
+    const setCookie = response.headers.get('set-cookie') ?? '';
+    expect(setCookie).toContain(`hsk_admin_session=${accessToken}`);
+    expect(setCookie).not.toContain(rawRefreshToken);
+  });
+
   it('rejects cross-origin login before contacting the backend', async () => {
     const deps = dependencies();
     const response = await handleLogin(

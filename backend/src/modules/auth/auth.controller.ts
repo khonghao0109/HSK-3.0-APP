@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Role } from '@prisma/client';
@@ -15,6 +24,7 @@ import {
   AuthTokenResponseDto,
 } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 
 type AuthenticatedUser = {
@@ -28,6 +38,7 @@ type AuthenticatedRequest = Request & {
 };
 
 export const LOGIN_IP_LIMIT_PER_MINUTE = 10;
+export const REFRESH_IP_LIMIT_PER_MINUTE = 30;
 
 /**
  * Resolved per request. Backend and browser E2E log in many times from one
@@ -35,6 +46,10 @@ export const LOGIN_IP_LIMIT_PER_MINUTE = 10;
  */
 export function loginIpLimit(): number {
   return process.env.NODE_ENV === 'test' ? 1_000 : LOGIN_IP_LIMIT_PER_MINUTE;
+}
+
+export function refreshIpLimit(): number {
+  return process.env.NODE_ENV === 'test' ? 1_000 : REFRESH_IP_LIMIT_PER_MINUTE;
 }
 
 @Controller('auth')
@@ -55,6 +70,18 @@ export class AuthController {
   @ApiEnvelope(AuthTokenResponseDto)
   login(@Body() loginDto: LoginDto): Promise<AuthTokenResponseDto> {
     return this.authService.login(loginDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: { limit: refreshIpLimit, ttl: 60_000, getTracker: ipTracker },
+  })
+  @ApiEnvelope(AuthTokenResponseDto)
+  refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<AuthTokenResponseDto> {
+    return this.authService.refresh(refreshTokenDto.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)

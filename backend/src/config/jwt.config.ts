@@ -16,5 +16,6 @@ export default () => ({
     secrets: parseJwtSecrets(),
     activeKid: process.env.JWT_ACTIVE_KID ?? 'v1',
     expiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+    refreshTokenTtlDays: Number(process.env.AUTH_REFRESH_TOKEN_TTL_DAYS ?? 30),
   },
 });

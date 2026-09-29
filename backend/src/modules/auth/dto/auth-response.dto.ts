@@ -11,10 +11,12 @@ export class AuthAccountDto extends AuthUserDto {
   name!: string | null;
 }
 
-/** Result of register and login. */
+/** Result of register, login, and refresh. */
 export class AuthTokenResponseDto {
   user!: AuthAccountDto;
   accessToken!: string;
+  refreshToken!: string;
+  refreshTokenExpiresAt!: string;
 }
 
 export class AuthMeResponseDto {

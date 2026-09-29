@@ -9,7 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerException } from '@nestjs/throttler';
-import { Prisma } from '@prisma/client';
+import { Prisma, type Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -80,12 +80,7 @@ export class AuthService implements OnModuleInit {
         throw error;
       });
 
-    const accessToken = await this.signToken(user.id, user.email, user.role);
-
-    return {
-      user,
-      accessToken,
-    };
+    return this.createSessionAndSignToken(user);
   }
 
   async login(loginDto: LoginDto) {
@@ -140,17 +135,12 @@ export class AuthService implements OnModuleInit {
     });
     await this.rateLimitStorage.reset(emailThrottleKey);
 
-    const accessToken = await this.signToken(user.id, user.email, user.role);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name: user.name,
-      },
-      accessToken,
-    };
+    return this.createSessionAndSignToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    });
   }
 
   /**
@@ -263,7 +253,243 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  private async signToken(id: number, email: string, role: string) {
+  async refresh(refreshToken: string) {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
+    type RefreshTxResult =
+      | {
+          kind: 'issued';
+          user: {
+            id: number;
+            email: string;
+            role: Role;
+            name: string | null;
+          };
+          session: {
+            id: number;
+            expiresAt: Date;
+          };
+          rawRefreshToken: string;
+        }
+      | {
+          kind: 'account_inactive';
+        }
+      | {
+          kind: 'not_claimed';
+        };
+
+    const txResult = await this.prisma.$transaction(
+      async (tx): Promise<RefreshTxResult> => {
+        const claimed = await tx.$queryRaw<
+          Array<{
+            id: number;
+            userId: number;
+            tokenHash: string;
+            expiresAt: Date;
+            revokedAt: Date | null;
+            revocationReason: string | null;
+          }>
+        >`
+          UPDATE "UserSession"
+          SET "revokedAt" = CURRENT_TIMESTAMP,
+              "revocationReason" = 'rotated',
+              "lastSeenAt" = CURRENT_TIMESTAMP
+          WHERE "tokenHash" = ${tokenHash}
+            AND "revokedAt" IS NULL
+            AND "expiresAt" > CURRENT_TIMESTAMP
+          RETURNING "id", "userId", "tokenHash", "expiresAt", "revokedAt", "revocationReason"
+        `;
+
+        if (claimed.length !== 1) {
+          return { kind: 'not_claimed' };
+        }
+
+        const session = claimed[0];
+        const user = await tx.user.findUnique({
+          where: { id: session.userId },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            name: true,
+            status: true,
+            deletedAt: true,
+          },
+        });
+
+        if (!user || user.status !== 'active' || user.deletedAt !== null) {
+          await tx.$executeRaw`
+            UPDATE "UserSession"
+            SET "revocationReason" = 'account_inactive',
+                "lastSeenAt" = CURRENT_TIMESTAMP
+            WHERE "id" = ${session.id}
+          `;
+          return { kind: 'account_inactive' };
+        }
+
+        const newRawRefreshToken = randomBytes(32).toString('base64url');
+        const newTokenHash = createHash('sha256')
+          .update(newRawRefreshToken)
+          .digest('hex');
+        const ttlDays = this.getRefreshTokenTtlDays();
+
+        const createdSessions = await tx.$queryRaw<
+          Array<{
+            id: number;
+            userId: number;
+            tokenHash: string;
+            expiresAt: Date;
+            createdAt: Date;
+            lastSeenAt: Date;
+          }>
+        >`
+          INSERT INTO "UserSession" (
+            "userId",
+            "tokenHash",
+            "expiresAt",
+            "createdAt",
+            "lastSeenAt"
+          )
+          VALUES (
+            ${user.id},
+            ${newTokenHash},
+            CURRENT_TIMESTAMP + (${ttlDays} * INTERVAL '1 day'),
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+          )
+          RETURNING "id", "userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt"
+        `;
+
+        const newSession = createdSessions[0];
+
+        return {
+          kind: 'issued',
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            name: user.name,
+          },
+          session: {
+            id: newSession.id,
+            expiresAt: newSession.expiresAt,
+          },
+          rawRefreshToken: newRawRefreshToken,
+        };
+      },
+    );
+
+    if (txResult.kind === 'issued') {
+      const accessToken = await this.signToken(
+        txResult.user.id,
+        txResult.user.email,
+        txResult.user.role,
+        txResult.session.id,
+      );
+
+      return {
+        user: txResult.user,
+        accessToken,
+        refreshToken: txResult.rawRefreshToken,
+        refreshTokenExpiresAt: txResult.session.expiresAt.toISOString(),
+      };
+    }
+
+    if (txResult.kind === 'account_inactive') {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const existingSession = await this.prisma.userSession.findUnique({
+      where: { tokenHash },
+      select: {
+        id: true,
+        userId: true,
+        revocationReason: true,
+      },
+    });
+
+    if (existingSession && existingSession.revocationReason === 'rotated') {
+      await this.prisma.$executeRaw`
+        UPDATE "UserSession"
+        SET "revokedAt" = CURRENT_TIMESTAMP,
+            "revocationReason" = 'refresh_reuse',
+            "lastSeenAt" = CURRENT_TIMESTAMP
+        WHERE "userId" = ${existingSession.userId}
+          AND "revokedAt" IS NULL
+      `;
+    }
+
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  private getRefreshTokenTtlDays(): number {
+    const configured = this.configService.get<number>(
+      'jwt.refreshTokenTtlDays',
+    );
+    return typeof configured === 'number' &&
+      Number.isSafeInteger(configured) &&
+      configured >= 1 &&
+      configured <= 90
+      ? configured
+      : 30;
+  }
+
+  private async createSessionAndSignToken(user: {
+    id: number;
+    email: string;
+    role: Role;
+    name: string | null;
+  }) {
+    const rawRefreshToken = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256')
+      .update(rawRefreshToken)
+      .digest('hex');
+    const ttlDays = this.getRefreshTokenTtlDays();
+
+    const sessions = await this.prisma.$queryRaw<
+      Array<{
+        id: number;
+        userId: number;
+        tokenHash: string;
+        expiresAt: Date;
+        createdAt: Date;
+        lastSeenAt: Date;
+        revokedAt: Date | null;
+        revocationReason: string | null;
+      }>
+    >`
+      INSERT INTO "UserSession" ("userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt")
+      VALUES (${user.id}, ${tokenHash}, CURRENT_TIMESTAMP + (${ttlDays} * INTERVAL '1 day'), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING "id", "userId", "tokenHash", "expiresAt", "createdAt", "lastSeenAt", "revokedAt", "revocationReason"
+    `;
+
+    const session = sessions[0];
+    const accessToken = await this.signToken(
+      user.id,
+      user.email,
+      user.role,
+      session.id,
+    );
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      },
+      accessToken,
+      refreshToken: rawRefreshToken,
+      refreshTokenExpiresAt: session.expiresAt.toISOString(),
+    };
+  }
+
+  private async signToken(
+    id: number,
+    email: string,
+    role: string,
+    sid: number,
+  ) {
     const jwtSecrets =
       this.configService.get<Record<string, string>>('jwt.secrets') ?? {};
     const activeKid = this.configService.get<string>('jwt.activeKid') ?? 'v1';
@@ -278,6 +504,7 @@ export class AuthService implements OnModuleInit {
         sub: id,
         email,
         role,
+        sid,
       },
       {
         secret,

@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -962,6 +978,8 @@ export interface components {
         AuthTokenResponseDto: {
             user: components["schemas"]["AuthAccountDto"];
             accessToken: string;
+            refreshToken: string;
+            refreshTokenExpiresAt: string;
         };
         RegisterDto: {
             /** Format: email */
@@ -973,6 +991,13 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+        };
+        RefreshTokenDto: {
+            /**
+             * @description Refresh token (32 bytes base64url encoded, 43 characters)
+             * @example dGhpcy1pcy1hLTMyLWJ5dGUtcmFuZG9tLXRva2VuLTIwMjY
+             */
+            refreshToken: string;
         };
         AuthUserDto: {
             id: number;
@@ -1480,6 +1505,38 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AuthTokenResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AuthController_refresh: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshTokenDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

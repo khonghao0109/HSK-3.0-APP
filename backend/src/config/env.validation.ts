@@ -131,6 +131,11 @@ export const envValidationSchema = Joi.object({
     .default(60000),
 
   JWT_EXPIRES_IN: Joi.string().default('7d'),
+  AUTH_REFRESH_TOKEN_TTL_DAYS: Joi.number()
+    .integer()
+    .min(1)
+    .max(90)
+    .default(30),
 }).custom((environment: unknown, helpers: Joi.CustomHelpers) => {
   if (!isEnvironmentRecord(environment)) return helpers.error('any.invalid');
   if (environment.MEDIA_METRICS_PORT === environment.PORT) {

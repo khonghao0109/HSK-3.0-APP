@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
 import { PrismaService } from '../../prisma/prisma.service';
 
-import { loginIpLimit } from './auth.controller';
+import { loginIpLimit, refreshIpLimit } from './auth.controller';
 import { AuthService, LOGIN_EMAIL_FAILURE_LIMIT } from './auth.service';
 
 type SqlCall = [{ sql: string; values: unknown[] }];
@@ -23,15 +23,22 @@ describe('AuthService login throttling and lockout', () => {
   const update = jest.fn();
   const create = jest.fn();
   const queryRaw = jest.fn();
+  const executeRaw = jest.fn();
+  const userSessionFindUnique = jest.fn();
+  const transaction = jest.fn();
   const prisma = {
     user: { findUnique, update, create },
+    userSession: { findUnique: userSessionFindUnique },
     $queryRaw: queryRaw,
+    $executeRaw: executeRaw,
+    $transaction: transaction,
   } as unknown as PrismaService;
   const increment = jest.fn();
   const reset = jest.fn();
   const storage = { increment, reset } as unknown as PostgresThrottlerStorage;
+  const signAsync = jest.fn().mockResolvedValue('signed-token');
   const jwtService = {
-    signAsync: jest.fn().mockResolvedValue('signed-token'),
+    signAsync,
   } as unknown as JwtService;
   const configService = {
     get: jest.fn((key: string) =>
@@ -39,7 +46,9 @@ describe('AuthService login throttling and lockout', () => {
         ? { v1: 'unit-test-jwt-secret' }
         : key === 'jwt.activeKid'
           ? 'v1'
-          : undefined,
+          : key === 'jwt.refreshTokenTtlDays'
+            ? 30
+            : undefined,
     ),
   } as unknown as ConfigService;
 
@@ -68,8 +77,23 @@ describe('AuthService login throttling and lockout', () => {
     );
     increment.mockResolvedValue({ isBlocked: false });
     findUnique.mockResolvedValue(activeUser);
-    queryRaw.mockResolvedValue([{ id: 7 }]);
+    queryRaw.mockResolvedValue([
+      {
+        id: 7,
+        userId: 7,
+        tokenHash: 'default-token-hash',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        lastSeenAt: new Date(),
+        revokedAt: null,
+        revocationReason: null,
+      },
+    ]);
     update.mockResolvedValue({});
+    executeRaw.mockResolvedValue(1);
+    transaction.mockImplementation((cb: (tx: unknown) => unknown) =>
+      cb(prisma),
+    );
   });
 
   const login = (email = '  Learner@Example.COM ', password = 'secret-pass') =>
@@ -239,10 +263,14 @@ describe('AuthService login throttling and lockout', () => {
   it('clears lockout and the email failure counter after a successful login', async () => {
     verifyPassword.mockResolvedValue(true);
 
-    await expect(login()).resolves.toEqual({
+    const result = await login();
+    expect(result).toEqual({
       user: { id: 7, email: 'learner@example.com', role: 'user', name: null },
       accessToken: 'signed-token',
+      refreshToken: expect.any(String),
+      refreshTokenExpiresAt: expect.any(String),
     });
+    expect(result.refreshToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
     expect(update).toHaveBeenCalledWith({
       where: { id: 7 },
@@ -266,6 +294,97 @@ describe('AuthService login throttling and lockout', () => {
     } finally {
       process.env.NODE_ENV = previous;
     }
+  });
+
+  it.each([
+    ['production', 30],
+    ['development', 30],
+    ['test', 1_000],
+  ])('limits refresh per IP under NODE_ENV=%s to %i', (nodeEnv, limit) => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = nodeEnv;
+    try {
+      expect(refreshIpLimit()).toBe(limit);
+    } finally {
+      process.env.NODE_ENV = previous;
+    }
+  });
+
+  describe('refresh', () => {
+    const rawToken = 'placeholder-refresh-token-43-chars-base64_';
+    const mockSession = {
+      id: 101,
+      userId: 7,
+      tokenHash: 'sample-hash',
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      revokedAt: null,
+      revocationReason: null,
+    };
+
+    it('rotates refresh token and returns new session when claim succeeds and user active', async () => {
+      queryRaw.mockResolvedValueOnce([mockSession]); // claim succeeds
+      findUnique.mockResolvedValueOnce(activeUser); // user active
+      queryRaw.mockResolvedValueOnce([{ ...mockSession, id: 102 }]); // new session
+
+      const result = await service.refresh(rawToken);
+
+      expect(result).toEqual({
+        user: { id: 7, email: 'learner@example.com', role: 'user', name: null },
+        accessToken: 'signed-token',
+        refreshToken: expect.any(String),
+        refreshTokenExpiresAt: expect.any(String),
+      });
+      expect(result.refreshToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+      expect(signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ sub: 7, sid: 102 }),
+        expect.anything(),
+      );
+    });
+
+    it('marks session account_inactive and rejects with 401 when user is not active', async () => {
+      queryRaw.mockResolvedValueOnce([mockSession]); // claim succeeds
+      findUnique.mockResolvedValueOnce({ ...activeUser, status: 'suspended' }); // user suspended
+
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        new UnauthorizedException('Invalid refresh token'),
+      );
+
+      expect(executeRaw).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.stringContaining('account_inactive')]),
+        101,
+      );
+    });
+
+    it('revokes all active sessions with refresh_reuse when rotated token is reused', async () => {
+      queryRaw.mockResolvedValueOnce([]); // claim 0 rows
+      userSessionFindUnique.mockResolvedValueOnce({
+        id: 101,
+        userId: 7,
+        revocationReason: 'rotated',
+      });
+
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        new UnauthorizedException('Invalid refresh token'),
+      );
+
+      expect(executeRaw).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.stringContaining('refresh_reuse')]),
+        7,
+      );
+    });
+
+    it('returns 401 without revoking user sessions when token is unknown or expired', async () => {
+      queryRaw.mockResolvedValueOnce([]); // claim 0 rows
+      userSessionFindUnique.mockResolvedValueOnce(null);
+
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        new UnauthorizedException('Invalid refresh token'),
+      );
+
+      expect(executeRaw).not.toHaveBeenCalled();
+    });
   });
 
   describe('stored password format', () => {

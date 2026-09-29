@@ -368,4 +368,33 @@ describe('media environment validation', () => {
       'https://admin.example.com.evil.test',
     );
   });
+
+  describe('AUTH_REFRESH_TOKEN_TTL_DAYS', () => {
+    it('defaults to 30 days when not set', () => {
+      const result = envValidationSchema.validate({ ...production });
+      expect(result.error).toBeUndefined();
+      expect(result.value.AUTH_REFRESH_TOKEN_TTL_DAYS).toBe(30);
+    });
+
+    it.each([1, 15, 30, 90])('accepts valid TTL value: %i', (ttl) => {
+      const result = envValidationSchema.validate({
+        ...production,
+        AUTH_REFRESH_TOKEN_TTL_DAYS: ttl,
+      });
+      expect(result.error).toBeUndefined();
+      expect(result.value.AUTH_REFRESH_TOKEN_TTL_DAYS).toBe(ttl);
+    });
+
+    it.each([0, -5, 91, 100, 1.5, 'invalid'])(
+      'rejects invalid TTL value: %s',
+      (ttl) => {
+        const result = envValidationSchema.validate({
+          ...production,
+          AUTH_REFRESH_TOKEN_TTL_DAYS: ttl,
+        });
+        expect(result.error).toBeDefined();
+        expect(result.error?.message).toContain('AUTH_REFRESH_TOKEN_TTL_DAYS');
+      },
+    );
+  });
 });

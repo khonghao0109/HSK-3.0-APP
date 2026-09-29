@@ -64,6 +64,8 @@ describe('Auth E2E', () => {
       data: {
         user: expect.objectContaining({ email: userEmail }),
         accessToken: expect.any(String),
+        refreshToken: expect.any(String),
+        refreshTokenExpiresAt: expect.any(String),
       },
       meta: {
         requestId: loginRes.headers['x-request-id'],
