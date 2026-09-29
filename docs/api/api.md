@@ -111,6 +111,7 @@ liveness/readiness.)
 | `POST` | `/auth/register` | public | 100/phút/IP |
 | `POST` | `/auth/login` | public | 10/phút/IP; 5 lần sai/15 phút/email |
 | `POST` | `/auth/refresh` | public | 30/phút/IP |
+| `POST` | `/auth/logout` | JWT | global |
 | `GET` | `/auth/me` | JWT | global |
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
@@ -148,20 +149,33 @@ Body refresh: `{ "refreshToken": string }` (32 byte `randomBytes` mã hoá base6
 Throttle 30/phút/IP (1.000/phút dưới test). DB chỉ lưu SHA-256 hex của token trong `UserSession`.
 Access token gắn session qua payload `sid` = `UserSession.id`. `JwtStrategy` từ chối (401) nếu
 session bị revoke hoặc hết hạn. Thời hạn access token mặc định vẫn là 7 ngày (`7d`) cho tới task
-M1.4b (khi hạ xuống 15 phút cùng BFF cookie).
+M1.4c (khi hạ xuống 15 phút cùng BFF cookie).
 
-Cơ chế xoay vòng (rotation) và phát hiện dùng lại (reuse detection):
+Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hiện dùng lại (reuse detection):
 - Claim nguyên tử một session hợp lệ bằng SQL UPDATE với `CURRENT_TIMESTAMP`, đặt lý do revoke là `rotated`.
 - Nếu claim thành công 1 dòng: user phải active và chưa soft-delete. Nếu không: revoke session đó với lý do
   `account_inactive` và trả 401. Nếu hợp lệ: tạo session mới (TTL `AUTH_REFRESH_TOKEN_TTL_DAYS`, mặc định 30 ngày)
   và trả cặp token mới.
-- Nếu claim 0 dòng: tra lại token hash. Nếu token đã bị revoke với lý do `rotated` (bị dùng lại), server
-  thu hồi TOÀN BỘ session còn lại của user với lý do `refresh_reuse`, rồi trả 401. Nếu không tồn tại hoặc hết hạn:
-  trả 401.
+- Nếu claim 0 dòng: kiểm tra trạng thái session theo đồng hồ DB:
+  - Nếu session mang lý do `rotated` và `revokedAt > CURRENT_TIMESTAMP - 10s` (trong khoảng ân hạn 10 giây): coi là race
+    đồng thời vô hại giữa các request (ví dụ nhiều tab refresh cùng lúc hoặc client retry do mạng). Server trả `401`,
+    KHÔNG thu hồi thêm session nào của user; session kế tiếp (successor) của bên thắng cuộc vẫn giữ nguyên hiệu lực.
+  - Nếu session mang lý do `rotated` và `revokedAt <= CURRENT_TIMESTAMP - 10s` (ngoài khoảng ân hạn 10 giây): coi là
+    dùng lại token đã bị xoay vòng (refresh reuse). Server thu hồi TOÀN BỘ session còn lại của user với lý do
+    `refresh_reuse`, rồi trả 401.
+  - Đánh đổi an toàn: khoảng ân hạn 10 giây giúp loại bỏ race condition làm huỷ nhầm session hợp lệ của người dùng khi
+    nhiều tab hoặc luồng cùng refresh một lúc; đổi lại, nếu token bị kẻ tấn công đánh cắp và dùng lại đúng trong 10 giây
+    đầu sau khi xoay vòng thì các session còn lại của nạn nhân chưa bị revoke ngay lập tức (request của kẻ tấn công vẫn
+    bị 401 từ chối, và chỉ kích hoạt revoke toàn bộ khi token được thử lại sau mốc 10 giây).
+  - Nếu token không tồn tại, hết hạn hoặc mang lý do khác: trả 401.
 - Mọi nhánh 401 của refresh trả chung thông điệp `Invalid refresh token` để không lộ trạng thái nội bộ.
-- Client bắt buộc phải serialize các request refresh (không gửi đồng thời): nếu 2 request refresh song song
-  gửi cùng một token, một request claim trước thắng và request thứ hai bị coi là dùng lại token khiến toàn bộ
-  session của user bị thu hồi.
+
+`POST /auth/logout` (JWT, rate limit toàn cục):
+- Yêu cầu access token hợp lệ (`JwtAuthGuard`). Thu hồi đúng session `sid` gắn với access token:
+  `revokedAt = CURRENT_TIMESTAMP`, `revocationReason = 'logout'`, với điều kiện `"revokedAt" IS NULL`.
+- Phản hồi `204 No Content` không kèm body.
+- Gọi lại logout bằng chính token đó (hoặc dùng token đó gọi `/auth/me`) → `401` do session đã bị thu hồi.
+- Các session khác của cùng user không bị ảnh hưởng.
 
 `data` của register/login (`201`) và refresh (`200`):
 
