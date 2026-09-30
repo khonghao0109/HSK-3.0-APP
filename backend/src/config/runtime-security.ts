@@ -148,6 +148,23 @@ export function assertJobQueueProvider(environment: {
   throw new Error('Job queue provider configuration is invalid.');
 }
 
+export function assertMailProvider(environment: {
+  NODE_ENV?: string;
+  MAIL_PROVIDER?: string;
+}): void {
+  const provider = environment.MAIL_PROVIDER;
+  if (provider === 'ses') return;
+  if (
+    (environment.NODE_ENV === 'development' ||
+      environment.NODE_ENV === 'test') &&
+    provider === 'mailpit'
+  ) {
+    return;
+  }
+  if (environment.NODE_ENV === 'test' && provider === 'memory') return;
+  throw new Error('Mail provider configuration is invalid.');
+}
+
 export function assertProductionSecrets(environment: {
   JWT_SECRETS?: string;
   JWT_ACTIVE_KID?: string;

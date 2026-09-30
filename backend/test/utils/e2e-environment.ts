@@ -24,6 +24,8 @@ const DEFAULT_MEDIA_ENVIRONMENT = {
   MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
   MEDIA_METRICS_BEARER_TOKEN: 'test-media-metrics-token-at-least-32-chars',
   JOB_QUEUE_PROVIDER: 'memory',
+  MAIL_PROVIDER: 'memory',
+  MAIL_FROM: 'noreply@hsk.local',
 } as const;
 
 export type E2eEnvironment = {

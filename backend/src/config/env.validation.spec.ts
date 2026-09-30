@@ -13,6 +13,8 @@ describe('media environment validation', () => {
     DATABASE_URL: 'postgresql://user:password@localhost:5432/hsk_test',
     JWT_SECRETS: JSON.stringify({ v1: jwtSecret }),
     JWT_ACTIVE_KID: 'v1',
+    MAIL_FROM: 'noreply@hsk.local',
+    MAIL_SES_REGION: 'ap-southeast-1',
   };
 
   const production = {
@@ -396,5 +398,83 @@ describe('media environment validation', () => {
         expect(result.error?.message).toContain('AUTH_REFRESH_TOKEN_TTL_DAYS');
       },
     );
+  });
+
+  describe('mail environment validation', () => {
+    it('requires MAIL_FROM', () => {
+      const env: Record<string, string> = { ...production };
+      delete env.MAIL_FROM;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_FROM');
+    });
+
+    it('rejects invalid MAIL_FROM', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        MAIL_FROM: 'not-an-email',
+      });
+      expect(res.error?.message).toContain('MAIL_FROM');
+    });
+
+    it('requires MAIL_SES_REGION when MAIL_PROVIDER is ses', () => {
+      const env: Record<string, string> = {
+        ...production,
+        MAIL_PROVIDER: 'ses',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_SES_REGION');
+    });
+
+    it('requires MAIL_MAILPIT_URL when MAIL_PROVIDER is mailpit', () => {
+      const env: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_MAILPIT_URL');
+    });
+
+    it('rejects MAIL_MAILPIT_URL with external host or non-http(s) scheme', () => {
+      for (const invalidUrl of [
+        'http://example.com:8025',
+        'http://192.168.1.1:8025',
+        'ftp://localhost:8025',
+      ]) {
+        const res = envValidationSchema.validate({
+          ...production,
+          NODE_ENV: 'development',
+          MAIL_PROVIDER: 'mailpit',
+          MAIL_MAILPIT_URL: invalidUrl,
+        });
+        expect(res.error?.message).toContain('MAIL_MAILPIT_URL');
+      }
+    });
+
+    it('accepts valid mailpit configuration under development', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+      });
+      expect(res.error).toBeUndefined();
+      expect(res.value.MAIL_PROVIDER).toBe('mailpit');
+      expect(res.value.MAIL_MAILPIT_URL).toBe('http://127.0.0.1:8025');
+    });
+
+    it('accepts valid memory configuration under test without region or url', () => {
+      const env: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'test',
+        MAIL_PROVIDER: 'memory',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error).toBeUndefined();
+      expect(res.value.MAIL_PROVIDER).toBe('memory');
+    });
   });
 });

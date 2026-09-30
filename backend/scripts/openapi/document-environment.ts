@@ -13,4 +13,6 @@ Object.assign(process.env, {
   MEDIA_SCANNER_PROVIDER: 'test',
   MEDIA_SIGNING_SECRET: 'placeholder-openapi-generation-only',
   MEDIA_METRICS_BEARER_TOKEN: 'placeholder-openapi-generation-only',
+  MAIL_PROVIDER: 'memory',
+  MAIL_FROM: 'noreply@hsk.local',
 });

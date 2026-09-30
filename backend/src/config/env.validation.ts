@@ -7,6 +7,7 @@ import {
 import {
   assertMediaProviders,
   assertJobQueueProvider,
+  assertMailProvider,
   assertProductionSecrets,
   DEFAULT_NON_PRODUCTION_ORIGINS,
   normalizeAllowedOrigins,
@@ -21,6 +22,22 @@ function allowedOrigins(environment: 'development' | 'production') {
       return helpers.error('any.invalid');
     }
   });
+}
+
+function validateMailpitUrl(value: unknown, helpers: Joi.CustomHelpers) {
+  if (typeof value !== 'string') return helpers.error('any.invalid');
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.hostname !== '127.0.0.1' && parsed.hostname !== 'localhost') {
+      return helpers.error('any.invalid');
+    }
+    return value;
+  } catch {
+    return helpers.error('any.invalid');
+  }
 }
 
 export const envValidationSchema = Joi.object({
@@ -56,6 +73,18 @@ export const envValidationSchema = Joi.object({
     .valid(...MEDIA_SCANNER_PROVIDERS)
     .default('clamav'),
   JOB_QUEUE_PROVIDER: Joi.string().valid('pgboss', 'memory').default('pgboss'),
+  MAIL_PROVIDER: Joi.string().valid('ses', 'mailpit', 'memory').default('ses'),
+  MAIL_FROM: Joi.string().email({ tlds: false }).required(),
+  MAIL_SES_REGION: Joi.when('MAIL_PROVIDER', {
+    is: 'ses',
+    then: Joi.string().required(),
+    otherwise: Joi.string().optional(),
+  }),
+  MAIL_MAILPIT_URL: Joi.when('MAIL_PROVIDER', {
+    is: 'mailpit',
+    then: Joi.string().custom(validateMailpitUrl).required(),
+    otherwise: Joi.string().custom(validateMailpitUrl).optional(),
+  }),
   MEDIA_STORAGE_BUCKET: Joi.when('MEDIA_STORAGE_PROVIDER', {
     is: 'memory',
     then: Joi.string().optional(),
@@ -158,6 +187,7 @@ export const envValidationSchema = Joi.object({
   try {
     assertMediaProviders(environment);
     assertJobQueueProvider(environment);
+    assertMailProvider(environment);
   } catch {
     return helpers.error('any.invalid');
   }

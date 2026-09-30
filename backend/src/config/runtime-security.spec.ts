@@ -5,6 +5,7 @@ import {
   applyApiSecurityHeaders,
   assertMediaProviders,
   assertJobQueueProvider,
+  assertMailProvider,
   assertProductionSecrets,
   buildCorsOriginValidator,
   configureApiEdgeSecurity,
@@ -421,5 +422,72 @@ describe('assertJobQueueProvider', () => {
         JOB_QUEUE_PROVIDER: 'memory',
       }),
     ).toThrow('Job queue provider configuration is invalid.');
+  });
+});
+
+describe('assertMailProvider', () => {
+  it('production + ses ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'ses',
+      }),
+    ).not.toThrow();
+  });
+
+  it('production + mailpit ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'mailpit',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('production + memory ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('development + mailpit ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+      }),
+    ).not.toThrow();
+  });
+
+  it('development + memory ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('test + memory ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'test',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).not.toThrow();
+  });
+
+  it('giá trị lạ ❌', () => {
+    for (const invalid of ['smtp', 'unknown', 'SES', '', undefined]) {
+      expect(() =>
+        assertMailProvider({
+          NODE_ENV: 'test',
+          MAIL_PROVIDER: invalid,
+        }),
+      ).toThrow('Mail provider configuration is invalid.');
+    }
   });
 });

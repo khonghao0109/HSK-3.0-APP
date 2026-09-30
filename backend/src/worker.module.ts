@@ -5,6 +5,7 @@ import databaseConfig from './config/database.config';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './prisma/prisma.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
+import { MailerModule } from './infrastructure/mail/mailer.module';
 import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessions.job';
 
 @Module({
@@ -16,6 +17,7 @@ import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessi
     }),
     PrismaModule,
     JobsModule.register({ isWorker: true }),
+    MailerModule,
   ],
   providers: [PurgeExpiredSessionsJob],
 })

@@ -91,6 +91,8 @@ describe('media adapter wiring', () => {
       DATABASE_URL: 'postgresql://user:password@localhost:5432/hsk_test',
       JWT_SECRETS: JSON.stringify({ v1: secret('jwt') }),
       JWT_ACTIVE_KID: 'v1',
+      MAIL_FROM: 'noreply@hsk.local',
+      MAIL_SES_REGION: 'ap-southeast-1',
     };
     const production = {
       ...common,
