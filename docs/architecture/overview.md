@@ -23,7 +23,7 @@ HSK-3.0-APP/
     src/config/       # app, database, jwt, media config; env.validation (Joi); runtime-security
     src/infrastructure/  # storage (S3 + in-memory), malware (ClamAV + test), observability
     src/prisma/       # PrismaModule/PrismaService
-    prisma/           # schema.prisma + 19 migration (SQL viết tay)
+    prisma/           # schema.prisma + 22 migration (SQL viết tay)
     scripts/          # dictionary pipeline, seed, operations (migrate wrapper), security (secret scan), test runners
     test/             # e2e (11 file) + database/*.sql (16 file)
   frontend/           # Next.js 16.3 App Router, React 19, TypeScript strict
@@ -70,9 +70,9 @@ Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-v
 
 Thư mục `infrastructure/`: `storage` (port `ObjectStoragePort`, adapter S3 và in-memory),
 `malware` (port scanner, adapter ClamAV INSTREAM và test), `observability` (metrics
-listener riêng, cardinality cố định). Adapter được chọn tường minh theo
-`MEDIA_STORAGE_PROVIDER` (`s3` | `memory`) và `MEDIA_SCANNER_PROVIDER` (`clamav` | `test`),
-không suy ra từ `NODE_ENV` (H.9, finding B-04).
+listener riêng, cardinality cố định), và `jobs` (port `JobQueuePort`, adapter `PgBossJobQueue` và `InMemoryJobQueue`). Adapter được chọn tường minh theo
+`MEDIA_STORAGE_PROVIDER` (`s3` | `memory`), `MEDIA_SCANNER_PROVIDER` (`clamav` | `test`),
+và `JOB_QUEUE_PROVIDER` (`pgboss` | `memory`), không suy ra từ `NODE_ENV` (H.9, finding B-04).
 
 ### 3.3 Quy ước API thực tế
 
@@ -163,15 +163,25 @@ Backend (`backend/.env.example`):
 | `MEDIA_METRICS_HOST`, `MEDIA_METRICS_PORT` | production | listener riêng, khác `PORT` |
 | `MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS` < `MEDIA_METRICS_COLLECTION_TIMEOUT_MS` | mặc định 750/1000 | |
 | `MEDIA_METRICS_CACHE_TTL_MS` < `MEDIA_METRICS_STALE_TTL_MS` | mặc định 5000/60000 | |
+| `JOB_QUEUE_PROVIDER` | mặc định `pgboss` | `memory` chỉ khi `NODE_ENV=test` |
 
 Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN`,
 `BFF_REQUEST_TIMEOUT_MS` (8000), `SESSION_COOKIE_NAME` (`hsk_admin_session`),
 `PLAYWRIGHT_BASE_URL`, `E2E_ADMIN_EMAIL/PASSWORD`, `E2E_USER_EMAIL/PASSWORD`.
 Không có biến `NEXT_PUBLIC_*`.
 
+### 3.7 Worker process và Job Queue (M1.7a)
+
+- Hệ thống xử lý tác vụ nền bất đồng bộ sử dụng `pg-boss` (chạy trên PostgreSQL, schema `pgboss`, không dùng Redis theo ADR-008 §2).
+- Tách bạch hai process:
+  - **Main API process (`src/main.ts`)**: vai trò enqueue job qua `JobQueuePort` (DIP). Cấu hình pg-boss `supervise: false` (không worker poll, không schedule). Hỗ trợ transactional outbox thông qua `SendJobOptions.tx` (Prisma transaction client).
+  - **Worker process (`src/worker.ts`)**: khởi động riêng (`WorkerModule`), cấu hình pg-boss `supervise: true`, thực hiện consume queue, xử lý job và quản lý cron schedule (`PurgeExpiredSessionsJob` định kỳ 03:17 UTC dọn dẹp `UserSession` hết hạn > 30 ngày theo lô 1.000 dòng). Tự bắt tín hiệu `SIGTERM`/`SIGINT` để shutdown êm ái một lần (stop boss, disconnect Prisma, exit 0).
+- Schema `pgboss` (version 43) được tạo trước bằng Prisma migration forward-only (`backend/prisma/migrations/20260929162559_pgboss_schema`); runtime pg-boss luôn đặt `migrate: false`. Khi khởi động, hệ thống fail-fast nếu schema chưa tồn tại ("schema not found") hoặc version khác 43 ("pg-boss schema version must be 43, but got X").
+- Provider chọn qua `JOB_QUEUE_PROVIDER`: mặc định `pgboss`; `memory` (`InMemoryJobQueue`) chỉ được phép khi `NODE_ENV=test` (được bảo vệ bởi `assertJobQueueProvider`).
+
 ## 4. Database
 
-- 59 model, 27 enum, 19 migration; runtime hiện chạm 23 model. Exam (14 model), SRS,
+- 59 model, 27 enum, 22 migration; runtime hiện chạm 23 model. Exam (14 model), SRS,
   privacy chỉ có schema.
 - Migration là SQL viết tay với ~45 trigger, ~32 function, ~100 CHECK; Prisma
   introspection không thấy các object này, nên `prisma migrate dev` không dùng được.

@@ -1,6 +1,6 @@
 # ADR-008: Chốt công nghệ cho các hạng mục còn bỏ ngỏ
 
-Status: Proposed — chờ Product Owner/Tech Lead duyệt. Riêng mục 1 (mobile) đã được
+Status: Accepted một phần — mục 1 (Product Owner chốt 04/09/2026), mục 2 và mục 9 (Product Owner chốt 29/09/2026). Các mục còn lại vẫn Proposed, chờ Product Owner/Tech Lead duyệt.
 Product Owner chốt ngày 04/09/2026. Ngày: 04/09/2026. Baseline: branch macdev, HEAD 3211bf8.
 
 ## Context

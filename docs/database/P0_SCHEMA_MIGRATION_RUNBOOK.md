@@ -895,3 +895,17 @@ Test: `src/prisma/utc-session-database-url.spec.ts` (unit) và
 `test/database-session-timezone.e2e-spec.ts`: phiên Prisma trả `current_setting('TimeZone') = 'UTC'`,
 kể cả khi URL cố ý truyền `-c TimeZone=Asia/Ho_Chi_Minh`, và
 `clock_timestamp()::timestamp(3)` khớp đồng hồ UTC của Node.
+
+## 21. Worker job schema (M1.7a)
+
+### 21.1. Migration 22 — `20260929162559_pgboss_schema`
+
+Sử dụng `pg-boss` 12 cho worker job queue, database engine độc lập với ứng dụng nhưng tái sử dụng PostgreSQL (theo ADR-008). 
+Migration được sinh bằng `getConstructionPlans('pgboss')` của `pg-boss` nhưng đã loại bỏ câu lệnh `BEGIN;` và `COMMIT;` top-level do Prisma chạy ngầm trong một transaction.
+
+- Lược đồ mới `pgboss` gồm các bảng `job`, `version`, `queue`, `schedule`, `subscription`.
+- Mọi connection client của Prisma vẫn dùng `schema=public` như cũ, pg-boss tự quản lý schema `pgboss`.
+
+### 21.2. Idempotent Queue Creation
+
+Khởi động Worker (và API) đều có hook gọi `boss.createQueue()` nhưng bọc bằng `try/catch` bỏ qua lỗi "already exists" để đảm bảo idempotent. Không cho phép đổi policy qua mã ứng dụng nếu queue đã tồn tại; nếu cần, phải drop bằng raw SQL và tạo lại.
