@@ -119,6 +119,7 @@ listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter
   object; `MediaIngestion` có state machine và fencing ở DB; signed URL HMAC-SHA256
   gồm method, path, expiry, checksum; TTL 60–600 giây.
 - Migration forward-only, viết tay SQL, có preflight; không sửa migration đã áp.
+- Xác thực email (M1.5b): `POST /auth/register` transactional enqueue job `mail.email-verification` với payload `{ userId }` và `singletonKey: 'email-verification:' + userId`. Link gửi qua email trỏ tới `${APP_PUBLIC_URL}/verify-email#token=<rawToken>` (fragment hash, raw token không gửi tới server khi tải trang tĩnh). Worker sinh raw token 32 byte base64url (43 ký tự), chỉ lưu SHA-256 vào `EmailVerificationToken` (TTL 24h); raw token chỉ nằm trong mail và bộ nhớ worker, không bao giờ nằm trong DB, job payload hay log. `POST /auth/email-verification/confirm` claim token nguyên tử (`usedAt = CURRENT_TIMESTAMP`) và cập nhật `User.emailVerifiedAt`; token sai, hết hạn, đã dùng hoặc user không active đều trả uniform 400 (`INVALID_VERIFICATION_TOKEN`). `POST /auth/email-verification/request` có `JwtAuthGuard` và throttle 3 req/15 phút/user.
 
 ### 3.5 Bảo mật và cấu hình
 
@@ -168,6 +169,7 @@ Backend (`backend/.env.example`):
 | `MAIL_FROM` | có | email người gửi hợp lệ |
 | `MAIL_SES_REGION` | khi provider `ses` | AWS SES Region |
 | `MAIL_MAILPIT_URL` | khi provider `mailpit` | chỉ `http(s)` tới `127.0.0.1` hoặc `localhost` |
+| `APP_PUBLIC_URL` | tuỳ chọn (mặc định `http://localhost:3000`) | URL công khai của web app để tạo link xác thực / reset; chỉ origin, production bắt buộc HTTPS, không path/query/hash |
 
 Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN`,
 `BFF_REQUEST_TIMEOUT_MS` (8000), `SESSION_COOKIE_NAME` (`hsk_admin_session`),

@@ -47,6 +47,7 @@ kill -SIGTERM <worker-pid>
 | `MAIL_FROM` | Có | Địa chỉ email người gửi hợp lệ (ví dụ `noreply@hsk.local` hoặc `auth@hsk.edu.vn`) |
 | `MAIL_SES_REGION` | Khi `ses` | AWS Region của SES (ví dụ `ap-southeast-1`) |
 | `MAIL_MAILPIT_URL` | Khi `mailpit` | URL dịch vụ Mailpit local (chỉ cho phép `127.0.0.1` hoặc `localhost`, ví dụ `http://127.0.0.1:8025`) |
+| `APP_PUBLIC_URL` | Tuỳ chọn | URL công khai của web app (mặc định `http://localhost:3000`). Bắt buộc HTTPS ở production; không chứa path/query/hash. Dùng để tạo link xác thực trong email. |
 
 > [!IMPORTANT]
 > Payload job gửi mail chỉ chứa `userId`. Worker tự sinh raw token lúc xử lý job, chỉ lưu SHA-256 vào bảng token; raw token chỉ xuất hiện trong nội dung mail gửi đi, không bao giờ nằm trong `pgboss.job`, log hay `cause` của lỗi.
@@ -65,3 +66,18 @@ kill -SIGTERM <worker-pid>
   - `retryLimit: 3`, `retryBackoff: true`.
   - Giới hạn xử lý an toàn: Xoá theo lô tối đa 1.000 dòng mỗi vòng lặp, tối đa 1.000 vòng lặp mỗi lần chạy để tránh khóa bảng lâu hoặc làm chậm DB.
   - Sử dụng đồng hồ DB (`CURRENT_TIMESTAMP`) để tránh lệch múi giờ giữa các máy chủ.
+
+### `mail.email-verification` (Hằng số `JOB_NAMES.SEND_EMAIL_VERIFICATION`)
+- **Mục đích**: Gửi email xác thực tài khoản kèm link kích hoạt dùng một lần khi đăng ký mới hoặc khi người dùng yêu cầu gửi lại link xác thực.
+- **Trigger**: Enqueue bất đồng bộ từ Main API (`POST /auth/register` trong cùng transaction với `user.create`, hoặc `POST /auth/email-verification/request`).
+- **Payload**: `{ userId: number }` (tuyệt đối không chứa raw token, email, hay thông tin nhạy cảm).
+- **Singleton key**: `email-verification:<userId>` (chống enqueue trùng lặp trong thời gian chờ xử lý).
+- **Chính sách**:
+  - Queue options: `policy: 'short'`, `retryLimit: 3`, `retryBackoff: true`.
+  - Skip điều kiện: User không tồn tại, đã soft-deleted (`deletedAt IS NOT NULL`), trạng thái không `active`, hoặc đã xác thực (`emailVerifiedAt IS NOT NULL`) -> hoàn tất job, không gửi mail.
+  - Sinh token và lưu trữ: Trong 1 transaction database, xoá toàn bộ token xác thực chưa dùng của user (`usedAt IS NULL`), sinh raw token ngẫu nhiên an toàn bằng `crypto.randomBytes(32).toString('base64url')` (43 ký tự), băm SHA-256 lưu vào bảng `EmailVerificationToken` với TTL 24 giờ (`expiresAt = CURRENT_TIMESTAMP + INTERVAL '24 hours'`).
+  - Gửi mail: Sau khi transaction commit thành công, gửi email plain text tiếng Việt qua `MailerPort` với link `${APP_PUBLIC_URL}/verify-email#token=<rawToken>`.
+  - Quản lý lỗi:
+    - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry (mỗi lần retry sẽ xoá token cũ và sinh token mới).
+    - Lỗi không retryable (`retryable: false`) -> ghi log cảnh báo chứa `jobId` và `error.name` (không log email, token hay error cause), hoàn tất job mà không throw.
+
