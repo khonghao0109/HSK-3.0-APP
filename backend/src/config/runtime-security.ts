@@ -138,6 +138,16 @@ export function assertMediaProviders(environment: {
   throw new Error('Media provider configuration is invalid.');
 }
 
+export function assertJobQueueProvider(environment: {
+  NODE_ENV?: string;
+  JOB_QUEUE_PROVIDER?: string;
+}): void {
+  const provider = environment.JOB_QUEUE_PROVIDER;
+  if (provider === 'pgboss') return;
+  if (environment.NODE_ENV === 'test' && provider === 'memory') return;
+  throw new Error('Job queue provider configuration is invalid.');
+}
+
 export function assertProductionSecrets(environment: {
   JWT_SECRETS?: string;
   JWT_ACTIVE_KID?: string;

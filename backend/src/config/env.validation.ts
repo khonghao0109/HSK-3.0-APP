@@ -6,6 +6,7 @@ import {
 } from './media.config';
 import {
   assertMediaProviders,
+  assertJobQueueProvider,
   assertProductionSecrets,
   DEFAULT_NON_PRODUCTION_ORIGINS,
   normalizeAllowedOrigins,
@@ -54,6 +55,7 @@ export const envValidationSchema = Joi.object({
   MEDIA_SCANNER_PROVIDER: Joi.string()
     .valid(...MEDIA_SCANNER_PROVIDERS)
     .default('clamav'),
+  JOB_QUEUE_PROVIDER: Joi.string().valid('pgboss', 'memory').default('pgboss'),
   MEDIA_STORAGE_BUCKET: Joi.when('MEDIA_STORAGE_PROVIDER', {
     is: 'memory',
     then: Joi.string().optional(),
@@ -155,6 +157,7 @@ export const envValidationSchema = Joi.object({
   }
   try {
     assertMediaProviders(environment);
+    assertJobQueueProvider(environment);
   } catch {
     return helpers.error('any.invalid');
   }

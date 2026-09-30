@@ -23,6 +23,7 @@ const DEFAULT_MEDIA_ENVIRONMENT = {
   MEDIA_INGESTION_ENABLED: 'true',
   MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
   MEDIA_METRICS_BEARER_TOKEN: 'test-media-metrics-token-at-least-32-chars',
+  JOB_QUEUE_PROVIDER: 'memory',
 } as const;
 
 export type E2eEnvironment = {

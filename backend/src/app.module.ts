@@ -25,6 +25,7 @@ import { MediaModule } from './modules/media/media.module';
 import { MediaObservabilityModule } from './infrastructure/observability/media-observability.module';
 import { PostgresThrottlerStorage } from './infrastructure/rate-limit/postgres-throttler.storage';
 import { RateLimitModule } from './infrastructure/rate-limit/rate-limit.module';
+import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -53,6 +54,7 @@ import { PrismaModule } from './prisma/prisma.module';
       }),
     }),
     PrismaModule,
+    JobsModule.register({ isWorker: false }),
     MediaObservabilityModule,
     AuthModule,
     CmsModule,

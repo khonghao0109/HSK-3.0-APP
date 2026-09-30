@@ -4,6 +4,7 @@ import {
   API_SECURITY_HEADERS,
   applyApiSecurityHeaders,
   assertMediaProviders,
+  assertJobQueueProvider,
   assertProductionSecrets,
   buildCorsOriginValidator,
   configureApiEdgeSecurity,
@@ -382,5 +383,43 @@ describe('runtime edge security', () => {
         ).toThrow('Production secret configuration is invalid.');
       }
     });
+  });
+});
+
+describe('assertJobQueueProvider', () => {
+  it('accepts pgboss in any environment', () => {
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'production',
+        JOB_QUEUE_PROVIDER: 'pgboss',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'test',
+        JOB_QUEUE_PROVIDER: 'pgboss',
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts memory only in test environment', () => {
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'test',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'production',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).toThrow('Job queue provider configuration is invalid.');
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'development',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).toThrow('Job queue provider configuration is invalid.');
   });
 });
