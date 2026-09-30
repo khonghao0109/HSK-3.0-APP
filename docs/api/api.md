@@ -115,6 +115,8 @@ liveness/readiness.)
 | `GET` | `/auth/me` | JWT | global |
 | `POST` | `/auth/email-verification/request` | JWT | 3/15 phút/user |
 | `POST` | `/auth/email-verification/confirm` | public | 10/phút/IP |
+| `POST` | `/auth/password-reset/request` | public | 5/15 phút/IP; 3 lần/giờ/email |
+| `POST` | `/auth/password-reset/confirm` | public | 10/phút/IP |
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
 Email canonicalize `trim().toLowerCase()`; DB unique theo `lower(email)`. Password trong
@@ -197,6 +199,30 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   `{ "success": false, "error": { "code": "INVALID_VERIFICATION_TOKEN", "message": "Verification token is invalid or expired." } }`.
   Phản hồi không phân biệt nguyên nhân nhằm ngăn chặn tấn công user enumeration hoặc dò tìm trạng thái token.
 - Cơ chế khoá dòng của PostgreSQL đảm bảo an toàn tuyệt đối khi có nhiều request đồng thời gửi cùng một token: chỉ duy nhất một request thành công (204), các request còn lại nhận 400.
+
+`POST /auth/password-reset/request` (public, 5 lần / 15 phút / IP, 3 lần / giờ / SHA-256 email):
+- Body: `{ "email": string(email) }`.
+- Email được chuẩn hoá bằng `trim().toLowerCase()`.
+- Luôn trả về `204 No Content` không kèm body (kể cả khi email không tồn tại hoặc tài khoản không active/đã soft-delete).
+- Rate limit hai lớp:
+  - 5 lần / 15 phút theo IP client (vượt quá → `429 TOO_MANY_REQUESTS`).
+  - 3 lần / giờ theo SHA-256 của email đã chuẩn hoá (`PostgresThrottlerStorage`). Khi vượt quá giới hạn theo email, endpoint vẫn trả về `204 No Content` và âm thầm không enqueue job để chống dò email mục tiêu (anti-enumeration).
+- Response của endpoint hoàn toàn giống hệt nhau (status, body, header) giữa trường hợp email có tồn tại và không tồn tại.
+- Khi user tồn tại, `deletedAt IS NULL`, `status = 'active'`, enqueue job `mail.password-reset` với payload `{ userId }` và `singletonKey: 'password-reset:' + userId`.
+
+`POST /auth/password-reset/confirm` (public, rate limit 10 lần / phút / IP):
+- Body: `{ "token": string, "newPassword": string(≥6) }`.
+- `newPassword` kiểm tra blacklist mật khẩu yếu (`assertPasswordNotBlacklisted`); mật khẩu mới được băm bằng Argon2id TRƯỚC khi mở database transaction.
+- Thực thi trong một database transaction:
+  1. Claim token: `UPDATE "PasswordResetToken" SET "usedAt" = CURRENT_TIMESTAMP WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP RETURNING "userId"`.
+  2. Đổi mật khẩu: `UPDATE "User" SET password = $hash WHERE id = $userId AND "deletedAt" IS NULL AND status = 'active' RETURNING id`.
+  3. Thu hồi toàn bộ session còn hiệu lực của user: `UPDATE "UserSession" SET "revokedAt" = CURRENT_TIMESTAMP WHERE "userId" = $userId AND "revokedAt" IS NULL`. Vì `JwtStrategy` kiểm tra `sid` ở mỗi request nên mọi access token cũ bị vô hiệu hoá ngay lập tức.
+  4. Xoá mọi reset token chưa sử dụng khác của user: `DELETE FROM "PasswordResetToken" WHERE "userId" = $userId AND "usedAt" IS NULL`.
+- Thành công: phản hồi `204 No Content`. Không tự động đăng nhập sau khi đặt lại mật khẩu.
+- Thất bại: nếu có 0 dòng ở bước 1 hoặc bước 2 (token sai, hết hạn, đã dùng, hoặc user suspended/soft-deleted), transaction rollback hoàn toàn và trả về `400 BAD_REQUEST` với mã lỗi chung duy nhất:
+  `{ "success": false, "error": { "code": "INVALID_RESET_TOKEN", "message": "Password reset token is invalid or expired." } }`.
+  Rollback đảm bảo nếu user bị suspended thì token chưa bị đánh dấu đã dùng (`usedAt` vẫn là null).
+- Không can thiệp vào các trường lockout (`failedLoginAttempts`, `lockUntil`).
 
 `data` của register/login (`201`) và refresh (`200`):
 
