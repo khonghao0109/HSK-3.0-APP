@@ -192,7 +192,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: `685f441`, kèm `ba83411`, PR #5 run `36672199065` |
 | M1.5b | Email verification (token hash) | ✅ | 30/09: `2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`. Xác thực email một lần qua link hash SHA-256 TTL 24h, fragment #token= |
-| M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
+| M1.5c | Password reset (token hash, dùng một lần) | ✅ | 30/09: `4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`. Đặt lại mật khẩu một lần qua link hash SHA-256 TTL 30m, revoke sessions, fragment #token= |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | |
 | M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2 |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
@@ -214,6 +214,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.1a | Learner session BFF: cookie riêng, route `api/session/*` cho learner | ⬜ | ADR-003 |
 | M2.1b | UI đăng ký, đăng nhập, đăng xuất | ⬜ | mockup 01/01,02 |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận fragment `#token=`, gọi confirm API |
+| M2.1d | Trang `/reset-password` (frontend) | ⬜ | Việc còn lại sau M1.5c: nhận fragment `#token=`, form mật khẩu mới, gọi POST /auth/password-reset/confirm |
 | M2.2 | UI onboarding goal + kế hoạch học | ⬜ | 01/03,04 |
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
@@ -421,7 +422,7 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`), `MailerPort`, `SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter` |
 | M1.5b | Email verification (token hash) | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`), POST /auth/email-verification/{request,confirm}, worker mail.email-verification sinh token SHA-256 TTL 24h, link fragment #token= |
-| M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
+| M1.5c | Password reset (token hash, dùng một lần) | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`), POST /auth/password-reset/request (204, throttle 5/15m/IP, 3/1h/email), POST /auth/password-reset/confirm (204, throttle 10/1m/IP), worker mail.password-reset sinh token SHA-256 TTL 30m, revoke mọi session, link fragment #token= |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
 | M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2; 30/09: ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`), schema pgboss v43, migrate: false, worker process riêng |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
@@ -451,6 +452,7 @@ UI và phần backend còn thiếu:
 | --- | --- | --- | --- |
 | M2.1 | Learner session: đăng ký, đăng nhập, đăng xuất qua BFF (cookie riêng cho learner) | ⬜ | `01-onboarding-placement/01,02` |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận token từ URL fragment `#token=`, gọi POST /auth/email-verification/confirm |
+| M2.1d | Trang `/reset-password` (frontend) | ⬜ | Việc còn lại sau M1.5c: nhận token từ URL fragment `#token=`, form mật khẩu mới, gọi POST /auth/password-reset/confirm |
 | M2.2 | Onboarding goal + kế hoạch học UI | ⬜ | `01-onboarding-placement/03,04` |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
@@ -614,3 +616,4 @@ khi vertical slice bắt đầu.
 | 30/09/2026 | GĐ4: M1.7a ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`): pg-boss trên PostgreSQL (schema pgboss v43, migrate: false), worker process riêng (`src/worker.ts`), purge expired sessions job (batch 1000, 30 days). Tổng 57/133. |
 | 30/09/2026 | GĐ4: M1.5a ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`): `MailerPort` (DIP), 3 adapter (`SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter`), module gắn worker process (`WorkerModule`), ma trận cấu hình mail và `assertMailProvider`, bảo vệ CRLF và chống rò rỉ PII. Tổng 58/133. |
 | 30/09/2026 | GĐ4: M1.5b ✅ đã đóng (`2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`): xác thực email một lần qua link hash SHA-256 TTL 24h, transactional register enqueue job `mail.email-verification`, POST /auth/email-verification/request (204, throttle 3/15m), POST /auth/email-verification/confirm (204, throttle 10/1m/IP), raw token trong mail fragment `#token=`, không lọt raw token ra DB/job/log. Tổng 59/133. |
+| 30/09/2026 | GĐ4: M1.5c ✅ đã đóng (`4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`): đặt lại mật khẩu một lần qua link hash SHA-256 TTL 30 phút, POST /auth/password-reset/request (204, rate limit 2 lớp 5/15m/IP và 3/1h/email anti-enumeration), POST /auth/password-reset/confirm (204, throttle 10/1m/IP, claim token và đổi password trong transaction, thu hồi toàn bộ session active, xoá token cũ chưa dùng, lỗi không phân biệt 400 INVALID_RESET_TOKEN), worker mail.password-reset short policy retry 3 backoff, link fragment #token=. M1.5 đóng; đủ điều kiện vào GĐ5. Tổng 60/133. |
