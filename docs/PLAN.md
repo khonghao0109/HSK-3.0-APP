@@ -193,10 +193,10 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: `685f441`, kèm `ba83411`, PR #5 run `36672199065` |
 | M1.5b | Email verification (token hash) | ✅ | 30/09: `2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`. Xác thực email một lần qua link hash SHA-256 TTL 24h, fragment #token= |
 | M1.5c | Password reset (token hash, dùng một lần) | ✅ | 30/09: `4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`. Đặt lại mật khẩu một lần qua link hash SHA-256 TTL 30m, revoke sessions, fragment #token= |
-| M1.6 | Profile API (`UserProfile`) | ⬜ | |
+| M1.6 | Profile API (`UserProfile`) | ✅ | 30/09: `3c9b3b5`, kèm `a9adb2a`, PR #5 run `36696120929`. GET/PATCH /users/me/profile, GET mặc định không tạo dòng, PATCH atomic upsert chống race, validate displayName (1–50 code point, chặn bidi/Cc), timezone IANA chuẩn định dạng và lưu nguyên bản, không có avatarUrl |
 | M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2 |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
-| M1.7c | Deletion request + anonymize worker | ⬜ | C-03 |
+| M1.7c | Deletion request + anonymize worker | ⬜ | C-03. Ghi chú M1.6: anonymize phải xoá `UserProfile.displayName` |
 | M1.8 | Dockerfile backend/frontend + digest | ⬜ | ADR-008 §11 |
 | M1.E | Privacy export/delete có evidence end-to-end; RC không fixture | ⬜ | |
 
@@ -423,10 +423,10 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`), `MailerPort`, `SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter` |
 | M1.5b | Email verification (token hash) | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`), POST /auth/email-verification/{request,confirm}, worker mail.email-verification sinh token SHA-256 TTL 24h, link fragment #token= |
 | M1.5c | Password reset (token hash, dùng một lần) | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`), POST /auth/password-reset/request (204, throttle 5/15m/IP, 3/1h/email), POST /auth/password-reset/confirm (204, throttle 10/1m/IP), worker mail.password-reset sinh token SHA-256 TTL 30m, revoke mọi session, link fragment #token= |
-| M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
+| M1.6 | Profile API (`UserProfile`) | ✅ | schema ✅; 30/09: ✅ đã đóng (`3c9b3b5`, kèm `a9adb2a`, PR #5 run `36696120929`), GET/PATCH /users/me/profile, GET mặc định không tạo dòng, PATCH atomic upsert chống race, validate displayName (1–50 ký tự code point, chặn bidi/Cc), timezone IANA chuẩn định dạng và lưu nguyên bản, không nhận avatarUrl |
 | M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2; 30/09: ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`), schema pgboss v43, migrate: false, worker process riêng |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
-| M1.7c | Deletion request + anonymize worker | ⬜ | C-03 |
+| M1.7c | Deletion request + anonymize worker | ⬜ | C-03. Ghi chú M1.6: anonymize phải xoá `UserProfile.displayName` |
 | M1.8 | Immutable build artifact cơ bản (Dockerfile + digest) | ⬜ | Sau H.2; ADR-008 §11 |
 
 Exit: không content/license blocker P0 ⬜ · privacy request có evidence end-to-end ⬜ ·
@@ -617,3 +617,4 @@ khi vertical slice bắt đầu.
 | 30/09/2026 | GĐ4: M1.5a ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`): `MailerPort` (DIP), 3 adapter (`SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter`), module gắn worker process (`WorkerModule`), ma trận cấu hình mail và `assertMailProvider`, bảo vệ CRLF và chống rò rỉ PII. Tổng 58/133. |
 | 30/09/2026 | GĐ4: M1.5b ✅ đã đóng (`2df43f5`, kèm `c543fd9`, `ff13c40`, PR #5 run `36684650025`): xác thực email một lần qua link hash SHA-256 TTL 24h, transactional register enqueue job `mail.email-verification`, POST /auth/email-verification/request (204, throttle 3/15m), POST /auth/email-verification/confirm (204, throttle 10/1m/IP), raw token trong mail fragment `#token=`, không lọt raw token ra DB/job/log. Tổng 59/133. |
 | 30/09/2026 | GĐ4: M1.5c ✅ đã đóng (`4ca031b`, kèm `9e67628`, `ec3b901`, PR #5 run `36689833324`): đặt lại mật khẩu một lần qua link hash SHA-256 TTL 30 phút, POST /auth/password-reset/request (204, rate limit 2 lớp 5/15m/IP và 3/1h/email anti-enumeration), POST /auth/password-reset/confirm (204, throttle 10/1m/IP, claim token và đổi password trong transaction, thu hồi toàn bộ session active, xoá token cũ chưa dùng, lỗi không phân biệt 400 INVALID_RESET_TOKEN), worker mail.password-reset short policy retry 3 backoff, link fragment #token=. M1.5 đóng; đủ điều kiện vào GĐ5. Tổng 60/133. |
+| 30/09/2026 | GĐ4: M1.6 ✅ đã đóng (`3c9b3b5`, kèm `a9adb2a`, PR #5 run `36696120929`): Profile API GET/PATCH /users/me/profile (JwtAuthGuard), đọc và sửa hồ sơ cá nhân { displayName, locale, timezone }. GET khi chưa có profile trả mặc định (null, vi-VN, Asia/Ho_Chi_Minh) và không tạo dòng; PATCH atomic upsert chống race condition (INSERT ... ON CONFLICT ("userId") DO UPDATE), validate displayName (trim, 1–50 code points, chặn control \p{Cc} và bidi override U+202A–U+202E/U+2066–U+2069, null để xoá), locale hỗ trợ vi-VN, timezone IANA chuẩn định dạng và lưu nguyên bản (Asia/Ho_Chi_Minh giữ nguyên, chặn asia/ho_chi_minh, +07:00, EST5EDT, Mars/Base), chặn body rỗng và field lạ, không có avatarUrl, cô lập theo user. Tổng 61/133. |
