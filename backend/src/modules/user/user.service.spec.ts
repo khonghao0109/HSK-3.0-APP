@@ -1,6 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
+import { JOB_NAMES } from '../../infrastructure/jobs/job-queue.port';
 import { PrismaService } from '../../prisma/prisma.service';
+import { hashPasswordWithPepper } from '../auth/utils/password-hasher';
 
 import { UserService } from './user.service';
 
@@ -12,15 +14,34 @@ describe('UserService', () => {
   const count = jest.fn();
   const findUniqueProfile = jest.fn();
   const queryRaw = jest.fn();
-  const transaction = jest.fn((operations: Promise<unknown>[]) =>
-    Promise.all(operations),
+  const executeRaw = jest.fn();
+  const auditLogCreate = jest.fn();
+  const txPrisma = {
+    $queryRaw: queryRaw,
+    $executeRaw: executeRaw,
+    auditLog: { create: auditLogCreate },
+  };
+  const transaction = jest.fn((cbOrArray: unknown) =>
+    typeof cbOrArray === 'function'
+      ? (cbOrArray as (tx: unknown) => unknown)(txPrisma)
+      : Promise.all(cbOrArray as Promise<unknown>[]),
   );
   const prisma = {
     user: { findFirst, findMany, count },
     userProfile: { findUnique: findUniqueProfile },
     $queryRaw: queryRaw,
+    $executeRaw: executeRaw,
     $transaction: transaction,
   } as unknown as PrismaService;
+  const config = {
+    get: jest.fn().mockImplementation((key: string) => {
+      if (key === 'AUTH_PASSWORD_PEPPER') return 'test-pepper';
+      return null;
+    }),
+  } as never;
+  const jobQueue = {
+    send: jest.fn().mockResolvedValue('job-1'),
+  };
   let service: UserService;
 
   const firstCall = (mock: jest.Mock) =>
@@ -34,7 +55,7 @@ describe('UserService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new UserService(prisma);
+    service = new UserService(prisma, config, jobQueue as never);
   });
 
   describe('getAllUsers', () => {
@@ -223,6 +244,115 @@ describe('UserService', () => {
       ).rejects.toThrow(
         new NotFoundException('User profile could not be updated.'),
       );
+    });
+  });
+
+  describe('requestAccountDeletion', () => {
+    let validHash: string;
+
+    beforeAll(async () => {
+      validHash = await hashPasswordWithPepper(
+        'CorrectPass123!',
+        'test-pepper',
+      );
+    });
+
+    it('answers 404 when user is not found or inactive', async () => {
+      findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.requestAccountDeletion(7, { password: 'any' }),
+      ).rejects.toThrow(new NotFoundException('User not found.'));
+    });
+
+    it('throws BadRequestException INVALID_PASSWORD when password is wrong and does not modify DB', async () => {
+      findFirst.mockResolvedValue({
+        id: 7,
+        password: validHash,
+        status: 'active',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.requestAccountDeletion(7, { password: 'WrongPassword' }),
+      ).rejects.toThrow(
+        new BadRequestException({
+          code: 'INVALID_PASSWORD',
+          message: 'Invalid password.',
+        }),
+      );
+
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns existing request if a requested request already exists (idempotent)', async () => {
+      const scheduledAt = new Date('2026-10-07T00:00:00Z');
+      findFirst.mockResolvedValue({
+        id: 7,
+        password: validHash,
+        status: 'active',
+        deletedAt: null,
+      });
+      queryRaw
+        .mockResolvedValueOnce([{ id: 7, status: 'active', deletedAt: null }])
+        .mockResolvedValueOnce([{ id: 99, scheduledAt }]);
+
+      const result = await service.requestAccountDeletion(7, {
+        password: 'CorrectPass123!',
+      });
+
+      expect(result).toEqual({ requestId: 99, scheduledAt });
+      expect(executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('creates AccountDeletionRequest, updates user, enqueues jobs in tx, and writes AuditLog', async () => {
+      const scheduledAt = new Date('2026-10-07T00:00:00Z');
+      findFirst.mockResolvedValue({
+        id: 7,
+        password: validHash,
+        status: 'active',
+        deletedAt: null,
+      });
+      queryRaw
+        .mockResolvedValueOnce([{ id: 7, status: 'active', deletedAt: null }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 101, scheduledAt }]);
+
+      const result = await service.requestAccountDeletion(7, {
+        password: 'CorrectPass123!',
+        reason: 'No longer needed',
+      });
+
+      expect(result).toEqual({ requestId: 101, scheduledAt });
+      expect(executeRaw).toHaveBeenCalled();
+      expect(jobQueue.send).toHaveBeenCalledTimes(2);
+      expect(jobQueue.send).toHaveBeenCalledWith(
+        JOB_NAMES.ANONYMIZE_ACCOUNT,
+        { requestId: 101 },
+        expect.objectContaining({
+          startAfter: scheduledAt,
+          singletonKey: 'anonymize:101',
+        }),
+      );
+      expect(jobQueue.send).toHaveBeenCalledWith(
+        JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+        { requestId: 101 },
+        expect.objectContaining({
+          singletonKey: 'deletion-mail:101',
+        }),
+      );
+      expect(auditLogCreate).toHaveBeenCalledWith({
+        data: {
+          actorId: 7,
+          action: 'account.deletion_requested',
+          targetType: 'User',
+          targetId: '7',
+          afterSummary: {
+            requestId: 101,
+            scheduledAt: scheduledAt.toISOString(),
+          },
+        },
+      });
     });
   });
 });

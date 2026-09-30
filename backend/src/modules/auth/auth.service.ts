@@ -11,7 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerException } from '@nestjs/throttler';
 import { Prisma, type Role } from '@prisma/client';
-import * as argon2 from 'argon2';
 import { createHash, randomBytes } from 'node:crypto';
 
 import {
@@ -24,6 +23,10 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { WEAK_PASSWORDS } from './constants/weak-passwords';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import {
+  hashPasswordWithPepper,
+  verifyPasswordWithPepper,
+} from './utils/password-hasher';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -121,10 +124,35 @@ export class AuthService implements OnModuleInit {
       },
     });
 
+    let isPendingDeletion = false;
+    let pendingDeletionRequestId: number | null = null;
+
+    if (user && user.status === 'deletion_pending') {
+      const activeRequests = await this.prisma.$queryRaw<{ id: number }[]>(
+        Prisma.sql`
+        SELECT id
+        FROM "AccountDeletionRequest"
+        WHERE "userId" = ${user.id}
+          AND status = 'requested'
+          AND "scheduledAt" > CURRENT_TIMESTAMP
+        ORDER BY id DESC
+        LIMIT 1
+      `,
+      );
+      if (activeRequests.length > 0) {
+        isPendingDeletion = true;
+        pendingDeletionRequestId = activeRequests[0].id;
+      }
+    }
+
     // Unknown and inactive accounts get the same 401 as a wrong password, after
     // a full Argon2id verification against a decoy, so neither the status code
     // nor the response time reveals whether the email is registered.
-    if (!user || user.status !== 'active' || user.deletedAt !== null) {
+    if (
+      !user ||
+      (!isPendingDeletion &&
+        (user.status !== 'active' || user.deletedAt !== null))
+    ) {
       await this.verifyPassword(
         loginDto.password,
         await this.getDummyPasswordHash(),
@@ -147,14 +175,59 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        failedLoginAttempts: 0,
-        lockUntil: null,
-        lastLoginAt: new Date(),
-      },
-    });
+    if (isPendingDeletion && pendingDeletionRequestId !== null) {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.$queryRaw(Prisma.sql`
+          SELECT id FROM "AccountDeletionRequest"
+          WHERE id = ${pendingDeletionRequestId}
+          FOR UPDATE
+        `);
+
+        const cancelResult = await tx.$executeRaw(Prisma.sql`
+          UPDATE "AccountDeletionRequest"
+          SET status = 'cancelled',
+              "cancelledAt" = CURRENT_TIMESTAMP,
+              "updatedAt" = CURRENT_TIMESTAMP
+          WHERE id = ${pendingDeletionRequestId}
+            AND status = 'requested'
+            AND "scheduledAt" > CURRENT_TIMESTAMP
+        `);
+
+        if (cancelResult === 0) {
+          throw new UnauthorizedException('Invalid credentials');
+        }
+
+        await tx.$executeRaw(Prisma.sql`
+          UPDATE "User"
+          SET status = 'active',
+              "deletedAt" = NULL,
+              "failedLoginAttempts" = 0,
+              "lockUntil" = NULL,
+              "lastLoginAt" = CURRENT_TIMESTAMP,
+              "updatedAt" = CURRENT_TIMESTAMP
+          WHERE id = ${user.id} AND status = 'deletion_pending'
+        `);
+
+        await tx.auditLog.create({
+          data: {
+            actorId: user.id,
+            action: 'account.deletion_cancelled',
+            targetType: 'User',
+            targetId: String(user.id),
+            afterSummary: { requestId: pendingDeletionRequestId },
+          },
+        });
+      });
+    } else {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          lockUntil: null,
+          lastLoginAt: new Date(),
+        },
+      });
+    }
     await this.rateLimitStorage.reset(emailThrottleKey);
 
     return this.createSessionAndSignToken({
@@ -244,15 +317,8 @@ export class AuthService implements OnModuleInit {
     return this.configService.get<string>('AUTH_PASSWORD_PEPPER') ?? '';
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    const passwordWithPepper = `${password}${this.getPepper()}`;
-
-    return argon2.hash(passwordWithPepper, {
-      type: argon2.argon2id,
-      memoryCost: 65536,
-      timeCost: 3,
-      parallelism: 1,
-    });
+  async hashPassword(password: string): Promise<string> {
+    return hashPasswordWithPepper(password, this.getPepper());
   }
 
   /**
@@ -260,19 +326,8 @@ export class AuthService implements OnModuleInit {
    * another Argon2 variant, a foreign algorithm) never matches, is not
    * re-hashed, and the account needs a password reset.
    */
-  private async verifyPassword(
-    password: string,
-    hash: string,
-  ): Promise<boolean> {
-    if (!hash.startsWith('$argon2id$')) {
-      return false;
-    }
-
-    try {
-      return await argon2.verify(hash, `${password}${this.getPepper()}`);
-    } catch {
-      return false;
-    }
+  async verifyPassword(password: string, hash: string): Promise<boolean> {
+    return verifyPasswordWithPepper(password, hash, this.getPepper());
   }
 
   async refresh(refreshToken: string) {

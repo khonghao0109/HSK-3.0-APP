@@ -9,6 +9,8 @@ import { MailerModule } from './infrastructure/mail/mailer.module';
 import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessions.job';
 import { SendEmailVerificationJob } from './modules/auth/jobs/send-email-verification.job';
 import { SendPasswordResetJob } from './modules/auth/jobs/send-password-reset.job';
+import { AnonymizeAccountJob } from './modules/user/jobs/anonymize-account.job';
+import { SendAccountDeletionScheduledJob } from './modules/user/jobs/send-account-deletion-scheduled.job';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { SendPasswordResetJob } from './modules/auth/jobs/send-password-reset.jo
     PurgeExpiredSessionsJob,
     SendEmailVerificationJob,
     SendPasswordResetJob,
+    AnonymizeAccountJob,
+    SendAccountDeletionScheduledJob,
   ],
 })
 export class WorkerModule {}

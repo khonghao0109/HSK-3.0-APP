@@ -29,10 +29,12 @@ describe('AuthService login throttling and lockout', () => {
   const queryRawUnsafe = jest.fn();
   const executeRawUnsafe = jest.fn();
   const userSessionFindUnique = jest.fn();
+  const auditLogCreate = jest.fn();
   const transaction = jest.fn();
   const prisma = {
     user: { findUnique, update, create },
     userSession: { findUnique: userSessionFindUnique },
+    auditLog: { create: auditLogCreate },
     $queryRaw: queryRaw,
     $executeRaw: executeRaw,
     $queryRawUnsafe: queryRawUnsafe,
@@ -222,6 +224,75 @@ describe('AuthService login throttling and lockout', () => {
       expect(hashPassword).toHaveBeenCalledTimes(1);
       const decoys = verifyPassword.mock.calls.map((call) => call[1] as string);
       expect(new Set(decoys).size).toBe(1);
+    });
+
+    it('answers a deletion_pending account with expired scheduledAt with generic 401 after decoy verification', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([]);
+      verifyPassword.mockResolvedValue(false);
+
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(verifyPassword).toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
+      expect(auditLogCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('account deletion cancellation during grace period', () => {
+    it('cancels deletion request, activates account, creates auditLog, and logs in on valid password', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([{ id: 42, expiresAt: new Date() }]);
+      executeRaw.mockResolvedValue(1);
+      verifyPassword.mockResolvedValue(true);
+
+      const result = await login();
+
+      expect(result).toHaveProperty('accessToken');
+      expect(auditLogCreate).toHaveBeenCalledWith({
+        data: {
+          actorId: 7,
+          action: 'account.deletion_cancelled',
+          targetType: 'User',
+          targetId: '7',
+          afterSummary: { requestId: 42 },
+        },
+      });
+      expect(reset).toHaveBeenCalledWith(emailKey);
+    });
+
+    it('rejects with 401 and does not cancel when password is wrong for deletion_pending account', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([{ id: 42 }]);
+      verifyPassword.mockResolvedValue(false);
+
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(auditLogCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects with 401 when cancellation executeRaw returns 0 rows (concurrent anonymization)', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([{ id: 42 }]);
+      executeRaw.mockResolvedValue(0);
+      verifyPassword.mockResolvedValue(true);
+
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(auditLogCreate).not.toHaveBeenCalled();
     });
   });
 

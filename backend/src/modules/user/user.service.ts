@@ -1,10 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
+import {
+  JOB_NAMES,
+  JobQueuePort,
+} from '../../infrastructure/jobs/job-queue.port';
 import { PrismaService } from '../../prisma/prisma.service';
+import { verifyPasswordWithPepper } from '../auth/utils/password-hasher';
 
+import { AccountDeletionResponseDto } from './dto/account-deletion-response.dto';
+import { RequestAccountDeletionDto } from './dto/request-account-deletion.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserProfileResponseDto } from './dto/user-profile-response.dto';
 import { DEFAULT_USER_PROFILE } from './validation/user-profile.validator';
@@ -22,7 +35,11 @@ type UserItem = Prisma.UserGetPayload<{ select: typeof USER_ITEM_SELECT }>;
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    @Inject(JobQueuePort) private readonly jobQueue: JobQueuePort,
+  ) {}
 
   async getProfile(userId: number) {
     const user = await this.prisma.user.findFirst({
@@ -130,6 +147,179 @@ export class UserService {
       locale: result.locale,
       timezone: result.timezone,
     };
+  }
+
+  async requestAccountDeletion(
+    userId: number,
+    dto: RequestAccountDeletionDto,
+  ): Promise<AccountDeletionResponseDto> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        status: { in: ['active', 'deletion_pending'] },
+      },
+      select: {
+        id: true,
+        password: true,
+        status: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (user.status === 'active' && user.deletedAt !== null) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const pepper = this.configService.get<string>('AUTH_PASSWORD_PEPPER') ?? '';
+    const isPasswordValid = await verifyPasswordWithPepper(
+      dto.password,
+      user.password,
+      pepper,
+    );
+
+    if (!isPasswordValid) {
+      throw new BadRequestException({
+        code: 'INVALID_PASSWORD',
+        message: 'Invalid password.',
+      });
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. SELECT ... FROM "User" WHERE id = $1 FOR UPDATE
+      const lockedUsers = await tx.$queryRaw<
+        Array<{ id: number; status: string; deletedAt: Date | null }>
+      >(Prisma.sql`
+        SELECT id, status, "deletedAt"
+        FROM "User"
+        WHERE id = ${userId}
+        FOR UPDATE
+      `);
+
+      if (lockedUsers.length === 0) {
+        throw new NotFoundException('User not found.');
+      }
+
+      const lockedUser = lockedUsers[0];
+
+      // 2. If already has request status = 'requested', return that request (idempotent)
+      const existingRequests = await tx.$queryRaw<
+        Array<{ id: number; scheduledAt: Date }>
+      >(Prisma.sql`
+        SELECT id, "scheduledAt"
+        FROM "AccountDeletionRequest"
+        WHERE "userId" = ${userId}
+          AND status = 'requested'
+        ORDER BY id DESC
+        LIMIT 1
+      `);
+
+      if (existingRequests.length > 0) {
+        return {
+          requestId: existingRequests[0].id,
+          scheduledAt: existingRequests[0].scheduledAt,
+        };
+      }
+
+      if (lockedUser.status !== 'active' || lockedUser.deletedAt !== null) {
+        throw new NotFoundException('User not found.');
+      }
+
+      // 3. INSERT AccountDeletionRequest with status = 'requested'
+      const insertedRows = await tx.$queryRaw<
+        Array<{ id: number; scheduledAt: Date }>
+      >(Prisma.sql`
+        INSERT INTO "AccountDeletionRequest" (
+          "userId",
+          status,
+          reason,
+          "verifiedAt",
+          "scheduledAt",
+          "createdAt",
+          "updatedAt"
+        )
+        VALUES (
+          ${userId},
+          'requested',
+          ${dto.reason ?? null},
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP + INTERVAL '7 days',
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP
+        )
+        RETURNING id, "scheduledAt"
+      `);
+
+      const { id: requestId, scheduledAt } = insertedRows[0];
+
+      // 4. UPDATE User SET status = 'deletion_pending', "deletedAt" = CURRENT_TIMESTAMP
+      await tx.$executeRaw(Prisma.sql`
+        UPDATE "User"
+        SET status = 'deletion_pending',
+            "deletedAt" = CURRENT_TIMESTAMP,
+            "updatedAt" = CURRENT_TIMESTAMP
+        WHERE id = ${userId}
+      `);
+
+      // 5. Revoke all UserSession; delete unused reset and verification tokens
+      await tx.$executeRaw(Prisma.sql`
+        UPDATE "UserSession"
+        SET "revokedAt" = CURRENT_TIMESTAMP
+        WHERE "userId" = ${userId} AND "revokedAt" IS NULL
+      `);
+
+      await tx.$executeRaw(Prisma.sql`
+        DELETE FROM "PasswordResetToken"
+        WHERE "userId" = ${userId} AND "usedAt" IS NULL
+      `);
+
+      await tx.$executeRaw(Prisma.sql`
+        DELETE FROM "EmailVerificationToken"
+        WHERE "userId" = ${userId} AND "usedAt" IS NULL
+      `);
+
+      // 6. Enqueue jobs in tx
+      await this.jobQueue.send(
+        JOB_NAMES.ANONYMIZE_ACCOUNT,
+        { requestId },
+        {
+          startAfter: scheduledAt,
+          singletonKey: `anonymize:${requestId}`,
+          tx,
+        },
+      );
+
+      await this.jobQueue.send(
+        JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+        { requestId },
+        {
+          singletonKey: `deletion-mail:${requestId}`,
+          tx,
+        },
+      );
+
+      // 7. AuditLog: action = 'account.deletion_requested'
+      await tx.auditLog.create({
+        data: {
+          actorId: userId,
+          action: 'account.deletion_requested',
+          targetType: 'User',
+          targetId: String(userId),
+          afterSummary: {
+            requestId,
+            scheduledAt:
+              scheduledAt instanceof Date
+                ? scheduledAt.toISOString()
+                : scheduledAt,
+          },
+        },
+      });
+
+      return { requestId, scheduledAt };
+    });
   }
 
   async getAllUsers(

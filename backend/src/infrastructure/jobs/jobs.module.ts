@@ -71,6 +71,18 @@ export class JobsModule {
                 name: JOB_NAMES.SEND_PASSWORD_RESET,
                 options: { policy: 'short', retryLimit: 3, retryBackoff: true },
               },
+              {
+                name: JOB_NAMES.ANONYMIZE_ACCOUNT,
+                options: {
+                  policy: 'standard',
+                  retryLimit: 3,
+                  retryBackoff: true,
+                },
+              },
+              {
+                name: JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+                options: { policy: 'short', retryLimit: 3, retryBackoff: true },
+              },
             ];
 
             for (const queue of queuesToCreate) {

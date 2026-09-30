@@ -347,6 +347,50 @@ describe('Job Queue Integration (J1-J8)', () => {
       assert.strictEqual(secondSend, null);
     });
 
+    it('J10: 2 queue account deletion tồn tại; job có startAfter trong tương lai không được fetch ngay', async () => {
+      const anonQueues = await prisma.$queryRawUnsafe<
+        { name: string; policy: string }[]
+      >(
+        `SELECT name, policy FROM pgboss.queue WHERE name = $1`,
+        JOB_NAMES.ANONYMIZE_ACCOUNT,
+      );
+      assert.strictEqual(anonQueues.length, 1);
+      assert.strictEqual(anonQueues[0].policy, 'standard');
+
+      const mailQueues = await prisma.$queryRawUnsafe<
+        { name: string; policy: string }[]
+      >(
+        `SELECT name, policy FROM pgboss.queue WHERE name = $1`,
+        JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+      );
+      assert.strictEqual(mailQueues.length, 1);
+      assert.strictEqual(mailQueues[0].policy, 'short');
+
+      const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const futureJobId = await apiQueue.send(
+        JOB_NAMES.ANONYMIZE_ACCOUNT,
+        { requestId: 9994 },
+        {
+          startAfter: futureDate,
+          singletonKey: 'anonymize:9994',
+        },
+      );
+      assert.ok(futureJobId);
+
+      const jobs = await prisma.$queryRawUnsafe<
+        { id: string; state: string; start_after: Date }[]
+      >(
+        `SELECT id, state, start_after FROM pgboss.job WHERE id = $1::uuid`,
+        futureJobId,
+      );
+      assert.strictEqual(jobs.length, 1);
+      assert.strictEqual(jobs[0].state, 'created');
+      assert.ok(new Date(jobs[0].start_after).getTime() > Date.now());
+
+      const fetched = await workerBoss.fetch(JOB_NAMES.ANONYMIZE_ACCOUNT);
+      assert.strictEqual(fetched.length, 0);
+    });
+
     it('J7: app.close() dừng pg-boss', async () => {
       const apiBoss = apiApp.get<PgBoss>(PG_BOSS_INSTANCE);
       const stopped = new Promise<void>((resolve, reject) => {

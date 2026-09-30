@@ -3,12 +3,16 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -18,6 +22,8 @@ import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
+import { AccountDeletionResponseDto } from './dto/account-deletion-response.dto';
+import { RequestAccountDeletionDto } from './dto/request-account-deletion.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserProfileResponseDto } from './dto/user-profile-response.dto';
 import { UserService } from './user.service';
@@ -60,6 +66,22 @@ export class UserController {
       throw new BadRequestException('Request body must not be empty.');
     }
     return this.userService.updateUserProfile(req.user.id, dto);
+  }
+
+  @Post('me/deletion-request')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @ApiEnvelope(AccountDeletionResponseDto)
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    description: 'Account deletion request accepted with 7-day grace period.',
+    type: AccountDeletionResponseDto,
+  })
+  requestAccountDeletion(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: RequestAccountDeletionDto,
+  ): Promise<AccountDeletionResponseDto> {
+    return this.userService.requestAccountDeletion(req.user.id, dto);
   }
 
   @Get('me')

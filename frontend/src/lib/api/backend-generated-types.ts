@@ -580,6 +580,22 @@ export interface paths {
         patch: operations["UserController_updateMeProfile"];
         trace?: never;
     };
+    "/api/v1/users/me/deletion-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UserController_requestAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -1452,6 +1468,31 @@ export interface components {
              * @example Asia/Ho_Chi_Minh
              */
             timezone?: string;
+        };
+        AccountDeletionResponseDto: {
+            /**
+             * @description ID of the account deletion request.
+             * @example 1
+             */
+            requestId: number;
+            /**
+             * Format: date-time
+             * @description Scheduled date and time when the account will be permanently anonymized.
+             * @example 2026-10-07T09:00:00.000Z
+             */
+            scheduledAt: string;
+        };
+        RequestAccountDeletionDto: {
+            /**
+             * @description Current password for confirming account deletion.
+             * @example StrongPassword123!
+             */
+            password: string;
+            /**
+             * @description Optional reason for deleting the account (up to 500 characters).
+             * @example No longer studying Chinese.
+             */
+            reason?: string;
         };
         LevelItemDto: {
             id: number;
@@ -2859,6 +2900,39 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["UserProfileResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_requestAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestAccountDeletionDto"];
+            };
+        };
+        responses: {
+            /** @description Account deletion request accepted with 7-day grace period. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AccountDeletionResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };
