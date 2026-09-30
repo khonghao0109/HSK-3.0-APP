@@ -70,9 +70,9 @@ Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-v
 
 Thư mục `infrastructure/`: `storage` (port `ObjectStoragePort`, adapter S3 và in-memory),
 `malware` (port scanner, adapter ClamAV INSTREAM và test), `observability` (metrics
-listener riêng, cardinality cố định), và `jobs` (port `JobQueuePort`, adapter `PgBossJobQueue` và `InMemoryJobQueue`). Adapter được chọn tường minh theo
+listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter `PgBossJobQueue` và `InMemoryJobQueue`), và `mail` (port `MailerPort`, adapter `SesMailerAdapter`, `MailpitMailerAdapter` và `InMemoryMailerAdapter`). Adapter được chọn tường minh theo
 `MEDIA_STORAGE_PROVIDER` (`s3` | `memory`), `MEDIA_SCANNER_PROVIDER` (`clamav` | `test`),
-và `JOB_QUEUE_PROVIDER` (`pgboss` | `memory`), không suy ra từ `NODE_ENV` (H.9, finding B-04).
+`JOB_QUEUE_PROVIDER` (`pgboss` | `memory`), và `MAIL_PROVIDER` (`ses` | `mailpit` | `memory`), không suy ra từ `NODE_ENV` (H.9, finding B-04).
 
 ### 3.3 Quy ước API thực tế
 
@@ -164,6 +164,10 @@ Backend (`backend/.env.example`):
 | `MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS` < `MEDIA_METRICS_COLLECTION_TIMEOUT_MS` | mặc định 750/1000 | |
 | `MEDIA_METRICS_CACHE_TTL_MS` < `MEDIA_METRICS_STALE_TTL_MS` | mặc định 5000/60000 | |
 | `JOB_QUEUE_PROVIDER` | mặc định `pgboss` | `memory` chỉ khi `NODE_ENV=test` |
+| `MAIL_PROVIDER` | mặc định `ses` | `ses` (mọi môi trường), `mailpit` (development/test), `memory` (chỉ khi `NODE_ENV=test`) |
+| `MAIL_FROM` | có | email người gửi hợp lệ |
+| `MAIL_SES_REGION` | khi provider `ses` | AWS SES Region |
+| `MAIL_MAILPIT_URL` | khi provider `mailpit` | chỉ `http(s)` tới `127.0.0.1` hoặc `localhost` |
 
 Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN`,
 `BFF_REQUEST_TIMEOUT_MS` (8000), `SESSION_COOKIE_NAME` (`hsk_admin_session`),

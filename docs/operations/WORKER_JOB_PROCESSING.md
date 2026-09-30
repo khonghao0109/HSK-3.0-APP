@@ -43,6 +43,13 @@ kill -SIGTERM <worker-pid>
 | `NODE_ENV` | Có | `production` / `development` / `test` |
 | `DATABASE_URL` | Có | Chuỗi kết nối PostgreSQL (ví dụ `postgresql://user:pass@host:5432/hsk_system?schema=public`) |
 | `JOB_QUEUE_PROVIDER` | Tuỳ chọn | Mặc định `pgboss`. Giá trị `memory` chỉ cho phép trong `NODE_ENV=test` |
+| `MAIL_PROVIDER` | Tuỳ chọn | Mặc định `ses`. Giá trị `mailpit` cho development/test; `memory` chỉ cho `NODE_ENV=test` |
+| `MAIL_FROM` | Có | Địa chỉ email người gửi hợp lệ (ví dụ `noreply@hsk.local` hoặc `auth@hsk.edu.vn`) |
+| `MAIL_SES_REGION` | Khi `ses` | AWS Region của SES (ví dụ `ap-southeast-1`) |
+| `MAIL_MAILPIT_URL` | Khi `mailpit` | URL dịch vụ Mailpit local (chỉ cho phép `127.0.0.1` hoặc `localhost`, ví dụ `http://127.0.0.1:8025`) |
+
+> [!IMPORTANT]
+> Payload job gửi mail chỉ chứa `userId`. Worker tự sinh raw token lúc xử lý job, chỉ lưu SHA-256 vào bảng token; raw token chỉ xuất hiện trong nội dung mail gửi đi, không bao giờ nằm trong `pgboss.job`, log hay `cause` của lỗi.
 
 ## 4. Quản lý kết nối Database Pool
 
