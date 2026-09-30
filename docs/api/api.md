@@ -113,12 +113,16 @@ liveness/readiness.)
 | `POST` | `/auth/refresh` | public | 30/phút/IP |
 | `POST` | `/auth/logout` | JWT | global |
 | `GET` | `/auth/me` | JWT | global |
+| `POST` | `/auth/email-verification/request` | JWT | 3/15 phút/user |
+| `POST` | `/auth/email-verification/confirm` | public | 10/phút/IP |
 
 Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
 Email canonicalize `trim().toLowerCase()`; DB unique theo `lower(email)`. Password trong
 blacklist → `400 "Password is too weak."`; email đã tồn tại → `409 "Email already exists"`,
 kể cả khi hai request đăng ký cùng email chạy song song (unique index `P2002` cũng map về
-`409`).
+`409`). Thao tác tạo user (`user.create`) và enqueue job gửi mail xác thực (`mail.email-verification`)
+được thực thi trong cùng một `prisma.$transaction`; nếu enqueue thất bại, transaction rollback
+hoàn toàn (không tạo user mồ côi). Session chỉ được tạo sau khi transaction commit thành công.
 
 Body login: `{ "email", "password" }`. Email không tồn tại, account không `active` hoặc
 đã soft-delete, sai mật khẩu → cùng `401 "Invalid credentials"`. Chỉ account đang khoá
@@ -176,6 +180,23 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 - Phản hồi `204 No Content` không kèm body.
 - Gọi lại logout bằng chính token đó (hoặc dùng token đó gọi `/auth/me`) → `401` do session đã bị thu hồi.
 - Các session khác của cùng user không bị ảnh hưởng.
+
+`POST /auth/email-verification/request` (JWT, rate limit 3 lần / 15 phút / user):
+- Yêu cầu access token hợp lệ (`JwtAuthGuard`). Rate limit áp dụng theo `user:<id>` (3 lần trong 15 phút).
+- Nếu email đã xác thực (`emailVerifiedAt` khác null), tài khoản không active hoặc đã soft-delete: phản hồi ngay `204 No Content` mà không đẩy job mới vào hàng đợi.
+- Nếu email chưa xác thực: đẩy job `mail.email-verification` với payload `{ userId }` và `singletonKey: 'email-verification:' + userId`.
+- Phản hồi `204 No Content` không kèm body. Vượt quá giới hạn rate limit → `429 TOO_MANY_REQUESTS`.
+
+`POST /auth/email-verification/confirm` (public, rate limit 10 lần / phút / IP):
+- Body: `{ "token": string }` (43 ký tự base64url unpadded, kiểm tra bằng regex `/^[A-Za-z0-9_-]{43}$/`).
+- Thực thi trong một database transaction:
+  1. Claim token: `UPDATE "EmailVerificationToken" SET "usedAt" = CURRENT_TIMESTAMP WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP RETURNING "userId"`.
+  2. Cập nhật user: `UPDATE "User" SET "emailVerifiedAt" = COALESCE("emailVerifiedAt", CURRENT_TIMESTAMP) WHERE id = $2 AND "deletedAt" IS NULL AND status = 'active' RETURNING id`.
+- Thành công: phản hồi `204 No Content`.
+- Thất bại: nếu có 0 dòng cập nhật ở bất kỳ bước nào (token không khớp, token hết hạn, token đã dùng trước đó, hoặc tài khoản đã bị khoá / soft-delete), transaction rollback hoàn toàn và trả về lỗi `400 BAD_REQUEST` với mã lỗi chung duy nhất:
+  `{ "success": false, "error": { "code": "INVALID_VERIFICATION_TOKEN", "message": "Verification token is invalid or expired." } }`.
+  Phản hồi không phân biệt nguyên nhân nhằm ngăn chặn tấn công user enumeration hoặc dò tìm trạng thái token.
+- Cơ chế khoá dòng của PostgreSQL đảm bảo an toàn tuyệt đối khi có nhiều request đồng thời gửi cùng một token: chỉ duy nhất một request thành công (204), các request còn lại nhận 400.
 
 `data` của register/login (`201`) và refresh (`200`):
 
