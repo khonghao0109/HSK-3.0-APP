@@ -45,7 +45,7 @@ cam kết.
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 9 / 10 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
-| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 3 / 16 | 3–4 tuần | 🟡 |
+| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 4 / 16 | 3–4 tuần | 🟡 |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 21 | 5–7 tuần | 🟡 backend xong |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
@@ -53,7 +53,7 @@ cam kết.
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **56 / 133 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **57 / 133 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -173,7 +173,7 @@ Vào: GĐ1 có CI để gate chạy trên Linux AMD64. Ra: không còn P0/P1 med
 | M0.3 | Forward-only migration, bounded lock deploy | 🟡 | script đã commit `6f74f5b`; H.11a ✅ `46396d7` (C-01, C-02 đóng) |
 | M0.4 | Validate K8s artifact, OCI identity, Linux AMD64 | 🟡 | gate chặn bởi producer policy; phụ thuộc #11 |
 | M0.5 | Owner, risk/decision register, evidence contract | 🟡 | roadmap đã commit; owner chưa gán |
-| #10 | Duyệt ADR-008 | 🔵 | Product Owner + Tech Lead |
+| #10 | Duyệt ADR-008 | 🟡 | §1, §2, §9 đã chốt (§2, §9: Product Owner 29/09/2026); còn lại 🔵 |
 | #11 | Đóng băng harness release-evidence hay giữ (ADR-008 §8, A-04) | 🔵 | quyết định M0.4 ở lại hay chuyển M6.2 |
 | M0.E | Đóng P2 media còn lại: B-07 TTL signed URL và secret previous, D-04 limiter per process; full gate GREEN | 🟡 | B-07 (`f51c71b`); D-04 đã đóng ở `6a61efc` (run `36407315763`, limiter per process + busy 503; huỷ việc sau nhận body được bỏ theo review 28/09); còn full gate Linux AMD64 (#11) |
 
@@ -194,7 +194,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.5b | Email verification (token hash) | ⬜ | |
 | M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | |
-| M1.7a | pg-boss trên PostgreSQL + worker process | ⬜ | ADR-008 §2 |
+| M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2 |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
 | M1.7c | Deletion request + anonymize worker | ⬜ | C-03 |
 | M1.8 | Dockerfile backend/frontend + digest | ⬜ | ADR-008 §11 |
@@ -420,7 +420,9 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
 | M1.5 | Email verification + password reset qua `MailerPort` (SES / Mailpit) | ⬜ | ADR-008 §9; token schema ✅ |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
-| M1.7 | Privacy: consent API, export job, deletion/anonymize worker (pg-boss) | ⬜ | C-03, ADR-001; schema ✅ |
+| M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2; 30/09: ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`), schema pgboss v43, migrate: false, worker process riêng |
+| M1.7b | Consent API + data export job | ⬜ | ADR-001 |
+| M1.7c | Deletion request + anonymize worker | ⬜ | C-03 |
 | M1.8 | Immutable build artifact cơ bản (Dockerfile + digest) | ⬜ | Sau H.2; ADR-008 §11 |
 
 Exit: không content/license blocker P0 ⬜ · privacy request có evidence end-to-end ⬜ ·
@@ -564,7 +566,7 @@ khi vertical slice bắt đầu.
 | 7 | Baseline metric learning/exam để roadmap có ngưỡng thành công | Data | ⬜ |
 | 8 | Nghĩa vụ lưu trữ dữ liệu cá nhân trong nước (Luật ANM 2018 Đ.26, NĐ 53/2022, NĐ 13/2023) → chọn hosting | Legal | ⬜ chặn M6.3 |
 | 9 | Công thức điểm bài học: loại bài chưa làm khỏi mẫu số hay không (D-03) | Product Owner | ⬜ |
-| 10 | Chấp nhận ADR-008 (stack còn lại) | Product Owner + Tech Lead | 🔵 |
+| 10 | Chấp nhận ADR-008 (stack còn lại) | Product Owner + Tech Lead | 🟡 §1, §2, §9 đã chốt (§2, §9: Product Owner 29/09/2026); còn lại 🔵 |
 | 11 | Đóng băng harness release-evidence theo ADR-008 §8 và review A-04 | Tech Lead | 🔵 |
 | 12 | Chỉ tiêu nội dung trước beta: số từ có nghĩa tiếng Việt (M1.2b), số bài học và bài tập mỗi cấp (M2.9), số câu hỏi và đề mỗi cấp (M4.6); nguồn và license cho audio từ vựng | Product Owner + Content | 🔵 đề xuất 14/09 trong mục 1.2 |
 
@@ -605,3 +607,4 @@ khi vertical slice bắt đầu.
 | 29/09/2026 | GĐ4: M1.4a ✅ đã đóng (`1b27a45`, PR #5 run `36521807782`): refresh token xoay vòng lưu hash sha256 trong `UserSession`, claim nguyên tử với `CURRENT_TIMESTAMP`, phát hiện dùng lại thu hồi toàn bộ session, access token gắn `sid`; giữ access token 7d, hạ 15 phút chuyển sang M1.4b cùng BFF refresh. |
 | 29/09/2026 | GĐ4: M1.4b ✅ đã đóng (`08a78ea`, PR #5 run `36533471666`): POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh vô hại giữa các tab; tách M1.4c cho BFF proxy refresh và cookie. Tổng 55/133. |
 | 29/09/2026 | GĐ4: M1.4c ✅ đã đóng (`01f468c`, PR #5 run `36547912748`): BFF proxy âm thầm refresh access token khi còn dưới 2 phút với single-flight sha256 map, cookie refresh song song với session cookie, route handler /api/session/logout gọi backend logout thật (204) để revoke session, hạ mặc định access token backend xuống 15m (`15m`). Tổng 56/133. |
+| 30/09/2026 | GĐ4: M1.7a ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`): pg-boss trên PostgreSQL (schema pgboss v43, migrate: false), worker process riêng (`src/worker.ts`), purge expired sessions job (batch 1000, 30 days). Tổng 57/133. |
