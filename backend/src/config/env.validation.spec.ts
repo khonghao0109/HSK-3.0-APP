@@ -21,6 +21,7 @@ describe('media environment validation', () => {
     ...base,
     NODE_ENV: 'production',
     ALLOWED_ORIGINS: 'https://admin.example.com,https://app.example.com',
+    APP_PUBLIC_URL: 'https://app.example.com',
     AUTH_PASSWORD_PEPPER: passwordPepper,
     MEDIA_STORAGE_BUCKET: 'hsk-private-media',
     MEDIA_STORAGE_REGION: 'ap-southeast-1',
@@ -41,6 +42,7 @@ describe('media environment validation', () => {
     'MEDIA_METRICS_PORT',
     'AUTH_PASSWORD_PEPPER',
     'ALLOWED_ORIGINS',
+    'APP_PUBLIC_URL',
   ])('requires production boundary %s', (missing) => {
     const environment: Record<string, string> = {
       ...production,
@@ -475,6 +477,71 @@ describe('media environment validation', () => {
       const res = envValidationSchema.validate(env);
       expect(res.error).toBeUndefined();
       expect(res.value.MAIL_PROVIDER).toBe('memory');
+    });
+  });
+
+  describe('APP_PUBLIC_URL', () => {
+    it('requires APP_PUBLIC_URL in production', () => {
+      const env: Record<string, string> = { ...production };
+      delete env.APP_PUBLIC_URL;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects non-https in production', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        APP_PUBLIC_URL: 'http://app.example.com',
+      });
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects origin with path in production', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        APP_PUBLIC_URL: 'https://app.example.com/verify-email',
+      });
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects origin with search or hash or credentials', () => {
+      for (const bad of [
+        'https://app.example.com?query=1',
+        'https://app.example.com#token',
+        'https://user:pass@app.example.com',
+      ]) {
+        const res = envValidationSchema.validate({
+          ...production,
+          APP_PUBLIC_URL: bad,
+        });
+        expect(res.error?.message).toContain('APP_PUBLIC_URL');
+      }
+    });
+
+    it('defaults to http://localhost:3000 in development when omitted', () => {
+      const devEnv: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+      };
+      delete devEnv.APP_PUBLIC_URL;
+      const res = envValidationSchema.validate(devEnv);
+      expect(res.error).toBeUndefined();
+      expect(res.value.APP_PUBLIC_URL).toBe('http://localhost:3000');
+    });
+
+    it('accepts custom http origin in development without path', () => {
+      const devEnv = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+        APP_PUBLIC_URL: 'http://127.0.0.1:3000',
+      };
+      const res = envValidationSchema.validate(devEnv);
+      expect(res.error).toBeUndefined();
+      expect(res.value.APP_PUBLIC_URL).toBe('http://127.0.0.1:3000');
     });
   });
 });

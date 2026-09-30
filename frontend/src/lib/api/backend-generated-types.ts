@@ -84,6 +84,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/email-verification/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_requestEmailVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-verification/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_confirmEmailVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cms/media/ingestions": {
         parameters: {
             query?: never;
@@ -1024,6 +1056,13 @@ export interface components {
         AuthMeResponseDto: {
             user: components["schemas"]["AuthUserDto"];
         };
+        ConfirmEmailVerificationDto: {
+            /**
+             * @description Raw email verification token (43-character base64url string)
+             * @example abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE
+             */
+            token: string;
+        };
         AdminDataSourceDto: {
             id: number;
             code: string;
@@ -1621,6 +1660,75 @@ export interface operations {
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AuthController_requestEmailVerification: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Email verification request accepted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AuthController_confirmEmailVerification: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmEmailVerificationDto"];
+            };
+        };
+        responses: {
+            /** @description Email verified successfully. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            /** @description Invalid or expired verification token. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["ErrorEnvelope"];
         };

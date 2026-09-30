@@ -15,4 +15,5 @@ Object.assign(process.env, {
   MEDIA_METRICS_BEARER_TOKEN: 'placeholder-openapi-generation-only',
   MAIL_PROVIDER: 'memory',
   MAIL_FROM: 'noreply@hsk.local',
+  APP_PUBLIC_URL: 'http://localhost:3000',
 });

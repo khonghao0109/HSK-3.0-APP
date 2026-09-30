@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   type OnModuleInit,
   UnauthorizedException,
@@ -13,6 +14,10 @@ import { Prisma, type Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash, randomBytes } from 'node:crypto';
 
+import {
+  JobQueuePort,
+  JOB_NAMES,
+} from '../../infrastructure/jobs/job-queue.port';
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -35,6 +40,7 @@ export class AuthService implements OnModuleInit {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly rateLimitStorage: PostgresThrottlerStorage,
+    @Inject(JobQueuePort) private readonly jobQueue: JobQueuePort,
   ) {}
 
   /** Hash the timing decoy at boot so the first failed login is not slower. */
@@ -56,19 +62,32 @@ export class AuthService implements OnModuleInit {
     this.assertPasswordNotBlacklisted(registerDto.password);
     const passwordHash = await this.hashPassword(registerDto.password);
 
-    const user = await this.prisma.user
-      .create({
-        data: {
-          email,
-          password: passwordHash,
-          name: registerDto.name,
-        },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          name: true,
-        },
+    const user = await this.prisma
+      .$transaction(async (tx) => {
+        const createdUser = await tx.user.create({
+          data: {
+            email,
+            password: passwordHash,
+            name: registerDto.name,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            name: true,
+          },
+        });
+
+        await this.jobQueue.send(
+          JOB_NAMES.SEND_EMAIL_VERIFICATION,
+          { userId: createdUser.id },
+          {
+            singletonKey: `email-verification:${createdUser.id}`,
+            tx,
+          },
+        );
+
+        return createdUser;
       })
       .catch((error: unknown) => {
         // A concurrent registration won the unique email index.
@@ -520,5 +539,70 @@ export class AuthService implements OnModuleInit {
         },
       },
     );
+  }
+
+  async requestEmailVerification(userId: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        emailVerifiedAt: true,
+        status: true,
+        deletedAt: true,
+      },
+    });
+
+    if (
+      !user ||
+      user.deletedAt !== null ||
+      user.status !== 'active' ||
+      user.emailVerifiedAt !== null
+    ) {
+      return;
+    }
+
+    await this.jobQueue.send(
+      JOB_NAMES.SEND_EMAIL_VERIFICATION,
+      { userId: user.id },
+      { singletonKey: `email-verification:${user.id}` },
+    );
+  }
+
+  async confirmEmailVerification(token: string): Promise<void> {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    await this.prisma.$transaction(async (tx) => {
+      const claimRows = await tx.$queryRawUnsafe<{ userId: number }[]>(
+        `UPDATE "EmailVerificationToken"
+         SET "usedAt" = CURRENT_TIMESTAMP
+         WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP
+         RETURNING "userId"`,
+        tokenHash,
+      );
+
+      if (!claimRows || claimRows.length === 0) {
+        throw new BadRequestException({
+          code: 'INVALID_VERIFICATION_TOKEN',
+          message: 'Verification token is invalid or expired.',
+        });
+      }
+
+      const userId = claimRows[0].userId;
+
+      const updateRows = await tx.$queryRawUnsafe<{ id: number }[]>(
+        `UPDATE "User"
+         SET "emailVerifiedAt" = COALESCE("emailVerifiedAt", CURRENT_TIMESTAMP)
+         WHERE id = $1 AND "deletedAt" IS NULL AND status = 'active'
+         RETURNING id`,
+        userId,
+      );
+
+      if (!updateRows || updateRows.length === 0) {
+        throw new BadRequestException({
+          code: 'INVALID_VERIFICATION_TOKEN',
+          message: 'Verification token is invalid or expired.',
+        });
+      }
+    });
   }
 }

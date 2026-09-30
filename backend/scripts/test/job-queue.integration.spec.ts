@@ -5,7 +5,10 @@ import { PurgeExpiredSessionsJob } from '../../src/modules/auth/jobs/purge-expir
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../src/prisma/prisma.module';
-import { JobQueuePort } from '../../src/infrastructure/jobs/job-queue.port';
+import {
+  JobQueuePort,
+  JOB_NAMES,
+} from '../../src/infrastructure/jobs/job-queue.port';
 import { INestApplicationContext } from '@nestjs/common';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -34,7 +37,7 @@ after(async () => {
   await prisma.$disconnect();
 });
 
-describe('Job Queue Integration (J1-J7)', () => {
+describe('Job Queue Integration (J1-J8)', () => {
   it('J1: pgboss.version = 43 sau migrate; không có BEGIN;/COMMIT; top-level trong migration', async () => {
     const res = await prisma.$queryRawUnsafe<{ version: number }[]>(
       'SELECT version FROM pgboss.version',
@@ -260,6 +263,54 @@ describe('Job Queue Integration (J1-J7)', () => {
       } finally {
         await duplicateApp.close();
       }
+    });
+
+    it('J8: register-like: gửi trong tx rồi rollback -> 0 job; commit -> 1 job; gửi lần 2 cùng singletonKey -> null', async () => {
+      // 1. Rollback in transaction -> 0 job in pgboss.job
+      await assert.rejects(
+        prisma.$transaction(async (tx) => {
+          await apiQueue.send(
+            JOB_NAMES.SEND_EMAIL_VERIFICATION,
+            { userId: 9991 },
+            { singletonKey: 'email-verification:9991', tx },
+          );
+          throw new Error('Rollback simulated');
+        }),
+      );
+
+      const rolledJobs = await prisma.$queryRawUnsafe<
+        { id: string; data: unknown }[]
+      >(
+        `SELECT id, data FROM pgboss.job WHERE name = $1 AND data->>'userId' = '9991'`,
+        JOB_NAMES.SEND_EMAIL_VERIFICATION,
+      );
+      assert.strictEqual(rolledJobs.length, 0);
+
+      // 2. Commit in transaction -> exactly 1 job with data = { userId: 9992 }
+      await prisma.$transaction(async (tx) => {
+        await apiQueue.send(
+          JOB_NAMES.SEND_EMAIL_VERIFICATION,
+          { userId: 9992 },
+          { singletonKey: 'email-verification:9992', tx },
+        );
+      });
+
+      const committedJobs = await prisma.$queryRawUnsafe<
+        { id: string; data: { userId: number } }[]
+      >(
+        `SELECT id, data FROM pgboss.job WHERE name = $1 AND data->>'userId' = '9992'`,
+        JOB_NAMES.SEND_EMAIL_VERIFICATION,
+      );
+      assert.strictEqual(committedJobs.length, 1);
+      assert.deepStrictEqual(committedJobs[0].data, { userId: 9992 });
+
+      // 3. Second send with identical singletonKey -> null
+      const secondSend = await apiQueue.send(
+        JOB_NAMES.SEND_EMAIL_VERIFICATION,
+        { userId: 9992 },
+        { singletonKey: 'email-verification:9992' },
+      );
+      assert.strictEqual(secondSend, null);
     });
 
     it('J7: app.close() dừng pg-boss', async () => {

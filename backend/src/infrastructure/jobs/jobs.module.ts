@@ -55,15 +55,29 @@ export class JobsModule {
             await boss.start();
 
             // "Queue được tạo idempotent khi cả hai process khởi động"
-            try {
-              await boss.createQueue(JOB_NAMES.PURGE_EXPIRED_SESSIONS, {
-                retryLimit: 3,
-                retryBackoff: true,
-              });
-            } catch (err: unknown) {
-              const message = err instanceof Error ? err.message : String(err);
-              if (!message.includes('already exists')) {
-                throw err;
+            const queuesToCreate: Array<{
+              name: string;
+              options: Parameters<PgBoss['createQueue']>[1];
+            }> = [
+              {
+                name: JOB_NAMES.PURGE_EXPIRED_SESSIONS,
+                options: { retryLimit: 3, retryBackoff: true },
+              },
+              {
+                name: JOB_NAMES.SEND_EMAIL_VERIFICATION,
+                options: { policy: 'short', retryLimit: 3, retryBackoff: true },
+              },
+            ];
+
+            for (const queue of queuesToCreate) {
+              try {
+                await boss.createQueue(queue.name, queue.options);
+              } catch (err: unknown) {
+                const message =
+                  err instanceof Error ? err.message : String(err);
+                if (!message.includes('already exists')) {
+                  throw err;
+                }
               }
             }
 

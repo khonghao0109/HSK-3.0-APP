@@ -99,6 +99,7 @@ describe('media adapter wiring', () => {
       NODE_ENV: 'production',
       ALLOWED_ORIGINS: 'https://admin.example.com',
       AUTH_PASSWORD_PEPPER: secret('pepper'),
+      APP_PUBLIC_URL: 'https://app.example.com',
       MEDIA_STORAGE_BUCKET: 'hsk-private-media',
       MEDIA_STORAGE_REGION: 'ap-southeast-1',
       MEDIA_SIGNING_SECRET: secret('signing'),

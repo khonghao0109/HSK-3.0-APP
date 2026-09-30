@@ -25,16 +25,21 @@ const RETRYABLE_SES_ERRORS = new Set([
 ]);
 
 export function classifySesError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
+  if (!error || typeof error !== 'object') return true;
 
   const name =
     'name' in error && typeof error.name === 'string' ? error.name : '';
 
-  if (RETRYABLE_SES_ERRORS.has(name)) {
-    return true;
-  }
   if (NON_RETRYABLE_SES_ERRORS.has(name)) {
     return false;
+  }
+
+  if ('$retryable' in error && Boolean(error.$retryable)) {
+    return true;
+  }
+
+  if (RETRYABLE_SES_ERRORS.has(name)) {
+    return true;
   }
 
   if (name === 'TimeoutError' || name === 'AbortError') {
@@ -64,10 +69,10 @@ export function classifySesError(error: unknown): boolean {
   if (statusCode !== undefined) {
     if (statusCode >= 500) return true;
     if (statusCode === 429) return true;
-    if (statusCode >= 400) return false;
   }
 
-  return false;
+  // Unrecognized errors fail-open to retryable to permit pg-boss to retry transient unknown errors
+  return true;
 }
 
 class MailOperationDeadline {

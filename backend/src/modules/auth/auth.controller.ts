@@ -23,6 +23,7 @@ import {
   AuthMeResponseDto,
   AuthTokenResponseDto,
 } from './dto/auth-response.dto';
+import { ConfirmEmailVerificationDto } from './dto/confirm-email-verification.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -109,5 +110,37 @@ export class AuthController {
         role: req.user.role,
       },
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth(OPENAPI_BEARER_AUTH)
+  @Post('email-verification/request')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 3, ttl: 15 * 60 * 1000 } })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Email verification request accepted.',
+  })
+  async requestEmailVerification(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.authService.requestEmailVerification(req.user.id);
+  }
+
+  @Post('email-verification/confirm')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60 * 1000, getTracker: ipTracker } })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Email verified successfully.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid or expired verification token.',
+  })
+  async confirmEmailVerification(
+    @Body() confirmDto: ConfirmEmailVerificationDto,
+  ): Promise<void> {
+    await this.authService.confirmEmailVerification(confirmDto.token);
   }
 }

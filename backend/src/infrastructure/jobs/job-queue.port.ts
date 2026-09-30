@@ -2,10 +2,12 @@ import { Prisma } from '@prisma/client';
 
 export const JOB_NAMES = {
   PURGE_EXPIRED_SESSIONS: 'session.purge-expired',
+  SEND_EMAIL_VERIFICATION: 'mail.email-verification',
 } as const;
 
 export interface JobDataMap {
   [JOB_NAMES.PURGE_EXPIRED_SESSIONS]: Record<string, never> | null;
+  [JOB_NAMES.SEND_EMAIL_VERIFICATION]: { userId: number };
 }
 
 export type JobName = keyof JobDataMap;

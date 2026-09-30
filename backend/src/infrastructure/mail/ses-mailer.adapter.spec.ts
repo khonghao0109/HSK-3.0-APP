@@ -260,10 +260,18 @@ describe('SesMailerAdapter', () => {
   });
 
   describe('classifySesError direct unit tests', () => {
-    it('returns false for null or non-object', () => {
-      expect(classifySesError(null)).toBe(false);
-      expect(classifySesError('string')).toBe(false);
-      expect(classifySesError(123)).toBe(false);
+    it('classifies error with $retryable as retryable (retryable: true)', () => {
+      const sdkError = Object.assign(new Error('Throttled by SDK'), {
+        $retryable: {},
+      });
+      expect(classifySesError(sdkError)).toBe(true);
+    });
+
+    it('classifies unknown or unfamiliar error (lỗi lạ) as retryable: true', () => {
+      const unknownError = new Error('Some unexpected glitch');
+      expect(classifySesError(unknownError)).toBe(true);
+      expect(classifySesError(null)).toBe(true);
+      expect(classifySesError('unexpected string error')).toBe(true);
     });
   });
 });

@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { MailerModule } from './infrastructure/mail/mailer.module';
 import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessions.job';
+import { SendEmailVerificationJob } from './modules/auth/jobs/send-email-verification.job';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessi
     JobsModule.register({ isWorker: true }),
     MailerModule,
   ],
-  providers: [PurgeExpiredSessionsJob],
+  providers: [PurgeExpiredSessionsJob, SendEmailVerificationJob],
 })
 export class WorkerModule {}

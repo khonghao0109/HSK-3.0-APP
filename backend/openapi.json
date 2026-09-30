@@ -274,6 +274,114 @@
         ]
       }
     },
+    "/api/v1/auth/email-verification/request": {
+      "post": {
+        "operationId": "AuthController_requestEmailVerification",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Email verification request accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email-verification/confirm": {
+      "post": {
+        "operationId": "AuthController_confirmEmailVerification",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailVerificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Email verified successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired verification token."
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/v1/admin/cms/media/ingestions": {
       "post": {
         "operationId": "CmsController_ingestMedia",
@@ -4317,6 +4425,20 @@
         },
         "required": [
           "user"
+        ]
+      },
+      "ConfirmEmailVerificationDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "description": "Raw email verification token (43-character base64url string)",
+            "example": "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE"
+          }
+        },
+        "required": [
+          "token"
         ]
       },
       "AdminDataSourceDto": {

@@ -40,6 +40,35 @@ function validateMailpitUrl(value: unknown, helpers: Joi.CustomHelpers) {
   }
 }
 
+function validateAppPublicUrl(
+  value: unknown,
+  helpers: Joi.CustomHelpers,
+  environment: 'development' | 'production' | 'test',
+) {
+  if (typeof value !== 'string') return helpers.error('any.invalid');
+  try {
+    const parsed = new URL(value);
+    if (environment === 'production' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.pathname !== '/' && parsed.pathname !== '') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.search || parsed.hash) {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.username || parsed.password) {
+      return helpers.error('any.invalid');
+    }
+    return parsed.origin;
+  } catch {
+    return helpers.error('any.invalid');
+  }
+}
+
 export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
@@ -63,6 +92,19 @@ export const envValidationSchema = Joi.object({
     otherwise: allowedOrigins('development').default(
       DEFAULT_NON_PRODUCTION_ORIGINS,
     ),
+  }),
+  APP_PUBLIC_URL: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string()
+      .custom((val, helpers) =>
+        validateAppPublicUrl(val, helpers, 'production'),
+      )
+      .required(),
+    otherwise: Joi.string()
+      .custom((val, helpers) =>
+        validateAppPublicUrl(val, helpers, 'development'),
+      )
+      .default('http://localhost:3000'),
   }),
 
   // Real adapters unless a test double is named; see assertMediaProviders.

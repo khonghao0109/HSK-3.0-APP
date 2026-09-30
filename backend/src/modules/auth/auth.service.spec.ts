@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash } from 'node:crypto';
 
+import { JOB_NAMES } from '../../infrastructure/jobs/job-queue.port';
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -36,6 +37,9 @@ describe('AuthService login throttling and lockout', () => {
   const increment = jest.fn();
   const reset = jest.fn();
   const storage = { increment, reset } as unknown as PostgresThrottlerStorage;
+  const jobQueue = {
+    send: jest.fn().mockResolvedValue('job-id-1'),
+  };
   const signAsync = jest.fn().mockResolvedValue('signed-token');
   const jwtService = {
     signAsync,
@@ -70,7 +74,13 @@ describe('AuthService login throttling and lockout', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AuthService(prisma, jwtService, configService, storage);
+    service = new AuthService(
+      prisma,
+      jwtService,
+      configService,
+      storage,
+      jobQueue,
+    );
     verifyPassword = jest.spyOn(
       service as unknown as { verifyPassword: () => Promise<boolean> },
       'verifyPassword',
@@ -257,6 +267,51 @@ describe('AuthService login throttling and lockout', () => {
       create.mockRejectedValue(new Error('connection lost'));
 
       await expect(service.register(input)).rejects.toThrow('connection lost');
+      expect(jobQueue.send).not.toHaveBeenCalled();
+    });
+
+    it('enqueues email-verification job within the transaction with userId and singletonKey', async () => {
+      findUnique.mockResolvedValue(null);
+      create.mockResolvedValue({
+        id: 42,
+        email: 'new@example.com',
+        role: 'user',
+        name: 'New',
+      });
+      jest
+        .spyOn(
+          service as unknown as { hashPassword: () => Promise<string> },
+          'hashPassword',
+        )
+        .mockResolvedValue('$argon2id$v=19$m=65536,t=3,p=1$stub');
+      jest
+        .spyOn(
+          service as unknown as {
+            createSessionAndSignToken: () => Promise<{
+              accessToken: string;
+              refreshToken: string;
+              refreshTokenExpiresAt: string;
+            }>;
+          },
+          'createSessionAndSignToken',
+        )
+        .mockResolvedValue({
+          accessToken: 'signed-access-token',
+          refreshToken: 'refresh-token',
+          refreshTokenExpiresAt: '2026-10-30T00:00:00Z',
+        });
+
+      await service.register(input);
+
+      expect(jobQueue.send).toHaveBeenCalledTimes(1);
+      expect(jobQueue.send).toHaveBeenCalledWith(
+        JOB_NAMES.SEND_EMAIL_VERIFICATION,
+        { userId: 42 },
+        expect.objectContaining({
+          singletonKey: 'email-verification:42',
+          tx: prisma,
+        }),
+      );
     });
   });
 

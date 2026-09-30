@@ -26,6 +26,7 @@ const DEFAULT_MEDIA_ENVIRONMENT = {
   JOB_QUEUE_PROVIDER: 'memory',
   MAIL_PROVIDER: 'memory',
   MAIL_FROM: 'noreply@hsk.local',
+  APP_PUBLIC_URL: 'http://localhost:3000',
 } as const;
 
 export type E2eEnvironment = {
