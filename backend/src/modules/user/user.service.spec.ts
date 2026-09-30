@@ -10,11 +10,15 @@ describe('UserService', () => {
   const findFirst = jest.fn();
   const findMany = jest.fn();
   const count = jest.fn();
+  const findUniqueProfile = jest.fn();
+  const queryRaw = jest.fn();
   const transaction = jest.fn((operations: Promise<unknown>[]) =>
     Promise.all(operations),
   );
   const prisma = {
     user: { findFirst, findMany, count },
+    userProfile: { findUnique: findUniqueProfile },
+    $queryRaw: queryRaw,
     $transaction: transaction,
   } as unknown as PrismaService;
   let service: UserService;
@@ -128,6 +132,96 @@ describe('UserService', () => {
 
       await expect(service.getProfile(7)).rejects.toThrow(
         new NotFoundException('User not found.'),
+      );
+    });
+  });
+
+  describe('getUserProfile', () => {
+    it('answers 404 when user is not found or inactive', async () => {
+      findFirst.mockResolvedValue(null);
+
+      await expect(service.getUserProfile(7)).rejects.toThrow(
+        new NotFoundException('User not found.'),
+      );
+    });
+
+    it('returns default profile when no UserProfile row exists without creating one', async () => {
+      findFirst.mockResolvedValue({ id: 7 });
+      findUniqueProfile.mockResolvedValue(null);
+
+      const result = await service.getUserProfile(7);
+      expect(result).toEqual({
+        displayName: null,
+        locale: 'vi-VN',
+        timezone: 'Asia/Ho_Chi_Minh',
+      });
+      expect(findUniqueProfile).toHaveBeenCalledWith({
+        where: { userId: 7 },
+        select: {
+          displayName: true,
+          locale: true,
+          timezone: true,
+        },
+      });
+    });
+
+    it('returns stored profile when UserProfile row exists', async () => {
+      findFirst.mockResolvedValue({ id: 7 });
+      findUniqueProfile.mockResolvedValue({
+        displayName: 'Nguyễn Văn A',
+        locale: 'vi-VN',
+        timezone: 'Asia/Ho_Chi_Minh',
+      });
+
+      const result = await service.getUserProfile(7);
+      expect(result).toEqual({
+        displayName: 'Nguyễn Văn A',
+        locale: 'vi-VN',
+        timezone: 'Asia/Ho_Chi_Minh',
+      });
+    });
+  });
+
+  describe('updateUserProfile', () => {
+    it('answers 404 when user is not found or inactive', async () => {
+      findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.updateUserProfile(7, { displayName: 'New Name' }),
+      ).rejects.toThrow(new NotFoundException('User not found.'));
+    });
+
+    it('executes parameterized upsert and returns updated profile', async () => {
+      findFirst.mockResolvedValue({ id: 7 });
+      queryRaw.mockResolvedValue([
+        {
+          displayName: 'New Name',
+          locale: 'vi-VN',
+          timezone: 'UTC',
+        },
+      ]);
+
+      const result = await service.updateUserProfile(7, {
+        displayName: '  New Name  ',
+        timezone: 'UTC',
+      });
+
+      expect(result).toEqual({
+        displayName: 'New Name',
+        locale: 'vi-VN',
+        timezone: 'UTC',
+      });
+      expect(queryRaw).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws NotFoundException when raw query returns no rows', async () => {
+      findFirst.mockResolvedValue({ id: 7 });
+      queryRaw.mockResolvedValue([]);
+
+      await expect(
+        service.updateUserProfile(7, { displayName: 'New Name' }),
+      ).rejects.toThrow(
+        new NotFoundException('User profile could not be updated.'),
       );
     });
   });

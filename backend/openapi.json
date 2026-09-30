@@ -2444,6 +2444,118 @@
         ]
       }
     },
+    "/api/v1/users/me/profile": {
+      "get": {
+        "operationId": "UserController_getMeProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserProfileResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_updateMeProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserProfileResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "UserController_getMe",
@@ -5795,6 +5907,53 @@
           "isPremium",
           "isLocked"
         ]
+      },
+      "UserProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "User display name, or null if unset.",
+            "example": "Nguyễn Văn A"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Supported locale identifier.",
+            "example": "vi-VN"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone identifier.",
+            "example": "Asia/Ho_Chi_Minh"
+          }
+        },
+        "required": [
+          "displayName",
+          "locale",
+          "timezone"
+        ]
+      },
+      "UpdateUserProfileDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "User display name (1-50 Unicode code points, trimmed, no control or bidi override characters), or null to clear.",
+            "example": "Nguyễn Văn A"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Supported locale. Currently only \"vi-VN\" is supported.",
+            "example": "vi-VN"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Valid IANA timezone identifier (up to 64 characters).",
+            "example": "Asia/Ho_Chi_Minh"
+          }
+        }
       },
       "LevelItemDto": {
         "type": "object",

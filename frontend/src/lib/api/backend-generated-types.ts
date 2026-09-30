@@ -564,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserController_getMeProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UserController_updateMeProfile"];
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -1402,6 +1418,40 @@ export interface components {
             orderIndex: number;
             isPremium: boolean;
             isLocked: boolean;
+        };
+        UserProfileResponseDto: {
+            /**
+             * @description User display name, or null if unset.
+             * @example Nguyễn Văn A
+             */
+            displayName: string | null;
+            /**
+             * @description Supported locale identifier.
+             * @example vi-VN
+             */
+            locale: string;
+            /**
+             * @description IANA timezone identifier.
+             * @example Asia/Ho_Chi_Minh
+             */
+            timezone: string;
+        };
+        UpdateUserProfileDto: {
+            /**
+             * @description User display name (1-50 Unicode code points, trimmed, no control or bidi override characters), or null to clear.
+             * @example Nguyễn Văn A
+             */
+            displayName?: string | null;
+            /**
+             * @description Supported locale. Currently only "vi-VN" is supported.
+             * @example vi-VN
+             */
+            locale?: string;
+            /**
+             * @description Valid IANA timezone identifier (up to 64 characters).
+             * @example Asia/Ho_Chi_Minh
+             */
+            timezone?: string;
         };
         LevelItemDto: {
             id: number;
@@ -2749,6 +2799,66 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_getMeProfile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["UserProfileResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_updateMeProfile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserProfileDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["UserProfileResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };
