@@ -81,3 +81,17 @@ kill -SIGTERM <worker-pid>
     - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry (mỗi lần retry sẽ xoá token cũ và sinh token mới).
     - Lỗi không retryable (`retryable: false`) -> ghi log cảnh báo chứa `jobId` và `error.name` (không log email, token hay error cause), hoàn tất job mà không throw.
 
+### `mail.password-reset` (Hằng số `JOB_NAMES.SEND_PASSWORD_RESET`)
+- **Mục đích**: Gửi email đặt lại mật khẩu kèm link chứa token dùng một lần khi người dùng yêu cầu quên mật khẩu.
+- **Trigger**: Enqueue bất đồng bộ từ Main API (`POST /auth/password-reset/request`).
+- **Payload**: `{ userId: number }` (tuyệt đối không chứa raw token, email, hay thông tin nhạy cảm).
+- **Singleton key**: `password-reset:<userId>` (chống enqueue trùng lặp trong thời gian chờ xử lý).
+- **Chính sách**:
+  - Queue options: `policy: 'short'`, `retryLimit: 3`, `retryBackoff: true`.
+  - Skip điều kiện: User không tồn tại, đã soft-deleted (`deletedAt IS NOT NULL`), hoặc trạng thái không `active` -> hoàn tất job, không gửi mail.
+  - Sinh token và lưu trữ: Trong 1 transaction database, xoá toàn bộ reset token chưa dùng của user (`usedAt IS NULL`), sinh raw token ngẫu nhiên an toàn bằng `crypto.randomBytes(32).toString('base64url')` (43 ký tự), băm SHA-256 lưu vào bảng `PasswordResetToken` với TTL 30 phút (`expiresAt = CURRENT_TIMESTAMP + INTERVAL '30 minutes'`).
+  - Gửi mail: Sau khi transaction commit thành công, gửi email plain text tiếng Việt qua `MailerPort` với link `${APP_PUBLIC_URL}/reset-password#token=<rawToken>`.
+  - Quản lý lỗi:
+    - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry (mỗi lần retry sẽ xoá token cũ và sinh token mới).
+    - Lỗi không retryable (`retryable: false`) -> ghi log lỗi chứa `jobId` và `error.name` (không log email, token hay error cause), hoàn tất job mà không throw.
+
