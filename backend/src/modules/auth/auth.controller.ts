@@ -24,9 +24,11 @@ import {
   AuthTokenResponseDto,
 } from './dto/auth-response.dto';
 import { ConfirmEmailVerificationDto } from './dto/confirm-email-verification.dto';
+import { ConfirmPasswordResetDto } from './dto/confirm-password-reset.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 
 type AuthenticatedUser = {
   id: number;
@@ -41,6 +43,8 @@ type AuthenticatedRequest = Request & {
 
 export const LOGIN_IP_LIMIT_PER_MINUTE = 10;
 export const REFRESH_IP_LIMIT_PER_MINUTE = 30;
+export const PASSWORD_RESET_REQUEST_IP_LIMIT = 5;
+export const PASSWORD_RESET_CONFIRM_IP_LIMIT = 10;
 
 /**
  * Resolved per request. Backend and browser E2E log in many times from one
@@ -52,6 +56,18 @@ export function loginIpLimit(): number {
 
 export function refreshIpLimit(): number {
   return process.env.NODE_ENV === 'test' ? 1_000 : REFRESH_IP_LIMIT_PER_MINUTE;
+}
+
+export function passwordResetRequestIpLimit(): number {
+  return process.env.NODE_ENV === 'test'
+    ? 1_000
+    : PASSWORD_RESET_REQUEST_IP_LIMIT;
+}
+
+export function passwordResetConfirmIpLimit(): number {
+  return process.env.NODE_ENV === 'test'
+    ? 1_000
+    : PASSWORD_RESET_CONFIRM_IP_LIMIT;
 }
 
 @Controller('auth')
@@ -142,5 +158,50 @@ export class AuthController {
     @Body() confirmDto: ConfirmEmailVerificationDto,
   ): Promise<void> {
     await this.authService.confirmEmailVerification(confirmDto.token);
+  }
+
+  @Post('password-reset/request')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: {
+      limit: passwordResetRequestIpLimit,
+      ttl: 15 * 60 * 1000,
+      getTracker: ipTracker,
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Password reset request accepted.',
+  })
+  async requestPasswordReset(
+    @Body() requestDto: RequestPasswordResetDto,
+  ): Promise<void> {
+    await this.authService.requestPasswordReset(requestDto.email);
+  }
+
+  @Post('password-reset/confirm')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: {
+      limit: passwordResetConfirmIpLimit,
+      ttl: 60 * 1000,
+      getTracker: ipTracker,
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Password reset successfully.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid or expired password reset token.',
+  })
+  async confirmPasswordReset(
+    @Body() confirmDto: ConfirmPasswordResetDto,
+  ): Promise<void> {
+    await this.authService.confirmPasswordReset(
+      confirmDto.token,
+      confirmDto.newPassword,
+    );
   }
 }

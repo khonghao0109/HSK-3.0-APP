@@ -313,6 +313,40 @@ describe('Job Queue Integration (J1-J8)', () => {
       assert.strictEqual(secondSend, null);
     });
 
+    it('J9: queue mail.password-reset tồn tại với policy short; gửi lần 2 cùng singletonKey -> null', async () => {
+      const queues = await prisma.$queryRawUnsafe<
+        { name: string; policy: string }[]
+      >(
+        `SELECT name, policy FROM pgboss.queue WHERE name = $1`,
+        JOB_NAMES.SEND_PASSWORD_RESET,
+      );
+      assert.strictEqual(queues.length, 1);
+      assert.strictEqual(queues[0].policy, 'short');
+
+      const firstJobId = await apiQueue.send(
+        JOB_NAMES.SEND_PASSWORD_RESET,
+        { userId: 9993 },
+        { singletonKey: 'password-reset:9993' },
+      );
+      assert.ok(firstJobId);
+
+      const jobs = await prisma.$queryRawUnsafe<
+        { id: string; data: { userId: number } }[]
+      >(
+        `SELECT id, data FROM pgboss.job WHERE name = $1 AND data->>'userId' = '9993'`,
+        JOB_NAMES.SEND_PASSWORD_RESET,
+      );
+      assert.strictEqual(jobs.length, 1);
+      assert.deepStrictEqual(jobs[0].data, { userId: 9993 });
+
+      const secondSend = await apiQueue.send(
+        JOB_NAMES.SEND_PASSWORD_RESET,
+        { userId: 9993 },
+        { singletonKey: 'password-reset:9993' },
+      );
+      assert.strictEqual(secondSend, null);
+    });
+
     it('J7: app.close() dừng pg-boss', async () => {
       const apiBoss = apiApp.get<PgBoss>(PG_BOSS_INSTANCE);
       const stopped = new Promise<void>((resolve, reject) => {

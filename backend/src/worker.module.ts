@@ -8,6 +8,7 @@ import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { MailerModule } from './infrastructure/mail/mailer.module';
 import { PurgeExpiredSessionsJob } from './modules/auth/jobs/purge-expired-sessions.job';
 import { SendEmailVerificationJob } from './modules/auth/jobs/send-email-verification.job';
+import { SendPasswordResetJob } from './modules/auth/jobs/send-password-reset.job';
 
 @Module({
   imports: [
@@ -20,6 +21,10 @@ import { SendEmailVerificationJob } from './modules/auth/jobs/send-email-verific
     JobsModule.register({ isWorker: true }),
     MailerModule,
   ],
-  providers: [PurgeExpiredSessionsJob, SendEmailVerificationJob],
+  providers: [
+    PurgeExpiredSessionsJob,
+    SendEmailVerificationJob,
+    SendPasswordResetJob,
+  ],
 })
 export class WorkerModule {}

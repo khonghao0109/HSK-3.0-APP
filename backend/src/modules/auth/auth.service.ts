@@ -30,6 +30,8 @@ const LOCKOUT_MINUTES = 15;
 export const LOGIN_EMAIL_FAILURE_LIMIT = 5;
 const LOGIN_EMAIL_WINDOW_MS = 15 * 60_000;
 export const REFRESH_REUSE_GRACE_SECONDS = 10;
+export const PASSWORD_RESET_EMAIL_LIMIT = 3;
+export const PASSWORD_RESET_EMAIL_WINDOW_MS = 60 * 60_000;
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -603,6 +605,104 @@ export class AuthService implements OnModuleInit {
           message: 'Verification token is invalid or expired.',
         });
       }
+    });
+  }
+
+  async requestPasswordReset(rawEmail: string): Promise<void> {
+    const email = this.normalizeEmail(rawEmail);
+
+    const throttleKey = createHash('sha256')
+      .update(`password-reset:email:${email}`)
+      .digest('hex');
+    const { isBlocked, totalHits } = await this.rateLimitStorage.increment(
+      throttleKey,
+      PASSWORD_RESET_EMAIL_WINDOW_MS,
+      PASSWORD_RESET_EMAIL_LIMIT,
+      PASSWORD_RESET_EMAIL_WINDOW_MS,
+    );
+
+    if (isBlocked || totalHits > PASSWORD_RESET_EMAIL_LIMIT) {
+      return;
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        status: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!user || user.deletedAt !== null || user.status !== 'active') {
+      return;
+    }
+
+    await this.jobQueue.send(
+      JOB_NAMES.SEND_PASSWORD_RESET,
+      { userId: user.id },
+      { singletonKey: `password-reset:${user.id}` },
+    );
+  }
+
+  async confirmPasswordReset(
+    token: string,
+    newPassword: string,
+  ): Promise<void> {
+    this.assertPasswordNotBlacklisted(newPassword);
+    const passwordHash = await this.hashPassword(newPassword);
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. claim token
+      const claimRows = await tx.$queryRawUnsafe<{ userId: number }[]>(
+        `UPDATE "PasswordResetToken"
+         SET "usedAt" = CURRENT_TIMESTAMP
+         WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP
+         RETURNING "userId"`,
+        tokenHash,
+      );
+
+      if (!claimRows || claimRows.length === 0) {
+        throw new BadRequestException({
+          code: 'INVALID_RESET_TOKEN',
+          message: 'Password reset token is invalid or expired.',
+        });
+      }
+
+      const userId = claimRows[0].userId;
+
+      // 2. update User password
+      const updateRows = await tx.$queryRawUnsafe<{ id: number }[]>(
+        `UPDATE "User"
+         SET password = $1
+         WHERE id = $2 AND "deletedAt" IS NULL AND status = 'active'
+         RETURNING id`,
+        passwordHash,
+        userId,
+      );
+
+      if (!updateRows || updateRows.length === 0) {
+        throw new BadRequestException({
+          code: 'INVALID_RESET_TOKEN',
+          message: 'Password reset token is invalid or expired.',
+        });
+      }
+
+      // 3. revoke all active sessions
+      await tx.$executeRawUnsafe(
+        `UPDATE "UserSession"
+         SET "revokedAt" = CURRENT_TIMESTAMP
+         WHERE "userId" = $1 AND "revokedAt" IS NULL`,
+        userId,
+      );
+
+      // 4. delete remaining unused reset tokens for this user
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "PasswordResetToken"
+         WHERE "userId" = $1 AND "usedAt" IS NULL`,
+        userId,
+      );
     });
   }
 }

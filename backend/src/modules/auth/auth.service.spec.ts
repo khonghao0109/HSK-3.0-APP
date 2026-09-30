@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   UnauthorizedException,
@@ -25,6 +26,8 @@ describe('AuthService login throttling and lockout', () => {
   const create = jest.fn();
   const queryRaw = jest.fn();
   const executeRaw = jest.fn();
+  const queryRawUnsafe = jest.fn();
+  const executeRawUnsafe = jest.fn();
   const userSessionFindUnique = jest.fn();
   const transaction = jest.fn();
   const prisma = {
@@ -32,6 +35,8 @@ describe('AuthService login throttling and lockout', () => {
     userSession: { findUnique: userSessionFindUnique },
     $queryRaw: queryRaw,
     $executeRaw: executeRaw,
+    $queryRawUnsafe: queryRawUnsafe,
+    $executeRawUnsafe: executeRawUnsafe,
     $transaction: transaction,
   } as unknown as PrismaService;
   const increment = jest.fn();
@@ -523,6 +528,120 @@ describe('AuthService login throttling and lockout', () => {
         [{ data: Record<string, unknown> }],
       ];
       expect(data).not.toHaveProperty('password');
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('does not enqueue and resolves when user does not exist', async () => {
+      findUnique.mockResolvedValueOnce(null);
+
+      await expect(
+        service.requestPasswordReset('notfound@example.com'),
+      ).resolves.toBeUndefined();
+
+      expect(jobQueue.send).not.toHaveBeenCalled();
+    });
+
+    it('does not enqueue and resolves when user is soft-deleted or suspended', async () => {
+      findUnique.mockResolvedValueOnce({
+        id: 11,
+        status: 'suspended',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.requestPasswordReset('suspended@example.com'),
+      ).resolves.toBeUndefined();
+
+      expect(jobQueue.send).not.toHaveBeenCalled();
+    });
+
+    it('does not enqueue and resolves when email rate limit exceeded', async () => {
+      increment.mockResolvedValueOnce({ isBlocked: true, totalHits: 4 });
+
+      await expect(
+        service.requestPasswordReset('learner@example.com'),
+      ).resolves.toBeUndefined();
+
+      expect(jobQueue.send).not.toHaveBeenCalled();
+      expect(findUnique).not.toHaveBeenCalled();
+    });
+
+    it('enqueues job with payload { userId } and singletonKey when user is active', async () => {
+      findUnique.mockResolvedValueOnce({
+        id: 7,
+        status: 'active',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.requestPasswordReset('Learner@Example.COM '),
+      ).resolves.toBeUndefined();
+
+      expect(jobQueue.send).toHaveBeenCalledWith(
+        JOB_NAMES.SEND_PASSWORD_RESET,
+        { userId: 7 },
+        { singletonKey: 'password-reset:7' },
+      );
+    });
+  });
+
+  describe('confirmPasswordReset', () => {
+    it('throws BadRequestException INVALID_RESET_TOKEN when token claim returns 0 rows', async () => {
+      queryRawUnsafe.mockResolvedValueOnce([]);
+
+      await expect(
+        service.confirmPasswordReset(
+          'dummy-token-dummy-token-dummy-token-dummy-t',
+          'NewValidPass123!',
+        ),
+      ).rejects.toThrow(
+        new BadRequestException({
+          code: 'INVALID_RESET_TOKEN',
+          message: 'Password reset token is invalid or expired.',
+        }),
+      );
+    });
+
+    it('throws BadRequestException INVALID_RESET_TOKEN when user update returns 0 rows', async () => {
+      queryRawUnsafe
+        .mockResolvedValueOnce([{ userId: 7 }])
+        .mockResolvedValueOnce([]);
+
+      await expect(
+        service.confirmPasswordReset(
+          'dummy-token-dummy-token-dummy-token-dummy-t',
+          'NewValidPass123!',
+        ),
+      ).rejects.toThrow(
+        new BadRequestException({
+          code: 'INVALID_RESET_TOKEN',
+          message: 'Password reset token is invalid or expired.',
+        }),
+      );
+    });
+
+    it('updates password, revokes sessions, and cleans unused tokens on success', async () => {
+      queryRawUnsafe
+        .mockResolvedValueOnce([{ userId: 7 }])
+        .mockResolvedValueOnce([{ id: 7 }]);
+      executeRawUnsafe.mockResolvedValue(1);
+
+      await expect(
+        service.confirmPasswordReset(
+          'dummy-token-dummy-token-dummy-token-dummy-t',
+          'NewValidPass123!',
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(executeRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE "UserSession"'),
+        7,
+      );
+      expect(executeRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM "PasswordResetToken"'),
+        7,
+      );
     });
   });
 });
