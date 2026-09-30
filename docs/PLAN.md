@@ -190,7 +190,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |
 | M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
-| M1.5a | `MailerPort` + adapter SES và Mailpit | ⬜ | ADR-008 §9 |
+| M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: `685f441`, kèm `ba83411`, PR #5 run `36672199065` |
 | M1.5b | Email verification (token hash) | ⬜ | |
 | M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | |
@@ -418,7 +418,9 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03; schema ✅. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03; schema ✅. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |
 | M1.4c | BFF refresh trong proxy, cookie refresh, hạ access 15 phút | ✅ | tiền đề mobile; 29/09: ✅ đã đóng (`01f468c`, PR #5 run `36547912748`) |
-| M1.5 | Email verification + password reset qua `MailerPort` (SES / Mailpit) | ⬜ | ADR-008 §9; token schema ✅ |
+| M1.5a | `MailerPort` + adapter SES và Mailpit | ✅ | ADR-008 §9; 30/09: ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`), `MailerPort`, `SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter` |
+| M1.5b | Email verification (token hash) | ⬜ | |
+| M1.5c | Password reset (token hash, dùng một lần) | ⬜ | |
 | M1.6 | Profile API (`UserProfile`) | ⬜ | schema ✅ |
 | M1.7a | pg-boss trên PostgreSQL + worker process | ✅ | ADR-008 §2; 30/09: ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`), schema pgboss v43, migrate: false, worker process riêng |
 | M1.7b | Consent API + data export job | ⬜ | ADR-001 |
@@ -608,3 +610,4 @@ khi vertical slice bắt đầu.
 | 29/09/2026 | GĐ4: M1.4b ✅ đã đóng (`08a78ea`, PR #5 run `36533471666`): POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh vô hại giữa các tab; tách M1.4c cho BFF proxy refresh và cookie. Tổng 55/133. |
 | 29/09/2026 | GĐ4: M1.4c ✅ đã đóng (`01f468c`, PR #5 run `36547912748`): BFF proxy âm thầm refresh access token khi còn dưới 2 phút với single-flight sha256 map, cookie refresh song song với session cookie, route handler /api/session/logout gọi backend logout thật (204) để revoke session, hạ mặc định access token backend xuống 15m (`15m`). Tổng 56/133. |
 | 30/09/2026 | GĐ4: M1.7a ✅ đã đóng (`b836cd7`, kèm `50ee3ee`, PR #5 run `36666904294`): pg-boss trên PostgreSQL (schema pgboss v43, migrate: false), worker process riêng (`src/worker.ts`), purge expired sessions job (batch 1000, 30 days). Tổng 57/133. |
+| 30/09/2026 | GĐ4: M1.5a ✅ đã đóng (`685f441`, kèm `ba83411`, PR #5 run `36672199065`): `MailerPort` (DIP), 3 adapter (`SesMailerAdapter`, `MailpitMailerAdapter`, `InMemoryMailerAdapter`), module gắn worker process (`WorkerModule`), ma trận cấu hình mail và `assertMailProvider`, bảo vệ CRLF và chống rò rỉ PII. Tổng 58/133. |
