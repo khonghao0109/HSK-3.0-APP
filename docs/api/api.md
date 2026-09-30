@@ -242,6 +242,8 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 | Method | Path | Auth | Query | Response |
 | --- | --- | --- | --- | --- |
 | `GET` | `/users/me` | JWT | — | `{ id, email, name, role, createdAt }` |
+| `GET` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
+| `PATCH` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
 | `GET` | `/users` | admin | `page`, `limit` | `[{ id, email, name, role, createdAt }]` + `meta` |
 
 - `GET /users` (H.8, B-05): sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có
@@ -254,6 +256,17 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   soft-delete hoặc không active bị JWT strategy chặn `401` trước; nếu account đổi trạng
   thái giữa strategy và service thì service trả `404 "User not found."`.
 - Không trả `password`, `failedLoginAttempts`, `lockUntil` hay trạng thái credential khác.
+- `GET /users/me/profile` (`JwtAuthGuard`): đọc hồ sơ người dùng `{ displayName: string | null, locale: string, timezone: string }`.
+  - Chưa có dòng `UserProfile` trong database → trả giá trị mặc định `{ displayName: null, locale: "vi-VN", timezone: "Asia/Ho_Chi_Minh" }`, tuyệt đối không tạo dòng mới khi đọc.
+  - User bị xoá (soft-delete) hoặc inactive → `404 "User not found."` (nếu không bị JWT guard chặn `401` trước). Không có token → `401`.
+- `PATCH /users/me/profile` (`JwtAuthGuard`): cập nhật hồ sơ cá nhân với các trường tuỳ chọn `displayName`, `locale`, `timezone`. Trả về hồ sơ sau khi cập nhật.
+  - Body rỗng `{}` → `400 "Request body must not be empty."`.
+  - Field lạ (ví dụ `avatarUrl`, `userId`) → `400` với mã lỗi `REQUEST_VALIDATION_FAILED` (xử lý bởi `ValidationPipe` với `forbidNonWhitelisted`). Không có trường `avatarUrl` ở cả GET lẫn PATCH API.
+  - `displayName`: kiểu `string | null`. Chuỗi được `trim()`, độ dài sau trim từ 1–50 ký tự Unicode code points (đếm theo code point thay vì UTF-16 code units); gửi `null` để xoá tên hiển thị; chuỗi rỗng sau trim → `400`; chặn ký tự điều khiển `\p{Cc}` và ký tự bidi override (U+202A–U+202E, U+2066–U+2069) → `400`; hỗ trợ tiếng Việt có dấu và chữ Hán.
+  - `locale`: chỉ chấp nhận hằng số `SUPPORTED_LOCALES = ['vi-VN'] as const`. Giá trị khác (như `en-US`) → `400`.
+  - `timezone`: tên IANA hợp lệ (1–64 ký tự). Phải khớp định dạng chuẩn IANA (ví dụ `Asia/Ho_Chi_Minh`, `UTC`, `Etc/GMT+7`, `America/Argentina/Buenos_Aires`), xác thực qua `new Intl.DateTimeFormat('en-US', { timeZone })` và lưu nguyên bản giá trị gửi lên (không tự ý chuẩn hoá hay đổi tên vùng). Định dạng không khớp (như `asia/ho_chi_minh`, `+07:00`, `EST5EDT`), tên không hợp lệ hoặc chuỗi > 64 ký tự → `400`.
+  - Xử lý race an toàn: nhiều request PATCH đồng thời cho user chưa có profile sử dụng parameterized atomic upsert (`INSERT ... ON CONFLICT ("userId") DO UPDATE`), tự động gán `"updatedAt" = CURRENT_TIMESTAMP`, đảm bảo không bao giờ ném lỗi `500` hay tạo dòng trùng lặp.
+  - Cách ly tuyệt đối giữa các user: người dùng chỉ đọc và sửa được hồ sơ của chính mình thông qua JWT token. Không có route nhận user id tuỳ ý.
 
 ```json
 {
