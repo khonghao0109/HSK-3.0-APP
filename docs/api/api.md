@@ -244,6 +244,7 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 | `GET` | `/users/me` | JWT | — | `{ id, email, name, role, createdAt }` |
 | `GET` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
 | `PATCH` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
+| `POST` | `/users/me/deletion-request` | JWT | — | `{ requestId, scheduledAt }` (HTTP 202) |
 | `GET` | `/users` | admin | `page`, `limit` | `[{ id, email, name, role, createdAt }]` + `meta` |
 
 - `GET /users` (H.8, B-05): sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có
@@ -267,6 +268,23 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   - `timezone`: tên IANA hợp lệ (1–64 ký tự). Phải khớp định dạng chuẩn IANA (ví dụ `Asia/Ho_Chi_Minh`, `UTC`, `Etc/GMT+7`, `America/Argentina/Buenos_Aires`), xác thực qua `new Intl.DateTimeFormat('en-US', { timeZone })` và lưu nguyên bản giá trị gửi lên (không tự ý chuẩn hoá hay đổi tên vùng). Định dạng không khớp (như `asia/ho_chi_minh`, `+07:00`, `EST5EDT`), tên không hợp lệ hoặc chuỗi > 64 ký tự → `400`.
   - Xử lý race an toàn: nhiều request PATCH đồng thời cho user chưa có profile sử dụng parameterized atomic upsert (`INSERT ... ON CONFLICT ("userId") DO UPDATE`), tự động gán `"updatedAt" = CURRENT_TIMESTAMP`, đảm bảo không bao giờ ném lỗi `500` hay tạo dòng trùng lặp.
   - Cách ly tuyệt đối giữa các user: người dùng chỉ đọc và sửa được hồ sơ của chính mình thông qua JWT token. Không có route nhận user id tuỳ ý.
+- `POST /users/me/deletion-request` (`JwtAuthGuard`, rate limit `@Throttle(5/15m)` theo user id): Yêu cầu xoá tài khoản với thời gian chờ 7 ngày (Product Owner chốt 30/09/2026).
+  - Body: `{ password: string, reason?: string }` (`reason` tuỳ chọn, tối đa 500 ký tự).
+  - Xác thực mật khẩu: Sai mật khẩu hiện tại → trả về HTTP `400` với mã lỗi `INVALID_PASSWORD` và message `'Invalid password'`. Không trả `401` để tránh BFF xoá session của người dùng.
+  - User không `active` hoặc đã soft-delete (`deletedAt IS NOT NULL`) → trả về `404 "User not found."`.
+  - Thành công: trả về HTTP `202 Accepted` với `{ requestId: number, scheduledAt: string }` (thời điểm lên lịch xoá sau 7 ngày).
+  - Trạng thái hệ thống:
+    - User chuyển sang `status = 'deletion_pending'` và gán `deletedAt = CURRENT_TIMESTAMP`.
+    - Toàn bộ `UserSession` hiện tại bị thu hồi (`revokedAt = CURRENT_TIMESTAMP`), các token reset mật khẩu hoặc xác minh email chưa dùng bị xoá. Access token cũ bị từ chối với `401 Unauthorized` ngay lập tức.
+    - Hai job nền được enqueue trong transaction: `privacy.anonymize-account` (`startAfter` = `scheduledAt`, `singletonKey = 'anonymize:' + requestId`) và `mail.account-deletion-scheduled` (`singletonKey = 'deletion-mail:' + requestId`).
+    - Idempotent: gọi trùng khi đã có request ở trạng thái `requested` sẽ trả lại request hiện có mà không tạo dòng mới.
+- Huỷ yêu cầu xoá bằng đăng nhập (`POST /auth/login`):
+  - Trong thời gian chờ 7 ngày (`scheduledAt > CURRENT_TIMESTAMP`), người dùng đăng nhập lại đúng mật khẩu sẽ tự động huỷ yêu cầu xoá:
+    - Yêu cầu cập nhật `status = 'cancelled'`, `cancelledAt = CURRENT_TIMESTAMP`.
+    - User được kích hoạt lại: `status = 'active'`, `deletedAt = NULL`, các bộ đếm khoá đăng nhập được xoá.
+    - Đăng nhập thành công trả về HTTP 200/201 cùng token phiên mới bình thường.
+  - Sai mật khẩu trong thời gian chờ → trả về HTTP `401 Unauthorized`, yêu cầu xoá vẫn giữ nguyên trạng thái `requested`.
+  - Đã quá hạn 7 ngày (`scheduledAt <= CURRENT_TIMESTAMP`), đăng nhập bị chặn (trả về HTTP `401` qua decoy hash) và worker sẽ thực hiện ẩn danh tài khoản theo ADR-001.
 
 ```json
 {

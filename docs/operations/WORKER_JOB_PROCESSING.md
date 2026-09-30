@@ -95,3 +95,48 @@ kill -SIGTERM <worker-pid>
     - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry (mỗi lần retry sẽ xoá token cũ và sinh token mới).
     - Lỗi không retryable (`retryable: false`) -> ghi log lỗi chứa `jobId` và `error.name` (không log email, token hay error cause), hoàn tất job mà không throw.
 
+### `privacy.anonymize-account` (Hằng số `JOB_NAMES.ANONYMIZE_ACCOUNT`)
+- **Mục đích**: Thực hiện ẩn danh dữ liệu người dùng sau khi hết thời gian chờ 7 ngày theo ADR-001.
+- **Trigger**: Enqueue bất đồng bộ trong cùng transaction với `POST /users/me/deletion-request`.
+- **Payload**: `{ requestId: number }` (chỉ chứa ID của yêu cầu xoá, tuyệt đối không chứa PII).
+- **Lập lịch trì hoãn (`startAfter`)**: Đặt đúng bằng `scheduledAt` lấy từ kết quả `RETURNING scheduledAt` của câu lệnh INSERT `AccountDeletionRequest` (sử dụng đồng hồ PostgreSQL, sau 7 ngày). Job nằm ở trạng thái `created` và không được worker fetch cho đến khi đến mốc `startAfter`.
+- **Singleton key**: `anonymize:<requestId>` (đảm bảo mỗi yêu cầu xoá chỉ có duy nhất 1 job ẩn danh trong queue).
+- **Chính sách**:
+  - Queue options: `policy: 'standard'`, `retryLimit: 3`, `retryBackoff: true`.
+  - Idempotency & Skip:
+    - Request không tồn tại -> cảnh báo, bỏ qua (return `false`).
+    - Request không còn ở trạng thái `requested` (đã `cancelled` do người dùng đăng nhập lại, hoặc đã `completed`) -> hoàn tất an toàn (return `true`).
+    - Thời gian hiện tại chưa vượt quá `scheduledAt` (chưa hết thời gian chờ) -> hoàn tất mà không đổi DB (return `true`).
+  - Xử lý ẩn danh (trong transaction có khóa row `FOR UPDATE`):
+    - Đổi `User.email` thành alias duy nhất `deleted+<id>@anonymized.invalid`, xoá `name = NULL`, thay mật khẩu bằng hash ngẫu nhiên không thể đăng nhập, đặt `status = 'anonymized'`.
+    - Xoá thông tin hồ sơ `UserProfile`: đặt `displayName = NULL`, `avatarUrl = NULL`; giữ nguyên `locale` và `timezone`.
+    - Xoá toàn bộ `UserSession`, `PasswordResetToken`, `EmailVerificationToken` của user.
+    - Cập nhật `AccountDeletionRequest.status = 'completed'`, gán `completedAt = CURRENT_TIMESTAMP`.
+    - Ghi `AuditLog` với `action = 'account.anonymized'`, `afterSummary = { requestId }`.
+    - Giữ nguyên toàn bộ fact lịch sử (`Consent`, `LearningEvent`, bài thi, kết quả, tiến độ).
+- **Xử lý sự cố Dead-letter / Job fail hết số lần retry**:
+  - Nếu job gặp lỗi bất thường và cạn số lần retry (chuyển sang dead-letter hoặc failed):
+  - Định kỳ hoặc khi có cảnh báo, kỹ sư vận hành chạy truy vấn tìm các yêu cầu xoá còn kẹt:
+    ```sql
+    SELECT id, "userId", status, "scheduledAt"
+    FROM "AccountDeletionRequest"
+    WHERE status = 'requested'
+      AND "scheduledAt" < CURRENT_TIMESTAMP - INTERVAL '1 day';
+    ```
+  - Sau khi xác định nguyên nhân lỗi (ví dụ trigger database hoặc timeout mạng), tiến hành re-enqueue job bằng script nội bộ hoặc gọi handler trực tiếp trong tiến trình worker.
+
+### `mail.account-deletion-scheduled` (Hằng số `JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED`)
+- **Mục đích**: Gửi email thông báo cho người dùng về lịch xoá tài khoản vĩnh viễn và cách đăng nhập lại để huỷ.
+- **Trigger**: Enqueue bất đồng bộ trong cùng transaction với `POST /users/me/deletion-request`.
+- **Payload**: `{ requestId: number }`.
+- **Singleton key**: `deletion-mail:<requestId>`.
+- **Chính sách**:
+  - Queue options: `policy: 'short'`, `retryLimit: 3`, `retryBackoff: true`.
+  - Skip điều kiện: Request không tồn tại, trạng thái không phải `requested`, thiếu `scheduledAt` hoặc thiếu thông tin user -> bỏ qua (return `false`).
+  - Format thời gian: Lấy múi giờ từ `UserProfile.timezone` của người dùng (mặc định `Asia/Ho_Chi_Minh` nếu chưa cấu hình hồ sơ), format thời điểm xoá theo locale `vi-VN`.
+  - Nội dung email: Plain text tiếng Việt thông báo thời điểm xoá vĩnh viễn và hướng dẫn đăng nhập lại tại `${APP_PUBLIC_URL}/login` trước thời điểm đó. Tuyệt đối không chèn lý do (`reason`), tên hoặc PII vào email.
+  - Quản lý lỗi:
+    - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry.
+    - Lỗi vĩnh viễn (`retryable: false`) -> ghi log lỗi chứa `jobId` và `error.name`, hoàn tất job mà không throw.
+
+
