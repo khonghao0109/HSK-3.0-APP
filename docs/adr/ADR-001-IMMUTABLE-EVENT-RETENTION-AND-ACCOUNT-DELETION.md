@@ -108,3 +108,21 @@ Theo quyết định sản phẩm ngày 30/09/2026, quy trình xóa tài khoản
    - Chạy với policy `short`.
    - Nếu request không còn `requested`, bỏ qua.
    - Gửi email tiếng Việt tới địa chỉ email của người dùng thông báo thời điểm tài khoản sẽ bị xoá vĩnh viễn (được format theo `UserProfile.timezone`, mặc định `Asia/Ho_Chi_Minh`, locale `vi-VN`) cùng hướng dẫn đăng nhập lại tại `${APP_PUBLIC_URL}/login` trước thời điểm đó để hủy. Email tuyệt đối không chứa `reason` hay PII.
+
+## Export dữ liệu (Product Owner duyệt 30/09/2026)
+
+- **Định dạng và lưu trữ:** Dữ liệu cá nhân xuất ra dưới dạng MỘT file JSON duy nhất (`schemaVersion: 1`), lưu trữ tại private bucket qua `ObjectStoragePort` với khóa lưu trữ dạng `privacy-exports/<userId>/<exportId>-<hex>.json`.
+- **Thời hạn khả dụng và lưu trữ:**
+  - Người dùng có thể tải file trong vòng **24 giờ** kể từ khi worker hoàn tất (`outputExpiresAt = completedAt + 24 hours`).
+  - File vật lý trong bucket private được dọn dẹp và xóa sau **7 ngày** kể từ khi xuất thành công (`completedAt < CURRENT_TIMESTAMP - INTERVAL '7 days'`) bởi cron job định kỳ `privacy.purge-expired-exports`.
+- **Giới hạn tần suất (Rate limit):**
+  - Tối đa 1 yêu cầu export trong vòng 24 giờ cho mỗi người dùng (dựa trên đồng hồ DB `CURRENT_TIMESTAMP`).
+  - Chỉ tính các yêu cầu có trạng thái `requested`, `processing`, hoặc `completed`. Yêu cầu `failed` không bị tính vào giới hạn này.
+- **Phương thức tải an toàn:**
+  - Không sử dụng presigned URL để tránh rò rỉ token truy cập ra ngoài URL hoặc lịch sử duyệt web.
+  - Tải trực tiếp qua endpoint có xác thực `GET /users/me/data-exports/:id/download` (`JwtAuthGuard`). Endpoint kiểm tra quyền sở hữu, trạng thái hoàn tất, hạn khả dụng và kiểm tra mã checksum SHA-256 đối soát từ storage trước khi trả về với các header an toàn (`Content-Type`, `Content-Disposition`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`).
+- **Xử lý nền và tính toàn vẹn (Worker `privacy.data-export`):**
+  - Chạy bất đồng bộ qua queue `privacy.data-export` với retry policy `standard` (tối đa 3 lần).
+  - Đọc dữ liệu trong transaction cô lập `RepeatableRead` để bảo đảm tính nhất quán của snapshot.
+  - Áp dụng nguyên tắc `EXPORT_COVERAGE`: toàn bộ model liên kết với `User` phải được phân loại rõ ràng thành `included` hoặc `excluded` (với lý do cụ thể). Không bao giờ xuất credentials, secret tokens (`password`, `tokenHash`, `failedLoginAttempts`, `lockUntil`).
+  - Giới hạn dung lượng: Đọc dữ liệu theo lô (như `LearningEvent` theo lô 1.000 dòng). Nếu kích thước vượt quá giới hạn an toàn 10 MB (`MAX_PRIVATE_MEDIA_OBJECT_BYTES`), job dừng sớm, đánh dấu `status = 'failed'` với `errorCode = 'EXPORT_TOO_LARGE'` mà không ném lỗi (không retry vô ích).
