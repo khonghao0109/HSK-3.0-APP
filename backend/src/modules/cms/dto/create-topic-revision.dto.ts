@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { TopicType } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -14,6 +15,7 @@ import {
 
 import { BoundedJsonPayload } from './bounded-json-payload.validator';
 import { IsStrictBoolean } from '../../../common/decorators/is-strict-boolean.decorator';
+import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../common/openapi/json-schemas';
 
 export class CreateTopicRevisionDto {
   @Transform(({ value }: { value: unknown }) =>
@@ -31,6 +33,7 @@ export class CreateTopicRevisionDto {
   @IsEnum(TopicType)
   type!: TopicType;
 
+  @ApiProperty(JSON_OBJECT_OR_ARRAY_SCHEMA)
   @IsDefined()
   @Validate(BoundedJsonPayload)
   content!: unknown;

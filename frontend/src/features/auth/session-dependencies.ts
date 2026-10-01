@@ -3,7 +3,11 @@ import 'server-only';
 import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
-import { loginResponseSchema, meResponseSchema } from './auth-contract';
+import {
+  backendLoginSchema,
+  backendMeSchema,
+  backendRefreshSchema,
+} from './auth-contract';
 import type { SessionHandlerDependencies } from './session-route-handlers';
 
 export function sessionDependencies(): SessionHandlerDependencies {
@@ -13,15 +17,27 @@ export function sessionDependencies(): SessionHandlerDependencies {
     production: serverEnv.NODE_ENV === 'production',
     nowMs: Date.now,
     login: async (input) =>
-      loginResponseSchema.parse(
+      backendLoginSchema.parse(
         await backend.request('/api/v1/auth/login', {
           method: 'POST',
           body: input,
         }),
-      ),
+      ).data,
     loadCurrentUser: async (token) =>
-      meResponseSchema.parse(
-        await backend.request('/api/v1/auth/me', { token }),
-      ).user,
+      backendMeSchema.parse(await backend.request('/api/v1/auth/me', { token }))
+        .data.user,
+    logout: async (token) => {
+      await backend.request('/api/v1/auth/logout', {
+        method: 'POST',
+        token,
+      });
+    },
+    refresh: async (refreshToken) =>
+      backendRefreshSchema.parse(
+        await backend.request('/api/v1/auth/refresh', {
+          method: 'POST',
+          body: { refreshToken },
+        }),
+      ).data,
   };
 }

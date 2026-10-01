@@ -3,7 +3,7 @@
 > Phiên bản: `2.1.0-p0-hardening`
 > Ngày chốt: `2026-08-10`
 > Nguồn kỹ thuật chuẩn: `backend/prisma/schema.prisma` và các migration trong `backend/prisma/migrations/`
-> Phạm vi: Web MVP P0; gồm 57 bảng nghiệp vụ, không tính `_prisma_migrations`.
+> Phạm vi: Web MVP P0; mô tả 57 bảng tại migration 15 (2026-08-10). Schema hiện có 60 model sau migration 16–20 (`MediaIngestion`, `MediaUploadRateLimit`, `RateLimitCounter` và các cột provenance/telemetry của Media chưa được bổ sung vào tài liệu này; xem `backend/prisma/schema.prisma` và runbook migration mục 18).
 
 ## 1. Nguyên tắc mô hình dữ liệu
 

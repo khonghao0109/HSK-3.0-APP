@@ -17,6 +17,7 @@ import { TestMediaMalwareScanner } from '../src/infrastructure/malware/test-medi
 import { InMemoryObjectStorageAdapter } from '../src/infrastructure/storage/in-memory-object-storage.adapter';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { apiError } from './utils/api-envelope';
 
 describe('Secure Media Ingestion V1 E2E', () => {
   let app: INestApplication;
@@ -130,10 +131,12 @@ describe('Secure Media Ingestion V1 E2E', () => {
         'disabled.png',
         'image/png',
       ).expect(503);
-      expect(response.body).toEqual({
-        code: 'MEDIA_INGESTION_DISABLED',
-        message: 'Media ingestion is temporarily disabled.',
-      });
+      expect(response.body).toEqual(
+        apiError({
+          code: 'MEDIA_INGESTION_DISABLED',
+          message: 'Media ingestion is temporarily disabled.',
+        }),
+      );
       expect(storage.count()).toBe(storageBaseline);
     } finally {
       config.set('media.ingestionEnabled', true);
@@ -190,7 +193,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       const storageBaseline = storage.count();
       const mediaBaseline = await ownedMediaCount();
       const response = await upload(adminToken, body, name, mime).expect(422);
-      expect(response.body).toMatchObject({ code });
+      expect(response.body).toMatchObject({ error: { code } });
       if (body.length > 0) {
         expect(JSON.stringify(response.body)).not.toContain(
           body.toString('base64'),
@@ -213,7 +216,9 @@ describe('Secure Media Ingestion V1 E2E', () => {
       const storageBaseline = storage.count();
       const mediaBaseline = await ownedMediaCount();
       const response = await rawUpload(name, png, 'image/png').expect(400);
-      expect(response.body.message).toBe('Upload filename is not allowed.');
+      expect(response.body.error.message).toBe(
+        'Upload filename is not allowed.',
+      );
       expect(JSON.stringify(response.body)).not.toContain(name);
       expect(storage.count()).toBe(storageBaseline);
       await expect(ownedMediaCount()).resolves.toBe(mediaBaseline);
@@ -241,7 +246,9 @@ describe('Secure Media Ingestion V1 E2E', () => {
         contentType: 'image/png',
       })
       .expect(400);
-    expect(malformed.body).toMatchObject({ code: 'MULTIPART_INVALID' });
+    expect(malformed.body).toMatchObject({
+      error: { code: 'MULTIPART_INVALID' },
+    });
     expect(JSON.stringify(malformed.body)).not.toContain('secret@example.com');
 
     const unlicensed = await upload(
@@ -253,7 +260,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       unlicensedSourceId,
     ).expect(422);
     expect(unlicensed.body).toMatchObject({
-      code: 'MEDIA_SOURCE_NOT_APPROVED',
+      error: { code: 'MEDIA_SOURCE_NOT_APPROVED' },
     });
     expect(storage.count()).toBe(storageBaseline);
     await expect(ownedMediaCount()).resolves.toBe(mediaBaseline);
@@ -387,7 +394,9 @@ describe('Secure Media Ingestion V1 E2E', () => {
       'malware.png',
       'image/png',
     ).expect(422);
-    expect(rejected.body).toMatchObject({ code: 'MALWARE_DETECTED' });
+    expect(rejected.body).toMatchObject({
+      error: { code: 'MALWARE_DETECTED' },
+    });
 
     const uncertainKey = `media-ingest-uncertain-${randomUUID()}`;
     storage.failNextPutAfterWrite();
@@ -398,7 +407,9 @@ describe('Secure Media Ingestion V1 E2E', () => {
       'image/png',
       uncertainKey,
     ).expect(503);
-    expect(uncertain.body).toMatchObject({ code: 'MEDIA_CLEANUP_REQUIRED' });
+    expect(uncertain.body).toMatchObject({
+      error: { code: 'MEDIA_CLEANUP_REQUIRED' },
+    });
     expect(storage.count()).toBe(storageBaseline + 1);
     const uncertainIngestion = await prisma.mediaIngestion.findUniqueOrThrow({
       where: {
@@ -484,7 +495,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       'image/png',
     ).expect(503);
     expect(unavailableScanner.body).toMatchObject({
-      code: 'MEDIA_SCANNER_UNAVAILABLE',
+      error: { code: 'MEDIA_SCANNER_UNAVAILABLE' },
     });
 
     await prisma.mediaUploadRateLimit.deleteMany({
@@ -498,7 +509,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       'image/png',
     ).expect(503);
     expect(invalidScanner.body).toMatchObject({
-      code: 'MEDIA_SCANNER_INVALID_RESPONSE',
+      error: { code: 'MEDIA_SCANNER_INVALID_RESPONSE' },
     });
 
     await installMediaInsertFailureTrigger();
@@ -551,7 +562,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .set('x-request-id', randomUUID())
       .expect(503);
     expect(failedCleanup.body).toMatchObject({
-      code: 'MEDIA_CLEANUP_REQUIRED',
+      error: { code: 'MEDIA_CLEANUP_REQUIRED' },
     });
     await expect(
       prisma.mediaIngestion.findUniqueOrThrow({
@@ -696,19 +707,24 @@ describe('Secure Media Ingestion V1 E2E', () => {
     expect(content.headers['content-type']).toBe('image/png');
     expect(content.headers['cache-control']).toBe('private, no-store');
     expect(content.headers['x-content-type-options']).toBe('nosniff');
+    // Streamed bytes bypass the JSON envelope but still carry the request id.
+    const bytes = content.body as Buffer;
+    expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    expect(bytes.length).toBe(Number(content.headers['content-length']));
+    expect(content.headers['x-request-id']).toEqual(expect.any(String));
     storage.failNextGet('integrity_violation');
     const integrityFailure = await request(app.getHttpServer())
       .get(grant.body.data.url)
       .expect(503);
     expect(integrityFailure.body).toMatchObject({
-      code: 'MEDIA_STORAGE_INTEGRITY_ERROR',
+      error: { code: 'MEDIA_STORAGE_INTEGRITY_ERROR' },
     });
     storage.failNextGet('unavailable');
     const providerOutage = await request(app.getHttpServer())
       .get(grant.body.data.url)
       .expect(503);
     expect(providerOutage.body).toMatchObject({
-      code: 'MEDIA_STORAGE_UNAVAILABLE',
+      error: { code: 'MEDIA_STORAGE_UNAVAILABLE' },
     });
     await request(app.getHttpServer())
       .get(
@@ -754,10 +770,12 @@ describe('Secure Media Ingestion V1 E2E', () => {
     try {
       const response = await stalledUpload();
       expect(response.status).toBe(408);
-      expect(JSON.parse(response.body)).toEqual({
-        code: 'MEDIA_UPLOAD_TIMEOUT',
-        message: 'Media upload did not complete within the allowed time.',
-      });
+      expect(JSON.parse(response.body)).toEqual(
+        apiError({
+          code: 'MEDIA_UPLOAD_TIMEOUT',
+          message: 'Media upload did not complete within the allowed time.',
+        }),
+      );
       const after = await metrics.render();
       expect(metricValue(after, 'hsk_media_ingestion_started_total')).toBe(
         metricValue(before, 'hsk_media_ingestion_started_total') + 1,
@@ -870,8 +888,8 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .send({ email, password })
       .expect(201);
     return {
-      userId: response.body.user.id as number,
-      token: response.body.accessToken as string,
+      userId: response.body.data.user.id as number,
+      token: response.body.data.accessToken as string,
     };
   }
 
@@ -880,7 +898,7 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(201);
-    return response.body.accessToken as string;
+    return response.body.data.accessToken as string;
   }
 
   async function installMediaInsertFailureTrigger(): Promise<void> {

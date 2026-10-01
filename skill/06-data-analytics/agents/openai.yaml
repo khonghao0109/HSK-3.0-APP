@@ -1,6 +1,0 @@
-interface:
-  display_name: "HSK Data & Analytics"
-  short_description: "Data pipeline, provenance, privacy và recovery"
-  default_prompt: "Use $06-data-analytics to design this HSK data workflow with quality and lineage evidence."
-policy:
-  allow_implicit_invocation: true

@@ -4,12 +4,7 @@ import { normalizeApiFailure } from '@/lib/api/api-error';
 import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
-import {
-  mediaDetailResponseSchema,
-  mediaListResponseSchema,
-  mediaMutationResponseSchema,
-} from './media-contract';
-import { parseMediaQuery, serializeMediaQuery } from './media-query';
+import { backendMediaMutationSchema } from './media-contract';
 
 function status(error: unknown): number {
   return typeof error === 'object' &&
@@ -43,45 +38,6 @@ function exactOrigin(request: NextRequest): boolean {
   }
 }
 
-export async function handleMediaList(request: NextRequest) {
-  const session = token(request);
-  if (!session) return failure(401);
-  const query = parseMediaQuery(
-    Object.fromEntries(request.nextUrl.searchParams),
-  );
-  try {
-    const response = mediaListResponseSchema.parse(
-      await backend.request(
-        `/api/v1/admin/cms/media?${serializeMediaQuery(query).toString()}`,
-        { token: session },
-      ),
-    );
-    const result = NextResponse.json(response);
-    result.headers.set('cache-control', 'no-store');
-    return result;
-  } catch (error) {
-    return failure(status(error));
-  }
-}
-
-export async function handleMediaDetail(request: NextRequest, mediaId: string) {
-  if (!/^\d+$/u.test(mediaId)) return failure(400);
-  const session = token(request);
-  if (!session) return failure(401);
-  try {
-    const response = mediaDetailResponseSchema.parse(
-      await backend.request(`/api/v1/admin/cms/media/${mediaId}`, {
-        token: session,
-      }),
-    );
-    const result = NextResponse.json(response);
-    result.headers.set('cache-control', 'no-store');
-    return result;
-  } catch (error) {
-    return failure(status(error));
-  }
-}
-
 export async function handleMediaMutation(
   request: NextRequest,
   mediaId: string,
@@ -92,7 +48,7 @@ export async function handleMediaMutation(
   const session = token(request);
   if (!session) return failure(401);
   try {
-    const response = mediaMutationResponseSchema.parse(
+    const response = backendMediaMutationSchema.parse(
       await backend.request(`/api/v1/admin/cms/media/${mediaId}/${operation}`, {
         token: session,
         method: 'POST',

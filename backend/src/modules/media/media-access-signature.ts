@@ -30,8 +30,13 @@ export function createMediaAccessSignature(input: MediaAccessPayload): string {
     .digest('hex');
 }
 
+/**
+ * Grants are always signed with the current secret. During a rotation window a
+ * grant signed with `previousSecret` still verifies until it expires, so no URL
+ * already handed out breaks when the secret changes (B-07).
+ */
 export function verifyMediaAccessSignature(
-  input: MediaAccessPayload & { signature: string },
+  input: MediaAccessPayload & { signature: string; previousSecret?: string },
   nowEpochSeconds = Math.floor(Date.now() / 1000),
 ): boolean {
   if (
@@ -43,7 +48,22 @@ export function verifyMediaAccessSignature(
   ) {
     return false;
   }
-  const expected = Buffer.from(createMediaAccessSignature(input), 'hex');
   const actual = Buffer.from(input.signature, 'hex');
+  return (
+    signedWith(input, input.secret, actual) ||
+    (input.previousSecret !== undefined &&
+      signedWith(input, input.previousSecret, actual))
+  );
+}
+
+function signedWith(
+  input: MediaAccessPayload,
+  secret: string,
+  actual: Buffer,
+): boolean {
+  const expected = Buffer.from(
+    createMediaAccessSignature({ ...input, secret }),
+    'hex',
+  );
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

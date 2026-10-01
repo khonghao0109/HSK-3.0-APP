@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Ho_Chi_Minh",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "pin",
+  "prConcurrentLimit": 3,
+  "packageRules": [
+    {
+      "description": "Gom mọi cập nhật không phải major thành một PR mỗi tuần",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "weekly non-major",
+      "groupSlug": "weekly-non-major"
+    },
+    {
+      "description": "Automerge patch cho devDependencies; Renovate chỉ merge khi status check xanh",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "weekly devDependencies patch",
+      "groupSlug": "weekly-dev-patch",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Major luôn mở PR riêng, không automerge (ADR-008 §12)",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

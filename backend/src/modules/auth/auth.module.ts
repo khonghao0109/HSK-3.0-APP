@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { StringValue } from 'ms';
 
+import { RateLimitModule } from '../../infrastructure/rate-limit/rate-limit.module';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 import { AuthController } from './auth.controller';
@@ -13,6 +14,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 @Module({
   imports: [
     PrismaModule,
+    RateLimitModule,
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),

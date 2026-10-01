@@ -191,7 +191,7 @@ export class OnboardingService {
     userId: number,
     dto: CreateGoalDto,
   ): Promise<ApiSuccessResponse<UserGoalView>> {
-    return this.prisma.$transaction(async (tx) => {
+    const result = this.prisma.$transaction(async (tx) => {
       await this.lockActiveUser(tx, userId);
 
       const level = await tx.level.findFirst({
@@ -248,7 +248,7 @@ export class OnboardingService {
           startDate: parsedStartDate,
         })
       ) {
-        return { success: true, data: serializeGoal(currentGoal) };
+        return { success: true as const, data: serializeGoal(currentGoal) };
       }
 
       await tx.userGoal.updateMany({
@@ -270,8 +270,14 @@ export class OnboardingService {
         select: GOAL_SELECT,
       });
 
-      return { success: true, data: serializeGoal(createdGoal) };
+      return { success: true as const, data: serializeGoal(createdGoal) };
     });
+    return result.catch((error: unknown) =>
+      rethrowActiveUniqueConflict(
+        error,
+        'Another active goal was created concurrently. Retry the request.',
+      ),
+    );
   }
 
   async getCurrentLearningPlan(
@@ -292,7 +298,7 @@ export class OnboardingService {
   async generateLearningPlan(
     userId: number,
   ): Promise<ApiSuccessResponse<LearningPlanView>> {
-    return this.prisma.$transaction(async (tx) => {
+    const result = this.prisma.$transaction(async (tx) => {
       await this.lockActiveUser(tx, userId);
 
       const goal = await tx.userGoal.findFirst({
@@ -343,7 +349,7 @@ export class OnboardingService {
         isPlanForGoal(currentPlan, goal) &&
         hasSameLessonSnapshot(currentPlan, lessons)
       ) {
-        return { success: true, data: serializePlan(currentPlan) };
+        return { success: true as const, data: serializePlan(currentPlan) };
       }
 
       const scheduledItems = lessons.map((lesson, index) => ({
@@ -376,8 +382,14 @@ export class OnboardingService {
         select: PLAN_SELECT,
       });
 
-      return { success: true, data: serializePlan(plan) };
+      return { success: true as const, data: serializePlan(plan) };
     });
+    return result.catch((error: unknown) =>
+      rethrowActiveUniqueConflict(
+        error,
+        'Another active learning plan was created concurrently. Retry the request.',
+      ),
+    );
   }
 
   private async lockActiveUser(tx: Prisma.TransactionClient, userId: number) {
@@ -394,6 +406,18 @@ export class OnboardingService {
       throw new UnauthorizedException('Account is not available.');
     }
   }
+}
+
+// UserGoal_userId_active_key / LearningPlan_userId_active_key reject a second
+// active row from any writer that bypasses the User FOR UPDATE serialization.
+function rethrowActiveUniqueConflict(error: unknown, message: string): never {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2002'
+  ) {
+    throw new ConflictException(message);
+  }
+  throw error;
 }
 
 function resolveTargetBand(

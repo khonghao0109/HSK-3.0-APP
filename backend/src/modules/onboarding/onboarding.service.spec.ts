@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -416,5 +417,62 @@ describe('OnboardingService learning plans', () => {
     expect(findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: 22, status: 'active' } }),
     );
+  });
+});
+
+describe('OnboardingService active-row unique index conflicts', () => {
+  const uniqueViolation = () =>
+    new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+      meta: { target: ['userId'] },
+    });
+
+  it('maps a concurrent active-goal unique violation to 409', async () => {
+    const { service, tx } = createHarness();
+    tx.level.findFirst.mockResolvedValue(level);
+    tx.userGoal.findMany.mockResolvedValue([]);
+    tx.userGoal.create.mockRejectedValue(uniqueViolation());
+
+    await expect(service.setGoal(1, goalDto)).rejects.toThrow(
+      new ConflictException(
+        'Another active goal was created concurrently. Retry the request.',
+      ),
+    );
+  });
+
+  it('maps a concurrent active-plan unique violation to 409', async () => {
+    const { service, tx } = createHarness();
+    tx.userGoal.findFirst.mockResolvedValue(goal);
+    tx.learningPlan.findMany.mockResolvedValue([]);
+    tx.lesson.findMany.mockResolvedValue([
+      {
+        id: 20,
+        title: 'Lesson',
+        description: null,
+        orderIndex: 1,
+        slug: 'lesson',
+      },
+    ]);
+    tx.learningPlan.create.mockRejectedValue(uniqueViolation());
+
+    await expect(service.generateLearningPlan(1)).rejects.toThrow(
+      new ConflictException(
+        'Another active learning plan was created concurrently. Retry the request.',
+      ),
+    );
+  });
+
+  it('does not relabel other database failures as conflicts', async () => {
+    const { service, tx } = createHarness();
+    const failure = new Prisma.PrismaClientKnownRequestError('Timed out', {
+      code: 'P2028',
+      clientVersion: 'test',
+    });
+    tx.level.findFirst.mockResolvedValue(level);
+    tx.userGoal.findMany.mockResolvedValue([]);
+    tx.userGoal.create.mockRejectedValue(failure);
+
+    await expect(service.setGoal(1, goalDto)).rejects.toBe(failure);
   });
 });

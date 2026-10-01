@@ -12,6 +12,11 @@ vi.mock('@/lib/api/server-backend', () => ({
 
 import { handleMediaMutation } from './media-route-handler';
 
+const BACKEND_META = {
+  requestId: '7d1f4a9e-3b2c-4d5e-8f60-1a2b3c4d5e6f',
+  timestamp: '2026-09-14T05:00:00.000Z',
+};
+
 describe('Media BFF mutation boundary', () => {
   it.each([undefined, 'https://attacker.example'])(
     'rejects missing or cross-origin mutation before session/backend access',
@@ -57,6 +62,7 @@ describe('Media BFF mutation boundary', () => {
           storageKey: 'must-not-survive',
         },
       },
+      meta: BACKEND_META,
     });
     const response = await handleMediaMutation(
       new NextRequest('http://127.0.0.1:3200/api/admin/media/41/quarantine', {
@@ -72,6 +78,33 @@ describe('Media BFF mutation boundary', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(await response.text()).not.toContain('must-not-survive');
+    const text = await response.text();
+    expect(text).not.toContain('must-not-survive');
+    // Backend envelope meta stays on the server.
+    expect(text).not.toContain(BACKEND_META.requestId);
+    expect(JSON.parse(text)).toMatchObject({
+      success: true,
+      data: { idempotent: false, media: { id: 41 } },
+    });
+  });
+
+  it('fails closed when the backend body is not the response envelope', async () => {
+    backendRequest.mockResolvedValueOnce({
+      success: true,
+      data: { idempotent: false, media: null },
+    });
+    const response = await handleMediaMutation(
+      new NextRequest('http://127.0.0.1:3200/api/admin/media/41/archive', {
+        method: 'POST',
+        headers: {
+          origin: 'http://127.0.0.1:3200',
+          cookie: 'hsk_admin_session=test-token',
+        },
+      }),
+      '41',
+      'archive',
+    );
+
+    expect(response.status).toBe(503);
   });
 });

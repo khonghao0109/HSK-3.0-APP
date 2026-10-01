@@ -7,8 +7,8 @@ import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
 import {
-  mediaDetailResponseSchema,
-  mediaListResponseSchema,
+  backendMediaDetailSchema,
+  backendMediaListSchema,
   type AdminMediaDetail,
   type MediaListResponse,
 } from './media-contract';
@@ -30,7 +30,7 @@ async function sessionToken(): Promise<string> {
 export async function loadMedia(query: MediaQuery): Promise<MediaListResponse> {
   const token = await sessionToken();
   const params = serializeMediaQuery(query);
-  return mediaListResponseSchema.parse(
+  return backendMediaListSchema.parse(
     await backend.request(`/api/v1/admin/cms/media?${params.toString()}`, {
       token,
     }),
@@ -41,7 +41,7 @@ export async function loadMediaAsset(
   mediaId: number,
 ): Promise<AdminMediaDetail> {
   const token = await sessionToken();
-  return mediaDetailResponseSchema.parse(
+  return backendMediaDetailSchema.parse(
     await backend.request(`/api/v1/admin/cms/media/${mediaId}`, { token }),
   ).data;
 }

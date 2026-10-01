@@ -6,6 +6,8 @@ import {
 
 import { SafeMediaUploadExceptionFilter } from './safe-media-upload-exception.filter';
 
+const REQUEST_ID = '7d1f4a9e-3b2c-4d5e-8f60-1a2b3c4d5e6f';
+
 describe('SafeMediaUploadExceptionFilter', () => {
   const filter = new SafeMediaUploadExceptionFilter();
 
@@ -17,11 +19,12 @@ describe('SafeMediaUploadExceptionFilter', () => {
     );
 
     expect(status).toHaveBeenCalledWith(400);
-    expect(json).toHaveBeenCalledWith({
-      statusCode: 400,
-      code: 'MULTIPART_INVALID',
-      message: 'Media upload request is malformed.',
-    });
+    expect(json).toHaveBeenCalledWith(
+      envelope({
+        code: 'MULTIPART_INVALID',
+        message: 'Media upload request is malformed.',
+      }),
+    );
     expect(JSON.stringify(json.mock.calls)).not.toContain('secret@example.com');
   });
 
@@ -30,11 +33,12 @@ describe('SafeMediaUploadExceptionFilter', () => {
     filter.catch(new PayloadTooLargeException('File too large'), host);
 
     expect(status).toHaveBeenCalledWith(413);
-    expect(json).toHaveBeenCalledWith({
-      statusCode: 413,
-      code: 'UPLOAD_TOO_LARGE',
-      message: 'Media upload exceeds the allowed size.',
-    });
+    expect(json).toHaveBeenCalledWith(
+      envelope({
+        code: 'UPLOAD_TOO_LARGE',
+        message: 'Media upload exceeds the allowed size.',
+      }),
+    );
   });
 
   it('preserves only the explicitly safe domain filename message', () => {
@@ -43,19 +47,33 @@ describe('SafeMediaUploadExceptionFilter', () => {
       new BadRequestException('Upload filename is not allowed.'),
       host,
     );
-    expect(json).toHaveBeenCalledWith({
-      statusCode: 400,
-      message: 'Upload filename is not allowed.',
-      error: 'Bad Request',
-    });
+    expect(json).toHaveBeenCalledWith(
+      envelope({
+        code: 'BAD_REQUEST',
+        message: 'Upload filename is not allowed.',
+      }),
+    );
   });
 });
+
+function envelope(error: { code: string; message: string }) {
+  return {
+    success: false,
+    error,
+    meta: { requestId: REQUEST_ID, timestamp: expect.any(String) as string },
+  };
+}
 
 function createHost() {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
+  const request = { headers: { 'x-request-id': REQUEST_ID } };
+  const response = { status, setHeader: jest.fn(), headersSent: false };
   const host = {
-    switchToHttp: () => ({ getResponse: () => ({ status }) }),
+    switchToHttp: () => ({
+      getRequest: () => request,
+      getResponse: () => response,
+    }),
   } as unknown as ArgumentsHost;
   return { host, json, status };
 }

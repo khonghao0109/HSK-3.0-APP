@@ -17,9 +17,13 @@ export type SessionCookie = {
   };
 };
 
-function jwtExpiry(token: string): number {
+export function getRefreshCookieName(sessionCookieName: string): string {
+  return `${sessionCookieName}_refresh`;
+}
+
+export function readJwtExpiry(token: string): number | null {
   const segments = token.split('.');
-  if (segments.length !== 3 || !segments[1]) throw new SessionTokenError();
+  if (segments.length !== 3 || !segments[1]) return null;
   try {
     const payload: unknown = JSON.parse(
       Buffer.from(segments[1], 'base64url').toString('utf8'),
@@ -31,13 +35,48 @@ function jwtExpiry(token: string): number {
       typeof payload.exp !== 'number' ||
       !Number.isSafeInteger(payload.exp)
     ) {
-      throw new SessionTokenError();
+      return null;
     }
     return payload.exp;
-  } catch (error) {
-    if (error instanceof SessionTokenError) throw error;
-    throw new SessionTokenError();
+  } catch {
+    return null;
   }
+}
+
+function jwtExpiry(token: string): number {
+  const exp = readJwtExpiry(token);
+  if (exp === null) throw new SessionTokenError();
+  return exp;
+}
+
+export function createRefreshSessionCookie(
+  refreshToken: string,
+  expiresAtIsoOrMs: string | number | Date,
+  input: { cookieName: string; nowMs: number; production: boolean },
+): SessionCookie {
+  const expiresAtMs =
+    typeof expiresAtIsoOrMs === 'number'
+      ? expiresAtIsoOrMs
+      : expiresAtIsoOrMs instanceof Date
+        ? expiresAtIsoOrMs.getTime()
+        : new Date(expiresAtIsoOrMs).getTime();
+
+  if (!Number.isFinite(expiresAtMs)) throw new SessionTokenError();
+  const maxAge =
+    Math.floor(expiresAtMs / 1000) - Math.floor(input.nowMs / 1000);
+  if (maxAge <= 0) throw new SessionTokenError();
+
+  return {
+    name: input.cookieName,
+    value: refreshToken,
+    options: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: input.production,
+      path: '/',
+      maxAge,
+    },
+  };
 }
 
 export function createSessionCookie(

@@ -3,6 +3,9 @@ import { createHash } from 'node:crypto';
 import {
   API_SECURITY_HEADERS,
   applyApiSecurityHeaders,
+  assertMediaProviders,
+  assertJobQueueProvider,
+  assertMailProvider,
   assertProductionSecrets,
   buildCorsOriginValidator,
   configureApiEdgeSecurity,
@@ -109,6 +112,57 @@ describe('runtime edge security', () => {
       'secret',
     );
     expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  describe('media providers', () => {
+    const providers = (
+      NODE_ENV: string | undefined,
+      MEDIA_STORAGE_PROVIDER: string | undefined,
+      MEDIA_SCANNER_PROVIDER: string | undefined,
+    ) => ({ NODE_ENV, MEDIA_STORAGE_PROVIDER, MEDIA_SCANNER_PROVIDER });
+
+    it.each(['production', 'development', 'test', undefined])(
+      'accepts S3 with ClamAV under NODE_ENV=%s',
+      (nodeEnv) => {
+        expect(() =>
+          assertMediaProviders(providers(nodeEnv, 's3', 'clamav')),
+        ).not.toThrow();
+      },
+    );
+
+    it.each([
+      ['memory', 'test'],
+      ['memory', 'clamav'],
+      ['s3', 'test'],
+    ])(
+      'accepts storage %s with scanner %s only under NODE_ENV=test',
+      (storage, scanner) => {
+        expect(() =>
+          assertMediaProviders(providers('test', storage, scanner)),
+        ).not.toThrow();
+        for (const nodeEnv of ['production', 'development', undefined]) {
+          expect(() =>
+            assertMediaProviders(providers(nodeEnv, storage, scanner)),
+          ).toThrow('Media provider configuration is invalid.');
+        }
+      },
+    );
+
+    it.each([
+      [undefined, 'clamav'],
+      ['s3', undefined],
+      ['minio', 'clamav'],
+      ['S3', 'clamav'],
+      ['s3', 'noop'],
+      ['memory', ''],
+    ])(
+      'fails closed on missing or unknown providers %j / %j, even under test',
+      (storage, scanner) => {
+        expect(() =>
+          assertMediaProviders(providers('test', storage, scanner)),
+        ).toThrow(/^Media provider configuration is invalid\.$/u);
+      },
+    );
   });
 
   describe('production secret material', () => {
@@ -302,6 +356,24 @@ describe('runtime edge security', () => {
       ).toThrow('Production secret configuration is invalid.');
     });
 
+    it('accepts a distinct previous media signing secret and rejects one equal to the current secret', () => {
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET_PREVIOUS: material(
+            'media-signing-previous',
+          ).toString('hex'),
+        }),
+      ).not.toThrow();
+      expect(() =>
+        assertProductionSecrets({
+          ...baseEnvironment(),
+          MEDIA_SIGNING_SECRET_PREVIOUS:
+            material('media-signing').toString('base64'),
+        }),
+      ).toThrow('Production secret configuration is invalid.');
+    });
+
     it('rejects malformed JWT secret maps with the same sanitized error', () => {
       for (const JWT_SECRETS of ['null', '[]', '{', '{"v1":42}']) {
         expect(() =>
@@ -312,5 +384,110 @@ describe('runtime edge security', () => {
         ).toThrow('Production secret configuration is invalid.');
       }
     });
+  });
+});
+
+describe('assertJobQueueProvider', () => {
+  it('accepts pgboss in any environment', () => {
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'production',
+        JOB_QUEUE_PROVIDER: 'pgboss',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'test',
+        JOB_QUEUE_PROVIDER: 'pgboss',
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts memory only in test environment', () => {
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'test',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'production',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).toThrow('Job queue provider configuration is invalid.');
+    expect(() =>
+      assertJobQueueProvider({
+        NODE_ENV: 'development',
+        JOB_QUEUE_PROVIDER: 'memory',
+      }),
+    ).toThrow('Job queue provider configuration is invalid.');
+  });
+});
+
+describe('assertMailProvider', () => {
+  it('production + ses ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'ses',
+      }),
+    ).not.toThrow();
+  });
+
+  it('production + mailpit ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'mailpit',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('production + memory ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'production',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('development + mailpit ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+      }),
+    ).not.toThrow();
+  });
+
+  it('development + memory ❌', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).toThrow('Mail provider configuration is invalid.');
+  });
+
+  it('test + memory ✅', () => {
+    expect(() =>
+      assertMailProvider({
+        NODE_ENV: 'test',
+        MAIL_PROVIDER: 'memory',
+      }),
+    ).not.toThrow();
+  });
+
+  it('giá trị lạ ❌', () => {
+    for (const invalid of ['smtp', 'unknown', 'SES', '', undefined]) {
+      expect(() =>
+        assertMailProvider({
+          NODE_ENV: 'test',
+          MAIL_PROVIDER: invalid,
+        }),
+      ).toThrow('Mail provider configuration is invalid.');
+    }
   });
 });

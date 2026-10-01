@@ -392,8 +392,9 @@ function normalizeSecretKey(key: string): string {
     .toUpperCase();
 }
 
+// `_PREVIOUS` holds the overlap secret during rotation; it is just as live.
 function isHighConfidenceSecretKey(key: string): boolean {
-  return /(?:^|_)(?:API_KEY|AUTH_TOKEN|BEARER_TOKEN|CLIENT_SECRET|JWT_SECRET|JWT_SECRETS|PASSWORD|PASSWD|PEPPER|PRIVATE_KEY|REFRESH_TOKEN|SECRET|SECRET_ACCESS_KEY|SIGNING_KEY|SIGNING_SECRET|TOKEN|WEBHOOK_SECRET)$/u.test(
+  return /(?:^|_)(?:API_KEY|AUTH_TOKEN|BEARER_TOKEN|CLIENT_SECRET|JWT_SECRET|JWT_SECRETS|PASSWORD|PASSWD|PEPPER|PRIVATE_KEY|REFRESH_TOKEN|SECRET|SECRET_ACCESS_KEY|SIGNING_KEY|SIGNING_SECRET|TOKEN|WEBHOOK_SECRET)(?:_PREVIOUS)?$/u.test(
     key,
   );
 }

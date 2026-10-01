@@ -1,6 +1,11 @@
 import { spawnSync } from 'node:child_process';
 
-import { canonicalJson, sha256CanonicalJson } from './canonical-json';
+import {
+  CANONICAL_JSON_MAX_DEPTH,
+  CanonicalJsonDepthError,
+  canonicalJson,
+  sha256CanonicalJson,
+} from './canonical-json';
 
 describe('canonical JSON', () => {
   it('produces the same JSON and SHA-256 hash regardless of object key order', () => {
@@ -57,4 +62,61 @@ describe('canonical JSON', () => {
     expect(outputs[0].stdout).toBe(outputs[1].stdout);
     expect(outputs[0].stdout).toBe('{"A":1,"z":2,"á":3,"đ":4,"汉":5,"😀":6}');
   });
+
+  it('serializes ordinary nesting unchanged', () => {
+    const value = { a: [{ b: { c: [1, 'two', null, true] } }] };
+
+    expect(canonicalJson(value)).toBe(
+      '{"a":[{"b":{"c":[1,"two",null,true]}}]}',
+    );
+    expect(canonicalJson(value, 5)).toBe(canonicalJson(value));
+    expect(sha256CanonicalJson(value)).toBe(sha256CanonicalJson(value, 5));
+  });
+
+  it('accepts a payload exactly at the depth bound', () => {
+    const atBound = nestObjects(CANONICAL_JSON_MAX_DEPTH);
+
+    expect(canonicalJson(atBound)).toContain('"leaf"');
+    expect(() =>
+      canonicalJson(nestArrays(CANONICAL_JSON_MAX_DEPTH)),
+    ).not.toThrow();
+    expect(() => canonicalJson(nestObjects(4), 4)).not.toThrow();
+  });
+
+  it('rejects payloads past the bound instead of exhausting the call stack', () => {
+    for (const build of [nestObjects, nestArrays]) {
+      const tooDeep = build(CANONICAL_JSON_MAX_DEPTH + 1);
+
+      expect(() => canonicalJson(tooDeep)).toThrow(CanonicalJsonDepthError);
+      expect(() => sha256CanonicalJson(tooDeep)).toThrow(
+        /maximum nesting depth of 16/u,
+      );
+      expect(() => canonicalJson(build(200_000))).toThrow(
+        CanonicalJsonDepthError,
+      );
+    }
+
+    const error = new CanonicalJsonDepthError(4);
+    expect(() => canonicalJson(nestObjects(5), 4)).toThrow(error.message);
+  });
+
+  it('requires a positive integer depth bound', () => {
+    for (const maxDepth of [0, -1, 1.5, Number.NaN]) {
+      expect(() => canonicalJson({ a: 1 }, maxDepth)).toThrow(
+        /positive integer/u,
+      );
+    }
+  });
 });
+
+function nestObjects(depth: number): unknown {
+  let value: unknown = 'leaf';
+  for (let level = 0; level < depth; level += 1) value = { nested: value };
+  return value;
+}
+
+function nestArrays(depth: number): unknown {
+  let value: unknown = 'leaf';
+  for (let level = 0; level < depth; level += 1) value = [value];
+  return value;
+}

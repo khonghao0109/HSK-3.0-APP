@@ -2,8 +2,6 @@
 -- Forward-only migration. Published legacy rows are intentionally not guessed or
 -- backfilled because their JSON/media provenance cannot be proven relationally.
 
-BEGIN;
-
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM "LessonExercise" WHERE status = 'published') THEN
@@ -336,5 +334,3 @@ CREATE TRIGGER "LessonExercise_revision_parent_restrict"
 BEFORE DELETE ON "LessonExercise"
 FOR EACH ROW
 EXECUTE FUNCTION hsk_restrict_lesson_exercise_revision_delete();
-
-COMMIT;

@@ -1,8 +1,6 @@
 -- Media provenance/provider hardening and unknown-write reconciliation.
 -- Forward-only: secure_media_ingestion_v1 remains immutable.
 
-BEGIN;
-
 DO $$
 BEGIN
   IF EXISTS (
@@ -333,5 +331,3 @@ COMMENT ON COLUMN "MediaIngestion"."cleanupAbsentObservedAt" IS
   'First verified object-absence observation for bounded unknown-PUT settling; completion requires a later observation.';
 COMMENT ON COLUMN "MediaIngestion"."sourceCodeSnapshot" IS
   'Immutable provenance captured from DataSource at ingestion claim.';
-
-COMMIT;

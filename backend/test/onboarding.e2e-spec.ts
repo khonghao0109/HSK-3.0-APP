@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { envelopeMeta } from './utils/api-envelope';
 
 type GoalResponse = {
   success: true;
@@ -79,6 +80,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       }),
     );
     await app.init();
+    await app.listen(0, '127.0.0.1');
 
     prisma = app.get(PrismaService);
 
@@ -176,15 +178,15 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email, password, name: 'Onboarding User A' })
       .expect(201);
-    expect(registerResponse.body.accessToken).toEqual(expect.any(String));
+    expect(registerResponse.body.data.accessToken).toEqual(expect.any(String));
 
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(201);
 
-    token = loginResponse.body.accessToken as string;
-    userId = loginResponse.body.user.id as number;
+    token = loginResponse.body.data.accessToken as string;
+    userId = loginResponse.body.data.user.id as number;
   });
 
   it('2. starts at set_goal', async () => {
@@ -202,6 +204,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
         hasCompletedPlacement: false,
         nextStep: 'set_goal',
       },
+      meta: envelopeMeta(),
     });
   });
 
@@ -490,6 +493,87 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
     currentPlanId = first.body.data.id as number;
   });
 
+  it('14b. enforces one active goal and plan per user for writers outside the service lock', async () => {
+    const bypassUser = await prisma.user.create({
+      data: {
+        email: `onboarding-index-${suffix}@example.com`,
+        password: 'synthetic-not-a-secret',
+      },
+      select: { id: true },
+    });
+    const startDate = new Date('2026-08-12T00:00:00.000Z');
+
+    const goalWrites = await Promise.allSettled(
+      [30, 45].map((dailyMinutes) =>
+        prisma.userGoal.create({
+          data: {
+            userId: bypassUser.id,
+            targetLevelId: levelId,
+            targetBand: 4,
+            dailyMinutes,
+            startDate,
+            isActive: true,
+          },
+        }),
+      ),
+    );
+    const planWrites = await Promise.allSettled(
+      [0, 1].map(() =>
+        prisma.learningPlan.create({
+          data: {
+            userId: bypassUser.id,
+            targetLevelId: levelId,
+            targetBand: 4,
+            status: 'active',
+            startDate,
+          },
+        }),
+      ),
+    );
+
+    for (const writes of [goalWrites, planWrites]) {
+      expect(
+        writes.filter(({ status }) => status === 'fulfilled'),
+      ).toHaveLength(1);
+      const rejected = writes.filter(
+        (write): write is PromiseRejectedResult => write.status === 'rejected',
+      );
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0].reason).toMatchObject({ code: 'P2002' });
+    }
+    expect(
+      await prisma.userGoal.count({
+        where: { userId: bypassUser.id, isActive: true },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.learningPlan.count({
+        where: { userId: bypassUser.id, status: 'active' },
+      }),
+    ).toBe(1);
+
+    // Inactive history is not constrained by the partial indexes.
+    await prisma.userGoal.create({
+      data: {
+        userId: bypassUser.id,
+        targetLevelId: levelId,
+        targetBand: 4,
+        dailyMinutes: 60,
+        startDate,
+        isActive: false,
+      },
+    });
+    await prisma.learningPlan.create({
+      data: {
+        userId: bypassUser.id,
+        targetLevelId: levelId,
+        targetBand: 4,
+        status: 'cancelled',
+        startDate,
+      },
+    });
+  });
+
   it('15. prevents User B from reading or targeting User A onboarding state', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
@@ -499,13 +583,17 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/login')
       .send({ email: userBEmail, password })
       .expect(201);
-    const userBToken = login.body.accessToken as string;
+    const userBToken = login.body.data.accessToken as string;
 
     const current = await request(app.getHttpServer())
       .get('/api/v1/onboarding/goals/current')
       .set('Authorization', `Bearer ${userBToken}`)
       .expect(200);
-    expect(current.body).toEqual({ success: true, data: null });
+    expect(current.body).toEqual({
+      success: true,
+      data: null,
+      meta: envelopeMeta(),
+    });
 
     await request(app.getHttpServer())
       .post('/api/v1/onboarding/goals')
@@ -552,10 +640,14 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .expect(400);
 
     expect(register.body).toMatchObject({
-      code: 'REQUEST_VALIDATION_FAILED',
-      errors: expect.arrayContaining([
-        expect.objectContaining({ path: '$.$unknown' }),
-      ]),
+      error: {
+        code: 'REQUEST_VALIDATION_FAILED',
+        details: {
+          errors: expect.arrayContaining([
+            expect.objectContaining({ path: '$.$unknown' }),
+          ]),
+        },
+      },
     });
     expect(JSON.stringify(register.body)).not.toContain('anonymizedEmail');
 
@@ -563,7 +655,7 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .post('/api/v1/auth/register')
       .send({ email: anonymizedEmail, password })
       .expect(201);
-    const anonymizedToken = validRegister.body.accessToken as string;
+    const anonymizedToken = validRegister.body.data.accessToken as string;
 
     await prisma.user.update({
       where: { email: anonymizedEmail },

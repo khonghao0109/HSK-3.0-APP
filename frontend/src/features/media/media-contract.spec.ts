@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  backendMediaListSchema,
+  backendMediaMutationSchema,
   mediaDetailResponseSchema,
   mediaListResponseSchema,
   mediaMutationResponseSchema,
 } from './media-contract';
+
+const BACKEND_META = {
+  requestId: '7d1f4a9e-3b2c-4d5e-8f60-1a2b3c4d5e6f',
+  timestamp: '2026-09-14T05:00:00.000Z',
+};
 
 function asset() {
   return {
@@ -33,6 +40,25 @@ function asset() {
 }
 
 describe('Media admin runtime contract', () => {
+  it('resolves backend envelopes to BFF shapes without storage fields', () => {
+    const pagination = { page: 1, limit: 20, total: 1, totalPages: 1 };
+    const list = backendMediaListSchema.parse({
+      success: true,
+      data: [{ ...asset(), storageKey: 'must-not-survive' }],
+      meta: { ...BACKEND_META, pagination },
+    });
+    expect(list.meta).toEqual(pagination);
+    expect(JSON.stringify(list)).not.toContain('must-not-survive');
+    expect(JSON.stringify(list)).not.toContain(BACKEND_META.requestId);
+
+    const mutation = backendMediaMutationSchema.parse({
+      success: true,
+      data: { idempotent: true, media: asset() },
+      meta: BACKEND_META,
+    });
+    expect(mediaMutationResponseSchema.parse(mutation)).toEqual(mutation);
+  });
+
   it('accepts list/detail metadata and strips storage-only fields', () => {
     const list = mediaListResponseSchema.parse({
       success: true,

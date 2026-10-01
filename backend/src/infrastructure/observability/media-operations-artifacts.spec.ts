@@ -31,6 +31,10 @@ describe('media operations artifacts', () => {
     expect(config).toContain('if ($hsk_media_signed_request_canonical = 0)');
     expect(config).toContain('Strict-Transport-Security');
     expect(config).toContain('$request_id');
+    expect(config).toContain(
+      'proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;',
+    );
+    expect(config).toContain('proxy_set_header X-Real-IP $remote_addr;');
     expect(config).not.toContain('error_log /dev/null');
     expect(config).toMatch(
       /error_log\s+\/var\/log\/nginx\/media_error\.log\s+emerg;/u,
@@ -123,6 +127,7 @@ describe('media operations artifacts', () => {
         'alertmanager',
         'amtool',
         'grafana',
+        'grype',
         'kubectl',
         'kubeconform',
       ]),
@@ -153,8 +158,22 @@ describe('media operations artifacts', () => {
       expect(image.platforms[0]?.runtimeRef).toBe(
         `${image.repository}@${image.platforms[0]?.digest}`,
       );
-      expect(image.attestations.signature.required).toBe(true);
+      expect(image.attestations.releaseAcceptance).toMatchObject({
+        required: true,
+        model: 'hsk-release-acceptance',
+        verifier: 'cosign-keyless-blob',
+      });
+      expect(image.attestations.upstreamPublisherSignature.status).toBe(
+        'absent',
+      );
       expect(image.attestations.sbom.required).toBe(true);
+      expect(image.attestations.vulnerability.failOn).toEqual([
+        'Critical',
+        'High',
+      ]);
+      expect(image.attestations.license.policySha256).toMatch(
+        /^[a-f0-9]{64}$/u,
+      );
     }
   });
 

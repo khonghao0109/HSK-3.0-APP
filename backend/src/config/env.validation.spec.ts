@@ -13,12 +13,15 @@ describe('media environment validation', () => {
     DATABASE_URL: 'postgresql://user:password@localhost:5432/hsk_test',
     JWT_SECRETS: JSON.stringify({ v1: jwtSecret }),
     JWT_ACTIVE_KID: 'v1',
+    MAIL_FROM: 'noreply@hsk.local',
+    MAIL_SES_REGION: 'ap-southeast-1',
   };
 
   const production = {
     ...base,
     NODE_ENV: 'production',
     ALLOWED_ORIGINS: 'https://admin.example.com,https://app.example.com',
+    APP_PUBLIC_URL: 'https://app.example.com',
     AUTH_PASSWORD_PEPPER: passwordPepper,
     MEDIA_STORAGE_BUCKET: 'hsk-private-media',
     MEDIA_STORAGE_REGION: 'ap-southeast-1',
@@ -39,6 +42,7 @@ describe('media environment validation', () => {
     'MEDIA_METRICS_PORT',
     'AUTH_PASSWORD_PEPPER',
     'ALLOWED_ORIGINS',
+    'APP_PUBLIC_URL',
   ])('requires production boundary %s', (missing) => {
     const environment: Record<string, string> = {
       ...production,
@@ -59,6 +63,44 @@ describe('media environment validation', () => {
       MEDIA_SCANNER_PORT: 3310,
     });
     expect(result.error).toBeUndefined();
+  });
+
+  it('defaults media ingestion max concurrency to 4 and enforces 1-16 bounds', () => {
+    expect(envValidationSchema.validate(production).value).toMatchObject({
+      MEDIA_INGESTION_MAX_CONCURRENCY: 4,
+    });
+    for (const valid of [1, 2, 8, 16]) {
+      const res = envValidationSchema.validate({
+        ...production,
+        MEDIA_INGESTION_MAX_CONCURRENCY: valid,
+      });
+      expect(res.error).toBeUndefined();
+      expect(res.value.MEDIA_INGESTION_MAX_CONCURRENCY).toBe(valid);
+    }
+    for (const invalid of [0, 17, 3.5, -1, 'invalid']) {
+      expect(
+        envValidationSchema.validate({
+          ...production,
+          MEDIA_INGESTION_MAX_CONCURRENCY: invalid,
+        }).error,
+      ).toBeDefined();
+    }
+  });
+
+  it('trusts one proxy hop by default and rejects non-hop-count values', () => {
+    expect(envValidationSchema.validate(production).value).toMatchObject({
+      TRUST_PROXY_HOPS: 1,
+    });
+    expect(
+      envValidationSchema.validate({ ...production, TRUST_PROXY_HOPS: '0' })
+        .error,
+    ).toBeUndefined();
+    for (const value of ['-1', '1.5', 'true', 'loopback']) {
+      expect(
+        envValidationSchema.validate({ ...production, TRUST_PROXY_HOPS: value })
+          .error,
+      ).toBeDefined();
+    }
   });
 
   it('rejects a metrics listener that collides with the public API listener', () => {
@@ -118,17 +160,109 @@ describe('media environment validation', () => {
     expect(insecure.error).toBeDefined();
   });
 
-  it('allows test-only adapters without production infrastructure values', () => {
-    const result = envValidationSchema.validate({
+  describe('media providers', () => {
+    const testSecrets = {
+      MEDIA_SIGNING_SECRET: 'test-media-signing-secret-at-least-32-characters',
+      MEDIA_METRICS_BEARER_TOKEN: 'test-media-metrics-token-at-least-32-chars',
+    };
+    const testDoubles = {
       ...base,
+      ...testSecrets,
       NODE_ENV: 'test',
+      MEDIA_STORAGE_PROVIDER: 'memory',
+      MEDIA_SCANNER_PROVIDER: 'test',
+    };
+    const development = { ...production, NODE_ENV: 'development' };
+    const missingNodeEnv: Record<string, string> = { ...production };
+    delete missingNodeEnv.NODE_ENV;
+
+    it('defaults to S3 and ClamAV', () => {
+      for (const environment of [production, development]) {
+        const result = envValidationSchema.validate(environment);
+        expect(result.error).toBeUndefined();
+        expect(result.value).toMatchObject({
+          MEDIA_STORAGE_PROVIDER: 's3',
+          MEDIA_SCANNER_PROVIDER: 'clamav',
+        });
+      }
     });
-    expect(result.error).toBeUndefined();
-    expect(result.value.MEDIA_SIGNING_SECRET).toHaveLength(48);
-    expect(result.value.MEDIA_INGESTION_ENABLED).toBe(true);
-    expect(result.value.ALLOWED_ORIGINS).toBe(
-      'http://localhost:3001,http://127.0.0.1:3001',
+
+    it('accepts named test doubles under NODE_ENV=test without storage or scanner infrastructure', () => {
+      const result = envValidationSchema.validate(testDoubles);
+
+      expect(result.error).toBeUndefined();
+      expect(result.value).toMatchObject({
+        MEDIA_STORAGE_PROVIDER: 'memory',
+        MEDIA_SCANNER_PROVIDER: 'test',
+        MEDIA_INGESTION_ENABLED: false,
+        ALLOWED_ORIGINS: 'http://localhost:3001,http://127.0.0.1:3001',
+      });
+    });
+
+    it.each([
+      ['production', production],
+      ['development', development],
+      ['a missing NODE_ENV', missingNodeEnv],
+    ])('refuses in-memory storage and the test scanner under %s', (_, env) => {
+      for (const override of [
+        { MEDIA_STORAGE_PROVIDER: 'memory' },
+        { MEDIA_SCANNER_PROVIDER: 'test' },
+        { MEDIA_STORAGE_PROVIDER: 'memory', MEDIA_SCANNER_PROVIDER: 'test' },
+      ]) {
+        expect(
+          envValidationSchema.validate({ ...env, ...override }).error,
+        ).toBeDefined();
+      }
+    });
+
+    it.each(['minio', 'S3', 'noop', ''])(
+      'rejects the unknown provider value %j',
+      (value) => {
+        expect(
+          envValidationSchema.validate({
+            ...testDoubles,
+            MEDIA_STORAGE_PROVIDER: value,
+          }).error,
+        ).toBeDefined();
+        expect(
+          envValidationSchema.validate({
+            ...testDoubles,
+            MEDIA_SCANNER_PROVIDER: value,
+          }).error,
+        ).toBeDefined();
+      },
     );
+
+    it('no longer infers test doubles or media secrets from NODE_ENV=test', () => {
+      const result = envValidationSchema.validate(
+        { ...base, NODE_ENV: 'test' },
+        { abortEarly: false },
+      );
+
+      for (const required of [
+        'MEDIA_STORAGE_BUCKET',
+        'MEDIA_STORAGE_REGION',
+        'MEDIA_SCANNER_HOST',
+        'MEDIA_SIGNING_SECRET',
+        'MEDIA_METRICS_BEARER_TOKEN',
+      ]) {
+        expect(result.error?.message).toContain(required);
+      }
+    });
+
+    it('requires storage and scanner infrastructure for the real adapters under NODE_ENV=test', () => {
+      const result = envValidationSchema.validate(
+        {
+          ...testDoubles,
+          MEDIA_STORAGE_PROVIDER: 's3',
+          MEDIA_SCANNER_PROVIDER: 'clamav',
+        },
+        { abortEarly: false },
+      );
+
+      expect(result.error?.message).toContain('MEDIA_STORAGE_BUCKET');
+      expect(result.error?.message).toContain('MEDIA_SCANNER_HOST');
+    });
   });
 
   it.each([
@@ -174,6 +308,20 @@ describe('media environment validation', () => {
     [
       'metrics placeholder',
       { MEDIA_METRICS_BEARER_TOKEN: 'change-me-at-least-32-characters' },
+    ],
+    [
+      'e2e signing secret',
+      {
+        MEDIA_SIGNING_SECRET:
+          'test-media-signing-secret-at-least-32-characters',
+      },
+    ],
+    [
+      'e2e metrics token',
+      {
+        MEDIA_METRICS_BEARER_TOKEN:
+          'test-media-metrics-token-at-least-32-chars',
+      },
     ],
   ])('rejects production %s without reflecting the secret', (_, override) => {
     const result = envValidationSchema.validate(
@@ -223,5 +371,177 @@ describe('media environment validation', () => {
     expect(result.value.ALLOWED_ORIGINS).toBe(
       'https://admin.example.com.evil.test',
     );
+  });
+
+  describe('AUTH_REFRESH_TOKEN_TTL_DAYS', () => {
+    it('defaults to 30 days when not set', () => {
+      const result = envValidationSchema.validate({ ...production });
+      expect(result.error).toBeUndefined();
+      expect(result.value.AUTH_REFRESH_TOKEN_TTL_DAYS).toBe(30);
+    });
+
+    it.each([1, 15, 30, 90])('accepts valid TTL value: %i', (ttl) => {
+      const result = envValidationSchema.validate({
+        ...production,
+        AUTH_REFRESH_TOKEN_TTL_DAYS: ttl,
+      });
+      expect(result.error).toBeUndefined();
+      expect(result.value.AUTH_REFRESH_TOKEN_TTL_DAYS).toBe(ttl);
+    });
+
+    it.each([0, -5, 91, 100, 1.5, 'invalid'])(
+      'rejects invalid TTL value: %s',
+      (ttl) => {
+        const result = envValidationSchema.validate({
+          ...production,
+          AUTH_REFRESH_TOKEN_TTL_DAYS: ttl,
+        });
+        expect(result.error).toBeDefined();
+        expect(result.error?.message).toContain('AUTH_REFRESH_TOKEN_TTL_DAYS');
+      },
+    );
+  });
+
+  describe('mail environment validation', () => {
+    it('requires MAIL_FROM', () => {
+      const env: Record<string, string> = { ...production };
+      delete env.MAIL_FROM;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_FROM');
+    });
+
+    it('rejects invalid MAIL_FROM', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        MAIL_FROM: 'not-an-email',
+      });
+      expect(res.error?.message).toContain('MAIL_FROM');
+    });
+
+    it('requires MAIL_SES_REGION when MAIL_PROVIDER is ses', () => {
+      const env: Record<string, string> = {
+        ...production,
+        MAIL_PROVIDER: 'ses',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_SES_REGION');
+    });
+
+    it('requires MAIL_MAILPIT_URL when MAIL_PROVIDER is mailpit', () => {
+      const env: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('MAIL_MAILPIT_URL');
+    });
+
+    it('rejects MAIL_MAILPIT_URL with external host or non-http(s) scheme', () => {
+      for (const invalidUrl of [
+        'http://example.com:8025',
+        'http://192.168.1.1:8025',
+        'ftp://localhost:8025',
+      ]) {
+        const res = envValidationSchema.validate({
+          ...production,
+          NODE_ENV: 'development',
+          MAIL_PROVIDER: 'mailpit',
+          MAIL_MAILPIT_URL: invalidUrl,
+        });
+        expect(res.error?.message).toContain('MAIL_MAILPIT_URL');
+      }
+    });
+
+    it('accepts valid mailpit configuration under development', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+      });
+      expect(res.error).toBeUndefined();
+      expect(res.value.MAIL_PROVIDER).toBe('mailpit');
+      expect(res.value.MAIL_MAILPIT_URL).toBe('http://127.0.0.1:8025');
+    });
+
+    it('accepts valid memory configuration under test without region or url', () => {
+      const env: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'test',
+        MAIL_PROVIDER: 'memory',
+      };
+      delete env.MAIL_SES_REGION;
+      const res = envValidationSchema.validate(env);
+      expect(res.error).toBeUndefined();
+      expect(res.value.MAIL_PROVIDER).toBe('memory');
+    });
+  });
+
+  describe('APP_PUBLIC_URL', () => {
+    it('requires APP_PUBLIC_URL in production', () => {
+      const env: Record<string, string> = { ...production };
+      delete env.APP_PUBLIC_URL;
+      const res = envValidationSchema.validate(env);
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects non-https in production', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        APP_PUBLIC_URL: 'http://app.example.com',
+      });
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects origin with path in production', () => {
+      const res = envValidationSchema.validate({
+        ...production,
+        APP_PUBLIC_URL: 'https://app.example.com/verify-email',
+      });
+      expect(res.error?.message).toContain('APP_PUBLIC_URL');
+    });
+
+    it('rejects origin with search or hash or credentials', () => {
+      for (const bad of [
+        'https://app.example.com?query=1',
+        'https://app.example.com#token',
+        'https://user:pass@app.example.com',
+      ]) {
+        const res = envValidationSchema.validate({
+          ...production,
+          APP_PUBLIC_URL: bad,
+        });
+        expect(res.error?.message).toContain('APP_PUBLIC_URL');
+      }
+    });
+
+    it('defaults to http://localhost:3000 in development when omitted', () => {
+      const devEnv: Record<string, string> = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+      };
+      delete devEnv.APP_PUBLIC_URL;
+      const res = envValidationSchema.validate(devEnv);
+      expect(res.error).toBeUndefined();
+      expect(res.value.APP_PUBLIC_URL).toBe('http://localhost:3000');
+    });
+
+    it('accepts custom http origin in development without path', () => {
+      const devEnv = {
+        ...production,
+        NODE_ENV: 'development',
+        MAIL_PROVIDER: 'mailpit',
+        MAIL_MAILPIT_URL: 'http://127.0.0.1:8025',
+        APP_PUBLIC_URL: 'http://127.0.0.1:3000',
+      };
+      const res = envValidationSchema.validate(devEnv);
+      expect(res.error).toBeUndefined();
+      expect(res.value.APP_PUBLIC_URL).toBe('http://127.0.0.1:3000');
+    });
   });
 });

@@ -1,6 +1,13 @@
 import * as Joi from 'joi';
 
 import {
+  MEDIA_SCANNER_PROVIDERS,
+  MEDIA_STORAGE_PROVIDERS,
+} from './media.config';
+import {
+  assertMediaProviders,
+  assertJobQueueProvider,
+  assertMailProvider,
   assertProductionSecrets,
   DEFAULT_NON_PRODUCTION_ORIGINS,
   normalizeAllowedOrigins,
@@ -17,12 +24,58 @@ function allowedOrigins(environment: 'development' | 'production') {
   });
 }
 
+function validateMailpitUrl(value: unknown, helpers: Joi.CustomHelpers) {
+  if (typeof value !== 'string') return helpers.error('any.invalid');
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.hostname !== '127.0.0.1' && parsed.hostname !== 'localhost') {
+      return helpers.error('any.invalid');
+    }
+    return value;
+  } catch {
+    return helpers.error('any.invalid');
+  }
+}
+
+function validateAppPublicUrl(
+  value: unknown,
+  helpers: Joi.CustomHelpers,
+  environment: 'development' | 'production' | 'test',
+) {
+  if (typeof value !== 'string') return helpers.error('any.invalid');
+  try {
+    const parsed = new URL(value);
+    if (environment === 'production' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.pathname !== '/' && parsed.pathname !== '') {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.search || parsed.hash) {
+      return helpers.error('any.invalid');
+    }
+    if (parsed.username || parsed.password) {
+      return helpers.error('any.invalid');
+    }
+    return parsed.origin;
+  } catch {
+    return helpers.error('any.invalid');
+  }
+}
+
 export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
 
   PORT: Joi.number().default(3000),
+  TRUST_PROXY_HOPS: Joi.number().integer().min(0).default(1),
 
   DATABASE_URL: Joi.string().required(),
 
@@ -40,55 +93,80 @@ export const envValidationSchema = Joi.object({
       DEFAULT_NON_PRODUCTION_ORIGINS,
     ),
   }),
+  APP_PUBLIC_URL: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string()
+      .custom((val, helpers) =>
+        validateAppPublicUrl(val, helpers, 'production'),
+      )
+      .required(),
+    otherwise: Joi.string()
+      .custom((val, helpers) =>
+        validateAppPublicUrl(val, helpers, 'development'),
+      )
+      .default('http://localhost:3000'),
+  }),
 
-  MEDIA_STORAGE_BUCKET: Joi.when('NODE_ENV', {
-    is: 'test',
+  // Real adapters unless a test double is named; see assertMediaProviders.
+  MEDIA_STORAGE_PROVIDER: Joi.string()
+    .valid(...MEDIA_STORAGE_PROVIDERS)
+    .default('s3'),
+  MEDIA_SCANNER_PROVIDER: Joi.string()
+    .valid(...MEDIA_SCANNER_PROVIDERS)
+    .default('clamav'),
+  JOB_QUEUE_PROVIDER: Joi.string().valid('pgboss', 'memory').default('pgboss'),
+  MAIL_PROVIDER: Joi.string().valid('ses', 'mailpit', 'memory').default('ses'),
+  MAIL_FROM: Joi.string().email({ tlds: false }).required(),
+  MAIL_SES_REGION: Joi.when('MAIL_PROVIDER', {
+    is: 'ses',
+    then: Joi.string().required(),
+    otherwise: Joi.string().optional(),
+  }),
+  MAIL_MAILPIT_URL: Joi.when('MAIL_PROVIDER', {
+    is: 'mailpit',
+    then: Joi.string().custom(validateMailpitUrl).required(),
+    otherwise: Joi.string().custom(validateMailpitUrl).optional(),
+  }),
+  MEDIA_STORAGE_BUCKET: Joi.when('MEDIA_STORAGE_PROVIDER', {
+    is: 'memory',
     then: Joi.string().optional(),
     otherwise: Joi.string().min(3).max(63).required(),
   }),
-  MEDIA_STORAGE_REGION: Joi.when('NODE_ENV', {
-    is: 'test',
+  MEDIA_STORAGE_REGION: Joi.when('MEDIA_STORAGE_PROVIDER', {
+    is: 'memory',
     then: Joi.string().optional(),
     otherwise: Joi.string().required(),
   }),
   MEDIA_STORAGE_ENDPOINT: Joi.string()
     .uri({ scheme: ['https'] })
     .optional(),
-  MEDIA_SIGNING_SECRET: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.string()
-      .min(32)
-      .default('test-media-signing-secret-at-least-32-characters'),
-    otherwise: Joi.string().min(32).required(),
-  }),
+  MEDIA_SIGNING_SECRET: Joi.string().min(32).required(),
+  // Verify-only overlap secret for a bounded rotation window (B-07).
+  MEDIA_SIGNING_SECRET_PREVIOUS: Joi.string().min(32).optional(),
+  // Admin preview grants; learner grants are fixed at 60 s.
   MEDIA_ACCESS_TTL_SECONDS: Joi.number()
     .integer()
     .min(60)
     .max(600)
     .default(300),
-  MEDIA_SCANNER_HOST: Joi.when('NODE_ENV', {
+  MEDIA_SCANNER_HOST: Joi.when('MEDIA_SCANNER_PROVIDER', {
     is: 'test',
     then: Joi.string().optional(),
     otherwise: Joi.string().hostname().required(),
   }),
   MEDIA_SCANNER_PORT: Joi.number().integer().min(1).max(65535).default(3310),
-  MEDIA_INGESTION_ENABLED: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.boolean().default(true),
-    otherwise: Joi.boolean().default(false),
-  }),
+  MEDIA_INGESTION_ENABLED: Joi.boolean().default(false),
+  MEDIA_INGESTION_MAX_CONCURRENCY: Joi.number()
+    .integer()
+    .min(1)
+    .max(16)
+    .default(4),
   MEDIA_UPLOAD_TIMEOUT_MS: Joi.number()
     .integer()
     .min(1000)
     .max(120000)
     .default(30000),
-  MEDIA_METRICS_BEARER_TOKEN: Joi.when('NODE_ENV', {
-    is: 'test',
-    then: Joi.string()
-      .min(32)
-      .default('test-media-metrics-token-at-least-32-chars'),
-    otherwise: Joi.string().min(32).required(),
-  }),
+  MEDIA_METRICS_BEARER_TOKEN: Joi.string().min(32).required(),
   MEDIA_METRICS_BEARER_TOKEN_PREVIOUS: Joi.string().min(32).optional(),
   MEDIA_METRICS_HOST: Joi.when('NODE_ENV', {
     is: 'production',
@@ -125,7 +203,12 @@ export const envValidationSchema = Joi.object({
     .max(300000)
     .default(60000),
 
-  JWT_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_EXPIRES_IN: Joi.string().default('15m'),
+  AUTH_REFRESH_TOKEN_TTL_DAYS: Joi.number()
+    .integer()
+    .min(1)
+    .max(90)
+    .default(30),
 }).custom((environment: unknown, helpers: Joi.CustomHelpers) => {
   if (!isEnvironmentRecord(environment)) return helpers.error('any.invalid');
   if (environment.MEDIA_METRICS_PORT === environment.PORT) {
@@ -141,6 +224,13 @@ export const envValidationSchema = Joi.object({
     Number(environment.MEDIA_METRICS_CACHE_TTL_MS) >=
     Number(environment.MEDIA_METRICS_STALE_TTL_MS)
   ) {
+    return helpers.error('any.invalid');
+  }
+  try {
+    assertMediaProviders(environment);
+    assertJobQueueProvider(environment);
+    assertMailProvider(environment);
+  } catch {
     return helpers.error('any.invalid');
   }
   if (environment.NODE_ENV !== 'production') return environment;

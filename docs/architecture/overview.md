@@ -1,0 +1,334 @@
+# Kiến trúc và quy ước hiện hành
+
+Cập nhật 04/09/2026 theo HEAD `3211bf8` và worktree. Tài liệu này thay thế
+`PROJECT_CONTEXT_FOR_AI.md`. Chỉ ghi những gì có trong code; kế hoạch nằm ở
+[../PLAN.md](../PLAN.md), thứ tự delivery ở [../product/roadmap.md](../product/roadmap.md),
+quyết định ở [../adr/](../adr/).
+
+## 1. Sản phẩm
+
+Nền tảng web học, ôn và thi HSK theo bảy nhóm curriculum `HSK1`…`HSK6` và `HSK7_9`
+(band 7–9). Hai vai trò: người học (`role=user`) và quản trị (`role=admin`). Luồng lõi:
+đăng ký → chọn mục tiêu và lộ trình → học bài → làm activity → lưu tiến độ → tra từ và ôn
+SRS → thi thử → xem kết quả. Hiện mới có backend cho onboarding, learning read, activity,
+progress, dictionary search và admin CMS/media; learner UI chưa có.
+
+## 2. Layout repo
+
+```text
+HSK-3.0-APP/
+  backend/            # NestJS 11 + Prisma 5 + PostgreSQL, API /api/v1
+    src/modules/      # auth, cms, dictionary, health, learning, media, onboarding, user
+    src/common/       # guards, decorators, pipes, policies, validation, utils
+    src/config/       # app, database, jwt, media config; env.validation (Joi); runtime-security
+    src/infrastructure/  # storage (S3 + in-memory), malware (ClamAV + test), observability
+    src/prisma/       # PrismaModule/PrismaService
+    prisma/           # schema.prisma + 22 migration (SQL viết tay)
+    scripts/          # dictionary pipeline, seed, operations (migrate wrapper), security (secret scan), test runners
+    test/             # e2e (11 file) + database/*.sql (16 file)
+  frontend/           # Next.js 16.3 App Router, React 19, TypeScript strict
+    src/app/          # (auth)/login, admin/exercises, admin/media, api/session/*, api/admin/*
+    src/features/     # auth, admin-shell, exercises, media
+    src/lib/          # api client, auth cookie, config, security (CSP)
+    e2e/              # Playwright + axe
+  ai/                 # placeholder rỗng (4 file 0 byte); xem ADR-008 §6
+  mobile/             # CHƯA TỒN TẠI. Dự kiến M7.7: React Native + Expo (ADR-008 §1)
+  packages/contracts/ # CHƯA TỒN TẠI. Tách từ frontend/src/features/*/*-contract.ts khi có mobile
+  ops/
+    nginx/            # media-security.conf, media-security-http.conf
+    observability/    # prometheus, alertmanager, grafana, kustomize, toolchain, evidence policy
+  docs/               # xem docs/README.md
+  .github/workflows/  # ci.yml (PR/push vào main); media-release-evidence.yml (chỉ khi push tag v3.0.0)
+```
+
+Chưa có root `package.json` và Dockerfile. `.nvmrc` (Node 24) và `docker-compose.yml`
+(PostgreSQL 16 ở profile mặc định; MinIO, ClamAV, Mailpit ở profile `dev`) nằm ở gốc
+repo. Mỗi package dùng npm lockfile riêng (ADR-003). Root `package.json` với npm
+workspaces chỉ xuất hiện cùng `mobile/` và `packages/contracts/` (ADR-008 §1).
+
+## 3. Backend
+
+### 3.1 Stack
+
+NestJS 11 (Express adapter), TypeScript, Prisma 5.22, PostgreSQL, `@nestjs/jwt` +
+Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-validator
++ class-transformer cho DTO, Joi cho env, `@nestjs/throttler`, `@aws-sdk/client-s3`,
+`sharp`, `music-metadata`, Jest 30 + Supertest.
+
+### 3.2 Module runtime
+
+| Module | Prefix | Chức năng | ADR |
+| --- | --- | --- | --- |
+| `auth` | `/auth` | register, login, me; lockout 5 lần/15 phút; JWT 7 ngày | — |
+| `user` | `/users` | me, profile cá nhân (GET/PATCH /users/me/profile); danh sách user cho admin | — |
+| `onboarding` | `/onboarding`, `/learning-plans` | goal + learning plan V1, row lock theo user | — |
+| `learning` | `/levels`, `/lessons`, `/topics`, `/stories`, `/learning/*`, `/progress` | public content read có readiness policy; lesson/topic start-complete; exercise attempt chấm server-side; progress/resume | — |
+| `dictionary` | `/dictionary` | prefix search hanzi/pinyin, 20 kết quả | — |
+| `cms` | `/admin/cms/*` | lesson/topic/exercise revision → review → publish → archive; exercise import preview + commit; media library, quarantine/archive; media ingestion | ADR-002, 004, 005 |
+| `media` | `/media` | cấp signed URL và trả nội dung private | ADR-005 |
+| `health` | `/health` | `SELECT 1` | — |
+
+Thư mục `infrastructure/`: `storage` (port `ObjectStoragePort`, adapter S3 và in-memory),
+`malware` (port scanner, adapter ClamAV INSTREAM và test), `observability` (metrics
+listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter `PgBossJobQueue` và `InMemoryJobQueue`), và `mail` (port `MailerPort`, adapter `SesMailerAdapter`, `MailpitMailerAdapter` và `InMemoryMailerAdapter`). Adapter được chọn tường minh theo
+`MEDIA_STORAGE_PROVIDER` (`s3` | `memory`), `MEDIA_SCANNER_PROVIDER` (`clamav` | `test`),
+`JOB_QUEUE_PROVIDER` (`pgboss` | `memory`), và `MAIL_PROVIDER` (`ses` | `mailpit` | `memory`), không suy ra từ `NODE_ENV` (H.9, finding B-04).
+
+### 3.3 Quy ước API thực tế
+
+- Prefix `/api/v1`; versioning theo path.
+- Auth: `Authorization: Bearer <jwt>` cho route có `JwtAuthGuard`; strategy đọc lại
+  `status`/`deletedAt`/`role` từ DB mỗi request nên khoá tài khoản có hiệu lực ngay.
+- Validation toàn cục: `whitelist`, `forbidNonWhitelisted`, `transform`; field lạ →
+  400 với path `$.$unknown`; boolean chỉ nhận JSON boolean thật.
+- Envelope (H.10a): `TransformInterceptor` và `GlobalExceptionFilter` toàn cục bọc mọi
+  response JSON thành `{ success: true, data, meta: { requestId, timestamp,
+  pagination? } }` hoặc `{ success: false, error: { code, message, details? }, meta }`;
+  chỉ bytes signed media content không bọc. `RequestIdMiddleware` echo `X-Request-ID`
+  (xem [../api/api.md](../api/api.md) §1).
+- Contract máy đọc (H.10c): `backend/openapi.json` sinh từ code bằng `@nestjs/swagger`
+  (CLI plugin), CI kiểm không lệch; frontend sinh type bằng `openapi-typescript`, không
+  sinh fetch client (xem [../api/api.md](../api/api.md) §0).
+- Lỗi không phải `HttpException` → `500` chung, không lộ message Prisma/SQL; validation
+  trả `error.code = REQUEST_VALIDATION_FAILED` với `details.errors`.
+- Pagination: `page` 1..2147483647, `limit 1..100` mặc định 20, `meta.pagination
+  { page, limit, total, totalPages }`; không có `sortBy/sortOrder`.
+- Idempotency: header `Idempotency-Key` cho activity write (8–128 ký tự), exercise
+  import commit (8–128) và media ingestion (32–128); replay trả `data` gốc, cùng key
+  khác body → 409.
+- Mọi `POST` trả `201` kể cả replay (chưa dùng `@HttpCode`).
+- Throttle toàn cục 20 req/phút/IP (register 100, login 200); xem finding A-02.
+
+### 3.4 Invariant nghiệp vụ
+
+- Public read chỉ trả `status = published` và `deletedAt IS NULL`. Lesson chỉ "ready"
+  khi Level cha published và có ít nhất một Topic hoặc Story published. Public lesson
+  không trả `LessonExercise.answer`, không trả `speaking_repeat`, listening chỉ khi
+  audio `ready` và URL không rỗng.
+- CMS: `ContentRevision`, `ContentReview`, `AuditLog` append-only (trigger DB). Hash
+  revision dùng canonical JSON (khoá sắp xếp, NFKC) không phụ thuộc locale. Lock order
+  publish: `User` admin `FOR SHARE` → `Lesson`/`Topic`/`LessonExercise` `FOR UPDATE` →
+  `Media` `FOR SHARE` khi listening. Import: lock actor → `DataSource` → parent theo id
+  tăng dần; interactive transaction `maxWait 5s`, `timeout 30s`; tối đa 100 dòng.
+- Activity: write serialize theo `User`; scorer chấm `mcq`, `listening_choice`,
+  `fill_blank`, `arrange_sentence` trên server; attempt và `LearningEvent` bất biến;
+  progress derive từ event, không nhận score/progress/userId từ client.
+- Onboarding: mỗi user một goal và một plan active, bảo vệ bằng `SELECT … FOR UPDATE`
+  trên `User` (chưa có unique index, finding C-04); plan chỉ chứa lesson ready.
+- Media: object key UUID do server sinh; ba lớp kiểm MIME; scan ClamAV trước khi ghi
+  object; `MediaIngestion` có state machine và fencing ở DB; signed URL HMAC-SHA256
+  gồm method, path, expiry, checksum; TTL 60–600 giây.
+- Migration forward-only, viết tay SQL, có preflight; không sửa migration đã áp.
+- Xác thực email (M1.5b): `POST /auth/register` transactional enqueue job `mail.email-verification` với payload `{ userId }` và `singletonKey: 'email-verification:' + userId`. Link gửi qua email trỏ tới `${APP_PUBLIC_URL}/verify-email#token=<rawToken>` (fragment hash, raw token không gửi tới server khi tải trang tĩnh). Worker sinh raw token 32 byte base64url (43 ký tự), chỉ lưu SHA-256 vào `EmailVerificationToken` (TTL 24h); raw token chỉ nằm trong mail và bộ nhớ worker, không bao giờ nằm trong DB, job payload hay log. `POST /auth/email-verification/confirm` claim token nguyên tử (`usedAt = CURRENT_TIMESTAMP`) và cập nhật `User.emailVerifiedAt`; token sai, hết hạn, đã dùng hoặc user không active đều trả uniform 400 (`INVALID_VERIFICATION_TOKEN`). `POST /auth/email-verification/request` có `JwtAuthGuard` và throttle 3 req/15 phút/user.
+- Đặt lại mật khẩu (M1.5c): `POST /auth/password-reset/request` (public) luôn trả 204 chống dò email; rate limit 2 lớp (5 lần/15 phút/IP và 3 lần/giờ/SHA-256 email, vượt theo email vẫn trả 204 và không enqueue). Worker `mail.password-reset` (short policy, retry 3 backoff) sinh raw token 32 byte base64url (43 ký tự), chỉ lưu SHA-256 vào `PasswordResetToken` (TTL 30 phút), link gửi qua email trỏ tới `${APP_PUBLIC_URL}/reset-password#token=<rawToken>`. `POST /auth/password-reset/confirm` (public, 10/phút/IP) hash Argon2id trước transaction, claim token nguyên tử (`usedAt = CURRENT_TIMESTAMP`), đổi mật khẩu user, thu hồi toàn bộ session còn hiệu lực (`UserSession.revokedAt = CURRENT_TIMESTAMP`, JwtStrategy kiểm tra `sid` mỗi request nên access token cũ chết ngay), và xoá các reset token chưa dùng khác của user. Lỗi xác thực token hoặc user suspended/soft-deleted đều rollback và trả uniform 400 (`INVALID_RESET_TOKEN`), bảo toàn token chưa bị dùng nếu user suspended.
+- Hồ sơ người dùng (M1.6): người dùng quản lý hồ sơ cá nhân qua `GET /users/me/profile` và `PATCH /users/me/profile` (`{ displayName, locale, timezone }`). Chưa có dòng `UserProfile` thì GET trả giá trị mặc định (`{ displayName: null, locale: 'vi-VN', timezone: 'Asia/Ho_Chi_Minh' }`) và tuyệt đối không tạo dòng trong DB khi đọc. PATCH hỗ trợ cập nhật từng phần (`displayName` 1–50 ký tự code point, chặn control `\p{Cc}` và bidi override, cho phép `null` để xoá; `locale` `vi-VN`; `timezone` IANA hợp lệ xác thực qua `Intl.DateTimeFormat` và lưu nguyên bản); chống race condition khi tạo dòng bằng atomic upsert trên PostgreSQL (`INSERT ... ON CONFLICT ("userId") DO UPDATE`, gán `"updatedAt" = CURRENT_TIMESTAMP`). Tuyệt đối không có trường `avatarUrl` ở cả đọc lẫn ghi nhằm triệt tiêu rủi ro tracking/XSS qua URL tự do; ảnh đại diện sẽ đi qua pipeline media riêng sau này.
+- Xoá tài khoản (M1.7c): quy trình xoá tài khoản có thời gian chờ 7 ngày (Product Owner chốt 30/09/2026). Người dùng xác thực mật khẩu hiện tại qua `POST /users/me/deletion-request` (sai mật khẩu trả về 400 `INVALID_PASSWORD`, đúng trả về 202 `Accepted`). Toàn bộ session bị thu hồi và tài khoản chuyển sang `deletion_pending`, gán `deletedAt`. Trong cùng transaction, hệ thống enqueue 2 job: `privacy.anonymize-account` (trì hoãn xử lý qua `startAfter = scheduledAt`, sau 7 ngày) và `mail.account-deletion-scheduled` (thông báo thời điểm xoá vĩnh viễn và link huỷ). Trong 7 ngày, người dùng đăng nhập lại đúng mật khẩu qua `POST /auth/login` sẽ tự động huỷ yêu cầu xoá, kích hoạt lại tài khoản thành `active` và xóa `deletedAt`. Sau 7 ngày, worker `privacy.anonymize-account` thực hiện ẩn danh dữ liệu theo ADR-001 (đổi email alias `deleted+<id>@anonymized.invalid`, xoá tên và display name, tạo mật khẩu ngẫu nhiên không thể đăng nhập, xoá toàn bộ session/token, chuyển user sang `anonymized`), đồng thời bảo toàn toàn bộ fact lịch sử học tập theo surrogate `User.id`. Email gốc được giải phóng để có thể đăng ký tài khoản mới với ID khác.
+- Xuất dữ liệu cá nhân (M1.7b1): người dùng yêu cầu xuất toàn bộ dữ liệu cá nhân thành một file JSON duy nhất qua `POST /users/me/data-exports` (`JwtAuthGuard`, trả về 202 `Accepted`). Giới hạn tối đa 1 export / 24 giờ / user được kiểm soát bằng đồng hồ DB (vi phạm trả về 429 `EXPORT_RATE_LIMITED`; các lượt export `failed` không bị tính). Trong transaction, hệ thống enqueue job `privacy.data-export`. Worker thực thi đọc snapshot dữ liệu nhất quán trong transaction `RepeatableRead` theo ma trận phân loại toàn vẹn `EXPORT_COVERAGE` (kiểm định chặt chẽ mọi model chứa `userId` qua DMMF), loại trừ toàn bộ secret credentials (`password`, `tokenHash`, reset/verification token). Nếu kích thước vượt quá 10 MB (`MAX_PRIVATE_MEDIA_OBJECT_BYTES`), worker dừng sớm và đánh dấu `status = 'failed'`, `errorCode = 'EXPORT_TOO_LARGE'` mà không retry. File hoàn tất được lưu vào private object storage qua `ObjectStoragePort` và có thể tải về trong 24 giờ qua endpoint có xác thực `GET /users/me/data-exports/:id/download` (kiểm tra toàn vẹn SHA-256 từ storage, thiết lập đủ 4 header an toàn `Content-Type`, `Content-Disposition`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`). Cron job `privacy.purge-expired-exports` chạy hàng giờ để xoá vĩnh viễn các file export đã quá 7 ngày trong storage và đặt `outputStorageKey = NULL`.
+
+### 3.5 Bảo mật và cấu hình
+
+- Production bắt buộc `NODE_ENV=production`; `assertProductionSecrets` yêu cầu mọi
+  secret ≥ 32 byte sau decode, entropy đủ, không placeholder, không trùng nhau.
+- `ALLOWED_ORIGINS` là danh sách origin chính xác; production chỉ nhận HTTPS, từ chối
+  wildcard, userinfo, path, query.
+- Header API: nosniff, `X-Frame-Options: DENY`, Referrer-Policy no-referrer,
+  Permissions-Policy, CSP `default-src 'none'`. HSTS chỉ ở TLS edge.
+- Bootstrap fail-closed: lỗi cấu hình không log object env; metrics listener riêng bind
+  trước public listener.
+- `assertMediaProviders` (chạy trong config validation, trước khi dựng module): adapter
+  giả `memory`/`test` chỉ hợp lệ khi `NODE_ENV=test` và phải được đặt tên; production,
+  development hay thiếu `NODE_ENV` mà dùng chúng thì process không khởi động.
+- Password: argon2id (64 MiB, t=3) + `AUTH_PASSWORD_PEPPER`.
+
+### 3.6 Biến môi trường
+
+Backend (`backend/.env.example`):
+
+| Biến | Bắt buộc | Ghi chú |
+| --- | --- | --- |
+| `NODE_ENV` | có | `development` / `production` / `test` |
+| `PORT` | mặc định 3000 | |
+| `DATABASE_URL` | có | Prisma; có thể kèm `?schema=public` |
+| `TEST_DATABASE_URL` | khi chạy test DB | cùng host/db với `DATABASE_URL`, không query param; tên DB phải khớp `(test\|e2e\|verify\|disposable\|hardening)` |
+| `JWT_SECRETS` | có | JSON `{ "kid": "secret" }` |
+| `JWT_ACTIVE_KID` | có | kid dùng để ký |
+| `JWT_EXPIRES_IN` | mặc định `15m` | |
+| `AUTH_PASSWORD_PEPPER` | production | ≥ 16 ký tự ngoài production |
+| `ALLOWED_ORIGINS` | production | mặc định loopback 3001 ngoài production |
+| `MEDIA_STORAGE_PROVIDER` | mặc định `s3` | `memory` chỉ khi `NODE_ENV=test` |
+| `MEDIA_SCANNER_PROVIDER` | mặc định `clamav` | `test` (chỉ nhận EICAR) chỉ khi `NODE_ENV=test` |
+| `MEDIA_STORAGE_BUCKET`, `MEDIA_STORAGE_REGION` | khi provider `s3` | S3-compatible |
+| `MEDIA_STORAGE_ENDPOINT` | tuỳ chọn | phải HTTPS |
+| `MEDIA_SIGNING_SECRET` | có | ≥ 32 |
+| `MEDIA_ACCESS_TTL_SECONDS` | mặc định 300 | 60–600 |
+| `MEDIA_SCANNER_HOST`, `MEDIA_SCANNER_PORT` | host khi provider `clamav` | ClamAV, mặc định 3310 |
+| `MEDIA_INGESTION_ENABLED` | mặc định false | kill switch upload |
+| `MEDIA_UPLOAD_TIMEOUT_MS` | mặc định 30000 | 1000–120000 |
+| `MEDIA_METRICS_BEARER_TOKEN` (+`_PREVIOUS`) | có | scrape token |
+| `MEDIA_METRICS_HOST`, `MEDIA_METRICS_PORT` | production | listener riêng, khác `PORT` |
+| `MEDIA_METRICS_DB_STATEMENT_TIMEOUT_MS` < `MEDIA_METRICS_COLLECTION_TIMEOUT_MS` | mặc định 750/1000 | |
+| `MEDIA_METRICS_CACHE_TTL_MS` < `MEDIA_METRICS_STALE_TTL_MS` | mặc định 5000/60000 | |
+| `JOB_QUEUE_PROVIDER` | mặc định `pgboss` | `memory` chỉ khi `NODE_ENV=test` |
+| `MAIL_PROVIDER` | mặc định `ses` | `ses` (mọi môi trường), `mailpit` (development/test), `memory` (chỉ khi `NODE_ENV=test`) |
+| `MAIL_FROM` | có | email người gửi hợp lệ |
+| `MAIL_SES_REGION` | khi provider `ses` | AWS SES Region |
+| `MAIL_MAILPIT_URL` | khi provider `mailpit` | chỉ `http(s)` tới `127.0.0.1` hoặc `localhost` |
+| `APP_PUBLIC_URL` | tuỳ chọn (mặc định `http://localhost:3000`) | URL công khai của web app để tạo link xác thực / reset; chỉ origin, production bắt buộc HTTPS, không path/query/hash |
+
+Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN`,
+`BFF_REQUEST_TIMEOUT_MS` (8000), `SESSION_COOKIE_NAME` (`hsk_admin_session`),
+`LEARNER_SESSION_COOKIE_NAME` (`hsk_learner_session`),
+`PLAYWRIGHT_BASE_URL`, `E2E_ADMIN_EMAIL/PASSWORD`, `E2E_USER_EMAIL/PASSWORD`.
+Không có biến `NEXT_PUBLIC_*`.
+
+BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: sử dụng cookie riêng (`LEARNER_SESSION_COOKIE_NAME`, mặc định `hsk_learner_session` và `${name}_refresh`), chỉ chấp nhận tài khoản có role `user` (tài khoản `admin` bị từ chối 403 `admin_account` và thu hồi session backend ngay lập tức), cung cấp các route `/api/learner/session/{login,register,logout,me}` với kiểm soát CSRF same-origin và proxy tự động refresh token theo tiền tố đường dẫn (ADR-003).
+
+### 3.7 Worker process và Job Queue (M1.7a)
+
+- Hệ thống xử lý tác vụ nền bất đồng bộ sử dụng `pg-boss` (chạy trên PostgreSQL, schema `pgboss`, không dùng Redis theo ADR-008 §2).
+- Tách bạch hai process:
+  - **Main API process (`src/main.ts`)**: vai trò enqueue job qua `JobQueuePort` (DIP). Cấu hình pg-boss `supervise: false` (không worker poll, không schedule). Hỗ trợ transactional outbox thông qua `SendJobOptions.tx` (Prisma transaction client).
+  - **Worker process (`src/worker.ts`)**: khởi động riêng (`WorkerModule`), cấu hình pg-boss `supervise: true`, thực hiện consume queue, xử lý job và quản lý cron schedule (`PurgeExpiredSessionsJob` định kỳ 03:17 UTC dọn dẹp `UserSession` hết hạn > 30 ngày theo lô 1.000 dòng). Tự bắt tín hiệu `SIGTERM`/`SIGINT` để shutdown êm ái một lần (stop boss, disconnect Prisma, exit 0).
+- Schema `pgboss` (version 43) được tạo trước bằng Prisma migration forward-only (`backend/prisma/migrations/20260929162559_pgboss_schema`); runtime pg-boss luôn đặt `migrate: false`. Khi khởi động, hệ thống fail-fast nếu schema chưa tồn tại ("schema not found") hoặc version khác 43 ("pg-boss schema version must be 43, but got X").
+- Provider chọn qua `JOB_QUEUE_PROVIDER`: mặc định `pgboss`; `memory` (`InMemoryJobQueue`) chỉ được phép khi `NODE_ENV=test` (được bảo vệ bởi `assertJobQueueProvider`).
+
+## 4. Database
+
+- 59 model, 27 enum, 22 migration; runtime hiện chạm 23 model. Exam (14 model), SRS,
+  privacy chỉ có schema.
+- Migration là SQL viết tay với ~45 trigger, ~32 function, ~100 CHECK; Prisma
+  introspection không thấy các object này, nên `prisma migrate dev` không dùng được.
+- Tài liệu: [../database/P0_DATA_DICTIONARY.md](../database/P0_DATA_DICTIONARY.md),
+  [../database/P0_ERD.md](../database/P0_ERD.md),
+  [../database/P0_SCHEMA_MIGRATION_RUNBOOK.md](../database/P0_SCHEMA_MIGRATION_RUNBOOK.md).
+
+## 5. Frontend
+
+- Next.js 16.3 App Router, React 19, TypeScript 6 strict, Zod 4, CSS variables theo
+  `frontend/DESIGN.md` (không Tailwind, không CSS-in-JS), Vitest + RTL, Playwright + axe.
+- Same-origin BFF: browser không cầm bearer token; token nằm trong cookie HttpOnly,
+  SameSite=Lax, Secure ở production, `Max-Age` bằng `exp` của JWT. Route handler
+  `api/session/{login,logout,me,recover}` và `api/admin/{exercises,media}` kiểm Origin,
+  allowlist path backend bằng regex, `cache: 'no-store'`, timeout 8 giây, lột bỏ field
+  nhạy cảm (ADR-003, ADR-004).
+- `proxy.ts` (thay middleware) chỉ sinh CSP nonce; chốt auth nằm ở `app/admin/layout.tsx`
+  và trong từng page.
+- Route hiện có: `/login`, `/forbidden`, `/admin/exercises[/[id]]`, `/admin/media[/[id]]`;
+  root redirect tới `/admin/exercises`. Chưa có learner UI.
+- Thiết kế: 36 mockup trong [../ui_image/README.md](../ui_image/README.md).
+- Mobile: React Native + Expo tại `mobile/` (ADR-008 §1), chưa có code. Mobile không đi
+  qua BFF; gọi backend trực tiếp với bearer token trong `expo-secure-store`. Bắt đầu ở
+  PLAN M7.7 sau khi M1.4, H.2, H.4, H.10 xong.
+
+## 6. Dữ liệu và scripts
+
+- `backend/scripts/dictionary/`: `raw/` (HSK 1–7-9 txt/json, `cedict_ts.u8` CC BY-SA
+  4.0), `parse.ts`, `normalize.ts`, `map-level.ts`, `build-final.ts`, `convert-hsk.ts`,
+  `seed.ts`; output `parsed/` (121.856 word, 200.156 nghĩa tiếng Anh, 11.086 mapping
+  word-level). Nghĩa tiếng Việt và license HSK list chưa xác minh (roadmap R1).
+- Thứ tự seed: `npm run seed:dictionary` (upsert 7 Level rồi insert Word, WordMeaning,
+  WordSource, WordLevel theo batch 1.000 từ `parsed/final_words.json`; phần Word không
+  idempotent, chỉ chạy trên DB chưa có Word) → `npm run seed:learning` (5 lesson
+  placeholder mỗi level, 20 từ mỗi lesson, 2 topic và story mẫu; upsert theo slug).
+  Không có script seed Level riêng: `backend/scripts/levels/seed.ts` là file rỗng.
+  `backend/scripts/test/seed-frontend-admin-console.ts` là fixture cho Playwright.
+- `backend/scripts/operations/`: wrapper `prisma migrate deploy` có timeout,
+  resolver migration 19, render observability.
+- `backend/scripts/security/`: secret scan + allowlist theo fingerprint.
+- `backend/scripts/test/media-*`: harness release-evidence (xem finding A-04, ADR-008 §8).
+
+## 7. Ops
+
+- `ops/nginx/`: fragment bảo vệ signed content và chặn `/metrics`.
+- `ops/observability/`: Prometheus rules + unit test, Alertmanager, Grafana dashboard,
+  kustomize cho private metrics network, toolchain pin, producer policy.
+- Workflow duy nhất `media-release-evidence.yml` chạy khi push tag `v3.0.0` trên
+  self-hosted linux/amd64; không có CI cho PR.
+
+## 8. AI
+
+`ai/services/rag-api` là placeholder rỗng. Quyết định runtime, DB và provider ở
+[../adr/ADR-008-TECHNOLOGY-STACK-DECISIONS.md](../adr/ADR-008-TECHNOLOGY-STACK-DECISIONS.md) §6.
+Backend không chứa module AI.
+
+## 9. Lệnh chạy và kiểm thử
+
+Backend (`cd backend`):
+
+| Lệnh | Cần DB? | Ghi chú |
+| --- | --- | --- |
+| `npm run start:dev` | có | dev server |
+| `npm run lint:check`, `npm run format:check`, `npx tsc --noEmit` | không | |
+| `npm test` | không | jest unit, rootDir `src`, 51 suite |
+| `npm run test:e2e` | có, disposable | `pretest:e2e` tự dựng DB và migrate; xem "Chạy e2e bằng một lệnh" bên dưới |
+| `npm run test:db:p0`, `test:db:concurrency`, `test:db:cms-concurrency`, `test:db:activity-*`, `test:db:exercise-*`, `test:db:media-*` | có, fresh migration-only | runner concurrency để lại fixture; mỗi lần chạy lại cần DB mới |
+| `npm run test:ops:media:unit`, `npm run test:security:secrets` | không | node:test |
+| `npm run test:ops:media` | tải tool | release harness, chỉ PASS ở profile linux-amd64 |
+| `npm run seed:dictionary`, `npm run seed:learning`, `npm run test:seed:frontend-console` | có | seed; dictionary trước, learning sau |
+
+Frontend (`cd frontend`): `npm run dev`, `npm run lint`, `npm run typecheck`
+(chạy `next typegen` trước), `npm test` (vitest), `npm run test:e2e` (build + Playwright,
+cần backend thật ở `BACKEND_API_URL` và DB đã seed console), `npm run test:generated-types`.
+
+### Chạy e2e bằng một lệnh
+
+```bash
+docker compose up -d --wait                 # PostgreSQL 16, file ở gốc repo
+cd backend && npm ci --ignore-scripts && npm run test:e2e
+```
+
+`pretest:e2e` (`backend/scripts/test/prepare-e2e-database.ts`) điền mặc định
+`NODE_ENV=test` cùng `DATABASE_URL`/`TEST_DATABASE_URL`/`JWT_SECRETS` khớp compose và
+cấu hình media dùng một lần (provider `memory`/`test`, ingestion bật, signing secret và
+metrics token giả),
+dựng lại database mặc định `hsk_e2e_test`, sinh Prisma Client (vì
+`npm ci --ignore-scripts` bỏ qua postinstall) rồi chạy `prisma migrate deploy`.
+
+Muốn dùng Postgres sẵn có thì set `DATABASE_URL` (và `TEST_DATABASE_URL` nếu URL mang
+`?schema=public`) tới database có tên kết thúc bằng `test`, `e2e`, `verify`,
+`disposable` hoặc `hardening`. Khi người gọi tự chỉ định database như vậy — CI cũng đi
+đường này — script chỉ tạo database còn thiếu và không xoá gì; việc dựng lại chỉ áp dụng
+cho database mặc định nội bộ mà tooling tự sở hữu. Không dùng `migrate reset`, `db push`
+hay truncate ở bất kỳ nhánh nào.
+
+e2e chạy `--runInBand`: mười một suite dùng chung một database và cùng `upsert` Level
+theo `code`, chạy song song sẽ đua fixture và làm hỏng các assertion đếm.
+
+Chỉ PostgreSQL là bắt buộc cho e2e: `backend/test/utils/e2e-environment.ts` đặt tường
+minh `MEDIA_STORAGE_PROVIDER=memory` và `MEDIA_SCANNER_PROVIDER=test` (chỉ khi biến chưa
+được set), nên MinIO và ClamAV không nằm trên đường chạy e2e. MinIO, ClamAV và Mailpit nằm ở profile `dev` của compose, chỉ phục vụ việc chạy
+ứng dụng thật ở máy local: `docker compose --profile dev up -d --wait`.
+
+Compose nằm ở `docker-compose.yml` gốc repo chứ không phải `docker-compose.test.yml` như
+tên trong PLAN.md, để `docker compose up -d` chạy được không cần cờ `-f` và để không phải
+duy trì hai file compose khi thêm service dev về sau.
+
+## 10. Quy tắc cho dev và AI agent
+
+1. Đọc `docs/README.md`, `PLAN.md` và ADR liên quan trước khi sửa vùng nào.
+2. Không suy đoán chức năng từ schema, mockup hay tên file; chỉ tin code, test và
+   migration trên HEAD.
+3. Mọi thay đổi endpoint/DTO/hành vi phải cập nhật `docs/api/api.md`, test và `PLAN.md`
+   trong cùng PR.
+4. Không hard-delete row có lịch sử; không sửa migration đã áp; không lưu token trong
+   browser storage; không trả `answer` ra public.
+5. Quyết định khó đảo ngược đi kèm ADR mới.
+6. Không thêm Redis, queue, microservice, framework state mới khi chưa có bằng chứng
+   tải theo ADR-008.
+7. Tài liệu viết tiếng Việt có dấu; code, commit và identifier viết tiếng Anh.
+
+## 11. Bản đồ tài liệu
+
+| Cần biết | Đọc |
+| --- | --- |
+| Trạng thái từng bước | `docs/PLAN.md` |
+| Thứ tự milestone, KPI, risk | `docs/product/roadmap.md` |
+| Chức năng theo vai trò và ưu tiên | `docs/product/functional-hierarchy.md` |
+| Hợp đồng HTTP | `docs/api/api.md` |
+| Quyết định kiến trúc | `docs/adr/` |
+| Ngữ nghĩa bảng, ERD, cách chạy migration | `docs/database/` |
+| Vận hành và release media | `docs/operations/MEDIA_INGESTION_RELEASE_RUNBOOK.md` |
+| Gate, DoD, nguyên tắc | `docs/process/engineering-process.md` |
+| Kết quả review mã | `docs/reviews/` |
+| Thiết kế UI | `docs/ui_image/` |
+| Đặc tả chi tiết phase tương lai | `docs/archive/PRODUCT_IMPLEMENTATION_MASTER_PLAN.md` |

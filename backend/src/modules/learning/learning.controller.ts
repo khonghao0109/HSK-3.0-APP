@@ -3,6 +3,7 @@ import type {
   ApiSuccessResponse,
   PaginationMeta,
 } from '../../common/interfaces/api-response.interface';
+import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { LearningService } from './learning.service';
 import { LevelItemDto } from './dto/level-response.dto';
 import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
@@ -22,11 +23,13 @@ export class LearningController {
   }
 
   @Get('levels')
+  @ApiEnvelope([LevelItemDto])
   async getLevels(): Promise<ApiSuccessResponse<LevelItemDto[]>> {
     return this.learningService.getLevels();
   }
 
   @Get('lessons')
+  @ApiEnvelope([LessonItemDto], { paginated: true })
   async getLessons(
     @Query() query: GetLessonsQueryDto,
   ): Promise<ApiSuccessResponse<LessonItemDto[], PaginationMeta>> {
@@ -34,6 +37,7 @@ export class LearningController {
   }
 
   @Get('lessons/:id')
+  @ApiEnvelope(LessonDetailDto)
   async getLessonDetail(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ApiSuccessResponse<LessonDetailDto>> {
@@ -41,6 +45,7 @@ export class LearningController {
   }
 
   @Get('topics')
+  @ApiEnvelope([TopicItemDto], { paginated: true })
   async getTopics(
     @Query() query: GetTopicsQueryDto,
   ): Promise<ApiSuccessResponse<TopicItemDto[], PaginationMeta>> {
@@ -48,6 +53,7 @@ export class LearningController {
   }
 
   @Get('stories')
+  @ApiEnvelope([StoryItemDto], { paginated: true })
   async getStories(
     @Query() query: GetStoriesQueryDto,
   ): Promise<ApiSuccessResponse<StoryItemDto[], PaginationMeta>> {

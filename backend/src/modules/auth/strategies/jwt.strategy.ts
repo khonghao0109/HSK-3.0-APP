@@ -41,26 +41,54 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: number; email: string; role: string }) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
+  async validate(payload: {
+    sub: number;
+    email: string;
+    role: string;
+    sid?: unknown;
+  }) {
+    const sid = payload.sid;
+    if (
+      typeof sid !== 'number' ||
+      !Number.isInteger(sid) ||
+      sid <= 0 ||
+      sid > 2147483647
+    ) {
+      throw new UnauthorizedException('Account is not available.');
+    }
+
+    const session = await this.prisma.userSession.findFirst({
+      where: {
+        id: sid,
+        userId: payload.sub,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+        user: {
+          id: payload.sub,
+          status: 'active',
+          deletedAt: null,
+        },
+      },
       select: {
-        id: true,
-        email: true,
-        role: true,
-        status: true,
-        deletedAt: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        },
       },
     });
 
-    if (!user || user.status !== 'active' || user.deletedAt !== null) {
+    if (!session || !session.user) {
       throw new UnauthorizedException('Account is not available.');
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: session.user.id,
+      email: session.user.email,
+      role: session.user.role,
+      sid,
     };
   }
 

@@ -3,18 +3,18 @@ import type { ChildProcess } from 'node:child_process';
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 
+import {
+  BOUNDED_MIGRATION_TIMEOUTS_MS,
+  buildBoundedPgOptions,
+} from '../operations/bounded-prisma-migrate-deploy';
+
 export const MEDIA_MIGRATION_NAMES = {
   provenance: '20260813120000_media_provenance_provider_hardening',
   lifecycle: '20260813163000_media_lifecycle_telemetry_truthfulness',
   auditIntegrity: '20260813193000_media_cleanup_audit_integrity',
 } as const;
 
-export const MEDIA_MIGRATION_TIMEOUTS_MS = {
-  lock: 2_000,
-  statement: 30_000,
-  idleInTransaction: 35_000,
-  command: 45_000,
-} as const;
+export const MEDIA_MIGRATION_TIMEOUTS_MS = BOUNDED_MIGRATION_TIMEOUTS_MS;
 
 export type MigrationFailureKind =
   | 'lock_timeout'
@@ -36,7 +36,17 @@ export type BoundedChildResult = {
   stdout: string;
   stderr: string;
   durationMs: number;
+  startedAt: string;
+  completedAt: string;
 };
+
+export type PrismaTimestampDriftAbort =
+  | {
+      exitCode: 1;
+      engineDiagnostic: 'transaction-aborted';
+      stage: 'prisma-migrate-deploy';
+    }
+  | { exitCode: 3; prismaCode: 'P3018'; sqlstate: 'P0001' };
 
 export type MigrationSourceCatalog = {
   migrations: Array<{ name: string; checksum: string }>;
@@ -57,8 +67,30 @@ const USER_INFO = /\/\/[^/@\s:]+:[^/@\s]+@/gu;
 const CREDENTIAL_EVIDENCE_KEY =
   /["'](?:databaseUrl|testDatabaseUrl|password|passwd|pwd|secret|token)["']\s*:/iu;
 
+const PRISMA_TRANSACTION_ABORT =
+  /(?:^|\r?\n)(?:Error: )?ERROR: current transaction is aborted, commands ignored until end of transaction block(?:\r?\n|$)/u;
+const BOUNDED_TIMESTAMP_DRIFT_ABORT =
+  /(?:^|\r?\n)BOUNDED_MIGRATION_DOMAIN_PREFLIGHT P3018 P0001 Media cleanup lifecycle lacks an exact authoritative audit timestamp(?:\r?\n|$)/u;
+
 export function sha256(value: string | Buffer): string {
   return createHash('sha256').update(value).digest('hex');
+}
+
+export function classifyPrismaTimestampDriftAbort(
+  exitCode: number,
+  diagnostic: string,
+): PrismaTimestampDriftAbort | undefined {
+  if (exitCode === 1 && PRISMA_TRANSACTION_ABORT.test(diagnostic)) {
+    return {
+      exitCode: 1,
+      engineDiagnostic: 'transaction-aborted',
+      stage: 'prisma-migrate-deploy',
+    };
+  }
+  if (exitCode === 3 && BOUNDED_TIMESTAMP_DRIFT_ABORT.test(diagnostic)) {
+    return { exitCode: 3, prismaCode: 'P3018', sqlstate: 'P0001' };
+  }
+  return undefined;
 }
 
 export function readMigrationSourceCatalog(
@@ -221,11 +253,7 @@ function parseSafeAuxiliaryTarget(
 }
 
 export function buildPgOptions(timeouts = MEDIA_MIGRATION_TIMEOUTS_MS): string {
-  return [
-    `-c lock_timeout=${String(timeouts.lock)}ms`,
-    `-c statement_timeout=${String(timeouts.statement)}ms`,
-    `-c idle_in_transaction_session_timeout=${String(timeouts.idleInTransaction)}ms`,
-  ].join(' ');
+  return buildBoundedPgOptions(timeouts);
 }
 
 export function assertExactMigrationOnlyCounts(
@@ -295,6 +323,7 @@ export function waitForBoundedChild(
   }
 
   const startedAt = Date.now();
+  const startedAtIso = new Date(startedAt).toISOString();
   let stdout = '';
   let stderr = '';
   let outputBytes = 0;
@@ -345,6 +374,8 @@ export function waitForBoundedChild(
         stdout,
         stderr,
         durationMs: Date.now() - startedAt,
+        startedAt: startedAtIso,
+        completedAt: new Date().toISOString(),
       });
     };
     const timeout = setTimeout(() => {

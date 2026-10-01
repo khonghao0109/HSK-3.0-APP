@@ -621,6 +621,17 @@ model MediaUploadRateLimit {
   actor User @relation(fields: [actorId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 }
 
+/// Fixed-window counters of the global throttler, shared by every backend
+/// replica. `key` is the throttler's SHA-256 bucket key. Purgeable: a row past
+/// `expireAt` holds no state and is deleted by the storage cleanup.
+model RateLimitCounter {
+  key      String   @id
+  points   Int
+  expireAt DateTime @db.Timestamptz(3)
+
+  @@index([expireAt])
+}
+
 model Level {
   id                Int           @id @default(autoincrement())
   name              String        @unique

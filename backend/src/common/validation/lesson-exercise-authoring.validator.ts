@@ -270,7 +270,10 @@ function readMediaId(
 }
 
 function assertGlobalBounds(value: unknown): void {
-  if (jsonDepth(value) > LESSON_EXERCISE_AUTHORING_LIMITS.maxDepth) {
+  if (
+    boundedJsonDepth(value, LESSON_EXERCISE_AUTHORING_LIMITS.maxDepth) >
+    LESSON_EXERCISE_AUTHORING_LIMITS.maxDepth
+  ) {
     fail('max_depth_exceeded', '$');
   }
   assertPayloadBytes(value);
@@ -279,7 +282,10 @@ function assertGlobalBounds(value: unknown): void {
 function assertPayloadBytes(value: unknown): void {
   let serialized: string;
   try {
-    serialized = canonicalJson(value);
+    serialized = canonicalJson(
+      value,
+      LESSON_EXERCISE_AUTHORING_LIMITS.maxDepth,
+    );
   } catch {
     fail('invalid_json', '$');
   }
@@ -291,14 +297,24 @@ function assertPayloadBytes(value: unknown): void {
   }
 }
 
-function jsonDepth(value: unknown): number {
-  if (Array.isArray(value)) {
-    return 1 + Math.max(0, ...value.map(jsonDepth));
+// Stops descending once the limit is already exceeded, so an adversarial
+// payload cannot drive this walk (or a spread over a huge array) off the stack.
+// The result saturates at maxDepth + 1, which is all the caller compares.
+function boundedJsonDepth(value: unknown, remainingDepth: number): number {
+  const children = Array.isArray(value)
+    ? value
+    : isPlainRecord(value)
+      ? Object.values(value)
+      : null;
+  if (children === null) return 0;
+  if (remainingDepth <= 0) return 1;
+
+  let deepestChild = 0;
+  for (const child of children) {
+    const childDepth = boundedJsonDepth(child, remainingDepth - 1);
+    if (childDepth > deepestChild) deepestChild = childDepth;
   }
-  if (isPlainRecord(value)) {
-    return 1 + Math.max(0, ...Object.values(value).map(jsonDepth));
-  }
-  return 0;
+  return 1 + deepestChild;
 }
 
 function requireRecord(value: unknown, path: string): Record<string, unknown> {

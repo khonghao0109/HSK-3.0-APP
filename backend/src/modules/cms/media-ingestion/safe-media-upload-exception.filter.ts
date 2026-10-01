@@ -6,20 +6,28 @@ import {
   HttpException,
   PayloadTooLargeException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Request, Response } from 'express';
+
+import { writeErrorEnvelope } from '../../../common/filters/global-exception.filter';
 
 const SAFE_BAD_REQUEST_MESSAGES = new Set([
   'Idempotency-Key is invalid.',
   'Upload filename is not allowed.',
 ]);
 
+/**
+ * Multer and multipart parsing errors can quote filenames or field values, so
+ * only known-safe 400 bodies pass through. The output uses the global error
+ * envelope; exceptions other than HttpException reach GlobalExceptionFilter.
+ */
 @Catch(HttpException)
 export class SafeMediaUploadExceptionFilter implements ExceptionFilter<HttpException> {
   catch(exception: HttpException, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<Response>();
+    const http = host.switchToHttp();
+    const request = http.getRequest<Request>();
+    const response = http.getResponse<Response>();
     if (exception instanceof PayloadTooLargeException) {
-      response.status(413).json({
-        statusCode: 413,
+      writeErrorEnvelope(request, response, 413, {
         code: 'UPLOAD_TOO_LARGE',
         message: 'Media upload exceeds the allowed size.',
       });
@@ -27,18 +35,25 @@ export class SafeMediaUploadExceptionFilter implements ExceptionFilter<HttpExcep
     }
     if (exception instanceof BadRequestException) {
       const body = exception.getResponse();
-      if (isSafeValidationBody(body) || hasSafeMessage(body)) {
-        response.status(400).json(body);
-        return;
-      }
-      response.status(400).json({
-        statusCode: 400,
-        code: 'MULTIPART_INVALID',
-        message: 'Media upload request is malformed.',
-      });
+      writeErrorEnvelope(
+        request,
+        response,
+        400,
+        isSafeValidationBody(body) || hasSafeMessage(body)
+          ? body
+          : {
+              code: 'MULTIPART_INVALID',
+              message: 'Media upload request is malformed.',
+            },
+      );
       return;
     }
-    response.status(exception.getStatus()).json(exception.getResponse());
+    writeErrorEnvelope(
+      request,
+      response,
+      exception.getStatus(),
+      exception.getResponse(),
+    );
   }
 }
 

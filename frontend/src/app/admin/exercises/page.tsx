@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 import { ExerciseFilters } from '@/features/exercises/exercise-filters';
 import { redirectToSessionLogin } from '@/features/auth/session-redirect';
@@ -22,6 +23,10 @@ export default async function ExercisesPage({
   } catch (error) {
     if (error instanceof BackendRequestError && error.status === 401)
       redirectToSessionLogin();
+    // Layouts do not re-render on client navigation, so the admin layout's
+    // role check can be stale; the backend's per-request 403 is authoritative.
+    if (error instanceof BackendRequestError && error.status === 403)
+      redirect('/forbidden');
     throw error;
   }
   return (

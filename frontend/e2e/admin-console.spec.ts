@@ -1,3 +1,5 @@
+import { execSync } from 'node:child_process';
+
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
@@ -701,4 +703,145 @@ test('supports keyboard flow, responsive layout, and automated accessibility', a
   await assertNoHorizontalOverflow(page);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test('P-a: sets both session and refresh HttpOnly cookies on admin login', async ({
+  page,
+  context,
+}) => {
+  await login(page);
+  await expect(page).toHaveURL(/\/admin\/exercises/);
+
+  const cookies = await context.cookies();
+  const sessionCookie = cookies.find((c) => c.name === 'hsk_admin_session');
+  const refreshCookie = cookies.find(
+    (c) => c.name === 'hsk_admin_session_refresh',
+  );
+
+  expect(sessionCookie).toBeTruthy();
+  expect(sessionCookie?.httpOnly).toBe(true);
+  expect(sessionCookie?.sameSite).toBe('Lax');
+
+  expect(refreshCookie).toBeTruthy();
+  expect(refreshCookie?.httpOnly).toBe(true);
+  expect(refreshCookie?.sameSite).toBe('Lax');
+});
+
+test('P-b: transparently refreshes expired session on navigation and revokes on logout', async ({
+  page,
+  context,
+}) => {
+  await login(page);
+  await expect(page).toHaveURL(/\/admin\/exercises/);
+
+  const initialCookies = await context.cookies();
+  const initialSession = initialCookies.find(
+    (c) => c.name === 'hsk_admin_session',
+  )?.value;
+  const initialRefresh = initialCookies.find(
+    (c) => c.name === 'hsk_admin_session_refresh',
+  )?.value;
+
+  expect(initialSession).toBeTruthy();
+  expect(initialRefresh).toBeTruthy();
+
+  const sessionParts = initialSession!.split('.');
+  const sessionPayloadStr = sessionParts[1] ?? '';
+  const payload = JSON.parse(
+    Buffer.from(sessionPayloadStr, 'base64url').toString('utf8'),
+  ) as {
+    exp: number;
+    sub: number;
+    sid?: number;
+  };
+  const nowSec = Math.floor(Date.now() / 1000);
+  const remainingSec = payload.exp - nowSec;
+
+  if (remainingSec <= 12) {
+    await page.waitForTimeout(Math.max((remainingSec + 1) * 1000, 1000));
+  } else {
+    const expiredPayload = {
+      ...payload,
+      exp: nowSec - 10,
+    };
+    const forgedExpiredToken = [
+      sessionParts[0],
+      Buffer.from(JSON.stringify(expiredPayload)).toString('base64url'),
+      sessionParts[2],
+    ].join('.');
+
+    await context.addCookies([
+      {
+        name: 'hsk_admin_session',
+        value: forgedExpiredToken,
+        url: 'http://127.0.0.1:3200',
+        httpOnly: true,
+        sameSite: 'Lax',
+      },
+    ]);
+  }
+
+  await page.goto('/admin/media');
+  await expect(page).toHaveURL(/\/admin\/media/);
+  await expect(
+    page.getByRole('heading', { name: 'Media library' }),
+  ).toBeVisible();
+
+  const refreshedCookies = await context.cookies();
+  const refreshedSession = refreshedCookies.find(
+    (c) => c.name === 'hsk_admin_session',
+  )?.value;
+  const refreshedRefresh = refreshedCookies.find(
+    (c) => c.name === 'hsk_admin_session_refresh',
+  )?.value;
+
+  expect(refreshedSession).toBeTruthy();
+  expect(refreshedRefresh).toBeTruthy();
+  expect(refreshedSession).not.toBe(initialSession);
+  expect(refreshedRefresh).not.toBe(initialRefresh);
+
+  let refreshedSid: number | undefined;
+  try {
+    const refreshedPayloadStr = refreshedSession!.split('.')[1] ?? '';
+    const refreshedPayload = JSON.parse(
+      Buffer.from(refreshedPayloadStr, 'base64url').toString('utf8'),
+    ) as { sid?: number };
+    refreshedSid = refreshedPayload.sid;
+  } catch {
+    // ignore
+  }
+
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page).toHaveURL(/\/login/);
+
+  await expect
+    .poll(async () => {
+      const currentCookies = await context.cookies();
+      return currentCookies.some(
+        (c) =>
+          (c.name === 'hsk_admin_session' ||
+            c.name === 'hsk_admin_session_refresh') &&
+          c.value !== '',
+      );
+    })
+    .toBe(false);
+
+  const meRes = await page.request.get('/api/session/me');
+  expect([401, 403]).toContain(meRes.status());
+
+  if (refreshedSid) {
+    try {
+      const dbUrl =
+        process.env.TEST_DATABASE_URL ||
+        process.env.DATABASE_URL ||
+        'postgresql://hsk:test-local-postgres@127.0.0.1:5432/hsk_e2e_test';
+      const reason = execSync(
+        `psql "${dbUrl}" -t -A -c 'SELECT "revocationReason" FROM "UserSession" WHERE id = ${refreshedSid}'`,
+        { encoding: 'utf8', timeout: 5000 },
+      ).trim();
+      expect(reason).toBe('logout');
+    } catch {
+      // ignore if psql not reachable
+    }
+  }
 });

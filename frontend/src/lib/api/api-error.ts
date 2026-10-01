@@ -2,6 +2,7 @@ export type ApiFailureKind =
   | 'invalid_request'
   | 'session_expired'
   | 'forbidden'
+  | 'account_locked'
   | 'not_found'
   | 'conflict'
   | 'validation'
