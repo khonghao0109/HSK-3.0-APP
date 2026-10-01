@@ -39,3 +39,13 @@ export type AuthUser = z.infer<typeof authUserSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
+
+export const registerInputSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6),
+  name: z.string().trim().min(1).optional(),
+});
+
+export type RegisterInput = z.infer<typeof registerInputSchema>;
+export const backendRegisterSchema = backendLoginSchema;
+export type RegisterResponse = LoginResponse;

@@ -17,8 +17,18 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const isApiRequest = request.nextUrl.pathname.startsWith('/api/');
   const serverEnv = parseServerEnv();
 
+  const isAdminRoute =
+    request.nextUrl.pathname.startsWith('/admin') ||
+    request.nextUrl.pathname.startsWith('/api/admin') ||
+    request.nextUrl.pathname.startsWith('/api/session') ||
+    request.nextUrl.pathname.startsWith('/login');
+
+  const cookieName = isAdminRoute
+    ? serverEnv.SESSION_COOKIE_NAME
+    : serverEnv.LEARNER_SESSION_COOKIE_NAME;
+
   const deps = {
-    cookieName: serverEnv.SESSION_COOKIE_NAME,
+    cookieName,
     production: serverEnv.NODE_ENV === 'production',
     nowMs: () => Date.now(),
     refresh: async (token: string) => {
@@ -67,5 +77,6 @@ export const config = {
     '/api/admin/:path*',
     '/api/session/me',
     '/api/session/recover',
+    '/api/learner/session/me',
   ],
 };

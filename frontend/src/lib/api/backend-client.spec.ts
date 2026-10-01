@@ -161,4 +161,28 @@ describe('server-only backend client', () => {
       client.request('/api/v1/auth/refreshx', { method: 'POST' }),
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
+
+  it('allowlists auth register endpoint, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/auth/register', {
+      method: 'POST',
+      body: { email: 'user@example.test', password: 'password123' },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    await expect(
+      client.request('/api/v1/auth/register/x', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+    await expect(
+      client.request('/api/v1/auth/register?x=1', { method: 'POST' }),
+    ).rejects.toMatchObject({ kind: 'invalid_request' });
+  });
 });

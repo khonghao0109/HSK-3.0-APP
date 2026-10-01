@@ -28,9 +28,31 @@ export const serverEnvSchema = z.object({
     .string()
     .regex(/^[A-Za-z0-9_-]{1,64}$/)
     .default('hsk_admin_session'),
+  LEARNER_SESSION_COOKIE_NAME: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{1,64}$/)
+    .default('hsk_learner_session'),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
+}).superRefine((data, context) => {
+  const adminCookie = data.SESSION_COOKIE_NAME;
+  const adminRefresh = `${adminCookie}_refresh`;
+  const learnerCookie = data.LEARNER_SESSION_COOKIE_NAME;
+  const learnerRefresh = `${learnerCookie}_refresh`;
+
+  if (
+    learnerCookie === adminCookie ||
+    learnerCookie === adminRefresh ||
+    learnerRefresh === adminCookie
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['LEARNER_SESSION_COOKIE_NAME'],
+      message:
+        'LEARNER_SESSION_COOKIE_NAME must differ from SESSION_COOKIE_NAME and its refresh cookie name.',
+    });
+  }
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

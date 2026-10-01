@@ -35,7 +35,7 @@ export type SessionHandlerDependencies = {
   refresh: (refreshToken: string) => Promise<RefreshResponse>;
 };
 
-function safeResponse(status: number, requestId?: string): NextResponse {
+export function safeResponse(status: number, requestId?: string): NextResponse {
   const failure = normalizeApiFailure({ status, requestId });
   const response = NextResponse.json(
     {
@@ -57,7 +57,7 @@ function safeResponse(status: number, requestId?: string): NextResponse {
  * unknown, inactive and wrong-password logins share 401. The console's own
  * 403s (cross-origin, non-admin) keep kind `forbidden`.
  */
-function accountLockedResponse(): NextResponse {
+export function accountLockedResponse(): NextResponse {
   const kind: ApiFailureKind = 'account_locked';
   const response = NextResponse.json(
     {
@@ -73,7 +73,7 @@ function accountLockedResponse(): NextResponse {
   return response;
 }
 
-function noStore(response: NextResponse): NextResponse {
+export function noStore(response: NextResponse): NextResponse {
   response.headers.set('cache-control', 'no-store');
   return response;
 }
@@ -90,7 +90,7 @@ function recoveryResponse(
   return response;
 }
 
-function isSameOrigin(request: NextRequest, appOrigin: string): boolean {
+export function isSameOrigin(request: NextRequest, appOrigin: string): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return false;
   try {
@@ -100,9 +100,9 @@ function isSameOrigin(request: NextRequest, appOrigin: string): boolean {
   }
 }
 
-function setClearedCookies(
+export function setClearedCookies(
   response: NextResponse,
-  deps: SessionHandlerDependencies,
+  deps: { cookieName: string; production: boolean },
 ): void {
   const cookie = createClearedSessionCookie(deps.cookieName, deps.production);
   response.cookies.set(cookie.name, cookie.value, cookie.options);
@@ -117,7 +117,7 @@ function setClearedCookies(
   );
 }
 
-function statusFromError(error: unknown): number {
+export function statusFromError(error: unknown): number {
   if (error instanceof BackendRequestError) return error.status;
   if (
     typeof error === 'object' &&
