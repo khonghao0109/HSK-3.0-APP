@@ -139,4 +139,68 @@ kill -SIGTERM <worker-pid>
     - `MailDeliveryError` với `retryable: true` -> throw để pg-boss retry.
     - Lỗi vĩnh viễn (`retryable: false`) -> ghi log lỗi chứa `jobId` và `error.name`, hoàn tất job mà không throw.
 
+### `privacy.data-export` (Hằng số `JOB_NAMES.DATA_EXPORT`)
+- **Mục đích**: Thu thập và xuất toàn bộ dữ liệu cá nhân của người dùng thành 1 file JSON lưu trong private object storage theo chính sách bảo mật (ADR-001).
+- **Trigger**: Enqueue bất đồng bộ trong cùng transaction với `POST /users/me/data-exports`.
+- **Payload**: `{ exportId: number }`.
+- **Singleton key**: `export:<exportId>`.
+- **Chính sách**:
+  - Queue options: `policy: 'standard'`, `retryLimit: 3`, `retryBackoff: true`.
+  - Idempotency & Trạng thái:
+    - Khóa dòng `DataExportJob` bằng `FOR UPDATE`.
+    - Status khác `requested` hoặc `processing` -> kết thúc idempotent (return `true`).
+    - Chuyển `status = 'processing'`, `startedAt = CURRENT_TIMESTAMP`.
+  - Đọc dữ liệu trong transaction cô lập `RepeatableRead` (snapshot nhất quán) dựa trên hằng số kiểm định `EXPORT_COVERAGE` với thuật toán fixpoint bắc cầu (phân loại mọi model có `userId`, quan hệ tới `User`, hoặc là quan hệ con tới các model trong `included` thành `included` hoặc `excluded` có lý do rõ ràng).
+  - Cấu trúc export và bảng con lồng nhau:
+    - `learningPlans[].items`: Chứa danh sách các bài học đã lên lịch (`LearningPlanItem`).
+    - `reviewCards[].events`: Chứa lịch sử đánh giá thẻ ôn tập (`ReviewEvent`), đọc theo lô 1.000, chuyển đổi `id` kiểu BigInt sang String, loại bỏ trường kỹ thuật `idempotencyKey`.
+    - `examAttempts[].answers`: Chứa câu trả lời của các lần thi (`ExamAnswer`), đọc theo lô 1.000, loại bỏ trường kỹ thuật `saveIdempotencyKey`.
+    - `examAttempts[].events`: Chứa sự kiện thi (`ExamAttemptEvent`), chuyển đổi `id` kiểu BigInt sang String, loại bỏ trường kỹ thuật `idempotencyKey`.
+    - `results[].skillScores`: Chứa điểm thành phần từng kỹ năng của kết quả thi (`ResultSkillScore`).
+    - Bảng `ExamAttemptSnapshot` được đưa vào `excluded` do là bản sao nội dung đề thi tại thời điểm thi, không phải dữ liệu do người học tạo ra.
+  - Cắt ngắn và giới hạn dung lượng: Đọc các bảng có khả năng phát triển lớn (`ReviewEvent`, `ExamAnswer`, `LearningEvent`) theo các lô 1.000 bản ghi (sắp xếp `id ASC`), kiểm tra tổng dung lượng tích luỹ. Nếu vượt quá `MAX_PRIVATE_MEDIA_OBJECT_BYTES` (10 MB), dừng đọc ngay và đánh dấu job `status = 'failed'`, `errorCode = 'EXPORT_TOO_LARGE'`, không ném lỗi ra ngoài (không retry vô ích).
+  - Tải lên storage: Tạo key ngẫu nhiên `privacy-exports/<userId>/<exportId>-<hex 16 bytes>.json`, tính checksum SHA-256 (64 hex characters) và gọi `putPrivateObject` của `ObjectStoragePort`. Nếu lưu trữ lỗi -> throw exception để pg-boss retry.
+  - Hoàn tất: Cập nhật `status = 'completed'`, `outputStorageKey`, `completedAt = CURRENT_TIMESTAMP`, `outputExpiresAt = CURRENT_TIMESTAMP + INTERVAL '24 hours'`.
+  - Bảo mật log: Log chỉ ghi `exportId`, `jobId`, `error.name`. Tuyệt đối không log storage key, token, email hay dữ liệu cá nhân.
+
+### `privacy.purge-expired-exports` (Hằng số `JOB_NAMES.PURGE_EXPIRED_EXPORTS`)
+- **Mục đích**: Tự động dọn dẹp các file JSON dữ liệu xuất đã hoàn thành quá 7 ngày trong private storage để giải phóng dung lượng và bảo vệ dữ liệu cá nhân.
+- **Lịch chạy**: Hằng giờ tại phút thứ 0 (`0 * * * *`).
+- **Chính sách**:
+  - `retryLimit: 3`, `retryBackoff: true`.
+  - Quét các export có `completedAt < CURRENT_TIMESTAMP - INTERVAL '7 days'` và còn `outputStorageKey IS NOT NULL`, xử lý theo lô tối đa 100 bản ghi mỗi lần chạy.
+  - Gọi `deletePrivateObject(outputStorageKey)` trên `ObjectStoragePort`. Nếu storage trả về lỗi `not_found`, coi như đối tượng đã được xoá an toàn trước đó.
+  - Cập nhật `outputStorageKey = NULL` và `updatedAt = CURRENT_TIMESTAMP`.
+
+### Xử lý sự cố: Export kẹt ở trạng thái `processing`
+- **Nguyên nhân**: Tiến trình worker bị tắt đột ngột (crash, OOM, node reboot) trong lúc đang xử lý snapshot hoặc upload storage, khiến `status` của `DataExportJob` vẫn giữ `processing` dù pg-boss job có thể đã kết thúc hoặc chuyển sang retry.
+- **Phát hiện**:
+  Truy vấn tìm các export job kẹt ở `processing` quá 30 phút:
+  ```sql
+  SELECT id, "userId", status, "startedAt", "createdAt"
+  FROM "DataExportJob"
+  WHERE status = 'processing'
+    AND "startedAt" < CURRENT_TIMESTAMP - INTERVAL '30 minutes';
+  ```
+- **Xử lý**:
+  1. Kiểm tra trạng thái job tương ứng trong schema `pgboss.job`:
+     ```sql
+     SELECT id, name, state, retry_count, output
+     FROM pgboss.job
+     WHERE name = 'privacy.data-export'
+       AND data->>'exportId' = '<exportId>';
+     ```
+  2. Nếu job trong pg-boss đã failed hoặc không còn tồn tại:
+     Chuyển `DataExportJob` sang trạng thái `failed` với mã lỗi thích hợp để giải phóng giới hạn rate limit 24h cho người dùng:
+     ```sql
+     UPDATE "DataExportJob"
+     SET status = 'failed',
+         "errorCode" = 'PROCESSING_TIMEOUT',
+         "errorMessage" = 'Job timed out or worker restarted during processing',
+         "completedAt" = CURRENT_TIMESTAMP,
+         "updatedAt" = CURRENT_TIMESTAMP
+     WHERE id = <exportId> AND status = 'processing';
+     ```
+  3. Người dùng sau đó có thể thực hiện yêu cầu xuất dữ liệu mới qua `POST /users/me/data-exports`.
+
 

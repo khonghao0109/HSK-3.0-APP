@@ -245,6 +245,9 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 | `GET` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
 | `PATCH` | `/users/me/profile` | JWT | — | `{ displayName, locale, timezone }` |
 | `POST` | `/users/me/deletion-request` | JWT | — | `{ requestId, scheduledAt }` (HTTP 202) |
+| `POST` | `/users/me/data-exports` | JWT | — | `{ exportId, status }` (HTTP 202) |
+| `GET` | `/users/me/data-exports` | JWT | — | `[{ id, status, createdAt, completedAt, outputExpiresAt, downloadable }]` |
+| `GET` | `/users/me/data-exports/:id/download` | JWT | — | file JSON nhị phân (`application/json; charset=utf-8`) |
 | `GET` | `/users` | admin | `page`, `limit` | `[{ id, email, name, role, createdAt }]` + `meta` |
 
 - `GET /users` (H.8, B-05): sort `id ASC`, `skip = (page - 1) * limit`. Bỏ mọi user có
@@ -285,6 +288,23 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
     - Đăng nhập thành công trả về HTTP 200/201 cùng token phiên mới bình thường.
   - Sai mật khẩu trong thời gian chờ → trả về HTTP `401 Unauthorized`, yêu cầu xoá vẫn giữ nguyên trạng thái `requested`.
   - Đã quá hạn 7 ngày (`scheduledAt <= CURRENT_TIMESTAMP`), đăng nhập bị chặn (trả về HTTP `401` qua decoy hash) và worker sẽ thực hiện ẩn danh tài khoản theo ADR-001.
+- `POST /users/me/data-exports` (`JwtAuthGuard`): Yêu cầu xuất dữ liệu cá nhân của người dùng thành một file JSON lưu trữ trong bucket private.
+  - User phải ở trạng thái `active`, `deletedAt IS NULL`, nếu không trả về HTTP `404 "User not found."`.
+  - Rate limit: Tối đa 1 export / 24 giờ / user. Nếu đã có export job trong vòng 24 giờ (`createdAt > CURRENT_TIMESTAMP - INTERVAL '24 hours'`) có trạng thái `requested`, `processing`, hoặc `completed` → trả về HTTP `429 Too Many Requests` với mã lỗi `EXPORT_RATE_LIMITED`. Export ở trạng thái `failed` không tính vào giới hạn này.
+  - Thành công: trả về HTTP `202 Accepted` với `{ exportId: number, status: 'requested' }`, đồng thời transactional enqueue job `privacy.data-export` với `singletonKey: 'export:' + exportId`.
+- `GET /users/me/data-exports` (`JwtAuthGuard`): Lấy danh sách tối đa 10 lượt xuất dữ liệu gần nhất của chính người dùng, sắp xếp mới nhất trước (`createdAt DESC`).
+  - Trả về danh sách gồm các trường: `{ id, status, createdAt, completedAt, outputExpiresAt, downloadable }`.
+  - `downloadable` là cờ boolean (`status = 'completed'` và `outputExpiresAt > CURRENT_TIMESTAMP` và còn file lưu trữ).
+  - Không bao giờ trả về `outputStorageKey` hay `errorMessage`.
+- `GET /users/me/data-exports/:id/download` (`JwtAuthGuard`): Tải file dữ liệu JSON đã xuất.
+  - Chỉ cho phép tải khi file xuất thuộc sở hữu của chính người dùng, `status = 'completed'`, chưa quá hạn 24 giờ (`outputExpiresAt > CURRENT_TIMESTAMP`) và còn `outputStorageKey`.
+  - Mọi trường hợp khác (export không tồn tại, của người dùng khác, chưa xong, hoặc đã hết hạn) đều trả về HTTP `404` đồng nhất.
+  - Xác thực tính toàn vẹn: kiểm tra checksum SHA-256 từ storage khớp với nội dung thực tế; nếu lệch trả về HTTP `500` và không trả nội dung.
+  - Header bảo mật bắt buộc:
+    - `Content-Type: application/json; charset=utf-8`
+    - `Content-Disposition: attachment; filename="hsk-data-export-<id>.json"`
+    - `Cache-Control: no-store`
+    - `X-Content-Type-Options: nosniff`
 
 ```json
 {
