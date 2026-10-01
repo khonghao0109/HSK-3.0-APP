@@ -2618,6 +2618,169 @@
         ]
       }
     },
+    "/api/v1/users/me/data-exports": {
+      "post": {
+        "operationId": "UserController_requestDataExport",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Data export requested successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CreateDataExportResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "get": {
+        "operationId": "UserController_listDataExports",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of data exports for current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DataExportItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/v1/users/me/data-exports/{id}/download": {
+      "get": {
+        "operationId": "UserController_downloadDataExport",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data export JSON file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "UserController_getMe",
@@ -6054,6 +6217,68 @@
         },
         "required": [
           "password"
+        ]
+      },
+      "CreateDataExportResponseDto": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "number",
+            "description": "Unique identifier of the data export job",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the data export job",
+            "example": "requested"
+          }
+        },
+        "required": [
+          "exportId",
+          "status"
+        ]
+      },
+      "DataExportItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Data export job identifier",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the data export job",
+            "example": "completed"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Timestamp when the export request was created",
+            "example": "2026-09-30T10:00:00.000Z"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Timestamp when the export was completed",
+            "example": "2026-09-30T10:05:00.000Z"
+          },
+          "outputExpiresAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Timestamp when the export output file expires (24 hours after completion)",
+            "example": "2026-10-01T10:05:00.000Z"
+          },
+          "downloadable": {
+            "type": "boolean",
+            "description": "Indicates if the export is currently available for download",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt",
+          "downloadable"
         ]
       },
       "LevelItemDto": {

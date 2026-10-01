@@ -5,27 +5,34 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
 
+import { RawResponse } from '../../common/decorators/raw-response.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
+import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
 import { AccountDeletionResponseDto } from './dto/account-deletion-response.dto';
+import { CreateDataExportResponseDto } from './dto/create-data-export-response.dto';
+import { DataExportItemDto } from './dto/data-export-response.dto';
 import { RequestAccountDeletionDto } from './dto/request-account-deletion.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserProfileResponseDto } from './dto/user-profile-response.dto';
+import { DataExportService } from './data-export.service';
 import { UserService } from './user.service';
 
 type AuthenticatedUser = {
@@ -42,7 +49,10 @@ type AuthenticatedRequest = Request & {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly dataExportService: DataExportService,
+  ) {}
 
   @Get('me/profile')
   @ApiEnvelope(UserProfileResponseDto)
@@ -82,6 +92,62 @@ export class UserController {
     @Body() dto: RequestAccountDeletionDto,
   ): Promise<AccountDeletionResponseDto> {
     return this.userService.requestAccountDeletion(req.user.id, dto);
+  }
+
+  @Post('me/data-exports')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiEnvelope(CreateDataExportResponseDto)
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    description: 'Data export requested successfully.',
+    type: CreateDataExportResponseDto,
+  })
+  requestDataExport(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CreateDataExportResponseDto> {
+    return this.dataExportService.requestDataExport(req.user.id);
+  }
+
+  @Get('me/data-exports')
+  @ApiEnvelope([DataExportItemDto])
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of data exports for current user.',
+    type: [DataExportItemDto],
+  })
+  listDataExports(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<DataExportItemDto[]> {
+    return this.dataExportService.listDataExports(req.user.id);
+  }
+
+  @Get('me/data-exports/:id/download')
+  @RawResponse()
+  @ApiOkResponse({
+    description: 'Data export JSON file.',
+    content: {
+      'application/json': {
+        schema: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  async downloadDataExport(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParsePositiveSafeIntegerPipe) id: number,
+    @Res() res: Response,
+  ): Promise<void> {
+    const file = await this.dataExportService.getDownloadableExport(
+      req.user.id,
+      id,
+    );
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="hsk-data-export-${id}.json"`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.end(file.body);
   }
 
   @Get('me')

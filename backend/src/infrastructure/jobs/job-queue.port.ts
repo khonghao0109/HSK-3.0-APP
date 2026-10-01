@@ -6,6 +6,8 @@ export const JOB_NAMES = {
   SEND_PASSWORD_RESET: 'mail.password-reset',
   ANONYMIZE_ACCOUNT: 'privacy.anonymize-account',
   SEND_ACCOUNT_DELETION_SCHEDULED: 'mail.account-deletion-scheduled',
+  DATA_EXPORT: 'privacy.data-export',
+  PURGE_EXPIRED_EXPORTS: 'privacy.purge-expired-exports',
 } as const;
 
 export interface JobDataMap {
@@ -14,6 +16,8 @@ export interface JobDataMap {
   [JOB_NAMES.SEND_PASSWORD_RESET]: { userId: number };
   [JOB_NAMES.ANONYMIZE_ACCOUNT]: { requestId: number };
   [JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED]: { requestId: number };
+  [JOB_NAMES.DATA_EXPORT]: { exportId: number };
+  [JOB_NAMES.PURGE_EXPIRED_EXPORTS]: Record<string, never> | null;
 }
 
 export type JobName = keyof JobDataMap;

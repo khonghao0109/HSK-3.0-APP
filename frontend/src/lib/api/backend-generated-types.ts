@@ -596,6 +596,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/data-exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserController_listDataExports"];
+        put?: never;
+        post: operations["UserController_requestDataExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/data-exports/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserController_downloadDataExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -1493,6 +1525,50 @@ export interface components {
              * @example No longer studying Chinese.
              */
             reason?: string;
+        };
+        CreateDataExportResponseDto: {
+            /**
+             * @description Unique identifier of the data export job
+             * @example 1
+             */
+            exportId: number;
+            /**
+             * @description Current status of the data export job
+             * @example requested
+             */
+            status: string;
+        };
+        DataExportItemDto: {
+            /**
+             * @description Data export job identifier
+             * @example 1
+             */
+            id: number;
+            /**
+             * @description Status of the data export job
+             * @example completed
+             */
+            status: string;
+            /**
+             * @description Timestamp when the export request was created
+             * @example 2026-09-30T10:00:00.000Z
+             */
+            createdAt: string;
+            /**
+             * @description Timestamp when the export was completed
+             * @example 2026-09-30T10:05:00.000Z
+             */
+            completedAt?: string | null;
+            /**
+             * @description Timestamp when the export output file expires (24 hours after completion)
+             * @example 2026-10-01T10:05:00.000Z
+             */
+            outputExpiresAt?: string | null;
+            /**
+             * @description Indicates if the export is currently available for download
+             * @example true
+             */
+            downloadable: boolean;
         };
         LevelItemDto: {
             id: number;
@@ -2933,6 +3009,95 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["AccountDeletionResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_listDataExports: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of data exports for current user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DataExportItemDto"][];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_requestDataExport: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Data export requested successfully. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CreateDataExportResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    UserController_downloadDataExport: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Data export JSON file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

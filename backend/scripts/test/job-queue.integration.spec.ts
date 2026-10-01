@@ -2,6 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
 import { JobsModule } from '../../src/infrastructure/jobs/jobs.module';
 import { PurgeExpiredSessionsJob } from '../../src/modules/auth/jobs/purge-expired-sessions.job';
+import { PurgeExpiredExportsJob } from '../../src/modules/user/jobs/purge-expired-exports.job';
+import { OBJECT_STORAGE } from '../../src/infrastructure/storage/object-storage.port';
+import { InMemoryObjectStorageAdapter } from '../../src/infrastructure/storage/in-memory-object-storage.adapter';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../src/prisma/prisma.module';
@@ -99,7 +102,14 @@ describe('Job Queue Integration (J1-J8)', () => {
           PrismaModule,
           JobsModule.register({ isWorker: true }),
         ],
-        providers: [PurgeExpiredSessionsJob],
+        providers: [
+          PurgeExpiredSessionsJob,
+          PurgeExpiredExportsJob,
+          {
+            provide: OBJECT_STORAGE,
+            useClass: InMemoryObjectStorageAdapter,
+          },
+        ],
       }).compile();
 
       await workerApp.init();
@@ -389,6 +399,26 @@ describe('Job Queue Integration (J1-J8)', () => {
 
       const fetched = await workerBoss.fetch(JOB_NAMES.ANONYMIZE_ACCOUNT);
       assert.strictEqual(fetched.length, 0);
+    });
+
+    it('J11: queue privacy.data-export tồn tại; schedule privacy.purge-expired-exports được đăng ký khi worker boot', async () => {
+      const exportQueues = await prisma.$queryRawUnsafe<
+        { name: string; policy: string }[]
+      >(
+        `SELECT name, policy FROM pgboss.queue WHERE name = $1`,
+        JOB_NAMES.DATA_EXPORT,
+      );
+      assert.strictEqual(exportQueues.length, 1);
+      assert.strictEqual(exportQueues[0].policy, 'standard');
+
+      const schedules = await prisma.$queryRawUnsafe<
+        { name: string; cron: string }[]
+      >(
+        `SELECT name, cron FROM pgboss.schedule WHERE name = $1`,
+        JOB_NAMES.PURGE_EXPIRED_EXPORTS,
+      );
+      assert.strictEqual(schedules.length, 1);
+      assert.strictEqual(schedules[0].cron, '0 * * * *');
     });
 
     it('J7: app.close() dừng pg-boss', async () => {

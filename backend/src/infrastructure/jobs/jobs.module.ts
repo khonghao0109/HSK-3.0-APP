@@ -83,6 +83,18 @@ export class JobsModule {
                 name: JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
                 options: { policy: 'short', retryLimit: 3, retryBackoff: true },
               },
+              {
+                name: JOB_NAMES.DATA_EXPORT,
+                options: {
+                  policy: 'standard',
+                  retryLimit: 3,
+                  retryBackoff: true,
+                },
+              },
+              {
+                name: JOB_NAMES.PURGE_EXPIRED_EXPORTS,
+                options: { retryLimit: 3, retryBackoff: true },
+              },
             ];
 
             for (const queue of queuesToCreate) {
