@@ -177,8 +177,11 @@ Backend (`backend/.env.example`):
 
 Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN`,
 `BFF_REQUEST_TIMEOUT_MS` (8000), `SESSION_COOKIE_NAME` (`hsk_admin_session`),
+`LEARNER_SESSION_COOKIE_NAME` (`hsk_learner_session`),
 `PLAYWRIGHT_BASE_URL`, `E2E_ADMIN_EMAIL/PASSWORD`, `E2E_USER_EMAIL/PASSWORD`.
 Không có biến `NEXT_PUBLIC_*`.
+
+BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: sử dụng cookie riêng (`LEARNER_SESSION_COOKIE_NAME`, mặc định `hsk_learner_session` và `${name}_refresh`), chỉ chấp nhận tài khoản có role `user` (tài khoản `admin` bị từ chối 403 `admin_account` và thu hồi session backend ngay lập tức), cung cấp các route `/api/learner/session/{login,register,logout,me}` với kiểm soát CSRF same-origin và proxy tự động refresh token theo tiền tố đường dẫn (ADR-003).
 
 ### 3.7 Worker process và Job Queue (M1.7a)
 

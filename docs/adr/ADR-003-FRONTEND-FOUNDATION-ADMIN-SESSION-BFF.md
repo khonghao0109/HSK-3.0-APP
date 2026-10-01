@@ -189,3 +189,17 @@ or claim Media Operations support.
 - Test counts and release evidence are recorded only after the current frozen
   tree is executed. Manual in-app Browser evidence remains a separate required
   release gate and is never inferred from Playwright.
+
+## Learner session (Tech Lead chốt 01/10/2026)
+
+1. **Cookie riêng:** env `LEARNER_SESSION_COOKIE_NAME`, mặc định `hsk_learner_session`; cookie refresh là `${name}_refresh`. Thuộc tính giống cookie admin: `HttpOnly`, `SameSite=Lax`, `path=/`, `Secure` ở production, `Max-Age` theo `exp` của JWT. Dùng lại `createSessionCookie` / `createRefreshSessionCookie`. `env-schema` refine bắt buộc tên cookie learner ≠ `SESSION_COOKIE_NAME` và khác cả hai tên `_refresh`.
+2. **Chỉ role `user`:** Tài khoản `admin` đăng nhập qua BFF learner trả về `403` kind `admin_account`, không set cookie, đồng thời thu hồi ngay session backend vừa tạo qua `POST /auth/logout` (best-effort, không log token). Endpoint `/me` của learner trả `403` nếu role không phải `user`.
+3. **Route riêng:** Giữ nguyên các route admin `/api/session/*`. Bổ sung route learner `/api/learner/session/*`:
+   - `POST /api/learner/session/login`: body `{ email, password }`.
+   - `POST /api/learner/session/register`: body `{ email, password, name? }`, `201` set cookie, `409` kind `email_taken`.
+   - `POST /api/learner/session/logout`: gọi backend `/auth/logout` best-effort, xoá cả hai cookie learner, luôn trả `204`.
+   - `GET /api/learner/session/me`: trả `{ user }`, hoặc `401` khi không có hoặc sai cookie.
+   - Mọi route POST kiểm same-origin qua `isSameOrigin`. Body validate bằng Zod, lỗi chuẩn hoá theo khuôn `safeResponse`, không echo body hay lộ raw backend body.
+4. **Proxy refresh theo đường dẫn:** Trong `src/proxy.ts`, chọn cookie theo pathname: đường dẫn bắt đầu bằng `/admin`, `/api/admin`, `/api/session` hoặc `/login` dùng cookie admin; còn lại dùng cookie learner. Tái sử dụng `sessionRefresh` với `cookieName` tương ứng, matcher bổ sung `/api/learner/session/me` (loại trừ login, register, logout khỏi matcher để tránh xoay token sắp bị thay thế hoặc thu hồi), không refresh đồng thời hai cookie trong một request. Giữ nguyên nonce CSP cho các trang learner không thuộc `/api`. Các route dữ liệu learner sau này tự thêm entry vào matcher.
+5. **Allowlist backend:** Bổ sung đúng `/api/v1/auth/register` vào `ALLOWED_PATHS` trong `src/lib/api/backend-client.ts`.
+
