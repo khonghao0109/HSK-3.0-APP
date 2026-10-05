@@ -385,12 +385,13 @@ Envelope §1. `userId` luôn lấy từ JWT. Write khoá row `User`
 hiện luôn `false` (chưa có placement API).
 
 `CreateGoal`: `targetLevelId` int ≥ 1 (level phải published) · `targetBand?` int 1–9 trong
-`minBand..maxBand`, bắt buộc với `HSK7_9` · `dailyMinutes` int 1–1440 · `reminderEnabled`
-boolean · `reminderTime?` `HH:mm`, bắt buộc khi enabled, phải bỏ khi disabled ·
+`minBand..maxBand`, bắt buộc với `HSK7_9` · `dailyMinutes` int 1–1440 · `learningPurpose?`
+`communication` | `study_abroad` | `hsk_exam` | `work` (tuỳ chọn, `null` khi không gửi) ·
+`reminderEnabled` boolean · `reminderTime?` `HH:mm`, bắt buộc khi enabled, phải bỏ khi disabled ·
 `startDate` `YYYY-MM-DD`.
 
-`UserGoal`: `{ id, targetLevelId, targetBand, dailyMinutes, reminderEnabled, reminderTime,
-startDate, isActive, createdAt, updatedAt, targetLevel: { id, code, name, minBand, maxBand } }`.
+`UserGoal`: `{ id, targetLevelId, targetBand, dailyMinutes, learningPurpose, reminderEnabled,
+reminderTime, startDate, isActive, createdAt, updatedAt, targetLevel: { id, code, name, minBand, maxBand } }`.
 
 `LearningPlan`: `{ id, targetLevelId, targetBand, generatedFromPlacementId, status, startDate,
 endDate, createdAt, updatedAt, targetLevel, items: [{ id, orderIndex, scheduledDate, status,

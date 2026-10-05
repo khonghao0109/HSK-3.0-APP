@@ -39,7 +39,7 @@
 | `UserSession` | Refresh/device session có thể thu hồi. | `tokenHash`, `deviceId`, `userAgent`, `ipAddress`, `lastSeenAt`, `expiresAt`, `revokedAt`, `revocationReason`. | `tokenHash` unique; index active session theo `userId`; chỉ lưu hash. |
 | `PasswordResetToken` | Một lần reset mật khẩu. | `tokenHash`, `expiresAt`, `usedAt`. | `tokenHash` unique; FK user cascade; chỉ lưu hash. |
 | `EmailVerificationToken` | Một lần xác minh email. | `tokenHash`, `expiresAt`, `usedAt`. | `tokenHash` unique; FK user cascade; chỉ lưu hash. |
-| `UserGoal` | Mục tiêu học chủ động. | `targetLevelId`, `targetBand`, `dailyMinutes`, reminder, `startDate`, `isActive`. | Band phải thuộc khoảng level; phút/ngày dương; level `RESTRICT`. |
+| `UserGoal` | Mục tiêu học chủ động. | `targetLevelId`, `targetBand`, `dailyMinutes`, `learningPurpose`, reminder, `startDate`, `isActive`. | Band phải thuộc khoảng level; phút/ngày dương; `learningPurpose` enum nullable (`communication`, `study_abroad`, `hsk_exam`, `work`); level `RESTRICT`. |
 | `PlacementAttempt` | Kết quả kiểm tra đầu vào. | `status`, `score`, `detailSnapshot`, `recommendedLevelId`, `recommendedBand`, timestamps. | Trạng thái và timestamp hoàn thành phải nhất quán; recommended band phải thuộc level. |
 | `LearningPlan` | Lộ trình học được sinh cho user. | `targetLevelId`, `targetBand`, `generatedFromPlacementId`, `status`, `startDate`, `endDate`. | Ngày kết thúc không trước ngày bắt đầu; target band hợp lệ. |
 | `LearningPlanItem` | Bài học theo thứ tự trong lộ trình. | `lessonId`, `orderIndex`, `scheduledDate`, `status`, timestamps. | Unique `(learningPlanId, orderIndex)` và `(learningPlanId, lessonId)`. |

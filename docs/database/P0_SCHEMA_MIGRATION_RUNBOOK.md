@@ -24,9 +24,11 @@
 | MED-A  | `20260813193000_media_cleanup_audit_integrity`           | Ràng buộc AuditLog ↔ MediaIngestion cleanup (deferred constraint trigger); preflight từ chối row processing. |
 | RL-C   | `20260914090000_rate_limit_counter`                      | Bảng purgeable `RateLimitCounter` cho throttler toàn cục dùng chung giữa các replica (mục 18).             |
 | ONB-U  | `20260916090000_user_active_goal_plan_unique`            | Partial unique index: tối đa một `UserGoal` active và một `LearningPlan` active mỗi user (mục 20).         |
+| PGB-S  | `20260929162559_pgboss_schema`                           | Worker job queue schema `pgboss` cho pg-boss 12 (mục 21).                                                  |
+| ONB-LP | `20261005023447_user_goal_learning_purpose`             | Enum `LearningPurpose` và cột `learningPurpose` trên `UserGoal` lưu lý do học (mục 22).                   |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 21 migration (đến `20260916090000_user_active_goal_plan_unique`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 23 migration (đến `20261005023447_user_goal_learning_purpose`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -909,3 +911,12 @@ Migration được sinh bằng `getConstructionPlans('pgboss')` của `pg-boss` 
 ### 21.2. Idempotent Queue Creation
 
 Khởi động Worker (và API) đều có hook gọi `boss.createQueue()` nhưng bọc bằng `try/catch` bỏ qua lỗi "already exists" để đảm bảo idempotent. Không cho phép đổi policy qua mã ứng dụng nếu queue đã tồn tại; nếu cần, phải drop bằng raw SQL và tạo lại.
+
+## 22. Mục tiêu học tập — lý do học (M2.B6)
+
+### 22.1. Migration 23 — `20261005023447_user_goal_learning_purpose`
+
+- Bổ sung enum PostgreSQL `LearningPurpose` với 4 giá trị: `communication`, `study_abroad`, `hsk_exam`, `work`.
+- Thêm cột nullable `learningPurpose` kiểu enum `LearningPurpose` vào bảng `UserGoal`. Không đặt default, không backfill dữ liệu cũ.
+- Forward-only, thuần `CREATE TYPE` + `ALTER TABLE ... ADD COLUMN`, an toàn cho migration zero-downtime.
+
