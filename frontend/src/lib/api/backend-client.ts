@@ -11,6 +11,11 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/media(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/media\/\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/\d+\/(?:archive|quarantine)$/,
+  /^\/api\/v1\/levels$/,
+  /^\/api\/v1\/onboarding\/status$/,
+  /^\/api\/v1\/onboarding\/goals$/,
+  /^\/api\/v1\/onboarding\/goals\/current$/,
+  /^\/api\/v1\/learning-plans$/,
 ];
 
 type ClientOptions = {

@@ -185,4 +185,40 @@ describe('server-only backend client', () => {
       client.request('/api/v1/auth/register?x=1', { method: 'POST' }),
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
+
+  it('allowlists onboarding and learning endpoints, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/levels');
+    await client.request('/api/v1/onboarding/status');
+    await client.request('/api/v1/onboarding/goals', {
+      method: 'POST',
+      body: {},
+    });
+    await client.request('/api/v1/onboarding/goals/current');
+    await client.request('/api/v1/learning-plans', { method: 'POST' });
+    expect(fetchImpl).toHaveBeenCalledTimes(5);
+
+    for (const path of [
+      '/api/v1/levels',
+      '/api/v1/onboarding/status',
+      '/api/v1/onboarding/goals',
+      '/api/v1/onboarding/goals/current',
+      '/api/v1/learning-plans',
+    ]) {
+      await expect(client.request(`${path}/x`)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+      await expect(client.request(`${path}?x=1`)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+  });
 });

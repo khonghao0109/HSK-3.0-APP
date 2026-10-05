@@ -52,6 +52,7 @@ describe('CSP nonce proxy and session refresh router', () => {
     '/api/session/me',
     '/api/session/recover',
     '/api/learner/session/me',
+    '/api/learner/onboarding/complete',
   ])('runs for targeted request %s', (url) => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
   });
@@ -102,7 +103,9 @@ describe('CSP nonce proxy and session refresh router', () => {
             user: { id: 2, email: 'learner@example.test', role: 'user' },
             accessToken: newLearnerAccess,
             refreshToken: 'rotated-learner-refresh',
-            refreshTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+            refreshTokenExpiresAt: new Date(
+              Date.now() + 86400000,
+            ).toISOString(),
           },
           meta: {
             requestId: 'test-request-id',
@@ -119,8 +122,12 @@ describe('CSP nonce proxy and session refresh router', () => {
 
       const res = await proxy(req);
       expect(fetchSpy).toHaveBeenCalled();
-      expect(res.cookies.get('hsk_learner_session')?.value).toBe(newLearnerAccess);
-      expect(res.cookies.get('hsk_learner_session_refresh')?.value).toBe('rotated-learner-refresh');
+      expect(res.cookies.get('hsk_learner_session')?.value).toBe(
+        newLearnerAccess,
+      );
+      expect(res.cookies.get('hsk_learner_session_refresh')?.value).toBe(
+        'rotated-learner-refresh',
+      );
       expect(res.cookies.get('hsk_admin_session')).toBeUndefined();
     });
 
@@ -134,7 +141,9 @@ describe('CSP nonce proxy and session refresh router', () => {
             user: { id: 1, email: 'admin@example.test', role: 'admin' },
             accessToken: newAdminAccess,
             refreshToken: 'rotated-admin-refresh',
-            refreshTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+            refreshTokenExpiresAt: new Date(
+              Date.now() + 86400000,
+            ).toISOString(),
           },
           meta: {
             requestId: 'test-request-id',
@@ -143,16 +152,21 @@ describe('CSP nonce proxy and session refresh router', () => {
         }),
       );
 
-      const req = new NextRequest('https://frontend.example.test/admin/dashboard', {
-        headers: {
-          cookie: `hsk_admin_session=${oldAdminAccess}; hsk_admin_session_refresh=current-admin-refresh`,
+      const req = new NextRequest(
+        'https://frontend.example.test/admin/dashboard',
+        {
+          headers: {
+            cookie: `hsk_admin_session=${oldAdminAccess}; hsk_admin_session_refresh=current-admin-refresh`,
+          },
         },
-      });
+      );
 
       const res = await proxy(req);
       expect(fetchSpy).toHaveBeenCalled();
       expect(res.cookies.get('hsk_admin_session')?.value).toBe(newAdminAccess);
-      expect(res.cookies.get('hsk_admin_session_refresh')?.value).toBe('rotated-admin-refresh');
+      expect(res.cookies.get('hsk_admin_session_refresh')?.value).toBe(
+        'rotated-admin-refresh',
+      );
       expect(res.cookies.get('hsk_learner_session')).toBeUndefined();
     });
 
@@ -167,7 +181,9 @@ describe('CSP nonce proxy and session refresh router', () => {
             user: { id: 2, email: 'learner@example.test', role: 'user' },
             accessToken: newLearnerAccess,
             refreshToken: 'rotated-learner-refresh',
-            refreshTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+            refreshTokenExpiresAt: new Date(
+              Date.now() + 86400000,
+            ).toISOString(),
           },
           meta: {
             requestId: 'test-request-id',
@@ -191,8 +207,12 @@ describe('CSP nonce proxy and session refresh router', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [, fetchOptions] = fetchSpy.mock.calls[0] ?? [];
       expect(String(fetchOptions?.body)).toContain('current-learner-refresh');
-      expect(res.cookies.get('hsk_learner_session')?.value).toBe(newLearnerAccess);
-      expect(res.cookies.get('hsk_learner_session_refresh')?.value).toBe('rotated-learner-refresh');
+      expect(res.cookies.get('hsk_learner_session')?.value).toBe(
+        newLearnerAccess,
+      );
+      expect(res.cookies.get('hsk_learner_session_refresh')?.value).toBe(
+        'rotated-learner-refresh',
+      );
       expect(res.cookies.get('hsk_admin_session')).toBeUndefined();
       expect(res.cookies.get('hsk_admin_session_refresh')).toBeUndefined();
     });

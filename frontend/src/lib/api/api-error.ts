@@ -6,6 +6,8 @@ export type ApiFailureKind =
   | 'admin_account'
   | 'email_taken'
   | 'weak_password'
+  | 'level_unavailable'
+  | 'content_unavailable'
   | 'not_found'
   | 'conflict'
   | 'validation'
