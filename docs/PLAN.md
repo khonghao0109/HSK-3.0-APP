@@ -45,15 +45,15 @@ cam kết.
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 9 / 10 | 1–2 tuần | 🟡 |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
-| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 4 / 16 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 9 / 29 | 5–7 tuần | 🟡 |
+| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 10 / 30 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **57 / 133 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **68 / 143 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -222,7 +222,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.1e | OAuth Google/Apple/Facebook | ⬜ | Nút trên UI hiện báo "Tính năng sắp ra mắt.", chờ backend OAuth |
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
-| M2.2 | UI onboarding goal + kế hoạch học | 🟡 | 05/10: chờ review; 01/03,04; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
+| M2.2 | UI onboarding goal + kế hoạch học | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); 01/03,04; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
@@ -233,6 +233,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.6a | Backend dictionary detail + save-word API | ⬜ | |
 | M2.6b | UI tra từ, chi tiết, lưu từ | ⬜ | 03/01,02 |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ⬜ | `frontend/DESIGN.md` |
+| M2.7a | Vệ sinh test e2e/unit (helper DB disposable cho psql, ghim TZ Vitest) và focus a11y learner (vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline) | 🟡 | 05/10: chờ review |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
@@ -468,12 +469,13 @@ UI và phần backend còn thiếu:
 | M2.1e | OAuth Google/Apple/Facebook | ⬜ | Nút trên UI hiện báo "Tính năng sắp ra mắt.", chờ backend OAuth |
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
-| M2.2 | Onboarding goal + kế hoạch học UI | 🟡 | 05/10: chờ review; `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
+| M2.2 | Onboarding goal + kế hoạch học UI | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ⬜ | `02-learning-lesson/03,04,05,06` |
 | M2.6 | Dictionary search/detail/save-word cơ bản (backend detail + save API còn thiếu) | ⬜ | `03-dictionary-review-reader/01,02` |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline states | ⬜ | `frontend/DESIGN.md` |
+| M2.7a | Vệ sinh test e2e/unit (helper DB disposable cho psql, ghim TZ Vitest) và focus a11y learner (vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline) | 🟡 | 05/10: chờ review |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 
@@ -640,3 +642,4 @@ khi vertical slice bắt đầu.
 | 05/10/2026 | GĐ5: M2.1b ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). Thêm M2.B6 🟡 chờ review (lưu `learningPurpose` cho UserGoal, migration `20261005023447_user_goal_learning_purpose`) và M2.B7 ⬜ (job gửi nhắc nhở học); quyết định PO 05/10 cho M2.2. Tổng 65/140. |
 | 05/10/2026 | GĐ5: M2.B6 ✅ đã đóng (`d1c249e`, `5b1e87e`, `ada69f3`, `3f6896d`, PR #5 run `37259009433`). Thêm M2.B8 🟡 chờ review (`GET /levels` trả code/minBand/maxBand, seed e2e HSK2/HSK3/HSK7_9, bổ sung e2e onboarding, kèm sửa link Return to platform (regression `23ecd30`), README env e2e); điều kiện trước M2.2. Tổng 66/141. |
 | 05/10/2026 | GĐ5: M2.B8 ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`). M2.2 🟡 chờ review: UI onboarding Mục tiêu và Kế hoạch (learner), 2 route Server Component `/(learner)/onboarding/{goal,plan}`, điều hướng `/learn`, BFF POST `/api/learner/onboarding/complete`, Playwright e2e (118 passed, 6 skipped, 0 failed), m22-compare 26/26 PASS, m21b-compare 40/40 PASS. Tổng 67/141 (66 + 1 = 67). |
+| 05/10/2026 | GĐ5: M2.2 ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`). Thêm M2.7a 🟡 chờ review (helper DB disposable cho kiểm psql trong e2e, ghim `TZ` cho Vitest, vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline, ẩn thông báo `content_unavailable` khi đổi lựa chọn, mock `redirect` ném lỗi như Next). Đếm lại bằng script theo từng dòng task: GĐ4 10/17 (bảng 1.1 ghi 4/16), tổng trước thay đổi 67/142 (dòng tổng ghi 57/133). Tổng 68/143. |
