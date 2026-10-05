@@ -213,8 +213,10 @@ BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: s�
   nhạy cảm (ADR-003, ADR-004).
 - `proxy.ts` (thay middleware) chỉ sinh CSP nonce; chốt auth nằm ở `app/admin/layout.tsx`
   và trong từng page.
-- Route hiện có: `/login`, `/forbidden`, `/admin/exercises[/[id]]`, `/admin/media[/[id]]`;
-  root redirect tới `/admin/exercises`. Chưa có learner UI.
+- Route hiện có:
+  - Admin & auth: `/login`, `/forbidden`, `/admin/exercises[/[id]]`, `/admin/media[/[id]]`.
+  - Learner UI (M2.1b): route group `(learner)` với layout và `learner.css` riêng, gồm 6 route: `/` (trang chào), `/sign-up` (đăng ký), `/sign-in` (đăng nhập), `/terms` (điều khoản), `/privacy` (chính sách bảo mật), `/learn` (trang học tạm "Xin chào, {email}" + nút đăng xuất).
+- Guard ở server cho learner (M2.1b): thực thi hoàn toàn ở Server Component thông qua `getServerLearnerSession()` và hàm thuần `resolveLearnerSession(token, loadCurrentUser)` (chỉ chấp nhận tài khoản có `role: 'user'`, trả về trạng thái `learner` hoặc `unauthenticated`). Khi chưa đăng nhập, `/learn` gọi `redirect('/sign-in')`. Khi đã đăng nhập, các trang `/`, `/sign-in`, `/sign-up` tự động gọi `redirect('/learn')`. Trường hợp backend trả lỗi 5xx được bắt và hiển thị giao diện thử lại qua `error.tsx` của route group.
 - Thiết kế: 36 mockup trong [../ui_image/README.md](../ui_image/README.md).
 - Mobile: React Native + Expo tại `mobile/` (ADR-008 §1), chưa có code. Mobile không đi
   qua BFF; gọi backend trực tiếp với bearer token trong `expo-secure-store`. Bắt đầu ở
