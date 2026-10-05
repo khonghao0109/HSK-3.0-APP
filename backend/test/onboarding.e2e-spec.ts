@@ -17,6 +17,7 @@ type GoalResponse = {
     targetLevelId: number;
     targetBand: number;
     dailyMinutes: number;
+    learningPurpose: string | null;
     startDate: string;
     targetLevel: {
       id: number;
@@ -671,5 +672,188 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       .get('/api/v1/onboarding/status')
       .set('Authorization', `Bearer ${anonymizedToken}`)
       .expect(401);
+  });
+
+  describe('learningPurpose on UserGoal (Task M2.B6)', () => {
+    const userCEmail = `onboarding-c-${suffix}@example.com`;
+    const userDEmail = `onboarding-d-${suffix}@example.com`;
+    let userCToken: string;
+    let userCId: number;
+    let userDToken: string;
+    let firstGoalId: number;
+
+    beforeAll(async () => {
+      const regC = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: userCEmail, password, name: 'Onboarding User C' })
+        .expect(201);
+      userCToken = regC.body.data.accessToken as string;
+      userCId = regC.body.data.user.id as number;
+
+      const regD = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: userDEmail, password, name: 'Onboarding User D' })
+        .expect(201);
+      userDToken = regD.body.data.accessToken as string;
+    });
+
+    it('M2.B6: creates a goal with learningPurpose "hsk_exam" and retrieves it in current goal', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'hsk_exam',
+        })
+        .expect(201);
+
+      const body = res.body as GoalResponse;
+      firstGoalId = body.data.id;
+      expect(body.data.learningPurpose).toBe('hsk_exam');
+
+      const currentRes = await request(app.getHttpServer())
+        .get('/api/v1/onboarding/goals/current')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .expect(200);
+
+      const currentBody = currentRes.body as GoalResponse;
+      expect(currentBody.data.learningPurpose).toBe('hsk_exam');
+    });
+
+    it('M2.B6: stores null for learningPurpose when omitted in request', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userDToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+        })
+        .expect(201);
+
+      const body = res.body as GoalResponse;
+      expect(body.data.learningPurpose).toBeNull();
+
+      const currentRes = await request(app.getHttpServer())
+        .get('/api/v1/onboarding/goals/current')
+        .set('Authorization', `Bearer ${userDToken}`)
+        .expect(200);
+
+      const currentBody = currentRes.body as GoalResponse;
+      expect(currentBody.data.learningPurpose).toBeNull();
+    });
+
+    it('M2.B6: rejects invalid learningPurpose values: "travel"', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'travel',
+        })
+        .expect(400);
+    });
+
+    it('M2.B6: rejects invalid learningPurpose values: 123', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 123,
+        })
+        .expect(400);
+    });
+
+    it('M2.B6: rejects invalid learningPurpose values: ""', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: '',
+        })
+        .expect(400);
+    });
+
+    it('M2.B6: rejects invalid learningPurpose values: true', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: true,
+        })
+        .expect(400);
+    });
+
+    it('M2.B6: idempotently returns existing goal when called twice with identical payload including learningPurpose', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'hsk_exam',
+        })
+        .expect(201);
+
+      const body = res.body as GoalResponse;
+      expect(body.data.id).toBe(firstGoalId);
+    });
+
+    it('M2.B6: deactivates old goal and creates new active goal when only learningPurpose changes', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${userCToken}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'work',
+        })
+        .expect(201);
+
+      const body = res.body as GoalResponse;
+      expect(body.data.id).not.toBe(firstGoalId);
+      expect(body.data.learningPurpose).toBe('work');
+
+      const oldGoal = await prisma.userGoal.findUniqueOrThrow({
+        where: { id: firstGoalId },
+      });
+      expect(oldGoal.isActive).toBe(false);
+
+      const activeCount = await prisma.userGoal.count({
+        where: { userId: userCId, isActive: true },
+      });
+      expect(activeCount).toBe(1);
+    });
   });
 });

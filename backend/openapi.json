@@ -6691,6 +6691,16 @@
             "minimum": 1,
             "maximum": 1440
           },
+          "learningPurpose": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "communication",
+              "study_abroad",
+              "hsk_exam",
+              "work"
+            ]
+          },
           "reminderEnabled": {
             "type": "boolean"
           },

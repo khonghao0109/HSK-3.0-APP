@@ -352,6 +352,7 @@ export class DataExportJob implements OnApplicationBootstrap {
               targetLevelId: number;
               targetBand: number | null;
               dailyMinutes: number;
+              learningPurpose: string | null;
               reminderEnabled: boolean;
               reminderTime: Date | null;
               startDate: Date;
@@ -360,7 +361,7 @@ export class DataExportJob implements OnApplicationBootstrap {
               updatedAt: Date;
             }>
           >(Prisma.sql`
-            SELECT id, "targetLevelId", "targetBand", "dailyMinutes", "reminderEnabled", "reminderTime", "startDate", "isActive", "createdAt", "updatedAt"
+            SELECT id, "targetLevelId", "targetBand", "dailyMinutes", "learningPurpose", "reminderEnabled", "reminderTime", "startDate", "isActive", "createdAt", "updatedAt"
             FROM "UserGoal"
             WHERE "userId" = ${userId}
             ORDER BY "createdAt" DESC

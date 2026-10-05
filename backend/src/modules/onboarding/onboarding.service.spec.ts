@@ -27,6 +27,7 @@ const goal = {
   targetLevelId: level.id,
   targetBand: 1,
   dailyMinutes: 30,
+  learningPurpose: null,
   reminderEnabled: false,
   reminderTime: null,
   startDate,
@@ -273,6 +274,41 @@ describe('OnboardingService goals', () => {
       data: { isActive: false },
     });
     expect(tx.userGoal.create).toHaveBeenCalled();
+  });
+
+  it('treats a goal with a different learningPurpose as not identical and deactivates the old goal', async () => {
+    const { service, tx } = createHarness();
+    tx.level.findFirst.mockResolvedValue(level);
+    tx.userGoal.findMany.mockResolvedValue([
+      {
+        ...goal,
+        learningPurpose: 'work',
+      },
+    ]);
+    tx.userGoal.updateMany.mockResolvedValue({ count: 1 });
+    tx.userGoal.create.mockResolvedValue({
+      ...goal,
+      id: 12,
+      learningPurpose: 'study_abroad',
+    });
+
+    const result = await service.setGoal(1, {
+      ...goalDto,
+      learningPurpose: 'study_abroad',
+    });
+
+    expect(result.data.id).toBe(12);
+    expect(tx.userGoal.updateMany).toHaveBeenCalledWith({
+      where: { userId: 1, isActive: true },
+      data: { isActive: false },
+    });
+    expect(tx.userGoal.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          learningPurpose: 'study_abroad',
+        }),
+      }),
+    );
   });
 
   it('scopes the current-goal lookup to the JWT owner', async () => {

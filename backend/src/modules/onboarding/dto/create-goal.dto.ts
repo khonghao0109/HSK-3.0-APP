@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -7,6 +8,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { LearningPurpose } from '@prisma/client';
 
 import { IsStrictBoolean } from '../../../common/decorators/is-strict-boolean.decorator';
 
@@ -28,6 +30,10 @@ export class CreateGoalDto {
   @Min(1)
   @Max(1440)
   dailyMinutes!: number;
+
+  @IsOptional()
+  @IsEnum(LearningPurpose)
+  learningPurpose?: LearningPurpose | null;
 
   @IsStrictBoolean()
   reminderEnabled!: boolean;

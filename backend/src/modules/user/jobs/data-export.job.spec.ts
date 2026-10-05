@@ -213,5 +213,82 @@ describe('DataExportJob', () => {
         'Private object storage is unavailable.',
       );
     });
+
+    it('includes learningPurpose in exported user goals snapshot', async () => {
+      // 1. Lock row
+      mockTx.$queryRaw.mockResolvedValueOnce([
+        { id: 1, userId: 10, status: 'requested' },
+      ]);
+
+      // 2. User basic info
+      mockTx.$queryRaw.mockResolvedValueOnce([
+        {
+          id: 10,
+          email: 'learner@example.com',
+          name: 'Learner',
+          createdAt: new Date(),
+          emailVerifiedAt: null,
+        },
+      ]);
+
+      // 3. UserProfile
+      mockTx.$queryRaw.mockResolvedValueOnce([]);
+
+      // 4. UserSession
+      mockTx.$queryRaw.mockResolvedValueOnce([]);
+
+      // 5. UserGoal
+      mockTx.$queryRaw.mockResolvedValueOnce([
+        {
+          id: 1,
+          targetLevelId: 1,
+          targetBand: 1,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: new Date('2026-08-11T00:00:00.000Z'),
+          isActive: true,
+          createdAt: new Date('2026-08-10T00:00:00.000Z'),
+          updatedAt: new Date('2026-08-10T00:00:00.000Z'),
+          learningPurpose: 'hsk_exam',
+        },
+      ]);
+
+      // Remaining queries before batches (21 queries: PlacementAttempt through AuditLog)
+      for (let i = 0; i < 21; i++) {
+        mockTx.$queryRaw.mockResolvedValueOnce([]);
+      }
+      // LearningEvent batch 1 empty
+      mockTx.$queryRaw.mockResolvedValueOnce([]);
+
+      const result = await job.process({ exportId: 1 });
+      expect(result).toBe(true);
+      expect(mockPutPrivateObject).toHaveBeenCalledTimes(1);
+
+      const putCall = mockPutPrivateObject.mock.calls[0][0] as {
+        body: Buffer;
+      };
+      const exportPayload = JSON.parse(putCall.body.toString('utf8'));
+      expect(exportPayload.goals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 1,
+            learningPurpose: 'hsk_exam',
+          }),
+        ]),
+      );
+
+      // Verify UserGoal raw query includes "learningPurpose" column in SELECT
+      const userGoalQueryCall = mockTx.$queryRaw.mock.calls.find(
+        (call: [{ strings?: string[] }]) =>
+          call[0]?.strings?.some((chunk: string) =>
+            chunk.includes('"UserGoal"'),
+          ),
+      );
+      expect(userGoalQueryCall).toBeDefined();
+      expect(userGoalQueryCall[0].strings.join('')).toContain(
+        '"learningPurpose"',
+      );
+    });
   });
 });

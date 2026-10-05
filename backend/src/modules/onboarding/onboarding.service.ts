@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { LearningPurpose, Prisma } from '@prisma/client';
 
 import { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
@@ -25,6 +25,7 @@ const GOAL_SELECT = {
   targetLevelId: true,
   targetBand: true,
   dailyMinutes: true,
+  learningPurpose: true,
   reminderEnabled: true,
   reminderTime: true,
   startDate: true,
@@ -243,6 +244,7 @@ export class OnboardingService {
           targetLevelId: level.id,
           targetBand,
           dailyMinutes: dto.dailyMinutes,
+          learningPurpose: dto.learningPurpose ?? null,
           reminderEnabled: dto.reminderEnabled,
           reminderTime: parsedReminderTime,
           startDate: parsedStartDate,
@@ -262,6 +264,7 @@ export class OnboardingService {
           targetLevelId: level.id,
           targetBand,
           dailyMinutes: dto.dailyMinutes,
+          learningPurpose: dto.learningPurpose ?? null,
           reminderEnabled: dto.reminderEnabled,
           reminderTime: parsedReminderTime,
           startDate: parsedStartDate,
@@ -508,6 +511,7 @@ function isSameGoal(
     targetLevelId: number;
     targetBand: number;
     dailyMinutes: number;
+    learningPurpose: LearningPurpose | null;
     reminderEnabled: boolean;
     reminderTime: Date | null;
     startDate: Date;
@@ -517,6 +521,7 @@ function isSameGoal(
     goal.targetLevelId === expected.targetLevelId &&
     goal.targetBand === expected.targetBand &&
     goal.dailyMinutes === expected.dailyMinutes &&
+    goal.learningPurpose === expected.learningPurpose &&
     goal.reminderEnabled === expected.reminderEnabled &&
     formatTimeOnly(goal.reminderTime) ===
       formatTimeOnly(expected.reminderTime) &&
@@ -555,6 +560,7 @@ function serializeGoal(goal: GoalRecord): UserGoalView {
     targetLevelId: goal.targetLevelId,
     targetBand: goal.targetBand,
     dailyMinutes: goal.dailyMinutes,
+    learningPurpose: goal.learningPurpose,
     reminderEnabled: goal.reminderEnabled,
     reminderTime: formatTimeOnly(goal.reminderTime),
     startDate: formatDateOnly(goal.startDate),

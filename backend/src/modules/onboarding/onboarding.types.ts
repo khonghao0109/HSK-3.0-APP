@@ -1,3 +1,5 @@
+import { LearningPurpose } from '@prisma/client';
+
 export type OnboardingNextStep =
   | 'ready'
   | 'set_goal'
@@ -25,6 +27,7 @@ export interface UserGoalView {
   targetLevelId: number;
   targetBand: number;
   dailyMinutes: number;
+  learningPurpose: LearningPurpose | null;
   reminderEnabled: boolean;
   reminderTime: string | null;
   startDate: string;
