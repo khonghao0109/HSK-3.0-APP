@@ -1,5 +1,16 @@
 # HSK Content Workbench — Admin Operations Design Brief V1.1
 
+> **Product decision (2026-10-01): target admin direction.** The Product Owner
+> adopted the admin shown in `docs/ui_image/06-admin-cms-operations/`: a
+> Vietnamese-language console branded "Hán Lộ Admin" with an overview dashboard,
+> lesson create/edit with a review workflow, and data import. This supersedes the
+> English-only vocabulary rule in "Visual direction" and the dashboard and
+> create/import items in "Explicit exclusions" as the target design. The rest of
+> this brief describes the V1 workbench as built today and stays the contract for
+> it until each target screen ships through its own roadmap task with the backend
+> endpoints, `docs/api.md` updates and tests it needs. Do not add UI for actions
+> the API does not support yet.
+
 ## Product and audience
 
 The interface is an operational workbench for HSK content administrators. Its
