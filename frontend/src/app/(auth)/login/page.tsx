@@ -45,7 +45,7 @@ export default async function LoginPage({
             <span aria-hidden="true">◆</span> Session credentials stay in a
             protected, HttpOnly cookie.
           </p>
-          <Link className="help-link" href="/">
+          <Link className="help-link" href="/admin/exercises">
             Return to platform
           </Link>
         </div>
