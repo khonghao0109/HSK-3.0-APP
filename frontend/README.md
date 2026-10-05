@@ -126,6 +126,9 @@ nhưng vẫn phải giữ các security header chung.
 Chỉ dùng database disposable mới, tên kết thúc bằng `_test`/`_e2e` theo backend
 guard. Không chạy seed hoặc browser test trên `hsk_system`, staging hay production.
 
+Backend cho e2e learner/admin bắt buộc phải chạy `NODE_ENV=test` (production/dev
+giới hạn 20 request/phút và 10 lần đăng nhập/phút, e2e sẽ nhận 429).
+
 ```bash
 # backend — database mới, migration-only
 NODE_ENV=test \
@@ -140,15 +143,35 @@ TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/hsk_frontend_consol
 AUTH_PASSWORD_PEPPER='test-pepper-at-least-16-characters' \
 npm run test:seed:frontend-console
 
+# backend server — chạy với cùng database và pepper dưới NODE_ENV=test
+# backend vẫn đọc backend/.env; biến đặt trong lệnh sẽ ghi đè, vì vậy mọi provider phải đặt tường minh memory/test để e2e không chạm adapter thật.
+NODE_ENV=test \
+PORT=3100 \
+DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/hsk_frontend_console_test?schema=public' \
+TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/hsk_frontend_console_test' \
+AUTH_PASSWORD_PEPPER='test-pepper-at-least-16-characters' \
+JWT_SECRETS='{"e2e":"test-e2e-jwt-secret-at-least-32-characters"}' \
+JWT_ACTIVE_KID='e2e' \
+MAIL_PROVIDER=memory \
+MAIL_FROM='noreply@hsk.local' \
+MEDIA_STORAGE_PROVIDER=memory \
+MEDIA_SCANNER_PROVIDER=test \
+MEDIA_SIGNING_SECRET='test-media-signing-secret-at-least-32-characters' \
+MEDIA_METRICS_BEARER_TOKEN='test-media-metrics-token-at-least-32-chars' \
+JOB_QUEUE_PROVIDER=memory \
+APP_PUBLIC_URL='http://127.0.0.1:3200' \
+ALLOWED_ORIGINS='http://127.0.0.1:3200' \
+npm run start
+
 # frontend — backend phải đang chạy ở 3100 với cùng database
 npx playwright install chromium
 npm run test:e2e
 ```
 
 Credential mặc định chỉ dành cho fixture disposable được ghi trong `.env.example`.
-`npm run test:e2e` build và chạy production server trên Chromium ở desktop 1440,
-mobile 390 và tablet 768. Không ghi số case cố định trong tài liệu; lấy kết quả từ
-gate gần nhất.
+`npm run test:e2e` build và chạy production server trên Chromium ở 4 project:
+`desktop-1440`, `desktop-1024`, `mobile-390`, `tablet-768` (đều là Chromium).
+Không ghi số case cố định trong tài liệu; lấy kết quả từ gate gần nhất.
 
 ## Cấu trúc chính
 
