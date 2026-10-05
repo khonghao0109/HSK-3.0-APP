@@ -131,10 +131,14 @@ export function OnboardingGoalForm({
     urlSelection.purpose ?? initialPurpose,
   );
   const [band, setBand] = useState<number>(urlSelection.band ?? initialBand);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const updateSelection = (newPurpose: LearningPurpose, newBand: number) => {
+    // Re-clicking the current choice is not a change; keep the notice.
+    if (newPurpose === purpose && newBand === band) return;
     setPurpose(newPurpose);
     setBand(newBand);
+    setNoticeDismissed(true);
     window.history.replaceState(
       null,
       '',
@@ -203,7 +207,7 @@ export function OnboardingGoalForm({
         đề xuất lộ trình tốt nhất
       </p>
 
-      {notice === 'content_unavailable' && (
+      {notice === 'content_unavailable' && !noticeDismissed && (
         <div className="alert alert--error" role="alert">
           <svg className="icon icon--sm" aria-hidden="true">
             <use href="#i-alert-triangle" />

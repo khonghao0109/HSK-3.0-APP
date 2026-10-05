@@ -366,4 +366,94 @@ describe('OnboardingGoalForm', () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it('hides the content_unavailable notice after the learner changes purpose', async () => {
+    const user = userEvent.setup();
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+        notice="content_unavailable"
+      />,
+    );
+    const noticeText =
+      'Cấp độ bạn chọn hiện chưa có bài học. Hãy chọn cấp độ khác.';
+    expect(screen.getByText(noticeText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Du học' }));
+
+    expect(screen.getByRole('radio', { name: 'Du học' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.queryByText(noticeText)).not.toBeInTheDocument();
+  });
+
+  it('hides the content_unavailable notice after the learner changes level', async () => {
+    const user = userEvent.setup();
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+        notice="content_unavailable"
+      />,
+    );
+    const noticeText =
+      'Cấp độ bạn chọn hiện chưa có bài học. Hãy chọn cấp độ khác.';
+    expect(screen.getByText(noticeText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: '2' }));
+
+    expect(screen.getByRole('radio', { name: '2' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.queryByText(noticeText)).not.toBeInTheDocument();
+  });
+
+  it('keeps the content_unavailable notice when the learner re-clicks the selected purpose', async () => {
+    const user = userEvent.setup();
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+        notice="content_unavailable"
+      />,
+    );
+    const noticeText =
+      'Cấp độ bạn chọn hiện chưa có bài học. Hãy chọn cấp độ khác.';
+    const selectedPurpose = screen.getByRole('radio', { name: 'Giao tiếp' });
+
+    await user.click(selectedPurpose);
+
+    expect(selectedPurpose).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText(noticeText)).toBeInTheDocument();
+  });
+
+  it('keeps the content_unavailable notice when the learner re-clicks the selected level', async () => {
+    const user = userEvent.setup();
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+        notice="content_unavailable"
+      />,
+    );
+    const noticeText =
+      'Cấp độ bạn chọn hiện chưa có bài học. Hãy chọn cấp độ khác.';
+    const selectedLevel = screen.getByRole('radio', { name: '3' });
+
+    await user.click(selectedLevel);
+
+    expect(selectedLevel).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText(noticeText)).toBeInTheDocument();
+  });
 });

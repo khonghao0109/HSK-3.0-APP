@@ -1,6 +1,8 @@
 import { isValidElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { redirect } from 'next/navigation';
+
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import type {
   LevelItem,
@@ -12,10 +14,14 @@ import {
   getPublicLevels,
 } from '@/features/onboarding/onboarding-service';
 
+import { BackendRequestError } from '@/lib/api/api-error';
+
 import OnboardingGoalPage from './page';
 
 vi.mock('next/navigation', () => ({
-  redirect: vi.fn(),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
   useRouter: () => ({ push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -102,5 +108,33 @@ describe('OnboardingGoalPage', () => {
     expect(props.initialPurpose).toBe('hsk_exam');
     expect(props.initialBand).toBe(2);
     expect(props.hasGoal).toBe(true);
+  });
+
+  it('redirects to /sign-in when there is no learner session', async () => {
+    vi.mocked(getServerLearnerSession).mockResolvedValue({
+      state: 'unauthenticated',
+      token: null,
+    });
+
+    await expect(renderPage({})).rejects.toThrow('NEXT_REDIRECT:/sign-in');
+
+    expect(redirect).toHaveBeenCalledWith('/sign-in');
+    expect(getPublicLevels).not.toHaveBeenCalled();
+    expect(getCurrentGoal).not.toHaveBeenCalled();
+  });
+
+  it('redirects to /sign-in when the backend responds 401', async () => {
+    vi.mocked(getCurrentGoal).mockRejectedValue(
+      new BackendRequestError({
+        status: 401,
+        kind: 'session_expired',
+        retryable: false,
+        message: 'Session expired',
+      }),
+    );
+
+    await expect(renderPage({})).rejects.toThrow('NEXT_REDIRECT:/sign-in');
+
+    expect(redirect).toHaveBeenCalledWith('/sign-in');
   });
 });
