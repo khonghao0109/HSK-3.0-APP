@@ -1,7 +1,7 @@
-import { execSync } from 'node:child_process';
-
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+
+import { disposableDbUrl, queryDisposableDb } from './support/disposable-db';
 
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin.frontend@example.test';
 const adminPassword =
@@ -731,6 +731,8 @@ test('P-b: transparently refreshes expired session on navigation and revokes on 
   page,
   context,
 }) => {
+  // Fail fast before the UI steps if the database is not disposable.
+  disposableDbUrl();
   await login(page);
   await expect(page).toHaveURL(/\/admin\/exercises/);
 
@@ -800,16 +802,15 @@ test('P-b: transparently refreshes expired session on navigation and revokes on 
   expect(refreshedSession).not.toBe(initialSession);
   expect(refreshedRefresh).not.toBe(initialRefresh);
 
-  let refreshedSid: number | undefined;
-  try {
-    const refreshedPayloadStr = refreshedSession!.split('.')[1] ?? '';
-    const refreshedPayload = JSON.parse(
-      Buffer.from(refreshedPayloadStr, 'base64url').toString('utf8'),
-    ) as { sid?: number };
-    refreshedSid = refreshedPayload.sid;
-  } catch {
-    // ignore
-  }
+  const refreshedPayloadStr = refreshedSession?.split('.')[1] ?? '';
+  const refreshedPayload = JSON.parse(
+    Buffer.from(refreshedPayloadStr, 'base64url').toString('utf8'),
+  ) as { sid?: unknown };
+  const refreshedSid = refreshedPayload.sid;
+  expect(
+    Number.isInteger(refreshedSid),
+    'refreshed admin access token must carry an integer sid claim',
+  ).toBe(true);
 
   await page.getByRole('button', { name: 'Log out' }).click();
   await expect(page).toHaveURL(/\/login/);
@@ -829,19 +830,8 @@ test('P-b: transparently refreshes expired session on navigation and revokes on 
   const meRes = await page.request.get('/api/session/me');
   expect([401, 403]).toContain(meRes.status());
 
-  if (refreshedSid) {
-    try {
-      const dbUrl =
-        process.env.TEST_DATABASE_URL ||
-        process.env.DATABASE_URL ||
-        'postgresql://hsk:test-local-postgres@127.0.0.1:5432/hsk_e2e_test';
-      const reason = execSync(
-        `psql "${dbUrl}" -t -A -c 'SELECT "revocationReason" FROM "UserSession" WHERE id = ${refreshedSid}'`,
-        { encoding: 'utf8', timeout: 5000 },
-      ).trim();
-      expect(reason).toBe('logout');
-    } catch {
-      // ignore if psql not reachable
-    }
-  }
+  const reason = queryDisposableDb(
+    `SELECT "revocationReason" FROM "UserSession" WHERE id = ${Number(refreshedSid)}`,
+  );
+  expect(reason).toBe('logout');
 });

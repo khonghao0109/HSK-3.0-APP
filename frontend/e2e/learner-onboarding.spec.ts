@@ -1,5 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { expect, test, type Locator } from '@playwright/test';
+
+import {
+  disposableDbUrl,
+  queryDisposableDb,
+  sqlLiteral,
+} from './support/disposable-db';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -30,8 +35,6 @@ async function expectKeyboardFocusVisible(locator: Locator): Promise<void> {
     true,
   );
 }
-
-const DISPOSABLE_DB_NAME = /_(test|e2e|verify|disposable|hardening)$/;
 
 const VIEWPORTS_8 = [
   { width: 320, height: 568 },
@@ -271,20 +274,8 @@ test.describe('Learner Onboarding Flow', () => {
   test('5. saves reminderEnabled=false and reminderTime null in database when reminder is disabled', async ({
     page,
   }) => {
-    const rawDbUrl = process.env.TEST_DATABASE_URL;
-    if (!rawDbUrl) {
-      throw new Error(
-        'TEST_DATABASE_URL is required for this test (disposable PostgreSQL database).',
-      );
-    }
-    // psql rejects Prisma-only query params such as ?schema=public
-    const psqlUrl = rawDbUrl.split('?')[0] ?? '';
-    const dbName = psqlUrl.slice(psqlUrl.lastIndexOf('/') + 1);
-    expect(
-      dbName,
-      'TEST_DATABASE_URL must point to a disposable test database',
-    ).toMatch(DISPOSABLE_DB_NAME);
-
+    // Fail fast before the UI steps if the database is not disposable.
+    disposableDbUrl();
     const email = `learner.ob5.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.test`;
     const password = 'StrongPassword123!';
 
@@ -307,25 +298,14 @@ test.describe('Learner Onboarding Flow', () => {
     await expect(page).toHaveURL(/\/learn/);
 
     // Check database with psql (disposable test database only)
-    const sql = [
-      'SELECT ug."reminderEnabled", ug."reminderTime" IS NULL',
-      'FROM "UserGoal" ug JOIN "User" u ON ug."userId" = u.id',
-      `WHERE u.email = :'email' AND ug."isActive" = true`,
-      'ORDER BY ug.id DESC LIMIT 1;',
-    ].join(' ');
-    const row = execFileSync(
-      'psql',
+    const row = queryDisposableDb(
       [
-        `--dbname=${psqlUrl}`,
-        '--no-psqlrc',
-        '--tuples-only',
-        '--no-align',
-        '--field-separator=|',
-        '--set=ON_ERROR_STOP=1',
-        `--set=email=${email}`,
-      ],
-      { encoding: 'utf8', timeout: 10_000, input: sql },
-    ).trim();
+        'SELECT ug."reminderEnabled", ug."reminderTime" IS NULL',
+        'FROM "UserGoal" ug JOIN "User" u ON ug."userId" = u.id',
+        `WHERE u.email = ${sqlLiteral(email)} AND ug."isActive" = true`,
+        'ORDER BY ug.id DESC LIMIT 1;',
+      ].join(' '),
+    );
     expect(row).toBe('f|t');
   });
 
