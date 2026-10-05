@@ -16,8 +16,10 @@
   --jade-200: #bfe9dc;
   --jade-100: #dff4ed;
   --jade-50: #effaf6;
+  --jade-25: #fbfefc;
 
   --cream-50: #fefaf2;
+  --cream-50-transparent: rgb(254 250 242 / 0);
   --cream-100: #f8f2e6;
   --cream-200: #efe7d8;
   --paper: #ffffff;
@@ -31,6 +33,7 @@
   --ink-900: #14182b;
 
   --cinnabar-600: #d4502b;
+  --cinnabar-500: #e2553a;
   --cinnabar-100: #fde8e1;
   --red-600: #e0453a;
   --red-100: #fdeceb;
@@ -66,8 +69,10 @@
   --focus-ring: 0 0 0 3px rgb(14 162 134 / 40%);
   --shadow-card: 0 1px 2px rgb(20 24 43 / 4%), 0 4px 14px rgb(20 24 43 / 5%);
   --shadow-float: 0 10px 30px rgb(11 28 70 / 16%);
-  --shadow-app-desktop: 0 0 0 1px var(--cream-200), 0 20px 60px rgb(11 28 70 / 8%);
+  --shadow-app-desktop:
+    0 0 0 1px var(--cream-200), 0 20px 60px rgb(11 28 70 / 8%);
   --icon-btn-hover-bg: rgb(127 127 127 / 10%);
+  --shadow-switch-knob: 0 1px 3px rgb(0 0 0 / 25%);
 
   /* ---------- Semantic tokens ---------- */
   --surface-canvas: var(--cream-50);
@@ -102,10 +107,13 @@
   --status-xp: var(--amber-500);
 
   /* ---------- Typography tokens ---------- */
-  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-serif: var(--font-noto-serif), 'Noto Serif', Georgia, 'Times New Roman', serif;
+  --font-sans:
+    var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif:
+    var(--font-noto-serif), 'Noto Serif', Georgia, 'Times New Roman', serif;
   --font-cn: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-  --font-cn-serif: var(--font-noto-serif-sc), 'Noto Serif SC', 'Songti SC', serif;
+  --font-cn-serif:
+    var(--font-noto-serif-sc), 'Noto Serif SC', 'Songti SC', serif;
 
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
@@ -323,7 +331,10 @@ html:has(.learner-app) {
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
-  transition: background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast);
+  transition:
+    background var(--dur-fast),
+    border-color var(--dur-fast),
+    transform var(--dur-fast);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -400,6 +411,11 @@ html:has(.learner-app) {
   background: var(--icon-btn-hover-bg);
 }
 
+/* Spacer placeholder that keeps the top-bar grid aligned; not interactive. */
+.learner-app span.icon-btn {
+  pointer-events: none;
+}
+
 /* ---------- Forms ---------- */
 .learner-app .field {
   display: grid;
@@ -427,7 +443,9 @@ html:has(.learner-app) {
   background: var(--surface-card);
   color: var(--text-strong);
   font-size: var(--fs-md);
-  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
 }
 
 .learner-app .input::placeholder {
@@ -480,7 +498,6 @@ html:has(.learner-app) {
   color: var(--alert-error-text);
   border: 1px solid var(--alert-error-border);
 }
-
 
 .learner-app .alert a {
   display: inline-block;
@@ -903,4 +920,431 @@ html:has(.learner-app) {
   font-family: var(--font-serif);
   font-size: 1.6rem;
   color: var(--navy-900);
+}
+
+/* ---------- 01-03/01-04 Onboarding ---------- */
+.learner-app .ob {
+  container-type: inline-size;
+  padding: 64px 21px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.learner-app .ob__top {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  margin-left: -11px;
+}
+
+.learner-app .ob__top .icon-btn {
+  color: var(--navy-900);
+}
+
+.learner-app .ob__top .icon-btn .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 2;
+}
+
+.learner-app .ob__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.learner-app .ob__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--slate-200);
+}
+
+.learner-app .ob__dots i.is-on {
+  background: var(--jade-600);
+  width: 12px;
+  height: 12px;
+  margin-top: -1.5px;
+}
+
+.learner-app .ob__step {
+  text-align: right;
+  font-size: 0.9375rem;
+  color: var(--navy-900);
+  font-weight: 500;
+  margin: 0;
+}
+
+.learner-app .ob__title {
+  margin-top: 26px;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.34rem;
+  line-height: 1.3;
+  color: var(--navy-900);
+}
+
+.learner-app .ob__sub {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--stone-700);
+}
+
+.learner-app .ob__sub--tight {
+  margin-top: 4px;
+}
+
+.learner-app .ob__h2 {
+  font-weight: 600;
+  font-size: 1.1875rem;
+  color: var(--navy-900);
+}
+
+.learner-app .ob__section {
+  margin-top: 30px;
+}
+
+.learner-app .ob .alert {
+  margin-top: 18px;
+}
+
+.learner-app .ob__footer {
+  position: sticky;
+  bottom: 0;
+  margin: auto -21px 0;
+  padding: 24px 21px max(46px, env(safe-area-inset-bottom));
+  background: linear-gradient(
+    to top,
+    var(--surface-canvas) 78%,
+    var(--cream-50-transparent)
+  );
+}
+
+.learner-app .ob__footer .alert {
+  margin-bottom: var(--sp-4);
+}
+
+.learner-app .ob__footer .btn {
+  min-height: 54px;
+  border-radius: 12px;
+  font-size: 1.1875rem;
+}
+
+.learner-app .goal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.learner-app .goal {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 145px;
+  padding: 12px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+  color: var(--navy-900);
+  font-weight: 500;
+  font-size: 1.0625rem;
+}
+
+.learner-app .goal img {
+  width: 78px;
+  height: 76px;
+}
+
+.learner-app .goal[aria-pressed='true'],
+.learner-app .goal[aria-checked='true'] {
+  border: 2px solid var(--jade-600);
+  background: var(--jade-25);
+}
+
+.learner-app .goal__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--jade-600);
+  display: none;
+}
+
+.learner-app .goal[aria-pressed='true'] .goal__check,
+.learner-app .goal[aria-checked='true'] .goal__check {
+  display: block;
+}
+
+.learner-app .levels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--cream-100);
+}
+
+.learner-app .levels button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 1.0625rem;
+  color: var(--navy-900);
+  font-weight: 500;
+}
+
+.learner-app .levels button[aria-checked='true'] {
+  background: var(--jade-600);
+  color: var(--white);
+  font-weight: 700;
+  box-shadow: 0 0 0 3px var(--jade-100);
+}
+
+/* The selected halo overrides the generic :focus-visible ring (higher
+   specificity), so add a solid ring outside the halo when focused. */
+.learner-app .levels button[aria-checked='true']:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--jade-100),
+    0 0 0 5px var(--jade-600);
+}
+
+.learner-app .level-info {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .level-info .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--stone-500);
+  margin-top: 2px;
+}
+
+.learner-app .level-info strong {
+  display: block;
+  font-size: 0.9375rem;
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+.learner-app .level-info p {
+  font-size: 0.8125rem;
+  color: var(--stone-600);
+  margin-top: 4px;
+}
+
+@media (max-width: 374px) {
+  .learner-app .level-info p br {
+    display: none;
+  }
+}
+
+.learner-app .minutes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.learner-app .minute {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 22px 4px 20px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .minute b {
+  font-size: 2.85rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--navy-900);
+  letter-spacing: -0.02em;
+}
+
+.learner-app .minute span {
+  font-size: 1rem;
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+.learner-app .minute small {
+  margin-top: 12px;
+  font-size: 0.8125rem;
+  color: var(--stone-600);
+}
+
+.learner-app .minute[aria-checked='true'] {
+  border: 2px solid var(--jade-600);
+}
+
+.learner-app .minute[aria-checked='true'] b,
+.learner-app .minute[aria-checked='true'] span {
+  color: var(--jade-600);
+}
+
+.learner-app .minute--fast b,
+.learner-app .minute--fast span {
+  color: var(--cinnabar-500);
+}
+
+/* Must precede .time-select select (same specificity) so its arrow position wins. */
+.learner-app select.input {
+  appearance: none;
+  padding-right: 2.5rem;
+  /* %236b625c in the data URI is --stone-600 (var() cannot be used inside url()). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b625c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+}
+
+.learner-app .time-select {
+  position: relative;
+  display: block;
+  margin-top: 14px;
+}
+
+.learner-app .time-select .icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--navy-900);
+  pointer-events: none;
+}
+
+.learner-app .time-select select {
+  min-height: 64px;
+  padding-left: 60px;
+  font-size: 1.3rem;
+  background-size: 20px;
+  background-position: right 1.2rem center;
+  font-weight: 500;
+  border-radius: 12px;
+}
+
+.learner-app .remind {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px 10px 18px 18px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .remind > .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--navy-900);
+}
+
+.learner-app .remind strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+.learner-app .remind small {
+  font-size: 0.75rem;
+  color: var(--stone-600);
+}
+
+.learner-app .tip {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 24px;
+  padding: 22px 18px;
+  border-radius: 14px;
+  background: var(--cream-100);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--stone-700);
+}
+
+.learner-app .tip .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--amber-500);
+  fill: var(--amber-500);
+}
+
+/* ---------- Switch, grow from base.css ---------- */
+.learner-app .grow {
+  flex: 1;
+}
+
+.learner-app .switch {
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.learner-app .switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.learner-app .switch span {
+  width: 2.6rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--slate-300);
+  position: relative;
+  pointer-events: none;
+  transition: background var(--dur);
+}
+
+.learner-app .switch span::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: calc(1.5rem - 6px);
+  height: calc(1.5rem - 6px);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: var(--shadow-switch-knob);
+  transition: transform var(--dur);
+}
+
+.learner-app .switch input:checked + span {
+  background: var(--jade-600);
+}
+
+.learner-app .switch input:checked + span::before {
+  transform: translateX(1.1rem);
+}
+
+.learner-app .switch input:focus-visible + span {
+  box-shadow: var(--focus-ring);
 }
