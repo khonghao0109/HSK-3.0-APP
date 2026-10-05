@@ -1671,6 +1671,8 @@ export interface components {
             targetLevelId: number;
             targetBand?: number | null;
             dailyMinutes: number;
+            /** @enum {string|null} */
+            learningPurpose?: "communication" | "study_abroad" | "hsk_exam" | "work" | null;
             reminderEnabled: boolean;
             reminderTime?: string | null;
             startDate: string;
