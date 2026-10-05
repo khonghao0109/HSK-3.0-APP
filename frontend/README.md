@@ -158,6 +158,7 @@ MEDIA_STORAGE_PROVIDER=memory \
 MEDIA_SCANNER_PROVIDER=test \
 MEDIA_SIGNING_SECRET='test-media-signing-secret-at-least-32-characters' \
 MEDIA_METRICS_BEARER_TOKEN='test-media-metrics-token-at-least-32-chars' \
+MEDIA_METRICS_HOST='127.0.0.1' \
 JOB_QUEUE_PROVIDER=memory \
 APP_PUBLIC_URL='http://127.0.0.1:3200' \
 ALLOWED_ORIGINS='http://127.0.0.1:3200' \
