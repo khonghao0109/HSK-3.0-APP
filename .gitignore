@@ -98,3 +98,6 @@ report.*.*.*.*.json
 !/backend/logs/
 /backend/logs/*
 !/backend/logs/.gitkeep
+
+# Bộ giao diện mẫu HTML dựng local từ docs/ui_image (tham chiếu thiết kế, không commit)
+/docs/ui_reference/
