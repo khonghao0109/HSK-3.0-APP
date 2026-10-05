@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { localDateString } from './onboarding-contract';
 import { ONBOARDING_ERROR_MESSAGES } from './onboarding-messages';
 import { OnboardingPlanForm } from './onboarding-plan-form';
 
@@ -88,7 +87,8 @@ describe('OnboardingPlanForm', () => {
       dailyMinutes: 15,
       reminderEnabled: false,
       reminderTime: null,
-      startDate: localDateString(new Date()),
+      // Exact local-date value is asserted in the fake-timer test below.
+      startDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
 
     await waitFor(() => {
@@ -311,10 +311,8 @@ describe('OnboardingPlanForm', () => {
   });
 
   it('posts JSON to the onboarding complete BFF route with the local startDate', async () => {
-    // Pin a UTC+7 zone so local midnight differs from the UTC date even on
-    // UTC CI runners; otherwise a toISOString() regression would pass.
-    const previousTz = process.env.TZ;
-    process.env.TZ = 'Asia/Ho_Chi_Minh';
+    // TZ is pinned to Asia/Ho_Chi_Minh (UTC+7) in vitest.config.ts, so local
+    // 00:30 falls on the previous UTC day and a toISOString() regression fails.
     vi.useFakeTimers();
     try {
       vi.setSystemTime(new Date(2026, 9, 5, 0, 30));
@@ -346,11 +344,6 @@ describe('OnboardingPlanForm', () => {
       expect(sentBody.startDate).toBe('2026-10-05');
     } finally {
       vi.useRealTimers();
-      if (previousTz === undefined) {
-        delete process.env.TZ;
-      } else {
-        process.env.TZ = previousTz;
-      }
     }
   });
 
