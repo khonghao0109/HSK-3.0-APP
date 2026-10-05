@@ -46,7 +46,7 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 4 / 16 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 5 / 21 | 5–7 tuần | 🟡 backend xong |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 7 / 28 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
@@ -212,14 +212,16 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.B3 | Start/complete, attempt, progress/resume | ✅ | `4f69f31` |
 | M2.B4 | Dictionary prefix search | ✅ | thiếu e2e riêng |
 | M2.B5 | Signed media access cho learner | ✅ | `media-access.service.ts` |
+| M2.B6 | Lưu lý do học `learningPurpose` cho UserGoal | 🟡 | 05/10: chờ review |
+| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: `2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`. POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
-| M2.1b | UI đăng ký, đăng nhập, đăng xuất | 🟡 | mockup 01/01,02; 01/10: chờ review. 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
+| M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận fragment `#token=`, gọi confirm API |
 | M2.1d | Trang `/reset-password` (frontend) | ⬜ | Việc còn lại sau M1.5c: nhận fragment `#token=`, form mật khẩu mới, gọi POST /auth/password-reset/confirm |
 | M2.1e | OAuth Google/Apple/Facebook | ⬜ | Nút trên UI hiện báo "Tính năng sắp ra mắt.", chờ backend OAuth |
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
-| M2.2 | UI onboarding goal + kế hoạch học | ⬜ | 01/03,04 |
+| M2.2 | UI onboarding goal + kế hoạch học | ⬜ | 01/03,04; PO 05/10: lưu lý do học (cần M2.B6); câu phụ nhắc nhở trung thực; sau màn Kế hoạch tạo lộ trình rồi vào /learn cho tới M2.3 |
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
@@ -455,14 +457,16 @@ UI và phần backend còn thiếu:
 
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
+| M2.B6 | Lưu lý do học `learningPurpose` cho UserGoal | 🟡 | 05/10: chờ review |
+| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: ✅ đã đóng (`2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`), POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
-| M2.1b | UI đăng ký, đăng nhập, đăng xuất | 🟡 | mockup 01/01,02; 01/10: chờ review. 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
+| M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận token từ URL fragment `#token=`, gọi POST /auth/email-verification/confirm |
 | M2.1d | Trang `/reset-password` (frontend) | ⬜ | Việc còn lại sau M1.5c: nhận token từ URL fragment `#token=`, form mật khẩu mới, gọi POST /auth/password-reset/confirm |
 | M2.1e | OAuth Google/Apple/Facebook | ⬜ | Nút trên UI hiện báo "Tính năng sắp ra mắt.", chờ backend OAuth |
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
-| M2.2 | Onboarding goal + kế hoạch học UI | ⬜ | `01-onboarding-placement/03,04` |
+| M2.2 | Onboarding goal + kế hoạch học UI | ⬜ | `01-onboarding-placement/03,04`; PO 05/10: lưu lý do học (cần M2.B6); câu phụ nhắc nhở trung thực; sau màn Kế hoạch tạo lộ trình rồi vào /learn cho tới M2.3 |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ⬜ | `02-learning-lesson/03,04,05,06` |
@@ -631,3 +635,4 @@ khi vertical slice bắt đầu.
 | 01/10/2026 | GĐ4: M1.7b1 ✅ đã đóng (`57eac10`, kèm `65b96df`, `f2e2b85`, PR #5 run `36808552129`): Export dữ liệu cá nhân dạng JSON qua ObjectStoragePort (ADR-001, Product Owner duyệt 30/09/2026), POST /users/me/data-exports (202, rate limit 1 export/24h/user trên DB clock, enqueue privacy.data-export), GET /users/me/data-exports (danh sách 10 export gần nhất), GET /users/me/data-exports/:id/download (kiểm tra quyền sở hữu, TTL 24h, đối soát checksum sha256 từ storage, 4 header an toàn, cấm URL ký), worker privacy.data-export (snapshot RepeatableRead, coverage DMMF 100%, chặn leak secret tokenHash/password, streaming batch LearningEvent 1000 dòng fail EXPORT_TOO_LARGE nếu >10MB), cron privacy.purge-expired-exports (dọn file S3 sau 7 ngày). Tách M1.7b2 Consent API (⬜) chờ quyết định Product Owner. Tổng 63/134. |
 | 01/10/2026 | GĐ5: M2.1a ✅ đã đóng (`2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`): Learner session BFF (ADR-003, Tech Lead chốt 01/10/2026), cookie riêng LEARNER_SESSION_COOKIE_NAME (mặc định hsk_learner_session và _refresh, validate refine chống trùng), chỉ cho phép role user (admin nhận 403 admin_account, thu hồi session backend ngay lập tức), các route POST /api/learner/session/{login,register,logout} và GET /api/learner/session/me (CSRF same-origin, Zod validation, safeResponse), proxy chọn cookie theo đường dẫn, backend-client allowlist thêm /api/v1/auth/register. Không làm UI. Tổng 64/135. |
 | 01/10/2026 | GĐ5: M2.1b 🟡 chờ review: UI chào mừng, đăng ký, đăng nhập, đăng xuất cho learner; nguồn thiết kế là bản HTML mẫu local docs/ui_reference (gitignore), áp dụng các quyết định PO 01/10/2026 (social toast "Tính năng sắp ra mắt.", điều khoản/bảo mật tĩnh tạm, desktop/tablet cột giữa rộng tối đa 480px với nền ngoài cream-100 và viền bóng, /sign-in dùng bố cục /sign-up với dòng phụ "Đăng nhập để tiếp tục học"), route group src/app/(learner)/, layout với next/font và learner.css riêng, xoá src/app/page.tsx, server guard qua getServerLearnerSession và resolveLearnerSession, form email/mật khẩu chuẩn a11y, validation client, nút hiện/ẩn mật khẩu, chặn double submit, thông báo lỗi thân thiện, nút đăng xuất tại /learn, Playwright e2e và script so pixel 40/40 PASS. Tổng 64/138. |
+| 05/10/2026 | GĐ5: M2.1b ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). Thêm M2.B6 🟡 chờ review (lưu `learningPurpose` cho UserGoal, migration `20261005023447_user_goal_learning_purpose`) và M2.B7 ⬜ (job gửi nhắc nhở học); quyết định PO 05/10 cho M2.2. Tổng 65/140. |
