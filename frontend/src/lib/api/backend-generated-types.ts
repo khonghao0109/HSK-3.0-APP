@@ -1574,6 +1574,9 @@ export interface components {
             id: number;
             name: string;
             orderIndex: number;
+            code: string;
+            minBand: number;
+            maxBand: number;
         };
         LessonItemDto: {
             id: number;
