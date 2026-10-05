@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -7,6 +7,32 @@ test.use({
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin.frontend@example.test';
 const adminPassword =
   process.env.E2E_ADMIN_PASSWORD ?? 'FrontendTest-Admin-123';
+
+async function completeOnboarding(page: Page): Promise<void> {
+  const completeStatus = await page.evaluate(async () => {
+    // startDate must be the learner's current local calendar date.
+    const now = new Date();
+    const startDate = [
+      String(now.getFullYear()),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-');
+    const res = await fetch('/api/learner/onboarding/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        learningPurpose: 'communication',
+        targetBand: 1,
+        dailyMinutes: 15,
+        reminderEnabled: true,
+        reminderTime: '19:00',
+        startDate,
+      }),
+    });
+    return res.status;
+  });
+  expect(completeStatus).toBe(200);
+}
 
 const VIEWPORTS_8 = [
   { width: 390, height: 844 },
@@ -48,6 +74,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
     await expect(page).toHaveTitle('Góc học tập · Hán Lộ');
     await expect(page.locator('h1')).toContainText(randomEmail);
@@ -71,6 +100,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Email').fill(randomEmail);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
@@ -80,7 +112,9 @@ test.describe('Learner Auth Flow', () => {
     // Attempt sign in with wrong password
     await page.goto('/sign-in');
     await page.getByLabel('Email').fill(randomEmail);
-    await page.getByLabel('Mật khẩu', { exact: true }).fill('WrongPassword123!');
+    await page
+      .getByLabel('Mật khẩu', { exact: true })
+      .fill('WrongPassword123!');
     await page.getByRole('button', { name: 'Đăng nhập' }).click();
 
     const alert = page.locator('.alert--error');
@@ -100,6 +134,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Email').fill(randomEmail);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
@@ -143,6 +180,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Email').fill(randomEmail);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
@@ -183,6 +223,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Email').fill(randomEmail);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
     // Test /learn at all 8 viewports
@@ -197,7 +240,9 @@ test.describe('Learner Auth Flow', () => {
       ).toBe(true);
 
       if (vp.width >= 320) {
-        const interactiveElements = await page.locator('a, button, input').all();
+        const interactiveElements = await page
+          .locator('a, button, input')
+          .all();
         for (const el of interactiveElements) {
           if (await el.isVisible()) {
             const box = await el.boundingBox();
@@ -230,7 +275,9 @@ test.describe('Learner Auth Flow', () => {
         ).toBe(true);
 
         if (vp.width >= 320) {
-          const interactiveElements = await page.locator('a, button, input').all();
+          const interactiveElements = await page
+            .locator('a, button, input')
+            .all();
           for (const el of interactiveElements) {
             if (await el.isVisible()) {
               const box = await el.boundingBox();
@@ -263,6 +310,9 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Email').fill(randomEmail);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+    await completeOnboarding(page);
+    await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
     // Check on /learn
