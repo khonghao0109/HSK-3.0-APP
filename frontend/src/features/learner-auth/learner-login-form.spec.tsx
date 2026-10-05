@@ -12,7 +12,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, refresh }),
 }));
 
-async function fillAndSubmit(email = 'learner@example.test', password = 'password123') {
+async function fillAndSubmit(
+  email = 'learner@example.test',
+  password = 'password123',
+) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Email'), email);
   await user.type(screen.getByLabelText('Mật khẩu'), password);
@@ -35,7 +38,10 @@ describe('LearnerLoginForm', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.invalidEmail);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Email')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
 
@@ -44,7 +50,10 @@ describe('LearnerLoginForm', () => {
     await user.click(screen.getByRole('button', { name: 'Đăng nhập' }));
 
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.invalidEmail);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Email')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -60,7 +69,10 @@ describe('LearnerLoginForm', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.shortPassword);
-    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Mật khẩu')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -77,9 +89,14 @@ describe('LearnerLoginForm', () => {
     await fillAndSubmit();
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.invalidCredentials);
+    expect(alert).toHaveTextContent(
+      LEARNER_AUTH_ERROR_MESSAGES.invalidCredentials,
+    );
     expect(replace).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
   });
 
@@ -98,7 +115,9 @@ describe('LearnerLoginForm', () => {
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.accountLocked);
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
   });
 
   it('shows error message for 403 admin_account without aria-invalid on fields', async () => {
@@ -116,7 +135,9 @@ describe('LearnerLoginForm', () => {
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.adminAccount);
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
   });
 
   it('shows error message for 429 rate limited without aria-invalid on fields', async () => {
@@ -134,7 +155,9 @@ describe('LearnerLoginForm', () => {
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.rateLimited);
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
   });
 
   it('shows error message for 5xx server error without aria-invalid on fields', async () => {
@@ -149,11 +172,15 @@ describe('LearnerLoginForm', () => {
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.generic);
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
   });
 
   it('shows error message for network error without aria-invalid on fields', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('Failed to fetch'),
+    );
 
     render(<LearnerLoginForm />);
     await fillAndSubmit();
@@ -162,7 +189,9 @@ describe('LearnerLoginForm', () => {
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.network);
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
   });
 
   it('renders alternatives component with social buttons', () => {
@@ -183,18 +212,24 @@ describe('LearnerLoginForm', () => {
       resolveFetch = resolve;
     });
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockReturnValue(pendingPromise);
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockReturnValue(pendingPromise);
 
     render(<LearnerLoginForm />);
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Email'), 'learner@example.test');
     await user.type(screen.getByLabelText('Mật khẩu'), 'password123');
 
-    const form = screen.getByRole('button', { name: 'Đăng nhập' }).closest('form')!;
+    const form = screen
+      .getByRole('button', { name: 'Đăng nhập' })
+      .closest('form')!;
     fireEvent.submit(form);
     fireEvent.submit(form);
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('Email')).toBeDisabled();
+    expect(screen.getByLabelText('Mật khẩu')).toBeDisabled();
 
     resolveFetch!(
       Response.json({ success: true, user: { email: 'learner@example.test' } }),

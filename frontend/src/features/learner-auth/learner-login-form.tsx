@@ -131,6 +131,7 @@ export function LearnerLoginForm() {
               placeholder="Nhập email của bạn"
               aria-describedby="auth-alert"
               aria-invalid={invalidField === 'email' ? 'true' : undefined}
+              disabled={pending}
               required
             />
           </div>

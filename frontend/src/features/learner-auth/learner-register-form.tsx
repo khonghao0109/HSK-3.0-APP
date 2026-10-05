@@ -24,8 +24,7 @@ function getErrorKind(body: unknown): string | null {
 }
 
 type RegisterError =
-  | { kind: 'email_taken'; message: string }
-  | { kind: 'other'; message: string };
+  { kind: 'email_taken'; message: string } | { kind: 'other'; message: string };
 
 type InvalidField = 'email' | 'password' | null;
 
@@ -158,6 +157,7 @@ export function LearnerRegisterForm() {
               placeholder="Nhập email của bạn"
               aria-describedby="auth-alert"
               aria-invalid={invalidField === 'email' ? 'true' : undefined}
+              disabled={pending}
               required
             />
           </div>

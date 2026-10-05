@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +12,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, refresh }),
 }));
 
-async function fillAndSubmit(email = 'newbie@example.test', password = 'password123') {
+async function fillAndSubmit(
+  email = 'newbie@example.test',
+  password = 'password123',
+) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Email'), email);
   await user.type(screen.getByLabelText('Mật khẩu'), password);
@@ -35,7 +38,10 @@ describe('LearnerRegisterForm', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.invalidEmail);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Email')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
 
@@ -44,7 +50,10 @@ describe('LearnerRegisterForm', () => {
     await user.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.invalidEmail);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Email')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -60,7 +69,10 @@ describe('LearnerRegisterForm', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.shortPassword);
-    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(screen.getByLabelText('Mật khẩu')).toHaveFocus();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -98,8 +110,13 @@ describe('LearnerRegisterForm', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.emailTaken);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Email')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
 
     const link = screen.getByRole('link', { name: 'Đăng nhập' });
     expect(link).toHaveAttribute('href', '/sign-in');
@@ -120,7 +137,9 @@ describe('LearnerRegisterForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.weakPassword);
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -138,7 +157,9 @@ describe('LearnerRegisterForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.rateLimited);
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -156,12 +177,16 @@ describe('LearnerRegisterForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.generic);
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
   it('shows network error message when fetch rejects without aria-invalid', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network failure'));
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new Error('Network failure'),
+    );
 
     render(<LearnerRegisterForm />);
     await fillAndSubmit();
@@ -169,7 +194,9 @@ describe('LearnerRegisterForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.network);
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -187,7 +214,9 @@ describe('LearnerRegisterForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.generic);
     expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Mật khẩu')).not.toHaveAttribute(
+      'aria-invalid',
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -208,6 +237,46 @@ describe('LearnerRegisterForm', () => {
   it('does not contain previous account link text', () => {
     render(<LearnerRegisterForm />);
     expect(screen.queryByText(/đã có tài khoản/i)).toBeNull();
+  });
+
+  it('prevents double submit and disables fields during submission', async () => {
+    let resolveFetch: (val: Response) => void;
+    const pendingPromise = new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockReturnValue(pendingPromise);
+
+    render(<LearnerRegisterForm />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Email'), 'newbie@example.test');
+    await user.type(screen.getByLabelText('Mật khẩu'), 'password123');
+
+    const form = screen
+      .getByRole('button', { name: 'Tạo tài khoản' })
+      .closest('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('Email')).toBeDisabled();
+    expect(screen.getByLabelText('Mật khẩu')).toBeDisabled();
+
+    resolveFetch!(
+      Response.json(
+        {
+          success: true,
+          user: { id: 3, email: 'newbie@example.test', role: 'user' },
+        },
+        { status: 201 },
+      ),
+    );
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith('/learn');
+    });
   });
 
   it('enforces password minLength attribute', () => {
