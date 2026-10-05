@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import type { ApiFailureKind } from '@/lib/api/api-error';
 import {
   createRefreshSessionCookie,
   createSessionCookie,
@@ -42,11 +43,12 @@ export type LearnerSessionHandlerDependencies = {
 };
 
 function adminAccountForbiddenResponse(): NextResponse {
+  const kind: ApiFailureKind = 'admin_account';
   const response = NextResponse.json(
     {
       success: false,
       error: {
-        kind: 'admin_account',
+        kind,
         message: 'Admin accounts cannot log in through the learner portal.',
       },
     },
@@ -57,15 +59,32 @@ function adminAccountForbiddenResponse(): NextResponse {
 }
 
 function emailTakenResponse(): NextResponse {
+  const kind: ApiFailureKind = 'email_taken';
   const response = NextResponse.json(
     {
       success: false,
       error: {
-        kind: 'email_taken',
+        kind,
         message: 'This email is already in use.',
       },
     },
     { status: 409 },
+  );
+  response.headers.set('cache-control', 'no-store');
+  return response;
+}
+
+function weakPasswordResponse(): NextResponse {
+  const kind: ApiFailureKind = 'weak_password';
+  const response = NextResponse.json(
+    {
+      success: false,
+      error: {
+        kind,
+        message: 'Password is too weak.',
+      },
+    },
+    { status: 400 },
   );
   response.headers.set('cache-control', 'no-store');
   return response;
@@ -176,6 +195,7 @@ export async function handleLearnerRegister(
   } catch (error) {
     if (error instanceof SessionTokenError) return safeResponse(503);
     const status = statusFromError(error);
+    if (status === 400) return weakPasswordResponse();
     if (status === 409) return emailTakenResponse();
     return safeResponse(
       [400, 401, 403, 409, 422, 429, 503].includes(status) ? status : 500,

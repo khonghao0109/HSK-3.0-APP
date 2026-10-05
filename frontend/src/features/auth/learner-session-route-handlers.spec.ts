@@ -277,6 +277,27 @@ describe('learner session BFF handlers', () => {
       expect(body.error.kind).toBe('email_taken');
     });
 
+    it('returns 400 weak_password when backend rejects password as too weak', async () => {
+      const deps = dependencies({
+        register: vi.fn().mockRejectedValue({ status: 400 }),
+      });
+
+      const response = await handleLearnerRegister(
+        post('/api/learner/session/register', {
+          email: 'valid@example.test',
+          password: 'password123',
+        }),
+        deps,
+      );
+
+      expect(response.status).toBe(400);
+      expect(response.cookies.getAll()).toEqual([]);
+
+      const body = (await response.json()) as { success: boolean; error: { kind: string } };
+      expect(body.success).toBe(false);
+      expect(body.error.kind).toBe('weak_password');
+    });
+
     it('returns 400 without calling backend on invalid registration body', async () => {
       const registerMock = vi.fn();
       const deps = dependencies({ register: registerMock });
