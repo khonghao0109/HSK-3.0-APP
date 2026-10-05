@@ -855,5 +855,144 @@ describe('Onboarding Goal & Learning Plan V1 E2E', () => {
       });
       expect(activeCount).toBe(1);
     });
+
+    it('M2.B6: stores null when learningPurpose is explicitly null', async () => {
+      const email = `onboarding-null-purpose-${Date.now()}@example.com`;
+      const reg = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email, password, name: 'Null Purpose User' })
+        .expect(201);
+      const token = reg.body.data.accessToken as string;
+
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: null,
+        })
+        .expect(201);
+
+      const body = res.body as GoalResponse;
+      expect(body.data.learningPurpose).toBeNull();
+
+      const currentRes = await request(app.getHttpServer())
+        .get('/api/v1/onboarding/goals/current')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      const currentBody = currentRes.body as GoalResponse;
+      expect(currentBody.data.learningPurpose).toBeNull();
+    });
+
+    it('M2.B6: idempotently returns existing goal when called twice with omitted learningPurpose and maintains exactly 1 goal in DB', async () => {
+      const email = `onboarding-no-purpose-${Date.now()}@example.com`;
+      const reg = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email, password, name: 'No Purpose User' })
+        .expect(201);
+      const token = reg.body.data.accessToken as string;
+      const userId = reg.body.data.user.id as number;
+
+      const payload = {
+        targetLevelId: levelId,
+        dailyMinutes: 30,
+        reminderEnabled: false,
+        reminderTime: null,
+        startDate: '2026-08-11',
+      };
+
+      const firstRes = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload)
+        .expect(201);
+      const firstId = (firstRes.body as GoalResponse).data.id;
+
+      const secondRes = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload)
+        .expect(201);
+      const secondId = (secondRes.body as GoalResponse).data.id;
+
+      expect(secondId).toBe(firstId);
+
+      const count = await prisma.userGoal.count({
+        where: { userId },
+      });
+      expect(count).toBe(1);
+    });
+
+    it('M2.B6: keeps onboarding status ready and returns same plan id after updating only learningPurpose', async () => {
+      const email = `onboarding-plan-purpose-${Date.now()}@example.com`;
+      const reg = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email, password, name: 'Plan Purpose User' })
+        .expect(201);
+      const token = reg.body.data.accessToken as string;
+
+      const initialGoalRes = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'hsk_exam',
+        })
+        .expect(201);
+      const initialGoalId = (initialGoalRes.body as GoalResponse).data.id;
+
+      const planRes = await request(app.getHttpServer())
+        .post('/api/v1/learning-plans')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201);
+      const initialPlanId = (planRes.body as PlanResponse).data.id;
+
+      const statusBefore = await request(app.getHttpServer())
+        .get('/api/v1/onboarding/status')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(
+        (statusBefore.body as { data: { nextStep: string } }).data.nextStep,
+      ).toBe('ready');
+
+      const updatedGoalRes = await request(app.getHttpServer())
+        .post('/api/v1/onboarding/goals')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          targetLevelId: levelId,
+          dailyMinutes: 30,
+          reminderEnabled: false,
+          reminderTime: null,
+          startDate: '2026-08-11',
+          learningPurpose: 'work',
+        })
+        .expect(201);
+      const updatedGoal = (updatedGoalRes.body as GoalResponse).data;
+      expect(updatedGoal.id).not.toBe(initialGoalId);
+      expect(updatedGoal.learningPurpose).toBe('work');
+
+      const statusAfter = await request(app.getHttpServer())
+        .get('/api/v1/onboarding/status')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(
+        (statusAfter.body as { data: { nextStep: string } }).data.nextStep,
+      ).toBe('ready');
+
+      const planAfterRes = await request(app.getHttpServer())
+        .post('/api/v1/learning-plans')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201);
+      expect((planAfterRes.body as PlanResponse).data.id).toBe(initialPlanId);
+    });
   });
 });
