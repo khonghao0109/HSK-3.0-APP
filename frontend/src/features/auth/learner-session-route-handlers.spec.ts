@@ -38,7 +38,12 @@ function dependencies(
     production: false,
     nowMs: () => nowSeconds * 1000,
     login: vi.fn().mockResolvedValue({
-      user: { id: 2, email: 'learner@example.test', role: 'user', name: 'Learner' },
+      user: {
+        id: 2,
+        email: 'learner@example.test',
+        role: 'user',
+        name: 'Learner',
+      },
       accessToken: jwt('user'),
       refreshToken: 'sample-refresh-token',
       refreshTokenExpiresAt: new Date(
@@ -60,7 +65,12 @@ function dependencies(
     }),
     logout: vi.fn().mockResolvedValue(undefined),
     refresh: vi.fn().mockResolvedValue({
-      user: { id: 2, email: 'learner@example.test', role: 'user', name: 'Learner' },
+      user: {
+        id: 2,
+        email: 'learner@example.test',
+        role: 'user',
+        name: 'Learner',
+      },
       accessToken: jwt('user'),
       refreshToken: 'refreshed-token',
       refreshTokenExpiresAt: new Date(
@@ -93,10 +103,7 @@ function post(
   });
 }
 
-function get(
-  path: string,
-  cookies?: Record<string, string>,
-) {
+function get(path: string, cookies?: Record<string, string>) {
   const headers = new Headers();
   if (cookies) {
     headers.set(
@@ -143,7 +150,10 @@ describe('learner session BFF handlers', () => {
       expect(refreshCookie?.maxAge).toBe(86400);
 
       expect(response.headers.get('cache-control')).toBe('no-store');
-      const body = (await response.json()) as { success: boolean; user: { role: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        user: { role: string };
+      };
       expect(body.success).toBe(true);
       expect(body.user.role).toBe('user');
     });
@@ -153,7 +163,12 @@ describe('learner session BFF handlers', () => {
       const adminToken = jwt('admin');
       const deps = dependencies({
         login: vi.fn().mockResolvedValue({
-          user: { id: 1, email: 'admin@example.test', role: 'admin', name: 'Admin' },
+          user: {
+            id: 1,
+            email: 'admin@example.test',
+            role: 'admin',
+            name: 'Admin',
+          },
           accessToken: adminToken,
           refreshToken: 'admin-refresh',
           refreshTokenExpiresAt: new Date(
@@ -175,7 +190,10 @@ describe('learner session BFF handlers', () => {
       expect(response.cookies.getAll()).toEqual([]);
       expect(logoutMock).toHaveBeenCalledWith(adminToken);
 
-      const body = (await response.json()) as { success: boolean; error: { kind: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        error: { kind: string };
+      };
       expect(body.success).toBe(false);
       expect(body.error.kind).toBe('admin_account');
     });
@@ -212,7 +230,10 @@ describe('learner session BFF handlers', () => {
 
       expect(response.status).toBe(403);
       expect(response.cookies.getAll()).toEqual([]);
-      const body = (await response.json()) as { success: boolean; error: { kind: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        error: { kind: string };
+      };
       expect(body.success).toBe(false);
       expect(body.error.kind).toBe('account_locked');
     });
@@ -251,7 +272,10 @@ describe('learner session BFF handlers', () => {
       expect(response.cookies.get('hsk_learner_session')).toBeDefined();
       expect(response.cookies.get('hsk_learner_session_refresh')).toBeDefined();
 
-      const body = (await response.json()) as { success: boolean; user: { email: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        user: { email: string };
+      };
       expect(body.success).toBe(true);
       expect(body.user.email).toBe('new@example.test');
     });
@@ -272,7 +296,10 @@ describe('learner session BFF handlers', () => {
       expect(response.status).toBe(409);
       expect(response.cookies.getAll()).toEqual([]);
 
-      const body = (await response.json()) as { success: boolean; error: { kind: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        error: { kind: string };
+      };
       expect(body.success).toBe(false);
       expect(body.error.kind).toBe('email_taken');
     });
@@ -293,7 +320,10 @@ describe('learner session BFF handlers', () => {
       expect(response.status).toBe(400);
       expect(response.cookies.getAll()).toEqual([]);
 
-      const body = (await response.json()) as { success: boolean; error: { kind: string } };
+      const body = (await response.json()) as {
+        success: boolean;
+        error: { kind: string };
+      };
       expect(body.success).toBe(false);
       expect(body.error.kind).toBe('weak_password');
     });
@@ -352,7 +382,9 @@ describe('learner session BFF handlers', () => {
 
       const learnerCookie = response.cookies.get('hsk_learner_session');
       expect(learnerCookie?.maxAge).toBe(0);
-      const learnerRefreshCookie = response.cookies.get('hsk_learner_session_refresh');
+      const learnerRefreshCookie = response.cookies.get(
+        'hsk_learner_session_refresh',
+      );
       expect(learnerRefreshCookie?.maxAge).toBe(0);
 
       // Admin cookie is untouched
@@ -430,7 +462,9 @@ describe('learner session BFF handlers', () => {
       );
 
       expect(response.status).toBe(200);
-      const body = (await response.json()) as { user: { role: string; email: string } };
+      const body = (await response.json()) as {
+        user: { role: string; email: string };
+      };
       expect(body.user.role).toBe('user');
       expect(body.user.email).toBe('learner@example.test');
     });

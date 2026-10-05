@@ -28,11 +28,16 @@ export default async function LearnerWelcomePage() {
         <h1 className="welcome__brand">
           <span className="sr-only">Hán Lộ</span>
           <span aria-hidden="true">
-            H<span className="acute" data-base="a">á</span>n Lộ
+            H
+            <span className="acute" data-base="a">
+              á
+            </span>
+            n Lộ
           </span>
         </h1>
         <p className="welcome__tagline">
-          Con đường chinh phục<br /> tiếng Trung
+          Con đường chinh phục
+          <br /> tiếng Trung
         </p>
         <p className="welcome__hanzi" lang="zh-Hans" aria-hidden="true">
           汉路

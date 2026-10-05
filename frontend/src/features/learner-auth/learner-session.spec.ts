@@ -47,7 +47,10 @@ describe('resolveLearnerSession', () => {
   it('returns unauthenticated when backend reports 401', async () => {
     const loadCurrentUser = vi.fn().mockRejectedValue({ status: 401 });
 
-    const result = await resolveLearnerSession('expired-token', loadCurrentUser);
+    const result = await resolveLearnerSession(
+      'expired-token',
+      loadCurrentUser,
+    );
 
     expect(result).toEqual({ state: 'unauthenticated' });
   });

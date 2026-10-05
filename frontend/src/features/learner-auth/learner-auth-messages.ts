@@ -14,4 +14,3 @@ export const LEARNER_AUTH_ERROR_MESSAGES = {
   email: 'Vui lòng nhập email hợp lệ.',
   password: 'Mật khẩu cần ít nhất 6 ký tự.',
 } as const;
-

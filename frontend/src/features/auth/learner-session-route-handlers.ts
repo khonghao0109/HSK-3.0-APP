@@ -93,7 +93,10 @@ function weakPasswordResponse(): NextResponse {
 function setLearnerSessionCookies(
   response: NextResponse,
   result: LoginResponse,
-  deps: Pick<LearnerSessionHandlerDependencies, 'cookieName' | 'nowMs' | 'production'>,
+  deps: Pick<
+    LearnerSessionHandlerDependencies,
+    'cookieName' | 'nowMs' | 'production'
+  >,
 ): void {
   const sessionCookie = createSessionCookie(result.accessToken, {
     cookieName: deps.cookieName,

@@ -1,8 +1,7 @@
 import type { AuthUser } from '@/features/auth/auth-contract';
 
 export type LearnerSessionState =
-  | { state: 'learner'; user: AuthUser }
-  | { state: 'unauthenticated' };
+  { state: 'learner'; user: AuthUser } | { state: 'unauthenticated' };
 
 type ErrorWithStatus = { status: unknown };
 

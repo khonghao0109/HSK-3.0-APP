@@ -20,7 +20,9 @@ describe('LearnerLogoutButton', () => {
   });
 
   it('logs out successfully with 204 and navigates to /', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 204 }),
+    );
 
     render(<LearnerLogoutButton />);
     const user = userEvent.setup();
@@ -33,7 +35,9 @@ describe('LearnerLogoutButton', () => {
   });
 
   it('shows error message on network failure during logout', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network error'));
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('Network error'),
+    );
 
     render(<LearnerLogoutButton />);
     const user = userEvent.setup();
