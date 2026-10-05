@@ -324,7 +324,7 @@ một Topic hoặc Story published.
 
 | Method | Path | Query | `data` |
 | --- | --- | --- | --- |
-| `GET` | `/levels`, `/learning/levels` | — | `[{ id, name, orderIndex }]` |
+| `GET` | `/levels`, `/learning/levels` | — | `[{ id, name, orderIndex, code, minBand, maxBand }]` |
 | `GET` | `/lessons`, `/learning/lessons` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, title, description, orderIndex, slug }]` + `meta` |
 | `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready |
 | `GET` | `/topics`, `/learning/topics` | `lessonId` **bắt buộc**, `page`, `limit` | `[{ id, lessonId, title, content, orderIndex }]` + `meta` |
@@ -382,7 +382,7 @@ Envelope §1. `userId` luôn lấy từ JWT. Write khoá row `User`
 | `POST` | `/learning-plans` | `{}` | `LearningPlan` | 201 |
 
 `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`. `hasCompletedPlacement`
-hiện luôn `false` (chưa có placement API).
+true khi có `PlacementAttempt` status `completed`; hiện chưa có API tạo placement.
 
 `CreateGoal`: `targetLevelId` int ≥ 1 (level phải published) · `targetBand?` int 1–9 trong
 `minBand..maxBand`, bắt buộc với `HSK7_9` · `dailyMinutes` int 1–1440 · `learningPurpose?`
