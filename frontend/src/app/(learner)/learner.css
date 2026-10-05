@@ -66,7 +66,9 @@
   --logo-facebook-blue: #1877f2;
   --logo-facebook-white: #ffffff;
 
-  --focus-ring: 0 0 0 3px rgb(14 162 134 / 40%);
+  /* Solid jade-700 on every control, inputs included (Q12): >= 3:1 vs
+     cream-50/100, paper and jade-25 (WCAG 1.4.11). */
+  --focus-ring: 0 0 0 3px var(--jade-700);
   --shadow-card: 0 1px 2px rgb(20 24 43 / 4%), 0 4px 14px rgb(20 24 43 / 5%);
   --shadow-float: 0 10px 30px rgb(11 28 70 / 16%);
   --shadow-app-desktop:
@@ -1115,7 +1117,7 @@ html:has(.learner-app) {
 .learner-app .levels button[aria-checked='true']:focus-visible {
   box-shadow:
     0 0 0 3px var(--jade-100),
-    0 0 0 5px var(--jade-600);
+    0 0 0 5px var(--jade-700);
 }
 
 .learner-app .level-info {
@@ -1347,4 +1349,15 @@ html:has(.learner-app) {
 
 .learner-app .switch input:focus-visible + span {
   box-shadow: var(--focus-ring);
+}
+
+/* Box-shadow rings are dropped in forced colors; use a system-color outline. */
+@media (forced-colors: active) {
+  .learner-app :focus-visible,
+  .learner-app .levels button[aria-checked='true']:focus-visible,
+  .learner-app .input:focus-visible,
+  .learner-app .switch input:focus-visible + span {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }
