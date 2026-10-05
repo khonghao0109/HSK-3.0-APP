@@ -146,6 +146,117 @@ async function main(): Promise<void> {
         publishedAt: new Date(),
       },
     });
+
+    await tx.level.create({
+      data: {
+        code: 'HSK2',
+        name: 'HSK 2',
+        orderIndex: 2,
+        minBand: 2,
+        maxBand: 2,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+
+    const level3 = await tx.level.create({
+      data: {
+        code: 'HSK3',
+        name: 'HSK 3',
+        orderIndex: 3,
+        minBand: 3,
+        maxBand: 3,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+    const lesson3 = await tx.lesson.create({
+      data: {
+        levelId: level3.id,
+        title: 'Making plans',
+        description: 'Arranging meetings and activities.',
+        slug: 'making-plans',
+        orderIndex: 1,
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+    await tx.topic.create({
+      data: {
+        lessonId: lesson3.id,
+        title: 'Weekend plans',
+        subtitle: 'Talking about future events',
+        content: [{ type: 'text', value: '这个周末你打算做什么？' }],
+        orderIndex: 1,
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+
+    const level79 = await tx.level.create({
+      data: {
+        code: 'HSK7_9',
+        name: 'HSK 7-9',
+        orderIndex: 7,
+        minBand: 7,
+        maxBand: 9,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+    const lesson79 = await tx.lesson.create({
+      data: {
+        levelId: level79.id,
+        title: 'Academic discourse & literature',
+        description: 'Advanced formal discussions and analysis.',
+        slug: 'academic-discourse-literature',
+        orderIndex: 1,
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
+    await tx.topic.create({
+      data: {
+        lessonId: lesson79.id,
+        title: 'Literary commentary',
+        subtitle: 'Formal critique',
+        content: [{ type: 'text', value: '关于现代文学演变的深度剖析。' }],
+        orderIndex: 1,
+        status: 'published',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+        publishedById: admin.id,
+        publishedAt: new Date(),
+      },
+    });
     const audio = await tx.media.create({
       data: {
         url: 'https://cdn.example.test/hsk/frontend-console/nihao.mp3',
