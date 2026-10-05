@@ -105,6 +105,7 @@ describe('Learning Lesson Detail E2E', () => {
     const level = await prisma.level.upsert({
       where: { code: 'HSK1' },
       update: {
+        name: 'HSK1',
         status: 'published',
         publishedAt: new Date(),
         deletedAt: null,
@@ -165,6 +166,25 @@ describe('Learning Lesson Detail E2E', () => {
       select: { id: true },
     });
     deletedLevelId = deletedLevel.id;
+
+    await prisma.level.upsert({
+      where: { code: 'HSK7_9' },
+      update: {
+        status: 'published',
+        publishedAt: new Date(),
+        deletedAt: null,
+      },
+      create: {
+        name: 'HSK 7-9',
+        code: 'HSK7_9',
+        orderIndex: 7,
+        minBand: 7,
+        maxBand: 9,
+        curriculumVersion: 'HSK_3_0',
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
 
     const lesson = await prisma.lesson.create({
       data: {
@@ -506,6 +526,25 @@ describe('Learning Lesson Detail E2E', () => {
         (level: { id: number }) => level.id === deletedLevelId,
       ),
     ).toBe(false);
+
+    type LevelItemResponse = {
+      id: number;
+      name: string;
+      orderIndex: number;
+      code: string;
+      minBand: number;
+      maxBand: number;
+    };
+    const levels = response.body.data as LevelItemResponse[];
+    for (const level of levels) {
+      expect(Object.keys(level).sort()).toEqual(
+        ['code', 'id', 'maxBand', 'minBand', 'name', 'orderIndex'].sort(),
+      );
+    }
+    const level79 = levels.find((level) => level.code === 'HSK7_9');
+    expect(level79).toBeDefined();
+    expect(level79?.minBand).toBe(7);
+    expect(level79?.maxBand).toBe(9);
   });
 
   it('GET /dictionary uses normalized pinyin and hides non-public words', async () => {

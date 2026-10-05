@@ -44,6 +44,9 @@ export class LearningService {
         id: true,
         name: true,
         orderIndex: true,
+        code: true,
+        minBand: true,
+        maxBand: true,
       },
     });
 
@@ -54,6 +57,9 @@ export class LearningService {
           id: level.id,
           name: level.name,
           orderIndex: level.orderIndex,
+          code: level.code,
+          minBand: level.minBand,
+          maxBand: level.maxBand,
         }),
       ),
     };

@@ -6292,12 +6292,24 @@
           },
           "orderIndex": {
             "type": "number"
+          },
+          "code": {
+            "type": "string"
+          },
+          "minBand": {
+            "type": "number"
+          },
+          "maxBand": {
+            "type": "number"
           }
         },
         "required": [
           "id",
           "name",
-          "orderIndex"
+          "orderIndex",
+          "code",
+          "minBand",
+          "maxBand"
         ]
       },
       "LessonItemDto": {
