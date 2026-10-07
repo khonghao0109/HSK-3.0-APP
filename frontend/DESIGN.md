@@ -11,6 +11,8 @@
 > endpoints, `docs/api.md` updates and tests it needs. Do not add UI for actions
 > the API does not support yet.
 
+Quyết định PO cho learner app: `docs/product/learner-ui-decisions.md`.
+
 ## Product and audience
 
 The interface is an operational workbench for HSK content administrators. Its
