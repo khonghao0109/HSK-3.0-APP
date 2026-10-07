@@ -21,7 +21,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `npm run openapi:check` và fail khi file commit bị lệch.
 - `data` có schema đầy đủ cho các endpoint có response DTO: `auth/register`, `auth/login`,
   `auth/me`, admin exercise list/detail, admin media list/detail/archive/quarantine (mọi
-  call của BFF) và public learning (`levels`, `lessons`, `topics`, `stories`). Endpoint
+  call của BFF), public learning (`levels`, `lessons`, `topics`, `stories`) và
+  `learning/path`. Endpoint
   khác mới có envelope, `data` để trống schema (bất kỳ JSON), shape xem Part A.
 - Frontend: `npm run typegen:backend` sinh `frontend/src/lib/api/backend-generated-types.ts`
   bằng `openapi-typescript`, chỉ dùng làm type. Không sinh fetch client (ADR-003): allowlist
@@ -407,7 +408,8 @@ Envelope §1. Mọi `POST` cần header `Idempotency-Key`; thiếu/sai →
 
 | Method | Path | Body | `data` |
 | --- | --- | --- | --- |
-| `POST` | `/learning/lessons/:lessonId/start` | `{}` | `{ lessonId, status: "learning", eventId, occurredAt }` |
+| `GET` | `/learning/path` | — | Path (dưới); header `Cache-Control: no-store` |
+| `POST` | `/learning/lessons/:lessonId/start` | `{}` | `{ lessonId, status: "learning", eventId, occurredAt }`; `409 lesson_locked` khi bài đang khoá (Q18) |
 | `GET` | `/learning/lessons/:lessonId/activity` | — | Activity (dưới) |
 | `POST` | `/learning/lessons/:lessonId/complete` | `{}` | `{ lessonId, status: "done", eventId, occurredAt }` |
 | `POST` | `/learning/topics/:topicId/start` | `{}` | `{ topicId, status: "learning", eventId, occurredAt }` |
@@ -431,9 +433,47 @@ PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
 
+Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextLesson }`.
+- `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`, cùng giá trị
+  `GET /onboarding/status`.
+- `goal`: `{ targetLevelCode, targetBand, learningPurpose } | null`; `targetLevelCode` là code
+  của cấp mục tiêu kể cả khi cấp đó không còn published; `targetBand` có thể `null`.
+- `levels`: mọi Level published và chưa xoá như `GET /learning/levels` (kể cả cấp chưa có bài,
+  `lessons: []`): `[{ id, code, name, orderIndex, lessonCount, completedCount, lessons: [{ id,
+  title, slug, position, state, completionPercent }] }]`. Chỉ Lesson ready; không trả
+  `coverImageId`, không có XP. `position` = 1..N theo `[orderIndex ASC, id ASC]` của bài ready;
+  `completionPercent` lấy từ Progress, chưa có row là `0`.
+- Mở khoá: bài `position = 1`, hoặc bài ready liền trước có Progress `done`, hoặc chính bài đó
+  đã có row Progress (mọi status). `state`: `done` (Progress `done`); `current` (tối đa 1 bài
+  mỗi cấp: bài mở có Progress `learning` với `lastActivityAt` mới nhất, null xếp cuối, hoà thì
+  `position` nhỏ hơn; không có thì bài mở đầu tiên chưa `done`); `available` (mở, chưa `done`,
+  không phải current); `locked` (còn lại).
+- `nextLesson`: `{ lessonId, title, slug, levelCode, position } | null`: bài `learning` có
+  `lastActivityAt` mới nhất trên mọi cấp; không có thì `current` của cấp mục tiêu; cấp mục tiêu
+  xong hết hoặc rỗng thì `current` của cấp đầu tiên có `orderIndex` lớn hơn cấp mục tiêu **và
+  có `current`**; cũng áp dụng khi cấp mục tiêu không còn published; không có thì `null`. Chưa có goal thì chỉ xét bước đầu.
+- Admin có JWT gọi được như mọi route JWT khác của A.7.
+
+Khoá ở `start` (Q18): bài chưa có row Progress mà bài ready liền trước chưa `done` (và không
+phải bài đầu cấp) trả `409` `error.code = "lesson_locked"`, message `Complete the previous
+lesson first.`. Thứ tự lỗi:
+1. `400` thiếu `Idempotency-Key` hoặc key sai format (chặn trước mọi thứ);
+2. `404` bài không ready;
+3. `400` key hết hạn, `201` replay (kết quả cũ), `409` key đã dùng cho request khác;
+4. `409 CONFLICT` bài đã được start bằng key khác;
+5. `409 lesson_locked`.
+
+`409
+lesson_locked` rollback cả transaction: không tạo Progress hay event, plan item giữ `planned`,
+key không bị tiêu (gọi lại cùng key sau khi bài trước xong sẽ thành công). `GET
+/learning/lessons/:lessonId/activity` không phản ánh khoá: `nextAction` vẫn có thể là
+`start_lesson` cho bài đang khoá; frontend dựa vào `GET /learning/path`. Topic start, attempt
+và complete trên bài chưa start vẫn trả `409` `Lesson must be started first.`.
+
 Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text }`;
 `arrange_sentence` `{ tokenIds: [] }`; `speaking_repeat` → `422`. Lỗi: `404` content không
-public; `409` cùng key khác request; `422` shape sai; `503` timeout.
+public; `409` cùng key khác request; `409 lesson_locked` start bài đang khoá; `422` shape sai;
+`503` timeout.
 
 ### A.8 Admin CMS — Lesson / Topic (admin)
 
