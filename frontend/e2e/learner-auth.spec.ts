@@ -196,6 +196,11 @@ test.describe('Learner Auth Flow', () => {
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await expect(page.getByLabel('Email')).toBeFocused();
+    // Q12: solid jade-700 focus ring (no alpha) on the email input
+    await expect(page.getByLabel('Email')).toHaveCSS(
+      'box-shadow',
+      /rgb\(2, 142, 106\)/,
+    );
     await page.keyboard.type(randomEmail);
 
     // Tab into password

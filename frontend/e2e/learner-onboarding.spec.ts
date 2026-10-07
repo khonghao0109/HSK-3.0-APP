@@ -29,6 +29,9 @@ async function readFocusStyle(locator: Locator): Promise<FocusStyle> {
   });
 }
 
+// Q12: every learner control shows a solid jade-700 ring (no alpha) on focus.
+const SOLID_JADE_700 = /rgb\(2, 142, 106\)/;
+
 async function expectKeyboardFocusVisible(locator: Locator): Promise<void> {
   await expect(locator).toBeFocused();
   expect(await locator.evaluate((node) => node.matches(':focus-visible'))).toBe(
@@ -424,6 +427,7 @@ test.describe('Learner Onboarding Flow', () => {
     await page.keyboard.press('Space');
     await expect(band1).toHaveAttribute('aria-checked', 'true');
     await expect(band1).toBeFocused();
+    await expect(band1).toHaveCSS('box-shadow', SOLID_JADE_700);
     const levelFocused = await readFocusStyle(band1);
 
     await page.keyboard.press('Tab');
@@ -471,6 +475,7 @@ test.describe('Learner Onboarding Flow', () => {
     await page.keyboard.press('Tab'); // time select
     const timeSelect = page.getByRole('combobox');
     await expectKeyboardFocusVisible(timeSelect);
+    await expect(timeSelect).toHaveCSS('box-shadow', SOLID_JADE_700);
     const selectFocused = await readFocusStyle(timeSelect);
     await expect(minute30).toHaveAttribute('aria-checked', 'true');
     const minuteBlurred = await readFocusStyle(minute30);
@@ -523,5 +528,103 @@ test.describe('Learner Onboarding Flow', () => {
 
     await expect(page).toHaveURL(/\/learn/);
     await expect(page.locator('h1')).toContainText(email);
+  });
+  test('8. marks the selected level with a system color in forced colors mode', async ({
+    page,
+  }) => {
+    const email = `learner.ob8.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.test`;
+    const password = 'StrongPassword123!';
+
+    await page.goto('/sign-up');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+
+    await page.emulateMedia({ forcedColors: 'active' });
+    const selected = page.getByRole('radio', { name: '3', exact: true });
+    const unselected = page.getByRole('radio', { name: '2', exact: true });
+    await expect(selected).toHaveAttribute('aria-checked', 'true');
+    await expect(unselected).toHaveAttribute('aria-checked', 'false');
+
+    // What is painted, not raw computed values: forced colors keeps the
+    // author alpha, so a transparent background still shows as Canvas, and a
+    // zero-width border or outline style none draws nothing.
+    const readPaint = (locator: Locator) =>
+      locator.evaluate((node) => {
+        const probe = document.createElement('span');
+        probe.style.backgroundColor = 'Canvas';
+        document.body.append(probe);
+        const canvas = window.getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        const opaque = (color: string) =>
+          /^rgba\(.*,\s*0\)$/.test(color) ? canvas : color;
+        const style = window.getComputedStyle(node);
+        return {
+          background: opaque(style.backgroundColor),
+          border:
+            style.borderTopWidth === '0px'
+              ? 'none'
+              : opaque(style.borderTopColor),
+          outline:
+            style.outlineStyle === 'none' ? 'none' : opaque(style.outlineColor),
+        };
+      });
+    const selectedPaint = await readPaint(selected);
+    const unselectedPaint = await readPaint(unselected);
+    expect(
+      selectedPaint.background !== unselectedPaint.background ||
+        selectedPaint.border !== unselectedPaint.border ||
+        selectedPaint.outline !== unselectedPaint.outline,
+      `selected level must differ from unselected by a system color: ${JSON.stringify({ selectedPaint, unselectedPaint })}`,
+    ).toBe(true);
+
+    // The number must stay readable: no forced Canvas over the Highlight
+    // fill, text color differs from the fill, and the pixels show glyphs.
+    const selectedText = await selected.evaluate((node) => {
+      const style = window.getComputedStyle(node);
+      return {
+        forcedColorAdjust: style.forcedColorAdjust,
+        color: style.color,
+        backgroundColor: style.backgroundColor,
+      };
+    });
+    expect(selectedText.forcedColorAdjust).toBe('none');
+    expect(selectedText.color).not.toBe(selectedText.backgroundColor);
+    // Center half of the button only: rounded corners and the page around
+    // them would add colors even when no number is painted.
+    const box = await selected.boundingBox();
+    if (!box) throw new Error('selected level has no bounding box');
+    const shot = (
+      await page.screenshot({
+        clip: {
+          x: box.x + box.width / 4,
+          y: box.y + box.height / 4,
+          width: box.width / 2,
+          height: box.height / 2,
+        },
+      })
+    ).toString('base64');
+    const distinctColors = await page.evaluate(async (png) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext('2d');
+      if (!context) return 0;
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, image.width, image.height);
+      const colors = new Set<string>();
+      for (let i = 0; i < data.length; i += 4) {
+        colors.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
+      }
+      return colors.size;
+    }, shot);
+    expect(
+      distinctColors,
+      'selected level screenshot must show the number over its fill',
+    ).toBeGreaterThanOrEqual(2);
   });
 });

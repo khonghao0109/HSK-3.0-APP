@@ -1360,4 +1360,18 @@ html:has(.learner-app) {
     outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
+
+  /* The jade fill and halo are dropped in forced colors; mark the selected
+     level with system colors so it is not told apart by font weight alone.
+     forced-color-adjust: none keeps Highlight behind the number (otherwise
+     Chromium paints Canvas over it); it also keeps box-shadow, so drop the
+     halo and focus shadow and leave the CanvasText outline as the ring. */
+  .learner-app .levels button[aria-checked='true'],
+  .learner-app .levels button[aria-checked='true']:focus-visible {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+    box-shadow: none;
+  }
 }
