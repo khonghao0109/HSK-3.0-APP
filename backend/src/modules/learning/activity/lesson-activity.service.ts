@@ -19,6 +19,7 @@ import {
   PUBLIC_LESSON_EXERCISE_WHERE,
   projectPublicExerciseMedia,
 } from '../public-exercise.policy';
+import { isLessonUnlocked } from '../path/learning-path.policy';
 import { SubmitLessonExerciseAttemptDto } from './dto/lesson-activity-write.dto';
 import {
   assertIdempotencyKeyWithinTtl,
@@ -163,6 +164,7 @@ export class LessonActivityService {
           'Lesson was already started with a different Idempotency-Key.',
         );
       }
+      await this.assertLessonUnlocked(tx, userId, graph, existing !== null);
 
       const now = new Date();
       const pointer = selectNextActivity({
@@ -727,6 +729,51 @@ export class LessonActivityService {
         );
       }
       throw new InternalServerErrorException('Unable to persist activity.');
+    }
+  }
+
+  /**
+   * Q18: an own Progress row unlocks the lesson without looking further, so
+   * the previous ready lesson is only read when the learner has no row.
+   */
+  private async assertLessonUnlocked(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    graph: PublicLessonGraph,
+    hasProgress: boolean,
+  ) {
+    if (hasProgress) return;
+    const previous = await tx.lesson.findFirst({
+      where: buildLessonReadyWhere({
+        levelId: graph.levelId,
+        AND: [
+          {
+            OR: [
+              { orderIndex: { lt: graph.orderIndex } },
+              { orderIndex: graph.orderIndex, id: { lt: graph.id } },
+            ],
+          },
+        ],
+      }),
+      orderBy: [{ orderIndex: 'desc' }, { id: 'desc' }],
+      select: { id: true },
+    });
+    const previousProgress = previous
+      ? await tx.progress.findUnique({
+          where: { userId_lessonId: { userId, lessonId: previous.id } },
+          select: { status: true },
+        })
+      : null;
+    const unlocked = isLessonUnlocked({
+      isFirst: previous === null,
+      previousStatus: previousProgress?.status ?? null,
+      hasProgress,
+    });
+    if (!unlocked) {
+      throw new ConflictException({
+        code: 'lesson_locked',
+        message: 'Complete the previous lesson first.',
+      });
     }
   }
 

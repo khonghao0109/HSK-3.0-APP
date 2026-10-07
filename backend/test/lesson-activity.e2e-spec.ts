@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { completePreviousReadyLesson } from './utils/lesson-path-fixtures';
 
 describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   let app: INestApplication;
@@ -313,7 +314,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
         data: {
           levelId,
           title: 'Content-only lesson',
-          orderIndex: 108,
+          orderIndex: 110,
           slug: `activity-content-only-${suffix}`,
           status: 'published',
           publishedAt: new Date(),
@@ -368,7 +369,10 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       data: {
         levelId,
         title: 'Listening snapshot lesson',
-        orderIndex: 109,
+        // Ready order (Q18): ... 105, listening 108, content-only 110, so
+        // unlocking listening never writes progress on a lesson this user
+        // starts later.
+        orderIndex: 108,
         slug: `activity-listening-${suffix}`,
         status: 'published',
         publishedAt: new Date(),
@@ -903,6 +907,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   });
 
   it('15. skips an archived current exercise without rewriting stored progress', async () => {
+    await completePreviousReadyLesson(prisma, secondUserId, archiveLessonId);
     await request(app.getHttpServer())
       .post(`/api/v1/learning/lessons/${archiveLessonId}/start`)
       .set('Authorization', `Bearer ${secondUserToken}`)
@@ -940,6 +945,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   });
 
   it('16. snapshots safe listening media and replays history after media archive', async () => {
+    await completePreviousReadyLesson(prisma, userId, listeningLessonId);
     await post(
       `/learning/lessons/${listeningLessonId}/start`,
       'listening-start-01',
@@ -1049,6 +1055,7 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   });
 
   it('18. explicitly completes a started content-only lesson', async () => {
+    await completePreviousReadyLesson(prisma, userId, contentOnlyLessonId);
     await post(
       `/learning/lessons/${contentOnlyLessonId}/complete`,
       'content-only-early',

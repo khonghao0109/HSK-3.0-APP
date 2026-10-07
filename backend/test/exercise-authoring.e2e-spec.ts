@@ -11,6 +11,7 @@ import { CreateExerciseDto } from '../src/modules/cms/dto/create-exercise.dto';
 import { ExerciseAuthoringService } from '../src/modules/cms/exercise-authoring.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+import { completePreviousReadyLesson } from './utils/lesson-path-fixtures';
 
 type ExerciseMutationBody = {
   success: true;
@@ -37,6 +38,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
   let topicId: number;
   let adminToken: string;
   let normalToken: string;
+  let learnerId: number;
   let learnerToken: string;
   let exerciseId: number;
   let revision1Id: number;
@@ -135,6 +137,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     adminToken = await login(`exercise-admin-${suffix}@example.com`);
     const learner = await register('learner');
     learnerToken = learner.token;
+    learnerId = learner.userId;
 
     readyAudioId = (
       await prisma.media.create({
@@ -373,6 +376,7 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
   });
 
   it('5. creates and publishes V2 without changing an already submitted V1 attempt', async () => {
+    await completePreviousReadyLesson(prisma, learnerId, lessonId);
     await request(app.getHttpServer())
       .post(`/api/v1/learning/lessons/${lessonId}/start`)
       .set('Authorization', `Bearer ${learnerToken}`)

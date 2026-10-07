@@ -13,6 +13,7 @@ import {
   LessonActivityTransactionOperation,
 } from '../../src/modules/learning/activity/lesson-activity-transaction-coordinator';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { completePreviousReadyLesson } from '../../test/utils/lesson-path-fixtures';
 
 const COORDINATION_TIMEOUT_MS = 2_000;
 const BARRIER_TIMEOUT_MS = 4_000;
@@ -446,6 +447,7 @@ async function main() {
     );
 
     const different = await createTopicFixture(observer, level.id, 2, suffix);
+    await completePreviousReadyLesson(observer, user.id, different.lesson.id);
     await setup.startLesson(user.id, different.lesson.id, 'diff-start-lesson');
     const differentRace = await runRace({
       observer,
@@ -490,6 +492,11 @@ async function main() {
       level.id,
       3,
       suffix,
+    );
+    await completePreviousReadyLesson(
+      observer,
+      user.id,
+      topicRaceFixture.lesson.id,
     );
     await setup.startLesson(
       user.id,
@@ -541,6 +548,11 @@ async function main() {
       4,
       suffix,
     );
+    await completePreviousReadyLesson(
+      observer,
+      user.id,
+      lessonRaceFixture.lesson.id,
+    );
     await setup.startLesson(
       user.id,
       lessonRaceFixture.lesson.id,
@@ -591,6 +603,11 @@ async function main() {
       level.id,
       5,
       suffix,
+    );
+    await completePreviousReadyLesson(
+      observer,
+      user.id,
+      timeoutFixture.lesson.id,
     );
     await setup.startLesson(
       user.id,
