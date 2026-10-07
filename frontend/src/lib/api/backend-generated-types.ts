@@ -996,30 +996,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/media/{mediaId}/access": {
+    "/api/v1/learning/path": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["MediaController_createAccess"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/media/{mediaId}/content": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["MediaController_getContent"];
+        get: operations["LearningPathController_getPath"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1102,6 +1086,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["LearningPlansController_generateLearningPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{mediaId}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MediaController_createAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{mediaId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MediaController_getContent"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1669,6 +1685,44 @@ export interface components {
                 [key: string]: unknown;
             };
             durationSeconds?: number;
+        };
+        LearningPathGoalDto: {
+            /** @enum {string|null} */
+            learningPurpose: "communication" | "study_abroad" | "hsk_exam" | "work" | null;
+            targetLevelCode: string;
+            targetBand: number | null;
+        };
+        LearningPathLessonDto: {
+            /** @enum {string} */
+            state: "done" | "current" | "available" | "locked";
+            id: number;
+            title: string;
+            slug: string;
+            position: number;
+            completionPercent: number;
+        };
+        LearningPathLevelDto: {
+            id: number;
+            code: string;
+            name: string;
+            orderIndex: number;
+            lessonCount: number;
+            completedCount: number;
+            lessons: components["schemas"]["LearningPathLessonDto"][];
+        };
+        LearningPathNextLessonDto: {
+            lessonId: number;
+            title: string;
+            slug: string;
+            levelCode: string;
+            position: number;
+        };
+        LearningPathResponseDto: {
+            /** @enum {string} */
+            nextStep: "set_goal" | "content_unavailable" | "generate_plan" | "ready";
+            goal: components["schemas"]["LearningPathGoalDto"] | null;
+            levels: components["schemas"]["LearningPathLevelDto"][];
+            nextLesson: components["schemas"]["LearningPathNextLessonDto"] | null;
         };
         CreateGoalDto: {
             targetLevelId: number;
@@ -3861,16 +3915,14 @@ export interface operations {
             default: components["responses"]["ErrorEnvelope"];
         };
     };
-    MediaController_createAccess: {
+    LearningPathController_getPath: {
         parameters: {
             query?: never;
             header?: {
                 /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
                 "X-Request-ID"?: components["parameters"]["RequestId"];
             };
-            path: {
-                mediaId: number;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -3883,38 +3935,9 @@ export interface operations {
                     "application/json": {
                         /** @enum {boolean} */
                         success: true;
-                        data: unknown;
+                        data: components["schemas"]["LearningPathResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
-                };
-            };
-            default: components["responses"]["ErrorEnvelope"];
-        };
-    };
-    MediaController_getContent: {
-        parameters: {
-            query: {
-                expires: number;
-                signature: string;
-            };
-            header?: {
-                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
-                "X-Request-ID"?: components["parameters"]["RequestId"];
-            };
-            path: {
-                mediaId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Raw media bytes; errors still use the JSON error envelope. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
                 };
             };
             default: components["responses"]["ErrorEnvelope"];
@@ -4059,6 +4082,65 @@ export interface operations {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    MediaController_createAccess: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                mediaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    MediaController_getContent: {
+        parameters: {
+            query: {
+                expires: number;
+                signature: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                mediaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Raw media bytes; errors still use the JSON error envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
             default: components["responses"]["ErrorEnvelope"];

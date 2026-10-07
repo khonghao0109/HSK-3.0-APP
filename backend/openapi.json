@@ -4349,20 +4349,12 @@
         ]
       }
     },
-    "/api/v1/media/{mediaId}/access": {
+    "/api/v1/learning/path": {
       "get": {
-        "operationId": "MediaController_createAccess",
+        "operationId": "LearningPathController_getPath",
         "parameters": [
           {
             "$ref": "#/components/parameters/RequestId"
-          },
-          {
-            "name": "mediaId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
           }
         ],
         "responses": {
@@ -4384,7 +4376,9 @@
                         true
                       ]
                     },
-                    "data": {},
+                    "data": {
+                      "$ref": "#/components/schemas/LearningPathResponseDto"
+                    },
                     "meta": {
                       "$ref": "#/components/schemas/ApiResponseMetaDto"
                     }
@@ -4403,63 +4397,7 @@
           }
         ],
         "tags": [
-          "Media"
-        ]
-      }
-    },
-    "/api/v1/media/{mediaId}/content": {
-      "get": {
-        "operationId": "MediaController_getContent",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/RequestId"
-          },
-          {
-            "name": "mediaId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "expires",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 2147483647,
-              "type": "number"
-            }
-          },
-          {
-            "name": "signature",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "pattern": "^[a-f0-9]{64}$",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Raw media bytes; errors still use the JSON error envelope.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorEnvelope"
-          }
-        },
-        "tags": [
-          "Media"
+          "LearningPath"
         ]
       }
     },
@@ -4720,6 +4658,120 @@
         ],
         "tags": [
           "LearningPlans"
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}/access": {
+      "get": {
+        "operationId": "MediaController_createAccess",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}/content": {
+      "get": {
+        "operationId": "MediaController_getContent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "expires",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "signature",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw media bytes; errors still use the JSON error envelope.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Media"
         ]
       }
     }
@@ -6683,6 +6735,179 @@
         },
         "required": [
           "answer"
+        ]
+      },
+      "LearningPathGoalDto": {
+        "type": "object",
+        "properties": {
+          "learningPurpose": {
+            "nullable": true,
+            "enum": [
+              "communication",
+              "study_abroad",
+              "hsk_exam",
+              "work"
+            ],
+            "type": "string"
+          },
+          "targetLevelCode": {
+            "type": "string"
+          },
+          "targetBand": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "learningPurpose",
+          "targetLevelCode",
+          "targetBand"
+        ]
+      },
+      "LearningPathLessonDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "done",
+              "current",
+              "available",
+              "locked"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "completionPercent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "state",
+          "id",
+          "title",
+          "slug",
+          "position",
+          "completionPercent"
+        ]
+      },
+      "LearningPathLevelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "lessonCount": {
+            "type": "number"
+          },
+          "completedCount": {
+            "type": "number"
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LearningPathLessonDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "orderIndex",
+          "lessonCount",
+          "completedCount",
+          "lessons"
+        ]
+      },
+      "LearningPathNextLessonDto": {
+        "type": "object",
+        "properties": {
+          "lessonId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lessonId",
+          "title",
+          "slug",
+          "levelCode",
+          "position"
+        ]
+      },
+      "LearningPathResponseDto": {
+        "type": "object",
+        "properties": {
+          "nextStep": {
+            "enum": [
+              "set_goal",
+              "content_unavailable",
+              "generate_plan",
+              "ready"
+            ],
+            "type": "string"
+          },
+          "goal": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningPathGoalDto"
+              }
+            ]
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LearningPathLevelDto"
+            }
+          },
+          "nextLesson": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningPathNextLessonDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nextStep",
+          "goal",
+          "levels",
+          "nextLesson"
         ]
       },
       "CreateGoalDto": {
