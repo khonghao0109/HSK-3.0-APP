@@ -591,40 +591,74 @@ test.describe('Learner Onboarding Flow', () => {
     });
     expect(selectedText.forcedColorAdjust).toBe('none');
     expect(selectedText.color).not.toBe(selectedText.backgroundColor);
-    // Center half of the button only: rounded corners and the page around
-    // them would add colors even when no number is painted.
-    const box = await selected.boundingBox();
-    if (!box) throw new Error('selected level has no bounding box');
-    const shot = (
-      await page.screenshot({
-        clip: {
-          x: box.x + box.width / 4,
-          y: box.y + box.height / 4,
-          width: box.width / 2,
-          height: box.height / 2,
-        },
-      })
-    ).toString('base64');
-    const distinctColors = await page.evaluate(async (png) => {
-      const image = new Image();
-      image.src = `data:image/png;base64,${png}`;
-      await image.decode();
-      const canvas = document.createElement('canvas');
-      canvas.width = image.width;
-      canvas.height = image.height;
-      const context = canvas.getContext('2d');
-      if (!context) return 0;
-      context.drawImage(image, 0, 0);
-      const { data } = context.getImageData(0, 0, image.width, image.height);
-      const colors = new Set<string>();
-      for (let i = 0; i < data.length; i += 4) {
-        colors.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
-      }
-      return colors.size;
-    }, shot);
+    // Pixels that change when only the number is hidden are the glyph; the
+    // number is readable when those pixels reach WCAG 4.5:1 against the fill
+    // (a near-fill text color fails). A forced backplate is caught by the
+    // forcedColorAdjust assertion above, not by this measure.
+    const handle = await selected.elementHandle();
+    if (!handle) throw new Error('selected level has no element handle');
+    const withNumber = (await handle.screenshot()).toString('base64');
+    await handle.evaluate((node) => {
+      (node as HTMLElement).style.setProperty(
+        'color',
+        'transparent',
+        'important',
+      );
+    });
+    const withoutNumber = (await handle.screenshot()).toString('base64');
+    await handle.evaluate((node) => {
+      (node as HTMLElement).style.removeProperty('color');
+    });
+    const glyph = await page.evaluate(
+      async ([original, hidden]) => {
+        const load = async (png: string) => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${png}`;
+          await image.decode();
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('2d canvas unavailable');
+          context.drawImage(image, 0, 0);
+          return context.getImageData(0, 0, image.width, image.height).data;
+        };
+        const channel = (value: number) => {
+          const c = value / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        };
+        const luminance = (data: Uint8ClampedArray, i: number) =>
+          0.2126 * channel(data[i] ?? 0) +
+          0.7152 * channel(data[i + 1] ?? 0) +
+          0.0722 * channel(data[i + 2] ?? 0);
+        const a = await load(original);
+        const b = await load(hidden);
+        let changedPixels = 0;
+        let maxContrast = 1;
+        for (let i = 0; i < Math.min(a.length, b.length); i += 4) {
+          if (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2]) {
+            continue;
+          }
+          changedPixels += 1;
+          const [high, low] = [luminance(a, i), luminance(b, i)].sort(
+            (x, y) => y - x,
+          );
+          maxContrast = Math.max(
+            maxContrast,
+            ((high ?? 0) + 0.05) / ((low ?? 0) + 0.05),
+          );
+        }
+        return { changedPixels, maxContrast };
+      },
+      [withNumber, withoutNumber] as const,
+    );
     expect(
-      distinctColors,
-      'selected level screenshot must show the number over its fill',
-    ).toBeGreaterThanOrEqual(2);
+      glyph.changedPixels,
+      'hiding the number must change selected level pixels',
+    ).toBeGreaterThan(0);
+    expect(
+      glyph.maxContrast,
+      'selected level number must reach 4.5:1 against its fill',
+    ).toBeGreaterThanOrEqual(4.5);
   });
 });

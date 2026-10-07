@@ -1371,7 +1371,6 @@ html:has(.learner-app) {
     forced-color-adjust: none;
     background: Highlight;
     color: HighlightText;
-    border-color: Highlight;
     box-shadow: none;
   }
 }
