@@ -1,6 +1,17 @@
 const DISPOSABLE_DATABASE_NAME_PATTERN =
   /(?:^|[_-])(test|e2e|verify|disposable|hardening)(?:[_-]\d+)?$/i;
 
+// libpq lets these query parameters override the host, port or database in the
+// URL path, so a disposable-looking URL could still connect somewhere else.
+const TARGET_OVERRIDE_PARAMETERS = [
+  'dbname',
+  'host',
+  'hostaddr',
+  'port',
+  'service',
+  'servicefile',
+] as const;
+
 type TestDatabaseEnvironment = {
   NODE_ENV?: string;
   DATABASE_URL?: string;
@@ -32,6 +43,20 @@ function parseDatabaseTarget(
 
   if (parsed.protocol !== 'postgresql:' && parsed.protocol !== 'postgres:') {
     throw new Error(`${variableName} must be a valid PostgreSQL URL`);
+  }
+
+  // libpq has no fragment: it reads "#?dbname=…" as query parameters, while
+  // URL moves them into hash, so the checks below would never see them.
+  if (parsed.hash !== '' || value.includes('#')) {
+    throw new Error(`${variableName} must not contain a fragment`);
+  }
+
+  for (const parameter of TARGET_OVERRIDE_PARAMETERS) {
+    if (parsed.searchParams.has(parameter)) {
+      throw new Error(
+        `${variableName} must not contain the ${parameter} parameter`,
+      );
+    }
   }
 
   const schemaParameters = parsed.searchParams.getAll('schema');

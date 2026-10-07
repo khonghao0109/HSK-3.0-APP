@@ -76,6 +76,64 @@ describe('assertDisposableTestDatabase', () => {
     );
   });
 
+  it.each(['dbname', 'host', 'hostaddr', 'port', 'service', 'servicefile'])(
+    'rejects the libpq %s parameter in DATABASE_URL and TEST_DATABASE_URL',
+    (parameter) => {
+      const base = 'postgresql://app:secret@localhost:5432/hsk_system_test';
+      expect(() =>
+        assertDisposableTestDatabase({
+          ...makeEnvironment('hsk_system_test'),
+          DATABASE_URL: `${base}?schema=public&${parameter}=prod`,
+        }),
+      ).toThrow(`DATABASE_URL must not contain the ${parameter} parameter`);
+      expect(() =>
+        assertDisposableTestDatabase({
+          ...makeEnvironment('hsk_system_test'),
+          TEST_DATABASE_URL: `${base}?${parameter}=prod`,
+        }),
+      ).toThrow(
+        `TEST_DATABASE_URL must not contain the ${parameter} parameter`,
+      );
+    },
+  );
+
+  it.each([
+    ['a query hidden in a fragment', '#?dbname=hsk_system'],
+    ['a parameter after a fragment', '?application_name=a#&dbname=hsk_system'],
+    ['a plain fragment', '#frag'],
+  ])(
+    'rejects %s in DATABASE_URL and TEST_DATABASE_URL',
+    (_caseName, suffix) => {
+      const base = 'postgresql://app:secret@localhost:5432/x_test';
+      expect(() =>
+        assertDisposableTestDatabase({
+          NODE_ENV: 'test',
+          DATABASE_URL: `${base}${suffix}`,
+          TEST_DATABASE_URL: base,
+        }),
+      ).toThrow(/^DATABASE_URL must not contain a fragment/);
+      expect(() =>
+        assertDisposableTestDatabase({
+          NODE_ENV: 'test',
+          DATABASE_URL: base,
+          TEST_DATABASE_URL: `${base}${suffix}`,
+        }),
+      ).toThrow(/^TEST_DATABASE_URL must not contain a fragment/);
+    },
+  );
+
+  it('accepts the CI database URL', () => {
+    const ciUrl =
+      'postgresql://hsk:test-local-postgres@127.0.0.1:5432/hsk_ci_e2e_test';
+    expect(
+      assertDisposableTestDatabase({
+        NODE_ENV: 'test',
+        DATABASE_URL: ciUrl,
+        TEST_DATABASE_URL: ciUrl,
+      }),
+    ).toEqual(expect.objectContaining({ databaseName: 'hsk_ci_e2e_test' }));
+  });
+
   it.each([
     'hsk_system',
     'hsk_latest',
