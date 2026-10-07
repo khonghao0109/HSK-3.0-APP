@@ -4,6 +4,8 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3200';
 
 export default defineConfig({
   testDir: './e2e',
+  // Vitest unit specs for e2e helpers live here; they are not browser tests.
+  testIgnore: ['**/e2e/support/**'],
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,

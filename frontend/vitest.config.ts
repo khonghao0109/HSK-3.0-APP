@@ -16,7 +16,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.spec.{ts,tsx}'],
+    // e2e/support specs are pure Node helpers (they pick the node environment
+    // per file); Playwright ignores them via testIgnore.
+    include: ['src/**/*.spec.{ts,tsx}', 'e2e/support/**/*.spec.ts'],
     restoreMocks: true,
   },
 });
