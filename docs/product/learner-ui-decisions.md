@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 07/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026).
+Cập nhật: 07/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -28,3 +28,11 @@ Cập nhật: 07/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q10 | **Cấp chưa mở vẫn hiện đủ 9 nút** (PO 05/10/2026) | Bản demo coi mọi cấp đều mở | App thật: chọn cấp chưa có Level published thì hiện "HSK n chưa mở. Hãy chọn cấp độ khác." và khoá nút Tiếp tục |
 | Q11 | **Tắt nhắc nhở thì không lưu giờ học** (PO 05/10/2026) | Ô giờ vẫn hiện và chọn được như mẫu | API chỉ có `reminderTime`; giờ chỉ được gửi khi công tắc bật |
 | Q12 | **Vòng focus đậm jade-700 cho mọi control, kể cả ô nhập liệu và ô chọn** (PO 05/10/2026) | Mẫu PNG dùng vòng xanh mờ 40% (tương phản khoảng 1,55:1) | `--focus-ring` trong `tokens.css` đổi sang `0 0 0 3px var(--jade-700)` để đạt WCAG 1.4.11 (≥ 3:1); app dùng cùng giá trị |
+| Q13 | **Mục tiêu hôm nay và Chuỗi ngày học do backend tính** (`GET /learning/home`, M2.B10; PO 07/10/2026) | Giữ 2 thẻ như mẫu | App thật: số phút hôm nay = tổng `durationSeconds` của lần nộp bài tập trong ngày (theo timezone hồ sơ), nên là 0 cho tới khi có nội dung bài tập (M2.9). Ngày học = có ít nhất một `lesson_completed`, `topic_completed` hoặc `exercise_submitted` (không tính `word_saved`). Đơn vị chuỗi hiện "ngày" thay cho "days" của ảnh 02-01 |
+| Q14 | **Ẩn thẻ XP "Cấp 7", chip XP ở Lộ trình và thẻ Ôn tập** cho tới khi có tính năng (PO 07/10/2026) | Bản demo vẫn hiện | App thật không có 3 phần này. XP cần ADR và migration (P1), SRS thuộc M3. Khi so pixel, bản mẫu ẩn cùng các phần đó |
+| Q15 | **Chuông không badge, avatar dạng icon chung, chào "Chào bạn" khi chưa có tên** (PO 07/10/2026) | Bản demo có badge "3" và ảnh avatar | Bấm chuông ra toast "Thông báo sẽ có khi tính năng ra mắt." Avatar là icon người dùng và trỏ tới Hồ sơ (Q17). Có tên thì chào "Chào, {tên}" |
+| Q16 | **Tab Tra từ, Ôn tập và 8 lối tắt Khám phá vẫn hiện; màn chưa có thì bấm ra toast "Tính năng sắp ra mắt."** (PO 07/10/2026) | Bản demo trỏ tới các màn demo | Giữ bố cục Q1. Khi màn đích ra mắt thì nối link thật |
+| Q17 | **Trang Hồ sơ tối thiểu `/learn/profile`: tên, email, nút Đăng xuất** (PO 07/10/2026) | Bản demo dùng `profile.html` đầy đủ | Tab Hồ sơ và avatar trỏ tới trang này cho tới khi làm màn 04/06. Trang chủ không còn nút Đăng xuất |
+| Q18 | **Khoá bài tuần tự trong từng cấp, server tính và chặn** (PO 07/10/2026) | Như mẫu: bài xong, bài đang học, bài khoá kèm toast "Hoàn thành bài trước để mở khoá." | Bài đầu cấp luôn mở; bài sau mở khi bài liền trước xong; bài đã có tiến độ không bao giờ bị khoá. `POST /learning/lessons/:id/start` bài khoá trả 409 `lesson_locked` (đổi contract M2.B3) |
+| Q19 | **Lộ trình luôn hiện đủ 7 tab cấp; tab mặc định là cấp mục tiêu** (PO 07/10/2026) | Như mẫu (HSK 7–9 theo Q3) | Cấp chưa có bài sẵn sàng hiện "HSK n chưa mở." với lưới trống. Cấp khác cấp mục tiêu vẫn học được theo quy tắc Q18 |
+| Q20 | **Ảnh minh hoạ bài học dùng ô chung** (PO 07/10/2026) | Bản demo dùng ảnh cắt riêng từng bài | API chưa trả ảnh bài. App dùng một ô minh hoạ chung; khi so pixel, vùng ảnh được che ở cả hai bên. Có ảnh thật thì thay vào đúng chỗ |
