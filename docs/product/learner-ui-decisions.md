@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 07/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày).
+Cập nhật: 09/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q24 ngày 09/10/2026).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -36,3 +36,7 @@ Cập nhật: 07/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q18 | **Khoá bài tuần tự trong từng cấp, server tính và chặn** (PO 07/10/2026) | Như mẫu: bài xong, bài đang học, bài khoá kèm toast "Hoàn thành bài trước để mở khoá." | Bài đầu cấp luôn mở; bài sau mở khi bài liền trước xong; bài đã có tiến độ không bao giờ bị khoá. `POST /learning/lessons/:id/start` bài khoá trả 409 `lesson_locked` (đổi contract M2.B3) |
 | Q19 | **Lộ trình luôn hiện đủ 7 tab cấp; tab mặc định là cấp mục tiêu** (PO 07/10/2026) | Như mẫu (HSK 7–9 theo Q3) | Cấp chưa có bài sẵn sàng hiện "HSK n chưa mở." với lưới trống. Cấp khác cấp mục tiêu vẫn học được theo quy tắc Q18 |
 | Q20 | **Ảnh minh hoạ bài học dùng ô chung** (PO 07/10/2026) | Bản demo dùng ảnh cắt riêng từng bài | API chưa trả ảnh bài. App dùng một ô minh hoạ chung; khi so pixel, vùng ảnh được che ở cả hai bên. Có ảnh thật thì thay vào đúng chỗ |
+| Q21 | **Vòng "Mục tiêu hôm nay" tô xanh theo tỉ lệ, trần 100%** (PO 09/10/2026) | Bản demo giữ vòng cứng của ảnh mẫu | Bỏ đoạn vàng 0–14% của ảnh 02-01. Vòng jade tô `min(phút hôm nay / mục tiêu, 100%)`, phần còn lại màu nền vòng; chữ vẫn hiện số thật (ví dụ "25/20") |
+| Q22 | **Tab "Học" và thẻ "Tiếp tục học" ra toast "Tính năng sắp ra mắt." cho tới khi màn đích ra mắt** (PO 09/10/2026) | Bản demo trỏ tới `path.html` và `lesson.html` | Như Q16. M2.4b nối tab Học tới `/learn/path`; màn bài học (M2.5) nối thẻ "Tiếp tục học" |
+| Q23 | **Nhãn tab đang chọn dùng chữ jade-800, icon giữ jade-700** (PO 09/10/2026) | Bản demo tô cả chữ lẫn icon jade-700 | Chữ 11px jade-700 trên nền trắng chỉ đạt 4,13:1, dưới mức 4,5:1 của WCAG AA. Chữ tab đang chọn đổi sang jade-800 (5,30:1), icon vẫn jade-700. `assets/css/learner.css` của bản demo đã sửa theo |
+| Q24 | **Giữ tiêu đề "Tiếp tục học" kể cả khi bài tiếp theo đang ở 0%** (PO 09/10/2026) | Bản demo chỉ có trạng thái đã học dở | Learner vừa lập kế hoạch thấy bài đầu tiên ở mục "Tiếp tục học" với 0%. Không đổi chữ, không đổi backend |
