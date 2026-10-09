@@ -46,14 +46,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 14 / 36 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 15 / 36 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **72 / 149 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **73 / 149 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -216,7 +216,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
-| M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | 🟡 | 07/10: chờ review; dùng lại `selectNextLesson` của M2.B9 |
+| M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: `2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`. POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
 | M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận fragment `#token=`, gọi confirm API |
@@ -228,7 +228,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
-| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ⬜ | `02-learning-lesson/01`; cần M2.B10 |
+| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | 🟡 | 09/10: chờ review; `02-learning-lesson/01`; Q21–Q22 |
 | M2.4b | Lộ trình (Q18–Q20) | ⬜ | `02-learning-lesson/02`; cần M2.B9, thêm path vào allowlist BFF |
 | M2.5a | Trang nội dung bài học | ⬜ | 02/03 |
 | M2.5b | Activity player: mcq, fill_blank | ⬜ | 02/04,05 |
@@ -469,7 +469,7 @@ UI và phần backend còn thiếu:
 | M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
-| M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | 🟡 | 07/10: chờ review; dùng lại `selectNextLesson` của M2.B9 |
+| M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: ✅ đã đóng (`2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`), POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
 | M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận token từ URL fragment `#token=`, gọi POST /auth/email-verification/confirm |
@@ -480,7 +480,7 @@ UI và phần backend còn thiếu:
 | M2.2 | Onboarding goal + kế hoạch học UI | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
-| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ⬜ | `02-learning-lesson/01`; cần M2.B10 |
+| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | 🟡 | 09/10: chờ review; `02-learning-lesson/01`; Q21–Q22 |
 | M2.4b | Lộ trình (Q18–Q20) | ⬜ | `02-learning-lesson/02`; cần M2.B9, thêm path vào allowlist BFF |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ⬜ | `02-learning-lesson/03,04,05,06` |
 | M2.6 | Dictionary search/detail/save-word cơ bản (backend detail + save API còn thiếu) | ⬜ | `03-dictionary-review-reader/01,02` |
@@ -659,3 +659,5 @@ khi vertical slice bắt đầu.
 | 07/10/2026 | GĐ5: M2.7b ✅ đã đóng (`87833f7`, `b7b553b`, `2882e3d`, `3333d48`, PR #5 run `37564398158`). Thêm M2.7c 🟡 chờ review (test 8 đo chữ của cấp độ đang chọn ở forced-colors: pixel đổi khi ẩn chữ và tương phản ≥ 4,5:1, bỏ `border-color` chết; tài liệu quyết định PO learner UI `docs/product/learner-ui-decisions.md` chép bảng Q1–Q12, PO đồng ý 07/10/2026, trỏ từ `frontend/DESIGN.md`). Đếm lại bằng script theo từng dòng task: GĐ5 12/32. Tổng 70/145. |
 | 07/10/2026 | GĐ5: M2.7c ✅ đã đóng (`d949b14`, `7d0dda8`, `ebf86bb`, PR #5 run `37568128763`). Thêm M2.B9 🟡 chờ review (`GET /learning/path` trả trạng thái bài theo Q18 và `nextLesson`; `POST /learning/lessons/:lessonId/start` trả `409 lesson_locked` khi bài ready liền trước chưa xong; quyết định PO Q13–Q20 chép vào `docs/product/learner-ui-decisions.md`), M2.B10 ⬜ `GET /learning/home` (Q13), M2.4a ⬜ Trang chủ + tab bar + `/learn/profile` (Q14–Q17), M2.4b ⬜ Lộ trình (Q18–Q20). Đếm lại bằng script theo từng dòng task: GĐ5 13/36. Tổng 71/149. |
 | 07/10/2026 | GĐ5: M2.B9 ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`). M2.B10 🟡 chờ review (`GET /learning/home` trả `nextStep`, `greetingName`, `dailyGoal` với `minutesToday` theo ngày local của timezone profile (cap 1440), `streakDays` tính chuỗi ngày học từ `lesson_completed`/`topic_completed`/`exercise_submitted` bằng một câu SQL gaps-and-islands, chuỗi kết thúc hôm qua vẫn giữ, `continueLesson` từ `selectNextLesson` kèm `completionPercent`; `LearningPathService.loadPathState` dùng chung cho path và home). Đếm lại bằng script theo từng dòng task: GĐ5 14/36. Tổng 72/149. |
+| 09/10/2026 | GĐ5: M2.B10 ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`). M2.4a 🟡 chờ review (Trang chủ learner `/learn` dựng trên `GET /learning/home`: hero, Mục tiêu hôm nay tô theo tỉ lệ trần 100% (Q21), Chuỗi ngày học, Tiếp tục học, Khám phá; layout `/learn` có tab bar và toast dùng chung; Học, Tra từ, Ôn tập, chuông, Khám phá và thẻ Tiếp tục học ra toast (Q15, Q16, Q22); `/learn/profile` tối thiểu có tên, email, Đăng xuất (Q17); thêm Q21–Q22 vào `docs/product/learner-ui-decisions.md`). Đếm lại bằng script theo từng dòng task: GĐ5 15/36. Tổng 73/149. |
+| 09/10/2026 | GĐ5: M2.4a FIX, vẫn 🟡 chờ review: vòng focus jade-700 cho avatar, vòng inset cho tab bar; màn 195px không tràn (Khám phá 3 cột, ẩn ô minh hoạ bài dưới 300px); thẻ Tiếp tục học dùng span thay h3/p; số liệu 2 thẻ đọc qua `aria-labelledby` và chữ sr-only; Hồ sơ vẫn hiện email và Đăng xuất khi `/learning/home` lỗi khác 401/403; thêm Q23 (chữ tab đang chọn jade-800) và Q24; thêm rule forced colors cho Home. Đếm lại bằng script theo từng dòng task: GĐ5 15/36. Tổng 73/149. |
