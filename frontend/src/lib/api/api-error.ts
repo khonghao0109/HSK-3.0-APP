@@ -105,3 +105,11 @@ export class BackendRequestError extends Error implements ApiFailure {
     this.requestId = failure.requestId;
   }
 }
+
+/** True for a backend 401/403: the session is gone or not allowed. */
+export function isAuthFailure(error: unknown): boolean {
+  return (
+    error instanceof BackendRequestError &&
+    (error.status === 401 || error.status === 403)
+  );
+}

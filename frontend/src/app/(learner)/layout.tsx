@@ -99,6 +99,75 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M19 15v4M17 17h4" />
             <path d="M5 3v3M3.5 4.5h3" />
           </symbol>
+          <symbol id="i-home" viewBox="0 0 24 24">
+            <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z" />
+          </symbol>
+          <symbol id="i-home-fill" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M11.36 2.23a1 1 0 0 1 1.28 0l8.64 7.2a1 1 0 0 1 .36.77V20a1.5 1.5 0 0 1-1.5 1.5h-4.64v-6.25H8.5v6.25H3.86A1.5 1.5 0 0 1 2.36 20v-9.8a1 1 0 0 1 .36-.77Z"
+            />
+          </symbol>
+          <symbol id="i-book-open" viewBox="0 0 24 24">
+            <path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z" />
+            <path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z" />
+          </symbol>
+          <symbol id="i-book-open-fill" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M2 4.2c0-.66.54-1.2 1.2-1.2H8a4.2 4.2 0 0 1 3.2 1.48V21a3.6 3.6 0 0 0-2.7-1.2H3.2A1.2 1.2 0 0 1 2 18.6Zm20 0c0-.66-.54-1.2-1.2-1.2H16a4.2 4.2 0 0 0-3.2 1.48V21a3.6 3.6 0 0 1 2.7-1.2h5.3a1.2 1.2 0 0 0 1.2-1.2Z"
+            />
+            <path d="M12 9.5v4" stroke="var(--white)" strokeWidth="2" />
+          </symbol>
+          <symbol id="i-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </symbol>
+          <symbol id="i-layers" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="5" rx="1.5" />
+            <rect x="3" y="11" width="18" height="5" rx="1.5" />
+            <path d="M7 20h10" />
+          </symbol>
+          <symbol id="i-user" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </symbol>
+          <symbol id="i-trophy" viewBox="0 0 24 24">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0Z" />
+          </symbol>
+          <symbol id="i-mic" viewBox="0 0 24 24">
+            <rect x="9" y="2" width="6" height="12" rx="3" />
+            <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+            <path d="M12 18v4" />
+          </symbol>
+          <symbol id="i-file-text" viewBox="0 0 24 24">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z" />
+            <path d="M14 2v6h6" />
+            <path d="M16 13H8" />
+            <path d="M16 17H8" />
+            <path d="M10 9H8" />
+          </symbol>
+          <symbol id="i-message-circle" viewBox="0 0 24 24">
+            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+          </symbol>
+          <symbol id="i-file-stack" viewBox="0 0 24 24">
+            <path d="M16 2v5h5" />
+            <path d="M21 6v6.5c0 .8-.7 1.5-1.5 1.5h-7c-.8 0-1.5-.7-1.5-1.5v-9c0-.8.7-1.5 1.5-1.5H17Z" />
+            <path d="M7 8v8.8c0 .3.2.6.4.8.2.2.5.4.8.4H15" />
+            <path d="M3 12v8.8c0 .3.2.6.4.8.2.2.5.4.8.4H11" />
+          </symbol>
+          <symbol id="i-help-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
+            <path d="M12 17h.01" />
+          </symbol>
           <symbol id="logo-google" viewBox="0 0 24 24">
             <path
               fill="var(--logo-google-blue)"

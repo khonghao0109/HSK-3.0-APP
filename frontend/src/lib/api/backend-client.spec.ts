@@ -204,7 +204,8 @@ describe('server-only backend client', () => {
     });
     await client.request('/api/v1/onboarding/goals/current');
     await client.request('/api/v1/learning-plans', { method: 'POST' });
-    expect(fetchImpl).toHaveBeenCalledTimes(5);
+    await client.request('/api/v1/learning/home');
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
 
     for (const path of [
       '/api/v1/levels',
@@ -212,6 +213,7 @@ describe('server-only backend client', () => {
       '/api/v1/onboarding/goals',
       '/api/v1/onboarding/goals/current',
       '/api/v1/learning-plans',
+      '/api/v1/learning/home',
     ]) {
       await expect(client.request(`${path}/x`)).rejects.toMatchObject({
         kind: 'invalid_request',

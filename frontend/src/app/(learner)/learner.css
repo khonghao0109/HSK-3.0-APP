@@ -66,6 +66,15 @@
   --logo-facebook-blue: #1877f2;
   --logo-facebook-white: #ffffff;
 
+  /* Home "Khám phá" tiles and avatar ring (m02.css, 02-01). */
+  --explore-amber-bg: #fdf0d5;
+  --explore-amber-fg: #b26a00;
+  --explore-red-bg: #fde4df;
+  --explore-red-fg: #c8283a;
+  --explore-violet-bg: #efecfb;
+  --explore-violet-fg: #6a55cf;
+  --avatar-ring: rgb(255 255 255 / 85%);
+
   /* Solid jade-700 on every control, inputs included (Q12): >= 3:1 vs
      cream-50/100, paper and jade-25 (WCAG 1.4.11). */
   --focus-ring: 0 0 0 3px var(--jade-700);
@@ -1351,8 +1360,951 @@ html:has(.learner-app) {
   box-shadow: var(--focus-ring);
 }
 
+/* ---------- Progress ---------- */
+.learner-app .progress {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--slate-200);
+  overflow: hidden;
+}
+
+.learner-app .progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--jade-600);
+  width: var(--value, 0%);
+  transition: width var(--dur);
+}
+
+/* `--value` for gauges and bars: static classes, since the CSP blocks inline
+   styles. */
+.learner-app .pct-0 {
+  --value: 0%;
+}
+
+.learner-app .pct-1 {
+  --value: 1%;
+}
+
+.learner-app .pct-2 {
+  --value: 2%;
+}
+
+.learner-app .pct-3 {
+  --value: 3%;
+}
+
+.learner-app .pct-4 {
+  --value: 4%;
+}
+
+.learner-app .pct-5 {
+  --value: 5%;
+}
+
+.learner-app .pct-6 {
+  --value: 6%;
+}
+
+.learner-app .pct-7 {
+  --value: 7%;
+}
+
+.learner-app .pct-8 {
+  --value: 8%;
+}
+
+.learner-app .pct-9 {
+  --value: 9%;
+}
+
+.learner-app .pct-10 {
+  --value: 10%;
+}
+
+.learner-app .pct-11 {
+  --value: 11%;
+}
+
+.learner-app .pct-12 {
+  --value: 12%;
+}
+
+.learner-app .pct-13 {
+  --value: 13%;
+}
+
+.learner-app .pct-14 {
+  --value: 14%;
+}
+
+.learner-app .pct-15 {
+  --value: 15%;
+}
+
+.learner-app .pct-16 {
+  --value: 16%;
+}
+
+.learner-app .pct-17 {
+  --value: 17%;
+}
+
+.learner-app .pct-18 {
+  --value: 18%;
+}
+
+.learner-app .pct-19 {
+  --value: 19%;
+}
+
+.learner-app .pct-20 {
+  --value: 20%;
+}
+
+.learner-app .pct-21 {
+  --value: 21%;
+}
+
+.learner-app .pct-22 {
+  --value: 22%;
+}
+
+.learner-app .pct-23 {
+  --value: 23%;
+}
+
+.learner-app .pct-24 {
+  --value: 24%;
+}
+
+.learner-app .pct-25 {
+  --value: 25%;
+}
+
+.learner-app .pct-26 {
+  --value: 26%;
+}
+
+.learner-app .pct-27 {
+  --value: 27%;
+}
+
+.learner-app .pct-28 {
+  --value: 28%;
+}
+
+.learner-app .pct-29 {
+  --value: 29%;
+}
+
+.learner-app .pct-30 {
+  --value: 30%;
+}
+
+.learner-app .pct-31 {
+  --value: 31%;
+}
+
+.learner-app .pct-32 {
+  --value: 32%;
+}
+
+.learner-app .pct-33 {
+  --value: 33%;
+}
+
+.learner-app .pct-34 {
+  --value: 34%;
+}
+
+.learner-app .pct-35 {
+  --value: 35%;
+}
+
+.learner-app .pct-36 {
+  --value: 36%;
+}
+
+.learner-app .pct-37 {
+  --value: 37%;
+}
+
+.learner-app .pct-38 {
+  --value: 38%;
+}
+
+.learner-app .pct-39 {
+  --value: 39%;
+}
+
+.learner-app .pct-40 {
+  --value: 40%;
+}
+
+.learner-app .pct-41 {
+  --value: 41%;
+}
+
+.learner-app .pct-42 {
+  --value: 42%;
+}
+
+.learner-app .pct-43 {
+  --value: 43%;
+}
+
+.learner-app .pct-44 {
+  --value: 44%;
+}
+
+.learner-app .pct-45 {
+  --value: 45%;
+}
+
+.learner-app .pct-46 {
+  --value: 46%;
+}
+
+.learner-app .pct-47 {
+  --value: 47%;
+}
+
+.learner-app .pct-48 {
+  --value: 48%;
+}
+
+.learner-app .pct-49 {
+  --value: 49%;
+}
+
+.learner-app .pct-50 {
+  --value: 50%;
+}
+
+.learner-app .pct-51 {
+  --value: 51%;
+}
+
+.learner-app .pct-52 {
+  --value: 52%;
+}
+
+.learner-app .pct-53 {
+  --value: 53%;
+}
+
+.learner-app .pct-54 {
+  --value: 54%;
+}
+
+.learner-app .pct-55 {
+  --value: 55%;
+}
+
+.learner-app .pct-56 {
+  --value: 56%;
+}
+
+.learner-app .pct-57 {
+  --value: 57%;
+}
+
+.learner-app .pct-58 {
+  --value: 58%;
+}
+
+.learner-app .pct-59 {
+  --value: 59%;
+}
+
+.learner-app .pct-60 {
+  --value: 60%;
+}
+
+.learner-app .pct-61 {
+  --value: 61%;
+}
+
+.learner-app .pct-62 {
+  --value: 62%;
+}
+
+.learner-app .pct-63 {
+  --value: 63%;
+}
+
+.learner-app .pct-64 {
+  --value: 64%;
+}
+
+.learner-app .pct-65 {
+  --value: 65%;
+}
+
+.learner-app .pct-66 {
+  --value: 66%;
+}
+
+.learner-app .pct-67 {
+  --value: 67%;
+}
+
+.learner-app .pct-68 {
+  --value: 68%;
+}
+
+.learner-app .pct-69 {
+  --value: 69%;
+}
+
+.learner-app .pct-70 {
+  --value: 70%;
+}
+
+.learner-app .pct-71 {
+  --value: 71%;
+}
+
+.learner-app .pct-72 {
+  --value: 72%;
+}
+
+.learner-app .pct-73 {
+  --value: 73%;
+}
+
+.learner-app .pct-74 {
+  --value: 74%;
+}
+
+.learner-app .pct-75 {
+  --value: 75%;
+}
+
+.learner-app .pct-76 {
+  --value: 76%;
+}
+
+.learner-app .pct-77 {
+  --value: 77%;
+}
+
+.learner-app .pct-78 {
+  --value: 78%;
+}
+
+.learner-app .pct-79 {
+  --value: 79%;
+}
+
+.learner-app .pct-80 {
+  --value: 80%;
+}
+
+.learner-app .pct-81 {
+  --value: 81%;
+}
+
+.learner-app .pct-82 {
+  --value: 82%;
+}
+
+.learner-app .pct-83 {
+  --value: 83%;
+}
+
+.learner-app .pct-84 {
+  --value: 84%;
+}
+
+.learner-app .pct-85 {
+  --value: 85%;
+}
+
+.learner-app .pct-86 {
+  --value: 86%;
+}
+
+.learner-app .pct-87 {
+  --value: 87%;
+}
+
+.learner-app .pct-88 {
+  --value: 88%;
+}
+
+.learner-app .pct-89 {
+  --value: 89%;
+}
+
+.learner-app .pct-90 {
+  --value: 90%;
+}
+
+.learner-app .pct-91 {
+  --value: 91%;
+}
+
+.learner-app .pct-92 {
+  --value: 92%;
+}
+
+.learner-app .pct-93 {
+  --value: 93%;
+}
+
+.learner-app .pct-94 {
+  --value: 94%;
+}
+
+.learner-app .pct-95 {
+  --value: 95%;
+}
+
+.learner-app .pct-96 {
+  --value: 96%;
+}
+
+.learner-app .pct-97 {
+  --value: 97%;
+}
+
+.learner-app .pct-98 {
+  --value: 98%;
+}
+
+.learner-app .pct-99 {
+  --value: 99%;
+}
+
+.learner-app .pct-100 {
+  --value: 100%;
+}
+
+/* ---------- Tab bar ---------- */
+.learner-app .tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  width: 100%;
+  max-width: var(--learner-max);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  min-height: var(--tabbar-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-default);
+}
+
+.learner-app .tabbar > a,
+.learner-app .tabbar > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 3.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-decoration: none;
+  color: var(--stone-600);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.learner-app .tabbar > [aria-current='page'] {
+  color: var(--jade-800);
+  font-weight: 700;
+}
+
+/* Q23: label jade-800 for AA contrast, icon stays jade-700. */
+.learner-app .tabbar > [aria-current='page'] .icon {
+  color: var(--jade-700);
+}
+
+/* Inset so the ring is not clipped at the bottom edge of the screen. */
+.learner-app .tabbar > :focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
+.learner-app .tabbar .icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---------- 02-01 Trang chủ ---------- */
+.learner-app .home-hero {
+  position: relative;
+  background: var(--surface-brand);
+  color: var(--white);
+  padding: 4px 18px 58px;
+  overflow: hidden;
+}
+
+.learner-app .home-hero__art {
+  position: absolute;
+  top: 13px;
+  right: 7px;
+  width: 128px;
+  height: auto;
+  pointer-events: none;
+}
+
+.learner-app .home-hero__top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.learner-app .home-hero__logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.learner-app .home-hero__bell {
+  position: relative;
+  color: var(--white);
+  margin-right: -8px;
+}
+
+.learner-app .home-hero__bell .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.learner-app .home-hero__greet {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.learner-app .home-hero__greet > div {
+  min-width: 0;
+}
+
+.learner-app .home-hero__avatar {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  background: var(--white);
+  color: var(--navy-900);
+  box-shadow: 0 0 0 3px var(--avatar-ring);
+}
+
+.learner-app .home-hero__avatar:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .home-hero__avatar .icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.learner-app .home-hero__greet h1 {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .home-hero__greet p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--navy-100);
+  margin-top: 2px;
+}
+
+.learner-app .home-body {
+  position: relative;
+  margin-top: -49px;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+  padding-bottom: calc(var(--tabbar-height) + 20px);
+}
+
+.learner-app .home-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Below 300px two stat cards no longer fit side by side; stack them. */
+@media (max-width: 299px) {
+  .learner-app .home-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.learner-app .home-stat {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  padding: 8px 8px 8px;
+  text-align: center;
+  min-height: 104px;
+  box-shadow: var(--shadow-card);
+}
+
+.learner-app .home-stat h2 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--navy-900);
+}
+
+/* Jade share of today's goal, capped at 100% (Q21). */
+.learner-app .home-gauge {
+  --size: 72px;
+  width: var(--size);
+  height: var(--size);
+  margin: 5px auto 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 225deg,
+    var(--jade-600) 0 var(--value, 0%),
+    var(--slate-200) var(--value, 0%) 100%
+  );
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.learner-app .home-gauge::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--surface-card);
+}
+
+.learner-app .home-gauge span {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+  color: var(--navy-900);
+}
+
+.learner-app .home-gauge b {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.learner-app .home-gauge b small {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.learner-app .home-gauge em {
+  font-style: normal;
+  font-size: 0.75rem;
+  margin-top: 3px;
+}
+
+.learner-app .home-streak {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.learner-app .home-streak img {
+  width: 36px;
+  height: 38px;
+}
+
+.learner-app .home-streak b {
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.learner-app .home-streak span {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.learner-app .home-section {
+  margin-top: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--navy-900);
+}
+
+.learner-app .home-lesson {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 14px 6px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  line-height: 1.35;
+}
+
+/* Shared lesson art until the API returns lesson images (Q20). */
+.learner-app .home-lesson__art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 73px;
+  height: 59px;
+  border-radius: 10px;
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+/* Below 300px the art would squeeze the title to a few letters per line. */
+@media (max-width: 299px) {
+  .learner-app .home-lesson__art {
+    display: none;
+  }
+}
+
+.learner-app .home-lesson__art .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.learner-app .home-lesson__title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--navy-900);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .home-lesson__meta {
+  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--navy-900);
+}
+
+.learner-app .home-lesson__bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.learner-app .home-lesson__bar .progress {
+  flex: 1;
+  height: 5px;
+}
+
+.learner-app .home-lesson > .grow {
+  min-width: 0;
+}
+
+.learner-app .home-lesson > .icon {
+  flex: none;
+  color: var(--navy-900);
+}
+
+/* "Khám phá" shortcuts: not in the 02-01 image (README, PO decisions). */
+.learner-app .home-explore {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 8px 4px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+}
+
+/* Below 300px four tiles are narrower than a 44px target; use three. */
+@media (max-width: 299px) {
+  .learner-app .home-explore {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.learner-app .home-explore button {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  width: 100%;
+  min-height: 4.75rem;
+  margin: 0;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: center;
+  text-decoration: none;
+  color: var(--navy-900);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.learner-app .home-explore button:hover {
+  background: var(--cream-100);
+}
+
+.learner-app .home-explore__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.learner-app .home-explore__icon .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 2;
+}
+
+.learner-app .home-explore__icon--amber {
+  background: var(--explore-amber-bg);
+  color: var(--explore-amber-fg);
+}
+
+.learner-app .home-explore__icon--red {
+  background: var(--explore-red-bg);
+  color: var(--explore-red-fg);
+}
+
+.learner-app .home-explore__icon--jade {
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+.learner-app .home-explore__icon--blue {
+  background: var(--blue-100);
+  color: var(--blue-600);
+}
+
+.learner-app .home-explore__icon--violet {
+  background: var(--explore-violet-bg);
+  color: var(--explore-violet-fg);
+}
+
+/* ---------- Hồ sơ tối thiểu (Q17) ---------- */
+.learner-app .profile {
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-6) var(--sp-4) calc(var(--tabbar-height) + var(--sp-6));
+}
+
+.learner-app .profile__title {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-strong);
+}
+
+.learner-app .profile__card {
+  margin: 0;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+}
+
+.learner-app .profile__row {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.learner-app .profile__row + .profile__row {
+  border-top: 1px solid var(--border-default);
+}
+
+.learner-app .profile__row dt {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.learner-app .profile__row dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
 /* Box-shadow rings are dropped in forced colors; use a system-color outline. */
 @media (forced-colors: active) {
+  .learner-app .home-hero__art {
+    display: none;
+  }
+
+  .learner-app .home-gauge {
+    forced-color-adjust: none;
+    background: conic-gradient(
+      from 225deg,
+      Highlight 0 var(--value, 0%),
+      Canvas var(--value, 0%) 100%
+    );
+    border: 1px solid CanvasText;
+  }
+
+  .learner-app .home-gauge::before {
+    background: Canvas;
+  }
+
+  .learner-app .home-gauge span {
+    color: CanvasText;
+  }
+
+  .learner-app .progress {
+    border: 1px solid CanvasText;
+  }
+
+  .learner-app .progress > span {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .learner-app .toast {
+    border: 1px solid CanvasText;
+  }
+
   .learner-app :focus-visible,
   .learner-app .levels button[aria-checked='true']:focus-visible,
   .learner-app .input:focus-visible,

@@ -34,6 +34,16 @@ async function completeOnboarding(page: Page): Promise<void> {
   expect(completeStatus).toBe(200);
 }
 
+async function openProfile(page: Page): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Điều hướng chính' })
+    .getByRole('link', { name: 'Hồ sơ' })
+    .click();
+  await expect(page).toHaveURL(/\/learn\/profile$/);
+  await expect(page).toHaveTitle('Hồ sơ · Hán Lộ');
+  await expect(page.locator('h1')).toHaveText('Hồ sơ');
+}
+
 const VIEWPORTS_8 = [
   { width: 390, height: 844 },
   { width: 320, height: 568 },
@@ -78,8 +88,11 @@ test.describe('Learner Auth Flow', () => {
     await completeOnboarding(page);
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
-    await expect(page).toHaveTitle('Góc học tập · Hán Lộ');
-    await expect(page.locator('h1')).toContainText(randomEmail);
+    await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
+
+    await openProfile(page);
+    await expect(page.locator('main.profile')).toContainText(randomEmail);
 
     const logoutBtn = page.getByRole('button', { name: 'Đăng xuất' });
     await expect(logoutBtn).toBeVisible();
@@ -106,6 +119,7 @@ test.describe('Learner Auth Flow', () => {
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
+    await openProfile(page);
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/$/);
 
@@ -140,6 +154,7 @@ test.describe('Learner Auth Flow', () => {
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
+    await openProfile(page);
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/$/);
 
@@ -149,8 +164,11 @@ test.describe('Learner Auth Flow', () => {
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Đăng nhập' }).click();
 
-    await expect(page).toHaveURL(/\/learn/);
-    await expect(page.locator('h1')).toContainText(randomEmail);
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await openProfile(page);
+    await expect(page.locator('main.profile')).toContainText(randomEmail);
   });
 
   test('shows admin_account error and stays on /sign-in when using E2E_ADMIN_EMAIL', async ({
@@ -186,6 +204,7 @@ test.describe('Learner Auth Flow', () => {
     await expect(page).toHaveURL(/\/learn/);
 
     // Logout
+    await openProfile(page);
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/$/);
 
@@ -214,8 +233,11 @@ test.describe('Learner Auth Flow', () => {
     await expect(page.getByRole('button', { name: 'Đăng nhập' })).toBeFocused();
     await page.keyboard.press('Enter');
 
-    await expect(page).toHaveURL(/\/learn/);
-    await expect(page.locator('h1')).toContainText(randomEmail);
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await openProfile(page);
+    await expect(page.locator('main.profile')).toContainText(randomEmail);
   });
 
   test('verifies responsive layout and touch target sizing across 8 viewports', async ({
@@ -233,36 +255,42 @@ test.describe('Learner Auth Flow', () => {
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
-    // Test /learn at all 8 viewports
-    for (const vp of VIEWPORTS_8) {
-      await page.setViewportSize(vp);
-      const noOverflow = await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      );
-      expect(
-        noOverflow,
-        `horizontal overflow on /learn at ${vp.width}x${vp.height}`,
-      ).toBe(true);
+    // Test /learn and /learn/profile at all 8 viewports
+    const learnerRoutes = ['/learn', '/learn/profile'];
+    for (const route of learnerRoutes) {
+      for (const vp of VIEWPORTS_8) {
+        await page.setViewportSize(vp);
+        await page.goto(route);
+        await expect(page).toHaveURL(new RegExp(`${route}$`));
+        const noOverflow = await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        );
+        expect(
+          noOverflow,
+          `horizontal overflow on ${route} at ${vp.width}x${vp.height}`,
+        ).toBe(true);
 
-      if (vp.width >= 320) {
-        const interactiveElements = await page
-          .locator('a, button, input')
-          .all();
-        for (const el of interactiveElements) {
-          if (await el.isVisible()) {
-            const box = await el.boundingBox();
-            if (box) {
-              expect(
-                box.height,
-                `Element height on /learn at ${vp.width}x${vp.height}`,
-              ).toBeGreaterThanOrEqual(43.9);
+        if (vp.width >= 320) {
+          const interactiveElements = await page
+            .locator('a, button, input')
+            .all();
+          for (const el of interactiveElements) {
+            if (await el.isVisible()) {
+              const box = await el.boundingBox();
+              if (box) {
+                expect(
+                  box.height,
+                  `Element height on ${route} at ${vp.width}x${vp.height}`,
+                ).toBeGreaterThanOrEqual(43.9);
+              }
             }
           }
         }
       }
     }
 
-    // Logout to test public routes
+    // Logout (on /learn/profile, the last visited route) to test public routes
+    await expect(page).toHaveURL(/\/learn\/profile$/);
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/$/);
 
@@ -320,7 +348,9 @@ test.describe('Learner Auth Flow', () => {
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
-    // Check on /learn
+    // Check on /learn and /learn/profile
+    await expect(page.locator('.learner-app[lang="vi"]')).toBeVisible();
+    await openProfile(page);
     await expect(page.locator('.learner-app[lang="vi"]')).toBeVisible();
 
     // Check on 5 public pages

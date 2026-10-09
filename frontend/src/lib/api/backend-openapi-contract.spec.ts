@@ -14,6 +14,7 @@ import {
   backendExerciseDetailSchema,
   backendExerciseListSchema,
 } from '@/features/exercises/exercise-contract';
+import { backendLearningHomeSchema } from '@/features/learner-home/learning-home-contract';
 import {
   backendMediaDetailSchema,
   backendMediaListSchema,
@@ -157,6 +158,12 @@ describe('backend OpenAPI contract', () => {
     expectTypeOf<Quarantine>().not.toBeNever();
     expectTypeOf<Archive | Quarantine>().toExtend<
       z.input<typeof backendMediaMutationSchema>
+    >();
+
+    type LearningHome = BackendBody<'/api/v1/learning/home', 'get', 200>;
+    expectTypeOf<LearningHome>().not.toBeNever();
+    expectTypeOf<LearningHome>().toExtend<
+      z.input<typeof backendLearningHomeSchema>
     >();
   });
 });

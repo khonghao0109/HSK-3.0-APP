@@ -130,15 +130,21 @@ test.describe('Learner Onboarding Flow', () => {
 
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
 
-    // Navigates to /learn with user email
-    await expect(page).toHaveURL(/\/learn/);
-    await expect(page).toHaveTitle('Góc học tập · Hán Lộ');
-    await expect(page.locator('h1')).toContainText(email);
+    // Navigates to the /learn Home (registered without a name)
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
 
     // Visiting /learn again stays on /learn
     await page.goto('/learn');
-    await expect(page).toHaveURL(/\/learn/);
-    await expect(page.locator('h1')).toContainText(email);
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
+
+    // The user email now lives on /learn/profile
+    await page.goto('/learn/profile');
+    await expect(page).toHaveURL(/\/learn\/profile$/);
+    await expect(page).toHaveTitle('Hồ sơ · Hán Lộ');
+    await expect(page.locator('main.profile')).toContainText(email);
   });
 
   test('2. completes band 8 onboarding and re-opening goal page shows selection and back link to /learn, also with URL params', async ({
@@ -526,8 +532,11 @@ test.describe('Learner Onboarding Flow', () => {
     await expectKeyboardFocusVisible(planSubmit);
     await page.keyboard.press('Enter');
 
-    await expect(page).toHaveURL(/\/learn/);
-    await expect(page.locator('h1')).toContainText(email);
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
+    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await page.goto('/learn/profile');
+    await expect(page.locator('main.profile')).toContainText(email);
   });
   test('8. marks the selected level with a system color in forced colors mode', async ({
     page,
