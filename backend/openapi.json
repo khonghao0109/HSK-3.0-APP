@@ -4401,6 +4401,58 @@
         ]
       }
     },
+    "/api/v1/learning/home": {
+      "get": {
+        "operationId": "LearningHomeController_getHome",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LearningHomeResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningHome"
+        ]
+      }
+    },
     "/api/v1/onboarding/status": {
       "get": {
         "operationId": "OnboardingController_getStatus",
@@ -6908,6 +6960,98 @@
           "goal",
           "levels",
           "nextLesson"
+        ]
+      },
+      "LearningHomeDailyGoalDto": {
+        "type": "object",
+        "properties": {
+          "targetMinutes": {
+            "type": "number"
+          },
+          "minutesToday": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "targetMinutes",
+          "minutesToday"
+        ]
+      },
+      "LearningHomeContinueLessonDto": {
+        "type": "object",
+        "properties": {
+          "lessonId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "completionPercent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lessonId",
+          "title",
+          "slug",
+          "levelCode",
+          "position",
+          "completionPercent"
+        ]
+      },
+      "LearningHomeResponseDto": {
+        "type": "object",
+        "properties": {
+          "nextStep": {
+            "enum": [
+              "set_goal",
+              "content_unavailable",
+              "generate_plan",
+              "ready"
+            ],
+            "type": "string"
+          },
+          "greetingName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dailyGoal": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningHomeDailyGoalDto"
+              }
+            ]
+          },
+          "streakDays": {
+            "type": "number"
+          },
+          "continueLesson": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningHomeContinueLessonDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nextStep",
+          "greetingName",
+          "dailyGoal",
+          "streakDays",
+          "continueLesson"
         ]
       },
       "CreateGoalDto": {

@@ -11,6 +11,8 @@ import { LessonActivityTransactionCoordinator } from './activity/lesson-activity
 import { ProgressController } from './activity/progress.controller';
 import { LearningPathController } from './path/learning-path.controller';
 import { LearningPathService } from './path/learning-path.service';
+import { LearningHomeController } from './home/learning-home.controller';
+import { LearningHomeService } from './home/learning-home.service';
 import { OnboardingModule } from '../onboarding/onboarding.module';
 
 @Module({
@@ -24,12 +26,14 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     LessonActivityController,
     ProgressController,
     LearningPathController,
+    LearningHomeController,
   ],
   providers: [
     LearningService,
     LessonActivityService,
     LessonActivityTransactionCoordinator,
     LearningPathService,
+    LearningHomeService,
   ],
   exports: [LessonActivityService],
 })

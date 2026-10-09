@@ -1012,6 +1012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learning/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LearningHomeController_getHome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/onboarding/status": {
         parameters: {
             query?: never;
@@ -1723,6 +1739,26 @@ export interface components {
             goal: components["schemas"]["LearningPathGoalDto"] | null;
             levels: components["schemas"]["LearningPathLevelDto"][];
             nextLesson: components["schemas"]["LearningPathNextLessonDto"] | null;
+        };
+        LearningHomeDailyGoalDto: {
+            targetMinutes: number;
+            minutesToday: number;
+        };
+        LearningHomeContinueLessonDto: {
+            lessonId: number;
+            title: string;
+            slug: string;
+            levelCode: string;
+            position: number;
+            completionPercent: number;
+        };
+        LearningHomeResponseDto: {
+            /** @enum {string} */
+            nextStep: "set_goal" | "content_unavailable" | "generate_plan" | "ready";
+            greetingName: string | null;
+            dailyGoal: components["schemas"]["LearningHomeDailyGoalDto"] | null;
+            streakDays: number;
+            continueLesson: components["schemas"]["LearningHomeContinueLessonDto"] | null;
         };
         CreateGoalDto: {
             targetLevelId: number;
@@ -3936,6 +3972,34 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["LearningPathResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningHomeController_getHome: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["LearningHomeResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

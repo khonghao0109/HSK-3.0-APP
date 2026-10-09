@@ -6,7 +6,7 @@ import {
   type LearningPathLessonState,
 } from '../learning-path.policy';
 
-const ONBOARDING_NEXT_STEPS = [
+export const ONBOARDING_NEXT_STEPS = [
   'set_goal',
   'content_unavailable',
   'generate_plan',
