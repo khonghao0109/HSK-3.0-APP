@@ -22,7 +22,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - `data` có schema đầy đủ cho các endpoint có response DTO: `auth/register`, `auth/login`,
   `auth/me`, admin exercise list/detail, admin media list/detail/archive/quarantine (mọi
   call của BFF), public learning (`levels`, `lessons`, `topics`, `stories`) và
-  `learning/path`. Endpoint
+  `learning/path`, `learning/home`. Endpoint
   khác mới có envelope, `data` để trống schema (bất kỳ JSON), shape xem Part A.
 - Frontend: `npm run typegen:backend` sinh `frontend/src/lib/api/backend-generated-types.ts`
   bằng `openapi-typescript`, chỉ dùng làm type. Không sinh fetch client (ADR-003): allowlist
@@ -409,6 +409,7 @@ Envelope §1. Mọi `POST` cần header `Idempotency-Key`; thiếu/sai →
 | Method | Path | Body | `data` |
 | --- | --- | --- | --- |
 | `GET` | `/learning/path` | — | Path (dưới); header `Cache-Control: no-store` |
+| `GET` | `/learning/home` | — | Home (dưới); header `Cache-Control: no-store` |
 | `POST` | `/learning/lessons/:lessonId/start` | `{}` | `{ lessonId, status: "learning", eventId, occurredAt }`; `409 lesson_locked` khi bài đang khoá (Q18) |
 | `GET` | `/learning/lessons/:lessonId/activity` | — | Activity (dưới) |
 | `POST` | `/learning/lessons/:lessonId/complete` | `{}` | `{ lessonId, status: "done", eventId, occurredAt }` |
@@ -453,6 +454,32 @@ Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextL
   xong hết hoặc rỗng thì `current` của cấp đầu tiên có `orderIndex` lớn hơn cấp mục tiêu **và
   có `current`**; cũng áp dụng khi cấp mục tiêu không còn published; không có thì `null`. Chưa có goal thì chỉ xét bước đầu.
 - Admin có JWT gọi được như mọi route JWT khác của A.7.
+
+Home `data` (Q13, chỉ đọc, không ghi DB): `{ nextStep, greetingName, dailyGoal, streakDays,
+continueLesson }`.
+- `nextStep`: như Path.
+- `greetingName: string | null`: `UserProfile.displayName` đã trim nếu khác rỗng; không có thì
+  `User.name` nếu hợp lệ theo luật `displayName` (trim, 1–50 ký tự, không ký tự control hay bidi
+  override); không có thì `null` (frontend hiện "Chào bạn").
+- Timezone: `UserProfile.timezone` nếu là IANA hợp lệ; không có profile, giá trị không hợp lệ,
+  hoặc hợp lệ với ICU của Node nhưng PostgreSQL không nhận (ví dụ `US/Pacific-New`, PostgreSQL
+  báo SQLSTATE `22023`) thì dùng `Asia/Ho_Chi_Minh`; trường hợp PostgreSQL không nhận, server
+  ghi log `warn` kèm `userId` và timezone rồi tính lại cả `minutesToday` lẫn `streakDays`.
+  "Hôm nay" là ngày lịch theo timezone này; đầu ngày là 00:00 local đổi sang UTC theo luật của
+  timezone (đúng cả ngày đổi giờ DST).
+- `dailyGoal`: `{ targetMinutes, minutesToday } | null`, `null` khi không có goal active.
+  `targetMinutes` = `UserGoal.dailyMinutes`. `minutesToday` = `min(floor(tổng durationSeconds /
+  60), 1440)` của các attempt của chính learner có `submittedAt` từ đầu ngày hôm nay tới thời
+  điểm request và `durationSeconds` khác `null`; không cap theo `targetMinutes`.
+- `streakDays`: số ngày local liên tiếp của chuỗi gần nhất. Ngày học là ngày local có ít nhất
+  một LearningEvent `lesson_completed`, `topic_completed` hoặc `exercise_submitted` (không tính
+  `lesson_started`, `topic_started`, `word_saved`) xảy ra không muộn hơn thời điểm request.
+  Chuỗi kết thúc hôm nay hoặc hôm qua vẫn được giữ (chưa học hôm nay chưa làm mất chuỗi); kết
+  thúc trước hôm qua thì `0`. Độ dài không giới hạn.
+- Ngày local của lịch sử tính theo timezone hiện tại lúc request: đổi timezone sẽ tính lại mọi
+  ngày cũ (cả `minutesToday` lẫn `streakDays`) theo timezone mới.
+- `continueLesson`: `nextLesson` của Path cộng `completionPercent` của bài đó trên Path
+  (`{ lessonId, title, slug, levelCode, position, completionPercent } | null`).
 
 Khoá ở `start` (Q18): bài chưa có row Progress mà bài ready liền trước chưa `done` (và không
 phải bài đầu cấp) trả `409` `error.code = "lesson_locked"`, message `Complete the previous
