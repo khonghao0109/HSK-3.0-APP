@@ -29,6 +29,52 @@ export class LearningPathService {
   async getPath(
     userId: number,
   ): Promise<ApiSuccessResponse<LearningPathResponseDto>> {
+    const { nextStep, goal, pathLevels } = await this.loadPathState(userId);
+
+    return {
+      success: true,
+      data: {
+        nextStep,
+        goal: goal
+          ? {
+              targetLevelCode: goal.targetLevel.code,
+              targetBand: goal.targetBand,
+              learningPurpose: goal.learningPurpose,
+            }
+          : null,
+        levels: pathLevels.map(
+          (level): LearningPathLevelDto => ({
+            id: level.id,
+            code: level.code,
+            name: level.name,
+            orderIndex: level.orderIndex,
+            lessonCount: level.lessons.length,
+            completedCount: level.lessons.filter(
+              (lesson) => lesson.state === 'done',
+            ).length,
+            lessons: level.lessons.map((lesson) => ({
+              id: lesson.id,
+              title: lesson.title,
+              slug: lesson.slug,
+              position: lesson.position,
+              state: lesson.state,
+              completionPercent: lesson.completionPercent,
+            })),
+          }),
+        ),
+        nextLesson: selectNextLesson({
+          levels: pathLevels,
+          targetLevelOrderIndex: goal?.targetLevel.orderIndex ?? null,
+        }),
+      },
+    };
+  }
+
+  /**
+   * Read-only state shared by `GET /learning/path` and `GET /learning/home`:
+   * one onboarding status call and a fixed set of queries per request.
+   */
+  async loadPathState(userId: number) {
     const [status, goal, levels, readyLessons, progresses] = await Promise.all([
       this.onboarding.getStatus(userId),
       this.prisma.userGoal.findFirst({
@@ -36,6 +82,7 @@ export class LearningPathService {
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         select: {
           targetBand: true,
+          dailyMinutes: true,
           learningPurpose: true,
           targetLevel: { select: { code: true, orderIndex: true } },
         },
@@ -86,42 +133,6 @@ export class LearningPathService {
         ),
       }));
 
-    return {
-      success: true,
-      data: {
-        nextStep: status.data.nextStep,
-        goal: goal
-          ? {
-              targetLevelCode: goal.targetLevel.code,
-              targetBand: goal.targetBand,
-              learningPurpose: goal.learningPurpose,
-            }
-          : null,
-        levels: pathLevels.map(
-          (level): LearningPathLevelDto => ({
-            id: level.id,
-            code: level.code,
-            name: level.name,
-            orderIndex: level.orderIndex,
-            lessonCount: level.lessons.length,
-            completedCount: level.lessons.filter(
-              (lesson) => lesson.state === 'done',
-            ).length,
-            lessons: level.lessons.map((lesson) => ({
-              id: lesson.id,
-              title: lesson.title,
-              slug: lesson.slug,
-              position: lesson.position,
-              state: lesson.state,
-              completionPercent: lesson.completionPercent,
-            })),
-          }),
-        ),
-        nextLesson: selectNextLesson({
-          levels: pathLevels,
-          targetLevelOrderIndex: goal?.targetLevel.orderIndex ?? null,
-        }),
-      },
-    };
+    return { nextStep: status.data.nextStep, goal, pathLevels };
   }
 }
