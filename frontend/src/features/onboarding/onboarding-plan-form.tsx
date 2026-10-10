@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
-import { localDateString, type LearningPurpose } from './onboarding-contract';
+import { localDateString, type LearningPurpose } from './onboarding-values';
 import { ONBOARDING_ERROR_MESSAGES } from './onboarding-messages';
 import { useRadioGroup } from './use-radio-group';
 

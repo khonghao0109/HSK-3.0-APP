@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { ONBOARDING_ERROR_MESSAGES } from './onboarding-messages';
+import type { LevelItem } from './onboarding-contract';
 import {
   parseGoalPageSearchParams,
   resolveLevelForBand,
   type LearningPurpose,
-  type LevelItem,
-} from './onboarding-contract';
+} from './onboarding-values';
 import { useRadioGroup } from './use-radio-group';
 
 const PURPOSES: Array<{
