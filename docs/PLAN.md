@@ -63,8 +63,8 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 37 | 5–7 tuần | 🟡 |
-| GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 38 | 5–7 tuần | 🟡 |
+| GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
@@ -72,7 +72,7 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **74 / 167 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **74 / 173 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -254,6 +254,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.5b | Activity player: mcq, fill_blank | ⬜ | 02/04,05 |
 | M2.5c | Activity player: listening, arrange | ⬜ | |
 | M2.5d | Hoàn thành bài, tổng kết, cập nhật progress | ⬜ | 02/06 |
+| M2.5e | Trình phát nghe: chọn tốc độ (0,75x / 1x) và nghe lại, dùng cho bài listening và thi thử | ⬜ | khảo sát đối thủ 10/10 (Migii HSK); tuỳ chọn phía client, không đổi API |
 | M2.6a | Backend dictionary detail + save-word API | ⬜ | |
 | M2.6b | UI tra từ, chi tiết, lưu từ | ⬜ | 03/01,02 |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ⬜ | `frontend/DESIGN.md` |
@@ -277,7 +278,12 @@ Vào: GĐ5 có M2.5, M2.6. Ra: ôn đúng hạn, lịch sử review bất biến
 | M3.4a | Schema + migration `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | ⬜ | mục 5 |
 | M3.4b | API dictionary detail đầy đủ, ví dụ/audio, saved-word lifecycle | ⬜ | |
 | M3.4c | UI chi tiết từ | ⬜ | |
+| M3.4d | Bộ thủ và âm Hán Việt trong chi tiết từ; ví dụ câu theo M3.4a/b | ⬜ | khảo sát 10/10 (Hanzii); lợi thế riêng cho người Việt; cần nguồn dữ liệu có giấy phép (#2) |
 | M3.5 | Test scheduler correctness, retention, timezone | ⬜ | C-05 |
+| M3.6 | Sổ lỗi sai: ôn lại bài tập làm sai từ lịch sử attempt bất biến, sau M4 thêm câu thi làm sai | ⬜ | khảo sát 10/10 (Migii HSK); đọc từ `LessonExerciseAttempt`, không sửa lịch sử |
+| M3.7 | Dạng bài nghe chép chính tả (dictation): validator, scorer, player | ⬜ | khảo sát 10/10 (Baolingo, Trùm Chinese); thêm vào shared validator và scorer `lesson-activity` |
+| M3.8a | Video YouTube: schema video và câu phụ đề có mốc thời gian, tách từ theo từ điển, gắn cấp HSK; admin nhập phụ đề, duyệt, publish | ⬜ | khảo sát 10/10 (Baolingo); phụ đề tự soạn, không tải phụ đề hay video từ YouTube |
+| M3.8b | Trình xem video cho người học: phụ đề chữ Hán, pinyin, tiếng Việt; lặp câu, đổi tốc độ, shadowing; tab từ vựng lọc theo cấp HSK, lưu vào ôn tập | ⬜ | nhúng `youtube-nocookie.com` qua IFrame API; mở CSP `frame-src` đúng tên miền |
 
 ### GĐ7 — Exam Engine, M4 (4–6 tuần)
 
@@ -333,7 +339,7 @@ Vào: web đủ vòng học (GĐ5 M2.5, M2.6; GĐ6; GĐ7); tiền đề mobile M
 | M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
 | M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
 | M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
-| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); mockup `04-exam-pronunciation-profile/05` |
+| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05` |
 | M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
 | M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
 | M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
@@ -384,7 +390,7 @@ Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest
 | H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 14 / 15 |
 | M1 Content/legal + Identity/Privacy | Dữ liệu và tài khoản đủ an toàn để mở beta | ⬜ | 0 / 8 |
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
-| M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 5 |
+| M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 8 |
 | M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
 | M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 5 / 13 |
 | M7 Đồ án: Mobile, AI, nhận diện | App đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | 0 / 5 |
@@ -557,8 +563,11 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 | M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ⬜ | schema ✅; invariant: archive master plan §16.4 |
 | M3.2 | Due queue, review session/event idempotency và concurrency | ⬜ | trigger ownership card→session ✅ |
 | M3.3 | Flashcard và lịch ôn tập UI | ⬜ | `03-dictionary-review-reader/03,04` |
-| M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle | ⬜ | `WordSense/WordExample` chưa có schema (mục 5) |
+| M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle, bộ thủ và âm Hán Việt | ⬜ | `WordSense/WordExample` chưa có schema (mục 5); M3.4d cần nguồn có giấy phép |
 | M3.5 | Test scheduler correctness, retention, timezone | ⬜ | C-05 |
+| M3.6 | Sổ lỗi sai từ lịch sử attempt bất biến | ⬜ | Khảo sát đối thủ 10/10 |
+| M3.7 | Dạng bài nghe chép chính tả (dictation) | ⬜ | Khảo sát đối thủ 10/10 |
+| M3.8 | Video YouTube có phụ đề, shadowing, từ vựng theo cấp HSK | ⬜ | Khảo sát đối thủ 10/10; M3.8a backend và admin, M3.8b người học |
 
 ### M4 — Exam Engine Web MVP
 
@@ -633,7 +642,7 @@ Checklist go-live và rollback chi tiết: archive master plan §27, §34, §35.
 | M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
 | M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
 | M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
-| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); mockup `04-exam-pronunciation-profile/05` |
+| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05` |
 | M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
 | M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
 | M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
@@ -750,3 +759,4 @@ khi vertical slice bắt đầu.
 | 09/10/2026 | GĐ5: M2.4b FIX, vẫn 🟡 chờ review: thanh tab cấp cao 45px (tab 44px nằm trọn, vùng bấm đủ, vòng focus không bị cắt); dưới 300px lưới bài 2 cột, ẩn ô minh hoạ bài, nhãn và tên ở thanh "Bài tiếp theo" một dòng; forced colors giữ viền focus trong tab và viền Highlight khi rê ô đang học; phím tắt có Alt/Ctrl/Meta không đổi tab; panel cấp chưa có bài nhận focus. Tên đọc của ô bài (dấu cách trước dấu phẩy) chưa sửa, chờ quyết định. Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
 | 10/10/2026 | GĐ5: thêm M2.9a (pipeline seed nội dung có agent hỗ trợ + pilot 5 bài HSK1) làm task con của M2.9; bắt đầu ngay vì API CMS và exercise import đã có, không chờ UI M5.1. GĐ5 16/37; tổng 74/150. |
 | 10/10/2026 | Sắp lại lộ trình cho đồ án tốt nghiệp (hạn 17/01/2027): thêm mục 1.0 phạm vi đồ án; GĐ9 mới = mobile, AI và nhận diện (M7.7a–d, M7.3, M7.4a–d, M7.2, M7.5a–b, M7.E); GĐ10 mới = deploy demo và bảo vệ (TN.1–TN.5, TN.E); production foundation + beta chuyển thành GĐ11 sau bảo vệ; reader, payment, community thành GĐ12. Tổng 74/167. |
+| 10/10/2026 | Bổ sung từ khảo sát đối thủ (ưu tiên cao và trung bình): M2.5e trình phát nghe đổi tốc độ (GĐ5); M3.4d bộ thủ và âm Hán Việt, M3.6 sổ lỗi sai, M3.7 bài nghe chép chính tả, M3.8a–b video YouTube có phụ đề (GĐ6); yêu cầu tô màu chữ phát âm sai cho M7.2. GĐ5 16/38, GĐ6 0/12; tổng 74/173. |
