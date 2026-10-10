@@ -46,14 +46,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 15 / 36 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 36 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **73 / 149 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **74 / 149 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -228,8 +228,8 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
-| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | 🟡 | 09/10: chờ review; `02-learning-lesson/01`; Q21–Q22 |
-| M2.4b | Lộ trình (Q18–Q20) | ⬜ | `02-learning-lesson/02`; cần M2.B9, thêm path vào allowlist BFF |
+| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) chờ review cùng M2.4b; `02-learning-lesson/01`; Q21–Q24 |
+| M2.4b | Lộ trình (Q18–Q20) | 🟡 | 09/10: chờ review; `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
 | M2.5a | Trang nội dung bài học | ⬜ | 02/03 |
 | M2.5b | Activity player: mcq, fill_blank | ⬜ | 02/04,05 |
 | M2.5c | Activity player: listening, arrange | ⬜ | |
@@ -480,8 +480,8 @@ UI và phần backend còn thiếu:
 | M2.2 | Onboarding goal + kế hoạch học UI | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
 | M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
-| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | 🟡 | 09/10: chờ review; `02-learning-lesson/01`; Q21–Q22 |
-| M2.4b | Lộ trình (Q18–Q20) | ⬜ | `02-learning-lesson/02`; cần M2.B9, thêm path vào allowlist BFF |
+| M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) chờ review cùng M2.4b; `02-learning-lesson/01`; Q21–Q24 |
+| M2.4b | Lộ trình (Q18–Q20) | 🟡 | 09/10: chờ review; `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ⬜ | `02-learning-lesson/03,04,05,06` |
 | M2.6 | Dictionary search/detail/save-word cơ bản (backend detail + save API còn thiếu) | ⬜ | `03-dictionary-review-reader/01,02` |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline states | ⬜ | `frontend/DESIGN.md` |
@@ -661,3 +661,5 @@ khi vertical slice bắt đầu.
 | 07/10/2026 | GĐ5: M2.B9 ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`). M2.B10 🟡 chờ review (`GET /learning/home` trả `nextStep`, `greetingName`, `dailyGoal` với `minutesToday` theo ngày local của timezone profile (cap 1440), `streakDays` tính chuỗi ngày học từ `lesson_completed`/`topic_completed`/`exercise_submitted` bằng một câu SQL gaps-and-islands, chuỗi kết thúc hôm qua vẫn giữ, `continueLesson` từ `selectNextLesson` kèm `completionPercent`; `LearningPathService.loadPathState` dùng chung cho path và home). Đếm lại bằng script theo từng dòng task: GĐ5 14/36. Tổng 72/149. |
 | 09/10/2026 | GĐ5: M2.B10 ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`). M2.4a 🟡 chờ review (Trang chủ learner `/learn` dựng trên `GET /learning/home`: hero, Mục tiêu hôm nay tô theo tỉ lệ trần 100% (Q21), Chuỗi ngày học, Tiếp tục học, Khám phá; layout `/learn` có tab bar và toast dùng chung; Học, Tra từ, Ôn tập, chuông, Khám phá và thẻ Tiếp tục học ra toast (Q15, Q16, Q22); `/learn/profile` tối thiểu có tên, email, Đăng xuất (Q17); thêm Q21–Q22 vào `docs/product/learner-ui-decisions.md`). Đếm lại bằng script theo từng dòng task: GĐ5 15/36. Tổng 73/149. |
 | 09/10/2026 | GĐ5: M2.4a FIX, vẫn 🟡 chờ review: vòng focus jade-700 cho avatar, vòng inset cho tab bar; màn 195px không tràn (Khám phá 3 cột, ẩn ô minh hoạ bài dưới 300px); thẻ Tiếp tục học dùng span thay h3/p; số liệu 2 thẻ đọc qua `aria-labelledby` và chữ sr-only; Hồ sơ vẫn hiện email và Đăng xuất khi `/learning/home` lỗi khác 401/403; thêm Q23 (chữ tab đang chọn jade-800) và Q24; thêm rule forced colors cho Home. Đếm lại bằng script theo từng dòng task: GĐ5 15/36. Tổng 73/149. |
+| 09/10/2026 | GĐ5: M2.4a ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại của M2.4a (icon tab đang chọn theo màu hệ thống ở forced colors, test hồi quy 195/299px, focus inset, màu Q23) chờ review cùng M2.4b. M2.4b 🟡 chờ review (Lộ trình learner `/learn/path` dựng trên `GET /learning/path`: 7 tab cấp cố định chọn mặc định cấp mục tiêu, lưới bài done/current/available/locked với ô minh hoạ chung, ô khoá `aria-disabled` ra toast khoá, ô mở và nút "Bắt đầu" ra toast sắp ra mắt, thanh "Bài tiếp theo" ẩn khi `nextLesson` null; tab Học nối tới `/learn/path`; thêm Q25–Q31 vào `docs/product/learner-ui-decisions.md`). Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
+| 09/10/2026 | GĐ5: M2.4b FIX, vẫn 🟡 chờ review: thanh tab cấp cao 45px (tab 44px nằm trọn, vùng bấm đủ, vòng focus không bị cắt); dưới 300px lưới bài 2 cột, ẩn ô minh hoạ bài, nhãn và tên ở thanh "Bài tiếp theo" một dòng; forced colors giữ viền focus trong tab và viền Highlight khi rê ô đang học; phím tắt có Alt/Ctrl/Meta không đổi tab; panel cấp chưa có bài nhận focus. Tên đọc của ô bài (dấu cách trước dấu phẩy) chưa sửa, chờ quyết định. Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
