@@ -29,13 +29,30 @@ Mockup `01-onboarding-placement/03` trỏ tới [ui_image/README.md](./ui_image/
 
 ## 1. Lộ trình hoàn thành dự án
 
-Lộ trình chia 11 giai đoạn (GĐ0–GĐ10) theo thứ tự dependency: lưới an toàn (CI) trước,
-đóng lỗ hổng, rồi mới xây learner app, sau đó hạ tầng production và beta. Mỗi task nhỏ
+Lộ trình chia 13 giai đoạn (GĐ0–GĐ12) theo thứ tự dependency: lưới an toàn (CI) trước,
+đóng lỗ hổng, rồi xây learner app, mobile và AI cho đồ án tốt nghiệp, sau đó hạ tầng
+production và beta. Mỗi task nhỏ
 mang mã trùng với bảng chi tiết ở mục 4 (`H.2`, `M2.5`…). Mã có hậu tố chữ (`H.2a`) là
 task con của bước cùng mã; bước cha chỉ ✅ khi mọi task con ✅. Hậu tố `E` là điều kiện
 ra của giai đoạn. Ước lượng thời gian giả định một dev full-stack làm việc với AI agent,
 không tính thời gian chờ pháp lý hoặc hạ tầng bên ngoài; dùng để xếp thứ tự, không phải
 cam kết.
+
+### 1.0 Phạm vi đồ án tốt nghiệp
+
+Đồ án nộp và bảo vệ trước **17/01/2027** (15 tuần từ 05/10/2026). Ưu tiên hoàn thiện web,
+rồi mobile + AI + nhận diện (GĐ9), rồi deploy bản demo và bảo vệ (GĐ10). Production
+foundation và beta (GĐ11) làm sau bảo vệ.
+
+- Thứ tự: GĐ5 → GĐ6 → GĐ7, song song M5.1, M5.2 (GĐ8) và M2.9a → GĐ9 → GĐ10.
+- Mốc theo lộ trình báo cáo: web đủ chức năng cuối tuần 9 (06/12/2026); GĐ9 tuần 10–13
+  (07/12/2026–03/01/2027); GĐ10 tuần 14–15 (04/01–17/01/2027).
+- M7.7a có thể bắt đầu sớm hơn tuần 10 nếu web vượt tiến độ. M7.4b–d cần chốt quyết định
+  #6 và ADR-008 §6 (M7.4a) trước tuần 12.
+- "Staging" trong điều kiện ra của GĐ5 (M2.E) được thoả bằng bản deploy demo TN.1 cho tới
+  khi có GĐ11.
+- Hoãn sau bảo vệ, giữ nguyên trạng thái: phần còn lại của GĐ3 (M0.3–M0.5, M0.E, #11);
+  M5.5–M5.7; M2.1e OAuth; toàn bộ GĐ11 và GĐ12.
 
 ### 1.1 Tiến độ theo giai đoạn
 
@@ -50,10 +67,13 @@ cam kết.
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
-| GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
-| GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
+| GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
+| GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
+| GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
+| GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **74 / 150 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **74 / 167 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -68,23 +88,23 @@ xuất, chờ quyết định #12.
 | Lớp dữ liệu | Hôm nay | Đủ sau bước | GĐ |
 | --- | --- | --- | --- |
 | Schema Web MVP | 59 model; thiếu `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | M3.4a | GĐ6 |
-| Schema tính năng M7 (OAuth, Material, Entitlement, QuestionRevision) | chưa có | backlog mục 5, theo từng tính năng | GĐ10 |
+| Schema tính năng M7 (OAuth, Material, Entitlement, QuestionRevision) | chưa có | backlog mục 5, theo từng tính năng | GĐ9, GĐ12 |
 | Từ điển tiếng Anh | 121.856 Word, 200.156 WordMeaning (CC-CEDICT, CC BY-SA 4.0) | đã đủ | GĐ0 ✅ |
 | Mapping từ theo cấp HSK | 11.086 WordLevel; 7 DataSource HSK chưa có license | M1.1 | GĐ4 |
 | Nghĩa tiếng Việt | 0 | M1.2a workflow → M1.2b 2.263 từ HSK1–HSK3 | GĐ4, song song tới GĐ8 |
-| Ví dụ câu, audio, stroke cho từ | 0; `Word.audioId`/`imageId` đều null | M3.4a/b schema và API; dữ liệu theo M2.9; media cần M5.2, M6.9 | GĐ6, GĐ8, GĐ9 |
+| Ví dụ câu, audio, stroke cho từ | 0; `Word.audioId`/`imageId` đều null | M3.4a/b schema và API; dữ liệu theo M2.9; media cần M5.2, M6.9 | GĐ6, GĐ8, GĐ11 |
 | Bài học, topic, story thật | 0; 35 Lesson, 70 Topic, 14 Story placeholder | M1.3 xoá placeholder; M2.9a pilot 5 bài HSK1; M2.9 nội dung HSK1–HSK3 | GĐ4, GĐ5 |
 | Bài tập trong bài học | 0 LessonExercise | M2.9 (API authoring/import đã có; UI M5.1b) | GĐ5, GĐ8 |
 | Câu placement | 0 | M2.3a code; câu lấy từ M4.6 | GĐ5, GĐ7 |
 | Ngân hàng câu hỏi, đề thi | 0 trên 14 bảng Exam | M4.1 công cụ; M4.6 dữ liệu HSK1–HSK3 | GĐ7 |
-| Media (audio, ảnh) | 0 Media; S3/ClamAV thật chưa có | M5.2 upload UI; M6.9 rehearsal ⛔ | GĐ8, GĐ9 |
-| Dữ liệu vận hành: User, Progress, ReviewCard, ExamAttempt | 0 | sinh ra từ beta M6.8; không có mốc "đủ" | GĐ9 trở đi |
+| Media (audio, ảnh) | 0 Media; S3/ClamAV thật chưa có | M5.2 upload UI; M6.9 rehearsal ⛔ | GĐ8, GĐ11 |
+| Dữ liệu vận hành: User, Progress, ReviewCard, ExamAttempt | 0 | sinh ra từ beta M6.8; không có mốc "đủ" | GĐ11 trở đi |
 
 Mốc gộp:
 
 - Đủ schema Web MVP: sau **M3.4a** (GĐ6).
 - Đủ công cụ nhập mọi loại nội dung: sau **M5.4** (GĐ8).
-- Đủ nội dung cho beta (HSK1–HSK3): khi **M1.2b, M2.9, M4.6** đạt chỉ tiêu, kiểm ở **M6.7** (GĐ9).
+- Đủ nội dung cho beta (HSK1–HSK3): khi **M1.2b, M2.9, M4.6** đạt chỉ tiêu, kiểm ở **M6.7** (GĐ11).
 
 **Sau khi hết PLAN, data vẫn còn thiếu:**
 
@@ -295,9 +315,46 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.7 | Trust & Safety: report/action/appeal/audit, least-privilege role | ⬜ | |
 | M5.8 | Notification preference + consent | ⬜ | |
 
-### GĐ9 — Production foundation + Beta, M6 (4–6 tuần)
+### GĐ9 — Đồ án: Mobile, AI và nhận diện, M7 (tuần 10–13)
 
-Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollback, restore drill có bằng chứng; beta go/no-go.
+Vào: web đủ vòng học (GĐ5 M2.5, M2.6; GĐ6; GĐ7); tiền đề mobile M1.4, H.2, H.4, H.10 ✅. Ra: app
+đủ vòng học trên bản build; chat AI trả lời có trích nguồn; phát âm, viết tay, OCR chạy trên app.
+
+| # | Task | Trạng thái | Ghi chú |
+| --- | --- | --- | --- |
+| M7.7 | Mobile React Native + Expo tại `mobile/` | ⬜ | ADR-008 §1 đã chốt; bước cha của M7.7a–d |
+| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web |
+| M7.7b | Onboarding, trang chủ, lộ trình, bài học, activity player 4 dạng | ⬜ | tuần 10; dùng lại API M2.B*, M2.5 |
+| M7.7c | Từ điển, ôn tập flashcard, thi thử, hồ sơ | ⬜ | tuần 11; cần M2.6, GĐ6, GĐ7 |
+| M7.7d | CI mobile (lint, typecheck, test) và bản build Android/iOS cài được cho demo | ⬜ | tuần 11 |
+| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8 |
+| M7.4 | AI/RAG: NestJS service riêng, pgvector, provider adapter ≥ 2 | ⬜ | bước cha của M7.4a–d |
+| M7.4a | Duyệt ADR-008 §6; chốt nhà cung cấp (#6); bộ câu hỏi đánh giá tiếng Trung/Việt; ngân sách và hạn mức | ⬜ | trước tuần 12; chỉ API chính thức có điều khoản xử lý dữ liệu, không dùng proxy gom tài khoản |
+| M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
+| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
+| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
+| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); mockup `04-exam-pronunciation-profile/05` |
+| M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
+| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
+| M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
+| M7.E | Demo trên bản build: app đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | |
+
+### GĐ10 — Đồ án: Deploy demo và bảo vệ, TN (tuần 14–15)
+
+Vào: GĐ9. Ra: hội đồng mở được web qua HTTPS và cài được app; báo cáo kiểm thử; bảo vệ 17/01/2027.
+
+| # | Task | Trạng thái | Ghi chú |
+| --- | --- | --- | --- |
+| TN.1 | Dockerfile backend, frontend, rag-api; deploy docker-compose lên một VPS có HTTPS qua Nginx | ⬜ | đóng cùng M1.8; không cần Terraform/ECS (để GĐ11) |
+| TN.2 | Backup database theo lịch và một lần khôi phục thử | ⬜ | bản rút gọn của M6.6 |
+| TN.3 | Giám sát cơ bản: health check, log tập trung, cảnh báo uptime | ⬜ | bản rút gọn của M6.5 |
+| TN.4 | Playwright trọn vòng trên bản deploy (thay staging cho M2.E) và smoke test app | ⬜ | |
+| TN.5 | Báo cáo kiểm thử, hướng dẫn cài đặt và sử dụng, dữ liệu demo | ⬜ | |
+| TN.E | Bảo vệ đồ án | ⬜ | 17/01/2027 |
+
+### GĐ11 — Production foundation + Beta, M6 (sau bảo vệ đồ án, 4–6 tuần)
+
+Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollback, restore drill có bằng chứng; beta go/no-go.
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
@@ -311,17 +368,12 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | M6.8 | Beta rollout tăng dần, observation window, go/no-go | ⬜ | |
 | M6.9 | Live Media Infrastructure Rehearsal | ⛔ | BLOCKED_EXTERNAL |
 
-### GĐ10 — Sau beta, M7 (theo outcome beta)
+### GĐ12 — Sau beta, M7+ (theo outcome beta)
 
 | # | Task | Trạng thái | Điều kiện bắt đầu |
 | --- | --- | --- | --- |
 | M7.1 | Interactive reader, materials | ⬜ | mockup 03/05,06 |
-| M7.2 | Pronunciation/shadowing | ⬜ | consent/retention, provider, rubric |
-| M7.3 | Notifications | ⬜ | M5.8 |
-| M7.4 | AI/RAG: service riêng, pgvector, provider adapter ≥2 | ⬜ | ADR-008 §6; corpus có license |
-| M7.5 | Hanzi/OCR | ⬜ | product validation, licensed model |
 | M7.6 | Subscription/payment | ⬜ | business model, legal/tax |
-| M7.7 | Mobile: `mobile/` Expo, npm workspaces, `packages/contracts/` | ⬜ | ADR-008 §1; M1.4, H.2, H.4, H.10 |
 | M7.8 | Community | ⬜ | moderation |
 
 ## 2. Tổng quan
@@ -335,8 +387,10 @@ Vào: GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest, rollb
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 5 |
 | M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
 | M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 5 / 13 |
-| M6 Production foundation + Beta | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
-| M7+ Later | Reader, pronunciation, AI, mobile, payment | ⬜ | 0 / 8 |
+| M7 Đồ án: Mobile, AI, nhận diện | App đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | 0 / 5 |
+| TN Đồ án: Deploy demo và bảo vệ | Web và app chạy trên bản deploy, bảo vệ 17/01/2027 | ⬜ | 0 / 5 |
+| M6 Production foundation + Beta (sau bảo vệ) | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
+| M7+ Later | Reader, payment, community | ⬜ | 0 / 3 |
 
 Số liệu hiện tại (đo 04/09/2026; dòng Kiểm thử, CI, Nhánh cập nhật 28/09):
 
@@ -548,7 +602,7 @@ Còn thiếu:
 Exit: 100% mutation nhạy cảm có audit (backend CMS/media ✅, user ⬜) · support queue có
 owner/SLA ⬜ · dashboard có reconciliation/runbook ⬜.
 
-### M6 — Project-wide Production Foundation và Web MVP Beta
+### M6 — Project-wide Production Foundation và Web MVP Beta (GĐ11, sau bảo vệ đồ án)
 
 | # | Bước | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
@@ -564,17 +618,44 @@ owner/SLA ⬜ · dashboard có reconciliation/runbook ⬜.
 
 Checklist go-live và rollback chi tiết: archive master plan §27, §34, §35.
 
-### M7+ — Differentiation và scale
+### M7 — Đồ án: Mobile, AI và nhận diện (GĐ9)
+
+| # | Task | Trạng thái | Ghi chú |
+| --- | --- | --- | --- |
+| M7.7 | Mobile React Native + Expo tại `mobile/` | ⬜ | ADR-008 §1 đã chốt; bước cha của M7.7a–d |
+| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web |
+| M7.7b | Onboarding, trang chủ, lộ trình, bài học, activity player 4 dạng | ⬜ | tuần 10; dùng lại API M2.B*, M2.5 |
+| M7.7c | Từ điển, ôn tập flashcard, thi thử, hồ sơ | ⬜ | tuần 11; cần M2.6, GĐ6, GĐ7 |
+| M7.7d | CI mobile (lint, typecheck, test) và bản build Android/iOS cài được cho demo | ⬜ | tuần 11 |
+| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8 |
+| M7.4 | AI/RAG: NestJS service riêng, pgvector, provider adapter ≥ 2 | ⬜ | bước cha của M7.4a–d |
+| M7.4a | Duyệt ADR-008 §6; chốt nhà cung cấp (#6); bộ câu hỏi đánh giá tiếng Trung/Việt; ngân sách và hạn mức | ⬜ | trước tuần 12; chỉ API chính thức có điều khoản xử lý dữ liệu, không dùng proxy gom tài khoản |
+| M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
+| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
+| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
+| M7.2 | Luyện phát âm: ghi âm trên app, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); mockup `04-exam-pronunciation-profile/05` |
+| M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
+| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
+| M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
+| M7.E | Demo trên bản build: app đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | |
+
+### TN — Đồ án: Deploy demo và bảo vệ (GĐ10)
+
+| # | Task | Trạng thái | Ghi chú |
+| --- | --- | --- | --- |
+| TN.1 | Dockerfile backend, frontend, rag-api; deploy docker-compose lên một VPS có HTTPS qua Nginx | ⬜ | đóng cùng M1.8; không cần Terraform/ECS (để GĐ11) |
+| TN.2 | Backup database theo lịch và một lần khôi phục thử | ⬜ | bản rút gọn của M6.6 |
+| TN.3 | Giám sát cơ bản: health check, log tập trung, cảnh báo uptime | ⬜ | bản rút gọn của M6.5 |
+| TN.4 | Playwright trọn vòng trên bản deploy (thay staging cho M2.E) và smoke test app | ⬜ | |
+| TN.5 | Báo cáo kiểm thử, hướng dẫn cài đặt và sử dụng, dữ liệu demo | ⬜ | |
+| TN.E | Bảo vệ đồ án | ⬜ | 17/01/2027 |
+
+### M7+ — Differentiation và scale (GĐ12, sau beta)
 
 | # | Hạng mục | Trạng thái | Điều kiện bắt đầu |
 | --- | --- | --- | --- |
 | M7.1 | Interactive reader, materials | ⬜ | Web MVP outcome; mockup `03-dictionary-review-reader/05,06` |
-| M7.2 | Pronunciation/shadowing | ⬜ | Consent/retention, provider, rubric |
-| M7.3 | Notifications | ⬜ | Preference/consent M5.8 |
-| M7.4 | AI/RAG: NestJS service riêng, pgvector, provider adapter ≥2 | ⬜ | ADR-008 §6; corpus có license, golden eval, DPA |
-| M7.5 | Hanzi/OCR | ⬜ | Product validation, licensed model |
 | M7.6 | Subscription/payment | ⬜ | Business model, legal/tax |
-| M7.7 | Mobile React Native + Expo tại `mobile/`; root npm workspaces + `packages/contracts/`; gọi backend trực tiếp bằng bearer trong SecureStore | ⬜ | ADR-008 §1; Web MVP outcome; tiền đề M1.4, H.2, H.4, H.10 |
 | M7.8 | Community | ⬜ | Moderation |
 
 ## 5. Schema backlog
@@ -582,8 +663,8 @@ Checklist go-live và rollback chi tiết: archive master plan §27, §34, §35.
 Model chưa build dù đã có thiết kế (archive `DATABASE_SCHEMA_COMPLETION_PLAN.md`):
 `AuthIdentity` (OAuth), `Material`/`MaterialItem`, `ContentAccess`/`Entitlement`,
 `WordSense`/`WordExample`/`WordRelation` + `pg_trgm`, `QuestionRevision`/`TestRevision`;
-nhóm P1/P2: reader/pronunciation/Hanzi (GĐ5), engagement/notification/support (GĐ7),
-payment (GĐ8), AI DB tách riêng (GĐ9).
+nhóm P1/P2 theo stage của plan schema archive: reader/pronunciation/Hanzi (stage 5),
+engagement/notification/support (stage 7), payment (stage 8), AI DB tách riêng (stage 9).
 
 Hardening dữ liệu: inventory SQL-only object + drift guard (C-07), dọn index (C-08),
 timestamptz (C-05), partition/retention cho bảng event, cập nhật data dictionary và ERD
@@ -615,6 +696,7 @@ khi vertical slice bắt đầu.
 4. GĐ4 theo đường găng: M1.4 session refresh/revoke (B-03), M1.5 mail; M1.1 chờ quyết định #2.
 5. M2.1 + M2.2 chỉ bắt đầu khi GĐ4 xong M1.4, M1.5 (điều kiện vào GĐ5).
 6. M2.9a: dựng pipeline seed nội dung có agent hỗ trợ và pilot 5 bài HSK1, chạy song song M2.4b–M2.5.
+7. M7.4a: chốt quyết định #6 (nhà cung cấp AI) và duyệt ADR-008 §6 trước tuần 12 của đồ án.
 
 ## 8. Nhật ký cập nhật
 
@@ -667,3 +749,4 @@ khi vertical slice bắt đầu.
 | 09/10/2026 | GĐ5: M2.4a ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại của M2.4a (icon tab đang chọn theo màu hệ thống ở forced colors, test hồi quy 195/299px, focus inset, màu Q23) chờ review cùng M2.4b. M2.4b 🟡 chờ review (Lộ trình learner `/learn/path` dựng trên `GET /learning/path`: 7 tab cấp cố định chọn mặc định cấp mục tiêu, lưới bài done/current/available/locked với ô minh hoạ chung, ô khoá `aria-disabled` ra toast khoá, ô mở và nút "Bắt đầu" ra toast sắp ra mắt, thanh "Bài tiếp theo" ẩn khi `nextLesson` null; tab Học nối tới `/learn/path`; thêm Q25–Q31 vào `docs/product/learner-ui-decisions.md`). Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
 | 09/10/2026 | GĐ5: M2.4b FIX, vẫn 🟡 chờ review: thanh tab cấp cao 45px (tab 44px nằm trọn, vùng bấm đủ, vòng focus không bị cắt); dưới 300px lưới bài 2 cột, ẩn ô minh hoạ bài, nhãn và tên ở thanh "Bài tiếp theo" một dòng; forced colors giữ viền focus trong tab và viền Highlight khi rê ô đang học; phím tắt có Alt/Ctrl/Meta không đổi tab; panel cấp chưa có bài nhận focus. Tên đọc của ô bài (dấu cách trước dấu phẩy) chưa sửa, chờ quyết định. Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
 | 10/10/2026 | GĐ5: thêm M2.9a (pipeline seed nội dung có agent hỗ trợ + pilot 5 bài HSK1) làm task con của M2.9; bắt đầu ngay vì API CMS và exercise import đã có, không chờ UI M5.1. GĐ5 16/37; tổng 74/150. |
+| 10/10/2026 | Sắp lại lộ trình cho đồ án tốt nghiệp (hạn 17/01/2027): thêm mục 1.0 phạm vi đồ án; GĐ9 mới = mobile, AI và nhận diện (M7.7a–d, M7.3, M7.4a–d, M7.2, M7.5a–b, M7.E); GĐ10 mới = deploy demo và bảo vệ (TN.1–TN.5, TN.E); production foundation + beta chuyển thành GĐ11 sau bảo vệ; reader, payment, community thành GĐ12. Tổng 74/167. |
