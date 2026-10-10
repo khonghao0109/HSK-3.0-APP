@@ -46,14 +46,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 36 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 37 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **74 / 149 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **74 / 150 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -73,7 +73,7 @@ xuất, chờ quyết định #12.
 | Mapping từ theo cấp HSK | 11.086 WordLevel; 7 DataSource HSK chưa có license | M1.1 | GĐ4 |
 | Nghĩa tiếng Việt | 0 | M1.2a workflow → M1.2b 2.263 từ HSK1–HSK3 | GĐ4, song song tới GĐ8 |
 | Ví dụ câu, audio, stroke cho từ | 0; `Word.audioId`/`imageId` đều null | M3.4a/b schema và API; dữ liệu theo M2.9; media cần M5.2, M6.9 | GĐ6, GĐ8, GĐ9 |
-| Bài học, topic, story thật | 0; 35 Lesson, 70 Topic, 14 Story placeholder | M1.3 xoá placeholder; M2.9 nội dung HSK1–HSK3 | GĐ4, GĐ5 |
+| Bài học, topic, story thật | 0; 35 Lesson, 70 Topic, 14 Story placeholder | M1.3 xoá placeholder; M2.9a pilot 5 bài HSK1; M2.9 nội dung HSK1–HSK3 | GĐ4, GĐ5 |
 | Bài tập trong bài học | 0 LessonExercise | M2.9 (API authoring/import đã có; UI M5.1b) | GĐ5, GĐ8 |
 | Câu placement | 0 | M2.3a code; câu lấy từ M4.6 | GĐ5, GĐ7 |
 | Ngân hàng câu hỏi, đề thi | 0 trên 14 bảng Exam | M4.1 công cụ; M4.6 dữ liệu HSK1–HSK3 | GĐ7 |
@@ -241,6 +241,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.7b | Guard DB disposable chặn tham số libpq đổi đích (frontend chỉ cho `sslmode`; backend chặn `dbname`, `host`, `hostaddr`, `port`, `service`, `servicefile`), test e2e bảo vệ màu vòng focus jade-700, forced-colors cho cấp độ đang chọn; chặn fragment `#` ở guard backend và helper e2e (libpq đọc `#?dbname=` thành tham số); Playwright `testIgnore` `**/e2e/support/**`; Vitest chạy `e2e/support` | ✅ | 07/10: ✅ đã đóng (`87833f7`, `b7b553b`, `2882e3d`, `3333d48`, PR #5 run `37564398158`) |
 | M2.7c | Test forced-colors đo chữ cấp độ đang chọn đọc được (pixel đổi khi ẩn chữ, tương phản ≥ 4,5:1), tài liệu quyết định PO learner UI `docs/product/learner-ui-decisions.md` | ✅ | 07/10: ✅ đã đóng (`d949b14`, `7d0dda8`, `ebf86bb`, PR #5 run `37568128763`) |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
+| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
 
@@ -489,6 +490,7 @@ UI và phần backend còn thiếu:
 | M2.7b | Guard DB disposable chặn tham số libpq đổi đích (frontend chỉ cho `sslmode`; backend chặn `dbname`, `host`, `hostaddr`, `port`, `service`, `servicefile`), test e2e bảo vệ màu vòng focus jade-700, forced-colors cho cấp độ đang chọn; chặn fragment `#` ở guard backend và helper e2e (libpq đọc `#?dbname=` thành tham số); Playwright `testIgnore` `**/e2e/support/**`; Vitest chạy `e2e/support` | ✅ | 07/10: ✅ đã đóng (`87833f7`, `b7b553b`, `2882e3d`, `3333d48`, PR #5 run `37564398158`) |
 | M2.7c | Test forced-colors đo chữ cấp độ đang chọn đọc được (pixel đổi khi ẩn chữ, tương phản ≥ 4,5:1), tài liệu quyết định PO learner UI `docs/product/learner-ui-decisions.md` | ✅ | 07/10: ✅ đã đóng (`d949b14`, `7d0dda8`, `ebf86bb`, PR #5 run `37568128763`) |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
+| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 
 Exit: flow end-to-end trên production build với backend thật ở staging ⬜ · không bearer
@@ -612,6 +614,7 @@ khi vertical slice bắt đầu.
 3. GĐ3 M0.E: D-04 limiter per process đã đóng (`6a61efc`, run `36407315763`); song song duyệt ADR-008 (#10) và #11 để biết M0.4 đi đâu.
 4. GĐ4 theo đường găng: M1.4 session refresh/revoke (B-03), M1.5 mail; M1.1 chờ quyết định #2.
 5. M2.1 + M2.2 chỉ bắt đầu khi GĐ4 xong M1.4, M1.5 (điều kiện vào GĐ5).
+6. M2.9a: dựng pipeline seed nội dung có agent hỗ trợ và pilot 5 bài HSK1, chạy song song M2.4b–M2.5.
 
 ## 8. Nhật ký cập nhật
 
@@ -663,3 +666,4 @@ khi vertical slice bắt đầu.
 | 09/10/2026 | GĐ5: M2.4a FIX, vẫn 🟡 chờ review: vòng focus jade-700 cho avatar, vòng inset cho tab bar; màn 195px không tràn (Khám phá 3 cột, ẩn ô minh hoạ bài dưới 300px); thẻ Tiếp tục học dùng span thay h3/p; số liệu 2 thẻ đọc qua `aria-labelledby` và chữ sr-only; Hồ sơ vẫn hiện email và Đăng xuất khi `/learning/home` lỗi khác 401/403; thêm Q23 (chữ tab đang chọn jade-800) và Q24; thêm rule forced colors cho Home. Đếm lại bằng script theo từng dòng task: GĐ5 15/36. Tổng 73/149. |
 | 09/10/2026 | GĐ5: M2.4a ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại của M2.4a (icon tab đang chọn theo màu hệ thống ở forced colors, test hồi quy 195/299px, focus inset, màu Q23) chờ review cùng M2.4b. M2.4b 🟡 chờ review (Lộ trình learner `/learn/path` dựng trên `GET /learning/path`: 7 tab cấp cố định chọn mặc định cấp mục tiêu, lưới bài done/current/available/locked với ô minh hoạ chung, ô khoá `aria-disabled` ra toast khoá, ô mở và nút "Bắt đầu" ra toast sắp ra mắt, thanh "Bài tiếp theo" ẩn khi `nextLesson` null; tab Học nối tới `/learn/path`; thêm Q25–Q31 vào `docs/product/learner-ui-decisions.md`). Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
 | 09/10/2026 | GĐ5: M2.4b FIX, vẫn 🟡 chờ review: thanh tab cấp cao 45px (tab 44px nằm trọn, vùng bấm đủ, vòng focus không bị cắt); dưới 300px lưới bài 2 cột, ẩn ô minh hoạ bài, nhãn và tên ở thanh "Bài tiếp theo" một dòng; forced colors giữ viền focus trong tab và viền Highlight khi rê ô đang học; phím tắt có Alt/Ctrl/Meta không đổi tab; panel cấp chưa có bài nhận focus. Tên đọc của ô bài (dấu cách trước dấu phẩy) chưa sửa, chờ quyết định. Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
+| 10/10/2026 | GĐ5: thêm M2.9a (pipeline seed nội dung có agent hỗ trợ + pilot 5 bài HSK1) làm task con của M2.9; bắt đầu ngay vì API CMS và exercise import đã có, không chờ UI M5.1. GĐ5 16/37; tổng 74/150. |
