@@ -58,7 +58,25 @@ describe('LearnerTabBar', () => {
     expect(iconHref(home)).toBe('#i-home');
   });
 
-  it.each(['Học', 'Tra từ', 'Ôn tập'])(
+  it('links Học to /learn/path and marks it current there', () => {
+    const nav = renderAt('/learn/path');
+    const learn = within(nav).getByRole('link', { name: 'Học' });
+    expect(learn).toHaveAttribute('href', '/learn/path');
+    expect(learn).toHaveAttribute('aria-current', 'page');
+    expect(iconHref(learn)).toBe('#i-book-open-fill');
+    expect(
+      within(nav).getByRole('link', { name: 'Trang chủ' }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
+  it('shows Học without aria-current and with the outline icon elsewhere', () => {
+    const nav = renderAt('/learn');
+    const learn = within(nav).getByRole('link', { name: 'Học' });
+    expect(learn).not.toHaveAttribute('aria-current');
+    expect(iconHref(learn)).toBe('#i-book-open');
+  });
+
+  it.each(['Tra từ', 'Ôn tập'])(
     '%s is a button that shows the coming-soon toast',
     (label) => {
       const nav = renderAt('/learn');

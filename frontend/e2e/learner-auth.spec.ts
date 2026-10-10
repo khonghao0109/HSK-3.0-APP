@@ -255,8 +255,8 @@ test.describe('Learner Auth Flow', () => {
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
 
-    // Test /learn and /learn/profile at all 8 viewports
-    const learnerRoutes = ['/learn', '/learn/profile'];
+    // Test /learn, /learn/path and /learn/profile at all 8 viewports
+    const learnerRoutes = ['/learn', '/learn/path', '/learn/profile'];
     for (const route of learnerRoutes) {
       for (const vp of VIEWPORTS_8) {
         await page.setViewportSize(vp);

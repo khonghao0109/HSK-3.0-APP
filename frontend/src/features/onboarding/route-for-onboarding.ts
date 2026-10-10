@@ -2,7 +2,10 @@ import type { OnboardingStatus, UserGoal } from './onboarding-contract';
 
 export function routeForOnboarding(
   status: Pick<OnboardingStatus, 'nextStep'>,
-  goal?: Pick<UserGoal, 'learningPurpose' | 'targetBand'> | null,
+  goal?: {
+    learningPurpose: UserGoal['learningPurpose'];
+    targetBand: number | null;
+  } | null,
 ): string | null {
   switch (status.nextStep) {
     case 'set_goal':

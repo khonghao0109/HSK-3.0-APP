@@ -14,10 +14,11 @@ function TabIcon({ name }: { name: string }) {
   );
 }
 
-/** Learner tab bar (Q1). Học, Tra từ, Ôn tập only toast until shipped (Q16, Q22). */
+/** Learner tab bar (Q1). Tra từ and Ôn tập only toast until shipped (Q16). */
 export function LearnerTabBar() {
   const pathname = usePathname();
   const onHome = pathname === '/learn';
+  const onPath = pathname === '/learn/path';
   const onProfile = pathname === '/learn/profile';
 
   return (
@@ -26,10 +27,10 @@ export function LearnerTabBar() {
         <TabIcon name={onHome ? 'home-fill' : 'home'} />
         Trang chủ
       </Link>
-      <ToastButton message={TOAST_COMING_SOON}>
-        <TabIcon name="book-open" />
+      <Link href="/learn/path" aria-current={onPath ? 'page' : undefined}>
+        <TabIcon name={onPath ? 'book-open-fill' : 'book-open'} />
         Học
-      </ToastButton>
+      </Link>
       <ToastButton message={TOAST_COMING_SOON}>
         <TabIcon name="search" />
         Tra từ

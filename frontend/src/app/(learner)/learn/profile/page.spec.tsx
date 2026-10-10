@@ -58,15 +58,6 @@ describe('LearnerProfilePage', () => {
     expect(getLearningHome).not.toHaveBeenCalled();
   });
 
-  it('redirects to /sign-in when the home fetch returns 401', async () => {
-    vi.mocked(getLearningHome).mockRejectedValue(
-      new BackendRequestError(normalizeApiFailure({ status: 401 })),
-    );
-    await expect(LearnerProfilePage()).rejects.toThrow(
-      'NEXT_REDIRECT:/sign-in',
-    );
-  });
-
   it.each([401, 403])(
     'redirects to /sign-in when the home fetch returns %i',
     async (status) => {

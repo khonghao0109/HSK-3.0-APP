@@ -75,6 +75,12 @@
   --explore-violet-fg: #6a55cf;
   --avatar-ring: rgb(255 255 255 / 85%);
 
+  /* Lộ trình (m02.css, 02-02). */
+  --path-hairline: #efe9e2;
+  --path-bar-bg: #f3f5ec;
+  --path-tile-shadow: rgb(20 24 43 / 4%);
+  --path-bar-shadow: rgb(20 24 43 / 5%);
+
   /* Solid jade-700 on every control, inputs included (Q12): >= 3:1 vs
      cream-50/100, paper and jade-25 (WCAG 1.4.11). */
   --focus-ring: 0 0 0 3px var(--jade-700);
@@ -2268,7 +2274,375 @@ html:has(.learner-app) {
   overflow-wrap: anywhere;
 }
 
-/* Box-shadow rings are dropped in forced colors; use a system-color outline. */
+/* ---------- Khung module 02: đầu navy + tấm kem bo góc ---------- */
+.learner-app .m02-head {
+  background: var(--surface-brand);
+  color: var(--text-on-brand);
+}
+
+.learner-app .m02-sheet {
+  position: relative;
+  margin-top: -12px;
+  border-radius: 12px 12px 0 0;
+  background: var(--surface-canvas);
+}
+
+/* ---------- 02-02 Lộ trình học ---------- */
+.learner-app .path-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 59px;
+  padding: 0 18px 12px 16px;
+}
+
+.learner-app .path-head__logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -7.5px;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.learner-app .path-body {
+  padding-bottom: calc(var(--tabbar-height) + 68px);
+}
+
+.learner-app .path-tabs {
+  display: flex;
+  align-items: flex-end;
+  height: 45px;
+  padding: 0 6px 0 11px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--path-hairline);
+}
+
+.learner-app .path-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.learner-app .path-tab {
+  position: relative;
+  flex: none;
+  min-width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 8px 6px 0;
+  border: 0;
+  background: none;
+  color: var(--slate-700);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.learner-app .path-tab[aria-selected='true'] {
+  padding: 8px 11px 0;
+  color: var(--jade-800);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.learner-app .path-tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--jade-600);
+}
+
+.learner-app .path-tab:focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
+.learner-app .path-panel {
+  padding: 10px 18px 0 15px;
+}
+
+.learner-app .path-title {
+  font-family: var(--font-sans);
+  font-size: 0.97rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink-900);
+}
+
+.learner-app .path-sub {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  color: var(--text-body);
+}
+
+.learner-app .path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px 11px;
+  margin-top: 8px;
+}
+
+/* Tiles are buttons: reset font, background, border and alignment. */
+.learner-app .topic {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-height: 69px;
+  margin: 0;
+  padding: 46px 4px 5px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 1px 3px var(--path-tile-shadow);
+  color: var(--ink-900);
+  font: inherit;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Shared lesson art until the API returns lesson images (Q20). */
+.learner-app .topic__art {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 34px;
+  border-radius: 6px;
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+.learner-app .topic__art .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Q27: long names wrap to two lines, then an ellipsis. */
+.learner-app .topic__name {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.66rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+.learner-app .topic__no {
+  position: absolute;
+  top: 6px;
+  left: 7px;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--slate-100);
+  color: var(--ink-900);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.learner-app .topic__state {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 15px;
+  height: 15px;
+}
+
+.learner-app .topic.is-done .topic__state {
+  color: var(--jade-600);
+}
+
+.learner-app .topic.is-locked .topic__state {
+  top: 8px;
+  right: 14px;
+  width: 10px;
+  height: 11px;
+  color: var(--stone-500);
+  stroke-width: 2.4;
+}
+
+.learner-app .topic.is-current {
+  border: 2px solid var(--jade-600);
+}
+
+.learner-app .topic.is-current .topic__no {
+  top: 5px;
+  left: 6px;
+  background: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .topic.is-current .topic__art {
+  top: 11px;
+}
+
+.learner-app .topic.is-current .topic__name {
+  margin-bottom: -1px;
+}
+
+.learner-app .topic:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app .topic.is-current:hover {
+  border-color: var(--jade-700);
+}
+
+.learner-app .topic.is-locked {
+  cursor: not-allowed;
+}
+
+/* Q12: the tile shadow would otherwise replace the focus ring. */
+.learner-app .topic:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .path-next {
+  position: fixed;
+  left: 50%;
+  bottom: var(--tabbar-height);
+  transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: calc(min(100%, var(--learner-max)) - 33px);
+  height: 52px;
+  padding: 0 8px 0 11px;
+  background: var(--path-bar-bg);
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  box-shadow: 0 -2px 10px var(--path-bar-shadow);
+}
+
+.learner-app .path-next__art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+.learner-app .path-next__art .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.learner-app .path-next .grow {
+  min-width: 0;
+}
+
+.learner-app .path-next p {
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .path-next__label {
+  font-size: 0.625rem;
+}
+
+.learner-app .path-next__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.learner-app .path-next__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 105px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--jade-800);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.learner-app .path-next__btn .icon {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+
+/* Large zoom (≤ 299px): drop the bar art, the button shrinks to its label. */
+@media (max-width: 299px) {
+  .learner-app .path-next__art {
+    display: none;
+  }
+
+  .learner-app .path-next__btn {
+    width: auto;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  /* Three columns leave ~46px tiles where the number overlaps the icon. */
+  .learner-app .path-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learner-app .topic__art {
+    display: none;
+  }
+
+  .learner-app .topic {
+    padding-top: 28px;
+    min-height: 0;
+  }
+
+  .learner-app .path-next__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The 52px bar cannot hold a two-line label and a two-line title. */
+  .learner-app .path-next__title {
+    -webkit-line-clamp: 1;
+  }
+}
+
+/* Forced colors. Keep this block last in the file: its rules share
+   specificity with the component rules above and must come after them. */
 @media (forced-colors: active) {
   .learner-app .home-hero__art {
     display: none;
@@ -2305,12 +2679,43 @@ html:has(.learner-app) {
     border: 1px solid CanvasText;
   }
 
+  /* SVG keeps a color set directly on it; follow the tab's system color. */
+  .learner-app .tabbar > [aria-current='page'] .icon {
+    color: inherit;
+  }
+
+  .learner-app .path-tab[aria-selected='true']::after {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .learner-app .topic.is-current,
+  .learner-app .topic.is-current:hover {
+    border-color: Highlight;
+  }
+
+  .learner-app .topic.is-done .topic__state,
+  .learner-app .topic.is-locked .topic__state,
+  .learner-app .path-next__btn .icon {
+    color: inherit;
+  }
+
+  .learner-app .path-next__btn {
+    border: 1px solid ButtonText;
+  }
+
+  /* Box-shadow rings are dropped in forced colors; use a system-color outline. */
   .learner-app :focus-visible,
   .learner-app .levels button[aria-checked='true']:focus-visible,
   .learner-app .input:focus-visible,
   .learner-app .switch input:focus-visible + span {
     outline: 2px solid CanvasText;
     outline-offset: 2px;
+  }
+
+  /* Keep the outline inside the tab so the scrolling strip does not clip it. */
+  .learner-app .path-tab:focus-visible {
+    outline-offset: -3px;
   }
 
   /* The jade fill and halo are dropped in forced colors; mark the selected

@@ -115,11 +115,6 @@ test.describe('Learner Home (M2.4a)', () => {
         text: TOAST_COMING_SOON,
       },
       {
-        label: 'tab Học',
-        control: nav.getByRole('button', { name: 'Học', exact: true }),
-        text: TOAST_COMING_SOON,
-      },
-      {
         label: 'tab Tra từ',
         control: nav.getByRole('button', { name: 'Tra từ' }),
         text: TOAST_COMING_SOON,
@@ -149,6 +144,11 @@ test.describe('Learner Home (M2.4a)', () => {
         await expect(toasts).toBeVisible();
       });
     }
+
+    // M2.4b links tab Học to the path (Q22): it navigates instead of toasting.
+    await expect(
+      nav.getByRole('link', { name: 'Học', exact: true }),
+    ).toHaveAttribute('href', '/learn/path');
   });
 
   test('marks the active tab with aria-current="page"', async ({
@@ -163,11 +163,22 @@ test.describe('Learner Home (M2.4a)', () => {
     await page.goto('/learn');
     await expect(home).toHaveAttribute('aria-current', 'page');
     await expect(profile).not.toHaveAttribute('aria-current', /.*/);
+    // Q23: label jade-800, icon jade-700.
+    await expect(home).toHaveCSS('color', 'rgb(6, 122, 96)');
+    await expect(home.locator('.icon')).toHaveCSS('color', 'rgb(2, 142, 106)');
 
     await page.goto('/learn/profile');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hồ sơ');
     await expect(profile).toHaveAttribute('aria-current', 'page');
     await expect(home).not.toHaveAttribute('aria-current', /.*/);
+
+    // Forced colors: the icon follows the system color of its own tab.
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/learn');
+    const labelColor = await home.evaluate(
+      (node) => window.getComputedStyle(node).color,
+    );
+    await expect(home.locator('.icon')).toHaveCSS('color', labelColor);
   });
 
   test('logs out from /learn/profile and lands on /', async ({
@@ -264,6 +275,7 @@ test.describe('Learner Home (M2.4a)', () => {
         (node) => window.getComputedStyle(node).boxShadow,
       );
       expect(boxShadow).toContain(JADE_700_RING);
+      expect(boxShadow, `${label} ring is inset`).toContain('inset');
       if (index < expectedLabels.length - 1) {
         await page.keyboard.press('Tab');
       }
@@ -283,9 +295,8 @@ test.describe('Learner Home (M2.4a)', () => {
       { label: 'bell', control: page.locator('.home-hero__bell') },
       { label: 'avatar', control: page.locator('.home-hero__avatar') },
     ];
-    if ((await page.locator('.home-lesson').count()) > 0) {
-      targets.push({ label: 'lesson', control: page.locator('.home-lesson') });
-    }
+    await expect(page.locator('.home-lesson')).toHaveCount(1);
+    targets.push({ label: 'lesson', control: page.locator('.home-lesson') });
     targets.push({
       label: 'first explore',
       control: page.locator('.home-explore > li:first-child > button'),
@@ -325,5 +336,57 @@ test.describe('Learner Home (M2.4a)', () => {
       .locator('.home-gauge')
       .evaluate((node) => window.getComputedStyle(node).backgroundImage);
     expect(gaugeImage).toContain('conic-gradient');
+
+    const bar = page.locator('.home-lesson .progress');
+    await expect(bar).toHaveCount(1);
+    await expect(bar.locator('> span')).toHaveCSS(
+      'forced-color-adjust',
+      'none',
+    );
+    const barBorder = await bar.evaluate((node) =>
+      parseFloat(window.getComputedStyle(node).borderTopWidth),
+    );
+    expect(barBorder).toBeGreaterThan(0);
+
+    await page.getByRole('button', { name: 'Thông báo' }).click();
+    const toastBorder = await page
+      .locator('.toast')
+      .first()
+      .evaluate((node) =>
+        parseFloat(window.getComputedStyle(node).borderTopWidth),
+      );
+    expect(toastBorder).toBeGreaterThan(0);
   });
+
+  for (const [width, height] of [
+    [195, 422],
+    [299, 600],
+  ] as const) {
+    test(`fits /learn at ${width}x${height} without horizontal overflow`, async ({
+      page,
+      baseURL,
+    }) => {
+      await registerReadyLearner(page, baseURL);
+      await page.setViewportSize({ width, height });
+      await page.goto('/learn');
+      await expect(page.locator('.home-lesson')).toHaveCount(1);
+
+      const layout = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+        lessonRight:
+          document.querySelector('.home-lesson')?.getBoundingClientRect()
+            .right ?? Number.POSITIVE_INFINITY,
+        exploreWidths: [
+          ...document.querySelectorAll('.home-explore button'),
+        ].map((node) => node.getBoundingClientRect().width),
+      }));
+      expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth);
+      expect(layout.lessonRight).toBeLessThanOrEqual(width);
+      expect(layout.exploreWidths).toHaveLength(8);
+      for (const exploreWidth of layout.exploreWidths) {
+        expect(exploreWidth).toBeGreaterThanOrEqual(44);
+      }
+    });
+  }
 });

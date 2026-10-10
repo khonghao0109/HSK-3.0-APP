@@ -175,8 +175,7 @@ export default async function LearnerHomePage() {
                   {continueLesson.title}
                 </span>
                 <span className="home-lesson__meta">
-                  {levelLabel(continueLesson.levelCode)} • Bài{' '}
-                  {continueLesson.position}
+                  {`${levelLabel(continueLesson.levelCode)} • Bài ${continueLesson.position}`}
                 </span>
                 <span className="home-lesson__bar">
                   <span className="progress" aria-hidden="true">
