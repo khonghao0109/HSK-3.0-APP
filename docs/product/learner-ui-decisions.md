@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 10/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026).
+Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q43 ngày 11/10/2026).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -47,3 +47,15 @@ Cập nhật: 10/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q29 | **Cấp chưa có bài: giữ tiêu đề "Lộ trình HSK n", thay phụ đề bằng "HSK n chưa mở." và bỏ lưới bài** (PO 09/10/2026) | Bản demo vẽ 12 ô khoá cho HSK 4–9 | Áp cho cấp không có trong API và cấp có `lessons: []`; tab vẫn bấm được (Q19) |
 | Q30 | **Không còn bài tiếp theo (`nextLesson = null`) thì ẩn thanh "Bài tiếp theo"** (PO 09/10/2026) | Bản demo luôn có thanh | Như Trang chủ ẩn "Tiếp tục học" |
 | Q31 | **Nút ở thanh "Bài tiếp theo" luôn ghi "Bắt đầu"** (PO 09/10/2026) | — | Kể cả khi bài đã học dở; nhất quán với Q24 |
+| Q32 | **URL màn bài học là `/learn/lessons/[id]` (id số)** (Tech Lead 11/10/2026) | `lesson.html` | Mọi route backend và payload đều theo id |
+| Q33 | **Nút tim "Yêu thích bài học" hiện, bấm ra toast "Tính năng sắp ra mắt."** (PO 11/10/2026) | Bản demo bật/tắt tim, lưu localStorage, toast "Đã thêm…" | Không có `aria-pressed` vì chưa có trạng thái thật |
+| Q34 | **Ảnh hero của bài là ô minh hoạ chung** (PO 11/10/2026) | Bản demo dùng ảnh riêng `m02-lesson-hero.png` | Như Q20: icon sách trên ô 139×116; che khi so pixel |
+| Q35 | **Các dòng "Nội dung bài học" lấy số từ dữ liệu thật, dòng có tổng 0 thì ẩn** (PO 11/10/2026) | Bản demo luôn có 4 dòng | Từ vựng = số từ của bài; Ngữ pháp = topic ngữ pháp xong/tổng; Luyện tập = bài tập đã làm/tổng |
+| Q36 | **Dòng Từ vựng chỉ ghi "N từ mới", không đếm x/N, có dấu tích khi phần từ vựng xong** (PO 11/10/2026) | Bản demo ghi 28/28 kèm thanh | Chưa theo dõi tiến độ theo từng từ (để M3) |
+| Q37 | **Ẩn dòng "Câu chuyện" tới khi có màn đọc truyện** (PO 11/10/2026) | Bản demo có dòng Câu chuyện khoá | So pixel ẩn ở cả hai bên |
+| Q38 | **"Tiếp tục học" và bấm từng dòng ra toast "Tính năng sắp ra mắt.", chưa bắt đầu bài** (PO 11/10/2026) | Bản demo trỏ tới `practice.html`, `flashcards.html`, `assistant.html` | Không gọi `POST start` tới khi có M2.5b; chữ nút luôn "Tiếp tục học" |
+| Q39 | **Bài không có mô tả thì ẩn đoạn mô tả** (Tech Lead 11/10/2026) | — | Không dùng câu mặc định |
+| Q40 | **Mở thẳng URL bài đang khoá: hiện màn ở trạng thái khoá, nút ra toast "Hoàn thành bài trước để mở khoá."** (PO 11/10/2026) | — | Trạng thái khoá do backend tính (Q18) |
+| Q41 | **Bài không tồn tại, chưa sẵn sàng hoặc id sai: trang not-found tiếng Việt trong learner (có tab bar, link "Về lộ trình")** (Tech Lead 11/10/2026) | — | — |
+| Q42 | **Màn bài học áp chuẩn như Q28: nút cao 44px thật, icon khoá stone-500, chữ nhỏ và chip đạt 4,5:1** (PO 11/10/2026) | Bản demo: CTA 33px, khoá `#d6d4d8` | `assets/css/m02.css` sẽ sửa theo khi làm M2.5a |
+| Q43 | **Backend làm trước (M2.B13): mở rộng `GET /learning/lessons/:id/activity` với cấp độ, vị trí, trạng thái khoá, số liệu từng phần, kèm DTO có kiểu** (Tech Lead 11/10/2026) | — | Một lần gọi cho màn bài học; dùng lại cho M2.5b |
