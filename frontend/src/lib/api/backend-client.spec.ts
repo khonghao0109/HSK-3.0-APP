@@ -206,7 +206,8 @@ describe('server-only backend client', () => {
     await client.request('/api/v1/learning-plans', { method: 'POST' });
     await client.request('/api/v1/learning/home');
     await client.request('/api/v1/learning/path');
-    expect(fetchImpl).toHaveBeenCalledTimes(7);
+    await client.request('/api/v1/learning/lessons/12/activity');
+    expect(fetchImpl).toHaveBeenCalledTimes(8);
 
     for (const path of [
       '/api/v1/levels',
@@ -216,11 +217,22 @@ describe('server-only backend client', () => {
       '/api/v1/learning-plans',
       '/api/v1/learning/home',
       '/api/v1/learning/path',
+      '/api/v1/learning/lessons/12/activity',
     ]) {
       await expect(client.request(`${path}/x`)).rejects.toMatchObject({
         kind: 'invalid_request',
       });
       await expect(client.request(`${path}?x=1`)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    for (const path of [
+      '/api/v1/learning/lessons/abc/activity',
+      '/api/v1/learning/lessons//activity',
+      '/api/v1/learning/lessons/12',
+      '/api/v1/learning/lessons/12/start',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }

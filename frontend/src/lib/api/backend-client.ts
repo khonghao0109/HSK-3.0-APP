@@ -18,6 +18,7 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/learning-plans$/,
   /^\/api\/v1\/learning\/home$/,
   /^\/api\/v1\/learning\/path$/,
+  /^\/api\/v1\/learning\/lessons\/\d+\/activity$/,
 ];
 
 type ClientOptions = {

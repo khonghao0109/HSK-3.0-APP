@@ -78,7 +78,7 @@ function selectedTab() {
 
 function tile(title: string) {
   const name = screen.getByText(title, { selector: '.topic__name' });
-  const button = name.closest('button');
+  const button = name.closest<HTMLElement>('a, button');
   if (!button) throw new Error(`no tile for ${title}`);
   return button;
 }
@@ -148,9 +148,7 @@ describe('LearnerPathLevels', () => {
       screen.getByText('Hoàn thành 12 bài để nắm vững HSK 3'),
     ).toBeInTheDocument();
     expect(screen.queryByText('HSK 3 chưa mở.')).toBeNull();
-    const buttons = container.querySelectorAll(
-      'ol.path-grid > li > button.topic',
-    );
+    const buttons = container.querySelectorAll('ol.path-grid > li > .topic');
     expect(
       Array.from(buttons).map(
         (button) => button.querySelector('.topic__name')?.textContent,
@@ -284,18 +282,26 @@ describe('LearnerPathLevels', () => {
     expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
-  it.each(['Chào hỏi', 'Gia đình', 'Mua sắm'])(
-    'toasts coming soon for open tile %s',
-    (title) => {
-      renderLevels('HSK3');
-      expect(tile(title)).not.toHaveAttribute('aria-disabled');
-      fireEvent.click(tile(title));
-      expect(
-        within(screen.getByRole('status')).getByText('Tính năng sắp ra mắt.'),
-      ).toBeInTheDocument();
-      expect(screen.queryByText('Hoàn thành bài trước để mở khoá.')).toBeNull();
-    },
-  );
+  it.each([
+    ['Chào hỏi', 10],
+    ['Gia đình', 20],
+    ['Mua sắm', 30],
+  ])('links open tile %s to its lesson page', (title, id) => {
+    renderLevels('HSK3');
+    const link = tile(title);
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', `/learn/lessons/${id}`);
+    expect(link).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(link);
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
+  });
+
+  it('keeps the locked tile a button, not a link', () => {
+    renderLevels('HSK3');
+    const locked = tile('Du lịch');
+    expect(locked.tagName).toBe('BUTTON');
+    expect(locked).not.toHaveAttribute('href');
+  });
 
   it('uses no inline style', () => {
     const { container } = renderLevels('HSK3');

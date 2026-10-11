@@ -87,6 +87,9 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
           </symbol>
+          <symbol id="i-heart" viewBox="0 0 24 24">
+            <path d="M19.5 12.6 12 20l-7.5-7.4A4.9 4.9 0 0 1 12 6.1a4.9 4.9 0 0 1 7.5 6.5Z" />
+          </symbol>
           <symbol id="i-check-circle" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" />
             <path

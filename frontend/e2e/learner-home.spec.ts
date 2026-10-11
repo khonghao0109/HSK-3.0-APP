@@ -124,11 +124,6 @@ test.describe('Learner Home (M2.4a)', () => {
         control: nav.getByRole('button', { name: 'Ôn tập' }),
         text: TOAST_COMING_SOON,
       },
-      {
-        label: 'Tiếp tục học card',
-        control: page.locator('.home-lesson'),
-        text: TOAST_COMING_SOON,
-      },
     ];
 
     // Wait for earlier toasts to expire (2.4 s) so each click must add
@@ -149,6 +144,11 @@ test.describe('Learner Home (M2.4a)', () => {
     await expect(
       nav.getByRole('link', { name: 'Học', exact: true }),
     ).toHaveAttribute('href', '/learn/path');
+    // M2.5a: the Tiếp tục học card links to its lesson page instead of toasting.
+    await expect(page.locator('a.home-lesson')).toHaveAttribute(
+      'href',
+      /^\/learn\/lessons\/\d+$/u,
+    );
   });
 
   test('marks the active tab with aria-current="page"', async ({

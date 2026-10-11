@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const PASSWORD = 'StrongPassword123!';
-const TOAST_COMING_SOON = 'Tính năng sắp ra mắt.';
 const JADE_700 = 'rgb(2, 142, 106)';
 
 function uniqueEmail(tag: string): string {
@@ -102,7 +101,7 @@ test.describe('Learner path (M2.4b)', () => {
     );
   });
 
-  test('current tile and next-lesson button show the coming-soon toast', async ({
+  test('current tile and next-lesson button link to the lesson page', async ({
     page,
     baseURL,
   }) => {
@@ -110,15 +109,25 @@ test.describe('Learner path (M2.4b)', () => {
     await page.goto('/learn/path');
     const all = toasts(page);
 
-    await expect(all).toHaveCount(0);
-    await page.locator('.topic.is-current').click();
-    await expect(all).toHaveCount(1);
-    await expect(all).toHaveText(TOAST_COMING_SOON);
+    const current = page.locator('a.topic.is-current');
+    const href = await current.getAttribute('href');
+    expect(href).toMatch(/^\/learn\/lessons\/\d+$/);
+    await expect(page.locator('a.path-next__btn')).toHaveAttribute(
+      'href',
+      href ?? '',
+    );
 
+    await current.click();
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
     await expect(all).toHaveCount(0);
-    await page.locator('.path-next__btn').click();
-    await expect(all).toHaveCount(1);
-    await expect(all).toHaveText(TOAST_COMING_SOON);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Greetings & first meetings',
+    );
+
+    await page.goto('/learn/path');
+    await page.locator('a.path-next__btn').click();
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+    await expect(all).toHaveCount(0);
   });
 
   test('levels without lessons say they are not open yet', async ({

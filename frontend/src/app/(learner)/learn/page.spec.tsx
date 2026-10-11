@@ -221,7 +221,7 @@ describe('LearnerHomePage', () => {
     expect(container.textContent).not.toContain('XP');
   });
 
-  it('renders the continue lesson card and toasts on click', async () => {
+  it('renders the continue lesson card as a link to the lesson', async () => {
     const { container } = await renderHome({
       ...readyHome,
       continueLesson: lesson,
@@ -243,8 +243,10 @@ describe('LearnerHomePage', () => {
     expect(card.querySelector('.progress > span')).toHaveClass('pct-40');
     expect(container.querySelector('[style]')).toBeNull();
 
+    expect(card.tagName).toBe('A');
+    expect(card).toHaveAttribute('href', `/learn/lessons/${lesson.lessonId}`);
     fireEvent.click(card);
-    expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
   it('lists the eight explore shortcuts in order', async () => {

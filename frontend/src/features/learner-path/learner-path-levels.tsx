@@ -1,13 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { levelLabel } from '@/features/learner-home/level-label';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
-import {
-  TOAST_COMING_SOON,
-  TOAST_LOCKED,
-} from '@/features/learner-shell/learner-toast-messages';
+import { TOAST_LOCKED } from '@/features/learner-shell/learner-toast-messages';
 
 import type {
   LessonState,
@@ -34,14 +32,8 @@ function tabId(code: string): string {
 
 function LessonTile({ lesson }: { lesson: PathLesson }) {
   const icon = STATE_ICON[lesson.state];
-  const locked = lesson.state === 'locked';
-  return (
-    <ToastButton
-      className={`topic is-${lesson.state}`}
-      message={locked ? TOAST_LOCKED : TOAST_COMING_SOON}
-      aria-current={lesson.state === 'current' ? 'step' : undefined}
-      aria-disabled={locked ? 'true' : undefined}
-    >
+  const body = (
+    <>
       <span className="topic__no">{lesson.position}</span>
       {icon && (
         <svg className="icon topic__state" aria-hidden="true">
@@ -55,7 +47,29 @@ function LessonTile({ lesson }: { lesson: PathLesson }) {
       </span>
       <span className="topic__name">{lesson.title}</span>
       <span className="sr-only">{STATE_TEXT[lesson.state]}</span>
-    </ToastButton>
+    </>
+  );
+
+  // Q44: a locked lesson only explains why; open ones go to the lesson page.
+  if (lesson.state === 'locked') {
+    return (
+      <ToastButton
+        className="topic is-locked"
+        message={TOAST_LOCKED}
+        aria-disabled="true"
+      >
+        {body}
+      </ToastButton>
+    );
+  }
+  return (
+    <Link
+      className={`topic is-${lesson.state}`}
+      href={`/learn/lessons/${lesson.id}`}
+      aria-current={lesson.state === 'current' ? 'step' : undefined}
+    >
+      {body}
+    </Link>
   );
 }
 

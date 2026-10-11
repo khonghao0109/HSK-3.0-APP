@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { redirect } from 'next/navigation';
@@ -169,23 +169,23 @@ describe('LearnerPathPage', () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it('renders the next lesson card with a coming-soon start button', async () => {
+  it('renders the next lesson card with a start link to the lesson', async () => {
     const { container } = await renderPath(readyPath);
     const aside = screen.getByRole('complementary', { name: 'Bài tiếp theo' });
     expect(aside.tagName).toBe('ASIDE');
     expect(aside.querySelector('p.path-next__title')?.textContent).toBe(
       'Gia đình',
     );
-    const button = aside.querySelector('button.path-next__btn');
-    if (!(button instanceof HTMLButtonElement)) {
-      throw new Error('missing start button');
+    const button = aside.querySelector('a.path-next__btn');
+    if (!(button instanceof HTMLAnchorElement)) {
+      throw new Error('missing start link');
     }
     expect(button.textContent?.startsWith('Bắt đầu')).toBe(true);
     expect(button.querySelector('.sr-only')?.textContent).toBe(' bài Gia đình');
-    fireEvent.click(button);
-    expect(
-      within(screen.getByRole('status')).getByText('Tính năng sắp ra mắt.'),
-    ).toBeInTheDocument();
+    expect(button).toHaveAttribute(
+      'href',
+      `/learn/lessons/${readyPath.nextLesson?.lessonId}`,
+    );
     expect(container.querySelector('[style]')).toBeNull();
   });
 

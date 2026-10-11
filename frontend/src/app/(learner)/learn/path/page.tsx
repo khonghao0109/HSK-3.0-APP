@@ -6,8 +6,6 @@ import { getServerLearnerSession } from '@/features/learner-auth/server-learner-
 import { LearnerPathLevels } from '@/features/learner-path/learner-path-levels';
 import type { LearningPath } from '@/features/learner-path/learning-path-contract';
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
-import { ToastButton } from '@/features/learner-shell/learner-toast';
-import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
 
@@ -66,13 +64,16 @@ export default async function LearnerPathPage() {
             <p className="path-next__label">Bài tiếp theo</p>
             <p className="path-next__title">{nextLesson.title}</p>
           </div>
-          <ToastButton className="path-next__btn" message={TOAST_COMING_SOON}>
+          <Link
+            className="path-next__btn"
+            href={`/learn/lessons/${nextLesson.lessonId}`}
+          >
             Bắt đầu
             <svg className="icon" aria-hidden="true">
               <use href="#i-arrow-right" />
             </svg>
             <span className="sr-only">{` bài ${nextLesson.title}`}</span>
-          </ToastButton>
+          </Link>
         </aside>
       )}
     </>

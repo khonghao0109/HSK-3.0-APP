@@ -81,6 +81,11 @@
   --path-tile-shadow: rgb(20 24 43 / 4%);
   --path-bar-shadow: rgb(20 24 43 / 5%);
 
+  /* Bài học (m02.css, 02-03). */
+  --lesson-violet: #8a6fe0;
+  --lesson-blue: #4a80e0;
+  --lesson-badge-text: #1f4f9c;
+
   /* Solid jade-700 on every control, inputs included (Q12): >= 3:1 vs
      cream-50/100, paper and jade-25 (WCAG 1.4.11). */
   --focus-ring: 0 0 0 3px var(--jade-700);
@@ -2654,6 +2659,485 @@ html:has(.learner-app) {
   }
 }
 
+/* ---------- Thanh tiêu đề navy (m02.css, 02-03) ---------- */
+.learner-app .m02-bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  height: 60px;
+  padding: 0 8px 8px;
+}
+
+/* Q12: the sheet below is pulled up 12px and painted later, so it would cover
+   the bottom of the back/heart focus ring; lift the buttons above it. */
+.learner-app .m02-bar .icon-btn {
+  position: relative;
+  z-index: 1;
+  color: var(--white);
+}
+
+.learner-app .m02-bar .icon-btn .icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke-width: 2;
+}
+
+.learner-app .m02-bar__title {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ---------- 02-03 Nội dung bài học (M2.5a, Q32–Q44) ---------- */
+.learner-app .lesson {
+  padding: 18px 17px calc(var(--tabbar-height) + 24px) 20px;
+}
+
+.learner-app .lesson-hero {
+  display: grid;
+  grid-template-columns: 139px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Q34: shared illustration tile in place of a per-lesson image, same box. */
+.learner-app .lesson-hero__img {
+  display: grid;
+  place-items: center;
+  width: 139px;
+  height: 116px;
+  margin-left: 1px;
+  border-radius: 12px;
+  background: var(--jade-50);
+  color: var(--jade-700);
+  aspect-ratio: 139 / 116;
+}
+
+.learner-app .lesson-hero__img .icon {
+  width: 44px;
+  height: 44px;
+  stroke-width: 1.8;
+}
+
+.learner-app .lesson-hero__info {
+  padding-top: 2px;
+  padding-right: 44px;
+}
+
+.learner-app .lesson-hero__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lesson-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 0;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--paper);
+  white-space: nowrap;
+  color: var(--lesson-badge-text);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.learner-app .lesson-hero__desc {
+  margin: 14px 0 0;
+  font-size: 0.75rem;
+  line-height: 14.5px;
+  color: var(--text-body);
+}
+
+.learner-app .lesson-hero__bar {
+  margin-top: 12px;
+  height: 4px;
+}
+
+.learner-app .lesson-hero__pct {
+  margin: 5px 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-body);
+}
+
+/* Q42: jade-700 on cream is 3.97:1; jade-800. */
+.learner-app .lesson-hero__pct b {
+  color: var(--jade-800);
+  font-weight: 600;
+}
+
+.learner-app .lesson-section {
+  margin: 3px 0 0;
+  font-size: 0.97rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink-900);
+}
+
+.learner-app .lesson-rows {
+  display: grid;
+  gap: 4.8px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .lrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 49px;
+  padding: 0 16.5px 0 13px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 1px 3px var(--path-tile-shadow);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+}
+
+.learner-app .lrow:hover {
+  border-color: var(--border-strong);
+}
+
+/* Q12: the card shadow above would replace the focus ring. */
+.learner-app .lrow:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .lrow > img {
+  width: 36px;
+  height: auto;
+  flex: none;
+}
+
+.learner-app .lrow .grow {
+  display: grid;
+  gap: 1.5px;
+  padding-top: 3px;
+}
+
+.learner-app .lrow__title {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lrow__meta {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--slate-500);
+}
+
+.learner-app .lrow__end {
+  position: relative;
+  align-self: stretch;
+  width: 84px;
+  flex: none;
+}
+
+.learner-app .lrow__bar {
+  position: absolute;
+  left: 0;
+  width: 59px;
+  top: 31px;
+  height: 4px;
+  background: var(--slate-200);
+}
+
+.learner-app .lrow__count {
+  position: absolute;
+  right: 0;
+  top: 15px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lrow__check {
+  position: absolute;
+  right: 0;
+  top: 17px;
+  width: 14px;
+  height: 14px;
+  color: var(--jade-600);
+}
+
+.learner-app .lrow--violet .lrow__bar > span {
+  background: var(--lesson-violet);
+}
+
+.learner-app .lrow--blue .lrow__bar > span {
+  background: var(--lesson-blue);
+}
+
+/* Q42, Q44: stone-500 lock (the demo's #d6d4d8 is 1.47:1). */
+.learner-app .lrow__lock {
+  position: absolute;
+  right: 1px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  color: var(--stone-500);
+  stroke-width: 2.4;
+}
+
+.learner-app .lrow.is-locked {
+  cursor: not-allowed;
+}
+
+/* Q42 (as Q28): a real 44px button on solid jade-800 (white on the demo
+   gradient is 2.58:1). Q38: a toast <button>, so it needs a width. */
+.learner-app .lesson-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 5px);
+  height: 44px;
+  margin: 8px 3px 0 2px;
+  padding: 0 26px 0 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--jade-800);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.learner-app .lesson-cta .icon {
+  position: absolute;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Q44: locked lesson — grey, aria-disabled (not `disabled`, so it still
+   focuses and shows the lock toast); slate-700 on slate-200 is 7.59:1. */
+.learner-app .lesson-cta[aria-disabled='true'],
+.learner-app .lesson-cta[aria-disabled='true']:hover {
+  background: var(--slate-200);
+  color: var(--slate-700);
+  cursor: not-allowed;
+}
+
+/* ---------- Không tìm thấy bài học (Q41) ---------- */
+.learner-app .lesson-nf {
+  flex: 1;
+  padding: 40px 20px calc(var(--tabbar-height) + 24px);
+}
+
+.learner-app .lesson-nf__body {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.learner-app .lesson-nf__art {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+  border-radius: 18px;
+  background: var(--cream-100);
+  color: var(--stone-600);
+}
+
+.learner-app .lesson-nf__art .icon {
+  width: 34px;
+  height: 34px;
+  stroke-width: 1.8;
+}
+
+.learner-app .lesson-nf__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lesson-nf__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+/* As "Tiếp tục học" (Q42): >= 44px, solid jade-800, white text 5.3:1. */
+.learner-app .lesson-nf__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 6px 16px;
+  border-radius: 10px;
+  background: var(--jade-800);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+/* Narrow screens (< 375px): smaller hero tile. */
+@media (max-width: 374px) {
+  .learner-app .lesson-hero {
+    grid-template-columns: 112px 1fr;
+    gap: 12px;
+  }
+
+  .learner-app .lesson-hero__img {
+    width: 112px;
+    height: auto;
+  }
+
+  .learner-app .lesson-hero__info {
+    padding-right: 0;
+  }
+
+  .learner-app .lesson-hero__desc {
+    margin-top: 8px;
+  }
+}
+
+/* Large zoom (≤ 299px): stacked hero, rows drop their art and wrap, count
+   and bar shrink; buttons stay >= 44px with no horizontal scroll at 195px. */
+@media (max-width: 299px) {
+  .learner-app .m02-bar__title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* A three-line title is taller than 60px; grow the bar and keep 12px for
+     the sheet pulled up over it. */
+  .learner-app .m02-bar {
+    height: auto;
+    min-height: 60px;
+    padding-bottom: 12px;
+  }
+
+  .learner-app .lesson {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .learner-app .lesson-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .learner-app .lesson-hero__img {
+    width: 139px;
+    height: 116px;
+  }
+
+  .learner-app .lesson-hero__info {
+    min-width: 0;
+    padding: 0;
+  }
+
+  .learner-app .lesson-hero__title,
+  .learner-app .lesson-hero__desc {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .lesson-hero__badge {
+    height: auto;
+    min-height: 20px;
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+
+  .learner-app .lesson-section {
+    margin-top: 12px;
+  }
+
+  .learner-app .lrow {
+    height: auto;
+    min-height: 49px;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  .learner-app .lrow > img {
+    display: none;
+  }
+
+  .learner-app .lrow .grow {
+    padding-top: 0;
+  }
+
+  .learner-app .lrow__title,
+  .learner-app .lrow__meta {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .lrow__end {
+    display: grid;
+    justify-items: end;
+    align-content: center;
+    gap: 4px;
+    align-self: center;
+    width: 44px;
+  }
+
+  .learner-app .lrow__count,
+  .learner-app .lrow__check,
+  .learner-app .lrow__lock {
+    position: static;
+  }
+
+  .learner-app .lrow__bar {
+    position: static;
+    width: 100%;
+  }
+
+  .learner-app .lesson-cta {
+    height: auto;
+    min-height: 44px;
+    padding: 6px 12px;
+  }
+
+  .learner-app .lesson-cta .icon {
+    position: static;
+    flex: none;
+  }
+
+  .learner-app .lesson-nf {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 /* Forced colors. Keep this block last in the file: its rules share
    specificity with the component rules above and must come after them. */
 @media (forced-colors: active) {
@@ -2715,6 +3199,30 @@ html:has(.learner-app) {
 
   .learner-app .path-next__btn {
     border: 1px solid ButtonText;
+  }
+
+  /* Lesson page (M2.5a): state icons follow the row's system color; the
+     solid CTA fills are dropped, so outline them. */
+  .learner-app .lrow__check,
+  .learner-app .lrow__lock,
+  .learner-app .lesson-hero__img {
+    color: inherit;
+  }
+
+  .learner-app .lesson-cta,
+  .learner-app .lesson-nf__cta {
+    border: 1px solid ButtonText;
+  }
+
+  /* Q44: keep the locked CTA visibly unavailable. */
+  .learner-app .lesson-cta[aria-disabled='true'] {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .learner-app .lrow--violet .lrow__bar > span,
+  .learner-app .lrow--blue .lrow__bar > span {
+    background: Highlight;
   }
 
   /* Box-shadow rings are dropped in forced colors; use a system-color outline. */

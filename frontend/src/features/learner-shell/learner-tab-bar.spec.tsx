@@ -69,6 +69,23 @@ describe('LearnerTabBar', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
+  it.each(['/learn/lessons/12', '/learn/lessons/abc'])(
+    'marks Học current on lesson page %s',
+    (pathname) => {
+      const nav = renderAt(pathname);
+      const learn = within(nav).getByRole('link', { name: 'Học' });
+      expect(learn).toHaveAttribute('aria-current', 'page');
+      expect(iconHref(learn)).toBe('#i-book-open-fill');
+    },
+  );
+
+  it('does not mark Học current on /learn/lessons without an id', () => {
+    const nav = renderAt('/learn/lessons');
+    expect(within(nav).getByRole('link', { name: 'Học' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
   it('shows Học without aria-current and with the outline icon elsewhere', () => {
     const nav = renderAt('/learn');
     const learn = within(nav).getByRole('link', { name: 'Học' });

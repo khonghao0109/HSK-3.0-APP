@@ -166,7 +166,10 @@ export default async function LearnerHomePage() {
         {continueLesson && (
           <>
             <h2 className="home-section">Tiếp tục học</h2>
-            <ToastButton className="home-lesson" message={TOAST_COMING_SOON}>
+            <Link
+              className="home-lesson"
+              href={`/learn/lessons/${continueLesson.lessonId}`}
+            >
               <span className="home-lesson__art" aria-hidden="true">
                 <Icon name="book-open" />
               </span>
@@ -185,7 +188,7 @@ export default async function LearnerHomePage() {
                 </span>
               </span>
               <Icon name="chevron-right" />
-            </ToastButton>
+            </Link>
           </>
         )}
 

@@ -18,7 +18,8 @@ function TabIcon({ name }: { name: string }) {
 export function LearnerTabBar() {
   const pathname = usePathname();
   const onHome = pathname === '/learn';
-  const onPath = pathname === '/learn/path';
+  const onPath =
+    pathname === '/learn/path' || pathname.startsWith('/learn/lessons/');
   const onProfile = pathname === '/learn/profile';
 
   return (

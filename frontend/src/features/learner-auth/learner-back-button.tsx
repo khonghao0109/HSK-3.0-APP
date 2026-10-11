@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 export function LearnerBackButton({
   fallbackHref = '/',
   className = 'icon-btn',
+  ariaLabel = 'Quay lại',
 }: {
   fallbackHref?: string;
   className?: string;
+  ariaLabel?: string;
 }) {
   const router = useRouter();
 
@@ -25,7 +27,7 @@ export function LearnerBackButton({
       className={className}
       href={fallbackHref}
       onClick={handleClick}
-      aria-label="Quay lại"
+      aria-label={ariaLabel}
     >
       <svg className="icon" aria-hidden="true">
         <use href="#i-arrow-left" />
