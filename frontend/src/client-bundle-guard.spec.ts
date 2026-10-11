@@ -329,6 +329,7 @@ describe('client bundle guard', () => {
     it("follows '.' to the directory index and reports the zod chain", () => {
       withTree(
         {
+          'sub.ts': 'export const s = 1;\n',
           'sub/index.ts':
             "import { z } from 'zod';\nexport const s = z.string();\n",
           'sub/entry.tsx':
