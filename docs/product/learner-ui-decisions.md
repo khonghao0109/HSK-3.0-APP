@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q43 ngày 11/10/2026).
+Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -57,5 +57,6 @@ Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q39 | **Bài không có mô tả thì ẩn đoạn mô tả** (Tech Lead 11/10/2026) | — | Không dùng câu mặc định |
 | Q40 | **Mở thẳng URL bài đang khoá: hiện màn ở trạng thái khoá, nút ra toast "Hoàn thành bài trước để mở khoá."** (PO 11/10/2026) | — | Trạng thái khoá do backend tính (Q18) |
 | Q41 | **Bài không tồn tại, chưa sẵn sàng hoặc id sai: trang not-found tiếng Việt trong learner (có tab bar, link "Về lộ trình")** (Tech Lead 11/10/2026) | — | — |
-| Q42 | **Màn bài học áp chuẩn như Q28: nút cao 44px thật, icon khoá stone-500, chữ nhỏ và chip đạt 4,5:1** (PO 11/10/2026) | Bản demo: CTA 33px, khoá `#d6d4d8` | `assets/css/m02.css` sẽ sửa theo khi làm M2.5a |
+| Q42 | **Màn bài học áp chuẩn như Q28: nút cao 44px thật, icon khoá stone-500, chữ nhỏ và chip đạt 4,5:1** (PO 11/10/2026) | Bản demo: CTA 33px, khoá `#d6d4d8` | `assets/css/m02.css` và `learner/lesson.html` đã sửa theo (ghi chú 32) |
 | Q43 | **Backend làm trước (M2.B13): mở rộng `GET /learning/lessons/:id/activity` với cấp độ, vị trí, trạng thái khoá, số liệu từng phần, kèm DTO có kiểu** (Tech Lead 11/10/2026) | — | Một lần gọi cho màn bài học; dùng lại cho M2.5b |
+| Q44 | **Bài khoá: dòng có icon khoá, không số/thanh; nút "Tiếp tục học" xám (aria-disabled); bấm dòng hoặc nút ra toast "Hoàn thành bài trước để mở khoá."** (PO 11/10/2026) | — | Bổ sung Q40 |
