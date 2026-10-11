@@ -13,12 +13,15 @@ import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
+import { ApiEnvelope } from '../../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
 import {
   EmptyLessonActivityWriteDto,
   SubmitLessonExerciseAttemptDto,
 } from './dto/lesson-activity-write.dto';
+import { LessonActivityResponseDto } from './dto/lesson-activity-response.dto';
 import { LessonActivityService } from './lesson-activity.service';
 
 const IDEMPOTENCY_KEY_HEADER = {
@@ -63,10 +66,11 @@ export class LessonActivityController {
   }
 
   @Get('lessons/:lessonId/activity')
+  @ApiEnvelope(LessonActivityResponseDto)
   getLessonActivity(
     @Req() request: AuthenticatedRequest,
     @Param('lessonId', ParsePositiveSafeIntegerPipe) lessonId: number,
-  ) {
+  ): Promise<ApiSuccessResponse<LessonActivityResponseDto>> {
     return this.activityService.getLessonActivity(request.user.id, lessonId);
   }
 

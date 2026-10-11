@@ -90,7 +90,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
   `ip:<req.ip>`. Các route ghi /IP luôn khoá theo IP. Route đếm theo user sẽ đếm theo IP
-  khi request không có bearer hợp lệ (ví dụ `/auth/me` trả 401). `req.ip` lấy từ
+  khi request không có bearer hợp lệ (không gửi bearer, hoặc token sai chữ ký hay hết
+  hạn; token còn hạn nhưng session đã bị thu hồi vẫn đếm theo user). `req.ip` lấy từ
   `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
   cửa sổ cố định lưu ở bảng PostgreSQL `RateLimitCounter`, dùng chung mọi replica;
   vượt giới hạn thì khoá hết thời gian `ttl` của route (60 giây hoặc 15 phút), hit
@@ -438,11 +439,26 @@ raw answer.
 timeSpentSeconds, startedAt, completedAt, lastActivityAt, lesson: { title, slug } }`.
 Score bài học là trung bình điểm tốt nhất của các bài **đã làm** (D-03).
 
-Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, progress,
+Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, level,
+position, state, sections, progress,
 topics: [{ …topic, progress: {…}, exercises: PublicExercise[] }], standaloneExercises:
 PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
+Trường thêm cho màn bài học (M2.B13, Q43):
+- `level`: `{ id, code, name }` của Level chứa bài.
+- `position`, `state`: cùng định nghĩa và cùng code với `GET /learning/path` (đọc từ
+  `loadLevelPaths`, chỉ thu hẹp về level của bài); `state ∈ done | current | available | locked`.
+  Bài đang khoá vẫn trả `200` với `state: "locked"`; chỉ `POST start` chặn.
+- `sections.vocabulary`: `{ wordCount, topicCount, topicsDone }`. `wordCount` = đúng tập
+  `words` của `GET /learning/lessons/:id` (LessonWord có Word published, chưa xoá).
+- `sections.grammar`: `{ topicCount, topicsDone }`.
+  `topicCount` đếm topic public (published, chưa xoá) có `type` `vocabulary` hoặc `grammar`
+  tương ứng; `topicsDone` là số topic đó có UserTopicProgress `done` của user.
+- `sections.practice`: `{ exerciseCount, attempted }`. `exerciseCount` = số exercise public
+  của bài (cùng tập `topics[].exercises` + `standaloneExercises`, loại `speaking_repeat`);
+  `attempted` = số exercise trong tập đó có ít nhất một attempt đã submit của user.
+- Mọi trường của activity đọc từ cùng một snapshot (REPEATABLE READ).
 
 Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextLesson }`.
 - `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`, cùng giá trị
@@ -503,8 +519,9 @@ lesson first.`. Thứ tự lỗi:
 `409
 lesson_locked` rollback cả transaction: không tạo Progress hay event, plan item giữ `planned`,
 key không bị tiêu (gọi lại cùng key sau khi bài trước xong sẽ thành công). `GET
-/learning/lessons/:lessonId/activity` không phản ánh khoá: `nextAction` vẫn có thể là
-`start_lesson` cho bài đang khoá; frontend dựa vào `GET /learning/path`. Topic start, attempt
+/learning/lessons/:lessonId/activity` trả `state` (cùng giá trị với `GET /learning/path`);
+chỉ `POST start` chặn bằng `409 lesson_locked`. `nextAction` vẫn có thể là `start_lesson`
+cho bài đang khoá. Topic start, attempt
 và complete trên bài chưa start vẫn trả `409` `Lesson must be started first.`.
 
 Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text }`;

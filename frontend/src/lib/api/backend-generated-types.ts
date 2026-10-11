@@ -1696,6 +1696,137 @@ export interface components {
             slug: string;
         };
         EmptyLessonActivityWriteDto: Record<string, never>;
+        LessonActivityLessonDto: {
+            id: number;
+            title: string;
+            description: string | null;
+            slug: string;
+            orderIndex: number;
+            levelId: number;
+        };
+        LessonActivityLevelDto: {
+            id: number;
+            code: string;
+            name: string;
+        };
+        LessonActivityVocabularySectionDto: {
+            /** @description Same words as `GET /lessons/:id`. */
+            wordCount: number;
+            /** @description Public topics of type `vocabulary`. */
+            topicCount: number;
+            topicsDone: number;
+        };
+        LessonActivityGrammarSectionDto: {
+            /** @description Public topics of type `grammar`. */
+            topicCount: number;
+            topicsDone: number;
+        };
+        LessonActivityPracticeSectionDto: {
+            /** @description Public exercises of the lesson, as listed in this response. */
+            exerciseCount: number;
+            /** @description Exercises with at least one submitted attempt by the learner. */
+            attempted: number;
+        };
+        LessonActivitySectionsDto: {
+            vocabulary: components["schemas"]["LessonActivityVocabularySectionDto"];
+            grammar: components["schemas"]["LessonActivityGrammarSectionDto"];
+            practice: components["schemas"]["LessonActivityPracticeSectionDto"];
+        };
+        LessonActivityProgressDto: {
+            score: number | null;
+            /** @enum {string} */
+            status: "done" | "learning" | "not_started";
+            completionPercent: number;
+            timeSpentSeconds: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            lastActivityAt: string | null;
+        };
+        LessonActivityTopicProgressDto: {
+            /** @enum {string} */
+            status: "done" | "learning" | "not_started";
+            completionPercent: number;
+            timeSpentSeconds: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            lastActivityAt: string | null;
+        };
+        LessonActivityAttemptDto: {
+            attemptId: number;
+            exerciseId: number;
+            attemptNumber: number;
+            isCorrect: boolean | null;
+            score: number | null;
+            durationSeconds: number | null;
+            exerciseVersion: number;
+            feedbackVersion: string | null;
+            explanation: string | null;
+            media: components["schemas"]["LessonDetailExerciseMediaDto"] | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+        };
+        LessonActivityExerciseDto: {
+            /**
+             * @description Only publishable types reach learners; `speaking_repeat` never does.
+             * @enum {string}
+             */
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence";
+            content: {
+                [key: string]: unknown;
+            } | unknown[];
+            id: number;
+            topicId: number | null;
+            prompt: string;
+            version: number;
+            orderIndex: number;
+            media: components["schemas"]["LessonDetailExerciseMediaDto"] | null;
+            latestAttempt: components["schemas"]["LessonActivityAttemptDto"] | null;
+        };
+        LessonActivityTopicDto: {
+            content: {
+                [key: string]: unknown;
+            } | unknown[];
+            id: number;
+            title: string;
+            subtitle: string | null;
+            /** @enum {string} */
+            type: "vocabulary" | "grammar" | "key_text" | "quiz" | "ai_speaking";
+            orderIndex: number;
+            isPremium: boolean;
+            isLocked: boolean;
+            progress: components["schemas"]["LessonActivityTopicProgressDto"];
+            exercises: components["schemas"]["LessonActivityExerciseDto"][];
+        };
+        LessonActivityCurrentTopicDto: {
+            id: number;
+            title: string;
+            orderIndex: number;
+        };
+        LessonActivityResponseDto: {
+            /**
+             * @description Q18 state, as in `GET /learning/path`; a locked lesson still reads.
+             * @enum {string}
+             */
+            state: "done" | "current" | "available" | "locked";
+            /** @enum {string} */
+            nextAction: "start_lesson" | "submit_exercise" | "complete_topic" | "complete_lesson" | "completed";
+            lesson: components["schemas"]["LessonActivityLessonDto"];
+            level: components["schemas"]["LessonActivityLevelDto"];
+            /** @description 1..N among the ready lessons of the level, as in `GET /learning/path`. */
+            position: number;
+            sections: components["schemas"]["LessonActivitySectionsDto"];
+            progress: components["schemas"]["LessonActivityProgressDto"];
+            topics: components["schemas"]["LessonActivityTopicDto"][];
+            standaloneExercises: components["schemas"]["LessonActivityExerciseDto"][];
+            currentTopic: components["schemas"]["LessonActivityCurrentTopicDto"] | null;
+            currentExercise: components["schemas"]["LessonActivityExerciseDto"] | null;
+        };
         SubmitLessonExerciseAttemptDto: {
             answer: {
                 [key: string]: unknown;
@@ -3711,7 +3842,7 @@ export interface operations {
                     "application/json": {
                         /** @enum {boolean} */
                         success: true;
-                        data: unknown;
+                        data: components["schemas"]["LessonActivityResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

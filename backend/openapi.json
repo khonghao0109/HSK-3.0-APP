@@ -3854,7 +3854,9 @@
                         true
                       ]
                     },
-                    "data": {},
+                    "data": {
+                      "$ref": "#/components/schemas/LessonActivityResponseDto"
+                    },
                     "meta": {
                       "$ref": "#/components/schemas/ApiResponseMetaDto"
                     }
@@ -6771,6 +6773,525 @@
       "EmptyLessonActivityWriteDto": {
         "type": "object",
         "properties": {}
+      },
+      "LessonActivityLessonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "levelId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "slug",
+          "orderIndex",
+          "levelId"
+        ]
+      },
+      "LessonActivityLevelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ]
+      },
+      "LessonActivityVocabularySectionDto": {
+        "type": "object",
+        "properties": {
+          "wordCount": {
+            "type": "number",
+            "description": "Same words as `GET /lessons/:id`."
+          },
+          "topicCount": {
+            "type": "number",
+            "description": "Public topics of type `vocabulary`."
+          },
+          "topicsDone": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "wordCount",
+          "topicCount",
+          "topicsDone"
+        ]
+      },
+      "LessonActivityGrammarSectionDto": {
+        "type": "object",
+        "properties": {
+          "topicCount": {
+            "type": "number",
+            "description": "Public topics of type `grammar`."
+          },
+          "topicsDone": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "topicCount",
+          "topicsDone"
+        ]
+      },
+      "LessonActivityPracticeSectionDto": {
+        "type": "object",
+        "properties": {
+          "exerciseCount": {
+            "type": "number",
+            "description": "Public exercises of the lesson, as listed in this response."
+          },
+          "attempted": {
+            "type": "number",
+            "description": "Exercises with at least one submitted attempt by the learner."
+          }
+        },
+        "required": [
+          "exerciseCount",
+          "attempted"
+        ]
+      },
+      "LessonActivitySectionsDto": {
+        "type": "object",
+        "properties": {
+          "vocabulary": {
+            "$ref": "#/components/schemas/LessonActivityVocabularySectionDto"
+          },
+          "grammar": {
+            "$ref": "#/components/schemas/LessonActivityGrammarSectionDto"
+          },
+          "practice": {
+            "$ref": "#/components/schemas/LessonActivityPracticeSectionDto"
+          }
+        },
+        "required": [
+          "vocabulary",
+          "grammar",
+          "practice"
+        ]
+      },
+      "LessonActivityProgressDto": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "learning",
+              "not_started"
+            ]
+          },
+          "completionPercent": {
+            "type": "number"
+          },
+          "timeSpentSeconds": {
+            "type": "number"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "score",
+          "status",
+          "completionPercent",
+          "timeSpentSeconds",
+          "startedAt",
+          "completedAt",
+          "lastActivityAt"
+        ]
+      },
+      "LessonActivityTopicProgressDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "learning",
+              "not_started"
+            ]
+          },
+          "completionPercent": {
+            "type": "number"
+          },
+          "timeSpentSeconds": {
+            "type": "number"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status",
+          "completionPercent",
+          "timeSpentSeconds",
+          "startedAt",
+          "completedAt",
+          "lastActivityAt"
+        ]
+      },
+      "LessonActivityAttemptDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "number"
+          },
+          "exerciseId": {
+            "type": "number"
+          },
+          "attemptNumber": {
+            "type": "number"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "durationSeconds": {
+            "type": "number",
+            "nullable": true
+          },
+          "exerciseVersion": {
+            "type": "number"
+          },
+          "feedbackVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonDetailExerciseMediaDto"
+              }
+            ]
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "attemptId",
+          "exerciseId",
+          "attemptNumber",
+          "isCorrect",
+          "score",
+          "durationSeconds",
+          "exerciseVersion",
+          "feedbackVersion",
+          "explanation",
+          "media",
+          "submittedAt"
+        ]
+      },
+      "LessonActivityExerciseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "Only publishable types reach learners; `speaking_repeat` never does.",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "listening_choice",
+              "arrange_sentence"
+            ],
+            "type": "string"
+          },
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "topicId": {
+            "type": "number",
+            "nullable": true
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonDetailExerciseMediaDto"
+              }
+            ]
+          },
+          "latestAttempt": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonActivityAttemptDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "content",
+          "id",
+          "topicId",
+          "prompt",
+          "version",
+          "orderIndex",
+          "media",
+          "latestAttempt"
+        ]
+      },
+      "LessonActivityTopicDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "vocabulary",
+              "grammar",
+              "key_text",
+              "quiz",
+              "ai_speaking"
+            ]
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "isPremium": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LessonActivityTopicProgressDto"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonActivityExerciseDto"
+            }
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "title",
+          "subtitle",
+          "type",
+          "orderIndex",
+          "isPremium",
+          "isLocked",
+          "progress",
+          "exercises"
+        ]
+      },
+      "LessonActivityCurrentTopicDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "orderIndex"
+        ]
+      },
+      "LessonActivityResponseDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "description": "Q18 state, as in `GET /learning/path`; a locked lesson still reads.",
+            "enum": [
+              "done",
+              "current",
+              "available",
+              "locked"
+            ],
+            "type": "string"
+          },
+          "nextAction": {
+            "enum": [
+              "start_lesson",
+              "submit_exercise",
+              "complete_topic",
+              "complete_lesson",
+              "completed"
+            ],
+            "type": "string"
+          },
+          "lesson": {
+            "$ref": "#/components/schemas/LessonActivityLessonDto"
+          },
+          "level": {
+            "$ref": "#/components/schemas/LessonActivityLevelDto"
+          },
+          "position": {
+            "type": "number",
+            "description": "1..N among the ready lessons of the level, as in `GET /learning/path`."
+          },
+          "sections": {
+            "$ref": "#/components/schemas/LessonActivitySectionsDto"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LessonActivityProgressDto"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonActivityTopicDto"
+            }
+          },
+          "standaloneExercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonActivityExerciseDto"
+            }
+          },
+          "currentTopic": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonActivityCurrentTopicDto"
+              }
+            ]
+          },
+          "currentExercise": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonActivityExerciseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "state",
+          "nextAction",
+          "lesson",
+          "level",
+          "position",
+          "sections",
+          "progress",
+          "topics",
+          "standaloneExercises",
+          "currentTopic",
+          "currentExercise"
+        ]
       },
       "SubmitLessonExerciseAttemptDto": {
         "type": "object",
