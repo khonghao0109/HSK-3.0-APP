@@ -321,6 +321,84 @@ test.describe('Learner path (M2.4b)', () => {
     expect(fits).toEqual([true, true]);
   });
 
+  test('fits 310px with two columns, no lesson art and no number over the state icon', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.setViewportSize({ width: 310, height: 640 });
+    await page.goto('/learn/path');
+    await expect(page.locator('.topic.is-current')).toHaveCount(1);
+
+    const columns = await page
+      .locator('.path-grid')
+      .evaluate((node) =>
+        window.getComputedStyle(node).gridTemplateColumns.split(' '),
+      );
+    expect(columns).toHaveLength(2);
+
+    const arts = page.locator('.topic__art');
+    const artCount = await arts.count();
+    expect(artCount).toBeGreaterThan(0);
+    for (let i = 0; i < artCount; i += 1) {
+      await expect(arts.nth(i)).toBeHidden();
+    }
+
+    const overlaps = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.topic')).flatMap((tile, index) => {
+        const no = tile.querySelector('.topic__no')?.getBoundingClientRect();
+        const state = tile
+          .querySelector('.topic__state')
+          ?.getBoundingClientRect();
+        if (!no || !state) return [];
+        const apart =
+          no.right <= state.left ||
+          state.right <= no.left ||
+          no.bottom <= state.top ||
+          state.bottom <= no.top;
+        return apart ? [] : [index];
+      }),
+    );
+    expect(overlaps).toEqual([]);
+  });
+
+  test('focused empty level panel shows an inset focus ring', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto('/learn/path');
+    await expect(page.locator('ol.path-grid')).toHaveCount(1);
+
+    await levelTab(page, 'HSK 2').click();
+    await expect(page.locator('.path-sub')).toHaveText('HSK 2 chưa mở.');
+    const panel = page.getByRole('tabpanel');
+    await expect(panel).toHaveAttribute('tabindex', '0');
+
+    let reached = false;
+    for (let i = 0; i < 30 && !reached; i += 1) {
+      await page.keyboard.press('Tab');
+      reached = await panel.evaluate((node) => node === document.activeElement);
+    }
+    expect(reached, 'panel reachable by Tab').toBe(true);
+    expect(await panel.evaluate((node) => node.matches(':focus-visible'))).toBe(
+      true,
+    );
+    const boxShadow = await panel.evaluate(
+      (node) => window.getComputedStyle(node).boxShadow,
+    );
+    expect(boxShadow).toContain('inset');
+    const paddingBottom = (node: Element) =>
+      window.getComputedStyle(node).paddingBottom;
+    expect(await panel.evaluate(paddingBottom)).toBe('8px');
+
+    await levelTab(page, 'HSK 3').click();
+    await expect(page.locator('ol.path-grid')).toHaveCount(1);
+    expect(await page.getByRole('tabpanel').evaluate(paddingBottom)).toBe(
+      '0px',
+    );
+  });
+
   test('level tabs are hittable across their full 44px height', async ({
     page,
     baseURL,

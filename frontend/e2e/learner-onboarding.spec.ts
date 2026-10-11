@@ -670,4 +670,60 @@ test.describe('Learner Onboarding Flow', () => {
       'selected level number must reach 4.5:1 against its fill',
     ).toBeGreaterThanOrEqual(4.5);
   });
+
+  test('9. hard-loading goal and plan pages raises no CSP violation', async ({
+    page,
+  }) => {
+    const email = `learner.ob9.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.test`;
+    const password = 'StrongPassword123!';
+
+    await page.goto('/sign-up');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
+    await expect(page).toHaveURL(/\/onboarding\/goal/);
+
+    const cspConsole: string[] = [];
+    page.on('console', (message) => {
+      const text = message.text();
+      if (text.includes('Content Security Policy')) cspConsole.push(text);
+    });
+    await page.addInitScript(() => {
+      const store: string[] = [];
+      Object.defineProperty(window, '__cspViolations', { value: store });
+      document.addEventListener('securitypolicyviolation', (event) => {
+        store.push(`${event.violatedDirective} ${event.blockedURI}`);
+      });
+    });
+    const readViolations = () =>
+      page.evaluate(() => {
+        const value: unknown = Reflect.get(window, '__cspViolations');
+        return Array.isArray(value) ? value.map(String) : null;
+      });
+
+    // Zod 4 probes Function("") on init; under a CSP without unsafe-eval that
+    // is a violation, so client bundles of these pages must not contain Zod.
+    // Each page is read only after a click that needs React event handlers,
+    // so the client bundle has loaded and hydrated before violations are read.
+    await page.goto('/onboarding/goal');
+    await expect(page.getByRole('radio', { name: /Thi/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+    const studyAbroad = page.getByRole('radio', { name: 'Du học' });
+    await expect(studyAbroad).toHaveAttribute('aria-checked', 'false');
+    await studyAbroad.click();
+    await expect(studyAbroad).toHaveAttribute('aria-checked', 'true');
+    expect(await readViolations()).toEqual([]);
+
+    await page.goto('/onboarding/plan?purpose=communication&band=3');
+    await expect(page).toHaveURL(
+      /\/onboarding\/plan\?purpose=communication&band=3/,
+    );
+    await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+    const fastPace = page.getByRole('radio', { name: /30/ });
+    await expect(fastPace).toHaveAttribute('aria-checked', 'false');
+    await fastPace.click();
+    await expect(fastPace).toHaveAttribute('aria-checked', 'true');
+    expect(await readViolations()).toEqual([]);
+    expect(cspConsole).toEqual([]);
+  });
 });

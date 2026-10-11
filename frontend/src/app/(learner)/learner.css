@@ -2369,6 +2369,14 @@ html:has(.learner-app) {
   padding: 10px 18px 0 15px;
 }
 
+.learner-app .path-panel:not(:has(.path-grid)) {
+  padding-bottom: 8px;
+}
+
+.learner-app .path-panel:focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
 .learner-app .path-title {
   font-family: var(--font-sans);
   font-size: 0.97rem;
@@ -2615,7 +2623,23 @@ html:has(.learner-app) {
     gap: 8px;
   }
 
-  /* Three columns leave ~46px tiles where the number overlaps the icon. */
+  .learner-app .path-next__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The 52px bar cannot hold a two-line label and a two-line title. */
+  .learner-app .path-next__title {
+    -webkit-line-clamp: 1;
+  }
+}
+
+/* Large zoom (≤ 319px): at 300–319px three columns leave ~80–86px tiles
+   where the 42px art overlaps the number and the state icon by 2.5–5px.
+   Two columns and no tile art keep number and icon apart. From 320px the
+   art still touches by under 2px, as in the mockup. */
+@media (max-width: 319px) {
   .learner-app .path-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2627,17 +2651,6 @@ html:has(.learner-app) {
   .learner-app .topic {
     padding-top: 28px;
     min-height: 0;
-  }
-
-  .learner-app .path-next__label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* The 52px bar cannot hold a two-line label and a two-line title. */
-  .learner-app .path-next__title {
-    -webkit-line-clamp: 1;
   }
 }
 
@@ -2714,7 +2727,8 @@ html:has(.learner-app) {
   }
 
   /* Keep the outline inside the tab so the scrolling strip does not clip it. */
-  .learner-app .path-tab:focus-visible {
+  .learner-app .path-tab:focus-visible,
+  .learner-app .path-panel:focus-visible {
     outline-offset: -3px;
   }
 

@@ -77,14 +77,24 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với
+- Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
+  mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
+  `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
+  60/phút/user, `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
+  `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
+  `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
+  5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
+  `POST /users/me/deletion-request` 5/15 phút. Khi `NODE_ENV=test`, mặc định và các
+  route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên 1.000; các
+  route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
-  `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
+  `ip:<req.ip>`. Các route ghi /IP luôn khoá theo IP. Route đếm theo user sẽ đếm theo IP
+  khi request không có bearer hợp lệ (ví dụ `/auth/me` trả 401). `req.ip` lấy từ
   `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
   cửa sổ cố định lưu ở bảng PostgreSQL `RateLimitCounter`, dùng chung mọi replica;
-  vượt giới hạn thì khoá hết thời gian `ttl` (60 giây), hit trong lúc bị khoá không
-  được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
+  vượt giới hạn thì khoá hết thời gian `ttl` của route (60 giây hoặc 15 phút), hit
+  trong lúc bị khoá không được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
   (fail-closed), không bỏ qua giới hạn.
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
   exercise import 8–128; media ingestion 32–128. Cùng key cùng body → `data` gốc (`meta`

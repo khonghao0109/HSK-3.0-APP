@@ -259,6 +259,11 @@ describe('LearnerPathLevels', () => {
     expect(screen.getByRole('tabpanel')).toHaveAttribute('tabindex', '0');
   });
 
+  it('makes a loaded level with no lessons focusable', () => {
+    renderLevels('HSK2', [hsk2Empty, hsk3]);
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('tabindex', '0');
+  });
+
   it('marks the current lesson as the step', () => {
     renderLevels('HSK3');
     expect(tile('Gia đình')).toHaveAttribute('aria-current', 'step');

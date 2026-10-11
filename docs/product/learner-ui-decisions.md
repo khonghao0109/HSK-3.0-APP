@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 09/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026).
+Cập nhật: 10/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -43,7 +43,7 @@ Cập nhật: 09/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q25 | **Lộ trình: bấm ô bài đang mở và nút "Bắt đầu" ra toast "Tính năng sắp ra mắt." cho tới khi có màn bài học (M2.5)** (PO 09/10/2026) | Bản demo trỏ tới `lesson.html` | Ô bài đang khoá vẫn ra toast "Hoàn thành bài trước để mở khoá." như mẫu |
 | Q26 | **Trạng thái "có thể học" (`available`) vẽ như ô đã xong nhưng không có dấu tích** (PO 09/10/2026) | Bản demo chỉ có xong, đang học, khoá | Ô trắng, viền thường, có số thứ tự, không icon; tên đọc thêm ", có thể học"; bấm được như ô mở |
 | Q27 | **Tên bài dài hiện tối đa 2 dòng rồi "…"** (PO 09/10/2026) | Bản demo dùng tên ngắn, một dòng (`nowrap`) | Áp cho ô bài và thanh "Bài tiếp theo"; tên ngắn vẫn một dòng. `assets/css/m02.css` của bản demo đã sửa theo |
-| Q28 | **Lộ trình đạt tương phản AA và vùng bấm 44px** (PO 09/10/2026) | Chữ tab đang chọn 3,97:1; chữ trắng trên nút "Bắt đầu" và badge 3,22:1; icon khoá 2,48:1; nút "Bắt đầu" cao 25px; tab cấp rộng 40–42px | Chữ tab đang chọn jade-800; nền nút "Bắt đầu" và badge bài đang học jade-800; icon khoá stone-500 (3,86:1); nút "Bắt đầu" cao 44px (thanh cao 52px); tab cấp rộng tối thiểu 44px. `assets/css/m02.css` đã sửa theo |
+| Q28 | **Lộ trình đạt tương phản AA và vùng bấm 44px** (PO 09/10/2026) | Chữ tab đang chọn 3,97:1; chữ trắng trên nút "Bắt đầu" và badge 3,22:1; icon khoá 2,48:1; nút "Bắt đầu" cao 25px; tab cấp rộng 40–42px | Chữ tab đang chọn jade-800; nền nút "Bắt đầu" và badge bài đang học jade-800; icon khoá stone-500 (3,86:1); nút "Bắt đầu" cao 44px (thanh cao 52px); tab cấp rộng tối thiểu 44px. `assets/css/m02.css` đã sửa theo. Thanh tab cấp cao 45px để tab 44px nằm trọn (Tech Lead 09/10/2026). Khi zoom lớn: dưới 320px lưới 2 cột, ẩn ảnh trong ô; dưới 300px thanh Bài tiếp theo một dòng, bỏ ảnh (Tech Lead 10/10/2026). |
 | Q29 | **Cấp chưa có bài: giữ tiêu đề "Lộ trình HSK n", thay phụ đề bằng "HSK n chưa mở." và bỏ lưới bài** (PO 09/10/2026) | Bản demo vẽ 12 ô khoá cho HSK 4–9 | Áp cho cấp không có trong API và cấp có `lessons: []`; tab vẫn bấm được (Q19) |
 | Q30 | **Không còn bài tiếp theo (`nextLesson = null`) thì ẩn thanh "Bài tiếp theo"** (PO 09/10/2026) | Bản demo luôn có thanh | Như Trang chủ ẩn "Tiếp tục học" |
 | Q31 | **Nút ở thanh "Bài tiếp theo" luôn ghi "Bắt đầu"** (PO 09/10/2026) | — | Kể cả khi bài đã học dở; nhất quán với Q24 |

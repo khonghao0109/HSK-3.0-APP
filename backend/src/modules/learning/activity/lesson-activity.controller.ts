@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -26,6 +27,14 @@ const IDEMPOTENCY_KEY_HEADER = {
   description:
     'Replaying a key with the same request returns the original result.',
 };
+
+export const EXERCISE_ATTEMPT_LIMIT_PER_MINUTE = 60;
+
+export function exerciseAttemptLimit(): number {
+  return process.env.NODE_ENV === 'test'
+    ? 1_000
+    : EXERCISE_ATTEMPT_LIMIT_PER_MINUTE;
+}
 
 type AuthenticatedRequest = Request & {
   user: { id: number; email: string; role: string };
@@ -110,6 +119,8 @@ export class LessonActivityController {
   }
 
   @Post('exercises/:exerciseId/attempts')
+  // At most 1 attempt per second per user; writes stay bounded and idempotent.
+  @Throttle({ default: { limit: exerciseAttemptLimit, ttl: 60_000 } })
   @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   submitAttempt(
     @Req() request: AuthenticatedRequest,
