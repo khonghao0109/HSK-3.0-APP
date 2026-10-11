@@ -26,6 +26,8 @@ Mockup `01-onboarding-placement/03` trỏ tới [ui_image/README.md](./ui_image/
 4. Thêm dòng vào mục 8 (nhật ký) khi đổi trạng thái milestone.
 5. Lộ trình mục 1 và bảng chi tiết mục 4 phải cùng trạng thái cho cùng một mã; bằng
    chứng ghi ở mục 4, mục 1 chỉ ghi ngắn.
+6. Tổng = tổng cột 'Task xong / tổng' của bảng 1.1; mỗi GĐ = số dòng có ô trạng thái trong bảng
+   của mục GĐ đó, kể cả mã `0.n` và `#n`; chỉ ✅ tính là xong.
 
 ## 1. Lộ trình hoàn thành dự án
 
@@ -46,14 +48,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 17 / 39 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 18 / 40 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **75 / 152 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **76 / 153 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -217,8 +219,9 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
 | M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
-| M2.B11 | Rate limit theo route cho luồng learner: `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts` 60/phút/user; sửa mô tả rate limit trong `docs/api/api.md` và `docs/architecture/overview.md` (20/phút là cho mỗi route và mỗi user/IP) | 🟡 | 10/10: chờ review; kèm việc nhỏ còn lại của M2.7d (`client-bundle-guard.spec.ts`, padding panel trống) |
-| M2.B12 | Media cho player M2.5 | ⬜ | Đầu vào: `GET /media/:id/content` là route public nên bị đếm theo IP: learner sau NAT/CGNAT chia chung 20/phút; signed URL của learner sống 60 giây, nghe lại phải xin access mới; ký URL cho từng từ vựng sẽ vượt 20/phút ở `media/:id/access`; nginx chưa có `limit_req`, tức lớp anonymous mà ADR-008 §2 dựa vào chưa tồn tại; cần quyết định trước khi làm M2.5b |
+| M2.B11 | Rate limit theo route cho luồng learner: `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts` 60/phút/user; sửa mô tả rate limit trong `docs/api/api.md` và `docs/architecture/overview.md` (20/phút là cho mỗi route và mỗi user/IP) | ✅ | 11/10: ✅ đã đóng (`ca0462f`, `c1e0ec9`, `1ec914c`, `b16401e`, PR #6 run `38104896978`); kèm việc nhỏ còn lại của M2.7d (`client-bundle-guard.spec.ts`, padding panel trống) |
+| M2.B12 | Media cho player M2.5 | ⬜ | Đầu vào: `GET /media/:id/content` là route public nên bị đếm theo IP: learner sau NAT/CGNAT chia chung 20/phút; signed URL của learner sống 60 giây, nghe lại phải xin access mới; ký URL cho từng từ vựng sẽ vượt 20/phút ở `media/:id/access`; nginx chưa có `limit_req`, tức lớp anonymous mà ADR-008 §2 dựa vào chưa tồn tại; cần quyết định trước khi làm M2.5b; backlog 11/10: media grant của learner không kiểm Level published |
+| M2.B13 | Mở rộng `GET /learning/lessons/:lessonId/activity` cho màn bài học (Q43): `level`, `position`, `state` cùng nguồn với `GET /learning/path`, `sections` (từ vựng, ngữ pháp, luyện tập) | 🟡 | 11/10: chờ review |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: `2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`. POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
 | M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận fragment `#token=`, gọi confirm API |
@@ -232,7 +235,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
 | M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) đã đóng cùng M2.4b 10/10; `02-learning-lesson/01`; Q21–Q24 |
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
-| M2.5a | Trang nội dung bài học | ⬜ | 02/03 |
+| M2.5a | Trang nội dung bài học | ⬜ | 02/03; Q32–Q43; chờ M2.B13 |
 | M2.5b | Activity player: mcq, fill_blank | ⬜ | 02/04,05 |
 | M2.5c | Activity player: listening, arrange | ⬜ | |
 | M2.5d | Hoàn thành bài, tổng kết, cập nhật progress | ⬜ | 02/06 |
@@ -473,8 +476,9 @@ UI và phần backend còn thiếu:
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
 | M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
-| M2.B11 | Rate limit theo route cho luồng learner: `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts` 60/phút/user; sửa mô tả rate limit trong `docs/api/api.md` và `docs/architecture/overview.md` (20/phút là cho mỗi route và mỗi user/IP) | 🟡 | 10/10: chờ review; kèm việc nhỏ còn lại của M2.7d (`client-bundle-guard.spec.ts`, padding panel trống) |
-| M2.B12 | Media cho player M2.5 | ⬜ | Đầu vào: `GET /media/:id/content` là route public nên bị đếm theo IP: learner sau NAT/CGNAT chia chung 20/phút; signed URL của learner sống 60 giây, nghe lại phải xin access mới; ký URL cho từng từ vựng sẽ vượt 20/phút ở `media/:id/access`; nginx chưa có `limit_req`, tức lớp anonymous mà ADR-008 §2 dựa vào chưa tồn tại; cần quyết định trước khi làm M2.5b |
+| M2.B11 | Rate limit theo route cho luồng learner: `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts` 60/phút/user; sửa mô tả rate limit trong `docs/api/api.md` và `docs/architecture/overview.md` (20/phút là cho mỗi route và mỗi user/IP) | ✅ | 11/10: ✅ đã đóng (`ca0462f`, `c1e0ec9`, `1ec914c`, `b16401e`, PR #6 run `38104896978`); kèm việc nhỏ còn lại của M2.7d (`client-bundle-guard.spec.ts`, padding panel trống) |
+| M2.B12 | Media cho player M2.5 | ⬜ | Đầu vào: `GET /media/:id/content` là route public nên bị đếm theo IP: learner sau NAT/CGNAT chia chung 20/phút; signed URL của learner sống 60 giây, nghe lại phải xin access mới; ký URL cho từng từ vựng sẽ vượt 20/phút ở `media/:id/access`; nginx chưa có `limit_req`, tức lớp anonymous mà ADR-008 §2 dựa vào chưa tồn tại; cần quyết định trước khi làm M2.5b; backlog 11/10: media grant của learner không kiểm Level published |
+| M2.B13 | Mở rộng `GET /learning/lessons/:lessonId/activity` cho màn bài học (Q43): `level`, `position`, `state` cùng nguồn với `GET /learning/path`, `sections` (từ vựng, ngữ pháp, luyện tập) | 🟡 | 11/10: chờ review |
 | M2.1a | Learner session BFF: cookie riêng, route `/api/learner/session/*` cho learner | ✅ | ADR-003; 01/10: ✅ đã đóng (`2bd2da9`, kèm `13b9d72`, PR #5 run `36815829812`), POST login/register/logout, GET me, cookie riêng LEARNER_SESSION_COOKIE_NAME, chặn role admin 403 admin_account, proxy refresh theo đường dẫn |
 | M2.1b | UI đăng ký, đăng nhập, đăng xuất | ✅ | mockup 01/01,02; 05/10: ✅ đã đóng (`8d09d41`, `23ecd30`, `d774724`, `cc9b0e9`, `88d155f`, PR #5 run `37255512085`). 6 route /(learner), guard server, form auth, nút logout, Playwright e2e |
 | M2.1c | Trang `/verify-email` (frontend) | ⬜ | Việc còn lại sau M1.5b: nhận token từ URL fragment `#token=`, gọi POST /auth/email-verification/confirm |
@@ -671,3 +675,4 @@ khi vertical slice bắt đầu.
 | 09/10/2026 | GĐ5: M2.4b FIX, vẫn 🟡 chờ review: thanh tab cấp cao 45px (tab 44px nằm trọn, vùng bấm đủ, vòng focus không bị cắt); dưới 300px lưới bài 2 cột, ẩn ô minh hoạ bài, nhãn và tên ở thanh "Bài tiếp theo" một dòng; forced colors giữ viền focus trong tab và viền Highlight khi rê ô đang học; phím tắt có Alt/Ctrl/Meta không đổi tab; panel cấp chưa có bài nhận focus. Tên đọc của ô bài (dấu cách trước dấu phẩy) chưa sửa, chờ quyết định. Đếm lại bằng script theo từng dòng task: GĐ5 16/36. Tổng 74/149. |
 | 10/10/2026 | GĐ5: M2.4b ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`). M2.7d 🟡 chờ review (Lộ trình dưới 320px lưới 2 cột, ẩn ảnh trong ô, thanh "Bài tiếp theo" một dòng giữ dưới 300px; vòng focus inset cho panel cấp, forced colors `outline-offset: -3px`; ghi Q28; tách `LEARNING_PURPOSES`, `parseGoalPageSearchParams`, `resolveLevelForBand`, `availableBands`, `localDateString` sang `onboarding-values.ts` không kéo Zod để hard-load `/onboarding/goal` không vi phạm CSP; test chốt chặn `client-bundle-guard.spec.ts`). Tên đọc của ô bài (dấu cách trước dấu phẩy): Tech Lead bỏ, vì là lỗi hình thức và trình đọc màn hình đọc không khác. Đếm lại bằng script theo từng dòng task: GĐ5 17/37. Tổng 75/150. |
 | 10/10/2026 | GĐ5: M2.B11 🟡 chờ review (rate limit theo route cho luồng learner: `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts` 60/phút/user, 1.000 khi `NODE_ENV=test`; giữ bucket theo route, các route khác, bucket IP của auth và bảng `RateLimitCounter`; sửa mô tả rate limit ở `docs/api/api.md` và `docs/architecture/overview.md`; kèm việc nhỏ còn lại của M2.7d: `client-bundle-guard.spec.ts` coi file không phải code là nút lá, thử `.ts`/`.tsx` cho specifier `.js`, resolve `.`/`..`; e2e kiểm padding-bottom panel trống). Thêm M2.B12 ⬜ Media cho player M2.5 (route media public bị đếm theo IP, signed URL 60 giây, nginx chưa có `limit_req`; cần quyết định trước M2.5b). Đếm lại bằng script theo từng dòng task: GĐ5 17/39. Tổng 75/152. |
+| 11/10/2026 | GĐ5: M2.B11 ✅ đã đóng (`ca0462f`, `c1e0ec9`, `1ec914c`, `b16401e`, PR #6 run `38104896978`). M2.B13 🟡 chờ review (mở rộng activity cho màn bài học, Q43: `level`, `position`, `state` cùng nguồn `loadLevelPaths` với Path, `sections` đếm từ vựng/ngữ pháp/luyện tập; bài khoá đọc `200` với `state: "locked"`, `POST start` vẫn `409 lesson_locked`). M2.5a ghi Q32–Q43, chờ M2.B13. Backlog: (1) public lesson detail dùng `ParseIntPipe`, cần kiểm id > int32; (2) `NextActivityAction` có giá trị bắt đầu topic mà không bao giờ trả (đã gỡ ở FIX M2.B13); (3) media grant của learner không kiểm Level published (gắn vào M2.B12). Đếm lại bằng script theo từng dòng task: GĐ5 18/40. Tổng 76/153. |
