@@ -1,6 +1,16 @@
 // @vitest-environment node
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
@@ -116,6 +126,8 @@ function runtimeSpecifiers(source: ts.SourceFile): string[] {
 
 function isLocalSpecifier(specifier: string): boolean {
   return (
+    specifier === '.' ||
+    specifier === '..' ||
     specifier.startsWith('./') ||
     specifier.startsWith('../') ||
     specifier.startsWith('@/')
@@ -124,30 +136,59 @@ function isLocalSpecifier(specifier: string): boolean {
 
 class UnresolvedImportError extends Error {}
 
-function resolveLocal(fromFile: string, specifier: string): string | null {
-  let base: string;
-  if (specifier.startsWith('@/')) {
-    base = join(srcRoot, specifier.slice(2));
-  } else if (specifier.startsWith('./') || specifier.startsWith('../')) {
-    base = resolve(dirname(fromFile), specifier);
-  } else {
-    return null;
+// Local files that exist but are not code: leaf nodes, never walked.
+const ASSET_EXTENSIONS = [
+  '.css',
+  '.scss',
+  '.json',
+  '.svg',
+  '.png',
+  '.jpg',
+  '.webp',
+  '.woff2',
+];
+const ASSET = Symbol('asset');
+
+function isFile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile();
+}
+
+function resolveLocal(
+  fromFile: string,
+  specifier: string,
+): string | typeof ASSET | null {
+  if (!isLocalSpecifier(specifier)) return null;
+  const base = specifier.startsWith('@/')
+    ? join(srcRoot, specifier.slice(2))
+    : resolve(dirname(fromFile), specifier);
+  const indexes = EXTENSIONS.map((ext) => join(base, `index${ext}`));
+  // Directory specifiers ('.', '..', 'x/', 'x/.', 'x/..') resolve only to the
+  // directory index, never to a sibling '<dir>.ts'.
+  if (
+    specifier === '.' ||
+    specifier === '..' ||
+    specifier.endsWith('/') ||
+    specifier.endsWith('/.') ||
+    specifier.endsWith('/..')
+  ) {
+    return indexes.find(isFile) ?? null;
   }
+  if (ASSET_EXTENSIONS.includes(extname(base)) && isFile(base)) return ASSET;
   const candidates = [
+    // './x.js' written for ESM resolves to x.ts / x.tsx first.
+    ...(base.endsWith('.js')
+      ? EXTENSIONS.map((ext) => base.slice(0, -3) + ext)
+      : []),
     base,
     ...EXTENSIONS.map((ext) => base + ext),
-    ...EXTENSIONS.map((ext) => join(base, `index${ext}`)),
+    ...indexes,
   ];
-  for (const candidate of candidates) {
-    if (
-      EXTENSIONS.some((ext) => candidate.endsWith(ext)) &&
-      existsSync(candidate) &&
-      statSync(candidate).isFile()
-    ) {
-      return candidate;
-    }
-  }
-  return null;
+  return (
+    candidates.find(
+      (candidate) =>
+        EXTENSIONS.some((ext) => candidate.endsWith(ext)) && isFile(candidate),
+    ) ?? null
+  );
 }
 
 function isZod(specifier: string): boolean {
@@ -180,6 +221,7 @@ function findZodChain(entry: string): string[] | null {
     for (const specifier of runtimeSpecifiers(cachedParse(file))) {
       if (isZod(specifier)) return [...chainTo(file), specifier];
       const target = resolveLocal(file, specifier);
+      if (target === ASSET) continue;
       if (!target && isLocalSpecifier(specifier)) {
         // Fail closed: an unresolved local import could hide a zod path.
         throw new UnresolvedImportError(
@@ -234,6 +276,109 @@ describe('client bundle guard', () => {
       true,
     );
     expect(runtimeSpecifiers(source)).toEqual(['./lazy', 'zod']);
+  });
+
+  describe('local resolution', () => {
+    const withTree = (
+      files: Record<string, string>,
+      run: (root: string) => void,
+    ): void => {
+      const root = mkdtempSync(join(tmpdir(), 'bundle-guard-'));
+      try {
+        for (const [name, body] of Object.entries(files)) {
+          const full = join(root, name);
+          mkdirSync(dirname(full), { recursive: true });
+          writeFileSync(full, body);
+        }
+        run(root);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    };
+
+    it('treats an existing .css import as a leaf', () => {
+      withTree(
+        {
+          'entry.tsx': "'use client';\nimport './styles.css';\n",
+          'styles.css': '.a { color: red; }\n',
+        },
+        (root) => {
+          expect(findZodChain(join(root, 'entry.tsx'))).toBeNull();
+        },
+      );
+    });
+
+    it("follows '..' to the parent index and reports the zod chain", () => {
+      withTree(
+        {
+          'index.ts':
+            "import { z } from 'zod';\nexport const s = z.string();\n",
+          'sub/entry.tsx':
+            "'use client';\nimport { s } from '..';\nexport { s };\n",
+        },
+        (root) => {
+          expect(findZodChain(join(root, 'sub/entry.tsx'))).toEqual([
+            relative(process.cwd(), join(root, 'sub/entry.tsx')),
+            relative(process.cwd(), join(root, 'index.ts')),
+            'zod',
+          ]);
+        },
+      );
+    });
+
+    it("follows '.' to the directory index and reports the zod chain", () => {
+      withTree(
+        {
+          'sub/index.ts':
+            "import { z } from 'zod';\nexport const s = z.string();\n",
+          'sub/entry.tsx':
+            "'use client';\nimport { s } from '.';\nexport { s };\n",
+        },
+        (root) => {
+          expect(findZodChain(join(root, 'sub/entry.tsx'))).toEqual([
+            relative(process.cwd(), join(root, 'sub/entry.tsx')),
+            relative(process.cwd(), join(root, 'sub/index.ts')),
+            'zod',
+          ]);
+        },
+      );
+    });
+
+    it("resolves '../' to the directory index, not a sibling '<dir>.ts'", () => {
+      withTree(
+        {
+          'pkg.ts': 'export const s = 1;\n',
+          'pkg/index.ts':
+            "import { z } from 'zod';\nexport const s = z.string();\n",
+          'pkg/sub/entry.tsx':
+            "'use client';\nimport { s } from '../';\nexport { s };\n",
+        },
+        (root) => {
+          expect(findZodChain(join(root, 'pkg/sub/entry.tsx'))).toEqual([
+            relative(process.cwd(), join(root, 'pkg/sub/entry.tsx')),
+            relative(process.cwd(), join(root, 'pkg/index.ts')),
+            'zod',
+          ]);
+        },
+      );
+    });
+
+    it("resolves './x.js' to x.ts and reports the zod chain", () => {
+      withTree(
+        {
+          'x.ts': "import { z } from 'zod';\nexport const s = z.string();\n",
+          'entry.tsx':
+            "'use client';\nimport { s } from './x.js';\nexport { s };\n",
+        },
+        (root) => {
+          expect(findZodChain(join(root, 'entry.tsx'))).toEqual([
+            relative(process.cwd(), join(root, 'entry.tsx')),
+            relative(process.cwd(), join(root, 'x.ts')),
+            'zod',
+          ]);
+        },
+      );
+    });
   });
 
   it("keeps zod out of every 'use client' module's import graph", () => {

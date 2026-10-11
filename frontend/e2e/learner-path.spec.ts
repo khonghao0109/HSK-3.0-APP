@@ -388,6 +388,15 @@ test.describe('Learner path (M2.4b)', () => {
       (node) => window.getComputedStyle(node).boxShadow,
     );
     expect(boxShadow).toContain('inset');
+    const paddingBottom = (node: Element) =>
+      window.getComputedStyle(node).paddingBottom;
+    expect(await panel.evaluate(paddingBottom)).toBe('8px');
+
+    await levelTab(page, 'HSK 3').click();
+    await expect(page.locator('ol.path-grid')).toHaveCount(1);
+    expect(await page.getByRole('tabpanel').evaluate(paddingBottom)).toBe(
+      '0px',
+    );
   });
 
   test('level tabs are hittable across their full 44px height', async ({
