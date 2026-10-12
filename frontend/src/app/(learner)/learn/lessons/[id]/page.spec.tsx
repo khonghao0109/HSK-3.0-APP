@@ -247,14 +247,26 @@ describe('LearnerLessonPage', () => {
     expect(rows[0]?.querySelector('.lrow__bar')).toBeNull();
     expect(rows[1]?.querySelector('.lrow__bar > span')).toHaveClass('pct-50');
     expect(rows[2]?.querySelector('.lrow__bar > span')).toHaveClass('pct-67');
+    expect(rows.map((row) => row.tagName)).toEqual(['BUTTON', 'BUTTON', 'A']);
     for (const row of rows) {
-      expect(row.tagName).toBe('BUTTON');
       expect(row).not.toHaveAttribute('aria-disabled');
       expect(row.querySelector('img')).toHaveAttribute('alt', '');
     }
   });
 
-  it.each(['Từ vựng', 'Ngữ pháp', 'Luyện tập'])(
+  it('links row Luyện tập of an open lesson to the player (Q45)', async () => {
+    const { container } = await renderLesson(current);
+    const row = Array.from(container.querySelectorAll('.lrow')).find(
+      (candidate) =>
+        candidate.querySelector('.lrow__title')?.textContent === 'Luyện tập',
+    );
+    expect(row?.tagName).toBe('A');
+    expect(row).toHaveAttribute('href', '/learn/lessons/5/practice');
+    if (row) fireEvent.click(row);
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
+  });
+
+  it.each(['Từ vựng', 'Ngữ pháp'])(
     'shows the coming-soon toast for row %s (Q38)',
     async (title) => {
       const { container } = await renderLesson(current);
@@ -270,16 +282,44 @@ describe('LearnerLessonPage', () => {
     },
   );
 
-  it('shows the coming-soon toast for the heart and the CTA', async () => {
+  it('links the CTA to the player and toasts the heart (Q33, Q45)', async () => {
     await renderLesson(current);
-    const cta = screen.getByRole('button', { name: 'Tiếp tục học' });
+    expect(screen.queryByRole('button', { name: 'Tiếp tục học' })).toBeNull();
+    const cta = screen.getByRole('link', { name: 'Tiếp tục học' });
     expect(cta).toHaveClass('lesson-cta');
+    expect(cta).toHaveAttribute('href', '/learn/lessons/5/practice');
     expect(cta).not.toHaveAttribute('aria-disabled');
-    fireEvent.click(cta);
     fireEvent.click(screen.getByRole('button', { name: 'Yêu thích bài học' }));
     expect(
       within(screen.getByRole('status')).getAllByText('Tính năng sắp ra mắt.'),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
+  });
+
+  it('keeps row Luyện tập of a locked lesson a lock toast, not a link (Q44)', async () => {
+    const { container } = await renderLesson(
+      {
+        ...locked,
+        sections: {
+          ...locked.sections,
+          practice: { exerciseCount: 2, attempted: 0 },
+        },
+      },
+      '6',
+    );
+    const row = Array.from(container.querySelectorAll('.lrow')).find(
+      (candidate) =>
+        candidate.querySelector('.lrow__title')?.textContent === 'Luyện tập',
+    );
+    if (!row) throw new Error('missing row Luyện tập');
+    expect(row.tagName).toBe('BUTTON');
+    expect(row).toHaveAttribute('aria-disabled', 'true');
+    expect(container.querySelector('a[href$="/practice"]')).toBeNull();
+    fireEvent.click(row);
+    expect(
+      within(screen.getByRole('status')).getByText(
+        'Hoàn thành bài trước để mở khoá.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('hides a missing description (Q39) and a zero-total row (Q35)', async () => {

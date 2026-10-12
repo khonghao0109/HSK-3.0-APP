@@ -1,31 +1,23 @@
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import Link from 'next/link';
 
 import { LearnerBackButton } from '@/features/learner-auth/learner-back-button';
-import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import {
   percentClass,
   wholePercent,
 } from '@/features/learner-home/learning-home-contract';
 import { levelLabel } from '@/features/learner-home/level-label';
-import type { LessonActivity } from '@/features/learner-lesson/lesson-activity-contract';
 import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
+import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader';
 import {
   LESSON_ROW_IMAGES,
   lessonRows,
-  parseLessonId,
 } from '@/features/learner-lesson/lesson-sections';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import {
   TOAST_COMING_SOON,
   TOAST_LOCKED,
 } from '@/features/learner-shell/learner-toast-messages';
-import {
-  getCurrentGoal,
-  getOnboardingStatus,
-} from '@/features/onboarding/onboarding-service';
-import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
-import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
 export const metadata: Metadata = {
   title: 'Bài học',
@@ -43,54 +35,25 @@ function Icon({ name, className }: { name: string; className?: string }) {
 }
 
 /**
- * Lesson page (M2.5a, Q32–Q44). Every `notFound()` and `redirect()` runs
- * before anything renders: the segment has no `loading.tsx` or Suspense, so
- * the response keeps its real 404 / 307 status.
+ * Lesson page (M2.5a, Q32–Q44). Tiếp tục học and the Luyện tập row of an
+ * open lesson open the player (Q45); the other rows still toast.
  */
 export default async function LearnerLessonPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const lessonId = parseLessonId((await params).id);
-  if (lessonId === null) notFound();
-
-  const session = await getServerLearnerSession();
-  if (session.state !== 'learner' || !session.token) {
-    redirect('/sign-in');
-  }
-
-  let activity: LessonActivity | null = null;
-  let redirectTarget: string | null = null;
-  let authFailed = false;
-  let missing = false;
-  try {
-    const status = await getOnboardingStatus(session.token);
-    if (status.nextStep !== 'ready') {
-      const goal =
-        status.nextStep === 'generate_plan'
-          ? await getCurrentGoal(session.token)
-          : null;
-      redirectTarget = routeForOnboarding(status, goal) ?? '/onboarding/goal';
-    } else {
-      activity = await getLessonActivity(session.token, lessonId);
-    }
-  } catch (error) {
-    if (isAuthFailure(error)) authFailed = true;
-    else if (error instanceof BackendRequestError && error.status === 404)
-      missing = true;
-    else throw error;
-  }
-
-  if (authFailed) redirect('/sign-in');
-  if (redirectTarget) redirect(redirectTarget);
-  if (missing || !activity) notFound();
+  const { lessonId, data: activity } = await loadLearnerLesson(
+    (await params).id,
+    getLessonActivity,
+  );
 
   const { lesson, level, position, sections } = activity;
   const locked = activity.state === 'locked';
   const percent = wholePercent(activity.progress.completionPercent);
   const description = lesson.description?.trim() || null;
   const rowMessage = locked ? TOAST_LOCKED : TOAST_COMING_SOON;
+  const practiceHref = `/learn/lessons/${lessonId}/practice`;
 
   return (
     <>
@@ -153,64 +116,82 @@ export default async function LearnerLessonPage({
             ]
               .filter(Boolean)
               .join(' ');
+            const content = (
+              <>
+                <img
+                  src={image.src}
+                  alt=""
+                  width={image.width}
+                  height={image.height}
+                />
+                <span className="grow">
+                  <span className="lrow__title">{row.title}</span>
+                  <span className="sr-only">, </span>
+                  <span className="lrow__meta">{row.meta}</span>
+                </span>
+                <span className="lrow__end">
+                  {row.locked && (
+                    <>
+                      <Icon name="lock-fill" className="lrow__lock" />
+                      <span className="sr-only">, đã khoá</span>
+                    </>
+                  )}
+                  {row.done && (
+                    <>
+                      <Icon name="check-circle" className="lrow__check" />
+                      <span className="sr-only">, đã học xong</span>
+                    </>
+                  )}
+                  {row.count && (
+                    <>
+                      <span className="sr-only">, </span>
+                      <span className="lrow__count">
+                        {row.count.label}
+                        <span className="sr-only">{` ${row.count.tail}`}</span>
+                      </span>
+                      <span className="progress lrow__bar" aria-hidden="true">
+                        <span className={percentClass(row.count.percent)} />
+                      </span>
+                    </>
+                  )}
+                </span>
+              </>
+            );
             return (
               <li key={row.kind}>
-                <ToastButton
-                  className={className}
-                  aria-disabled={row.locked ? 'true' : undefined}
-                  message={rowMessage}
-                >
-                  <img
-                    src={image.src}
-                    alt=""
-                    width={image.width}
-                    height={image.height}
-                  />
-                  <span className="grow">
-                    <span className="lrow__title">{row.title}</span>
-                    <span className="sr-only">, </span>
-                    <span className="lrow__meta">{row.meta}</span>
-                  </span>
-                  <span className="lrow__end">
-                    {row.locked && (
-                      <>
-                        <Icon name="lock-fill" className="lrow__lock" />
-                        <span className="sr-only">, đã khoá</span>
-                      </>
-                    )}
-                    {row.done && (
-                      <>
-                        <Icon name="check-circle" className="lrow__check" />
-                        <span className="sr-only">, đã học xong</span>
-                      </>
-                    )}
-                    {row.count && (
-                      <>
-                        <span className="sr-only">, </span>
-                        <span className="lrow__count">
-                          {row.count.label}
-                          <span className="sr-only">{` ${row.count.tail}`}</span>
-                        </span>
-                        <span className="progress lrow__bar" aria-hidden="true">
-                          <span className={percentClass(row.count.percent)} />
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </ToastButton>
+                {row.kind === 'practice' && !row.locked ? (
+                  <Link className={className} href={practiceHref}>
+                    {content}
+                  </Link>
+                ) : (
+                  <ToastButton
+                    className={className}
+                    aria-disabled={row.locked ? 'true' : undefined}
+                    message={rowMessage}
+                  >
+                    {content}
+                  </ToastButton>
+                )}
               </li>
             );
           })}
         </ul>
 
-        <ToastButton
-          className="lesson-cta"
-          aria-disabled={locked ? 'true' : undefined}
-          message={rowMessage}
-        >
-          Tiếp tục học
-          <Icon name="arrow-right" />
-        </ToastButton>
+        {locked ? (
+          <ToastButton
+            className="lesson-cta"
+            aria-disabled="true"
+            message={TOAST_LOCKED}
+          >
+            Tiếp tục học
+            <Icon name="arrow-right" />
+          </ToastButton>
+        ) : (
+          <Link className="lesson-cta" href={practiceHref}>
+            Tiếp tục học
+            <Icon name="arrow-right" />
+          </Link>
+        )}
       </main>
     </>
   );

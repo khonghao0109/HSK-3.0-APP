@@ -1,174 +1,15 @@
-import {
-  expect,
-  request as playwrightRequest,
-  test,
-  type APIRequestContext,
-  type Locator,
-  type Page,
-} from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
-const PASSWORD = 'StrongPassword123!';
+import {
+  publishLockedLesson,
+  readCspViolations,
+  registerReadyLearner,
+  watchCsp,
+} from './support/learner-fixtures';
+
 const TOAST_COMING_SOON = 'Tính năng sắp ra mắt.';
 const TOAST_LOCKED = 'Hoàn thành bài trước để mở khoá.';
 const FIRST_LESSON = 'Greetings & first meetings';
-const LOCKED_SLUG = 'm25a-e2e-locked';
-const BACKEND =
-  process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://127.0.0.1:3100/api/v1';
-const ADMIN = {
-  email: 'admin.frontend@example.test',
-  password: 'FrontendTest-Admin-123',
-};
-
-function uniqueEmail(tag: string): string {
-  return `learner.lesson.${tag}.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.test`;
-}
-
-function appOrigin(baseURL: string | undefined): string {
-  return new URL(baseURL ?? 'http://127.0.0.1:3200').origin;
-}
-
-/** Registers through the BFF and completes onboarding for HSK 1. */
-async function registerReadyLearner(
-  page: Page,
-  baseURL: string | undefined,
-): Promise<void> {
-  const origin = appOrigin(baseURL);
-  const register = await page.request.post('/api/learner/session/register', {
-    headers: { origin, 'content-type': 'application/json' },
-    data: { email: uniqueEmail('band1'), password: PASSWORD },
-  });
-  expect(register.status()).toBe(201);
-
-  await page.goto('/sign-in');
-  const completeStatus = await page.evaluate(async () => {
-    const now = new Date();
-    const startDate = [
-      String(now.getFullYear()),
-      String(now.getMonth() + 1).padStart(2, '0'),
-      String(now.getDate()).padStart(2, '0'),
-    ].join('-');
-    const res = await fetch('/api/learner/onboarding/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        learningPurpose: 'hsk_exam',
-        targetBand: 1,
-        dailyMinutes: 15,
-        reminderEnabled: true,
-        reminderTime: '07:00',
-        startDate,
-      }),
-    });
-    return res.status;
-  });
-  expect(completeStatus).toBe(200);
-}
-
-type Envelope<T> = { data: T };
-
-async function call<T>(
-  api: APIRequestContext,
-  method: 'GET' | 'POST',
-  route: string,
-  token?: string,
-  data?: unknown,
-): Promise<T> {
-  const response = await api.fetch(`${BACKEND}${route}`, {
-    method,
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-    data,
-  });
-  if (response.status() === 409 && route === '/admin/cms/lessons') {
-    throw new Error(
-      'A draft m25a-e2e-locked lesson is left from an aborted run: use a new disposable DB.',
-    );
-  }
-  expect(response.ok(), `${method} ${route} → ${response.status()}`).toBe(true);
-  return ((await response.json()) as Envelope<T>).data;
-}
-
-/**
- * Publishes a second ready lesson on HSK 3 through the Admin CMS: for a new
- * learner it sits behind the level's first lesson, so it is locked (Q18).
- * One grammar topic: the Từ vựng row needs words, which the CMS cannot add.
- * HSK 3 keeps its single path grid, so the path specs are unaffected.
- */
-async function publishLockedLesson(): Promise<number> {
-  const api = await playwrightRequest.newContext();
-  try {
-    const admin = (
-      await call<{ accessToken: string }>(
-        api,
-        'POST',
-        '/auth/login',
-        undefined,
-        ADMIN,
-      )
-    ).accessToken;
-    const levels = await call<Array<{ id: number; code: string }>>(
-      api,
-      'GET',
-      '/learning/levels',
-    );
-    const hsk3 = levels.find((level) => level.code === 'HSK3');
-    if (!hsk3) throw new Error('seed has no published HSK3');
-    // Idempotent per DB: every project's worker runs beforeAll again, and
-    // (levelId, orderIndex) is unique.
-    const ready = await call<Array<{ id: number; slug: string }>>(
-      api,
-      'GET',
-      `/learning/lessons?levelId=${hsk3.id}`,
-    );
-    const existing = ready.find((lesson) => lesson.slug === LOCKED_SLUG);
-    if (existing) return existing.id;
-    type Draft = {
-      lesson?: { id: number };
-      topic?: { id: number };
-      revision: { id: number };
-    };
-    const lesson = await call<Draft>(api, 'POST', '/admin/cms/lessons', admin, {
-      levelId: hsk3.id,
-      title: 'Bài khoá e2e',
-      orderIndex: 900,
-      slug: LOCKED_SLUG,
-    });
-    const lessonId = lesson.lesson?.id;
-    if (!lessonId) throw new Error('lesson draft has no id');
-    const topic = await call<Draft>(api, 'POST', '/admin/cms/topics', admin, {
-      lessonId,
-      title: 'Ngữ pháp e2e',
-      subtitle: 'Fixture e2e',
-      type: 'grammar',
-      content: [{ type: 'text', value: 'Nội dung fixture.' }],
-      orderIndex: 1,
-      isPremium: false,
-      isLocked: false,
-    });
-    const topicId = topic.topic?.id;
-    if (!topicId) throw new Error('topic draft has no id');
-    for (const [kind, id, revision] of [
-      ['topics', topicId, topic.revision.id],
-      ['lessons', lessonId, lesson.revision.id],
-    ] as const) {
-      await call(
-        api,
-        'POST',
-        `/admin/cms/${kind}/${id}/revisions/${revision}/reviews`,
-        admin,
-        { decision: 'approved' },
-      );
-      await call(
-        api,
-        'POST',
-        `/admin/cms/${kind}/${id}/revisions/${revision}/publish`,
-        admin,
-      );
-    }
-    return lessonId;
-  } finally {
-    await api.dispose();
-  }
-}
 
 function tabBar(page: Page): Locator {
   return page.getByRole('navigation', { name: 'Điều hướng chính' });
@@ -176,32 +17,6 @@ function tabBar(page: Page): Locator {
 
 function toasts(page: Page): Locator {
   return page.locator('.toast-region[role="status"] .toast');
-}
-
-async function watchCsp(page: Page): Promise<string[]> {
-  const cspConsole: string[] = [];
-  page.on('console', (message) => {
-    const text = message.text();
-    if (text.includes('Content Security Policy')) cspConsole.push(text);
-  });
-  page.on('pageerror', (error) =>
-    cspConsole.push(`pageerror ${error.message}`),
-  );
-  await page.addInitScript(() => {
-    const store: string[] = [];
-    Object.defineProperty(window, '__cspViolations', { value: store });
-    document.addEventListener('securitypolicyviolation', (event) => {
-      store.push(`${event.violatedDirective} ${event.blockedURI}`);
-    });
-  });
-  return cspConsole;
-}
-
-async function readCspViolations(page: Page): Promise<string[] | null> {
-  return page.evaluate(() => {
-    const value: unknown = Reflect.get(window, '__cspViolations');
-    return Array.isArray(value) ? value.map(String) : null;
-  });
 }
 
 async function expectToast(page: Page, control: Locator, message: string) {
@@ -293,7 +108,7 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(page).toHaveURL(/\/learn\/path$/);
   });
 
-  test('rows, heart and CTA of an open lesson show the coming-soon toast', async ({
+  test('rows and heart toast; Luyện tập and the CTA open the player (Q45)', async ({
     page,
     baseURL,
   }) => {
@@ -303,8 +118,13 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       FIRST_LESSON,
     );
-    const rows = page.locator('.lesson-rows .lrow');
-    expect(await rows.count()).toBeGreaterThan(0);
+    const lessonPath = new URL(page.url()).pathname;
+    const practice = page.locator('.lesson-rows a.lrow');
+    await expect(practice).toHaveCount(1);
+    await expect(practice.locator('.lrow__title')).toHaveText('Luyện tập');
+    await expect(practice).toHaveAttribute('href', `${lessonPath}/practice`);
+    // Seed HSK 1 lesson: Luyện tập is its only row today; any other row toasts.
+    const rows = page.locator('.lesson-rows button.lrow');
     for (let index = 0; index < (await rows.count()); index += 1) {
       const row = rows.nth(index);
       await expect(row).not.toHaveAttribute('aria-disabled');
@@ -315,10 +135,12 @@ test.describe('Learner lesson page (M2.5a)', () => {
       page.getByRole('button', { name: 'Yêu thích bài học' }),
       TOAST_COMING_SOON,
     );
-    await expectToast(
-      page,
-      page.getByRole('button', { name: 'Tiếp tục học' }),
-      TOAST_COMING_SOON,
+    const cta = page.getByRole('link', { name: 'Tiếp tục học' });
+    await expect(cta).toHaveAttribute('href', `${lessonPath}/practice`);
+    await cta.click();
+    await expect(page).toHaveURL(new RegExp(`${lessonPath}/practice$`));
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Luyện tập',
     );
   });
 

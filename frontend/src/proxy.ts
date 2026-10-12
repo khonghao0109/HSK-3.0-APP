@@ -79,5 +79,7 @@ export const config = {
     '/api/session/recover',
     '/api/learner/session/me',
     '/api/learner/onboarding/:path*',
+    '/api/learner/lessons/:path*',
+    '/api/learner/exercises/:path*',
   ],
 };

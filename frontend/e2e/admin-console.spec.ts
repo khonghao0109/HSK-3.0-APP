@@ -453,12 +453,22 @@ test('routes a current non-admin to forbidden without rendering admin data', asy
 test('uses URL filters and server pagination, then opens a detail', async ({
   page,
 }) => {
+  // limit=1: one page per exercise. Learner specs add fixtures to the same
+  // DB, so the seed's 3 is read from the table the list counts (no filter).
+  const pages = Number(
+    queryDisposableDb('SELECT count(*) FROM "LessonExercise"'),
+  );
+  expect(pages).toBeGreaterThanOrEqual(3);
   await login(page);
   await page.goto('/admin/exercises?limit=1&page=1');
-  await expect(page.getByText(/page 1 of 3/i)).toBeVisible();
+  await expect(
+    page.getByText(`Page 1 of ${pages}`, { exact: false }),
+  ).toBeVisible();
   await page.getByRole('link', { name: /next/i }).click();
   await expect(page).toHaveURL(/page=2/);
-  await expect(page.getByText(/page 2 of 3/i)).toBeVisible();
+  await expect(
+    page.getByText(`Page 2 of ${pages}`, { exact: false }),
+  ).toBeVisible();
   await page.getByLabel('Status').selectOption('published');
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page).toHaveURL(/status=published/);

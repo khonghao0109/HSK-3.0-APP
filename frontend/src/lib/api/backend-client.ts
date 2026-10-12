@@ -19,6 +19,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/learning\/home$/,
   /^\/api\/v1\/learning\/path$/,
   /^\/api\/v1\/learning\/lessons\/\d+\/activity$/,
+  /^\/api\/v1\/learning\/lessons\/\d+\/start$/,
+  /^\/api\/v1\/learning\/exercises\/\d+\/attempts$/,
 ];
 
 type ClientOptions = {
@@ -34,6 +36,8 @@ type RequestOptions = {
   token?: string;
   method?: 'GET' | 'POST';
   body?: unknown;
+  /** Sent as `Idempotency-Key` (docs/api/api.md §A.7). */
+  idempotencyKey?: string;
 };
 
 function isAllowedPath(path: string): boolean {
@@ -84,6 +88,8 @@ export function createBackendClient(options: ClientOptions) {
         if (request.token)
           headers.set('authorization', `Bearer ${request.token}`);
         if (forwardedFor) headers.set('x-forwarded-for', forwardedFor);
+        if (request.idempotencyKey)
+          headers.set('idempotency-key', request.idempotencyKey);
         if (request.body !== undefined)
           headers.set('content-type', 'application/json');
         const response = await fetchImpl(new URL(path, options.baseUrl), {

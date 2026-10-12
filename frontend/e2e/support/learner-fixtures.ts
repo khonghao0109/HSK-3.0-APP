@@ -1,0 +1,339 @@
+import {
+  expect,
+  request as playwrightRequest,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test';
+
+import { queryDisposableDb, sqlLiteral } from './disposable-db';
+
+// Shared by the lesson page (M2.5a) and player (M2.5b) specs. Fixtures go
+// through the Admin CMS of the disposable e2e DB and are idempotent per DB:
+// each project re-runs beforeAll, and Playwright runs one worker.
+
+export const PASSWORD = 'StrongPassword123!';
+export const LOCKED_SLUG = 'm25a-e2e-locked';
+export const BACKEND =
+  process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://127.0.0.1:3100/api/v1';
+const ADMIN = {
+  email: 'admin.frontend@example.test',
+  password: 'FrontendTest-Admin-123',
+};
+
+function uniqueEmail(tag: string): string {
+  return `learner.lesson.${tag}.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.test`;
+}
+
+function appOrigin(baseURL: string | undefined): string {
+  return new URL(baseURL ?? 'http://127.0.0.1:3200').origin;
+}
+
+/**
+ * Registers through the BFF and completes onboarding for HSK 1; returns the
+ * learner's email (password {@link PASSWORD}).
+ */
+export async function registerReadyLearner(
+  page: Page,
+  baseURL: string | undefined,
+): Promise<string> {
+  const origin = appOrigin(baseURL);
+  const email = uniqueEmail('band1');
+  const register = await page.request.post('/api/learner/session/register', {
+    headers: { origin, 'content-type': 'application/json' },
+    data: { email, password: PASSWORD },
+  });
+  expect(register.status()).toBe(201);
+
+  await page.goto('/sign-in');
+  const completeStatus = await page.evaluate(async () => {
+    const now = new Date();
+    const startDate = [
+      String(now.getFullYear()),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-');
+    const res = await fetch('/api/learner/onboarding/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        learningPurpose: 'hsk_exam',
+        targetBand: 1,
+        dailyMinutes: 15,
+        reminderEnabled: true,
+        reminderTime: '07:00',
+        startDate,
+      }),
+    });
+    return res.status;
+  });
+  expect(completeStatus).toBe(200);
+  return email;
+}
+
+type Envelope<T> = { data: T };
+
+export async function call<T>(
+  api: APIRequestContext,
+  method: 'GET' | 'POST',
+  route: string,
+  token?: string,
+  data?: unknown,
+): Promise<T> {
+  const response = await api.fetch(`${BACKEND}${route}`, {
+    method,
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+    data,
+  });
+  if (response.status() === 409 && route.startsWith('/admin/cms/')) {
+    throw new Error(
+      `${method} ${route} → 409: a fixture draft is left from an aborted run; use a new disposable DB.`,
+    );
+  }
+  expect(response.ok(), `${method} ${route} → ${response.status()}`).toBe(true);
+  return ((await response.json()) as Envelope<T>).data;
+}
+
+/** Backend access token for an email and password (direct, not the BFF). */
+export async function backendLogin(
+  api: APIRequestContext,
+  email: string,
+  password: string,
+): Promise<string> {
+  return (
+    await call<{ accessToken: string }>(api, 'POST', '/auth/login', undefined, {
+      email,
+      password,
+    })
+  ).accessToken;
+}
+
+async function levelId(api: APIRequestContext, code: string): Promise<number> {
+  const levels = await call<Array<{ id: number; code: string }>>(
+    api,
+    'GET',
+    '/learning/levels',
+  );
+  const level = levels.find((item) => item.code === code);
+  if (!level) throw new Error(`seed has no published ${code}`);
+  return level.id;
+}
+
+/** Id of a ready lesson of a level, by slug or else the first one. */
+export async function readyLessonId(
+  code: string,
+  slug?: string,
+): Promise<number | null> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const ready = await call<Array<{ id: number; slug: string }>>(
+      api,
+      'GET',
+      `/learning/lessons?levelId=${await levelId(api, code)}`,
+    );
+    const lesson = slug ? ready.find((item) => item.slug === slug) : ready[0];
+    return lesson?.id ?? null;
+  } finally {
+    await api.dispose();
+  }
+}
+
+type Draft = {
+  lesson?: { id: number };
+  topic?: { id: number };
+  exercise?: { id: number };
+  revision: { id: number };
+};
+
+async function approveAndPublish(
+  api: APIRequestContext,
+  admin: string,
+  kind: 'lessons' | 'topics' | 'exercises',
+  id: number,
+  revision: number,
+): Promise<void> {
+  await call(
+    api,
+    'POST',
+    `/admin/cms/${kind}/${id}/revisions/${revision}/reviews`,
+    admin,
+    { decision: 'approved' },
+  );
+  await call(
+    api,
+    'POST',
+    `/admin/cms/${kind}/${id}/revisions/${revision}/publish`,
+    admin,
+  );
+}
+
+/**
+ * Publishes a second ready lesson on HSK 3 through the Admin CMS: for a new
+ * learner it sits behind the level's first lesson, so it is locked (Q18).
+ * One grammar topic: the Từ vựng row needs words, which the CMS cannot add.
+ * HSK 3 keeps its single path grid, so the path specs are unaffected.
+ */
+export async function publishLockedLesson(): Promise<number> {
+  const existing = await readyLessonId('HSK3', LOCKED_SLUG);
+  if (existing) return existing;
+  const api = await playwrightRequest.newContext();
+  try {
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const lesson = await call<Draft>(api, 'POST', '/admin/cms/lessons', admin, {
+      levelId: await levelId(api, 'HSK3'),
+      title: 'Bài khoá e2e',
+      orderIndex: 900,
+      slug: LOCKED_SLUG,
+    });
+    const lessonId = lesson.lesson?.id;
+    if (!lessonId) throw new Error('lesson draft has no id');
+    const topic = await call<Draft>(api, 'POST', '/admin/cms/topics', admin, {
+      lessonId,
+      title: 'Ngữ pháp e2e',
+      subtitle: 'Fixture e2e',
+      type: 'grammar',
+      content: [{ type: 'text', value: 'Nội dung fixture.' }],
+      orderIndex: 1,
+      isPremium: false,
+      isLocked: false,
+    });
+    const topicId = topic.topic?.id;
+    if (!topicId) throw new Error('topic draft has no id');
+    await approveAndPublish(api, admin, 'topics', topicId, topic.revision.id);
+    await approveAndPublish(
+      api,
+      admin,
+      'lessons',
+      lessonId,
+      lesson.revision.id,
+    );
+    return lessonId;
+  } finally {
+    await api.dispose();
+  }
+}
+
+export const ARRANGE_PROMPT = 'Sắp xếp các từ sau thành câu hoàn chỉnh.';
+export const FILL_PROMPT = '我想___东西。';
+export const FILL_EXPLANATION = 'Điền 买 (mua): 我想买东西。';
+
+export const LISTENING_PROMPT = 'Nghe và chọn đáp án đúng.';
+const LISTENING_AUDIO = 'https://cdn.example.test/hsk/e2e/m25b-listening.mp3';
+
+/**
+ * A ready audio row of its own: admin-console quarantines the seeded
+ * nihao-listening.mp3, which hides the seeded listening_choice afterwards.
+ * The CMS has no way to make media ready, so it goes in through psql.
+ */
+function readyAudioId(): number {
+  const id = queryDisposableDb(
+    [
+      'INSERT INTO "Media" (url, type, "mimeType", duration, "originalFilename", "processingStatus", "updatedAt")',
+      `VALUES (${sqlLiteral(LISTENING_AUDIO)}, 'audio', 'audio/mpeg', 5, 'm25b-listening.mp3', 'ready', now())`,
+      'ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url RETURNING id',
+    ].join(' '),
+  );
+  // psql prints the RETURNING row, then the command tag (INSERT 0 1).
+  const first = id.split('\n')[0] ?? '';
+  if (!/^\d+$/u.test(first)) throw new Error(`no audio id: ${id}`);
+  return Number(first);
+}
+
+/**
+ * Adds arrange_sentence, fill_blank and listening_choice exercises (no
+ * topic) to the first HSK 3 lesson, which the seed gives no exercises.
+ * Returns the lesson id.
+ */
+export async function publishPracticeExercises(): Promise<number> {
+  const lessonId = await readyLessonId('HSK3');
+  if (!lessonId) throw new Error('seed has no ready HSK3 lesson');
+  const api = await playwrightRequest.newContext();
+  try {
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const existing = await call<Array<{ prompt: string; status: string }>>(
+      api,
+      'GET',
+      `/admin/cms/exercises?lessonId=${lessonId}&limit=100`,
+      admin,
+    );
+    const fixtures = [
+      {
+        type: 'arrange_sentence',
+        prompt: ARRANGE_PROMPT,
+        content: {
+          tokens: [
+            { id: 'wo', text: '我' },
+            { id: 'xiang', text: '想' },
+            { id: 'mai', text: '买' },
+          ],
+        },
+        answer: { tokenIds: ['wo', 'xiang', 'mai'] },
+        explanation: 'Câu đúng: 我想买。',
+        orderIndex: 901,
+      },
+      {
+        type: 'fill_blank',
+        prompt: FILL_PROMPT,
+        content: {},
+        answer: { acceptedTexts: ['买'] },
+        explanation: FILL_EXPLANATION,
+        orderIndex: 902,
+      },
+      {
+        type: 'listening_choice',
+        prompt: LISTENING_PROMPT,
+        content: {
+          options: [
+            { id: 'shop', text: '商店' },
+            { id: 'market', text: '超市' },
+          ],
+        },
+        answer: { optionId: 'market' },
+        explanation: 'Đoạn nghe nói 超市.',
+        orderIndex: 903,
+        mediaId: readyAudioId(),
+      },
+    ];
+    for (const fixture of fixtures) {
+      if (existing.some((item) => item.prompt === fixture.prompt)) continue;
+      const draft = await call<Draft>(
+        api,
+        'POST',
+        '/admin/cms/exercises',
+        admin,
+        { lessonId, ...fixture },
+      );
+      const id = draft.exercise?.id;
+      if (!id) throw new Error('exercise draft has no id');
+      await approveAndPublish(api, admin, 'exercises', id, draft.revision.id);
+    }
+    return lessonId;
+  } finally {
+    await api.dispose();
+  }
+}
+
+export async function watchCsp(page: Page): Promise<string[]> {
+  const cspConsole: string[] = [];
+  page.on('console', (message) => {
+    const text = message.text();
+    if (text.includes('Content Security Policy')) cspConsole.push(text);
+  });
+  page.on('pageerror', (error) =>
+    cspConsole.push(`pageerror ${error.message}`),
+  );
+  await page.addInitScript(() => {
+    const store: string[] = [];
+    Object.defineProperty(window, '__cspViolations', { value: store });
+    document.addEventListener('securitypolicyviolation', (event) => {
+      store.push(`${event.violatedDirective} ${event.blockedURI}`);
+    });
+  });
+  return cspConsole;
+}
+
+export async function readCspViolations(page: Page): Promise<string[] | null> {
+  return page.evaluate(() => {
+    const value: unknown = Reflect.get(window, '__cspViolations');
+    return Array.isArray(value) ? value.map(String) : null;
+  });
+}

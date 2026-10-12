@@ -230,11 +230,78 @@ describe('server-only backend client', () => {
       '/api/v1/learning/lessons/abc/activity',
       '/api/v1/learning/lessons//activity',
       '/api/v1/learning/lessons/12',
-      '/api/v1/learning/lessons/12/start',
     ]) {
       await expect(client.request(path)).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }
+  });
+
+  it('allowlists lesson start and exercise attempts, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/learning/lessons/12/start', {
+      method: 'POST',
+      body: {},
+    });
+    await client.request('/api/v1/learning/exercises/34/attempts', {
+      method: 'POST',
+      body: { answer: { optionId: 'a' } },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    for (const path of [
+      '/api/v1/learning/lessons/-1/start',
+      '/api/v1/learning/lessons/12/start?x=1',
+      '/api/v1/learning/lessons/12/start/',
+      '/api/v1/learning/lessons/../start',
+      '/api/v1/learning/lessons/12/../start',
+      '/api/v1/learning/lessons/abc/start',
+      '/api/v1/learning/lessons/12/complete',
+      '/api/v1/learning/exercises/-1/attempts',
+      '/api/v1/learning/exercises/34/attempts?x=1',
+      '/api/v1/learning/exercises/34/attempts/',
+      '/api/v1/learning/exercises/../attempts',
+      '/api/v1/learning/exercises/34/../attempts',
+      '/api/v1/learning/exercises//attempts',
+      '/api/v1/learning/exercises/34',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends the idempotency key header only when given', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/learning/lessons/12/start', {
+      method: 'POST',
+      body: {},
+      idempotencyKey: 'lesson-start-12',
+    });
+    await client.request('/api/v1/learning/path');
+
+    const [, first] = fetchImpl.mock.calls[0] ?? [];
+    const [, second] = fetchImpl.mock.calls[1] ?? [];
+    expect(new Headers(first?.headers).get('idempotency-key')).toBe(
+      'lesson-start-12',
+    );
+    expect(new Headers(second?.headers).has('idempotency-key')).toBe(false);
   });
 });

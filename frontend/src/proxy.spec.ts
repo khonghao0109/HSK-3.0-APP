@@ -53,6 +53,8 @@ describe('CSP nonce proxy and session refresh router', () => {
     '/api/session/recover',
     '/api/learner/session/me',
     '/api/learner/onboarding/complete',
+    '/api/learner/lessons/12/start',
+    '/api/learner/exercises/34/attempts',
   ])('runs for targeted request %s', (url) => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
   });

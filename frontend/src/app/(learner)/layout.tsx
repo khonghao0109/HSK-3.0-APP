@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
-import { Inter, Noto_Serif, Noto_Serif_SC } from 'next/font/google';
+import {
+  Inter,
+  Noto_Sans_SC,
+  Noto_Serif,
+  Noto_Serif_SC,
+} from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import './learner.css';
@@ -15,6 +20,13 @@ const notoSerif = Noto_Serif({
   weight: ['600', '700'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-noto-serif',
+  display: 'swap',
+});
+
+const notoSansSC = Noto_Sans_SC({
+  weight: ['400', '500', '700'],
+  preload: false,
+  variable: '--font-noto-sans-sc',
   display: 'swap',
 });
 
@@ -35,7 +47,7 @@ export const metadata: Metadata = {
 export default function LearnerLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable}`}
+      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${notoSansSC.variable}`}
       lang="vi"
     >
       <div hidden aria-hidden="true">
@@ -89,6 +101,18 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
           </symbol>
           <symbol id="i-heart" viewBox="0 0 24 24">
             <path d="M19.5 12.6 12 20l-7.5-7.4A4.9 4.9 0 0 1 12 6.1a4.9 4.9 0 0 1 7.5 6.5Z" />
+          </symbol>
+          <symbol id="i-x" viewBox="0 0 24 24">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </symbol>
+          <symbol id="i-x-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" />
+            <path
+              d="m9 9 6 6M15 9l-6 6"
+              stroke="var(--white)"
+              strokeWidth="2.2"
+            />
           </symbol>
           <symbol id="i-check-circle" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" />
