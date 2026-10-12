@@ -82,5 +82,6 @@ export const config = {
     '/api/learner/onboarding/:path*',
     '/api/learner/lessons/:path*',
     '/api/learner/exercises/:path*',
+    '/api/learner/topics/:path*',
   ],
 };

@@ -20,6 +20,7 @@ import {
   newAttemptKey,
   progressClass,
   splitBlank,
+  topicToClose,
   type PlayerChoice,
   type PlayerExercise,
   type PlayerInput,
@@ -34,7 +35,11 @@ export const PLAYER_MESSAGES = {
   done: 'Bạn đã làm xong phần luyện tập',
   submitFailed: 'Không gửi được câu trả lời. Vui lòng thử lại.',
   startFailed: 'Chưa mở được bài luyện tập. Vui lòng thử lại.',
+  finishing: 'Đang lưu kết quả bài học…',
+  finishFailed: 'Chưa lưu được kết quả bài học. Vui lòng thử lại.',
 } as const;
+
+type StartOutcome = 'started' | 'sign-in' | 'lesson' | 'failed';
 
 type Result = { correct: boolean; explanation: string | null };
 
@@ -83,6 +88,9 @@ function readResult(body: unknown): Result | null {
 /**
  * Activity player (M2.5b, Q45–Q50): one exercise at a time, checked by the
  * backend. Exercises the player cannot show yet only count towards x/y (Q48).
+ * M2.5d (Q58): Tiếp tục after a topic's last exercise closes the topic, and
+ * once every exercise has an attempt the lesson is completed and the player
+ * moves to the complete page; opening it with all answered does the same.
  */
 export function LessonPlayer({
   lessonId,
@@ -98,6 +106,8 @@ export function LessonPlayer({
   const router = useRouter();
   const lessonHref = `/learn/lessons/${lessonId}`;
   const total = exercises.length;
+  const allAnsweredAtOpen =
+    startIndex >= total && exercises.every((exercise) => exercise.answered);
 
   const [index, setIndex] = useState(startIndex);
   const [input, setInput] = useState<PlayerInput>(EMPTY_INPUT);
@@ -106,6 +116,17 @@ export function LessonPlayer({
   const [error, setError] = useState<string | null>(null);
   const [started, setStarted] = useState(!needsStart);
   const [startFailed, setStartFailed] = useState(false);
+  const [answeredIds, setAnsweredIds] = useState<ReadonlySet<number>>(
+    () =>
+      new Set(
+        exercises
+          .filter((exercise) => exercise.answered)
+          .map((exercise) => exercise.id),
+      ),
+  );
+  const [completion, setCompletion] = useState<'idle' | 'busy' | 'failed'>(
+    allAnsweredAtOpen ? 'busy' : 'idle',
+  );
 
   const submittingRef = useRef(false);
   const pendingRef = useRef<Pending | null>(null);
@@ -124,9 +145,7 @@ export function LessonPlayer({
 
   // Resolves to what the start call means for the page; the state change
   // happens in the callback, never synchronously in the effect.
-  const requestStart = useCallback(async (): Promise<
-    'started' | 'sign-in' | 'lesson' | 'failed'
-  > => {
+  const requestStart = useCallback(async (): Promise<StartOutcome> => {
     try {
       const response = await fetch(`/api/learner/lessons/${lessonId}/start`, {
         method: 'POST',
@@ -147,7 +166,7 @@ export function LessonPlayer({
   }, [lessonId]);
 
   const applyStart = useCallback(
-    (outcome: 'started' | 'sign-in' | 'lesson' | 'failed') => {
+    (outcome: StartOutcome) => {
       if (outcome === 'started') setStarted(true);
       else if (outcome === 'sign-in') router.replace('/sign-in');
       else if (outcome === 'lesson') router.replace(lessonHref);
@@ -158,7 +177,7 @@ export function LessonPlayer({
   );
 
   // The start in flight: a check made before it answers waits for it.
-  const startRef = useRef<Promise<string> | null>(null);
+  const startRef = useRef<Promise<StartOutcome> | null>(null);
 
   // Once per mount: the key is fixed per lesson, so even a repeat would only
   // replay, but there is no reason to send it again.
@@ -166,6 +185,75 @@ export function LessonPlayer({
     if (!needsStart || startRef.current) return;
     startRef.current = requestStart().then(applyStart);
   }, [needsStart, requestStart, applyStart]);
+
+  // Topic closes in flight: the lesson complete waits for them (Q58). A
+  // failed close is left to the complete BFF, which closes it again.
+  const closingRef = useRef<Promise<unknown>[]>([]);
+  const closeTopic = useCallback(
+    (topicId: number) => {
+      closingRef.current.push(
+        fetch(`/api/learner/topics/${topicId}/complete`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ lessonId }),
+        })
+          .then((response) => response.text())
+          .catch(() => ''),
+      );
+    },
+    [lessonId],
+  );
+
+  // Completes the lesson and moves to its complete page; on failure the done
+  // card offers a retry. State changes only after an await.
+  const finishingRef = useRef(false);
+  const finish = useCallback(async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    let outcome: StartOutcome = startRef.current
+      ? await startRef.current
+      : 'started';
+    if (outcome === 'failed') {
+      startRef.current = requestStart().then(applyStart);
+      outcome = await startRef.current;
+    }
+    // applyStart already left the page.
+    if (outcome === 'sign-in' || outcome === 'lesson') return;
+    if (outcome === 'started') {
+      await Promise.all(closingRef.current);
+      try {
+        const response = await fetch(
+          `/api/learner/lessons/${lessonId}/complete`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          },
+        );
+        await response.text().catch(() => '');
+        if (response.status === 200) {
+          router.replace(`${lessonHref}/complete`);
+          return;
+        }
+        if (response.status === 401 || response.status === 403) {
+          router.replace('/sign-in');
+          return;
+        }
+      } catch {
+        // Network failure: offer a retry.
+      }
+    }
+    finishingRef.current = false;
+    setCompletion('failed');
+  }, [applyStart, lessonHref, lessonId, requestStart, router]);
+
+  // Opened with every exercise answered (even a done lesson): complete now.
+  const finishOnOpenRef = useRef(allAnsweredAtOpen);
+  useEffect(() => {
+    if (!finishOnOpenRef.current) return;
+    finishOnOpenRef.current = false;
+    void finish();
+  }, [finish]);
 
   // A new exercise: time it from now and, after Tiếp tục, move focus to its
   // prompt so keyboard and screen reader users start there.
@@ -200,6 +288,13 @@ export function LessonPlayer({
           ) ?? headingRef.current);
     (next ?? fallback)?.focus();
   }, [input]);
+
+  const retryFinish = () => {
+    // The heading stays mounted, so focus does not drop to the body.
+    headingRef.current?.focus();
+    setCompletion('busy');
+    void finish();
+  };
 
   const retryStart = () => {
     setStartFailed(false);
@@ -262,6 +357,8 @@ export function LessonPlayer({
       const checked = response.status === 200 ? readResult(body) : null;
       if (checked) {
         pendingRef.current = null;
+        const answeredId = current.id;
+        setAnsweredIds((ids) => new Set(ids).add(answeredId));
         setResult(checked);
       } else {
         setError(PLAYER_MESSAGES.submitFailed);
@@ -274,6 +371,14 @@ export function LessonPlayer({
   };
 
   const next = () => {
+    const last = index + 1 >= total;
+    const topicId = topicToClose(exercises, index, answeredIds);
+    // After the last exercise the complete BFF closes the topic itself.
+    if (topicId !== null && !last) closeTopic(topicId);
+    if (last && exercises.every((exercise) => answeredIds.has(exercise.id))) {
+      setCompletion('busy');
+      void finish();
+    }
     movedRef.current = true;
     pendingRef.current = null;
     setIndex((value) => value + 1);
@@ -363,7 +468,12 @@ export function LessonPlayer({
       : [PLAYER_MESSAGES.wrongTitle, result.explanation]
           .filter(Boolean)
           .join('. ')
-    : (error ?? (startFailed ? PLAYER_MESSAGES.startFailed : ''));
+    : (error ??
+      (startFailed
+        ? PLAYER_MESSAGES.startFailed
+        : completion === 'busy'
+          ? PLAYER_MESSAGES.finishing
+          : ''));
   const done = index >= total;
   const shown = done ? total : index + 1;
   const answeredCount = done ? total : index + (result ? 1 : 0);
@@ -416,9 +526,28 @@ export function LessonPlayer({
             >
               {PLAYER_MESSAGES.done}
             </h2>
-            <Link className="lesson-cta" href={lessonHref}>
-              Về bài học
-            </Link>
+            {completion === 'busy' && <p>{PLAYER_MESSAGES.finishing}</p>}
+            {completion === 'failed' && (
+              <>
+                <p className="ex-error" role="alert">
+                  {PLAYER_MESSAGES.finishFailed}
+                </p>
+                <button
+                  className="lesson-cta"
+                  type="button"
+                  onClick={retryFinish}
+                >
+                  Thử lại
+                </button>
+              </>
+            )}
+            {/* Some exercise has no attempt (a type the player cannot show,
+                Q48): the lesson cannot be completed yet. */}
+            {completion === 'idle' && (
+              <Link className="lesson-cta" href={lessonHref}>
+                Về bài học
+              </Link>
+            )}
           </section>
         )}
 

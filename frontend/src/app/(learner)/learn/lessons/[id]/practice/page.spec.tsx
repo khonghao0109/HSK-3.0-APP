@@ -59,6 +59,7 @@ const activity: LessonPlayerActivity = {
     {
       id: 1,
       orderIndex: 1,
+      progress: { status: 'learning' },
       exercises: [exercise(11, 1, { attemptId: 1 }), exercise(12, 2)],
     },
   ],

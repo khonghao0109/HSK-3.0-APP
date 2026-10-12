@@ -193,6 +193,22 @@ Audio của câu nghe đi qua BFF cùng origin, nên CSP giữ `media-src 'self'
   Không gửi cookie hay token sang backend. Route này không đi qua `limit_req` nginx
   của location content; backend vẫn giới hạn theo grant và theo IP.
 
+## BFF hoàn thành bài của learner
+
+Player đóng topic và hoàn thành bài qua BFF (M2.5d, Q58); trang
+`/learn/lessons/:id/complete` chỉ mở được khi bài đã `done`:
+
+- `POST /api/learner/topics/:id/complete` với body `{ lessonId }`: đọc activity của
+  bài, start topic nếu còn `not_started` rồi complete. Topic đã `done` (kể cả sau
+  `409`) trả `{ success: true, data: { topicId } }`; còn lại `409`.
+- `POST /api/learner/lessons/:id/complete`: đóng mọi topic chưa `done` mà bài tập
+  public nào cũng đã có attempt, rồi complete bài. Backend trả `409` thì đọc
+  `GET /api/v1/progress/lessons/:id`: `done` là thành công, còn lại `409`.
+
+Mỗi lệnh ghi gửi backend một `Idempotency-Key` UUID mới sinh phía server. Cả hai
+route cần cùng origin và phiên learner (`401` khi thiếu; backend `401`/`403` xoá
+cookie), id sai trả `404`, phản hồi `no-store`.
+
 ## Cấu trúc chính
 
 ```text

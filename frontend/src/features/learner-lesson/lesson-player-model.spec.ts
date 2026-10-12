@@ -11,6 +11,7 @@ import {
   orderPlayerExercises,
   progressClass,
   splitBlank,
+  topicToClose,
   WAVE_BARS,
   type PlayerExercise,
 } from './lesson-player-model';
@@ -62,6 +63,7 @@ describe('orderPlayerExercises', () => {
     );
     expect(mcq).toEqual({
       id: 1,
+      topicId: null,
       prompt: 'Câu 1',
       answered: false,
       kind: 'mcq',
@@ -124,6 +126,7 @@ describe('orderPlayerExercises', () => {
     );
     expect(listening).toEqual({
       id: 1,
+      topicId: null,
       prompt: 'Câu 1',
       answered: false,
       kind: 'listening',
@@ -200,9 +203,35 @@ describe('firstPendingIndex', () => {
   });
 });
 
+describe('topicToClose (Q58)', () => {
+  const list = orderPlayerExercises(
+    [
+      { id: 1, orderIndex: 1, exercises: [raw(10, 1), raw(11, 2)] },
+      { id: 2, orderIndex: 2, exercises: [raw(20, 1)] },
+    ],
+    [raw(30, 1)],
+  );
+
+  it('keeps the topic of each exercise, null for standalone ones', () => {
+    expect(list.map((exercise) => exercise.topicId)).toEqual([1, 1, 2, null]);
+  });
+
+  it('closes a topic after its last exercise once all of it is answered', () => {
+    expect(topicToClose(list, 1, new Set([10, 11]))).toBe(1);
+    expect(topicToClose(list, 2, new Set([20]))).toBe(2);
+  });
+
+  it('does not close before the last exercise, with one unanswered, or for standalone ones', () => {
+    expect(topicToClose(list, 0, new Set([10, 11]))).toBeNull();
+    expect(topicToClose(list, 1, new Set([11]))).toBeNull();
+    expect(topicToClose(list, 3, new Set([10, 11, 20, 30]))).toBeNull();
+  });
+});
+
 describe('buildAnswer', () => {
   const mcq: PlayerExercise = {
     id: 1,
+    topicId: null,
     prompt: 'p',
     answered: false,
     kind: 'mcq',
@@ -213,6 +242,7 @@ describe('buildAnswer', () => {
   };
   const arrange: PlayerExercise = {
     id: 2,
+    topicId: null,
     prompt: 'p',
     answered: false,
     kind: 'arrange_sentence',
@@ -224,6 +254,7 @@ describe('buildAnswer', () => {
   };
   const fill: PlayerExercise = {
     id: 3,
+    topicId: null,
     prompt: 'p',
     answered: false,
     kind: 'fill_blank',
@@ -266,7 +297,13 @@ describe('buildAnswer', () => {
   it('never builds an answer for an unsupported exercise', () => {
     expect(
       buildAnswer(
-        { id: 4, prompt: 'p', answered: false, kind: 'unsupported' },
+        {
+          id: 4,
+          topicId: null,
+          prompt: 'p',
+          answered: false,
+          kind: 'unsupported',
+        },
         { optionId: 'a', tokenIds: ['a'], text: 'a' },
       ),
     ).toBeNull();
@@ -329,6 +366,7 @@ describe('listening helpers', () => {
   it('builds { optionId } for listening like mcq', () => {
     const listening: PlayerExercise = {
       id: 1,
+      topicId: null,
       prompt: 'p',
       answered: false,
       kind: 'listening',

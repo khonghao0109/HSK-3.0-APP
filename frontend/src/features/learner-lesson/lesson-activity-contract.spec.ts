@@ -7,7 +7,7 @@ import {
 
 const activity = {
   lesson: { id: 5, title: 'Chào hỏi', description: null, slug: 'chao-hoi' },
-  progress: { completionPercent: 67, status: 'learning' },
+  progress: { completionPercent: 67, status: 'learning', score: 80.4 },
   level: { id: 1, code: 'HSK1', name: 'HSK 1' },
   position: 1,
   state: 'current',
@@ -25,7 +25,7 @@ describe('lessonActivitySchema', () => {
     const parsed = lessonActivitySchema.parse(activity);
     expect(parsed).toEqual({
       lesson: { id: 5, title: 'Chào hỏi', description: null },
-      progress: { completionPercent: 67 },
+      progress: { completionPercent: 67, status: 'learning', score: 80.4 },
       level: { id: 1, code: 'HSK1', name: 'HSK 1' },
       position: 1,
       state: 'current',

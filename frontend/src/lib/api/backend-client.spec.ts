@@ -264,7 +264,6 @@ describe('server-only backend client', () => {
       '/api/v1/learning/lessons/../start',
       '/api/v1/learning/lessons/12/../start',
       '/api/v1/learning/lessons/abc/start',
-      '/api/v1/learning/lessons/12/complete',
       '/api/v1/learning/exercises/-1/attempts',
       '/api/v1/learning/exercises/34/attempts?x=1',
       '/api/v1/learning/exercises/34/attempts/',
@@ -278,6 +277,44 @@ describe('server-only backend client', () => {
       });
     }
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('allowlists lesson/topic complete and lesson progress, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    for (const path of [
+      '/api/v1/learning/lessons/12/complete',
+      '/api/v1/learning/topics/7/start',
+      '/api/v1/learning/topics/7/complete',
+    ]) {
+      await client.request(path, { method: 'POST', body: {} });
+    }
+    await client.request('/api/v1/progress/lessons/12');
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+
+    for (const path of [
+      '/api/v1/learning/lessons/12/complete?x=1',
+      '/api/v1/learning/lessons/12/complete/',
+      '/api/v1/learning/lessons/../complete',
+      '/api/v1/learning/topics/-1/complete',
+      '/api/v1/learning/topics/7/attempts',
+      '/api/v1/learning/topics/7',
+      '/api/v1/progress/lessons',
+      '/api/v1/progress/lessons/12/x',
+      '/api/v1/progress/lessons/abc',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
 
   it('sends the idempotency key header only when given', async () => {

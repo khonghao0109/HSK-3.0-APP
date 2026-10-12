@@ -3627,6 +3627,517 @@ html:has(.learner-app) {
   padding: 0 14px;
 }
 
+/* ---------- 02-06 Hoàn thành bài học (M2.5d, Q42, Q58–Q61) ---------- */
+/* m02.css 02-06 + khối M2.5d. Không có tab bar (mẫu 06); trang nằm trên nền
+   navy như mẫu. Q59: không ô XP, không thẻ thành tích. */
+.learner-app .app:has(> .done-main) {
+  --m02-c-pink: #e0507e;
+  --m02-c-lav: #8a83d8;
+  --m02-c-yellow: #f2c64c;
+  --m02-c-blue: #3e5bd8;
+  --m02-c-orange: #ef7348;
+  --m02-c-olive: #c8a24c;
+  --m02-c-teal: #4db39e;
+  --m02-c-red: #ef5262;
+  --m02-c-brown: #8c5a4c;
+  --m02-c-green: #9fc07c;
+  --m02-c-cyan: #36d3d6;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: radial-gradient(
+    120% 60% at 50% 22%,
+    #13265a 0%,
+    var(--navy-900) 55%,
+    #091842 100%
+  );
+}
+
+.learner-app .app:has(> .done-main) > .tabbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .learner-app:has(.done-main) {
+    background: var(--navy-950);
+  }
+}
+
+.learner-app .done-confetti {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 175px;
+  pointer-events: none;
+}
+
+/* Mẫu đặt vị trí bằng style="--x…"; CSP không cho thuộc tính style nên
+   vị trí theo thứ tự mảnh (README ghi chú 36). */
+.learner-app .done-confetti i {
+  position: absolute;
+  left: calc(var(--x) / 390 * 100%);
+  top: var(--y);
+  width: 6px;
+  height: 10px;
+  border-radius: 1.5px;
+  background: var(--c);
+  transform: rotate(var(--r));
+  opacity: 0.9;
+  animation:
+    done-confetti-in 900ms ease-out both,
+    done-confetti-float 3.2s ease-in-out 900ms infinite alternate;
+}
+
+.learner-app .done-confetti i:nth-child(3n) {
+  animation-delay: 80ms, 1.1s;
+}
+
+.learner-app .done-confetti i:nth-child(3n + 1) {
+  animation-delay: 160ms, 1.4s;
+}
+
+.learner-app .done-confetti i:nth-child(1) {
+  --x: 44;
+  --y: 9px;
+  --r: 20deg;
+}
+
+.learner-app .done-confetti i:nth-child(2) {
+  --x: 12;
+  --y: 31px;
+  --r: -35deg;
+}
+
+.learner-app .done-confetti i:nth-child(3) {
+  --x: 40;
+  --y: 44px;
+  --r: 30deg;
+}
+
+.learner-app .done-confetti i:nth-child(4) {
+  --x: 89;
+  --y: 55px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(5) {
+  --x: 22;
+  --y: 74px;
+  --r: -30deg;
+}
+
+.learner-app .done-confetti i:nth-child(6) {
+  --x: 63;
+  --y: 71px;
+  --r: -35deg;
+}
+
+.learner-app .done-confetti i:nth-child(7) {
+  --x: 119;
+  --y: 67px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(8) {
+  --x: 61;
+  --y: 100px;
+  --r: -50deg;
+}
+
+.learner-app .done-confetti i:nth-child(9) {
+  --x: 32;
+  --y: 104px;
+  --r: 20deg;
+}
+
+.learner-app .done-confetti i:nth-child(10) {
+  --x: 44;
+  --y: 147px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(11) {
+  --x: 293;
+  --y: 50px;
+  --r: 30deg;
+}
+
+.learner-app .done-confetti i:nth-child(12) {
+  --x: 352;
+  --y: 12px;
+  --r: 40deg;
+}
+
+.learner-app .done-confetti i:nth-child(13) {
+  --x: 373;
+  --y: 30px;
+  --r: 50deg;
+}
+
+.learner-app .done-confetti i:nth-child(14) {
+  --x: 358;
+  --y: 56px;
+  --r: 10deg;
+}
+
+.learner-app .done-confetti i:nth-child(15) {
+  --x: 342;
+  --y: 73px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(16) {
+  --x: 263;
+  --y: 66px;
+  --r: -25deg;
+}
+
+.learner-app .done-confetti i:nth-child(17) {
+  --x: 371;
+  --y: 91px;
+  --r: 50deg;
+}
+
+.learner-app .done-confetti i:nth-child(18) {
+  --x: 331;
+  --y: 107px;
+  --r: -45deg;
+}
+
+.learner-app .done-confetti i:nth-child(19) {
+  --x: 364;
+  --y: 126px;
+  --r: 40deg;
+}
+
+.learner-app .done-confetti i:nth-child(20) {
+  --x: 342;
+  --y: 150px;
+  --r: 45deg;
+}
+
+.learner-app .done-confetti i:nth-child(21) {
+  --x: 299;
+  --y: 82px;
+  --r: 0deg;
+}
+
+.learner-app .done-confetti i.is-curl {
+  width: 5px;
+  height: 11px;
+  border-radius: 4px 4px 1px 1px;
+}
+
+.learner-app .done-confetti i.is-diamond {
+  width: 8px;
+  height: 8px;
+}
+
+.learner-app .done-confetti i.is-star {
+  width: 13px;
+  height: 13px;
+  border-radius: 0;
+  clip-path: polygon(
+    50% 0,
+    62% 38%,
+    100% 50%,
+    62% 62%,
+    50% 100%,
+    38% 62%,
+    0 50%,
+    38% 38%
+  );
+}
+
+.learner-app .c-pink {
+  --c: var(--m02-c-pink);
+}
+
+.learner-app .c-lav {
+  --c: var(--m02-c-lav);
+}
+
+.learner-app .c-yellow {
+  --c: var(--m02-c-yellow);
+}
+
+.learner-app .c-blue {
+  --c: var(--m02-c-blue);
+}
+
+.learner-app .c-orange {
+  --c: var(--m02-c-orange);
+}
+
+.learner-app .c-olive {
+  --c: var(--m02-c-olive);
+}
+
+.learner-app .c-teal {
+  --c: var(--m02-c-teal);
+}
+
+.learner-app .c-red {
+  --c: var(--m02-c-red);
+}
+
+.learner-app .c-brown {
+  --c: var(--m02-c-brown);
+}
+
+.learner-app .c-green {
+  --c: var(--m02-c-green);
+}
+
+.learner-app .c-cyan {
+  --c: var(--m02-c-cyan);
+}
+
+.learner-app .c-star {
+  --c: var(--amber-500);
+}
+
+@keyframes done-confetti-in {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) rotate(calc(var(--r) - 120deg));
+  }
+}
+
+@keyframes done-confetti-float {
+  to {
+    transform: translateY(4px) rotate(calc(var(--r) + 12deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-app .done-confetti i {
+    animation: none;
+  }
+}
+
+.learner-app .done-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12.5px 27px;
+}
+
+.learner-app .done-kicker {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.learner-app .done-title {
+  margin-top: 4px;
+  font-family: var(--font-sans);
+  text-align: center;
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.learner-app .done-medal {
+  position: relative;
+  height: 104px;
+  margin-top: -2.5px;
+}
+
+.learner-app .done-medal img {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 230px;
+  height: auto;
+  transform: translateX(calc(-50% - 1.5px));
+}
+
+.learner-app .done-medal__score {
+  position: absolute;
+  left: 50%;
+  top: 36px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  color: var(--jade-700);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.learner-app .done-medal__score small {
+  margin-left: 2px;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.learner-app .done-stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.learner-app .done-stat {
+  height: 62.3px;
+  padding-top: 12px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink-900);
+  text-align: center;
+}
+
+.learner-app .done-stat h2 {
+  font-size: 0.71rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.learner-app .done-stat__score {
+  margin-top: 6px;
+  color: var(--jade-700);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.learner-app .done-stat__score small {
+  margin-left: 1px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.learner-app .done-actions {
+  display: grid;
+  grid-template-columns: 164.8fr 187.8fr;
+  gap: 12.4px;
+  margin-top: 15.3px;
+}
+
+.learner-app .done-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  height: 48px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.learner-app .done-btn:focus-visible {
+  border-radius: 10px;
+}
+
+.learner-app .done-btn .icon {
+  width: 25px;
+  height: 25px;
+}
+
+.learner-app .done-btn--light {
+  padding-left: 4px;
+  background: var(--paper);
+  color: var(--ink-900);
+}
+
+.learner-app .done-btn--light .icon {
+  stroke-width: 2;
+  color: var(--navy-900);
+}
+
+/* Q42: nền jade-800 đặc (chữ trắng 5,3:1). */
+.learner-app .done-btn--primary {
+  gap: 30px;
+  padding-left: 14px;
+  background: var(--jade-800);
+  color: #fff;
+  font-size: 1.06rem;
+}
+
+.learner-app .done-btn--primary .icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
+}
+
+.learner-app .done-btn--light:hover {
+  background: var(--cream-100);
+}
+
+@media (max-width: 374px) {
+  .learner-app .done-btn {
+    gap: 10px;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .done-btn--primary {
+    gap: 12px;
+    padding-left: 0;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .done-btn .icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Zoom lớn (≤ 299px CSS): mẫu tràn ngang ở đây; hai nút xếp dọc và xuống
+   dòng, huy chương co theo bề ngang. */
+@media (max-width: 299px) {
+  .learner-app .done-kicker,
+  .learner-app .done-title {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .done-medal {
+    width: min(100%, 230px);
+    height: auto;
+    margin-inline: auto;
+    aspect-ratio: 230 / 105;
+  }
+
+  .learner-app .done-medal img {
+    position: static;
+    width: 100%;
+    transform: none;
+  }
+
+  .learner-app .done-medal__score {
+    top: 32%;
+    font-size: 2rem;
+  }
+
+  .learner-app .done-medal__score small {
+    font-size: 1.1rem;
+  }
+
+  .learner-app .done-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .learner-app .done-btn,
+  .learner-app .done-btn--primary {
+    height: auto;
+    min-height: 48px;
+    padding: 8px 12px;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .learner-app .done-btn {
+    border: 1px solid ButtonText;
+  }
+}
+
 /* Narrow screens (< 375px): smaller hero tile. */
 @media (max-width: 374px) {
   .learner-app .lesson-hero {

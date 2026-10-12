@@ -5,6 +5,8 @@ import { backendEnvelope } from '@/lib/api/backend-envelope';
 
 import { FILL_BLANK_MAX_LENGTH } from './lesson-player-model';
 
+const progressStatusSchema = z.enum(['not_started', 'learning', 'done']);
+
 const exerciseSchema = z.object({
   id: z.number().int().positive(),
   type: z.string(),
@@ -24,13 +26,13 @@ const exerciseSchema = z.object({
 export const lessonPlayerActivitySchema = z.object({
   lesson: z.object({ id: z.number().int(), title: z.string() }),
   state: lessonStateSchema,
-  progress: z.object({
-    status: z.enum(['not_started', 'learning', 'done']),
-  }),
+  progress: z.object({ status: progressStatusSchema }),
   topics: z.array(
     z.object({
       id: z.number().int(),
       orderIndex: z.number().int(),
+      // Read by the complete BFF (Q58); the player ignores it.
+      progress: z.object({ status: progressStatusSchema }),
       exercises: z.array(exerciseSchema),
     }),
   ),
@@ -45,6 +47,16 @@ export const backendLessonPlayerActivitySchema = backendEnvelope(
 export const backendLessonStartSchema = backendEnvelope(
   z.object({ lessonId: z.number().int() }),
 );
+
+/** `GET /progress/lessons/:lessonId`, read after a 409 on complete. */
+export const backendLessonProgressSchema = backendEnvelope(
+  z.object({ status: progressStatusSchema }),
+);
+
+/** Body the browser sends to `POST /api/learner/topics/:id/complete`. */
+export const topicCompleteInputSchema = z.strictObject({
+  lessonId: z.number().int().positive().max(2_147_483_647),
+});
 
 /** `Attempt` fields the result bar shows; it never carries the answer key. */
 export const backendAttemptSchema = backendEnvelope(

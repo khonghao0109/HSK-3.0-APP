@@ -6,7 +6,9 @@ import { getRefreshCookieName } from '@/lib/auth/session-cookie';
 
 import {
   handleExerciseAttempt,
+  handleLessonComplete,
   handleLessonStart,
+  handleTopicComplete,
   type LessonPlayerHandlerDependencies,
 } from './lesson-player-route-handler';
 
@@ -472,5 +474,444 @@ describe('handleExerciseAttempt', () => {
       503,
       'unavailable',
     );
+  });
+});
+
+type TopicStatus = 'not_started' | 'learning' | 'done';
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+
+function completeActivity(
+  topics: Array<{ id: number; status: TopicStatus; attempts: boolean[] }>,
+  status = 'learning',
+) {
+  return {
+    success: true,
+    meta,
+    data: {
+      lesson: { id: 12, title: 'Bài' },
+      state: 'current',
+      progress: { status },
+      topics: topics.map((topic, index) => ({
+        id: topic.id,
+        orderIndex: index + 1,
+        progress: { status: topic.status },
+        exercises: topic.attempts.map((attempted, exercise) => ({
+          id: topic.id * 10 + exercise,
+          type: 'mcq',
+          prompt: 'p',
+          content: {},
+          orderIndex: exercise + 1,
+          latestAttempt: attempted ? { attemptId: 1 } : null,
+        })),
+      })),
+      standaloneExercises: [],
+    },
+  };
+}
+
+type Call = Parameters<LessonPlayerHandlerDependencies['requestBackend']>;
+
+/** Backend fake: reads answer from `reads`, writes answer `writes[path]`. */
+function fakeBackend(
+  reads: Record<string, unknown[]>,
+  writes: Record<string, number> = {},
+) {
+  const calls: Call[] = [];
+  const respond = (...call: Call): unknown => {
+    calls.push(call);
+    const [path, options] = call;
+    if (options?.method === 'POST') {
+      const status = writes[path] ?? 201;
+      if (status !== 201) throw backendError(status);
+      return { success: true, meta, data: {} };
+    }
+    const queue = reads[path];
+    const next = queue && queue.length > 1 ? queue.shift() : queue?.[0];
+    if (next === undefined) throw backendError(404);
+    if (typeof next === 'number') throw backendError(next);
+    return next;
+  };
+  const requestBackend = vi
+    .fn()
+    .mockImplementation(async (...call: Call) => respond(...call));
+  const posts = () =>
+    calls
+      .filter(([, options]) => options?.method === 'POST')
+      .map(([path]) => path);
+  return { requestBackend, calls, posts };
+}
+
+const activityPath = '/api/v1/learning/lessons/12/activity';
+const topicPath = '/api/learner/topics/3/complete';
+
+function topicRequest(options: { cookie?: boolean; body?: unknown } = {}) {
+  return request(topicPath, {
+    key: null,
+    cookie: options.cookie,
+    body: options.body ?? { lessonId: 12 },
+  });
+}
+
+describe('handleTopicComplete (Q58)', () => {
+  it('starts a not-started topic, then completes it, each with a fresh UUID key', async () => {
+    const backend = fakeBackend({
+      [activityPath]: [
+        completeActivity([{ id: 3, status: 'not_started', attempts: [true] }]),
+      ],
+    });
+    const response = await handleTopicComplete(
+      topicRequest(),
+      '3',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { topicId: 3 },
+    });
+    expect(backend.posts()).toEqual([
+      '/api/v1/learning/topics/3/start',
+      '/api/v1/learning/topics/3/complete',
+    ]);
+    const keys = backend.calls
+      .filter(([, options]) => options?.method === 'POST')
+      .map(([, options]) => options?.idempotencyKey);
+    expect(keys.every((key) => UUID.test(key ?? ''))).toBe(true);
+    expect(new Set(keys).size).toBe(2);
+    expect(backend.calls[0]).toEqual([
+      activityPath,
+      { token: 'learner-token' },
+    ]);
+  });
+
+  it('does not start a topic that is already learning', async () => {
+    const backend = fakeBackend({
+      [activityPath]: [
+        completeActivity([{ id: 3, status: 'learning', attempts: [true] }]),
+      ],
+    });
+    const response = await handleTopicComplete(
+      topicRequest(),
+      '3',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(backend.posts()).toEqual(['/api/v1/learning/topics/3/complete']);
+  });
+
+  it('answers success without a write when the topic is already done', async () => {
+    const backend = fakeBackend({
+      [activityPath]: [
+        completeActivity([{ id: 3, status: 'done', attempts: [true] }]),
+      ],
+    });
+    const response = await handleTopicComplete(
+      topicRequest(),
+      '3',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(backend.posts()).toEqual([]);
+  });
+
+  it('treats a 409 on complete as success once the topic reads done', async () => {
+    const backend = fakeBackend(
+      {
+        [activityPath]: [
+          completeActivity([{ id: 3, status: 'learning', attempts: [true] }]),
+          completeActivity([{ id: 3, status: 'done', attempts: [true] }]),
+        ],
+      },
+      { '/api/v1/learning/topics/3/complete': 409 },
+    );
+    const response = await handleTopicComplete(
+      topicRequest(),
+      '3',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { topicId: 3 },
+    });
+  });
+
+  it('answers 409 when a 409 leaves the topic not done', async () => {
+    const backend = fakeBackend(
+      {
+        [activityPath]: [
+          completeActivity([{ id: 3, status: 'learning', attempts: [false] }]),
+        ],
+      },
+      { '/api/v1/learning/topics/3/complete': 409 },
+    );
+    await expectFailure(
+      await handleTopicComplete(
+        topicRequest(),
+        '3',
+        deps(backend.requestBackend),
+      ),
+      409,
+      'conflict',
+    );
+  });
+
+  it('answers 401 without a learner cookie, before the backend', async () => {
+    const requestBackend = vi.fn();
+    await expectFailure(
+      await handleTopicComplete(
+        topicRequest({ cookie: false }),
+        '3',
+        deps(requestBackend),
+      ),
+      401,
+      'session_expired',
+    );
+    expect(requestBackend).not.toHaveBeenCalled();
+  });
+
+  it('clears the learner cookies on a backend 401', async () => {
+    const backend = fakeBackend({ [activityPath]: [401] });
+    const response = await handleTopicComplete(
+      topicRequest(),
+      '3',
+      deps(backend.requestBackend),
+    );
+    await expectFailure(response, 401, 'session_expired');
+    expectCookiesCleared(response);
+  });
+
+  it.each(['abc', '0', '-1', '2147483648', '01'])(
+    'answers 404 for topic id %j before the backend',
+    async (id) => {
+      const requestBackend = vi.fn();
+      await expectFailure(
+        await handleTopicComplete(topicRequest(), id, deps(requestBackend)),
+        404,
+        'not_found',
+      );
+      expect(requestBackend).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([{}, { lessonId: 0 }, { lessonId: '12' }, { lessonId: 12, x: 1 }])(
+    'answers 400 for body %j',
+    async (body) => {
+      const requestBackend = vi.fn();
+      await expectFailure(
+        await handleTopicComplete(
+          topicRequest({ body }),
+          '3',
+          deps(requestBackend),
+        ),
+        400,
+        'invalid_request',
+      );
+      expect(requestBackend).not.toHaveBeenCalled();
+    },
+  );
+
+  it('answers 404 for a topic outside the lesson', async () => {
+    const backend = fakeBackend({
+      [activityPath]: [
+        completeActivity([{ id: 4, status: 'learning', attempts: [true] }]),
+      ],
+    });
+    await expectFailure(
+      await handleTopicComplete(
+        topicRequest(),
+        '3',
+        deps(backend.requestBackend),
+      ),
+      404,
+      'not_found',
+    );
+    expect(backend.posts()).toEqual([]);
+  });
+
+  it('rejects a cross-origin request before the backend', async () => {
+    const requestBackend = vi.fn();
+    const forged = request(topicPath, {
+      origin: 'http://evil.example',
+      key: null,
+      body: { lessonId: 12 },
+    });
+    await expectFailure(
+      await handleTopicComplete(forged, '3', deps(requestBackend)),
+      403,
+      'forbidden',
+    );
+    expect(requestBackend).not.toHaveBeenCalled();
+  });
+});
+
+const lessonCompletePath = '/api/learner/lessons/12/complete';
+const progressPath = '/api/v1/progress/lessons/12';
+
+function progress(status: string) {
+  return { success: true, meta, data: { lessonId: 12, status, score: 100 } };
+}
+
+describe('handleLessonComplete (Q58)', () => {
+  it('closes only topics whose exercises all have an attempt, then completes the lesson', async () => {
+    const backend = fakeBackend({
+      [activityPath]: [
+        completeActivity([
+          { id: 1, status: 'done', attempts: [true] },
+          { id: 2, status: 'not_started', attempts: [true, true] },
+          { id: 3, status: 'learning', attempts: [true] },
+          { id: 4, status: 'learning', attempts: [true, false] },
+          { id: 5, status: 'not_started', attempts: [] },
+        ]),
+      ],
+    });
+    const response = await handleLessonComplete(
+      request(lessonCompletePath, { key: null }),
+      '12',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { lessonId: 12 },
+    });
+    expect(backend.posts()).toEqual([
+      '/api/v1/learning/topics/2/start',
+      '/api/v1/learning/topics/2/complete',
+      '/api/v1/learning/topics/3/complete',
+      '/api/v1/learning/topics/5/start',
+      '/api/v1/learning/topics/5/complete',
+      '/api/v1/learning/lessons/12/complete',
+    ]);
+    const keys = backend.calls
+      .filter(([, options]) => options?.method === 'POST')
+      .map(([, options]) => options?.idempotencyKey ?? '');
+    expect(keys.every((key) => UUID.test(key))).toBe(true);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('answers success when the lesson complete 409s and progress is done', async () => {
+    const backend = fakeBackend(
+      {
+        [activityPath]: [
+          completeActivity(
+            [{ id: 1, status: 'done', attempts: [true] }],
+            'done',
+          ),
+        ],
+        [progressPath]: [progress('done')],
+      },
+      { '/api/v1/learning/lessons/12/complete': 409 },
+    );
+    const response = await handleLessonComplete(
+      request(lessonCompletePath, { key: null }),
+      '12',
+      deps(backend.requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { lessonId: 12 },
+    });
+    expect(backend.calls.at(-1)).toEqual([
+      progressPath,
+      { token: 'learner-token' },
+    ]);
+  });
+
+  it.each([
+    ['learning', progress('learning')],
+    ['missing', 404],
+  ])(
+    'answers 409 when the lesson complete 409s and progress is %s',
+    async (_label, read) => {
+      const backend = fakeBackend(
+        {
+          [activityPath]: [
+            completeActivity([
+              { id: 1, status: 'learning', attempts: [false] },
+            ]),
+          ],
+          [progressPath]: [read],
+        },
+        { '/api/v1/learning/lessons/12/complete': 409 },
+      );
+      await expectFailure(
+        await handleLessonComplete(
+          request(lessonCompletePath, { key: null }),
+          '12',
+          deps(backend.requestBackend),
+        ),
+        409,
+        'conflict',
+      );
+      expect(backend.posts()).toEqual(['/api/v1/learning/lessons/12/complete']);
+    },
+  );
+
+  it('answers 401 without a learner cookie, before the backend', async () => {
+    const requestBackend = vi.fn();
+    await expectFailure(
+      await handleLessonComplete(
+        request(lessonCompletePath, { key: null, cookie: false }),
+        '12',
+        deps(requestBackend),
+      ),
+      401,
+      'session_expired',
+    );
+    expect(requestBackend).not.toHaveBeenCalled();
+  });
+
+  it('clears the learner cookies on a backend 401', async () => {
+    const backend = fakeBackend({ [activityPath]: [401] });
+    const response = await handleLessonComplete(
+      request(lessonCompletePath, { key: null }),
+      '12',
+      deps(backend.requestBackend),
+    );
+    await expectFailure(response, 401, 'session_expired');
+    expectCookiesCleared(response);
+  });
+
+  it.each(['abc', '0', '2147483648'])(
+    'answers 404 for lesson id %j before the backend',
+    async (id) => {
+      const requestBackend = vi.fn();
+      await expectFailure(
+        await handleLessonComplete(
+          request(lessonCompletePath, { key: null }),
+          id,
+          deps(requestBackend),
+        ),
+        404,
+        'not_found',
+      );
+      expect(requestBackend).not.toHaveBeenCalled();
+    },
+  );
+
+  it('answers 503 when a topic write fails with 503', async () => {
+    const backend = fakeBackend(
+      {
+        [activityPath]: [
+          completeActivity([{ id: 1, status: 'learning', attempts: [true] }]),
+        ],
+      },
+      { '/api/v1/learning/topics/1/complete': 503 },
+    );
+    await expectFailure(
+      await handleLessonComplete(
+        request(lessonCompletePath, { key: null }),
+        '12',
+        deps(backend.requestBackend),
+      ),
+      503,
+      'unavailable',
+    );
+    expect(backend.posts()).toEqual(['/api/v1/learning/topics/1/complete']);
   });
 });

@@ -25,6 +25,7 @@ vi.mock('next/navigation', () => ({
 
 const mcq: PlayerExercise = {
   id: 11,
+  topicId: null,
   prompt: 'Chọn từ có nghĩa là siêu thị.',
   answered: false,
   kind: 'mcq',
@@ -37,6 +38,7 @@ const mcq: PlayerExercise = {
 };
 const arrange: PlayerExercise = {
   id: 12,
+  topicId: null,
   prompt: 'Sắp xếp các từ sau thành câu hoàn chỉnh.',
   answered: false,
   kind: 'arrange_sentence',
@@ -48,12 +50,14 @@ const arrange: PlayerExercise = {
 };
 const fill: PlayerExercise = {
   id: 13,
+  topicId: null,
   prompt: '你___',
   answered: false,
   kind: 'fill_blank',
 };
 const listening: PlayerExercise = {
   id: 14,
+  topicId: null,
   prompt: 'Nghe và chọn.',
   answered: false,
   kind: 'unsupported',
@@ -485,6 +489,155 @@ describe('LessonPlayer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Thêm 想' }));
     fireEvent.click(screen.getByRole('button', { name: 'Bỏ 想 khỏi câu' }));
     expect(screen.getByRole('button', { name: 'Thêm 我' })).toHaveFocus();
+  });
+
+  describe('completing the lesson (Q58)', () => {
+    const inTopic = (id: number, topicId: number): PlayerExercise => ({
+      ...mcq,
+      id,
+      topicId,
+    });
+
+    function urls() {
+      return fetchSpy.mock.calls.map(([url]) => String(url));
+    }
+
+    async function answerRight() {
+      fireEvent.click(screen.getByRole('radio', { name: '超市' }));
+      fireEvent.click(checkButton());
+      await screen.findByText('Chính xác!');
+    }
+
+    function continueButton() {
+      return screen.getByRole('button', { name: 'Tiếp tục' });
+    }
+
+    it('closes a topic after its last exercise, then completes the lesson and opens /complete', async () => {
+      fetchSpy.mockImplementation(async (url) =>
+        String(url).includes('/attempts')
+          ? attempt(true)
+          : ok({ success: true, data: {} }),
+      );
+      renderPlayer([inTopic(21, 7), inTopic(22, 7), { ...mcq, id: 23 }]);
+
+      await answerRight();
+      fireEvent.click(continueButton());
+      expect(urls().filter((url) => url.includes('/topics/'))).toEqual([]);
+
+      await answerRight();
+      fireEvent.click(continueButton());
+      expect(urls().filter((url) => url.includes('/topics/'))).toEqual([
+        '/api/learner/topics/7/complete',
+      ]);
+      const close = fetchSpy.mock.calls.find(([url]) =>
+        String(url).includes('/topics/'),
+      );
+      expect(close?.[1]?.method).toBe('POST');
+      expect(close?.[1]?.body).toBe(JSON.stringify({ lessonId: 5 }));
+      expect(
+        urls().some(
+          (url) => url.includes('/complete') && url.includes('/lessons/'),
+        ),
+      ).toBe(false);
+
+      await answerRight();
+      fireEvent.click(continueButton());
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+      );
+      expect(urls().filter((url) => !url.includes('/attempts'))).toEqual([
+        '/api/learner/topics/7/complete',
+        '/api/learner/lessons/5/complete',
+      ]);
+    });
+
+    it('waits for a topic close in flight before completing the lesson', async () => {
+      let finishClose: (response: Response) => void = () => {};
+      fetchSpy.mockImplementation((url) => {
+        if (String(url).includes('/attempts'))
+          return Promise.resolve(attempt(true));
+        if (String(url).includes('/topics/')) {
+          return new Promise<Response>((done) => {
+            finishClose = done;
+          });
+        }
+        return Promise.resolve(ok({ success: true, data: { lessonId: 5 } }));
+      });
+      renderPlayer([inTopic(21, 7), { ...mcq, id: 23 }]);
+      await answerRight();
+      fireEvent.click(continueButton());
+      await answerRight();
+      fireEvent.click(continueButton());
+      await act(async () => {});
+      expect(urls().some((url) => url.endsWith('/lessons/5/complete'))).toBe(
+        false,
+      );
+      await act(async () => finishClose(ok({ success: true })));
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+      );
+    });
+
+    it('completes at once when opened with every exercise answered', async () => {
+      fetchSpy.mockResolvedValue(ok({ success: true, data: { lessonId: 5 } }));
+      renderPlayer(
+        [
+          { ...inTopic(21, 7), answered: true },
+          { ...mcq, id: 23, answered: true },
+        ],
+        { startIndex: 2 },
+      );
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+      );
+      expect(urls()).toEqual(['/api/learner/lessons/5/complete']);
+      expect(fetchSpy.mock.calls[0]?.[1]?.method).toBe('POST');
+      expect(screen.queryByRole('link', { name: 'Về bài học' })).toBeNull();
+    });
+
+    it('shows an alert with a retry when completing fails, and stays on the page', async () => {
+      fetchSpy
+        .mockResolvedValueOnce(ok({ success: false }, 503))
+        .mockResolvedValueOnce(ok({ success: true, data: { lessonId: 5 } }));
+      renderPlayer([{ ...mcq, answered: true }], { startIndex: 1 });
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(
+        'Chưa lưu được kết quả bài học. Vui lòng thử lại.',
+      );
+      expect(replace).not.toHaveBeenCalled();
+
+      const retry = screen.getByRole('button', { name: 'Thử lại' });
+      fireEvent.click(retry);
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+      );
+      expect(urls()).toEqual([
+        '/api/learner/lessons/5/complete',
+        '/api/learner/lessons/5/complete',
+      ]);
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', {
+            level: 2,
+            name: 'Bạn đã làm xong phần luyện tập',
+          }),
+        ).toHaveFocus(),
+      );
+    });
+
+    it('goes to /sign-in when completing answers 401', async () => {
+      fetchSpy.mockResolvedValue(ok({ success: false }, 401));
+      renderPlayer([{ ...mcq, answered: true }], { startIndex: 1 });
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/sign-in'));
+    });
+
+    it('does not complete while an exercise has no attempt (Q48)', () => {
+      renderPlayer([listening, { ...mcq, answered: true }], { startIndex: 2 });
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole('link', { name: 'Về bài học' }),
+      ).toBeInTheDocument();
+    });
   });
 
   it('offers a retry when start fails', async () => {

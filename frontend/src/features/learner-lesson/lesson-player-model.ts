@@ -5,6 +5,8 @@ export type PlayerChoice = { id: string; text: string };
 
 export type PlayerExercise = {
   id: number;
+  /** Topic it belongs to; null for a standalone exercise. */
+  topicId: number | null;
   prompt: string;
   answered: boolean;
 } & (
@@ -83,9 +85,13 @@ function readMedia(media: unknown): PlayerMedia | null {
   };
 }
 
-function toPlayerExercise(raw: RawExercise): PlayerExercise {
+function toPlayerExercise(
+  raw: RawExercise,
+  topicId: number | null,
+): PlayerExercise {
   const base = {
     id: raw.id,
+    topicId,
     prompt: raw.prompt,
     answered: raw.latestAttempt !== null,
   };
@@ -112,10 +118,34 @@ export function orderPlayerExercises(
 ): PlayerExercise[] {
   const fromTopics = [...topics]
     .sort(byOrder)
-    .flatMap((topic) => [...topic.exercises].sort(byOrder));
-  return [...fromTopics, ...[...standalone].sort(byOrder)].map(
-    toPlayerExercise,
-  );
+    .flatMap((topic) =>
+      [...topic.exercises]
+        .sort(byOrder)
+        .map((raw) => toPlayerExercise(raw, topic.id)),
+    );
+  return [
+    ...fromTopics,
+    ...[...standalone].sort(byOrder).map((raw) => toPlayerExercise(raw, null)),
+  ];
+}
+
+/**
+ * Topic to close after Tiếp tục on exercise `index` (Q58): the exercise is
+ * the topic's last one and every exercise of the topic has an attempt.
+ */
+export function topicToClose(
+  exercises: PlayerExercise[],
+  index: number,
+  answered: ReadonlySet<number>,
+): number | null {
+  const topicId = exercises[index]?.topicId ?? null;
+  if (topicId === null || exercises[index + 1]?.topicId === topicId) {
+    return null;
+  }
+  const ofTopic = exercises.filter((exercise) => exercise.topicId === topicId);
+  return ofTopic.every((exercise) => answered.has(exercise.id))
+    ? topicId
+    : null;
 }
 
 /** First exercise without an attempt; `length` when every one has one. */

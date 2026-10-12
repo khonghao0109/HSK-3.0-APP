@@ -15,7 +15,12 @@ export const lessonActivitySchema = z.object({
     title: z.string(),
     description: z.string().nullable(),
   }),
-  progress: z.object({ completionPercent: z.number() }),
+  progress: z.object({
+    completionPercent: z.number(),
+    // Read by the complete page (M2.5d, Q59).
+    status: z.enum(['not_started', 'learning', 'done']),
+    score: z.number().nullable(),
+  }),
   level: z.object({ id: z.number().int(), code: z.string(), name: z.string() }),
   position: z.number().int().positive(),
   state: lessonStateSchema,

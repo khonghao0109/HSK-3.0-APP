@@ -19,6 +19,7 @@ vi.mock('next/navigation', () => ({
 const SIG = 'ab'.repeat(32);
 const listening: PlayerExercise = {
   id: 14,
+  topicId: null,
   prompt: 'Nghe và chọn đáp án đúng.',
   answered: false,
   kind: 'listening',

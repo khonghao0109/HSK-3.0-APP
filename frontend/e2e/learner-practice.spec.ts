@@ -27,7 +27,6 @@ import {
 // (publishPracticeExercises): arrange_sentence, fill_blank, listening_choice
 // (with a real ingested WAV since M2.5c).
 const MCQ_EXPLANATION = '你好 is the standard greeting “hello”.';
-const DONE = 'Bạn đã làm xong phần luyện tập';
 
 type Activity = {
   progress: { status: string };
@@ -223,14 +222,17 @@ test.describe('Learner activity player (M2.5b)', () => {
     await page.getByRole('radio', { name: '超市' }).click();
     await check(page).click();
     await expect(feedback(page)).toContainText('Chính xác!');
+    // M2.5d (Q58): Tiếp tục on the last exercise completes the lesson and
+    // opens its complete page.
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
-    await expect(page.getByRole('heading', { level: 2 })).toHaveText(DONE);
-    await expect(
-      page.getByRole('link', { name: 'Về bài học' }),
-    ).toHaveAttribute('href', `/learn/lessons/${hsk3Lesson}`);
+    await expect(page).toHaveURL(
+      new RegExp(`/learn/lessons/${hsk3Lesson}/complete$`),
+    );
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.locator('.done-medal__score')).toHaveText('100%');
 
     const view = await backendView(email, hsk3Lesson);
-    expect(view.status).toBe('learning');
+    expect(view.status).toBe('done');
     expect(view.attempts.arrange_sentence?.map((a) => a.isCorrect)).toEqual([
       true,
     ]);
