@@ -98,7 +98,8 @@ listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter
   khác body → 409.
 - Mọi `POST` trả `201` kể cả replay (chưa dùng `@HttpCode`).
 - Throttle mặc định 20 req/phút cho mỗi route và mỗi user/IP (không phải tổng chung);
-  route giới hạn riêng (auth/me 120, attempts 60, register 100, login 10, …) xem
+  route giới hạn riêng (auth/me 120, attempts 60, media access 120/user, media content
+  60/grant + 600/IP và nginx `limit_req`, register 100, login 10, …) xem
   `docs/api/api.md` mục Rate limit; xem finding A-02.
 
 ### 3.4 Invariant nghiệp vụ

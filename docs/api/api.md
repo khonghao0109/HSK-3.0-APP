@@ -80,12 +80,15 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
   mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
   `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
-  60/phút/user, `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
+  60/phút/user, `GET /media/:mediaId/access` 120/phút/user,
+  `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
+  `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
   `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
   `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
   5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
   `POST /users/me/deletion-request` 5/15 phút. Khi `NODE_ENV=test`, mặc định và các
-  route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên 1.000; các
+  route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên 1.000 (trần
+  IP của route media content nâng lên 10.000); các
   route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
@@ -628,8 +631,21 @@ finalize. Chi tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
-| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 60 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+
+Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate
+của route attempts (`PUBLIC_LESSON_EXERCISE_WHERE` + `buildLessonReadyWhere()`): exercise
+published, chưa soft-delete, loại public (listening_choice thì media audio ready), topic
+(nếu có) published; lesson published, Level published và chưa soft-delete, lesson có ít
+nhất một topic hoặc story published. Admin không đổi.
+
+Rate limit route content: bucket `default` khoá theo `grant:<sha256(mediaId:expires:signature)>`
+(không chứa chữ ký gốc) khi `mediaId`, `expires`, `signature` đúng dạng và
+`now ≤ expires ≤ now + max(TTL learner, TTL admin) + 60`; ngược lại khoá theo IP. Throttler
+riêng `mediaContentIp` giữ trần 600/phút/IP chỉ cho route này. Ở edge, nginx thêm
+`limit_req` 20 req/giây/địa chỉ, burst 200, trả `429` có `Cache-Control: private, no-store`; body
+429 của edge là trang lỗi HTML của nginx, không phải envelope JSON.
 
 Signature = HMAC-SHA256 trên `method`, canonical path, `expiresAt`, checksum; so sánh
 timing-safe; body được hash lại trước khi trả. Grant luôn ký bằng `MEDIA_SIGNING_SECRET`;

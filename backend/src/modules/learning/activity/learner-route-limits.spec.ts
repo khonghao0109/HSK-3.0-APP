@@ -1,4 +1,14 @@
 import { AuthController, authMeLimit } from '../../auth/auth.controller';
+import { MediaController } from '../../media/media.controller';
+import {
+  isNotMediaContentRoute,
+  mediaContentIpLimit,
+} from '../../media/media-content-ip-throttle';
+import {
+  grantTracker,
+  mediaAccessLimit,
+  mediaContentGrantLimit,
+} from '../../media/media-content-throttle';
 import {
   exerciseAttemptLimit,
   LessonActivityController,
@@ -16,14 +26,24 @@ function withNodeEnv(nodeEnv: string, run: () => void): void {
 
 describe('learner route limits', () => {
   it.each([
-    ['production', 120, 60],
-    ['test', 1_000, 1_000],
+    ['production', 120, 60, 60, 600, 120],
+    ['test', 1_000, 1_000, 1_000, 10_000, 1_000],
   ])(
     'resolves limits under NODE_ENV=%s',
-    (nodeEnv, authMe, exerciseAttempt) => {
+    (
+      nodeEnv,
+      authMe,
+      exerciseAttempt,
+      contentGrant,
+      contentIp,
+      mediaAccess,
+    ) => {
       withNodeEnv(nodeEnv, () => {
         expect(authMeLimit()).toBe(authMe);
         expect(exerciseAttemptLimit()).toBe(exerciseAttempt);
+        expect(mediaContentGrantLimit()).toBe(contentGrant);
+        expect(mediaContentIpLimit()).toBe(contentIp);
+        expect(mediaAccessLimit()).toBe(mediaAccess);
       });
     },
   );
@@ -41,6 +61,18 @@ describe('learner route limits', () => {
       'submitAttempt',
       exerciseAttemptLimit,
     ],
+    [
+      'MediaController.getContent',
+      MediaController.prototype,
+      'getContent',
+      mediaContentGrantLimit,
+    ],
+    [
+      'MediaController.createAccess',
+      MediaController.prototype,
+      'createAccess',
+      mediaAccessLimit,
+    ],
   ] as const)(
     '%s carries its own throttle metadata',
     (_name, proto, method, limit) => {
@@ -54,6 +86,40 @@ describe('learner route limits', () => {
       expect(
         Reflect.getMetadata('THROTTLER:TTLdefault', handler as object),
       ).toBe(60_000);
+    },
+  );
+
+  it('tracks only MediaController.getContent by grant', () => {
+    const tracker = (method: string) =>
+      Reflect.getMetadata(
+        'THROTTLER:TRACKERdefault',
+        Object.getOwnPropertyDescriptor(MediaController.prototype, method)
+          ?.value as object,
+      ) as unknown;
+
+    expect(tracker('getContent')).toBe(grantTracker);
+    expect(tracker('createAccess')).toBeUndefined();
+  });
+
+  it.each([
+    [MediaController, 'getContent', false],
+    [MediaController, 'createAccess', true],
+    [AuthController, 'getProfile', true],
+    [LessonActivityController, 'submitAttempt', true],
+  ] as const)(
+    'mediaContentIp skipIf for %p.%s is %p',
+    (controller, method, skipped) => {
+      const handler: unknown = Object.getOwnPropertyDescriptor(
+        controller.prototype,
+        method,
+      )?.value;
+
+      expect(
+        isNotMediaContentRoute({
+          getClass: () => controller,
+          getHandler: () => handler,
+        }),
+      ).toBe(skipped);
     },
   );
 });

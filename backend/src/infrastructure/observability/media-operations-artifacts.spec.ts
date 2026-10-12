@@ -41,6 +41,27 @@ describe('media operations artifacts', () => {
     );
   });
 
+  it('rate-limits the signed-content route per client address at the edge', () => {
+    const config = read('ops/nginx/media-security.conf');
+    const httpConfig = read('ops/nginx/media-security-http.conf');
+    const directives = (text: string) =>
+      text
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('#'))
+        .join('\n');
+
+    expect(directives(httpConfig)).toContain(
+      'limit_req_zone $binary_remote_addr zone=media_content:10m rate=20r/s;',
+    );
+    expect(directives(config)).toContain(
+      'limit_req zone=media_content burst=200 nodelay;',
+    );
+    expect(directives(config)).toContain('limit_req_status 429;');
+    expect(directives(httpConfig + config)).not.toContain(
+      '$http_x_forwarded_for',
+    );
+  });
+
   it('defines every required bounded-cardinality release alert', () => {
     const alerts = read('ops/observability/media-alerts.yml');
     for (const alert of [
