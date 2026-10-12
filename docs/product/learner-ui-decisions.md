@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày).
+Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -69,3 +69,7 @@ Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q51 | **Có nút "Kiểm tra" ở chân màn cho cả 3 dạng; chọn đáp án thì viền jade-700, chưa nộp; phím mũi tên không nộp** (PO 11/10/2026) | Mẫu 05 chấm ngay khi chạm | — |
 | Q52 | **Gợi ý "(Chạm vào từ để ghép câu)"; bỏ khối pinyin/dịch (API không có); tiêu đề "Luyện tập" và câu "Câu của bạn hoàn toàn đúng." dùng cho cả 3 dạng; thẻ từ, chip và nút kết quả theo Q42 (≥ 44px thật, nút jade-800, nút sai `#b3261e`)** (Tech Lead 11/10/2026) | Mẫu 04: "(Drag để sắp xếp)", có pinyin/dịch, thẻ 38px, chip 32px | Vì vậy 8 từ của mẫu 04 xuống 2 hàng ở 390px. Quy ước ô trống của fill_blank: `___` (2 dấu `_` trở lên) hoặc `＿`; prompt không có thì ô trống nằm cuối câu |
 | Q53 | **arrange để lại ô trống mờ ở chỗ từ đã dùng, kể cả khi câu đã đúng** (PO 11/10/2026) | — | — |
+| Q54 | **listening_choice: bỏ nút "Hiện transcript" và khối transcript (API không có); hàng công cụ chỉ còn "Nghe lại" bên phải** (PO 12/10/2026) | Mẫu 05 có transcript | `learner/practice-listening.html` (ghi chú 35) |
+| Q55 | **Sóng âm trang trí: giữ hình vạch của mẫu 05, vạch đã nghe tô jade-600 theo tiến độ thật; thời gian lấy từ file thật** (PO 12/10/2026) | — | Không so pixel vạch sóng, chỉ kiểm số vạch và phần đã tô |
+| Q56 | **Không tự phát audio khi mở câu nghe; learner bấm nút phát** (PO 12/10/2026) | — | — |
+| Q57 | **Không bắt nghe trước khi "Kiểm tra": chọn đáp án là bấm được (như Q51)** (PO 12/10/2026) | — | — |
