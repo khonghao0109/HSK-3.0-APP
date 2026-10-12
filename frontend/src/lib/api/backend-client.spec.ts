@@ -304,4 +304,106 @@ describe('server-only backend client', () => {
     );
     expect(new Headers(second?.headers).has('idempotency-key')).toBe(false);
   });
+  it('allowlists media access and content, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/media/7/access', { token: 't' });
+    await client.raw('/api/v1/media/7/content');
+    for (const path of [
+      '/api/v1/media/7/access/x',
+      '/api/v1/media/abc/content',
+      '/api/v1/media/7/content?expires=1',
+      '/api/v1/media/7',
+    ]) {
+      await expect(client.raw(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('raw returns any status unread and sends no token', async () => {
+    const upstream = new Response('nope', { status: 403 });
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(upstream);
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+      requestIdFactory: () => 'request-raw',
+      forwardedFor: async () => '203.0.113.9',
+    });
+
+    const response = await client.raw('/api/v1/media/7/content', {
+      search: new URLSearchParams([
+        ['expires', '1'],
+        ['signature', 'a'.repeat(64)],
+      ]),
+      headers: { range: 'bytes=0-1' },
+    });
+
+    expect(response).toBe(upstream);
+    expect(response.bodyUsed).toBe(false);
+    const [input, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(String(input)).toBe(
+      `http://backend.example.test/api/v1/media/7/content?expires=1&signature=${'a'.repeat(64)}`,
+    );
+    const headers = new Headers(init?.headers);
+    expect(headers.get('range')).toBe('bytes=0-1');
+    expect(headers.get('x-request-id')).toBe('request-raw');
+    expect(headers.get('x-forwarded-for')).toBe('203.0.113.9');
+    expect(headers.has('authorization')).toBe(false);
+    expect(headers.has('cookie')).toBe(false);
+  });
+
+  it('raw times out waiting for headers, not while the body streams', async () => {
+    vi.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      const hanging = vi.fn<typeof fetch>((_input, init) => {
+        signal = init?.signal ?? undefined;
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError')),
+          );
+        });
+      });
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 100,
+        fetchImpl: hanging,
+      });
+      const pending = client.raw('/api/v1/media/7/content');
+      const assertion = expect(pending).rejects.toMatchObject({
+        kind: 'timeout',
+        status: 503,
+      });
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      await assertion;
+
+      let bodySignal: AbortSignal | undefined;
+      const answering = vi.fn<typeof fetch>((_input, init) => {
+        bodySignal = init?.signal ?? undefined;
+        return Promise.resolve(new Response('bytes'));
+      });
+      const streaming = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 100,
+        fetchImpl: answering,
+      });
+      await streaming.raw('/api/v1/media/7/content');
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(bodySignal?.aborted).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

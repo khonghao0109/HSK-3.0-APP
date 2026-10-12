@@ -13,6 +13,8 @@ const exerciseSchema = z.object({
   content: z.unknown(),
   orderIndex: z.number().int(),
   latestAttempt: z.object({ attemptId: z.number().int() }).nullable(),
+  // listening_choice audio; read defensively by the player model like content.
+  media: z.unknown().optional(),
 });
 
 /**

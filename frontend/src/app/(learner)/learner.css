@@ -99,6 +99,8 @@
   --ex-right-bg: #eef8f3;
   --ex-progress-end: #19ad86;
   --ex-chip-text: #111111;
+  --ex-play-top: #15ad8a;
+  --ex-wave-rest: #d9d8dd;
   /* Hover stays >= 4.5:1 with white (jade-700 is 4.13:1). */
   --ex-btn-hover: #055c48;
 
@@ -3444,6 +3446,120 @@ html:has(.learner-app) {
   color: var(--red-600);
 }
 
+/* listening_choice (M2.5c, Q54–Q57): mẫu 05 with its M2.5c block; play and
+   "Nghe lại" are 44px for real (Q42), no transcript (Q54). */
+.learner-app .ls-audio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  margin: 10px 0 0 -1.6px;
+  padding: 0 10.8px 0 3.7px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.learner-app .play-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--jade-600);
+  color: var(--white);
+}
+
+.learner-app .ls-play {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(180deg, var(--ex-play-top), var(--jade-600));
+}
+
+.learner-app .ls-play .icon {
+  width: 21px;
+  height: 21px;
+}
+
+.learner-app .ls-audio__track {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Decorative (Q55): SVG bars, played ones jade-600. */
+.learner-app .ls-wave {
+  display: block;
+  position: relative;
+  width: calc(100% - 47px);
+  height: 24px;
+  overflow: visible;
+}
+
+.learner-app .ls-wave rect {
+  fill: var(--jade-600);
+}
+
+.learner-app .ls-wave rect.is-rest {
+  fill: var(--ex-wave-rest);
+}
+
+.learner-app .ls-audio__time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0;
+  color: var(--stone-600);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.learner-app .ls-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12.5px 0 0 -1.6px;
+}
+
+.learner-app .ls-tool {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 16px 0 14px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 0 1px 2px var(--path-tile-shadow);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.learner-app .ls-tool .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2;
+}
+
+.learner-app .ls-tool:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app .ls-play:focus-visible,
+.learner-app .ls-tool:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .ls-tools + .ex-error {
+  margin-top: 12px;
+}
+
 /* fill_blank (Q47): the sentence with an underlined blank, one input. */
 .learner-app .fb-q {
   font-size: 0.95rem;
@@ -3754,7 +3870,8 @@ html:has(.learner-app) {
   .learner-app .m02-feedback,
   .learner-app .m02-feedback__btn,
   .learner-app .ex-check,
-  .learner-app .ex-error {
+  .learner-app .ex-error,
+  .learner-app .ls-play {
     border: 1px solid ButtonText;
   }
 

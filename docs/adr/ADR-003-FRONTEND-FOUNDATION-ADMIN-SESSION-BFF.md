@@ -117,6 +117,11 @@ or claim Media Operations support.
   yet. A future Media slice may add only the exact configured storage/CDN
   origin after its threat and retention model is approved; broad `https:` or
   wildcard sources remain prohibited.
+- Learner audio (M2.5c, 12/10/2026) stays same-origin: the BFF route
+  `GET /api/learner/media/:id/access` rebuilds the backend grant into
+  `/api/learner/media/:id/content?expires=&signature=`, and that route streams
+  the backend bytes and forwards a single `Range`. The browser never talks to
+  the backend or a storage origin, so `media-src` remains `'self'`.
 - The root layout waits for a request so every page is dynamically rendered.
   This disables static optimization, ISR, PPR, and default CDN page caching,
   increasing request-time rendering cost. This trade-off is accepted for the

@@ -156,6 +156,7 @@ MAIL_PROVIDER=memory \
 MAIL_FROM='noreply@hsk.local' \
 MEDIA_STORAGE_PROVIDER=memory \
 MEDIA_SCANNER_PROVIDER=test \
+MEDIA_INGESTION_ENABLED=true \
 MEDIA_SIGNING_SECRET='test-media-signing-secret-at-least-32-characters' \
 MEDIA_METRICS_BEARER_TOKEN='test-media-metrics-token-at-least-32-chars' \
 MEDIA_METRICS_HOST='127.0.0.1' \
@@ -169,10 +170,28 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
+`MEDIA_INGESTION_ENABLED=true` cho fixture câu nghe (M2.5c) tải một file WAV qua
+`POST /admin/cms/media/ingestions` vào storage memory của chính backend đang chạy.
+
 Credential mặc định chỉ dành cho fixture disposable được ghi trong `.env.example`.
 `npm run test:e2e` build và chạy production server trên Chromium ở 4 project:
 `desktop-1440`, `desktop-1024`, `mobile-390`, `tablet-768` (đều là Chromium).
 Không ghi số case cố định trong tài liệu; lấy kết quả từ gate gần nhất.
+
+## BFF media của learner
+
+Audio của câu nghe đi qua BFF cùng origin, nên CSP giữ `media-src 'self'`
+(ADR-003):
+
+- `GET /api/learner/media/:id/access`: cần phiên learner; gọi backend
+  `GET /api/v1/media/:id/access` và trả `{ success: true, data: { src, expiresAt } }`
+  với `src = /api/learner/media/:id/content?expires=&signature=` (`no-store`).
+  Backend `403`/`404`/`429` giữ nguyên, lỗi khác `503`, URL grant lạ `502`.
+- `GET /api/learner/media/:id/content?expires=&signature=`: cần cookie phiên đúng
+  định dạng (không gọi `/auth/me`); stream bytes của backend, chuyển tiếp một
+  `Range: bytes=…`, giữ `200`/`206`/`416`, luôn `Cache-Control: private, no-store`.
+  Không gửi cookie hay token sang backend. Route này không đi qua `limit_req` nginx
+  của location content; backend vẫn giới hạn theo grant và theo IP.
 
 ## Cấu trúc chính
 

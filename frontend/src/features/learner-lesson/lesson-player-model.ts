@@ -11,9 +11,13 @@ export type PlayerExercise = {
   | { kind: 'mcq'; options: PlayerChoice[] }
   | { kind: 'arrange_sentence'; tokens: PlayerChoice[] }
   | { kind: 'fill_blank' }
-  // listening_choice until M2.5c, and any shape the player cannot read (Q48).
+  | { kind: 'listening'; options: PlayerChoice[]; media: PlayerMedia }
+  // listening_choice without media, and any shape the player cannot read (Q48).
   | { kind: 'unsupported' }
 );
+
+/** Audio of a listening_choice; `duration` (seconds) until metadata loads. */
+export type PlayerMedia = { id: number; duration: number | null };
 
 export type PlayerAnswer =
   { optionId: string } | { tokenIds: string[] } | { text: string };
@@ -35,6 +39,7 @@ type RawExercise = {
   content: unknown;
   orderIndex: number;
   latestAttempt: unknown;
+  media?: unknown;
 };
 
 type RawTopic = { id: number; orderIndex: number; exercises: RawExercise[] };
@@ -62,6 +67,22 @@ function readChoices(content: unknown, key: string): PlayerChoice[] | null {
   return choices;
 }
 
+function readMedia(media: unknown): PlayerMedia | null {
+  if (typeof media !== 'object' || media === null) return null;
+  const id: unknown = Reflect.get(media, 'id');
+  const duration: unknown = Reflect.get(media, 'duration');
+  if (typeof id !== 'number' || !Number.isSafeInteger(id) || id <= 0) {
+    return null;
+  }
+  return {
+    id,
+    duration:
+      typeof duration === 'number' && Number.isFinite(duration) && duration > 0
+        ? duration
+        : null,
+  };
+}
+
 function toPlayerExercise(raw: RawExercise): PlayerExercise {
   const base = {
     id: raw.id,
@@ -76,6 +97,10 @@ function toPlayerExercise(raw: RawExercise): PlayerExercise {
     if (tokens) return { ...base, kind: 'arrange_sentence', tokens };
   } else if (raw.type === 'fill_blank') {
     return { ...base, kind: 'fill_blank' };
+  } else if (raw.type === 'listening_choice') {
+    const options = readChoices(raw.content, 'options');
+    const media = readMedia(raw.media);
+    if (options && media) return { ...base, kind: 'listening', options, media };
   }
   return { ...base, kind: 'unsupported' };
 }
@@ -111,7 +136,8 @@ export function buildAnswer(
   input: PlayerInput,
 ): PlayerAnswer | null {
   switch (exercise.kind) {
-    case 'mcq': {
+    case 'mcq':
+    case 'listening': {
       const { optionId } = input;
       return optionId !== null &&
         exercise.options.some((option) => option.id === optionId)
@@ -165,4 +191,91 @@ export function progressClass(done: number, total: number): string {
 /** Fresh Idempotency-Key for one attempt; reused only to retry it. */
 export function newAttemptKey(): string {
   return `attempt-${crypto.randomUUID()}`;
+}
+
+/**
+ * Bars of the decorative wave of mẫu 05 (Q55): [x, height] on its 268×24
+ * track, so `x / 268` is the bar's left edge as a share of the width.
+ */
+export const WAVE_BARS: ReadonlyArray<readonly [number, number]> = [
+  [1, 20],
+  [5.5, 21],
+  [10, 10],
+  [11.5, 23],
+  [15, 26],
+  [18.5, 23],
+  [22, 21],
+  [25.5, 4],
+  [29.5, 4],
+  [34, 4],
+  [38, 4],
+  [42, 4],
+  [46.5, 5],
+  [50.5, 5],
+  [54.5, 6],
+  [59, 4],
+  [63, 5],
+  [67, 6],
+  [71, 10],
+  [75, 6],
+  [79, 8],
+  [83, 13],
+  [87, 18],
+  [91, 11],
+  [95, 7],
+  [99, 12],
+  [103, 17],
+  [107.5, 9],
+  [111.5, 10],
+  [116, 16],
+  [120, 13],
+  [124, 9],
+  [128, 16],
+  [132, 24],
+  [137, 14],
+  [141, 6],
+  [145.5, 8],
+  [149.5, 7],
+  [153.5, 8],
+  [157.5, 12],
+  [161.5, 18],
+  [165.5, 12],
+  [169.5, 8],
+  [173.5, 6],
+  [177.5, 7],
+  [182, 6],
+  [186.5, 5],
+  [190.5, 6],
+  [194.5, 5],
+  [198.5, 4],
+  [202.5, 5],
+  [207, 5],
+  [211.5, 6],
+  [215.5, 8],
+  [219.5, 12],
+  [223.5, 7],
+  [227.5, 6],
+  [231.5, 4],
+  [235.5, 3],
+  [239.5, 4],
+  [243.5, 4],
+  [247.5, 3],
+  [251.5, 3],
+  [255.5, 3],
+  [259.5, 2],
+  [263.5, 2],
+  [267.5, 2],
+];
+export const WAVE_TRACK_WIDTH = 268;
+
+/** True when the bar starting at `x` lies before the played share. */
+export function isBarPlayed(x: number, played: number): boolean {
+  return x / WAVE_TRACK_WIDTH < played;
+}
+
+/** `m:ss` for a whole number of seconds (negative or NaN shows 0:00). */
+export function formatClock(seconds: number): string {
+  const total =
+    Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }

@@ -11,6 +11,7 @@ import {
   call,
   FILL_EXPLANATION,
   FILL_PROMPT,
+  LISTENING_PROMPT,
   PASSWORD,
   publishLockedLesson,
   publishPracticeExercises,
@@ -23,9 +24,9 @@ import {
 // HSK 1 lesson (seed): mcq "Choose the meaning of 你好" (Hello is right)
 // first; its seeded listening_choice disappears once admin-console has
 // quarantined the audio, so the total is read from the backend. HSK 3 lesson
-// (publishPracticeExercises): arrange_sentence, fill_blank, listening_choice.
+// (publishPracticeExercises): arrange_sentence, fill_blank, listening_choice
+// (with a real ingested WAV since M2.5c).
 const MCQ_EXPLANATION = '你好 is the standard greeting “hello”.';
-const SOON = 'Dạng bài này sắp ra mắt.';
 const DONE = 'Bạn đã làm xong phần luyện tập';
 
 type Activity = {
@@ -213,10 +214,15 @@ test.describe('Learner activity player (M2.5b)', () => {
 
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
 
-    // Q48: listening_choice is a coming-soon card that still counts in x/y.
+    // M2.5c: listening_choice with audio is a real question; it can be
+    // checked without listening first (Q57). Playback: learner-listening.
     await expect(count(page)).toHaveText('3/3');
-    await expect(page.getByRole('heading', { level: 2 })).toHaveText(SOON);
-    await expect(check(page)).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 2 })).toHaveText(
+      LISTENING_PROMPT,
+    );
+    await page.getByRole('radio', { name: '超市' }).click();
+    await check(page).click();
+    await expect(feedback(page)).toContainText('Chính xác!');
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     await expect(page.getByRole('heading', { level: 2 })).toHaveText(DONE);
     await expect(
@@ -229,7 +235,9 @@ test.describe('Learner activity player (M2.5b)', () => {
       true,
     ]);
     expect(view.attempts.fill_blank?.map((a) => a.isCorrect)).toEqual([true]);
-    expect(view.attempts.listening_choice).toEqual([]);
+    expect(view.attempts.listening_choice?.map((a) => a.isCorrect)).toEqual([
+      true,
+    ]);
   });
 
   test('fill_blank wrong shows its explanation', async ({ page, baseURL }) => {

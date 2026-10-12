@@ -122,6 +122,39 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
               strokeWidth="2.2"
             />
           </symbol>
+          <symbol id="i-volume-fill" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M3 9.2c0-.66.54-1.2 1.2-1.2H7l4.4-3.6c.66-.54 1.6-.07 1.6.77v13.66c0 .84-.94 1.31-1.6.77L7 16H4.2A1.2 1.2 0 0 1 3 14.8Z"
+            />
+            <path d="M16 9a4.2 4.2 0 0 1 0 6" />
+            <path d="M18.8 6.5a8 8 0 0 1 0 11" />
+          </symbol>
+          <symbol id="i-pause" viewBox="0 0 24 24">
+            <rect
+              x="6"
+              y="5"
+              width="4"
+              height="14"
+              rx="1"
+              fill="currentColor"
+              stroke="none"
+            />
+            <rect
+              x="14"
+              y="5"
+              width="4"
+              height="14"
+              rx="1"
+              fill="currentColor"
+              stroke="none"
+            />
+          </symbol>
+          <symbol id="i-rotate-ccw" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </symbol>
           <symbol id="i-star-fill" viewBox="0 0 24 24">
             <path
               fill="currentColor"

@@ -5,11 +5,12 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { queryDisposableDb, sqlLiteral } from './disposable-db';
+import { ingestListeningAudio } from './listening-audio';
 
-// Shared by the lesson page (M2.5a) and player (M2.5b) specs. Fixtures go
-// through the Admin CMS of the disposable e2e DB and are idempotent per DB:
-// each project re-runs beforeAll, and Playwright runs one worker.
+// Shared by the lesson page (M2.5a), player (M2.5b) and listening (M2.5c)
+// specs. Fixtures go through the Admin CMS of the disposable e2e DB and are
+// idempotent per DB: each project re-runs beforeAll, and Playwright runs one
+// worker.
 
 export const PASSWORD = 'StrongPassword123!';
 export const LOCKED_SLUG = 'm25a-e2e-locked';
@@ -217,26 +218,7 @@ export const FILL_PROMPT = '我想___东西。';
 export const FILL_EXPLANATION = 'Điền 买 (mua): 我想买东西。';
 
 export const LISTENING_PROMPT = 'Nghe và chọn đáp án đúng.';
-const LISTENING_AUDIO = 'https://cdn.example.test/hsk/e2e/m25b-listening.mp3';
-
-/**
- * A ready audio row of its own: admin-console quarantines the seeded
- * nihao-listening.mp3, which hides the seeded listening_choice afterwards.
- * The CMS has no way to make media ready, so it goes in through psql.
- */
-function readyAudioId(): number {
-  const id = queryDisposableDb(
-    [
-      'INSERT INTO "Media" (url, type, "mimeType", duration, "originalFilename", "processingStatus", "updatedAt")',
-      `VALUES (${sqlLiteral(LISTENING_AUDIO)}, 'audio', 'audio/mpeg', 5, 'm25b-listening.mp3', 'ready', now())`,
-      'ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url RETURNING id',
-    ].join(' '),
-  );
-  // psql prints the RETURNING row, then the command tag (INSERT 0 1).
-  const first = id.split('\n')[0] ?? '';
-  if (!/^\d+$/u.test(first)) throw new Error(`no audio id: ${id}`);
-  return Number(first);
-}
+export const LISTENING_EXPLANATION = 'Đoạn nghe nói 超市.';
 
 /**
  * Adds arrange_sentence, fill_blank and listening_choice exercises (no
@@ -288,19 +270,24 @@ export async function publishPracticeExercises(): Promise<number> {
           ],
         },
         answer: { optionId: 'market' },
-        explanation: 'Đoạn nghe nói 超市.',
+        explanation: LISTENING_EXPLANATION,
         orderIndex: 903,
-        mediaId: readyAudioId(),
       },
     ];
     for (const fixture of fixtures) {
       if (existing.some((item) => item.prompt === fixture.prompt)) continue;
+      // A real WAV in the backend's memory storage, so the player can play
+      // it; admin-console quarantines the seeded nihao-listening.mp3.
+      const mediaId =
+        fixture.type === 'listening_choice'
+          ? await ingestListeningAudio(api, BACKEND, admin)
+          : undefined;
       const draft = await call<Draft>(
         api,
         'POST',
         '/admin/cms/exercises',
         admin,
-        { lessonId, ...fixture },
+        { lessonId, ...fixture, ...(mediaId ? { mediaId } : {}) },
       );
       const id = draft.exercise?.id;
       if (!id) throw new Error('exercise draft has no id');

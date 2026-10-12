@@ -143,7 +143,7 @@ describe('LessonPlayer', () => {
     fireEvent.click(checkButton());
 
     const next = await screen.findByRole('button', { name: 'Tiếp tục' });
-    expect(next).toHaveFocus();
+    await waitFor(() => expect(next).toHaveFocus());
     expect(screen.getByText('Chính xác!')).toBeInTheDocument();
     expect(screen.getByText('Câu của bạn hoàn toàn đúng.')).toBeInTheDocument();
     expect(next.closest('[aria-live]')).toBeNull();
@@ -162,12 +162,14 @@ describe('LessonPlayer', () => {
     });
 
     fireEvent.click(next);
-    expect(
-      screen.getByRole('heading', {
-        level: 2,
-        name: 'Sắp xếp các từ sau thành câu hoàn chỉnh.',
-      }),
-    ).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', {
+          level: 2,
+          name: 'Sắp xếp các từ sau thành câu hoàn chỉnh.',
+        }),
+      ).toHaveFocus(),
+    );
   });
 
   it('shows a wrong answer with the explanation and no retry (Q50)', async () => {
@@ -176,6 +178,9 @@ describe('LessonPlayer', () => {
     fireEvent.click(screen.getByRole('radio', { name: '银行' }));
     fireEvent.click(checkButton());
     await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Tiếp tục' })).toHaveFocus(),
+    );
     const bar = container.querySelector('.m02-feedback--wrong');
     expect(bar).not.toBeNull();
     expect(screen.getByText('Siêu thị là 超市.')).toBeInTheDocument();
@@ -191,7 +196,6 @@ describe('LessonPlayer', () => {
       'aria-checked',
       'false',
     );
-    expect(screen.getByRole('button', { name: 'Tiếp tục' })).toHaveFocus();
   });
 
   it('hides a null explanation', async () => {

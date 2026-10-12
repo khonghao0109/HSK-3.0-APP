@@ -24,6 +24,7 @@ import {
   type PlayerExercise,
   type PlayerInput,
 } from './lesson-player-model';
+import { ListeningExercise } from './listening-exercise';
 
 export const PLAYER_MESSAGES = {
   correctTitle: 'Chính xác!',
@@ -288,8 +289,11 @@ export function LessonPlayer({
     },
     [locked],
   );
-  const optionIds =
-    current?.kind === 'mcq' ? current.options.map((option) => option.id) : [];
+  const choices =
+    current?.kind === 'mcq' || current?.kind === 'listening'
+      ? current.options
+      : [];
+  const optionIds = choices.map((option) => option.id);
   const radio = useRadioGroup({ items: optionIds, onChange: selectOption });
 
   const addToken = (id: string) => {
@@ -314,6 +318,44 @@ export function LessonPlayer({
       void submit();
     }
   };
+
+  const options = choices.length > 0 && (
+    <div className="ls-options" role="radiogroup" aria-labelledby="ex-q">
+      {choices.map((option, optionIndex) => {
+        const checked = input.optionId === option.id;
+        const focusable =
+          checked || (input.optionId === null && optionIndex === 0);
+        const mark = result && checked;
+        const className = [
+          'ls-opt',
+          mark ? (result.correct ? 'is-right' : 'is-wrong') : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return (
+          <button
+            key={option.id}
+            className={className}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            aria-disabled={locked ? 'true' : undefined}
+            tabIndex={focusable ? 0 : -1}
+            onClick={() => selectOption(option.id)}
+            onKeyDown={(event) => radio.handleKeyDown(event, optionIndex)}
+          >
+            <ChoiceText text={option.text} />
+            {mark && (
+              <Icon
+                name={result.correct ? 'check-circle' : 'x-circle'}
+                className="ls-opt__mark"
+              />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const announcement = result
     ? result.correct
@@ -415,48 +457,19 @@ export function LessonPlayer({
             <h2 className="pr-q" id="ex-q" ref={headingRef} tabIndex={-1}>
               {current.prompt}
             </h2>
-            <div
-              className="ls-options"
-              role="radiogroup"
-              aria-labelledby="ex-q"
-            >
-              {current.options.map((option, optionIndex) => {
-                const checked = input.optionId === option.id;
-                const focusable =
-                  checked || (input.optionId === null && optionIndex === 0);
-                const mark = result && checked;
-                const className = [
-                  'ls-opt',
-                  mark ? (result.correct ? 'is-right' : 'is-wrong') : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ');
-                return (
-                  <button
-                    key={option.id}
-                    className={className}
-                    type="button"
-                    role="radio"
-                    aria-checked={checked}
-                    aria-disabled={locked ? 'true' : undefined}
-                    tabIndex={focusable ? 0 : -1}
-                    onClick={() => selectOption(option.id)}
-                    onKeyDown={(event) =>
-                      radio.handleKeyDown(event, optionIndex)
-                    }
-                  >
-                    <ChoiceText text={option.text} />
-                    {mark && (
-                      <Icon
-                        name={result.correct ? 'check-circle' : 'x-circle'}
-                        className="ls-opt__mark"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            {options}
           </>
+        )}
+
+        {current?.kind === 'listening' && (
+          <ListeningExercise
+            key={current.id}
+            prompt={current.prompt}
+            media={current.media}
+            headingRef={headingRef}
+          >
+            {options}
+          </ListeningExercise>
         )}
 
         {current?.kind === 'fill_blank' && (

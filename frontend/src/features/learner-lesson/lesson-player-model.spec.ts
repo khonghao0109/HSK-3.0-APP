@@ -3,12 +3,15 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAnswer,
   firstPendingIndex,
+  formatClock,
   hasHan,
+  isBarPlayed,
   IDEMPOTENCY_KEY_PATTERN,
   newAttemptKey,
   orderPlayerExercises,
   progressClass,
   splitBlank,
+  WAVE_BARS,
   type PlayerExercise,
 } from './lesson-player-model';
 
@@ -107,6 +110,66 @@ describe('orderPlayerExercises', () => {
       [raw(1, 1, type, null, content)],
     );
     expect(exercise?.kind).toBe('unsupported');
+  });
+
+  it('reads listening_choice options and its audio (M2.5c)', () => {
+    const [listening] = orderPlayerExercises(
+      [],
+      [
+        {
+          ...raw(1, 1, 'listening_choice'),
+          media: { id: 7, url: 'x', type: 'audio', duration: 3 },
+        },
+      ],
+    );
+    expect(listening).toEqual({
+      id: 1,
+      prompt: 'Câu 1',
+      answered: false,
+      kind: 'listening',
+      options: [
+        { id: 'a', text: '商店' },
+        { id: 'b', text: '超市' },
+      ],
+      media: { id: 7, duration: 3 },
+    });
+  });
+
+  it.each([
+    [
+      { id: 7, duration: null },
+      { id: 7, duration: null },
+    ],
+    [
+      { id: 7, duration: -1 },
+      { id: 7, duration: null },
+    ],
+    [{ id: 7 }, { id: 7, duration: null }],
+  ])('keeps media %j as %j', (media, expected) => {
+    const [listening] = orderPlayerExercises(
+      [],
+      [{ ...raw(1, 1, 'listening_choice'), media }],
+    );
+    expect(listening).toMatchObject({ kind: 'listening', media: expected });
+  });
+
+  it.each([null, {}, { id: 0 }, { id: '7' }, { id: 1.5 }, 'media'])(
+    'keeps listening_choice with media %j a coming-soon card (Q48)',
+    (media) => {
+      const [exercise] = orderPlayerExercises(
+        [],
+        [{ ...raw(1, 1, 'listening_choice'), media }],
+      );
+      expect(exercise?.kind).toBe('unsupported');
+    },
+  );
+
+  it('ignores media on other types', () => {
+    const [mcq] = orderPlayerExercises(
+      [],
+      [{ ...raw(1, 1), media: { id: 7, duration: 3 } }],
+    );
+    expect(mcq).not.toHaveProperty('media');
   });
 
   it('marks an exercise with a latest attempt as answered', () => {
@@ -234,5 +297,51 @@ describe('player helpers', () => {
     const first = newAttemptKey();
     expect(first).toMatch(IDEMPOTENCY_KEY_PATTERN);
     expect(newAttemptKey()).not.toBe(first);
+  });
+});
+
+describe('listening helpers', () => {
+  it('has the 67 bars of mẫu 05 (Q55)', () => {
+    expect(WAVE_BARS).toHaveLength(67);
+  });
+
+  it('plays bars by share of the track', () => {
+    expect(WAVE_BARS.filter(([x]) => isBarPlayed(x, 0))).toHaveLength(0);
+    expect(WAVE_BARS.filter(([x]) => isBarPlayed(x, 1))).toHaveLength(67);
+    expect(WAVE_BARS.filter(([x]) => isBarPlayed(x, 0.5)).length).toBe(
+      WAVE_BARS.filter(([x]) => x < 134).length,
+    );
+  });
+
+  it.each([
+    [0, '0:00'],
+    [2.9, '0:02'],
+    [3, '0:03'],
+    [65, '1:05'],
+    [600, '10:00'],
+    [-1, '0:00'],
+    [Number.NaN, '0:00'],
+    [Number.POSITIVE_INFINITY, '0:00'],
+  ])('formats %d seconds as %s', (seconds, text) => {
+    expect(formatClock(seconds)).toBe(text);
+  });
+
+  it('builds { optionId } for listening like mcq', () => {
+    const listening: PlayerExercise = {
+      id: 1,
+      prompt: 'p',
+      answered: false,
+      kind: 'listening',
+      options: [
+        { id: 'a', text: 'A' },
+        { id: 'b', text: 'B' },
+      ],
+      media: { id: 7, duration: 3 },
+    };
+    expect(buildAnswer(listening, { ...EMPTY, optionId: 'b' })).toEqual({
+      optionId: 'b',
+    });
+    expect(buildAnswer(listening, { ...EMPTY, optionId: 'z' })).toBeNull();
+    expect(buildAnswer(listening, EMPTY)).toBeNull();
   });
 });
