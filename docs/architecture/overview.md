@@ -63,7 +63,7 @@ Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-v
 | `user` | `/users` | me, profile cá nhân (GET/PATCH /users/me/profile); danh sách user cho admin | — |
 | `onboarding` | `/onboarding`, `/learning-plans` | goal + learning plan V1, row lock theo user | — |
 | `learning` | `/levels`, `/lessons`, `/topics`, `/stories`, `/learning/*`, `/progress` | public content read có readiness policy; lesson/topic start-complete; exercise attempt chấm server-side; progress/resume | — |
-| `dictionary` | `/dictionary` | prefix search hanzi/pinyin, 20 kết quả | — |
+| `dictionary` | `/dictionary` | prefix search hanzi/pinyin, 20 kết quả có `id`; chi tiết từ public `/dictionary/words/:id`; GET/POST/DELETE `/dictionary/words/:id/save` (JWT) lưu/bỏ lưu từ | — |
 | `cms` | `/admin/cms/*` | lesson/topic/exercise revision → review → publish → archive; exercise import preview + commit; media library, quarantine/archive; media ingestion | ADR-002, 004, 005 |
 | `media` | `/media` | cấp signed URL và trả nội dung private | ADR-005 |
 | `health` | `/health` | `SELECT 1` | — |

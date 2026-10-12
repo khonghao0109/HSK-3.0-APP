@@ -36,7 +36,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 
 - Base path: `/api/v1`; versioning theo path; JSON UTF-8.
 - Auth: `Authorization: Bearer <jwt>` cho route đánh dấu `JWT`/`admin`. Public content,
-  dictionary, health và signed media content không cần token. JWT HS256 có header `kid`,
+  dictionary (trừ các route `…/save`), health và signed media content không cần token. JWT HS256 có header `kid`,
   claims `sub`, `email`, `role`; strategy đọc lại `status`, `deletedAt`, `role` từ DB mỗi
   request. Chưa có refresh/revocation.
 - Validation: `whitelist`, `forbidNonWhitelisted`, `transform`. Field lạ → `400` với
@@ -80,7 +80,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
   mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
   `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
-  60/phút/user, `GET /media/:mediaId/access` 120/phút/user,
+  60/phút/user, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
   `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
   `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
   `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
@@ -368,20 +368,55 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 
 ### A.5 Dictionary
 
-| Method | Path | Auth |
-| --- | --- | --- |
-| `GET` | `/dictionary?query=<hanzi hoặc pinyin>` | public |
+| Method | Path | Auth | Throttle |
+| --- | --- | --- | --- |
+| `GET` | `/dictionary?query=<hanzi hoặc pinyin>` | public | mặc định |
+| `GET` | `/dictionary/words/:id` | public | mặc định |
+| `GET` | `/dictionary/words/:id/save` | JWT | mặc định |
+| `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
+| `DELETE` | `/dictionary/words/:id/save` | JWT | 60/phút/user (cùng `wordSaveLimit`) |
 
-Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc `pinyinNormalized`.
-Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]` (không `400`). Tối
-đa 20 kết quả; chỉ Word `published`, `isPure = true`, có ít nhất một meaning.
+"Từ public" = Word `published`, chưa soft-delete, `isPure = true`, có ít nhất một meaning
+(`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho cả 5 route). Không route
+nào đặt header cache.
 
-`data` `200` là mảng, không `id`:
+**Search.** Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc
+`pinyinNormalized`. Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]`
+(không `400`). Tối đa 20 kết quả, chỉ từ public; `level` là tên Level published đầu tiên
+theo `orderIndex`. `data` `200` là mảng:
 
 ```json
-[{ "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+[{ "id": 12, "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
    "meanings": [{ "en": "to study", "vi": "học tập" }], "level": "HSK 1" }]
 ```
+
+**Chi tiết từ** `GET /dictionary/words/:id`. `:id` không phải số nguyên dương an toàn →
+`400`; không phải từ public → `404` (`error.code` `WORD_NOT_FOUND`). `data` `200`:
+
+```json
+{ "id": 12, "hanzi": "学习", "traditional": "學習", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+  "example": "我每天都学习中文。",
+  "meanings": [{ "order": 1, "en": "to study", "vi": "học tập", "partOfSpeech": "verb", "usage": null, "note": null }],
+  "levels": [{ "code": "HSK1", "name": "HSK 1" }],
+  "sources": [{ "name": "…", "version": "1.0.0", "license": null, "attribution": null }] }
+```
+
+`meanings` theo `meaningOrder`; `levels` chỉ Level published, chưa xoá, theo `orderIndex`;
+`sources` để nguồn `isPrimary` đứng đầu rồi theo id nguồn. Trường nullable trả `null`.
+Không trả trạng thái, audio, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`
+(audio từ vựng thuộc backlog M2.B12).
+
+**Lưu từ** (Q62: chỉ lưu `UserWord`, chưa tạo thẻ ôn SRS). Thiếu token → `401`; `:id` sai
+dạng → `400`. Không response nào chứa `userId` hay `Idempotency-Key`.
+
+| Route | `data` | Lỗi |
+| --- | --- | --- |
+| `GET …/save` | `{ wordId, saved }`. Đã lưu → `saved: true`, kể cả khi từ đã bị gỡ public (để còn bỏ lưu được) | chưa lưu và từ không public → `404 WORD_NOT_FOUND` |
+| `POST …/save` | `{ wordId, saved: true, eventId, occurredAt }`; trả `201` kể cả replay. Lưu lần đầu tạo `UserWord` và `LearningEvent` `word_saved` (`resourceType: "word"`, `resourceId: wordId`) trong một transaction khoá `User`; đã lưu rồi → `eventId: null`, `occurredAt: null`, không tạo event | thiếu/sai key → `400`; key đã dùng cho request khác → `409`; key quá 24 giờ → `400`; từ không public → `404 WORD_NOT_FOUND`; tài khoản không active → `401` |
+| `DELETE …/save` | `{ wordId, saved: false }`; idempotent, `200` cả khi chưa lưu hoặc từ không tồn tại. **Bỏ lưu không ghi event** (`LearningEventType` chưa có loại bỏ lưu) | tài khoản không active → `401` |
+
+Replay một `Idempotency-Key` trả lại kết quả gốc, kể cả khi từ đã bị bỏ lưu sau đó; trạng thái hiện tại đọc bằng `GET …/save`. Replay cùng key trả lại đúng kết quả cũ (cùng `eventId`). Hai request lưu song song của
+một user được tuần tự hoá bằng khoá `User`: đúng một `UserWord` và một event.
 
 ### A.6 Onboarding và Learning plan (JWT)
 
@@ -693,7 +728,7 @@ code sẽ tự vào spec đó.
 | `POST/GET` | `/privacy/consents`, `/privacy/exports`, `/privacy/deletion-requests` | Privacy lifecycle (ADR-001) | M1 |
 | `POST` | `/onboarding/placements`, `/onboarding/placements/:id/complete` | Placement (feature flag) | M2 |
 | `PATCH` | `/learning-plans/items/:id` | Trạng thái item trong plan | M2 |
-| `GET` | `/dictionary/words/:id`; `POST` `/dictionary/words/:id/save`; `PATCH` `/dictionary/words/:id/progress` | Chi tiết từ, lưu từ | M2–M3 |
+| `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
 | CRUD | `/admin/cms/questions`, `/admin/cms/tests` | Exam authoring | M4 |
 | `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |

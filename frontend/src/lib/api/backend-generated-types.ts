@@ -676,6 +676,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dictionary/words/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DictionaryController_getWord"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dictionary/words/{id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DictionaryController_getSaved"];
+        put?: never;
+        post: operations["DictionaryController_saveWord"];
+        delete: operations["DictionaryController_unsaveWord"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -1601,6 +1633,50 @@ export interface components {
              * @example true
              */
             downloadable: boolean;
+        };
+        DictionaryWordMeaningDto: {
+            order: number;
+            en: string | null;
+            vi: string | null;
+            partOfSpeech: string | null;
+            usage: string | null;
+            note: string | null;
+        };
+        DictionaryWordLevelDto: {
+            code: string;
+            name: string;
+        };
+        DictionaryWordSourceDto: {
+            name: string;
+            version: string;
+            license: string | null;
+            attribution: string | null;
+        };
+        DictionaryWordDetailDto: {
+            id: number;
+            hanzi: string;
+            traditional: string | null;
+            pinyin: string;
+            pinyinTone: string | null;
+            example: string | null;
+            /** @description Ordered by `meaningOrder`. */
+            meanings: components["schemas"]["DictionaryWordMeaningDto"][];
+            /** @description Published, not deleted Levels ordered by `orderIndex`. */
+            levels: components["schemas"]["DictionaryWordLevelDto"][];
+            /** @description The primary source first, then by data source id. */
+            sources: components["schemas"]["DictionaryWordSourceDto"][];
+        };
+        DictionaryWordSavedDto: {
+            wordId: number;
+            saved: boolean;
+        };
+        DictionaryWordSaveResultDto: {
+            wordId: number;
+            saved: boolean;
+            /** @description `null` when the word was already saved and no event was written. */
+            eventId: string | null;
+            /** Format: date-time */
+            occurredAt: string | null;
         };
         LevelItemDto: {
             id: number;
@@ -3413,6 +3489,128 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_getWord: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_getSaved: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSavedDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_saveWord: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+                /** @description Replaying a key with the same request returns the original result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSaveResultDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_unsaveWord: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSavedDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

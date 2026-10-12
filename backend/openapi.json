@@ -2956,6 +2956,246 @@
         ]
       }
     },
+    "/api/v1/dictionary/words/{id}": {
+      "get": {
+        "operationId": "DictionaryController_getWord",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DictionaryWordDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Dictionary"
+        ]
+      }
+    },
+    "/api/v1/dictionary/words/{id}/save": {
+      "get": {
+        "operationId": "DictionaryController_getSaved",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DictionaryWordSavedDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Dictionary"
+        ]
+      },
+      "post": {
+        "operationId": "DictionaryController_saveWord",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DictionaryWordSaveResultDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Dictionary"
+        ]
+      },
+      "delete": {
+        "operationId": "DictionaryController_unsaveWord",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DictionaryWordSavedDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Dictionary"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -6385,6 +6625,182 @@
           "status",
           "createdAt",
           "downloadable"
+        ]
+      },
+      "DictionaryWordMeaningDto": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "number"
+          },
+          "en": {
+            "type": "string",
+            "nullable": true
+          },
+          "vi": {
+            "type": "string",
+            "nullable": true
+          },
+          "partOfSpeech": {
+            "type": "string",
+            "nullable": true
+          },
+          "usage": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "order",
+          "en",
+          "vi",
+          "partOfSpeech",
+          "usage",
+          "note"
+        ]
+      },
+      "DictionaryWordLevelDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "DictionaryWordSourceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "attribution": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "license",
+          "attribution"
+        ]
+      },
+      "DictionaryWordDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "traditional": {
+            "type": "string",
+            "nullable": true
+          },
+          "pinyin": {
+            "type": "string"
+          },
+          "pinyinTone": {
+            "type": "string",
+            "nullable": true
+          },
+          "example": {
+            "type": "string",
+            "nullable": true
+          },
+          "meanings": {
+            "description": "Ordered by `meaningOrder`.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordMeaningDto"
+            }
+          },
+          "levels": {
+            "description": "Published, not deleted Levels ordered by `orderIndex`.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordLevelDto"
+            }
+          },
+          "sources": {
+            "description": "The primary source first, then by data source id.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordSourceDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "hanzi",
+          "traditional",
+          "pinyin",
+          "pinyinTone",
+          "example",
+          "meanings",
+          "levels",
+          "sources"
+        ]
+      },
+      "DictionaryWordSavedDto": {
+        "type": "object",
+        "properties": {
+          "wordId": {
+            "type": "number"
+          },
+          "saved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "wordId",
+          "saved"
+        ]
+      },
+      "DictionaryWordSaveResultDto": {
+        "type": "object",
+        "properties": {
+          "wordId": {
+            "type": "number"
+          },
+          "saved": {
+            "type": "boolean"
+          },
+          "eventId": {
+            "type": "string",
+            "nullable": true,
+            "description": "`null` when the word was already saved and no event was written."
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "wordId",
+          "saved",
+          "eventId",
+          "occurredAt"
         ]
       },
       "LevelItemDto": {
