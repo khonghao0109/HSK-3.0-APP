@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026).
+Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -60,3 +60,12 @@ Cập nhật: 11/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q42 | **Màn bài học áp chuẩn như Q28: nút cao 44px thật, icon khoá stone-500, chữ nhỏ và chip đạt 4,5:1** (PO 11/10/2026) | Bản demo: CTA 33px, khoá `#d6d4d8` | `assets/css/m02.css` và `learner/lesson.html` đã sửa theo (ghi chú 32) |
 | Q43 | **Backend làm trước (M2.B13): mở rộng `GET /learning/lessons/:id/activity` với cấp độ, vị trí, trạng thái khoá, số liệu từng phần, kèm DTO có kiểu** (Tech Lead 11/10/2026) | — | Một lần gọi cho màn bài học; dùng lại cho M2.5b |
 | Q44 | **Bài khoá: dòng có icon khoá, không số/thanh; nút "Tiếp tục học" xám (aria-disabled); bấm dòng hoặc nút ra toast "Hoàn thành bài trước để mở khoá."** (PO 11/10/2026) | — | Bổ sung Q40 |
+| Q45 | **Chia M2.5 theo mẫu: M2.5b là khung player (thanh trên có X, tiêu đề, số x/y; thanh tiến độ; thanh kết quả) cùng arrange_sentence (mẫu 04), mcq (lưới 2×2 của mẫu 05, bỏ khối audio) và fill_blank; M2.5c là listening_choice, làm sau M2.B12** (PO 11/10/2026) | `practice.html`, `listening.html` | Thay Q38 ở 2 chỗ: nút "Tiếp tục học" và dòng Luyện tập của màn bài học (bài không khoá) mở player; các dòng khác vẫn ra toast |
+| Q46 | **M2.B12: route content đếm lượt theo mediaId + chữ ký thay cho IP; route access đếm theo user, khoảng 120/phút; TTL learner 300 giây; kiểm thêm Level published; thêm nginx `limit_req` trong `ops/`; kiểm Safari có hỗ trợ Range không; audio từ vựng để task sau** (PO 11/10/2026) | — | Đầu vào của M2.B12 |
+| Q47 | **fill_blank là câu có ô trống gạch dưới, bên dưới là 1 ô nhập (IME của hệ điều hành) và nút "Kiểm tra"** (PO 11/10/2026) | — | Không có mẫu riêng |
+| Q48 | **listening_choice (và dạng chưa hỗ trợ) hiện thẻ "Dạng bài này sắp ra mắt." kèm nút "Tiếp tục"; không gửi attempt; vẫn tính vào x/y** (PO 11/10/2026) | `listening.html` | Tới khi có M2.5c |
+| Q49 | **Bấm X thì quay về `/learn/lessons/<id>` ngay, không hỏi lại** (PO 11/10/2026) | Bản demo mở hộp "Thoát bài luyện tập?" | — |
+| Q50 | **Trả lời sai dùng `m02-feedback--wrong`, hiện `explanation` của Attempt (null thì ẩn), nút "Tiếp tục", không cho làm lại ngay** (PO 11/10/2026) | Bản demo có nút "Làm lại"; mẫu 05 có dòng "Đáp án: …" | Attempt không trả đáp án đúng nên không hiện dòng "Đáp án: …"; cần dòng này thì phải có task backend riêng |
+| Q51 | **Có nút "Kiểm tra" ở chân màn cho cả 3 dạng; chọn đáp án thì viền jade-700, chưa nộp; phím mũi tên không nộp** (PO 11/10/2026) | Mẫu 05 chấm ngay khi chạm | — |
+| Q52 | **Gợi ý "(Chạm vào từ để ghép câu)"; bỏ khối pinyin/dịch (API không có); tiêu đề "Luyện tập" và câu "Câu của bạn hoàn toàn đúng." dùng cho cả 3 dạng; thẻ từ, chip và nút kết quả theo Q42 (≥ 44px thật, nút jade-800, nút sai `#b3261e`)** (Tech Lead 11/10/2026) | Mẫu 04: "(Drag để sắp xếp)", có pinyin/dịch, thẻ 38px, chip 32px | Vì vậy 8 từ của mẫu 04 xuống 2 hàng ở 390px. Quy ước ô trống của fill_blank: `___` (2 dấu `_` trở lên) hoặc `＿`; prompt không có thì ô trống nằm cuối câu |
+| Q53 | **arrange để lại ô trống mờ ở chỗ từ đã dùng, kể cả khi câu đã đúng** (PO 11/10/2026) | — | — |
