@@ -47,4 +47,17 @@ describe('LearnerBackButton', () => {
     expect(router.push).toHaveBeenCalledWith('/learn/path');
     length.mockRestore();
   });
+
+  it('draws the arrow by default and the given icon otherwise', () => {
+    const { container, rerender } = render(<LearnerBackButton />);
+    expect(container.querySelector('use')).toHaveAttribute(
+      'href',
+      '#i-arrow-left',
+    );
+    rerender(<LearnerBackButton icon="chevron-left" />);
+    expect(container.querySelector('use')).toHaveAttribute(
+      'href',
+      '#i-chevron-left',
+    );
+  });
 });

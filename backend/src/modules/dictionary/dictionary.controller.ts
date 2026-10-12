@@ -30,6 +30,15 @@ export function wordSaveLimit(): number {
   return process.env.NODE_ENV === 'test' ? 1_000 : WORD_SAVE_LIMIT_PER_MINUTE;
 }
 
+export const DICTIONARY_READ_LIMIT_PER_MINUTE = 120;
+
+/** Search-as-you-type and word pages outrun the global 20/minute bucket. */
+export function dictionaryReadLimit(): number {
+  return process.env.NODE_ENV === 'test'
+    ? 1_000
+    : DICTIONARY_READ_LIMIT_PER_MINUTE;
+}
+
 type AuthenticatedRequest = Request & {
   user: { id: number; email: string; role: string };
 };
@@ -39,17 +48,20 @@ export class DictionaryController {
   constructor(private readonly dictionaryService: DictionaryService) {}
 
   @Get()
+  @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
   async search(@Query('query') query: string) {
     return this.dictionaryService.search(query);
   }
 
   @Get('words/:id')
+  @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
   @ApiEnvelope(DictionaryWordDetailDto)
   getWord(@Param('id', ParsePositiveSafeIntegerPipe) id: number) {
     return this.dictionaryService.getWord(id);
   }
 
   @Get('words/:id/save')
+  @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @ApiEnvelope(DictionaryWordSavedDto)

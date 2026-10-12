@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import {
   Inter,
+  LXGW_WenKai_TC,
   Noto_Sans_SC,
   Noto_Serif,
   Noto_Serif_SC,
@@ -31,9 +32,18 @@ const notoSansSC = Noto_Sans_SC({
 });
 
 const notoSerifSC = Noto_Serif_SC({
-  weight: ['500', '700'],
+  // 400: Tra từ rows and example sentence (m03.css, M2.6b).
+  weight: ['400', '500', '700'],
   preload: false,
   variable: '--font-noto-serif-sc',
+  display: 'swap',
+});
+
+// Kai face of the module 03 headwords (m03.css --m03-font-kai, M2.6b).
+const lxgwWenKai = LXGW_WenKai_TC({
+  weight: '700',
+  preload: false,
+  variable: '--font-lxgw-wenkai',
   display: 'swap',
 });
 
@@ -47,7 +57,7 @@ export const metadata: Metadata = {
 export default function LearnerLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${notoSansSC.variable}`}
+      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${notoSansSC.variable} ${lxgwWenKai.variable}`}
       lang="vi"
     >
       <div hidden aria-hidden="true">
@@ -249,6 +259,75 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <circle cx="12" cy="12" r="9.5" />
             <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
             <path d="M12 17h.01" />
+          </symbol>
+          <symbol id="i-chevron-left" viewBox="0 0 24 24">
+            <path d="m15 18-6-6 6-6" />
+          </symbol>
+          <symbol id="i-history" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M12 7v5l3 2" />
+          </symbol>
+          <symbol id="i-m03-clear" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="11" fill="currentColor" stroke="none" />
+            <path
+              d="m8.2 8.2 7.6 7.6M15.8 8.2l-7.6 7.6"
+              stroke="var(--white)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.6"
+            />
+          </symbol>
+          <symbol id="i-m03-pen" viewBox="0 0 24 24">
+            <path d="M3.5 21.5h17" />
+            <path d="M15.2 3.6a2.3 2.3 0 0 1 3.2 3.2L8.6 16.6 4.5 18l1.4-4.1Z" />
+          </symbol>
+          <symbol id="i-camera" viewBox="0 0 24 24">
+            <path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </symbol>
+          <symbol id="i-m03-mic" viewBox="0 0 24 24">
+            <rect
+              x="8.5"
+              y="2"
+              width="7"
+              height="12.5"
+              rx="3.5"
+              fill="currentColor"
+              stroke="none"
+            />
+            <path d="M19 10.5a7 7 0 0 1-14 0" />
+            <path d="M12 17.5V22" />
+          </symbol>
+          <symbol id="i-m03-read" viewBox="0 0 24 24">
+            <path d="M2.5 4.5H9a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2H2.5Z" />
+            <path d="M21.5 4.5H15a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2h7.1Z" />
+            <path d="M8.5 10v1.5M15.5 10v1.5" />
+          </symbol>
+          <symbol id="i-file-question" viewBox="0 0 24 24">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z" />
+            <path d="M14 2v6h6" />
+            <path d="M10 11a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.5" />
+            <path d="M12 17.5h.01" />
+          </symbol>
+          <symbol id="i-more-vertical" viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </symbol>
+          <symbol id="i-copy" viewBox="0 0 24 24">
+            <rect x="8" y="8" width="14" height="14" rx="2" />
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+          </symbol>
+          <symbol id="i-flag" viewBox="0 0 24 24">
+            <path d="M4 22V4s1.5-1 4.5-1 5 2 8 2 3.5-1 3.5-1v11s-1 1-3.5 1-5-2-8-2S4 15 4 15" />
+          </symbol>
+          <symbol id="i-pen-line" viewBox="0 0 24 24">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </symbol>
+          <symbol id="i-check" viewBox="0 0 24 24">
+            <path d="M20 6 9 17l-5-5" />
           </symbol>
           <symbol id="logo-google" viewBox="0 0 24 24">
             <path

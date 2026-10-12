@@ -4433,3 +4433,725 @@ html:has(.learner-app) {
     box-shadow: none;
   }
 }
+
+/* ---------- m03.css 03-01/03-02 + khối M2.6b (ghi chú 37): Tra từ và Chi tiết từ ----------
+   Chép từ docs/ui_reference/assets/css/m03.css. `.m03` của mẫu là `.app` chứa `.dict` hoặc
+   `.word`; bỏ nút loa (Q66), nút tim chỉ toast (Q63). */
+.learner-app .app:has(> .dict, > .word) {
+  --m03-navy: var(--navy-900);
+  --m03-canvas: #fefefe;
+  --m03-line: #e9e7e4;
+  --m03-line-soft: #efedea;
+  --m03-ink: #101528;
+  --m03-jade: #0a8460;
+  --m03-jade-line: #a9dcc6;
+  --m03-sunken: #f6f5f2;
+  --m03-gray-btn: #b2b2b4;
+  --m03-blue-soft: #e4eaf8;
+  --m03-blue-ink: #1a4cae;
+  --m03-font-kai:
+    var(--font-lxgw-wenkai), 'LXGW WenKai TC', 'Kaiti SC', 'STKaiti', 'KaiTi',
+    var(--font-cn-serif);
+  background: var(--m03-canvas);
+  color: var(--m03-ink);
+}
+
+/* base.css / learner.css của mẫu mà app chưa có. */
+.learner-app .appbar__end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.learner-app .appbar--wide {
+  grid-template-columns: 3rem 1fr auto;
+}
+.learner-app .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Khung chung */
+.learner-app .app:has(> .dict, > .word) .appbar {
+  min-height: 48px;
+  padding: 7px 2px 0;
+  grid-template-columns: 48px 1fr 48px;
+  background: var(--m03-navy);
+}
+.learner-app .app:has(> .dict, > .word) .appbar--wide {
+  grid-template-columns: 48px 1fr auto;
+}
+.learner-app .app:has(> .dict, > .word) .appbar__title {
+  /* The global h1 rule (src/app/styles.css) is serif; the demo bar is Inter. */
+  font-family: var(--font-sans);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn {
+  color: #fff;
+  height: 41px;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn:hover {
+  background: rgb(255 255 255 / 10%);
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn .icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  stroke-width: 2;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 70%);
+}
+.learner-app .app:has(> .dict, > .word) .appbar__end {
+  gap: 0;
+}
+.learner-app .m03-tabbed {
+  padding-bottom: calc(
+    var(--tabbar-height) + 24px + env(safe-area-inset-bottom)
+  );
+}
+
+/* 03-01 Tìm kiếm từ điển */
+.learner-app .dict {
+  padding: 14px 18px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The demo's .dict padding drops .m03-tabbed's bottom space, so the last
+   control ends under the fixed tab bar at large zoom (Q69). */
+.learner-app .dict.m03-tabbed {
+  padding-bottom: calc(
+    var(--tabbar-height) + 24px + env(safe-area-inset-bottom)
+  );
+}
+.learner-app .dict-search {
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  border: 1px solid var(--m03-line);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(20 24 43 / 4%);
+}
+.learner-app .dict-search__field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.learner-app .dict-search__field > .icon {
+  position: absolute;
+  left: 11px;
+  width: 19px;
+  height: 19px;
+  color: #7b7e86;
+  stroke-width: 1.7;
+  pointer-events: none;
+}
+.learner-app .dict-search__input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 30px 0 40px;
+  border: 0;
+  border-radius: 9px 0 0 9px;
+  background: transparent;
+  color: var(--m03-ink);
+  font-size: 1rem;
+  line-height: 1;
+}
+.learner-app .dict-search__input::placeholder {
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+}
+.learner-app .dict-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+.learner-app .dict-search__input:focus {
+  outline: none;
+}
+.learner-app .dict-search:focus-within {
+  border-color: var(--jade-600);
+  box-shadow: var(--focus-ring);
+}
+.learner-app .dict-search__clear {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--m03-gray-btn);
+  display: grid;
+  place-items: center;
+}
+.learner-app .dict-search__clear .icon {
+  width: 16px;
+  height: 16px;
+}
+.learner-app .dict-search__tools {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+  border-left: 1px solid var(--m03-line);
+}
+.learner-app .dict-search__tools > * {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40.5px;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--jade-700);
+  text-decoration: none;
+  border-radius: 8px;
+}
+.learner-app .dict-search__tools .icon {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.9;
+}
+.learner-app .dict-search__tools > *:hover {
+  background: var(--jade-50);
+}
+.learner-app .dict__count {
+  margin: 17px 0 7px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--m03-ink);
+}
+.learner-app .dict-results {
+  display: grid;
+  gap: 9px;
+}
+.learner-app .dict-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 129px 1fr auto;
+  align-items: center;
+  min-height: 43px;
+  padding: 4px 14px 4px 14px;
+  background: #fff;
+  border: 1px solid var(--m03-line);
+  border-radius: 9px;
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
+}
+.learner-app .dict-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+.learner-app .dict-item__link {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 1;
+}
+.learner-app .dict-item__hz {
+  font-family: var(--font-cn-serif);
+  font-weight: 400;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  color: var(--m03-ink);
+  white-space: nowrap;
+}
+.learner-app .dict-item__body {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.learner-app .dict-item__py {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+  line-height: 1.35;
+}
+.learner-app .dict-item__vi {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--m03-jade);
+  line-height: 1.35;
+}
+.learner-app .dict-item .badge {
+  position: relative;
+  z-index: 0;
+  font-size: 0.625rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--m03-blue-soft);
+  color: var(--m03-blue-ink);
+}
+.learner-app .dict-item--top {
+  min-height: 81px;
+  padding: 6px 14px;
+  border-color: var(--m03-jade-line);
+}
+.learner-app .dict-item--top .dict-item__hz {
+  margin-bottom: 10px;
+  font-family: var(--m03-font-kai);
+  font-weight: 700;
+  font-size: 2.45rem;
+  letter-spacing: 0.02em;
+  color: var(--m03-jade);
+}
+.learner-app .dict-item--top .dict-item__py {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  gap: 9px;
+}
+.learner-app .dict-item--top .dict-item__vi {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-top: 3px;
+}
+.learner-app .dict-item--top .badge {
+  justify-self: start;
+  margin-top: 5px;
+  padding: 0 5px;
+  line-height: 14px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  background: var(--jade-600);
+  color: #fff;
+}
+.learner-app .dict-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.learner-app .dict-empty .icon {
+  width: 36px;
+  height: 36px;
+  color: var(--text-subtle);
+}
+.learner-app .dict-empty strong {
+  color: var(--m03-ink);
+  font-size: 0.9375rem;
+}
+.learner-app .dict-more {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 18px;
+  min-height: 32px;
+  padding: 0 10px 0 16px;
+  width: 100%;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 9px;
+  background: var(--m03-sunken);
+  font-size: 0.75rem;
+  color: var(--m03-ink);
+  text-align: left;
+}
+.learner-app .dict-more > .icon:first-child {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.6;
+}
+.learner-app .dict-more > .icon:last-child {
+  margin-left: auto;
+  width: 15px;
+  height: 15px;
+  color: #4b4f5a;
+}
+.learner-app .dict-more:hover {
+  background: var(--cream-100);
+}
+
+/* 03-02 Chi tiết từ vựng */
+.learner-app .word {
+  position: relative;
+  padding: 0 21px 24px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.learner-app .word__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+.learner-app .word__hz {
+  margin: 21px 0 0 -1px;
+  font-family: var(--m03-font-kai);
+  font-weight: 700;
+  font-size: 3.5rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--m03-jade);
+}
+.learner-app .word__mid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  margin-top: 12px;
+}
+.learner-app .word__py {
+  justify-self: start;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--m03-ink);
+  border-bottom: 1.5px dashed #8a8c94;
+  padding-bottom: 1px;
+}
+.learner-app .word__vi {
+  margin-top: -3px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--m03-jade);
+}
+.learner-app .word .badge--lv {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 0 7px;
+  line-height: 18px;
+  border-radius: 6px;
+  background: var(--jade-600);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.learner-app .seg {
+  display: inline-flex;
+  margin: 12px 0 0;
+  padding: 2px;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 8px;
+  background: var(--m03-sunken);
+}
+.learner-app .seg button {
+  position: relative;
+  min-width: 69px;
+  height: 23px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2a2e3a;
+  white-space: nowrap;
+}
+.learner-app .seg button + button {
+  min-width: 80px;
+}
+.learner-app .seg button[aria-pressed='true'] {
+  background: #fff;
+  color: var(--jade-700);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(20 24 43 / 10%);
+}
+.learner-app .word-ex {
+  margin-top: 13px;
+  padding: 9px 12px 9px 5px;
+  border: 1px solid var(--m03-line);
+  border-radius: 10px;
+  background: #fff;
+}
+.learner-app .word-ex h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+  line-height: 1.3;
+}
+.learner-app .word-ex h2::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--jade-600);
+}
+.learner-app .word-ex__cn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0 7px;
+  font-family: var(--font-cn-serif);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--m03-ink);
+  letter-spacing: 0.02em;
+}
+.learner-app .word-ex footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 11px 0 0 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--m03-line-soft);
+  font-size: 0.6375rem;
+  color: #4a4e5a;
+}
+.learner-app .word-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 37px;
+  margin-top: 9px;
+  border: 1.5px solid var(--jade-700);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--jade-700);
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.learner-app .word-save .icon {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+}
+.learner-app .word-save:hover {
+  background: var(--jade-50);
+}
+.learner-app .word-save[aria-pressed='true'] {
+  background: var(--jade-600);
+  border-color: var(--jade-600);
+  color: #fff;
+}
+.learner-app .word-bar .icon-btn {
+  width: 42px;
+}
+.learner-app .word-bar .icon-btn .icon {
+  width: 24px;
+  height: 24px;
+}
+.learner-app .word-bar .appbar__end {
+  margin-right: -1px;
+}
+.learner-app .m03-menu {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 30;
+  min-width: 196px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--m03-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-float);
+}
+.learner-app .m03-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--m03-ink);
+  font-size: 0.875rem;
+  text-align: left;
+  text-decoration: none;
+}
+.learner-app .m03-menu button:hover {
+  background: var(--m03-sunken);
+}
+.learner-app .m03-menu .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+/* Chi tiết từ không có tab bar (mẫu 03-02), như .done-main. */
+.learner-app .app:has(> .word) > .tabbar {
+  display: none;
+}
+
+@media (max-width: 360px) {
+  .learner-app .dict-item {
+    grid-template-columns: 112px 1fr auto;
+    padding-right: 10px;
+  }
+  .learner-app .dict-item .badge {
+    padding: 2px 6px;
+  }
+}
+
+/* Lead patch của mẫu: vùng bấm ≥ 44px. */
+.learner-app .app:has(> .dict, > .word) .icon-btn {
+  position: relative;
+}
+.learner-app .app:has(> .dict, > .word) .icon-btn::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+.learner-app .dict-item__link {
+  min-height: 44px;
+}
+/* Ô vẫn vẽ như mẫu, input trong suốt cao 44px. */
+.learner-app .dict-search__input {
+  height: 44px;
+  margin-block: -5px;
+}
+
+/* Khối M2.6b của mẫu (Q69: control 44px thật, chữ ≥ 4,5:1; Q65). */
+.learner-app .app:has(> .dict) .appbar .icon-btn,
+.learner-app .app:has(> .dict, > .word) .word-bar .icon-btn {
+  width: 44px;
+  height: 44px;
+}
+.learner-app .app:has(> .dict) .appbar,
+.learner-app .app:has(> .word) .appbar {
+  padding-top: 4px;
+}
+.learner-app .dict-search {
+  height: 46px;
+}
+.learner-app .dict-search__input {
+  padding-right: 4px;
+}
+.learner-app .dict-search__input::placeholder {
+  color: var(--text-muted);
+}
+/* Nút xoá là phần tử flex cạnh ô nhập (không đè lên ô nhập), 44×44 thật. */
+.learner-app .dict-search__clear {
+  position: static;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border-radius: 8px;
+}
+.learner-app .dict-search__tools > * {
+  width: 44px;
+}
+.learner-app .dict-item {
+  min-height: 46px;
+}
+.learner-app .dict-item--top {
+  min-height: 81px;
+}
+.learner-app .dict-item__vi--none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.learner-app .dict-item--top .badge {
+  background: var(--jade-800);
+}
+.learner-app .dict-more {
+  min-height: 44px;
+}
+.learner-app .word .seg button {
+  height: 44px;
+}
+.learner-app .word .seg button[aria-pressed='true'] {
+  color: var(--jade-800);
+}
+.learner-app .word .badge--lv {
+  background: var(--jade-800);
+}
+.learner-app .word__vi--none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.learner-app .word-save {
+  min-height: 44px;
+  color: var(--jade-800);
+}
+.learner-app .word-save[aria-pressed='true'] {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+}
+/* Mẫu ẩn .seg bằng [hidden]; app không render nó. */
+.learner-app .word__mid:not(:has(> .seg)) {
+  margin-bottom: 9px;
+}
+/* Lỗi tra từ (M2.6b, không có trong mẫu): như .word-save, ≥ 44px. */
+.learner-app .dict-retry {
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 20px;
+  border: 1.5px solid var(--jade-700);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--jade-800);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.learner-app .dict-retry:hover {
+  background: var(--jade-50);
+}
+
+@media (max-width: 299px) {
+  .learner-app .dict {
+    padding: 14px 12px 0;
+  }
+  .learner-app .dict-search {
+    flex-wrap: wrap;
+    height: auto;
+  }
+  .learner-app .dict-search__field {
+    flex: 1 0 100%;
+    height: 44px;
+  }
+  .learner-app .dict-search__tools {
+    flex: 1 0 100%;
+    height: 45px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--m03-line);
+  }
+  .learner-app .dict-item {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+    padding: 6px 12px;
+  }
+  .learner-app .dict-item .badge {
+    justify-self: start;
+  }
+  .learner-app .dict-item--top .dict-item__hz {
+    margin-bottom: 4px;
+  }
+  .learner-app .word {
+    padding: 0 12px 24px;
+  }
+  .learner-app .word__mid {
+    grid-template-columns: 1fr;
+  }
+  .learner-app .word .seg {
+    justify-self: start;
+  }
+}

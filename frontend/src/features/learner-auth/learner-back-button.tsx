@@ -6,10 +6,13 @@ export function LearnerBackButton({
   fallbackHref = '/',
   className = 'icon-btn',
   ariaLabel = 'Quay lại',
+  icon = 'arrow-left',
 }: {
   fallbackHref?: string;
   className?: string;
   ariaLabel?: string;
+  /** Sprite symbol without the `i-` prefix (module 03 bars draw a chevron). */
+  icon?: string;
 }) {
   const router = useRouter();
 
@@ -30,7 +33,7 @@ export function LearnerBackButton({
       aria-label={ariaLabel}
     >
       <svg className="icon" aria-hidden="true">
-        <use href="#i-arrow-left" />
+        <use href={`#i-${icon}`} />
       </svg>
     </a>
   );

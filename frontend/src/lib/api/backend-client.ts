@@ -25,6 +25,9 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/learning\/exercises\/\d+\/attempts$/,
   /^\/api\/v1\/media\/\d+\/access$/,
   /^\/api\/v1\/media\/\d+\/content$/,
+  /^\/api\/v1\/dictionary\?query=[^&#]+$/,
+  /^\/api\/v1\/dictionary\/words\/\d+$/,
+  /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
 ];
 
 /** Raw requests wait at most this long for the response headers. */
@@ -49,7 +52,7 @@ type RawRequestOptions = {
 
 type RequestOptions = {
   token?: string;
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'DELETE';
   body?: unknown;
   /** Sent as `Idempotency-Key` (docs/api/api.md §A.7). */
   idempotencyKey?: string;

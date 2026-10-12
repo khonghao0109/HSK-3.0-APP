@@ -341,6 +341,63 @@ describe('server-only backend client', () => {
     );
     expect(new Headers(second?.headers).has('idempotency-key')).toBe(false);
   });
+  it('allowlists dictionary search, word and save, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      `/api/v1/dictionary?query=${encodeURIComponent('学习')}`,
+      { token: 't' },
+    );
+    await client.request('/api/v1/dictionary/words/12', { token: 't' });
+    await client.request('/api/v1/dictionary/words/12/save', { token: 't' });
+    for (const path of [
+      '/api/v1/dictionary',
+      '/api/v1/dictionary?query=a&x=1',
+      '/api/v1/dictionary/words/abc',
+      '/api/v1/dictionary/words/1/savex',
+      '/api/v1/dictionary/words/1/save?x=1',
+    ]) {
+      await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends DELETE with the token and no body', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/dictionary/words/12/save', {
+      token: 't',
+      method: 'DELETE',
+    });
+
+    const [url, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(String(url)).toBe(
+      'http://backend.example.test/api/v1/dictionary/words/12/save',
+    );
+    expect(init?.method).toBe('DELETE');
+    expect(init?.body).toBeUndefined();
+    const headers = new Headers(init?.headers);
+    expect(headers.get('authorization')).toBe('Bearer t');
+    expect(headers.has('content-type')).toBe(false);
+    expect(headers.has('idempotency-key')).toBe(false);
+  });
+
   it('allowlists media access and content, rejecting path variants', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

@@ -186,6 +186,8 @@ Không có biến `NEXT_PUBLIC_*`.
 
 BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: sử dụng cookie riêng (`LEARNER_SESSION_COOKIE_NAME`, mặc định `hsk_learner_session` và `${name}_refresh`), chỉ chấp nhận tài khoản có role `user` (tài khoản `admin` bị từ chối 403 `admin_account` và thu hồi session backend ngay lập tức), cung cấp các route `/api/learner/session/{login,register,logout,me}` với kiểm soát CSRF same-origin và proxy tự động refresh token theo tiền tố đường dẫn (ADR-003).
 
+Từ điển learner (M2.6b) đi qua 2 route BFF: `GET /api/learner/dictionary?q=` (tra từ, `q` sau `trim` dài 1–64 ký tự) và `POST`/`DELETE /api/learner/dictionary/words/:id/save` (lưu, bỏ lưu; kiểm same-origin, `Idempotency-Key` sinh phía server cho mỗi lần lưu). Cả hai cần cookie learner, luôn gửi token tới backend để giới hạn đọc 120/phút tính theo user, trả `cache-control: no-store`, và xoá cookie khi backend trả 401/403.
+
 ### 3.7 Worker process và Job Queue (M1.7a)
 
 - Hệ thống xử lý tác vụ nền bất đồng bộ sử dụng `pg-boss` (chạy trên PostgreSQL, schema `pgboss`, không dùng Redis theo ADR-008 §2).

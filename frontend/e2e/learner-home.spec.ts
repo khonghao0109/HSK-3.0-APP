@@ -115,11 +115,6 @@ test.describe('Learner Home (M2.4a)', () => {
         text: TOAST_COMING_SOON,
       },
       {
-        label: 'tab Tra từ',
-        control: nav.getByRole('button', { name: 'Tra từ' }),
-        text: TOAST_COMING_SOON,
-      },
-      {
         label: 'tab Ôn tập',
         control: nav.getByRole('button', { name: 'Ôn tập' }),
         text: TOAST_COMING_SOON,

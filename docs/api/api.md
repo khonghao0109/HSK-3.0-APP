@@ -80,7 +80,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
   mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
   `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
-  60/phút/user, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
+  60/phút/user, `GET /dictionary`, `GET /dictionary/words/:id` và `GET /dictionary/words/:id/save`
+  120/phút/user hoặc IP, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
   `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
   `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
   `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
@@ -370,9 +371,9 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 
 | Method | Path | Auth | Throttle |
 | --- | --- | --- | --- |
-| `GET` | `/dictionary?query=<hanzi, pinyin hoặc nghĩa Việt/Anh>` | public | mặc định |
-| `GET` | `/dictionary/words/:id` | public | mặc định |
-| `GET` | `/dictionary/words/:id/save` | JWT | mặc định |
+| `GET` | `/dictionary?query=<hanzi, pinyin hoặc nghĩa Việt/Anh>` | public | 120/phút/user hoặc IP (`dictionaryReadLimit`, 1.000 khi `NODE_ENV=test`) |
+| `GET` | `/dictionary/words/:id` | public | 120/phút/user hoặc IP (cùng `dictionaryReadLimit`) |
+| `GET` | `/dictionary/words/:id/save` | JWT | 120/phút/user (cùng `dictionaryReadLimit`) |
 | `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
 | `DELETE` | `/dictionary/words/:id/save` | JWT | 60/phút/user (cùng `wordSaveLimit`) |
 

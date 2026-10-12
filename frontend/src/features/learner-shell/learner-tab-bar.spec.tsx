@@ -93,16 +93,41 @@ describe('LearnerTabBar', () => {
     expect(iconHref(learn)).toBe('#i-book-open');
   });
 
-  it.each(['Tra từ', 'Ôn tập'])(
-    '%s is a button that shows the coming-soon toast',
-    (label) => {
-      const nav = renderAt('/learn');
-      const button = within(nav).getByRole('button', { name: label });
-      expect(button.tagName).toBe('BUTTON');
-      expect(button).toHaveAttribute('type', 'button');
-      expect(screen.queryByText(TOAST_COMING_SOON)).not.toBeInTheDocument();
-      fireEvent.click(button);
-      expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
+  it.each([
+    '/learn/dictionary',
+    '/learn/dictionary/12',
+    '/learn/dictionary/abc',
+  ])(
+    'links Tra từ to /learn/dictionary and marks it current on %s',
+    (pathname) => {
+      const nav = renderAt(pathname);
+      const dictionary = within(nav).getByRole('link', { name: 'Tra từ' });
+      expect(dictionary).toHaveAttribute('href', '/learn/dictionary');
+      expect(dictionary).toHaveAttribute('aria-current', 'page');
+      expect(iconHref(dictionary)).toBe('#i-search');
+      expect(
+        within(nav).getByRole('link', { name: 'Trang chủ' }),
+      ).not.toHaveAttribute('aria-current');
     },
   );
+
+  it.each(['/learn', '/learn/dictionaryx', '/learn/path'])(
+    'does not mark Tra từ current on %s',
+    (pathname) => {
+      const nav = renderAt(pathname);
+      expect(
+        within(nav).getByRole('link', { name: 'Tra từ' }),
+      ).not.toHaveAttribute('aria-current');
+    },
+  );
+
+  it('Ôn tập is a button that shows the coming-soon toast', () => {
+    const nav = renderAt('/learn');
+    const button = within(nav).getByRole('button', { name: 'Ôn tập' });
+    expect(button.tagName).toBe('BUTTON');
+    expect(button).toHaveAttribute('type', 'button');
+    expect(screen.queryByText(TOAST_COMING_SOON)).not.toBeInTheDocument();
+    fireEvent.click(button);
+    expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
+  });
 });

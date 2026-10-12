@@ -1,4 +1,8 @@
-import { DictionaryController, wordSaveLimit } from './dictionary.controller';
+import {
+  DictionaryController,
+  dictionaryReadLimit,
+  wordSaveLimit,
+} from './dictionary.controller';
 import {
   toWordDetail,
   WORD_DETAIL_INCLUDE,
@@ -223,6 +227,26 @@ describe('word save limit', () => {
         DictionaryController.prototype[method],
       );
       expect(limit).toBe(wordSaveLimit);
+    },
+  );
+});
+
+describe('dictionary read limit', () => {
+  it.each([
+    ['production', 120],
+    ['test', 1_000],
+  ])('resolves under NODE_ENV=%s', (nodeEnv, limit) => {
+    withNodeEnv(nodeEnv, () => expect(dictionaryReadLimit()).toBe(limit));
+  });
+
+  it.each(['search', 'getWord', 'getSaved'] as const)(
+    'throttles DictionaryController.%s with dictionaryReadLimit',
+    (method) => {
+      const limit: unknown = Reflect.getMetadata(
+        'THROTTLER:LIMITdefault',
+        DictionaryController.prototype[method],
+      );
+      expect(limit).toBe(dictionaryReadLimit);
     },
   );
 });
