@@ -48,14 +48,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 24 / 40 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 26 / 40 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **82 / 153 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **84 / 153 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -232,14 +232,14 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.2 | UI onboarding goal + kế hoạch học | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); 01/03,04; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
 | M2.3b | Placement UI | ⬜ | 01/05,06 |
-| M2.4 | Trang chủ + lộ trình học | ⬜ | 02/01,02 |
+| M2.4 | Trang chủ + lộ trình học | ✅ | 02/01,02; 12/10: ✅ phạm vi 02/01,02 đã phủ bởi M2.4a, M2.4b |
 | M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) đã đóng cùng M2.4b 10/10; `02-learning-lesson/01`; Q21–Q24 |
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
 | M2.5a | Trang nội dung bài học | ✅ | 11/10: ✅ đã đóng (`7159999`, `f376863`, `f61b0f8`, PR #6 run `38144395840`); 02/03; Q32–Q44 |
 | M2.5b | Activity player: khung, arrange_sentence, mcq, fill_blank | ✅ | 02/04, 02/05 phần lưới; Q45, Q47–Q50; 12/10: ✅ đã đóng (`c5647e0`, `2f0b720`, `d92675f`, PR #6 run `38200991127`) |
 | M2.5c | Activity player: listening_choice (cần M2.B12) | ✅ | 02/05; Q45, Q48, Q54–Q57; audio qua BFF cùng origin (`/api/learner/media/:id/access`, `/api/learner/media/:id/content` chuyển tiếp Range), giữ `media-src 'self'`; chưa đo tỉ lệ 429 của bucket grant (backlog M2.B12 mục 2), vẫn để backlog; 12/10: ✅ đã đóng (`fc52f26`, `5014020`, `3c7c049`, run `38213402357`) |
-| M2.5d | Hoàn thành bài, tổng kết, cập nhật progress | 🟡 chờ review | 02/06; Q58–Q61; BFF `POST /api/learner/topics/:id/complete` (body `{ lessonId }`) và `POST /api/learner/lessons/:id/complete` (đóng topic đã đủ attempt rồi complete bài, `409` + progress `done` là thành công); player đóng topic sau bài tập cuối của topic, xong bài tập cuối hoặc mở player khi mọi bài tập đã có attempt thì complete và chuyển `/learn/lessons/:id/complete`; màn Hoàn thành không XP/thành tích, điểm `Math.round(Progress.score)` |
-| M2.6a | Backend dictionary detail + save-word API | ⬜ | |
+| M2.5d | Hoàn thành bài, tổng kết, cập nhật progress | ✅ | 02/06; Q58–Q61; BFF `POST /api/learner/topics/:id/complete` (body `{ lessonId }`) và `POST /api/learner/lessons/:id/complete` (đóng topic đã đủ attempt rồi complete bài, `409` + progress `done` là thành công); player đóng topic sau bài tập cuối của topic, xong bài tập cuối hoặc mở player khi mọi bài tập đã có attempt thì complete và chuyển `/learn/lessons/:id/complete`; màn Hoàn thành không XP/thành tích, điểm `Math.round(Progress.score)`; 12/10: ✅ đã đóng (`c8d2348`, `36e332a`, PR #6 run `38232025356`) |
+| M2.6a | Backend dictionary detail + save-word API | 🟡 đang làm | Q62, Q63; chi tiết từ public, lưu/bỏ lưu (JWT, Idempotency-Key); search thêm id |
 | M2.6b | UI tra từ, chi tiết, lưu từ | ⬜ | 03/01,02 |
 | M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ⬜ | `frontend/DESIGN.md` |
 | M2.7a | Vệ sinh test e2e/unit (helper DB disposable cho psql, ghim TZ Vitest) và focus a11y learner (vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline) | ✅ | 05/10: ✅ đã đóng (`d4d664d`, `234a3d6`, `063ef39`, `a9a91bf`, `b1a043b`, PR #5 run `37296349078`) |
@@ -488,7 +488,7 @@ UI và phần backend còn thiếu:
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
 | M2.2 | Onboarding goal + kế hoạch học UI | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
 | M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
-| M2.4 | Trang chủ + lộ trình học | ⬜ | `02-learning-lesson/01,02` |
+| M2.4 | Trang chủ + lộ trình học | ✅ | `02-learning-lesson/01,02`; 12/10: ✅ phạm vi 02/01,02 đã phủ bởi M2.4a, M2.4b |
 | M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) đã đóng cùng M2.4b 10/10; `02-learning-lesson/01`; Q21–Q24 |
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ⬜ | `02-learning-lesson/03,04,05,06` |
@@ -682,3 +682,4 @@ khi vertical slice bắt đầu.
 | 12/10/2026 | GĐ5: M2.B12 ✅ đã đóng (`578ca94`, `5de2b86`, PR #6 run `38204114744`). M2.5c 🟡 chờ review (player listening_choice: nút phát, sóng âm trang trí 67 vạch tô theo tiến độ, thời gian `floor(currentTime)`/`ceil(duration)`, "Nghe lại"; không tự phát và không tải audio trước khi bấm phát; chọn đáp án là Kiểm tra được; audio qua BFF cùng origin `GET /api/learner/media/:id/access` và `GET /api/learner/media/:id/content` (stream, chuyển tiếp Range, `private, no-store`), CSP giữ `media-src 'self'`; listening_choice không có media vẫn là thẻ sắp ra mắt). Backlog M2.B12 mục 2 (đo tỉ lệ 429 của bucket grant) chưa làm ở M2.5c, vẫn để backlog. Backlog sau review M2.5c: (1) backend trả 401 ở route access thì BFF chưa xoá cookie; (2) lỗi của route content dùng `no-store`, chưa phải `private, no-store`; (3) chưa có test truyền abort signal lên backend; (4) cần thử phát audio trên iPhone/Safari thật trước khi phát hành. Q54–Q57 chép vào `docs/product/learner-ui-decisions.md`; ADR-003 ghi media learner đi qua BFF. Đếm lại bằng script theo từng dòng task: GĐ5 23/40. Tổng 81/153. |
 | 12/10/2026 | GĐ5: M2.5c ✅ đã đóng (`fc52f26`, `5014020`, `3c7c049`, run `38213402357`). M2.5d 🟡 đang làm (hoàn thành bài theo Q58–Q61: player tự đóng topic khi đã làm hết bài tập của topic qua BFF start + complete topic, xong bài tập cuối thì complete bài rồi mở màn Hoàn thành `/learn/lessons/[id]/complete`; màn Hoàn thành không có XP và thẻ thành tích, điểm lấy `Progress.score`, "Ôn từ mới" ra toast, "Bài tiếp theo" theo `GET /learning/path`, bài cuối Level là "Về lộ trình"; không đổi backend). Q58–Q61 chép vào `docs/product/learner-ui-decisions.md`. Đếm lại bằng script theo từng dòng task: GĐ5 24/40. Tổng 82/153. |
 | 12/10/2026 | GĐ5: M2.5d 🟡 chờ review (BFF đóng topic và hoàn thành bài, mỗi lệnh ghi một `Idempotency-Key` UUID sinh phía server; player đóng topic sau bài tập cuối của topic, hoàn thành bài sau bài tập cuối hoặc khi mở player với mọi bài tập đã có attempt rồi chuyển `/learn/lessons/:id/complete`, lỗi hiện `role="alert"` và "Thử lại"; màn Hoàn thành theo mẫu 06 và Q59–Q61, pháo giấy đặt bằng `:nth-child`, không thuộc tính `style`; thẻ "Bạn đã làm xong phần luyện tập" chỉ còn khi có bài tập chưa có attempt, ví dụ dạng sắp ra mắt Q48). Backlog sau review M2.5d: (1) Màn bài học khi bài đã done chưa đổi hành vi; (2) Điểm trên màn Hoàn thành dùng aria-label trên <p> (ARIA cấm), đổi sang chữ sr-only. Đếm lại bằng script theo từng dòng task: GĐ5 24/40. Tổng 82/153. |
+| 12/10/2026 | GĐ5: M2.5d ✅ đã đóng (`c8d2348`, `36e332a`, PR #6 run `38232025356`). M2.4 ✅: phạm vi 02/01,02 đã phủ bởi M2.4a, M2.4b. M2.6a 🟡 đang làm (Q62, Q63: chi tiết từ public, lưu/bỏ lưu từ có JWT và Idempotency-Key, search thêm `id`). Đếm lại bằng script theo quy tắc 0.6 (gồm `#10`, `#11`): GĐ5 26/40, tổng 84/153. |

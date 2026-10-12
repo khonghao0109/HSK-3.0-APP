@@ -77,5 +77,7 @@ Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q59 | **Màn Hoàn thành: ẩn ô "Kinh nghiệm nhận được" (XP) và thẻ "Thành tích mới!"; điểm lấy Progress.score** (PO 12/10/2026) | Mẫu có 35 XP và huy hiệu "Sắm sửa thành thạo" | Backend chưa có XP/thành tích |
 | Q60 | **"Ôn từ mới" giữ như mẫu, bấm ra toast "Tính năng sắp ra mắt."** (PO 12/10/2026) | Mẫu trỏ `flashcards.html` | Như Q33/Q38 |
 | Q61 | **"Bài tiếp theo" mở màn bài học của bài kế cùng Level theo `GET /learning/path`; bài cuối Level thì nút là "Về lộ trình"** (PO 12/10/2026) | Mẫu trỏ `path.html` | — |
+| Q62 | **"Lưu để ôn" chỉ lưu từ (UserWord, có event `word_saved`), bấm lại là bỏ lưu; chưa tạo thẻ ôn SRS (để M3)** (PO 12/10/2026) | — | M2.6a backend, M2.6b UI |
+| Q63 | **Màn chi tiết từ: chỉ "Lưu để ôn" là trạng thái thật; nút tim "Thêm vào yêu thích" giữ trên UI, bấm ra toast "Tính năng sắp ra mắt."** (PO 12/10/2026) | Mẫu bật/tắt tim riêng, toast "Đã thêm 学习 vào yêu thích" | Như Q33 |
 
 Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".
