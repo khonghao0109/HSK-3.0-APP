@@ -84,5 +84,7 @@ Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q66 | **Ẩn mọi nút loa (phát âm từ, câu ví dụ, từng dòng kết quả) tới khi API có audio từ vựng** (PO 12/10/2026) | Mẫu có nút loa | Audio từ vựng: backlog M2.B12 |
 | Q67 | **Viết tay, ảnh chụp, giọng nói, lịch sử tra cứu, "Xem thêm trong Từ điển Hán Lộ", menu "Xem cách viết Hán tự" và "Báo lỗi nội dung" giữ như mẫu, bấm ra toast "Tính năng sắp ra mắt."; "Sao chép từ" làm thật** (PO 12/10/2026) | Mẫu trỏ màn demo/toast demo | Như Q16, Q33 |
 | Q68 | **Ví dụ chỉ hiện câu chữ Hán của API (ẩn dòng pinyin và dịch); không có ví dụ thì ẩn cả khối. Nút Giản thể/Phồn thể chỉ đổi chữ đầu màn; từ không có phồn thể thì ẩn nút** (PO 12/10/2026) | Mẫu đổi cả câu ví dụ, có pinyin và dịch | API chỉ có `example` một câu |
+| Q69 | **Màn Tra từ và Chi tiết từ áp chuẩn như Q42: mọi control cao/rộng 44px thật, chữ nhỏ và badge đạt 4,5:1** (PO 12/10/2026) | Mẫu: ô tìm 36px, Giản/Phồn 23px, "Lưu để ôn" 37px, "Xem thêm" 32px, nút app bar 41px; chữ trắng trên jade-600 | `docs/ui_reference` ghi chú 37 |
+| Q70 | **Dòng kết quả chỉ hiện nghĩa tiếng Việt đầu tiên (theo thứ tự nghĩa); Chi tiết từ hiện mọi nghĩa tiếng Việt nối bằng "; "** (PO 12/10/2026) | Mẫu chỉ có một nghĩa | Như Q65: không có nghĩa Việt thì hiện "Chưa có nghĩa tiếng Việt" |
 
 Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".
