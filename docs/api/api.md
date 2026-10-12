@@ -370,7 +370,7 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 
 | Method | Path | Auth | Throttle |
 | --- | --- | --- | --- |
-| `GET` | `/dictionary?query=<hanzi hoặc pinyin>` | public | mặc định |
+| `GET` | `/dictionary?query=<hanzi, pinyin hoặc nghĩa Việt/Anh>` | public | mặc định |
 | `GET` | `/dictionary/words/:id` | public | mặc định |
 | `GET` | `/dictionary/words/:id/save` | JWT | mặc định |
 | `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
@@ -380,10 +380,38 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 (`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho cả 5 route). Không route
 nào đặt header cache.
 
-**Search.** Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc
-`pinyinNormalized`. Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]`
-(không `400`). Tối đa 20 kết quả, chỉ từ public; `level` là tên Level published đầu tiên
-theo `orderIndex`. `data` `200` là mảng:
+**Search.** Query được chuẩn NFC rồi `trim`; hợp lệ khi dài 1–64 ký tự và:
+
+- có ký tự hanzi `㐀-鿿`: chỉ gồm hanzi, `[a-zA-Z1-5:üÜ' ]`;
+- không có hanzi: chỉ gồm chữ Latin có hoặc không dấu, số `1-5`, dấu cách, `'`, `:`.
+
+Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]` với `200` (không `400`).
+"Có cấp HSK" = từ có ít nhất một Level `published`, chưa soft-delete (cùng điều kiện với
+`level` trong response). Mỗi request tối đa 3 truy vấn DB.
+
+- **Hanzi:** `hanzi` bắt đầu bằng query. Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; `hanzi` ngắn trước,
+  rồi `hanzi`, rồi `id`. Tối đa 20.
+- **Latin**, tối đa 20 từ, không trùng `id`, nhóm 1 trước rồi nhóm 2 lấp chỗ còn lại:
+  1. Pinyin: `pinyinNormalized` bắt đầu bằng query đã chuẩn pinyin (bỏ số thanh, chữ
+     thường, `ü` → `u:`). Chỉ chạy khi query không có dấu tiếng Việt (gồm toàn ký tự
+     `[a-zA-Z1-5:üÜ' ]`). Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; khớp trọn (`pinyinNormalized` bằng
+     query) trước, pinyin ngắn trước, rồi `pinyinNormalized`, rồi `id`.
+  2. Nghĩa: chạy khi query sau chuẩn nghĩa (bỏ dấu, `đ` → `d`, chữ thường, gộp khoảng
+     trắng) dài ≥ 2 ký tự và nhóm 1 chưa đủ 20; chỉ gồm từ chưa có ở nhóm 1. Một meaning
+     khớp khi `meaningViNormalized` hoặc `meaningEnNormalized` khớp **đầu từ**: cột bắt
+     đầu bằng query, hoặc chứa query ngay sau một ký tự không phải chữ/số. Query có dấu
+     còn khớp đầu từ `meaningViNormalized` với query viết thường giữ dấu, cho dòng cũ do
+     backfill P0 chuẩn hoá giữ dấu. Thứ tự: khớp chính xác trước (cột bằng query, bằng
+     `"to " + query`, hoặc bằng query giữ dấu), cấp HSK thấp hơn trước (theo `orderIndex`
+     của Level published), từ không có cấp xếp sau, nghĩa khớp ngắn nhất
+     trước, rồi `id`.
+
+Chỉ từ public; `level` là tên Level published đầu tiên theo `orderIndex`. Dữ liệu từ điển
+thật hiện chỉ có nghĩa tiếng Anh (CC-CEDICT, 0 nghĩa Việt cho tới M1.2a), nên hôm nay
+tra theo nghĩa chỉ ra kết quả nhờ nghĩa Anh. Ví dụ: `?query=hoc` và `?query=học` khớp từ
+có nghĩa Việt "học tập" và nghĩa Anh "hockey", không khớp "shocking"; `?query=study` đưa
+từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` trả từ có pinyin
+`xue…` trước, rồi tới từ có nghĩa bắt đầu bằng "xue". `data` `200` là mảng:
 
 ```json
 [{ "id": 12, "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
