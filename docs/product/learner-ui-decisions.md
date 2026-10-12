@@ -79,5 +79,10 @@ Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q61 | **"Bài tiếp theo" mở màn bài học của bài kế cùng Level theo `GET /learning/path`; bài cuối Level thì nút là "Về lộ trình"** (PO 12/10/2026) | Mẫu trỏ `path.html` | — |
 | Q62 | **"Lưu để ôn" chỉ lưu từ (UserWord, có event `word_saved`), bấm lại là bỏ lưu; chưa tạo thẻ ôn SRS (để M3)** (PO 12/10/2026) | — | M2.6a backend, M2.6b UI |
 | Q63 | **Màn chi tiết từ: chỉ "Lưu để ôn" là trạng thái thật; nút tim "Thêm vào yêu thích" giữ trên UI, bấm ra toast "Tính năng sắp ra mắt."** (PO 12/10/2026) | Mẫu bật/tắt tim riêng, toast "Đã thêm 学习 vào yêu thích" | Như Q33 |
+| Q64 | **Tra từ theo nghĩa: `GET /dictionary` tra thêm nghĩa tiếng Việt (bỏ dấu) và nghĩa tiếng Anh; làm ở task backend M2.B14 trước M2.6b** (PO 12/10/2026) | Mẫu tra được nghĩa tiếng Việt | Từ điển thật (CC-CEDICT) hôm nay chỉ có nghĩa tiếng Anh, 0 nghĩa Việt (M1.2a chưa làm) |
+| Q65 | **Màn Tra từ và Chi tiết từ chỉ hiện nghĩa tiếng Việt; từ không có nghĩa Việt hiện "Chưa có nghĩa tiếng Việt", không hiện nghĩa tiếng Anh, không tự dịch** (PO 12/10/2026) | Mẫu luôn có nghĩa Việt | Kết quả tìm thấy nhờ nghĩa tiếng Anh vẫn hiện câu này |
+| Q66 | **Ẩn mọi nút loa (phát âm từ, câu ví dụ, từng dòng kết quả) tới khi API có audio từ vựng** (PO 12/10/2026) | Mẫu có nút loa | Audio từ vựng: backlog M2.B12 |
+| Q67 | **Viết tay, ảnh chụp, giọng nói, lịch sử tra cứu, "Xem thêm trong Từ điển Hán Lộ", menu "Xem cách viết Hán tự" và "Báo lỗi nội dung" giữ như mẫu, bấm ra toast "Tính năng sắp ra mắt."; "Sao chép từ" làm thật** (PO 12/10/2026) | Mẫu trỏ màn demo/toast demo | Như Q16, Q33 |
+| Q68 | **Ví dụ chỉ hiện câu chữ Hán của API (ẩn dòng pinyin và dịch); không có ví dụ thì ẩn cả khối. Nút Giản thể/Phồn thể chỉ đổi chữ đầu màn; từ không có phồn thể thì ẩn nút** (PO 12/10/2026) | Mẫu đổi cả câu ví dụ, có pinyin và dịch | API chỉ có `example` một câu |
 
 Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".
