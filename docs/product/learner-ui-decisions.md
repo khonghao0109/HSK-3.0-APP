@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026).
+Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -73,3 +73,9 @@ Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q55 | **Sóng âm trang trí: giữ hình vạch của mẫu 05, vạch đã nghe tô jade-600 theo tiến độ thật; thời gian lấy từ file thật** (PO 12/10/2026) | — | Không so pixel vạch sóng, chỉ kiểm số vạch và phần đã tô |
 | Q56 | **Không tự phát audio khi mở câu nghe; learner bấm nút phát** (PO 12/10/2026) | — | — |
 | Q57 | **Không bắt nghe trước khi "Kiểm tra": chọn đáp án là bấm được (như Q51)** (PO 12/10/2026) | — | — |
+| Q58 | **Hoàn thành bài: player tự đóng topic khi learner đã làm hết bài tập của topic đó (BFF gọi start nếu cần + complete topic); xong bài tập cuối thì complete bài rồi mở màn Hoàn thành** (PO 12/10/2026) | Chưa có màn học từ/ngữ pháp để đóng topic | Không đổi backend |
+| Q59 | **Màn Hoàn thành: ẩn ô "Kinh nghiệm nhận được" (XP) và thẻ "Thành tích mới!"; điểm lấy Progress.score** (PO 12/10/2026) | Mẫu có 35 XP và huy hiệu "Sắm sửa thành thạo" | Backend chưa có XP/thành tích |
+| Q60 | **"Ôn từ mới" giữ như mẫu, bấm ra toast "Tính năng sắp ra mắt."** (PO 12/10/2026) | Mẫu trỏ `flashcards.html` | Như Q33/Q38 |
+| Q61 | **"Bài tiếp theo" mở màn bài học của bài kế cùng Level theo `GET /learning/path`; bài cuối Level thì nút là "Về lộ trình"** (PO 12/10/2026) | Mẫu trỏ `path.html` | — |
+
+Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".
