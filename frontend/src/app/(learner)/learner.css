@@ -4450,7 +4450,7 @@ html:has(.learner-app) {
 }
 
 /* ---------- m03.css 03-01/03-02 + khối M2.6b (ghi chú 37): Tra từ và Chi tiết từ ----------
-   Chép từ docs/ui_reference/assets/css/m03.css. `.m03` của mẫu là `.app` chứa `.dict` hoặc
+   Chép từ docs/ui_reference/mobile/css/m03.css. `.m03` của mẫu là `.app` chứa `.dict` hoặc
    `.word`; bỏ nút loa (Q66), nút tim chỉ toast (Q63). */
 .learner-app .app:has(> .dict, > .word) {
   --m03-navy: var(--navy-900);

@@ -1,8 +1,8 @@
 # PLAN — Tiến độ dự án HSK 3.0
 
-> Cập nhật: 28/09/2026 · Baseline: branch `macdev`, HEAD `6681486` (PR #5 vào `main`, chưa merge)
-> · Trạng thái tổng: **PRE-BETA**. Backend và admin console có nền; CI chạy trên PR vào `main`
-> (run xanh đầu tiên ở PR #5); chưa có branch protection, learner app, hạ tầng production.
+> Cập nhật: 13/10/2026 · Baseline: branch `macdev`, HEAD `5d8d81a` (PR #6 vào `main`, chưa merge)
+> · Trạng thái tổng: **PRE-BETA**. Backend, admin console và learner app (M2.1–M2.8) có nền; CI chạy trên PR vào `main`
+> (run xanh đầu tiên ở PR #5); chưa có branch protection, hạ tầng production.
 
 Ký hiệu:
 
@@ -17,6 +17,7 @@ Ký hiệu:
 Mã `A-01`…`G-02` trỏ tới [reviews/2026-09-04-codebase-review.md](./reviews/2026-09-04-codebase-review.md).
 Mã `ADR-008 §n` trỏ tới [adr/ADR-008-TECHNOLOGY-STACK-DECISIONS.md](./adr/ADR-008-TECHNOLOGY-STACK-DECISIONS.md).
 Mockup `01-onboarding-placement/03` trỏ tới [ui_image/README.md](./ui_image/README.md).
+Mẫu HTML local (gitignored) ở `docs/ui_reference/` chia `mobile/`, `web/`, `admin/`.
 
 ## 0. Cách dùng file này
 
@@ -48,14 +49,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 32 / 42 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 34 / 43 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **90 / 155 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **92 / 156 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -242,13 +243,14 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.5d | Hoàn thành bài, tổng kết, cập nhật progress | ✅ | 02/06; Q58–Q61; BFF `POST /api/learner/topics/:id/complete` (body `{ lessonId }`) và `POST /api/learner/lessons/:id/complete` (đóng topic đã đủ attempt rồi complete bài, `409` + progress `done` là thành công); player đóng topic sau bài tập cuối của topic, xong bài tập cuối hoặc mở player khi mọi bài tập đã có attempt thì complete và chuyển `/learn/lessons/:id/complete`; màn Hoàn thành không XP/thành tích, điểm `Math.round(Progress.score)`; 12/10: ✅ đã đóng (`c8d2348`, `36e332a`, PR #6 run `38232025356`) |
 | M2.6a | Backend dictionary detail + save-word API | ✅ | Q62, Q63; chi tiết từ public, lưu/bỏ lưu (JWT, Idempotency-Key); search thêm id; commit `6b1397b`; 12/10: ✅ đã đóng (`6b1397b`, `ef51c56`, PR #6 run `38238233906`) |
 | M2.6b | UI tra từ, chi tiết, lưu từ | ✅ | 03/01,02; Q62–Q70; kèm giới hạn đọc dictionary theo route; commit `230b821`; review 12/10: commit PASS, còn thiếu `/api/learner/dictionary/:path*` trong matcher `frontend/src/proxy.ts` (sửa cùng M2.1c/d); commit `5e46bef`; 13/10: ✅ đã đóng (`5e46bef`, `03734f0`, PR #6 run `38343537592`); sửa matcher proxy ở `5e46bef` |
-| M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ⬜ | `frontend/DESIGN.md` |
+| M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline | ✅ | `frontend/DESIGN.md`; 13/10: ✅ M2.7a–M2.7e đã đóng; bố cục web ≥ 1024px tách sang M2.10 (Q81) |
 | M2.7a | Vệ sinh test e2e/unit (helper DB disposable cho psql, ghim TZ Vitest) và focus a11y learner (vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline) | ✅ | 05/10: ✅ đã đóng (`d4d664d`, `234a3d6`, `063ef39`, `a9a91bf`, `b1a043b`, PR #5 run `37296349078`) |
 | M2.7b | Guard DB disposable chặn tham số libpq đổi đích (frontend chỉ cho `sslmode`; backend chặn `dbname`, `host`, `hostaddr`, `port`, `service`, `servicefile`), test e2e bảo vệ màu vòng focus jade-700, forced-colors cho cấp độ đang chọn; chặn fragment `#` ở guard backend và helper e2e (libpq đọc `#?dbname=` thành tham số); Playwright `testIgnore` `**/e2e/support/**`; Vitest chạy `e2e/support` | ✅ | 07/10: ✅ đã đóng (`87833f7`, `b7b553b`, `2882e3d`, `3333d48`, PR #5 run `37564398158`) |
 | M2.7c | Test forced-colors đo chữ cấp độ đang chọn đọc được (pixel đổi khi ẩn chữ, tương phản ≥ 4,5:1), tài liệu quyết định PO learner UI `docs/product/learner-ui-decisions.md` | ✅ | 07/10: ✅ đã đóng (`d949b14`, `7d0dda8`, `ebf86bb`, PR #5 run `37568128763`) |
 | M2.7d | Lộ trình khi zoom lớn (dưới 320px lưới 2 cột, ẩn ảnh trong ô; vòng focus inset cho panel cấp), tách giá trị onboarding khỏi Zod (`onboarding-values.ts`) để hard-load `/onboarding/goal` và `/onboarding/plan` không vi phạm CSP, test chốt chặn `client-bundle-guard.spec.ts` | ✅ | 11/10: ✅ đã đóng (`b400ea5`, `c8d8f3b`, `d063cd3`, PR #6 run `38103091483`) |
-| M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | 🟡 đang làm | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin) |
+| M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | ✅ | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin); 13/10: ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`); Q78–Q80 |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ✅ | ADR-008 §10; Q75: chỉ dữ liệu first-party đã có, không bảng `ProductEvent` tới khi có consent (M1.7b2); Q76: activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; kèm sửa 2 test e2e chập chờn; Q77: onboarded = user có ≥ 1 `LearningPlan` bất kỳ status, `createdAt < asOf`; 13/10: ✅ đã đóng (`a8613cd`, `7dc6c59`, PR #6 run `38347856594`) |
+| M2.10 | Bố cục web cho learner từ 1024px (Q81): khung `.w-app` sidebar + thanh trên, `.w-public` nav ngang + footer, `.w-focus` màn làm bài; dưới 1024px giữ nguyên | ⬜ | Mẫu local `docs/ui_reference/web/` (20 trang); so ảnh ở 1024 và 1440 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
 
@@ -496,13 +498,14 @@ UI và phần backend còn thiếu:
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
 | M2.5 | Nội dung bài học, activity player (mcq, fill_blank, listening, arrange), hoàn thành | ✅ | `02-learning-lesson/03,04,05,06`; 12/10: ✅ mọi task con M2.5a–M2.5d đã đóng |
 | M2.6 | Dictionary search/detail/save-word cơ bản (backend detail + save API còn thiếu) | ✅ | `03-dictionary-review-reader/01,02`; 13/10: ✅ M2.6a, M2.6b đã đóng |
-| M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline states | ⬜ | `frontend/DESIGN.md` |
+| M2.7 | Responsive, keyboard, screen reader, loading/empty/error/offline states | ✅ | `frontend/DESIGN.md`; 13/10: ✅ M2.7a–M2.7e đã đóng; bố cục web ≥ 1024px tách sang M2.10 (Q81) |
 | M2.7a | Vệ sinh test e2e/unit (helper DB disposable cho psql, ghim TZ Vitest) và focus a11y learner (vòng focus jade-700 cho mọi control (Q12), ≥ 3:1 so với nền liền kề; forced-colors outline) | ✅ | 05/10: ✅ đã đóng (`d4d664d`, `234a3d6`, `063ef39`, `a9a91bf`, `b1a043b`, PR #5 run `37296349078`) |
 | M2.7b | Guard DB disposable chặn tham số libpq đổi đích (frontend chỉ cho `sslmode`; backend chặn `dbname`, `host`, `hostaddr`, `port`, `service`, `servicefile`), test e2e bảo vệ màu vòng focus jade-700, forced-colors cho cấp độ đang chọn; chặn fragment `#` ở guard backend và helper e2e (libpq đọc `#?dbname=` thành tham số); Playwright `testIgnore` `**/e2e/support/**`; Vitest chạy `e2e/support` | ✅ | 07/10: ✅ đã đóng (`87833f7`, `b7b553b`, `2882e3d`, `3333d48`, PR #5 run `37564398158`) |
 | M2.7c | Test forced-colors đo chữ cấp độ đang chọn đọc được (pixel đổi khi ẩn chữ, tương phản ≥ 4,5:1), tài liệu quyết định PO learner UI `docs/product/learner-ui-decisions.md` | ✅ | 07/10: ✅ đã đóng (`d949b14`, `7d0dda8`, `ebf86bb`, PR #5 run `37568128763`) |
 | M2.7d | Lộ trình khi zoom lớn (dưới 320px lưới 2 cột, ẩn ảnh trong ô; vòng focus inset cho panel cấp), tách giá trị onboarding khỏi Zod (`onboarding-values.ts`) để hard-load `/onboarding/goal` và `/onboarding/plan` không vi phạm CSP, test chốt chặn `client-bundle-guard.spec.ts` | ✅ | 11/10: ✅ đã đóng (`b400ea5`, `c8d8f3b`, `d063cd3`, PR #6 run `38103091483`) |
-| M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | 🟡 đang làm | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin) |
+| M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | ✅ | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin); 13/10: ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`); Q78–Q80 |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ✅ | ADR-008 §10; Q75: chỉ dữ liệu first-party đã có, không bảng `ProductEvent` tới khi có consent (M1.7b2); Q76: activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; kèm sửa 2 test e2e chập chờn; Q77: onboarded = user có ≥ 1 `LearningPlan` bất kỳ status, `createdAt < asOf`; 13/10: ✅ đã đóng (`a8613cd`, `7dc6c59`, PR #6 run `38347856594`) |
+| M2.10 | Bố cục web cho learner từ 1024px (Q81): khung `.w-app` sidebar + thanh trên, `.w-public` nav ngang + footer, `.w-focus` màn làm bài; dưới 1024px giữ nguyên | ⬜ | Mẫu local `docs/ui_reference/web/` (20 trang); so ảnh ở 1024 và 1440 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 
 Exit: flow end-to-end trên production build với backend thật ở staging ⬜ · không bearer
@@ -699,3 +702,4 @@ khi vertical slice bắt đầu.
 | 13/10/2026 | GĐ5: M2.1c, M2.1d, M2.6b ✅ đã đóng (`d36feab`, `5e46bef`, `03734f0`, PR #6 run `38343537592`); M2.6 ✅ (mục 4). M2.8 🟡 đang làm theo Q75, Q76, kèm sửa `learner-listening.spec.ts:229` và `learner-auth.spec.ts:105` chập chờn. Script đếm chuẩn tính cả dòng mã `#n` và mọi ô trạng thái (⛔, 🔵). Đếm lại: GĐ5 31/41, tổng 89/154. |
 | 13/10/2026 | GĐ5: M2.8 🟡 chờ review: `npm run analytics:p0` (`backend/scripts/analytics/p0-product-metrics.ts`, transaction READ ONLY, `$queryRaw` + `Prisma.sql`) tính signups, onboarded (Q77: user có ≥ 1 `LearningPlan` bất kỳ status, `createdAt < asOf`), activation 7 ngày (Q76), lesson started/completed/completion rate, chỉ số tổng, không PII; định nghĩa và SQL Metabase ở `docs/analytics/P0_PRODUCT_METRICS.md`; e2e `p0-product-metrics.e2e-spec.ts`. Sửa `learner-listening.spec.ts:229` chập chờn: player gọi access lần 2 khi bấm Phát lúc grant của lần mount còn đang chờ, nay dùng chung request đang chờ (unit test mới). `learner-auth.spec.ts:105 [tablet-768]` không tái hiện được (240/240 PASS), chưa sửa. Đếm không đổi: GĐ5 31/41, tổng 89/154. Backlog: `learner-auth.spec.ts:105`; grant cũ có thể ghi đè `grantRef` nếu `media.id` đổi khi đang mount (có từ trước). |
 | 13/10/2026 | GĐ5: M2.8 ✅ đã đóng (`2c786d0`, `a8613cd`, `7dc6c59`, PR #6 run `38347856594`; Q77 onboarded = đã từng tạo plan). Thêm M2.7e 🟡 đang làm (axe, bàn phím, trạng thái learner). Đếm lại: GĐ5 32/42, tổng 90/155. |
+| 13/10/2026 | GĐ5: M2.7e ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`; Q78–Q80 tương phản); M2.7 ✅ (M2.7a–M2.7e đã đóng). Thêm M2.10 ⬜ bố cục web learner từ 1024px (Q81). Đếm lại: GĐ5 34/43, tổng 92/156. |
