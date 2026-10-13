@@ -9,10 +9,18 @@ export const metadata: Metadata = {
   title: 'Đăng nhập',
 };
 
-export default async function LearnerSignInPage() {
+export default async function LearnerSignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  // Only the exact value `verify-email` is honoured (Q73); any other `next`
+  // is ignored, so sign-in never redirects anywhere else.
+  const { next } = await searchParams;
+  const nextPath = next === 'verify-email' ? '/verify-email' : undefined;
   const session = await getServerLearnerSession();
   if (session.state === 'learner') {
-    redirect('/learn');
+    redirect(nextPath ?? '/learn');
   }
 
   return (
@@ -27,7 +35,7 @@ export default async function LearnerSignInPage() {
       </h1>
       <p className="auth__subtitle">Đăng nhập để tiếp tục học</p>
 
-      <LearnerLoginForm />
+      <LearnerLoginForm nextPath={nextPath} />
     </main>
   );
 }

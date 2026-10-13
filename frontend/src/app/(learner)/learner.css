@@ -5155,3 +5155,90 @@ html:has(.learner-app) {
     justify-self: start;
   }
 }
+
+/* ---------- 01 Quên mật khẩu, Đặt lại mật khẩu, Xác thực email (M2.1c/d, Q71–Q74) ---------- */
+/* As Q42: real 44px controls, text >= 4.5:1 (link jade-800). */
+.learner-app .auth__forgot {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 2px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--jade-800);
+  text-decoration: none;
+}
+
+.learner-app .auth__forgot:hover {
+  text-decoration: underline;
+}
+
+.learner-app .auth__forgot ~ .auth__submit {
+  margin-top: 14px;
+}
+
+.learner-app .auth-result__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 24px;
+  border-radius: 50%;
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+.learner-app .auth-result__icon .icon {
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 1.8;
+}
+
+.learner-app .auth-result__icon--warn {
+  background: var(--red-100);
+  color: var(--red-600);
+}
+
+.learner-app .auth__subtitle strong {
+  color: var(--navy-900);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .auth__actions {
+  display: grid;
+  margin-top: 32px;
+}
+
+.learner-app .auth__actions .alert {
+  margin-bottom: 18px;
+}
+
+.learner-app .auth__actions .btn {
+  min-height: 50px;
+  border-radius: 10px;
+  font-size: 1.125rem;
+  white-space: normal;
+  text-align: center;
+}
+
+.learner-app .auth [tabindex='-1']:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.learner-app .auth__submit {
+  white-space: normal;
+  text-align: center;
+}
+
+/* Q74: primary buttons of welcome, sign-up, sign-in and the recovery pages
+   on jade-800 (white 5.3:1 instead of 3.2:1 on jade-600), as Q42. */
+.learner-app .welcome .btn--primary,
+.learner-app .auth .btn--primary,
+.learner-app .welcome .btn--primary:hover,
+.learner-app .auth .btn--primary:hover {
+  background: var(--jade-800);
+}

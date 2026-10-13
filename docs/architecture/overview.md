@@ -188,6 +188,8 @@ BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: s�
 
 Từ điển learner (M2.6b) đi qua 2 route BFF: `GET /api/learner/dictionary?q=` (tra từ, `q` sau `trim` dài 1–64 ký tự) và `POST`/`DELETE /api/learner/dictionary/words/:id/save` (lưu, bỏ lưu; kiểm same-origin, `Idempotency-Key` sinh phía server cho mỗi lần lưu). Cả hai cần cookie learner, luôn gửi token tới backend để giới hạn đọc 120/phút tính theo user, trả `cache-control: no-store`, và xoá cookie khi backend trả 401/403.
 
+Quên mật khẩu, đặt lại mật khẩu và xác thực email của learner (M2.1c, M2.1d) đi qua 4 route BFF, đều `POST`, kiểm same-origin và trả `cache-control: no-store`: `/api/learner/password-reset/request` (`{ email }`, 204 như nhau dù email có tài khoản hay không), `/api/learner/password-reset/confirm` (`{ token, newPassword }`; 204 thì xoá cookie learner vì backend đã thu hồi mọi phiên; lỗi 400 trả `{ code }` là `INVALID_RESET_TOKEN`, `WEAK_PASSWORD` hoặc `INVALID_REQUEST`), `/api/learner/email-verification/confirm` (`{ token }`, không cần cookie; lỗi 400 trả `INVALID_VERIFICATION_TOKEN`) và `/api/learner/email-verification/request` (cần cookie learner; 401/403 thì xoá cookie). Token đọc từ fragment `#token=` của trang `/reset-password`, `/verify-email` rồi xoá khỏi URL ngay; BFF chuyển tiếp `X-Forwarded-For` để giới hạn theo IP của backend tính theo người dùng.
+
 ### 3.7 Worker process và Job Queue (M1.7a)
 
 - Hệ thống xử lý tác vụ nền bất đồng bộ sử dụng `pg-boss` (chạy trên PostgreSQL, schema `pgboss`, không dùng Redis theo ADR-008 §2).

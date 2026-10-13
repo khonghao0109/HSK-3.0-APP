@@ -162,6 +162,57 @@ describe('server-only backend client', () => {
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
 
+  it('allowlists password reset and email verification, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+    const paths = [
+      '/api/v1/auth/password-reset/request',
+      '/api/v1/auth/password-reset/confirm',
+      '/api/v1/auth/email-verification/request',
+      '/api/v1/auth/email-verification/confirm',
+    ];
+
+    for (const path of paths) {
+      await client.request(path, { method: 'POST', body: {} });
+    }
+    expect(
+      fetchImpl.mock.calls.map(([url]) => new URL(String(url)).pathname),
+    ).toEqual(paths);
+
+    for (const path of paths) {
+      for (const variant of [`${path}?x=1`, `${path}/x`]) {
+        await expect(
+          client.request(variant, { method: 'POST' }),
+        ).rejects.toMatchObject({ kind: 'invalid_request' });
+      }
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(paths.length);
+  });
+
+  it('resolves a 204 response without a body', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await expect(
+      client.request('/api/v1/auth/password-reset/request', {
+        method: 'POST',
+        body: { email: 'a@b.test' },
+      }),
+    ).resolves.toBeNull();
+  });
+
   it('allowlists auth register endpoint, rejecting path variants', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

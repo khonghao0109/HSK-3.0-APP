@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useRef, useState } from 'react';
 
@@ -24,7 +25,12 @@ function getErrorKind(body: unknown): string | null {
 
 type InvalidField = 'email' | 'password' | null;
 
-export function LearnerLoginForm() {
+export function LearnerLoginForm({
+  nextPath,
+}: {
+  /** Only `/verify-email` (Q73): the sign-in page accepts no other `next`. */
+  nextPath?: '/verify-email';
+} = {}) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
@@ -73,7 +79,7 @@ export function LearnerLoginForm() {
       });
 
       if (response.status === 200) {
-        router.replace('/learn');
+        router.replace(nextPath ?? '/learn');
         router.refresh();
         return;
       }
@@ -143,6 +149,10 @@ export function LearnerLoginForm() {
           inputRef={passwordInputRef}
           disabled={pending}
         />
+
+        <Link className="auth__forgot" href="/forgot-password">
+          Quên mật khẩu?
+        </Link>
 
         <div
           className="alert alert--error"

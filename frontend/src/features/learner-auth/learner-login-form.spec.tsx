@@ -263,4 +263,38 @@ describe('LearnerLoginForm', () => {
       screen.getByRole('button', { name: 'Hiện mật khẩu' }),
     ).toBeInTheDocument();
   });
+
+  it('links "Quên mật khẩu?" to /forgot-password between the password field and the submit button (Q71)', () => {
+    render(<LearnerLoginForm />);
+    const link = screen.getByRole('link', { name: 'Quên mật khẩu?' });
+    expect(link).toHaveAttribute('href', '/forgot-password');
+    expect(link).toHaveClass('auth__forgot');
+    const form = link.closest('form')!;
+    const children = [...form.children];
+    const passwordField = screen.getByLabelText('Mật khẩu').closest('.field')!;
+    const submit = screen.getByRole('button', { name: 'Đăng nhập' });
+    expect(children.indexOf(passwordField)).toBeLessThan(
+      children.indexOf(link),
+    );
+    expect(children.indexOf(link)).toBeLessThan(
+      children.indexOf(screen.getByRole('alert', { hidden: true })),
+    );
+    expect(children.indexOf(link)).toBeLessThan(children.indexOf(submit));
+  });
+
+  it('goes to the given next path after signing in (Q73)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({
+        success: true,
+        user: { id: 2, email: 'learner@example.test', role: 'user' },
+      }),
+    );
+
+    render(<LearnerLoginForm nextPath="/verify-email" />);
+    await fillAndSubmit();
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith('/verify-email');
+    });
+  });
 });

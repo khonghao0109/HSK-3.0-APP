@@ -227,8 +227,12 @@ test.describe('Learner Auth Flow', () => {
     await expect(page.getByLabel('Mật khẩu', { exact: true })).toBeFocused();
     await page.keyboard.type(password);
 
-    // Tab past toggle to submit button
+    // Tab past toggle and "Quên mật khẩu?" (Q71) to submit button
     await page.keyboard.press('Tab'); // focus toggle
+    await page.keyboard.press('Tab'); // focus "Quên mật khẩu?"
+    await expect(
+      page.getByRole('link', { name: 'Quên mật khẩu?' }),
+    ).toBeFocused();
     await page.keyboard.press('Tab'); // focus submit
     await expect(page.getByRole('button', { name: 'Đăng nhập' })).toBeFocused();
     await page.keyboard.press('Enter');
