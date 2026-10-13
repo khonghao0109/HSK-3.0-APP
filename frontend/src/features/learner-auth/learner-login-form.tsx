@@ -118,7 +118,12 @@ export function LearnerLoginForm({
 
   return (
     <>
-      <form className="auth__form" onSubmit={submit} noValidate>
+      <form
+        className="auth__form"
+        onSubmit={submit}
+        noValidate
+        aria-busy={pending || undefined}
+      >
         <div className="field">
           <label className="field__label" htmlFor="email">
             Email

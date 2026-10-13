@@ -29,6 +29,7 @@ function ResetPasswordView({ token }: { token: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [invalid, setInvalid] = useState(false);
   const busy = useRef(false);
+  const [pending, setPending] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const shown: View = view ?? (token ? 'form' : 'invalid');
@@ -53,6 +54,7 @@ function ResetPasswordView({ token }: { token: string | null }) {
     }
 
     busy.current = true;
+    setPending(true);
     try {
       const response = await fetch('/api/learner/password-reset/confirm', {
         method: 'POST',
@@ -76,6 +78,7 @@ function ResetPasswordView({ token }: { token: string | null }) {
       fail(LEARNER_AUTH_ERROR_MESSAGES.network, false);
     } finally {
       busy.current = false;
+      setPending(false);
     }
   }
 
@@ -89,7 +92,12 @@ function ResetPasswordView({ token }: { token: string | null }) {
           Mật khẩu mới cần ít nhất 6 ký tự. Sau khi đổi, bạn sẽ được đăng xuất
           khỏi mọi thiết bị.
         </p>
-        <form className="auth__form" onSubmit={submit} noValidate>
+        <form
+          className="auth__form"
+          onSubmit={submit}
+          noValidate
+          aria-busy={pending || undefined}
+        >
           <LearnerPasswordField
             autoComplete="new-password"
             label="Mật khẩu mới"

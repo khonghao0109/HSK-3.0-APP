@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 13/10/2026 (thêm Q78–Q80 ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -90,5 +90,8 @@ Cập nhật: 12/10/2026 (PO đồng ý đưa bảng này vào repo ngày 07/10/
 | Q72 | **Trang `/verify-email` mở từ email không tự xác thực: người dùng bấm nút "Xác thực email"** (PO 12/10/2026) | Không có mẫu | Máy quét liên kết của hòm thư có chạy JS cũng không tiêu token; `docs/ui_reference` ghi chú 38 |
 | Q73 | **Liên kết xác thực hết hạn hoặc đã dùng: đang đăng nhập thì có nút "Gửi lại email xác thực"; chưa đăng nhập thì nút "Đăng nhập để gửi lại"** (PO 12/10/2026) | Không có mẫu | Đăng nhập xong quay lại `/verify-email` |
 | Q74 | **Nút chính của cả luồng chào, đăng ký, đăng nhập, quên/đặt lại mật khẩu, xác thực email đổi sang nền jade-800 (chữ trắng 5,3:1), như Q42** (PO 12/10/2026) | Mẫu nền jade-600 (chữ trắng 3,2:1) | `docs/ui_reference` ghi chú 38 |
+| Q78 | **Nút "Tiếp tục" ở màn Mục tiêu và Kế hoạch đổi sang nền jade-800 (chữ trắng 5,3:1), như Q74** (PO 13/10/2026, M2.7e) | Mẫu nền jade-600 (chữ trắng 3,21:1, axe color-contrast) | — |
+| Q79 | **Chữ "phút" 16px ở ô chọn phút: ô đang chọn jade-800 (5,3:1), ô "Tăng tốc" `#c2410c` (5,18:1); số lớn giữ màu mẫu** (PO 13/10/2026, M2.7e) | Mẫu jade-600 (3,21:1) và cinnabar-500 (3,75:1) | Số 2,85rem đậm là chữ lớn, đạt 3:1 |
+| Q80 | **Link "Điều khoản sử dụng" và "Chính sách bảo mật" ở Đăng nhập, Đăng ký dùng jade-800 (5,09:1 trên nền kem)** (PO 13/10/2026, M2.7e) | Mẫu jade-700 (3,97:1) | — |
 
 Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".

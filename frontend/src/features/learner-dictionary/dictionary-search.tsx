@@ -135,6 +135,7 @@ export function DictionarySearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlight = useRef<AbortController | null>(null);
+  const [searching, setSearching] = useState(false);
 
   const cancel = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -171,6 +172,7 @@ export function DictionarySearch({
       // A newer search or the clear button replaced this one: drop it.
       if (controller.signal.aborted) return;
       inFlight.current = null;
+      setSearching(false);
       if (outcome === 'sign-in') router.replace('/sign-in');
       else setState(outcome);
     });
@@ -180,6 +182,8 @@ export function DictionarySearch({
     cancel();
     const q = normalizeSearchQuery(value);
     syncUrl(q);
+    // Busy from the keystroke until the result (the mount search is 'loading').
+    setSearching(q !== null);
     if (q === null) {
       setState({ kind: 'empty' });
       return;
@@ -216,7 +220,9 @@ export function DictionarySearch({
 
   const retry = () => {
     const q = normalizeSearchQuery(query);
-    if (q !== null) search(q);
+    if (q === null) return;
+    setSearching(true);
+    search(q);
   };
 
   const count =
@@ -309,6 +315,7 @@ export function DictionarySearch({
           className="dict-results"
           id="dict-results"
           aria-labelledby="dict-count"
+          aria-busy={searching || state.kind === 'loading' || undefined}
         >
           {state.kind === 'empty' ? (
             <li className="dict-empty">
@@ -316,13 +323,16 @@ export function DictionarySearch({
               <span>Gõ chữ Hán, pinyin hoặc nghĩa tiếng Việt để tra từ.</span>
             </li>
           ) : state.kind === 'error' ? (
-            <li className="dict-empty" role="alert">
-              <Icon name="file-question" />
-              <strong>Không tra được lúc này</strong>
-              <span>Vui lòng thử lại.</span>
-              <button className="dict-retry" type="button" onClick={retry}>
-                Thử lại
-              </button>
+            <li className="dict-empty">
+              {/* The alert sits inside the item: an li keeps its list role. */}
+              <div role="alert">
+                <Icon name="file-question" />
+                <strong>Không tra được lúc này</strong>
+                <span>Vui lòng thử lại.</span>
+                <button className="dict-retry" type="button" onClick={retry}>
+                  Thử lại
+                </button>
+              </div>
             </li>
           ) : state.kind === 'loading' ? null : state.items.length === 0 ? (
             <li className="dict-empty">

@@ -33,6 +33,8 @@ export default defineConfig({
     },
     {
       name: 'desktop-1024',
+      // M2.7e: the keyboard-only runs cover desktop-1440 and mobile-390.
+      grepInvert: /@keyboard/u,
       use: {
         ...devices['Desktop Chrome'],
         browserName: 'chromium',
@@ -49,6 +51,8 @@ export default defineConfig({
     },
     {
       name: 'tablet-768',
+      // M2.7e: the keyboard-only runs cover desktop-1440 and mobile-390.
+      grepInvert: /@keyboard/u,
       use: {
         ...devices['iPad (gen 7)'],
         browserName: 'chromium',

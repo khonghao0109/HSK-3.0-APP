@@ -13,6 +13,7 @@ export function ForgotPasswordForm() {
   const [invalid, setInvalid] = useState(false);
   const [sentTo, setSentTo] = useState('');
   const busy = useRef(false);
+  const [pending, setPending] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -31,6 +32,7 @@ export function ForgotPasswordForm() {
     }
 
     busy.current = true;
+    setPending(true);
     try {
       const response = await fetch('/api/learner/password-reset/request', {
         method: 'POST',
@@ -49,6 +51,7 @@ export function ForgotPasswordForm() {
       setError(LEARNER_AUTH_ERROR_MESSAGES.network);
     } finally {
       busy.current = false;
+      setPending(false);
     }
   }
 
@@ -85,7 +88,12 @@ export function ForgotPasswordForm() {
         Nhập email đã đăng ký. Chúng tôi sẽ gửi liên kết để bạn đặt mật khẩu
         mới.
       </p>
-      <form className="auth__form" onSubmit={submit} noValidate>
+      <form
+        className="auth__form"
+        onSubmit={submit}
+        noValidate
+        aria-busy={pending || undefined}
+      >
         <div className="field">
           <label className="field__label" htmlFor="email">
             Email

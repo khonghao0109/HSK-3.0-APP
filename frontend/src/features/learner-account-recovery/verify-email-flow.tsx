@@ -48,6 +48,7 @@ function VerifyEmailView({
   const { view, go, heading } = useView<View>();
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
+  const [pending, setPending] = useState(false);
 
   // Q72: opening the link never calls the API; the learner has to press the button.
   const shown: View = view ?? (token ? 'confirm' : 'invalid');
@@ -59,6 +60,7 @@ function VerifyEmailView({
   ) {
     if (busy.current) return;
     busy.current = true;
+    setPending(true);
     setError(null);
     try {
       const response = await fetch(path, {
@@ -73,6 +75,7 @@ function VerifyEmailView({
       setError(LEARNER_AUTH_ERROR_MESSAGES.network);
     } finally {
       busy.current = false;
+      setPending(false);
     }
   }
 
@@ -106,6 +109,7 @@ function VerifyEmailView({
           <button
             className="btn btn--primary btn--block"
             type="button"
+            aria-busy={pending || undefined}
             onClick={confirm}
           >
             Xác thực email
@@ -157,6 +161,7 @@ function VerifyEmailView({
             <button
               className="btn btn--primary btn--block"
               type="button"
+              aria-busy={pending || undefined}
               onClick={resend}
             >
               Gửi lại email xác thực

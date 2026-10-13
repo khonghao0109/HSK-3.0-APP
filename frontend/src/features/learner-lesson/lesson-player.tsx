@@ -468,12 +468,9 @@ export function LessonPlayer({
       : [PLAYER_MESSAGES.wrongTitle, result.explanation]
           .filter(Boolean)
           .join('. ')
-    : (error ??
-      (startFailed
-        ? PLAYER_MESSAGES.startFailed
-        : completion === 'busy'
-          ? PLAYER_MESSAGES.finishing
-          : ''));
+    : completion === 'busy'
+      ? PLAYER_MESSAGES.finishing
+      : '';
   const done = index >= total;
   const shown = done ? total : index + 1;
   const answeredCount = done ? total : index + (result ? 1 : 0);
@@ -671,9 +668,15 @@ export function LessonPlayer({
                 </button>
               </div>
             )}
-            {error && <p className="ex-error">{error}</p>}
+            {error && (
+              <p className="ex-error" role="alert">
+                {error}
+              </p>
+            )}
             {startFailed && (
-              <p className="ex-error">{PLAYER_MESSAGES.startFailed}</p>
+              <p className="ex-error" role="alert">
+                {PLAYER_MESSAGES.startFailed}
+              </p>
             )}
           </div>
           {/* One node for Kiểm tra and Thử lại, so focus survives the swap. */}
@@ -683,6 +686,7 @@ export function LessonPlayer({
               type="button"
               ref={checkRef}
               aria-disabled={startFailed || canCheck ? undefined : 'true'}
+              aria-busy={submitting || undefined}
               onClick={startFailed ? retryStart : () => void submit()}
             >
               {startFailed

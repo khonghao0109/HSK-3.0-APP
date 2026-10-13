@@ -34,6 +34,8 @@
 
   --cinnabar-600: #d4502b;
   --cinnabar-500: #e2553a;
+  /* Q79: small text in cinnabar (5.18:1 on white; 500 and 600 fall short). */
+  --cinnabar-700: #c2410c;
   --cinnabar-100: #fde8e1;
   --red-600: #e0453a;
   --red-100: #fdeceb;
@@ -939,7 +941,8 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__terms a {
-  color: var(--jade-700);
+  /* Q80: jade-800, 5.09:1 on cream (jade-700 is 3.97:1). */
+  color: var(--jade-800);
   text-decoration: none;
   font-weight: 500;
   display: inline-block;
@@ -1238,14 +1241,21 @@ html:has(.learner-app) {
   border: 2px solid var(--jade-600);
 }
 
-.learner-app .minute[aria-checked='true'] b,
-.learner-app .minute[aria-checked='true'] span {
+.learner-app .minute[aria-checked='true'] b {
   color: var(--jade-600);
 }
 
-.learner-app .minute--fast b,
-.learner-app .minute--fast span {
+.learner-app .minute--fast b {
   color: var(--cinnabar-500);
+}
+
+/* Q79: the 16px "phút" needs 4.5:1; the large number keeps the mockup colour. */
+.learner-app .minute--fast span {
+  color: var(--cinnabar-700);
+}
+
+.learner-app .minute[aria-checked='true'] span {
+  color: var(--jade-800);
 }
 
 /* Must precede .time-select select (same specificity) so its arrow position wins. */
@@ -3304,6 +3314,11 @@ html:has(.learner-app) {
   color: transparent;
 }
 
+/* A used word keeps focus after Enter; it still shows the ring (Q12). */
+.learner-app .pr-chip.is-used:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
 .learner-app .pr-chip[aria-disabled='true'] {
   cursor: default;
 }
@@ -4750,6 +4765,11 @@ html:has(.learner-app) {
   height: 36px;
   color: var(--text-subtle);
 }
+.learner-app .dict-empty > [role='alert'] {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
 .learner-app .dict-empty strong {
   color: var(--m03-ink);
   font-size: 0.9375rem;
@@ -5235,10 +5255,13 @@ html:has(.learner-app) {
 }
 
 /* Q74: primary buttons of welcome, sign-up, sign-in and the recovery pages
-   on jade-800 (white 5.3:1 instead of 3.2:1 on jade-600), as Q42. */
+   on jade-800 (white 5.3:1 instead of 3.2:1 on jade-600), as Q42; Q78 adds
+   the onboarding goal and plan pages. */
 .learner-app .welcome .btn--primary,
 .learner-app .auth .btn--primary,
+.learner-app .ob .btn--primary,
 .learner-app .welcome .btn--primary:hover,
-.learner-app .auth .btn--primary:hover {
+.learner-app .auth .btn--primary:hover,
+.learner-app .ob .btn--primary:hover {
   background: var(--jade-800);
 }

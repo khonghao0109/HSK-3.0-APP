@@ -51,6 +51,7 @@ export function WordDetail({
   const [saved, setSaved] = useState(initialSaved);
   const [menuOpen, setMenuOpen] = useState(false);
   const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +102,7 @@ export function WordDetail({
   const toggleSave = async () => {
     if (saving.current) return;
     saving.current = true;
+    setBusy(true);
     try {
       const response = await fetch(
         `/api/learner/dictionary/words/${word.id}/save`,
@@ -119,9 +121,10 @@ export function WordDetail({
           : `Đã bỏ ${word.hanzi} khỏi danh sách ôn tập`,
       );
     } catch {
-      showToast(SAVE_FAILED);
+      showToast(SAVE_FAILED, 'alert');
     } finally {
       saving.current = false;
+      setBusy(false);
     }
   };
 
@@ -247,6 +250,7 @@ export function WordDetail({
           className="word-save"
           type="button"
           aria-pressed={saved}
+          aria-busy={busy || undefined}
           onClick={() => void toggleSave()}
         >
           <Icon name={saved ? 'check' : 'heart'} />
