@@ -38,6 +38,8 @@ docs/
     P0_DATA_DICTIONARY.md       # ngữ nghĩa bảng/cột và invariant
     P0_ERD.md                   # ERD logic theo bounded context
     P0_SCHEMA_MIGRATION_RUNBOOK.md  # cách chạy, kiểm chứng và phục hồi migration
+  analytics/
+    P0_PRODUCT_METRICS.md       # chỉ số P0 (activation, lesson completion), Q75/Q76
   operations/
     MEDIA_INGESTION_RELEASE_RUNBOOK.md  # vận hành/release Media
   process/
