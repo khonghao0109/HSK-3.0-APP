@@ -291,6 +291,12 @@ html:has(.learner-app) {
   display: none !important;
 }
 
+/* Web-only parts (sidebar, top bar, M2.10a): out of layout and of the
+   accessibility tree below 1024px; learner-web.css shows them. */
+.learner-app .w-only {
+  display: none;
+}
+
 .learner-app .sr-only {
   position: absolute;
   width: 1px;

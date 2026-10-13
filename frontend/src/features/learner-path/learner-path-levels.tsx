@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { levelLabel } from '@/features/learner-home/level-label';
+import { percentClass, wholePercent } from '@/features/learner-home/percent';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { TOAST_LOCKED } from '@/features/learner-shell/learner-toast-messages';
 
@@ -19,6 +20,14 @@ const STATE_TEXT: Record<LessonState, string> = {
   current: ', đang học',
   available: ', có thể học',
   locked: ', đã khoá',
+};
+
+// Visible state line of the web tile (mẫu web/path.html); the sr-only
+// STATE_TEXT already names the state, so this one is aria-hidden.
+const STATE_LABEL: Record<Exclude<LessonState, 'current'>, string> = {
+  done: 'Đã xong',
+  available: 'Có thể học',
+  locked: 'Chưa mở',
 };
 
 const STATE_ICON: Partial<Record<LessonState, string>> = {
@@ -47,6 +56,25 @@ function LessonTile({ lesson }: { lesson: PathLesson }) {
       </span>
       <span className="topic__name">{lesson.title}</span>
       <span className="sr-only">{STATE_TEXT[lesson.state]}</span>
+      <span className="topic__label w-only" aria-hidden="true">
+        {lesson.state === 'current' ? (
+          `Đang học · ${wholePercent(lesson.completionPercent)}%`
+        ) : (
+          <>
+            {icon && (
+              <svg className="icon">
+                <use href={`#i-${lesson.state === 'locked' ? 'lock' : icon}`} />
+              </svg>
+            )}
+            {STATE_LABEL[lesson.state]}
+          </>
+        )}
+      </span>
+      {lesson.state === 'current' && (
+        <span className="topic__bar w-only" aria-hidden="true">
+          <span className={percentClass(lesson.completionPercent)} />
+        </span>
+      )}
     </>
   );
 
@@ -195,6 +223,60 @@ export function LearnerPathLevels({
           <p className="path-sub">{`${label} chưa mở.`}</p>
         )}
       </section>
+      {level && lessons.length > 0 && (
+        <PathSummary level={level} lessons={lessons} label={label} />
+      )}
     </>
+  );
+}
+
+/** Web "Tiến độ" card of the selected level (mẫu web/path.html). */
+function PathSummary({
+  level,
+  lessons,
+  label,
+}: {
+  level: PathLevel;
+  lessons: PathLesson[];
+  label: string;
+}) {
+  const count = (state: LessonState) =>
+    lessons.filter((lesson) => lesson.state === state).length;
+  const rows: Array<[string, string, number]> = [
+    ['check-circle', 'Đã xong', count('done')],
+    ['book-open', 'Đang học', count('current')],
+    ['lock', 'Chưa mở', count('locked')],
+  ];
+  const available = count('available');
+  if (available > 0) rows.splice(2, 0, ['book-open', 'Có thể học', available]);
+  const share =
+    level.lessonCount > 0
+      ? (level.completedCount / level.lessonCount) * 100
+      : 0;
+
+  return (
+    <section className="path-sum w-only" aria-labelledby="path-sum-title">
+      <h2 className="path-sum__title" id="path-sum-title">
+        {`Tiến độ ${label}`}
+      </h2>
+      <p className="path-sum__big">
+        <b>{level.completedCount}</b>
+        {`/${level.lessonCount} bài đã xong`}
+      </p>
+      <span className="path-sum__bar" aria-hidden="true">
+        <span className={percentClass(share)} />
+      </span>
+      <ul className="path-sum__legend">
+        {rows.map(([icon, text, value]) => (
+          <li key={text}>
+            <svg className="icon" aria-hidden="true">
+              <use href={`#i-${icon}`} />
+            </svg>
+            {`${text}: `}
+            <b>{value}</b>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

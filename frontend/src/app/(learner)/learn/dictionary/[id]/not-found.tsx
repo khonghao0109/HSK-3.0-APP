@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
 import { LearnerBackButton } from '@/features/learner-auth/learner-back-button';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 
 /** Missing, unpublished or malformed word id (Tech Lead, as Q41). */
 export default function WordNotFound() {
   return (
     <>
+      <LearnerWebTopbar />
       <header className="m02-head m02-bar">
         <LearnerBackButton
           fallbackHref="/learn/dictionary"

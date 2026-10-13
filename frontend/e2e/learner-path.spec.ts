@@ -56,6 +56,19 @@ function tabBar(page: Page): Locator {
   return page.getByRole('navigation', { name: 'Điều hướng chính' });
 }
 
+/** M2.10a: from 1024px the sidebar (`.w-side`) replaces the tab bar. */
+function isWeb(page: Page): boolean {
+  return (page.viewportSize()?.width ?? 0) >= 1024;
+}
+
+/** Link to Lộ trình: tab "Học" on mobile, sidebar "Lộ trình học" on web. */
+function pathLink(page: Page): Locator {
+  return tabBar(page).getByRole('link', {
+    name: isWeb(page) ? 'Lộ trình học' : 'Học',
+    exact: true,
+  });
+}
+
 function levelTab(page: Page, name: string): Locator {
   return page
     .getByRole('tablist', { name: 'Cấp độ HSK' })
@@ -82,10 +95,7 @@ test.describe('Learner path (M2.4b)', () => {
     await page.goto('/learn');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    const learnLink = tabBar(page).getByRole('link', {
-      name: 'Học',
-      exact: true,
-    });
+    const learnLink = pathLink(page);
     await learnLink.click();
     await expect(page).toHaveURL(/\/learn\/path$/);
     await expect(learnLink).toHaveAttribute('aria-current', 'page');
@@ -215,7 +225,11 @@ test.describe('Learner path (M2.4b)', () => {
     await expect(page.locator('.topic')).not.toHaveCount(0);
 
     const targets: Array<{ label: string; control: Locator }> = [
-      { label: 'logo', control: page.locator('.path-head__logo') },
+      {
+        label: 'logo',
+        // Web: the path head is hidden; the sidebar brand is the logo.
+        control: page.locator(isWeb(page) ? '.w-brand' : '.path-head__logo'),
+      },
       {
         label: 'selected tab',
         control: page.locator('.path-tab[aria-selected="true"]'),
@@ -274,7 +288,7 @@ test.describe('Learner path (M2.4b)', () => {
     expect(await readCspViolations(page)).toEqual([]);
     expect(cspConsole).toEqual([]);
 
-    await tabBar(page).getByRole('link', { name: 'Học', exact: true }).click();
+    await pathLink(page).click();
     await expect(page).toHaveURL(/\/learn\/path$/);
     await expect(page.locator('.topic.is-current')).toHaveCount(1);
     expect(await readCspViolations(page)).toEqual([]);
@@ -399,7 +413,11 @@ test.describe('Learner path (M2.4b)', () => {
     expect(boxShadow).toContain('inset');
     const paddingBottom = (node: Element) =>
       window.getComputedStyle(node).paddingBottom;
-    expect(await panel.evaluate(paddingBottom)).toBe('8px');
+    // Mobile keeps 8px under the "chưa mở" line; on the web the panel is a
+    // subgrid row of the page grid with no padding (M2.10a).
+    expect(await panel.evaluate(paddingBottom)).toBe(
+      isWeb(page) ? '0px' : '8px',
+    );
 
     await levelTab(page, 'HSK 3').click();
     await expect(page.locator('ol.path-grid')).toHaveCount(1);

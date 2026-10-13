@@ -125,7 +125,11 @@ describe('Chi tiết từ page', () => {
   });
 
   it('not-found page links back to Tra từ', () => {
-    render(<WordNotFound />);
+    render(
+      <LearnerToastProvider>
+        <WordNotFound />
+      </LearnerToastProvider>,
+    );
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Không tìm thấy từ',
     );

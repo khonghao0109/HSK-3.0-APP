@@ -882,13 +882,18 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(page).toHaveURL(/\/learn$/u);
 
     const tabs = page.getByRole('navigation', { name: 'Điều hướng chính' });
+    // M2.10a: from 1024px the sidebar replaces the tab bar.
+    const web = (page.viewportSize()?.width ?? 0) >= 1024;
     // Bell toast: opened with Enter, it leaves by itself (Q15).
     await pressOn(page, page.getByRole('button', { name: 'Thông báo' }));
     await expect(page.getByRole('status')).toContainText(
       'Thông báo sẽ có khi tính năng ra mắt.',
     );
     await expect(page.getByRole('button', { name: 'Thông báo' })).toBeFocused();
-    await pressOn(page, tabs.getByRole('link', { name: 'Học' }));
+    await pressOn(
+      page,
+      tabs.getByRole('link', { name: web ? 'Lộ trình học' : 'Học' }),
+    );
     await expect(page).toHaveURL(/\/learn\/path$/u);
 
     await pressOn(
@@ -936,7 +941,12 @@ test.describe('Learner accessibility (M2.7e)', () => {
     // The word page has no tab bar: back to Tra từ first.
     await pressOn(page, page.getByRole('link', { name: 'Quay lại' }), 'Enter');
     await expect(page).toHaveURL(/\/learn\/dictionary/u);
-    await pressOn(page, tabs.getByRole('link', { name: 'Hồ sơ' }));
+    await pressOn(
+      page,
+      (web ? page.locator('.w-side') : tabs).getByRole('link', {
+        name: 'Hồ sơ',
+      }),
+    );
     await expect(page).toHaveURL(/\/learn\/profile$/u);
     await expect(page.getByRole('heading', { name: 'Hồ sơ' })).toBeVisible();
     await tabTo(page, page.getByRole('button', { name: 'Đăng xuất' }));

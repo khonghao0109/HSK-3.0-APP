@@ -6,6 +6,7 @@ import type { DictionarySearchItem } from '@/features/learner-dictionary/diction
 import { normalizeSearchQuery } from '@/features/learner-dictionary/dictionary-display';
 import { DictionarySearch } from '@/features/learner-dictionary/dictionary-search';
 import { searchWords } from '@/features/learner-dictionary/dictionary-service';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { isAuthFailure } from '@/lib/api/api-error';
 
 export const metadata: Metadata = {
@@ -40,5 +41,11 @@ export default async function DictionaryPage({
   }
   if (authFailed) redirect('/sign-in');
 
-  return <DictionarySearch initialQuery={q ?? ''} initialItems={items} />;
+  return (
+    <>
+      {/* Q85: Tra từ keeps its own search box, none in the top bar. */}
+      <LearnerWebTopbar search={false} />
+      <DictionarySearch initialQuery={q ?? ''} initialItems={items} />
+    </>
+  );
 }

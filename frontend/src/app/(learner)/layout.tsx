@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from 'react';
 
 import './learner.css';
+import './learner-web.css';
 
 const inter = Inter({
   weight: ['400', '500', '600', '700'],
@@ -212,6 +213,10 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z" />
             <path d="M5.5 9h3M5.5 12.5h3" />
             <circle cx="7" cy="6.6" r=".9" fill="currentColor" stroke="none" />
+          </symbol>
+          <symbol id="i-book-marked" viewBox="0 0 24 24">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            <path d="M10 2v8l3-3 3 3V2" />
           </symbol>
           <symbol id="i-search" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="7" />

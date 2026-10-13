@@ -67,6 +67,19 @@ describe('Tra từ page', () => {
     );
   });
 
+  it('renders the web top bar without its search box (Q85)', async () => {
+    const { container } = render(
+      <LearnerToastProvider>{await page()}</LearnerToastProvider>,
+    );
+    const topbar = container.querySelector('.w-top');
+    expect(topbar).not.toBeNull();
+    expect(topbar?.querySelector('input, [role="search"]')).toBeNull();
+    // Only the page's own search form is left.
+    const forms = screen.getAllByRole('search');
+    expect(forms).toHaveLength(1);
+    expect(forms[0]).toHaveClass('dict-search');
+  });
+
   it.each([['   '], ['a'.repeat(65)], [['a', 'b']]])(
     'treats an invalid q (%j) as empty',
     async (q) => {

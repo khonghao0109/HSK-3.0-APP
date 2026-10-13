@@ -213,6 +213,9 @@ describe('LearnerPathLevels', () => {
       'topic__art',
       'topic__name',
       'sr-only',
+      // Web state line and, for the current lesson, its bar (M2.10a).
+      'topic__label w-only',
+      ...(state === 'current' ? ['topic__bar w-only'] : []),
     ];
     expect(children.map((child) => child.getAttribute('class'))).toEqual(
       expectedClasses,
@@ -306,5 +309,47 @@ describe('LearnerPathLevels', () => {
   it('uses no inline style', () => {
     const { container } = renderLevels('HSK3');
     expect(container.querySelector('[style]')).toBeNull();
+  });
+
+  it('shows the web state line of each tile (M2.10a)', () => {
+    renderLevels('HSK3', [
+      {
+        ...hsk3,
+        lessons: hsk3.lessons.map((item) =>
+          item.state === 'current'
+            ? { ...item, completionPercent: 37.6 }
+            : item,
+        ),
+      },
+    ]);
+    const label = (title: string) => tile(title).querySelector('.topic__label');
+    expect(label('Chào hỏi')).toHaveTextContent(/^Đã xong$/u);
+    expect(label('Gia đình')).toHaveTextContent(/^Đang học · 38%$/u);
+    expect(label('Mua sắm')).toHaveTextContent(/^Có thể học$/u);
+    expect(label('Du lịch')).toHaveTextContent(/^Chưa mở$/u);
+    expect(label('Chào hỏi')).toHaveAttribute('aria-hidden', 'true');
+    expect(tile('Gia đình').querySelector('.topic__bar > span')).toHaveClass(
+      'pct-38',
+    );
+    expect(tile('Chào hỏi').querySelector('.topic__bar')).toBeNull();
+  });
+
+  it('summarises the selected level in the web progress card', () => {
+    renderLevels('HSK3', [hsk3, hsk2Empty]);
+    const card = screen.getByRole('region', { name: 'Tiến độ HSK 3' });
+    expect(card).toHaveClass('path-sum', 'w-only');
+    expect(card.querySelector('.path-sum__big')).toHaveTextContent(
+      /^1\/12 bài đã xong$/u,
+    );
+    // 1 of 12 lessons done → 8%.
+    expect(card.querySelector('.path-sum__bar > span')).toHaveClass('pct-8');
+    expect(
+      within(card)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Đã xong: 1', 'Đang học: 1', 'Có thể học: 1', 'Chưa mở: 1']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'HSK 2' }));
+    expect(screen.queryByRole('region', { name: /Tiến độ/u })).toBeNull();
   });
 });

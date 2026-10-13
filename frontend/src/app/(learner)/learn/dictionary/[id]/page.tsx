@@ -14,6 +14,7 @@ import {
   WordDetail,
   type WordView,
 } from '@/features/learner-dictionary/word-detail';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
@@ -72,5 +73,10 @@ export default async function WordPage({
 
   if (authFailed) redirect('/sign-in');
   if (view === null) notFound();
-  return <WordDetail word={view} initialSaved={saved} />;
+  return (
+    <>
+      <LearnerWebTopbar />
+      <WordDetail word={view} initialSaved={saved} />
+    </>
+  );
 }

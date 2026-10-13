@@ -1,0 +1,1300 @@
+/* Hán Lộ — learner web layout from 1024px (M2.10a, PO Q81).
+   Source: docs/ui_reference/web/css/web.css (frame `.w-app`), home.css,
+   learn.css (Lộ trình) and profile.css. Below 1024px nothing here applies:
+   the mobile layout of learner.css stays as it is, and `.w-only` parts stay
+   hidden (learner.css). Lesson screens (`/learn/lessons/**`) render no
+   sidebar or top bar, so none of the frame rules below reach them. */
+
+@media (min-width: 1024px) {
+  .learner-app {
+    /* web.css :root */
+    --w-side: 264px;
+    --w-top: 64px;
+    --w-max: 1200px;
+    --w-pad: 40px;
+  }
+
+  /* body.web background (web.css) */
+  .learner-app:has(.w-side) {
+    background: var(--cream-50);
+  }
+
+  /* ---------- Frame (web.css "Khung đã đăng nhập") ---------- */
+  .learner-app .w-app:has(> .w-side) {
+    display: grid;
+    grid-template-columns: var(--w-side) minmax(0, 1fr);
+    min-height: 100vh;
+    background: linear-gradient(
+      to right,
+      var(--surface-card) calc(var(--w-side) - 1px),
+      var(--border-default) 0 var(--w-side),
+      transparent 0
+    );
+  }
+
+  /* web.css `body.web { min-width: 1024px }`: the frame scrolls sideways
+     instead of squeezing its columns when less than 1024px is usable (200%
+     zoom), which is what keeps the sample free of overlapping text. */
+  .learner-app .w-app {
+    min-width: 1024px;
+  }
+
+  .learner-app .w-side {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    padding: var(--sp-5) var(--sp-4);
+    background: var(--surface-card);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .learner-app .w-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 var(--sp-2) var(--sp-4);
+    text-decoration: none;
+  }
+
+  .learner-app .w-brand__mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--navy-900);
+    color: var(--white);
+    font-family: var(--font-cn-serif);
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .learner-app .w-brand__name {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    color: var(--navy-900);
+  }
+
+  .learner-app .w-side__group {
+    margin: var(--sp-4) var(--sp-3) var(--sp-1);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stone-600);
+  }
+
+  .learner-app .w-nav a,
+  .learner-app .w-nav button {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    width: 100%;
+    min-height: 48px;
+    margin: 0;
+    padding: 0 var(--sp-3);
+    border: 0;
+    border-radius: var(--r-md);
+    background: none;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    font-size: var(--fs-base);
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--stone-700);
+  }
+
+  .learner-app .w-nav a:hover,
+  .learner-app .w-nav button:hover {
+    background: var(--cream-100);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-nav a[aria-current='page'] {
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--jade-700);
+  }
+
+  /* Q12: the ring wins over the current-page bar while focused. */
+  .learner-app .w-nav a:focus-visible,
+  .learner-app .w-nav button:focus-visible,
+  .learner-app .w-side__me:focus-visible,
+  .learner-app .w-brand:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .learner-app .w-nav .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .learner-app .w-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1). */
+  .learner-app .w-tag--soon {
+    background: var(--amber-100);
+    color: #7a5300;
+  }
+
+  .learner-app .w-nav .w-tag {
+    margin-left: auto;
+  }
+
+  .learner-app .w-side__spacer {
+    flex: 1;
+  }
+
+  .learner-app .w-side__me {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
+    padding: var(--sp-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-md);
+    text-decoration: none;
+    color: inherit;
+    line-height: 1.5;
+  }
+
+  .learner-app .w-side__me:hover,
+  .learner-app .w-side__me[aria-current='page'] {
+    border-color: var(--jade-600);
+  }
+
+  /* No avatar API yet (Q82): the user icon of the mobile Home avatar. */
+  .learner-app .w-side__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--jade-50);
+    color: var(--navy-900);
+  }
+
+  .learner-app .w-side__who {
+    min-width: 0;
+    color: var(--text-strong);
+    font-size: var(--fs-md);
+    font-weight: 700;
+  }
+
+  .learner-app .w-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The mobile 480px column becomes the whole main area. */
+  .learner-app .app:has(> .w-top) {
+    flex: 1;
+    max-width: none;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .learner-app .w-app:has(> .w-side) .tabbar {
+    display: none;
+  }
+
+  .learner-app .w-top {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    height: var(--w-top);
+    padding: 0 var(--w-pad);
+    background: rgb(254 250 242 / 92%);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .learner-app .w-search {
+    position: relative;
+    flex: 0 1 440px;
+  }
+
+  .learner-app .w-search .icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--stone-600);
+    pointer-events: none;
+  }
+
+  .learner-app .w-search input {
+    width: 100%;
+    height: 44px;
+    padding: 0 var(--sp-4) 0 44px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-pill);
+    background: var(--surface-card);
+    font: inherit;
+    font-size: var(--fs-md);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-search input::placeholder {
+    color: var(--stone-600);
+  }
+
+  .learner-app .w-search input:focus {
+    outline: none;
+    border-color: var(--jade-700);
+    box-shadow: var(--focus-ring);
+  }
+
+  .learner-app .w-top__end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .learner-app .w-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    font-weight: 600;
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  .learner-app .w-chip img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .learner-app .w-top .icon-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    color: var(--text-strong);
+  }
+
+  /* The avatar of web.css is a photo; no avatar API yet, so the user icon. */
+  .learner-app .w-top__me {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--navy-900);
+    box-shadow: 0 0 0 2px var(--avatar-ring);
+  }
+
+  .learner-app .w-top__me:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* `.w-content`: 1200px of content plus the 40px gutters. */
+  .learner-app
+    :where(.app:has(> .w-top))
+    > :where(header, main, aside):not(.w-top) {
+    width: 100%;
+    max-width: calc(var(--w-max) + 2 * var(--w-pad));
+    margin-inline: auto;
+    padding-inline: var(--w-pad);
+  }
+
+  .learner-app .w-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ---------- Trang chủ (web/home.html, Q83) ---------- */
+  .learner-app .home-hero {
+    padding-top: var(--sp-8);
+    padding-bottom: 0;
+    background: none;
+    color: var(--text-body);
+    overflow: visible;
+  }
+
+  /* Logo, bell and avatar live in the sidebar and top bar on the web. */
+  .learner-app .home-hero__art,
+  .learner-app .home-hero__top,
+  .learner-app .home-hero__avatar {
+    display: none;
+  }
+
+  .learner-app .home-hero__greet {
+    display: block;
+    margin: 0;
+  }
+
+  .learner-app .home-hero__greet h1 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-hero__greet p {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .learner-app .home-body {
+    margin-top: var(--sp-6);
+    padding-bottom: var(--sp-12);
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    align-items: start;
+    gap: 0 var(--sp-6);
+  }
+
+  .learner-app .home-stats {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-4);
+  }
+
+  /* No lesson to continue: the two cards share the row. */
+  .learner-app .home-body:not(:has(> .home-lesson)) .home-stats {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learner-app .home-stat {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--sp-4);
+    min-height: 0;
+    padding: var(--sp-4) var(--sp-5);
+    border-radius: var(--r-lg);
+    text-align: left;
+  }
+
+  .learner-app .home-stat h2 {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-gauge {
+    --size: 56px;
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+
+  .learner-app .home-gauge::before {
+    inset: 5px;
+  }
+
+  .learner-app .home-gauge b {
+    font-size: var(--fs-md);
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-gauge b small {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .learner-app .home-gauge em {
+    display: none;
+  }
+
+  /* Streak (mẫu: "12 ngày liên tiếp" over "Chuỗi ngày học"): the mobile
+     texts, laid out the same way, value first (Q83). */
+  .learner-app .home-streak {
+    display: contents;
+  }
+
+  .learner-app .home-streak img {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 48px;
+    height: 50px;
+  }
+
+  .learner-app .home-streak div {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+
+  .learner-app .home-streak b,
+  .learner-app .home-streak span {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-stat:has(.home-streak) h2 {
+    grid-row: 2;
+    font-size: var(--fs-md);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  /* "Tiếp tục học": the heading is the card's tag (web/home.html). */
+  .learner-app .home-body > .home-section:has(+ .home-lesson) {
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 1;
+    justify-self: start;
+    margin: calc(var(--sp-6) + 1px) 0 0
+      calc(var(--sp-6) + 220px + var(--sp-8) + 1px);
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+    /* The pill sits in the card's reserved 21px line; wrapping it (narrow
+       frames, 200% zoom) would push it over the lesson title (Q83). */
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .learner-app .home-lesson {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sp-8);
+    padding: var(--sp-6);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    line-height: 1.5;
+  }
+
+  .learner-app .home-lesson:hover {
+    border-color: var(--jade-600);
+    box-shadow: var(--shadow-float);
+  }
+
+  .learner-app .home-lesson:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Q20/Q34: shared art box until the API returns lesson images. */
+  .learner-app .home-lesson__art {
+    grid-row: 1 / span 2;
+    width: 220px;
+    height: 180px;
+    border-radius: var(--r-lg);
+    background: var(--jade-100);
+  }
+
+  .learner-app .home-lesson__art .icon {
+    width: 72px;
+    height: 72px;
+    stroke-width: 1.4;
+  }
+
+  .learner-app .home-lesson > .grow {
+    display: grid;
+    gap: var(--sp-3);
+    padding-top: calc(21px + var(--sp-3));
+  }
+
+  .learner-app .home-lesson__title {
+    font-size: var(--fs-xl);
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-lesson__meta {
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .learner-app .home-lesson__bar {
+    gap: var(--sp-3);
+    margin: 0;
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--jade-800);
+  }
+
+  .learner-app .home-lesson__bar .progress {
+    height: 8px;
+  }
+
+  .learner-app .home-lesson__cta {
+    grid-column: 2;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 48px;
+    margin-top: calc(var(--sp-2) - var(--sp-8));
+    padding: 0 var(--sp-6);
+    border-radius: var(--r-md);
+    background: var(--jade-800);
+    color: var(--white);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .learner-app .home-lesson > .icon:last-child {
+    display: none;
+  }
+
+  .learner-app .home-body > .home-section {
+    grid-column: 1 / -1;
+    margin: var(--sp-10) 0 var(--sp-4);
+    font-size: var(--fs-xl);
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .home-explore {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-6);
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .learner-app .home-explore button {
+    justify-items: start;
+    gap: var(--sp-2);
+    height: 100%;
+    min-height: 0;
+    padding: var(--sp-6);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    text-align: left;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--text-strong);
+    /* Not box-shadow: the Q12 focus ring must show at once. */
+    transition: border-color var(--dur-fast);
+  }
+
+  .learner-app .home-explore button:hover {
+    background: var(--surface-card);
+    border-color: var(--jade-600);
+    box-shadow: var(--shadow-float);
+  }
+
+  .learner-app .home-explore button:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .learner-app .home-explore__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-md);
+  }
+
+  .learner-app .home-explore__icon .icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.8;
+  }
+
+  /* ---------- Lộ trình (web/path.html) ----------
+     One grid on `.app`; `main` and the tab panel pass it on (subgrid), so
+     the title sits above the level tabs and the aside cards beside the
+     lessons, without moving anything in the DOM.
+     Rows of `.app`: 1 top bar · 2 title · 3 subtitle · 4 tabs · 5–6 cards
+     and lessons · 7 filler; inside `main` and the panel they count from 2. */
+  .learner-app .app:has(> .path-body) {
+    display: grid;
+    grid-template-columns:
+      minmax(var(--w-pad), 1fr) minmax(0, 856px) var(--sp-6)
+      320px minmax(var(--w-pad), 1fr);
+    grid-template-rows: auto auto auto auto auto auto 1fr;
+    align-content: start;
+  }
+
+  .learner-app .app:has(> .path-body) > .w-top {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .learner-app .path-head {
+    display: none;
+  }
+
+  .learner-app .app:has(> .path-body) > .path-body {
+    grid-column: 1 / -1;
+    grid-row: 2 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 var(--sp-12);
+    border-radius: 0;
+    background: none;
+  }
+
+  .learner-app .path-tabs {
+    grid-column: 2 / 5;
+    grid-row: 3;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-2);
+    height: auto;
+    margin-bottom: var(--sp-6);
+    padding: 0;
+    overflow: visible;
+    border: 0;
+  }
+
+  .learner-app .path-tab,
+  .learner-app .path-tab[aria-selected='true'] {
+    min-height: 44px;
+    height: auto;
+    padding: 0 var(--sp-5);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-pill);
+    background: var(--surface-card);
+    color: var(--stone-700);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .learner-app .path-tab:hover {
+    border-color: var(--jade-600);
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-tab[aria-selected='true'] {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: var(--white);
+  }
+
+  .learner-app .path-tab[aria-selected='true']::after {
+    display: none;
+  }
+
+  .learner-app .path-tab:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .learner-app .path-panel {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    padding: 0;
+  }
+
+  .learner-app .path-panel:not(:has(.path-grid)) {
+    padding: 0;
+  }
+
+  .learner-app .path-title {
+    grid-column: 2 / 5;
+    grid-row: 1;
+    margin-top: var(--sp-8);
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-sub {
+    grid-column: 2 / 5;
+    grid-row: 2;
+    margin: var(--sp-1) 0 var(--sp-6);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  /* A level without lessons: the "chưa mở" line sits under the tabs. */
+  .learner-app .path-panel:not(:has(.path-grid)) .path-sub {
+    grid-row: 4;
+    margin: 0;
+    color: var(--text-body);
+  }
+
+  .learner-app .path-grid {
+    grid-column: 2;
+    grid-row: 4 / span 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-4);
+    margin: 0;
+    align-content: start;
+  }
+
+  .learner-app .topic {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-content: start;
+    justify-items: start;
+    gap: var(--sp-2) 0;
+    height: 100%;
+    min-height: 0;
+    padding: var(--sp-5);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+    color: var(--text-strong);
+    text-align: left;
+    line-height: 1.5;
+    /* Not box-shadow: the Q12 focus ring must show at once. */
+    transition: border-color var(--dur-fast);
+  }
+
+  .learner-app .topic:hover {
+    border-color: var(--jade-600);
+    box-shadow: var(--shadow-float);
+  }
+
+  .learner-app .topic:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Q20: shared art box in place of the per-lesson picture. */
+  .learner-app .topic__art,
+  .learner-app .topic.is-current .topic__art {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+    transform: none;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--r-md);
+    background: var(--jade-100);
+  }
+
+  .learner-app .topic__art .icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .learner-app .topic__no,
+  .learner-app .topic.is-current .topic__no {
+    position: static;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+    display: block;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .learner-app .topic__no::before {
+    content: 'Bài ';
+  }
+
+  /* The state shows as a line of text (`.topic__label`) on the web. */
+  .learner-app .topic__state {
+    display: none;
+  }
+
+  .learner-app .topic__name,
+  .learner-app .topic.is-current .topic__name {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: left;
+    color: var(--text-strong);
+  }
+
+  .learner-app .topic__label {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-md);
+    color: var(--stone-600);
+  }
+
+  .learner-app .topic__label .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .learner-app .topic.is-done .topic__label {
+    color: var(--jade-800);
+  }
+
+  .learner-app .topic.is-done .topic__label .icon {
+    color: var(--jade-700);
+  }
+
+  .learner-app .topic.is-current {
+    border: 2px solid var(--jade-700);
+    background: var(--jade-50);
+  }
+
+  .learner-app .topic.is-current .topic__label {
+    color: var(--jade-800);
+    font-weight: 600;
+  }
+
+  .learner-app .topic__bar {
+    grid-column: 1 / -1;
+    display: block;
+    width: 100%;
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--slate-200);
+    overflow: hidden;
+  }
+
+  .learner-app .topic__bar > span {
+    display: block;
+    height: 100%;
+    width: var(--value, 0%);
+    border-radius: inherit;
+    background: var(--jade-600);
+  }
+
+  .learner-app .topic.is-locked {
+    box-shadow: none;
+  }
+
+  .learner-app .topic.is-locked .topic__name {
+    color: var(--stone-700);
+  }
+
+  .learner-app .topic.is-locked .topic__art {
+    filter: grayscale(0.6);
+    opacity: 0.7;
+  }
+
+  /* "Bài tiếp theo" card (learn.css .learn-next). */
+  .learner-app .app:has(> .path-body) > .path-next {
+    grid-column: 4;
+    grid-row: 5;
+    position: static;
+    transform: none;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: var(--sp-2);
+    width: auto;
+    max-width: none;
+    height: auto;
+    margin: 0 0 var(--sp-4);
+    padding: var(--sp-6);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .path-next__art {
+    width: 120px;
+    height: 100px;
+    margin-bottom: var(--sp-2);
+    border-radius: var(--r-md);
+    background: var(--jade-100);
+  }
+
+  .learner-app .path-next__art .icon {
+    width: 44px;
+    height: 44px;
+    stroke-width: 1.4;
+  }
+
+  .learner-app .path-next .grow {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .path-next__label {
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .learner-app .path-next p.path-next__label {
+    line-height: 1.5;
+    color: var(--jade-800);
+  }
+
+  .learner-app .path-next p.path-next__title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-next p.path-next__meta {
+    display: block;
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .learner-app .path-next__btn {
+    gap: var(--sp-2);
+    width: 100%;
+    height: auto;
+    min-height: 48px;
+    margin-top: var(--sp-2);
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .learner-app .path-next__btn .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.8;
+  }
+
+  /* "Tiến độ" card (learn.css .learn-sum). */
+  .learner-app .path-sum {
+    grid-column: 4;
+    grid-row: 5;
+    align-self: start;
+    display: grid;
+    gap: var(--sp-3);
+    padding: var(--sp-6);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Without a next lesson the progress card takes its place. */
+  .learner-app .app:not(:has(> .path-next)) .path-sum {
+    grid-row: 4;
+  }
+
+  .learner-app .path-sum__title {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-sum__big {
+    color: var(--text-muted);
+  }
+
+  .learner-app .path-sum__big b {
+    font-size: var(--fs-2xl);
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-sum__bar {
+    display: block;
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--slate-200);
+    overflow: hidden;
+  }
+
+  .learner-app .path-sum__bar > span {
+    display: block;
+    height: 100%;
+    width: var(--value, 0%);
+    border-radius: inherit;
+    background: var(--jade-600);
+  }
+
+  .learner-app .path-sum__legend {
+    display: grid;
+    gap: var(--sp-2);
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-md);
+    color: var(--text-body);
+  }
+
+  .learner-app .path-sum__legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .path-sum__legend .icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--stone-600);
+  }
+
+  .learner-app .path-sum__legend li:first-child .icon {
+    color: var(--jade-800);
+  }
+
+  .learner-app .path-sum__legend b {
+    margin-left: auto;
+    color: var(--text-strong);
+  }
+
+  /* ---------- Hồ sơ (web/profile.html, Q17, Q82) ----------
+     Only the current data: name, email and sign-out in the hero card. */
+  .learner-app .profile {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 var(--sp-6);
+    padding-top: var(--sp-8);
+    padding-bottom: var(--sp-12);
+  }
+
+  .learner-app .profile__title {
+    grid-column: 1 / -1;
+    margin-bottom: var(--sp-6);
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+  }
+
+  /* The hero card behind avatar, name/email and the sign-out button. */
+  .learner-app .profile::before {
+    content: '';
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: stretch;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .profile__avatar {
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 96px;
+    height: 96px;
+    margin: var(--sp-6) 0 var(--sp-6) var(--sp-8);
+    border-radius: 50%;
+    background: var(--jade-100);
+    border: 3px solid var(--surface-card);
+    box-shadow: 0 0 0 2px var(--jade-200);
+    color: var(--navy-900);
+  }
+
+  .learner-app .profile__avatar .icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .learner-app .profile__card {
+    grid-column: 2;
+    grid-row: 2;
+    position: relative;
+    display: grid;
+    gap: var(--sp-1);
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .learner-app .profile__row {
+    padding: 0;
+  }
+
+  .learner-app .profile__row + .profile__row {
+    border-top: 0;
+  }
+
+  /* Labels stay for screen readers; the card shows the values only. */
+  .learner-app .profile__row dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .learner-app .profile__row:first-child dd {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .learner-app .profile__row + .profile__row dd {
+    font-size: var(--fs-md);
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .learner-app .profile > div:last-child {
+    grid-column: 3;
+    grid-row: 2;
+    position: relative;
+    margin-right: var(--sp-8);
+  }
+
+  .learner-app .profile .auth__submit {
+    width: auto;
+    min-width: 160px;
+    padding: 0 var(--sp-6);
+  }
+
+  /* ---------- Tra từ, Chi tiết từ: only fit in the frame (M2.10b) ---------- */
+  .learner-app .app:has(> .w-top):has(> .dict, > .word) {
+    background: var(--m03-canvas);
+  }
+
+  /* Their navy bar sticks under the top bar, not under it. */
+  .learner-app .app:has(> .w-top):has(> .dict, > .word) .appbar {
+    top: var(--w-top);
+  }
+}
+
+/* 1024–1279px (learn.css): the aside cards go above the lessons, side by
+   side; the lesson grid keeps four columns. Home: mẫu home.html keeps its two
+   columns here and its card text runs under the stat cards, so the stat
+   cards go under the "Tiếp tục học" card instead. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .learner-app .home-body,
+  .learner-app .home-body:not(:has(> .home-lesson)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learner-app .home-stats,
+  .learner-app .home-body:not(:has(> .home-lesson)) .home-stats {
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learner-app .home-body:has(> .home-lesson) .home-stats {
+    margin-top: var(--sp-4);
+  }
+
+  .learner-app .app:has(> .path-body) {
+    grid-template-columns:
+      var(--w-pad) minmax(0, 1fr) var(--sp-4)
+      minmax(0, 1fr) var(--w-pad);
+  }
+
+  .learner-app .path-grid {
+    grid-column: 2 / 5;
+    grid-row: 5;
+  }
+
+  .learner-app .app:has(> .path-body) > .path-next {
+    grid-column: 2;
+    grid-row: 5;
+    grid-template-columns: 96px minmax(0, 1fr);
+    column-gap: var(--sp-4);
+    align-items: center;
+    margin: 0 0 var(--sp-6);
+  }
+
+  .learner-app .path-next__art {
+    grid-row: span 2;
+    width: 96px;
+    height: 80px;
+    margin: 0;
+  }
+
+  .learner-app .path-next__btn {
+    grid-column: 2;
+    width: auto;
+    padding: 0 var(--sp-6);
+  }
+
+  .learner-app .path-sum {
+    grid-column: 4;
+    grid-row: 4;
+    align-self: stretch;
+    margin-bottom: var(--sp-6);
+  }
+
+  .learner-app .app:not(:has(> .path-next)) .path-sum {
+    grid-column: 2 / 5;
+  }
+
+  .learner-app .topic {
+    padding: var(--sp-4);
+  }
+}
+
+/* Forced colors drop the box-shadow ring: keep a system outline (Q12). */
+@media (min-width: 1024px) and (forced-colors: active) {
+  .learner-app .w-search input:focus,
+  .learner-app .w-brand:focus-visible,
+  .learner-app .w-nav a:focus-visible,
+  .learner-app .w-nav button:focus-visible,
+  .learner-app .w-side__me:focus-visible,
+  .learner-app .w-top__me:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+}

@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { levelLabel } from '@/features/learner-home/level-label';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { LearnerPathLevels } from '@/features/learner-path/learner-path-levels';
 import type { LearningPath } from '@/features/learner-path/learning-path-contract';
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
@@ -40,6 +42,7 @@ export default async function LearnerPathPage() {
 
   return (
     <>
+      <LearnerWebTopbar />
       <header className="m02-head path-head">
         <Link className="path-head__logo" href="/learn">
           Hán Lộ
@@ -63,6 +66,9 @@ export default async function LearnerPathPage() {
           <div className="grow">
             <p className="path-next__label">Bài tiếp theo</p>
             <p className="path-next__title">{nextLesson.title}</p>
+            <p className="path-next__meta w-only">
+              {`${levelLabel(nextLesson.levelCode)} • Bài ${nextLesson.position}`}
+            </p>
           </div>
           <Link
             className="path-next__btn"
