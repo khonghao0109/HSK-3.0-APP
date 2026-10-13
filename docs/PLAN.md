@@ -49,14 +49,14 @@ cam kết.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 34 / 46 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 35 / 46 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **92 / 159 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **93 / 159 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -251,8 +251,8 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | ✅ | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin); 13/10: ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`); Q78–Q80 |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ✅ | ADR-008 §10; Q75: chỉ dữ liệu first-party đã có, không bảng `ProductEvent` tới khi có consent (M1.7b2); Q76: activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; kèm sửa 2 test e2e chập chờn; Q77: onboarded = user có ≥ 1 `LearningPlan` bất kỳ status, `createdAt < asOf`; 13/10: ✅ đã đóng (`a8613cd`, `7dc6c59`, PR #6 run `38347856594`) |
 | M2.10 | Bố cục web cho learner từ 1024px (Q81): khung `.w-app` sidebar + thanh trên, `.w-public` nav ngang + footer, `.w-focus` màn làm bài; dưới 1024px giữ nguyên | ⬜ | Mẫu local `docs/ui_reference/web/` (20 trang); so ảnh ở 1024 và 1440 |
-| M2.10a | Khung web `.w-app` (sidebar + thanh trên) cho /learn, /learn/path, /learn/profile, /learn/dictionary, /learn/dictionary/[id]; nội dung web Trang chủ, Lộ trình, Hồ sơ (Q81–Q83, Q85) | 🟡 đang làm | mẫu `web/home.html`, `web/path.html`, `web/profile.html` |
-| M2.10b | Nội dung web Tra từ, Chi tiết từ; màn làm bài `.w-focus` (bài học, luyện tập, hoàn thành, không tìm thấy) | ⬜ | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html` |
+| M2.10a | Khung web `.w-app` (sidebar + thanh trên) cho /learn, /learn/path, /learn/profile, /learn/dictionary, /learn/dictionary/[id]; nội dung web Trang chủ, Lộ trình, Hồ sơ (Q81–Q83, Q85) | ✅ | mẫu `web/home.html`, `web/path.html`, `web/profile.html`; 13/10: ✅ đã đóng (`0de3e57`, `b37e96d`, PR #6 run `38395402644`) |
+| M2.10b | Nội dung web Tra từ, Chi tiết từ; màn làm bài `.w-focus` (bài học, luyện tập, hoàn thành, không tìm thấy) | 🟡 đang làm | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html` |
 | M2.10c | Trang công khai `.w-public`: /, đăng nhập, đăng ký, quên/đặt lại mật khẩu, xác thực email, onboarding, điều khoản, bảo mật (Q84) | ⬜ | mẫu `web/index.html`, `web/sign-*.html`, `web/onboarding-*.html`, ... |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
@@ -509,8 +509,8 @@ UI và phần backend còn thiếu:
 | M2.7e | Kiểm a11y tự động (axe WCAG 2.1 AA) mọi màn learner × 4 viewport, luồng chỉ dùng bàn phím, trạng thái loading/empty/error/offline có thông báo cho screen reader | ✅ | Bàn giao bởi M2.7; chuẩn là WCAG 2.1 AA và `docs/product/learner-ui-decisions.md`, không dùng `frontend/DESIGN.md` (brief admin); 13/10: ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`); Q78–Q80 |
 | M2.8 | Product event P0 first-party: activation, lesson completion | ✅ | ADR-008 §10; Q75: chỉ dữ liệu first-party đã có, không bảng `ProductEvent` tới khi có consent (M1.7b2); Q76: activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; kèm sửa 2 test e2e chập chờn; Q77: onboarded = user có ≥ 1 `LearningPlan` bất kỳ status, `createdAt < asOf`; 13/10: ✅ đã đóng (`a8613cd`, `7dc6c59`, PR #6 run `38347856594`) |
 | M2.10 | Bố cục web cho learner từ 1024px (Q81): khung `.w-app` sidebar + thanh trên, `.w-public` nav ngang + footer, `.w-focus` màn làm bài; dưới 1024px giữ nguyên | ⬜ | Mẫu local `docs/ui_reference/web/` (20 trang); so ảnh ở 1024 và 1440 |
-| M2.10a | Khung web `.w-app` (sidebar + thanh trên) cho /learn, /learn/path, /learn/profile, /learn/dictionary, /learn/dictionary/[id]; nội dung web Trang chủ, Lộ trình, Hồ sơ (Q81–Q83, Q85) | 🟡 đang làm | mẫu `web/home.html`, `web/path.html`, `web/profile.html` |
-| M2.10b | Nội dung web Tra từ, Chi tiết từ; màn làm bài `.w-focus` (bài học, luyện tập, hoàn thành, không tìm thấy) | ⬜ | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html` |
+| M2.10a | Khung web `.w-app` (sidebar + thanh trên) cho /learn, /learn/path, /learn/profile, /learn/dictionary, /learn/dictionary/[id]; nội dung web Trang chủ, Lộ trình, Hồ sơ (Q81–Q83, Q85) | ✅ | mẫu `web/home.html`, `web/path.html`, `web/profile.html`; 13/10: ✅ đã đóng (`0de3e57`, `b37e96d`, PR #6 run `38395402644`) |
+| M2.10b | Nội dung web Tra từ, Chi tiết từ; màn làm bài `.w-focus` (bài học, luyện tập, hoàn thành, không tìm thấy) | 🟡 đang làm | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html` |
 | M2.10c | Trang công khai `.w-public`: /, đăng nhập, đăng ký, quên/đặt lại mật khẩu, xác thực email, onboarding, điều khoản, bảo mật (Q84) | ⬜ | mẫu `web/index.html`, `web/sign-*.html`, `web/onboarding-*.html`, ... |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 
@@ -710,3 +710,4 @@ khi vertical slice bắt đầu.
 | 13/10/2026 | GĐ5: M2.8 ✅ đã đóng (`2c786d0`, `a8613cd`, `7dc6c59`, PR #6 run `38347856594`; Q77 onboarded = đã từng tạo plan). Thêm M2.7e 🟡 đang làm (axe, bàn phím, trạng thái learner). Đếm lại: GĐ5 32/42, tổng 90/155. |
 | 13/10/2026 | GĐ5: M2.7e ✅ đã đóng (`59ac0a3`, `5d8d81a`, PR #6 run `38365835081`; Q78–Q80 tương phản); M2.7 ✅ (M2.7a–M2.7e đã đóng). Thêm M2.10 ⬜ bố cục web learner từ 1024px (Q81). Đếm lại: GĐ5 34/43, tổng 92/156. |
 | 13/10/2026 | GĐ5: tách M2.10 thành M2.10a (khung web `.w-app`, nội dung web Trang chủ, Lộ trình, Hồ sơ; 🟡 đang làm), M2.10b (nội dung web Tra từ, Chi tiết từ; màn làm bài `.w-focus`; ⬜), M2.10c (trang công khai `.w-public`; ⬜). Q82–Q85 chép vào `docs/product/learner-ui-decisions.md` và đồng bộ bảng với README. Đếm lại: GĐ5 34/46, tổng 92/159. |
+| 13/10/2026 | GĐ5: M2.10a ✅ đã đóng (`0de3e57`, `b37e96d`, PR #6 run `38395402644`): khung web `.w-app` từ 1024px (sidebar 264px + thanh trên 64px, nội dung ≤ 1200px căn giữa), nội dung web Trang chủ/Lộ trình/Hồ sơ theo Q81–Q83, Q85. Test mới `learner-web.spec.ts`: đo cột nội dung 1200px ở 1920, lưới Khám phá/Lộ trình khớp mẫu ở 1280/1440, không tràn ngang ở 1024/1280/1920, zoom 200% và forced-colors không chồng chữ và giữ vòng focus; phá thử (max-width 1400, lưới 3 cột) đều FAIL đúng, khôi phục khớp sha256. M2.10b 🟡 đang làm. Đếm lại: GĐ5 35/46, tổng 93/159. |
