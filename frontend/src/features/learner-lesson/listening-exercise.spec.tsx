@@ -287,6 +287,23 @@ describe('ListeningExercise (M2.5c)', () => {
     expect(pauseSpy).toHaveBeenCalled();
     expect(element.hasAttribute('src')).toBe(false);
   });
+  it('a click while the mount grant is in flight waits for it, no second grant', async () => {
+    let release: (response: Response) => void = () => {};
+    fetchSpy.mockImplementation(
+      () => new Promise<Response>((resolve) => (release = resolve)),
+    );
+    const { container } = renderListening();
+    fireEvent.click(playButton() as HTMLButtonElement);
+    expect(urls()).toEqual(['/api/learner/media/7/access']);
+    release(grantResponse());
+    await settle();
+    expect(urls()).toEqual(['/api/learner/media/7/access']);
+    expect(audio(container).getAttribute('src')).toContain(
+      'expires=1791000001',
+    );
+    expect(playSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('does not play a grant that arrives after unmount', async () => {
     let release: (response: Response) => void = () => {};
     fetchSpy.mockImplementation(

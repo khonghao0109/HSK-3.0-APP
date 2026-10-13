@@ -94,10 +94,18 @@ export function ListeningExercise({
   const [duration, setDuration] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const fetchGrant = useCallback(async () => {
-    const grant = await requestGrant(media.id);
-    if (grant) grantRef.current = grant;
-    return grant;
+  // A press while a grant request is in flight shares it instead of asking twice.
+  const pendingRef = useRef<Promise<Grant | null> | null>(null);
+
+  const fetchGrant = useCallback(() => {
+    if (pendingRef.current) return pendingRef.current;
+    const pending = requestGrant(media.id).then((grant) => {
+      if (pendingRef.current === pending) pendingRef.current = null;
+      if (grant) grantRef.current = grant;
+      return grant;
+    });
+    pendingRef.current = pending;
+    return pending;
   }, [media.id]);
 
   // Access only, no bytes: the audio element keeps preload="none".
@@ -107,6 +115,7 @@ export function ListeningExercise({
     return () => {
       generationRef.current += 1;
       hasSrcRef.current = false;
+      pendingRef.current = null;
       if (!audio) return;
       audio.pause();
       audio.removeAttribute('src');
