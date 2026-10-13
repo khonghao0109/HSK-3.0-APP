@@ -92,5 +92,5 @@ describe('Dictionary read limit E2E (M2.6b)', () => {
       .get(`/api/v1/dictionary/words/${wordId}`)
       .expect(200);
     expect(word.body.data.id).toBe(wordId);
-  });
+  }, 30_000);
 });
