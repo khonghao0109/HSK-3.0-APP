@@ -23,25 +23,20 @@ function SoonButton({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-/** Only the player screens (practice/complete) drop the `.w-app` frame for
-    the `.w-focus` frame; the lesson detail screens keep the sidebar (M2.10b,
-    mẫu web/lesson.html marks "Lộ trình học" current). */
-export function isFocusRoute(pathname: string): boolean {
-  return (
-    pathname.startsWith('/learn/lessons/') &&
-    (pathname.endsWith('/practice') || pathname.endsWith('/complete'))
-  );
-}
-
 /**
  * Web sidebar of the `.w-app` frame from 1024px (Q81, mẫu `web/home.html`).
  * Hidden below 1024px, where the tab bar stays. No sign-out here (Q82). The
  * profile cell shows "Hồ sơ": `/auth/me` returns no name and the layout makes
  * no backend call of its own, and there is no avatar API yet.
+ *
+ * M2.10d F5: it is rendered on every `/learn` page, the player screens
+ * included (their `.w-focus` frame hides it with CSS). Deciding from the URL
+ * could not tell a real player page from the not-found page of the same
+ * `/learn/lessons/<id>/practice` URL — Next keeps the URL for a not-found
+ * render — so the frame switch moved to `:has()` in learner-web.css.
  */
 export function LearnerSidebar() {
   const pathname = usePathname();
-  if (isFocusRoute(pathname)) return null;
 
   const onHome = pathname === '/learn';
   // Lesson screens belong to the path (mẫu web/lesson.html).

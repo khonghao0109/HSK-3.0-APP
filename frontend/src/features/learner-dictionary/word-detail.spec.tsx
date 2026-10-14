@@ -189,6 +189,79 @@ describe('WordDetail', () => {
     expect(more).toHaveFocus();
   });
 
+  /* M2.10d (F7): the same behaviours for the web hero card's ⋮ copy
+     ('.word-web__more' + '#word-menu-web'); both copies render in jsdom, so
+     the specs pick them by their web-only selectors. */
+  describe('web ⋮ menu (F7)', () => {
+    function moreWebButton(): HTMLElement {
+      const button = document.querySelector('.word-web__more');
+      if (!button) throw new Error('missing web ⋮ button');
+      return button as HTMLElement;
+    }
+
+    function webMenu(): HTMLElement {
+      const menu = document.getElementById('word-menu-web');
+      if (!menu) throw new Error('missing web menu');
+      return menu as HTMLElement;
+    }
+
+    function webMenuItem(name: string): HTMLElement {
+      return within(webMenu()).getByRole('button', { name });
+    }
+
+    it('opens from the web ⋮ with aria-expanded and aria-controls', () => {
+      renderWord();
+      const more = moreWebButton();
+      const menu = webMenu();
+      expect(more).toHaveAttribute('aria-controls', 'word-menu-web');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+      expect(menu).toHaveAttribute('hidden');
+
+      fireEvent.click(more);
+      expect(menu).not.toHaveAttribute('hidden');
+      expect(more).toHaveAttribute('aria-expanded', 'true');
+      // The mobile copy follows the shared state but stays out of scope here.
+      expect(document.getElementById('word-menu')).not.toHaveAttribute(
+        'hidden',
+      );
+    });
+
+    it('Escape closes the web menu and returns focus to the web ⋮', () => {
+      renderWord();
+      const more = moreWebButton();
+      fireEvent.click(more);
+      expect(webMenu()).not.toHaveAttribute('hidden');
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(webMenu()).toHaveAttribute('hidden');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+      expect(document.activeElement).toBe(more);
+    });
+
+    it('Sao chép từ in the web menu copies and closes the menu', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+      renderWord();
+      fireEvent.click(moreWebButton());
+      fireEvent.click(webMenuItem('Sao chép từ'));
+      await flush();
+      expect(webMenu()).toHaveAttribute('hidden');
+      expect(writeText).toHaveBeenCalledWith('学习 (xuéxí)');
+      expect(toasts()).toEqual(['Đã sao chép 学习 (xuéxí)']);
+    });
+
+    it('a click outside closes the web menu', () => {
+      renderWord();
+      const more = moreWebButton();
+      fireEvent.click(more);
+      expect(webMenu()).not.toHaveAttribute('hidden');
+
+      fireEvent.click(document.body);
+      expect(webMenu()).toHaveAttribute('hidden');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
   it('Sao chép từ copies "hanzi (pinyin)" and toasts it (Q67)', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });

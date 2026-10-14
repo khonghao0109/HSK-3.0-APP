@@ -900,7 +900,10 @@ test.describe('Learner accessibility (M2.7e)', () => {
 
     await pressOn(
       page,
-      page.locator(`a[href="/learn/lessons/${hsk1Lesson}"]`).first(),
+      // M2.10d F4: the "Bài tiếp theo" card exists twice with the same href
+      // (`.path-mid` hidden outside 1024–1279px), so target the lesson tile
+      // inside the grid instead of the first href match.
+      page.locator(`.path-grid a[href="/learn/lessons/${hsk1Lesson}"]`).first(),
     );
     await expect(page).toHaveURL(
       new RegExp(`/learn/lessons/${hsk1Lesson}$`, 'u'),
@@ -969,7 +972,9 @@ test.describe('Learner accessibility (M2.7e)', () => {
     );
     await pressOn(
       page,
-      page.locator(`a[href="/learn/lessons/${hsk3Lesson}"]`).first(),
+      // Same M2.10d F4 note as above: the tile inside the grid, not the
+      // duplicated card link.
+      page.locator(`.path-grid a[href="/learn/lessons/${hsk3Lesson}"]`).first(),
     );
     await expect(page).toHaveURL(
       new RegExp(`/learn/lessons/${hsk3Lesson}$`, 'u'),

@@ -646,6 +646,42 @@ describe('LessonPlayer', () => {
     });
   });
 
+  // M2.10d (F6): the footer hint "Chọn một đáp án…" only fits kinds where the
+  // learner picks an option; arrange/fill have their own guidance.
+  describe('footer hint per exercise kind (F6)', () => {
+    const HINT = 'Chọn một đáp án rồi bấm Kiểm tra.';
+    const listeningChoice: PlayerExercise = {
+      id: 15,
+      topicId: null,
+      prompt: 'Nghe và chọn đáp án đúng.',
+      answered: false,
+      kind: 'listening',
+      options: [
+        { id: 'shop', text: '商店' },
+        { id: 'market', text: '超市' },
+      ],
+      media: { id: 7, duration: 3 },
+    };
+
+    it.each([
+      ['mcq', mcq],
+      ['listening', listeningChoice],
+    ])('shows the hint before answering a %s', (_kind, exercise) => {
+      // The listening kind fetches its media access grant on mount.
+      fetchSpy.mockResolvedValue(ok({ success: true, data: {} }));
+      renderPlayer([exercise]);
+      expect(screen.getByText(HINT)).toBeInTheDocument();
+    });
+
+    it.each([
+      ['arrange_sentence', arrange],
+      ['fill_blank', fill],
+    ])('shows no hint before answering a %s', (_kind, exercise) => {
+      renderPlayer([exercise]);
+      expect(screen.queryByText(HINT)).toBeNull();
+    });
+  });
+
   it('offers a retry when start fails', async () => {
     fetchSpy
       .mockResolvedValueOnce(ok({ success: false }, 503))

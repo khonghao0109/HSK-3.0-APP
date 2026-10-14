@@ -127,10 +127,16 @@ export default async function LearnerLessonPage({
           </ToastButton>
         </section>
 
-        {/* M2.10b: the web content card wraps the section (mẫu lesson.html
-            `.learn-content`); display:contents below 1024px. */}
-        <div className="lesson-content">
-          <h2 className="lesson-section">Nội dung bài học</h2>
+        {/* M2.10d F10: the web content section is a plain section with a
+            `.w-h2` head (mẫu lesson.html `.w-section.learn-content`), not a
+            card wrapping cards; display:contents below 1024px. */}
+        <section
+          className="lesson-content"
+          aria-labelledby="lesson-content-title"
+        >
+          <h2 className="lesson-section" id="lesson-content-title">
+            Nội dung bài học
+          </h2>
           <ul className="lesson-rows">
             {lessonRows(sections, locked).map((row) => {
               const image = LESSON_ROW_IMAGES[row.kind];
@@ -165,6 +171,12 @@ export default async function LearnerLessonPage({
                     {row.done && (
                       <>
                         <Icon name="check-circle" className="lrow__check" />
+                        {/* M2.10d F11: the sample's visible done label (mẫu
+                            .learn-row__done); web-only, the sr-only line
+                            already announces the state. */}
+                        <span className="lrow__state w-only" aria-hidden="true">
+                          Đã học xong
+                        </span>
                         <span className="sr-only">, đã học xong</span>
                       </>
                     )}
@@ -202,7 +214,7 @@ export default async function LearnerLessonPage({
               );
             })}
           </ul>
-        </div>
+        </section>
 
         {/* M2.10b: the web progress card (mẫu lesson.html `.learn-prog`).
             Web-only copy: the hero keeps its own progress row below 1024px

@@ -5,6 +5,15 @@
    hidden (learner.css). Lesson screens (`/learn/lessons/**`) render no
    sidebar or top bar, so none of the frame rules below reach them. */
 
+/* M2.10d F4: the early "Bài tiếp theo" copy (`.path-mid`) only exists for
+   the 1024–1279px layout, where the card sits above the lesson grid and the
+   late copy (`.path-next`) would put its "Bắt đầu" link after every lesson
+   in the Tab order. Hidden elsewhere; the 1024–1279px block below shows it
+   and hides the late copy there. */
+.learner-app .path-mid {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .learner-app {
     /* web.css :root */
@@ -14,13 +23,24 @@
     --w-pad: 40px;
   }
 
-  /* body.web background (web.css) */
-  .learner-app:has(.w-side) {
+  /* M2.10d F5: the player screens keep the `.w-focus` frame. The sidebar is
+     in their DOM too (so the not-found page of the same URL keeps the frame),
+     hidden here; `.ex` is the player root and `.done-main` the completion
+     screen. */
+  .learner-app .w-app:has(.app > .ex) > .w-side,
+  .learner-app .w-app:has(.app > .done-main) > .w-side {
+    display: none;
+  }
+
+  /* body.web background (web.css); the player screens above keep their own
+     root colour (learner.css, e.g. navy-950 for `.done-main`). */
+  .learner-app:has(.w-side):not(:has(.app > .ex)):not(:has(.app > .done-main)) {
     background: var(--cream-50);
   }
 
   /* ---------- Frame (web.css "Khung đã đăng nhập") ---------- */
-  .learner-app .w-app:has(> .w-side) {
+  .learner-app
+    .w-app:has(> .w-side):not(:has(.app > .ex)):not(:has(.app > .done-main)) {
     display: grid;
     grid-template-columns: var(--w-side) minmax(0, 1fr);
     min-height: 100vh;
@@ -1205,10 +1225,9 @@
     padding: 0 var(--sp-6);
   }
 
-  /* ---------- Tra từ, Chi tiết từ: only fit in the frame (M2.10b) ---------- */
-  .learner-app .app:has(> .w-top):has(> .dict, > .word) {
-    background: var(--m03-canvas);
-  }
+  /* ---------- Tra từ, Chi tiết từ: only fit in the frame (M2.10b) ----------
+     M2.10d F12 (Q2): no background of its own — the frame's cream shows
+     through like on every other `.w-app` page. */
 
   /* Their navy bar sticks under the top bar, not under it. */
   .learner-app .app:has(> .w-top):has(> .dict, > .word) .appbar {
@@ -1281,6 +1300,114 @@
     grid-column: 2 / 5;
   }
 
+  /* M2.10d F4: at 1024–1279px the early copy (`.path-mid`, between the level
+     tabs and the panel) carries the card; the late copy after `main` would
+     put "Bắt đầu" after every lesson in the Tab order, so it is hidden here.
+     Same look as the sample's hoisted aside (learn.css `order: -1`). */
+  .learner-app .app:has(> .path-body) > .path-next {
+    display: none;
+  }
+
+  .learner-app .path-body > .path-mid {
+    grid-column: 2;
+    grid-row: 4;
+    position: static;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+    gap: var(--sp-2) var(--sp-4);
+    width: auto;
+    max-width: none;
+    height: auto;
+    margin: 0 0 var(--sp-6);
+    padding: var(--sp-6);
+    transform: none;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .path-mid__art {
+    display: grid;
+    grid-row: span 2;
+    place-items: center;
+    width: 96px;
+    height: 80px;
+    margin: 0;
+    border-radius: var(--r-md);
+    background: var(--jade-100);
+    color: var(--jade-700);
+  }
+
+  .learner-app .path-mid__art .icon {
+    width: 44px;
+    height: 44px;
+    stroke-width: 1.4;
+  }
+
+  .learner-app .path-mid .grow {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .path-mid__label {
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .learner-app .path-mid p.path-mid__title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .path-mid p.path-mid__meta {
+    display: block;
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .learner-app .path-mid__btn {
+    display: inline-flex;
+    grid-column: 2;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    width: auto;
+    min-height: 48px;
+    margin: var(--sp-2) 0 0;
+    padding: 0 var(--sp-6);
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--jade-800);
+    color: var(--white);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .learner-app .path-mid__btn .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.8;
+  }
+
+  .learner-app .path-mid__btn:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
   .learner-app .topic {
     padding: var(--sp-4);
   }
@@ -1325,6 +1452,14 @@
   }
 
   .learner-app .w-crumbs a {
+    /* M2.10d F3 (Q69/Q42): a real 44×44px touch target. The negative
+       vertical margins cancel the taller box, so the crumb line and its
+       text stay where they were. */
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin-block: -11px;
     color: var(--jade-800);
     text-decoration: none;
   }
@@ -1455,23 +1590,20 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* The section card (mẫu .learn-content). */
+  /* The content section (mẫu .w-section.learn-content): transparent, not a
+     card — the rows below are the cards (M2.10d F10, không thẻ lồng thẻ). */
   .learner-app .lesson-content {
     display: block;
     grid-column: 1;
     margin-top: var(--sp-8);
-    padding: var(--sp-6);
-    border: 1px solid var(--border-default);
-    border-radius: var(--r-lg);
-    background: var(--surface-card);
-    box-shadow: var(--shadow-card);
   }
 
+  /* mẫu .w-h2 (M2.10d F10). */
   .learner-app .lesson-content .lesson-section {
     margin: 0 0 var(--sp-4);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xl);
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.3;
     color: var(--text-strong);
   }
 
@@ -1528,6 +1660,27 @@
     gap: var(--sp-4);
     width: 180px;
     align-self: center;
+  }
+
+  /* M2.10d F11: the state icon sits inside the end slot like the sample
+     (.learn-row__end), not a corner badge of the row card. */
+  .learner-app .lesson-content .lrow__check,
+  .learner-app .lesson-content .lrow__lock {
+    position: static;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* mẫu .learn-row__done: icon + visible "Đã học xong" in jade. */
+  .learner-app .lesson-content .lrow.is-done .lrow__end {
+    gap: 6px;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--jade-800);
+  }
+
+  .learner-app .lesson-content .lrow.is-done .lrow__check {
+    color: var(--jade-800);
   }
 
   .learner-app .lesson-content .lrow__count {
@@ -1764,7 +1917,8 @@
     box-shadow: var(--focus-ring);
   }
 
-  /* The tool pills (mẫu .wdict-tools button). */
+  /* The tool pills (mẫu .wdict-tools button): icon and label side by side —
+     M2.10d F8 (the mobile icon-only grid must not stack them). */
   .learner-app .dict-search__tools {
     display: flex;
     flex-wrap: wrap;
@@ -1775,6 +1929,8 @@
   }
 
   .learner-app .dict-search__tools button {
+    display: inline-flex;
+    align-items: center;
     gap: var(--sp-2);
     width: auto;
     height: auto;
@@ -1859,10 +2015,25 @@
     background: transparent;
   }
 
+  /* M2.10d F9: the sample's table rows (mẫu .wdict-row__hz) — the mobile
+     Kai/letter-spaced headword and the solid badge must not leak onto web. */
   .learner-app .dict-item__hz {
     grid-area: 1 / 1 / span 2;
+    font-family: var(--font-cn);
     font-size: 1.75rem;
     line-height: 1.2;
+    letter-spacing: normal;
+    color: var(--text-strong);
+  }
+
+  /* First row (mẫu .wdict-row--top .wdict-row__hz): same face, bold. */
+  .learner-app .dict-item--top .dict-item__hz {
+    margin-bottom: 0;
+    font-family: var(--font-cn);
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--text-strong);
   }
 
   .learner-app .dict-item__body {
@@ -1888,9 +2059,30 @@
     color: var(--text-muted);
   }
 
+  /* Level pill of the sample table (mẫu .wdict-lv): pastel per level. */
   .learner-app .dict-item .badge {
     grid-area: 1 / 4;
     justify-self: start;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--cream-100);
+    box-shadow: inset 0 0 0 1px var(--border-default);
+    color: var(--stone-700);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+
+  .learner-app .dict-item .badge.badge--lv1 {
+    background: var(--jade-50);
+    box-shadow: inset 0 0 0 1px var(--jade-200);
+    color: var(--jade-800);
+  }
+
+  .learner-app .dict-item .badge.badge--lv2,
+  .learner-app .dict-item .badge.badge--lv3 {
+    background: var(--blue-100);
+    box-shadow: none;
+    color: var(--navy-800);
   }
 
   .learner-app .dict-item__chevron {
@@ -2368,6 +2560,11 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    /* M2.10d F3 (Q69/Q42): real 44×44px touch target; the negative vertical
+       margins keep the link line in place. */
+    min-width: 44px;
+    min-height: 44px;
+    margin-block: -11px;
     color: var(--jade-800);
     font-size: var(--fs-md);
     font-weight: 600;

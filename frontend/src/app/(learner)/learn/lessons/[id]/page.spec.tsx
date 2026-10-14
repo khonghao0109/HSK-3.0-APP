@@ -265,6 +265,33 @@ describe('LearnerLessonPage', () => {
     }
   });
 
+  it('labels a finished row with the visible web-only state (F11)', async () => {
+    const { container } = await renderLesson(current);
+    const rows = Array.from(container.querySelectorAll('.lesson-rows .lrow'));
+    const done = rows.filter((row) => row.classList.contains('is-done'));
+    expect(done).toHaveLength(1);
+    const finished = done[0];
+    if (!finished) throw new Error('missing finished row Từ vựng');
+
+    // F11: the sample's visible "Đã học xong" tag (mẫu .learn-row__done).
+    // Web-only duplicate of the sr-only announcement, so it is hidden from
+    // assistive tech and the spoken name does not change.
+    const state = finished.querySelector('.lrow__state');
+    expect(state).not.toBeNull();
+    expect(state).toHaveClass('w-only');
+    expect(state).toHaveAttribute('aria-hidden', 'true');
+    expect(state?.textContent).toBe('Đã học xong');
+    expect(spokenName(finished)).toBe('Từ vựng, 6 từ mới, đã học xong');
+    expect(
+      within(finished as HTMLElement).getByText(', đã học xong'),
+    ).toHaveClass('sr-only');
+
+    for (const row of rows.filter((candidate) => candidate !== finished)) {
+      expect(row).not.toHaveClass('is-done');
+      expect(row.querySelector('.lrow__state')).toBeNull();
+    }
+  });
+
   it('links row Luyện tập of an open lesson to the player (Q45)', async () => {
     const { container } = await renderLesson(current);
     const row = Array.from(container.querySelectorAll('.lrow')).find(

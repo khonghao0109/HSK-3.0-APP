@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { SEARCH_QUERY_MAX_LENGTH } from '@/features/learner-dictionary/dictionary-display';
+
 import { LearnerToastProvider } from './learner-toast';
 import { TOAST_NOTIFICATIONS } from './learner-toast-messages';
 import { LearnerWebTopbar } from './learner-web-topbar';
@@ -22,6 +24,15 @@ describe('LearnerWebTopbar', () => {
     expect(form).toHaveAttribute('action', '/learn/dictionary');
     expect(form.getAttribute('method') ?? 'get').toBe('get');
     expect(container.firstElementChild).toHaveClass('w-top', 'w-only');
+  });
+
+  // M2.10d (F13): the box caps the query at the length the API accepts.
+  it('caps the search box at SEARCH_QUERY_MAX_LENGTH', () => {
+    renderTopbar();
+    expect(screen.getByRole('searchbox', { name: 'Tra từ' })).toHaveAttribute(
+      'maxLength',
+      String(SEARCH_QUERY_MAX_LENGTH),
+    );
   });
 
   it('does not render the search box on Tra từ (Q85)', () => {

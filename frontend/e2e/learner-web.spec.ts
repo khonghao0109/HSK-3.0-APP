@@ -26,28 +26,70 @@ import {
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const TOAST_COMING_SOON = 'Tính năng sắp ra mắt.';
 
-// A word of its own, so other specs' fixtures stay untouched.
-const WORD = { hanzi: '网页框架', pinyin: 'wang3 ye4 kuang4 jia4' };
+// Words of its own, so other specs' fixtures stay untouched.
+type WebWord = {
+  hanzi: string;
+  pinyin: string;
+  pinyinNormalized: string;
+  pinyinTone: string;
+  example: string;
+  meaningVi: string;
+  meaningViNormalized: string;
+  meaningEn: string;
+};
 
-function wordId(): number {
+const WORD: WebWord = {
+  hanzi: '网页框架',
+  pinyin: 'wang3 ye4 kuang4 jia4',
+  pinyinNormalized: 'wang ye kuang jia',
+  pinyinTone: 'wǎngyè kuàngjià',
+  example: '这是网页框架。',
+  meaningVi: 'khung trang web',
+  meaningViNormalized: 'khung trang web',
+  meaningEn: 'web frame',
+};
+
+// M2.10d F1: the Tra từ result-page tests search for this word, which this
+// spec owns as well (测试词典 belongs to learner-dictionary.spec.ts), so a
+// fresh DB run of learner-web.spec.ts alone still renders a result list.
+const QUERY_WORD: WebWord = {
+  hanzi: '网页词典',
+  pinyin: 'wang3 ye4 ci2 dian3',
+  pinyinNormalized: 'wang ye ci dian',
+  pinyinTone: 'wǎngyè cídiǎn',
+  example: '我用网页词典查词。',
+  meaningVi: 'từ điển web',
+  meaningViNormalized: 'tu dien web',
+  meaningEn: 'web dictionary',
+};
+
+// A hanzi query is a prefix match, so the full hanzi finds exactly this word.
+const QUERY_WORD_ROUTE = `/learn/dictionary?q=${encodeURIComponent(QUERY_WORD.hanzi)}`;
+
+/** Idempotent: read first; only a missing word gets Word + meaning + HSK1. */
+function ensureWord(word: WebWord): number {
   const read = () =>
     queryDisposableDb(
-      `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(WORD.hanzi)}`,
+      `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(word.hanzi)}`,
     );
   if (!read()) {
     queryDisposableDb(`WITH w AS (
         INSERT INTO "Word" (hanzi, pinyin, "pinyinNormalized", "pinyinTone", example, status, "isPure", "publishedAt", "updatedAt")
-        VALUES (${sqlLiteral(WORD.hanzi)}, ${sqlLiteral(WORD.pinyin)}, 'wang ye kuang jia', 'wǎngyè kuàngjià',
-          '这是网页框架。', 'published'::"ContentStatus", true, now(), now())
+        VALUES (${sqlLiteral(word.hanzi)}, ${sqlLiteral(word.pinyin)}, ${sqlLiteral(word.pinyinNormalized)}, ${sqlLiteral(word.pinyinTone)},
+          ${sqlLiteral(word.example)}, 'published'::"ContentStatus", true, now(), now())
         RETURNING id),
       m AS (INSERT INTO "WordMeaning" ("wordId", "meaningOrder", "meaningVi", "meaningEn", "meaningViNormalized", "meaningEnNormalized", "updatedAt")
-        SELECT id, 1, 'khung trang web', 'web frame', 'khung trang web', 'web frame', now() FROM w),
+        SELECT id, 1, ${sqlLiteral(word.meaningVi)}, ${sqlLiteral(word.meaningEn)}, ${sqlLiteral(word.meaningViNormalized)}, ${sqlLiteral(word.meaningEn)}, now() FROM w),
       l AS (INSERT INTO "WordLevel" ("wordId", "levelId") SELECT w.id, lv.id FROM w, "Level" lv WHERE lv.code = 'HSK1')
       SELECT id FROM w;`);
   }
   const id = Number(read());
-  if (!id) throw new Error('web fixture word missing');
+  if (!id) throw new Error(`web fixture word missing: ${word.hanzi}`);
   return id;
+}
+
+function wordId(): number {
+  return ensureWord(WORD);
 }
 
 function sidebar(page: Page): Locator {
@@ -253,6 +295,38 @@ async function activeFocusRing(page: Page): Promise<FocusRing> {
   });
 }
 
+/** M2.10d F3 (Q69/Q42): every visible `selector` target is at least 44x44. */
+async function expectTouchTargets(
+  page: Page,
+  selector: string,
+  label: string,
+): Promise<void> {
+  const targets = page.locator(selector);
+  const count = await targets.count();
+  expect(count, `${label}: ${selector} rendered`).toBeGreaterThan(0);
+  for (let index = 0; index < count; index += 1) {
+    const target = targets.nth(index);
+    if (!(await target.isVisible())) continue;
+    const name = (
+      (await target.getAttribute('aria-label')) ??
+      (await target.textContent()) ??
+      ''
+    )
+      .trim()
+      .replace(/\s+/gu, ' ')
+      .slice(0, 30);
+    const box = await target.boundingBox();
+    expect(box, `${label}: ${selector} "${name}" has a box`).not.toBeNull();
+    if (!box) continue;
+    expect
+      .soft(box.width, `${label}: ${selector} "${name}" width`)
+      .toBeGreaterThanOrEqual(44);
+    expect
+      .soft(box.height, `${label}: ${selector} "${name}" height`)
+      .toBeGreaterThanOrEqual(44);
+  }
+}
+
 test.describe('Learner web frame (M2.10a) @web', () => {
   let lessonId = 0;
   let word = 0;
@@ -369,6 +443,155 @@ test.describe('Learner web frame (M2.10a) @web', () => {
     expect(firstOf('side')).toBe(0);
     expect(firstOf('top')).toBeGreaterThan(order.lastIndexOf('side'));
     expect(firstOf('main')).toBeGreaterThan(order.lastIndexOf('top'));
+  });
+
+  // M2.10d F4: inside the main content column of Lộ trình the Tab order
+  // follows the visual reading order (top→bottom, left→right; 8px row
+  // tolerance) — including the "Bắt đầu" button of the "Bài tiếp theo" card,
+  // which CSS places above/beside the grid while the DOM keeps it last.
+  // Fails until the Lead's DOM/CSS fix lands (F4).
+  test('Tab order inside the main column follows the visual order (F4)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+
+    type FocusedBox = {
+      label: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      /** Focus target inside the lesson grid (`.path-grid`). */
+      inGrid: boolean;
+    };
+    // The focused element when it is a visible part of the main content
+    // column (`.w-main` minus the `.w-top` bar; the `.w-side` sidebar sits
+    // outside `.w-main`, and the sidebar → top bar → main zone order already
+    // has its own test). Body, hidden and sr-only targets are skipped but
+    // still count as Tab steps.
+    const focusedInMain = (): Promise<FocusedBox | null> =>
+      page.evaluate(() => {
+        const element = document.activeElement;
+        if (!(element instanceof HTMLElement)) return null;
+        if (element === document.body || !element.checkVisibility()) {
+          return null;
+        }
+        if (element.closest('.sr-only')) return null;
+        if (!element.closest('.w-main') || element.closest('.w-top')) {
+          return null;
+        }
+        const box = element.getBoundingClientRect();
+        if (box.width < 1 || box.height < 1) return null;
+        const label = (
+          element.getAttribute('aria-label') ??
+          element.textContent ??
+          ''
+        )
+          .trim()
+          .replace(/\s+/gu, ' ')
+          .slice(0, 40);
+        return {
+          label,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          inGrid: element.closest('.path-grid') !== null,
+        };
+      });
+
+    /** Consecutive targets move down a row or right within the same row. */
+    const outOfOrderIn = (boxes: FocusedBox[]): string[] => {
+      const out: string[] = [];
+      for (let index = 1; index < boxes.length; index += 1) {
+        const prev = boxes[index - 1];
+        const next = boxes[index];
+        if (!prev || !next) continue;
+        const prevCy = prev.y + prev.height / 2;
+        const nextCy = next.y + next.height / 2;
+        const prevCx = prev.x + prev.width / 2;
+        const nextCx = next.x + next.width / 2;
+        const ordered =
+          nextCy > prevCy + 8 ||
+          (Math.abs(nextCy - prevCy) <= 8 && nextCx > prevCx);
+        if (!ordered) {
+          out.push(
+            `"${prev.label}" (${prevCx.toFixed(0)},${prevCy.toFixed(0)}) → "${next.label}" (${nextCx.toFixed(0)},${nextCy.toFixed(0)})`,
+          );
+        }
+      }
+      return out;
+    };
+
+    for (const width of [1024, 1279, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/learn/path');
+      await expect(page.locator('.path-grid')).toBeVisible();
+
+      const sequence: FocusedBox[] = [];
+      const seen = new Set<string>();
+      for (let step = 0; step < 60; step += 1) {
+        await page.keyboard.press('Tab');
+        const focus = await focusedInMain();
+        if (!focus) continue;
+        const key = `${focus.label}@${Math.round(focus.x)},${Math.round(focus.y)}`;
+        if (seen.has(key)) break; // Focus wrapped: the cycle is complete.
+        seen.add(key);
+        sequence.push(focus);
+      }
+
+      // Required case: the visible "Bắt đầu" of the "Bài tiếp theo" card is
+      // tabbable. M2.10d F4: two copies exist and CSS shows exactly one per
+      // viewport (`.path-mid` at 1024–1279px, `.path-next` elsewhere), so the
+      // visible locator is the copy of this viewport.
+      const nextButton = page.locator(
+        '.path-mid__btn:visible, .path-next__btn:visible',
+      );
+      await expect(nextButton, `Bắt đầu rendered at ${width}`).toHaveCount(1);
+      const nextBox = await nextButton.boundingBox();
+      const nextIndex = sequence.findIndex(
+        (focus) =>
+          nextBox !== null &&
+          Math.abs(focus.x - nextBox.x) <= 2 &&
+          Math.abs(focus.y - nextBox.y) <= 2,
+      );
+      expect(
+        nextIndex,
+        `Bắt đầu is tabbable at ${width}`,
+      ).toBeGreaterThanOrEqual(0);
+
+      const gridIndexes = sequence
+        .map((focus, index) => ({ focus, index }))
+        .filter((entry) => entry.focus.inGrid);
+      expect(gridIndexes.length, `lesson tiles at ${width}`).toBeGreaterThan(0);
+
+      if (width >= 1280) {
+        // Two columns (mẫu path.html: lessons left, aside right). The sample's
+        // reading order is column-major, so the card's "Bắt đầu" comes after
+        // every lesson tile; the tiles themselves keep the grid order.
+        expect(
+          nextIndex,
+          `Bắt đầu after every lesson tile at ${width}`,
+        ).toBeGreaterThan(gridIndexes[gridIndexes.length - 1]?.index ?? -1);
+        expect(
+          outOfOrderIn(gridIndexes.map((entry) => entry.focus)),
+          `lesson tiles order at ${width}`,
+        ).toEqual([]);
+      } else {
+        // One column: the card sits above the grid, so the whole sequence
+        // must be in reading order.
+        expect(
+          outOfOrderIn(sequence),
+          `tab order at ${width}: ${sequence.length} main targets`,
+        ).toEqual([]);
+      }
+      console.log(
+        `M2.10a F4 :: ${width} tab=${sequence.length} [${sequence
+          .map((focus) => focus.label)
+          .join(' → ')}]`,
+      );
+    }
   });
 
   test('top bar search opens Tra từ with ?q=; Tra từ has no top search (Q85)', async ({
@@ -815,6 +1038,8 @@ test.describe('Learner web content (M2.10b) @web', () => {
     fixture.hsk3Lesson = await publishPracticeExercises();
     fixture.lockedLesson = await publishLockedLesson();
     fixture.wordId = wordId();
+    // F1: the Tra từ result tests (TL-3 and axe below) query this word.
+    ensureWord(QUERY_WORD);
   });
 
   test('frames follow the mockup table: .w-app vs .w-focus, aria-current', async ({
@@ -845,14 +1070,16 @@ test.describe('Learner web content (M2.10b) @web', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'Luyện tập' }),
     ).toBeVisible();
-    await expect(sidebar(page), 'sidebar practice').toHaveCount(0);
+    // M2.10d F5: the sidebar is rendered on every `.w-app` page (a not-found
+    // under /practice keeps the frame); the player screens hide it with CSS.
+    await expect(sidebar(page), 'sidebar practice').toBeHidden();
     await expect(page.locator('.w-top'), 'top bar practice').toHaveCount(0);
     await expect(page.locator('.tabbar'), 'tab bar practice').toBeHidden();
 
     await finishLesson(email, fixture.hsk3Lesson);
     await page.goto(`/learn/lessons/${fixture.hsk3Lesson}/complete`);
     await expect(page.locator('.done-title')).toBeVisible();
-    await expect(sidebar(page), 'sidebar complete').toHaveCount(0);
+    await expect(sidebar(page), 'sidebar complete').toBeHidden();
     await expect(page.locator('.w-top'), 'top bar complete').toHaveCount(0);
     await expect(page.locator('.tabbar'), 'tab bar complete').toBeHidden();
     console.log('M2.10b 1 :: frames verified for 6 .w-app + 2 .w-focus routes');
@@ -1006,7 +1233,7 @@ test.describe('Learner web content (M2.10b) @web', () => {
     const measured: string[] = [];
     for (const width of [1024, 1280, 1440, 1920]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/learn/dictionary?q=%E6%B5%8B%E8%AF%95');
+      await page.goto(QUERY_WORD_ROUTE);
       await expect(page.locator('.dict-item').first()).toBeVisible();
       const geo = await page.evaluate(() => {
         const rect = (el: Element | null) => {
@@ -1064,7 +1291,7 @@ test.describe('Learner web content (M2.10b) @web', () => {
     const email = await registerReadyLearner(page, baseURL);
     await finishLesson(email, fixture.hsk3Lesson);
     const m210bAxeRoutes = [
-      '/learn/dictionary?q=%E6%B5%8B%E8%AF%95',
+      QUERY_WORD_ROUTE,
       `/learn/dictionary/${fixture.wordId}`,
       '/learn/dictionary/99999999',
       `/learn/lessons/${fixture.hsk1Lesson}`,
@@ -1155,6 +1382,64 @@ test.describe('Learner web content (M2.10b) @web', () => {
     await expect(page.locator('.ex-error[role="alert"]')).toBeVisible();
     await axe('submit 503');
     console.log('M2.10b 5b :: axe clean on 4 player states');
+  });
+
+  // M2.10d F3 (Q69/Q42): the web chrome links keep a 44x44 px touch target.
+  // Fails until the Lead's CSS fix lands (F3).
+  test('touch targets: .w-crumbs a and .word-web__back are at least 44px (F3)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto(`/learn/dictionary/${fixture.wordId}`);
+    await expect(page.locator('.word__hz')).toBeVisible();
+    await expectTouchTargets(page, '.w-crumbs a', 'word page crumbs');
+    await expectTouchTargets(page, '.word-web__back', 'word page back');
+
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}`);
+    await expect(page.locator('.lesson-hero').first()).toBeVisible();
+    await expectTouchTargets(page, '.w-crumbs a', 'lesson page crumbs');
+    console.log('M2.10b F3 :: touch targets measured on word and lesson');
+  });
+
+  // M2.10d F5: an unknown lesson id under the player routes renders the 404
+  // inside the `.w-app` frame (sidebar, top bar, crumbs; no tab bar). Fails
+  // until the Lead's sidebar fix lands (F5).
+  test('unknown lesson practice/complete keep the .w-app frame on the 404 (F5)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    for (const route of [
+      '/learn/lessons/99999999/practice',
+      '/learn/lessons/99999999/complete',
+    ]) {
+      for (const width of [1024, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        const response = await page.goto(route);
+        expect(response?.status(), `${route} at ${width}`).toBe(404);
+        await expect(sidebar(page), `sidebar ${route}@${width}`).toBeVisible();
+        await expect(
+          page.locator('.w-top'),
+          `top bar ${route}@${width}`,
+        ).toBeVisible();
+        await expect(
+          page.locator('.w-crumbs'),
+          `crumbs ${route}@${width}`,
+        ).toBeVisible();
+        await expect(
+          page.locator('.tabbar'),
+          `tab bar ${route}@${width}`,
+        ).toBeHidden();
+        await expect(
+          page.getByRole('heading', { level: 1 }),
+          `heading ${route}@${width}`,
+        ).toHaveText('Không tìm thấy bài học');
+      }
+    }
+    console.log('M2.10b F5 :: 404 frame verified on practice and complete');
   });
 });
 

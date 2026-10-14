@@ -63,8 +63,11 @@ function ResultRow({
   top: boolean;
 }) {
   const vi = firstVietnamese(item.meanings);
+  // M2.10d F9: the web table paints the level as a pastel pill per level
+  // (mẫu .wdict-lv--n); levels without a pill class keep the neutral pill.
+  const lv = item.level?.match(/HSK (\d)/u)?.[1];
   const badge = item.level ? (
-    <span className="badge" aria-hidden="true">
+    <span className={lv ? `badge badge--lv${lv}` : 'badge'} aria-hidden="true">
       {item.level}
     </span>
   ) : null;

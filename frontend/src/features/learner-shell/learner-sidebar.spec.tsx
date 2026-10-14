@@ -67,18 +67,21 @@ describe('LearnerSidebar', () => {
     expect(cell).toHaveAttribute('aria-current', 'page');
   });
 
-  it('renders nothing only on the player screens (M2.10b)', () => {
+  it('renders on the player screens too; CSS frames them (M2.10d F5)', () => {
+    // URL-based hiding could not tell a real player page from the not-found
+    // page of the same /practice URL, so the frame switch lives in
+    // learner-web.css (`:has(.app > .ex)` / `:has(.app > .done-main)`): the
+    // sidebar is rendered everywhere and the player screens hide it.
     for (const pathname of [
       '/learn/lessons/7/practice',
       '/learn/lessons/7/complete',
+      '/learn/lessons/7',
+      '/learn/path',
     ]) {
       const { container, unmount } = renderAt(pathname);
-      expect(container.querySelector('.w-side')).toBeNull();
+      expect(container.querySelector('.w-side')).not.toBeNull();
       unmount();
     }
-    // The lesson detail screens keep the frame (mẫu web/lesson.html).
-    const { container } = renderAt('/learn/lessons/7');
-    expect(container.querySelector('.w-side')).not.toBeNull();
   });
 
   it('toasts from every coming-soon item and from Hỗ trợ', () => {

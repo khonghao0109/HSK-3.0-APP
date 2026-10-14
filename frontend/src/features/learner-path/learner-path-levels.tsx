@@ -1,7 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 
 import { levelLabel } from '@/features/learner-home/level-label';
 import { percentClass, wholePercent } from '@/features/learner-home/percent';
@@ -104,13 +110,20 @@ function LessonTile({ lesson }: { lesson: PathLesson }) {
 /**
  * Level tabs (Q19): always the seven codes, default to the goal level. Tab
  * changes are local state only; no network call.
+ *
+ * `midCard` is the M2.10d F4 copy of the "Bài tiếp theo" card for the
+ * 1024–1279px layout. It is rendered between the tabs and the panel — right
+ * above the lesson grid, where the eye sees it — so the DOM and the visual
+ * order match (the ≥ 1280px copy stays after `main`).
  */
 export function LearnerPathLevels({
   levels,
   initialCode,
+  midCard = null,
 }: {
   levels: PathLevel[];
   initialCode: string;
+  midCard?: ReactNode;
 }) {
   const [selected, setSelected] = useState(() =>
     PATH_LEVEL_CODES.some((code) => code === initialCode)
@@ -195,6 +208,8 @@ export function LearnerPathLevels({
           );
         })}
       </div>
+
+      {midCard}
 
       <section
         className="path-panel"

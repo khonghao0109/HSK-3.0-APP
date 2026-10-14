@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { SEARCH_QUERY_MAX_LENGTH } from '@/features/learner-dictionary/dictionary-display';
+
 import { ToastButton } from './learner-toast';
 import { TOAST_NOTIFICATIONS } from './learner-toast-messages';
 
@@ -35,6 +37,7 @@ export function LearnerWebTopbar({
             aria-label="Tra từ"
             placeholder="Tra chữ Hán, pinyin hoặc nghĩa tiếng Việt"
             autoComplete="off"
+            maxLength={SEARCH_QUERY_MAX_LENGTH}
           />
         </form>
       )}

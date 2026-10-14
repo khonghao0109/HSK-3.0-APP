@@ -649,11 +649,16 @@ export function LessonPlayer({
           <div>
             {/* M2.10b: the web foot's hint (mẫu .pq-foot__hint); the mobile
                 foot only carries the button. */}
-            {!result && !error && !startFailed && (
-              <p className="pq-foot__hint w-only">
-                Chọn một đáp án rồi bấm Kiểm tra.
-              </p>
-            )}
+            {/* F6: chỉ các dạng chọn đáp án (mcq, listening) có hint này;
+                arrange_sentence và fill_blank có hướng dẫn riêng. */}
+            {!result &&
+              !error &&
+              !startFailed &&
+              (current?.kind === 'mcq' || current?.kind === 'listening') && (
+                <p className="pq-foot__hint w-only">
+                  Chọn một đáp án rồi bấm Kiểm tra.
+                </p>
+              )}
             {result?.correct === true && (
               <div className="m02-feedback">
                 <img

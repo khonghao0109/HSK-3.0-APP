@@ -89,7 +89,11 @@ test.describe('Learner lesson page (M2.5a)', () => {
   }) => {
     await registerReadyLearner(page, baseURL);
     await page.goto('/learn/path');
-    await page.locator('a.path-next__btn').click();
+    // M2.10d F4: `.path-mid` (1024–1279px) or `.path-next` (mobile bar /
+    // ≥ 1280px); CSS shows exactly one copy per viewport.
+    await page
+      .locator('a.path-mid__btn:visible, a.path-next__btn:visible')
+      .click();
     await expect(page).toHaveURL(/\/learn\/lessons\/\d+$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       FIRST_LESSON,

@@ -122,10 +122,12 @@ test.describe('Learner path (M2.4b)', () => {
     const current = page.locator('a.topic.is-current');
     const href = await current.getAttribute('href');
     expect(href).toMatch(/^\/learn\/lessons\/\d+$/);
-    await expect(page.locator('a.path-next__btn')).toHaveAttribute(
-      'href',
-      href ?? '',
+    // M2.10d F4: the card exists twice (`.path-mid` at 1024–1279px, the
+    // mobile bar/≥ 1280px `.path-next`); CSS shows one copy per viewport.
+    const nextButton = page.locator(
+      'a.path-mid__btn:visible, a.path-next__btn:visible',
     );
+    await expect(nextButton).toHaveAttribute('href', href ?? '');
 
     await current.click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
@@ -135,7 +137,7 @@ test.describe('Learner path (M2.4b)', () => {
     );
 
     await page.goto('/learn/path');
-    await page.locator('a.path-next__btn').click();
+    await nextButton.click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
     await expect(all).toHaveCount(0);
   });
@@ -235,7 +237,13 @@ test.describe('Learner path (M2.4b)', () => {
         control: page.locator('.path-tab[aria-selected="true"]'),
       },
       { label: 'first topic', control: page.locator('.topic').first() },
-      { label: 'next button', control: page.locator('.path-next__btn') },
+      {
+        label: 'next button',
+        // M2.10d F4: the visible copy (`.path-mid` at 1024–1279px).
+        control: page.locator(
+          '.path-mid__btn:visible, .path-next__btn:visible',
+        ),
+      },
     ];
     for (const { label, control } of targets) {
       await test.step(label, async () => {
