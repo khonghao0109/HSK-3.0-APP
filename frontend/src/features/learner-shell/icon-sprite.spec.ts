@@ -5,27 +5,42 @@ import { describe, expect, it } from 'vitest';
 
 // V5 (M2.10c): sprite icon sống trong `layout.tsx` (server component, không
 // render được bằng testing-library cho gọn), nên guard này đọc nguồn và đối
-// chiếu ba chiều: 5 symbol mới phải có, mọi `#i-…` của 10 trang mẫu web công
-// khai phải có symbol, và mọi `<use href="#i-…">` trong `src` phải trỏ tới
-// symbol có thật.
+// chiếu: 5 symbol mới phải có, đủ 24 id của 10 trang mẫu web công khai, và mọi
+// `<use href="#i-…">` trong `src` phải trỏ tới symbol có thật.
+//
+// Không đọc `docs/ui_reference/` trong test: thư mục đó bị `.gitignore` nên CI
+// không có (xem danh sách id bên dưới).
 
 const srcRoot = resolve(process.cwd(), 'src');
 const layoutPath = resolve(srcRoot, 'app/(learner)/layout.tsx');
-const repoRoot = resolve(process.cwd(), '..');
-const sampleDir = resolve(repoRoot, 'docs/ui_reference/web');
 
-/** 10 trang mẫu web công khai của M2.10c (PO Q81). */
-const SAMPLE_PAGES = [
-  'index',
-  'sign-in',
-  'sign-up',
-  'forgot-password',
-  'reset-password',
-  'verify-email',
-  'onboarding-goal',
-  'onboarding-plan',
-  'terms',
-  'privacy',
+/** 24 id `#i-…` grep trên 10 trang `docs/ui_reference/web/*.html` (bản local,
+ * gitignored), đếm 14/10/2026. */
+const PUBLIC_SAMPLE_ICON_IDS = [
+  'i-alert-triangle',
+  'i-arrow-left',
+  'i-arrow-right',
+  'i-bell',
+  'i-book-open',
+  'i-check',
+  'i-check-circle',
+  'i-check-circle-line',
+  'i-chevron-down',
+  'i-chevron-right',
+  'i-clipboard-check',
+  'i-clock',
+  'i-eye',
+  'i-file-text',
+  'i-info',
+  'i-layers',
+  'i-lock',
+  'i-mail',
+  'i-mic',
+  'i-search',
+  'i-sparkles',
+  'i-star-fill',
+  'i-target',
+  'i-trophy',
 ];
 
 /** Năm symbol mà bản mẫu dùng nhưng sprite còn thiếu trước V5. */
@@ -72,14 +87,15 @@ describe('sprite icon của khung learner (M2.10c, V5)', () => {
     expect(missing).toEqual([]);
   });
 
+  // 24 id = grep `#i-` trên 10 trang docs/ui_reference/web/*.html (bản local,
+  // gitignored), đếm 14/10/2026. Chép vào đây vì `docs/ui_reference/` bị
+  // `.gitignore` nên CI không có file mẫu để đọc; danh sách này giữ nguyên bảo
+  // vệ "0 id thiếu" trên CI.
   it('không thiếu symbol nào so với 10 trang mẫu web công khai', () => {
-    const referenced = new Set<string>();
-    for (const page of SAMPLE_PAGES) {
-      const html = readFileSync(join(sampleDir, `${page}.html`), 'utf8');
-      for (const id of iconReferences(html)) referenced.add(id);
-    }
-    expect(referenced.size).toBeGreaterThan(20);
-    const missing = [...referenced].filter((id) => !spriteIds.has(id)).sort();
+    expect(PUBLIC_SAMPLE_ICON_IDS).toHaveLength(24);
+    const missing = PUBLIC_SAMPLE_ICON_IDS.filter(
+      (id) => !spriteIds.has(id),
+    ).sort();
     expect(missing).toEqual([]);
   });
 
