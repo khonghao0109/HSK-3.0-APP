@@ -13,6 +13,7 @@ import {
   LESSON_ROW_IMAGES,
   lessonRows,
 } from '@/features/learner-lesson/lesson-sections';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import {
   TOAST_COMING_SOON,
@@ -57,7 +58,10 @@ export default async function LearnerLessonPage({
 
   return (
     <>
-      <header className="m02-head m02-bar">
+      {/* M2.10b: the .w-app frame's top bar (mẫu web/lesson.html). No streak
+          chip: this page loads no /learning/home (no new backend request). */}
+      <LearnerWebTopbar />
+      <header className="m02-head m02-bar m-only">
         <LearnerBackButton
           fallbackHref="/learn/path"
           ariaLabel="Quay lại lộ trình"
@@ -73,6 +77,16 @@ export default async function LearnerLessonPage({
       </header>
 
       <main className="m02-sheet lesson">
+        {/* M2.10b: web breadcrumbs replace the mobile back bar (mẫu
+            lesson.html). */}
+        <nav className="w-crumbs w-only" aria-label="Vị trí">
+          <Link href="/learn/path">Lộ trình học</Link>
+          <Icon name="chevron-right" className="icon--sm" />
+          <Link href="/learn/path">{levelLabel(level.code)}</Link>
+          <Icon name="chevron-right" className="icon--sm" />
+          <span aria-current="page">{lesson.title}</span>
+        </nav>
+
         <section className="lesson-hero" aria-labelledby="lesson-title">
           <span className="lesson-hero__img" aria-hidden="true">
             <Icon name="book-open" />
@@ -89,7 +103,7 @@ export default async function LearnerLessonPage({
             </p>
             {description && <p className="lesson-hero__desc">{description}</p>}
             <div
-              className="progress lesson-hero__bar"
+              className="progress lesson-hero__bar m-only"
               role="progressbar"
               aria-label="Tiến độ bài học"
               aria-valuemin={0}
@@ -98,88 +112,136 @@ export default async function LearnerLessonPage({
             >
               <span className={percentClass(percent)} />
             </div>
-            <p className="lesson-hero__pct">
+            <p className="lesson-hero__pct m-only">
               <b>{percent}%</b> hoàn thành
             </p>
           </div>
+          {/* M2.10b: the web hero card carries the favourite button that the
+              mobile top bar shows (mẫu lesson.html .learn-fav). */}
+          <ToastButton
+            className="icon-btn lesson-fav w-only"
+            aria-label="Yêu thích bài học"
+            message={TOAST_COMING_SOON}
+          >
+            <Icon name="heart" />
+          </ToastButton>
         </section>
 
-        <h2 className="lesson-section">Nội dung bài học</h2>
-        <ul className="lesson-rows">
-          {lessonRows(sections, locked).map((row) => {
-            const image = LESSON_ROW_IMAGES[row.kind];
-            const className = [
-              'lrow',
-              image.tone,
-              row.done ? 'is-done' : '',
-              row.locked ? 'is-locked' : '',
-            ]
-              .filter(Boolean)
-              .join(' ');
-            const content = (
-              <>
-                <img
-                  src={image.src}
-                  alt=""
-                  width={image.width}
-                  height={image.height}
-                />
-                <span className="grow">
-                  <span className="lrow__title">{row.title}</span>
-                  <span className="sr-only">, </span>
-                  <span className="lrow__meta">{row.meta}</span>
-                </span>
-                <span className="lrow__end">
-                  {row.locked && (
-                    <>
-                      <Icon name="lock-fill" className="lrow__lock" />
-                      <span className="sr-only">, đã khoá</span>
-                    </>
+        {/* M2.10b: the web content card wraps the section (mẫu lesson.html
+            `.learn-content`); display:contents below 1024px. */}
+        <div className="lesson-content">
+          <h2 className="lesson-section">Nội dung bài học</h2>
+          <ul className="lesson-rows">
+            {lessonRows(sections, locked).map((row) => {
+              const image = LESSON_ROW_IMAGES[row.kind];
+              const className = [
+                'lrow',
+                image.tone,
+                row.done ? 'is-done' : '',
+                row.locked ? 'is-locked' : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+              const content = (
+                <>
+                  <img
+                    src={image.src}
+                    alt=""
+                    width={image.width}
+                    height={image.height}
+                  />
+                  <span className="grow">
+                    <span className="lrow__title">{row.title}</span>
+                    <span className="sr-only">, </span>
+                    <span className="lrow__meta">{row.meta}</span>
+                  </span>
+                  <span className="lrow__end">
+                    {row.locked && (
+                      <>
+                        <Icon name="lock-fill" className="lrow__lock" />
+                        <span className="sr-only">, đã khoá</span>
+                      </>
+                    )}
+                    {row.done && (
+                      <>
+                        <Icon name="check-circle" className="lrow__check" />
+                        <span className="sr-only">, đã học xong</span>
+                      </>
+                    )}
+                    {row.count && (
+                      <>
+                        <span className="sr-only">, </span>
+                        <span className="lrow__count">
+                          {row.count.label}
+                          <span className="sr-only">{` ${row.count.tail}`}</span>
+                        </span>
+                        <span className="progress lrow__bar" aria-hidden="true">
+                          <span className={percentClass(row.count.percent)} />
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </>
+              );
+              return (
+                <li key={row.kind}>
+                  {row.kind === 'practice' && !row.locked ? (
+                    <Link className={className} href={practiceHref}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <ToastButton
+                      className={className}
+                      aria-disabled={row.locked ? 'true' : undefined}
+                      message={rowMessage}
+                    >
+                      {content}
+                    </ToastButton>
                   )}
-                  {row.done && (
-                    <>
-                      <Icon name="check-circle" className="lrow__check" />
-                      <span className="sr-only">, đã học xong</span>
-                    </>
-                  )}
-                  {row.count && (
-                    <>
-                      <span className="sr-only">, </span>
-                      <span className="lrow__count">
-                        {row.count.label}
-                        <span className="sr-only">{` ${row.count.tail}`}</span>
-                      </span>
-                      <span className="progress lrow__bar" aria-hidden="true">
-                        <span className={percentClass(row.count.percent)} />
-                      </span>
-                    </>
-                  )}
-                </span>
-              </>
-            );
-            return (
-              <li key={row.kind}>
-                {row.kind === 'practice' && !row.locked ? (
-                  <Link className={className} href={practiceHref}>
-                    {content}
-                  </Link>
-                ) : (
-                  <ToastButton
-                    className={className}
-                    aria-disabled={row.locked ? 'true' : undefined}
-                    message={rowMessage}
-                  >
-                    {content}
-                  </ToastButton>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* M2.10b: the web progress card (mẫu lesson.html `.learn-prog`).
+            Web-only copy: the hero keeps its own progress row below 1024px
+            and the mobile CTA stays at the bottom of the sheet. */}
+        <aside className="lesson-prog w-only" aria-label="Tiến độ bài học">
+          <h2 className="lesson-prog__title">Tiến độ bài học</h2>
+          <p className="lesson-prog__pct">
+            <b>{percent}%</b> hoàn thành
+          </p>
+          <div
+            className="progress lesson-prog__bar"
+            role="progressbar"
+            aria-label="Tiến độ bài học"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percent}
+          >
+            <span className={percentClass(percent)} />
+          </div>
+          {locked ? (
+            <ToastButton
+              className="lesson-cta"
+              aria-disabled="true"
+              message={TOAST_LOCKED}
+            >
+              Tiếp tục học
+              <Icon name="arrow-right" />
+            </ToastButton>
+          ) : (
+            <Link className="lesson-cta" href={practiceHref}>
+              Tiếp tục học
+              <Icon name="arrow-right" />
+            </Link>
+          )}
+        </aside>
 
         {locked ? (
           <ToastButton
-            className="lesson-cta"
+            className="lesson-cta m-only"
             aria-disabled="true"
             message={TOAST_LOCKED}
           >
@@ -187,7 +249,7 @@ export default async function LearnerLessonPage({
             <Icon name="arrow-right" />
           </ToastButton>
         ) : (
-          <Link className="lesson-cta" href={practiceHref}>
+          <Link className="lesson-cta m-only" href={practiceHref}>
             Tiếp tục học
             <Icon name="arrow-right" />
           </Link>

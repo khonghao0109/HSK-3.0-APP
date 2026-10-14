@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useRouter } from 'next/navigation';
@@ -51,6 +51,26 @@ function toasts(): string[] {
 
 function saveButton(): HTMLElement {
   return document.querySelector('.word-save') as HTMLElement;
+}
+
+/* M2.10b: two ⋮ buttons exist (mobile app bar, web hero card); the specs
+   exercise the mobile one. */
+/* M2.10b: the menu exists twice (mobile + web copy); the specs exercise the
+   mobile one. */
+function menuItem(name: string): HTMLElement {
+  const menu = document.getElementById('word-menu');
+  if (!menu) throw new Error('missing menu');
+  return within(menu as HTMLElement).getByRole('button', { name });
+}
+
+function moreButton(): HTMLElement {
+  const bar = document.querySelector('.appbar');
+  if (!bar) throw new Error('missing app bar');
+  const button = Array.from(bar.querySelectorAll('button')).find(
+    (candidate) => candidate.getAttribute('aria-label') === 'Tuỳ chọn khác',
+  );
+  if (!button) throw new Error('missing ⋮ button');
+  return button as HTMLElement;
 }
 
 async function flush() {
@@ -141,7 +161,7 @@ describe('WordDetail', () => {
 
   it('the ⋮ menu opens, closes on an item, outside click and Esc (focus back)', () => {
     renderWord();
-    const more = screen.getByRole('button', { name: 'Tuỳ chọn khác' });
+    const more = moreButton();
     const menu = document.getElementById('word-menu')!;
     expect(more).toHaveAttribute('aria-controls', 'word-menu');
     expect(menu).toHaveAttribute('hidden');
@@ -152,9 +172,7 @@ describe('WordDetail', () => {
     expect(
       Array.from(menu.querySelectorAll('button')).map((b) => b.textContent),
     ).toEqual(['Xem cách viết Hán tự', 'Sao chép từ', 'Báo lỗi nội dung']);
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Xem cách viết Hán tự' }),
-    );
+    fireEvent.click(menuItem('Xem cách viết Hán tự'));
     expect(menu).toHaveAttribute('hidden');
     // The focused item vanished with the menu: focus goes back to ⋮.
     expect(more).toHaveFocus();
@@ -175,8 +193,8 @@ describe('WordDetail', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     renderWord();
-    fireEvent.click(screen.getByRole('button', { name: 'Tuỳ chọn khác' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Sao chép từ' }));
+    fireEvent.click(moreButton());
+    fireEvent.click(menuItem('Sao chép từ'));
     await flush();
     expect(writeText).toHaveBeenCalledWith('学习 (xuéxí)');
     expect(toasts()).toEqual(['Đã sao chép 学习 (xuéxí)']);
@@ -188,8 +206,8 @@ describe('WordDetail', () => {
       clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
     });
     renderWord();
-    fireEvent.click(screen.getByRole('button', { name: 'Tuỳ chọn khác' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Sao chép từ' }));
+    fireEvent.click(moreButton());
+    fireEvent.click(menuItem('Sao chép từ'));
     await flush();
     expect(toasts()).toEqual(['Không sao chép được.']);
   });

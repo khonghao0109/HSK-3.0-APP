@@ -8,7 +8,7 @@ export default function WordNotFound() {
   return (
     <>
       <LearnerWebTopbar />
-      <header className="m02-head m02-bar">
+      <header className="m02-head m02-bar m-only">
         <LearnerBackButton
           fallbackHref="/learn/dictionary"
           ariaLabel="Quay lại Tra từ"

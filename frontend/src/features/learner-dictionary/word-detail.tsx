@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 
 import { LearnerBackButton } from '@/features/learner-auth/learner-back-button';
 import {
@@ -53,6 +55,12 @@ export function WordDetail({
   const saving = useRef(false);
   const [busy, setBusy] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
+  // M2.10b: the web hero card has its own ⋮ + menu copies (the app bar and
+  // its menu hide at 1024px); the menu tracks which button opened it so
+  // focus returns there.
+  const moreWebRef = useRef<HTMLButtonElement>(null);
+  const menuWebRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +69,9 @@ export function WordDetail({
       const target = event.target as Node;
       if (
         !menuRef.current?.contains(target) &&
-        !moreRef.current?.contains(target)
+        !menuWebRef.current?.contains(target) &&
+        !moreRef.current?.contains(target) &&
+        !moreWebRef.current?.contains(target)
       ) {
         setMenuOpen(false);
       }
@@ -69,7 +79,7 @@ export function WordDetail({
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setMenuOpen(false);
-      moreRef.current?.focus();
+      (openerRef.current ?? moreRef.current)?.focus();
     };
     document.addEventListener('click', onClick);
     document.addEventListener('keydown', onKey);
@@ -83,7 +93,12 @@ export function WordDetail({
   // had disappears with the menu).
   const closeMenu = () => {
     setMenuOpen(false);
-    moreRef.current?.focus();
+    (openerRef.current ?? moreRef.current)?.focus();
+  };
+
+  const toggleMenu = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!menuOpen) openerRef.current = event.currentTarget;
+    setMenuOpen((open) => !open);
   };
 
   const copy = async () => {
@@ -130,9 +145,40 @@ export function WordDetail({
 
   const shown = traditional && word.traditional ? word.traditional : word.hanzi;
 
+  // Shared by the mobile and the web menu copies (only one is visible per
+  // viewport; the mobile copy keeps its `.app` anchor below 1024px).
+  const menuItems = (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          closeMenu();
+          showToast(TOAST_COMING_SOON);
+        }}
+      >
+        <Icon name="pen-line" />
+        Xem cách viết Hán tự
+      </button>
+      <button type="button" onClick={() => void copy()}>
+        <Icon name="copy" />
+        Sao chép từ
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          closeMenu();
+          showToast(TOAST_COMING_SOON);
+        }}
+      >
+        <Icon name="flag" />
+        Báo lỗi nội dung
+      </button>
+    </>
+  );
+
   return (
     <>
-      <header className="appbar appbar--wide word-bar">
+      <header className="appbar appbar--wide word-bar m-only">
         <LearnerBackButton
           fallbackHref="/learn/dictionary"
           icon="chevron-left"
@@ -154,108 +200,201 @@ export function WordDetail({
             aria-expanded={menuOpen}
             aria-controls="word-menu"
             aria-label="Tuỳ chọn khác"
-            onClick={() => setMenuOpen((open) => !open)}
+            onClick={toggleMenu}
           >
             <Icon name="more-vertical" />
           </button>
         </div>
       </header>
-      <div className="m03-menu" id="word-menu" ref={menuRef} hidden={!menuOpen}>
-        <button
-          type="button"
-          onClick={() => {
-            closeMenu();
-            showToast(TOAST_COMING_SOON);
-          }}
-        >
-          <Icon name="pen-line" />
-          Xem cách viết Hán tự
-        </button>
-        <button type="button" onClick={() => void copy()}>
-          <Icon name="copy" />
-          Sao chép từ
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            closeMenu();
-            showToast(TOAST_COMING_SOON);
-          }}
-        >
-          <Icon name="flag" />
-          Báo lỗi nội dung
-        </button>
+
+      {/* Mobile menu: stays exactly where the mobile layout expects it
+          (anchored to `.app`); hidden from 1024px, where the hero copy below
+          takes over. */}
+      <div
+        className="m03-menu m-only"
+        id="word-menu"
+        ref={menuRef}
+        hidden={!menuOpen}
+      >
+        {menuItems}
       </div>
 
       <main className="word">
-        <div className="word__head">
-          <h1
-            className="word__hz"
+        {/* M2.10b: web breadcrumbs replace the mobile app bar (mẫu
+            web/word.html). */}
+        <nav className="w-crumbs w-only" aria-label="Đường dẫn">
+          <Link href="/learn/dictionary">Tra từ</Link>
+          <svg className="icon icon--sm" aria-hidden="true">
+            <use href="#i-chevron-right" />
+          </svg>
+          <span
+            aria-current="page"
             lang={traditional && word.traditional ? 'zh-Hant' : 'zh-Hans'}
           >
             {shown}
-          </h1>
-        </div>
-        <div className="word__mid">
-          <p className="word__py" lang="zh-Latn-pinyin">
-            {word.pinyin}
-          </p>
-          {word.traditional ? (
-            // Q68: switches the headword only, not the example.
-            <div className="seg" role="group" aria-label="Kiểu chữ">
+          </span>
+        </nav>
+        {/* M2.10b: the wrappers group the sample's cards; below 1024px they
+            are display:contents, so the mobile flow is unchanged. */}
+        <div className="word-web">
+          <div className="word-web__main">
+            <div className="word-web__hero">
+              <div className="word__head">
+                <h1
+                  className="word__hz"
+                  lang={traditional && word.traditional ? 'zh-Hant' : 'zh-Hans'}
+                >
+                  {shown}
+                </h1>
+              </div>
+              <div className="word-web__hero-body">
+                <div className="word__mid">
+                  <p className="word__py" lang="zh-Latn-pinyin">
+                    {word.pinyin}
+                  </p>
+                  {word.traditional ? (
+                    // Q68: switches the headword only, not the example.
+                    <div className="seg" role="group" aria-label="Kiểu chữ">
+                      <button
+                        type="button"
+                        aria-pressed={!traditional}
+                        onClick={() => setTraditional(false)}
+                      >
+                        Giản thể
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={traditional}
+                        onClick={() => setTraditional(true)}
+                      >
+                        Phồn thể
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+                {word.vietnamese ? (
+                  <p className="word__vi">{word.vietnamese}</p>
+                ) : (
+                  <p className="word__vi word__vi--none">{NO_VIETNAMESE}</p>
+                )}
+                {word.level ? (
+                  <span className="badge badge--lv">{word.level}</span>
+                ) : null}
+              </div>
+              {/* M2.10b: the web hero card carries its own ⋮ + menu copy
+                  (mẫu word.html `.wword-menuwrap`); the mobile pair above
+                  stays untouched below 1024px. */}
               <button
+                ref={moreWebRef}
+                className="icon-btn word-web__more w-only"
                 type="button"
-                aria-pressed={!traditional}
-                onClick={() => setTraditional(false)}
+                aria-expanded={menuOpen}
+                aria-controls="word-menu-web"
+                aria-label="Tuỳ chọn khác"
+                onClick={toggleMenu}
               >
-                Giản thể
+                <Icon name="more-vertical" />
               </button>
-              <button
-                type="button"
-                aria-pressed={traditional}
-                onClick={() => setTraditional(true)}
+              <div
+                className="m03-menu word-web__menu w-only"
+                id="word-menu-web"
+                ref={menuWebRef}
+                hidden={!menuOpen}
               >
-                Phồn thể
-              </button>
+                {menuItems}
+              </div>
             </div>
-          ) : null}
-        </div>
-        {word.vietnamese ? (
-          <p className="word__vi">{word.vietnamese}</p>
-        ) : (
-          <p className="word__vi word__vi--none">{NO_VIETNAMESE}</p>
-        )}
-        {word.level ? (
-          <span className="badge badge--lv">{word.level}</span>
-        ) : null}
 
-        {word.example ? (
-          <section className="word-ex" aria-labelledby="word-ex-title">
-            <h2 id="word-ex-title">Ví dụ</h2>
-            <p className="word-ex__cn">
-              <span className="cn" lang="zh-Hans">
-                {word.example}
-              </span>
-            </p>
-            {word.source ? (
-              <footer>
-                <span>Nguồn: {word.source.name}</span>
-                <span>Phiên bản: {word.source.version}</span>
-              </footer>
+            {word.example ? (
+              <section className="word-ex" aria-labelledby="word-ex-title">
+                <h2 id="word-ex-title">Ví dụ</h2>
+                <p className="word-ex__cn">
+                  <span className="cn" lang="zh-Hans">
+                    {word.example}
+                  </span>
+                </p>
+                {word.source ? (
+                  <footer>
+                    <span>Nguồn: {word.source.name}</span>
+                    <span>Phiên bản: {word.source.version}</span>
+                  </footer>
+                ) : null}
+              </section>
             ) : null}
-          </section>
-        ) : null}
+          </div>
 
-        <button
-          className="word-save"
-          type="button"
-          aria-pressed={saved}
-          aria-busy={busy || undefined}
-          onClick={() => void toggleSave()}
-        >
-          <Icon name={saved ? 'check' : 'heart'} />
-          <span>{saved ? 'Đã lưu' : 'Lưu để ôn'}</span>
-        </button>
+          <div className="word-web__aside">
+            <div className="word-web__act">
+              <button
+                className="word-save"
+                type="button"
+                aria-pressed={saved}
+                aria-busy={busy || undefined}
+                onClick={() => void toggleSave()}
+              >
+                <Icon name={saved ? 'check' : 'heart'} />
+                <span>{saved ? 'Đã lưu' : 'Lưu để ôn'}</span>
+              </button>
+              {/* M2.10b: the web aside's ghost favourite button (mẫu
+                  word.html); the mobile one sits in the app bar. */}
+              <ToastButton
+                className="word-web__fav w-only"
+                message={TOAST_COMING_SOON}
+              >
+                <Icon name="heart" />
+                Thêm vào yêu thích
+                <span className="w-tag w-tag--soon">Sắp có</span>
+              </ToastButton>
+            </div>
+            {/* M2.10b: web-only info card (mẫu word.html); mobile keeps its
+                own layout without it. */}
+            <section
+              className="word-web__info w-only"
+              aria-labelledby="word-info-title"
+            >
+              <h2 className="word-web__info-title" id="word-info-title">
+                Thông tin từ
+              </h2>
+              <dl className="wword-info">
+                {word.level ? (
+                  <div>
+                    <dt>Cấp độ</dt>
+                    <dd>{word.level}</dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt>Giản thể</dt>
+                  <dd lang="zh-Hans">{word.hanzi}</dd>
+                </div>
+                {word.traditional ? (
+                  <div>
+                    <dt>Phồn thể</dt>
+                    <dd lang="zh-Hant">{word.traditional}</dd>
+                  </div>
+                ) : null}
+                {word.source ? (
+                  <>
+                    <div>
+                      <dt>Nguồn</dt>
+                      <dd>{word.source.name}</dd>
+                    </div>
+                    <div>
+                      <dt>Phiên bản</dt>
+                      <dd>{word.source.version}</dd>
+                    </div>
+                  </>
+                ) : null}
+              </dl>
+              <LearnerBackButton
+                className="word-web__back w-only"
+                ariaLabel="Quay lại Tra từ"
+                fallbackHref="/learn/dictionary"
+              >
+                Quay lại Tra từ
+              </LearnerBackButton>
+            </section>
+          </div>
+        </div>
       </main>
     </>
   );

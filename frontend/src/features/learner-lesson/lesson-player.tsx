@@ -94,11 +94,15 @@ function readResult(body: unknown): Result | null {
  */
 export function LessonPlayer({
   lessonId,
+  lessonTitle,
   exercises,
   startIndex,
   needsStart,
 }: {
   lessonId: number;
+  /** M2.10b: web kicker "lesson · type" (mẫu practice-*.html); optional so
+      the mobile-only render paths stay unchanged. */
+  lessonTitle?: string;
   exercises: PlayerExercise[];
   startIndex: number;
   needsStart: boolean;
@@ -490,7 +494,24 @@ export function LessonPlayer({
         >
           <Icon name="x" />
         </Link>
-        <h1 className="m02-bar__title">Luyện tập</h1>
+        {/* M2.10b: `.ex-track` groups the title with the bar's progress copy
+            (mẫu .pq-track); display:contents below 1024px keeps the mobile
+            bar exactly as it was. */}
+        <div className="ex-track">
+          <h1 className="m02-bar__title">Luyện tập</h1>
+          {total > 0 && (
+            <div
+              className="progress ex-progress ex-progress--web w-only"
+              role="progressbar"
+              aria-label="Tiến độ luyện tập"
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={answeredCount}
+            >
+              <span className={progressClass(answeredCount, total)} />
+            </div>
+          )}
+        </div>
         {total > 0 && (
           <p
             className="m02-bar__count"
@@ -502,8 +523,20 @@ export function LessonPlayer({
       </header>
 
       <main className="m02-sheet ex-body" ref={bodyRef}>
+        {/* M2.10b: web kicker (mẫu practice-mcq/listening.html). Only the two
+            mocked types carry the sample's own label; the others show the
+            lesson title alone (no invented copy). */}
+        {lessonTitle && (
+          <p className="pq-kicker w-only">
+            {current?.kind === 'mcq'
+              ? `${lessonTitle} · Trắc nghiệm`
+              : current?.kind === 'listening'
+                ? `${lessonTitle} · Nghe hiểu`
+                : lessonTitle}
+          </p>
+        )}
         <div
-          className="progress ex-progress"
+          className="progress ex-progress m-only"
           role="progressbar"
           aria-label="Tiến độ luyện tập"
           aria-valuemin={0}
@@ -614,6 +647,13 @@ export function LessonPlayer({
       {!done && current?.kind !== 'unsupported' && (
         <footer className="ex-foot">
           <div>
+            {/* M2.10b: the web foot's hint (mẫu .pq-foot__hint); the mobile
+                foot only carries the button. */}
+            {!result && !error && !startFailed && (
+              <p className="pq-foot__hint w-only">
+                Chọn một đáp án rồi bấm Kiểm tra.
+              </p>
+            )}
             {result?.correct === true && (
               <div className="m02-feedback">
                 <img

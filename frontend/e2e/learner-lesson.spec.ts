@@ -69,9 +69,17 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       FIRST_LESSON,
     );
-    await expect(
-      tabBar(page).getByRole('link', { name: 'Học', exact: true }),
-    ).toHaveAttribute('aria-current', 'page');
+    // M2.10b: from 1024px the sidebar replaces the tab bar and the lesson
+    // page marks "Lộ trình học" current (mẫu web/lesson.html).
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
+      await expect(
+        page.locator('.w-side').getByRole('link', { name: 'Lộ trình học' }),
+      ).toHaveAttribute('aria-current', 'page');
+    } else {
+      await expect(
+        tabBar(page).getByRole('link', { name: 'Học', exact: true }),
+      ).toHaveAttribute('aria-current', 'page');
+    }
     await expect(toasts(page)).toHaveCount(0);
   });
 
@@ -102,9 +110,19 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await page.goto('/learn/path');
     await page.locator('a.topic.is-current').click();
     await expect(page).toHaveURL(/\/learn\/lessons\/\d+$/);
-    const back = page.getByRole('link', { name: 'Quay lại lộ trình' });
-    await expect(back).toHaveAttribute('href', '/learn/path');
-    await back.click();
+    // M2.10b: the mobile bar (with the back button) is hidden from 1024px;
+    // there the breadcrumbs' "Lộ trình học" link is the way back.
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
+      const crumb = page
+        .locator('.w-crumbs')
+        .getByRole('link', { name: 'Lộ trình học' });
+      await expect(crumb).toHaveAttribute('href', '/learn/path');
+      await crumb.click();
+    } else {
+      const back = page.getByRole('link', { name: 'Quay lại lộ trình' });
+      await expect(back).toHaveAttribute('href', '/learn/path');
+      await back.click();
+    }
     await expect(page).toHaveURL(/\/learn\/path$/);
   });
 
@@ -191,9 +209,17 @@ test.describe('Learner lesson page (M2.5a)', () => {
       await expect(
         page.getByRole('link', { name: 'Về lộ trình' }),
       ).toHaveAttribute('href', '/learn/path');
-      await expect(
-        tabBar(page).getByRole('link', { name: 'Học', exact: true }),
-      ).toHaveAttribute('aria-current', 'page');
+      // M2.10b: at 1024px+ the 404 sits in the .w-app frame, so the sidebar
+      // carries the current-page marker instead of the (hidden) tab bar.
+      if ((page.viewportSize()?.width ?? 0) >= 1024) {
+        await expect(
+          page.locator('.w-side').getByRole('link', { name: 'Lộ trình học' }),
+        ).toHaveAttribute('aria-current', 'page');
+      } else {
+        await expect(
+          tabBar(page).getByRole('link', { name: 'Học', exact: true }),
+        ).toHaveAttribute('aria-current', 'page');
+      }
     });
   }
 

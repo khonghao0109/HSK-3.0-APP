@@ -23,9 +23,14 @@ function SoonButton({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-/** Lesson screens get the `.w-focus` layout in M2.10b; they keep theirs. */
-export function isLessonRoute(pathname: string): boolean {
-  return pathname.startsWith('/learn/lessons/');
+/** Only the player screens (practice/complete) drop the `.w-app` frame for
+    the `.w-focus` frame; the lesson detail screens keep the sidebar (M2.10b,
+    mẫu web/lesson.html marks "Lộ trình học" current). */
+export function isFocusRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith('/learn/lessons/') &&
+    (pathname.endsWith('/practice') || pathname.endsWith('/complete'))
+  );
 }
 
 /**
@@ -36,10 +41,12 @@ export function isLessonRoute(pathname: string): boolean {
  */
 export function LearnerSidebar() {
   const pathname = usePathname();
-  if (isLessonRoute(pathname)) return null;
+  if (isFocusRoute(pathname)) return null;
 
   const onHome = pathname === '/learn';
-  const onPath = pathname === '/learn/path';
+  // Lesson screens belong to the path (mẫu web/lesson.html).
+  const onPath =
+    pathname === '/learn/path' || pathname.startsWith('/learn/lessons/');
   const onDictionary =
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');

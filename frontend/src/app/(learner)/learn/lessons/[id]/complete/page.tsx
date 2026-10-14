@@ -86,50 +86,79 @@ export default async function LessonCompletePage({
 
   return (
     <>
-      <div className="done-confetti" aria-hidden="true">
+      {/* Mobile confetti keeps its original DOM slot (a child of `.app`):
+          moving it into `.done-main` would repaint the pieces over the text
+          because `.done-main` is `position: relative; z-index: 1`. Hidden at
+          ≥1024px, where the hero card carries its own copy (mẫu
+          lesson-complete.html). */}
+      <div className="done-confetti m-only" aria-hidden="true">
         {CONFETTI.map((className, index) => (
           <i key={index} className={className} />
         ))}
       </div>
 
+      {/* M2.10b: the web .w-focus frame carries the brand on top (mẫu
+          web/lesson-complete.html); the mobile page has no brand bar. */}
+      <header className="done-brand w-only">
+        <Link className="done-brand__link" href="/learn">
+          <span className="done-brand__mark" aria-hidden="true">
+            汉
+          </span>
+          <span className="done-brand__name">Hán Lộ</span>
+        </Link>
+      </header>
+
       <main className="done-main">
-        <p className="done-kicker">Chúc mừng! Bạn đã hoàn thành bài học</p>
-        <h1 className="done-title">{data.activity.lesson.title}</h1>
+        {/* M2.10b: web card + navy hero wrappers (mẫu lesson-complete.html);
+            display:contents below 1024px so the mobile layout is unchanged. */}
+        <section className="done-card" aria-labelledby="done-title">
+          <div className="done-hero">
+            <div className="done-confetti w-only" aria-hidden="true">
+              {CONFETTI.map((className, index) => (
+                <i key={index} className={className} />
+              ))}
+            </div>
+            <p className="done-kicker">Chúc mừng! Bạn đã hoàn thành bài học</p>
+            <h1 className="done-title" id="done-title">
+              {data.activity.lesson.title}
+            </h1>
 
-        <div className="done-medal">
-          <img
-            src="/images/learner/m02-medal.png"
-            alt=""
-            width={230}
-            height={105}
-          />
-          <p className="done-medal__score" aria-label={scoreLabel}>
-            {scoreText}
-          </p>
-        </div>
+            <div className="done-medal">
+              <img
+                src="/images/learner/m02-medal.png"
+                alt=""
+                width={230}
+                height={105}
+              />
+              <p className="done-medal__score" aria-label={scoreLabel}>
+                {scoreText}
+              </p>
+            </div>
+          </div>
 
-        <div className="done-stats">
-          <section className="done-stat">
-            <h2>Điểm số của bạn</h2>
-            <p className="done-stat__score" aria-label={scoreLabel}>
-              {scoreText}
-            </p>
-          </section>
-        </div>
+          <div className="done-stats">
+            <section className="done-stat">
+              <h2>Điểm số của bạn</h2>
+              <p className="done-stat__score" aria-label={scoreLabel}>
+                {scoreText}
+              </p>
+            </section>
+          </div>
 
-        <div className="done-actions">
-          <ToastButton
-            className="done-btn done-btn--light"
-            message={TOAST_COMING_SOON}
-          >
-            <Icon name="book-open-text" />
-            Ôn từ mới
-          </ToastButton>
-          <Link className="done-btn done-btn--primary" href={next.href}>
-            {next.label}
-            <Icon name="arrow-right" />
-          </Link>
-        </div>
+          <div className="done-actions">
+            <ToastButton
+              className="done-btn done-btn--light"
+              message={TOAST_COMING_SOON}
+            >
+              <Icon name="book-open-text" />
+              Ôn từ mới
+            </ToastButton>
+            <Link className="done-btn done-btn--primary" href={next.href}>
+              {next.label}
+              <Icon name="arrow-right" />
+            </Link>
+          </div>
+        </section>
       </main>
     </>
   );

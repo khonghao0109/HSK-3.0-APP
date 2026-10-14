@@ -48,6 +48,8 @@ describe('LearnerSidebar', () => {
     ['/learn/path', 'Lộ trình học', '/learn/path'],
     ['/learn/dictionary', 'Tra từ', '/learn/dictionary'],
     ['/learn/dictionary/42', 'Tra từ', '/learn/dictionary'],
+    // M2.10b: lesson screens keep the sidebar and belong to Lộ trình học.
+    ['/learn/lessons/7', 'Lộ trình học', '/learn/path'],
   ])('marks the current item on %s', (pathname, name, href) => {
     renderAt(pathname);
     const nav = mainNav();
@@ -65,9 +67,18 @@ describe('LearnerSidebar', () => {
     expect(cell).toHaveAttribute('aria-current', 'page');
   });
 
-  it('renders nothing on the lesson screens (M2.10b)', () => {
-    const { container } = renderAt('/learn/lessons/7/practice');
-    expect(container.querySelector('.w-side')).toBeNull();
+  it('renders nothing only on the player screens (M2.10b)', () => {
+    for (const pathname of [
+      '/learn/lessons/7/practice',
+      '/learn/lessons/7/complete',
+    ]) {
+      const { container, unmount } = renderAt(pathname);
+      expect(container.querySelector('.w-side')).toBeNull();
+      unmount();
+    }
+    // The lesson detail screens keep the frame (mẫu web/lesson.html).
+    const { container } = renderAt('/learn/lessons/7');
+    expect(container.querySelector('.w-side')).not.toBeNull();
   });
 
   it('toasts from every coming-soon item and from Hỗ trợ', () => {

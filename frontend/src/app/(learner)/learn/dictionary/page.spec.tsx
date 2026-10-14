@@ -62,9 +62,10 @@ describe('Tra từ page', () => {
   it('opens empty without searching', async () => {
     render(<LearnerToastProvider>{await page()}</LearnerToastProvider>);
     expect(searchWords).not.toHaveBeenCalled();
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Nhập từ cần tra',
-    );
+    // M2.10b: the web aside cards add their own h2s; target the count one.
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Nhập từ cần tra' }),
+    ).toHaveTextContent('Nhập từ cần tra');
   });
 
   it('renders the web top bar without its search box (Q85)', async () => {

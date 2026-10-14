@@ -103,7 +103,9 @@ async function audit(page: Page, state: string, title: string): Promise<void> {
   expect
     .soft(await page.locator('html').getAttribute('lang'), `lang ${state}`)
     .toBe('vi');
-  expect.soft(await page.locator('h1').count(), `h1 ${state}`).toBe(1);
+  // M2.10b: Tra từ carries an app-bar h1 (mobile) and a page-head h1 (web);
+  // exactly one of them is rendered per viewport, so count the visible one.
+  expect.soft(await page.locator('h1:visible').count(), `h1 ${state}`).toBe(1);
   expect.soft(await page.locator('main').count(), `main ${state}`).toBe(1);
   expect.soft(await page.title(), `title ${state}`).toBe(title);
 }

@@ -99,6 +99,10 @@ function ResultRow({
         {top ? badge : null}
       </span>
       {top ? null : badge}
+      {/* M2.10b: the web table row ends with a chevron (mẫu .wdict-row). */}
+      <svg className="icon dict-item__chevron w-only" aria-hidden="true">
+        <use href="#i-chevron-right" />
+      </svg>
     </li>
   );
 }
@@ -234,7 +238,7 @@ export function DictionarySearch({
 
   return (
     <>
-      <header className="appbar">
+      <header className="appbar m-only">
         <Link className="icon-btn" href="/learn" aria-label="Quay lại">
           <Icon name="chevron-left" />
         </Link>
@@ -251,109 +255,206 @@ export function DictionarySearch({
       </header>
 
       <main className="dict m03-tabbed">
-        <form className="dict-search" role="search" onSubmit={onSubmit}>
-          <div className="dict-search__field">
-            <Icon name="search" />
-            <label className="sr-only" htmlFor="dict-q">
-              Tra từ: chữ Hán, pinyin hoặc nghĩa tiếng Việt
-            </label>
-            <input
-              ref={inputRef}
-              className="dict-search__input cn"
-              id="dict-q"
-              name="q"
-              type="search"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                schedule(event.target.value);
-              }}
-              lang="zh-Hans"
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={SEARCH_QUERY_MAX_LENGTH}
-              placeholder="Nhập chữ Hán, pinyin, nghĩa"
-              aria-controls="dict-results"
-              aria-describedby="dict-count"
-            />
-            <button
-              className="dict-search__clear"
-              type="button"
-              aria-label="Xoá nội dung tìm kiếm"
-              hidden={query.trim() === ''}
-              onClick={clear}
-            >
-              <Icon name="m03-clear" />
-            </button>
+        {/* M2.10b: web page head + 2-column grid (mẫu web/dictionary.html).
+            The wrappers are display:contents below 1024px, so the mobile
+            layout keeps its exact flow. */}
+        <div className="w-pagehead w-only">
+          <div>
+            <h1 className="w-h1">Từ điển</h1>
+            <p className="w-lead">Tra chữ Hán, pinyin hoặc nghĩa tiếng Việt.</p>
           </div>
-          <div className="dict-search__tools">
-            <ToastButton
-              aria-label="Tra bằng chữ viết tay"
-              message={TOAST_COMING_SOON}
-            >
-              <Icon name="m03-pen" />
-            </ToastButton>
-            <ToastButton
-              aria-label="Tra bằng ảnh chụp"
-              message={TOAST_COMING_SOON}
-            >
-              <Icon name="camera" />
-            </ToastButton>
-            <ToastButton
-              aria-label="Tra bằng giọng nói"
-              message={TOAST_COMING_SOON}
-            >
-              <Icon name="m03-mic" />
-            </ToastButton>
-          </div>
-        </form>
-
-        <h2 className="dict__count" id="dict-count" aria-live="polite">
-          {count}
-        </h2>
-        <ul
-          className="dict-results"
-          id="dict-results"
-          aria-labelledby="dict-count"
-          aria-busy={searching || state.kind === 'loading' || undefined}
-        >
-          {state.kind === 'empty' ? (
-            <li className="dict-empty">
-              <Icon name="search" />
-              <span>Gõ chữ Hán, pinyin hoặc nghĩa tiếng Việt để tra từ.</span>
-            </li>
-          ) : state.kind === 'error' ? (
-            <li className="dict-empty">
-              {/* The alert sits inside the item: an li keeps its list role. */}
-              <div role="alert">
-                <Icon name="file-question" />
-                <strong>Không tra được lúc này</strong>
-                <span>Vui lòng thử lại.</span>
-                <button className="dict-retry" type="button" onClick={retry}>
-                  Thử lại
+        </div>
+        <div className="dict-web">
+          <div className="dict-web__main">
+            <form className="dict-search" role="search" onSubmit={onSubmit}>
+              <div className="dict-search__field">
+                <Icon name="search" />
+                <label className="sr-only" htmlFor="dict-q">
+                  Tra từ: chữ Hán, pinyin hoặc nghĩa tiếng Việt
+                </label>
+                <input
+                  ref={inputRef}
+                  className="dict-search__input cn"
+                  id="dict-q"
+                  name="q"
+                  type="search"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    schedule(event.target.value);
+                  }}
+                  lang="zh-Hans"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={SEARCH_QUERY_MAX_LENGTH}
+                  placeholder="Nhập chữ Hán, pinyin, nghĩa"
+                  aria-controls="dict-results"
+                  aria-describedby="dict-count"
+                />
+                <button
+                  className="dict-search__clear"
+                  type="button"
+                  aria-label="Xoá nội dung tìm kiếm"
+                  hidden={query.trim() === ''}
+                  onClick={clear}
+                >
+                  <Icon name="m03-clear" />
+                </button>
+                {/* Web-only submit (mẫu .wdict-field .w-btn); mobile submits
+                    with Enter. */}
+                <button className="dict-search__submit w-only" type="submit">
+                  Tra từ
                 </button>
               </div>
-            </li>
-          ) : state.kind === 'loading' ? null : state.items.length === 0 ? (
-            <li className="dict-empty">
-              <Icon name="file-question" />
-              <strong>Không tìm thấy kết quả</strong>
-              <span>
-                Thử nhập chữ Hán khác, pinyin không dấu hoặc nghĩa tiếng Việt.
-              </span>
-            </li>
-          ) : (
-            state.items.map((item, index) => (
-              <ResultRow key={item.id} item={item} top={index === 0} />
-            ))
-          )}
-        </ul>
+              <div className="dict-search__tools">
+                <ToastButton
+                  aria-label="Tra bằng chữ viết tay"
+                  message={TOAST_COMING_SOON}
+                >
+                  <Icon name="m03-pen" />
+                  <span className="dict-tools__label w-only">
+                    Viết tay
+                    <span className="w-tag w-tag--soon">Sắp có</span>
+                  </span>
+                </ToastButton>
+                <ToastButton
+                  aria-label="Tra bằng ảnh chụp"
+                  message={TOAST_COMING_SOON}
+                >
+                  <Icon name="camera" />
+                  <span className="dict-tools__label w-only">
+                    Ảnh chụp
+                    <span className="w-tag w-tag--soon">Sắp có</span>
+                  </span>
+                </ToastButton>
+                <ToastButton
+                  aria-label="Tra bằng giọng nói"
+                  message={TOAST_COMING_SOON}
+                >
+                  <Icon name="m03-mic" />
+                  <span className="dict-tools__label w-only">
+                    Giọng nói
+                    <span className="w-tag w-tag--soon">Sắp có</span>
+                  </span>
+                </ToastButton>
+              </div>
+            </form>
 
-        <ToastButton className="dict-more" message={TOAST_COMING_SOON}>
-          <Icon name="m03-read" />
-          <span>Xem thêm trong Từ điển Hán Lộ</span>
-          <Icon name="chevron-right" />
-        </ToastButton>
+            <div className="dict-web__box">
+              <h2 className="dict__count" id="dict-count" aria-live="polite">
+                {count}
+              </h2>
+              {/* Column headers of the web result table (mẫu
+                  .wdict-cols); the rows announce their own content. */}
+              <div className="dict-web__cols w-only" aria-hidden="true">
+                <span>Chữ Hán</span>
+                <span>Pinyin</span>
+                <span>Nghĩa</span>
+                <span>Cấp</span>
+              </div>
+              <ul
+                className="dict-results"
+                id="dict-results"
+                aria-labelledby="dict-count"
+                aria-busy={searching || state.kind === 'loading' || undefined}
+              >
+                {state.kind === 'empty' ? (
+                  <li className="dict-empty">
+                    <Icon name="search" />
+                    <span>
+                      Gõ chữ Hán, pinyin hoặc nghĩa tiếng Việt để tra từ.
+                    </span>
+                  </li>
+                ) : state.kind === 'error' ? (
+                  <li className="dict-empty">
+                    {/* The alert sits inside the item: an li keeps its list role. */}
+                    <div role="alert">
+                      <Icon name="file-question" />
+                      <strong>Không tra được lúc này</strong>
+                      <span>Vui lòng thử lại.</span>
+                      <button
+                        className="dict-retry"
+                        type="button"
+                        onClick={retry}
+                      >
+                        Thử lại
+                      </button>
+                    </div>
+                  </li>
+                ) : state.kind === 'loading' ? null : state.items.length ===
+                  0 ? (
+                  <li className="dict-empty">
+                    <Icon name="file-question" />
+                    <strong>Không tìm thấy kết quả</strong>
+                    <span>
+                      Thử nhập chữ Hán khác, pinyin không dấu hoặc nghĩa tiếng
+                      Việt.
+                    </span>
+                  </li>
+                ) : (
+                  state.items.map((item, index) => (
+                    <ResultRow key={item.id} item={item} top={index === 0} />
+                  ))
+                )}
+              </ul>
+
+              <ToastButton className="dict-more" message={TOAST_COMING_SOON}>
+                <Icon name="m03-read" />
+                <span>Xem thêm trong Từ điển Hán Lộ</span>
+                <Icon name="chevron-right" />
+              </ToastButton>
+            </div>
+          </div>
+
+          {/* M2.10b: the web aside cards (mẫu web/dictionary.html). Web-only:
+              the mobile layout has no equivalent (the history entry lives in
+              the app bar there). */}
+          <div className="dict-web__aside w-only">
+            <section
+              className="dict-web__card"
+              aria-labelledby="dict-history-title"
+            >
+              <div className="dict-web__aside-head">
+                <h2 className="dict-web__card-title" id="dict-history-title">
+                  Tra gần đây
+                </h2>
+                <span className="w-tag w-tag--soon">Sắp có</span>
+              </div>
+              <p className="w-muted">
+                Lịch sử tra cứu sẽ hiện ở đây để bạn mở lại nhanh các từ đã tra.
+              </p>
+              <ToastButton
+                className="dict-web__ghost"
+                message={TOAST_COMING_SOON}
+              >
+                <Icon name="history" />
+                Lịch sử tra cứu
+              </ToastButton>
+            </section>
+            <section
+              className="dict-web__card"
+              aria-labelledby="dict-tips-title"
+            >
+              <h2 className="dict-web__card-title" id="dict-tips-title">
+                Mẹo tra từ
+              </h2>
+              <ul className="dict-web__tips">
+                <li>
+                  <b lang="zh-Hans">学习</b>
+                  <span>Gõ chữ Hán</span>
+                </li>
+                <li>
+                  <b>xuexi</b>
+                  <span>Pinyin không dấu</span>
+                </li>
+                <li>
+                  <b>học tập</b>
+                  <span>Nghĩa tiếng Việt</span>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
       </main>
     </>
   );

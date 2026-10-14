@@ -291,10 +291,25 @@ html:has(.learner-app) {
   display: none !important;
 }
 
-/* Web-only parts (sidebar, top bar, M2.10a): out of layout and of the
-   accessibility tree below 1024px; learner-web.css shows them. */
-.learner-app .w-only {
-  display: none;
+/* M2.10b hooks: grouping wrappers for the web card/grid layouts (mẫu
+   web/dictionary.html, word.html, lesson.html, lesson-complete.html). They
+   generate no box below 1024px, so the mobile flow and pixels are exactly
+   what they were before the wrappers existed; learner-web.css turns them
+   into the sample's grids and cards from 1024px. */
+.learner-app .dict-web,
+.learner-app .dict-web__main,
+.learner-app .dict-web__box,
+.learner-app .word-web,
+.learner-app .word-web__main,
+.learner-app .word-web__hero,
+.learner-app .word-web__hero-body,
+.learner-app .word-web__aside,
+.learner-app .word-web__act,
+.learner-app .lesson-content,
+.learner-app .ex-track,
+.learner-app .done-card,
+.learner-app .done-hero {
+  display: contents;
 }
 
 .learner-app .sr-only {
@@ -5270,4 +5285,14 @@ html:has(.learner-app) {
 .learner-app .auth .btn--primary:hover,
 .learner-app .ob .btn--primary:hover {
   background: var(--jade-800);
+}
+
+/* Web-only parts (sidebar, top bar, M2.10a): out of layout and of the
+   accessibility tree below 1024px; learner-web.css shows them. Last rule of
+   this file on purpose: mobile rules above set `display` on some of the same
+   elements (`.icon-btn`, `.progress`, …) with the same specificity, and this
+   rule has to win below 1024px. At ≥1024px learner-web.css (imported after
+   this file) sets the display of the web parts back. */
+.learner-app .w-only {
+  display: none;
 }

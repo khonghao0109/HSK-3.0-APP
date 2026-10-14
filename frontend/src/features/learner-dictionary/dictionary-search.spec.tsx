@@ -148,12 +148,13 @@ describe('DictionarySearch', () => {
 
   it('opens empty: count, hint, no clear button, no speaker (Q66)', () => {
     const { container } = renderSearch();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Từ điển',
-    );
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Nhập từ cần tra',
-    );
+    // M2.10b: the mobile app bar and the web page head both carry it.
+    for (const heading of screen.getAllByRole('heading', { level: 1 })) {
+      expect(heading).toHaveTextContent('Từ điển');
+    }
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Nhập từ cần tra' }),
+    ).toHaveTextContent('Nhập từ cần tra');
     expect(
       screen.getByText('Gõ chữ Hán, pinyin hoặc nghĩa tiếng Việt để tra từ.'),
     ).toBeInTheDocument();
@@ -171,9 +172,9 @@ describe('DictionarySearch', () => {
   it('renders the server result of ?q= with Q65/Q70 meanings and badges', () => {
     const { container } = renderSearch('学习', [xuexi, learner, materials]);
     expect(input()).toHaveValue('学习');
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Kết quả (3)',
-    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Kết quả (3)' }),
+    ).toHaveTextContent('Kết quả (3)');
     const [top, second, third] = rows();
     expect(top).toHaveClass('dict-item', 'dict-item--top');
     expect(top!.querySelector('.dict-item__vi')).toHaveTextContent('học tập');
@@ -205,9 +206,9 @@ describe('DictionarySearch', () => {
 
   it('shows "Không tìm thấy kết quả" for an empty server result', () => {
     renderSearch('zzzq', []);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Kết quả (0)',
-    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Kết quả (0)' }),
+    ).toHaveTextContent('Kết quả (0)');
     expect(screen.getByText('Không tìm thấy kết quả')).toBeInTheDocument();
   });
 
@@ -229,9 +230,9 @@ describe('DictionarySearch', () => {
     calls[0]!.resolve(ok([xuexi]));
     await flush();
     expect(rows()).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Kết quả (1)',
-    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Kết quả (1)' }),
+    ).toHaveTextContent('Kết quả (1)');
   });
 
   it('aborts the older request without showing an error for it', async () => {
@@ -318,9 +319,9 @@ describe('DictionarySearch', () => {
     expect(calls).toHaveLength(0);
     expect(input()).toHaveValue('');
     expect(input()).toHaveFocus();
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Nhập từ cần tra',
-    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Nhập từ cần tra' }),
+    ).toHaveTextContent('Nhập từ cần tra');
     expect(container.querySelector('.dict-search__clear')).toHaveAttribute(
       'hidden',
     );
@@ -407,15 +408,23 @@ describe('DictionarySearch', () => {
   });
 
   it('the tools, history and "Xem thêm" only toast (Q67)', () => {
-    renderSearch();
+    const { container } = renderSearch();
     for (const name of [
       'Tra bằng chữ viết tay',
       'Tra bằng ảnh chụp',
       'Tra bằng giọng nói',
-      'Lịch sử tra cứu',
     ]) {
       fireEvent.click(screen.getByRole('button', { name }));
     }
+    // M2.10b: the app bar keeps the mobile history button; the web aside
+    // card has its own ghost one.
+    const appbar = container.querySelector('.appbar');
+    if (!appbar) throw new Error('missing app bar');
+    fireEvent.click(
+      within(appbar as HTMLElement).getByRole('button', {
+        name: 'Lịch sử tra cứu',
+      }),
+    );
     fireEvent.click(
       screen.getByRole('button', { name: 'Xem thêm trong Từ điển Hán Lộ' }),
     );

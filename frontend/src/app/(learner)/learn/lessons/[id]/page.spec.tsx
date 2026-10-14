@@ -206,8 +206,10 @@ describe('LearnerLessonPage', () => {
     expect(
       screen.getByRole('link', { name: 'Quay lại lộ trình' }),
     ).toHaveAttribute('href', '/learn/path');
-    const fav = screen.getByRole('button', { name: 'Yêu thích bài học' });
-    expect(fav).not.toHaveAttribute('aria-pressed');
+    // M2.10b: one copy in the mobile bar, one on the web hero card.
+    const favs = screen.getAllByRole('button', { name: 'Yêu thích bài học' });
+    expect(favs).toHaveLength(2);
+    for (const fav of favs) expect(fav).not.toHaveAttribute('aria-pressed');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Chào hỏi' }),
@@ -222,10 +224,19 @@ describe('LearnerLessonPage', () => {
     expect(container.querySelector('.lesson-hero__desc')?.textContent).toBe(
       'Lời chào trong ngày.',
     );
-    const bar = screen.getByRole('progressbar', { name: 'Tiến độ bài học' });
-    expect(bar).toHaveAttribute('aria-valuenow', '67');
-    expect(bar.firstElementChild).toHaveClass('pct-67');
+    // M2.10b: the mobile hero keeps its bar; the web progress card repeats it.
+    const bars = screen.getAllByRole('progressbar', {
+      name: 'Tiến độ bài học',
+    });
+    expect(bars).toHaveLength(2);
+    for (const bar of bars) {
+      expect(bar).toHaveAttribute('aria-valuenow', '67');
+      expect(bar.firstElementChild).toHaveClass('pct-67');
+    }
     expect(container.querySelector('.lesson-hero__pct')?.textContent).toBe(
+      '67% hoàn thành',
+    );
+    expect(container.querySelector('.lesson-prog__pct')?.textContent).toBe(
       '67% hoàn thành',
     );
     expect(container.querySelector('[style]')).toBeNull();
@@ -283,13 +294,23 @@ describe('LearnerLessonPage', () => {
   );
 
   it('links the CTA to the player and toasts the heart (Q33, Q45)', async () => {
-    await renderLesson(current);
+    const { container } = await renderLesson(current);
     expect(screen.queryByRole('button', { name: 'Tiếp tục học' })).toBeNull();
-    const cta = screen.getByRole('link', { name: 'Tiếp tục học' });
-    expect(cta).toHaveClass('lesson-cta');
-    expect(cta).toHaveAttribute('href', '/learn/lessons/5/practice');
-    expect(cta).not.toHaveAttribute('aria-disabled');
-    fireEvent.click(screen.getByRole('button', { name: 'Yêu thích bài học' }));
+    // M2.10b: mobile sheet CTA + web progress-card CTA, same target.
+    const ctas = screen.getAllByRole('link', { name: 'Tiếp tục học' });
+    expect(ctas).toHaveLength(2);
+    for (const cta of ctas) {
+      expect(cta).toHaveClass('lesson-cta');
+      expect(cta).toHaveAttribute('href', '/learn/lessons/5/practice');
+      expect(cta).not.toHaveAttribute('aria-disabled');
+    }
+    const bar = container.querySelector('.m02-bar');
+    if (!bar) throw new Error('missing mobile bar');
+    fireEvent.click(
+      within(bar as HTMLElement).getByRole('button', {
+        name: 'Yêu thích bài học',
+      }),
+    );
     expect(
       within(screen.getByRole('status')).getAllByText('Tính năng sắp ra mắt.'),
     ).toHaveLength(1);
@@ -346,9 +367,15 @@ describe('LearnerLessonPage', () => {
       expect(row.querySelector('.lrow__lock')).not.toBeNull();
       expect(row.querySelector('.lrow__count, .lrow__bar')).toBeNull();
     }
-    const cta = screen.getByRole('button', { name: 'Tiếp tục học' });
-    expect(cta).toHaveAttribute('aria-disabled', 'true');
-    expect(cta).not.toHaveAttribute('disabled');
+    const ctas = screen.getAllByRole('button', { name: 'Tiếp tục học' });
+    // M2.10b: mobile sheet CTA + web progress-card CTA, both locked.
+    expect(ctas).toHaveLength(2);
+    for (const cta of ctas) {
+      expect(cta).toHaveAttribute('aria-disabled', 'true');
+      expect(cta).not.toHaveAttribute('disabled');
+    }
+    const cta = ctas[0];
+    if (!cta) throw new Error('missing CTA');
     expect(container.querySelector('.lesson-hero__badge')?.textContent).toBe(
       'HSK 1 •, Bài 2',
     );
@@ -361,7 +388,13 @@ describe('LearnerLessonPage', () => {
     expect(
       within(status).getAllByText('Hoàn thành bài trước để mở khoá.'),
     ).toHaveLength(2);
-    fireEvent.click(screen.getByRole('button', { name: 'Yêu thích bài học' }));
+    const bar = container.querySelector('.m02-bar');
+    if (!bar) throw new Error('missing mobile bar');
+    fireEvent.click(
+      within(bar as HTMLElement).getByRole('button', {
+        name: 'Yêu thích bài học',
+      }),
+    );
     expect(
       within(status).getByText('Tính năng sắp ra mắt.'),
     ).toBeInTheDocument();
@@ -381,7 +414,13 @@ describe('LearnerLessonPage', () => {
 
 describe('LessonNotFound', () => {
   it('shows the Vietnamese not-found page with a link back to the path (Q41)', () => {
-    const { container } = render(<LessonNotFound />);
+    // M2.10b: the page now carries the web top bar, whose bell needs the
+    // toast provider.
+    const { container } = render(
+      <LearnerToastProvider>
+        <LessonNotFound />
+      </LearnerToastProvider>,
+    );
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Không tìm thấy bài học' }),

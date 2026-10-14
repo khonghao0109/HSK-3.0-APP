@@ -122,10 +122,16 @@ describe('LessonPlayer', () => {
     const count = container.querySelector('.m02-bar__count');
     expect(count?.textContent).toBe('2/4');
     expect(count).toHaveAttribute('aria-label', 'Câu 2 trên 4');
-    const bar = screen.getByRole('progressbar', { name: 'Tiến độ luyện tập' });
-    expect(bar).toHaveAttribute('aria-valuenow', '1');
-    expect(bar).toHaveAttribute('aria-valuemax', '4');
-    expect(bar.querySelector('span')).toHaveClass('pct-25');
+    // M2.10b: the bar shows it on the web frame, the body below 1024px.
+    const bars = screen.getAllByRole('progressbar', {
+      name: 'Tiến độ luyện tập',
+    });
+    expect(bars).toHaveLength(2);
+    for (const bar of bars) {
+      expect(bar).toHaveAttribute('aria-valuenow', '1');
+      expect(bar).toHaveAttribute('aria-valuemax', '4');
+      expect(bar.querySelector('span')).toHaveClass('pct-25');
+    }
     expect(container.querySelector('[style]')).toBeNull();
   });
 
@@ -419,9 +425,9 @@ describe('LessonPlayer', () => {
       '/learn/lessons/5',
     );
     expect(container.querySelector('.m02-bar__count')?.textContent).toBe('1/1');
-    expect(screen.getByRole('progressbar').querySelector('span')).toHaveClass(
-      'pct-100',
-    );
+    for (const bar of screen.getAllByRole('progressbar')) {
+      expect(bar.querySelector('span')).toHaveClass('pct-100');
+    }
     expect(container.querySelector('footer')).toBeNull();
   });
 

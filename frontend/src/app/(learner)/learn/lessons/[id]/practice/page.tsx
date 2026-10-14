@@ -32,6 +32,7 @@ export default async function LessonPracticePage({
   return (
     <LessonPlayer
       lessonId={lessonId}
+      lessonTitle={data.lesson.title}
       exercises={exercises}
       startIndex={firstPendingIndex(exercises)}
       needsStart={data.progress.status === 'not_started'}

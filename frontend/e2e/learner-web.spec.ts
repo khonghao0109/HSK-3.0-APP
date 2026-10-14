@@ -1,10 +1,22 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import {
+  expect,
+  request as playwrightRequest,
+  test,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 
 import { queryDisposableDb, sqlLiteral } from './support/disposable-db';
 import {
+  backendLogin,
+  call,
+  LISTENING_PROMPT,
+  publishLockedLesson,
+  publishPracticeExercises,
   readyLessonId,
   registerReadyLearner,
+  PASSWORD,
 } from './support/learner-fixtures';
 
 // M2.10a: from 1024px the learner screens sit in the `.w-app` frame
@@ -293,12 +305,15 @@ test.describe('Learner web frame (M2.10a) @web', () => {
       'page',
     );
 
-    // The lesson screens keep their current layout (M2.10b): no sidebar.
+    // M2.10b: the lesson detail screens joined the frame (the sidebar marks
+    // "Lộ trình học" current); the player screens use `.w-focus` instead.
     await page.goto(`/learn/lessons/${lessonId}`);
-    await expect(page.locator('.lesson-hero, main').first()).toBeVisible();
-    await expect(sidebar(page)).toHaveCount(0);
-    await expect(page.locator('.w-top')).toHaveCount(0);
-    await expect(page.locator('.tabbar')).toBeVisible();
+    await expect(page.locator('.lesson-hero').first()).toBeVisible();
+    await expect(sidebar(page)).toBeVisible();
+    await expect(
+      mainNav(page).getByRole('link', { name: 'Lộ trình học' }),
+    ).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('.tabbar')).toBeHidden();
   });
 
   test('coming-soon items and Hỗ trợ toast; profile cell opens Hồ sơ', async ({
@@ -608,5 +623,598 @@ test.describe('Learner web frame (M2.10a) @web', () => {
       );
     }
     console.log(`M2.10a 2-forced-colors :: ${measured.join(' | ')}`);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* M2.10b: Tra từ, Chi tiết từ and Bài học in `.w-app`; Luyện tập and
+   Hoàn thành in `.w-focus` (web/dictionary.html, word.html, lesson.html,
+   lesson-not-found.html, practice-*.html, lesson-complete.html). */
+
+/** web/css/web.css `.w-focus__body`: 760px content plus 2 × 40px gutters. */
+const SAMPLE_FOCUS_BODY = 840;
+const SAMPLE_FOCUS_CONTENT = 760;
+
+type FocusMeasure = {
+  bodyX: number;
+  bodyWidth: number;
+  contentWidth: number;
+  footInnerX: number | null;
+  footInnerWidth: number | null;
+};
+
+/** The `.w-focus` body box and its painted content width. */
+async function measureFocusBody(page: Page): Promise<FocusMeasure> {
+  return page.evaluate(() => {
+    const body = document.querySelector<HTMLElement>('.ex-body, .done-main');
+    if (!body) throw new Error('focus body is missing');
+    const rect = body.getBoundingClientRect();
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minX = Number.POSITIVE_INFINITY;
+    for (const element of Array.from(body.querySelectorAll('*'))) {
+      if (!(element instanceof HTMLElement) || !element.checkVisibility()) {
+        continue;
+      }
+      if (element.closest('.sr-only')) continue;
+      const box = element.getBoundingClientRect();
+      if (box.width < 4 || box.height < 4) continue;
+      minX = Math.min(minX, box.x);
+      maxX = Math.max(maxX, box.x + box.width);
+    }
+    const footInner = document.querySelector<HTMLElement>(
+      '.ex-foot > div, .done-actions',
+    );
+    const footRect = footInner?.getBoundingClientRect();
+    return {
+      bodyX: rect.x,
+      bodyWidth: rect.width,
+      contentWidth: maxX - minX,
+      footInnerX: footRect ? footRect.x : null,
+      footInnerWidth: footRect ? footRect.width : null,
+    };
+  });
+}
+
+type WebFixture = {
+  hsk1Lesson: number;
+  hsk3Lesson: number;
+  lockedLesson: number;
+  wordId: number;
+};
+
+/** Idempotent write against the backend with a fresh Idempotency-Key. */
+async function learnerWrite(
+  api: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  token: string,
+  route: string,
+  data: unknown,
+): Promise<void> {
+  const response = await api.fetch(`http://127.0.0.1:3100/api/v1${route}`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'idempotency-key': `m210b-web-${crypto.randomUUID()}`,
+    },
+    data,
+  });
+  if (!response.ok()) {
+    throw new Error(`POST ${route} → ${response.status()}`);
+  }
+}
+
+type PlayerExercise = { id: number; type: string };
+
+async function playerActivity(
+  api: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  token: string,
+  lessonId: number,
+): Promise<PlayerExercise[]> {
+  const activity = await call<{
+    topics: Array<{ exercises: PlayerExercise[] }>;
+    standaloneExercises: PlayerExercise[];
+  }>(api, 'GET', `/learning/lessons/${lessonId}/activity`, token);
+  return [
+    ...activity.topics.flatMap((topic) => topic.exercises),
+    ...activity.standaloneExercises,
+  ];
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The known right answers of the publishPracticeExercises fixtures. */
+async function answerFixture(
+  api: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  token: string,
+  exercise: PlayerExercise,
+): Promise<void> {
+  // The backend allows at most 1 attempt per second per learner.
+  await sleep(1100);
+  const answer =
+    exercise.type === 'arrange_sentence'
+      ? { tokenIds: ['wo', 'xiang', 'mai'] }
+      : exercise.type === 'fill_blank'
+        ? { text: '买' }
+        : { optionId: 'market' };
+  await learnerWrite(
+    api,
+    token,
+    `/learning/exercises/${exercise.id}/attempts`,
+    {
+      answer,
+    },
+  );
+}
+
+/** Starts the lesson and answers arrange + fill, leaving listening pending. */
+async function reachListening(email: string, lessonId: number): Promise<void> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const token = await backendLogin(api, email, PASSWORD);
+    await learnerWrite(api, token, `/learning/lessons/${lessonId}/start`, {});
+    const exercises = await playerActivity(api, token, lessonId);
+    const byType = new Map(
+      exercises.map((exercise) => [exercise.type, exercise]),
+    );
+    const arrange = byType.get('arrange_sentence');
+    const fill = byType.get('fill_blank');
+    if (!arrange || !fill) throw new Error('fixture exercises are missing');
+    await answerFixture(api, token, arrange);
+    await answerFixture(api, token, fill);
+  } finally {
+    await api.dispose();
+  }
+}
+
+/** Finishes every fixture exercise and the lesson itself (Q58 order). */
+async function finishLesson(email: string, lessonId: number): Promise<void> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const token = await backendLogin(api, email, PASSWORD);
+    await learnerWrite(api, token, `/learning/lessons/${lessonId}/start`, {});
+    const exercises = await playerActivity(api, token, lessonId);
+    for (const exercise of exercises) await answerFixture(api, token, exercise);
+    const activity = await call<{
+      topics: Array<{ id: number }>;
+    }>(api, 'GET', `/learning/lessons/${lessonId}/activity`, token);
+    for (const topic of activity.topics) {
+      await sleep(1100);
+      await learnerWrite(api, token, `/learning/topics/${topic.id}/start`, {});
+      await sleep(1100);
+      await learnerWrite(
+        api,
+        token,
+        `/learning/topics/${topic.id}/complete`,
+        {},
+      );
+    }
+    await learnerWrite(
+      api,
+      token,
+      `/learning/lessons/${lessonId}/complete`,
+      {},
+    );
+  } finally {
+    await api.dispose();
+  }
+}
+
+test.describe('Learner web content (M2.10b) @web', () => {
+  const fixture: WebFixture = {
+    hsk1Lesson: 0,
+    hsk3Lesson: 0,
+    lockedLesson: 0,
+    wordId: 0,
+  };
+
+  test.describe.configure({ timeout: 120_000 });
+
+  test.beforeAll(async () => {
+    const hsk1 = await readyLessonId('HSK1');
+    if (!hsk1) throw new Error('seed has no ready HSK1 lesson');
+    fixture.hsk1Lesson = hsk1;
+    fixture.hsk3Lesson = await publishPracticeExercises();
+    fixture.lockedLesson = await publishLockedLesson();
+    fixture.wordId = wordId();
+  });
+
+  test('frames follow the mockup table: .w-app vs .w-focus, aria-current', async ({
+    page,
+    baseURL,
+  }) => {
+    const email = await registerReadyLearner(page, baseURL);
+    const appRoutes: Array<[string, string]> = [
+      ['/learn/dictionary', 'Tra từ'],
+      [`/learn/dictionary/${fixture.wordId}`, 'Tra từ'],
+      ['/learn/dictionary/99999999', 'Tra từ'],
+      [`/learn/lessons/${fixture.hsk1Lesson}`, 'Lộ trình học'],
+      [`/learn/lessons/${fixture.lockedLesson}`, 'Lộ trình học'],
+      ['/learn/lessons/99999999', 'Lộ trình học'],
+    ];
+    for (const [route, current] of appRoutes) {
+      await page.goto(route);
+      await expect(sidebar(page), `sidebar ${route}`).toBeVisible();
+      await expect(page.locator('.w-top'), `top bar ${route}`).toBeVisible();
+      await expect(page.locator('.tabbar'), `tab bar ${route}`).toBeHidden();
+      await expect(
+        mainNav(page).getByRole('link', { name: current, exact: true }),
+        `aria-current ${route}`,
+      ).toHaveAttribute('aria-current', 'page');
+    }
+
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Luyện tập' }),
+    ).toBeVisible();
+    await expect(sidebar(page), 'sidebar practice').toHaveCount(0);
+    await expect(page.locator('.w-top'), 'top bar practice').toHaveCount(0);
+    await expect(page.locator('.tabbar'), 'tab bar practice').toBeHidden();
+
+    await finishLesson(email, fixture.hsk3Lesson);
+    await page.goto(`/learn/lessons/${fixture.hsk3Lesson}/complete`);
+    await expect(page.locator('.done-title')).toBeVisible();
+    await expect(sidebar(page), 'sidebar complete').toHaveCount(0);
+    await expect(page.locator('.w-top'), 'top bar complete').toHaveCount(0);
+    await expect(page.locator('.tabbar'), 'tab bar complete').toBeHidden();
+    console.log('M2.10b 1 :: frames verified for 6 .w-app + 2 .w-focus routes');
+  });
+
+  test('content columns: .w-app 1200px at 1920; .w-focus 760px at 1440 and 1920', async ({
+    page,
+    baseURL,
+  }) => {
+    const email = await registerReadyLearner(page, baseURL);
+    const measured: string[] = [];
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    for (const route of [
+      '/learn/dictionary',
+      `/learn/dictionary/${fixture.wordId}`,
+      `/learn/lessons/${fixture.hsk1Lesson}`,
+    ]) {
+      await page.goto(route);
+      await expect(sidebar(page)).toBeVisible();
+      const block = await measureMainBlock(page);
+      measured.push(
+        `${route} content.x=${block.contentX.toFixed(2)} content.w=${block.contentWidth.toFixed(2)}`,
+      );
+      expect
+        .soft(block.contentWidth, `content width ${route}`)
+        .toBeLessThanOrEqual(SAMPLE_CONTENT_MAX);
+      const centredX =
+        block.sidebarWidth +
+        Math.max(0, (block.mainColumnWidth - block.contentWidth) / 2);
+      expect
+        .soft(Math.abs(block.contentX - centredX), `centred ${route}`)
+        .toBeLessThanOrEqual(1);
+    }
+
+    // `.w-focus`: sample measures body 840px wide (x=300 at 1440, x=540 at
+    // 1920) with the footer content 760px wide (x=340/580).
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Luyện tập' }),
+    ).toBeVisible();
+    for (const width of [1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.waitForTimeout(150);
+      const focus = await measureFocusBody(page);
+      measured.push(
+        `practice@${width} body.x=${focus.bodyX.toFixed(2)} body.w=${focus.bodyWidth.toFixed(2)} ` +
+          `content.w=${focus.contentWidth.toFixed(2)} foot.w=${focus.footInnerWidth?.toFixed(2) ?? 'none'}`,
+      );
+      expect
+        .soft(focus.bodyWidth, `focus body ${width}`)
+        .toBeLessThanOrEqual(SAMPLE_FOCUS_BODY);
+      expect
+        .soft(focus.bodyWidth, `focus body ${width}`)
+        .toBe(SAMPLE_FOCUS_BODY);
+      expect
+        .soft(
+          Math.abs(focus.bodyX - (width - focus.bodyWidth) / 2),
+          `focus centred ${width}`,
+        )
+        .toBeLessThanOrEqual(1);
+      expect
+        .soft(focus.contentWidth, `focus content ${width}`)
+        .toBeLessThanOrEqual(SAMPLE_FOCUS_CONTENT);
+      expect
+        .soft(focus.footInnerWidth ?? 0, `focus foot ${width}`)
+        .toBeLessThanOrEqual(SAMPLE_FOCUS_CONTENT);
+    }
+
+    await finishLesson(email, fixture.hsk3Lesson);
+    for (const width of [1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/lessons/${fixture.hsk3Lesson}/complete`);
+      await expect(page.locator('.done-title')).toBeVisible();
+      const focus = await measureFocusBody(page);
+      measured.push(
+        `complete@${width} body.x=${focus.bodyX.toFixed(2)} body.w=${focus.bodyWidth.toFixed(2)} ` +
+          `content.w=${focus.contentWidth.toFixed(2)}`,
+      );
+      expect
+        .soft(focus.contentWidth, `complete content ${width}`)
+        .toBeLessThanOrEqual(SAMPLE_FOCUS_CONTENT);
+      expect
+        .soft(
+          Math.abs(
+            focus.bodyX +
+              (focus.bodyWidth - focus.contentWidth) / 2 -
+              (width - focus.contentWidth) / 2,
+          ),
+          `complete centred ${width}`,
+        )
+        .toBeLessThanOrEqual(1);
+    }
+    console.log(`M2.10b 2 :: ${measured.join(' | ')}`);
+  });
+
+  test('no horizontal overflow on the M2.10b routes at 1024, 1280 and 1920', async ({
+    page,
+    baseURL,
+  }) => {
+    const email = await registerReadyLearner(page, baseURL);
+    const m210bRoutes = [
+      '/learn/dictionary',
+      `/learn/dictionary/${fixture.wordId}`,
+      '/learn/dictionary/99999999',
+      `/learn/lessons/${fixture.hsk1Lesson}`,
+      `/learn/lessons/${fixture.lockedLesson}`,
+      '/learn/lessons/99999999',
+      `/learn/lessons/${fixture.hsk1Lesson}/practice`,
+    ];
+    const measured: string[] = [];
+    for (const width of [1024, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const route of m210bRoutes) {
+        await page.goto(route);
+        const layout = await page.evaluate(() => ({
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: document.documentElement.clientWidth,
+        }));
+        measured.push(
+          `${route}@${width} ${layout.scrollWidth}/${layout.clientWidth}`,
+        );
+        expect
+          .soft(layout.scrollWidth, `${route} at ${width}`)
+          .toBeLessThanOrEqual(layout.clientWidth);
+      }
+    }
+    // Complete is a .w-focus route too.
+    await finishLesson(email, fixture.hsk3Lesson);
+    for (const width of [1024, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/lessons/${fixture.hsk3Lesson}/complete`);
+      const layout = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      measured.push(
+        `complete@${width} ${layout.scrollWidth}/${layout.clientWidth}`,
+      );
+      expect
+        .soft(layout.scrollWidth, `complete at ${width}`)
+        .toBeLessThanOrEqual(layout.clientWidth);
+    }
+    console.log(`M2.10b 3 :: ${measured.join(' | ')}`);
+  });
+
+  test('Tra từ: aside right at 1280+, below in two columns under 1280 (TL-3)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    const measured: string[] = [];
+    for (const width of [1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/learn/dictionary?q=%E6%B5%8B%E8%AF%95');
+      await expect(page.locator('.dict-item').first()).toBeVisible();
+      const geo = await page.evaluate(() => {
+        const rect = (el: Element | null) => {
+          if (!el) return null;
+          const box = el.getBoundingClientRect();
+          return {
+            x: box.x,
+            y: box.y,
+            right: box.right,
+            bottom: box.bottom,
+            width: box.width,
+          };
+        };
+        const grid = document.querySelector('.dict-web');
+        const main = document.querySelector('.dict-web__main');
+        const aside = document.querySelector('.dict-web__aside');
+        return {
+          gridColumns: grid ? getComputedStyle(grid).gridTemplateColumns : '',
+          main: rect(main),
+          aside: rect(aside),
+          asideColumns: aside
+            ? getComputedStyle(aside).gridTemplateColumns
+            : '',
+        };
+      });
+      measured.push(
+        `@${width} main.x=${geo.main?.x.toFixed(1)} aside.x=${geo.aside?.x.toFixed(1)} aside.y=${geo.aside?.y.toFixed(1)} cols="${geo.gridColumns}" asideCols="${geo.asideColumns}"`,
+      );
+      if (!geo.main || !geo.aside) {
+        throw new Error('dictionary web grid is missing');
+      }
+      if (width >= 1280) {
+        expect
+          .soft(geo.aside.x, `aside right at ${width}`)
+          .toBeGreaterThanOrEqual(geo.main.right - 1);
+        expect
+          .soft(Math.abs(geo.aside.y - geo.main.y), `aside top at ${width}`)
+          .toBeLessThanOrEqual(1);
+      } else {
+        expect
+          .soft(geo.aside.y, `aside below at ${width}`)
+          .toBeGreaterThanOrEqual(geo.main.bottom - 1);
+        expect
+          .soft(
+            geo.asideColumns.split(/\s+/u).filter(Boolean).length,
+            `aside columns at ${width}`,
+          )
+          .toBe(2);
+      }
+    }
+    console.log(`M2.10b 4 :: ${measured.join(' | ')}`);
+  });
+
+  test('axe WCAG 2.1 AA on the M2.10b routes', async ({ page, baseURL }) => {
+    const email = await registerReadyLearner(page, baseURL);
+    await finishLesson(email, fixture.hsk3Lesson);
+    const m210bAxeRoutes = [
+      '/learn/dictionary?q=%E6%B5%8B%E8%AF%95',
+      `/learn/dictionary/${fixture.wordId}`,
+      '/learn/dictionary/99999999',
+      `/learn/lessons/${fixture.hsk1Lesson}`,
+      `/learn/lessons/${fixture.lockedLesson}`,
+      '/learn/lessons/99999999',
+      `/learn/lessons/${fixture.hsk3Lesson}/complete`,
+    ];
+    for (const route of m210bAxeRoutes) {
+      await page.goto(route);
+      await page.waitForLoadState('networkidle');
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(AXE_TAGS)
+        .analyze();
+      expect
+        .soft(
+          violations.map(
+            (v) =>
+              `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`,
+          ),
+          `axe ${route}`,
+        )
+        .toEqual([]);
+    }
+    console.log(`M2.10b 5a :: axe clean on ${m210bAxeRoutes.length} routes`);
+  });
+
+  test('axe on the player states: mcq right, mcq wrong, listening, submit failure', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    const axe = async (label: string) => {
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(AXE_TAGS)
+        .analyze();
+      expect
+        .soft(
+          violations.map(
+            (v) =>
+              `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`,
+          ),
+          `axe ${label}`,
+        )
+        .toEqual([]);
+    };
+
+    // mcq, answered right.
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
+    const group = page.getByRole('radiogroup');
+    await group.getByRole('radio').first().click();
+    await page.getByRole('button', { name: 'Kiểm tra' }).click();
+    await expect(page.locator('.m02-feedback')).toBeVisible();
+    await axe('mcq answered');
+
+    // listening question (arrange + fill answered via the API first).
+    const email = await registerReadyLearner(page, baseURL);
+    await reachListening(email, fixture.hsk3Lesson);
+    await page.goto(`/learn/lessons/${fixture.hsk3Lesson}/practice`);
+    await expect(
+      page.getByRole('heading', { level: 2, name: LISTENING_PROMPT }),
+    ).toBeVisible();
+    await axe('listening');
+
+    // mcq answered wrong (fresh learner so the mcq is unanswered).
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
+    const group2 = page.getByRole('radiogroup');
+    await group2.getByRole('radio').last().click();
+    await page.getByRole('button', { name: 'Kiểm tra' }).click();
+    await expect(page.locator('.m02-feedback--wrong')).toBeVisible();
+    await axe('mcq wrong');
+
+    // Submit failure (503): the alert shows and axe stays clean.
+    await registerReadyLearner(page, baseURL);
+    await page.route('**/api/learner/exercises/*/attempts', (route) =>
+      route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error: { code: 'SERVICE_UNAVAILABLE', message: 'diag 503' },
+        }),
+      }),
+    );
+    await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
+    await page.getByRole('radiogroup').getByRole('radio').first().click();
+    await page.getByRole('button', { name: 'Kiểm tra' }).click();
+    await expect(page.locator('.ex-error[role="alert"]')).toBeVisible();
+    await axe('submit 503');
+    console.log('M2.10b 5b :: axe clean on 4 player states');
+  });
+});
+
+// M2.10b (review fix): `.w-only` is now the last rule of learner.css, so no
+// mobile rule that sets `display` on the same element (`.icon-btn`,
+// `.progress`, …) can win over it below 1024px. This guards every web-only
+// part of the lesson, word and practice flows at 390px.
+async function expectWOnlyHidden(page: Page, label: string): Promise<void> {
+  const total = await page.locator('.w-only').count();
+  expect(total, `${label}: .w-only parts rendered`).toBeGreaterThan(0);
+  const visible = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('.w-only'))
+      .filter((element) => window.getComputedStyle(element).display !== 'none')
+      .map(
+        (element) => `${element.tagName.toLowerCase()}.${element.className}`,
+      ),
+  );
+  expect(visible, `${label}: .w-only visible at 390px`).toEqual([]);
+}
+
+test.describe('Learner mobile: .w-only parts are hidden below 1024px', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  let lessonId = 0;
+  let listeningLesson = 0;
+
+  test.beforeAll(async () => {
+    const hsk1 = await readyLessonId('HSK1');
+    if (!hsk1) throw new Error('seed has no ready HSK1 lesson');
+    lessonId = hsk1;
+    listeningLesson = await publishPracticeExercises();
+  });
+
+  test('lesson, word and practice hide every .w-only part at 390px', async ({
+    page,
+    baseURL,
+  }) => {
+    const email = await registerReadyLearner(page, baseURL);
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.goto(`/learn/lessons/${lessonId}`);
+    await expect(page.locator('.lesson-hero__title')).toBeVisible();
+    await expectWOnlyHidden(page, 'lesson');
+
+    await page.goto(`/learn/dictionary/${wordId()}`);
+    await expect(page.locator('.word__hz')).toBeVisible();
+    await expectWOnlyHidden(page, 'word');
+
+    await page.goto(`/learn/lessons/${lessonId}/practice`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Luyện tập' }),
+    ).toBeVisible();
+    await expectWOnlyHidden(page, 'practice-mcq');
+
+    await reachListening(email, listeningLesson);
+    await page.goto(`/learn/lessons/${listeningLesson}/practice`);
+    await expect(
+      page.getByRole('heading', { level: 2, name: LISTENING_PROMPT }),
+    ).toBeVisible();
+    await expectWOnlyHidden(page, 'practice-listening');
+    console.log('M2.10b 6 :: .w-only hidden at 390px on 4 states');
   });
 });
