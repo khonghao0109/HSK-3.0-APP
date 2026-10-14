@@ -218,3 +218,89 @@ describe('VerifyEmailFlow (M2.1c, Q72, Q73)', () => {
     await screen.findByRole('heading', { name: 'Email đã được xác thực' });
   });
 });
+
+// M2.10c (PO Q81): bản web dàn lại chính khối này bằng CSS, nên số control
+// trong DOM phải bằng bản mobile — không sinh bản thứ hai.
+describe('VerifyEmailFlow — một bản control cho bản web (M2.10c)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    replace.mockReset();
+  });
+  afterEach(() => {
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('never renders a form control (the page only has state actions)', async () => {
+    open('/verify-email', false);
+    await screen.findByRole('heading', {
+      name: 'Liên kết không còn hiệu lực',
+    });
+    expect(document.querySelectorAll('input')).toHaveLength(0);
+    expect(document.querySelectorAll('form')).toHaveLength(0);
+    expect(document.querySelectorAll('button[type="submit"]')).toHaveLength(0);
+  });
+
+  it('renders the invalid state with the single sign-in action when no token is present (Q73)', async () => {
+    open('/verify-email', false);
+    await screen.findByRole('heading', {
+      name: 'Liên kết không còn hiệu lực',
+    });
+    expect(document.querySelectorAll('a.btn')).toHaveLength(1);
+    expect(
+      screen.getByRole('link', { name: 'Đăng nhập để gửi lại' }),
+    ).toHaveAttribute('href', '/sign-in?next=verify-email');
+    expect(
+      screen.queryByRole('button', { name: 'Gửi lại email xác thực' }),
+    ).toBeNull();
+  });
+
+  it('renders the confirm state with exactly one action button (Q72)', async () => {
+    open(`/verify-email#token=${TOKEN}`, false);
+    await screen.findByRole('heading', { name: 'Xác thực email' });
+    expect(document.querySelectorAll('button')).toHaveLength(1);
+    expect(
+      screen.getByRole('button', { name: 'Xác thực email' }),
+    ).toBeInTheDocument();
+  });
+
+  it('gives a signed-in learner one resend button in the invalid state (Q73)', async () => {
+    open('/verify-email', true);
+    await screen.findByRole('heading', {
+      name: 'Liên kết không còn hiệu lực',
+    });
+    expect(document.querySelectorAll('button')).toHaveLength(1);
+    expect(
+      screen.getByRole('button', { name: 'Gửi lại email xác thực' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Đăng nhập để gửi lại' }),
+    ).toBeNull();
+  });
+
+  it('renders the done state with a single "Vào học" action', async () => {
+    respond(204);
+    open(`/verify-email#token=${TOKEN}`, false);
+    await click('Xác thực email');
+    await screen.findByRole('heading', { name: 'Email đã được xác thực' });
+
+    expect(document.querySelectorAll('input')).toHaveLength(0);
+    expect(document.querySelectorAll('button')).toHaveLength(0);
+    expect(screen.getByRole('link', { name: 'Vào học' })).toHaveAttribute(
+      'href',
+      '/learn',
+    );
+  });
+
+  it('renders the sent state with a single "Vào học" action', async () => {
+    respond(204);
+    open('/verify-email', true);
+    await screen.findByRole('heading', { name: 'Liên kết không còn hiệu lực' });
+    await click('Gửi lại email xác thực');
+    await screen.findByRole('heading', { name: 'Đã gửi lại email' });
+
+    expect(screen.getByRole('link', { name: 'Vào học' })).toHaveAttribute(
+      'href',
+      '/learn',
+    );
+  });
+});

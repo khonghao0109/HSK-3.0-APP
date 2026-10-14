@@ -219,3 +219,53 @@ describe('ResetPasswordFlow (M2.1d)', () => {
     expect(screen.getByRole('alert', { hidden: true })).not.toBeVisible();
   });
 });
+
+// M2.10c (PO Q81): bản web dàn lại chính khối này bằng CSS, nên số control
+// trong DOM phải bằng bản mobile — không sinh bản thứ hai.
+describe('ResetPasswordFlow — một bản control cho bản web (M2.10c)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+  afterEach(() => {
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('renders exactly one password input and one submit button in the form view', async () => {
+    open(`/reset-password#token=${TOKEN}`);
+    await screen.findByLabelText('Mật khẩu mới');
+    expect(document.querySelectorAll('input')).toHaveLength(1);
+    expect(document.querySelectorAll('input[name="password"]')).toHaveLength(1);
+    expect(document.querySelectorAll('button[type="submit"]')).toHaveLength(1);
+    expect(
+      document.querySelectorAll('button[aria-label="Hiện mật khẩu"]'),
+    ).toHaveLength(1);
+  });
+
+  it('renders no control in the invalid view (no token) and the new-link action', async () => {
+    open('/reset-password');
+    await screen.findByRole('heading', {
+      name: 'Liên kết không còn hiệu lực',
+    });
+    expect(document.querySelectorAll('input')).toHaveLength(0);
+    expect(document.querySelectorAll('button[type="submit"]')).toHaveLength(0);
+    expect(document.querySelectorAll('button')).toHaveLength(0);
+    expect(
+      screen.getByRole('link', { name: 'Gửi liên kết mới' }),
+    ).toHaveAttribute('href', '/forgot-password');
+  });
+
+  it('renders the done view without a form and with the sign-in action', async () => {
+    respond(204);
+    open(`/reset-password#token=${TOKEN}`);
+    await screen.findByLabelText('Mật khẩu mới');
+    await submit('MatKhauMoi#2026');
+    await screen.findByRole('heading', { name: 'Đã đặt lại mật khẩu' });
+
+    expect(document.querySelectorAll('input')).toHaveLength(0);
+    expect(document.querySelectorAll('button[type="submit"]')).toHaveLength(0);
+    expect(screen.getByRole('link', { name: 'Đăng nhập' })).toHaveAttribute(
+      'href',
+      '/sign-in',
+    );
+  });
+});

@@ -75,6 +75,14 @@ export function ForgotPasswordForm() {
             Về đăng nhập
           </Link>
         </div>
+        {/* M2.10c: only the web sample has this hint (`.wa-note`); the
+            mobile screen has no room for it, so it is `.w-only`. */}
+        <p className="wa-note w-only">
+          <svg className="icon" aria-hidden="true">
+            <use href="#i-info" />
+          </svg>
+          <span>Không thấy email? Hãy xem cả mục Spam.</span>
+        </p>
       </section>
     );
   }

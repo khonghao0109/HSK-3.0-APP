@@ -345,7 +345,11 @@ test.describe('Learner accessibility (M2.7e)', () => {
   test('axe: welcome, sign-in, sign-up, privacy, terms', async ({ page }) => {
     await signedOutPage(page);
     await page.goto('/');
-    await expect(page.getByRole('link', { name: 'Bắt đầu học' })).toBeVisible();
+    // M2.10c: mẫu web/index.html có BA lời gọi "Bắt đầu học" (nav, hero, CTA
+    // cuối trang) nên locator phải chỉ định phần tử đầu; khẳng định giữ nguyên.
+    await expect(
+      page.getByRole('link', { name: 'Bắt đầu học' }).first(),
+    ).toBeVisible();
     await audit(page, 'welcome', TITLES.welcome);
 
     await page.goto('/sign-in');

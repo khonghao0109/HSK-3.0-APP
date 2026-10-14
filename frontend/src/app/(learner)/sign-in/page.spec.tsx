@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { redirect, session } = vi.hoisted(() => ({
@@ -12,9 +13,20 @@ vi.mock('next/navigation', () => ({ redirect }));
 vi.mock('@/features/learner-auth/server-learner-session', () => ({
   getServerLearnerSession: session,
 }));
+// The real form is covered by learner-login-form.spec.tsx; this mock only
+// needs to pass the new `switchLink` slot through (M2.10c).
 vi.mock('@/features/learner-auth/learner-login-form', () => ({
-  LearnerLoginForm: ({ nextPath }: { nextPath?: string }) => (
-    <p data-testid="next">{nextPath ?? 'none'}</p>
+  LearnerLoginForm: ({
+    nextPath,
+    switchLink,
+  }: {
+    nextPath?: string;
+    switchLink?: ReactNode;
+  }) => (
+    <>
+      <p data-testid="next">{nextPath ?? 'none'}</p>
+      {switchLink}
+    </>
   ),
 }));
 
@@ -78,4 +90,45 @@ describe('sign-in page next parameter (Q73)', () => {
       expect(redirect).toHaveBeenCalledWith('/learn');
     },
   );
+});
+
+describe('sign-in page — khung công khai bản web (M2.10c, Q81)', () => {
+  beforeEach(() => {
+    redirect.mockClear();
+    session.mockReset();
+    session.mockResolvedValue({ state: 'unauthenticated', token: null });
+  });
+
+  it('wraps the mobile page in .w-public with the web nav and the tall art', async () => {
+    const { container } = render(await page());
+    expect(container.querySelector('.w-public')).not.toBeNull();
+
+    const nav = container.querySelector('header.w-pubnav.wa-nav.w-only');
+    expect(nav).not.toBeNull();
+    expect(nav?.querySelector('a.w-brand')?.getAttribute('href')).toBe('/');
+    expect(nav?.querySelector('a.wa-home')?.getAttribute('href')).toBe('/');
+
+    expect(
+      container.querySelectorAll('.w-auth__art.wa-art--tall'),
+    ).toHaveLength(1);
+    expect(container.querySelectorAll('.wa-points li')).toHaveLength(3);
+  });
+
+  it('hides the mobile back link on the web with .m-only', async () => {
+    const { container } = render(await page());
+    const back = container.querySelector('a.auth__back');
+    expect(back).toHaveClass('m-only');
+    expect(back?.getAttribute('href')).toBe('/');
+    expect(back).toHaveAttribute('aria-label', 'Quay lại');
+  });
+
+  it('adds the web-only switch link to sign-up (mẫu .wa-switch)', async () => {
+    const { container } = render(await page());
+    const switchLine = container.querySelector('p.wa-switch');
+    expect(switchLine).toHaveClass('w-only');
+    expect(switchLine).toHaveTextContent('Chưa có tài khoản?');
+    expect(switchLine?.querySelector('a')?.getAttribute('href')).toBe(
+      '/sign-up',
+    );
+  });
 });

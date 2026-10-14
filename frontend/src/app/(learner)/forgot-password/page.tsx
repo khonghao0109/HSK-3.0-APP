@@ -2,6 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { ForgotPasswordForm } from '@/features/learner-account-recovery/forgot-password-form';
+import {
+  LearnerAuthArtWide,
+  LearnerAuthBackLink,
+  LearnerAuthNav,
+} from '@/features/learner-auth/learner-web-auth-chrome';
 
 export const metadata: Metadata = {
   title: 'Quên mật khẩu',
@@ -9,17 +14,27 @@ export const metadata: Metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="app auth">
-      <Link
-        className="icon-btn auth__back"
-        href="/sign-in"
-        aria-label="Quay lại"
-      >
-        <svg className="icon" aria-hidden="true">
-          <use href="#i-arrow-left" />
-        </svg>
-      </Link>
-      <ForgotPasswordForm />
-    </main>
+    // Public web frame (M2.10c, Q81); no box below 1024px.
+    <div className="w-public">
+      <LearnerAuthNav />
+      <main className="app auth">
+        {/* Left column of the sample's `.w-auth__form`; `display: contents`
+            below 1024px, so the mobile flow keeps its own flex items. */}
+        <div className="w-public w-auth__form">
+          <LearnerAuthBackLink />
+          <Link
+            className="icon-btn auth__back m-only"
+            href="/sign-in"
+            aria-label="Quay lại"
+          >
+            <svg className="icon" aria-hidden="true">
+              <use href="#i-arrow-left" />
+            </svg>
+          </Link>
+          <ForgotPasswordForm />
+        </div>
+        <LearnerAuthArtWide />
+      </main>
+    </div>
   );
 }

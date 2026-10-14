@@ -131,3 +131,37 @@ describe('ForgotPasswordForm (Q71)', () => {
     await screen.findByRole('heading', { name: 'Kiểm tra email của bạn' });
   });
 });
+
+// M2.10c (PO Q81): bản web dàn lại chính khối này bằng CSS, nên số control
+// trong DOM phải bằng bản mobile — không sinh bản thứ hai.
+describe('ForgotPasswordForm — một bản control cho bản web (M2.10c)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders exactly one email input and one submit button', () => {
+    const { container } = render(<ForgotPasswordForm />);
+    expect(container.querySelectorAll('input')).toHaveLength(1);
+    expect(container.querySelectorAll('input[name="email"]')).toHaveLength(1);
+    expect(container.querySelectorAll('button[type="submit"]')).toHaveLength(1);
+  });
+
+  it('keeps the sent state on a single control set and adds the web-only hint', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 204 }),
+    );
+    const { container } = render(<ForgotPasswordForm />);
+    await submitEmail('ban@hanlo.vn');
+
+    await screen.findByRole('heading', { name: 'Kiểm tra email của bạn' });
+    expect(container.querySelectorAll('input')).toHaveLength(0);
+    expect(container.querySelectorAll('button[type="submit"]')).toHaveLength(0);
+    expect(screen.getByRole('link', { name: 'Về đăng nhập' })).toHaveAttribute(
+      'href',
+      '/sign-in',
+    );
+    const note = container.querySelector('p.wa-note');
+    expect(note).toHaveClass('w-only');
+    expect(note).toHaveTextContent('Không thấy email? Hãy xem cả mục Spam.');
+  });
+});

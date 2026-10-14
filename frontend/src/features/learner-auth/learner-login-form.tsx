@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, useRef, useState, type ReactNode } from 'react';
 
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
@@ -27,9 +27,13 @@ type InvalidField = 'email' | 'password' | null;
 
 export function LearnerLoginForm({
   nextPath,
+  switchLink,
 }: {
   /** Only `/verify-email` (Q73): the sign-in page accepts no other `next`. */
   nextPath?: '/verify-email';
+  /** `.wa-switch` slot of the web page (M2.10c); keep the switch in DOM order
+   *  between the social buttons and the legal links. */
+  switchLink?: ReactNode;
 } = {}) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -185,7 +189,7 @@ export function LearnerLoginForm({
         </button>
       </form>
 
-      <LearnerAuthAlternatives />
+      <LearnerAuthAlternatives switchLink={switchLink} />
     </>
   );
 }

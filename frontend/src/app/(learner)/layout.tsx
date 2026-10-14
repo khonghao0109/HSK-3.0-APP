@@ -10,6 +10,11 @@ import type { ReactNode } from 'react';
 
 import './learner.css';
 import './learner-web.css';
+import './learner-web-public.css';
+import './learner-web-landing.css';
+import './learner-web-legal.css';
+import './learner-web-auth.css';
+import './learner-web-onboarding.css';
 
 const inter = Inter({
   weight: ['400', '500', '600', '700'],
@@ -364,6 +369,33 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
               fill="var(--logo-facebook-white)"
               d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.95-1.88h1.51V4.91s-1.37-.23-2.68-.23c-2.74 0-4.53 1.66-4.53 4.66V12H7.08v3.47h3.04V24a12.1 12.1 0 0 0 3.75 0v-8.53Z"
             />
+          </symbol>
+          {/* Năm hình mà 10 trang mẫu web công khai dùng nhưng sprite còn
+              thiếu (V5). Đường dẫn chép nguyên từ
+              `docs/ui_reference/shared/js/icons.js`:
+              check-circle-line (dòng 50), chevron-down (8), info (62),
+              target (90), clipboard-check (102). */}
+          <symbol id="i-check-circle-line" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="m8 12.5 2.8 2.8L16.5 9.5" />
+          </symbol>
+          <symbol id="i-chevron-down" viewBox="0 0 24 24">
+            <path d="m6 9 6 6 6-6" />
+          </symbol>
+          <symbol id="i-info" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </symbol>
+          <symbol id="i-target" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <circle cx="12" cy="12" r="5.5" />
+            <circle cx="12" cy="12" r="1.5" />
+          </symbol>
+          <symbol id="i-clipboard-check" viewBox="0 0 24 24">
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <path d="m9 14 2 2 4-4" />
           </symbol>
         </svg>
       </div>

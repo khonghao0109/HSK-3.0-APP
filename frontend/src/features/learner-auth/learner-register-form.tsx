@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, useRef, useState, type ReactNode } from 'react';
 
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
@@ -28,7 +28,13 @@ type RegisterError =
 
 type InvalidField = 'email' | 'password' | null;
 
-export function LearnerRegisterForm() {
+export function LearnerRegisterForm({
+  switchLink,
+}: {
+  /** `.wa-switch` slot of the web page (M2.10c); keep the switch in DOM order
+   *  between the social buttons and the legal links. */
+  switchLink?: ReactNode;
+} = {}) {
   const router = useRouter();
   const [error, setError] = useState<RegisterError | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
@@ -209,7 +215,7 @@ export function LearnerRegisterForm() {
         </button>
       </form>
 
-      <LearnerAuthAlternatives />
+      <LearnerAuthAlternatives switchLink={switchLink} />
     </>
   );
 }

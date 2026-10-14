@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -84,17 +84,17 @@ describe('OnboardingGoalForm', () => {
       [
         '7',
         'HSK 7 ~ 11.092 từ vựng (chung cấp 7–9)',
-        'Sử dụng tiếng Trung trong học thuậtvà công việc chuyên môn.',
+        'Sử dụng tiếng Trung trong học thuật và công việc chuyên môn.',
       ],
       [
         '8',
         'HSK 8 ~ 11.092 từ vựng (chung cấp 7–9)',
-        'Xử lý văn bản và thảo luận chuyên sâuở mức độ cao.',
+        'Xử lý văn bản và thảo luận chuyên sâu ở mức độ cao.',
       ],
       [
         '9',
         'HSK 9 ~ 11.092 từ vựng (chung cấp 7–9)',
-        'Thành thạo gần như người bản ngữtrong mọi lĩnh vực.',
+        'Thành thạo gần như người bản ngữ trong mọi lĩnh vực.',
       ],
     ];
     for (const [bandName, title, desc] of expectedCopy) {
@@ -326,7 +326,7 @@ describe('OnboardingGoalForm', () => {
     expect(
       screen.queryByRole('link', { name: 'Quay lại' }),
     ).not.toBeInTheDocument();
-    const topContainer = document.querySelector('.ob__top')!;
+    const topContainer = document.querySelector<HTMLElement>('.ob__top')!;
     expect(topContainer.firstElementChild).toHaveAttribute(
       'aria-hidden',
       'true',
@@ -334,7 +334,10 @@ describe('OnboardingGoalForm', () => {
 
     unmount();
 
-    // 2. With goal: back link to /learn
+    // 2. With goal: back link to /learn. The mobile chrome (`.ob__top`) and
+    // the web nav (`.obw-nav`) each keep one copy; below 1024px the web nav is
+    // `display: none` (`.w-only`) and from 1024px the mobile chrome is, so the
+    // rendered page never shows two back controls.
     render(
       <OnboardingGoalForm
         initialPurpose="communication"
@@ -344,9 +347,111 @@ describe('OnboardingGoalForm', () => {
       />,
     );
 
-    const backLink = screen.getByRole('link', { name: 'Quay lại' });
-    expect(backLink).toBeInTheDocument();
+    const backLink = within(
+      document.querySelector<HTMLElement>('.ob__top')!,
+    ).getByRole('link', { name: 'Quay lại' });
     expect(backLink).toHaveAttribute('href', '/learn');
+
+    const nav = document.querySelector<HTMLElement>('.obw-nav')!;
+    expect(within(nav).getByRole('link', { name: 'Quay lại' })).toHaveAttribute(
+      'href',
+      '/learn',
+    );
+  });
+
+  it('web nav (Q81): step 1/4 with a single readable label and four tick marks', () => {
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+      />,
+    );
+
+    const nav = document.querySelector<HTMLElement>('.obw-nav')!;
+    expect(nav).toHaveClass('w-only');
+
+    // The mobile chrome keeps its own step text; at web it is hidden by
+    // `.m-only` so only the nav copy is read.
+    expect(document.querySelector('.ob__top')).toHaveClass('m-only');
+    expect(
+      within(document.querySelector<HTMLElement>('.ob__top')!).getByText(
+        'Bước 1 trên 4',
+      ),
+    ).toHaveClass('sr-only');
+
+    const count = within(nav).getByText('1/4');
+    expect(count).toHaveAttribute('aria-label', 'Bước 1 trên 4');
+    // Exactly one readable label in the nav: the `ol` is decorative and no
+    // `sr-only` copy repeats the sentence.
+    expect(nav.querySelectorAll('.sr-only')).toHaveLength(0);
+    expect(within(nav).queryByText('Bước 1 trên 4')).toBeNull();
+
+    const ticks = nav.querySelectorAll('.obw-steps ol li');
+    expect(ticks).toHaveLength(4);
+    expect(nav.querySelector('.obw-steps ol')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    expect(ticks[0]).toHaveClass('is-done');
+    expect(ticks[1]).not.toHaveClass('is-done');
+
+    expect(within(nav).getByRole('link', { name: 'Hán Lộ' })).toHaveAttribute(
+      'href',
+      '/learn',
+    );
+  });
+
+  it('keeps one copy of every radio control (three web copies would be a regression)', () => {
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+      />,
+    );
+
+    expect(
+      within(
+        screen.getByRole('radiogroup', { name: 'Cấp độ HSK mục tiêu' }),
+      ).getAllByRole('radio'),
+    ).toHaveLength(9);
+    expect(
+      within(
+        screen.getByRole('radiogroup', { name: 'Mục tiêu học tập' }),
+      ).getAllByRole('radio'),
+    ).toHaveLength(4);
+    // The web layout restyles the same buttons; it never adds a native input.
+    expect(document.querySelectorAll('input[type="radio"]')).toHaveLength(0);
+    expect(document.querySelectorAll('[role="radio"]')).toHaveLength(13);
+    expect(screen.getAllByRole('button', { name: 'Tiếp tục' })).toHaveLength(1);
+  });
+
+  it('web summary panel shows the live goal selection and stays web only', () => {
+    render(
+      <OnboardingGoalForm
+        initialPurpose="communication"
+        initialBand={3}
+        hasGoal={false}
+        levels={sampleLevels}
+      />,
+    );
+
+    const panel = document.querySelector<HTMLElement>('.obw-summary__panel')!;
+    expect(panel).toHaveClass('w-only');
+    expect(document.getElementById('sum-goal')).toHaveTextContent('Giao tiếp');
+    expect(document.getElementById('sum-level')).toHaveTextContent('HSK 3');
+
+    fireEvent.click(screen.getByRole('radio', { name: /Công việc/ }));
+    fireEvent.click(screen.getByRole('radio', { name: '7' }));
+
+    expect(document.getElementById('sum-goal')).toHaveTextContent('Công việc');
+    expect(document.getElementById('sum-level')).toHaveTextContent('HSK 7');
+    expect(document.getElementById('level-title')).toHaveTextContent(
+      'HSK 7 ~ 11.092 từ vựng (chung cấp 7–9)',
+    );
   });
 
   it('displays notice alert when notice=content_unavailable is passed', () => {
