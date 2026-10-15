@@ -98,6 +98,8 @@ Cập nhật: 13/10/2026 (thêm Q82–Q85 ngày 13/10/2026; đồng bộ với R
 | Q83 | **Trang chủ web giữ dữ liệu và chữ của trang chủ mobile hiện tại (nút "Bắt đầu"/"Tiếp tục học" theo trạng thái), chỉ dàn lại thành lưới web; mục chưa có API (XP, cấp, ôn tập, Khám phá) ẩn hoặc gắn "Sắp có" như mobile** (PO 13/10/2026) | Mẫu web có thẻ mục tiêu ngày, XP, cấp | Số liệu demo trong mẫu (Minh, 12 ngày, 320 XP) không dùng |
 | Q84 | **Trang `/` bản web dùng chữ quảng bá trong `web/index.html`; Luyện nghe ghi là đã có (M2.5c), mục "Sắp có" là Ôn tập, Thi thử, Phát âm, Trợ lý AI** (PO 13/10/2026) | Trang chào mobile | — |
 | Q85 | **Ở trang Tra từ bản web, ẩn ô tìm kiếm của thanh trên; các trang khác giữ ô đó, gửi tới `/learn/dictionary?q=`** (PO 13/10/2026) | Mẫu web có cả hai ô | Tránh hai ô cùng label cho screen reader |
+| Q86 | **Trang `/` bản web, thẻ "HSK 7–9": chữ số từ vựng màu navy-900 (13,9:1 trên navy-100)** (PO 14/10/2026, M2.10c) | Mẫu jade-800 (4,44:1, axe color-contrast) | — |
+| Q87 | **Trang Kế hoạch bản web, câu dưới nút Tiếp tục: "Tiếp theo: tạo lộ trình học của bạn."** (PO 14/10/2026, M2.10c) | Mẫu "Tiếp theo: bài kiểm tra xếp trình độ." | Theo Q8: chưa có bài xếp trình độ, Tiếp tục tạo lộ trình rồi vào `/learn` |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
