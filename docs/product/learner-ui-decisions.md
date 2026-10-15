@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 13/10/2026 (thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 15/10/2026 (thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -100,6 +100,11 @@ Cập nhật: 13/10/2026 (thêm Q82–Q85 ngày 13/10/2026; đồng bộ với R
 | Q85 | **Ở trang Tra từ bản web, ẩn ô tìm kiếm của thanh trên; các trang khác giữ ô đó, gửi tới `/learn/dictionary?q=`** (PO 13/10/2026) | Mẫu web có cả hai ô | Tránh hai ô cùng label cho screen reader |
 | Q86 | **Trang `/` bản web, thẻ "HSK 7–9": chữ số từ vựng màu navy-900 (13,9:1 trên navy-100)** (PO 14/10/2026, M2.10c) | Mẫu jade-800 (4,44:1, axe color-contrast) | — |
 | Q87 | **Trang Kế hoạch bản web, câu dưới nút Tiếp tục: "Tiếp theo: tạo lộ trình học của bạn."** (PO 14/10/2026, M2.10c) | Mẫu "Tiếp theo: bài kiểm tra xếp trình độ." | Theo Q8: chưa có bài xếp trình độ, Tiếp tục tạo lộ trình rồi vào `/learn` |
+| Q88 | **Khung admin "Hán Lộ Admin" tiếng Việt theo mẫu `admin/` làm thành task riêng M5.0, trước M5.1a; dịch cả trang Bài tập, Media, đăng nhập admin** (PO 15/10/2026) | Admin hiện tại tiếng Anh "HSK Content Workbench" | Mục sidebar chưa có trang: hiện "Sắp có", không link |
+| Q89 | **Cho phép admin tự duyệt bản sửa của chính mình; UI hiện người viết và người duyệt, cảnh báo khi tự duyệt; audit log ghi đủ** (PO 15/10/2026, M5.1a) | Mẫu không có người duyệt riêng | Bắt buộc bốn mắt xem lại khi có vai trò reviewer (M5.7) |
+| Q90 | **Nội dung Topic soạn bằng một ô JSON, kiểm ở server (≤ 100 KB, sâu ≤ 20 như backend), báo lỗi đúng vị trí; form riêng từng loại để task sau** (PO 15/10/2026, M5.1a) | — | Cần chốt schema 5 loại Topic trước khi làm form |
+| Q91 | **Trang soạn bài chỉ có thứ API hỗ trợ: Thông tin chung (tiêu đề, cấp độ, mô tả, thứ tự, slug), danh sách Topic của bài, quy trình gửi duyệt/duyệt/xuất bản/lưu trữ** (PO 15/10/2026, M5.1a) | Mẫu có Mục tiêu, Thời lượng, Tags, 7 mục Từ vựng…Kiểm tra, tự động lưu, nhân bản, xoá | Không vẽ nút cho tính năng chưa có (`frontend/DESIGN.md`) |
+| Q92 | **Admin: mục sidebar đang chọn và nút chính nền jade-800 `#067a60` (chữ trắng 5,3:1), như Q42/Q74/Q78** (PO 15/10/2026, M5.0) | Mẫu nền jade-600 (chữ trắng 3,22:1, axe color-contrast) | — |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 

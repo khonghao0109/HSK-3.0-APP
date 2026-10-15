@@ -52,11 +52,11 @@ cam kết.
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 39 / 47 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 7 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
-| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
+| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 15 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Production foundation + Beta (M6) | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ10 | Sau beta: reader, AI, mobile, payment (M7) | Theo outcome beta | 0 / 8 | — | ⬜ |
 
-Tổng: **98 / 160 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
+Tổng: **98 / 161 task**. Đường găng tới beta: GĐ1 → GĐ2 → GĐ4 → GĐ5 → GĐ9; GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
 M4.6 là track biên soạn chạy song song từ GĐ4 và chỉ gate ở M6.7 (xem 1.2).
@@ -298,7 +298,8 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.B3 | Media list/detail + quarantine/archive | ✅ | `69c32bc` |
 | M5.B4 | Backend CMS lesson/topic/exercise/import + media ingestion API | ✅ | |
 | M5.B5 | `GET /users` cho admin | ✅ | cần H.8 |
-| M5.1a | CMS mutation UI lesson/topic: tạo, sửa, review, publish | ⬜ | 06/02,03 |
+| M5.0 | Khung admin "Hán Lộ Admin" tiếng Việt theo mẫu 06 (Q88): sidebar/thanh trên/drawer, dịch Bài tập, Media, đăng nhập | 🟡 đang làm | Q4, Q88–Q92 |
+| M5.1a | CMS mutation UI lesson/topic: tạo, sửa, review, publish | ⬜ | sau M5.0; Q89–Q91; 06/02,03 |
 | M5.1b | Exercise authoring + import UI | ⬜ | 06/04 |
 | M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | 06/06 |
@@ -554,12 +555,13 @@ submit/retry không double result ⬜ · SLO staging ⬜.
 | M5.B3 | Media list/detail + quarantine/archive | ✅ | `69c32bc`, `frontend/src/features/media` |
 | M5.B4 | Backend CMS lesson/topic/exercise/import + media ingestion API | ✅ | mục 3 dòng 7, 9, 12 |
 | M5.B5 | `GET /users` cho admin | ✅ | cần H.8 |
+| M5.0 | Khung admin "Hán Lộ Admin" tiếng Việt theo mẫu 06 (Q88): sidebar/thanh trên/drawer, dịch Bài tập, Media, đăng nhập | 🟡 đang làm | Q4, Q88–Q92 |
 
 Còn thiếu:
 
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
-| M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | ⬜ | `06-admin-cms-operations/02,03,04` |
+| M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | ⬜ | sau M5.0; Q89–Q91; `06-admin-cms-operations/02,03,04` |
 | M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | `06-admin-cms-operations/06` |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
@@ -719,3 +721,4 @@ khi vertical slice bắt đầu.
 | 14/10/2026 | GĐ5: M2.10c ✅ đã đóng (`734dc77` + `dd7adb2`, PR #6 run `38600729243`). CI `734dc77` (run 38597703618) đỏ do unit test đọc docs/ui_reference (gitignored); sửa ở `dd7adb2`. Nội dung: 10 trang công khai `.w-public` (landing + pháp lý, xác thực + khôi phục, onboarding) theo Q81/Q84; khung `.w-public` `display:contents` dưới 1024px nên mobile không đổi. Q86 (thẻ "HSK 7–9" navy-900), Q87 (câu dưới nút Tiếp tục) chép vào `docs/product/learner-ui-decisions.md`; TL-5: ô "Sắp có" 2 cột ở 1024–1279. Vòng review 2 (V1–V6 + R1): bỏ `order` trên tiêu đề/radio/nút (dùng `grid-row` cho `.obw-tip`), khoảng trắng thật thay `::before` (innerText không thấy nội dung CSS sinh ra), mũi tên trong nút "Tiếp tục", nền khung một màu như mẫu, 5 symbol sprite bổ sung, ẩn "Quay lại đăng nhập" ở `/verify-email`, bỏ bóng đổ desktop của `.app`. Đo: K3a 20 cặp 390/768 + K3b 6 cặp 1024/1440 = 0 pixel (base `ab7adab`), K4 522 passed / 6 skipped / 0 failed, gate frontend 0 failed. Mô hình team: Lead giữ khung chung (`.w-public`, `LearnerBrand`, sprite) + điều phối, 3 agent L/A/O song song theo 3 nhóm trang, Pha C (gộp, gate, K3, K4, ảnh, D1) Lead tự chạy. Đếm lại theo quy tắc 0.6: GĐ5 38/47, tổng 96/160. |
 | 15/10/2026 | GĐ4: M1.8 🟡 đang làm (Dockerfile backend/frontend multi-stage non-root + digest, ADR-008 §11). GĐ5: M2.10 ✅ đóng theo M2.10a–d; bài khoá chưa có mẫu web (TL-1). Backlog: (e) scanner secret dùng `git cat-file --batch` (gate docs từng đỏ khi máy tải cao, chạy lại PASS). Đếm lại theo quy tắc 0.6: GĐ4 10/17, GĐ5 39/47, tổng 97/160. |
 | 15/10/2026 | GĐ4: M1.8 ✅ đã đóng (`29e23ac`, run `38684167028`): Dockerfile backend/frontend multi-stage non-root (ADR-008 §11), base `node:24-bookworm-slim` pin digest `sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5` dùng chung hai service, `npm ci --ignore-scripts`, `.dockerignore` chặn `.env*`; backend 1 image chạy 3 lệnh (API `node dist/src/main.js` là CMD mặc định, worker `node dist/src/worker.js`, migrate `node dist/scripts/operations/bounded-prisma-migrate-deploy.js`), migrate không tự chạy khi start; frontend Next `output: 'standalone'` chạy `node server.js` với `.next/static` + `public`. Job CI `images` (linux/amd64, `id -u` = 1000 cả hai, image ID vào summary + log, không push registry): image ID amd64 backend `03ac99c86809`, frontend `6f4aec84fa3d`. Kiểm local bằng VM Lima `hsk-docker` arm64 (Docker CE 29.9.1): migrate 23/23, smoke full-stack Postgres→migrate→API 200→frontend 200→đăng ký qua BFF 201; e2e frontend trên DB disposable mới 522 passed / 6 skipped / 0 failed; gate all 0 failed. Backlog: (f) build frontend tải Google Fonts lúc build, Turbopack đôi khi fail `next/font/google queries have exactly one entry`; cân nhắc next/font/local. (g) `GET /api/v1/health` trả `env` và `port` ra public. Đếm lại theo quy tắc 0.6: GĐ4 11/17, GĐ5 39/47, tổng 98/160. |
+| 15/10/2026 | GĐ8: mở M5.0 🟡 đang làm — khung admin "Hán Lộ Admin" tiếng Việt theo mẫu `admin/` 06 (Q4, Q88): sidebar/thanh trên/drawer, dịch Bài tập, Media, đăng nhập. Q88–Q92 chép vào `docs/product/learner-ui-decisions.md`. M5.1a theo sau M5.0 (Q89–Q91). Đếm lại theo quy tắc 0.6: GĐ8 5/15, tổng 98/161. |
