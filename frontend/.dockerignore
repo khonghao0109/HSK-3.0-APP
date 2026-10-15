@@ -1,0 +1,17 @@
+# Bí mật môi trường: chặn mọi file .env*, kể cả .env.example (được git track).
+.env*
+
+# Dependencies và build output — được dựng lại trong image.
+node_modules
+.next
+
+# VCS metadata.
+.git
+
+# Test artifacts.
+coverage
+playwright-report
+test-results
+
+# Log.
+*.log
