@@ -16,8 +16,8 @@ async function submitWith(response: Response) {
   render(<LoginForm />);
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Email'), 'admin@example.test');
-  await user.type(screen.getByLabelText('Password'), 'secret1');
-  await user.click(screen.getByRole('button', { name: 'Sign in' }));
+  await user.type(screen.getByLabelText('Mật khẩu'), 'secret1');
+  await user.click(screen.getByRole('button', { name: 'Đăng nhập' }));
 }
 
 const failure = (status: number, kind?: string) =>

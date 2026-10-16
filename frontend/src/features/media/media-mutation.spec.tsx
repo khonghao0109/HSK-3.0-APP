@@ -34,16 +34,16 @@ describe('MediaLifecycleActions', () => {
         processingStatus="ready"
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Archive asset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu trữ' }));
     expect(
-      screen.getByRole('group', { name: 'Confirm archive asset' }),
+      screen.getByRole('group', { name: 'Xác nhận lưu trữ media' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Confirm archive' }),
+      screen.getByRole('button', { name: 'Xác nhận lưu trữ' }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Huỷ' }));
     expect(
-      screen.queryByRole('button', { name: 'Confirm archive' }),
+      screen.queryByRole('button', { name: 'Xác nhận lưu trữ' }),
     ).not.toBeInTheDocument();
   });
 
@@ -55,9 +55,7 @@ describe('MediaLifecycleActions', () => {
         processingStatus="quarantined"
       />,
     );
-    expect(
-      screen.getByRole('button', { name: 'Quarantine asset' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cách ly' })).toBeDisabled();
     rerender(
       <MediaLifecycleActions
         mediaId={41}
@@ -66,7 +64,7 @@ describe('MediaLifecycleActions', () => {
       />,
     );
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.getByText(/retained for history/i)).toBeInTheDocument();
+    expect(screen.getByText(/giữ lại cho lịch sử/)).toBeInTheDocument();
   });
 
   describe('keyboard focus (E-02)', () => {
@@ -81,17 +79,13 @@ describe('MediaLifecycleActions', () => {
       );
       await user.tab();
       await user.tab();
-      expect(
-        screen.getByRole('button', { name: 'Archive asset' }),
-      ).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus();
 
       await user.keyboard('{Enter}');
-      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Huỷ' })).toHaveFocus();
 
       await user.keyboard('{Enter}');
-      expect(
-        screen.getByRole('button', { name: 'Archive asset' }),
-      ).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus();
       expect(document.activeElement).not.toBe(document.body);
     });
 
@@ -105,13 +99,11 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      screen.getByRole('button', { name: 'Archive asset' }).focus();
+      screen.getByRole('button', { name: 'Lưu trữ' }).focus();
       await user.keyboard('{Enter}{Enter}');
 
       expect(fetchMock).not.toHaveBeenCalled();
-      expect(
-        screen.getByRole('button', { name: 'Archive asset' }),
-      ).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus();
     });
 
     it('returns focus to the confirm button when archive fails', async () => {
@@ -124,15 +116,17 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      await user.click(screen.getByRole('button', { name: 'Archive asset' }));
-      await user.click(screen.getByRole('button', { name: 'Confirm archive' }));
+      await user.click(screen.getByRole('button', { name: 'Lưu trữ' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Xác nhận lưu trữ' }),
+      );
 
       expect(await screen.findByRole('alert')).toHaveTextContent(
-        /temporarily unavailable/i,
+        /tạm thời không khả dụng/,
       );
       await waitFor(() =>
         expect(
-          screen.getByRole('button', { name: 'Confirm archive' }),
+          screen.getByRole('button', { name: 'Xác nhận lưu trữ' }),
         ).toHaveFocus(),
       );
     });
@@ -147,8 +141,10 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      await user.click(screen.getByRole('button', { name: 'Archive asset' }));
-      await user.click(screen.getByRole('button', { name: 'Confirm archive' }));
+      await user.click(screen.getByRole('button', { name: 'Lưu trữ' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Xác nhận lưu trữ' }),
+      );
       await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
       expect(fetchMock).toHaveBeenCalledWith(
         '/api/admin/media/41/archive',
@@ -162,7 +158,7 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      expect(screen.getByText(/retained for history/i)).toHaveFocus();
+      expect(screen.getByText(/giữ lại cho lịch sử/)).toHaveFocus();
     });
 
     it('keeps focus in the action group after quarantine', async () => {
@@ -175,9 +171,7 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      await user.click(
-        screen.getByRole('button', { name: 'Quarantine asset' }),
-      );
+      await user.click(screen.getByRole('button', { name: 'Cách ly' }));
       await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
       rerender(
         <MediaLifecycleActions
@@ -187,12 +181,8 @@ describe('MediaLifecycleActions', () => {
         />,
       );
 
-      expect(
-        screen.getByRole('button', { name: 'Quarantine asset' }),
-      ).toBeDisabled();
-      expect(
-        screen.getByRole('button', { name: 'Archive asset' }),
-      ).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Cách ly' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus();
     });
 
     it('returns focus to quarantine when it fails', async () => {
@@ -205,15 +195,11 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      await user.click(
-        screen.getByRole('button', { name: 'Quarantine asset' }),
-      );
+      await user.click(screen.getByRole('button', { name: 'Cách ly' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent(/changed/i);
+      expect(await screen.findByRole('alert')).toHaveTextContent(/đã thay đổi/);
       await waitFor(() =>
-        expect(
-          screen.getByRole('button', { name: 'Quarantine asset' }),
-        ).toHaveFocus(),
+        expect(screen.getByRole('button', { name: 'Cách ly' })).toHaveFocus(),
       );
     });
   });

@@ -9,7 +9,9 @@ import { loadMedia } from '@/features/media/media-service';
 import { MediaTable } from '@/features/media/media-table';
 import { BackendRequestError } from '@/lib/api/api-error';
 
-export const metadata: Metadata = { title: 'Media library' };
+import '../admin-media.css';
+
+export const metadata: Metadata = { title: 'Thư viện media' };
 
 export default async function MediaPage({
   searchParams,
@@ -30,45 +32,24 @@ export default async function MediaPage({
     throw error;
   }
   return (
-    <div className="page-stack">
-      <header className="page-header">
+    <div className="adm-page-stack">
+      <header className="adm-page-head">
         <div>
-          <p className="eyebrow">ASSET OPERATIONS</p>
-          <h1>Media library</h1>
+          <h1>Thư viện media</h1>
           <p>
-            Inspect processing state, provenance and content references without
-            exposing delivery or storage credentials.
+            Xem trạng thái xử lý, nguồn gốc và tham chiếu nội dung của media.
           </p>
-        </div>
-        <div className="read-only-chip">
-          <span aria-hidden="true">◇</span>
-          <span>
-            <strong>Safety operations V1</strong>
-            <small>Upload pipeline is not enabled</small>
-          </span>
         </div>
       </header>
       <MediaFilters query={query} />
-      <section
-        className="content-panel"
-        aria-labelledby="media-results-heading"
-      >
-        <div className="content-panel__header">
-          <div>
-            <p className="eyebrow">CURRENT VIEW</p>
-            <h2 id="media-results-heading">Asset inventory</h2>
-          </div>
-          <p className="record-count mono">
-            {result.meta.total.toLocaleString('en')} TOTAL
-          </p>
-        </div>
+      <div className="adm-card adm-media-card">
         <MediaTable media={result.data} />
         <MediaPagination
           query={query}
           total={result.meta.total}
           totalPages={result.meta.totalPages}
         />
-      </section>
+      </div>
     </div>
   );
 }

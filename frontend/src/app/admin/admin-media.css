@@ -1,0 +1,67 @@
+/**
+ * Lớp riêng của trang Thư viện media (M5.0) — chỉ gồm nhóm chưa có trong
+ * admin.css: nhóm thao tác vòng đời (cách ly / lưu trữ + xác nhận inline),
+ * danh sách bài tập tham chiếu ở trang chi tiết, và card chứa bảng cần
+ * overflow hidden để bo góc phủ lên header bảng (như .cnt-card của mẫu m06).
+ * Biến --adm-* kế thừa từ .admin-app (admin.css); class mới bắt đầu adm-.
+ */
+
+.admin-app .adm-media-actions {
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-media-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+.admin-app .adm-media-actions__confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .adm-media-card {
+  overflow: hidden;
+}
+
+/* Danh sách bài tập tham chiếu media (trang chi tiết) */
+.admin-app .adm-media-usage {
+  list-style: none;
+  margin: var(--adm-sp-3) 0 0;
+  padding: 0;
+  display: grid;
+}
+.admin-app .adm-media-usage li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-3);
+  border-top: 1px solid var(--adm-slate-100);
+  padding: var(--adm-sp-3) 0;
+}
+.admin-app .adm-media-usage li > div {
+  min-width: 0;
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+.admin-app .adm-media-usage strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .admin-app .adm-media-usage li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 430px) {
+  .admin-app .adm-media-actions__buttons > *,
+  .admin-app .adm-media-actions__confirmation {
+    width: 100%;
+  }
+  .admin-app .adm-media-actions__confirmation > * {
+    width: 100%;
+  }
+}

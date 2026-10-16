@@ -7,7 +7,9 @@ import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { loadExercise } from '@/features/exercises/exercise-service';
 import { BackendRequestError } from '@/lib/api/api-error';
 
-export const metadata: Metadata = { title: 'Exercise detail' };
+import '../../admin-exercises.css';
+
+export const metadata: Metadata = { title: 'Chi tiết bài tập' };
 
 export default async function ExerciseDetailPage({
   params,
@@ -32,9 +34,9 @@ export default async function ExerciseDetailPage({
     throw error;
   }
   return (
-    <div className="page-stack">
-      <nav className="breadcrumb" aria-label="Breadcrumb">
-        <Link href="/admin/exercises">Exercises</Link>
+    <div className="adm-page-stack">
+      <nav className="adm-breadcrumb" aria-label="Đường dẫn">
+        <Link href="/admin/exercises">Bài tập</Link>
         <span aria-hidden="true">/</span>
         <span aria-current="page">EX-{exercise.id}</span>
       </nav>

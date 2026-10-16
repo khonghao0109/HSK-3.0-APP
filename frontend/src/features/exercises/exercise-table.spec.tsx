@@ -36,30 +36,38 @@ const exercise: AdminExercise = {
 describe('ExerciseTable', () => {
   it('renders operational identity and a deep link without authoritative answer', () => {
     render(<ExerciseTable exercises={[exercise]} />);
-    const row = screen.getByRole('row', { name: /101/i });
+    const row = screen.getByRole('row', { name: /bài tập 101/i });
     expect(within(row).getByText('Chào hỏi')).toBeInTheDocument();
     expect(within(row).getByText('Lời chào đầu tiên')).toBeInTheDocument();
-    expect(within(row).getByText('Published')).toBeInTheDocument();
+    expect(within(row).getByText('Trắc nghiệm')).toBeInTheDocument();
+    expect(within(row).getByText('Đã xuất bản')).toBeInTheDocument();
     expect(
-      within(row).getByRole('link', { name: /open exercise 101/i }),
+      within(row).getByRole('link', { name: /mở bài tập 101/i }),
     ).toHaveAttribute('href', '/admin/exercises/101');
     expect(screen.queryByText('hello')).not.toBeInTheDocument();
 
     const compactList = screen.getByRole('list', {
-      name: 'Exercises for narrow screens',
+      name: 'Danh sách bài tập cho màn hẹp',
     });
     const compactRecord = within(compactList).getByRole('listitem', {
-      name: /exercise 101/i,
+      name: /bài tập 101/i,
     });
     expect(within(compactRecord).getByText('EX-101')).toBeInTheDocument();
-    expect(within(compactRecord).getByText('Published')).toBeInTheDocument();
+    expect(within(compactRecord).getByText('Đã xuất bản')).toBeInTheDocument();
     expect(
-      within(compactRecord).getByRole('link', { name: /open exercise 101/i }),
+      within(compactRecord).getByRole('link', { name: /mở bài tập 101/i }),
     ).toHaveAttribute('href', '/admin/exercises/101');
   });
 
   it('renders a helpful empty state', () => {
     render(<ExerciseTable exercises={[]} />);
-    expect(screen.getByRole('status')).toHaveTextContent('No exercises match');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Không có bài tập nào khớp bộ lọc.',
+    );
+    expect(
+      within(screen.getByRole('status')).getByRole('link', {
+        name: 'Xoá lọc',
+      }),
+    ).toHaveAttribute('href', '/admin/exercises');
   });
 });
