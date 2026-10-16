@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 16/10/2026 (thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 16/10/2026 (thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -107,6 +107,7 @@ Cập nhật: 16/10/2026 (thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngà
 | Q92 | **Admin: mục sidebar đang chọn và nút chính nền jade-800 `#067a60` (chữ trắng 5,3:1), như Q42/Q74/Q78** (PO 15/10/2026, M5.0) | Mẫu nền jade-600 (chữ trắng 3,22:1, axe color-contrast) | — |
 | Q93 | **Luật chung: màu chữ/badge/link của mẫu dưới AA 4,5:1 được làm đậm cùng tông tới khi đạt AA; Tech Lead duyệt và ghi vào bảng "Lệch màu AA" của README, không cần mã Q riêng. Đổi tông hoặc bố cục vẫn hỏi PO** (PO 16/10/2026) | Từng lần một mã Q (Q12, Q74, Q78, Q86…) | Đã áp ở M5.0: slate-500 `#6b7686`→`#5f6b7f`, chữ vàng `#b26a00`→`#9a5b00`, chữ badge jade-700→jade-800 |
 | Q94 | **Sidebar admin: mục chưa có trang không có chip; chữ nhạt (≥ 4,5:1 trên navy-850, vd `#8a9bbd` 5,6:1), "Sắp có" nằm trong tên đọc màn hình và `title`; mọi nhãn 1 dòng như mẫu** (PO 16/10/2026, M5.0) | Q88 ghi chip "Sắp có" làm nhãn dài xuống 2 dòng | Thay phần "hiện 'Sắp có'" của Q88 |
+| Q95 | **Ngày giờ admin hiện theo giờ Việt Nam (Asia/Ho_Chi_Minh, UTC+7), dạng `dd/mm/yyyy hh:mm` 24h, không ghi nhãn múi giờ; một hàm dùng chung cho mọi trang admin** (PO 16/10/2026, M5.1a) | M5.0 (TL-10) hiện theo UTC, vd 05:26 sáng 16/10 giờ VN hiện "15/10/2026 22:26" | Áp cho Bài tập, Media, Nội dung |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
