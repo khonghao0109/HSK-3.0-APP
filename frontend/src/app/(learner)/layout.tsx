@@ -1,8 +1,20 @@
 import type { Metadata } from 'next';
-import { Inter, Noto_Serif, Noto_Serif_SC } from 'next/font/google';
+import {
+  Inter,
+  LXGW_WenKai_TC,
+  Noto_Sans_SC,
+  Noto_Serif,
+  Noto_Serif_SC,
+} from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import './learner.css';
+import './learner-web.css';
+import './learner-web-public.css';
+import './learner-web-landing.css';
+import './learner-web-legal.css';
+import './learner-web-auth.css';
+import './learner-web-onboarding.css';
 
 const inter = Inter({
   weight: ['400', '500', '600', '700'],
@@ -18,10 +30,26 @@ const notoSerif = Noto_Serif({
   display: 'swap',
 });
 
+const notoSansSC = Noto_Sans_SC({
+  weight: ['400', '500', '700'],
+  preload: false,
+  variable: '--font-noto-sans-sc',
+  display: 'swap',
+});
+
 const notoSerifSC = Noto_Serif_SC({
-  weight: ['500', '700'],
+  // 400: Tra từ rows and example sentence (m03.css, M2.6b).
+  weight: ['400', '500', '700'],
   preload: false,
   variable: '--font-noto-serif-sc',
+  display: 'swap',
+});
+
+// Kai face of the module 03 headwords (m03.css --m03-font-kai, M2.6b).
+const lxgwWenKai = LXGW_WenKai_TC({
+  weight: '700',
+  preload: false,
+  variable: '--font-lxgw-wenkai',
   display: 'swap',
 });
 
@@ -35,7 +63,7 @@ export const metadata: Metadata = {
 export default function LearnerLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable}`}
+      className={`learner-app ${inter.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${notoSansSC.variable} ${lxgwWenKai.variable}`}
       lang="vi"
     >
       <div hidden aria-hidden="true">
@@ -87,6 +115,21 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
           </symbol>
+          <symbol id="i-heart" viewBox="0 0 24 24">
+            <path d="M19.5 12.6 12 20l-7.5-7.4A4.9 4.9 0 0 1 12 6.1a4.9 4.9 0 0 1 7.5 6.5Z" />
+          </symbol>
+          <symbol id="i-x" viewBox="0 0 24 24">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </symbol>
+          <symbol id="i-x-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" />
+            <path
+              d="m9 9 6 6M15 9l-6 6"
+              stroke="var(--white)"
+              strokeWidth="2.2"
+            />
+          </symbol>
           <symbol id="i-check-circle" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" />
             <path
@@ -94,6 +137,39 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
               stroke="var(--white)"
               strokeWidth="2.2"
             />
+          </symbol>
+          <symbol id="i-volume-fill" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M3 9.2c0-.66.54-1.2 1.2-1.2H7l4.4-3.6c.66-.54 1.6-.07 1.6.77v13.66c0 .84-.94 1.31-1.6.77L7 16H4.2A1.2 1.2 0 0 1 3 14.8Z"
+            />
+            <path d="M16 9a4.2 4.2 0 0 1 0 6" />
+            <path d="M18.8 6.5a8 8 0 0 1 0 11" />
+          </symbol>
+          <symbol id="i-pause" viewBox="0 0 24 24">
+            <rect
+              x="6"
+              y="5"
+              width="4"
+              height="14"
+              rx="1"
+              fill="currentColor"
+              stroke="none"
+            />
+            <rect
+              x="14"
+              y="5"
+              width="4"
+              height="14"
+              rx="1"
+              fill="currentColor"
+              stroke="none"
+            />
+          </symbol>
+          <symbol id="i-rotate-ccw" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
           </symbol>
           <symbol id="i-star-fill" viewBox="0 0 24 24">
             <path
@@ -136,6 +212,16 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
               d="M2 4.2c0-.66.54-1.2 1.2-1.2H8a4.2 4.2 0 0 1 3.2 1.48V21a3.6 3.6 0 0 0-2.7-1.2H3.2A1.2 1.2 0 0 1 2 18.6Zm20 0c0-.66-.54-1.2-1.2-1.2H16a4.2 4.2 0 0 0-3.2 1.48V21a3.6 3.6 0 0 1 2.7-1.2h5.3a1.2 1.2 0 0 0 1.2-1.2Z"
             />
             <path d="M12 9.5v4" stroke="var(--white)" strokeWidth="2" />
+          </symbol>
+          <symbol id="i-book-open-text" viewBox="0 0 24 24">
+            <path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z" />
+            <path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z" />
+            <path d="M5.5 9h3M5.5 12.5h3" />
+            <circle cx="7" cy="6.6" r=".9" fill="currentColor" stroke="none" />
+          </symbol>
+          <symbol id="i-book-marked" viewBox="0 0 24 24">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            <path d="M10 2v8l3-3 3 3V2" />
           </symbol>
           <symbol id="i-search" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="7" />
@@ -184,6 +270,75 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
             <path d="M12 17h.01" />
           </symbol>
+          <symbol id="i-chevron-left" viewBox="0 0 24 24">
+            <path d="m15 18-6-6 6-6" />
+          </symbol>
+          <symbol id="i-history" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M12 7v5l3 2" />
+          </symbol>
+          <symbol id="i-m03-clear" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="11" fill="currentColor" stroke="none" />
+            <path
+              d="m8.2 8.2 7.6 7.6M15.8 8.2l-7.6 7.6"
+              stroke="var(--white)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.6"
+            />
+          </symbol>
+          <symbol id="i-m03-pen" viewBox="0 0 24 24">
+            <path d="M3.5 21.5h17" />
+            <path d="M15.2 3.6a2.3 2.3 0 0 1 3.2 3.2L8.6 16.6 4.5 18l1.4-4.1Z" />
+          </symbol>
+          <symbol id="i-camera" viewBox="0 0 24 24">
+            <path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </symbol>
+          <symbol id="i-m03-mic" viewBox="0 0 24 24">
+            <rect
+              x="8.5"
+              y="2"
+              width="7"
+              height="12.5"
+              rx="3.5"
+              fill="currentColor"
+              stroke="none"
+            />
+            <path d="M19 10.5a7 7 0 0 1-14 0" />
+            <path d="M12 17.5V22" />
+          </symbol>
+          <symbol id="i-m03-read" viewBox="0 0 24 24">
+            <path d="M2.5 4.5H9a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2H2.5Z" />
+            <path d="M21.5 4.5H15a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2h7.1Z" />
+            <path d="M8.5 10v1.5M15.5 10v1.5" />
+          </symbol>
+          <symbol id="i-file-question" viewBox="0 0 24 24">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z" />
+            <path d="M14 2v6h6" />
+            <path d="M10 11a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.5" />
+            <path d="M12 17.5h.01" />
+          </symbol>
+          <symbol id="i-more-vertical" viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </symbol>
+          <symbol id="i-copy" viewBox="0 0 24 24">
+            <rect x="8" y="8" width="14" height="14" rx="2" />
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+          </symbol>
+          <symbol id="i-flag" viewBox="0 0 24 24">
+            <path d="M4 22V4s1.5-1 4.5-1 5 2 8 2 3.5-1 3.5-1v11s-1 1-3.5 1-5-2-8-2S4 15 4 15" />
+          </symbol>
+          <symbol id="i-pen-line" viewBox="0 0 24 24">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </symbol>
+          <symbol id="i-check" viewBox="0 0 24 24">
+            <path d="M20 6 9 17l-5-5" />
+          </symbol>
           <symbol id="logo-google" viewBox="0 0 24 24">
             <path
               fill="var(--logo-google-blue)"
@@ -214,6 +369,33 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
               fill="var(--logo-facebook-white)"
               d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.95-1.88h1.51V4.91s-1.37-.23-2.68-.23c-2.74 0-4.53 1.66-4.53 4.66V12H7.08v3.47h3.04V24a12.1 12.1 0 0 0 3.75 0v-8.53Z"
             />
+          </symbol>
+          {/* Năm hình mà 10 trang mẫu web công khai dùng nhưng sprite còn
+              thiếu (V5). Đường dẫn chép nguyên từ
+              `docs/ui_reference/shared/js/icons.js`:
+              check-circle-line (dòng 50), chevron-down (8), info (62),
+              target (90), clipboard-check (102). */}
+          <symbol id="i-check-circle-line" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="m8 12.5 2.8 2.8L16.5 9.5" />
+          </symbol>
+          <symbol id="i-chevron-down" viewBox="0 0 24 24">
+            <path d="m6 9 6 6 6-6" />
+          </symbol>
+          <symbol id="i-info" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </symbol>
+          <symbol id="i-target" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <circle cx="12" cy="12" r="5.5" />
+            <circle cx="12" cy="12" r="1.5" />
+          </symbol>
+          <symbol id="i-clipboard-check" viewBox="0 0 24 24">
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <path d="m9 14 2 2 4-4" />
           </symbol>
         </svg>
       </div>

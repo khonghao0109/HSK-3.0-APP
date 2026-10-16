@@ -1,16 +1,16 @@
 export default function ExerciseDetailLoading() {
   return (
     <div
-      className="page-stack"
+      className="adm-page-stack"
       role="status"
       aria-busy="true"
-      aria-label="Loading exercise detail"
+      aria-label="Đang tải chi tiết bài tập"
     >
-      <h1 className="sr-only">Loading exercise detail</h1>
-      <div className="skeleton skeleton--title" />
-      <div className="detail-grid">
-        <div className="panel skeleton skeleton--detail" />
-        <div className="panel skeleton skeleton--detail" />
+      <h1 className="sr-only">Đang tải chi tiết bài tập</h1>
+      <div className="adm-skeleton adm-skeleton--title" />
+      <div className="adm-detail-grid">
+        <div className="adm-skeleton adm-skeleton--panel" />
+        <div className="adm-skeleton adm-skeleton--panel" />
       </div>
     </div>
   );

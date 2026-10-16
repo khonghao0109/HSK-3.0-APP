@@ -13,9 +13,14 @@ import {
 
 export const TOAST_DURATION_MS = 2400;
 
-type Toast = { id: number; message: string };
+/** `alert` for a failure the learner must notice (role="alert"). */
+export type ToastTone = 'status' | 'alert';
 
-const ToastContext = createContext<((message: string) => void) | null>(null);
+type Toast = { id: number; message: string; tone: ToastTone };
+
+type ShowToast = (message: string, tone?: ToastTone) => void;
+
+const ToastContext = createContext<ShowToast | null>(null);
 
 /** One shared live region for the learner shell; each toast leaves after 2.4 s. */
 export function LearnerToastProvider({ children }: { children: ReactNode }) {
@@ -31,23 +36,30 @@ export function LearnerToastProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const showToast = useCallback((message: string) => {
-    nextId.current += 1;
-    const id = nextId.current;
-    setToasts((current) => [...current, { id, message }]);
-    const timer = setTimeout(() => {
-      timers.current.delete(timer);
-      setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, TOAST_DURATION_MS);
-    timers.current.add(timer);
-  }, []);
+  const showToast = useCallback(
+    (message: string, tone: ToastTone = 'status') => {
+      nextId.current += 1;
+      const id = nextId.current;
+      setToasts((current) => [...current, { id, message, tone }]);
+      const timer = setTimeout(() => {
+        timers.current.delete(timer);
+        setToasts((current) => current.filter((toast) => toast.id !== id));
+      }, TOAST_DURATION_MS);
+      timers.current.add(timer);
+    },
+    [],
+  );
 
   return (
     <ToastContext.Provider value={showToast}>
       {children}
       <div className="toast-region" role="status" aria-live="polite">
         {toasts.map((toast) => (
-          <div key={toast.id} className="toast">
+          <div
+            key={toast.id}
+            className="toast"
+            role={toast.tone === 'alert' ? 'alert' : undefined}
+          >
             {toast.message}
           </div>
         ))}
@@ -56,7 +68,7 @@ export function LearnerToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useLearnerToast(): (message: string) => void {
+export function useLearnerToast(): ShowToast {
   const showToast = useContext(ToastContext);
   if (!showToast) {
     throw new Error('useLearnerToast must be used inside LearnerToastProvider');

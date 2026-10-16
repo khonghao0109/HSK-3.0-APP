@@ -63,16 +63,24 @@ const detail: AdminExerciseDetail = {
 
 describe('ExerciseDetail', () => {
   it('renders canonical content, admin-only answer, provenance, safe media, and review', () => {
-    render(<ExerciseDetail exercise={detail} canViewAnswer />);
+    const { container } = render(
+      <ExerciseDetail exercise={detail} canViewAnswer />,
+    );
     expect(
-      screen.getByRole('heading', { name: /exercise 102/i }),
+      screen.getByRole('heading', { name: /bài tập 102/i }),
     ).toBeInTheDocument();
+    expect(screen.getByText('Phiên bản 3')).toBeInTheDocument();
     expect(screen.getByText('Mua sắm')).toBeInTheDocument();
     expect(screen.getByText('Địa điểm mua sắm')).toBeInTheDocument();
+    expect(screen.getByText('Nghe chọn đáp án')).toBeInTheDocument();
     expect(screen.getByText(/"optionId": "market"/)).toBeInTheDocument();
     expect(screen.getByText('HSK source')).toBeInTheDocument();
+    expect(screen.getByText('Âm thanh')).toBeInTheDocument();
     expect(screen.getByText('audio/mpeg')).toBeInTheDocument();
-    expect(screen.getByText('Approved')).toBeInTheDocument();
+    expect(screen.getByText('Sẵn sàng')).toBeInTheDocument();
+    expect(screen.getByText('Đã duyệt')).toBeInTheDocument();
+    // Móc e2e: hash bản sửa phải nằm trong panel Lịch sử bản sửa.
+    expect(container.querySelector('.adm-hash')).toHaveTextContent('hash');
     expect(document.body.textContent).not.toContain('storageKey');
     expect(document.body.textContent).not.toContain('checksum');
   });
@@ -81,7 +89,9 @@ describe('ExerciseDetail', () => {
     render(<ExerciseDetail exercise={detail} canViewAnswer={false} />);
     expect(screen.queryByText(/"optionId": "market"/)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/restricted to authenticated administrators/i),
+      screen.getByText(
+        'Dữ liệu đáp án chỉ dành cho quản trị viên đã đăng nhập.',
+      ),
     ).toBeInTheDocument();
   });
 });

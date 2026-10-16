@@ -2380,7 +2380,7 @@ async function validateNginx(
     const configPath = join(temporary, 'nginx.conf');
     writeFileSync(
       configPath,
-      `worker_processes 1;\npid ${join(temporary, 'nginx.pid')};\nerror_log ${join(temporary, 'error.log')} notice;\nevents { worker_connections 64; }\nhttp {\n  include ${resolve(repositoryRoot, 'ops/nginx/media-security-http.conf')};\n  upstream hsk_backend { server 127.0.0.1:${upstreamPort}; }\n  server {\n    listen 127.0.0.1:${proxyPort};\n    include ${locationPath};\n    location / { proxy_pass http://hsk_backend; }\n  }\n}\n`,
+      `worker_processes 1;\npid ${join(temporary, 'nginx.pid')};\nerror_log ${join(temporary, 'error.log')} notice;\nevents { worker_connections 1024; }\nhttp {\n  include ${resolve(repositoryRoot, 'ops/nginx/media-security-http.conf')};\n  upstream hsk_backend { server 127.0.0.1:${upstreamPort}; }\n  server {\n    listen 127.0.0.1:${proxyPort};\n    include ${locationPath};\n    location / { proxy_pass http://hsk_backend; }\n  }\n}\n`,
       { mode: 0o600 },
     );
     const syntax = recordedProcess(
@@ -2473,10 +2473,56 @@ async function validateNginx(
         'Rejected signed route fell through to the generic upstream.',
       );
     }
+
+    // limit_req zone=media_content rate=20r/s burst=200 nodelay: one address
+    // gets burst+1 requests at once, then the bucket refills at the rate.
+    const burstSignature = 'operational-burst-signature';
+    const edgeBurst = 200;
+    const edgeRatePerSecond = 20;
+    const burstBaseline = upstreamHits;
+    const burstStarted = Date.now();
+    const burstResults = await Promise.all(
+      Array.from({ length: edgeBurst + 50 }, (_unused, index) =>
+        rawHttp(
+          proxyPort,
+          `/api/v1/media/1/content?expires=${index}&signature=${burstSignature}`,
+          'GET',
+        ),
+      ),
+    );
+    const refillAllowance = Math.ceil(
+      ((Date.now() - burstStarted) / 1000) * edgeRatePerSecond,
+    );
+    const limited = burstResults.filter((result) => result.status === 429);
+    if (limited.length === 0) {
+      throw new Error('Signed-content burst was not rate limited at the edge.');
+    }
+    if (upstreamHits - burstBaseline > edgeBurst + 1 + refillAllowance) {
+      throw new Error('Signed-content burst exceeded the edge allowance.');
+    }
+    if (
+      limited.some(
+        (result) => result.headers['cache-control'] !== 'private, no-store',
+      )
+    ) {
+      throw new Error('Edge 429 response is missing private, no-store.');
+    }
     await delay(75);
     const log = readFileSync(accessLogPath, 'utf8');
+    if (!log.includes(' 429 ')) {
+      throw new Error('Nginx access evidence lacks the rate-limited request.');
+    }
+    const mainErrorLog = readFileSync(join(temporary, 'error.log'), 'utf8');
+    if (
+      mainErrorLog.includes(burstSignature) ||
+      mainErrorLog.includes('expires=')
+    ) {
+      throw new Error('Nginx main error log leaked signed query data.');
+    }
     for (const forbidden of [
       signature,
+      burstSignature,
+      'signature',
       'expires=',
       'token=',
       'must-not-leak',
@@ -2491,6 +2537,7 @@ async function validateNginx(
       const diagnosticLog = readFileSync(safeErrorLogPath, 'utf8');
       for (const forbidden of [
         signature,
+        burstSignature,
         'expires=',
         'token=',
         'must-not-leak',
@@ -2506,7 +2553,7 @@ async function validateNginx(
       'nginx-http-adversarial-matrix',
       httpMatrixStarted,
       true,
-      'Public metrics variants rejected; canonical content and ordinary route reached the synthetic upstream; queries absent from logs.',
+      'Public metrics variants rejected; canonical content and ordinary route reached the synthetic upstream; signed-content burst limited with private 429; queries absent from logs.',
     );
     return {
       status: 'PASS',

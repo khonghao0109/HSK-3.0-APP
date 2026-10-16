@@ -24,8 +24,8 @@ function deferred<T>() {
 async function fillAndSubmit() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Email'), 'admin@example.test');
-  await user.type(screen.getByLabelText('Password'), 'secret1');
-  await user.click(screen.getByRole('button', { name: /session|sign in/i }));
+  await user.type(screen.getByLabelText('Mật khẩu'), 'secret1');
+  await user.click(screen.getByRole('button', { name: /phiên|đăng nhập/i }));
   return user;
 }
 
@@ -66,7 +66,7 @@ describe('session recovery and login ordering', () => {
 
     expect(calls).toEqual(['/api/session/recover']);
     expect(screen.getByLabelText('Email')).toHaveValue('admin@example.test');
-    expect(screen.getByLabelText('Password')).toHaveValue('secret1');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveValue('secret1');
 
     await act(() => {
       recovery.resolve(
@@ -142,12 +142,10 @@ describe('session recovery and login ordering', () => {
     });
 
     render(<LoginForm sessionEnded />);
-    await screen.findByRole('button', { name: 'Retry session check' });
+    await screen.findByRole('button', { name: 'Thử lại' });
     expect(calls).toEqual(['/api/session/recover']);
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Retry session check' }),
-    );
+    await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
     await waitFor(() =>
       expect(calls).toEqual(['/api/session/recover', '/api/session/recover']),
     );
@@ -169,7 +167,7 @@ describe('session recovery and login ordering', () => {
     render(<LoginForm sessionEnded />);
 
     expect(
-      await screen.findByRole('button', { name: 'Retry session check' }),
+      await screen.findByRole('button', { name: 'Thử lại' }),
     ).toBeVisible();
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
@@ -191,7 +189,7 @@ describe('session recovery and login ordering', () => {
 
     render(<LoginForm />);
     const user = await fillAndSubmit();
-    await user.click(screen.getByRole('button', { name: 'Signing in…' }));
+    await user.click(screen.getByRole('button', { name: 'Đang đăng nhập…' }));
 
     expect(calls).toEqual(['/api/session/login']);
     await act(() => {

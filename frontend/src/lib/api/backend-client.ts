@@ -6,6 +6,10 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/auth\/refresh$/,
   /^\/api\/v1\/auth\/logout$/,
   /^\/api\/v1\/auth\/me$/,
+  /^\/api\/v1\/auth\/password-reset\/request$/,
+  /^\/api\/v1\/auth\/password-reset\/confirm$/,
+  /^\/api\/v1\/auth\/email-verification\/request$/,
+  /^\/api\/v1\/auth\/email-verification\/confirm$/,
   /^\/api\/v1\/admin\/cms\/exercises(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+$/,
   /^\/api\/v1\/admin\/cms\/media(?:\?.*)?$/,
@@ -18,7 +22,20 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/learning-plans$/,
   /^\/api\/v1\/learning\/home$/,
   /^\/api\/v1\/learning\/path$/,
+  /^\/api\/v1\/learning\/lessons\/\d+\/activity$/,
+  /^\/api\/v1\/learning\/lessons\/\d+\/(?:start|complete)$/,
+  /^\/api\/v1\/learning\/topics\/\d+\/(?:start|complete)$/,
+  /^\/api\/v1\/progress\/lessons\/\d+$/,
+  /^\/api\/v1\/learning\/exercises\/\d+\/attempts$/,
+  /^\/api\/v1\/media\/\d+\/access$/,
+  /^\/api\/v1\/media\/\d+\/content$/,
+  /^\/api\/v1\/dictionary\?query=[^&#]+$/,
+  /^\/api\/v1\/dictionary\/words\/\d+$/,
+  /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
 ];
+
+/** Raw requests wait at most this long for the response headers. */
+const RAW_HEADERS_TIMEOUT_MS = 10_000;
 
 type ClientOptions = {
   baseUrl: string;
@@ -29,10 +46,20 @@ type ClientOptions = {
   forwardedFor?: () => Promise<string | undefined>;
 };
 
+type RawRequestOptions = {
+  /** Query string, appended to the allowlisted path as given. */
+  search?: URLSearchParams;
+  headers?: Record<string, string>;
+  /** Aborts the upstream request (for example when the browser leaves). */
+  signal?: AbortSignal;
+};
+
 type RequestOptions = {
   token?: string;
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'DELETE';
   body?: unknown;
+  /** Sent as `Idempotency-Key` (docs/api/api.md §A.7). */
+  idempotencyKey?: string;
 };
 
 function isAllowedPath(path: string): boolean {
@@ -83,6 +110,8 @@ export function createBackendClient(options: ClientOptions) {
         if (request.token)
           headers.set('authorization', `Bearer ${request.token}`);
         if (forwardedFor) headers.set('x-forwarded-for', forwardedFor);
+        if (request.idempotencyKey)
+          headers.set('idempotency-key', request.idempotencyKey);
         if (request.body !== undefined)
           headers.set('content-type', 'application/json');
         const response = await fetchImpl(new URL(path, options.baseUrl), {
@@ -119,6 +148,58 @@ export function createBackendClient(options: ClientOptions) {
         }
         throw new BackendRequestError(
           normalizeApiFailure({ status: 503, requestId }),
+        );
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+
+    /**
+     * GET without a token whose response (any status) is returned as is, body
+     * unread, for streaming. The timeout covers only the wait for headers.
+     */
+    async raw(
+      path: string,
+      request: RawRequestOptions = {},
+    ): Promise<Response> {
+      if (!isAllowedPath(path)) {
+        throw new BackendRequestError(
+          normalizeApiFailure({ status: 400, requestId: requestIdFactory() }),
+        );
+      }
+      const requestId = requestIdFactory();
+      const forwardedFor = await options.forwardedFor?.();
+      const controller = new AbortController();
+      const timer = setTimeout(
+        () => controller.abort(),
+        RAW_HEADERS_TIMEOUT_MS,
+      );
+      const signal = request.signal
+        ? AbortSignal.any([controller.signal, request.signal])
+        : controller.signal;
+      const url = new URL(path, options.baseUrl);
+      if (request.search) url.search = request.search.toString();
+      try {
+        const headers = new Headers(request.headers);
+        headers.set('x-request-id', requestId);
+        if (forwardedFor) headers.set('x-forwarded-for', forwardedFor);
+        return await fetchImpl(url, {
+          method: 'GET',
+          headers,
+          cache: 'no-store',
+          signal,
+        });
+      } catch {
+        throw new BackendRequestError(
+          controller.signal.aborted
+            ? {
+                status: 503,
+                kind: 'timeout',
+                message: 'The upstream request timed out.',
+                retryable: true,
+                requestId,
+              }
+            : normalizeApiFailure({ status: 503, requestId }),
         );
       } finally {
         clearTimeout(timer);

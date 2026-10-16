@@ -36,7 +36,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 
 - Base path: `/api/v1`; versioning theo path; JSON UTF-8.
 - Auth: `Authorization: Bearer <jwt>` cho route đánh dấu `JWT`/`admin`. Public content,
-  dictionary, health và signed media content không cần token. JWT HS256 có header `kid`,
+  dictionary (trừ các route `…/save`), health và signed media content không cần token. JWT HS256 có header `kid`,
   claims `sub`, `email`, `role`; strategy đọc lại `status`, `deletedAt`, `role` từ DB mỗi
   request. Chưa có refresh/revocation.
 - Validation: `whitelist`, `forbidNonWhitelisted`, `transform`. Field lạ → `400` với
@@ -77,14 +77,29 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với
+- Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
+  mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
+  `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
+  60/phút/user, `GET /dictionary`, `GET /dictionary/words/:id` và `GET /dictionary/words/:id/save`
+  120/phút/user hoặc IP, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
+  `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
+  `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
+  `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
+  `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
+  5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
+  `POST /users/me/deletion-request` 5/15 phút. Khi `NODE_ENV=test`, mặc định và các
+  route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên 1.000 (trần
+  IP của route media content nâng lên 10.000); các
+  route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
-  `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
+  `ip:<req.ip>`. Các route ghi /IP luôn khoá theo IP. Route đếm theo user sẽ đếm theo IP
+  khi request không có bearer hợp lệ (không gửi bearer, hoặc token sai chữ ký hay hết
+  hạn; token còn hạn nhưng session đã bị thu hồi vẫn đếm theo user). `req.ip` lấy từ
   `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
   cửa sổ cố định lưu ở bảng PostgreSQL `RateLimitCounter`, dùng chung mọi replica;
-  vượt giới hạn thì khoá hết thời gian `ttl` (60 giây), hit trong lúc bị khoá không
-  được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
+  vượt giới hạn thì khoá hết thời gian `ttl` của route (60 giây hoặc 15 phút), hit
+  trong lúc bị khoá không được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
   (fail-closed), không bỏ qua giới hạn.
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
   exercise import 8–128; media ingestion 32–128. Cùng key cùng body → `data` gốc (`meta`
@@ -354,20 +369,83 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 
 ### A.5 Dictionary
 
-| Method | Path | Auth |
-| --- | --- | --- |
-| `GET` | `/dictionary?query=<hanzi hoặc pinyin>` | public |
+| Method | Path | Auth | Throttle |
+| --- | --- | --- | --- |
+| `GET` | `/dictionary?query=<hanzi, pinyin hoặc nghĩa Việt/Anh>` | public | 120/phút/user hoặc IP (`dictionaryReadLimit`, 1.000 khi `NODE_ENV=test`) |
+| `GET` | `/dictionary/words/:id` | public | 120/phút/user hoặc IP (cùng `dictionaryReadLimit`) |
+| `GET` | `/dictionary/words/:id/save` | JWT | 120/phút/user (cùng `dictionaryReadLimit`) |
+| `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
+| `DELETE` | `/dictionary/words/:id/save` | JWT | 60/phút/user (cùng `wordSaveLimit`) |
 
-Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc `pinyinNormalized`.
-Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]` (không `400`). Tối
-đa 20 kết quả; chỉ Word `published`, `isPure = true`, có ít nhất một meaning.
+"Từ public" = Word `published`, chưa soft-delete, `isPure = true`, có ít nhất một meaning
+(`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho cả 5 route). Không route
+nào đặt header cache.
 
-`data` `200` là mảng, không `id`:
+**Search.** Query được chuẩn NFC rồi `trim`; hợp lệ khi dài 1–64 ký tự và:
+
+- có ký tự hanzi `㐀-鿿`: chỉ gồm hanzi, `[a-zA-Z1-5:üÜ' ]`;
+- không có hanzi: chỉ gồm chữ Latin có hoặc không dấu, số `1-5`, dấu cách, `'`, `:`.
+
+Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]` với `200` (không `400`).
+"Có cấp HSK" = từ có ít nhất một Level `published`, chưa soft-delete (cùng điều kiện với
+`level` trong response). Mỗi request tối đa 3 truy vấn DB.
+
+- **Hanzi:** `hanzi` bắt đầu bằng query. Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; `hanzi` ngắn trước,
+  rồi `hanzi`, rồi `id`. Tối đa 20.
+- **Latin**, tối đa 20 từ, không trùng `id`, nhóm 1 trước rồi nhóm 2 lấp chỗ còn lại:
+  1. Pinyin: `pinyinNormalized` bắt đầu bằng query đã chuẩn pinyin (bỏ số thanh, chữ
+     thường, `ü` → `u:`). Chỉ chạy khi query không có dấu tiếng Việt (gồm toàn ký tự
+     `[a-zA-Z1-5:üÜ' ]`). Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; khớp trọn (`pinyinNormalized` bằng
+     query) trước, pinyin ngắn trước, rồi `pinyinNormalized`, rồi `id`.
+  2. Nghĩa: chạy khi query sau chuẩn nghĩa (bỏ dấu, `đ` → `d`, chữ thường, gộp khoảng
+     trắng) dài ≥ 2 ký tự và nhóm 1 chưa đủ 20; chỉ gồm từ chưa có ở nhóm 1. Một meaning
+     khớp khi `meaningViNormalized` hoặc `meaningEnNormalized` khớp **đầu từ**: cột bắt
+     đầu bằng query, hoặc chứa query ngay sau một ký tự không phải chữ/số. Query có dấu
+     còn khớp đầu từ `meaningViNormalized` với query viết thường giữ dấu, cho dòng cũ do
+     backfill P0 chuẩn hoá giữ dấu. Thứ tự: khớp chính xác trước (cột bằng query, bằng
+     `"to " + query`, hoặc bằng query giữ dấu), cấp HSK thấp hơn trước (theo `orderIndex`
+     của Level published), từ không có cấp xếp sau, nghĩa khớp ngắn nhất
+     trước, rồi `id`.
+
+Chỉ từ public; `level` là tên Level published đầu tiên theo `orderIndex`. Dữ liệu từ điển
+thật hiện chỉ có nghĩa tiếng Anh (CC-CEDICT, 0 nghĩa Việt cho tới M1.2a), nên hôm nay
+tra theo nghĩa chỉ ra kết quả nhờ nghĩa Anh. Ví dụ: `?query=hoc` và `?query=học` khớp từ
+có nghĩa Việt "học tập" và nghĩa Anh "hockey", không khớp "shocking"; `?query=study` đưa
+từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` trả từ có pinyin
+`xue…` trước, rồi tới từ có nghĩa bắt đầu bằng "xue". `data` `200` là mảng:
 
 ```json
-[{ "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+[{ "id": 12, "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
    "meanings": [{ "en": "to study", "vi": "học tập" }], "level": "HSK 1" }]
 ```
+
+**Chi tiết từ** `GET /dictionary/words/:id`. `:id` không phải số nguyên dương an toàn →
+`400`; không phải từ public → `404` (`error.code` `WORD_NOT_FOUND`). `data` `200`:
+
+```json
+{ "id": 12, "hanzi": "学习", "traditional": "學習", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+  "example": "我每天都学习中文。",
+  "meanings": [{ "order": 1, "en": "to study", "vi": "học tập", "partOfSpeech": "verb", "usage": null, "note": null }],
+  "levels": [{ "code": "HSK1", "name": "HSK 1" }],
+  "sources": [{ "name": "…", "version": "1.0.0", "license": null, "attribution": null }] }
+```
+
+`meanings` theo `meaningOrder`; `levels` chỉ Level published, chưa xoá, theo `orderIndex`;
+`sources` để nguồn `isPrimary` đứng đầu rồi theo id nguồn. Trường nullable trả `null`.
+Không trả trạng thái, audio, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`
+(audio từ vựng thuộc backlog M2.B12).
+
+**Lưu từ** (Q62: chỉ lưu `UserWord`, chưa tạo thẻ ôn SRS). Thiếu token → `401`; `:id` sai
+dạng → `400`. Không response nào chứa `userId` hay `Idempotency-Key`.
+
+| Route | `data` | Lỗi |
+| --- | --- | --- |
+| `GET …/save` | `{ wordId, saved }`. Đã lưu → `saved: true`, kể cả khi từ đã bị gỡ public (để còn bỏ lưu được) | chưa lưu và từ không public → `404 WORD_NOT_FOUND` |
+| `POST …/save` | `{ wordId, saved: true, eventId, occurredAt }`; trả `201` kể cả replay. Lưu lần đầu tạo `UserWord` và `LearningEvent` `word_saved` (`resourceType: "word"`, `resourceId: wordId`) trong một transaction khoá `User`; đã lưu rồi → `eventId: null`, `occurredAt: null`, không tạo event | thiếu/sai key → `400`; key đã dùng cho request khác → `409`; key quá 24 giờ → `400`; từ không public → `404 WORD_NOT_FOUND`; tài khoản không active → `401` |
+| `DELETE …/save` | `{ wordId, saved: false }`; idempotent, `200` cả khi chưa lưu hoặc từ không tồn tại. **Bỏ lưu không ghi event** (`LearningEventType` chưa có loại bỏ lưu) | tài khoản không active → `401` |
+
+Replay một `Idempotency-Key` trả lại kết quả gốc, kể cả khi từ đã bị bỏ lưu sau đó; trạng thái hiện tại đọc bằng `GET …/save`. Replay cùng key trả lại đúng kết quả cũ (cùng `eventId`). Hai request lưu song song của
+một user được tuần tự hoá bằng khoá `User`: đúng một `UserWord` và một event.
 
 ### A.6 Onboarding và Learning plan (JWT)
 
@@ -428,11 +506,26 @@ raw answer.
 timeSpentSeconds, startedAt, completedAt, lastActivityAt, lesson: { title, slug } }`.
 Score bài học là trung bình điểm tốt nhất của các bài **đã làm** (D-03).
 
-Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, progress,
+Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, level,
+position, state, sections, progress,
 topics: [{ …topic, progress: {…}, exercises: PublicExercise[] }], standaloneExercises:
 PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
+Trường thêm cho màn bài học (M2.B13, Q43):
+- `level`: `{ id, code, name }` của Level chứa bài.
+- `position`, `state`: cùng định nghĩa và cùng code với `GET /learning/path` (đọc từ
+  `loadLevelPaths`, chỉ thu hẹp về level của bài); `state ∈ done | current | available | locked`.
+  Bài đang khoá vẫn trả `200` với `state: "locked"`; chỉ `POST start` chặn.
+- `sections.vocabulary`: `{ wordCount, topicCount, topicsDone }`. `wordCount` = đúng tập
+  `words` của `GET /learning/lessons/:id` (LessonWord có Word published, chưa xoá).
+- `sections.grammar`: `{ topicCount, topicsDone }`.
+  `topicCount` đếm topic public (published, chưa xoá) có `type` `vocabulary` hoặc `grammar`
+  tương ứng; `topicsDone` là số topic đó có UserTopicProgress `done` của user.
+- `sections.practice`: `{ exerciseCount, attempted }`. `exerciseCount` = số exercise public
+  của bài (cùng tập `topics[].exercises` + `standaloneExercises`, loại `speaking_repeat`);
+  `attempted` = số exercise trong tập đó có ít nhất một attempt đã submit của user.
+- Mọi trường của activity đọc từ cùng một snapshot (REPEATABLE READ).
 
 Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextLesson }`.
 - `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`, cùng giá trị
@@ -493,8 +586,9 @@ lesson first.`. Thứ tự lỗi:
 `409
 lesson_locked` rollback cả transaction: không tạo Progress hay event, plan item giữ `planned`,
 key không bị tiêu (gọi lại cùng key sau khi bài trước xong sẽ thành công). `GET
-/learning/lessons/:lessonId/activity` không phản ánh khoá: `nextAction` vẫn có thể là
-`start_lesson` cho bài đang khoá; frontend dựa vào `GET /learning/path`. Topic start, attempt
+/learning/lessons/:lessonId/activity` trả `state` (cùng giá trị với `GET /learning/path`);
+chỉ `POST start` chặn bằng `409 lesson_locked`. `nextAction` vẫn có thể là `start_lesson`
+cho bài đang khoá. Topic start, attempt
 và complete trên bài chưa start vẫn trả `409` `Lesson must be started first.`.
 
 Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text }`;
@@ -601,8 +695,21 @@ finalize. Chi tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
-| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 60 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+
+Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate
+của route attempts (`PUBLIC_LESSON_EXERCISE_WHERE` + `buildLessonReadyWhere()`): exercise
+published, chưa soft-delete, loại public (listening_choice thì media audio ready), topic
+(nếu có) published; lesson published, Level published và chưa soft-delete, lesson có ít
+nhất một topic hoặc story published. Admin không đổi.
+
+Rate limit route content: bucket `default` khoá theo `grant:<sha256(mediaId:expires:signature)>`
+(không chứa chữ ký gốc) khi `mediaId`, `expires`, `signature` đúng dạng và
+`now ≤ expires ≤ now + max(TTL learner, TTL admin) + 60`; ngược lại khoá theo IP. Throttler
+riêng `mediaContentIp` giữ trần 600/phút/IP chỉ cho route này. Ở edge, nginx thêm
+`limit_req` 20 req/giây/địa chỉ, burst 200, trả `429` có `Cache-Control: private, no-store`; body
+429 của edge là trang lỗi HTML của nginx, không phải envelope JSON.
 
 Signature = HMAC-SHA256 trên `method`, canonical path, `expiresAt`, checksum; so sánh
 timing-safe; body được hash lại trước khi trả. Grant luôn ký bằng `MEDIA_SIGNING_SECRET`;
@@ -650,7 +757,7 @@ code sẽ tự vào spec đó.
 | `POST/GET` | `/privacy/consents`, `/privacy/exports`, `/privacy/deletion-requests` | Privacy lifecycle (ADR-001) | M1 |
 | `POST` | `/onboarding/placements`, `/onboarding/placements/:id/complete` | Placement (feature flag) | M2 |
 | `PATCH` | `/learning-plans/items/:id` | Trạng thái item trong plan | M2 |
-| `GET` | `/dictionary/words/:id`; `POST` `/dictionary/words/:id/save`; `PATCH` `/dictionary/words/:id/progress` | Chi tiết từ, lưu từ | M2–M3 |
+| `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
 | CRUD | `/admin/cms/questions`, `/admin/cms/tests` | Exam authoring | M4 |
 | `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |

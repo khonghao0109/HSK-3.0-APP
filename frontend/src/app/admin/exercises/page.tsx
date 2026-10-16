@@ -9,7 +9,9 @@ import { ExerciseTable } from '@/features/exercises/exercise-table';
 import { Pagination } from '@/features/exercises/pagination';
 import { BackendRequestError } from '@/lib/api/api-error';
 
-export const metadata: Metadata = { title: 'Exercises' };
+import '../admin-exercises.css';
+
+export const metadata: Metadata = { title: 'Bài tập' };
 
 export default async function ExercisesPage({
   searchParams,
@@ -30,45 +32,22 @@ export default async function ExercisesPage({
     throw error;
   }
   return (
-    <div className="page-stack">
-      <header className="page-header">
+    <div className="adm-page-stack">
+      <header className="adm-page-head">
         <div>
-          <p className="eyebrow">CONTENT REPOSITORY</p>
-          <h1>Exercises</h1>
-          <p>
-            Inspect canonical lesson activities, publication state and source
-            lineage.
-          </p>
-        </div>
-        <div className="read-only-chip">
-          <span aria-hidden="true">◇</span>
-          <span>
-            <strong>Read-only V1</strong>
-            <small>Protected admin data</small>
-          </span>
+          <h1>Bài tập</h1>
+          <p>Xem kho bài tập, trạng thái xuất bản và nguồn gốc nội dung.</p>
         </div>
       </header>
       <ExerciseFilters query={query} />
-      <section
-        className="content-panel"
-        aria-labelledby="exercise-results-heading"
-      >
-        <div className="content-panel__header">
-          <div>
-            <p className="eyebrow">CURRENT VIEW</p>
-            <h2 id="exercise-results-heading">Exercise inventory</h2>
-          </div>
-          <p className="record-count mono">
-            {result.meta.total.toLocaleString('en')} TOTAL
-          </p>
-        </div>
+      <div className="adm-card adm-card--clip">
         <ExerciseTable exercises={result.data} />
         <Pagination
           query={query}
           total={result.meta.total}
           totalPages={result.meta.totalPages}
         />
-      </section>
+      </div>
     </div>
   );
 }

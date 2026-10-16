@@ -63,7 +63,7 @@ Passport JWT (HS256, header `kid` để xoay secret), argon2id + pepper, class-v
 | `user` | `/users` | me, profile cá nhân (GET/PATCH /users/me/profile); danh sách user cho admin | — |
 | `onboarding` | `/onboarding`, `/learning-plans` | goal + learning plan V1, row lock theo user | — |
 | `learning` | `/levels`, `/lessons`, `/topics`, `/stories`, `/learning/*`, `/progress` | public content read có readiness policy; lesson/topic start-complete; exercise attempt chấm server-side; progress/resume | — |
-| `dictionary` | `/dictionary` | prefix search hanzi/pinyin, 20 kết quả | — |
+| `dictionary` | `/dictionary` | prefix search hanzi/pinyin, 20 kết quả có `id`; chi tiết từ public `/dictionary/words/:id`; GET/POST/DELETE `/dictionary/words/:id/save` (JWT) lưu/bỏ lưu từ | — |
 | `cms` | `/admin/cms/*` | lesson/topic/exercise revision → review → publish → archive; exercise import preview + commit; media library, quarantine/archive; media ingestion | ADR-002, 004, 005 |
 | `media` | `/media` | cấp signed URL và trả nội dung private | ADR-005 |
 | `health` | `/health` | `SELECT 1` | — |
@@ -97,7 +97,10 @@ listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter
   import commit (8–128) và media ingestion (32–128); replay trả `data` gốc, cùng key
   khác body → 409.
 - Mọi `POST` trả `201` kể cả replay (chưa dùng `@HttpCode`).
-- Throttle toàn cục 20 req/phút/IP (register 100, login 200); xem finding A-02.
+- Throttle mặc định 20 req/phút cho mỗi route và mỗi user/IP (không phải tổng chung);
+  route giới hạn riêng (auth/me 120, attempts 60, media access 120/user, media content
+  60/grant + 600/IP và nginx `limit_req`, register 100, login 10, …) xem
+  `docs/api/api.md` mục Rate limit; xem finding A-02.
 
 ### 3.4 Invariant nghiệp vụ
 
@@ -182,6 +185,10 @@ Frontend (`frontend/.env.example`): `BACKEND_API_URL` (server-only), `APP_ORIGIN
 Không có biến `NEXT_PUBLIC_*`.
 
 BFF session cho learner (M2.1a) tách biệt hoàn toàn với session admin: sử dụng cookie riêng (`LEARNER_SESSION_COOKIE_NAME`, mặc định `hsk_learner_session` và `${name}_refresh`), chỉ chấp nhận tài khoản có role `user` (tài khoản `admin` bị từ chối 403 `admin_account` và thu hồi session backend ngay lập tức), cung cấp các route `/api/learner/session/{login,register,logout,me}` với kiểm soát CSRF same-origin và proxy tự động refresh token theo tiền tố đường dẫn (ADR-003).
+
+Từ điển learner (M2.6b) đi qua 2 route BFF: `GET /api/learner/dictionary?q=` (tra từ, `q` sau `trim` dài 1–64 ký tự) và `POST`/`DELETE /api/learner/dictionary/words/:id/save` (lưu, bỏ lưu; kiểm same-origin, `Idempotency-Key` sinh phía server cho mỗi lần lưu). Cả hai cần cookie learner, luôn gửi token tới backend để giới hạn đọc 120/phút tính theo user, trả `cache-control: no-store`, và xoá cookie khi backend trả 401/403.
+
+Quên mật khẩu, đặt lại mật khẩu và xác thực email của learner (M2.1c, M2.1d) đi qua 4 route BFF, đều `POST`, kiểm same-origin và trả `cache-control: no-store`: `/api/learner/password-reset/request` (`{ email }`, 204 như nhau dù email có tài khoản hay không), `/api/learner/password-reset/confirm` (`{ token, newPassword }`; 204 thì xoá cookie learner vì backend đã thu hồi mọi phiên; lỗi 400 trả `{ code }` là `INVALID_RESET_TOKEN`, `WEAK_PASSWORD` hoặc `INVALID_REQUEST`), `/api/learner/email-verification/confirm` (`{ token }`, không cần cookie; lỗi 400 trả `INVALID_VERIFICATION_TOKEN`) và `/api/learner/email-verification/request` (cần cookie learner; 401/403 thì xoá cookie). Token đọc từ fragment `#token=` của trang `/reset-password`, `/verify-email` rồi xoá khỏi URL ngay; BFF chuyển tiếp `X-Forwarded-For` để giới hạn theo IP của backend tính theo người dùng.
 
 ### 3.7 Worker process và Job Queue (M1.7a)
 

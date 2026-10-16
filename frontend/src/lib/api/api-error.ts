@@ -22,11 +22,13 @@ export type ApiFailure = {
   message: string;
   retryable: boolean;
   requestId?: string;
+  /** `error.code` of the backend error envelope, when it is a string. */
+  code?: string;
 };
 
 const FAILURE_BY_STATUS: Record<
   number,
-  Omit<ApiFailure, 'status' | 'requestId'>
+  Omit<ApiFailure, 'status' | 'requestId' | 'code'>
 > = {
   400: {
     kind: 'invalid_request',
@@ -79,6 +81,7 @@ export function normalizeApiFailure(input: {
     ? (input.status as number)
     : 500;
   const known = FAILURE_BY_STATUS[status];
+  const code = envelopeCode(input.body);
   return {
     status,
     ...(known ?? {
@@ -87,7 +90,16 @@ export function normalizeApiFailure(input: {
       retryable: status >= 500,
     }),
     ...(input.requestId ? { requestId: input.requestId } : {}),
+    ...(code === undefined ? {} : { code }),
   };
+}
+
+function envelopeCode(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null) return undefined;
+  const error = (body as { error?: unknown }).error;
+  if (typeof error !== 'object' || error === null) return undefined;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
 }
 
 export class BackendRequestError extends Error implements ApiFailure {
@@ -95,6 +107,7 @@ export class BackendRequestError extends Error implements ApiFailure {
   kind: ApiFailureKind;
   retryable: boolean;
   requestId?: string;
+  code?: string;
 
   constructor(failure: ApiFailure) {
     super(failure.message);
@@ -103,6 +116,7 @@ export class BackendRequestError extends Error implements ApiFailure {
     this.kind = failure.kind;
     this.retryable = failure.retryable;
     this.requestId = failure.requestId;
+    this.code = failure.code;
   }
 }
 

@@ -1,27 +1,17 @@
 import Link from 'next/link';
 
-import { StatusBadge } from '@/components/ui/status-badge';
+import { AdminBadge } from '@/features/admin-shell/admin-badge';
+import {
+  adminDateTime,
+  lifecycleLabel,
+  mediaTypeLabel,
+  processingStatusLabel,
+} from '@/features/admin-shell/admin-labels';
 
 import type { AdminMediaDetail } from './media-contract';
 import { MediaLifecycleActions } from './media-mutation';
 
-function label(value: string): string {
-  return value
-    .split('_')
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ');
-}
-
-function date(value: string | null): string {
-  if (!value) return '—';
-  return new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(value));
-}
-
-function size(value: number | null): string {
+function fileSize(value: number | null): string {
   if (value === null) return '—';
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
@@ -30,131 +20,130 @@ function size(value: number | null): string {
 
 export function MediaDetail({ asset }: { asset: AdminMediaDetail }) {
   return (
-    <article className="detail-stack">
-      <header className="detail-hero media-detail-hero">
+    <article className="adm-page-stack">
+      <header className="adm-hero">
         <div>
-          <p className="eyebrow mono">MEDIA ASSET / MD-{asset.id}</p>
-          <h1>{asset.filename ?? `Media asset ${asset.id}`}</h1>
-          <p className="detail-hero__prompt">
-            Operational metadata only. Delivery URL and storage credentials are
-            intentionally restricted.
+          <h1 className="adm-break-anywhere">
+            {asset.filename ?? `Media ${asset.id}`}
+          </h1>
+          <p className="adm-hero__prompt">
+            Chỉ hiển thị metadata vận hành. URL phân phối và thông tin đăng nhập
+            storage được giới hạn.
           </p>
         </div>
-        <div className="detail-hero__meta">
-          <StatusBadge status={asset.processingStatus}>
-            {label(asset.processingStatus)}
-          </StatusBadge>
-          <StatusBadge status={asset.lifecycle}>
-            {label(asset.lifecycle)}
-          </StatusBadge>
+        <div className="adm-hero__meta">
+          <AdminBadge
+            status={asset.processingStatus}
+            label={processingStatusLabel(asset.processingStatus)}
+          />
+          <AdminBadge
+            status={asset.lifecycle}
+            label={lifecycleLabel(asset.lifecycle)}
+          />
         </div>
       </header>
 
-      <section className="detail-grid" aria-label="Media asset overview">
-        <div className="panel detail-main">
-          <div className="section-heading">
-            <p className="eyebrow">Asset profile</p>
-            <h2>Technical metadata</h2>
+      <section className="adm-detail-grid" aria-label="Tổng quan media">
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Thông tin kỹ thuật</h2>
           </div>
-          <dl className="fact-list fact-list--two-columns">
+          <dl className="adm-facts adm-facts--two-col">
             <div>
-              <dt>Type</dt>
-              <dd>{label(asset.type)}</dd>
+              <dt>Loại</dt>
+              <dd>{mediaTypeLabel(asset.type)}</dd>
             </div>
             <div>
-              <dt>MIME</dt>
-              <dd className="mono">{asset.mimeType ?? '—'}</dd>
+              <dt>Định dạng MIME</dt>
+              <dd className="adm-mono">{asset.mimeType ?? '—'}</dd>
             </div>
             <div>
-              <dt>Size</dt>
-              <dd>{size(asset.size)}</dd>
+              <dt>Dung lượng</dt>
+              <dd>{fileSize(asset.size)}</dd>
             </div>
             <div>
-              <dt>Duration</dt>
+              <dt>Thời lượng</dt>
               <dd>{asset.duration === null ? '—' : `${asset.duration}s`}</dd>
             </div>
             <div>
-              <dt>Created</dt>
-              <dd>{date(asset.createdAt)}</dd>
+              <dt>Ngày tạo</dt>
+              <dd>{adminDateTime(asset.createdAt)}</dd>
             </div>
             <div>
-              <dt>Updated</dt>
-              <dd>{date(asset.updatedAt)}</dd>
+              <dt>Ngày cập nhật</dt>
+              <dd>{adminDateTime(asset.updatedAt)}</dd>
             </div>
           </dl>
         </div>
-        <aside className="panel fact-panel" aria-label="Media provenance">
-          <div className="section-heading">
-            <p className="eyebrow">Traceability</p>
-            <h2>Provenance</h2>
+        <aside className="adm-card adm-panel" aria-label="Nguồn gốc media">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Nguồn gốc</h2>
           </div>
-          <dl className="fact-list">
+          <dl className="adm-facts">
             <div>
-              <dt>Source</dt>
-              <dd>{asset.dataSource?.name ?? 'Manual ingestion'}</dd>
+              <dt>Nguồn</dt>
+              <dd>{asset.dataSource?.name ?? 'Nhập thủ công'}</dd>
             </div>
             <div>
-              <dt>Source code</dt>
-              <dd className="mono">{asset.dataSource?.code ?? '—'}</dd>
+              <dt>Mã nguồn</dt>
+              <dd className="adm-mono">{asset.dataSource?.code ?? '—'}</dd>
             </div>
             <div>
-              <dt>Source version</dt>
-              <dd className="mono">{asset.dataSource?.version ?? '—'}</dd>
+              <dt>Phiên bản nguồn</dt>
+              <dd className="adm-mono">{asset.dataSource?.version ?? '—'}</dd>
             </div>
             <div>
-              <dt>Uploader ID</dt>
-              <dd className="mono">{asset.uploadedById ?? '—'}</dd>
+              <dt>ID người tải lên</dt>
+              <dd className="adm-mono">{asset.uploadedById ?? '—'}</dd>
             </div>
             <div>
-              <dt>Last operator ID</dt>
-              <dd className="mono">{asset.updatedById ?? '—'}</dd>
+              <dt>ID người thao tác gần nhất</dt>
+              <dd className="adm-mono">{asset.updatedById ?? '—'}</dd>
             </div>
           </dl>
         </aside>
       </section>
 
-      <section className="detail-grid detail-grid--balanced">
-        <div className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Content graph</p>
-            <h2>References</h2>
+      <section className="adm-detail-grid adm-detail-grid--balanced">
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Tham chiếu</h2>
           </div>
-          <p className="muted">
-            {asset.usageCount} total content reference
-            {asset.usageCount === 1 ? '' : 's'}.
+          <p className="adm-muted">
+            {asset.usageCount} lượt tham chiếu trong nội dung.
           </p>
           {asset.usage.lessonExercises.length > 0 ? (
-            <ul className="media-usage-list">
+            <ul className="adm-media-usage">
               {asset.usage.lessonExercises.map((exercise) => (
                 <li key={exercise.id}>
                   <div>
-                    <span className="mono">EX-{exercise.id}</span>
+                    <span className="adm-mono">EX-{exercise.id}</span>{' '}
                     <strong>{exercise.prompt}</strong>
                   </div>
                   <Link
-                    className="row-link"
+                    className="adm-link"
                     href={`/admin/exercises/${exercise.id}`}
                   >
-                    Open exercise {exercise.id} →
+                    Mở bài tập {exercise.id}
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted">No lesson exercises reference this asset.</p>
+            <p className="adm-muted">
+              Không có bài tập nào tham chiếu media này.
+            </p>
           )}
           {asset.usage.counts.otherContent > 0 ? (
-            <p className="muted">
-              {asset.usage.counts.otherContent} additional reference
-              {asset.usage.counts.otherContent === 1 ? '' : 's'} belongs to
-              other content types.
+            <p className="adm-muted">
+              {asset.usage.counts.otherContent} tham chiếu thuộc loại nội dung
+              khác.
             </p>
           ) : null}
         </div>
-        <div className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Safety workflow</p>
-            <h2>Lifecycle operations</h2>
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Thao tác vòng đời</h2>
           </div>
           <MediaLifecycleActions
             mediaId={asset.id}

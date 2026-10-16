@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
+
 import { withExercisePage, type ExerciseQuery } from './exercise-query';
 
 export function Pagination({
@@ -11,37 +13,49 @@ export function Pagination({
   total: number;
   totalPages: number;
 }) {
-  if (totalPages <= 1)
-    return (
-      <p className="pagination-summary mono">
-        {total} record{total === 1 ? '' : 's'}
-      </p>
-    );
+  const from = total > 0 ? (query.page - 1) * query.limit + 1 : 0;
+  const to = Math.min(total, query.page * query.limit);
+  const hasPrevious = query.page > 1;
+  const hasNext = query.page < totalPages;
   return (
-    <nav className="pagination" aria-label="Exercise pages">
-      <p className="pagination-summary mono">
-        Page {query.page} of {totalPages} · {total} records
+    <nav className="adm-pagination" aria-label="Phân trang bài tập">
+      <p className="adm-pagination__info" aria-live="polite">
+        Hiển thị {from} đến {to} của {total} kết quả
       </p>
-      <div>
-        {query.page > 1 ? (
+      <div className="adm-pagination__pages">
+        {hasPrevious ? (
           <Link
-            className="page-link"
+            className="adm-page-btn"
             href={withExercisePage(query, query.page - 1)}
           >
-            ← Previous
+            <AdminIcon name="chevron-left" className="adm-icon adm-icon--sm" />
+            Trước
           </Link>
         ) : (
-          <span className="page-link page-link--disabled">← Previous</span>
+          <span
+            className="adm-page-btn adm-page-btn--disabled"
+            aria-disabled="true"
+          >
+            <AdminIcon name="chevron-left" className="adm-icon adm-icon--sm" />
+            Trước
+          </span>
         )}
-        {query.page < totalPages ? (
+        {hasNext ? (
           <Link
-            className="page-link"
+            className="adm-page-btn"
             href={withExercisePage(query, query.page + 1)}
           >
-            Next →
+            Sau
+            <AdminIcon name="chevron-right" className="adm-icon adm-icon--sm" />
           </Link>
         ) : (
-          <span className="page-link page-link--disabled">Next →</span>
+          <span
+            className="adm-page-btn adm-page-btn--disabled"
+            aria-disabled="true"
+          >
+            Sau
+            <AdminIcon name="chevron-right" className="adm-icon adm-icon--sm" />
+          </span>
         )}
       </div>
     </nav>

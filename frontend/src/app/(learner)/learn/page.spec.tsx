@@ -221,7 +221,20 @@ describe('LearnerHomePage', () => {
     expect(container.textContent).not.toContain('XP');
   });
 
-  it('renders the continue lesson card and toasts on click', async () => {
+  it('labels the web card button "Bắt đầu" for a lesson not started', async () => {
+    const { container } = await renderHome({
+      ...readyHome,
+      continueLesson: { ...lesson, completionPercent: 0 },
+    });
+    expect(container.querySelector('.home-lesson__cta')).toHaveTextContent(
+      /^Bắt đầu$/u,
+    );
+    expect(container.querySelector('.w-top .w-chip')).toHaveTextContent(
+      `Chuỗi ngày học: ${readyHome.streakDays} ngày`,
+    );
+  });
+
+  it('renders the continue lesson card as a link to the lesson', async () => {
     const { container } = await renderHome({
       ...readyHome,
       continueLesson: lesson,
@@ -243,8 +256,16 @@ describe('LearnerHomePage', () => {
     expect(card.querySelector('.progress > span')).toHaveClass('pct-40');
     expect(container.querySelector('[style]')).toBeNull();
 
+    // Web card button (Q83): a lesson under way reads "Tiếp tục học".
+    expect(card.querySelector('.home-lesson__cta')).toHaveTextContent(
+      /^Tiếp tục học$/u,
+    );
+    expect(card.querySelector('.home-lesson__cta')).toHaveClass('w-only');
+
+    expect(card.tagName).toBe('A');
+    expect(card).toHaveAttribute('href', `/learn/lessons/${lesson.lessonId}`);
     fireEvent.click(card);
-    expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
   it('lists the eight explore shortcuts in order', async () => {
@@ -271,11 +292,13 @@ describe('LearnerHomePage', () => {
 
   it('toasts from the bell and links the avatar to the profile', async () => {
     await renderHome(readyHome);
-    fireEvent.click(screen.getByRole('button', { name: 'Thông báo' }));
+    // The hero of the mobile layout; the web top bar has its own (M2.10a).
+    const hero = within(screen.getByRole('banner'));
+    fireEvent.click(hero.getByRole('button', { name: 'Thông báo' }));
     expect(
       screen.getByText('Thông báo sẽ có khi tính năng ra mắt.'),
     ).toHaveClass('toast');
-    expect(screen.getByRole('link', { name: 'Hồ sơ' })).toHaveAttribute(
+    expect(hero.getByRole('link', { name: 'Hồ sơ' })).toHaveAttribute(
       'href',
       '/learn/profile',
     );

@@ -1,25 +1,17 @@
-import { StatusBadge } from '@/components/ui/status-badge';
+import { AdminBadge } from '@/features/admin-shell/admin-badge';
+import {
+  adminDateTime,
+  exerciseStatusLabel,
+  exerciseTypeLabel,
+  mediaTypeLabel,
+  processingStatusLabel,
+  reviewDecisionLabel,
+} from '@/features/admin-shell/admin-labels';
 
 import type { AdminExerciseDetail } from './exercise-contract';
 
 function json(value: unknown): string {
   return JSON.stringify(value, null, 2);
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  return new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(value));
-}
-
-function decisionLabel(value: string): string {
-  return value
-    .split('_')
-    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-    .join(' ');
 }
 
 export function ExerciseDetail({
@@ -30,126 +22,126 @@ export function ExerciseDetail({
   canViewAnswer: boolean;
 }) {
   return (
-    <article className="detail-stack">
-      <header className="detail-hero">
+    <article className="adm-page-stack">
+      <header className="adm-hero">
         <div>
-          <p className="eyebrow mono">LESSON EXERCISE / EX-{exercise.id}</p>
-          <h1>Exercise {exercise.id}</h1>
-          <p className="detail-hero__prompt">{exercise.prompt}</p>
+          <h1>Bài tập {exercise.id}</h1>
+          <p className="adm-hero__prompt">{exercise.prompt}</p>
         </div>
-        <div className="detail-hero__meta">
-          <StatusBadge status={exercise.status}>
-            {decisionLabel(exercise.status)}
-          </StatusBadge>
-          <span className="version-chip mono">Version {exercise.version}</span>
+        <div className="adm-hero__meta">
+          <AdminBadge
+            status={exercise.status}
+            label={exerciseStatusLabel(exercise.status)}
+          />
+          <span className="adm-badge adm-badge--muted adm-mono">
+            Phiên bản {exercise.version}
+          </span>
         </div>
       </header>
 
-      <section className="detail-grid" aria-label="Exercise overview">
-        <div className="panel detail-main">
-          <div className="section-heading">
-            <p className="eyebrow">Canonical payload</p>
-            <h2>Content</h2>
+      <section className="adm-detail-grid" aria-label="Tổng quan bài tập">
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Nội dung</h2>
           </div>
-          <pre className="json-block">
+          <pre className="adm-json">
             <code>{json(exercise.content)}</code>
           </pre>
-          <div className="answer-block">
-            <h3>Authoritative answer</h3>
+          <div className="adm-panel-section">
+            <h3 className="adm-subhead">Đáp án</h3>
             {canViewAnswer ? (
-              <pre className="json-block json-block--answer">
+              <pre className="adm-json">
                 <code>{json(exercise.answer)}</code>
               </pre>
             ) : (
-              <p>Answer data is restricted to authenticated administrators.</p>
+              <p className="adm-muted">
+                Dữ liệu đáp án chỉ dành cho quản trị viên đã đăng nhập.
+              </p>
             )}
           </div>
           {exercise.explanation ? (
-            <div className="prose-block">
-              <h3>Explanation</h3>
+            <div className="adm-panel-section">
+              <h3 className="adm-subhead">Giải thích</h3>
               <p>{exercise.explanation}</p>
             </div>
           ) : null}
         </div>
 
-        <aside className="panel fact-panel" aria-label="Exercise metadata">
-          <div className="section-heading">
-            <p className="eyebrow">Placement</p>
-            <h2>Context</h2>
+        <aside className="adm-card adm-panel" aria-label="Ngữ cảnh bài tập">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Ngữ cảnh</h2>
           </div>
-          <dl className="fact-list">
+          <dl className="adm-facts">
             <div>
-              <dt>Lesson</dt>
+              <dt>Bài học</dt>
               <dd>{exercise.lesson.title}</dd>
             </div>
             <div>
-              <dt>Topic</dt>
-              <dd>{exercise.topic?.title ?? 'Lesson level'}</dd>
+              <dt>Chủ đề</dt>
+              <dd>{exercise.topic?.title ?? 'Cấp bài học'}</dd>
             </div>
             <div>
-              <dt>Type</dt>
-              <dd>{decisionLabel(exercise.type)}</dd>
+              <dt>Loại</dt>
+              <dd>{exerciseTypeLabel(exercise.type)}</dd>
             </div>
             <div>
-              <dt>Order</dt>
-              <dd className="mono">{exercise.orderIndex}</dd>
+              <dt>Thứ tự</dt>
+              <dd className="adm-mono">{exercise.orderIndex}</dd>
             </div>
             <div>
-              <dt>Published</dt>
-              <dd>{formatDate(exercise.publishedAt)}</dd>
+              <dt>Xuất bản</dt>
+              <dd>{adminDateTime(exercise.publishedAt)}</dd>
             </div>
           </dl>
         </aside>
       </section>
 
-      <section className="detail-grid detail-grid--balanced">
-        <div className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Traceability</p>
-            <h2>Provenance</h2>
+      <section className="adm-detail-grid adm-detail-grid--balanced">
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Nguồn gốc</h2>
           </div>
-          <dl className="fact-list">
+          <dl className="adm-facts">
             <div>
-              <dt>Data source</dt>
-              <dd>{exercise.dataSource?.name ?? 'Manual authoring'}</dd>
+              <dt>Nguồn dữ liệu</dt>
+              <dd>{exercise.dataSource?.name ?? 'Soạn thủ công'}</dd>
             </div>
             <div>
-              <dt>Source code</dt>
-              <dd className="mono">{exercise.dataSource?.code ?? '—'}</dd>
+              <dt>Mã nguồn</dt>
+              <dd className="adm-mono">{exercise.dataSource?.code ?? '—'}</dd>
             </div>
             <div>
-              <dt>Source key</dt>
-              <dd className="mono break-anywhere">
+              <dt>Khoá nguồn</dt>
+              <dd className="adm-mono adm-break-anywhere">
                 {exercise.sourceKey ?? '—'}
               </dd>
             </div>
             <div>
-              <dt>Created</dt>
-              <dd>{formatDate(exercise.createdAt)}</dd>
+              <dt>Ngày tạo</dt>
+              <dd>{adminDateTime(exercise.createdAt)}</dd>
             </div>
             <div>
-              <dt>Updated</dt>
-              <dd>{formatDate(exercise.updatedAt)}</dd>
+              <dt>Ngày cập nhật</dt>
+              <dd>{adminDateTime(exercise.updatedAt)}</dd>
             </div>
           </dl>
         </div>
-        <div className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Safe asset view</p>
-            <h2>Media</h2>
+        <div className="adm-card adm-panel">
+          <div className="adm-panel__head">
+            <h2 className="adm-panel__title">Media</h2>
           </div>
           {exercise.media ? (
-            <dl className="fact-list">
+            <dl className="adm-facts">
               <div>
-                <dt>Type</dt>
-                <dd>{exercise.media.type}</dd>
+                <dt>Loại</dt>
+                <dd>{mediaTypeLabel(exercise.media.type)}</dd>
               </div>
               <div>
                 <dt>MIME</dt>
                 <dd>{exercise.media.mimeType ?? '—'}</dd>
               </div>
               <div>
-                <dt>Duration</dt>
+                <dt>Thời lượng</dt>
                 <dd>
                   {exercise.media.duration
                     ? `${exercise.media.duration}s`
@@ -157,45 +149,48 @@ export function ExerciseDetail({
                 </dd>
               </div>
               <div>
-                <dt>Processing</dt>
+                <dt>Xử lý</dt>
                 <dd>
-                  <StatusBadge status={exercise.media.processingStatus}>
-                    {decisionLabel(exercise.media.processingStatus)}
-                  </StatusBadge>
+                  <AdminBadge
+                    status={exercise.media.processingStatus}
+                    label={processingStatusLabel(
+                      exercise.media.processingStatus,
+                    )}
+                  />
                 </dd>
               </div>
             </dl>
           ) : (
-            <p className="muted">No media is attached to this exercise.</p>
+            <p className="adm-muted">Bài tập này không có media.</p>
           )}
         </div>
       </section>
 
-      <section className="panel revision-panel">
-        <div className="section-heading">
-          <p className="eyebrow">Immutable audit trail</p>
-          <h2>Revision history</h2>
+      <section className="adm-card adm-panel">
+        <div className="adm-panel__head">
+          <h2 className="adm-panel__title">Lịch sử bản sửa</h2>
         </div>
         {exercise.revisions.length === 0 ? (
-          <p className="muted">No revisions recorded.</p>
+          <p className="adm-muted">Chưa có bản sửa nào.</p>
         ) : (
-          <ol className="timeline">
+          <ol className="adm-timeline">
             {exercise.revisions.map((revision) => (
               <li key={revision.id}>
-                <div className="timeline__rail" aria-hidden="true" />
-                <div className="timeline__content">
-                  <div className="timeline__title">
-                    <strong>Revision {revision.revision}</strong>
-                    <span>{formatDate(revision.createdAt)}</span>
+                <div className="adm-timeline__rail" aria-hidden="true" />
+                <div className="adm-timeline__content">
+                  <div className="adm-timeline__title">
+                    <strong>Bản sửa {revision.revision}</strong>
+                    <span>{adminDateTime(revision.createdAt)}</span>
                   </div>
-                  <span className="mono hash">
-                    {revision.contentHash ?? 'Hash unavailable'}
+                  <span className="adm-mono adm-hash">
+                    {revision.contentHash ?? 'Không có hash'}
                   </span>
                   {revision.reviews.map((review) => (
-                    <div className="review-record" key={review.id}>
-                      <StatusBadge status={review.decision}>
-                        {decisionLabel(review.decision)}
-                      </StatusBadge>
+                    <div className="adm-review" key={review.id}>
+                      <AdminBadge
+                        status={review.decision}
+                        label={reviewDecisionLabel(review.decision)}
+                      />
                       {review.note ? <span>{review.note}</span> : null}
                     </div>
                   ))}

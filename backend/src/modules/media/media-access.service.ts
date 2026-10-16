@@ -19,7 +19,9 @@ import {
   ObjectStorageError,
   ObjectStorageErrorKind,
 } from '../../infrastructure/storage/object-storage.port';
+import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PUBLIC_LESSON_EXERCISE_WHERE } from '../learning/public-exercise.policy';
 import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
 import {
   canonicalMediaContentResource,
@@ -32,10 +34,12 @@ type AuthenticatedMediaActor = { id: number; role: string };
 
 /**
  * A learner grant is a bearer capability URL, so it stays valid only long
- * enough to start loading the asset; a copied link dies within a minute (B-07).
- * Admins keep `media.accessTtlSeconds` for previews.
+ * enough to load and replay one clip; a copied link dies within five minutes
+ * (B-07, Q46). Admins keep `media.accessTtlSeconds` for previews. A rotated
+ * signing secret must stay in the previous slot for at least the larger of
+ * the two TTLs.
  */
-export const LEARNER_MEDIA_ACCESS_TTL_SECONDS = 60;
+export const LEARNER_MEDIA_ACCESS_TTL_SECONDS = 300;
 
 @Injectable()
 export class MediaAccessService {
@@ -71,13 +75,11 @@ export class MediaAccessService {
         processingStatus: true,
         deletedAt: true,
         lessonExercises: {
+          // Same predicate as the public attempt route (Q46).
           where: {
-            status: 'published',
-            deletedAt: null,
-            lesson: { is: { status: 'published', deletedAt: null } },
-            OR: [
-              { topicId: null },
-              { topic: { is: { status: 'published', deletedAt: null } } },
+            AND: [
+              PUBLIC_LESSON_EXERCISE_WHERE,
+              { lesson: { is: buildLessonReadyWhere() } },
             ],
           },
           select: { id: true },
