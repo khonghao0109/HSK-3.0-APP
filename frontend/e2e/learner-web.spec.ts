@@ -16,6 +16,7 @@ import {
   publishPracticeExercises,
   readyLessonId,
   registerReadyLearner,
+  BACKEND,
   PASSWORD,
 } from './support/learner-fixtures';
 
@@ -912,7 +913,7 @@ async function learnerWrite(
   route: string,
   data: unknown,
 ): Promise<void> {
-  const response = await api.fetch(`http://127.0.0.1:3100/api/v1${route}`, {
+  const response = await api.fetch(`${BACKEND}${route}`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,

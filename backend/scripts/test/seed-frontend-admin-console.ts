@@ -257,6 +257,71 @@ async function main(): Promise<void> {
         publishedAt: new Date(),
       },
     });
+    // M5.1a (F5): 1 bài học draft với 1 chủ đề draft, mỗi cái đúng 1 bản sửa
+    // chưa đánh giá — dữ liệu cho luồng review/publish của trang Nội dung.
+    const draftLesson = await tx.lesson.create({
+      data: {
+        levelId: level.id,
+        title: 'Numbers & counting',
+        description: 'Counting and simple quantities.',
+        slug: 'numbers-counting',
+        orderIndex: 2,
+        status: 'draft',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+    const draftLessonSnapshot = {
+      title: draftLesson.title,
+      description: draftLesson.description,
+      orderIndex: draftLesson.orderIndex,
+      slug: draftLesson.slug,
+    };
+    await tx.contentRevision.create({
+      data: {
+        entityType: 'lesson',
+        entityId: draftLesson.id,
+        revision: 1,
+        snapshot: draftLessonSnapshot,
+        contentHash: canonicalHash(draftLessonSnapshot),
+        authorId: admin.id,
+      },
+    });
+    const draftTopic = await tx.topic.create({
+      data: {
+        lessonId: draftLesson.id,
+        title: 'Numbers 1–10',
+        subtitle: 'Basic numerals',
+        type: 'vocabulary',
+        content: [{ type: 'text', value: '一二三四五六七八九十' }],
+        orderIndex: 1,
+        status: 'draft',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+    const draftTopicSnapshot = {
+      title: draftTopic.title,
+      subtitle: draftTopic.subtitle,
+      type: draftTopic.type,
+      content: draftTopic.content,
+      orderIndex: draftTopic.orderIndex,
+      isPremium: draftTopic.isPremium,
+      isLocked: draftTopic.isLocked,
+    };
+    await tx.contentRevision.create({
+      data: {
+        entityType: 'topic',
+        entityId: draftTopic.id,
+        revision: 1,
+        snapshot: draftTopicSnapshot,
+        contentHash: canonicalHash(draftTopicSnapshot),
+        authorId: admin.id,
+      },
+    });
+
     const audio = await tx.media.create({
       data: {
         url: 'https://cdn.example.test/hsk/frontend-console/nihao.mp3',

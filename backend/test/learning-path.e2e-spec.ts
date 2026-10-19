@@ -14,6 +14,7 @@ type LevelState = {
   status: 'draft' | 'published' | 'archived';
   publishedAt: Date | null;
   deletedAt: Date | null;
+  name: string;
 };
 
 /**
@@ -577,11 +578,24 @@ describe('Learning path and sequential lesson lock (Q18) E2E', () => {
   async function publishLevel(code: 'HSK2' | 'HSK3', band: number) {
     const prior = await prisma.level.findUnique({
       where: { code },
-      select: { id: true, status: true, publishedAt: true, deletedAt: true },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        publishedAt: true,
+        deletedAt: true,
+      },
     });
     const level = await prisma.level.upsert({
       where: { code },
-      update: { status: 'published', publishedAt: new Date(), deletedAt: null },
+      // name cũng phải ép về `code`: dictionary-search (M2.B14) upsert cùng
+      // level với name khác; không ép name thì P4 flake theo thứ tự suite.
+      update: {
+        name: code,
+        status: 'published',
+        publishedAt: new Date(),
+        deletedAt: null,
+      },
       create: {
         code,
         name: code,
@@ -600,6 +614,8 @@ describe('Learning path and sequential lesson lock (Q18) E2E', () => {
             status: prior.status,
             publishedAt: prior.publishedAt,
             deletedAt: prior.deletedAt,
+            // R16: khôi phục cả name (upsert ở trên ép name = code).
+            name: prior.name,
           }
         : null,
     );

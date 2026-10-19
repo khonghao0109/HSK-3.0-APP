@@ -621,8 +621,9 @@ test('M5.0 (a)(b)(c): khung sidebar desktop đúng mẫu 06, Q88/Q92/Q94', async
 
   // (b) Q94: mục chưa có trang KHÔNG chip, không link, aria-disabled,
   // "Sắp có" trong tên đọc + title; mọi nhãn 1 dòng, mục cao ≤ 44px.
+  // M5.1a: "Nội dung" đã có trang (/admin/content) nên "Sắp có" giảm 9 → 8.
   const soonItems = page.locator('.adm-nav__item--soon');
-  await expect(soonItems).toHaveCount(9);
+  await expect(soonItems).toHaveCount(8);
   await expect(page.locator('.adm-nav__soon')).toHaveCount(0);
   await expect(soonItems.first()).toHaveAttribute('title', 'Sắp có');
   await expect(soonItems.first()).toHaveAccessibleName(/Sắp có/u);

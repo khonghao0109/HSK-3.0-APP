@@ -605,7 +605,7 @@ revision đã approved mới nhất → archive. Revision/review/audit append-on
 | Method | Path | Query/Body | `data` |
 | --- | --- | --- | --- |
 | `GET` | `/admin/cms/lessons` | `levelId?`, `status?`, `search?` (1–200), `page`, `limit` | `[{ …LessonAdmin, latestRevision }]` + `meta` |
-| `GET` | `/admin/cms/lessons/:lessonId` | — | `{ lesson, revisions }` |
+| `GET` | `/admin/cms/lessons/:lessonId` | — | `{ lesson, revisions, topics }` |
 | `POST` | `/admin/cms/lessons` | `CreateLesson` | `{ lesson, revision, idempotent: false }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions` | `LessonRevision` | `{ lesson, revision, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
@@ -629,8 +629,31 @@ Không có `GET /admin/cms/topics` (list).
 `LessonAdmin`: `{ id, levelId, title, description, orderIndex, slug, status, createdById,
 updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt }`.
 
-Lỗi: `400` DTO; `403` role; `404` entity; `409` stale/không approved/unique; `503` lock
-timeout. Lock order và hash: ADR-002, overview §3.4.
+`GET /admin/cms/lessons/:lessonId` (M5.1a, B1): `topics` là mọi Topic của bài học (kể cả
+archived), sắp xếp `orderIndex` asc rồi `id` asc, KHÔNG có trường `content`; mỗi phần tử kèm
+`latestRevision` tóm tắt `{ id, revision, authorId, createdAt, reviews }` với `reviews` tối đa
+1 bản mới nhất `{ decision, reviewerId, createdAt }` (không snapshot, không contentHash), hoặc
+`null` khi chủ đề chưa có bản sửa. Không phân trang (một bài học có ít chủ đề).
+
+Lỗi: `400` DTO; `403` role; `404` entity; `409` (mã máy trong `error.code`, bảng dưới);
+`503` lock timeout. Lock order và hash: ADR-002, overview §3.4.
+
+Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sang câu tiếng Việt):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `CONTENT_ARCHIVED` | `Archived content cannot be changed.` / `Archived <Lesson\|Topic> cannot be changed.` | Mutation vào content đã archived |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` / `… can be published.` | Review/publish bản sửa không còn là mới nhất |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved |
+| `LESSON_LEVEL_NOT_PUBLISHED` | `Lesson requires a published, non-deleted parent level.` | Publish lesson mà Level chưa published |
+| `LESSON_NO_PUBLISHED_CHILD` | `Lesson requires at least one published Topic or Story.` | Publish lesson chưa có Topic/Story published |
+| `CONTENT_UNIQUE_CONFLICT` | `Content conflicts with an existing slug or order.` | Trùng unique (ví dụ slug lesson) |
+| `CONTENT_CONSTRAINT_CONFLICT` | `Content violates a database integrity constraint.` | Vi phạm ràng buộc FK/check |
+| `CONTENT_CONCURRENT_UPDATE` | `Concurrent content update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `Lesson revision snapshot is invalid.` / `Topic revision snapshot is invalid.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+`REVISION_NOT_LATEST`/`REVIEW_NOT_APPROVED` từ `decidePublishAction` dùng chung, nên publish
+LessonExercise (A.9) cũng trả hai mã này; các `409` riêng của Exercise không có `code`.
 
 ### A.9 Admin CMS — Exercise và Import (admin)
 

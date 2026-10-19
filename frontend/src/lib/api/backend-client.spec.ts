@@ -131,6 +131,64 @@ describe('server-only backend client', () => {
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
 
+  it('allowlists only the explicit lesson/topic CMS endpoints (M5.1a, F1)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/admin/cms/lessons?page=1&limit=20&search=chao',
+    );
+    await client.request('/api/v1/admin/cms/lessons/41');
+    await client.request('/api/v1/admin/cms/lessons/41/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/revisions/7/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/revisions/7/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/archive', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics', { method: 'POST' });
+    await client.request('/api/v1/admin/cms/topics/9');
+    await client.request('/api/v1/admin/cms/topics/9/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/revisions/3/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/revisions/3/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/archive', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(12);
+
+    for (const path of [
+      '/api/v1/admin/cms/lessons/1/../x',
+      '/api/v1/admin/cms/lessons/abc',
+      '/api/v1/admin/cms/lessons/41/revisions/7/reviews/extra',
+      '/api/v1/admin/cms/lessons/41/revisions/abc/publish',
+      '/api/v1/admin/cms/topics/9/archive/extra',
+      '/api/v1/admin/cms/topics?x=1',
+      '/api/v1/admin/cms/lessons/41/archive?x=1',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(12);
+  });
+
   it('allowlists auth refresh and logout endpoints, rejecting path variants', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

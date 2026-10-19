@@ -56,7 +56,8 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
     );
     expect(items).toEqual([
       'Tổng quan (Sắp có)',
-      'Nội dung (Sắp có)',
+      // M5.1a: "Nội dung" đã có trang /admin/content.
+      'Nội dung',
       'Bài tập',
       'Thư viện media',
       'Ngân hàng câu hỏi (Sắp có)',
@@ -83,13 +84,13 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
     const soonItems = Array.from(
       document.querySelectorAll('.adm-nav__item--soon'),
     );
-    expect(soonItems).toHaveLength(9);
+    // M5.1a: "Nội dung" có trang → còn 8 mục "Sắp có".
+    expect(soonItems).toHaveLength(8);
     // Q94: bỏ chip "Sắp có" khỏi sidebar.
     expect(document.querySelectorAll('.adm-nav__soon')).toHaveLength(0);
 
     const visibleLabels = [
       'Tổng quan',
-      'Nội dung',
       'Ngân hàng câu hỏi',
       'Nhập dữ liệu',
       'Người dùng',

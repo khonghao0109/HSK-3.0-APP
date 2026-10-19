@@ -114,6 +114,11 @@
   letter-spacing: normal;
   line-height: 1.3;
 }
+/* R4: textarea mặc định của trình duyệt là monospace; admin dùng font chữ
+   thường, ô JSON giữ mono qua class riêng (.adm-topic-form__json). */
+.admin-app textarea {
+  font-family: inherit;
+}
 .admin-app :focus-visible {
   outline: none;
   box-shadow: var(--adm-focus-ring);
@@ -671,6 +676,9 @@
 }
 .admin-app .adm-page-stack {
   display: grid;
+  /* minmax(0, 1fr): chặn grid blowout — con có min-content lớn (form, bảng)
+     không đẩy cột vượt viewport ở màn hẹp (M5.1a e2e mobile-390). */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--adm-sp-4);
   align-content: start;
 }
@@ -702,6 +710,184 @@
   color: var(--adm-alert-error-text);
   font-size: var(--adm-fs-sm);
   line-height: 1.45;
+}
+
+/* ----- Quy trình xuất bản nội dung (M5.1a, Q89–Q91) ----- */
+.admin-app .adm-content-workflow {
+  display: grid;
+  gap: var(--adm-sp-4);
+}
+.admin-app .adm-content-workflow__publish,
+.admin-app .adm-content-workflow__archive {
+  display: grid;
+  gap: var(--adm-sp-2);
+  justify-items: start;
+}
+/* R3: nhóm xác nhận lưu trữ inline, không phụ thuộc admin-media.css. */
+.admin-app .adm-content-workflow__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+/* TL-16: 4 bước như lesson-editor.html (.le-flow/.le-step/.le-current). */
+.admin-app .adm-flow {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+}
+.admin-app .adm-flow__step {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 13px;
+  align-items: start;
+  min-height: 64px;
+  padding: 11px 12px 8px 13px;
+  border: 1px solid transparent;
+  border-radius: var(--adm-r-sm);
+  position: relative;
+}
+.admin-app .adm-flow__step + .adm-flow__step::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: -36px;
+  height: 50px;
+  border-left: 2px solid var(--adm-slate-200);
+  z-index: 0;
+}
+.admin-app .adm-flow__step.is-done + .adm-flow__step::before,
+.admin-app .adm-flow__step.is-done::before {
+  border-color: var(--adm-jade-200);
+}
+.admin-app .adm-flow__dot {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--adm-slate-200);
+  color: var(--adm-slate-700);
+  display: grid;
+  place-items: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.admin-app .adm-flow__step b {
+  display: block;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-navy-900);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.admin-app .adm-flow__step small {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--adm-slate-500);
+  margin-top: 5px;
+}
+.admin-app .adm-flow__step[aria-current='step'] {
+  background: var(--adm-jade-50);
+  border-color: var(--adm-jade-200);
+}
+.admin-app .adm-flow__step[aria-current='step'] .adm-flow__dot,
+.admin-app .adm-flow__step.is-done .adm-flow__dot {
+  background: var(--adm-jade-800);
+  color: var(--adm-paper);
+}
+.admin-app .adm-flow__step[aria-current='step'] b {
+  color: var(--adm-jade-800);
+}
+.admin-app .adm-flow-current {
+  padding: 14px 16px;
+  text-align: center;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+}
+.admin-app .adm-flow-current h3 {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--adm-slate-700);
+  margin-bottom: 11px;
+}
+.admin-app .adm-flow-current__state {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--adm-jade-800);
+  margin-bottom: 4px;
+}
+.admin-app .adm-flow-current__state[data-state='review'] {
+  color: var(--adm-amber-text);
+}
+.admin-app .adm-flow-current__state[data-state='approved'] {
+  color: var(--adm-blue-text);
+}
+.admin-app .adm-flow-current__meta {
+  font-size: 0.6875rem;
+  color: var(--adm-slate-500);
+  line-height: 1.6;
+}
+.admin-app .adm-review-form {
+  margin: 0;
+  padding: var(--adm-sp-3);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-review-form legend {
+  padding: 0 var(--adm-sp-1);
+  font-size: var(--adm-fs-sm);
+  font-weight: 600;
+  color: var(--adm-navy-900);
+}
+.admin-app .adm-review-form:disabled {
+  opacity: 0.6;
+}
+.admin-app .adm-review-form__options {
+  display: flex;
+  gap: var(--adm-sp-4);
+  flex-wrap: wrap;
+}
+.admin-app .adm-review-form__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-navy-900);
+  cursor: pointer;
+}
+/* TL-17: lỗi chưa chọn quyết định, cạnh nhóm radio. */
+.admin-app .adm-review-form__error {
+  margin: 0;
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+/* Q89: cảnh báo tĩnh khi tự duyệt bản sửa của chính mình. */
+.admin-app .adm-review-form__self-warning {
+  margin: 0;
+  padding: var(--adm-sp-3) var(--adm-sp-4);
+  border: 1px solid var(--adm-amber-100);
+  border-radius: var(--adm-r-md);
+  background: var(--adm-amber-100);
+  color: var(--adm-amber-text);
+  font-size: var(--adm-fs-sm);
+  line-height: 1.45;
+}
+/* Hàng review trong timeline lịch sử bản sửa (badge + người duyệt + ghi chú). */
+.admin-app .adm-review-record {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  flex-wrap: wrap;
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-xs);
+  margin-top: var(--adm-sp-1);
 }
 
 /* Trạng thái rỗng trong bảng/trang (m06.css .m06-empty-inline) */
@@ -1092,12 +1278,17 @@
   }
   .admin-app .adm-detail-grid,
   .admin-app .adm-detail-grid--balanced {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr): 1fr thuần = minmax(auto, 1fr) — min-content của form
+       bên trong giãn cột vượt viewport ≤900px (M5.1a e2e mobile-390). */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* ===================== ≤430px: một cột ===================== */
 @media (max-width: 430px) {
+  .admin-app .adm-content-workflow__confirm > * {
+    width: 100%;
+  }
   .admin-app .adm-user__text {
     display: none;
   }
@@ -1115,8 +1306,11 @@
   .admin-app .adm-filters .adm-btn {
     width: 100%;
   }
+  /* Không dùng basis 100%: với flex-direction: column (mục ở trên), basis theo
+     trục dọc làm trình duyệt wrap sang cột mới → trang tràn ngang (M5.1a e2e
+     mobile-390 bắt được). `1 1 auto` đủ để search giãn khi còn row-wrap. */
   .admin-app .adm-search {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
   }
   .admin-app .adm-record-list__facts {
     grid-template-columns: 1fr;

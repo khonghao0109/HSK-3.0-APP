@@ -21,7 +21,12 @@ export type AdminNavItem = {
 
 export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { key: 'dashboard', label: 'Tổng quan', icon: 'layout-dashboard' },
-  { key: 'content', label: 'Nội dung', icon: 'file-stack' },
+  {
+    key: 'content',
+    label: 'Nội dung',
+    icon: 'file-stack',
+    href: '/admin/content',
+  },
   {
     key: 'exercises',
     label: 'Bài tập',
