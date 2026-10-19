@@ -653,7 +653,8 @@ Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sa
 | `CONTENT_REVISION_INVALID` | `Lesson revision snapshot is invalid.` / `Topic revision snapshot is invalid.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
 
 `REVISION_NOT_LATEST`/`REVIEW_NOT_APPROVED` từ `decidePublishAction` dùng chung, nên publish
-LessonExercise (A.9) cũng trả hai mã này; các `409` riêng của Exercise không có `code`.
+LessonExercise (A.9) cũng trả hai mã này. M5.1b1 bổ sung mã máy cho mọi `409` riêng của
+Exercise ở bảng A.9.
 
 ### A.9 Admin CMS — Exercise và Import (admin)
 
@@ -682,6 +683,49 @@ explanation, version, orderIndex, status, dataSourceId, sourceKey, createdById, 
 publishedById, publishedAt, deletedAt, createdAt, updatedAt, media: { id, url, type,
 mimeType, duration, processingStatus, deletedAt } | null, lesson: { id, title, slug },
 topic | null, dataSource | null }`.
+
+Hình dạng `content`/`answer` theo từng loại (canonical sau validator; `id` ổn định 1–128 ký
+tự, không khoảng trắng; `text` 1–4096; `prompt` 1–4096; `explanation` ≤4096; `orderIndex`
+1–1 000 000):
+
+| `type` | `content` | `answer` |
+| --- | --- | --- |
+| `mcq`, `listening_choice` | `{ options: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ optionId }`, phải là một `id` trong `content.options` |
+| `fill_blank` | `{}` | `{ acceptedTexts: string[] }` 1–100 phần tử + `caseSensitive?` boolean |
+| `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ tokenIds: string[] }` đủ mọi token, không trùng, **thứ tự = đáp án đúng** |
+| `speaking_repeat` | `{ referenceText? }` | `{}`; chỉ lưu draft, không publish được |
+
+Canonical payload ≤ 65 536 byte, depth ≤ 8. `mediaId` chỉ dùng cho `listening_choice`; publish
+cần Media `audio`, `processingStatus = ready`, chưa xoá.
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng chữ):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `TOPIC_LESSON_MISMATCH` | `Topic must belong to the exercise parent lesson.` / `Topic must be live and belong to the exercise parent lesson.` | `topicId` không thuộc `lessonId` hoặc Topic không live |
+| `CONTENT_ARCHIVED` | `Archived LessonExercise cannot be changed.` | Mutation vào bài tập đã archived |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` / `… can be published.` | Review/publish bản sửa không còn mới nhất (dùng chung A.8) |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved (dùng chung A.8) |
+| `CONTENT_UNIQUE_CONFLICT` | `LessonExercise content conflicts.` | Trùng unique của LessonExercise |
+| `CONTENT_CONSTRAINT_CONFLICT` | `LessonExercise violates a database integrity constraint.` | Vi phạm FK/check (ví dụ `mediaId` không tồn tại) |
+| `CONTENT_CONCURRENT_UPDATE` | `Concurrent LessonExercise update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `LessonExercise revision snapshot is invalid.` / `LessonExercise revision snapshot integrity check failed.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+Lỗi `422` (mã máy trong `error.code`; `details.path` là vị trí lỗi để client hiện đúng ô):
+
+| `error.code` | `error.message` / `details` | Khi nào |
+| --- | --- | --- |
+| `EXERCISE_TYPE_NOT_PUBLISHABLE` | `speaking_repeat is unsupported for publishing in Lesson Activity V1.` | Publish bản sửa `speaking_repeat` |
+| `listening_media_not_ready` | `Listening audio media must be ready and live.`, `details.path = "mediaId"` | Publish `listening_choice` khi audio thiếu/chưa ready/đã xoá |
+| mã validator bảng dưới | `LessonExercise validation failed at <path>.`, `details.path` = đường dẫn | Payload sai shape/giới hạn theo từng loại |
+
+Mã validator của `lesson-exercise-authoring.validator.ts` (422, kèm `details.path`): `required_field`,
+`invalid_exercise_type`, `unsupported_publish_type`, `object_required`, `unknown_field`,
+`array_required`, `array_too_small`, `array_too_large`, `duplicate_stable_id`,
+`invalid_stable_id`, `authoritative_option_not_found`, `accepted_texts_required`,
+`boolean_required`, `invalid_token_set`, `media_not_allowed`, `media_required`,
+`positive_safe_integer_required`, `max_depth_exceeded`, `invalid_json`, `payload_too_large`,
+`string_required`, `non_empty_string_required`, `string_too_long`.
 
 ### A.10 Admin Media Library và Ingestion (admin)
 

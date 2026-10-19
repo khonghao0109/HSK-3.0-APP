@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  EXERCISE_UNPUBLISHABLE_REASON,
+  exercisePublishBlockReason,
+  liveExerciseVersion,
   parseRouteId,
   topicPrefillFromSnapshot,
   workflowStep,
@@ -221,6 +224,152 @@ describe('workflowStep (TL-16)', () => {
         }),
       ).toMatchObject({ step: 3 });
     });
+  });
+});
+
+describe('S1/TL-21: snapshot bài tập khi xét bước 4', () => {
+  const exerciseLive = {
+    id: 41,
+    lessonId: 7,
+    topicId: 9,
+    type: 'mcq',
+    prompt: 'Chọn lời chào đúng',
+    content: {
+      options: [
+        { id: 'opt-1', text: '你好' },
+        { id: 'opt-2', text: '再见' },
+      ],
+    },
+    answer: { optionId: 'opt-1' },
+    explanation: '你好 là lời chào.',
+    mediaId: null,
+    orderIndex: 3,
+    status: 'published',
+  };
+  const exerciseSnapshot = {
+    // Khoá khác thứ tự với live; backend so canonical nên phải khớp.
+    orderIndex: 3,
+    mediaId: null,
+    explanation: '你好 là lời chào.',
+    answer: { optionId: 'opt-1' },
+    content: {
+      options: [
+        { id: 'opt-1', text: '你好' },
+        { id: 'opt-2', text: '再见' },
+      ],
+    },
+    prompt: 'Chọn lời chào đúng',
+    type: 'mcq',
+  };
+  const publishedBefore = { at: '2026-10-14T00:00:00Z', byId: 5 };
+
+  it('live trùng snapshot (kể cả thứ tự khoá) → bước 4', () => {
+    expect(
+      workflowStep('published', publishedBefore, reviewed('approved'), {
+        entity: 'exercise',
+        live: exerciseLive,
+        snapshot: exerciseSnapshot,
+        liveVersion: 2,
+      }),
+    ).toMatchObject({ step: 4, note: null });
+  });
+
+  it('R3: chỉ bước 4 khi nội dung khớp VÀ liveVersion === revision mới nhất', () => {
+    const base = {
+      entity: 'exercise' as const,
+      live: exerciseLive,
+      snapshot: exerciseSnapshot,
+    };
+    expect(
+      workflowStep('published', publishedBefore, reviewed('approved'), {
+        ...base,
+        liveVersion: 2,
+      }),
+    ).toMatchObject({ step: 4, note: null });
+    for (const liveVersion of [1, 3, null, undefined]) {
+      expect(
+        workflowStep('published', publishedBefore, reviewed('approved'), {
+          ...base,
+          liveVersion,
+        }),
+      ).toMatchObject({ step: 3 });
+    }
+    // publishedAt sau bản sửa nhưng version lệch vẫn không phải bước 4.
+    expect(
+      workflowStep(
+        'published',
+        { at: '2026-10-19T00:00:00Z', byId: 5 },
+        reviewed('approved'),
+        { ...base, liveVersion: 1 },
+      ),
+    ).toMatchObject({ step: 3 });
+  });
+
+  it('R3: liveExerciseVersion đọc version hợp lệ, còn lại null', () => {
+    expect(liveExerciseVersion({ version: 3 })).toBe(3);
+    for (const value of [null, undefined, '3', 0, -1, 1.5, {}, []]) {
+      expect(liveExerciseVersion(value)).toBeNull();
+    }
+  });
+
+  it('khác type/prompt/content/answer/explanation/mediaId/orderIndex → bước 3', () => {
+    const changes = [
+      { type: 'fill_blank' },
+      { prompt: 'Câu khác' },
+      { content: { options: [] } },
+      { answer: { optionId: 'opt-2' } },
+      { explanation: null },
+      { mediaId: 9 },
+      { orderIndex: 4 },
+    ];
+    for (const change of changes) {
+      expect(
+        workflowStep('published', publishedBefore, reviewed('approved'), {
+          entity: 'exercise',
+          live: { ...exerciseLive, ...change },
+          snapshot: exerciseSnapshot,
+        }),
+      ).toMatchObject({ step: 3 });
+    }
+  });
+
+  it('live thiếu trường hoặc sai kiểu → không coi là trùng', () => {
+    for (const broken of [
+      { type: 3 },
+      { prompt: null },
+      { content: [] },
+      { answer: 'x' },
+      { explanation: 5 },
+      { mediaId: 'audio-1' },
+      { orderIndex: '3' },
+      { type: undefined },
+    ]) {
+      expect(
+        workflowStep('published', publishedBefore, reviewed('approved'), {
+          entity: 'exercise',
+          live: { ...exerciseLive, ...broken },
+          snapshot: exerciseSnapshot,
+        }),
+      ).toMatchObject({ step: 3 });
+    }
+  });
+});
+
+describe('TL-21: loại bài tập chưa xuất bản được', () => {
+  it('chỉ speaking_repeat bị chặn, kèm câu lý do', () => {
+    expect(exercisePublishBlockReason('speaking_repeat')).toBe(
+      EXERCISE_UNPUBLISHABLE_REASON,
+    );
+    expect(EXERCISE_UNPUBLISHABLE_REASON).toBe('Loại này chưa xuất bản được.');
+    for (const type of [
+      'mcq',
+      'listening_choice',
+      'fill_blank',
+      'arrange_sentence',
+      'unknown_future_type',
+    ]) {
+      expect(exercisePublishBlockReason(type)).toBeNull();
+    }
   });
 });
 

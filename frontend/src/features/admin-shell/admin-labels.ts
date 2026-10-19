@@ -121,6 +121,9 @@ const CONTENT_CONFLICT_MESSAGE: Record<string, string> = {
   CONTENT_CONCURRENT_UPDATE:
     'Có người vừa cập nhật nội dung này. Tải lại trang rồi thử lại.',
   CONTENT_REVISION_INVALID: 'Bản sửa không hợp lệ. Tải lại trang rồi thử lại.',
+  // M5.1b1 (F5): 409 riêng của bài tập.
+  TOPIC_LESSON_MISMATCH:
+    'Chủ đề không thuộc bài học của bài tập hoặc chủ đề không còn hiệu lực.',
 };
 
 const CONTENT_CONFLICT_FALLBACK =
@@ -132,6 +135,100 @@ export function contentConflictMessage(
   if (!code) return CONTENT_CONFLICT_FALLBACK;
   return CONTENT_CONFLICT_MESSAGE[code] ?? CONTENT_CONFLICT_FALLBACK;
 }
+
+/**
+ * M5.1b1 (F5, TL-20): nhãn tiếng Việt cho mọi mã 422 của
+ * `lesson-exercise-authoring.validator.ts`, `exercise-publish-readiness.ts` và
+ * `EXERCISE_TYPE_NOT_PUBLISHABLE` của `exercise-authoring.service.ts`. Mã lạ
+ * rơi về câu chung; message tiếng Anh của backend không hiển thị.
+ */
+const EXERCISE_VALIDATION_MESSAGE: Record<string, string> = {
+  // service (422)
+  EXERCISE_TYPE_NOT_PUBLISHABLE: 'Loại này chưa xuất bản được.',
+  listening_media_not_ready: 'Audio phải sẵn sàng và chưa bị xoá.',
+  // lesson-exercise-authoring.validator.ts
+  required_field: 'Thiếu trường bắt buộc.',
+  invalid_exercise_type: 'Loại bài tập không hợp lệ.',
+  unsupported_publish_type: 'Loại bài tập này chưa xuất bản được.',
+  object_required: 'Dữ liệu phải là một đối tượng hợp lệ.',
+  unknown_field: 'Dữ liệu có trường không được hỗ trợ.',
+  array_required: 'Trường này phải là danh sách.',
+  array_too_small: 'Danh sách chưa đủ phần tử tối thiểu.',
+  array_too_large: 'Danh sách vượt quá số phần tử cho phép.',
+  duplicate_stable_id: 'Mã phần tử bị trùng. Tải lại trang rồi thử lại.',
+  invalid_stable_id: 'Mã phần tử không hợp lệ.',
+  authoritative_option_not_found: 'Đáp án đúng phải là một lựa chọn đã nhập.',
+  accepted_texts_required: 'Cần ít nhất một đáp án chấp nhận.',
+  boolean_required: 'Giá trị phải là đúng/sai.',
+  invalid_token_set: 'Các mảnh câu phải khớp đúng danh sách đã nhập.',
+  media_not_allowed: 'Chỉ câu nghe chọn mới có audio.',
+  media_required: 'Câu nghe chọn cần audio.',
+  positive_safe_integer_required: 'Giá trị phải là số nguyên dương.',
+  max_depth_exceeded: 'Dữ liệu lồng quá sâu.',
+  invalid_json: 'Dữ liệu JSON không hợp lệ.',
+  payload_too_large: 'Dữ liệu quá lớn (tối đa 65 536 byte).',
+  string_required: 'Trường này phải là chuỗi.',
+  non_empty_string_required: 'Trường này không được để trống.',
+  string_too_long: 'Trường này quá dài (tối đa 4 096 ký tự).',
+};
+
+export const EXERCISE_VALIDATION_FALLBACK =
+  'Dữ liệu bài tập không hợp lệ. Kiểm tra lại các ô được đánh dấu.';
+
+export function exerciseValidationMessage(
+  code: string | null | undefined,
+): string {
+  if (!code) return EXERCISE_VALIDATION_FALLBACK;
+  return EXERCISE_VALIDATION_MESSAGE[code] ?? EXERCISE_VALIDATION_FALLBACK;
+}
+
+/** TL-19 (F5): nhãn form bài tập dùng chung cho 5 loại. */
+export const EXERCISE_FORM = {
+  type: 'Loại bài tập',
+  prompt: 'Đề bài',
+  explanation: 'Giải thích',
+  orderIndex: 'Thứ tự',
+  options: 'Lựa chọn',
+  correctAnswer: 'Đáp án đúng',
+  addOption: 'Thêm lựa chọn',
+  remove: 'Xoá',
+  audio: 'Audio',
+  acceptedTexts: 'Đáp án chấp nhận',
+  caseSensitive: 'Phân biệt chữ hoa/thường',
+  tokens: 'Mảnh câu',
+  moveUp: 'Lên',
+  moveDown: 'Xuống',
+  referenceText: 'Câu mẫu',
+  submitCreate: 'Tạo bài tập',
+  submitRevision: 'Lưu bản sửa',
+} as const;
+
+/** TL-19: 5 loại trong ô "Loại bài tập" (nhãn ngắn của form). */
+export const EXERCISE_FORM_TYPE_OPTIONS = [
+  { value: 'mcq', label: 'Trắc nghiệm' },
+  { value: 'listening_choice', label: 'Nghe chọn' },
+  { value: 'fill_blank', label: 'Điền từ' },
+  { value: 'arrange_sentence', label: 'Sắp xếp câu' },
+  { value: 'speaking_repeat', label: 'Luyện nói' },
+] as const;
+
+/** TL-19: câu kiểm client cạnh ô (dùng aria-describedby + focus ô lỗi đầu). */
+export const EXERCISE_FORM_MESSAGE = {
+  typeRequired: 'Chọn loại bài tập.',
+  promptRequired: 'Nhập đề bài (tối đa 4 096 ký tự).',
+  explanationTooLong: 'Giải thích tối đa 4 096 ký tự.',
+  orderIndexInvalid: 'Thứ tự phải là số từ 1 đến 1 000 000.',
+  optionsRange: 'Cần từ 2 đến 100 lựa chọn.',
+  optionTextRequired: 'Nhập nội dung lựa chọn.',
+  correctAnswerRequired: 'Chọn một đáp án đúng.',
+  audioRequired: 'Chọn audio đã sẵn sàng cho câu nghe.',
+  acceptedTextsRange: 'Cần từ 1 đến 100 đáp án chấp nhận.',
+  acceptedTextRequired: 'Nhập đáp án chấp nhận.',
+  tokensRange: 'Cần từ 2 đến 100 mảnh câu.',
+  tokenTextRequired: 'Nhập nội dung mảnh câu.',
+  referenceTextTooLong: 'Câu mẫu tối đa 4 096 ký tự.',
+  generic: 'Kiểm tra lại các ô được đánh dấu.',
+} as const;
 
 /** `HSK1` → `HSK 1`; `HSK7_9` → `HSK 7–9` (Q3, TL-12). Mã lạ trả nguyên. */
 export function levelLabel(code: string): string {

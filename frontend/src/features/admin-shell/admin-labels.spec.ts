@@ -7,8 +7,13 @@ import {
   badgeTone,
   contentConflictMessage,
   contentStatusLabel,
+  EXERCISE_FORM,
+  EXERCISE_FORM_MESSAGE,
+  EXERCISE_FORM_TYPE_OPTIONS,
+  EXERCISE_VALIDATION_FALLBACK,
   exerciseStatusLabel,
   exerciseTypeLabel,
+  exerciseValidationMessage,
   levelLabel,
   lifecycleLabel,
   mediaTypeLabel,
@@ -247,6 +252,115 @@ describe('admin-labels', () => {
       expect(adminDateTime(undefined)).toBe('—');
       expect(adminDateTime('')).toBe('—');
       expect(adminDateTime('not-a-date')).toBe('—');
+    });
+  });
+
+  // M5.1b1 (F5, TL-19/TL-20): chốt nhãn 409 mới, toàn bộ mã 422 và chữ form.
+  describe('exercise labels (M5.1b1)', () => {
+    it('maps the new exercise 409 code to Vietnamese (TL-14)', () => {
+      expect(contentConflictMessage('TOPIC_LESSON_MISMATCH')).toContain(
+        'Chủ đề không thuộc bài học',
+      );
+      expect(contentConflictMessage('TOPIC_LESSON_MISMATCH')).not.toBe(
+        contentConflictMessage('SOMETHING_NEW'),
+      );
+    });
+
+    it('has a Vietnamese sentence for every backend 422 code (TL-20)', () => {
+      // Danh sách lấy từ `code:`/`fail(` của
+      // backend/src/common/validation/lesson-exercise-authoring.validator.ts,
+      // backend/src/modules/cms/exercise-publish-readiness.ts và
+      // EXERCISE_TYPE_NOT_PUBLISHABLE của exercise-authoring.service.ts.
+      const codes = [
+        'EXERCISE_TYPE_NOT_PUBLISHABLE',
+        'listening_media_not_ready',
+        'required_field',
+        'invalid_exercise_type',
+        'unsupported_publish_type',
+        'object_required',
+        'unknown_field',
+        'array_required',
+        'array_too_small',
+        'array_too_large',
+        'duplicate_stable_id',
+        'invalid_stable_id',
+        'authoritative_option_not_found',
+        'accepted_texts_required',
+        'boolean_required',
+        'invalid_token_set',
+        'media_not_allowed',
+        'media_required',
+        'positive_safe_integer_required',
+        'max_depth_exceeded',
+        'invalid_json',
+        'payload_too_large',
+        'string_required',
+        'non_empty_string_required',
+        'string_too_long',
+      ];
+      for (const code of codes) {
+        const message = exerciseValidationMessage(code);
+        expect(message, code).not.toBe(EXERCISE_VALIDATION_FALLBACK);
+        expect(message, code).not.toBe(code);
+        expect(message.length, code).toBeGreaterThan(3);
+      }
+      expect(EXERCISE_VALIDATION_FALLBACK).toBe(
+        'Dữ liệu bài tập không hợp lệ. Kiểm tra lại các ô được đánh dấu.',
+      );
+      expect(exerciseValidationMessage('SOMETHING_NEW')).toBe(
+        EXERCISE_VALIDATION_FALLBACK,
+      );
+      expect(exerciseValidationMessage(null)).toBe(
+        EXERCISE_VALIDATION_FALLBACK,
+      );
+      expect(exerciseValidationMessage(undefined)).toBe(
+        EXERCISE_VALIDATION_FALLBACK,
+      );
+      expect(exerciseValidationMessage('EXERCISE_TYPE_NOT_PUBLISHABLE')).toBe(
+        'Loại này chưa xuất bản được.',
+      );
+    });
+
+    it('pins the TL-19 form labels with correct Vietnamese diacritics', () => {
+      expect(EXERCISE_FORM_TYPE_OPTIONS).toEqual([
+        { value: 'mcq', label: 'Trắc nghiệm' },
+        { value: 'listening_choice', label: 'Nghe chọn' },
+        { value: 'fill_blank', label: 'Điền từ' },
+        { value: 'arrange_sentence', label: 'Sắp xếp câu' },
+        { value: 'speaking_repeat', label: 'Luyện nói' },
+      ]);
+      expect(EXERCISE_FORM).toMatchObject({
+        type: 'Loại bài tập',
+        prompt: 'Đề bài',
+        explanation: 'Giải thích',
+        orderIndex: 'Thứ tự',
+        options: 'Lựa chọn',
+        correctAnswer: 'Đáp án đúng',
+        addOption: 'Thêm lựa chọn',
+        remove: 'Xoá',
+        audio: 'Audio',
+        acceptedTexts: 'Đáp án chấp nhận',
+        caseSensitive: 'Phân biệt chữ hoa/thường',
+        tokens: 'Mảnh câu',
+        moveUp: 'Lên',
+        moveDown: 'Xuống',
+        referenceText: 'Câu mẫu',
+      });
+      expect(EXERCISE_FORM_MESSAGE).toMatchObject({
+        typeRequired: 'Chọn loại bài tập.',
+        promptRequired: 'Nhập đề bài (tối đa 4 096 ký tự).',
+        explanationTooLong: 'Giải thích tối đa 4 096 ký tự.',
+        orderIndexInvalid: 'Thứ tự phải là số từ 1 đến 1 000 000.',
+        optionsRange: 'Cần từ 2 đến 100 lựa chọn.',
+        optionTextRequired: 'Nhập nội dung lựa chọn.',
+        correctAnswerRequired: 'Chọn một đáp án đúng.',
+        audioRequired: 'Chọn audio đã sẵn sàng cho câu nghe.',
+        acceptedTextsRange: 'Cần từ 1 đến 100 đáp án chấp nhận.',
+        acceptedTextRequired: 'Nhập đáp án chấp nhận.',
+        tokensRange: 'Cần từ 2 đến 100 mảnh câu.',
+        tokenTextRequired: 'Nhập nội dung mảnh câu.',
+        referenceTextTooLong: 'Câu mẫu tối đa 4 096 ký tự.',
+      });
     });
   });
 });

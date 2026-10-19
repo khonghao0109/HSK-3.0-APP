@@ -1,9 +1,8 @@
-import { createHash } from 'node:crypto';
-
 import { Prisma, PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
+import { sha256CanonicalJson } from '../../src/common/utils/canonical-json';
 
 const prisma = new PrismaClient();
 const REQUIRED_EMPTY_TABLES = [
@@ -17,8 +16,10 @@ const REQUIRED_EMPTY_TABLES = [
   'Media',
 ] as const;
 
+// TL-22: contentHash phải là canonical JSON như backend (khoá sắp xếp) để
+// `assertExerciseRevisionHash`/`decidePublishAction` chấp nhận snapshot seed.
 function canonicalHash(value: unknown): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  return sha256CanonicalJson(value);
 }
 
 async function assertMigrationOnlyFixtureState(): Promise<void> {
@@ -403,10 +404,12 @@ async function main(): Promise<void> {
         sourceKey: 'hsk1.greetings.listening.nihao',
       },
       {
+        // TL-22: shape canonical của fill_blank — content rỗng, đáp án nằm ở
+        // answer.acceptedTexts (không phải content.acceptedForms/answer.text).
         type: 'fill_blank',
         prompt: 'Complete the greeting: 你__',
-        content: { acceptedForms: ['好'] },
-        answer: { text: '好' },
+        content: {},
+        answer: { acceptedTexts: ['好'] },
         explanation: '你好 combines 你 and 好.',
         status: 'draft',
         sourceKey: 'hsk1.greetings.fill.nihao',

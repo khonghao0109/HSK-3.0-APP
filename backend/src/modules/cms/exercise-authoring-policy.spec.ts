@@ -7,6 +7,7 @@ import {
   ExerciseSnapshot,
   assertExerciseRevisionHash,
   isExerciseArchived,
+  parseExerciseSnapshot,
   shouldMaterializeExerciseRevision,
 } from './exercise-authoring.service';
 
@@ -26,9 +27,16 @@ describe('LessonExercise revision and version policy', () => {
     expect(assertExerciseRevisionHash(snapshot, hash)).toBe(hash);
   });
 
-  it.each([null, '', 'tampered-hash'])(
-    'rejects a missing or changed revision hash without exposing the answer',
-    (hash) => {
+  it.each([
+    [null, 'Content revision hash is missing.'],
+    ['', 'Content revision hash is missing.'],
+    [
+      'tampered-hash',
+      'LessonExercise revision snapshot integrity check failed.',
+    ],
+  ])(
+    'rejects a missing or changed revision hash with CONTENT_REVISION_INVALID and the exact message',
+    (hash, message) => {
       expect(() => assertExerciseRevisionHash(snapshot, hash)).toThrow(
         ConflictException,
       );
@@ -36,9 +44,29 @@ describe('LessonExercise revision and version policy', () => {
         assertExerciseRevisionHash(snapshot, hash);
       } catch (error) {
         expect(String(error)).not.toContain('你好');
+        expect((error as ConflictException).getResponse()).toEqual({
+          code: 'CONTENT_REVISION_INVALID',
+          message,
+        });
       }
     },
   );
+
+  it('maps an invalid revision snapshot to CONTENT_REVISION_INVALID (parse branch)', () => {
+    // Nhánh `parseExerciseSnapshot` (:867) không đi qua assertExerciseRevisionHash,
+    // nên giữ một case riêng khoá đúng code + message của nó.
+    expect(() =>
+      parseExerciseSnapshot({ type: 'not-a-valid-type' }, 'publish'),
+    ).toThrow(ConflictException);
+    try {
+      parseExerciseSnapshot({ type: 'not-a-valid-type' }, 'publish');
+    } catch (error) {
+      expect((error as ConflictException).getResponse()).toEqual({
+        code: 'CONTENT_REVISION_INVALID',
+        message: 'LessonExercise revision snapshot is invalid.',
+      });
+    }
+  });
 
   it('materializes a new revision only while the exercise is draft', () => {
     expect(shouldMaterializeExerciseRevision('draft')).toBe(true);

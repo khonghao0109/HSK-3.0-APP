@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
+import {
+  BackendRequestError,
+  normalizeApiFailure,
+  type ApiErrorDetails,
+} from '@/lib/api/api-error';
 import { backend } from '@/lib/api/server-backend';
 import { serverEnv } from '@/lib/config/server-env';
 
 import { backendContentMutationSchema } from './content-contract';
 
-type ContentEntity = 'lessons' | 'topics';
+/**
+ * F3 (M5.1b1): entity của BFF content, dùng chung cho lesson/topic (M5.1a) và
+ * exercises (M5.1b1). Đường dẫn backend giữ nguyên `/api/v1/admin/cms/<entity>`.
+ */
+export type ContentEntity = 'lessons' | 'topics' | 'exercises';
 
 function status(error: unknown): number {
   return error instanceof BackendRequestError ? error.status : 503;
@@ -16,13 +24,18 @@ function status(error: unknown): number {
  * Envelope lỗi BFF → browser (media-route-handler pattern), nhưng GIỮ
  * `error.code` của backend (TL-14) để client map sang câu tiếng Việt.
  */
-function failure(statusCode: number, code?: string) {
+export function failure(
+  statusCode: number,
+  code?: string,
+  details?: ApiErrorDetails,
+) {
   const response = NextResponse.json(
     {
       success: false,
       error: {
         ...normalizeApiFailure({ status: statusCode }),
         ...(code === undefined ? {} : { code }),
+        ...(details === undefined ? {} : { details }),
       },
     },
     { status: statusCode },
@@ -31,11 +44,11 @@ function failure(statusCode: number, code?: string) {
   return response;
 }
 
-function token(request: NextRequest): string | null {
+export function token(request: NextRequest): string | null {
   return request.cookies.get(serverEnv.SESSION_COOKIE_NAME)?.value ?? null;
 }
 
-function exactOrigin(request: NextRequest): boolean {
+export function exactOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return false;
   try {
@@ -45,11 +58,11 @@ function exactOrigin(request: NextRequest): boolean {
   }
 }
 
-function numericId(value: string): boolean {
+export function numericId(value: string): boolean {
   return /^\d+$/u.test(value);
 }
 
-async function proxy(
+export async function proxy(
   request: NextRequest,
   path: string,
   withBody: boolean,
@@ -77,9 +90,11 @@ async function proxy(
     result.headers.set('cache-control', 'no-store');
     return result;
   } catch (error) {
+    // F1: chỉ `path`/`errors` đã lọc của BackendRequestError đi tiếp ra browser.
     return failure(
       status(error),
       error instanceof BackendRequestError ? error.code : undefined,
+      error instanceof BackendRequestError ? error.details : undefined,
     );
   }
 }

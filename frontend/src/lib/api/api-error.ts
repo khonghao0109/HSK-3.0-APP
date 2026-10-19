@@ -16,6 +16,23 @@ export type ApiFailureKind =
   | 'timeout'
   | 'unknown';
 
+/**
+ * M5.1b1 (F1/TL-20): chi tiết lỗi 422 mà form cần để hiện đúng ô — chỉ hai
+ * khoá này được đi qua BFF, mọi khoá khác của `error.details` bị bỏ.
+ */
+export type ApiErrorDetailRow = {
+  rowNumber: number;
+  code: string;
+  path: string;
+};
+
+export type ApiErrorDetails = {
+  /** Vị trí lỗi trong payload (ví dụ `content.options[1].text`). */
+  path?: string;
+  /** Lỗi theo dòng của import (tối đa 100 dòng). */
+  errors?: ApiErrorDetailRow[];
+};
+
 export type ApiFailure = {
   status: number;
   kind: ApiFailureKind;
@@ -24,7 +41,15 @@ export type ApiFailure = {
   requestId?: string;
   /** `error.code` of the backend error envelope, when it is a string. */
   code?: string;
+  /** Chi tiết lỗi đã lọc (chỉ `path` và `errors`). */
+  details?: ApiErrorDetails;
 };
+
+export const API_ERROR_DETAILS_LIMITS = {
+  maxPathLength: 200,
+  maxErrors: 100,
+  maxCodeLength: 64,
+} as const;
 
 const FAILURE_BY_STATUS: Record<
   number,
@@ -82,6 +107,7 @@ export function normalizeApiFailure(input: {
     : 500;
   const known = FAILURE_BY_STATUS[status];
   const code = envelopeCode(input.body);
+  const details = sanitizeErrorDetails(envelopeDetails(input.body));
   return {
     status,
     ...(known ?? {
@@ -91,7 +117,66 @@ export function normalizeApiFailure(input: {
     }),
     ...(input.requestId ? { requestId: input.requestId } : {}),
     ...(code === undefined ? {} : { code }),
+    ...(details === undefined ? {} : { details }),
   };
+}
+
+/**
+ * F1: giữ đúng `path` (string ≤ 200) và `errors` (≤ 100 × {rowNumber int,
+ * code ≤ 64, path ≤ 200}), bỏ mọi khoá khác và mọi phần tử sai shape/quá dài.
+ * Không có mục nào hợp lệ → undefined.
+ */
+export function sanitizeErrorDetails(
+  value: unknown,
+): ApiErrorDetails | undefined {
+  if (!isPlainRecord(value)) return undefined;
+  const path = validString(value.path, API_ERROR_DETAILS_LIMITS.maxPathLength);
+
+  let errors: ApiErrorDetailRow[] | undefined;
+  if (Array.isArray(value.errors)) {
+    const rows: ApiErrorDetailRow[] = [];
+    for (const entry of value.errors) {
+      if (rows.length >= API_ERROR_DETAILS_LIMITS.maxErrors) break;
+      if (!isPlainRecord(entry)) continue;
+      if (!Number.isInteger(entry.rowNumber)) continue;
+      const code = validString(
+        entry.code,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      const rowPath = validString(
+        entry.path,
+        API_ERROR_DETAILS_LIMITS.maxPathLength,
+      );
+      if (code === undefined || rowPath === undefined) continue;
+      rows.push({ rowNumber: entry.rowNumber as number, code, path: rowPath });
+    }
+    if (rows.length > 0) errors = rows;
+  }
+
+  if (path === undefined && errors === undefined) return undefined;
+  return {
+    ...(path === undefined ? {} : { path }),
+    ...(errors === undefined ? {} : { errors }),
+  };
+}
+
+function validString(value: unknown, maxLength: number): string | undefined {
+  return typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= maxLength
+    ? value
+    : undefined;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function envelopeDetails(body: unknown): unknown {
+  if (typeof body !== 'object' || body === null) return undefined;
+  const error = (body as { error?: unknown }).error;
+  if (typeof error !== 'object' || error === null) return undefined;
+  return (error as { details?: unknown }).details;
 }
 
 function envelopeCode(body: unknown): string | undefined {
@@ -108,6 +193,7 @@ export class BackendRequestError extends Error implements ApiFailure {
   retryable: boolean;
   requestId?: string;
   code?: string;
+  details?: ApiErrorDetails;
 
   constructor(failure: ApiFailure) {
     super(failure.message);
@@ -117,6 +203,7 @@ export class BackendRequestError extends Error implements ApiFailure {
     this.retryable = failure.retryable;
     this.requestId = failure.requestId;
     this.code = failure.code;
+    this.details = failure.details;
   }
 }
 

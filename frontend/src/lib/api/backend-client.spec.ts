@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { BackendRequestError } from './api-error';
 import { clientForwardedFor, createBackendClient } from './backend-client';
 
 describe('server-only backend client', () => {
@@ -187,6 +188,108 @@ describe('server-only backend client', () => {
       });
     }
     expect(fetchImpl).toHaveBeenCalledTimes(12);
+  });
+
+  it('allowlists only the explicit exercise CMS mutation endpoints (M5.1b1, F2)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/admin/cms/exercises?lessonId=7&status=draft&page=1&limit=20',
+    );
+    await client.request('/api/v1/admin/cms/exercises/41');
+    await client.request('/api/v1/admin/cms/exercises', { method: 'POST' });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions/7/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions/7/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/archive', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
+
+    // Chưa mở exercise-imports (M5.1b2) và không cho biến thể đường dẫn.
+    for (const path of [
+      '/api/v1/admin/cms/exercise-imports',
+      '/api/v1/admin/cms/exercise-imports/preview',
+      '/api/v1/admin/cms/exercises/41/revisions/7/reviews/extra',
+      '/api/v1/admin/cms/exercises/abc/revisions',
+      '/api/v1/admin/cms/exercises/41/archive?x=1',
+      '/api/v1/admin/cms/exercises/1/../x',
+      '/api/v1/admin/cms/exercises/41/revisions/7',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
+  });
+
+  it('keeps only the filtered error details of a backend 422 envelope (M5.1b1, F1)', async () => {
+    const longPath = `content.${'x'.repeat(210)}`;
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
+          success: false,
+          error: {
+            code: 'invalid_token_set',
+            message: 'LessonExercise validation failed at answer.tokenIds.',
+            details: {
+              path: 'answer.tokenIds',
+              errors: [
+                { rowNumber: 3, code: 'missing_field', path: 'answer' },
+                { rowNumber: '3', code: 'bad_row', path: 'answer' },
+                { rowNumber: 4, code: 'x'.repeat(65), path: 'answer' },
+                { rowNumber: 5, code: 'ok', path: longPath },
+                { rowNumber: 6, code: 'valid', path: 'content.options[0]' },
+                '{not object}',
+              ],
+              sql: 'SELECT answer FROM LessonExercise',
+              authorId: 7,
+              stack: 'secret stack',
+            },
+          },
+        },
+        { status: 422 },
+      ),
+    );
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    const error = await client
+      .request('/api/v1/admin/cms/exercises', { method: 'POST', body: {} })
+      .catch((thrown: unknown) => thrown as BackendRequestError);
+
+    expect(error).toMatchObject({
+      status: 422,
+      kind: 'validation',
+      code: 'invalid_token_set',
+      details: {
+        path: 'answer.tokenIds',
+        errors: [
+          { rowNumber: 3, code: 'missing_field', path: 'answer' },
+          { rowNumber: 6, code: 'valid', path: 'content.options[0]' },
+        ],
+      },
+    });
+    const serialized = JSON.stringify(error);
+    expect(serialized).not.toContain('SELECT answer');
+    expect(serialized).not.toContain('secret stack');
+    expect(serialized).not.toContain('bad_row');
   });
 
   it('allowlists auth refresh and logout endpoints, rejecting path variants', async () => {

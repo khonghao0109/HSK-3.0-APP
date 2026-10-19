@@ -272,4 +272,160 @@ describe('ContentWorkflow (M5.1a)', () => {
       screen.getByText(/Đã lưu trữ — không thể thay đổi/),
     ).toBeInTheDocument();
   });
+
+  it('posts exercise publish and archive to the exercises BFF routes (F4)', async () => {
+    const fetchMock = stubFetch(200);
+    const { rerender } = renderWorkflow({
+      entity: 'exercises',
+      latestRevision: approvedRevision,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Xuất bản' }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/admin/exercises/41/revisions/70/publish',
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    refresh.mockReset();
+    rerender(
+      <ContentWorkflow
+        entity="exercises"
+        entityId={41}
+        status="draft"
+        latestRevision={approvedRevision}
+        sessionAdminId={7}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu trữ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Xác nhận lưu trữ' }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/admin/exercises/41/archive',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('keeps the exercise publish button off with the TL-21 reason when the type cannot be published', () => {
+    renderWorkflow({
+      entity: 'exercises',
+      latestRevision: approvedRevision,
+      publishBlockedReason: 'Loại này chưa xuất bản được.',
+    });
+    expect(screen.getByRole('button', { name: 'Xuất bản' })).toBeDisabled();
+    expect(
+      screen.getByText('Loại này chưa xuất bản được.'),
+    ).toBeInTheDocument();
+  });
+
+  it('recognises an idempotent exercise publish as step 4 from live matching snapshot (TL-21)', () => {
+    renderWorkflow({
+      entity: 'exercises',
+      status: 'published',
+      publishedAt: '2026-10-14T00:00:00Z',
+      latestRevision: approvedRevision,
+      live: {
+        type: 'fill_blank',
+        prompt: 'Điền từ còn thiếu',
+        content: {},
+        answer: { acceptedTexts: ['好'] },
+        explanation: null,
+        mediaId: null,
+        orderIndex: 2,
+        // R3: version live phải bằng revision mới nhất mới tính bước 4.
+        version: 1,
+      },
+      snapshot: {
+        type: 'fill_blank',
+        prompt: 'Điền từ còn thiếu',
+        content: {},
+        answer: { acceptedTexts: ['好'] },
+        explanation: null,
+        mediaId: null,
+        orderIndex: 2,
+      },
+    });
+    expect(screen.getByRole('button', { name: 'Xuất bản' })).toBeDisabled();
+    expect(
+      screen.getByText('Bản sửa mới nhất đã được xuất bản.'),
+    ).toBeInTheDocument();
+  });
+
+  // R2 (M5.1b1 A'): 422 của bài tập hiện đúng nhãn TL-20; lesson/topic giữ câu chung.
+  it('maps exercise 422 codes to their TL-20 Vietnamese labels (R2)', async () => {
+    stubFetch(422, {
+      success: false,
+      error: { status: 422, code: 'listening_media_not_ready' },
+    });
+    renderWorkflow({
+      entity: 'exercises',
+      latestRevision: approvedRevision,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Xuất bản' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Audio phải sẵn sàng và chưa bị xoá.',
+    );
+
+    cleanup();
+    stubFetch(422, {
+      success: false,
+      error: {
+        status: 422,
+        code: 'EXERCISE_TYPE_NOT_PUBLISHABLE',
+      },
+    });
+    renderWorkflow({
+      entity: 'exercises',
+      latestRevision: approvedRevision,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Xuất bản' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Loại này chưa xuất bản được.',
+    );
+    expect(refresh).not.toHaveBeenCalled();
+
+    cleanup();
+    stubFetch(422, {
+      success: false,
+      error: { status: 422, code: 'listening_media_not_ready' },
+    });
+    renderWorkflow({ entity: 'lessons', latestRevision: approvedRevision });
+    fireEvent.click(screen.getByRole('button', { name: 'Xuất bản' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Thao tác tạm thời không khả dụng. Hãy thử lại.',
+    );
+  });
+
+  // R3 (M5.1b1 A'): nội dung khớp nhưng version ≠ revision → chưa phải bước 4,
+  // nút Xuất bản vẫn bật khi bản mới nhất đã duyệt.
+  it('keeps exercise publish enabled when content matches but live version is older (R3)', () => {
+    renderWorkflow({
+      entity: 'exercises',
+      status: 'published',
+      publishedAt: '2026-10-14T00:00:00Z',
+      latestRevision: approvedRevision,
+      live: {
+        type: 'fill_blank',
+        prompt: 'Điền từ còn thiếu',
+        content: {},
+        answer: { acceptedTexts: ['好'] },
+        explanation: null,
+        mediaId: null,
+        orderIndex: 2,
+        version: 2,
+      },
+      snapshot: {
+        type: 'fill_blank',
+        prompt: 'Điền từ còn thiếu',
+        content: {},
+        answer: { acceptedTexts: ['好'] },
+        explanation: null,
+        mediaId: null,
+        orderIndex: 2,
+      },
+    });
+    expect(screen.getByRole('button', { name: 'Xuất bản' })).toBeEnabled();
+    expect(
+      screen.queryByText('Bản sửa mới nhất đã được xuất bản.'),
+    ).not.toBeInTheDocument();
+  });
 });

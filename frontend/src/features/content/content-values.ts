@@ -36,13 +36,19 @@ export type WorkflowStepState = {
 };
 
 /** S1: loại nội dung để chuẩn hoá đúng bộ trường backend so sánh. */
-export type ContentEntityKind = 'lesson' | 'topic';
+export type ContentEntityKind = 'lesson' | 'topic' | 'exercise';
 
 /** S1: nội dung live + snapshot bản sửa mới nhất để nhận biết đã xuất bản. */
 export type ContentComparison = {
   entity: ContentEntityKind;
   live: unknown;
   snapshot: unknown;
+  /**
+   * R3: version của bài tập live (DTO admin `version`). Chỉ bài tập dùng:
+   * bước 4 yêu cầu `live.version === latestRevision.revision` VÀ nội dung khớp
+   * (như `exercise-authoring.service.ts` khi tính `liveContentMatchesRevision`).
+   */
+  liveVersion?: number | null;
 };
 
 /**
@@ -57,6 +63,42 @@ function liveSnapshotOf(
 ): Record<string, unknown> | null {
   if (typeof live !== 'object' || live === null) return null;
   const value = live as Record<string, unknown>;
+  if (entity === 'exercise') {
+    // TL-21: backend so snapshot bài tập bằng đúng bộ trường của
+    // `snapshotFromExercise` (cms/exercise-authoring.service.ts):
+    // type, prompt, content, answer, explanation, orderIndex, mediaId.
+    const explanation = value.explanation;
+    const mediaId = value.mediaId;
+    const content = value.content;
+    const answer = value.answer;
+    if (
+      typeof value.type !== 'string' ||
+      typeof value.prompt !== 'string' ||
+      typeof value.orderIndex !== 'number' ||
+      typeof content !== 'object' ||
+      content === null ||
+      Array.isArray(content) ||
+      typeof answer !== 'object' ||
+      answer === null ||
+      Array.isArray(answer) ||
+      (explanation !== undefined &&
+        explanation !== null &&
+        typeof explanation !== 'string') ||
+      (mediaId !== undefined && mediaId !== null && typeof mediaId !== 'number')
+    ) {
+      return null;
+    }
+    return {
+      type: value.type,
+      prompt: value.prompt.trim(),
+      content,
+      answer,
+      explanation:
+        typeof explanation === 'string' ? explanation.trim() || null : null,
+      orderIndex: value.orderIndex,
+      mediaId: typeof mediaId === 'number' ? mediaId : null,
+    };
+  }
   if (entity === 'lesson') {
     const description = value.description;
     if (
@@ -126,6 +168,17 @@ function canonicalJson(value: unknown): string {
   return `"__${typeof value}__"`;
 }
 
+/** R3: version của bài tập live; thiếu/sai kiểu → null (coi như không khớp). */
+export function liveExerciseVersion(live: unknown): number | null {
+  if (typeof live !== 'object' || live === null) return null;
+  const version = (live as Record<string, unknown>).version;
+  return typeof version === 'number' &&
+    Number.isInteger(version) &&
+    version >= 1
+    ? version
+    : null;
+}
+
 /** S1: nội dung live trùng snapshot bản sửa mới nhất (backend so canonical). */
 export function contentMatchesSnapshot(comparison: ContentComparison): boolean {
   const live = liveSnapshotOf(comparison.entity, comparison.live);
@@ -153,13 +206,23 @@ export function workflowStep(
     published.at !== null &&
     (latestRevision === null ||
       Date.parse(published.at) >= Date.parse(latestRevision.createdAt));
+  const exerciseComparison = comparison?.entity === 'exercise';
   const liveMatchesSnapshot =
     latestRevision !== null &&
     comparison !== undefined &&
     comparison !== null &&
-    contentMatchesSnapshot(comparison);
+    contentMatchesSnapshot(comparison) &&
+    (!exerciseComparison ||
+      (comparison?.liveVersion != null &&
+        comparison.liveVersion === latestRevision.revision));
+  // R3: bài tập chỉ "đã xuất bản bản mới nhất" khi nội dung khớp VÀ version live
+  // bằng revision mới nhất; publishedAt không đủ (như backend
+  // `liveContentMatchesRevision`). Lesson/topic giữ nguyên S1.
   const isPublishedCurrent =
-    status === 'published' && (publishedAfterRevision || liveMatchesSnapshot);
+    status === 'published' &&
+    (exerciseComparison
+      ? liveMatchesSnapshot
+      : publishedAfterRevision || liveMatchesSnapshot);
   if (latestRevision === null) {
     return isPublishedCurrent
       ? {
@@ -265,6 +328,17 @@ export function topicPrefillFromSnapshot(
     isPremium: value.isPremium,
     isLocked: value.isLocked,
   };
+}
+
+/** TL-21: luyện nói chưa xuất bản được; lý do hiện dưới nút "Xuất bản". */
+export const EXERCISE_UNPUBLISHABLE_REASON = 'Loại này chưa xuất bản được.';
+
+/**
+ * TL-21: loại bài tập chưa publish được ở Lesson Activity V1 (hiện chỉ
+ * speaking_repeat). Giá trị lạ → không chặn (backend vẫn là nguồn đúng).
+ */
+export function exercisePublishBlockReason(type: string): string | null {
+  return type === 'speaking_repeat' ? EXERCISE_UNPUBLISHABLE_REASON : null;
 }
 
 /** R11: 401 ở thao tác client → về đăng nhập như trang server (redirectToSessionLogin). */

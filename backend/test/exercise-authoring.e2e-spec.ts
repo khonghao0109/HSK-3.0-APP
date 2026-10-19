@@ -48,6 +48,8 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
   let speakingExerciseId: number;
   let speakingRevisionId: number;
   let readyAudioId: number;
+  let otherLessonId: number | null = null;
+  let otherTopicId: number | null = null;
 
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
   const password = 'StrongPassword123!';
@@ -158,6 +160,21 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
   });
 
   afterAll(async () => {
+    if (otherLessonId) {
+      const now = new Date();
+      await prisma.lessonExercise.updateMany({
+        where: { lessonId: otherLessonId },
+        data: { status: 'archived', deletedAt: now },
+      });
+      await prisma.topic.updateMany({
+        where: { lessonId: otherLessonId },
+        data: { status: 'archived', deletedAt: now },
+      });
+      await prisma.lesson.update({
+        where: { id: otherLessonId },
+        data: { status: 'archived', deletedAt: now },
+      });
+    }
     if (lessonId) {
       const now = new Date();
       await prisma.lessonExercise.updateMany({
@@ -289,6 +306,35 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       }),
     ).resolves.toEqual({ topicId });
 
+    const otherLesson = await prisma.lesson.create({
+      data: {
+        levelId,
+        title: 'Other exercise lesson',
+        slug: `exercise-authoring-other-${suffix}`,
+        orderIndex: 800_000 + Math.floor(Math.random() * 100_000),
+        status: 'draft',
+      },
+    });
+    otherLessonId = otherLesson.id;
+    otherTopicId = (
+      await prisma.topic.create({
+        data: {
+          lessonId: otherLessonId,
+          title: 'Other lesson topic',
+          content: [{ type: 'text', value: 'Other fixture.' }],
+          orderIndex: 1,
+          status: 'draft',
+        },
+      })
+    ).id;
+    const mismatch = await adminPost('/admin/cms/exercises')
+      .send({ lessonId, topicId: otherTopicId, ...choicePayload() })
+      .expect(409);
+    expect(mismatch.body.error).toMatchObject({
+      code: 'TOPIC_LESSON_MISMATCH',
+      message: 'Topic must belong to the exercise parent lesson.',
+    });
+
     const publicDetail = await request(app.getHttpServer())
       .get(`/api/v1/learning/lessons/${lessonId}`)
       .expect(200);
@@ -408,6 +454,13 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
       .expect(201);
     revision2Id = revision.body.data.revision.id as number;
     expect(revision.body.data.revision.revision).toBe(2);
+    const stalePublish = await adminPost(
+      `/admin/cms/exercises/${exerciseId}/revisions/${revision1Id}/publish`,
+    ).expect(409);
+    expect(stalePublish.body.error).toMatchObject({
+      code: 'REVISION_NOT_LATEST',
+      message: 'Only the latest content revision can be used for this action.',
+    });
     await review(exerciseId, revision2Id, 'approved');
     const publishedV2 = await publish(exerciseId, revision2Id);
     expect(publishedV2.data.exercise).toMatchObject({ version: 2 });
@@ -453,6 +506,9 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     const rejected = await adminPost(
       `/admin/cms/exercises/${speakingExerciseId}/revisions/${speakingRevisionId}/publish`,
     ).expect(422);
+    expect(rejected.body.error).toMatchObject({
+      code: 'EXERCISE_TYPE_NOT_PUBLISHABLE',
+    });
     expect(rejected.body.error.message).toMatch(
       /speaking_repeat.*unsupported/i,
     );
@@ -616,6 +672,15 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
 
   it('9. archives without deleting attempt history and audits safe summaries', async () => {
     await adminPost(`/admin/cms/exercises/${exerciseId}/archive`).expect(201);
+    const archivedMutation = await adminPost(
+      `/admin/cms/exercises/${exerciseId}/revisions`,
+    )
+      .send(choicePayload())
+      .expect(409);
+    expect(archivedMutation.body.error).toMatchObject({
+      code: 'CONTENT_ARCHIVED',
+      message: 'Archived LessonExercise cannot be changed.',
+    });
     const publicDetail = await request(app.getHttpServer())
       .get(`/api/v1/learning/lessons/${lessonId}`)
       .expect(200);

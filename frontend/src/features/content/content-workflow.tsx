@@ -7,12 +7,14 @@ import {
   ADMIN_ACTION,
   adminDateTime,
   contentConflictMessage,
+  exerciseValidationMessage,
   reviewDecisionLabel,
 } from '@/features/admin-shell/admin-labels';
 
 import {
   actorLabel,
   FORBIDDEN_MESSAGE,
+  liveExerciseVersion,
   SESSION_LOGIN_PATH,
   workflowStep,
   type WorkflowRevision,
@@ -72,12 +74,17 @@ const FLOW_STEPS = [
 
 const REVIEW_DECISION_ERROR = 'Vui lòng chọn quyết định đánh giá.';
 
+/** F4: exercises dùng BFF riêng `/api/admin/exercises` (TL-18/TL-21). */
 function bffPath(
-  entity: 'lessons' | 'topics',
+  entity: 'lessons' | 'topics' | 'exercises',
   entityId: number,
   tail: string,
 ): string {
-  return `/api/admin/content/${entity}/${entityId}/${tail}`;
+  const base =
+    entity === 'exercises'
+      ? '/api/admin/exercises'
+      : `/api/admin/content/${entity}`;
+  return `${base}/${entityId}/${tail}`;
 }
 
 export function ContentWorkflow({
@@ -90,8 +97,9 @@ export function ContentWorkflow({
   live = null,
   snapshot = null,
   sessionAdminId,
+  publishBlockedReason = null,
 }: {
-  entity: 'lessons' | 'topics';
+  entity: 'lessons' | 'topics' | 'exercises';
   entityId: number;
   status: string;
   publishedAt?: string | null;
@@ -101,6 +109,11 @@ export function ContentWorkflow({
   live?: unknown;
   snapshot?: unknown;
   sessionAdminId: number;
+  /**
+   * TL-21: lý do loại bài tập chưa xuất bản được (ví dụ luyện nói). Có lý do
+   * thì nút "Xuất bản" luôn tắt và hiện đúng câu dưới nút.
+   */
+  publishBlockedReason?: string | null;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<Operation | null>(null);
@@ -142,25 +155,43 @@ export function ContentWorkflow({
   const latestReview = latestRevision?.reviews[0] ?? null;
   // S1: bước 4 cả khi nội dung live vẫn trùng snapshot bản sửa mới nhất
   // (publish idempotent, publishedAt cũ hơn bản sửa).
+  const comparisonEntity =
+    entity === 'lessons'
+      ? 'lesson'
+      : entity === 'topics'
+        ? 'topic'
+        : 'exercise';
   const flow = workflowStep(
     status,
     { at: publishedAt, byId: publishedById },
     latestRevision,
-    { entity: entity === 'lessons' ? 'lesson' : 'topic', live, snapshot },
+    {
+      entity: comparisonEntity,
+      live,
+      snapshot,
+      ...(entity === 'exercises'
+        ? { liveVersion: liveExerciseVersion(live) }
+        : {}),
+    },
   );
   const currentStep = flow ? FLOW_STEPS[flow.step - 1] : null;
   const alreadyPublished = flow?.step === 4;
+  // TL-21: "không xuất bản được" (luyện nói) thắng mọi lý do khác.
   const publishable =
-    latestReview?.decision === 'approved' && !alreadyPublished;
-  const publishBlockReason = alreadyPublished
-    ? 'Bản sửa mới nhất đã được xuất bản.'
-    : !latestRevision
-      ? 'Chưa có bản sửa nào để xuất bản.'
-      : !latestReview
-        ? 'Bản sửa mới nhất đang chờ duyệt.'
-        : latestReview.decision !== 'approved'
-          ? `Đánh giá mới nhất: ${reviewDecisionLabel(latestReview.decision)} — cần bản sửa được duyệt.`
-          : null;
+    publishBlockedReason === null &&
+    latestReview?.decision === 'approved' &&
+    !alreadyPublished;
+  const publishBlockReason =
+    publishBlockedReason ??
+    (alreadyPublished
+      ? 'Bản sửa mới nhất đã được xuất bản.'
+      : !latestRevision
+        ? 'Chưa có bản sửa nào để xuất bản.'
+        : !latestReview
+          ? 'Bản sửa mới nhất đang chờ duyệt.'
+          : latestReview.decision !== 'approved'
+            ? `Đánh giá mới nhất: ${reviewDecisionLabel(latestReview.decision)} — cần bản sửa được duyệt.`
+            : null);
   // Q89: tự duyệt được phép, cảnh báo tĩnh khi người viết bản sửa mới nhất
   // chính là admin đang đăng nhập.
   const selfAuthored =
@@ -213,9 +244,13 @@ export function ContentWorkflow({
         setError(
           response.status === 409
             ? contentConflictMessage(code)
-            : response.status === 403
-              ? FORBIDDEN_MESSAGE
-              : 'Thao tác tạm thời không khả dụng. Hãy thử lại.',
+            : // R2: 422 của bài tập dùng nhãn theo mã validator (TL-20);
+              // lesson/topic giữ câu chung như M5.1a.
+              response.status === 422 && entity === 'exercises'
+              ? exerciseValidationMessage(code)
+              : response.status === 403
+                ? FORBIDDEN_MESSAGE
+                : 'Thao tác tạm thời không khả dụng. Hãy thử lại.',
         );
         return;
       }
