@@ -45,6 +45,8 @@ rồi mobile + AI + nhận diện (GĐ9), rồi deploy bản demo và bảo vệ
 foundation và beta (GĐ11) làm sau bảo vệ.
 
 - Thứ tự: GĐ5 → GĐ6 → GĐ7, song song M5.1, M5.2 (GĐ8) và M2.9a → GĐ9 → GĐ10.
+- Thiết kế đi trước code: màn nào trong [product/design-coverage.md](./product/design-coverage.md)
+  còn thiếu thì làm task M2.UXa–M2.UXd cho màn đó trước khi dựng UI thật.
 - Mốc theo lộ trình báo cáo: web đủ chức năng cuối tuần 9 (06/12/2026); GĐ9 tuần 10–13
   (07/12/2026–03/01/2027); GĐ10 tuần 14–15 (04/01–17/01/2027).
 - M7.7a có thể bắt đầu sớm hơn tuần 10 nếu web vượt tiến độ. M7.4b–d cần chốt quyết định
@@ -63,7 +65,7 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 10 / 17 | 3–4 tuần | 🟡 |
-| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 38 | 5–7 tuần | 🟡 |
+| GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 16 / 42 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 5 / 14 | 4–6 tuần | 🟡 read console |
@@ -72,7 +74,7 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **74 / 173 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **74 / 177 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -264,6 +266,10 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
 | M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
+| M2.UXa | Bổ sung thiết kế mobile P1 còn thiếu (MB-01…MB-19): học từ vựng và ngữ pháp trong bài, fill_blank, dictation, tốc độ nghe, chi tiết từ đầy đủ, sổ từ, sổ lỗi, tổng kết ôn, giới thiệu đề và lịch sử thi, chọn xếp trình độ, luyện viết, các trạng thái chat AI, xin quyền và consent, cài đặt tài khoản, video YouTube | ⬜ | [product/design-coverage.md](./product/design-coverage.md) §2; thêm vào `docs/ui_reference/mobile/` rồi đưa lên Figma section Mobile |
+| M2.UXb | Bổ sung thiết kế web học viên P1 còn thiếu (WB-01…WB-14): bài khoá, học từ vựng và ngữ pháp, các dạng bài tập, xếp trình độ, ôn tập, sổ từ và sổ lỗi, chi tiết từ và Hán tự, thi thử, trợ lý AI, video, thông báo, cài đặt tài khoản | ⬜ | design-coverage §3; web cần bản 1440 và 1024px; chốt cách hiển thị mục chỉ có trên app |
+| M2.UXc | Bổ sung thiết kế admin P1 (AD-01…AD-09): đăng nhập và hết phiên, thư viện media, soạn bài tập, soạn đề thi, từ vựng và duyệt nghĩa theo lô, truyện và cấp độ, video phụ đề, chi tiết người dùng, AI Ops | ⬜ | design-coverage §4; thay workbench tiếng Anh bằng "Hán Lộ Admin" theo bộ mẫu |
+| M2.UXd | Trạng thái dùng chung cho mobile, web, admin: mất mạng, lỗi, trống, đang tải, hết phiên, tính năng tắt | ⬜ | design-coverage §5; điều kiện để M2.7 có chuẩn so |
 | M2.E | Playwright flow end-to-end trên production build với backend staging | ⬜ | |
 
 ### GĐ6 — SRS + Dictionary completion, M3 (3–4 tuần)
@@ -552,6 +558,10 @@ UI và phần backend còn thiếu:
 | M2.8 | Product event P0 first-party: activation, lesson completion | ⬜ | ADR-008 §10 |
 | M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
+| M2.UXa | Bổ sung thiết kế mobile P1 còn thiếu (MB-01…MB-19): học từ vựng và ngữ pháp trong bài, fill_blank, dictation, tốc độ nghe, chi tiết từ đầy đủ, sổ từ, sổ lỗi, tổng kết ôn, giới thiệu đề và lịch sử thi, chọn xếp trình độ, luyện viết, các trạng thái chat AI, xin quyền và consent, cài đặt tài khoản, video YouTube | ⬜ | [product/design-coverage.md](./product/design-coverage.md) §2; thêm vào `docs/ui_reference/mobile/` rồi đưa lên Figma section Mobile |
+| M2.UXb | Bổ sung thiết kế web học viên P1 còn thiếu (WB-01…WB-14): bài khoá, học từ vựng và ngữ pháp, các dạng bài tập, xếp trình độ, ôn tập, sổ từ và sổ lỗi, chi tiết từ và Hán tự, thi thử, trợ lý AI, video, thông báo, cài đặt tài khoản | ⬜ | design-coverage §3; web cần bản 1440 và 1024px; chốt cách hiển thị mục chỉ có trên app |
+| M2.UXc | Bổ sung thiết kế admin P1 (AD-01…AD-09): đăng nhập và hết phiên, thư viện media, soạn bài tập, soạn đề thi, từ vựng và duyệt nghĩa theo lô, truyện và cấp độ, video phụ đề, chi tiết người dùng, AI Ops | ⬜ | design-coverage §4; thay workbench tiếng Anh bằng "Hán Lộ Admin" theo bộ mẫu |
+| M2.UXd | Trạng thái dùng chung cho mobile, web, admin: mất mạng, lỗi, trống, đang tải, hết phiên, tính năng tắt | ⬜ | design-coverage §5; điều kiện để M2.7 có chuẩn so |
 
 Exit: flow end-to-end trên production build với backend thật ở staging ⬜ · không bearer
 token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/security/visual QA ⬜.
@@ -706,6 +716,7 @@ khi vertical slice bắt đầu.
 5. M2.1 + M2.2 chỉ bắt đầu khi GĐ4 xong M1.4, M1.5 (điều kiện vào GĐ5).
 6. M2.9a: dựng pipeline seed nội dung có agent hỗ trợ và pilot 5 bài HSK1, chạy song song M2.4b–M2.5.
 7. M7.4a: chốt quyết định #6 (nhà cung cấp AI) và duyệt ADR-008 §6 trước tuần 12 của đồ án.
+8. M2.UXa–M2.UXd: bổ sung các màn thiết kế còn thiếu theo [product/design-coverage.md](./product/design-coverage.md), thứ tự Mobile P1 → Web P1 → Admin P1 → trạng thái chung.
 
 ## 8. Nhật ký cập nhật
 
@@ -760,3 +771,4 @@ khi vertical slice bắt đầu.
 | 10/10/2026 | GĐ5: thêm M2.9a (pipeline seed nội dung có agent hỗ trợ + pilot 5 bài HSK1) làm task con của M2.9; bắt đầu ngay vì API CMS và exercise import đã có, không chờ UI M5.1. GĐ5 16/37; tổng 74/150. |
 | 10/10/2026 | Sắp lại lộ trình cho đồ án tốt nghiệp (hạn 17/01/2027): thêm mục 1.0 phạm vi đồ án; GĐ9 mới = mobile, AI và nhận diện (M7.7a–d, M7.3, M7.4a–d, M7.2, M7.5a–b, M7.E); GĐ10 mới = deploy demo và bảo vệ (TN.1–TN.5, TN.E); production foundation + beta chuyển thành GĐ11 sau bảo vệ; reader, payment, community thành GĐ12. Tổng 74/167. |
 | 10/10/2026 | Bổ sung từ khảo sát đối thủ (ưu tiên cao và trung bình): M2.5e trình phát nghe đổi tốc độ (GĐ5); M3.4d bộ thủ và âm Hán Việt, M3.6 sổ lỗi sai, M3.7 bài nghe chép chính tả, M3.8a–b video YouTube có phụ đề (GĐ6); yêu cầu tô màu chữ phát âm sai cho M7.2. GĐ5 16/38, GĐ6 0/12; tổng 74/173. |
+| 19/10/2026 | Kiểm độ phủ thiết kế: bộ HTML mẫu `docs/ui_reference/` (40 mobile, 20 web, 10 admin, đã đưa lên Figma) đối chiếu với mọi task chức năng; danh sách màn còn thiếu ghi ở [product/design-coverage.md](./product/design-coverage.md). Thêm M2.UXa (mobile), M2.UXb (web), M2.UXc (admin), M2.UXd (trạng thái chung) vào GĐ5. GĐ5 16/42; tổng 74/177. |
