@@ -75,11 +75,21 @@ dưới đây chạy trên web trước rồi mới lên mobile, nên web cần 
 | WB-12 | Video YouTube: danh sách và trình xem | M3.8b | P1 |
 | WB-13 | Thông báo và tuỳ chọn thông báo | M5.8 | P1 |
 | WB-14 | Cài đặt tài khoản: sửa hồ sơ, đổi mật khẩu, đăng xuất; consent | M1.6, M1.7b2 | P1 |
+| WB-17 | Luyện phát âm: ghi âm qua micro trình duyệt (HTTPS, xin quyền), điểm âm tiết và thanh điệu, tô màu chữ phát âm sai, shadowing; consent và xoá bản ghi | M7.2 | P1 |
+| WB-18 | Viết tay và OCR trên web ở trạng thái "Dùng trên app": mục menu, nút viết tay / ảnh chụp ở tra từ và nút luyện viết ở Hán tự mở thông báo kèm mã QR tải app | M7.5a, M7.5b | P1 |
 | WB-15 | Trung tâm hỗ trợ, gửi phản hồi, báo lỗi nội dung | M5.6 | P2 |
 | WB-16 | Đọc tương tác và tài liệu học | M7.1 | P2 |
 
-Phát âm, roleplay giọng nói, viết tay và OCR chỉ cần bản mobile (PLAN M7.2, M7.5 chạy trên
-app). Cần chốt: web có giữ các mục này trong menu với trạng thái "Dùng trên app" hay ẩn đi.
+**Quyết định 19/10/2026 (phát âm, viết tay, OCR trên web):**
+
+- Phát âm (M7.2) làm cả web và app. Web ghi âm bằng micro trình duyệt rồi gửi lên cùng
+  dịch vụ chấm phát âm qua backend; logic chấm dùng chung, chỉ khác phần ghi âm ở client
+  (WB-17).
+- Viết tay (M7.5a) và OCR (M7.5b) chỉ chạy trên app, nhận dạng trên thiết bị. Web giữ mục
+  trong menu với trạng thái "Dùng trên app" kèm mã QR tải app (WB-18). Sau bảo vệ có thể
+  thêm bản web dùng nhận dạng trên server để web và app chung một engine.
+- Roleplay giọng nói (mobile `roleplay.html`) theo cùng hướng phát âm khi làm, chưa xếp vào
+  phạm vi web của đồ án.
 
 ## 4. Admin còn thiếu (M2.UXc)
 
@@ -127,7 +137,7 @@ có cần thiết kế lại theo bộ mẫu.
 | Khu | Đã có | Còn thiếu P1 | Còn thiếu P2 |
 | --- | --- | --- | --- |
 | Mobile | 40 | 19 | 1 |
-| Web | 20 | 14 nhóm (≈ 28 màn) | 2 |
+| Web | 20 | 16 nhóm (≈ 30 màn) | 2 |
 | Admin | 6 (+4 giữ chỗ) | 9 | 4 |
 | Trạng thái chung | trong từng trang | 5 nhóm | — |
 
