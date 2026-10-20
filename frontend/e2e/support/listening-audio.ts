@@ -44,6 +44,8 @@ export async function ingestListeningAudio(
   api: APIRequestContext,
   backend: string,
   adminToken: string,
+  idempotencyKey = 'e2e-learner-listening-audio-v1-000000000000',
+  filename = 'e2e-listening.wav',
 ): Promise<number> {
   const source = queryDisposableDb(
     'SELECT id FROM "DataSource" ORDER BY id LIMIT 1',
@@ -54,11 +56,11 @@ export async function ingestListeningAudio(
     {
       headers: {
         authorization: `Bearer ${adminToken}`,
-        'idempotency-key': 'e2e-learner-listening-audio-v1-000000000000',
+        'idempotency-key': idempotencyKey,
       },
       multipart: {
         file: {
-          name: 'e2e-listening.wav',
+          name: filename,
           mimeType: 'audio/wav',
           buffer: listeningWav(),
         },

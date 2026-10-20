@@ -112,12 +112,20 @@ export default async function LessonDetailPage({
                 Chủ đề của bài
               </h2>
               {lesson.status === 'archived' ? null : (
-                <Link
-                  className="adm-btn adm-btn--outline adm-btn--sm"
-                  href={`/admin/content/topics/new?lessonId=${lesson.id}`}
-                >
-                  Thêm chủ đề
-                </Link>
+                <div className="adm-page-head__actions">
+                  <Link
+                    className="adm-btn adm-btn--outline adm-btn--sm"
+                    href={`/admin/content/topics/new?lessonId=${lesson.id}`}
+                  >
+                    Thêm chủ đề
+                  </Link>
+                  <Link
+                    className="adm-btn adm-btn--outline adm-btn--sm"
+                    href={`/admin/exercises/new?lessonId=${lesson.id}`}
+                  >
+                    Thêm bài tập
+                  </Link>
+                </div>
               )}
             </div>
             <LessonTopics topics={topics} />

@@ -473,11 +473,11 @@ test('uses URL filters and server pagination, then opens a detail', async ({
     .getByRole('link', { name: /mở bài tập/i })
     .first()
     .click();
+  // TL-18 (M5.1b1): trang chi tiết chỉ đọc được thay bằng trang sửa có form
+  // từng loại; tiêu đề trang là đề bài nên chỉ cần h1 hiện ra.
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: /bài tập \d+/i }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Đáp án', exact: true }),
+    page.getByRole('heading', { name: 'Nội dung bài tập', exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Lịch sử bản sửa')).toBeVisible();
 });
@@ -496,9 +496,7 @@ test('keeps the exercise revision hash readable inside every responsive boundary
   for (const width of exerciseDetailBoundaryWidths) {
     await page.setViewportSize({ width, height: width >= 1024 ? 900 : 1024 });
     await page.goto('/admin/exercises/1');
-    await expect(
-      page.getByRole('heading', { name: 'Bài tập 1', exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
 
     const metrics = await assertNoHorizontalOverflow(page);
     expect(metrics.innerWidth).toBe(width);
@@ -847,7 +845,14 @@ test('navigates the secure Media library, filters assets and opens safe detail',
       { headers: { origin: 'https://attacker.example' } },
     );
     expect(crossOrigin.status()).toBe(403);
-    await page.getByRole('button', { name: 'Cách ly' }).click();
+    // Ma trận M5.1b1 chạy 2 lần trên cùng DB: lượt đầu đã cách ly media seed
+    // thì lượt sau nút bị tắt — khẳng định rõ trạng thái thay vì bỏ qua.
+    const quarantine = page.getByRole('button', { name: 'Cách ly' });
+    if (await quarantine.isEnabled()) {
+      await quarantine.click();
+    } else {
+      await expect(quarantine).toBeDisabled();
+    }
     await expect(page.getByText('Đã cách ly')).toBeVisible();
   }
 

@@ -14,9 +14,12 @@ import { actorLabel, type WorkflowRevision } from './content-values';
 export function RevisionHistory({
   revisions,
   sessionAdminId,
+  showContentHash = false,
 }: {
   revisions: WorkflowRevision[];
   sessionAdminId: number;
+  /** Trang sửa bài tập: hiện hash canonical để đối soát tính toàn vẹn. */
+  showContentHash?: boolean;
 }) {
   return (
     <section className="adm-card adm-panel">
@@ -38,6 +41,11 @@ export function RevisionHistory({
                 <span className="adm-muted">
                   {actorLabel(revision.authorId, sessionAdminId)}
                 </span>
+                {showContentHash ? (
+                  <span className="adm-mono adm-hash">
+                    {revision.contentHash ?? 'Không có hash'}
+                  </span>
+                ) : null}
                 {revision.reviews.map((review, index) => (
                   <div
                     className="adm-review-record"

@@ -17,6 +17,8 @@ export type WorkflowRevision = {
   authorId: number | null;
   createdAt: string;
   reviews: WorkflowReview[];
+  /** Hash nội dung canonical của bản sửa (trang sửa bài tập hiện để đối soát). */
+  contentHash?: string | null;
 };
 
 /** TL-13: "Bạn" khi là admin đang đăng nhập, ngược lại "Quản trị viên #<id>". */

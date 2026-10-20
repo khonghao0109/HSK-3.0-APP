@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
 import { ExerciseFilters } from '@/features/exercises/exercise-filters';
 import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { parseExerciseQuery } from '@/features/exercises/exercise-query';
@@ -37,6 +39,15 @@ export default async function ExercisesPage({
         <div>
           <h1>Bài tập</h1>
           <p>Xem kho bài tập, trạng thái xuất bản và nguồn gốc nội dung.</p>
+        </div>
+        <div className="adm-page-head__actions">
+          <Link
+            className="adm-btn adm-btn--primary"
+            href="/admin/exercises/new"
+          >
+            <AdminIcon name="plus" className="adm-icon adm-icon--sm" />
+            Tạo bài tập
+          </Link>
         </div>
       </header>
       <ExerciseFilters query={query} />
