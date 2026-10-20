@@ -71,13 +71,13 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 39 / 53 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
-| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 7 / 16 | 4–6 tuần | 🟡 read console |
+| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 8 / 16 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
 | GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **100 / 190 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **101 / 190 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -333,7 +333,7 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.B5 | `GET /users` cho admin | ✅ | cần H.8 |
 | M5.0 | Khung admin "Hán Lộ Admin" tiếng Việt theo mẫu 06 (Q88): sidebar/thanh trên/drawer, dịch Bài tập, Media, đăng nhập | ✅ | Q4, Q88–Q94; 16/10: ✅ đã đóng (`59a7570`, run `38834186034`) |
 | M5.1a | CMS mutation UI lesson/topic: tạo, sửa, review, publish | ✅ | Q89–Q91, Q95; 19/10: ✅ đã đóng (`cadce315e33396f704c1b9a1002be2bd0d16313d`, run `39221424166`) |
-| M5.1b1 | Soạn, duyệt, xuất bản bài tập bằng form từng loại | 🟡 | Q89, Q91, Q95, Q96; đang làm |
+| M5.1b1 | Soạn, duyệt, xuất bản bài tập bằng form từng loại | ✅ | Q89, Q91, Q95, Q96; 20/10: ✅ đã đóng (`c8f2131`, run `39408418130`) |
 | M5.1b2 | API nguồn dữ liệu + trang nhập bài tập JSON + sidebar "Nhập dữ liệu" | ⬜ | Q97–Q99; 06/04 |
 | M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | 06/06 |
@@ -637,7 +637,7 @@ Còn thiếu:
 
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
-| M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | 🟡 | M5.1a xong, M5.1b1 đang làm, còn M5.1b2; Q89–Q91, Q95, Q96; `06-admin-cms-operations/02,03,04` |
+| M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | 🟡 | M5.1a, M5.1b1 xong, còn M5.1b2; Q89–Q91, Q95, Q96; `06-admin-cms-operations/02,03,04` |
 | M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | `06-admin-cms-operations/06` |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
@@ -838,3 +838,4 @@ khi vertical slice bắt đầu.
 | 19/10/2026 | Kiểm độ phủ thiết kế: bộ HTML mẫu `docs/ui_reference/` (40 mobile, 20 web, 10 admin, đã đưa lên Figma) đối chiếu với mọi task chức năng; danh sách màn còn thiếu ghi ở [product/design-coverage.md](./product/design-coverage.md). Thêm M2.UXa (mobile), M2.UXb (web), M2.UXc (admin), M2.UXd (trạng thái chung) vào GĐ5. GĐ5 16/42; tổng 74/177. |
 | 19/10/2026 | Quyết định phạm vi web cho nhận dạng: phát âm (M7.2) làm cả web và app, dùng chung dịch vụ chấm qua backend, web ghi âm bằng micro trình duyệt; viết tay (M7.5a) và OCR (M7.5b) chỉ chạy trên app, web hiện trạng thái "Dùng trên app" kèm mã QR. Thêm WB-17, WB-18 vào M2.UXb ([product/design-coverage.md](./product/design-coverage.md) §3). Không đổi số task. |
 | 19/10/2026 | Gộp nhánh `claude/relaxed-hamilton-f07sck` (lộ trình đồ án GĐ9–GĐ12, M2.9a, mục khảo sát đối thủ, M2.UXa–M2.UXd, quyết định phát âm/viết tay/OCR trên web) vào `macdev`: giữ mọi trạng thái và task của `macdev`, thêm M2.5e, M2.9a vào GĐ5. Đếm lại theo quy tắc 0.6: GĐ4 11/17, GĐ5 39/53, GĐ6 0/12, GĐ8 7/16, GĐ9 0/16, GĐ10 0/6, GĐ11 0/9, GĐ12 0/3. Tổng 100/190. |
+| 20/10/2026 | GĐ8: M5.1b1 ✅ đã đóng (`c8f2131`, run `39408418130`) — soạn/sửa/duyệt/xuất bản bài tập bằng form từng loại (Q89, Q91, Q95, Q96; TL-18–TL-22, TL-24): 2 trang `/admin/exercises/new` + `/admin/exercises/[exerciseId]`, 5 form theo loại (trắc nghiệm/nghe chọn/điền từ/sắp xếp câu/luyện nói) dùng chung state + payload canonical, kiểm client theo loại (chữ Việt cạnh ô, `aria-describedby`, focus ô lỗi đầu), 422 map `error.details.path` về đúng ô, quy trình 4 bước + lịch sử bản sửa + cảnh báo tự duyệt Q89, luyện nói tắt Xuất bản kèm lý do, lưu trữ inline, ô chọn bài học bỏ bài lưu trữ và `?lessonId=` bài lưu trữ báo không thêm được. TL-24: `answer.tokenIds` giữ thứ tự soạn (thứ tự đúng) còn `content.tokens` là thứ tự hiển thị khác thứ tự đáp án, so theo chữ đã trim (nếu mọi mảnh cùng một chữ thì so id), xáo bằng `crypto.getRandomValues`; sửa chỉ đề giữ thứ tự hiển thị cũ, mảnh mới nối cuối, mảnh xoá bỏ khỏi cả hai; lưu thành công nhớ thứ tự vừa gửi cho lần lưu sau. Gate `all` 0 failed; e2e admin-exercise 4 viewport 94 passed/22 skipped/0 failed, ma trận admin-exercise + admin-console × 4 project chạy 2 lần cùng DB: 94 passed/22 skipped/0 failed mỗi lần, audio fixture còn đúng 1 bản ghi. Đếm lại theo quy tắc 0.6: GĐ8 8/16, tổng 101/190. |
