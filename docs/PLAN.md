@@ -71,13 +71,13 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 39 / 53 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
-| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 9 / 17 | 4–6 tuần | 🟡 read console |
+| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 10 / 17 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
 | GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **102 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **103 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -335,7 +335,7 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.1a | CMS mutation UI lesson/topic: tạo, sửa, review, publish | ✅ | Q89–Q91, Q95; 19/10: ✅ đã đóng (`cadce315e33396f704c1b9a1002be2bd0d16313d`, run `39221424166`) |
 | M5.1b1 | Soạn, duyệt, xuất bản bài tập bằng form từng loại | ✅ | Q89, Q91, Q95, Q96; 20/10: ✅ đã đóng (`c8f2131`, run `39408418130`) |
 | M5.1b2 | API nguồn dữ liệu + trang nhập bài tập JSON + sidebar "Nhập dữ liệu" | ✅ | Q97–Q101; 06/04; 21/10: ✅ đã đóng (`d468a48`, run `39540541415`) |
-| M5.2a | Tải media 1 tệp + lọc nguồn đủ giấy phép + cờ bật/tắt + nút "Tải lên" | 🟡 | Q102–Q105; 06/05; đang làm |
+| M5.2a | Tải media 1 tệp + lọc nguồn đủ giấy phép + cờ bật/tắt + nút "Tải lên" | ✅ | Q102–Q105; 06/05; 21/10: ✅ đã đóng (`ac3bf9e`, run `39547048119`) |
 | M5.2b | Danh sách ingestion cần xử lý + dọn dẹp (reconciliation) + nghe/xem trước media | ⬜ | Q105 |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | 06/06 |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
@@ -639,7 +639,7 @@ Còn thiếu:
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
 | M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | ✅ | M5.1a, M5.1b1, M5.1b2 xong; Q89–Q91, Q95, Q96; `06-admin-cms-operations/02,03,04` |
-| M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | tách M5.2a/M5.2b |
+| M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | tách M5.2a/M5.2b; M5.2a xong, còn M5.2b |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | `06-admin-cms-operations/06` |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | `06-admin-cms-operations/01`; ADR-008 §10 |
@@ -844,3 +844,4 @@ khi vertical slice bắt đầu.
 | 21/10/2026 | GĐ8: M5.1b2 vòng sửa 1 — Q101: ô "Nguồn dữ liệu" hiện mọi nguồn, **đính chính production có 8 nguồn từ điển từ migration `20260810092000_p0_cms_provenance_import_audit`** (CC-CEDICT + HSK word list HSK1–HSK7_9); Q100 chỉ áp khi danh sách rỗng; không lọc, không đổi schema, phân loại nguồn (kind) để task sau. Q101 chép nguyên vào `docs/product/learner-ui-decisions.md` (sau Q100; bảng Q repo 98 dòng; `docs/ui_reference/README.md` local không sửa). Vòng sửa theo review M5.1b2: Z1 cắt 100 lỗi preview ở BFF + errorsTotal; Z2 khoá UI khi pending + chốt requestId; Z3 kiểm 90 KB trước khi đọc + chốt thứ tự đọc; Z4 "Nhập tệp khác" sau thành công; Z5 aria-live chỉ vùng thông báo; Z6 input file tabIndex=-1 + focus-within; Z7 một câu lý do mỗi nút tắt + aria-describedby; Z8 vùng bấm link ≥ 44px ≤900px; Z9 e2e lấy id từ phản hồi commit + kiểm archive; Z10 e2e thiếu key đúng shape + mã lỗi; Z11 test 413/kéo-thả; Z12 Content-Length > 102 400 → 413 trước khi đọc body; Z13 ô nguồn rộng, caption sr-only, dòng nhắc Q101. Không đổi số đếm. Đếm lại theo quy tắc 0.6: GĐ8 8/16, tổng 101/190 (không đổi vì chỉ ⬜→🟡). |
 | 21/10/2026 | GĐ8: M5.1b2 ✅ đã đóng (`d468a48`, run `39540541415`) — API nguồn dữ liệu `GET /admin/cms/data-sources` (4 field, envelope phân trang, sort name/version/id), trang `/admin/import` (stepper 3 bước, dropzone, preview/errors/commit, Q100/Q101, a11y), BFF `exercise-imports/preview` + `exercise-imports` (Origin→cookie→413→JSON→key, cắt 100 lỗi + errorsTotal, Content-Length chặn trước khi đọc), sidebar "Nhập dữ liệu" thành link; TL-25…TL-33; Q100 (chưa nguồn → câu báo + khoá tải tệp), Q101 (hiện mọi nguồn + dòng nhắc; đính chính production có 8 nguồn từ điển từ migration `20260810092000_p0_cms_provenance_import_audit`); vòng sửa 2: W1–W6. Đếm lại theo quy tắc 0.6: GĐ8 9/16, tổng 102/190. |
 | 21/10/2026 | GĐ8: tách M5.2 thành M5.2a 🟡 đang làm (tải media 1 tệp + lọc nguồn đủ giấy phép + cờ bật/tắt + nút "Tải lên", 06/05) và M5.2b ⬜ (danh sách ingestion cần xử lý + dọn dẹp + nghe/xem trước). Q102–Q105 chép vào `docs/product/learner-ui-decisions.md`. Quyết định Tech Lead: TL-34 một tệp, đồng bộ, hiện processingStatus của phản hồi 201; TL-35 `GET /admin/cms/data-sources?eligibleFor=media` dùng chung predicate finalize (một fragment `Prisma.sql`); TL-36 `GET /admin/cms/media` thêm `meta.ingestionEnabled`; TL-37 409 ingestion có mã máy; TL-38 Idempotency-Key theo tệp/nguồn, giữ khi thử lại lỗi tạm; TL-39 kiểm tên/đuôi/kích thước ở client + MIME chuẩn theo đuôi; TL-40 BFF `POST /api/admin/media/ingestions` (Origin→cookie→415→411/413→key→dataSourceId→413, timeout 125 s); TL-41 nhãn tiếng Việt cho mọi mã lỗi media; TL-42 trang `/admin/media/upload`; TL-43 link "Tải lên" ở `/admin/media` theo cờ; TL-44 nút footer M5.1b2 `adm-btn--outline`; TL-45 e2e `admin-media-upload.spec.ts` (upload thật chỉ desktop-1440, ≤ 3 lần/lượt vì rate limit 5/phút). Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. SKILL §6a áp cho M5.2a. Đếm lại theo quy tắc 0.6: GĐ8 9/17, tổng 102/191. |
+| 21/10/2026 | GĐ8: M5.2a ✅ đã đóng (`ac3bf9e`, run `39547048119`) — tải media 1 tệp (Q102–Q105; TL-34…TL-45): `GET /admin/cms/data-sources?eligibleFor=media` dùng chung predicate finalize (fragment `MEDIA_ELIGIBLE_DATA_SOURCE_SQL`), `GET /admin/cms/media` thêm `meta.ingestionEnabled` qua `extraMeta` của envelope (chỉ giá trị scalar, chặn khoá base `requestId`/`timestamp`/`pagination`), 409 ingestion có mã máy (`IDEMPOTENCY_KEY_IN_USE`, `MEDIA_INGESTION_IN_PROGRESS`, `IDEMPOTENCY_KEY_RENEWAL_REQUIRED`, `MEDIA_STORAGE_PROVIDER_MISMATCH`); BFF `POST /api/admin/media/ingestions` (Origin→cookie→415→411/413→key→dataSourceId→413→độ dài khớp Content-Length, timeout 125 s), `experimental.proxyClientMaxBodySize` = 10 551 296 byte để proxy không cắt tệp 10 MiB; trang `/admin/media/upload` (Idempotency-Key theo tệp/nguồn, MIME chuẩn theo đuôi, nhãn Việt mọi mã lỗi, MB/KB), link "Tải lên" theo cờ, nút footer M5.1b2 `adm-btn--outline`; vòng sửa 1: V1–V4 + nit. E2e upload thật chỉ desktop-1440 (3 lần/lượt, gồm tệp 10 485 700 byte). Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
