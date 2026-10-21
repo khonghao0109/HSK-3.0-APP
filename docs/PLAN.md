@@ -71,13 +71,13 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 39 / 53 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
-| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 10 / 17 | 4–6 tuần | 🟡 read console |
+| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 11 / 17 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
 | GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **103 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **104 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -336,7 +336,7 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.1b1 | Soạn, duyệt, xuất bản bài tập bằng form từng loại | ✅ | Q89, Q91, Q95, Q96; 20/10: ✅ đã đóng (`c8f2131`, run `39408418130`) |
 | M5.1b2 | API nguồn dữ liệu + trang nhập bài tập JSON + sidebar "Nhập dữ liệu" | ✅ | Q97–Q101; 06/04; 21/10: ✅ đã đóng (`d468a48`, run `39540541415`) |
 | M5.2a | Tải media 1 tệp + lọc nguồn đủ giấy phép + cờ bật/tắt + nút "Tải lên" | ✅ | Q102–Q105; 06/05; 21/10: ✅ đã đóng (`ac3bf9e`, run `39547048119`) |
-| M5.2b | Danh sách ingestion cần xử lý + dọn dẹp (reconciliation) + nghe/xem trước media | 🟡 | Q106, Q107; chờ review |
+| M5.2b | Danh sách ingestion cần xử lý + dọn dẹp (reconciliation) + nghe/xem trước media | ✅ | Q106, Q107; 21/10: ✅ đã đóng (`92731cb`, run `39572342680`) |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | 06/06 |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | 06/01; ADR-008 §10 |
@@ -415,7 +415,7 @@ Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 8 |
 | M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
-| M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 5 / 13 |
+| M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 6 / 13 |
 | M7 Đồ án: Mobile, AI, nhận diện | App đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | 0 / 5 |
 | TN Đồ án: Deploy demo và bảo vệ | Web và app chạy trên bản deploy, bảo vệ 17/01/2027 | ⬜ | 0 / 5 |
 | M6 Production foundation + Beta (sau bảo vệ) | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
@@ -639,7 +639,7 @@ Còn thiếu:
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
 | M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | ✅ | M5.1a, M5.1b1, M5.1b2 xong; Q89–Q91, Q95, Q96; `06-admin-cms-operations/02,03,04` |
-| M5.2 | Upload media UI + trạng thái processing + reconciliation | ⬜ | tách M5.2a/M5.2b; M5.2a xong, còn M5.2b |
+| M5.2 | Upload media UI + trạng thái processing + reconciliation | ✅ | tách M5.2a/M5.2b; cả hai đã đóng (`ac3bf9e`, `92731cb`) |
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | `06-admin-cms-operations/06` |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | `06-admin-cms-operations/01`; ADR-008 §10 |
@@ -847,3 +847,4 @@ khi vertical slice bắt đầu.
 | 21/10/2026 | GĐ8: M5.2a ✅ đã đóng (`ac3bf9e`, run `39547048119`) — tải media 1 tệp (Q102–Q105; TL-34…TL-45): `GET /admin/cms/data-sources?eligibleFor=media` dùng chung predicate finalize (fragment `MEDIA_ELIGIBLE_DATA_SOURCE_SQL`), `GET /admin/cms/media` thêm `meta.ingestionEnabled` qua `extraMeta` của envelope (chỉ giá trị scalar, chặn khoá base `requestId`/`timestamp`/`pagination`), 409 ingestion có mã máy (`IDEMPOTENCY_KEY_IN_USE`, `MEDIA_INGESTION_IN_PROGRESS`, `IDEMPOTENCY_KEY_RENEWAL_REQUIRED`, `MEDIA_STORAGE_PROVIDER_MISMATCH`); BFF `POST /api/admin/media/ingestions` (Origin→cookie→415→411/413→key→dataSourceId→413→độ dài khớp Content-Length, timeout 125 s), `experimental.proxyClientMaxBodySize` = 10 551 296 byte để proxy không cắt tệp 10 MiB; trang `/admin/media/upload` (Idempotency-Key theo tệp/nguồn, MIME chuẩn theo đuôi, nhãn Việt mọi mã lỗi, MB/KB), link "Tải lên" theo cờ, nút footer M5.1b2 `adm-btn--outline`; vòng sửa 1: V1–V4 + nit. E2e upload thật chỉ desktop-1440 (3 lần/lượt, gồm tệp 10 485 700 byte). Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
 | 21/10/2026 | GĐ8: M5.2b 🟡 đang làm — danh sách tải lên cần xử lý + nút Dọn dẹp + nghe/xem trước media. Q106–Q107 chép vào `docs/product/learner-ui-decisions.md`. Quyết định Tech Lead: TL-46 tập "có vấn đề" = `cleanup_required` hoặc `processing` quá 15 phút (một hằng `Prisma.sql` dùng chung với metric `hsk_media_stuck_processing`); TL-47 `GET /admin/cms/media/ingestions` admin-only, phân trang, no-store, không gắn cờ ingestion, không trả cột nhạy cảm, `cleanupAvailable` so provider hiện tại; TL-48 seed bản ghi kẹt bằng `SET LOCAL TIME ZONE`; TL-49 allowlist backend-client; TL-50 BFF `POST /api/admin/media/ingestions/[id]/cleanup` (Origin→id→cookie→backend); TL-51 trang `/admin/media/ingestions` + link từ `/admin/media`; TL-52 nút Dọn dẹp không xác nhận, kết quả vào vùng live, làm mới danh sách; TL-53 không đếm ngược; TL-54 BFF admin access/content dùng lại handler learner; TL-55 xem trước ảnh/audio chỉ khi media sẵn sàng, không tự phát; TL-56 log env Playwright; TL-57 admin phụ cho upload ảnh; TL-58 seed lượt tải bằng SQL trong spec; TL-59 không assert 0 console error ở chi tiết ảnh lượt khác; TL-60 docs api.md. SKILL §6a áp dụng cho M5.2b. Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
 | 21/10/2026 | GĐ8: M5.2b 🟡 chờ review — `GET /admin/cms/media/ingestions` (hằng `MEDIA_INGESTION_STUCK_PROCESSING_SQL` dùng chung với metric `hsk_media_stuck_processing`, khai báo trước `media/:mediaId`, không gắn cờ ingestion); BFF `POST /api/admin/media/ingestions/[id]/cleanup` và `GET /api/admin/media/[id]/access|content` (dùng lại handler learner qua `sessionCookieName` + `contentRoutePrefix`); trang `/admin/media/ingestions` + link từ Thư viện media; thẻ "Xem trước" ở chi tiết media (ảnh JPG/PNG, audio MP3/WAV bấm "Nghe thử", hết hạn theo `expiresAt`); admin phụ `admin.media.frontend@example.test` trong seed Playwright. Seed bản ghi kẹt bằng `SET LOCAL TIME ZONE` chạy được trên DB disposable (e2e I8). Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
+| 21/10/2026 | GĐ8: M5.2b ✅ đã đóng (`92731cb`, run `39572342680`) — danh sách tải lên cần xử lý + Dọn dẹp + nghe/xem trước media (Q106, Q107; TL-46…TL-60): `GET /admin/cms/media/ingestions` (cleanup_required + processing kẹt >15 phút, hằng `MEDIA_INGESTION_STUCK_PROCESSING_SQL` dùng chung metric), BFF cleanup và admin access/content dùng lại handler learner, trang `/admin/media/ingestions`, thẻ Xem trước. Vòng sửa 1: V1 trang vượt không hiện phân trang, V2 focus chuyển sang `<audio>` có nhãn, V3 khung ảnh tối thiểu + chữ đang tải, N1 hết hạn không cướp focus, N2 test focus-return thật, N3 I6 chờ hydrate. Nợ test: I8/429 phụ thuộc DB sạch và khoảng cách >60 s giữa các lượt chạy; fileSize chi tiết "1.6 KB" lệch `formatMediaBytes`. Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. Đếm lại theo quy tắc 0.6: GĐ8 11/17, tổng 104/191. |
