@@ -1290,6 +1290,20 @@ export interface components {
             updatedAt: string;
             dataSource: components["schemas"]["AdminDataSourceDto"] | null;
         };
+        PaginationMetaDto: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+        AdminMediaListMetaDto: {
+            /** Format: date-time */
+            timestamp: string;
+            ingestionEnabled: boolean;
+            pagination: components["schemas"]["PaginationMetaDto"];
+            /** @description Same value as the `X-Request-ID` response header. */
+            requestId: string;
+        };
         AdminMediaExerciseUsageDto: {
             id: number;
             lessonId: number;
@@ -1999,12 +2013,6 @@ export interface components {
             /** @description Same value as the `X-Request-ID` response header. */
             requestId: string;
         };
-        PaginationMetaDto: {
-            page: number;
-            limit: number;
-            total: number;
-            totalPages: number;
-        };
         ApiPageResponseMetaDto: {
             /** Format: date-time */
             timestamp: string;
@@ -2433,7 +2441,7 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["AdminMediaDto"][];
-                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                        meta: components["schemas"]["AdminMediaListMetaDto"];
                     };
                 };
             };
@@ -2535,6 +2543,8 @@ export interface operations {
             query?: {
                 page?: number;
                 limit?: number;
+                /** @description Q103/TL-35: `media` keeps only sources media finalize would accept. */
+                eligibleFor?: "media";
             };
             header?: {
                 /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */

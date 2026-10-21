@@ -1,9 +1,16 @@
 import type { NextConfig } from 'next';
 
+import { MEDIA_UPLOAD_BFF_MAX_BYTES } from './src/features/media-upload/media-upload-values';
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    // M5.2a (V1): proxy đệm body tối đa 10 MB mặc định và cắt phần thừa; tải
+    // media cần đủ tệp 10 MiB + phần bao multipart.
+    proxyClientMaxBodySize: MEDIA_UPLOAD_BFF_MAX_BYTES,
+  },
   async headers() {
     return [
       {

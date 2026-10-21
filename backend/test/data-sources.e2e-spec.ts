@@ -26,6 +26,7 @@ describe('Admin data sources và giới hạn body import (M5.1b2) E2E', () => {
   const createdDataSourceIds: number[] = [];
   const sharedName = `Data source order ${suffix}`;
   const uniqueName = `Data source unique ${suffix}`;
+  const mediaName = `Data source media ${suffix}`;
 
   beforeAll(async () => {
     assertDisposableTestDatabase();
@@ -96,6 +97,23 @@ describe('Admin data sources và giới hạn body import (M5.1b2) E2E', () => {
       });
       createdDataSourceIds.push(created.id);
     }
+    // Q103: license NULL / blank never owns media; the rest of the row is valid.
+    for (const [version, license] of [
+      ['v3', 'approved-license'],
+      ['v2', null],
+      ['v1', '   '],
+    ] as const) {
+      const created = await prisma.dataSource.create({
+        data: {
+          code: `DS_MEDIA_${suffix}_${version}`,
+          name: mediaName,
+          version,
+          license,
+        },
+        select: { id: true },
+      });
+      createdDataSourceIds.push(created.id);
+    }
   });
 
   afterAll(async () => {
@@ -139,7 +157,7 @@ describe('Admin data sources và giới hạn body import (M5.1b2) E2E', () => {
     const fixtureItems = (
       response.body.data as Record<string, unknown>[]
     ).filter((item) => String(item.code).includes(suffix));
-    expect(fixtureItems).toHaveLength(4);
+    expect(fixtureItems).toHaveLength(createdDataSourceIds.length);
     for (const item of fixtureItems) {
       expect(Object.keys(item).sort()).toEqual([
         'code',
@@ -220,5 +238,63 @@ describe('Admin data sources và giới hạn body import (M5.1b2) E2E', () => {
       .send(payload);
     expect(response.status).toBe(413);
     expect(JSON.stringify(response.body)).not.toContain(bigText.slice(0, 32));
+  });
+
+  it('6. eligibleFor=media keeps only sources media finalize accepts (Q103/TL-35)', async () => {
+    const codesOf = (body: { data: { code: string }[] }) =>
+      body.data.filter((item) => item.code.startsWith(`DS_MEDIA_${suffix}`));
+
+    const all = await listDataSources('?page=1&limit=100')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(codesOf(all.body).map((item) => item.code)).toEqual([
+      `DS_MEDIA_${suffix}_v3`,
+      `DS_MEDIA_${suffix}_v2`,
+      `DS_MEDIA_${suffix}_v1`,
+    ]);
+
+    const eligible = await listDataSources(
+      '?page=1&limit=100&eligibleFor=media',
+    )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const media = codesOf(eligible.body);
+    expect(media).toHaveLength(1);
+    expect(Object.keys(media[0] ?? {}).sort()).toEqual([
+      'code',
+      'id',
+      'name',
+      'version',
+    ]);
+    expect(media[0]).toMatchObject({
+      code: `DS_MEDIA_${suffix}_v3`,
+      name: mediaName,
+      version: 'v3',
+    });
+    const [{ total }] = await prisma.$queryRaw<{ total: number }[]>(
+      Prisma.sql`SELECT count(*)::int AS total FROM "DataSource"
+        WHERE NULLIF(btrim(license), '') IS NOT NULL
+          AND NULLIF(btrim(code), '') IS NOT NULL
+          AND NULLIF(btrim(version), '') IS NOT NULL`,
+    );
+    expect(eligible.body.meta.pagination.total).toBe(total);
+    expect(eligible.body.meta.pagination.total).toBeLessThan(
+      all.body.meta.pagination.total,
+    );
+
+    const firstPage = await listDataSources('?page=1&limit=1&eligibleFor=media')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(firstPage.body.data).toHaveLength(1);
+    expect(firstPage.body.meta.pagination).toMatchObject({
+      page: 1,
+      limit: 1,
+      total,
+      totalPages: total,
+    });
+
+    await listDataSources('?eligibleFor=lesson')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(400);
   });
 });

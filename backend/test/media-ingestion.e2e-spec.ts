@@ -380,7 +380,18 @@ describe('Secure Media Ingestion V1 E2E', () => {
   it('8. rejects reusing an idempotency key for a different request', async () => {
     const key = `media-ingest-conflict-${randomUUID()}`;
     await upload(adminToken, png, 'first.png', 'image/png', key).expect(201);
-    await upload(adminToken, png, 'second.png', 'image/png', key).expect(409);
+    const reused = await upload(
+      adminToken,
+      png,
+      'second.png',
+      'image/png',
+      key,
+    ).expect(409);
+    // TL-37: 409 carries a machine code; the message stays word for word.
+    expect(reused.body.error).toEqual({
+      code: 'IDEMPOTENCY_KEY_IN_USE',
+      message: 'Idempotency-Key is already in use.',
+    });
   });
 
   it('9. leaves no new object or Media on rejection, storage, processing and database failure', async () => {
@@ -597,13 +608,12 @@ describe('Secure Media Ingestion V1 E2E', () => {
       .expect(201)
       .then((response) => response);
     await deleteBarrier.started;
-    await upload(
-      adminToken,
-      png,
-      'cleanup.png',
-      'image/png',
-      cleanupKey,
-    ).expect(409);
+    await upload(adminToken, png, 'cleanup.png', 'image/png', cleanupKey)
+      .expect(409)
+      .expect(({ body }) => {
+        // Cleanup claims the row as `processing` (OBJECT_CLEANUP_IN_PROGRESS).
+        expect(body.error.code).toBe('MEDIA_INGESTION_IN_PROGRESS');
+      });
     deleteBarrier.release();
     const settlingCleanup = await cleanupPromise;
     expect(settlingCleanup.body).toMatchObject({
@@ -641,6 +651,23 @@ describe('Secure Media Ingestion V1 E2E', () => {
         },
       }),
     ).resolves.toBe(1);
+
+    // TL-37: a reconciled key cannot be reused for the same request.
+    await prisma.mediaUploadRateLimit.deleteMany({
+      where: { actorId: adminId },
+    });
+    const renewal = await upload(
+      adminToken,
+      png,
+      'cleanup.png',
+      'image/png',
+      cleanupKey,
+    ).expect(409);
+    expect(renewal.body.error).toEqual({
+      code: 'IDEMPOTENCY_KEY_RENEWAL_REQUIRED',
+      message:
+        'A new Idempotency-Key is required after storage reconciliation.',
+    });
   });
 
   async function ageCleanupObservation(ingestionId: number): Promise<void> {

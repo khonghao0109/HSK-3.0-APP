@@ -1,6 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 const SAFE_IDEMPOTENCY_KEY = /^[A-Za-z0-9][A-Za-z0-9._:-]{31,127}$/u;
+/**
+ * Q103/TL-35: the one predicate deciding whether a `"DataSource"` row may own
+ * media. Shared by ingestion finalize and the admin source list.
+ */
+export const MEDIA_ELIGIBLE_DATA_SOURCE_SQL = Prisma.sql`NULLIF(btrim(code), '') IS NOT NULL
+  AND NULLIF(btrim(version), '') IS NOT NULL
+  AND NULLIF(btrim(license), '') IS NOT NULL
+  AND ("referenceUrl" IS NULL OR NULLIF(btrim("referenceUrl"), '') IS NOT NULL)
+  AND (attribution IS NULL OR NULLIF(btrim(attribution), '') IS NOT NULL)
+  AND ("contentHash" IS NULL OR NULLIF(btrim("contentHash"), '') IS NOT NULL)`;
+
 const FORBIDDEN_PATH_OR_ENCODING =
   /(?:[/\\]|\.\.|%2f|%5c|%252f|%255c|^[A-Za-z]:)/iu;
 

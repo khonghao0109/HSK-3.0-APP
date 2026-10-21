@@ -214,6 +214,86 @@ export function exerciseImportErrorLabel(code: string | null | undefined): {
   };
 }
 
+/**
+ * TL-41 (M5.2a): nhãn tiếng Việt cho mọi mã lỗi tải media (media-file.processor,
+ * media-ingestion.service, guard, boundary interceptor, filter, BFF). Mã lạ →
+ * câu chung, UI hiện mã gốc trong `<code>`.
+ */
+const MEDIA_UPLOAD_ERROR_MESSAGE: Record<string, string> = {
+  FILE_REQUIRED: 'Chưa có tệp trong yêu cầu tải lên.',
+  FILE_EMPTY: 'Tệp rỗng. Chọn tệp có nội dung.',
+  FILE_SIZE_INVALID: 'Dung lượng tệp không hợp lệ.',
+  FILE_MALFORMED: 'Tệp bị hỏng hoặc không đọc được.',
+  MEDIA_TYPE_NOT_ALLOWED:
+    'Loại tệp không được phép. Chỉ nhận JPG, PNG, MP3 hoặc WAV.',
+  MIME_SIGNATURE_MISMATCH:
+    'Nội dung tệp không khớp với loại tệp. Kiểm tra lại tệp hoặc đuôi tệp.',
+  FILENAME_EXTENSION_MISMATCH:
+    'Đuôi tên tệp không khớp với nội dung tệp. Tên tệp chỉ có một dấu chấm, ví dụ bai1.wav.',
+  IMAGE_DIMENSIONS_EXCEEDED: 'Ảnh có kích thước quá lớn.',
+  POLYGLOT_DETECTED: 'Tệp chứa nội dung lạ và bị từ chối.',
+  MALWARE_DETECTED: 'Tệp bị quét phát hiện mã độc và đã bị từ chối.',
+  MEDIA_REJECTED: 'Tệp đã bị từ chối khi kiểm tra.',
+  MEDIA_SOURCE_NOT_APPROVED:
+    'Nguồn dữ liệu này chưa đủ giấy phép để nhận media. Chọn nguồn khác.',
+  MEDIA_CLEANUP_REQUIRED:
+    'Lần tải trước cần được dọn dẹp trước khi thử lại. Liên hệ quản trị hệ thống.',
+  MEDIA_CLEANUP_OUTCOME_UNKNOWN:
+    'Chưa rõ kết quả dọn dẹp lần tải trước. Thử lại sau ít phút.',
+  MEDIA_FINALIZE_OUTCOME_UNKNOWN:
+    'Chưa rõ kết quả lưu tệp. Thử lại sau ít phút với cùng tệp.',
+  MEDIA_REJECTION_OUTCOME_UNKNOWN:
+    'Chưa rõ kết quả kiểm tra tệp. Thử lại sau ít phút với cùng tệp.',
+  MEDIA_DATABASE_UNAVAILABLE: 'Cơ sở dữ liệu tạm không phản hồi. Thử lại sau.',
+  MEDIA_PROCESSING_UNAVAILABLE:
+    'Dịch vụ xử lý media tạm không phản hồi. Thử lại sau.',
+  MEDIA_INGESTION_UNAVAILABLE:
+    'Dịch vụ tải media tạm không phản hồi. Thử lại sau.',
+  MEDIA_SCANNER_UNAVAILABLE:
+    'Dịch vụ quét virus tạm không phản hồi. Thử lại sau.',
+  MEDIA_SCANNER_INVALID_RESPONSE:
+    'Dịch vụ quét virus trả kết quả không hợp lệ. Thử lại sau.',
+  MEDIA_STORAGE_UNAVAILABLE:
+    'Kho lưu trữ media tạm không phản hồi. Thử lại sau.',
+  MEDIA_STORAGE_INTEGRITY_ERROR:
+    'Tệp đã lưu không khớp kiểm tra toàn vẹn. Liên hệ quản trị hệ thống.',
+  MEDIA_STORAGE_PROVIDER_MISMATCH:
+    'Kho lưu trữ của lần tải này khác cấu hình hiện tại. Liên hệ quản trị hệ thống.',
+  IDEMPOTENCY_KEY_IN_USE:
+    'Mã tải lên đã được dùng cho tệp khác. Bấm "Tải lên" để thử lại với mã mới.',
+  IDEMPOTENCY_KEY_RENEWAL_REQUIRED:
+    'Lần tải trước đã được dọn dẹp. Bấm "Tải lên" để thử lại với mã mới.',
+  MEDIA_INGESTION_IN_PROGRESS:
+    'Tệp này đang được xử lý. Đợi một lát rồi bấm "Tải lên" lại.',
+  MEDIA_INGESTION_BUSY:
+    'Hệ thống đang bận xử lý tệp khác. Thử lại sau vài giây.',
+  MEDIA_INGESTION_DISABLED: 'Tính năng tải media đang tạm tắt.',
+  MEDIA_UPLOAD_TIMEOUT: 'Tải lên quá thời gian cho phép. Thử lại.',
+  MEDIA_UPLOAD_ABORTED: 'Kết nối bị ngắt khi đang tải lên. Thử lại.',
+  MEDIA_UPLOAD_BFF_TIMEOUT:
+    'Máy chủ chưa phản hồi kịp. Bấm "Tải lên" để thử lại với cùng tệp.',
+  UPLOAD_TOO_LARGE: 'Tệp vượt quá 10 MB.',
+  UPLOAD_BODY_INCOMPLETE: 'Tệp gửi lên không đầy đủ. Thử lại.',
+  MULTIPART_INVALID: 'Yêu cầu tải lên không hợp lệ. Chọn lại tệp rồi thử lại.',
+  INVALID_IDEMPOTENCY_KEY: 'Thiếu mã tải lên. Chọn lại tệp rồi thử lại.',
+  TOO_MANY_REQUESTS:
+    'Bạn đã tải lên quá nhiều trong một phút. Thử lại sau khoảng 1 phút.',
+  BAD_REQUEST: 'Yêu cầu tải lên không hợp lệ.',
+  CONFLICT: 'Tệp đang bị xung đột với lần tải khác. Thử lại.',
+};
+
+export const MEDIA_UPLOAD_ERROR_FALLBACK =
+  'Không tải được tệp. Thử lại hoặc liên hệ quản trị hệ thống.';
+
+export function mediaUploadErrorLabel(code: string | null | undefined): {
+  message: string;
+  unknownCode: string | null;
+} {
+  const message = code ? MEDIA_UPLOAD_ERROR_MESSAGE[code] : undefined;
+  if (message) return { message, unknownCode: null };
+  return { message: MEDIA_UPLOAD_ERROR_FALLBACK, unknownCode: code ?? null };
+}
+
 /** TL-19 (F5): nhãn form bài tập dùng chung cho 5 loại. */
 export const EXERCISE_FORM = {
   type: 'Loại bài tập',

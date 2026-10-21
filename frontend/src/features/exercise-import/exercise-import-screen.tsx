@@ -572,7 +572,7 @@ export function ExerciseImportScreen({
             ) : null}
             {/* Z13: đã có tệp chỉ hiện "Chọn tệp khác". */}
             <button
-              className="adm-btn"
+              className="adm-btn adm-btn--outline"
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={locked}
@@ -731,7 +731,7 @@ export function ExerciseImportScreen({
 
       <div className="adm-import-footer">
         <button
-          className="adm-btn"
+          className="adm-btn adm-btn--outline"
           type="button"
           onClick={result ? resetForAnotherFile : resetPreview}
           disabled={(!result && step === 1) || pending !== null}

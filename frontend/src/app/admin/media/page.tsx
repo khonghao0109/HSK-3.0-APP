@@ -7,6 +7,7 @@ import { MediaPagination } from '@/features/media/media-pagination';
 import { parseMediaQuery } from '@/features/media/media-query';
 import { loadMedia } from '@/features/media/media-service';
 import { MediaTable } from '@/features/media/media-table';
+import { MediaUploadLink } from '@/features/media/media-upload-link';
 import { BackendRequestError } from '@/lib/api/api-error';
 
 import '../admin-media.css';
@@ -40,6 +41,7 @@ export default async function MediaPage({
             Xem trạng thái xử lý, nguồn gốc và tham chiếu nội dung của media.
           </p>
         </div>
+        <MediaUploadLink enabled={result.ingestionEnabled} />
       </header>
       <MediaFilters query={query} />
       <div className="adm-card adm-media-card">

@@ -101,6 +101,12 @@ async function main(): Promise<void> {
         createdById: admin.id,
       },
     });
+    // M5.2a (Q103): nguồn thiếu giấy phép không được hiện ở màn tải media.
+    await tx.$executeRaw(
+      Prisma.sql`INSERT INTO "DataSource" (code, name, version, license, "createdById", "updatedAt")
+        VALUES ('FRONTEND_CONSOLE_UNLICENSED', 'Nguồn chưa có giấy phép', '2026.10', NULL, ${admin.id}, CURRENT_TIMESTAMP)
+        ON CONFLICT (code) DO NOTHING`,
+    );
     const level = await tx.level.create({
       data: {
         code: 'HSK1',

@@ -729,7 +729,7 @@
                       }
                     },
                     "meta": {
-                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                      "$ref": "#/components/schemas/AdminMediaListMetaDto"
                     }
                   }
                 }
@@ -957,6 +957,18 @@
               "maximum": 100,
               "default": 20,
               "type": "integer"
+            }
+          },
+          {
+            "name": "eligibleFor",
+            "required": false,
+            "in": "query",
+            "description": "Q103/TL-35: `media` keeps only sources media finalize would accept.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "media"
+              ]
             }
           }
         ],
@@ -5478,6 +5490,58 @@
           "dataSource"
         ]
       },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages"
+        ]
+      },
+      "AdminMediaListMetaDto": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ingestionEnabled": {
+            "type": "boolean"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Same value as the `X-Request-ID` response header."
+          }
+        },
+        "required": [
+          "timestamp",
+          "ingestionEnabled",
+          "pagination",
+          "requestId"
+        ]
+      },
       "AdminMediaExerciseUsageDto": {
         "type": "object",
         "properties": {
@@ -8131,33 +8195,6 @@
         "required": [
           "timestamp",
           "requestId"
-        ]
-      },
-      "PaginationMetaDto": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "totalPages": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "page",
-          "limit",
-          "total",
-          "totalPages"
         ]
       },
       "ApiPageResponseMetaDto": {

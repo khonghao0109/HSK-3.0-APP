@@ -660,7 +660,7 @@ Exercise ở bảng A.9.
 
 | Method | Path | Query/Body/Header | `data` |
 | --- | --- | --- | --- |
-| `GET` | `/admin/cms/data-sources` | `page`, `limit` (1–100, mặc định 20); chỉ đọc, dùng cho trang Nhập dữ liệu | `[{ id, code, name, version }]` + `meta`; sort `name ASC, version DESC, id ASC` |
+| `GET` | `/admin/cms/data-sources` | `page`, `limit` (1–100, mặc định 20), `eligibleFor?` (chỉ `media`: giữ nguồn mà finalize ingestion chấp nhận — code, version, license không rỗng; field tuỳ chọn nếu có thì không rỗng; giá trị khác → `400`); chỉ đọc, dùng cho trang Nhập dữ liệu và Tải media | `[{ id, code, name, version }]` + `meta`; sort `name ASC, version DESC, id ASC` |
 | `GET` | `/admin/cms/exercises` | `lessonId?`, `topicId?`, `type?`, `status?`, `page`, `limit` | `[{ …ExerciseAdmin, latestRevision }]` + `meta` |
 | `GET` | `/admin/cms/exercises/:exerciseId` | — | `{ …ExerciseAdmin, revisions }` |
 | `POST` | `/admin/cms/exercises` | `CreateExercise` | `{ exercise, revision, idempotent: false }` |
@@ -764,7 +764,7 @@ Response có `Cache-Control: no-store`.
 
 | Method | Path | Input | `data` | Status |
 | --- | --- | --- | --- | --- |
-| `GET` | `/admin/cms/media` | `type?` (audio/image/pdf/video), `processingStatus?`, `lifecycle?` (active/archived), `dataSourceId?`, `page`, `limit` | `MediaAdmin[]` + `meta`; sort `updatedAt DESC, id DESC` | 200 |
+| `GET` | `/admin/cms/media` | `type?` (audio/image/pdf/video), `processingStatus?`, `lifecycle?` (active/archived), `dataSourceId?`, `page`, `limit` | `MediaAdmin[]` + `meta` (thêm `meta.ingestionEnabled: boolean` = `MEDIA_INGESTION_ENABLED`, không lộ cấu hình khác); sort `updatedAt DESC, id DESC` | 200 |
 | `GET` | `/admin/cms/media/:mediaId` | — | `MediaAdmin` + `usage: { lessonExercises: [{ id, lessonId, topicId, prompt, status }] (≤50), counts: { lessonExercises, otherContent } }` | 200 |
 | `POST` | `/admin/cms/media/:mediaId/quarantine` | — | `{ idempotent, media }`; đã archived → `409` | 201 |
 | `POST` | `/admin/cms/media/:mediaId/archive` | — | `{ idempotent, media }` | 201 |
@@ -783,7 +783,11 @@ thì trả `503`. `503` có `error.code` `MEDIA_INGESTION_BUSY`, `Retry-After: 1
 `UPLOAD_TOO_LARGE`; multipart hỏng → `400` `error.code` `MULTIPART_INVALID`; client
 ngắt trong khi upload body → client không nhận được response (kết nối đã đóng); không tạo
 bản ghi ingestion; upload timeout → `408` `MEDIA_UPLOAD_TIMEOUT`; file bị reject →
-`400/422`; đang processing hoặc cùng key khác request → `409`; scanner/storage timeout →
+`400/422` (nguồn thiếu giấy phép → `422` `MEDIA_SOURCE_NOT_APPROVED`); `409` có `error.code`:
+`IDEMPOTENCY_KEY_IN_USE` (cùng key khác request), `MEDIA_INGESTION_IN_PROGRESS` (đang xử lý),
+`IDEMPOTENCY_KEY_RENEWAL_REQUIRED` (key đã qua dọn dẹp storage, cần key mới),
+`MEDIA_STORAGE_PROVIDER_MISMATCH` (provider storage của bản ghi khác adapter); message tiếng Anh
+giữ nguyên; scanner/storage timeout →
 `503`. Sau khi đã nhận đủ body, client ngắt kết nối không huỷ công việc (việc tiếp tục
 hoàn tất trong nền và retry với cùng `Idempotency-Key` được replay `201` với
 `idempotent: true`). Pipeline: claim → sharp/music-metadata → ClamAV → reserve → put →

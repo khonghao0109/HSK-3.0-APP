@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { BackendRequestError } from './api-error';
-import { clientForwardedFor, createBackendClient } from './backend-client';
+import {
+  MEDIA_UPLOAD_BFF_TIMEOUT_MS,
+  clientForwardedFor,
+  createBackendClient,
+} from './backend-client';
 
 describe('server-only backend client', () => {
   it('attaches bearer authorization and a safe request id only server-side', async () => {
@@ -747,5 +751,105 @@ describe('server-only backend client', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('upload (M5.2a, TL-40)', () => {
+    const options = {
+      token: 'server-secret-token',
+      idempotencyKey: '8f6c1d4e-2b7a-4c39-9e51-0a3f6b2d7c18',
+      contentType: 'multipart/form-data; boundary=----hsk',
+      body: new Uint8Array([1, 2, 3]).buffer,
+    };
+
+    it('posts the raw multipart bytes with only bearer, content-type and key', async () => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(Response.json({ success: true }, { status: 201 }));
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 5,
+        fetchImpl,
+        requestIdFactory: () => 'request-1',
+      });
+
+      await client.upload(
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=12',
+        options,
+      );
+
+      const [url, init] = fetchImpl.mock.calls[0] ?? [];
+      expect(String(url)).toBe(
+        'http://backend.example.test/api/v1/admin/cms/media/ingestions?dataSourceId=12',
+      );
+      expect(init?.method).toBe('POST');
+      expect(init?.body).toBe(options.body);
+      expect([...new Headers(init?.headers).keys()].sort()).toEqual([
+        'accept',
+        'authorization',
+        'content-type',
+        'idempotency-key',
+        'x-request-id',
+      ]);
+      expect(new Headers(init?.headers).get('content-type')).toBe(
+        options.contentType,
+      );
+    });
+
+    it('allowlists only ingestions with a numeric dataSourceId', async () => {
+      const fetchImpl = vi.fn<typeof fetch>();
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 5,
+        fetchImpl,
+      });
+      for (const path of [
+        '/api/v1/admin/cms/media/ingestions',
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=1&x=1',
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=abc',
+      ]) {
+        await expect(client.upload(path, options)).rejects.toMatchObject({
+          kind: 'invalid_request',
+        });
+      }
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it('waits MEDIA_UPLOAD_BFF_TIMEOUT_MS (≥ backend 120 s), then 503 with its own code', async () => {
+      vi.useFakeTimers();
+      try {
+        const fetchImpl = vi.fn<typeof fetch>(
+          (_input, init) =>
+            new Promise((_resolve, reject) => {
+              init?.signal?.addEventListener('abort', () =>
+                reject(new DOMException('aborted', 'AbortError')),
+              );
+            }),
+        );
+        const client = createBackendClient({
+          baseUrl: 'http://backend.example.test',
+          timeoutMs: 5,
+          fetchImpl,
+        });
+        let settled = false;
+        const pending = client
+          .upload('/api/v1/admin/cms/media/ingestions?dataSourceId=12', options)
+          .catch((error: unknown) => {
+            settled = true;
+            return error;
+          });
+
+        expect(MEDIA_UPLOAD_BFF_TIMEOUT_MS).toBe(125_000);
+        await vi.advanceTimersByTimeAsync(120_000);
+        expect(settled).toBe(false);
+        await vi.advanceTimersByTimeAsync(5_000);
+        await expect(pending).resolves.toMatchObject({
+          status: 503,
+          kind: 'timeout',
+          code: 'MEDIA_UPLOAD_BFF_TIMEOUT',
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

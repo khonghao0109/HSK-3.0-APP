@@ -52,8 +52,12 @@ describe('MediaTable', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       'Không có media nào khớp bộ lọc.',
     );
+    // TL-43: the only upload entry is the flag-gated link in the page header.
     expect(
-      screen.queryByRole('button', { name: /upload/i }),
+      screen.queryByRole('button', { name: /upload|tải lên/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /upload|tải lên/i }),
     ).not.toBeInTheDocument();
   });
 });

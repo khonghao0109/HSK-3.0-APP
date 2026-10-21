@@ -19,7 +19,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { Request } from 'express';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
@@ -41,6 +40,7 @@ import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
 import {
   AdminMediaDetailDto,
   AdminMediaDto,
+  AdminMediaListMetaDto,
   AdminMediaLifecycleResultDto,
 } from './dto/admin-media-response.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
@@ -56,6 +56,7 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
 import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
 import { DataSourcesService } from './data-sources.service';
+import { AdminDataSourcesQueryDto } from './dto/admin-data-sources-query.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
@@ -149,7 +150,10 @@ export class CmsController {
 
   @Get('media')
   @Header('Cache-Control', 'no-store')
-  @ApiEnvelope([AdminMediaDto], { paginated: true })
+  @ApiEnvelope([AdminMediaDto], {
+    paginated: true,
+    meta: AdminMediaListMetaDto,
+  })
   listMedia(
     @Req() request: AuthenticatedRequest,
     @Query() query: AdminMediaQueryDto,
@@ -198,7 +202,7 @@ export class CmsController {
   @ApiEnvelope([AdminDataSourceDto], { paginated: true })
   listDataSources(
     @Req() request: AuthenticatedRequest,
-    @Query() query: PaginationQueryDto,
+    @Query() query: AdminDataSourcesQueryDto,
   ): Promise<ApiSuccessResponse<AdminDataSourceDto[]>> {
     return this.dataSourcesService.listDataSources(request.user, query);
   }

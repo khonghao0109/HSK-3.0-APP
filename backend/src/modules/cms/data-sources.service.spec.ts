@@ -1,7 +1,10 @@
 import { ForbiddenException } from '@nestjs/common';
 
+import { Prisma } from '@prisma/client';
+
 import { CmsActor } from './cms-workflow';
 import { DataSourcesService } from './data-sources.service';
+import { MEDIA_ELIGIBLE_DATA_SOURCE_SQL } from './media-ingestion/media-ingestion.policy';
 
 /**
  * TL-26: GET /admin/cms/data-sources trả danh sách nguồn dữ liệu cho admin
@@ -94,5 +97,54 @@ describe('DataSourcesService (TL-26)', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(findMany).not.toHaveBeenCalled();
     expect(count).not.toHaveBeenCalled();
+  });
+
+  describe('eligibleFor=media (Q103/TL-35)', () => {
+    function rawPrisma(pageRows: unknown[], total: number) {
+      const queryRaw = jest
+        .fn()
+        .mockResolvedValueOnce(pageRows)
+        .mockResolvedValueOnce([{ total }]);
+      const findMany = jest.fn();
+      return {
+        prisma: {
+          $transaction: (operations: Promise<unknown>[]) =>
+            Promise.all(operations),
+          $queryRaw: queryRaw,
+          dataSource: { findMany, count: jest.fn() },
+        },
+        queryRaw,
+        findMany,
+      };
+    }
+
+    it('filters page and total with the shared finalize predicate, same 4 fields and order', async () => {
+      const { prisma, queryRaw, findMany } = rawPrisma(rows.slice(0, 1), 21);
+      const service = new DataSourcesService(prisma as never);
+
+      const result = await service.listDataSources(ADMIN, {
+        page: 2,
+        limit: 20,
+        eligibleFor: 'media',
+      });
+
+      expect(findMany).not.toHaveBeenCalled();
+      const [page, total] = queryRaw.mock.calls.map(
+        (call: unknown[]) => call[0] as Prisma.Sql,
+      );
+      for (const sql of [page, total]) {
+        expect(sql.sql).toContain(MEDIA_ELIGIBLE_DATA_SOURCE_SQL.sql);
+      }
+      expect(page.sql).toMatch(
+        /^SELECT id, code, name, version FROM "DataSource"/,
+      );
+      expect(page.sql).toContain('ORDER BY name ASC, version DESC, id ASC');
+      expect(page.values.slice(-2)).toEqual([20, 20]);
+      expect(result).toEqual({
+        success: true,
+        data: rows.slice(0, 1),
+        meta: { page: 2, limit: 20, total: 21, totalPages: 2 },
+      });
+    });
   });
 });

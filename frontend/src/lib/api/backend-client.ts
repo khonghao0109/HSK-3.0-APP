@@ -1,3 +1,5 @@
+import { MEDIA_UPLOAD_BFF_TIMEOUT_CODE } from '@/features/media-upload/media-upload-values';
+
 import { BackendRequestError, normalizeApiFailure } from './api-error';
 
 const ALLOWED_PATHS = [
@@ -32,6 +34,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/media(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/media\/\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/\d+\/(?:archive|quarantine)$/,
+  // M5.2a (TL-40): tải media, chỉ query dataSourceId số.
+  /^\/api\/v1\/admin\/cms\/media\/ingestions\?dataSourceId=\d+$/,
   /^\/api\/v1\/levels$/,
   /^\/api\/v1\/onboarding\/status$/,
   /^\/api\/v1\/onboarding\/goals$/,
@@ -51,6 +55,12 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
 ];
 
+/**
+ * TL-40: ≥ trần MEDIA_UPLOAD_TIMEOUT_MS 120 000 của backend (env.validation.ts)
+ * để backend tự trả 408 trước khi BFF bỏ cuộc.
+ */
+export const MEDIA_UPLOAD_BFF_TIMEOUT_MS = 125_000;
+
 /** Raw requests wait at most this long for the response headers. */
 const RAW_HEADERS_TIMEOUT_MS = 10_000;
 
@@ -69,6 +79,14 @@ type RawRequestOptions = {
   headers?: Record<string, string>;
   /** Aborts the upstream request (for example when the browser leaves). */
   signal?: AbortSignal;
+};
+
+type UploadOptions = {
+  token: string;
+  idempotencyKey: string;
+  /** Header multipart nguyên văn (có boundary). */
+  contentType: string;
+  body: ArrayBuffer;
 };
 
 type RequestOptions = {
@@ -161,6 +179,75 @@ export function createBackendClient(options: ClientOptions) {
             message: 'The upstream request timed out.',
             retryable: true,
             requestId,
+          });
+        }
+        throw new BackendRequestError(
+          normalizeApiFailure({ status: 503, requestId }),
+        );
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+
+    /**
+     * POST multipart (request() chỉ gửi JSON). Chỉ chuyển tiếp content-type,
+     * idempotency-key và bearer.
+     * shortcut: đệm ≤ ~10 MiB mỗi request, chuyển sang stream request.body khi
+     * tải đồng thời/giới hạn lớn hơn.
+     */
+    async upload<T = unknown>(
+      path: string,
+      request: UploadOptions,
+    ): Promise<T> {
+      if (!isAllowedPath(path)) {
+        throw new BackendRequestError(
+          normalizeApiFailure({ status: 400, requestId: requestIdFactory() }),
+        );
+      }
+      const requestId = requestIdFactory();
+      const forwardedFor = await options.forwardedFor?.();
+      const controller = new AbortController();
+      const timer = setTimeout(
+        () => controller.abort(),
+        MEDIA_UPLOAD_BFF_TIMEOUT_MS,
+      );
+      try {
+        const headers = new Headers({
+          accept: 'application/json',
+          'x-request-id': requestId,
+          authorization: `Bearer ${request.token}`,
+          'content-type': request.contentType,
+          'idempotency-key': request.idempotencyKey,
+        });
+        if (forwardedFor) headers.set('x-forwarded-for', forwardedFor);
+        const response = await fetchImpl(new URL(path, options.baseUrl), {
+          method: 'POST',
+          headers,
+          body: request.body,
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const body: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new BackendRequestError(
+            normalizeApiFailure({
+              status: response.status,
+              body,
+              requestId: response.headers.get('x-request-id') ?? requestId,
+            }),
+          );
+        }
+        return body as T;
+      } catch (error) {
+        if (error instanceof BackendRequestError) throw error;
+        if (controller.signal.aborted) {
+          throw new BackendRequestError({
+            status: 503,
+            kind: 'timeout',
+            message: 'The upstream request timed out.',
+            retryable: true,
+            requestId,
+            code: MEDIA_UPLOAD_BFF_TIMEOUT_CODE,
           });
         }
         throw new BackendRequestError(
