@@ -40,7 +40,12 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     href: '/admin/media',
   },
   { key: 'question-bank', label: 'Ngân hàng câu hỏi', icon: 'file-question' },
-  { key: 'import', label: 'Nhập dữ liệu', icon: 'upload' },
+  {
+    key: 'import',
+    label: 'Nhập dữ liệu',
+    icon: 'upload',
+    href: '/admin/import',
+  },
   { key: 'users', label: 'Người dùng', icon: 'users' },
   { key: 'reports', label: 'Báo cáo', icon: 'bar-chart' },
   { key: 'ai-ops', label: 'AI Ops', icon: 'cpu' },

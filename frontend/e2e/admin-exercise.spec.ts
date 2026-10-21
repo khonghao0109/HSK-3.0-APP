@@ -63,6 +63,12 @@ function suffix(testInfo: TestInfo): string {
   return testInfo.project.name.replace(/[^a-z0-9]/gu, '-');
 }
 
+/**
+ * Nợ test M5.1b1 (xử lý ở M5.1b2): LessonExercise KHÔNG có unique
+ * (lessonId, orderIndex) — schema chỉ có @@index([lessonId, orderIndex])
+ * (backend/prisma/schema.prisma:1033), nên orderIndex trùng trong cùng bài
+ * được phép; không cần đổi sang max+1 như Y6.
+ */
 function uniqueOrderIndex(): number {
   return 900_000 + (Date.now() % 90_000);
 }

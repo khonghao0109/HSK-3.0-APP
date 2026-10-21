@@ -660,6 +660,7 @@ Exercise ở bảng A.9.
 
 | Method | Path | Query/Body/Header | `data` |
 | --- | --- | --- | --- |
+| `GET` | `/admin/cms/data-sources` | `page`, `limit` (1–100, mặc định 20); chỉ đọc, dùng cho trang Nhập dữ liệu | `[{ id, code, name, version }]` + `meta`; sort `name ASC, version DESC, id ASC` |
 | `GET` | `/admin/cms/exercises` | `lessonId?`, `topicId?`, `type?`, `status?`, `page`, `limit` | `[{ …ExerciseAdmin, latestRevision }]` + `meta` |
 | `GET` | `/admin/cms/exercises/:exerciseId` | — | `{ …ExerciseAdmin, revisions }` |
 | `POST` | `/admin/cms/exercises` | `CreateExercise` | `{ exercise, revision, idempotent: false }` |
@@ -677,6 +678,36 @@ canonical 65 536 byte/depth 8/string 4096/array 100 và exact-key theo type. `sp
 chỉ lưu draft, không publish. `listening_choice` publish cần audio `ready`.
 `CreateExercise` = + `lessonId`, `topicId?`. `ImportBody`: `dataSourceId`, `fileName` 1–255,
 `rows` 1–100.
+
+Import bài tập (M5.1b2) chạy hai bước trên cùng payload: `preview` chỉ kiểm và trả
+`previewHash` (sha256 canonical của `dataSourceId`, `fileName` đã chuẩn hoá, các dòng hợp lệ
+và danh sách lỗi; không ghi DB); `commit` bắt buộc `previewHash` khớp payload hiện tại và
+header `Idempotency-Key` 8–128 ký tự `[A-Za-z0-9][A-Za-z0-9._:-]*` — replay cùng key với
+cùng payload trả lại kết quả cũ (`idempotent: true`), thiếu key → `422`
+(`error.code = UNPROCESSABLE_ENTITY`, không có mã riêng). Commit all-or-nothing: chỉ cần một
+dòng lỗi thì không ghi gì.
+
+Giới hạn body: JSON mặc định của backend là 100 KB (không cấu hình riêng cho route này);
+body lớn hơn → `413` (`error.code = PAYLOAD_TOO_LARGE`, message không lặp lại body); JSON
+hỏng → `400` (`error.code = MALFORMED_REQUEST`). Client chặn sớm ở 90 000 byte, BFF chặn
+102 400 byte (A.12).
+
+Lỗi `422` khi commit gặp dòng không hợp lệ (`error.code = IMPORT_VALIDATION_FAILED`,
+`error.message = Exercise import contains invalid rows.`): `details.errors` là mảng
+`{ rowNumber (1-based), code, path }` đã sắp theo `rowNumber`, `path`, `code`. Preview trả
+cùng shape lỗi trong `data.errors` (không phải 422). `code` là mã public viết HOA: các mã
+riêng của import là `SOURCE_KEY_ALREADY_EXISTS`, `DUPLICATE_SOURCE_KEY_IN_BATCH`,
+`UNEXPECTED_FIELD`, `OPTION_ID_NOT_FOUND`, `PARENT_LESSON_NOT_FOUND`,
+`TOPIC_LESSON_MISMATCH`, `MEDIA_NOT_FOUND`, `INVALID_SOURCE_KEY`, `INVALID_ROW`; các mã
+validator bài tập khác lấy nguyên mã viết HOA (vd `REQUIRED_FIELD`, `PAYLOAD_TOO_LARGE`).
+`path` dùng `$` cho cả dòng (`object_required`), `$.$unknown` cho trường lạ và tên trường
+cho lỗi từng ô (`sourceKey`, `lessonId`, `topicId`, `mediaId`, `content.options[0].id`…).
+
+Lỗi `409` của import chỉ có `error.message` tiếng Anh, KHÔNG có mã máy riêng
+(`error.code = CONFLICT`): preview hash không khớp payload (`Preview hash does not match; the
+import payload changed.`), replay `Idempotency-Key` với payload khác, hoặc bản ghi import cũ
+không đầy đủ (`… manual review is required.`). Race/timeout hạ tầng → `503` message
+`Exercise import is temporarily unavailable; retry the request.` (retry được với cùng key).
 
 `ExerciseAdmin`: `{ id, lessonId, topicId, mediaId, type, prompt, content, answer,
 explanation, version, orderIndex, status, dataSourceId, sourceKey, createdById, updatedById,
@@ -801,6 +832,8 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/session/recover` | `POST` | Xoá cookie khi backend trả 401/403 (fail-closed) |
 | `/api/session/me` | `GET` | Đối chiếu cookie với `/auth/me`. Chỉ xoá cookie khi backend trả 401/403; 5xx, timeout hay body sai giữ cookie và trả `503` (502/503/504) hoặc `500` (E-01). Không có UI consumer; Playwright dùng để kiểm header bảo mật |
 | `/api/admin/media/:id/quarantine`, `/archive` | `POST` | Mutation an toàn có Origin check; UI dùng |
+| `/api/admin/exercise-imports/preview` | `POST` | Preview nhập bài tập (M5.1b2): kiểm `Origin` → 403, cookie admin → 401, body > 102 400 byte → 413, JSON hỏng → 400 rồi chuyển tiếp `/admin/cms/exercise-imports/preview`; giữ `code`/`details` của backend |
+| `/api/admin/exercise-imports` | `POST` | Commit nhập bài tập: như route preview, thêm header `Idempotency-Key` bắt buộc đúng `IDEMPOTENCY_KEY_PATTERN` (sai/thiếu → 400) và body > 102 400 byte → 413; chuyển key qua `RequestOptions.idempotencyKey` |
 
 Trang admin đọc dữ liệu bằng Server Component gọi thẳng backend (`exercise-service.ts`,
 `media-service.ts`), không qua BFF route. Bốn route `GET` `/api/admin/exercises`,
@@ -809,6 +842,16 @@ nên đã bị xoá (H.14, E-01) để thu hẹp bề mặt tấn công; thêm l
 component phải kèm redact `answer`/snapshot và `media.url` cùng test. Layout admin không
 render lại khi điều hướng client, nên mỗi trang admin tự map lỗi backend `401` → login và
 `403` → `/forbidden`.
+
+Hai route import trả lỗi theo envelope BFF (`failure(status, code, details)`), nên `422`
+giữ `error.details.errors`, `409` giữ status và `413` được UI dịch thành câu tiếng Việt
+("Tệp tối đa 90 KB." cho tệp người dùng chọn; body BFF lớn hơn 100 KB không lộ message thô).
+
+Route preview (Z1): giữ tối đa 100 lỗi ĐẦU theo thứ tự backend trong `data.errors`, thêm
+`data.errorsTotal` là tổng số lỗi thật; UI hiện "Hiện 100 lỗi đầu trong N lỗi." khi
+`errorsTotal > 100`. Thiếu/sai `Idempotency-Key` ở route commit trả `400`
+`error.code = INVALID_IDEMPOTENCY_KEY`. Kiểm `Content-Length > 102 400` chạy trước khi đọc
+body (Z12), vẫn giữ kiểm theo độ dài thật sau khi đọc cho request không có header.
 
 ## Part B — Dự kiến
 

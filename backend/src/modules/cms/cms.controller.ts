@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { Request } from 'express';
 
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
@@ -30,6 +31,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CmsActor } from './cms-workflow';
 import { CmsService } from './cms.service';
 import {
+  AdminDataSourceDto,
   AdminExerciseDetailDto,
   AdminExerciseDto,
 } from './dto/admin-exercise-response.dto';
@@ -53,6 +55,7 @@ import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
 import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
+import { DataSourcesService } from './data-sources.service';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
@@ -90,6 +93,7 @@ export class CmsController {
     private readonly exerciseImportService: ExerciseImportService,
     private readonly mediaAdminService: MediaAdminService,
     private readonly mediaIngestionService: MediaIngestionService,
+    private readonly dataSourcesService: DataSourcesService,
   ) {}
 
   @Post('media/ingestions')
@@ -187,6 +191,16 @@ export class CmsController {
     return this.mediaAdminService.archiveMedia(request.user, mediaId, {
       correlationId: correlationId(requestId),
     });
+  }
+
+  @Get('data-sources')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminDataSourceDto], { paginated: true })
+  listDataSources(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ApiSuccessResponse<AdminDataSourceDto[]>> {
+    return this.dataSourcesService.listDataSources(request.user, query);
   }
 
   @Get('exercises')

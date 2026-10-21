@@ -15,6 +15,10 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/exercises\/\d+\/revisions$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+\/revisions\/\d+\/(?:reviews|publish)$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+\/archive$/,
+  // M5.1b2: nguồn dữ liệu (chỉ đọc, có query) + hai bước nhập bài tập.
+  /^\/api\/v1\/admin\/cms\/data-sources(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/cms\/exercise-imports\/preview$/,
+  /^\/api\/v1\/admin\/cms\/exercise-imports$/,
   /^\/api\/v1\/admin\/cms\/lessons(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/lessons\/\d+$/,
   /^\/api\/v1\/admin\/cms\/lessons\/\d+\/revisions$/,

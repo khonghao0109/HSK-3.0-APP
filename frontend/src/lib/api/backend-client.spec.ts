@@ -219,10 +219,8 @@ describe('server-only backend client', () => {
     });
     expect(fetchImpl).toHaveBeenCalledTimes(7);
 
-    // Chưa mở exercise-imports (M5.1b2) và không cho biến thể đường dẫn.
+    // Không cho biến thể đường dẫn (exercise-imports mở ở M5.1b2, test riêng).
     for (const path of [
-      '/api/v1/admin/cms/exercise-imports',
-      '/api/v1/admin/cms/exercise-imports/preview',
       '/api/v1/admin/cms/exercises/41/revisions/7/reviews/extra',
       '/api/v1/admin/cms/exercises/abc/revisions',
       '/api/v1/admin/cms/exercises/41/archive?x=1',
@@ -234,6 +232,44 @@ describe('server-only backend client', () => {
       });
     }
     expect(fetchImpl).toHaveBeenCalledTimes(7);
+  });
+
+  it('allowlists only the explicit data-source and exercise-import endpoints (M5.1b2, F2)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/admin/cms/data-sources?page=1&limit=100');
+    await client.request('/api/v1/admin/cms/exercise-imports/preview', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercise-imports', {
+      method: 'POST',
+      idempotencyKey: 'import-0001',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+
+    for (const path of [
+      // Path lân cận: id, đoạn con, path khác hoặc query ở nơi không cho phép.
+      '/api/v1/admin/cms/exercise-imports/1',
+      '/api/v1/admin/cms/exercise-imports/preview/1',
+      '/api/v1/admin/cms/exercise-imports?x=1',
+      '/api/v1/admin/cms/data-sources/1',
+      '/api/v1/admin/cms/data-source',
+      '/api/v1/admin/cms/exercise-imports/../exercises',
+      '/api/v1/admin/cms/exercises/imports',
+      '/api/v1/admin/exercise-imports',
+    ]) {
+      await expect(
+        client.request(path, { method: 'POST' }),
+      ).rejects.toMatchObject({ kind: 'invalid_request' });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
 
   it('keeps only the filtered error details of a backend 422 envelope (M5.1b1, F1)', async () => {

@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 20/10/2026 (thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 21/10/2026 (thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -113,6 +113,7 @@ Cập nhật: 20/10/2026 (thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/
 | Q98 | **Trang nhập bài tập: tệp .json ≤ 100 dòng đọc ở trình duyệt → "Xem trước & kiểm tra" (tổng/hợp lệ/lỗi, bảng lỗi theo dòng) → "Nhập dữ liệu"; bố cục theo 06/04 nhưng bỏ ghép cột, mức cảnh báo, nhập một phần, thanh tiến độ, tải báo cáo lỗi; bài nhập vào là Bản nháp** (PO 19/10/2026, M5.1b) | 06/04 là nhập Từ vựng CSV/JSON 20MB có ghép cột, cảnh báo, tiến độ | Backend nhập cả lô hoặc không, tối đa 100 dòng |
 | Q99 | **Mục sidebar "Nhập dữ liệu" mở trang nhập bài tập; khi có nhập Từ vựng/Câu hỏi (M5.4) thì trang thêm lựa chọn loại dữ liệu** (PO 19/10/2026, M5.1b) | Q94: mục "Sắp có" | — |
 | Q100 | **Chưa có nguồn dữ liệu thì trang Nhập dữ liệu hiện "Chưa có nguồn dữ liệu. Liên hệ quản trị hệ thống để thêm nguồn." và khoá phần tải tệp; nguồn được thêm bằng script/SQL vận hành, không seed nguồn mặc định, không tạo nguồn trong admin** (PO 20/10/2026, M5.1b2) | Production chưa có DataSource | Trang quản lý nguồn để task sau |
+| Q101 | **Ô "Nguồn dữ liệu" hiện mọi nguồn (gồm 8 nguồn từ điển migration đã seed: CC-CEDICT, HSK word list); dưới ô có dòng "Chọn đúng nguồn biên soạn của bài tập; nguồn mới do quản trị hệ thống thêm."; không lọc, không đổi schema** (PO 21/10/2026, M5.1b2) | Production có sẵn 8 nguồn từ điển, Q100 chỉ áp khi danh sách rỗng | Phân loại nguồn (kind) để task sau |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 

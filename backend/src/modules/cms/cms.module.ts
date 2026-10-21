@@ -6,6 +6,7 @@ import { StorageModule } from '../../infrastructure/storage/storage.module';
 import { CmsController } from './cms.controller';
 import { CmsService } from './cms.service';
 import { CmsTransactionCoordinator } from './cms-transaction-coordinator';
+import { DataSourcesService } from './data-sources.service';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
@@ -23,6 +24,7 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
   providers: [
     CmsService,
     CmsTransactionCoordinator,
+    DataSourcesService,
     ExerciseAuthoringService,
     ExerciseImportService,
     MediaAdminService,

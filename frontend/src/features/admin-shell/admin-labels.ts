@@ -170,6 +170,17 @@ const EXERCISE_VALIDATION_MESSAGE: Record<string, string> = {
   string_required: 'Trường này phải là chuỗi.',
   non_empty_string_required: 'Trường này không được để trống.',
   string_too_long: 'Trường này quá dài (tối đa 4 096 ký tự).',
+  // M5.1b2 (TL-31): mã public của import bài tập (backend A.9). Mã public là
+  // chữ HOA; `exerciseValidationMessage` chuẩn hoá về chữ thường trước khi tra.
+  source_key_already_exists: 'Nguồn đã có bài tập với mã nguồn này.',
+  duplicate_source_key_in_batch: 'Mã nguồn bị trùng trong tệp.',
+  unexpected_field: 'Dòng có trường không được hỗ trợ.',
+  option_id_not_found: 'Đáp án đúng không khớp lựa chọn nào.',
+  parent_lesson_not_found: 'Bài học không tồn tại hoặc chưa xuất bản.',
+  topic_lesson_mismatch: 'Chủ đề không thuộc bài học đã chọn.',
+  media_not_found: 'Media không tồn tại.',
+  invalid_source_key: 'Mã nguồn không hợp lệ.',
+  invalid_row: 'Dòng dữ liệu không hợp lệ.',
 };
 
 export const EXERCISE_VALIDATION_FALLBACK =
@@ -179,7 +190,28 @@ export function exerciseValidationMessage(
   code: string | null | undefined,
 ): string {
   if (!code) return EXERCISE_VALIDATION_FALLBACK;
-  return EXERCISE_VALIDATION_MESSAGE[code] ?? EXERCISE_VALIDATION_FALLBACK;
+  const normalized = code.toLowerCase();
+  for (const [key, message] of Object.entries(EXERCISE_VALIDATION_MESSAGE)) {
+    if (key.toLowerCase() === normalized) return message;
+  }
+  return EXERCISE_VALIDATION_FALLBACK;
+}
+
+/**
+ * TL-31: nhãn lỗi import. Mã lạ trả câu chung kèm mã gốc để UI hiện trong
+ * `<code>`; mã đã biết trả `unknownCode: null`.
+ */
+export function exerciseImportErrorLabel(code: string | null | undefined): {
+  message: string;
+  unknownCode: string | null;
+} {
+  if (!code)
+    return { message: EXERCISE_VALIDATION_FALLBACK, unknownCode: null };
+  const message = exerciseValidationMessage(code);
+  return {
+    message,
+    unknownCode: message === EXERCISE_VALIDATION_FALLBACK ? code : null,
+  };
 }
 
 /** TL-19 (F5): nhãn form bài tập dùng chung cho 5 loại. */
