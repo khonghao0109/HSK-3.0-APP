@@ -36,6 +36,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/media\/\d+\/(?:archive|quarantine)$/,
   // M5.2a (TL-40): tải media, chỉ query dataSourceId số.
   /^\/api\/v1\/admin\/cms\/media\/ingestions\?dataSourceId=\d+$/,
+  /^\/api\/v1\/admin\/cms\/media\/ingestions\?page=\d+&limit=\d+$/,
+  /^\/api\/v1\/admin\/cms\/media\/ingestions\/\d+\/cleanup$/,
   /^\/api\/v1\/levels$/,
   /^\/api\/v1\/onboarding\/status$/,
   /^\/api\/v1\/onboarding\/goals$/,

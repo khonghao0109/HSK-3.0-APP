@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   canonicalMediaFile,
   checkMediaFile,
-  formatMediaBytes,
   MEDIA_IDEMPOTENCY_KEY_PATTERN,
   MEDIA_UPLOAD_MAX_BYTES,
   MEDIA_UPLOAD_TEXT,
 } from './media-upload-values';
+import { formatMediaBytes } from '@/features/media/media-format';
 
 describe('checkMediaFile (TL-39)', () => {
   it.each([

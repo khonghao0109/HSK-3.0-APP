@@ -65,3 +65,62 @@
     width: 100%;
   }
 }
+
+/* M5.2b: danh sách tải lên cần xử lý (thẻ dọc, đọc được ở 390px) */
+.admin-app .adm-ingestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.admin-app .adm-ingestion {
+  display: grid;
+  gap: var(--adm-sp-3);
+  justify-items: start;
+  border-top: 1px solid var(--adm-slate-100);
+  padding: var(--adm-sp-4) 0;
+}
+.admin-app .adm-ingestion > dl {
+  justify-self: stretch;
+}
+.admin-app .adm-ingestion__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  min-width: 0;
+}
+
+/* M5.2b: xem trước media ở trang chi tiết */
+.admin-app .adm-media-preview {
+  display: grid;
+  gap: var(--adm-sp-3);
+  justify-items: start;
+}
+.admin-app .adm-media-preview__frame {
+  display: grid;
+  place-items: center;
+  min-inline-size: calc(var(--adm-sp-6) * 5);
+  min-block-size: calc(var(--adm-sp-6) * 5);
+  max-width: 100%;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-slate-50);
+  padding: var(--adm-sp-2);
+}
+.admin-app .adm-media-preview__frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  height: auto;
+  object-fit: contain;
+}
+.admin-app .adm-media-preview__audio {
+  display: grid;
+  gap: var(--adm-sp-3);
+  justify-items: start;
+  justify-self: stretch;
+}
+.admin-app .adm-media-preview audio {
+  width: min(100%, 480px);
+}

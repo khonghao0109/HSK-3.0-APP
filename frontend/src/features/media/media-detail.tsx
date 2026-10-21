@@ -10,6 +10,7 @@ import {
 
 import type { AdminMediaDetail } from './media-contract';
 import { MediaLifecycleActions } from './media-mutation';
+import { MediaPreview } from './media-preview';
 
 function fileSize(value: number | null): string {
   if (value === null) return '—';
@@ -27,8 +28,8 @@ export function MediaDetail({ asset }: { asset: AdminMediaDetail }) {
             {asset.filename ?? `Media ${asset.id}`}
           </h1>
           <p className="adm-hero__prompt">
-            Chỉ hiển thị metadata vận hành. URL phân phối và thông tin đăng nhập
-            storage được giới hạn.
+            Xem trước qua liên kết có thời hạn. URL lưu trữ và thông tin đăng
+            nhập storage không hiển thị.
           </p>
         </div>
         <div className="adm-hero__meta">
@@ -42,6 +43,8 @@ export function MediaDetail({ asset }: { asset: AdminMediaDetail }) {
           />
         </div>
       </header>
+
+      <MediaPreview asset={asset} />
 
       <section className="adm-detail-grid" aria-label="Tổng quan media">
         <div className="adm-card adm-panel">

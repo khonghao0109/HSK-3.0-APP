@@ -155,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["CmsController_listMediaIngestions"];
         put?: never;
         post: operations["CmsController_ingestMedia"];
         delete?: never;
@@ -1304,6 +1304,27 @@ export interface components {
             /** @description Same value as the `X-Request-ID` response header. */
             requestId: string;
         };
+        AdminMediaIngestionDto: {
+            id: number;
+            /** @enum {string} */
+            status: "processing" | "cleanup_required";
+            failureCode: string | null;
+            /** @description Sanitized original filename. */
+            filename: string | null;
+            size: number;
+            dataSource: components["schemas"]["AdminDataSourceDto"];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            processingStartedAt: string | null;
+            /** Format: date-time */
+            cleanupRequiredAt: string | null;
+            cleanupAttempts: number;
+            /** Format: date-time */
+            cleanupLastAttemptAt: string | null;
+            /** @description True only for `cleanup_required` rows written by the current storage provider. */
+            cleanupAvailable: boolean;
+        };
         AdminMediaExerciseUsageDto: {
             id: number;
             lessonId: number;
@@ -2347,6 +2368,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_listMediaIngestions: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminMediaIngestionDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
             };
             default: components["responses"]["ErrorEnvelope"];
         };

@@ -66,9 +66,15 @@ async function main(): Promise<void> {
     process.env.E2E_ADMIN_PASSWORD ?? 'FrontendTest-Admin-123';
   const userEmail = process.env.E2E_USER_EMAIL ?? 'user.frontend@example.test';
   const userPassword = process.env.E2E_USER_PASSWORD ?? 'FrontendTest-User-123';
-  const [adminHash, userHash] = await Promise.all([
+  // M5.2b (TL-57): second admin with its own upload rate-limit window.
+  const mediaAdminEmail =
+    process.env.E2E_MEDIA_ADMIN_EMAIL ?? 'admin.media.frontend@example.test';
+  const mediaAdminPassword =
+    process.env.E2E_MEDIA_ADMIN_PASSWORD ?? 'FrontendTest-MediaAdmin-123';
+  const [adminHash, userHash, mediaAdminHash] = await Promise.all([
     passwordHash(adminPassword),
     passwordHash(userPassword),
+    passwordHash(mediaAdminPassword),
   ]);
 
   await prisma.$transaction(async (tx) => {
@@ -88,6 +94,16 @@ async function main(): Promise<void> {
         password: userHash,
         name: 'Learner Fixture',
         role: 'user',
+        status: 'active',
+        emailVerifiedAt: new Date(),
+      },
+    });
+    await tx.user.create({
+      data: {
+        email: mediaAdminEmail,
+        password: mediaAdminHash,
+        name: 'Media Fixture Admin',
+        role: 'admin',
         status: 'active',
         emailVerifiedAt: new Date(),
       },

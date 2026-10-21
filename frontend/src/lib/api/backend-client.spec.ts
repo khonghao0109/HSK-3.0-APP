@@ -814,6 +814,36 @@ describe('server-only backend client', () => {
       expect(fetchImpl).not.toHaveBeenCalled();
     });
 
+    it('allowlists the ingestion list (page, limit) and numeric cleanup only (TL-49)', async () => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockImplementation(async () => Response.json({ success: true }));
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 500,
+        fetchImpl,
+      });
+      await client.request(
+        '/api/v1/admin/cms/media/ingestions?page=2&limit=20',
+      );
+      await client.request('/api/v1/admin/cms/media/ingestions/41/cleanup', {
+        method: 'POST',
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      for (const path of [
+        '/api/v1/admin/cms/media/ingestions?limit=20&page=2',
+        '/api/v1/admin/cms/media/ingestions?page=2&limit=20&x=1',
+        '/api/v1/admin/cms/media/ingestions?page=a&limit=20',
+        '/api/v1/admin/cms/media/ingestions/abc/cleanup',
+        '/api/v1/admin/cms/media/ingestions/41/cleanup/x',
+      ]) {
+        await expect(client.request(path)).rejects.toMatchObject({
+          kind: 'invalid_request',
+        });
+      }
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
     it('waits MEDIA_UPLOAD_BFF_TIMEOUT_MS (≥ backend 120 s), then 503 with its own code', async () => {
       vi.useFakeTimers();
       try {

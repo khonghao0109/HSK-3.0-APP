@@ -20,7 +20,7 @@ type Deps = LearnerMediaHandlerDependencies;
 
 function deps(over: Partial<Deps> = {}): Deps {
   return {
-    learnerCookieName,
+    sessionCookieName: learnerCookieName,
     requestBackend: vi.fn<Deps['requestBackend']>(),
     requestBackendRaw: vi.fn<Deps['requestBackendRaw']>(),
     ...over,
@@ -75,6 +75,31 @@ describe('GET /api/learner/media/:id/access', () => {
       data: {
         src: `/api/learner/media/7/content?expires=1791000000&signature=${SIG}`,
         expiresAt: '2026-10-12T10:05:00.000Z',
+      },
+    });
+    expect(requestBackend).toHaveBeenCalledWith('/api/v1/media/7/access', {
+      token: TOKEN,
+    });
+  });
+
+  it('points src at the configured content route and reads that cookie (TL-54)', async () => {
+    const requestBackend = vi.fn().mockResolvedValue(grant(good));
+    const headers = new Headers({ cookie: `hsk_admin_session=${TOKEN}` });
+    const response = await handleMediaAccess(
+      new NextRequest(new URL('/api/admin/media/7/access', appOrigin), {
+        headers,
+      }),
+      '7',
+      deps({
+        requestBackend,
+        sessionCookieName: 'hsk_admin_session',
+        contentRoutePrefix: '/api/admin/media',
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      data: {
+        src: `/api/admin/media/7/content?expires=1791000000&signature=${SIG}`,
       },
     });
     expect(requestBackend).toHaveBeenCalledWith('/api/v1/media/7/access', {

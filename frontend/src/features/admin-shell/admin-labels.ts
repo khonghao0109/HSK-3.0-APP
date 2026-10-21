@@ -294,6 +294,64 @@ export function mediaUploadErrorLabel(code: string | null | undefined): {
   return { message: MEDIA_UPLOAD_ERROR_FALLBACK, unknownCode: code ?? null };
 }
 
+/* M5.2b (TL-51): lượt tải cần xử lý — trạng thái, mã lỗi, tông badge. */
+const MEDIA_INGESTION_STATUS: Record<string, string> = {
+  cleanup_required: 'Cần dọn dẹp',
+  processing: 'Kẹt xử lý',
+};
+
+const MEDIA_INGESTION_TONE: Record<string, AdminBadgeTone> = {
+  cleanup_required: 'draft',
+  processing: 'danger',
+};
+
+const MEDIA_INGESTION_FAILURE: Record<string, string> = {
+  OBJECT_WRITE_OUTCOME_UNKNOWN: 'Không rõ kết quả ghi tệp',
+  OBJECT_CLEANUP_REQUIRED: 'Lần dọn trước bị lỗi',
+  OBJECT_CLEANUP_SETTLING: 'Đang chờ xác nhận tệp đã xoá',
+  OBJECT_CLEANUP_IN_PROGRESS: 'Đang dọn dẹp',
+};
+
+export function mediaIngestionStatusLabel(status: string): string {
+  return MEDIA_INGESTION_STATUS[status] ?? status;
+}
+
+export function mediaIngestionStatusTone(status: string): AdminBadgeTone {
+  return MEDIA_INGESTION_TONE[status] ?? 'muted';
+}
+
+/** Nhãn mã lỗi; `null` khi mã lạ (UI hiện mã thô dạng mono). */
+export function mediaIngestionFailureLabel(code: string): string | null {
+  return MEDIA_INGESTION_FAILURE[code] ?? null;
+}
+
+/** TL-52: câu kết quả nút Dọn dẹp, theo status và mã lỗi của BFF. */
+export function mediaCleanupResultLabel(
+  ingestionId: number,
+  result:
+    | { kind: 'completed' }
+    | { kind: 'settling' }
+    | { kind: 'error'; status: number; code: string | null },
+): string {
+  if (result.kind === 'completed') return `Đã dọn dẹp bản ghi #${ingestionId}.`;
+  if (result.kind === 'settling') {
+    return `Bản ghi #${ingestionId}: tệp không còn trong storage. Bấm Dọn dẹp lại sau ít nhất 1 phút để hoàn tất.`;
+  }
+  if (result.status === 409) {
+    return `Bản ghi #${ingestionId} đã thay đổi hoặc đang được dọn. Danh sách đã được làm mới.`;
+  }
+  if (result.status === 503 && result.code === 'MEDIA_CLEANUP_REQUIRED') {
+    return 'Storage tạm thời không dọn được. Thử lại sau.';
+  }
+  if (
+    result.status === 503 &&
+    result.code === 'MEDIA_CLEANUP_OUTCOME_UNKNOWN'
+  ) {
+    return 'Chưa rõ kết quả dọn dẹp. Làm mới trang để xem trạng thái.';
+  }
+  return 'Không dọn dẹp được. Thử lại sau.';
+}
+
 /** TL-19 (F5): nhãn form bài tập dùng chung cho 5 loại. */
 export const EXERCISE_FORM = {
   type: 'Loại bài tập',

@@ -19,7 +19,7 @@ export function lessonPlayerDependencies(): LessonPlayerHandlerDependencies {
 export function learnerMediaDependencies(): LearnerMediaHandlerDependencies {
   const serverEnv = parseServerEnv();
   return {
-    learnerCookieName: serverEnv.LEARNER_SESSION_COOKIE_NAME,
+    sessionCookieName: serverEnv.LEARNER_SESSION_COOKIE_NAME,
     requestBackend: (path, options) => backend.request(path, options),
     requestBackendRaw: (path, options) => backend.raw(path, options),
   };

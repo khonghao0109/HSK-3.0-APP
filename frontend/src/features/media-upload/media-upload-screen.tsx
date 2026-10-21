@@ -16,8 +16,8 @@ import {
   MEDIA_UPLOAD_TEXT,
   canonicalMediaFile,
   checkMediaFile,
-  formatMediaBytes,
 } from './media-upload-values';
+import { formatMediaBytes } from '@/features/media/media-format';
 
 const UPLOAD_URL = '/api/admin/media/ingestions';
 const SOURCE_NOT_APPROVED = 'MEDIA_SOURCE_NOT_APPROVED';

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { redirectToSessionLogin } from '@/features/auth/session-redirect';
 import { MediaFilters } from '@/features/media/media-filters';
 import { MediaPagination } from '@/features/media/media-pagination';
-import { parseMediaQuery } from '@/features/media/media-query';
+import { parseMediaQuery, withMediaPage } from '@/features/media/media-query';
 import { loadMedia } from '@/features/media/media-service';
 import { MediaTable } from '@/features/media/media-table';
 import { MediaUploadLink } from '@/features/media/media-upload-link';
@@ -41,7 +42,15 @@ export default async function MediaPage({
             Xem trạng thái xử lý, nguồn gốc và tham chiếu nội dung của media.
           </p>
         </div>
-        <MediaUploadLink enabled={result.ingestionEnabled} />
+        <div className="adm-page-head__actions">
+          <Link
+            className="adm-btn adm-btn--outline"
+            href="/admin/media/ingestions"
+          >
+            Tải lên cần xử lý
+          </Link>
+          <MediaUploadLink enabled={result.ingestionEnabled} />
+        </div>
       </header>
       <MediaFilters query={query} />
       <div className="adm-card adm-media-card">
@@ -50,6 +59,7 @@ export default async function MediaPage({
           query={query}
           total={result.meta.total}
           totalPages={result.meta.totalPages}
+          pageHref={(page) => withMediaPage(query, page)}
         />
       </div>
     </div>

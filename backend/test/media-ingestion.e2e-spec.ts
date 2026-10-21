@@ -120,6 +120,25 @@ describe('Secure Media Ingestion V1 E2E', () => {
     await expect(ownedMediaCount()).resolves.toBe(mediaBaseline);
   });
 
+  it('1a. lists reconciliation rows for admins only and validates paging (TL-47)', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/cms/media/ingestions')
+      .expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/cms/media/ingestions')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(403);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/cms/media/ingestions?page=0')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(400);
+    const listed = await request(app.getHttpServer())
+      .get('/api/v1/admin/cms/media/ingestions')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(listed.body.meta.pagination).toMatchObject({ page: 1, limit: 20 });
+  });
+
   it('1b. disables new ingestion without disabling the application', async () => {
     const config = app.get(ConfigService);
     const storageBaseline = storage.count();
@@ -138,6 +157,11 @@ describe('Secure Media Ingestion V1 E2E', () => {
         }),
       );
       expect(storage.count()).toBe(storageBaseline);
+      // ADR-005: reconciliation stays reachable while ingestion is off.
+      await request(app.getHttpServer())
+        .get('/api/v1/admin/cms/media/ingestions')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
     } finally {
       config.set('media.ingestionEnabled', true);
     }
@@ -447,6 +471,40 @@ describe('Secure Media Ingestion V1 E2E', () => {
       status: 'cleanup_required',
     });
     expect(uncertainIngestion.storageKey).not.toBeNull();
+    // TL-47: the reconciliation list shows the row, cleanable, without storage internals.
+    const listed = await request(app.getHttpServer())
+      .get('/api/v1/admin/cms/media/ingestions?page=1&limit=100')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(listed.headers['cache-control']).toBe('no-store');
+    const listedItem = (
+      listed.body.data as Array<Record<string, unknown>>
+    ).find((item) => item.id === uncertainIngestion.id);
+    expect(listedItem).toMatchObject({
+      status: 'cleanup_required',
+      failureCode: 'OBJECT_WRITE_OUTCOME_UNKNOWN',
+      filename: 'uncertain.png',
+      cleanupAvailable: true,
+      cleanupAttempts: 0,
+    });
+    expect(Object.keys(listedItem ?? {}).sort()).toEqual([
+      'cleanupAttempts',
+      'cleanupAvailable',
+      'cleanupLastAttemptAt',
+      'cleanupRequiredAt',
+      'dataSource',
+      'failureCode',
+      'filename',
+      'id',
+      'processingStartedAt',
+      'size',
+      'startedAt',
+      'status',
+    ]);
+    expect(JSON.stringify(listed.body)).not.toContain(
+      uncertainIngestion.storageKey ?? '',
+    );
+    expect(listed.body.meta.pagination).toMatchObject({ page: 1, limit: 100 });
     const firstUnknownCleanup = await request(app.getHttpServer())
       .post(
         `/api/v1/admin/cms/media/ingestions/${uncertainIngestion.id}/cleanup`,

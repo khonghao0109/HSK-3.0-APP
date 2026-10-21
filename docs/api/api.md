@@ -769,11 +769,25 @@ Response có `Cache-Control: no-store`.
 | `POST` | `/admin/cms/media/:mediaId/quarantine` | — | `{ idempotent, media }`; đã archived → `409` | 201 |
 | `POST` | `/admin/cms/media/:mediaId/archive` | — | `{ idempotent, media }` | 201 |
 | `POST` | `/admin/cms/media/ingestions?dataSourceId=` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128 | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
+| `GET` | `/admin/cms/media/ingestions` | `page`, `limit` (mặc định 20, ≤100) | `MediaIngestionAdmin[]` + `meta` phân trang; sort `startedAt DESC, id DESC` | 200 |
 | `POST` | `/admin/cms/media/ingestions/:ingestionId/cleanup` | — | `{ ingestionId, cleanupCompleted: true }` hoặc `{ ingestionId, cleanupCompleted: false, settling: true }` | 201 |
 
 `MediaAdmin`: `{ id, filename, type, mimeType, size, duration, processingStatus, lifecycle,
 usageCount, dataSourceId, uploadedById, updatedById, deletedAt, createdAt, updatedAt,
 dataSource: { id, code, name, version } }` — không URL, storageKey, checksum.
+
+`MediaIngestionAdmin` (M5.2b, TL-46/TL-47): `{ id, status, failureCode, filename, size,
+dataSource: { id, code, name, version }, startedAt, processingStartedAt, cleanupRequiredAt,
+cleanupAttempts, cleanupLastAttemptAt, cleanupAvailable }`. Chỉ liệt kê lượt cần đối soát:
+`status = 'cleanup_required'`, hoặc `status = 'processing'` có `processingStartedAt` cũ hơn
+15 phút (cùng điều kiện với metric `hsk_media_stuck_processing`, hằng
+`MEDIA_INGESTION_STUCK_PROCESSING_SQL`); `failed`/`rejected`/`completed` không hiện.
+`cleanupAvailable` = `cleanup_required` và provider storage của bản ghi trùng adapter hiện tại.
+Không trả `storageKey`, `processingToken`, `idempotencyKeyHash`, `requestFingerprint`,
+`checksum`, `storageProvider`, `source*Snapshot`, `cleanupAbsentObservedAt`, `actorId`,
+`mediaId`, `declaredMimeType`, `validatedMimeType`. Không gắn cờ ingestion: danh sách và
+cleanup vẫn chạy khi `MEDIA_INGESTION_ENABLED=false` (ADR-005). Route khai báo trước
+`/admin/cms/media/:mediaId`.
 
 Ingestion: `MEDIA_INGESTION_ENABLED=false` → từ chối; giới hạn concurrency trong
 process qua `MEDIA_INGESTION_MAX_CONCURRENCY` (1–16, mặc định 4): khi đầy slot → drain
@@ -836,6 +850,8 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/session/recover` | `POST` | Xoá cookie khi backend trả 401/403 (fail-closed) |
 | `/api/session/me` | `GET` | Đối chiếu cookie với `/auth/me`. Chỉ xoá cookie khi backend trả 401/403; 5xx, timeout hay body sai giữ cookie và trả `503` (502/503/504) hoặc `500` (E-01). Không có UI consumer; Playwright dùng để kiểm header bảo mật |
 | `/api/admin/media/:id/quarantine`, `/archive` | `POST` | Mutation an toàn có Origin check; UI dùng |
+| `/api/admin/media/ingestions/:ingestionId/cleanup` | `POST` | Dọn dẹp lượt tải (M5.2b, TL-50): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401 rồi `POST` không body tới backend; thành công trả `201` + `no-store`; giữ status và `code` lỗi của backend (`503` `MEDIA_CLEANUP_REQUIRED`/`MEDIA_CLEANUP_OUTCOME_UNKNOWN`, `409`); lỗi khác hay phản hồi lệch shape → `503` |
+| `/api/admin/media/:id/access`, `/content` | `GET` | Xem trước media ở trang chi tiết (TL-54): cùng handler với `/api/learner/media/:id/*` nhưng đọc cookie `hsk_admin_session` và trả `src` `/api/admin/media/:id/content?expires=&signature=`; TTL grant admin = `MEDIA_ACCESS_TTL_SECONDS` |
 | `/api/admin/exercise-imports/preview` | `POST` | Preview nhập bài tập (M5.1b2): kiểm `Origin` → 403, cookie admin → 401, body > 102 400 byte → 413, JSON hỏng → 400 rồi chuyển tiếp `/admin/cms/exercise-imports/preview`; giữ `code`/`details` của backend |
 | `/api/admin/exercise-imports` | `POST` | Commit nhập bài tập: như route preview, thêm header `Idempotency-Key` bắt buộc đúng `IDEMPOTENCY_KEY_PATTERN` (sai/thiếu → 400) và body > 102 400 byte → 413; chuyển key qua `RequestOptions.idempotencyKey` |
 

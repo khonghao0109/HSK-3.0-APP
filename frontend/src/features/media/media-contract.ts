@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import {
   backendEnvelope,
+  backendPage,
   envelopeMetaSchema,
   paginationSchema,
 } from '@/lib/api/backend-envelope';
@@ -122,3 +123,39 @@ export type AdminMediaDetail = z.infer<
   typeof mediaDetailResponseSchema
 >['data'];
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>;
+
+// M5.2b (TL-47): lượt tải cần đối soát.
+export const mediaIngestionStatuses = [
+  'cleanup_required',
+  'processing',
+] as const;
+
+export const adminMediaIngestionSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(mediaIngestionStatuses),
+  failureCode: z.string().nullable(),
+  filename: z.string().min(1).nullable(),
+  size: z.number().int().nonnegative(),
+  dataSource: dataSourceSchema,
+  startedAt: z.string().datetime(),
+  processingStartedAt: z.string().datetime().nullable(),
+  cleanupRequiredAt: z.string().datetime().nullable(),
+  cleanupAttempts: z.number().int().nonnegative(),
+  cleanupLastAttemptAt: z.string().datetime().nullable(),
+  cleanupAvailable: z.boolean(),
+});
+
+export const backendMediaIngestionListSchema = backendPage(
+  adminMediaIngestionSchema,
+);
+
+// TL-50: kết quả POST cleanup; `settling` chỉ có khi tệp vừa vắng lần đầu.
+export const backendMediaCleanupSchema = backendEnvelope(
+  z.object({
+    ingestionId: z.number().int().positive(),
+    cleanupCompleted: z.boolean(),
+    settling: z.boolean().optional(),
+  }),
+);
+
+export type AdminMediaIngestion = z.infer<typeof adminMediaIngestionSchema>;

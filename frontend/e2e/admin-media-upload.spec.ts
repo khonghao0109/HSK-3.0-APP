@@ -9,17 +9,27 @@ import {
 import { queryDisposableDb, sqlLiteral } from './support/disposable-db';
 
 /**
- * M5.2a — trang Tải media lên (TL-42, TL-45).
+ * M5.2a — trang Tải media lên (TL-42, TL-45); M5.2b — nghe/xem trước (TL-55).
  *
  * Guard 5 lần/phút/admin đếm cả request bị từ chối (cms.controller.ts), nên
- * request upload thật tới backend CHỈ chạy ở desktop-1440 và đúng 3 lần mỗi
- * lượt ((1), (1b), (2)). Backend Playwright chạy MEDIA_INGESTION_ENABLED=true; cờ tắt và "không
- * nguồn" kiểm ở unit.
+ * request upload thật tới backend CHỈ chạy ở desktop-1440: 3 upload / admin
+ * chính ((1), (1b), (2)) + 1 upload / admin phụ ((1c), TL-57), chỉ
+ * desktop-1440. Backend Playwright chạy MEDIA_INGESTION_ENABLED=true; cờ tắt
+ * và "không nguồn" kiểm ở unit.
  */
 
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin.frontend@example.test';
 const adminPassword =
   process.env.E2E_ADMIN_PASSWORD ?? 'FrontendTest-Admin-123';
+const mediaAdminEmail =
+  process.env.E2E_MEDIA_ADMIN_EMAIL ?? 'admin.media.frontend@example.test';
+const mediaAdminPassword =
+  process.env.E2E_MEDIA_ADMIN_PASSWORD ?? 'FrontendTest-MediaAdmin-123';
+// PNG 32×32 RGB màu xanh đặc (V3: đủ lớn để thấy trong khung xem trước).
+const PNG_32X32 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR42mNQTX5NU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULAMMtzEyPwvGEAAAAAElFTkSuQmCC',
+  'base64',
+);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3200';
 const origin = new URL(baseURL).origin;
 const LICENSED_CODE = 'FRONTEND_CONSOLE_V1';
@@ -54,10 +64,14 @@ function wavBytes(total = 44 + 1600): Buffer {
   return buffer;
 }
 
-async function loginAsAdmin(page: Page) {
+async function loginAsAdmin(
+  page: Page,
+  email = adminEmail,
+  password = adminPassword,
+) {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(adminEmail);
-  await page.getByLabel('Mật khẩu').fill(adminPassword);
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Mật khẩu').fill(password);
   await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await page.waitForURL(/\/(admin\/|forbidden)/u);
 }
@@ -126,6 +140,76 @@ test.describe('Admin tải media (M5.2a)', () => {
     await page.getByRole('link', { name: 'Xem chi tiết' }).click();
     await page.waitForURL(new RegExp(`/admin/media/${mediaId}$`, 'u'));
     await expect(page.getByText(filename).first()).toBeVisible();
+
+    // TL-55: nghe thử chỉ lấy grant khi bấm, không tự phát.
+    const access = page.waitForResponse((item) =>
+      item.url().endsWith(`/api/admin/media/${mediaId}/access`),
+    );
+    await page.getByRole('button', { name: 'Nghe thử' }).click();
+    expect((await access).status()).toBe(200);
+    const audio = page.locator('.adm-media-preview audio');
+    await expect(audio).toHaveCount(1);
+    // Lồng sai CSS từng làm <audio> co về 0 px: kiểm thấy được thật.
+    await expect(audio).toBeVisible();
+    const state = await audio.evaluate((element: HTMLAudioElement) => ({
+      preload: element.getAttribute('preload'),
+      autoplay: element.autoplay,
+      paused: element.paused,
+      src: element.getAttribute('src') ?? '',
+    }));
+    expect(state).toMatchObject({
+      preload: 'none',
+      autoplay: false,
+      paused: true,
+    });
+    expect(state.src.startsWith(`/api/admin/media/${mediaId}/content?`)).toBe(
+      true,
+    );
+    // Same-origin fetch from the page sends the session cookie like <audio>.
+    const fetched = await page.evaluate(async (src) => {
+      const full = await fetch(src);
+      const ranged = await fetch(src, { headers: { range: 'bytes=0-1' } });
+      return {
+        status: full.status,
+        type: full.headers.get('content-type'),
+        rangedStatus: ranged.status,
+      };
+    }, state.src);
+    expect(fetched).toEqual({
+      status: 200,
+      type: 'audio/wav',
+      rangedStatus: 206,
+    });
+  });
+
+  test('(1c) admin phụ tải PNG 1×1 → chi tiết hiện ảnh xem trước', async ({
+    page,
+  }, testInfo) => {
+    skipUnlessUploadProject(testInfo);
+    await loginAsAdmin(page, mediaAdminEmail, mediaAdminPassword);
+    await page.goto('/admin/media/upload');
+    await chooseSource(page);
+    const filename = `xemtruoc${suffix}.png`;
+    await page.setInputFiles('#media-file', {
+      name: filename,
+      mimeType: 'image/png',
+      buffer: PNG_32X32,
+    });
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(UPLOAD_URL) &&
+        response.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Tải lên' }).click();
+    expect((await responsePromise).status()).toBe(201);
+    await page.getByRole('link', { name: 'Xem chi tiết' }).click();
+    const image = page.getByRole('img', { name: `Xem trước ${filename}` });
+    await expect(image).toBeVisible();
+    await expect
+      .poll(() =>
+        image.evaluate((element: HTMLImageElement) => element.naturalWidth),
+      )
+      .toBeGreaterThanOrEqual(32);
   });
 
   test('(1b) WAV 10 485 700 byte (sát giới hạn 10 MiB) → thành công qua proxy/BFF', async ({
@@ -244,7 +328,7 @@ test.describe('Admin tải media (M5.2a)', () => {
   }) => {
     await loginAsAdmin(page);
     await page.goto('/admin/media');
-    const link = page.getByRole('link', { name: 'Tải lên' });
+    const link = page.getByRole('link', { name: 'Tải lên', exact: true });
     await expect(link).toHaveAttribute('href', '/admin/media/upload');
     await link.click();
     await page.waitForURL(/\/admin\/media\/upload$/u);

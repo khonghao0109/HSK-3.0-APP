@@ -13,6 +13,14 @@ export const MEDIA_ELIGIBLE_DATA_SOURCE_SQL = Prisma.sql`NULLIF(btrim(code), '')
   AND (attribution IS NULL OR NULLIF(btrim(attribution), '') IS NOT NULL)
   AND ("contentHash" IS NULL OR NULLIF(btrim("contentHash"), '') IS NOT NULL)`;
 
+/**
+ * TL-46: an ingestion still `processing` after this window is stuck. Shared by
+ * the `hsk_media_stuck_processing` metric and the admin ingestion list.
+ */
+export const MEDIA_INGESTION_STUCK_PROCESSING_SQL = Prisma.sql`status = 'processing'
+  AND "processingStartedAt" IS NOT NULL
+  AND "processingStartedAt" < CURRENT_TIMESTAMP - INTERVAL '15 minutes'`;
+
 const FORBIDDEN_PATH_OR_ENCODING =
   /(?:[/\\]|\.\.|%2f|%5c|%252f|%255c|^[A-Za-z]:)/iu;
 

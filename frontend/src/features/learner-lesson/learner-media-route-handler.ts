@@ -9,7 +9,10 @@ import { backendEnvelope } from '@/lib/api/backend-envelope';
 import { readJwtExpiry } from '@/lib/auth/session-cookie';
 
 export type LearnerMediaHandlerDependencies = {
-  learnerCookieName: string;
+  /** Session cookie carrying the backend bearer (learner or admin). */
+  sessionCookieName: string;
+  /** Same-origin route the `src` points at; default '/api/learner/media'. */
+  contentRoutePrefix?: string;
   requestBackend: (
     path: string,
     options?: { token?: string },
@@ -76,7 +79,7 @@ export async function handleMediaAccess(
   deps: LearnerMediaHandlerDependencies,
 ): Promise<NextResponse> {
   if (!isMediaId(rawId)) return safeResponse(404);
-  const token = request.cookies.get(deps.learnerCookieName)?.value;
+  const token = request.cookies.get(deps.sessionCookieName)?.value;
   if (!token) return safeResponse(401);
 
   let raw: unknown;
@@ -114,7 +117,10 @@ export async function handleMediaAccess(
   ]);
   const response = NextResponse.json({
     success: true,
-    data: { src: `/api/learner/media/${rawId}/content?${search}`, expiresAt },
+    data: {
+      src: `${deps.contentRoutePrefix ?? '/api/learner/media'}/${rawId}/content?${search}`,
+      expiresAt,
+    },
   });
   response.headers.set('cache-control', 'no-store');
   return response;
@@ -131,7 +137,7 @@ export async function handleMediaContent(
   deps: LearnerMediaHandlerDependencies,
 ): Promise<Response> {
   if (!isMediaId(rawId)) return safeResponse(404);
-  const token = request.cookies.get(deps.learnerCookieName)?.value;
+  const token = request.cookies.get(deps.sessionCookieName)?.value;
   if (!token || readJwtExpiry(token) === null) return safeResponse(401);
   const grant = readGrant(request.nextUrl.searchParams);
   if (!grant) return safeResponse(400);

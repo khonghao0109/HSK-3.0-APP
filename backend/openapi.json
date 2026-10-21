@@ -562,6 +562,81 @@
         "tags": [
           "Cms"
         ]
+      },
+      "get": {
+        "operationId": "CmsController_listMediaIngestions",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminMediaIngestionDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
       }
     },
     "/api/v1/admin/cms/media/ingestions/{ingestionId}/cleanup": {
@@ -5540,6 +5615,76 @@
           "ingestionEnabled",
           "pagination",
           "requestId"
+        ]
+      },
+      "AdminMediaIngestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "processing",
+              "cleanup_required"
+            ]
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "filename": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sanitized original filename."
+          },
+          "size": {
+            "type": "number"
+          },
+          "dataSource": {
+            "$ref": "#/components/schemas/AdminDataSourceDto"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "processingStartedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "cleanupRequiredAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "cleanupAttempts": {
+            "type": "number"
+          },
+          "cleanupLastAttemptAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "cleanupAvailable": {
+            "type": "boolean",
+            "description": "True only for `cleanup_required` rows written by the current storage provider."
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "failureCode",
+          "filename",
+          "size",
+          "dataSource",
+          "startedAt",
+          "processingStartedAt",
+          "cleanupRequiredAt",
+          "cleanupAttempts",
+          "cleanupLastAttemptAt",
+          "cleanupAvailable"
         ]
       },
       "AdminMediaExerciseUsageDto": {
