@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 21/10/2026 (thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 21/10/2026 (thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -114,6 +114,10 @@ Cập nhật: 21/10/2026 (thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/20
 | Q99 | **Mục sidebar "Nhập dữ liệu" mở trang nhập bài tập; khi có nhập Từ vựng/Câu hỏi (M5.4) thì trang thêm lựa chọn loại dữ liệu** (PO 19/10/2026, M5.1b) | Q94: mục "Sắp có" | — |
 | Q100 | **Chưa có nguồn dữ liệu thì trang Nhập dữ liệu hiện "Chưa có nguồn dữ liệu. Liên hệ quản trị hệ thống để thêm nguồn." và khoá phần tải tệp; nguồn được thêm bằng script/SQL vận hành, không seed nguồn mặc định, không tạo nguồn trong admin** (PO 20/10/2026, M5.1b2) | Production chưa có DataSource | Trang quản lý nguồn để task sau |
 | Q101 | **Ô "Nguồn dữ liệu" hiện mọi nguồn (gồm 8 nguồn từ điển migration đã seed: CC-CEDICT, HSK word list); dưới ô có dòng "Chọn đúng nguồn biên soạn của bài tập; nguồn mới do quản trị hệ thống thêm."; không lọc, không đổi schema** (PO 21/10/2026, M5.1b2) | Production có sẵn 8 nguồn từ điển, Q100 chỉ áp khi danh sách rỗng | Phân loại nguồn (kind) để task sau |
+| Q102 | **Màn tải media làm đúng như backend: 1 tệp mỗi lần, JPG/PNG/MP3/WAV, tối đa 10 MB, chỉ ô "Nguồn dữ liệu"; bỏ tải nhiều tệp, video/PDF, Giấy phép, Thẻ, Alt text** (PO 21/10/2026, M5.2a) | Mẫu: nhiều tệp, video/PDF, Giấy phép/Thẻ/Alt text | Ghi task sau |
+| Q103 | **Ô nguồn ở màn tải media chỉ hiện nguồn đủ điều kiện nhận media (đủ mã, phiên bản, giấy phép); không còn nguồn nào → khoá màn hình như Q100** (PO 21/10/2026, M5.2a) | 7/8 nguồn seed thiếu giấy phép | — |
+| Q104 | **Tính năng nhận media tắt → ẩn nút "Tải lên" (backend trả cờ bật/tắt trong API đã có, không lộ cấu hình khác), theo Q91** (PO 21/10/2026, M5.2a) | — | — |
+| Q105 | **Bỏ khỏi M5.2: ô tìm kiếm, "Đồng bộ nguồn", thao tác hàng loạt, ảnh thu nhỏ, tên người tải, checksum, nhật ký xử lý, tải xuống; nghe/xem trước đưa vào M5.2b hoặc task sau** (PO 21/10/2026, M5.2a) | Mẫu 06/05 | — |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
