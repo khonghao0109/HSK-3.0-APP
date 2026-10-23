@@ -19,6 +19,7 @@ import databaseConfig from './config/database.config';
 import { envValidationSchema } from './config/env.validation';
 import jwtConfig from './config/jwt.config';
 import mediaConfig from './config/media.config';
+import { AdminUsersModule } from './modules/admin-users/admin-users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
@@ -73,6 +74,7 @@ import { PrismaModule } from './prisma/prisma.module';
     JobsModule.register({ isWorker: false }),
     MediaObservabilityModule,
     AuthModule,
+    AdminUsersModule,
     CmsModule,
     UserModule,
     DictionaryModule,

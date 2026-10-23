@@ -21,8 +21,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `npm run openapi:check` và fail khi file commit bị lệch.
 - `data` có schema đầy đủ cho các endpoint có response DTO: `auth/register`, `auth/login`,
   `auth/me`, admin exercise list/detail, admin media list/detail/archive/quarantine (mọi
-  call của BFF), public learning (`levels`, `lessons`, `topics`, `stories`) và
-  `learning/path`, `learning/home`. Endpoint
+  call của BFF), admin users list và admin audit logs, public learning (`levels`, `lessons`,
+  `topics`, `stories`) và `learning/path`, `learning/home`. Endpoint
   khác mới có envelope, `data` để trống schema (bất kỳ JSON), shape xem Part A.
 - Frontend: `npm run typegen:backend` sinh `frontend/src/lib/api/backend-generated-types.ts`
   bằng `openapi-typescript`, chỉ dùng làm type. Không sinh fetch client (ADR-003): allowlist
@@ -854,6 +854,9 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/admin/media/:id/access`, `/content` | `GET` | Xem trước media ở trang chi tiết (TL-54): cùng handler với `/api/learner/media/:id/*` nhưng đọc cookie `hsk_admin_session` và trả `src` `/api/admin/media/:id/content?expires=&signature=`; TTL grant admin = `MEDIA_ACCESS_TTL_SECONDS` |
 | `/api/admin/exercise-imports/preview` | `POST` | Preview nhập bài tập (M5.1b2): kiểm `Origin` → 403, cookie admin → 401, body > 102 400 byte → 413, JSON hỏng → 400 rồi chuyển tiếp `/admin/cms/exercise-imports/preview`; giữ `code`/`details` của backend |
 | `/api/admin/exercise-imports` | `POST` | Commit nhập bài tập: như route preview, thêm header `Idempotency-Key` bắt buộc đúng `IDEMPOTENCY_KEY_PATTERN` (sai/thiếu → 400) và body > 102 400 byte → 413; chuyển key qua `RequestOptions.idempotencyKey` |
+| `/api/admin/users/:id/role` | `PATCH` | Đổi vai trò (M5.3, TL-70): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401, JSON body 400 nếu không phải object có `role` là `user`/`admin`; chỉ chuyển tiếp đúng `{ role }`, trả `200` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/suspend` | `POST` | Khoá tài khoản (M5.3): như route role, body phải có `reason` là string (backend tự trim/kiểm 1–500 → 400); chỉ chuyển tiếp đúng `{ reason }`, trả `201` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/unsuspend` | `POST` | Mở khoá (M5.3): như route role nhưng không đọc body, chuyển tiếp `POST /admin/users/:id/unsuspend`, trả `201` + `no-store`, giữ `code` lỗi backend |
 
 Trang admin đọc dữ liệu bằng Server Component gọi thẳng backend (`exercise-service.ts`,
 `media-service.ts`), không qua BFF route. Bốn route `GET` `/api/admin/exercises`,
@@ -873,6 +876,84 @@ Route preview (Z1): giữ tối đa 100 lỗi ĐẦU theo thứ tự backend tro
 `error.code = INVALID_IDEMPOTENCY_KEY`. Kiểm `Content-Length > 102 400` chạy trước khi đọc
 body (Z12), vẫn giữ kiểm theo độ dài thật sau khi đọc cho request không có header.
 
+### A.13 Admin Users và Audit (admin)
+
+Response có `Cache-Control: no-store`. Cả 5 route yêu cầu JWT admin: thiếu/sai token
+→ `401`, role `user` → `403`.
+
+| Method | Path | Input | `data` | Status |
+| --- | --- | --- | --- | --- |
+| `GET` | `/admin/users` | `role?` (`user`/`admin`), `status?` (`active`/`suspended`/`deletion_pending`), `q?` ≤100 ký tự sau trim, `page`, `limit` | `AdminUser[]` + `meta` phân trang; sort `createdAt DESC, id DESC` | 200 |
+| `PATCH` | `/admin/users/:id/role` | `{ role: 'user' \| 'admin' }` | `AdminUser` | 200 |
+| `POST` | `/admin/users/:id/suspend` | `{ reason: string }` 1–500 ký tự sau trim | `AdminUser` | 201 |
+| `POST` | `/admin/users/:id/unsuspend` | — | `AdminUser` | 201 |
+| `GET` | `/admin/audit-logs` | `targetType?`, `targetId?` (≤64 ký tự sau trim), `page`, `limit` | `AdminAuditLog[]` + `meta` phân trang; sort `createdAt DESC, id DESC` | 200 |
+
+`AdminUser`: `{ id, email, name, role, status, lastLoginAt, createdAt }` — không bao giờ
+trả `password`, `failedLoginAttempts`, `lockUntil` hay token.
+
+- Mặc định `GET /admin/users` loại `status = 'anonymized'` và mọi bản ghi đã có
+  `deletedAt`. `status=deletion_pending` là cách duy nhất thấy bản ghi chờ xoá (bản ghi
+  này đã có `deletedAt` do yêu cầu xoá đặt trước đó).
+- `q` tìm ILIKE trên `email` hoặc `name`; `%`, `_`, `\` được escape để khớp literal; `q`
+  rỗng sau trim coi như không lọc. `role`, `status` ngoài danh sách trên, `q` >100 ký tự
+  hay query lạ → `400 REQUEST_VALIDATION_FAILED`.
+- `:id` qua `ParsePositiveSafeIntegerPipe`: không phải số nguyên dương
+  `1..2147483647` → `400`. Id không tồn tại hoặc user đã anonymized → `404`.
+
+`AdminAuditLog`: `{ id, createdAt, action, actor: { id, name, email } | null, targetType,
+targetId, target: { email } | null, reason, roleChange }`.
+
+- `id` là chuỗi vì `AuditLog.id` là PostgreSQL bigint.
+- `actor` null khi hành động do hệ thống thực hiện.
+- `target` chỉ có khi `targetType` là user (không phân biệt hoa/thường, vì audit cũ ghi
+  `User`) và user đó chưa anonymized; ngược lại `null`.
+- `reason` chỉ với `user.suspended`; `roleChange: { from, to } | null` chỉ với
+  `user.role_changed` (TL-67a — ngoại lệ duy nhất cho quy tắc cấm trả summary, chỉ hai giá
+  trị role). Không trả `ipAddress`, `userAgent`, `beforeSummary`, `afterSummary` hay bất kỳ
+  phần nào khác của summary.
+- Lọc `targetType` so khớp chính xác chuỗi đã lưu (audit cũ có thể là `User`).
+
+Ghi audit (TL-66): action `user.role_changed`, `user.suspended`, `user.unsuspended`;
+`targetType = 'user'`, `targetId` là chuỗi id, `actorId` là admin thực hiện,
+`correlationId` = request id, `beforeSummary`/`afterSummary` chỉ chứa `{ role }` hoặc
+`{ status }` (+ `{ reason }` với `user.suspended`). Không ghi IP/UA.
+
+Nghiệp vụ:
+
+- Mọi mutation chạy trong một transaction, mở đầu bằng `pg_advisory_xact_lock` trên một
+  key hằng dùng chung; phép đếm "admin active cuối cùng" chạy trong cùng transaction đó.
+  Mọi `UPDATE` đều có điều kiện trạng thái trong `WHERE` (row lock trên user mục tiêu).
+- TL-76: ngay sau `pg_advisory_xact_lock`, mutation đọc lại hàng actor bằng
+  `SELECT … FROM "User" WHERE id = <actorId> FOR UPDATE`; actor phải có `role='admin'`,
+  `status='active'`, `deletedAt IS NULL`. Không đạt → `403 FORBIDDEN`, message
+  `Insufficient role.` (giống RolesGuard), không UPDATE và không ghi audit. Nhờ vậy request
+  của admin vừa bị hạ quyền/khoá trong lúc đang xử lý sẽ fail closed thay vì commit.
+- `PATCH role`: chỉ user `active` hoặc `suspended` mới đổi được. Tự đổi role của chính
+  mình → `409 ADMIN_SELF_ACTION_FORBIDDEN` (kể cả khi gửi đúng role hiện tại). Hạ quyền
+  admin `active` cuối cùng → `409 LAST_ADMIN_REQUIRED`. Gửi đúng role hiện tại → `200`,
+  không ghi audit. Hạ quyền admin đang `suspended` không bị chặn bởi luật admin cuối.
+- `POST suspend`: chỉ `active` → `suspended`; mọi `UserSession` chưa bị thu hồi của user
+  nhận `revokedAt` trong cùng transaction nên access token cũ nhận `401` ngay lần request
+  kế tiếp. Tự khoá mình → `409 ADMIN_SELF_ACTION_FORBIDDEN`. Khoá admin `active` cuối
+  cùng → `409 LAST_ADMIN_REQUIRED`.
+- `POST unsuspend`: chỉ `suspended` → `active`; không mở khoá tài khoản
+  `deletion_pending`/`anonymized`.
+
+Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng chữ):
+
+| `error.code` | HTTP | Khi nào |
+| --- | --- | --- |
+| `USER_NOT_FOUND` | 404 | Id không tồn tại hoặc user đã anonymized |
+| `ADMIN_SELF_ACTION_FORBIDDEN` | 409 | Admin tự đổi role hoặc tự khoá tài khoản mình |
+| `USER_NOT_MODIFIABLE` | 409 | Đổi role user không ở trạng thái `active`/`suspended` (vd `deletion_pending`) |
+| `LAST_ADMIN_REQUIRED` | 409 | Hạ quyền hoặc khoá admin `active` cuối cùng |
+| `USER_NOT_ACTIVE` | 409 | Khoá user không ở trạng thái `active` |
+| `USER_NOT_SUSPENDED` | 409 | Mở khoá user không ở trạng thái `suspended` |
+| `FORBIDDEN` | 403 | Token không phải admin |
+| `UNAUTHORIZED` | 401 | Thiếu/sai token |
+| `REQUEST_VALIDATION_FAILED` | 400 | `:id`, body hoặc query sai shape/giới hạn (chi tiết như §1) |
+
 ## Part B — Dự kiến
 
 Chưa có controller. Cột milestone theo roadmap §6. Endpoint đã triển khai: Part A và
@@ -891,7 +972,6 @@ code sẽ tự vào spec đó.
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
 | CRUD | `/admin/cms/questions`, `/admin/cms/tests` | Exam authoring | M4 |
 | `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
-| `GET/PATCH` | `/users` (phân trang), `/users/:id/role`, `/users/:id/lock` | Admin user lifecycle | M5 |
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |
 | `POST` | `/support/tickets`, `/reports` | Support / Trust & Safety | M5 |

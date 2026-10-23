@@ -148,6 +148,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminUsersController_listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AdminUsersController_changeRole"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AdminUsersController_suspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AdminUsersController_unsuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminUsersController_listAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cms/media/ingestions": {
         parameters: {
             query?: never;
@@ -1259,6 +1339,59 @@ export interface components {
              */
             newPassword: string;
         };
+        AdminUserDto: {
+            id: number;
+            email: string;
+            name: string | null;
+            /** @enum {string} */
+            role: "user" | "admin";
+            /** @enum {string} */
+            status: "active" | "suspended" | "deletion_pending";
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ChangeUserRoleDto: {
+            /** @enum {string} */
+            role: "user" | "admin";
+        };
+        SuspendUserDto: {
+            /**
+             * @description TL-63: the stored reason is the trimmed input and must be 1–500 chars.
+             *     Declared `unknown` on purpose: with `enableImplicitConversion`, a JSON
+             *     number or boolean would be coerced to text before validation and accepted.
+             *     The controller narrows it after validation proves it is a string.
+             */
+            reason: string;
+        };
+        AdminAuditLogActorDto: {
+            id: number;
+            name: string | null;
+            email: string;
+        };
+        AdminAuditLogTargetDto: {
+            email: string;
+        };
+        AdminAuditRoleChangeDto: {
+            /** @enum {string} */
+            from: "user" | "admin";
+            /** @enum {string} */
+            to: "user" | "admin";
+        };
+        AdminAuditLogDto: {
+            /** @description `AuditLog.id` is a PostgreSQL bigint; JSON exposes it as a string. */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            action: string;
+            actor: components["schemas"]["AdminAuditLogActorDto"] | null;
+            targetType: string;
+            targetId: string | null;
+            target: components["schemas"]["AdminAuditLogTargetDto"] | null;
+            reason: string | null;
+            roleChange: components["schemas"]["AdminAuditRoleChangeDto"] | null;
+        };
         AdminDataSourceDto: {
             id: number;
             code: string;
@@ -2368,6 +2501,171 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_listUsers: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                role?: "user" | "admin";
+                status?: "active" | "suspended" | "deletion_pending";
+                q?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_changeRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_suspend: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendUserDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_unsuspend: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_listAuditLogs: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                targetType?: string;
+                targetId?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminAuditLogDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
             };
             default: components["responses"]["ErrorEnvelope"];
         };
