@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 21/10/2026 (thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 23/10/2026 (thêm Q108–Q111 ngày 23/10/2026; thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -120,6 +120,10 @@ Cập nhật: 21/10/2026 (thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 
 | Q105 | **Bỏ khỏi M5.2: ô tìm kiếm, "Đồng bộ nguồn", thao tác hàng loạt, ảnh thu nhỏ, tên người tải, checksum, nhật ký xử lý, tải xuống; nghe/xem trước đưa vào M5.2b hoặc task sau** (PO 21/10/2026, M5.2a) | Mẫu 06/05 | — |
 | Q106 | **Đối soát tải lên: thêm API liệt kê lượt tải có vấn đề; trang hiện danh sách; lượt "cần dọn dẹp" có nút Dọn dẹp gọi API dọn dẹp có sẵn; lượt xử lý treo chỉ hiện, ghi "liên hệ vận hành" (ADR-005)** (PO 21/10/2026, M5.2b) | Mẫu không có phần đối soát | — |
 | Q107 | **Trang chi tiết media cho nghe/xem trước media sẵn sàng qua liên kết truy cập có thời hạn của backend: ảnh trong khung, audio có trình phát bấm nghe, không tự phát (như Q56)** (PO 21/10/2026, M5.2b) | Mẫu có waveform, tải xuống (bỏ theo Q91/Q105) | — |
+| Q108 | **Bỏ vai trò Giáo viên khỏi trang quản lý người dùng: chỉ có tab Tất cả / Người học / Quản trị viên; không đổi schema, chỉ dùng hai role `user`/`admin` đang có** (PO 23/10/2026, M5.3) | Mẫu có tab và vai trò Giáo viên | Không thêm role mới |
+| Q109 | **Khoá tài khoản là khoá vô thời hạn (`suspended`), bắt buộc nhập lý do, thu hồi mọi phiên đăng nhập ngay, chỉ admin mở lại** (PO 23/10/2026, M5.3) | Mẫu không nói thời hạn khoá | — |
+| Q110 | **Không có nút "+ Thêm người dùng"; người dùng tự đăng ký, admin chỉ đổi vai trò và khoá/mở** (PO 23/10/2026, M5.3) | Mẫu có nút thêm người dùng | — |
+| Q111 | **Cột "Trung tâm vận hành (Ops)" để task sau; trang M5.3 chỉ có Người dùng và Nhật ký hoạt động** (PO 23/10/2026, M5.3) | Mẫu có cột Ops | — |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
