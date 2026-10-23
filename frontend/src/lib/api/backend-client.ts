@@ -38,6 +38,10 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/media\/ingestions\?dataSourceId=\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/ingestions\?page=\d+&limit=\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/ingestions\/\d+\/cleanup$/,
+  // M5.3 (TL-70): quản lý người dùng admin + nhật ký audit.
+  /^\/api\/v1\/admin\/users(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/users\/\d+\/(?:role|suspend|unsuspend)$/,
+  /^\/api\/v1\/admin\/audit-logs(?:\?[^#]*)?$/,
   /^\/api\/v1\/levels$/,
   /^\/api\/v1\/onboarding\/status$/,
   /^\/api\/v1\/onboarding\/goals$/,
@@ -93,7 +97,7 @@ type UploadOptions = {
 
 type RequestOptions = {
   token?: string;
-  method?: 'GET' | 'POST' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** Sent as `Idempotency-Key` (docs/api/api.md §A.7). */
   idempotencyKey?: string;

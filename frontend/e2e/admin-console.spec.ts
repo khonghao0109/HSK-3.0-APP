@@ -620,9 +620,10 @@ test('M5.0 (a)(b)(c): khung sidebar desktop đúng mẫu 06, Q88/Q92/Q94', async
   // (b) Q94: mục chưa có trang KHÔNG chip, không link, aria-disabled,
   // "Sắp có" trong tên đọc + title; mọi nhãn 1 dòng, mục cao ≤ 44px.
   // M5.1a: "Nội dung" đã có trang (/admin/content); M5.1b2 (TL-33):
-  // "Nhập dữ liệu" đã có trang (/admin/import) nên "Sắp có" giảm 9 → 7.
+  // "Nhập dữ liệu" có trang (/admin/import); M5.3: "Người dùng" có trang
+  // (/admin/users), nên "Sắp có" giảm 9 → 6.
   const soonItems = page.locator('.adm-nav__item--soon');
-  await expect(soonItems).toHaveCount(7);
+  await expect(soonItems).toHaveCount(6);
   await expect(page.locator('.adm-nav__soon')).toHaveCount(0);
   await expect(soonItems.first()).toHaveAttribute('title', 'Sắp có');
   await expect(soonItems.first()).toHaveAccessibleName(/Sắp có/u);
@@ -661,6 +662,9 @@ test('M5.0 (a)(b)(c): khung sidebar desktop đúng mẫu 06, Q88/Q92/Q94', async
   await expect(
     page.getByRole('link', { name: 'Báo cáo', exact: true }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Người dùng', exact: true }),
+  ).toHaveAttribute('href', '/admin/users');
 
   // (c) Thu gọn → sidebar 72px, aria-expanded=false, nhãn ẩn.
   const collapse = page.getByRole('button', { name: 'Thu gọn' });

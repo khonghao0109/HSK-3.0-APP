@@ -46,7 +46,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     icon: 'upload',
     href: '/admin/import',
   },
-  { key: 'users', label: 'Người dùng', icon: 'users' },
+  { key: 'users', label: 'Người dùng', icon: 'users', href: '/admin/users' },
   { key: 'reports', label: 'Báo cáo', icon: 'bar-chart' },
   { key: 'ai-ops', label: 'AI Ops', icon: 'cpu' },
   { key: 'feedback', label: 'Phản hồi', icon: 'message-circle' },
