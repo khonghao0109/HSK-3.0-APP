@@ -1,6 +1,6 @@
 # Quyết định Product Owner cho learner UI
 
-Cập nhật: 23/10/2026 (thêm Q108–Q111 ngày 23/10/2026; thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
+Cập nhật: 23/10/2026 (thêm Q112–Q114 ngày 23/10/2026; thêm Q108–Q111 ngày 23/10/2026; thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
 - **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
   `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
@@ -124,6 +124,9 @@ Cập nhật: 23/10/2026 (thêm Q108–Q111 ngày 23/10/2026; thêm Q106–Q107 
 | Q109 | **Khoá tài khoản là khoá vô thời hạn (`suspended`), bắt buộc nhập lý do, thu hồi mọi phiên đăng nhập ngay, chỉ admin mở lại** (PO 23/10/2026, M5.3) | Mẫu không nói thời hạn khoá | — |
 | Q110 | **Không có nút "+ Thêm người dùng"; người dùng tự đăng ký, admin chỉ đổi vai trò và khoá/mở** (PO 23/10/2026, M5.3) | Mẫu có nút thêm người dùng | — |
 | Q111 | **Cột "Trung tâm vận hành (Ops)" để task sau; trang M5.3 chỉ có Người dùng và Nhật ký hoạt động** (PO 23/10/2026, M5.3) | Mẫu có cột Ops | — |
+| Q112 | **M4.1a chỉ có 4 dạng câu khách quan: trắc nghiệm 1 đáp án (kèm audio hoặc ảnh tuỳ chọn), Đúng/Sai, Điền từ, Sắp xếp câu. Viết và Nói làm sau (cần chấm tay, M4.3)** (PO 23/10/2026, M4.1a) | Mẫu có thêm "Nghe chọn hình", "Tự luận", không có Đúng/Sai | Viết/Nói ở M4.3 |
+| Q113 | **Giữ 4 kỹ năng nghe/đọc/viết/nói. "Từ vựng & Ngữ pháp" trên mockup là nhóm theo tag `tu-vung`/`ngu-phap`, câu loại này gắn kỹ năng Đọc. Mẫu thua ở điểm: "kỹ năng Từ vựng & Ngữ pháp"** (PO 23/10/2026, M4.1a) | Mẫu coi Từ vựng, Ngữ pháp là kỹ năng riêng | Lọc theo 2 tag, gắn kỹ năng Đọc |
+| Q114 | **Không làm nút "Nhập câu hỏi" và "Xuất dữ liệu" trong M4.1a; nhập câu hỏi sẽ thành một loại dữ liệu ở trang "Nhập dữ liệu" trong M5.4 (Q99)** (PO 23/10/2026, M4.1a) | Mẫu có 2 nút Nhập câu hỏi / Xuất dữ liệu | Nhập câu hỏi ở M5.4, trang Nhập dữ liệu |
 
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
