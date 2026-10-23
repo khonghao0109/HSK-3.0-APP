@@ -238,7 +238,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.B4 | Dictionary prefix search | ✅ | thiếu e2e riêng |
 | M2.B5 | Signed media access cho learner | ✅ | `media-access.service.ts` |
 | M2.B6 | Lưu lý do học `learningPurpose` cho UserGoal | ✅ | 05/10: ✅ đã đóng (`d1c249e`, `5b1e87e`, `ada69f3`, `3f6896d`, PR #5 run `37259009433`) |
-| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
+| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt"; cải tiến R20 (mục 5.1) |
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
 | M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
@@ -254,8 +254,8 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
 | M2.2 | UI onboarding goal + kế hoạch học | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); 01/03,04; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
-| M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅ |
-| M2.3b | Placement UI | ⬜ | 01/05,06 |
+| M2.3a | Placement backend: chọn câu, chấm, kết quả (feature flag) | ⬜ | `PlacementAttempt` schema ✅; cải tiến R1 (mục 5.1) |
+| M2.3b | Placement UI | ⬜ | 01/05,06; cải tiến R2 (mục 5.1) |
 | M2.4 | Trang chủ + lộ trình học | ✅ | 02/01,02; 12/10: ✅ phạm vi 02/01,02 đã phủ bởi M2.4a, M2.4b |
 | M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) đã đóng cùng M2.4b 10/10; `02-learning-lesson/01`; Q21–Q24 |
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
@@ -278,7 +278,7 @@ Vào: GĐ4 xong M1.4, M1.5. Ra: người học đi hết đăng nhập → mục
 | M2.10b | Nội dung web Tra từ, Chi tiết từ, Bài học (kể cả bài khoá, not-found) trong `.w-app`; Luyện tập và Hoàn thành trong `.w-focus` | ✅ | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html`; 14/10: ✅ đã đóng (`2b0523a`, PR #6 run `38503428606`) |
 | M2.10c | Trang công khai `.w-public`: /, đăng nhập, đăng ký, quên/đặt lại mật khẩu, xác thực email, onboarding, điều khoản, bảo mật (Q84) | ✅ | mẫu `web/index.html`, `web/sign-*.html`, `web/onboarding-*.html`, ...; 14/10: ✅ đã đóng (`734dc77` + `dd7adb2`, PR #6 run `38600729243`); K3a 20 + K3b 6 cặp 0 pixel; K4 522 passed / 6 skipped; Q86, Q87, TL-5 |
 | M2.10d | Sửa lỗi review sau đóng M2.10a/M2.10b: vùng chạm 44px (Q69), thứ tự focus Lộ trình 1024–1279, khung 404 dưới practice/complete, gợi ý player theo loại bài, test menu ⋮ web, fixture riêng của spec web, bám mẫu Tra từ và Bài học, lỗi Prisma 500 khi hoàn thành bài | ✅ | 14/10: ✅ đã đóng (`2125a67`, PR #6 run `38531633716`); F2 chưa tái hiện sau 146 lượt, log không có mã Pxxxx, xem mục 8 |
-| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
+| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9; cải tiến R21 (mục 5.1) |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (HSK1 ≈ 22, HSK2 ≈ 31, HSK3 ≈ 39 bài), mỗi bài ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng; ≥ 1 story mỗi 10 bài | ⬜ | chỉ tiêu 🔵 #12; nhập qua CMS API/import hoặc M5.1; audio cần M5.2 + M6.9; HSK4–HSK7_9 sau beta |
 | M2.UXa | Bổ sung thiết kế mobile P1 còn thiếu (MB-01…MB-19): học từ vựng và ngữ pháp trong bài, fill_blank, dictation, tốc độ nghe, chi tiết từ đầy đủ, sổ từ, sổ lỗi, tổng kết ôn, giới thiệu đề và lịch sử thi, chọn xếp trình độ, luyện viết, các trạng thái chat AI, xin quyền và consent, cài đặt tài khoản, video YouTube | ⬜ | [product/design-coverage.md](./product/design-coverage.md) §2; thêm vào `docs/ui_reference/mobile/` rồi đưa lên Figma section Mobile |
 | M2.UXb | Bổ sung thiết kế web học viên P1 còn thiếu (WB-01…WB-14, WB-17, WB-18): bài khoá, học từ vựng và ngữ pháp, các dạng bài tập, xếp trình độ, ôn tập, sổ từ và sổ lỗi, chi tiết từ và Hán tự, thi thử, trợ lý AI, video, thông báo, cài đặt tài khoản, luyện phát âm, trạng thái "Dùng trên app" cho viết tay và OCR | ⬜ | design-coverage §3; web cần bản 1440 và 1024px; quyết định 19/10: phát âm có trên web, viết tay và OCR chỉ trên app |
@@ -292,16 +292,16 @@ Vào: GĐ5 có M2.5, M2.6. Ra: ôn đúng hạn, lịch sử review bất biến
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M3.1 | Scheduler policy/version, `ReviewCard` là source of truth | ⬜ | schema ✅ |
-| M3.2 | Due queue, review session/event idempotency, concurrency | ⬜ | trigger ownership ✅ |
-| M3.3 | Flashcard + lịch ôn tập UI | ⬜ | 03/03,04 |
-| M3.4a | Schema + migration `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | ⬜ | mục 5 |
-| M3.4b | API dictionary detail đầy đủ, ví dụ/audio, saved-word lifecycle | ⬜ | |
+| M3.1 | Scheduler policy/version, `ReviewCard` là source of truth | ⬜ | schema ✅; cải tiến R3 (mục 5.1) |
+| M3.2 | Due queue, review session/event idempotency, concurrency | ⬜ | trigger ownership ✅; cải tiến R4 (mục 5.1) |
+| M3.3 | Flashcard + lịch ôn tập UI | ⬜ | 03/03,04; cải tiến R5 (mục 5.1) |
+| M3.4a | Schema + migration `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | ⬜ | mục 5; cải tiến R6 (mục 5.1) |
+| M3.4b | API dictionary detail đầy đủ, ví dụ/audio, saved-word lifecycle | ⬜ | cải tiến R6 (mục 5.1) |
 | M3.4c | UI chi tiết từ | ⬜ | |
-| M3.4d | Bộ thủ và âm Hán Việt trong chi tiết từ; ví dụ câu theo M3.4a/b | ⬜ | khảo sát 10/10 (Hanzii); lợi thế riêng cho người Việt; cần nguồn dữ liệu có giấy phép (#2) |
+| M3.4d | Bộ thủ và âm Hán Việt trong chi tiết từ; ví dụ câu theo M3.4a/b | ⬜ | khảo sát 10/10 (Hanzii); lợi thế riêng cho người Việt; cần nguồn dữ liệu có giấy phép (#2); cải tiến R7 (mục 5.1) |
 | M3.5 | Test scheduler correctness, retention, timezone | ⬜ | C-05 |
-| M3.6 | Sổ lỗi sai: ôn lại bài tập làm sai từ lịch sử attempt bất biến, sau M4 thêm câu thi làm sai | ⬜ | khảo sát 10/10 (Migii HSK); đọc từ `LessonExerciseAttempt`, không sửa lịch sử |
-| M3.7 | Dạng bài nghe chép chính tả (dictation): validator, scorer, player | ⬜ | khảo sát 10/10 (Baolingo, Trùm Chinese); thêm vào shared validator và scorer `lesson-activity` |
+| M3.6 | Sổ lỗi sai: ôn lại bài tập làm sai từ lịch sử attempt bất biến, sau M4 thêm câu thi làm sai | ⬜ | khảo sát 10/10 (Migii HSK); đọc từ `LessonExerciseAttempt`, không sửa lịch sử; cải tiến R8 (mục 5.1) |
+| M3.7 | Dạng bài nghe chép chính tả (dictation): validator, scorer, player | ⬜ | khảo sát 10/10 (Baolingo, Trùm Chinese); thêm vào shared validator và scorer `lesson-activity`; cải tiến R9 (mục 5.1) |
 | M3.8a | Video YouTube: schema video và câu phụ đề có mốc thời gian, tách từ theo từ điển, gắn cấp HSK; admin nhập phụ đề, duyệt, publish | ⬜ | khảo sát 10/10 (Baolingo); phụ đề tự soạn, không tải phụ đề hay video từ YouTube |
 | M3.8b | Trình xem video cho người học: phụ đề chữ Hán, pinyin, tiếng Việt; lặp câu, đổi tốc độ, shadowing; tab từ vựng lọc theo cấp HSK, lưu vào ôn tập | ⬜ | nhúng `youtube-nocookie.com` qua IFrame API; mở CSP `frame-src` đúng tên miền |
 
@@ -311,14 +311,14 @@ Vào: GĐ5 xong. Ra: thi trọn flow, snapshot không đổi khi content sửa, 
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M4.1 | Admin question/test authoring + publish | ⬜ | 06/05; schema 14 model ✅ |
-| M4.2a | Start → snapshot bất biến | ⬜ | `ExamAttemptSnapshot` ✅ |
-| M4.2b | Autosave, resume, timer | ⬜ | |
+| M4.1 | Admin question/test authoring + publish | ⬜ | 06/05; schema 14 model ✅; cải tiến R10 (mục 5.1) |
+| M4.2a | Start → snapshot bất biến | ⬜ | `ExamAttemptSnapshot` ✅; cải tiến R11 (mục 5.1) |
+| M4.2b | Autosave, resume, timer | ⬜ | cải tiến R12 (mục 5.1) |
 | M4.2c | Submit idempotent, chống double result | ⬜ | |
-| M4.3 | Server scoring, skill breakdown, explanation policy | ⬜ | |
+| M4.3 | Server scoring, skill breakdown, explanation policy | ⬜ | cải tiến R11, R13 (mục 5.1) |
 | M4.4 | Concurrency/capacity test theo workload duyệt | ⬜ | |
-| M4.5 | Learner exam/review/result UI | ⬜ | 04/01–04 |
-| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp theo cấu trúc chính thức; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | chỉ tiêu 🔵 #12; nhập qua M4.1/M5.4; HSK4–HSK7_9 sau beta, HSK7–9 chờ #1 |
+| M4.5 | Learner exam/review/result UI | ⬜ | 04/01–04; cải tiến R14 (mục 5.1) |
+| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp theo cấu trúc chính thức; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | chỉ tiêu 🔵 #12; nhập qua M4.1/M5.4; HSK4–HSK7_9 sau beta, HSK7–9 chờ #1; cải tiến R10 (mục 5.1) |
 
 ### GĐ8 — Admin ops, analytics, support, trust, M5 (4–6 tuần; M5.1–M5.2 song song GĐ5)
 
@@ -340,7 +340,7 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | 06/06 |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | 06/01; ADR-008 §10 |
-| M5.6 | Support ticket / content report: taxonomy, API, queue, SLA | ⬜ | |
+| M5.6 | Support ticket / content report: taxonomy, API, queue, SLA | ⬜ | cải tiến R22 (mục 5.1) |
 | M5.7 | Trust & Safety: report/action/appeal/audit, least-privilege role | ⬜ | |
 | M5.8 | Notification preference + consent | ⬜ | |
 
@@ -352,19 +352,19 @@ Vào: web đủ vòng học (GĐ5 M2.5, M2.6; GĐ6; GĐ7); tiền đề mobile M
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | M7.7 | Mobile React Native + Expo tại `mobile/` | ⬜ | ADR-008 §1 đã chốt; bước cha của M7.7a–d |
-| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web |
+| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web; cải tiến R19 (mục 5.1) |
 | M7.7b | Onboarding, trang chủ, lộ trình, bài học, activity player 4 dạng | ⬜ | tuần 10; dùng lại API M2.B*, M2.5 |
 | M7.7c | Từ điển, ôn tập flashcard, thi thử, hồ sơ | ⬜ | tuần 11; cần M2.6, GĐ6, GĐ7 |
 | M7.7d | CI mobile (lint, typecheck, test) và bản build Android/iOS cài được cho demo | ⬜ | tuần 11 |
-| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8 |
+| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8; cải tiến R20 (mục 5.1) |
 | M7.4 | AI/RAG: NestJS service riêng, pgvector, provider adapter ≥ 2 | ⬜ | bước cha của M7.4a–d |
 | M7.4a | Duyệt ADR-008 §6; chốt nhà cung cấp (#6); bộ câu hỏi đánh giá tiếng Trung/Việt; ngân sách và hạn mức | ⬜ | trước tuần 12; chỉ API chính thức có điều khoản xử lý dữ liệu, không dùng proxy gom tài khoản |
 | M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
-| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
-| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
-| M7.2 | Luyện phát âm: ghi âm trên app và web, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05` |
+| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12; cải tiến R16 (mục 5.1) |
+| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02`; cải tiến R17 (mục 5.1) |
+| M7.2 | Luyện phát âm: ghi âm trên app và web, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05`; cải tiến R15 (mục 5.1) |
 | M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
-| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
+| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03`; cải tiến R18 (mục 5.1) |
 | M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
 | M7.E | Demo trên bản build: app đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | |
 
@@ -402,8 +402,8 @@ Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest
 | # | Task | Trạng thái | Điều kiện bắt đầu |
 | --- | --- | --- | --- |
 | M7.1 | Interactive reader, materials | ⬜ | mockup 03/05,06 |
-| M7.6 | Subscription/payment | ⬜ | business model, legal/tax |
-| M7.8 | Community | ⬜ | moderation |
+| M7.6 | Subscription/payment | ⬜ | business model, legal/tax; cải tiến R23 (mục 5.1) |
+| M7.8 | Community | ⬜ | moderation; cải tiến R24 (mục 5.1) |
 
 ## 2. Tổng quan
 
@@ -550,7 +550,7 @@ UI và phần backend còn thiếu:
 | # | Bước | Trạng thái | Mockup / ghi chú |
 | --- | --- | --- | --- |
 | M2.B6 | Lưu lý do học `learningPurpose` cho UserGoal | ✅ | 05/10: ✅ đã đóng (`d1c249e`, `5b1e87e`, `ada69f3`, `3f6896d`, PR #5 run `37259009433`) |
-| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt" |
+| M2.B7 | Job gửi nhắc nhở học theo reminderEnabled/reminderTime | ⬜ | PO 05/10: UI lưu tuỳ chọn, câu phụ "Nhắc nhở sẽ được gửi khi tính năng ra mắt"; cải tiến R20 (mục 5.1) |
 | M2.B8 | GET /levels trả code/minBand/maxBand; seed e2e HSK2/HSK3/HSK7_9 | ✅ | 05/10: ✅ đã đóng (`32ebce0`, `830aa81`, `c869fe1`, `c8373ca`, `36c236a`, `256bd00`, `c4270b0`, `4d5b5a2`, PR #5 run `37265687035`) |
 | M2.B9 | `GET /learning/path` (trạng thái bài done/current/available/locked, `nextLesson`) và khoá bài tuần tự ở `POST /learning/lessons/:lessonId/start` (Q18) | ✅ | 07/10: ✅ đã đóng (`35464e9`, `f944589`, `82ced4e`, `529f1da`, `4823c2c`, PR #5 run `37574103921`) |
 | M2.B10 | `GET /learning/home`: Mục tiêu hôm nay, Chuỗi ngày học do backend tính (Q13) | ✅ | 09/10: ✅ đã đóng (`89c991d`, `a144a71`, `019f1a7`, `3613c00`, PR #5 run `37884908537`); dùng lại `selectNextLesson` của M2.B9 |
@@ -566,7 +566,7 @@ UI và phần backend còn thiếu:
 | M2.1f | Nội dung thật /terms, /privacy — gắn M1.7b2 | ⬜ | Hiện là trang tĩnh tạm thời, gắn quyết định Consent M1.7b2 |
 | M2.1g | Thay hình minh hoạ trang chào bằng file gốc độ phân giải cao (hiện cắt từ mockup 310px) | ⬜ | Assets SVG/@3x khi có |
 | M2.2 | Onboarding goal + kế hoạch học UI | ✅ | 05/10: ✅ đã đóng (`4549dcd`, `218e0d3`, `fe89443`, `01c1ffd`, `2d16b74`, `2dfb834`, `0f08df2`, PR #5 run `37281941987`); `01-onboarding-placement/03,04`; 2 route goal/plan, pure routeForOnboarding, BFF complete, Playwright 118 pass, so pixel 26/26 và 40/40 PASS |
-| M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅ |
+| M2.3 | Placement test (feature flag): backend chọn câu, chấm, kết quả + UI | ⬜ | `01-onboarding-placement/05,06`; schema `PlacementAttempt` ✅; cải tiến R1, R2 (mục 5.1) |
 | M2.4 | Trang chủ + lộ trình học | ✅ | `02-learning-lesson/01,02`; 12/10: ✅ phạm vi 02/01,02 đã phủ bởi M2.4a, M2.4b |
 | M2.4a | Trang chủ + tab bar + `/learn/profile` (Q14–Q17) | ✅ | 09/10: ✅ đã đóng (`b3e85a9`, `46690c6`, `b8645cf`, PR #5 run `37917119665`); việc còn lại (forced colors icon tab, test hồi quy) đã đóng cùng M2.4b 10/10; `02-learning-lesson/01`; Q21–Q24 |
 | M2.4b | Lộ trình (Q18–Q20) | ✅ | 10/10: ✅ đã đóng (`618b302`, `2c36586`, `d34c3b8`, PR #5 run `38016160000`); `/learn/path`, tab Học; `02-learning-lesson/02`; Q25–Q31 |
@@ -584,7 +584,7 @@ UI và phần backend còn thiếu:
 | M2.10b | Nội dung web Tra từ, Chi tiết từ, Bài học (kể cả bài khoá, not-found) trong `.w-app`; Luyện tập và Hoàn thành trong `.w-focus` | ✅ | mẫu `web/dictionary.html`, `web/word.html`, `web/lesson*.html`, `web/practice-*.html`; 14/10: ✅ đã đóng (`2b0523a`, PR #6 run `38503428606`) |
 | M2.10c | Trang công khai `.w-public`: /, đăng nhập, đăng ký, quên/đặt lại mật khẩu, xác thực email, onboarding, điều khoản, bảo mật (Q84) | ✅ | mẫu `web/index.html`, `web/sign-*.html`, `web/onboarding-*.html`, ... (20 trang); 14/10: ✅ đã đóng (`734dc77` + `dd7adb2`, PR #6 run `38600729243`): 10 trang công khai `.w-public`, khung `display:contents` dưới 1024px nên mobile không đổi (K3a 20 cặp 390/768 + K3b 6 cặp 1024/1440: 0 pixel; base `ab7adab`), K4 522 passed / 6 skipped / 0 failed, gate frontend 0 failed; Q86 (navy-900), Q87 (câu dưới nút Tiếp tục), TL-5 (ô "Sắp có" 2 cột ở 1024–1279) |
 | M2.10d | Sửa lỗi review sau đóng M2.10a/M2.10b: vùng chạm 44px (Q69), thứ tự focus Lộ trình 1024–1279, khung 404 dưới practice/complete, gợi ý player theo loại bài, test menu ⋮ web, fixture riêng của spec web, bám mẫu Tra từ và Bài học, lỗi Prisma 500 khi hoàn thành bài | ✅ | 14/10: ✅ đã đóng (`2125a67`, PR #6 run `38531633716`); F2 chưa tái hiện sau 146 lượt, log không có mã Pxxxx, xem mục 8 |
-| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9 |
+| M2.9a | Pipeline seed nội dung có agent hỗ trợ + pilot HSK1: (1) xoá placeholder trên DB dev cùng M1.3; (2) script nạp Lesson/Topic từ file JSON qua CMS API và bài tập qua exercise import (preview → commit, `Idempotency-Key`), mọi bản ghi ở trạng thái draft; (3) agent soạn nháp 5 bài HSK1 đầu: từ vựng, câu ví dụ, nghĩa tiếng Việt trong nội dung bài, ≥ 8 bài tập trên ≥ 3 loại; (4) người duyệt review → approve → publish theo workflow CMS | ⬜ | Bắt đầu ngay, không chờ M5.1 UI; nghĩa tiếng Việt vào `WordMeaning` vẫn chờ M1.2a; audio chờ chọn nguồn TTS (#12); không chép hàng loạt từ nguồn bên thứ ba; mở rộng theo đợt sang phần còn lại của M2.9; cải tiến R21 (mục 5.1) |
 | M2.9 | Nội dung học thật HSK1–HSK3 thay 35 bài placeholder: 20 từ/bài, phủ ≥ 80% từ vựng cấp (≈ 92 bài), ≥ 2 topic, ≥ 8 bài tập trên ≥ 3 loại, audio từ vựng, ≥ 1 story mỗi 10 bài | ⬜ | Chỉ tiêu 🔵 #12; track biên soạn song song, gate M6.7; audio cần M5.2 và M6.9 |
 | M2.UXa | Bổ sung thiết kế mobile P1 còn thiếu (MB-01…MB-19): học từ vựng và ngữ pháp trong bài, fill_blank, dictation, tốc độ nghe, chi tiết từ đầy đủ, sổ từ, sổ lỗi, tổng kết ôn, giới thiệu đề và lịch sử thi, chọn xếp trình độ, luyện viết, các trạng thái chat AI, xin quyền và consent, cài đặt tài khoản, video YouTube | ⬜ | [product/design-coverage.md](./product/design-coverage.md) §2; thêm vào `docs/ui_reference/mobile/` rồi đưa lên Figma section Mobile |
 | M2.UXb | Bổ sung thiết kế web học viên P1 còn thiếu (WB-01…WB-14, WB-17, WB-18): bài khoá, học từ vựng và ngữ pháp, các dạng bài tập, xếp trình độ, ôn tập, sổ từ và sổ lỗi, chi tiết từ và Hán tự, thi thử, trợ lý AI, video, thông báo, cài đặt tài khoản, luyện phát âm, trạng thái "Dùng trên app" cho viết tay và OCR | ⬜ | design-coverage §3; web cần bản 1440 và 1024px; quyết định 19/10: phát âm có trên web, viết tay và OCR chỉ trên app |
@@ -598,25 +598,25 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 
 | # | Bước | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ⬜ | schema ✅; invariant: archive master plan §16.4 |
-| M3.2 | Due queue, review session/event idempotency và concurrency | ⬜ | trigger ownership card→session ✅ |
-| M3.3 | Flashcard và lịch ôn tập UI | ⬜ | `03-dictionary-review-reader/03,04` |
-| M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle, bộ thủ và âm Hán Việt | ⬜ | `WordSense/WordExample` chưa có schema (mục 5); M3.4d cần nguồn có giấy phép |
+| M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ⬜ | schema ✅; invariant: archive master plan §16.4; cải tiến R3 (mục 5.1) |
+| M3.2 | Due queue, review session/event idempotency và concurrency | ⬜ | trigger ownership card→session ✅; cải tiến R4 (mục 5.1) |
+| M3.3 | Flashcard và lịch ôn tập UI | ⬜ | `03-dictionary-review-reader/03,04`; cải tiến R5 (mục 5.1) |
+| M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle, bộ thủ và âm Hán Việt | ⬜ | `WordSense/WordExample` chưa có schema (mục 5); M3.4d cần nguồn có giấy phép; cải tiến R6, R7 (mục 5.1) |
 | M3.5 | Test scheduler correctness, retention, timezone | ⬜ | C-05 |
-| M3.6 | Sổ lỗi sai từ lịch sử attempt bất biến | ⬜ | Khảo sát đối thủ 10/10 |
-| M3.7 | Dạng bài nghe chép chính tả (dictation) | ⬜ | Khảo sát đối thủ 10/10 |
+| M3.6 | Sổ lỗi sai từ lịch sử attempt bất biến | ⬜ | Khảo sát đối thủ 10/10; cải tiến R8 (mục 5.1) |
+| M3.7 | Dạng bài nghe chép chính tả (dictation) | ⬜ | Khảo sát đối thủ 10/10; cải tiến R9 (mục 5.1) |
 | M3.8 | Video YouTube có phụ đề, shadowing, từ vựng theo cấp HSK | ⬜ | Khảo sát đối thủ 10/10; M3.8a backend và admin, M3.8b người học |
 
 ### M4 — Exam Engine Web MVP
 
 | # | Bước | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M4.1 | Admin question/test authoring + publish workflow | ⬜ | schema 14 model + trigger ✅; `06-admin-cms-operations/05` |
-| M4.2 | Start → snapshot → autosave → resume → timer → submit idempotency | ⬜ | `ExamAttemptSnapshot`/`Event` bất biến ✅ |
-| M4.3 | Server scoring, result/skill breakdown, explanation policy | ⬜ | |
+| M4.1 | Admin question/test authoring + publish workflow | ⬜ | schema 14 model + trigger ✅; `06-admin-cms-operations/05`; cải tiến R10 (mục 5.1) |
+| M4.2 | Start → snapshot → autosave → resume → timer → submit idempotency | ⬜ | `ExamAttemptSnapshot`/`Event` bất biến ✅; cải tiến R11, R12 (mục 5.1) |
+| M4.3 | Server scoring, result/skill breakdown, explanation policy | ⬜ | cải tiến R11, R13 (mục 5.1) |
 | M4.4 | Concurrency/capacity test theo workload được duyệt | ⬜ | |
-| M4.5 | Learner exam/review/result UI | ⬜ | `04-exam-pronunciation-profile/01–04` |
-| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | Chỉ tiêu 🔵 #12; nhập qua M4.1 và M5.4; HSK7–9 chờ quyết định #1 |
+| M4.5 | Learner exam/review/result UI | ⬜ | `04-exam-pronunciation-profile/01–04`; cải tiến R14 (mục 5.1) |
+| M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | Chỉ tiêu 🔵 #12; nhập qua M4.1 và M5.4; HSK7–9 chờ quyết định #1; cải tiến R10 (mục 5.1) |
 
 Đặc tả chi tiết: archive master plan §17. Exit: snapshot không đổi khi content sửa ⬜ ·
 submit/retry không double result ⬜ · SLO staging ⬜.
@@ -643,7 +643,7 @@ Còn thiếu:
 | M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ⬜ | `06-admin-cms-operations/06` |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | `06-admin-cms-operations/01`; ADR-008 §10 |
-| M5.6 | Support ticket / content report taxonomy, API, queue, SLA | ⬜ | |
+| M5.6 | Support ticket / content report taxonomy, API, queue, SLA | ⬜ | cải tiến R22 (mục 5.1) |
 | M5.7 | Trust & Safety: policy, report/action/appeal/audit, least-privilege roles | ⬜ | |
 | M5.8 | Notification preference và consent (nếu vào beta) | ⬜ | |
 
@@ -671,19 +671,19 @@ Checklist go-live và rollback chi tiết: archive master plan §27, §34, §35.
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | M7.7 | Mobile React Native + Expo tại `mobile/` | ⬜ | ADR-008 §1 đã chốt; bước cha của M7.7a–d |
-| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web |
+| M7.7a | Khởi tạo `mobile/` Expo + Expo Router; root npm workspaces + `packages/contracts/` sinh từ `openapi.json`; đăng ký, đăng nhập, token trong SecureStore, refresh xoay vòng | ⬜ | tuần 10; gọi backend trực tiếp, không qua BFF web; cải tiến R19 (mục 5.1) |
 | M7.7b | Onboarding, trang chủ, lộ trình, bài học, activity player 4 dạng | ⬜ | tuần 10; dùng lại API M2.B*, M2.5 |
 | M7.7c | Từ điển, ôn tập flashcard, thi thử, hồ sơ | ⬜ | tuần 11; cần M2.6, GĐ6, GĐ7 |
 | M7.7d | CI mobile (lint, typecheck, test) và bản build Android/iOS cài được cho demo | ⬜ | tuần 11 |
-| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8 |
+| M7.3 | Thông báo đẩy nhắc lịch học qua Expo Notifications, gắn job M2.B7 | ⬜ | tuần 11; dùng tuỳ chọn reminder đã lưu ở UserGoal thay điều kiện M5.8; cải tiến R20 (mục 5.1) |
 | M7.4 | AI/RAG: NestJS service riêng, pgvector, provider adapter ≥ 2 | ⬜ | bước cha của M7.4a–d |
 | M7.4a | Duyệt ADR-008 §6; chốt nhà cung cấp (#6); bộ câu hỏi đánh giá tiếng Trung/Việt; ngân sách và hạn mức | ⬜ | trước tuần 12; chỉ API chính thức có điều khoản xử lý dữ liệu, không dùng proxy gom tài khoản |
 | M7.4b | `ai/services/rag-api` + PostgreSQL pgvector riêng; ingest từ điển và nội dung đã publish | ⬜ | tuần 12; thêm pgvector vào `docker-compose.yml` |
-| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12 |
-| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02` |
-| M7.2 | Luyện phát âm: ghi âm trên app và web, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05` |
+| M7.4c | Truy xuất và trả lời có trích nguồn hoặc từ chối trung thực; hạn mức theo người dùng; kill switch | ⬜ | tuần 12; cải tiến R16 (mục 5.1) |
+| M7.4d | Gateway backend `POST /api/v1/ai/chat` (JWT, rate limit) + UI chat web và mobile | ⬜ | tuần 12; mockup `05-ai-hanzi-support/01,02`; cải tiến R17 (mục 5.1) |
+| M7.2 | Luyện phát âm: ghi âm trên app và web, chấm âm tiết và thanh điệu qua dịch vụ đánh giá phát âm, consent và xoá bản ghi | ⬜ | tuần 13; mở `speaking_repeat` (đang 422); kết quả tô màu từng chữ và thanh điệu sai (khảo sát 10/10, SuperChinese); mockup `04-exam-pronunciation-profile/05`; cải tiến R15 (mục 5.1) |
 | M7.5 | Hán tự nâng cao: viết tay và OCR | ⬜ | bước cha của M7.5a–b |
-| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03` |
+| M7.5a | Thứ tự nét, luyện viết, nhận dạng chữ viết tay trên thiết bị (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; dữ liệu nét phải kiểm license; mockup `05-ai-hanzi-support/03`; cải tiến R18 (mục 5.1) |
 | M7.5b | Tra từ bằng camera: OCR chữ Hán trên thiết bị, chạm để tra từ điển (chỉ app; web hiện "Dùng trên app") | ⬜ | tuần 13; mockup `05-ai-hanzi-support/04` |
 | M7.E | Demo trên bản build: app đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | |
 
@@ -703,8 +703,8 @@ Checklist go-live và rollback chi tiết: archive master plan §27, §34, §35.
 | # | Hạng mục | Trạng thái | Điều kiện bắt đầu |
 | --- | --- | --- | --- |
 | M7.1 | Interactive reader, materials | ⬜ | Web MVP outcome; mockup `03-dictionary-review-reader/05,06` |
-| M7.6 | Subscription/payment | ⬜ | Business model, legal/tax |
-| M7.8 | Community | ⬜ | Moderation |
+| M7.6 | Subscription/payment | ⬜ | Business model, legal/tax; cải tiến R23 (mục 5.1) |
+| M7.8 | Community | ⬜ | Moderation; cải tiến R24 (mục 5.1) |
 
 ## 5. Schema backlog
 
@@ -718,6 +718,63 @@ Hardening dữ liệu: inventory SQL-only object + drift guard (C-07), dọn ind
 timestamptz (C-05), partition/retention cho bảng event, cập nhật data dictionary và ERD
 cho migration 16–19, đóng băng schema domain chưa có runtime (Exam, SRS, privacy) tới
 khi vertical slice bắt đầu.
+
+### 5.1 Acceptance bổ sung từ khảo sát đối thủ (23/10/2026)
+
+Nguồn: khảo sát dịch ngược 8 app/web (Hanzii web và app, Baolingo, SuperChinese, Migii, Speak Chinese,
+HelloChinese), báo cáo local `reverse/_report-cai-tien-tong-hop.md` (gitignored, chỉ tham khảo, không
+sao chép mã, dữ liệu hay văn bản). Mockup và quyết định PO thắng mọi đề xuất dưới đây. Đây là tiêu chí
+nghiệm thu thêm cho task đã có, không phải task mới; không tính vào tổng mục 1.1.
+
+| Mã | Task | Acceptance bổ sung | Vì sao (đối thủ) | Ưu tiên |
+| --- | --- | --- | --- | --- |
+| R1 | M2.3a | Server giữ trạng thái placement; client chỉ gửi `{attemptId, questionId, answer, idempotencyKey}`; server chấm và tự quyết kết thúc và cấp; không trả đáp án hay đúng/sai trước khi nộp câu. Bậc thang tối đa 20 câu, dừng sớm khi đổi chiều hai lần quanh một cấp. `detailSnapshot` lưu chuỗi câu, `finishReason`, cờ kết quả tạm/đủ tin cậy, ước lượng từ vựng và ngữ pháp; map ra một Level (HSK7_9 giữ band 7/8/9). Không tự ghi đè `targetLevel`/`LearningPlan` (#13) | Hanzii web gửi cờ đáp án xuống client, SuperChinese cho client tự gửi `finish`/level; Hanzii app có quy tắc CAT rõ nhất | P0 |
+| R2 | M2.3b | Kết quả theo `ui_reference/mobile/placement-result.html` (radar có `<desc>` liệt kê điểm cho screen reader); nhãn "kết quả tạm"/"đủ tin cậy"; nút xác nhận đặt trình độ; "Làm sau" | Hanzii, SuperChinese: người học phải bấm xác nhận | P1 |
+| R3 | M3.1 | Test vectors theo archive master plan §16.4–16.6 (§16.2 Redis/BullMQ đã bị ADR-008 thay) cho bước đầu từng grade: again lặp step đầu, hard khác good, good sang step kế, easy tốt nghiệp; floor `easeFactor` 1.3 theo SM-2; ôn trễ tính theo thời gian thực `lastReviewedAt → now`. Cùng migration: thêm `relearning` vào `ReviewCardState`, `ReviewEvent.source` (hiện chỉ `flashcard`). Cột FSRS chờ #14. Không lấy thông số từ đối thủ | Baolingo để hard = good ở bước đầu; HelloChinese kẹp eFactor ≥ 2.5 nên từ khó không rút ngắn được khoảng ôn | P0 |
+| R4 | M3.2 | Submit review trả `nextDueAt`/`nextState`; hàng đợi đến hạn trả preview khoảng ôn cho cả 4 grade, client không tự tính. POST ngay mỗi lần chấm với `idempotencyKey` sinh ở client, retry khi lỗi mạng; nếu gom lô thì flush bằng `sendBeacon` lúc `pagehide`. Hạn phiên và con trỏ resume lưu trong `ReviewSession.summary`. Không UPDATE/DELETE `ReviewEvent`; hoàn tác (nếu #14 duyệt) chỉ bằng event bù | Hanzii web đệm review trong localStorage, mất khi đóng tab; SuperChinese có phiên hết hạn và resume | P0 |
+| R5 | M3.3 | 4 nút có nhãn kèm khoảng ôn lấy từ server, phím 1–4, vuốt chỉ là lối tắt, thanh nút dính đáy ở 390px, bộ đếm x/N, trạng thái trống có lối về Lộ trình/Tra từ. Nhãn mức thuộc Yếu/Đang củng cố/Quen/Thuộc và "Chưa đủ dữ liệu" suy từ state/interval/lapses, không thêm cột, không hiện phần trăm giả. Lịch ôn: số đến hạn hôm nay + phân bố 3/7/14 ngày theo timezone. Mockup `flashcards.html`, `review-calendar.html`, `review-complete.html` thắng (mockup không có nút hoàn tác) | Baolingo 4 nút + phím 1–4; SuperChinese có trạng thái "chưa đủ dữ liệu" | P0 |
+| R6 | M3.4a, M3.4b | Xếp hạng tra từ: khớp chính xác > tiền tố > trigram; nhận pinyin có dấu thanh hoặc số (dùng chung normalizer R9); badge Level, HSK7_9 kèm band; dữ liệu ít đổi (bộ thủ, bảng Hán Việt) phục vụ tĩnh có version. Không gửi nét viết tay tới endpoint bên thứ ba | Hanzii web tra theo tab loại, gửi nét viết tay tới endpoint Google không chính thức | P1 |
+| R7 | M3.4d | Trường âm Hán Việt theo chữ (chữ đa âm có nhiều âm) và bộ thủ gắn chữ; nguồn có giấy phép (#2) | Hanzii web và app coi âm Hán Việt cạnh pinyin là lõi cho người Việt | P1 |
+| R8 | M3.6 | Theo mockup `mistakes.html`, `mistakes-review.html`; "đã sửa" suy từ attempt đúng sau đó; không xoá attempt sai, không thêm bảng | Migii lấy câu sai từ lịch sử | P1 |
+| R9 | M3.7 | Normalizer pinyin khoan dung: dấu thanh và số, v = ü, bỏ `'` và khoảng trắng, chấp nhận biến điệu 一/不 và 3-3; trả mức "đúng âm, sai thanh" (vẫn không trả đáp án, Q50). Hiện `normalize-pinyin.ts` chỉ bỏ số thanh | HelloChinese, Hanzii app chấm gõ pinyin 3 mức | P1 |
+| R10 | M4.1, M4.6 | Chốt bộ `Tag` slug dạng câu HSK 3.0 theo đề mẫu chính thức trước khi soạn ≥ 300 câu/cấp, kèm test đồng bộ nhãn tiếng Việt; không trộn dạng HSK 2.0 (#15) | Migii clone dạng 3.0 từ 2.0; Baolingo gắn nhãn 3.0 cho đề 2.0 | P1 |
+| R11 | M4.2a, M4.3 | Serializer đề và câu kế tiếp loại `correctAnswer`/`explanation`; submit chỉ nhận đáp án thô, bỏ qua mọi score/result/point từ client; giải thích chỉ trả sau submit, đọc từ snapshot. Test contract khẳng định payload lúc đang làm bài không chứa khoá đáp án | 7/8 đối thủ gửi đáp án trong payload đề hoặc tin điểm client; "mã hoá" bằng khoá nằm ở client không phải bảo mật | P0 |
+| R12 | M4.2b | Attempt và đồng hồ chỉ bắt đầu khi bấm "Bắt đầu" ở `exam-intro.html` (MB-10); hết giờ tính từ `startedAt/expiresAt` theo giờ server, thời gian client gửi chỉ dùng cho analytics; autosave idempotent từng câu, thêm lô khi reconnect/resume; tải trước audio cả đề; banner mất mạng | Baolingo autosave từng câu và theo lô; Migii màn chuẩn bị có thử loa | P1 |
+| R13 | M4.3 | `ExamAnswer` thêm trạng thái chấm `pending/grading/graded/failed` cho câu viết/nói (migration mới); Result tách điểm tạm và điểm cuối; pass/fail tính ở server; weak areas theo Tag dạng câu (R10); kết quả AI theo descriptor của rubric | Hanzii app cờ `process`; Migii trả kết quả HSKK/viết bất đồng bộ | P1 |
+| R14 | M4.5 | Điểm theo kỹ năng và dạng câu, thời gian theo phần, "tổng X/Y, điểm đỗ Z"; đúng/sai bằng icon kèm chữ, không chỉ màu; giải thích câu sai không paywall; trạng thái "đang chấm"; nộp sớm có xác nhận; không quảng cáo. Mockup `exam-result.html`, `exam-review.html`, `exam-history.html` | Hanzii web donut + thanh theo phần + lưới câu; Hanzii app đặt quảng cáo trên màn kết quả | P1 |
+| R15 | M7.2 | `detailJson` = điểm tổng + accuracy/fluency/completeness (+ tone) + mảng âm tiết `{initial, final, tone, expectedTone, score, issue, fix}`; qua khi tổng ≥ ngưỡng và mọi ký tự trọng tâm ≥ ngưỡng; ngưỡng là config server, khoảng nửa mở, test biên; cho "Tiếp tục" sau 3 lần. Audio đi browser/app → backend → vendor, key vendor chỉ ở server. Bản ghi mặc định private, signed URL ngắn hạn, không userId trong tên file, không feed/xếp hạng giọng nói, xoá theo lifecycle; xin quyền micro theo `permissions.html` (MB-15) trước lần ghi đầu. Câu rỗng hoặc không nhận dạng được = "thử lại", không được điểm | SuperChinese giải mã key STT trên máy; Baolingo công khai audio người học và cho câu rỗng 100 điểm; Hanzii web hard-code ngưỡng ở client | P1 |
+| R16 | M7.4c | Quota là transaction PostgreSQL theo user, feature và ngày (timezone hồ sơ): trừ trước khi gọi vendor, hoàn khi vendor lỗi, idempotent; `GET /ai/usage` trả `used/limit/remaining/resetsAt`; giới hạn độ dài input; kill switch theo feature. Validator bài viết (số chữ Hán, từ bắt buộc, lặp) chạy trước LLM, sai thì không trừ quota. Prompt và rubric chỉ nằm trong `ai/services/rag-api`, kết quả lưu `rubricVersion`. Không Redis (ADR-008 §2) | Hanzii web, HelloChinese, Speak Chinese đếm quota ở client; Speak Chinese để key và rubric trong app | P1 |
+| R17 | M7.4d | SSE trên `POST /api/v1/ai/chat` qua BFF; request mang `clientEventId`; stream có pha; phân trang tin nhắn bằng cursor | Hanzii web dùng WebSocket mang token trong frame | P2 |
+| R18 | M7.5a | Dữ liệu nét chữ pin version, kiểm license, tự host qua media pipeline | Speak Chinese tải dữ liệu nét `@latest` từ CDN | P2 |
+| R19 | M7.7a | Gate mobile: chỉ HTTPS, không ngoại lệ cleartext/ATS, không log payload xác thực, không quyền AD_ID hay SDK session replay, không secret trong app. Khi có offline: chỉ upload event log có `idempotencyKey`, server tính lại SRS/streak/progress, pull theo `since` + tombstone, không last-write-wins | HelloChinese đăng nhập và biên lai IAP qua `http://`, sync last-write-wins; Speak Chinese bật AD_ID + Clarity | P1 khi bắt đầu |
+| R20 | M2.B7, M7.3 | Job nhắc chạy theo `reminderTime` + timezone, bỏ qua ngày đã có sự kiện học, ưu tiên ngày sắp đứt chuỗi; xin quyền push theo `permissions.html` | SuperChinese, Migii nhắc theo giờ và khi sắp mất chuỗi | P2 |
+| R21 | M2.9a | Script ngoài sinh file import bài tập nháp (mcq, arrange_sentence, listening_choice) từ Word/LessonWord; distractor cùng Level, thiếu ≥ 4 mục thì báo lỗi; đi qua revision → review → publish đã có, không thêm endpoint | Speak Chinese sinh 6 dạng bài từ dữ liệu bài; Hanzii app kiểm đủ 4 mục mới sinh trắc nghiệm | P1 |
+| R22 | M5.6 | Báo lỗi nội dung một bảng chung `targetType + targetId + contentVersion + lý do`, rate limit theo user, chống báo trùng, vào hàng đợi CMS; thống kê % đúng theo câu để phát hiện đáp án sai. Bật nút ở learner cần PO mở lại Q67 | Cả 8 đối thủ có báo lỗi nội dung | P2 |
+| R23 | M7.6 | Client chỉ gửi `sku`; entitlement chỉ cấp qua webhook/IPN có verify chữ ký, idempotent; đơn lưu snapshot giá; poll có timeout; không countdown giả, gacha/vòng quay, quảng cáo trong luồng học | Hanzii web cho client gửi `percent`/`sandbox`, kích hoạt qua query redirect; Migii duyệt ảnh chuyển khoản bằng tay | P2 |
+| R24 | M7.8 | DTO công khai chỉ displayName/avatar/level; không lộ trạng thái premium, hạn hay online; bảng xếp hạng opt-in | Hanzii web lộ `is_premium`, `premium_expired`, `last_online_at` | P2 |
+
+### 5.2 Backlog nhỏ từ khảo sát đối thủ (chưa thành task)
+
+Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tính vào tổng.
+
+- Kẹp `durationSeconds` của attempt theo khoảng start → submit server đo; phút học hôm nay (Q13) không lấy giá trị client vượt khoảng đó.
+- Liệt kê phiên đăng nhập và đăng xuất thiết bị khác (`UserSession` đã có `deviceId/userAgent/lastSeenAt`), mã lỗi `session_revoked`; chưa giới hạn số thiết bị (#16).
+- Header `Retry-After` cho 429 của `CustomThrottlerGuard` (hiện chỉ media ingestion có).
+- Mật khẩu mới tối thiểu 8 ký tự (đang `@MinLength(6)`), login giữ 6 (#16).
+- Test integrity đếm số từ theo Level so với chuẩn chính thức; không seed từ danh sách bên thứ ba.
+- Sau M3.3: phiên ôn thích ứng, chọn dạng câu theo độ quá hạn.
+- `streakMax` tính từ ngày học sẵn có; freeze chỉ khi có ADR.
+- Dạng bài ngữ pháp "sắp xếp từ thành câu", "nối nửa câu" qua validator/scorer chung; player có fallback "chưa hỗ trợ" cho loại lạ.
+- Attempt tham chiếu revision/version của bài để kết quả bất biến khi CMS sửa.
+- M7.1: tách từ ở server lúc publish, lưu token trong content Json; không tải từ điển/jieba về browser.
+
+### 5.3 Invariant cắt ngang rút từ phản mẫu của đối thủ
+
+- Đáp án, điểm, thưởng, quota, chuỗi ngày học và quyết định kết thúc chỉ tính ở server; không nhận score/correct/XP/finish từ client.
+- Không secret, không ký request, không "mã hoá" payload ở client; bảo vệ bằng auth, rate limit PostgreSQL và không trả field thừa (ADR-003, ADR-008).
+- Bản ghi giọng nói và nội dung người học mặc định private; không feed công khai.
+- Không dark pattern: countdown giả, gacha/vòng quay, chặn việc học bằng tài nguyên ảo, quảng cáo trong luồng học.
+- Không trộn chuẩn HSK 2.0 và 3.0; HSK7_9 là một Level.
 
 ## 6. Quyết định mở
 
@@ -735,6 +792,10 @@ khi vertical slice bắt đầu.
 | 10 | Chấp nhận ADR-008 (stack còn lại) | Product Owner + Tech Lead | 🟡 §1, §2, §9 đã chốt (§2, §9: Product Owner 29/09/2026); còn lại 🔵 |
 | 11 | Đóng băng harness release-evidence theo ADR-008 §8 và review A-04 | Tech Lead | 🔵 |
 | 12 | Chỉ tiêu nội dung trước beta: số từ có nghĩa tiếng Việt (M1.2b), số bài học và bài tập mỗi cấp (M2.9), số câu hỏi và đề mỗi cấp (M4.6); nguồn và license cho audio từ vựng | Product Owner + Content | 🔵 đề xuất 14/09 trong mục 1.2 |
+| 13 | Placement có được tự đổi `targetLevel` không hay luôn cần người học xác nhận; có dùng nhãn "kết quả tạm" (R1, R2) | Product Owner | 🔵 đề xuất: luôn xác nhận |
+| 14 | SRS: chính sách grade bước đầu (R3); thêm cột FSRS ngay migration M3.1 hay chỉ SM-2, có chấp nhận dependency `ts-fsrs`; exercise attempt có sinh thẻ/ReviewEvent không (Q62), tra từ có tính lần ôn (đề xuất: không); nút hoàn tác lần chấm (mockup không có) | Product Owner + Tech Lead | 🔵 chặn phần tương ứng của M3.1–M3.3 |
+| 15 | Bộ Tag dạng câu HSK 3.0 do ai chốt, dựa trên đề mẫu chính thức nào (R10); có báo trong app khi câu viết/nói chấm xong không (Q15 đang chỉ toast) | Curriculum + Product Owner | 🔵 cần trước M4.6 |
+| 16 | Học và tài khoản: ngày học bắt đầu 02:00–04:00 thay 00:00 (đổi Q13); nút "Không thể nghe/nói lúc này" và topic có tính hoàn thành (Q18, Q58); câu sai xếp lại cuối bài (Q50); `daysOfWeek` cho nhắc học; mật khẩu tối thiểu 8; màn quản lý thiết bị | Product Owner | 🔵 |
 
 ## 7. Việc cần làm ngay (2 tuần tới)
 
@@ -746,6 +807,7 @@ khi vertical slice bắt đầu.
 6. M2.9a: dựng pipeline seed nội dung có agent hỗ trợ và pilot 5 bài HSK1, chạy song song M2.4b–M2.5.
 7. M7.4a: chốt quyết định #6 (nhà cung cấp AI) và duyệt ADR-008 §6 trước tuần 12 của đồ án.
 8. M2.UXa–M2.UXd: bổ sung các màn thiết kế còn thiếu theo [product/design-coverage.md](./product/design-coverage.md), thứ tự Mobile P1 → Web P1 → Admin P1 → trạng thái chung.
+9. Ngoài PLAN: thu hồi phiên tài khoản Hanzii đã dùng để capture; `reverse/` (local, gitignored) chứa token phiên và thông tin cá nhân thật, không đưa capture hay ảnh chụp vào docs, PR hay prompt gửi ra ngoài.
 
 ## 8. Nhật ký cập nhật
 
@@ -848,3 +910,4 @@ khi vertical slice bắt đầu.
 | 21/10/2026 | GĐ8: M5.2b 🟡 đang làm — danh sách tải lên cần xử lý + nút Dọn dẹp + nghe/xem trước media. Q106–Q107 chép vào `docs/product/learner-ui-decisions.md`. Quyết định Tech Lead: TL-46 tập "có vấn đề" = `cleanup_required` hoặc `processing` quá 15 phút (một hằng `Prisma.sql` dùng chung với metric `hsk_media_stuck_processing`); TL-47 `GET /admin/cms/media/ingestions` admin-only, phân trang, no-store, không gắn cờ ingestion, không trả cột nhạy cảm, `cleanupAvailable` so provider hiện tại; TL-48 seed bản ghi kẹt bằng `SET LOCAL TIME ZONE`; TL-49 allowlist backend-client; TL-50 BFF `POST /api/admin/media/ingestions/[id]/cleanup` (Origin→id→cookie→backend); TL-51 trang `/admin/media/ingestions` + link từ `/admin/media`; TL-52 nút Dọn dẹp không xác nhận, kết quả vào vùng live, làm mới danh sách; TL-53 không đếm ngược; TL-54 BFF admin access/content dùng lại handler learner; TL-55 xem trước ảnh/audio chỉ khi media sẵn sàng, không tự phát; TL-56 log env Playwright; TL-57 admin phụ cho upload ảnh; TL-58 seed lượt tải bằng SQL trong spec; TL-59 không assert 0 console error ở chi tiết ảnh lượt khác; TL-60 docs api.md. SKILL §6a áp dụng cho M5.2b. Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
 | 21/10/2026 | GĐ8: M5.2b 🟡 chờ review — `GET /admin/cms/media/ingestions` (hằng `MEDIA_INGESTION_STUCK_PROCESSING_SQL` dùng chung với metric `hsk_media_stuck_processing`, khai báo trước `media/:mediaId`, không gắn cờ ingestion); BFF `POST /api/admin/media/ingestions/[id]/cleanup` và `GET /api/admin/media/[id]/access|content` (dùng lại handler learner qua `sessionCookieName` + `contentRoutePrefix`); trang `/admin/media/ingestions` + link từ Thư viện media; thẻ "Xem trước" ở chi tiết media (ảnh JPG/PNG, audio MP3/WAV bấm "Nghe thử", hết hạn theo `expiresAt`); admin phụ `admin.media.frontend@example.test` trong seed Playwright. Seed bản ghi kẹt bằng `SET LOCAL TIME ZONE` chạy được trên DB disposable (e2e I8). Đếm lại theo quy tắc 0.6: GĐ8 10/17, tổng 103/191. |
 | 21/10/2026 | GĐ8: M5.2b ✅ đã đóng (`92731cb`, run `39572342680`) — danh sách tải lên cần xử lý + Dọn dẹp + nghe/xem trước media (Q106, Q107; TL-46…TL-60): `GET /admin/cms/media/ingestions` (cleanup_required + processing kẹt >15 phút, hằng `MEDIA_INGESTION_STUCK_PROCESSING_SQL` dùng chung metric), BFF cleanup và admin access/content dùng lại handler learner, trang `/admin/media/ingestions`, thẻ Xem trước. Vòng sửa 1: V1 trang vượt không hiện phân trang, V2 focus chuyển sang `<audio>` có nhãn, V3 khung ảnh tối thiểu + chữ đang tải, N1 hết hạn không cướp focus, N2 test focus-return thật, N3 I6 chờ hydrate. Nợ test: I8/429 phụ thuộc DB sạch và khoảng cách >60 s giữa các lượt chạy; fileSize chi tiết "1.6 KB" lệch `formatMediaBytes`. Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. Đếm lại theo quy tắc 0.6: GĐ8 11/17, tổng 104/191. |
+| 23/10/2026 | Khảo sát đối thủ: thêm mục 5.1 (24 acceptance R1–R24 gắn task đã có, đánh dấu "cải tiến Rn" ở ghi chú task), 5.2 backlog nhỏ, 5.3 invariant cắt ngang; quyết định mở #13–#16; mục 7 thêm việc thu hồi phiên capture. Không thêm task, tổng giữ 104 / 191. Nguồn: báo cáo local `reverse/_report-cai-tien-tong-hop.md`. |
