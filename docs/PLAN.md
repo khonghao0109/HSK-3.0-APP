@@ -71,13 +71,13 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 39 / 53 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 0 / 8 | 4–6 tuần | ⬜ |
-| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 11 / 17 | 4–6 tuần | 🟡 read console |
+| GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 12 / 17 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
 | GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **104 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **105 / 191 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -337,7 +337,7 @@ Vào: GĐ2 xong H.8, H.10. Ra: 100% mutation nhạy cảm có audit; support que
 | M5.1b2 | API nguồn dữ liệu + trang nhập bài tập JSON + sidebar "Nhập dữ liệu" | ✅ | Q97–Q101; 06/04; 21/10: ✅ đã đóng (`d468a48`, run `39540541415`) |
 | M5.2a | Tải media 1 tệp + lọc nguồn đủ giấy phép + cờ bật/tắt + nút "Tải lên" | ✅ | Q102–Q105; 06/05; 21/10: ✅ đã đóng (`ac3bf9e`, run `39547048119`) |
 | M5.2b | Danh sách ingestion cần xử lý + dọn dẹp (reconciliation) + nghe/xem trước media | ✅ | Q106, Q107; 21/10: ✅ đã đóng (`92731cb`, run `39572342680`) |
-| M5.3 | User lifecycle admin: role, khoá/mở, audit UX | 🟡 | 06/06; Q108–Q111, TL-61…TL-75; 23/10: 🟡 đang làm |
+| M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ✅ | 06/06; Q108–Q111, TL-61…TL-76; 23/10: ✅ đã đóng (`f4ec2b3`, run `39929790726`) |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | 06/01; ADR-008 §10 |
 | M5.6 | Support ticket / content report: taxonomy, API, queue, SLA | ⬜ | cải tiến R22 (mục 5.1) |
@@ -415,7 +415,7 @@ Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
 | M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 8 |
 | M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
-| M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 6 / 13 |
+| M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 7 / 13 |
 | M7 Đồ án: Mobile, AI, nhận diện | App đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | 0 / 5 |
 | TN Đồ án: Deploy demo và bảo vệ | Web và app chạy trên bản deploy, bảo vệ 17/01/2027 | ⬜ | 0 / 5 |
 | M6 Production foundation + Beta (sau bảo vệ) | Promote, quan sát, rollback, phục hồi | ⬜ | 0 / 9 |
@@ -640,7 +640,7 @@ Còn thiếu:
 | --- | --- | --- | --- |
 | M5.1 | Mutation UI CMS: tạo/sửa/review/publish/import lesson, topic, exercise | ✅ | M5.1a, M5.1b1, M5.1b2 xong; Q89–Q91, Q95, Q96; `06-admin-cms-operations/02,03,04` |
 | M5.2 | Upload media UI + trạng thái processing + reconciliation | ✅ | tách M5.2a/M5.2b; cả hai đã đóng (`ac3bf9e`, `92731cb`) |
-| M5.3 | User lifecycle admin: role, khoá/mở, audit UX | 🟡 | `06-admin-cms-operations/06`; 23/10: 🟡 đang làm (Pha A backend) |
+| M5.3 | User lifecycle admin: role, khoá/mở, audit UX | ✅ | `06-admin-cms-operations/06`; 23/10: ✅ đã đóng (`f4ec2b3`, run `39929790726`) |
 | M5.4 | CMS cho Level, Story, Word, Question, Test; generic import; scheduled publish | ⬜ | |
 | M5.5 | Dashboard data-quality/content/product/ops (Metabase) | ⬜ | `06-admin-cms-operations/01`; ADR-008 §10 |
 | M5.6 | Support ticket / content report taxonomy, API, queue, SLA | ⬜ | cải tiến R22 (mục 5.1) |
@@ -912,3 +912,4 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 | 21/10/2026 | GĐ8: M5.2b ✅ đã đóng (`92731cb`, run `39572342680`) — danh sách tải lên cần xử lý + Dọn dẹp + nghe/xem trước media (Q106, Q107; TL-46…TL-60): `GET /admin/cms/media/ingestions` (cleanup_required + processing kẹt >15 phút, hằng `MEDIA_INGESTION_STUCK_PROCESSING_SQL` dùng chung metric), BFF cleanup và admin access/content dùng lại handler learner, trang `/admin/media/ingestions`, thẻ Xem trước. Vòng sửa 1: V1 trang vượt không hiện phân trang, V2 focus chuyển sang `<audio>` có nhãn, V3 khung ảnh tối thiểu + chữ đang tải, N1 hết hạn không cướp focus, N2 test focus-return thật, N3 I6 chờ hydrate. Nợ test: I8/429 phụ thuộc DB sạch và khoảng cách >60 s giữa các lượt chạy; fileSize chi tiết "1.6 KB" lệch `formatMediaBytes`. Rủi ro phát hành: nginx ops chưa có `client_max_body_size`/`proxy_read_timeout` (mặc định 1 MB) → chặn ở M6.9. Đếm lại theo quy tắc 0.6: GĐ8 11/17, tổng 104/191. |
 | 23/10/2026 | Khảo sát đối thủ: thêm mục 5.1 (24 acceptance R1–R24 gắn task đã có, đánh dấu "cải tiến Rn" ở ghi chú task), 5.2 backlog nhỏ, 5.3 invariant cắt ngang; quyết định mở #13–#16; mục 7 thêm việc thu hồi phiên capture. Không thêm task, tổng giữ 104 / 191. Nguồn: báo cáo local `reverse/_report-cai-tien-tong-hop.md`. |
 | 23/10/2026 | GĐ8: mở M5.3 🟡 đang làm — quản lý người dùng cho admin: đổi vai trò, khoá/mở khoá, nhật ký audit (Q108–Q111). Q108 bỏ vai trò Giáo viên, chỉ tab Tất cả / Người học / Quản trị viên, không đổi schema; Q109 khoá vô thời hạn (`suspended`), lý do bắt buộc, thu hồi mọi phiên ngay, chỉ admin mở lại; Q110 không có nút "+ Thêm người dùng", người dùng tự đăng ký; Q111 cột "Trung tâm vận hành (Ops)" để task sau, trang M5.3 chỉ có Người dùng và Nhật ký hoạt động. Quyết định Tech Lead TL-61…TL-75: `GET /admin/users` (admin-only, no-store, phân trang, lọc role/status/q, sort createdAt desc/id desc, không trả field nhạy cảm); `PATCH /admin/users/:id/role` (cấm tự đổi role, cấm hạ admin active cuối cùng, 409 mã máy); `POST /admin/users/:id/suspend` (reason trim 1–500, chỉ active→suspended, thu hồi mọi `UserSession` trong cùng transaction) và `POST /admin/users/:id/unsuspend` (chỉ suspended→active); transaction + `pg_advisory_xact_lock`, test DB đua 2 admin hạ quyền nhau còn đúng 1 admin; audit trong transaction (`user.role_changed`, `user.suspended`, `user.unsuspended`, summary chỉ `{role}`/`{status}`/`{reason}`, correlationId từ requestId); `GET /admin/audit-logs` (admin-only, no-store, lọc targetType/targetId, không lộ IP/UA/summary); `:id` qua `ParsePositiveSafeIntegerPipe`, 404/403/401; BFF 3 route, trang `/admin/users` + khối audit + dialog (focus trap, Esc, focus quay về), e2e 4 project; TL-69 cập nhật `docs/api/api.md`. SKILL §6a áp dụng cho M5.3. Đếm lại theo quy tắc 0.6: GĐ8 11/17, tổng 104/191. |
+| 23/10/2026 | GĐ8: M5.3 ✅ đã đóng (`f4ec2b3`, run `39929790726`) — quản lý người dùng cho admin (Q108–Q111, TL-61…TL-76): 4 endpoint user (`GET /admin/users`, `PATCH /admin/users/:id/role`, `POST /admin/users/:id/suspend`, `POST /admin/users/:id/unsuspend`) + `GET /admin/audit-logs`, admin-only, `no-store`, phân trang/lọc/sort cố định; mutation chạy trong một transaction + `pg_advisory_xact_lock`, TL-76 kiểm lại actor bằng `SELECT … FOR UPDATE` (stale actor → 403, không ghi audit), giữ ít nhất một admin active, khoá thì thu hồi mọi `UserSession` cùng transaction, audit `user.role_changed`/`user.suspended`/`user.unsuspended` chỉ chứa `{role}`/`{status}`/`{reason}` + `roleChange` (TL-67a), không lộ IP/UA; trang `/admin/users` (3 tab Q108, lọc trạng thái/tìm kiếm trên URL, bảng desktop ↔ card mobile, dialog đổi vai trò/khoá/mở khoá có focus/Esc/trả focus, live region, khối "Nhật ký hoạt động (Audit)"); BFF 3 route (Origin→id→cookie→JSON body), allowlist backend-client + PATCH; e2e `admin-users.spec.ts` chạy 4 project. Vòng sửa: R1 (TOCTOU actor — TL-76), R2 (thiếu `<td>` làm bảng vỡ desktop), R3 (test cấu trúc 6 ô + bắt console/pageerror), R4 (email lặp ở cột Người dùng), N1 (bỏ font mono ở email/lần đăng nhập/thời gian audit, email không cắt giữa chữ, vai trò không xuống dòng), N2 (live region rỗng không chiếm chỗ). **Rủi ro tồn:** admin cuối cùng vẫn tự xoá được tài khoản qua luồng xoá tài khoản (`user.service.ts` không kiểm last-admin, không dùng lock `5_300_201`); cần task hardening sau. Đếm lại theo quy tắc 0.6: GĐ8 12/17, tổng 105/191. |
