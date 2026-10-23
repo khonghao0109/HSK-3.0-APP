@@ -227,6 +227,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
     expect(response.body.error.message).toMatch(/published Topic or Story/i);
+    expect(response.body.error.code).toBe('LESSON_NO_PUBLISHED_CHILD');
   });
 
   it('5. publishes only the latest approved ready Lesson revision', async () => {
@@ -340,6 +341,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
     expect(response.body.error.message).toMatch(/latest content revision/i);
+    expect(response.body.error.code).toBe('REVISION_NOT_LATEST');
   });
 
   it('10. serializes concurrent revision creation without lost updates', async () => {
@@ -395,6 +397,7 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
     expect(response.body.error.message).toMatch(/must approve/i);
+    expect(response.body.error.code).toBe('REVIEW_NOT_APPROVED');
   });
 
   it('12. filters draft/deleted child content and never returns exercise answer', async () => {
@@ -604,7 +607,286 @@ describe('CMS Lite Publish Workflow & Lesson Content Readiness V1 E2E', () => {
     });
   });
 
-  it('16. rejects stale admin JWT after suspension and anonymization', async () => {
+  it('16. returns lesson detail topics ordered, without content, with summary latestRevision (B1)', async () => {
+    const detail = await request(app.getHttpServer())
+      .get(`/api/v1/admin/cms/lessons/${lessonId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const topics = detail.body.data.topics as Array<Record<string, unknown>>;
+
+    // Mọi Topic của bài (kể cả archived), orderIndex asc rồi id asc:
+    // topic published (1), hidden draft (2), archived (3).
+    expect(topics.map((topic) => topic.orderIndex)).toEqual([1, 2, 3]);
+    expect(topics.map((topic) => topic.status)).toEqual([
+      'published',
+      'draft',
+      'archived',
+    ]);
+    for (const topic of topics) {
+      expect(topic).not.toHaveProperty('content');
+    }
+
+    // latestRevision tóm tắt: không snapshot/contentHash; reviews tối đa 1
+    // bản mới nhất chỉ gồm decision/reviewerId/createdAt.
+    const summary = topics[0].latestRevision as Record<string, unknown>;
+    expect(summary).toMatchObject({ revision: 1 });
+    expect(Object.keys(summary).sort()).toEqual([
+      'authorId',
+      'createdAt',
+      'id',
+      'reviews',
+      'revision',
+    ]);
+    const reviews = summary.reviews as Array<Record<string, unknown>>;
+    expect(reviews).toHaveLength(1);
+    expect(Object.keys(reviews[0]).sort()).toEqual([
+      'createdAt',
+      'decision',
+      'reviewerId',
+    ]);
+    expect(reviews[0].decision).toBe('approved');
+
+    // Chủ đề draft chưa có đánh giá → reviews rỗng; không có bản sửa → null
+    // (bài này mọi chủ đề đều có revision 1 nên kiểm nhánh rỗng).
+    const draftSummary = topics[1].latestRevision as { reviews: unknown[] };
+    expect(draftSummary.reviews).toEqual([]);
+  });
+
+  it('17. returns machine codes for lesson 409 conflicts and audits reviews (B2+B3)', async () => {
+    // CONTENT_UNIQUE_CONFLICT: slug trùng (Lesson.slug @unique).
+    const duplicate = await request(app.getHttpServer())
+      .post('/api/v1/admin/cms/lessons')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        levelId,
+        ...lessonPayload({ title: 'Duplicate slug lesson', orderIndex: 20 }),
+      })
+      .expect(409);
+    expect(duplicate.body.error.code).toBe('CONTENT_UNIQUE_CONFLICT');
+    expect(duplicate.body.error.message).toBe(
+      'Content conflicts with an existing slug or order.',
+    );
+
+    // LESSON_LEVEL_NOT_PUBLISHED: level tạm chuyển draft (không tạo Level mới
+    // vì code/band bị check constraint chặt và các suite e2e khác upsert chung
+    // DB), khôi phục published ở finally. Publish-readiness đọc trạng thái
+    // level tại thời điểm publish, không phải lúc tạo lesson.
+    await prisma.level.update({
+      where: { id: levelId },
+      data: { status: 'draft' },
+    });
+    try {
+      const draftLesson = await request(app.getHttpServer())
+        .post('/api/v1/admin/cms/lessons')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          levelId,
+          ...lessonPayload({
+            title: 'Draft level lesson',
+            slug: `cms-draft-level-${suffix}`,
+            orderIndex: 21,
+          }),
+        })
+        .expect(201);
+      const draftLessonId = draftLesson.body.data.lesson.id as number;
+      const draftRevisionId = draftLesson.body.data.revision.id as number;
+      await review('lesson', draftLessonId, draftRevisionId, 'approved');
+
+      // Q89/B3: review ghi audit đủ actor, correlation và tóm tắt sau thao tác.
+      const reviewAudit = await prisma.auditLog.findFirstOrThrow({
+        where: { action: 'lesson.reviewed', targetId: String(draftLessonId) },
+        orderBy: { id: 'desc' },
+      });
+      expect(reviewAudit.actorId).toBe(adminId);
+      expect(reviewAudit.correlationId).toBeTruthy();
+      expect(reviewAudit.afterSummary).toMatchObject({
+        entityType: 'lesson',
+        entityId: draftLessonId,
+        revision: 1,
+        status: 'approved',
+      });
+
+      const levelNotPublished = await request(app.getHttpServer())
+        .post(
+          `/api/v1/admin/cms/lessons/${draftLessonId}/revisions/${draftRevisionId}/publish`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(409);
+      expect(levelNotPublished.body.error.code).toBe(
+        'LESSON_LEVEL_NOT_PUBLISHED',
+      );
+      expect(levelNotPublished.body.error.message).toBe(
+        'Lesson requires a published, non-deleted parent level.',
+      );
+    } finally {
+      await prisma.level.update({
+        where: { id: levelId },
+        data: { status: 'published' },
+      });
+    }
+  });
+
+  it('18. returns machine codes for topic 409 conflicts (B2)', async () => {
+    const parent = await request(app.getHttpServer())
+      .post('/api/v1/admin/cms/lessons')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        levelId,
+        ...lessonPayload({
+          title: 'Topic codes parent',
+          slug: `cms-topic-codes-${suffix}`,
+          orderIndex: 22,
+        }),
+      })
+      .expect(201);
+    const parentId = parent.body.data.lesson.id as number;
+
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/admin/cms/topics')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ lessonId: parentId, ...topicPayload({ title: 'Codes topic' }) })
+      .expect(201);
+    const codesTopicId = created.body.data.topic.id as number;
+    const codesRevision1Id = created.body.data.revision.id as number;
+
+    // REVIEW_NOT_APPROVED: publish bản mới nhất chưa được duyệt.
+    const notApproved = await request(app.getHttpServer())
+      .post(
+        `/api/v1/admin/cms/topics/${codesTopicId}/revisions/${codesRevision1Id}/publish`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+    expect(notApproved.body.error.code).toBe('REVIEW_NOT_APPROVED');
+    expect(notApproved.body.error.message).toBe(
+      'The latest review decision must approve this revision.',
+    );
+
+    // REVISION_NOT_LATEST: publish bản sửa cũ sau khi có bản sửa mới hơn.
+    const revision2 = await request(app.getHttpServer())
+      .post(`/api/v1/admin/cms/topics/${codesTopicId}/revisions`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(topicPayload({ title: 'Codes topic v2' }))
+      .expect(201);
+    const codesRevision2Id = revision2.body.data.revision.id as number;
+    const stale = await request(app.getHttpServer())
+      .post(
+        `/api/v1/admin/cms/topics/${codesTopicId}/revisions/${codesRevision1Id}/publish`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+    expect(stale.body.error.code).toBe('REVISION_NOT_LATEST');
+    expect(stale.body.error.message).toBe(
+      'Only the latest content revision can be used for this action.',
+    );
+
+    // CONTENT_ARCHIVED (assertMutableEntity): tạo bản sửa cho topic đã lưu trữ.
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/cms/topics/${codesTopicId}/archive`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(201);
+    const archivedEdit = await request(app.getHttpServer())
+      .post(`/api/v1/admin/cms/topics/${codesTopicId}/revisions`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(topicPayload({ title: 'Codes topic v3' }))
+      .expect(409);
+    expect(archivedEdit.body.error.code).toBe('CONTENT_ARCHIVED');
+    expect(archivedEdit.body.error.message).toBe(
+      'Archived Topic cannot be changed.',
+    );
+
+    // CONTENT_ARCHIVED (assertEntityExists): review topic đã lưu trữ.
+    const archivedReview = await request(app.getHttpServer())
+      .post(
+        `/api/v1/admin/cms/topics/${codesTopicId}/revisions/${codesRevision2Id}/reviews`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ decision: 'approved' })
+      .expect(409);
+    expect(archivedReview.body.error.code).toBe('CONTENT_ARCHIVED');
+    expect(archivedReview.body.error.message).toBe(
+      'Archived content cannot be changed.',
+    );
+  });
+
+  it('18b. handles a topic without revisions, audits topic reviews and rejects an invalid snapshot (R15)', async () => {
+    const parent = await request(app.getHttpServer())
+      .post('/api/v1/admin/cms/lessons')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        levelId,
+        ...lessonPayload({
+          title: 'Null revision parent',
+          slug: `cms-null-revision-${suffix}`,
+          orderIndex: 23,
+        }),
+      })
+      .expect(201);
+    const parentId = parent.body.data.lesson.id as number;
+
+    // Nhánh latestRevision null: topic tạo thẳng bằng prisma, không có bản sửa.
+    const bare = await prisma.topic.create({
+      data: {
+        lessonId: parentId,
+        title: 'Bare topic',
+        type: 'vocabulary',
+        content: [{ type: 'text', value: 'No revision.' }],
+        orderIndex: 1,
+      },
+      select: { id: true },
+    });
+    const lessonDetail = await request(app.getHttpServer())
+      .get(`/api/v1/admin/cms/lessons/${parentId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const bareItem = (
+      lessonDetail.body.data.topics as Array<Record<string, unknown>>
+    ).find((topic) => topic.id === bare.id);
+    expect(bareItem).toMatchObject({ id: bare.id, latestRevision: null });
+    const topicDetail = await request(app.getHttpServer())
+      .get(`/api/v1/admin/cms/topics/${bare.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(topicDetail.body.data.revisions).toEqual([]);
+
+    // CONTENT_REVISION_INVALID: bản sửa có snapshot không hợp lệ (chèn thẳng
+    // bằng prisma vì API luôn tạo snapshot hợp lệ), được duyệt rồi publish.
+    const invalid = await prisma.contentRevision.create({
+      data: {
+        entityType: 'topic',
+        entityId: bare.id,
+        revision: 1,
+        snapshot: { title: 42 },
+        contentHash: 'invalid-snapshot-hash',
+        authorId: adminId,
+      },
+      select: { id: true },
+    });
+    await review('topic', bare.id, invalid.id, 'approved');
+
+    // Audit topic.reviewed đủ actor, correlation và tóm tắt.
+    const reviewAudit = await prisma.auditLog.findFirstOrThrow({
+      where: { action: 'topic.reviewed', targetId: String(bare.id) },
+      orderBy: { id: 'desc' },
+    });
+    expect(reviewAudit.actorId).toBe(adminId);
+    expect(reviewAudit.correlationId).toBeTruthy();
+    expect(reviewAudit.afterSummary).toMatchObject({
+      entityType: 'topic',
+      entityId: bare.id,
+      revision: 1,
+      status: 'approved',
+    });
+
+    const rejected = await request(app.getHttpServer())
+      .post(
+        `/api/v1/admin/cms/topics/${bare.id}/revisions/${invalid.id}/publish`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+    expect(rejected.body.error.code).toBe('CONTENT_REVISION_INVALID');
+  });
+
+  it('19. rejects stale admin JWT after suspension and anonymization', async () => {
     await prisma.user.update({
       where: { id: adminId },
       data: { status: 'suspended' },

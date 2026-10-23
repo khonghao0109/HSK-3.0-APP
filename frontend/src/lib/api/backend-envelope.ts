@@ -8,7 +8,7 @@ export const paginationSchema = z.object({
   totalPages: z.number().int().nonnegative(),
 });
 
-const envelopeMetaSchema = z.object({
+export const envelopeMetaSchema = z.object({
   requestId: z.string().min(1),
   timestamp: z.string().min(1),
 });

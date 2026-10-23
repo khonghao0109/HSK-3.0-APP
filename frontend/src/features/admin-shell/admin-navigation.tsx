@@ -3,68 +3,97 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import type { AdminIconName } from './admin-icon';
 import { AdminIcon } from './admin-icon';
+import { ADMIN_ACTION } from './admin-labels';
 
-function active(pathname: string, prefix: string): boolean {
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+/**
+ * Một mảng items duy nhất cho sidebar desktop và drawer ≤900px (TL-6).
+ * Mục chưa có trang (Q94): không link, không chip, `aria-disabled`, chữ nhạt
+ * đạt AA trên navy-850, "Sắp có" nằm trong tên đọc màn hình và `title`.
+ */
+export type AdminNavItem = {
+  key: string;
+  label: string;
+  icon: AdminIconName;
+  href?: `/admin/${string}`;
+};
+
+export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
+  { key: 'dashboard', label: 'Tổng quan', icon: 'layout-dashboard' },
+  {
+    key: 'content',
+    label: 'Nội dung',
+    icon: 'file-stack',
+    href: '/admin/content',
+  },
+  {
+    key: 'exercises',
+    label: 'Bài tập',
+    icon: 'clipboard-check',
+    href: '/admin/exercises',
+  },
+  {
+    key: 'media',
+    label: 'Thư viện media',
+    icon: 'image',
+    href: '/admin/media',
+  },
+  { key: 'question-bank', label: 'Ngân hàng câu hỏi', icon: 'file-question' },
+  {
+    key: 'import',
+    label: 'Nhập dữ liệu',
+    icon: 'upload',
+    href: '/admin/import',
+  },
+  { key: 'users', label: 'Người dùng', icon: 'users', href: '/admin/users' },
+  { key: 'reports', label: 'Báo cáo', icon: 'bar-chart' },
+  { key: 'ai-ops', label: 'AI Ops', icon: 'cpu' },
+  { key: 'feedback', label: 'Phản hồi', icon: 'message-circle' },
+  { key: 'settings', label: 'Cài đặt hệ thống', icon: 'settings' },
+];
+
+function isCurrent(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminNavigation() {
+export function AdminNavigation({
+  onNavigate,
+}: {
+  /** Drawer ≤900px đóng khi bấm một mục có trang (desktop: no-op vô hại). */
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
-  const items = [
-    { href: '/admin/exercises', label: 'Exercises', icon: 'book' as const },
-    { href: '/admin/media', label: 'Media', icon: 'media' as const },
-  ];
   return (
-    <nav className="side-nav" aria-label="Admin navigation">
-      <p className="side-nav__label">CONTENT OPERATIONS</p>
-      <span className="side-nav__item side-nav__item--disabled">
-        <AdminIcon name="grid" />
-        <span>Overview</span>
-        <small>Soon</small>
-      </span>
-      {items.map((item) => {
-        const current = active(pathname, item.href);
+    <nav className="adm-nav">
+      {ADMIN_NAV_ITEMS.map((item) => {
+        if (!item.href) {
+          return (
+            <span
+              className="adm-nav__item adm-nav__item--soon"
+              aria-disabled="true"
+              title={ADMIN_ACTION.comingSoon}
+              key={item.key}
+            >
+              <AdminIcon name={item.icon} />
+              <span className="adm-nav__label">
+                {item.label}
+                <span className="sr-only">{` (${ADMIN_ACTION.comingSoon})`}</span>
+              </span>
+            </span>
+          );
+        }
+        const current = isCurrent(pathname, item.href);
         return (
           <Link
-            className={`side-nav__item${current ? ' side-nav__item--active' : ''}`}
+            className="adm-nav__item"
             href={item.href}
             aria-current={current ? 'page' : undefined}
-            key={item.href}
+            onClick={onNavigate}
+            key={item.key}
           >
             <AdminIcon name={item.icon} />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-      <span className="side-nav__item side-nav__item--disabled">
-        <AdminIcon name="review" />
-        <span>Review queue</span>
-        <small>Soon</small>
-      </span>
-    </nav>
-  );
-}
-
-export function AdminMobileNavigation() {
-  const pathname = usePathname();
-  const items = [
-    { href: '/admin/exercises', label: 'Exercises', icon: 'book' as const },
-    { href: '/admin/media', label: 'Media', icon: 'media' as const },
-  ];
-  return (
-    <nav className="mobile-module-nav" aria-label="Admin module navigation">
-      {items.map((item) => {
-        const current = active(pathname, item.href);
-        return (
-          <Link
-            className={current ? 'mobile-module-nav__item--active' : undefined}
-            href={item.href}
-            aria-current={current ? 'page' : undefined}
-            key={item.href}
-          >
-            <AdminIcon name={item.icon} />
-            <span>{item.label}</span>
+            <span className="adm-nav__label">{item.label}</span>
           </Link>
         );
       })}

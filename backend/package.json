@@ -52,7 +52,9 @@
     "render:ops:media": "ts-node scripts/operations/render-media-observability.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts",
-    "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts"
+    "test:db:admin-users-concurrency": "ts-node scripts/test/run-admin-users-concurrency.ts",
+    "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts",
+    "analytics:p0": "ts-node scripts/analytics/p0-product-metrics.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",

@@ -46,6 +46,7 @@ export const LOGIN_IP_LIMIT_PER_MINUTE = 10;
 export const REFRESH_IP_LIMIT_PER_MINUTE = 30;
 export const PASSWORD_RESET_REQUEST_IP_LIMIT = 5;
 export const PASSWORD_RESET_CONFIRM_IP_LIMIT = 10;
+export const AUTH_ME_LIMIT_PER_MINUTE = 120;
 
 /**
  * Resolved per request. Backend and browser E2E log in many times from one
@@ -73,6 +74,10 @@ export function passwordResetConfirmIpLimit(): number {
   return process.env.NODE_ENV === 'test'
     ? 1_000
     : PASSWORD_RESET_CONFIRM_IP_LIMIT;
+}
+
+export function authMeLimit(): number {
+  return process.env.NODE_ENV === 'test' ? 1_000 : AUTH_ME_LIMIT_PER_MINUTE;
 }
 
 @Controller('auth')
@@ -124,6 +129,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Get('me')
+  // Every learner page render calls this route; it only verifies the JWT and runs one indexed query.
+  @Throttle({ default: { limit: authMeLimit, ttl: 60_000 } })
   @ApiEnvelope(AuthMeResponseDto)
   getProfile(@Req() req: AuthenticatedRequest): AuthMeResponseDto {
     return {

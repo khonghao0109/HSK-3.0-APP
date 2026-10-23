@@ -286,3 +286,30 @@ describe('LearnerRegisterForm', () => {
     expect(passwordInput).toHaveAttribute('required');
   });
 });
+
+// M2.10c (PO Q81): the web layout of sign-up dàn lại chính khối này bằng CSS,
+// nên số control trong DOM phải bằng bản mobile — không sinh bản thứ hai.
+describe('LearnerRegisterForm — một bản control cho bản web (M2.10c)', () => {
+  it('renders exactly one email input, one password input and one submit button', () => {
+    const { container } = render(<LearnerRegisterForm />);
+    expect(container.querySelectorAll('input')).toHaveLength(2);
+    expect(container.querySelectorAll('input[name="email"]')).toHaveLength(1);
+    expect(container.querySelectorAll('input[name="password"]')).toHaveLength(
+      1,
+    );
+    expect(container.querySelectorAll('button[type="submit"]')).toHaveLength(1);
+    expect(
+      container.querySelectorAll('button[aria-label="Hiện mật khẩu"]'),
+    ).toHaveLength(1);
+  });
+
+  it('links the legal pages to /terms and /privacy (Q80)', () => {
+    render(<LearnerRegisterForm />);
+    const terms = screen.getByRole('link', { name: 'Điều khoản sử dụng' });
+    const privacy = screen.getByRole('link', { name: 'Chính sách bảo mật' });
+    expect(terms).toHaveAttribute('href', '/terms');
+    expect(privacy).toHaveAttribute('href', '/privacy');
+    expect(terms.closest('p')).toHaveClass('auth__terms');
+    expect(privacy.closest('p')).toHaveClass('auth__terms');
+  });
+});

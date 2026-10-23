@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { clientForwardedFor, createBackendClient } from './backend-client';
+import { BackendRequestError } from './api-error';
+import {
+  MEDIA_UPLOAD_BFF_TIMEOUT_MS,
+  clientForwardedFor,
+  createBackendClient,
+} from './backend-client';
 
 describe('server-only backend client', () => {
   it('attaches bearer authorization and a safe request id only server-side', async () => {
@@ -131,6 +136,202 @@ describe('server-only backend client', () => {
     ).rejects.toMatchObject({ kind: 'invalid_request' });
   });
 
+  it('allowlists only the explicit lesson/topic CMS endpoints (M5.1a, F1)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/admin/cms/lessons?page=1&limit=20&search=chao',
+    );
+    await client.request('/api/v1/admin/cms/lessons/41');
+    await client.request('/api/v1/admin/cms/lessons/41/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/revisions/7/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/revisions/7/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/lessons/41/archive', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics', { method: 'POST' });
+    await client.request('/api/v1/admin/cms/topics/9');
+    await client.request('/api/v1/admin/cms/topics/9/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/revisions/3/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/revisions/3/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/topics/9/archive', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(12);
+
+    for (const path of [
+      '/api/v1/admin/cms/lessons/1/../x',
+      '/api/v1/admin/cms/lessons/abc',
+      '/api/v1/admin/cms/lessons/41/revisions/7/reviews/extra',
+      '/api/v1/admin/cms/lessons/41/revisions/abc/publish',
+      '/api/v1/admin/cms/topics/9/archive/extra',
+      '/api/v1/admin/cms/topics?x=1',
+      '/api/v1/admin/cms/lessons/41/archive?x=1',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(12);
+  });
+
+  it('allowlists only the explicit exercise CMS mutation endpoints (M5.1b1, F2)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/admin/cms/exercises?lessonId=7&status=draft&page=1&limit=20',
+    );
+    await client.request('/api/v1/admin/cms/exercises/41');
+    await client.request('/api/v1/admin/cms/exercises', { method: 'POST' });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions/7/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/revisions/7/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercises/41/archive', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
+
+    // Không cho biến thể đường dẫn (exercise-imports mở ở M5.1b2, test riêng).
+    for (const path of [
+      '/api/v1/admin/cms/exercises/41/revisions/7/reviews/extra',
+      '/api/v1/admin/cms/exercises/abc/revisions',
+      '/api/v1/admin/cms/exercises/41/archive?x=1',
+      '/api/v1/admin/cms/exercises/1/../x',
+      '/api/v1/admin/cms/exercises/41/revisions/7',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
+  });
+
+  it('allowlists only the explicit data-source and exercise-import endpoints (M5.1b2, F2)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/admin/cms/data-sources?page=1&limit=100');
+    await client.request('/api/v1/admin/cms/exercise-imports/preview', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/exercise-imports', {
+      method: 'POST',
+      idempotencyKey: 'import-0001',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+
+    for (const path of [
+      // Path lân cận: id, đoạn con, path khác hoặc query ở nơi không cho phép.
+      '/api/v1/admin/cms/exercise-imports/1',
+      '/api/v1/admin/cms/exercise-imports/preview/1',
+      '/api/v1/admin/cms/exercise-imports?x=1',
+      '/api/v1/admin/cms/data-sources/1',
+      '/api/v1/admin/cms/data-source',
+      '/api/v1/admin/cms/exercise-imports/../exercises',
+      '/api/v1/admin/cms/exercises/imports',
+      '/api/v1/admin/exercise-imports',
+    ]) {
+      await expect(
+        client.request(path, { method: 'POST' }),
+      ).rejects.toMatchObject({ kind: 'invalid_request' });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('keeps only the filtered error details of a backend 422 envelope (M5.1b1, F1)', async () => {
+    const longPath = `content.${'x'.repeat(210)}`;
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
+          success: false,
+          error: {
+            code: 'invalid_token_set',
+            message: 'LessonExercise validation failed at answer.tokenIds.',
+            details: {
+              path: 'answer.tokenIds',
+              errors: [
+                { rowNumber: 3, code: 'missing_field', path: 'answer' },
+                { rowNumber: '3', code: 'bad_row', path: 'answer' },
+                { rowNumber: 4, code: 'x'.repeat(65), path: 'answer' },
+                { rowNumber: 5, code: 'ok', path: longPath },
+                { rowNumber: 6, code: 'valid', path: 'content.options[0]' },
+                '{not object}',
+              ],
+              sql: 'SELECT answer FROM LessonExercise',
+              authorId: 7,
+              stack: 'secret stack',
+            },
+          },
+        },
+        { status: 422 },
+      ),
+    );
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    const error = await client
+      .request('/api/v1/admin/cms/exercises', { method: 'POST', body: {} })
+      .catch((thrown: unknown) => thrown as BackendRequestError);
+
+    expect(error).toMatchObject({
+      status: 422,
+      kind: 'validation',
+      code: 'invalid_token_set',
+      details: {
+        path: 'answer.tokenIds',
+        errors: [
+          { rowNumber: 3, code: 'missing_field', path: 'answer' },
+          { rowNumber: 6, code: 'valid', path: 'content.options[0]' },
+        ],
+      },
+    });
+    const serialized = JSON.stringify(error);
+    expect(serialized).not.toContain('SELECT answer');
+    expect(serialized).not.toContain('secret stack');
+    expect(serialized).not.toContain('bad_row');
+  });
+
   it('allowlists auth refresh and logout endpoints, rejecting path variants', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
@@ -160,6 +361,57 @@ describe('server-only backend client', () => {
     await expect(
       client.request('/api/v1/auth/refreshx', { method: 'POST' }),
     ).rejects.toMatchObject({ kind: 'invalid_request' });
+  });
+
+  it('allowlists password reset and email verification, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+    const paths = [
+      '/api/v1/auth/password-reset/request',
+      '/api/v1/auth/password-reset/confirm',
+      '/api/v1/auth/email-verification/request',
+      '/api/v1/auth/email-verification/confirm',
+    ];
+
+    for (const path of paths) {
+      await client.request(path, { method: 'POST', body: {} });
+    }
+    expect(
+      fetchImpl.mock.calls.map(([url]) => new URL(String(url)).pathname),
+    ).toEqual(paths);
+
+    for (const path of paths) {
+      for (const variant of [`${path}?x=1`, `${path}/x`]) {
+        await expect(
+          client.request(variant, { method: 'POST' }),
+        ).rejects.toMatchObject({ kind: 'invalid_request' });
+      }
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(paths.length);
+  });
+
+  it('resolves a 204 response without a body', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await expect(
+      client.request('/api/v1/auth/password-reset/request', {
+        method: 'POST',
+        body: { email: 'a@b.test' },
+      }),
+    ).resolves.toBeNull();
   });
 
   it('allowlists auth register endpoint, rejecting path variants', async () => {
@@ -206,7 +458,8 @@ describe('server-only backend client', () => {
     await client.request('/api/v1/learning-plans', { method: 'POST' });
     await client.request('/api/v1/learning/home');
     await client.request('/api/v1/learning/path');
-    expect(fetchImpl).toHaveBeenCalledTimes(7);
+    await client.request('/api/v1/learning/lessons/12/activity');
+    expect(fetchImpl).toHaveBeenCalledTimes(8);
 
     for (const path of [
       '/api/v1/levels',
@@ -216,6 +469,7 @@ describe('server-only backend client', () => {
       '/api/v1/learning-plans',
       '/api/v1/learning/home',
       '/api/v1/learning/path',
+      '/api/v1/learning/lessons/12/activity',
     ]) {
       await expect(client.request(`${path}/x`)).rejects.toMatchObject({
         kind: 'invalid_request',
@@ -224,5 +478,408 @@ describe('server-only backend client', () => {
         kind: 'invalid_request',
       });
     }
+    for (const path of [
+      '/api/v1/learning/lessons/abc/activity',
+      '/api/v1/learning/lessons//activity',
+      '/api/v1/learning/lessons/12',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+  });
+
+  it('allowlists lesson start and exercise attempts, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/learning/lessons/12/start', {
+      method: 'POST',
+      body: {},
+    });
+    await client.request('/api/v1/learning/exercises/34/attempts', {
+      method: 'POST',
+      body: { answer: { optionId: 'a' } },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    for (const path of [
+      '/api/v1/learning/lessons/-1/start',
+      '/api/v1/learning/lessons/12/start?x=1',
+      '/api/v1/learning/lessons/12/start/',
+      '/api/v1/learning/lessons/../start',
+      '/api/v1/learning/lessons/12/../start',
+      '/api/v1/learning/lessons/abc/start',
+      '/api/v1/learning/exercises/-1/attempts',
+      '/api/v1/learning/exercises/34/attempts?x=1',
+      '/api/v1/learning/exercises/34/attempts/',
+      '/api/v1/learning/exercises/../attempts',
+      '/api/v1/learning/exercises/34/../attempts',
+      '/api/v1/learning/exercises//attempts',
+      '/api/v1/learning/exercises/34',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('allowlists lesson/topic complete and lesson progress, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    for (const path of [
+      '/api/v1/learning/lessons/12/complete',
+      '/api/v1/learning/topics/7/start',
+      '/api/v1/learning/topics/7/complete',
+    ]) {
+      await client.request(path, { method: 'POST', body: {} });
+    }
+    await client.request('/api/v1/progress/lessons/12');
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+
+    for (const path of [
+      '/api/v1/learning/lessons/12/complete?x=1',
+      '/api/v1/learning/lessons/12/complete/',
+      '/api/v1/learning/lessons/../complete',
+      '/api/v1/learning/topics/-1/complete',
+      '/api/v1/learning/topics/7/attempts',
+      '/api/v1/learning/topics/7',
+      '/api/v1/progress/lessons',
+      '/api/v1/progress/lessons/12/x',
+      '/api/v1/progress/lessons/abc',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
+
+  it('sends the idempotency key header only when given', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/learning/lessons/12/start', {
+      method: 'POST',
+      body: {},
+      idempotencyKey: 'lesson-start-12',
+    });
+    await client.request('/api/v1/learning/path');
+
+    const [, first] = fetchImpl.mock.calls[0] ?? [];
+    const [, second] = fetchImpl.mock.calls[1] ?? [];
+    expect(new Headers(first?.headers).get('idempotency-key')).toBe(
+      'lesson-start-12',
+    );
+    expect(new Headers(second?.headers).has('idempotency-key')).toBe(false);
+  });
+  it('allowlists dictionary search, word and save, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      `/api/v1/dictionary?query=${encodeURIComponent('学习')}`,
+      { token: 't' },
+    );
+    await client.request('/api/v1/dictionary/words/12', { token: 't' });
+    await client.request('/api/v1/dictionary/words/12/save', { token: 't' });
+    for (const path of [
+      '/api/v1/dictionary',
+      '/api/v1/dictionary?query=a&x=1',
+      '/api/v1/dictionary/words/abc',
+      '/api/v1/dictionary/words/1/savex',
+      '/api/v1/dictionary/words/1/save?x=1',
+    ]) {
+      await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends DELETE with the token and no body', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/dictionary/words/12/save', {
+      token: 't',
+      method: 'DELETE',
+    });
+
+    const [url, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(String(url)).toBe(
+      'http://backend.example.test/api/v1/dictionary/words/12/save',
+    );
+    expect(init?.method).toBe('DELETE');
+    expect(init?.body).toBeUndefined();
+    const headers = new Headers(init?.headers);
+    expect(headers.get('authorization')).toBe('Bearer t');
+    expect(headers.has('content-type')).toBe(false);
+    expect(headers.has('idempotency-key')).toBe(false);
+  });
+
+  it('allowlists media access and content, rejecting path variants', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/media/7/access', { token: 't' });
+    await client.raw('/api/v1/media/7/content');
+    for (const path of [
+      '/api/v1/media/7/access/x',
+      '/api/v1/media/abc/content',
+      '/api/v1/media/7/content?expires=1',
+      '/api/v1/media/7',
+    ]) {
+      await expect(client.raw(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('raw returns any status unread and sends no token', async () => {
+    const upstream = new Response('nope', { status: 403 });
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(upstream);
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+      requestIdFactory: () => 'request-raw',
+      forwardedFor: async () => '203.0.113.9',
+    });
+
+    const response = await client.raw('/api/v1/media/7/content', {
+      search: new URLSearchParams([
+        ['expires', '1'],
+        ['signature', 'a'.repeat(64)],
+      ]),
+      headers: { range: 'bytes=0-1' },
+    });
+
+    expect(response).toBe(upstream);
+    expect(response.bodyUsed).toBe(false);
+    const [input, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(String(input)).toBe(
+      `http://backend.example.test/api/v1/media/7/content?expires=1&signature=${'a'.repeat(64)}`,
+    );
+    const headers = new Headers(init?.headers);
+    expect(headers.get('range')).toBe('bytes=0-1');
+    expect(headers.get('x-request-id')).toBe('request-raw');
+    expect(headers.get('x-forwarded-for')).toBe('203.0.113.9');
+    expect(headers.has('authorization')).toBe(false);
+    expect(headers.has('cookie')).toBe(false);
+  });
+
+  it('raw times out waiting for headers, not while the body streams', async () => {
+    vi.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      const hanging = vi.fn<typeof fetch>((_input, init) => {
+        signal = init?.signal ?? undefined;
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError')),
+          );
+        });
+      });
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 100,
+        fetchImpl: hanging,
+      });
+      const pending = client.raw('/api/v1/media/7/content');
+      const assertion = expect(pending).rejects.toMatchObject({
+        kind: 'timeout',
+        status: 503,
+      });
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      await assertion;
+
+      let bodySignal: AbortSignal | undefined;
+      const answering = vi.fn<typeof fetch>((_input, init) => {
+        bodySignal = init?.signal ?? undefined;
+        return Promise.resolve(new Response('bytes'));
+      });
+      const streaming = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 100,
+        fetchImpl: answering,
+      });
+      await streaming.raw('/api/v1/media/7/content');
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(bodySignal?.aborted).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  describe('upload (M5.2a, TL-40)', () => {
+    const options = {
+      token: 'server-secret-token',
+      idempotencyKey: '8f6c1d4e-2b7a-4c39-9e51-0a3f6b2d7c18',
+      contentType: 'multipart/form-data; boundary=----hsk',
+      body: new Uint8Array([1, 2, 3]).buffer,
+    };
+
+    it('posts the raw multipart bytes with only bearer, content-type and key', async () => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(Response.json({ success: true }, { status: 201 }));
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 5,
+        fetchImpl,
+        requestIdFactory: () => 'request-1',
+      });
+
+      await client.upload(
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=12',
+        options,
+      );
+
+      const [url, init] = fetchImpl.mock.calls[0] ?? [];
+      expect(String(url)).toBe(
+        'http://backend.example.test/api/v1/admin/cms/media/ingestions?dataSourceId=12',
+      );
+      expect(init?.method).toBe('POST');
+      expect(init?.body).toBe(options.body);
+      expect([...new Headers(init?.headers).keys()].sort()).toEqual([
+        'accept',
+        'authorization',
+        'content-type',
+        'idempotency-key',
+        'x-request-id',
+      ]);
+      expect(new Headers(init?.headers).get('content-type')).toBe(
+        options.contentType,
+      );
+    });
+
+    it('allowlists only ingestions with a numeric dataSourceId', async () => {
+      const fetchImpl = vi.fn<typeof fetch>();
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 5,
+        fetchImpl,
+      });
+      for (const path of [
+        '/api/v1/admin/cms/media/ingestions',
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=1&x=1',
+        '/api/v1/admin/cms/media/ingestions?dataSourceId=abc',
+      ]) {
+        await expect(client.upload(path, options)).rejects.toMatchObject({
+          kind: 'invalid_request',
+        });
+      }
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it('allowlists the ingestion list (page, limit) and numeric cleanup only (TL-49)', async () => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockImplementation(async () => Response.json({ success: true }));
+      const client = createBackendClient({
+        baseUrl: 'http://backend.example.test',
+        timeoutMs: 500,
+        fetchImpl,
+      });
+      await client.request(
+        '/api/v1/admin/cms/media/ingestions?page=2&limit=20',
+      );
+      await client.request('/api/v1/admin/cms/media/ingestions/41/cleanup', {
+        method: 'POST',
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      for (const path of [
+        '/api/v1/admin/cms/media/ingestions?limit=20&page=2',
+        '/api/v1/admin/cms/media/ingestions?page=2&limit=20&x=1',
+        '/api/v1/admin/cms/media/ingestions?page=a&limit=20',
+        '/api/v1/admin/cms/media/ingestions/abc/cleanup',
+        '/api/v1/admin/cms/media/ingestions/41/cleanup/x',
+      ]) {
+        await expect(client.request(path)).rejects.toMatchObject({
+          kind: 'invalid_request',
+        });
+      }
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
+    it('waits MEDIA_UPLOAD_BFF_TIMEOUT_MS (≥ backend 120 s), then 503 with its own code', async () => {
+      vi.useFakeTimers();
+      try {
+        const fetchImpl = vi.fn<typeof fetch>(
+          (_input, init) =>
+            new Promise((_resolve, reject) => {
+              init?.signal?.addEventListener('abort', () =>
+                reject(new DOMException('aborted', 'AbortError')),
+              );
+            }),
+        );
+        const client = createBackendClient({
+          baseUrl: 'http://backend.example.test',
+          timeoutMs: 5,
+          fetchImpl,
+        });
+        let settled = false;
+        const pending = client
+          .upload('/api/v1/admin/cms/media/ingestions?dataSourceId=12', options)
+          .catch((error: unknown) => {
+            settled = true;
+            return error;
+          });
+
+        expect(MEDIA_UPLOAD_BFF_TIMEOUT_MS).toBe(125_000);
+        await vi.advanceTimersByTimeAsync(120_000);
+        expect(settled).toBe(false);
+        await vi.advanceTimersByTimeAsync(5_000);
+        await expect(pending).resolves.toMatchObject({
+          status: 503,
+          kind: 'timeout',
+          code: 'MEDIA_UPLOAD_BFF_TIMEOUT',
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

@@ -40,6 +40,7 @@ import {
 } from './media-file.processor';
 import {
   buildMediaObjectKey,
+  MEDIA_ELIGIBLE_DATA_SOURCE_SQL,
   normalizeUploadFilename,
   validateMediaIdempotencyKey,
 } from './media-ingestion.policy';
@@ -915,12 +916,7 @@ export class MediaIngestionService {
           "contentHash" AS "sourceContentHashSnapshot"
         FROM "DataSource"
         WHERE id = ${input.dataSourceId}
-          AND NULLIF(btrim(code), '') IS NOT NULL
-          AND NULLIF(btrim(version), '') IS NOT NULL
-          AND NULLIF(btrim(license), '') IS NOT NULL
-          AND ("referenceUrl" IS NULL OR NULLIF(btrim("referenceUrl"), '') IS NOT NULL)
-          AND (attribution IS NULL OR NULLIF(btrim(attribution), '') IS NOT NULL)
-          AND ("contentHash" IS NULL OR NULLIF(btrim("contentHash"), '') IS NOT NULL)
+          AND ${MEDIA_ELIGIBLE_DATA_SOURCE_SQL}
         FOR SHARE`,
       );
       if (sources.length !== 1) {
@@ -943,12 +939,16 @@ export class MediaIngestionService {
       if (existing) {
         if (existing.storageProvider !== this.storage.provider) {
           this.metrics?.recordStorage('put', 'provider_mismatch', 0);
-          throw new ConflictException(
-            'Media ingestion storage provider is unavailable.',
-          );
+          throw new ConflictException({
+            code: 'MEDIA_STORAGE_PROVIDER_MISMATCH',
+            message: 'Media ingestion storage provider is unavailable.',
+          });
         }
         if (existing.requestFingerprint !== input.requestFingerprint) {
-          throw new ConflictException('Idempotency-Key is already in use.');
+          throw new ConflictException({
+            code: 'IDEMPOTENCY_KEY_IN_USE',
+            message: 'Idempotency-Key is already in use.',
+          });
         }
         if (existing.status === 'completed') return existing;
         if (existing.status === 'rejected') {
@@ -964,14 +964,17 @@ export class MediaIngestionService {
           });
         }
         if (existing.status === 'processing') {
-          throw new ConflictException(
-            'Media ingestion is already in progress.',
-          );
+          throw new ConflictException({
+            code: 'MEDIA_INGESTION_IN_PROGRESS',
+            message: 'Media ingestion is already in progress.',
+          });
         }
         if (existing.storageKey || existing.failureCode === 'OBJECT_CLEANED') {
-          throw new ConflictException(
-            'A new Idempotency-Key is required after storage reconciliation.',
-          );
+          throw new ConflictException({
+            code: 'IDEMPOTENCY_KEY_RENEWAL_REQUIRED',
+            message:
+              'A new Idempotency-Key is required after storage reconciliation.',
+          });
         }
         return tx.mediaIngestion.update({
           where: { id: existing.id },

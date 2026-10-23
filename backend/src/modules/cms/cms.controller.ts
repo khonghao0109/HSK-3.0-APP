@@ -23,6 +23,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import { isAcceptedRequestId } from '../../common/middleware/request-id.middleware';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -30,6 +31,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CmsActor } from './cms-workflow';
 import { CmsService } from './cms.service';
 import {
+  AdminDataSourceDto,
   AdminExerciseDetailDto,
   AdminExerciseDto,
 } from './dto/admin-exercise-response.dto';
@@ -39,6 +41,7 @@ import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
 import {
   AdminMediaDetailDto,
   AdminMediaDto,
+  AdminMediaListMetaDto,
   AdminMediaLifecycleResultDto,
 } from './dto/admin-media-response.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
@@ -52,7 +55,10 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
+import { AdminMediaIngestionDto } from './dto/admin-media-ingestion-response.dto';
 import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
+import { DataSourcesService } from './data-sources.service';
+import { AdminDataSourcesQueryDto } from './dto/admin-data-sources-query.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
@@ -61,6 +67,7 @@ import {
   MediaIngestionService,
   UploadedMediaFile,
 } from './media-ingestion/media-ingestion.service';
+import { MediaIngestionReconciliationService } from './media-ingestion/media-ingestion-reconciliation.service';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
 import {
   getMediaIngestionObservation,
@@ -90,6 +97,8 @@ export class CmsController {
     private readonly exerciseImportService: ExerciseImportService,
     private readonly mediaAdminService: MediaAdminService,
     private readonly mediaIngestionService: MediaIngestionService,
+    private readonly dataSourcesService: DataSourcesService,
+    private readonly mediaIngestionReconciliationService: MediaIngestionReconciliationService,
   ) {}
 
   @Post('media/ingestions')
@@ -145,12 +154,31 @@ export class CmsController {
 
   @Get('media')
   @Header('Cache-Control', 'no-store')
-  @ApiEnvelope([AdminMediaDto], { paginated: true })
+  @ApiEnvelope([AdminMediaDto], {
+    paginated: true,
+    meta: AdminMediaListMetaDto,
+  })
   listMedia(
     @Req() request: AuthenticatedRequest,
     @Query() query: AdminMediaQueryDto,
   ): Promise<ApiSuccessResponse<AdminMediaDto[]>> {
     return this.mediaAdminService.listMedia(request.user, query);
+  }
+
+  // TL-47: declared before `media/:mediaId`, otherwise Express matches
+  // "ingestions" as a media id and the id pipe answers 400. No ingestion flag
+  // guard: reconciliation must work while ingestion is switched off (ADR-005).
+  @Get('media/ingestions')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminMediaIngestionDto], { paginated: true })
+  listMediaIngestions(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ApiSuccessResponse<AdminMediaIngestionDto[]>> {
+    return this.mediaIngestionReconciliationService.listIngestions(
+      request.user,
+      query,
+    );
   }
 
   @Get('media/:mediaId')
@@ -187,6 +215,16 @@ export class CmsController {
     return this.mediaAdminService.archiveMedia(request.user, mediaId, {
       correlationId: correlationId(requestId),
     });
+  }
+
+  @Get('data-sources')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminDataSourceDto], { paginated: true })
+  listDataSources(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminDataSourcesQueryDto,
+  ): Promise<ApiSuccessResponse<AdminDataSourceDto[]>> {
+    return this.dataSourcesService.listDataSources(request.user, query);
   }
 
   @Get('exercises')

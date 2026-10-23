@@ -1,0 +1,1336 @@
+/**
+ * Hán Lộ Admin — khung + thành phần dùng chung (M5.0, Q4/Q88–Q92).
+ *
+ * Nguồn thiết kế: docs/ui_reference/admin/css/admin.css + m06.css (khung,
+ * module 06) và shared/css/base.css (button/input/card/badge), chuyển sang
+ * biến `--adm-*` scope trong `.admin-app` để không đụng class/token cũ trong
+ * styles.css (styles.css còn phục vụ learner tới khi C3 dọn rule admin cũ).
+ *
+ * Mọi màu hex chỉ nằm trong khối token dưới đây; component chỉ dùng biến.
+ * Q92: mục sidebar đang chọn và nút chính nền jade-800 (#067a60).
+ * Q12: vòng focus jade-700 đặc 3px.
+ */
+
+.admin-app {
+  /* ----- Token primitive (copy từ docs/ui_reference/shared/css/tokens.css,
+     chỉ biến admin dùng) ----- */
+  --adm-navy-900: #0b1c46;
+  --adm-navy-850: #0a224a;
+  --adm-navy-100: #e7ebf5;
+
+  --adm-jade-800: #067a60;
+  --adm-jade-700: #028e6a;
+  --adm-jade-600: #0ea286;
+  --adm-jade-200: #bfe9dc;
+  --adm-jade-100: #dff4ed;
+  --adm-jade-50: #effaf6;
+
+  --adm-paper: #ffffff;
+  --adm-slate-50: #f6f7f9;
+  --adm-slate-100: #eef1f5;
+  --adm-slate-200: #e2e7ee;
+  --adm-slate-300: #cfd6e0;
+  /* slate-500 của mẫu (#6b7686) trên nền slate-50 chỉ đạt 4,3:1 < 4,5
+     (axe color-contrast) → app dùng #5f6b7f (5,03:1 trên slate-50, 5,39:1
+     trên trắng). Lệch mẫu có chủ đích, cùng hướng Q12/Q23/Q86. */
+  --adm-slate-500: #5f6b7f;
+  --adm-slate-700: #3c4757;
+
+  --adm-red-600: #e0453a;
+  /* chữ trắng trên red-600 chỉ 4,13:1 → nút danger dùng #c73429 (5,31:1). */
+  --adm-red-strong: #c73429;
+  --adm-red-100: #fdeceb;
+  --adm-red-text: #b3261e;
+  --adm-alert-error-text: #9b2a22;
+  --adm-alert-error-border: #f6c9c4;
+  --adm-amber-100: #fff4d6;
+  /* #b26a00 của mẫu trên amber-100 chỉ 3,87:1 → #9a5b00 (4,95:1). */
+  --adm-amber-text: #9a5b00;
+  --adm-blue-100: #e5eefc;
+  --adm-blue-text: #1a4fae;
+
+  /* Chữ/icon trên nền navy (sidebar, topbar ≤900px) */
+  --adm-on-navy: #d6deee;
+  --adm-on-navy-muted: #b9c4da;
+  /* Q94: chữ mục chưa có trang — #8a9bbd đạt 5,60:1 trên navy-850 (#0a224a). */
+  --adm-nav-soon-text: #8a9bbd;
+  --adm-on-navy-hover: rgb(255 255 255 / 7%);
+  --adm-backdrop-bg: rgb(7 20 48 / 40%);
+
+  --adm-table-hover: #fbfcfd;
+  --adm-code-bg: #102337;
+  --adm-code-text: #cbe9e1;
+
+  /* Typography / spacing / shape (cùng thang tokens.css) */
+  --adm-fs-xs: 0.75rem;
+  --adm-fs-sm: 0.8125rem;
+  --adm-fs-md: 0.9375rem;
+  --adm-fs-lg: 1.125rem;
+  --adm-fs-xl: 1.375rem;
+  --adm-sp-1: 4px;
+  --adm-sp-2: 8px;
+  --adm-sp-3: 12px;
+  --adm-sp-4: 16px;
+  --adm-sp-5: 20px;
+  --adm-sp-6: 24px;
+  --adm-r-sm: 8px;
+  --adm-r-md: 12px;
+  --adm-dur-fast: 150ms;
+  --adm-dur: 200ms;
+
+  /* Font: đúng họ/weight learner nạp (Inter + Noto Sans SC), biến do
+     admin-fonts.ts (next/font) đặt lên wrapper. */
+  --adm-font-sans:
+    var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --adm-font-cn: var(--font-noto-sans-sc), 'PingFang SC', sans-serif;
+  --adm-font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  /* Q12: vòng focus đặc ≥ 3:1 trên nền trắng/xám */
+  --adm-focus-ring: 0 0 0 3px var(--adm-jade-700);
+
+  /* Kích thước khung (tokens.css: --admin-sidebar, --admin-topbar) */
+  --adm-sidebar-w: 232px;
+  --adm-sidebar-w-collapsed: 72px;
+  --adm-sidebar-w-drawer: 260px;
+  --adm-topbar-h: 60px;
+
+  /* ----- Nền móng trong phạm vi admin ----- */
+  background: var(--adm-slate-50);
+  color: var(--adm-slate-700);
+  font-family: var(--adm-font-sans);
+  font-size: var(--adm-fs-md);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Trung hoà style global của styles.css (h1 serif clamp, margin) trong admin. */
+.admin-app h1,
+.admin-app h2,
+.admin-app h3,
+.admin-app h4,
+.admin-app p {
+  margin: 0;
+  font-family: inherit;
+  letter-spacing: normal;
+  line-height: 1.3;
+}
+/* R4: textarea mặc định của trình duyệt là monospace; admin dùng font chữ
+   thường, ô JSON giữ mono qua class riêng (.adm-topic-form__json). */
+.admin-app textarea {
+  font-family: inherit;
+}
+.admin-app :focus-visible {
+  outline: none;
+  box-shadow: var(--adm-focus-ring);
+  border-radius: var(--adm-r-sm);
+}
+
+.admin-app .adm-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.admin-app .adm-icon--sm {
+  width: 1rem;
+  height: 1rem;
+}
+.admin-app .adm-mono {
+  font-family: var(--adm-font-mono);
+  font-size: 0.86em;
+  letter-spacing: 0.015em;
+}
+.admin-app .adm-muted {
+  color: var(--adm-slate-500);
+}
+.admin-app .adm-break-anywhere {
+  overflow-wrap: anywhere;
+}
+
+/* ===================== Khung (admin.css + m06.css của mẫu) ===================== */
+.admin-app .adm-shell {
+  display: grid;
+  grid-template-columns: var(--adm-sidebar-w) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.admin-app .adm-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 12px 14px;
+  background: var(--adm-navy-850);
+  color: var(--adm-on-navy);
+}
+
+.admin-app .adm-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  padding: 4px 6px 22px;
+  color: var(--adm-paper);
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-app .adm-brand__mark {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--adm-jade-600);
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--adm-paper);
+}
+
+.admin-app .adm-nav {
+  display: grid;
+  /* minmax(0, 1fr): chặn track khỏi phình theo max-content của nhãn nowrap
+     (mục + badge "Sắp có" dài), label co lại còn ellipsis. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+.admin-app .adm-nav__item,
+.admin-app .adm-collapse {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-3);
+  min-height: 44px;
+  padding: 0 var(--adm-sp-3);
+  border: 0;
+  border-radius: var(--adm-r-sm);
+  background: none;
+  width: 100%;
+  color: inherit;
+  font-size: var(--adm-fs-md);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-app .adm-nav__item:hover,
+.admin-app .adm-collapse:hover {
+  background: var(--adm-on-navy-hover);
+  color: var(--adm-paper);
+}
+/* Q92: mục đang chọn nền jade-800 (#067a60), chữ trắng 5,3:1. */
+.admin-app .adm-nav__item[aria-current='page'] {
+  background: var(--adm-jade-800);
+  color: var(--adm-paper);
+  font-weight: 600;
+}
+/* Q94: mục chưa có trang — không link, không chip, chữ nhạt đạt AA. */
+.admin-app .adm-nav__item--soon {
+  cursor: default;
+  color: var(--adm-nav-soon-text);
+}
+.admin-app .adm-nav__item--soon:hover {
+  background: none;
+  color: var(--adm-nav-soon-text);
+}
+.admin-app .adm-nav__label {
+  min-width: 0;
+  /* Q94: mọi nhãn 1 dòng như mẫu (bỏ chip nên "Ngân hàng câu hỏi" và
+     "Cài đặt hệ thống" vừa 232px). */
+  white-space: nowrap;
+  line-height: 1.25;
+}
+.admin-app .adm-sidebar__spacer {
+  flex: 1;
+}
+
+/* Thu gọn desktop: sidebar 72px, chỉ còn icon (aria-expanded phản ánh trạng
+   thái trong admin-shell.tsx). */
+@media (min-width: 901px) {
+  .admin-app .adm-shell--collapsed {
+    grid-template-columns: var(--adm-sidebar-w-collapsed) minmax(0, 1fr);
+  }
+  .admin-app .adm-shell--collapsed .adm-nav__label,
+  .admin-app .adm-shell--collapsed .adm-brand__label {
+    display: none;
+  }
+  .admin-app .adm-shell--collapsed .adm-nav__item,
+  .admin-app .adm-shell--collapsed .adm-collapse {
+    justify-content: center;
+    padding: 0;
+  }
+  .admin-app .adm-shell--collapsed .adm-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.admin-app .adm-backdrop {
+  display: none;
+}
+
+.admin-app .adm-main-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ----- Thanh trên 60px trắng (TL-7: không ô tìm kiếm, chuông, badge) ----- */
+.admin-app .adm-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-3);
+  min-height: var(--adm-topbar-h);
+  padding: 0 var(--adm-sp-6);
+  background: var(--adm-paper);
+  border-bottom: 1px solid var(--adm-slate-200);
+}
+.admin-app .adm-topbar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-3);
+  margin-left: auto;
+}
+.admin-app .adm-user {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+.admin-app .adm-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--adm-navy-100);
+  color: var(--adm-navy-900);
+  display: grid;
+  place-items: center;
+  flex: none;
+  overflow: hidden;
+}
+.admin-app .adm-user__text {
+  display: grid;
+  line-height: 1.25;
+}
+.admin-app .adm-user__name {
+  font-weight: 700;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .adm-user__role {
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-500);
+}
+
+.admin-app .adm-main {
+  min-width: 0;
+  flex: 1;
+  padding: 22px 24px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--adm-sp-4);
+  align-content: start;
+}
+
+/* ===================== Thành phần dùng chung ===================== */
+/* Nút (base.css .btn + .admin .btn; chính = jade-800 theo Q92) */
+.admin-app .adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--adm-sp-2);
+  min-height: 2.5rem;
+  padding: 0 var(--adm-sp-4);
+  border: 1px solid transparent;
+  border-radius: var(--adm-r-sm);
+  font-weight: 600;
+  font-size: var(--adm-fs-sm);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--adm-dur-fast),
+    border-color var(--adm-dur-fast),
+    color var(--adm-dur-fast);
+}
+.admin-app .adm-btn--primary {
+  background: var(--adm-jade-800);
+  border-color: var(--adm-jade-800);
+  color: var(--adm-paper);
+}
+.admin-app .adm-btn--primary:hover {
+  background: var(--adm-jade-700);
+  border-color: var(--adm-jade-700);
+}
+.admin-app .adm-btn--outline {
+  background: var(--adm-paper);
+  color: var(--adm-navy-900);
+  border-color: var(--adm-slate-200);
+}
+.admin-app .adm-btn--outline:hover {
+  border-color: var(--adm-slate-300);
+  background: var(--adm-slate-50);
+}
+.admin-app .adm-btn--ghost {
+  background: transparent;
+  color: var(--adm-navy-900);
+}
+.admin-app .adm-btn--ghost:hover {
+  background: var(--adm-slate-100);
+}
+.admin-app .adm-btn--danger {
+  background: var(--adm-red-strong);
+  border-color: var(--adm-red-strong);
+  color: var(--adm-paper);
+}
+.admin-app .adm-btn--sm {
+  min-height: 2.25rem;
+  padding: 0 10px;
+}
+.admin-app .adm-btn--block {
+  display: flex;
+  width: 100%;
+}
+.admin-app .adm-btn[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Nút icon (mật độ mẫu: desktop 40px, ≤900px 44px theo quy ước README) */
+.admin-app .adm-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.admin-app .adm-icon-btn:hover {
+  background: var(--adm-on-navy-hover);
+}
+.admin-app .adm-main .adm-icon-btn:hover,
+.admin-app .adm-topbar .adm-icon-btn:hover {
+  background: var(--adm-slate-100);
+}
+/* Nút menu chỉ dành cho drawer ≤900px; desktop thu sidebar bằng "Thu gọn".
+   Sau .adm-icon-btn để display:none thắng display:inline-grid. */
+.admin-app .adm-menu.adm-icon-btn {
+  display: none;
+}
+
+/* Input/select (base.css .input + .admin .input) */
+.admin-app .adm-input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 var(--adm-sp-3);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-paper);
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  transition:
+    border-color var(--adm-dur-fast),
+    box-shadow var(--adm-dur-fast);
+}
+.admin-app .adm-input::placeholder {
+  color: var(--adm-slate-500);
+}
+.admin-app .adm-input:focus {
+  outline: none;
+  border-color: var(--adm-jade-600);
+  box-shadow: var(--adm-focus-ring);
+}
+.admin-app select.adm-input {
+  appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b7686' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
+.admin-app .adm-field {
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+.admin-app .adm-field__label {
+  font-size: var(--adm-fs-xs);
+  font-weight: 600;
+  color: var(--adm-slate-700);
+}
+
+/* Thẻ và panel */
+.admin-app .adm-card {
+  background: var(--adm-paper);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 4%);
+}
+.admin-app .adm-panel {
+  padding: var(--adm-sp-5);
+}
+.admin-app .adm-panel__head {
+  margin-bottom: var(--adm-sp-4);
+}
+.admin-app .adm-panel__title {
+  font-size: var(--adm-fs-md);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+}
+
+/* Bảng (admin.css .table) */
+.admin-app .adm-table-wrap {
+  position: relative;
+  overflow-x: auto;
+}
+.admin-app .adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .adm-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--adm-slate-700);
+  background: var(--adm-slate-50);
+  padding: 0.7rem var(--adm-sp-3);
+  border-bottom: 1px solid var(--adm-slate-200);
+  white-space: nowrap;
+}
+.admin-app .adm-table td {
+  padding: 0.65rem var(--adm-sp-3);
+  border-bottom: 1px solid var(--adm-slate-100);
+  color: var(--adm-slate-700);
+}
+.admin-app .adm-table tbody tr:hover {
+  background: var(--adm-table-hover);
+}
+.admin-app .adm-table__strong {
+  color: var(--adm-navy-900);
+  font-weight: 500;
+}
+/* Cột ID không xuống dòng giữa token (EX-… / MD-…). */
+.admin-app .adm-table td:first-child {
+  white-space: nowrap;
+}
+.admin-app .adm-table__sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+
+/* Badge trạng thái (admin.css .status--*) */
+.admin-app .adm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: var(--adm-fs-xs);
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.admin-app .adm-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* chữ jade-800 trên jade-50 = 4,97:1 (mẫu jade-700 chỉ 3,87:1, axe color-contrast). */
+.admin-app .adm-badge--ok {
+  color: var(--adm-jade-800);
+  background: var(--adm-jade-50);
+}
+.admin-app .adm-badge--draft {
+  color: var(--adm-amber-text);
+  background: var(--adm-amber-100);
+}
+.admin-app .adm-badge--muted {
+  color: var(--adm-slate-500);
+  background: var(--adm-slate-100);
+}
+.admin-app .adm-badge--danger {
+  color: var(--adm-red-text);
+  background: var(--adm-red-100);
+}
+.admin-app .adm-badge--info {
+  color: var(--adm-blue-text);
+  background: var(--adm-blue-100);
+}
+@media (forced-colors: active) {
+  .admin-app .adm-badge {
+    border-color: currentColor;
+  }
+}
+
+/* Hàng lọc (admin.css .filters + m06 .cnt-filters) */
+.admin-app .adm-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.admin-app .adm-filters .adm-input {
+  width: auto;
+  min-width: 150px;
+}
+.admin-app .adm-search {
+  position: relative;
+  flex: 1 1 200px;
+}
+.admin-app .adm-search .adm-input {
+  width: 100%;
+  padding-left: 2.25rem;
+}
+.admin-app .adm-search > .adm-icon {
+  position: absolute;
+  left: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--adm-slate-500);
+  pointer-events: none;
+}
+
+/* Phân trang: "Hiển thị X đến Y của N kết quả" + Trước/Sau (admin.css
+   .pagination; không cỡ trang vì query hiện không có — M5.0 mục 4). */
+.admin-app .adm-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-3);
+  flex-wrap: wrap;
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-slate-500);
+  padding: var(--adm-sp-3) var(--adm-sp-4);
+}
+.admin-app .adm-pagination__info {
+  margin: 0;
+}
+.admin-app .adm-pagination__pages {
+  display: flex;
+  gap: var(--adm-sp-2);
+  align-items: center;
+}
+.admin-app .adm-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--adm-sp-1);
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 10px;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-paper);
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  text-decoration: none;
+  cursor: pointer;
+}
+.admin-app .adm-page-btn:hover {
+  border-color: var(--adm-jade-600);
+  color: var(--adm-jade-700);
+}
+.admin-app .adm-page-btn--disabled,
+.admin-app .adm-page-btn--disabled:hover {
+  color: var(--adm-slate-500);
+  border-color: var(--adm-slate-200);
+  cursor: default;
+}
+
+/* Đầu trang (admin.css .page-head) */
+.admin-app .adm-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--adm-sp-4);
+  flex-wrap: wrap;
+}
+.admin-app .adm-page-head h1 {
+  font-size: var(--adm-fs-xl);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+}
+.admin-app .adm-page-head p {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+  margin-top: 2px;
+}
+.admin-app .adm-page-head__actions {
+  display: flex;
+  gap: var(--adm-sp-2);
+  flex-wrap: wrap;
+}
+.admin-app .adm-page-stack {
+  display: grid;
+  /* minmax(0, 1fr): chặn grid blowout — con có min-content lớn (form, bảng)
+     không đẩy cột vượt viewport ở màn hẹp (M5.1a e2e mobile-390). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--adm-sp-4);
+  align-content: start;
+}
+
+/* Breadcrumb (admin.css .breadcrumb) */
+.admin-app .adm-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-500);
+}
+.admin-app .adm-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+.admin-app .adm-breadcrumb a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Lỗi form/inline (base.css .alert--error) */
+.admin-app .adm-form-error {
+  margin: 0;
+  padding: var(--adm-sp-3) var(--adm-sp-4);
+  border: 1px solid var(--adm-alert-error-border);
+  border-radius: var(--adm-r-md);
+  background: var(--adm-red-100);
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-sm);
+  line-height: 1.45;
+}
+
+/* ----- Quy trình xuất bản nội dung (M5.1a, Q89–Q91) ----- */
+.admin-app .adm-content-workflow {
+  display: grid;
+  gap: var(--adm-sp-4);
+}
+.admin-app .adm-content-workflow__publish,
+.admin-app .adm-content-workflow__archive {
+  display: grid;
+  gap: var(--adm-sp-2);
+  justify-items: start;
+}
+/* R3: nhóm xác nhận lưu trữ inline, không phụ thuộc admin-media.css. */
+.admin-app .adm-content-workflow__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+/* TL-16: 4 bước như lesson-editor.html (.le-flow/.le-step/.le-current). */
+.admin-app .adm-flow {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+}
+.admin-app .adm-flow__step {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 13px;
+  align-items: start;
+  min-height: 64px;
+  padding: 11px 12px 8px 13px;
+  border: 1px solid transparent;
+  border-radius: var(--adm-r-sm);
+  position: relative;
+}
+.admin-app .adm-flow__step + .adm-flow__step::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: -36px;
+  height: 50px;
+  border-left: 2px solid var(--adm-slate-200);
+  z-index: 0;
+}
+.admin-app .adm-flow__step.is-done + .adm-flow__step::before,
+.admin-app .adm-flow__step.is-done::before {
+  border-color: var(--adm-jade-200);
+}
+.admin-app .adm-flow__dot {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--adm-slate-200);
+  color: var(--adm-slate-700);
+  display: grid;
+  place-items: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.admin-app .adm-flow__step b {
+  display: block;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-navy-900);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.admin-app .adm-flow__step small {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--adm-slate-500);
+  margin-top: 5px;
+}
+.admin-app .adm-flow__step[aria-current='step'] {
+  background: var(--adm-jade-50);
+  border-color: var(--adm-jade-200);
+}
+.admin-app .adm-flow__step[aria-current='step'] .adm-flow__dot,
+.admin-app .adm-flow__step.is-done .adm-flow__dot {
+  background: var(--adm-jade-800);
+  color: var(--adm-paper);
+}
+.admin-app .adm-flow__step[aria-current='step'] b {
+  color: var(--adm-jade-800);
+}
+.admin-app .adm-flow-current {
+  padding: 14px 16px;
+  text-align: center;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+}
+.admin-app .adm-flow-current h3 {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--adm-slate-700);
+  margin-bottom: 11px;
+}
+.admin-app .adm-flow-current__state {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--adm-jade-800);
+  margin-bottom: 4px;
+}
+.admin-app .adm-flow-current__state[data-state='review'] {
+  color: var(--adm-amber-text);
+}
+.admin-app .adm-flow-current__state[data-state='approved'] {
+  color: var(--adm-blue-text);
+}
+.admin-app .adm-flow-current__meta {
+  font-size: 0.6875rem;
+  color: var(--adm-slate-500);
+  line-height: 1.6;
+}
+.admin-app .adm-review-form {
+  margin: 0;
+  padding: var(--adm-sp-3);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-review-form legend {
+  padding: 0 var(--adm-sp-1);
+  font-size: var(--adm-fs-sm);
+  font-weight: 600;
+  color: var(--adm-navy-900);
+}
+.admin-app .adm-review-form:disabled {
+  opacity: 0.6;
+}
+.admin-app .adm-review-form__options {
+  display: flex;
+  gap: var(--adm-sp-4);
+  flex-wrap: wrap;
+}
+.admin-app .adm-review-form__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-navy-900);
+  cursor: pointer;
+}
+/* TL-17: lỗi chưa chọn quyết định, cạnh nhóm radio. */
+.admin-app .adm-review-form__error {
+  margin: 0;
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+/* Q89: cảnh báo tĩnh khi tự duyệt bản sửa của chính mình. */
+.admin-app .adm-review-form__self-warning {
+  margin: 0;
+  padding: var(--adm-sp-3) var(--adm-sp-4);
+  border: 1px solid var(--adm-amber-100);
+  border-radius: var(--adm-r-md);
+  background: var(--adm-amber-100);
+  color: var(--adm-amber-text);
+  font-size: var(--adm-fs-sm);
+  line-height: 1.45;
+}
+/* Hàng review trong timeline lịch sử bản sửa (badge + người duyệt + ghi chú). */
+.admin-app .adm-review-record {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  flex-wrap: wrap;
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-xs);
+  margin-top: var(--adm-sp-1);
+}
+
+/* Trạng thái rỗng trong bảng/trang (m06.css .m06-empty-inline) */
+.admin-app .adm-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--adm-sp-3);
+  flex-wrap: wrap;
+  padding: 40px var(--adm-sp-4);
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+  text-align: center;
+}
+.admin-app .adm-empty .adm-icon {
+  color: var(--adm-slate-300);
+}
+
+/* Link trong nội dung/bảng */
+.admin-app .adm-link {
+  color: var(--adm-jade-800);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-app .adm-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Skeleton tải trang */
+.admin-app .adm-skeleton {
+  border-radius: var(--adm-r-sm);
+  background: linear-gradient(
+    90deg,
+    var(--adm-slate-100),
+    var(--adm-slate-200),
+    var(--adm-slate-100)
+  );
+  background-size: 200% 100%;
+  animation: adm-shimmer 1.2s linear infinite;
+}
+@keyframes adm-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.admin-app .adm-skeleton--title {
+  width: min(420px, 80%);
+  height: 60px;
+}
+.admin-app .adm-skeleton--filters {
+  height: 40px;
+}
+.admin-app .adm-skeleton--row {
+  height: 44px;
+  margin-bottom: 8px;
+}
+.admin-app .adm-skeleton--panel {
+  min-height: 320px;
+}
+
+/* Trang trạng thái giữa màn (đăng nhập, cấm, lỗi, không tìm thấy) */
+.admin-app .adm-state-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--adm-sp-6);
+  background: var(--adm-slate-50);
+}
+.admin-app .adm-state-card {
+  width: min(100%, 430px);
+  display: grid;
+  gap: var(--adm-sp-3);
+  justify-items: center;
+  text-align: center;
+  padding: 32px;
+  background: var(--adm-paper);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 4%);
+}
+.admin-app .adm-state-card__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+  font-size: var(--adm-fs-lg);
+  text-decoration: none;
+}
+.admin-app .adm-state-card__mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-700);
+}
+.admin-app .adm-state-card__mark--danger {
+  background: var(--adm-red-100);
+  color: var(--adm-red-text);
+}
+.admin-app .adm-state-card h1 {
+  font-size: var(--adm-fs-xl);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+}
+.admin-app .adm-state-card p {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .adm-state-card__actions {
+  display: grid;
+  gap: var(--adm-sp-2);
+  width: 100%;
+  margin-top: var(--adm-sp-2);
+}
+/* Form trong thẻ giữa trang (đăng nhập): full width, căn trái. */
+.admin-app .adm-state-card .adm-page-stack {
+  width: 100%;
+  text-align: left;
+}
+
+/* Trang chi tiết dùng chung (không có trong mẫu; giữ cấu trúc V1) */
+.admin-app .adm-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--adm-sp-6);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--adm-slate-200);
+  padding-bottom: var(--adm-sp-5);
+}
+.admin-app .adm-hero h1 {
+  font-size: var(--adm-fs-xl);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.admin-app .adm-hero__prompt {
+  max-width: 800px;
+  margin-top: var(--adm-sp-1);
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-md);
+}
+.admin-app .adm-hero__meta {
+  display: flex;
+  gap: var(--adm-sp-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.admin-app .adm-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.65fr);
+  gap: var(--adm-sp-5);
+}
+.admin-app .adm-detail-grid--balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-app .adm-facts {
+  margin: 0;
+  display: grid;
+}
+.admin-app .adm-facts > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: var(--adm-sp-3);
+  border-top: 1px solid var(--adm-slate-100);
+  padding: 10px 0;
+}
+.admin-app .adm-facts > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.admin-app .adm-facts dt {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+.admin-app .adm-facts dd {
+  margin: 0;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.admin-app .adm-facts--two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--adm-sp-6);
+}
+.admin-app .adm-facts--two-col > div:nth-child(-n + 2) {
+  border-top: 0;
+  padding-top: 0;
+}
+.admin-app .adm-json {
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--adm-code-bg);
+  border-radius: var(--adm-r-sm);
+  padding: var(--adm-sp-4);
+  background: var(--adm-code-bg);
+  color: var(--adm-code-text);
+  font-family: var(--adm-font-mono);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-app .adm-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-app .adm-timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--adm-sp-3);
+  min-height: 72px;
+}
+.admin-app .adm-timeline__rail::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--adm-jade-600);
+  box-shadow: 0 0 0 4px var(--adm-jade-100);
+}
+.admin-app .adm-timeline__rail::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: -2px;
+  left: 8px;
+  width: 1px;
+  background: var(--adm-slate-200);
+}
+.admin-app .adm-timeline li:last-child .adm-timeline__rail::after {
+  display: none;
+}
+.admin-app .adm-timeline__content {
+  min-width: 0;
+  padding: 0 0 var(--adm-sp-5);
+}
+.admin-app .adm-timeline__title {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--adm-sp-4);
+  flex-wrap: wrap;
+}
+.admin-app .adm-timeline__title span {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+
+/* Danh sách bản ghi thay bảng ở màn hẹp (hợp đồng V1: không cuộn ngang) */
+.admin-app .adm-record-list {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-app .adm-record-list > li {
+  border-top: 1px solid var(--adm-slate-200);
+  padding: var(--adm-sp-4);
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-record-list > li:first-child {
+  border-top: 0;
+}
+.admin-app .adm-record-list__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-record-list__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--adm-sp-2) var(--adm-sp-3);
+  margin: 0;
+}
+.admin-app .adm-record-list__facts dt {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+.admin-app .adm-record-list__facts dd {
+  margin: 0;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  overflow-wrap: anywhere;
+}
+
+/* ===================== ≤900px: sidebar thành drawer ===================== */
+@media (max-width: 900px) {
+  .admin-app .adm-shell,
+  .admin-app .adm-shell--collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-app .adm-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--adm-sidebar-w-drawer);
+    z-index: 50;
+    transform: translateX(-100%);
+    /* Drawer đóng phải khuất khỏi tab order (visibility), không chỉ trượt
+       khỏi màn; visibility trễ một nhịp để transition trượt ra xong đã. */
+    visibility: hidden;
+    transition:
+      transform var(--adm-dur),
+      visibility 0s var(--adm-dur);
+  }
+  .admin-app .adm-shell--drawer-open .adm-sidebar {
+    transform: none;
+    visibility: visible;
+    transition:
+      transform var(--adm-dur),
+      visibility 0s 0s;
+  }
+  .admin-app .adm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    border: 0;
+    padding: 0;
+    background: var(--adm-backdrop-bg);
+    cursor: default;
+  }
+  .admin-app .adm-shell--drawer-open .adm-backdrop {
+    display: block;
+  }
+  .admin-app .adm-collapse {
+    display: none;
+  }
+  .admin-app .adm-menu.adm-icon-btn {
+    display: inline-grid;
+  }
+  .admin-app .adm-topbar {
+    padding: 0 var(--adm-sp-3);
+    background: var(--adm-navy-850);
+    color: var(--adm-on-navy);
+    border-bottom: 0;
+  }
+  .admin-app .adm-topbar .adm-icon-btn:hover {
+    background: var(--adm-on-navy-hover);
+  }
+  .admin-app .adm-user__name {
+    color: var(--adm-paper);
+  }
+  .admin-app .adm-user__role {
+    color: var(--adm-on-navy-muted);
+  }
+  .admin-app .adm-avatar {
+    background: var(--adm-paper);
+    color: var(--adm-navy-900);
+  }
+  .admin-app .adm-topbar__logout {
+    background: transparent;
+    border-color: var(--adm-on-navy-muted);
+    color: var(--adm-paper);
+  }
+  .admin-app .adm-topbar__logout:hover {
+    background: var(--adm-on-navy-hover);
+    border-color: var(--adm-on-navy-muted);
+  }
+  .admin-app .adm-btn,
+  .admin-app .adm-input {
+    min-height: 2.75rem;
+  }
+  .admin-app .adm-icon-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .admin-app .adm-main {
+    padding: var(--adm-sp-4);
+  }
+  .admin-app .adm-table-wrap--swap {
+    display: none;
+  }
+  .admin-app .adm-record-list--swap {
+    display: block;
+  }
+  .admin-app .adm-detail-grid,
+  .admin-app .adm-detail-grid--balanced {
+    /* minmax(0, 1fr): 1fr thuần = minmax(auto, 1fr) — min-content của form
+       bên trong giãn cột vượt viewport ≤900px (M5.1a e2e mobile-390). */
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ===================== ≤430px: một cột ===================== */
+@media (max-width: 430px) {
+  .admin-app .adm-content-workflow__confirm > * {
+    width: 100%;
+  }
+  .admin-app .adm-user__text {
+    display: none;
+  }
+  .admin-app .adm-page-head h1 {
+    font-size: var(--adm-fs-lg);
+  }
+  .admin-app .adm-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-app .adm-filters .adm-input {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-app .adm-filters .adm-btn {
+    width: 100%;
+  }
+  /* Không dùng basis 100%: với flex-direction: column (mục ở trên), basis theo
+     trục dọc làm trình duyệt wrap sang cột mới → trang tràn ngang (M5.1a e2e
+     mobile-390 bắt được). `1 1 auto` đủ để search giãn khi còn row-wrap. */
+  .admin-app .adm-search {
+    flex: 1 1 auto;
+  }
+  .admin-app .adm-record-list__facts {
+    grid-template-columns: 1fr;
+  }
+  .admin-app .adm-facts > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .admin-app .adm-facts dd {
+    text-align: left;
+  }
+  .admin-app .adm-facts--two-col {
+    grid-template-columns: 1fr;
+  }
+  .admin-app .adm-facts--two-col > div:nth-child(2) {
+    border-top: 1px solid var(--adm-slate-100);
+    padding-top: 10px;
+  }
+  .admin-app .adm-pagination {
+    justify-content: center;
+    text-align: center;
+  }
+}

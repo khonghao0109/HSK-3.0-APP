@@ -7,6 +7,8 @@ export interface LearnerPasswordFieldProps {
   invalid?: boolean;
   inputRef?: Ref<HTMLInputElement>;
   disabled?: boolean;
+  label?: string;
+  placeholder?: string;
 }
 
 export function LearnerPasswordField({
@@ -14,13 +16,15 @@ export function LearnerPasswordField({
   invalid = false,
   inputRef,
   disabled = false,
+  label = 'Mật khẩu',
+  placeholder = 'Nhập mật khẩu',
 }: LearnerPasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="field">
       <label className="field__label" htmlFor="password">
-        Mật khẩu
+        {label}
       </label>
       <div className="input-wrap">
         <svg className="icon" aria-hidden="true">
@@ -34,7 +38,7 @@ export function LearnerPasswordField({
           type={showPassword ? 'text' : 'password'}
           autoComplete={autoComplete}
           minLength={6}
-          placeholder="Nhập mật khẩu"
+          placeholder={placeholder}
           aria-describedby="auth-alert"
           aria-invalid={invalid ? 'true' : undefined}
           disabled={disabled}

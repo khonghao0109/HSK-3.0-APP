@@ -148,7 +148,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/cms/media/ingestions": {
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminUsersController_listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/role": {
         parameters: {
             query?: never;
             header?: never;
@@ -156,6 +172,70 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AdminUsersController_changeRole"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AdminUsersController_suspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AdminUsersController_unsuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminUsersController_listAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/media/ingestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_listMediaIngestions"];
         put?: never;
         post: operations["CmsController_ingestMedia"];
         delete?: never;
@@ -238,6 +318,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CmsController_archiveMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/data-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_listDataSources"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -671,6 +767,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dictionary/words/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DictionaryController_getWord"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dictionary/words/{id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DictionaryController_getSaved"];
+        put?: never;
+        post: operations["DictionaryController_saveWord"];
+        delete: operations["DictionaryController_unsaveWord"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1211,6 +1339,59 @@ export interface components {
              */
             newPassword: string;
         };
+        AdminUserDto: {
+            id: number;
+            email: string;
+            name: string | null;
+            /** @enum {string} */
+            role: "user" | "admin";
+            /** @enum {string} */
+            status: "active" | "suspended" | "deletion_pending";
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ChangeUserRoleDto: {
+            /** @enum {string} */
+            role: "user" | "admin";
+        };
+        SuspendUserDto: {
+            /**
+             * @description TL-63: the stored reason is the trimmed input and must be 1–500 chars.
+             *     Declared `unknown` on purpose: with `enableImplicitConversion`, a JSON
+             *     number or boolean would be coerced to text before validation and accepted.
+             *     The controller narrows it after validation proves it is a string.
+             */
+            reason: string;
+        };
+        AdminAuditLogActorDto: {
+            id: number;
+            name: string | null;
+            email: string;
+        };
+        AdminAuditLogTargetDto: {
+            email: string;
+        };
+        AdminAuditRoleChangeDto: {
+            /** @enum {string} */
+            from: "user" | "admin";
+            /** @enum {string} */
+            to: "user" | "admin";
+        };
+        AdminAuditLogDto: {
+            /** @description `AuditLog.id` is a PostgreSQL bigint; JSON exposes it as a string. */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            action: string;
+            actor: components["schemas"]["AdminAuditLogActorDto"] | null;
+            targetType: string;
+            targetId: string | null;
+            target: components["schemas"]["AdminAuditLogTargetDto"] | null;
+            reason: string | null;
+            roleChange: components["schemas"]["AdminAuditRoleChangeDto"] | null;
+        };
         AdminDataSourceDto: {
             id: number;
             code: string;
@@ -1241,6 +1422,41 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             dataSource: components["schemas"]["AdminDataSourceDto"] | null;
+        };
+        PaginationMetaDto: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+        AdminMediaListMetaDto: {
+            /** Format: date-time */
+            timestamp: string;
+            ingestionEnabled: boolean;
+            pagination: components["schemas"]["PaginationMetaDto"];
+            /** @description Same value as the `X-Request-ID` response header. */
+            requestId: string;
+        };
+        AdminMediaIngestionDto: {
+            id: number;
+            /** @enum {string} */
+            status: "processing" | "cleanup_required";
+            failureCode: string | null;
+            /** @description Sanitized original filename. */
+            filename: string | null;
+            size: number;
+            dataSource: components["schemas"]["AdminDataSourceDto"];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            processingStartedAt: string | null;
+            /** Format: date-time */
+            cleanupRequiredAt: string | null;
+            cleanupAttempts: number;
+            /** Format: date-time */
+            cleanupLastAttemptAt: string | null;
+            /** @description True only for `cleanup_required` rows written by the current storage provider. */
+            cleanupAvailable: boolean;
         };
         AdminMediaExerciseUsageDto: {
             id: number;
@@ -1602,6 +1818,50 @@ export interface components {
              */
             downloadable: boolean;
         };
+        DictionaryWordMeaningDto: {
+            order: number;
+            en: string | null;
+            vi: string | null;
+            partOfSpeech: string | null;
+            usage: string | null;
+            note: string | null;
+        };
+        DictionaryWordLevelDto: {
+            code: string;
+            name: string;
+        };
+        DictionaryWordSourceDto: {
+            name: string;
+            version: string;
+            license: string | null;
+            attribution: string | null;
+        };
+        DictionaryWordDetailDto: {
+            id: number;
+            hanzi: string;
+            traditional: string | null;
+            pinyin: string;
+            pinyinTone: string | null;
+            example: string | null;
+            /** @description Ordered by `meaningOrder`. */
+            meanings: components["schemas"]["DictionaryWordMeaningDto"][];
+            /** @description Published, not deleted Levels ordered by `orderIndex`. */
+            levels: components["schemas"]["DictionaryWordLevelDto"][];
+            /** @description The primary source first, then by data source id. */
+            sources: components["schemas"]["DictionaryWordSourceDto"][];
+        };
+        DictionaryWordSavedDto: {
+            wordId: number;
+            saved: boolean;
+        };
+        DictionaryWordSaveResultDto: {
+            wordId: number;
+            saved: boolean;
+            /** @description `null` when the word was already saved and no event was written. */
+            eventId: string | null;
+            /** Format: date-time */
+            occurredAt: string | null;
+        };
         LevelItemDto: {
             id: number;
             name: string;
@@ -1696,6 +1956,137 @@ export interface components {
             slug: string;
         };
         EmptyLessonActivityWriteDto: Record<string, never>;
+        LessonActivityLessonDto: {
+            id: number;
+            title: string;
+            description: string | null;
+            slug: string;
+            orderIndex: number;
+            levelId: number;
+        };
+        LessonActivityLevelDto: {
+            id: number;
+            code: string;
+            name: string;
+        };
+        LessonActivityVocabularySectionDto: {
+            /** @description Same words as `GET /lessons/:id`. */
+            wordCount: number;
+            /** @description Public topics of type `vocabulary`. */
+            topicCount: number;
+            topicsDone: number;
+        };
+        LessonActivityGrammarSectionDto: {
+            /** @description Public topics of type `grammar`. */
+            topicCount: number;
+            topicsDone: number;
+        };
+        LessonActivityPracticeSectionDto: {
+            /** @description Public exercises of the lesson, as listed in this response. */
+            exerciseCount: number;
+            /** @description Exercises with at least one submitted attempt by the learner. */
+            attempted: number;
+        };
+        LessonActivitySectionsDto: {
+            vocabulary: components["schemas"]["LessonActivityVocabularySectionDto"];
+            grammar: components["schemas"]["LessonActivityGrammarSectionDto"];
+            practice: components["schemas"]["LessonActivityPracticeSectionDto"];
+        };
+        LessonActivityProgressDto: {
+            score: number | null;
+            /** @enum {string} */
+            status: "done" | "learning" | "not_started";
+            completionPercent: number;
+            timeSpentSeconds: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            lastActivityAt: string | null;
+        };
+        LessonActivityTopicProgressDto: {
+            /** @enum {string} */
+            status: "done" | "learning" | "not_started";
+            completionPercent: number;
+            timeSpentSeconds: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            lastActivityAt: string | null;
+        };
+        LessonActivityAttemptDto: {
+            attemptId: number;
+            exerciseId: number;
+            attemptNumber: number;
+            isCorrect: boolean | null;
+            score: number | null;
+            durationSeconds: number | null;
+            exerciseVersion: number;
+            feedbackVersion: string | null;
+            explanation: string | null;
+            media: components["schemas"]["LessonDetailExerciseMediaDto"] | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+        };
+        LessonActivityExerciseDto: {
+            /**
+             * @description Only publishable types reach learners; `speaking_repeat` never does.
+             * @enum {string}
+             */
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence";
+            content: {
+                [key: string]: unknown;
+            } | unknown[];
+            id: number;
+            topicId: number | null;
+            prompt: string;
+            version: number;
+            orderIndex: number;
+            media: components["schemas"]["LessonDetailExerciseMediaDto"] | null;
+            latestAttempt: components["schemas"]["LessonActivityAttemptDto"] | null;
+        };
+        LessonActivityTopicDto: {
+            content: {
+                [key: string]: unknown;
+            } | unknown[];
+            id: number;
+            title: string;
+            subtitle: string | null;
+            /** @enum {string} */
+            type: "vocabulary" | "grammar" | "key_text" | "quiz" | "ai_speaking";
+            orderIndex: number;
+            isPremium: boolean;
+            isLocked: boolean;
+            progress: components["schemas"]["LessonActivityTopicProgressDto"];
+            exercises: components["schemas"]["LessonActivityExerciseDto"][];
+        };
+        LessonActivityCurrentTopicDto: {
+            id: number;
+            title: string;
+            orderIndex: number;
+        };
+        LessonActivityResponseDto: {
+            /**
+             * @description Q18 state, as in `GET /learning/path`; a locked lesson still reads.
+             * @enum {string}
+             */
+            state: "done" | "current" | "available" | "locked";
+            /** @enum {string} */
+            nextAction: "start_lesson" | "submit_exercise" | "complete_topic" | "complete_lesson" | "completed";
+            lesson: components["schemas"]["LessonActivityLessonDto"];
+            level: components["schemas"]["LessonActivityLevelDto"];
+            /** @description 1..N among the ready lessons of the level, as in `GET /learning/path`. */
+            position: number;
+            sections: components["schemas"]["LessonActivitySectionsDto"];
+            progress: components["schemas"]["LessonActivityProgressDto"];
+            topics: components["schemas"]["LessonActivityTopicDto"][];
+            standaloneExercises: components["schemas"]["LessonActivityExerciseDto"][];
+            currentTopic: components["schemas"]["LessonActivityCurrentTopicDto"] | null;
+            currentExercise: components["schemas"]["LessonActivityExerciseDto"] | null;
+        };
         SubmitLessonExerciseAttemptDto: {
             answer: {
                 [key: string]: unknown;
@@ -1775,12 +2166,6 @@ export interface components {
             timestamp: string;
             /** @description Same value as the `X-Request-ID` response header. */
             requestId: string;
-        };
-        PaginationMetaDto: {
-            page: number;
-            limit: number;
-            total: number;
-            totalPages: number;
         };
         ApiPageResponseMetaDto: {
             /** Format: date-time */
@@ -2120,6 +2505,202 @@ export interface operations {
             default: components["responses"]["ErrorEnvelope"];
         };
     };
+    AdminUsersController_listUsers: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                role?: "user" | "admin";
+                status?: "active" | "suspended" | "deletion_pending";
+                q?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_changeRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_suspend: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendUserDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_unsuspend: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_listAuditLogs: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                targetType?: string;
+                targetId?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminAuditLogDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_listMediaIngestions: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminMediaIngestionDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
     CmsController_ingestMedia: {
         parameters: {
             query: {
@@ -2210,7 +2791,7 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["AdminMediaDto"][];
-                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                        meta: components["schemas"]["AdminMediaListMetaDto"];
                     };
                 };
             };
@@ -2301,6 +2882,39 @@ export interface operations {
                         success: true;
                         data: components["schemas"]["AdminMediaLifecycleResultDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_listDataSources: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                /** @description Q103/TL-35: `media` keeps only sources media finalize would accept. */
+                eligibleFor?: "media";
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminDataSourceDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
                     };
                 };
             };
@@ -3289,6 +3903,128 @@ export interface operations {
             default: components["responses"]["ErrorEnvelope"];
         };
     };
+    DictionaryController_getWord: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_getSaved: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSavedDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_saveWord: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+                /** @description Replaying a key with the same request returns the original result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSaveResultDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_unsaveWord: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["DictionaryWordSavedDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
     HealthController_check: {
         parameters: {
             query?: never;
@@ -3711,7 +4447,7 @@ export interface operations {
                     "application/json": {
                         /** @enum {boolean} */
                         success: true;
-                        data: unknown;
+                        data: components["schemas"]["LessonActivityResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

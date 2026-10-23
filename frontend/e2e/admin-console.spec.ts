@@ -81,17 +81,16 @@ async function assertNoHorizontalOverflow(
 
 async function assertLoginActionsVisible(page: Page) {
   await expect(page.getByLabel('Email')).toBeVisible();
-  await expect(page.getByLabel('Password')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+  await expect(page.getByLabel('Mật khẩu')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đăng nhập' })).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Return to platform' }),
+    page.getByRole('link', { name: 'Về trang Bài tập' }),
   ).toBeVisible();
 }
 
 async function assertLoginLayout(page: Page) {
   const metrics = await assertNoHorizontalOverflow(page);
-  await expect(page.locator('.login-panel')).toBeInViewport();
-  await expect(page.locator('.login-card')).toBeInViewport();
+  await expect(page.locator('.adm-state-card')).toBeInViewport();
   await assertLoginActionsVisible(page);
   return metrics;
 }
@@ -141,7 +140,9 @@ test('keeps session recovery pending and retry states inside the login viewport'
   });
   await page.goto('/login?reason=session');
   await recoveryRequested.promise;
-  await expect(page.getByText('Your session ended.')).toBeVisible();
+  await expect(
+    page.getByText('Phiên đã kết thúc. Đăng nhập lại để tiếp tục.'),
+  ).toBeVisible();
   await assertLoginLayout(page);
   releaseRecovery.resolve();
   await recoveryCompleted.promise;
@@ -151,9 +152,7 @@ test('keeps session recovery pending and retry states inside the login viewport'
     await route.fulfill({ status: 503 });
   });
   await page.goto('/login?reason=session');
-  await expect(
-    page.getByRole('button', { name: 'Retry session check' }),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
   await assertNoHorizontalOverflow(page);
   await assertLoginActionsVisible(page);
 });
@@ -161,8 +160,8 @@ test('keeps session recovery pending and retry states inside the login viewport'
 async function login(page: Page, email = adminEmail, password = adminPassword) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('Mật khẩu').fill(password);
+  await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await page.waitForURL(/\/(admin\/exercises|forbidden)/);
 }
 
@@ -226,15 +225,13 @@ test('serves a strict per-request production CSP and redirects anonymous admin a
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
   await page.goto('/login');
-  await expect(
-    page.getByRole('heading', { name: /welcome back/i }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập' })).toBeVisible();
   await page.goto('/admin/exercises');
   await expect(page).toHaveURL('http://127.0.0.1:3200/login?reason=session');
   expect(consoleErrors).toEqual([]);
 });
 
-test('keeps Return to platform client navigation RSC-safe and canonical', async ({
+test('keeps the back-to-exercises link client navigation RSC-safe and canonical', async ({
   page,
   context,
 }) => {
@@ -262,9 +259,9 @@ test('keeps Return to platform client navigation RSC-safe and canonical', async 
     ),
   ).toBe(true);
   await expect(
-    page.getByRole('link', { name: 'Return to platform' }),
+    page.getByRole('link', { name: 'Về trang Bài tập' }),
   ).toBeVisible();
-  await page.getByRole('link', { name: 'Return to platform' }).click();
+  await page.getByRole('link', { name: 'Về trang Bài tập' }).click();
   await page.waitForURL(/\/login\?reason=session$/u);
   expect(consoleIssues).toEqual([]);
   expect(new URL(page.url()).origin).toBe('http://127.0.0.1:3200');
@@ -329,13 +326,13 @@ test('serializes a pending cookie clear before login creates a new session', asy
   await page.goto('/login?reason=session');
   await recoveryRequested.promise;
   await page.getByLabel('Email').fill(adminEmail);
-  await page.getByLabel('Password').fill(adminPassword);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('Mật khẩu').fill(adminPassword);
+  await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await expect(
-    page.getByRole('button', { name: 'Checking session…' }),
+    page.getByRole('button', { name: 'Đang kiểm tra phiên…' }),
   ).toBeDisabled();
   await expect(page.getByLabel('Email')).toHaveValue(adminEmail);
-  await expect(page.getByLabel('Password')).toHaveValue(adminPassword);
+  await expect(page.getByLabel('Mật khẩu')).toHaveValue(adminPassword);
   expect(requestOrder).toEqual(['recover']);
 
   recoveryReleased = true;
@@ -389,8 +386,8 @@ test('a stale recovery response cannot mutate a fresh login cookie', async ({
   });
   await recoveryRequested.promise;
   await page.getByLabel('Email').fill(adminEmail);
-  await page.getByLabel('Password').fill(adminPassword);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('Mật khẩu').fill(adminPassword);
+  await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await expect(page).toHaveURL(/\/admin\/exercises/u);
   const cookieBeforeStaleResponse = (await context.cookies()).find(
     (cookie) => cookie.name === 'hsk_admin_session',
@@ -433,8 +430,8 @@ test('protects deep links, persists an HttpOnly session, and logs out', async ({
     await page.evaluate(() => localStorage.length + sessionStorage.length),
   ).toBe(0);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Exercises' })).toBeVisible();
-  await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page.getByRole('heading', { name: 'Bài tập' })).toBeVisible();
+  await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(page).toHaveURL(/\/login/);
   expect(consoleErrors).toEqual([]);
 });
@@ -445,32 +442,44 @@ test('routes a current non-admin to forbidden without rendering admin data', asy
   await login(page, userEmail, userPassword);
   await expect(page).toHaveURL(/\/forbidden/);
   await expect(
-    page.getByRole('heading', { name: /access restricted/i }),
+    page.getByRole('heading', { name: 'Không có quyền truy cập' }),
   ).toBeVisible();
-  await expect(page.getByText('Authoritative answer')).toHaveCount(0);
+  await expect(page.getByText('Đáp án')).toHaveCount(0);
 });
 
 test('uses URL filters and server pagination, then opens a detail', async ({
   page,
 }) => {
+  // limit=1: one page per exercise. Learner specs add fixtures to the same
+  // DB, so the seed's 3 is read from the table the list counts (no filter).
+  const pages = Number(
+    queryDisposableDb('SELECT count(*) FROM "LessonExercise"'),
+  );
+  expect(pages).toBeGreaterThanOrEqual(3);
   await login(page);
   await page.goto('/admin/exercises?limit=1&page=1');
-  await expect(page.getByText(/page 1 of 3/i)).toBeVisible();
-  await page.getByRole('link', { name: /next/i }).click();
+  await expect(
+    page.getByText(`Hiển thị 1 đến 1 của ${pages} kết quả`, { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Sau' }).click();
   await expect(page).toHaveURL(/page=2/);
-  await expect(page.getByText(/page 2 of 3/i)).toBeVisible();
-  await page.getByLabel('Status').selectOption('published');
-  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(
+    page.getByText(`Hiển thị 2 đến 2 của ${pages} kết quả`, { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel('Trạng thái').selectOption('published');
+  await page.getByRole('button', { name: 'Lọc' }).click();
   await expect(page).toHaveURL(/status=published/);
   await page
-    .getByRole('link', { name: /open exercise/i })
+    .getByRole('link', { name: /mở bài tập/i })
     .first()
     .click();
+  // TL-18 (M5.1b1): trang chi tiết chỉ đọc được thay bằng trang sửa có form
+  // từng loại; tiêu đề trang là đề bài nên chỉ cần h1 hiện ra.
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: /exercise \d+/i }),
+    page.getByRole('heading', { name: 'Nội dung bài tập', exact: true }),
   ).toBeVisible();
-  await expect(page.getByText('Authoritative answer')).toBeVisible();
-  await expect(page.getByText('Revision history')).toBeVisible();
+  await expect(page.getByText('Lịch sử bản sửa')).toBeVisible();
 });
 
 test('keeps the exercise revision hash readable inside every responsive boundary', async ({
@@ -487,15 +496,15 @@ test('keeps the exercise revision hash readable inside every responsive boundary
   for (const width of exerciseDetailBoundaryWidths) {
     await page.setViewportSize({ width, height: width >= 1024 ? 900 : 1024 });
     await page.goto('/admin/exercises/1');
-    await expect(
-      page.getByRole('heading', { name: 'Exercise 1', exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
 
     const metrics = await assertNoHorizontalOverflow(page);
     expect(metrics.innerWidth).toBe(width);
 
-    const revisionPanel = page.locator('.revision-panel');
-    const hash = revisionPanel.locator('.hash');
+    const revisionPanel = page.locator('.adm-panel').filter({
+      has: page.getByRole('heading', { name: 'Lịch sử bản sửa' }),
+    });
+    const hash = revisionPanel.locator('.adm-hash');
     await expect(hash).toHaveCount(1);
     await expect(hash).toHaveText(/^[a-f0-9]{64}$/u);
 
@@ -534,45 +543,205 @@ test('keeps the exercise revision hash readable inside every responsive boundary
   expect(consoleIssues).toEqual([]);
 });
 
-test('matches the admin operations shell and adaptive inventory contract', async ({
+test('matches the Hán Lộ Admin shell and adaptive inventory contract', async ({
   page,
 }, testInfo: TestInfo) => {
   await login(page);
   await expect(page).toHaveURL(/\/admin\/exercises/u);
   await assertNoHorizontalOverflow(page);
 
-  const sidebar = page.locator('.sidebar');
-  const desktopTable = page.locator('.exercise-table');
+  const sidebar = page.locator('.adm-sidebar');
+  const desktopTable = page.locator('.adm-table');
   const compactList = page.getByRole('list', {
-    name: 'Exercises for narrow screens',
+    name: 'Danh sách bài tập cho màn hẹp',
   });
 
   if (testInfo.project.name.startsWith('desktop-')) {
     await expect(sidebar).toBeVisible();
     const sidebarBox = await sidebar.boundingBox();
-    expect(sidebarBox?.width).toBeGreaterThanOrEqual(208);
-    expect(sidebarBox?.width).toBeLessThanOrEqual(232);
-    await expect(
-      page.getByRole('banner', { name: 'Admin workspace toolbar' }),
-    ).toBeVisible();
+    expect(sidebarBox?.width).toBe(232);
+    await expect(page.locator('.adm-topbar')).toBeVisible();
     await expect(desktopTable).toBeVisible();
     await expect(compactList).toBeHidden();
   } else {
     await expect(sidebar).toBeHidden();
-    await expect(page.locator('.mobile-header')).toBeVisible();
+    await expect(page.locator('.adm-topbar')).toBeVisible();
     await expect(desktopTable).toBeHidden();
     await expect(compactList).toBeVisible();
 
     const logoutBox = await page
-      .getByRole('button', { name: 'Log out' })
+      .getByRole('button', { name: 'Đăng xuất' })
       .boundingBox();
     expect(logoutBox?.width).toBeGreaterThanOrEqual(44);
     expect(logoutBox?.height).toBeGreaterThanOrEqual(44);
   }
 
   await expect(
-    page.getByRole('button', { name: /create|publish|import|media/i }),
+    page.getByRole('button', { name: /tạo|xuất bản|nhập|tải lên/i }),
   ).toHaveCount(0);
+});
+
+test('M5.0 (a)(b)(c): khung sidebar desktop đúng mẫu 06, Q88/Q92/Q94', async ({
+  page,
+}, testInfo: TestInfo) => {
+  test.skip(
+    !testInfo.project.name.startsWith('desktop-'),
+    'Khung desktop: chạy ở project desktop; drawer có test riêng ở ≤900px.',
+  );
+  await login(page);
+  await expect(page).toHaveURL(/\/admin\/exercises/u);
+
+  // (a) sidebar 232px nền navy-850; mục đang chọn nền jade-800 (Q92);
+  // thanh trên 60px nền trắng.
+  const frame = await page.evaluate(() => {
+    const sidebar = document.querySelector('.adm-sidebar');
+    const active = document.querySelector(
+      '.adm-nav__item[aria-current="page"]',
+    );
+    const topbar = document.querySelector('.adm-topbar');
+    if (!sidebar || !active || !topbar) return null;
+    return {
+      sidebarWidth: sidebar.getBoundingClientRect().width,
+      sidebarBg: getComputedStyle(sidebar).backgroundColor,
+      activeBg: getComputedStyle(active).backgroundColor,
+      activeLabel: active.textContent,
+      topbarHeight: topbar.getBoundingClientRect().height,
+      topbarBg: getComputedStyle(topbar).backgroundColor,
+    };
+  });
+  expect(frame).not.toBeNull();
+  expect(frame!.sidebarWidth).toBe(232);
+  expect(frame!.sidebarBg).toBe('rgb(10, 34, 74)');
+  expect(frame!.activeLabel).toBe('Bài tập');
+  expect(frame!.activeBg).toBe('rgb(6, 122, 96)');
+  expect(frame!.topbarHeight).toBe(60);
+  expect(frame!.topbarBg).toBe('rgb(255, 255, 255)');
+
+  // (b) Q94: mục chưa có trang KHÔNG chip, không link, aria-disabled,
+  // "Sắp có" trong tên đọc + title; mọi nhãn 1 dòng, mục cao ≤ 44px.
+  // M5.1a: "Nội dung" đã có trang (/admin/content); M5.1b2 (TL-33):
+  // "Nhập dữ liệu" có trang (/admin/import); M5.3: "Người dùng" có trang
+  // (/admin/users), nên "Sắp có" giảm 9 → 6.
+  const soonItems = page.locator('.adm-nav__item--soon');
+  await expect(soonItems).toHaveCount(6);
+  await expect(page.locator('.adm-nav__soon')).toHaveCount(0);
+  await expect(soonItems.first()).toHaveAttribute('title', 'Sắp có');
+  await expect(soonItems.first()).toHaveAccessibleName(/Sắp có/u);
+
+  const navAudit = await page.locator('.adm-nav__item').evaluateAll((items) =>
+    items.map((item) => {
+      const label = item.querySelector('.adm-nav__label');
+      return {
+        tag: item.tagName,
+        soon: item.classList.contains('adm-nav__item--soon'),
+        ariaDisabled: item.getAttribute('aria-disabled'),
+        title: item.getAttribute('title'),
+        text: item.textContent ?? '',
+        hasChip: item.querySelector('.adm-nav__soon') !== null,
+        height: item.getBoundingClientRect().height,
+        whiteSpace: label ? getComputedStyle(label).whiteSpace : null,
+        scrollWidth: label?.scrollWidth ?? null,
+        clientWidth: label?.clientWidth ?? null,
+      };
+    }),
+  );
+  expect(navAudit).toHaveLength(11);
+  for (const item of navAudit) {
+    expect(item.height).toBeLessThanOrEqual(44);
+    expect(item.whiteSpace).toBe('nowrap');
+    expect(item.scrollWidth).not.toBeNull();
+    expect(item.scrollWidth!).toBeLessThanOrEqual(item.clientWidth!);
+    expect(item.hasChip).toBe(false);
+    if (item.soon) {
+      expect(item.tag).not.toBe('A');
+      expect(item.ariaDisabled).toBe('true');
+      expect(item.title).toBe('Sắp có');
+      expect(item.text).toContain('(Sắp có)');
+    }
+  }
+  await expect(
+    page.getByRole('link', { name: 'Báo cáo', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Người dùng', exact: true }),
+  ).toHaveAttribute('href', '/admin/users');
+
+  // (c) Thu gọn → sidebar 72px, aria-expanded=false, nhãn ẩn.
+  const collapse = page.getByRole('button', { name: 'Thu gọn' });
+  await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+  await collapse.click();
+  await expect(collapse).toHaveAttribute('aria-expanded', 'false');
+  const collapsed = await page.evaluate(() => {
+    const sidebar = document.querySelector('.adm-sidebar');
+    const label = document.querySelector('.adm-nav__label');
+    if (!sidebar || !label) return null;
+    return {
+      sidebarWidth: sidebar.getBoundingClientRect().width,
+      labelDisplay: getComputedStyle(label).display,
+    };
+  });
+  expect(collapsed).not.toBeNull();
+  expect(collapsed!.sidebarWidth).toBe(72);
+  expect(collapsed!.labelDisplay).toBe('none');
+  await collapse.click();
+  await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('M5.0 (e): thanh trên không ô tìm kiếm, chuông, badge phản hồi (TL-7)', async ({
+  page,
+}) => {
+  // R4: chạy ở cả 4 viewport (390/768/1024/1440).
+  await login(page);
+  await expect(page).toHaveURL(/\/admin\/exercises/u);
+
+  const topbar = page.locator('.adm-topbar');
+  await expect(topbar).toBeVisible();
+  await expect(topbar.getByRole('search')).toHaveCount(0);
+  await expect(topbar.getByRole('searchbox')).toHaveCount(0);
+  await expect(topbar.locator('input')).toHaveCount(0);
+  await expect(
+    topbar.getByRole('button', { name: /thông báo|chuông/i }),
+  ).toHaveCount(0);
+  await expect(
+    topbar.getByRole('link', { name: /thông báo|chuông|phản hồi/i }),
+  ).toHaveCount(0);
+  await expect(topbar.getByText(/phản hồi mới/i)).toHaveCount(0);
+});
+
+test('M5.0 (d): ≤900px nút menu mở drawer, Esc đóng và trả focus về nút (390 + 768)', async ({
+  page,
+}, testInfo: TestInfo) => {
+  test.skip(
+    !['mobile-390', 'tablet-768'].includes(testInfo.project.name),
+    'Drawer là hành vi ≤900px: chạy ở mobile-390 và tablet-768.',
+  );
+  await login(page);
+  await expect(page).toHaveURL(/\/admin\/exercises/u);
+
+  const menu = page.getByRole('button', { name: 'Mở hoặc thu gọn menu' });
+  await expect(menu).toBeVisible();
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.adm-sidebar')).toBeHidden();
+
+  await menu.click();
+  await expect(menu).toHaveAttribute('aria-expanded', 'true');
+  const sidebar = page.locator('.adm-sidebar');
+  // Chờ hết transition trượt (200ms) rồi mới đo.
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.adm-sidebar');
+    return el !== null && getComputedStyle(el).transform === 'none';
+  });
+  await expect(sidebar).toBeVisible();
+  const drawerWidth = await sidebar.evaluate(
+    (el) => el.getBoundingClientRect().width,
+  );
+  expect(drawerWidth).toBe(260);
+  await expect(page.locator('.adm-backdrop')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeFocused();
+  await expect(page.locator('.adm-backdrop')).toBeHidden();
 });
 
 test('navigates the secure Media library, filters assets and opens safe detail', async ({
@@ -581,27 +750,33 @@ test('navigates the secure Media library, filters assets and opens safe detail',
 }, testInfo: TestInfo) => {
   const consoleIssues = captureConsoleIssues(page);
   await login(page);
-  const adminNavigation = page.getByRole('navigation', {
-    name: testInfo.project.name.startsWith('desktop-')
-      ? 'Admin navigation'
-      : 'Admin module navigation',
+  // ≤900px sidebar là drawer đóng sẵn: mở bằng nút menu trước khi bấm mục.
+  if (!testInfo.project.name.startsWith('desktop-')) {
+    await page.getByRole('button', { name: 'Mở hoặc thu gọn menu' }).click();
+    await page.waitForFunction(() => {
+      const el = document.querySelector('.adm-sidebar');
+      return el !== null && getComputedStyle(el).transform === 'none';
+    });
+  }
+  const adminNavigation = page.getByRole('complementary', {
+    name: 'Điều hướng quản trị',
   });
   await adminNavigation
-    .getByRole('link', { name: 'Media', exact: true })
+    .getByRole('link', { name: 'Thư viện media', exact: true })
     .click();
   await expect(page).toHaveURL(/\/admin\/media/u);
   await expect(
-    page.getByRole('heading', { name: 'Media library' }),
+    page.getByRole('heading', { name: 'Thư viện media' }),
   ).toBeVisible();
   await assertNoHorizontalOverflow(page);
 
-  await page.getByLabel('Type').selectOption('audio');
-  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await page.getByLabel('Loại', { exact: true }).selectOption('audio');
+  await page.getByRole('button', { name: 'Lọc' }).click();
   await expect(page).toHaveURL(/type=audio/u);
 
-  const desktopTable = page.locator('.media-table');
+  const desktopTable = page.locator('.adm-table');
   const compactList = page.getByRole('list', {
-    name: 'Media for narrow screens',
+    name: 'Danh sách media cho màn hẹp',
   });
   if (testInfo.project.name.startsWith('desktop-')) {
     await expect(desktopTable).toBeVisible();
@@ -620,25 +795,25 @@ test('navigates the secure Media library, filters assets and opens safe detail',
     : compactList.getByRole('listitem', { name: /media \d+/iu }).filter({
         hasText: 'nihao-listening.mp3',
       });
-  await mediaRecord.getByRole('link', { name: /open media \d+/iu }).click();
+  await mediaRecord.getByRole('link', { name: /mở media \d+/iu }).click();
   await expect(
     page.getByRole('heading', { name: 'nihao-listening.mp3' }),
   ).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'Technical metadata', exact: true }),
+    page.getByRole('heading', { name: 'Thông tin kỹ thuật', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'References', exact: true }),
+    page.getByRole('heading', { name: 'Tham chiếu', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'Lifecycle operations', exact: true }),
+    page.getByRole('heading', { name: 'Thao tác vòng đời', exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText(/cdn\.example|private-test-provider|checksum-/i),
   ).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 
-  const metadataFacts = page.locator('.fact-list--two-columns > div');
+  const metadataFacts = page.locator('.adm-facts--two-col > div');
   const [typeFact, mimeFact] = await Promise.all([
     metadataFacts.nth(0).boundingBox(),
     metadataFacts.nth(1).boundingBox(),
@@ -675,11 +850,18 @@ test('navigates the secure Media library, filters assets and opens safe detail',
       { headers: { origin: 'https://attacker.example' } },
     );
     expect(crossOrigin.status()).toBe(403);
-    await page.getByRole('button', { name: 'Quarantine asset' }).click();
-    await expect(page.getByText('Quarantined')).toBeVisible();
+    // Ma trận M5.1b1 chạy 2 lần trên cùng DB: lượt đầu đã cách ly media seed
+    // thì lượt sau nút bị tắt — khẳng định rõ trạng thái thay vì bỏ qua.
+    const quarantine = page.getByRole('button', { name: 'Cách ly' });
+    if (await quarantine.isEnabled()) {
+      await quarantine.click();
+    } else {
+      await expect(quarantine).toBeDisabled();
+    }
+    await expect(page.getByText('Đã cách ly')).toBeVisible();
   }
 
-  await expect(page).toHaveTitle(/Media detail · HSK Content Workbench/u);
+  await expect(page).toHaveTitle(/Chi tiết media · Hán Lộ Admin/u);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
   expect(consoleIssues).toEqual([]);
@@ -694,12 +876,12 @@ test('supports keyboard flow, responsive layout, and automated accessibility', a
   await expect(page.getByLabel('Email')).toBeFocused();
   await page.getByLabel('Email').fill(adminEmail);
   await page.keyboard.press('Tab');
-  await page.getByLabel('Password').fill(adminPassword);
+  await page.getByLabel('Mật khẩu').fill(adminPassword);
   await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/admin\/exercises/);
-  await expect(page).toHaveTitle(/Exercises · HSK Content Workbench/u);
-  await expect(page.getByRole('heading', { name: 'Exercises' })).toBeVisible();
+  await expect(page).toHaveTitle(/Bài tập · Hán Lộ Admin/u);
+  await expect(page.getByRole('heading', { name: 'Bài tập' })).toBeVisible();
   await assertNoHorizontalOverflow(page);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
@@ -786,7 +968,7 @@ test('P-b: transparently refreshes expired session on navigation and revokes on 
   await page.goto('/admin/media');
   await expect(page).toHaveURL(/\/admin\/media/);
   await expect(
-    page.getByRole('heading', { name: 'Media library' }),
+    page.getByRole('heading', { name: 'Thư viện media' }),
   ).toBeVisible();
 
   const refreshedCookies = await context.cookies();
@@ -812,7 +994,7 @@ test('P-b: transparently refreshes expired session on navigation and revokes on 
     'refreshed admin access token must carry an integer sid claim',
   ).toBe(true);
 
-  await page.getByRole('button', { name: 'Log out' }).click();
+  await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(page).toHaveURL(/\/login/);
 
   await expect

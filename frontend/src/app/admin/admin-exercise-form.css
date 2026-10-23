@@ -1,0 +1,192 @@
+/**
+ * Form soạn/sửa bài tập theo từng loại (M5.1b1, TL-19, Q96).
+ *
+ * Nguồn layout: docs/ui_reference/admin/exercise-editor.html (card "Thông tin
+ * chung" + "Dạng bài tập"), giản lược theo Q96/TL-19 và map sang token/class
+ * `adm-` như M5.1a. Biến --adm-* kế thừa từ .admin-app (admin.css); chỉ dùng
+ * CSS variables, không Tailwind, không !important, không inline style.
+ */
+
+.admin-app .adm-exercise-form {
+  display: grid;
+  gap: var(--adm-sp-4);
+}
+
+/* Hàng Loại/Thứ tự và hàng Bài học/Chủ đề: 2 cột, hẹp thì 1 cột. */
+.admin-app .adm-exercise-form__grid,
+.admin-app .adm-exercise-form__fields {
+  display: grid;
+  gap: var(--adm-sp-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.admin-app .adm-exercise-form__group {
+  margin: 0;
+  min-width: 0;
+  padding: var(--adm-sp-4);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+
+.admin-app .adm-exercise-form__legend {
+  padding: 0 var(--adm-sp-2);
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  font-weight: 700;
+}
+
+.admin-app .adm-exercise-form__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--adm-sp-2);
+}
+
+/* Mỗi dòng lựa chọn/đáp án/mảnh câu: số thứ tự + input + nút thao tác. */
+.admin-app .adm-exercise-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+  align-items: center;
+}
+
+.admin-app .adm-exercise-form__row .adm-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+/* Ô nhập + lỗi inline của từng dòng (lựa chọn/đáp án/mảnh câu). */
+.admin-app .adm-exercise-form__control {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+
+.admin-app .adm-exercise-form__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-1);
+}
+
+.admin-app .adm-exercise-form__index {
+  min-width: 1.5rem;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  font-weight: 600;
+  text-align: end;
+}
+
+.admin-app .adm-exercise-form__radio {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  flex: none;
+  accent-color: var(--adm-jade-700);
+}
+
+.admin-app .adm-exercise-form__radio:focus-visible {
+  outline: 3px solid var(--adm-jade-700);
+  outline-offset: 2px;
+}
+
+/* Giá trị chỉ đọc (Bài học/Chủ đề khi sửa hoặc khi đã có ?lessonId=). */
+.admin-app .adm-exercise-form__static-group {
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+
+.admin-app .adm-exercise-form__static {
+  margin: 0;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+  overflow-wrap: anywhere;
+}
+
+/* Câu báo đổi loại / lý do luyện nói chưa xuất bản được (TL-19, TL-21). */
+.admin-app .adm-exercise-form__notice {
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-blue-100);
+  color: var(--adm-blue-text);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+
+.admin-app .adm-exercise-form__hint {
+  margin: 0;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+
+.admin-app .adm-exercise-form__check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  min-height: 2.5rem;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+}
+
+.admin-app .adm-exercise-form__check input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  flex: none;
+  accent-color: var(--adm-jade-700);
+}
+
+.admin-app .adm-exercise-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+
+/* Lỗi từng ô (base.css .field__error): chữ đỏ đậm đạt AA trên trắng. */
+.admin-app .adm-exercise-form .adm-field__error {
+  margin: 0;
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+
+/* Viền đỏ cho ô lỗi (giống form bài học M5.1a); focus vẫn jade. */
+.admin-app .adm-exercise-form .adm-input[aria-invalid='true']:not(:focus) {
+  border-color: var(--adm-red-strong);
+}
+
+@media (max-width: 900px) {
+  .admin-app .adm-exercise-form__grid,
+  .admin-app .adm-exercise-form__fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* X4/Y1: vùng role="status" luôn hiển thị (không ẩn phần tử); khi rỗng chỉ
+   triệt tiêu hộp để không chiếm chỗ, giữ nguyên bề ngoài khi có chữ. */
+.admin-app .adm-exercise-form__status:empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* X10: tiêu đề trang sửa (đề bài) dài không tràn ngang, kể cả chuỗi không dấu cách. */
+.admin-app .adm-exercise-form__heading {
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* X9: vùng bấm ô "Phân biệt chữ hoa/thường" ≥ 44px ở màn hẹp (quy ước admin ≤900px). */
+@media (max-width: 900px) {
+  .admin-app .adm-exercise-form__check {
+    min-block-size: 2.75rem;
+  }
+}

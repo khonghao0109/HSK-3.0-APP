@@ -1,9 +1,8 @@
-import { createHash } from 'node:crypto';
-
 import { Prisma, PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
+import { sha256CanonicalJson } from '../../src/common/utils/canonical-json';
 
 const prisma = new PrismaClient();
 const REQUIRED_EMPTY_TABLES = [
@@ -17,8 +16,10 @@ const REQUIRED_EMPTY_TABLES = [
   'Media',
 ] as const;
 
+// TL-22: contentHash phải là canonical JSON như backend (khoá sắp xếp) để
+// `assertExerciseRevisionHash`/`decidePublishAction` chấp nhận snapshot seed.
 function canonicalHash(value: unknown): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  return sha256CanonicalJson(value);
 }
 
 async function assertMigrationOnlyFixtureState(): Promise<void> {
@@ -65,9 +66,15 @@ async function main(): Promise<void> {
     process.env.E2E_ADMIN_PASSWORD ?? 'FrontendTest-Admin-123';
   const userEmail = process.env.E2E_USER_EMAIL ?? 'user.frontend@example.test';
   const userPassword = process.env.E2E_USER_PASSWORD ?? 'FrontendTest-User-123';
-  const [adminHash, userHash] = await Promise.all([
+  // M5.2b (TL-57): second admin with its own upload rate-limit window.
+  const mediaAdminEmail =
+    process.env.E2E_MEDIA_ADMIN_EMAIL ?? 'admin.media.frontend@example.test';
+  const mediaAdminPassword =
+    process.env.E2E_MEDIA_ADMIN_PASSWORD ?? 'FrontendTest-MediaAdmin-123';
+  const [adminHash, userHash, mediaAdminHash] = await Promise.all([
     passwordHash(adminPassword),
     passwordHash(userPassword),
+    passwordHash(mediaAdminPassword),
   ]);
 
   await prisma.$transaction(async (tx) => {
@@ -91,6 +98,16 @@ async function main(): Promise<void> {
         emailVerifiedAt: new Date(),
       },
     });
+    await tx.user.create({
+      data: {
+        email: mediaAdminEmail,
+        password: mediaAdminHash,
+        name: 'Media Fixture Admin',
+        role: 'admin',
+        status: 'active',
+        emailVerifiedAt: new Date(),
+      },
+    });
     const source = await tx.dataSource.create({
       data: {
         code: 'FRONTEND_CONSOLE_V1',
@@ -100,6 +117,12 @@ async function main(): Promise<void> {
         createdById: admin.id,
       },
     });
+    // M5.2a (Q103): nguồn thiếu giấy phép không được hiện ở màn tải media.
+    await tx.$executeRaw(
+      Prisma.sql`INSERT INTO "DataSource" (code, name, version, license, "createdById", "updatedAt")
+        VALUES ('FRONTEND_CONSOLE_UNLICENSED', 'Nguồn chưa có giấy phép', '2026.10', NULL, ${admin.id}, CURRENT_TIMESTAMP)
+        ON CONFLICT (code) DO NOTHING`,
+    );
     const level = await tx.level.create({
       data: {
         code: 'HSK1',
@@ -257,6 +280,71 @@ async function main(): Promise<void> {
         publishedAt: new Date(),
       },
     });
+    // M5.1a (F5): 1 bài học draft với 1 chủ đề draft, mỗi cái đúng 1 bản sửa
+    // chưa đánh giá — dữ liệu cho luồng review/publish của trang Nội dung.
+    const draftLesson = await tx.lesson.create({
+      data: {
+        levelId: level.id,
+        title: 'Numbers & counting',
+        description: 'Counting and simple quantities.',
+        slug: 'numbers-counting',
+        orderIndex: 2,
+        status: 'draft',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+    const draftLessonSnapshot = {
+      title: draftLesson.title,
+      description: draftLesson.description,
+      orderIndex: draftLesson.orderIndex,
+      slug: draftLesson.slug,
+    };
+    await tx.contentRevision.create({
+      data: {
+        entityType: 'lesson',
+        entityId: draftLesson.id,
+        revision: 1,
+        snapshot: draftLessonSnapshot,
+        contentHash: canonicalHash(draftLessonSnapshot),
+        authorId: admin.id,
+      },
+    });
+    const draftTopic = await tx.topic.create({
+      data: {
+        lessonId: draftLesson.id,
+        title: 'Numbers 1–10',
+        subtitle: 'Basic numerals',
+        type: 'vocabulary',
+        content: [{ type: 'text', value: '一二三四五六七八九十' }],
+        orderIndex: 1,
+        status: 'draft',
+        dataSourceId: source.id,
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+    const draftTopicSnapshot = {
+      title: draftTopic.title,
+      subtitle: draftTopic.subtitle,
+      type: draftTopic.type,
+      content: draftTopic.content,
+      orderIndex: draftTopic.orderIndex,
+      isPremium: draftTopic.isPremium,
+      isLocked: draftTopic.isLocked,
+    };
+    await tx.contentRevision.create({
+      data: {
+        entityType: 'topic',
+        entityId: draftTopic.id,
+        revision: 1,
+        snapshot: draftTopicSnapshot,
+        contentHash: canonicalHash(draftTopicSnapshot),
+        authorId: admin.id,
+      },
+    });
+
     const audio = await tx.media.create({
       data: {
         url: 'https://cdn.example.test/hsk/frontend-console/nihao.mp3',
@@ -338,10 +426,12 @@ async function main(): Promise<void> {
         sourceKey: 'hsk1.greetings.listening.nihao',
       },
       {
+        // TL-22: shape canonical của fill_blank — content rỗng, đáp án nằm ở
+        // answer.acceptedTexts (không phải content.acceptedForms/answer.text).
         type: 'fill_blank',
         prompt: 'Complete the greeting: 你__',
-        content: { acceptedForms: ['好'] },
-        answer: { text: '好' },
+        content: {},
+        answer: { acceptedTexts: ['好'] },
         explanation: '你好 combines 你 and 好.',
         status: 'draft',
         sourceKey: 'hsk1.greetings.fill.nihao',

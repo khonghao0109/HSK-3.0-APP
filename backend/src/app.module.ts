@@ -7,7 +7,10 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import {
+  CustomThrottlerGuard,
+  ipTracker,
+} from './common/guards/custom-throttler.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { JsonBodyDepthMiddleware } from './common/middleware/json-body-depth.middleware';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -16,11 +19,16 @@ import databaseConfig from './config/database.config';
 import { envValidationSchema } from './config/env.validation';
 import jwtConfig from './config/jwt.config';
 import mediaConfig from './config/media.config';
+import { AdminUsersModule } from './modules/admin-users/admin-users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
+import {
+  isNotMediaContentRoute,
+  mediaContentIpLimit,
+} from './modules/media/media-content-ip-throttle';
 import { MediaModule } from './modules/media/media.module';
 import { MediaObservabilityModule } from './infrastructure/observability/media-observability.module';
 import { PostgresThrottlerStorage } from './infrastructure/rate-limit/postgres-throttler.storage';
@@ -43,6 +51,15 @@ import { PrismaModule } from './prisma/prisma.module';
       useFactory: (storage: PostgresThrottlerStorage) => ({
         throttlers: [
           {
+            // The content route keys `default` by grant, so this keeps a per-IP ceiling there only.
+            // Listed first so a blocked IP is refused before a grant counter row is written.
+            name: 'mediaContentIp',
+            ttl: 60_000,
+            limit: mediaContentIpLimit,
+            getTracker: ipTracker,
+            skipIf: isNotMediaContentRoute,
+          },
+          {
             ttl: 60_000,
             // Browser E2E deliberately exercises many authenticated navigations from
             // one loopback address. Production keeps the fail-closed global limit.
@@ -57,6 +74,7 @@ import { PrismaModule } from './prisma/prisma.module';
     JobsModule.register({ isWorker: false }),
     MediaObservabilityModule,
     AuthModule,
+    AdminUsersModule,
     CmsModule,
     UserModule,
     DictionaryModule,

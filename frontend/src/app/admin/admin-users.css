@@ -1,0 +1,293 @@
+/**
+ * Trang Người dùng (M5.3) — phần CSS chưa có trong admin.css.
+ *
+ * Nguồn thiết kế: docs/ui_reference/admin/users-ops.html (khối trái; cột
+ * "Trung tâm vận hành" bị bỏ theo Q111). Chỉ dùng biến --adm-* kế thừa từ
+ * .admin-app (admin.css), không hex, không Tailwind (ADR-008).
+ */
+
+/* TL-71/Q108: ba tab vai trò, trạng thái chọn nằm trên URL (aria-current). */
+.admin-app .uo-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--adm-slate-200);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-app .uo-tabs::-webkit-scrollbar {
+  display: none;
+}
+.admin-app .uo-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--adm-sp-4);
+  color: var(--adm-slate-700);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-app .uo-tab:hover {
+  color: var(--adm-navy-900);
+}
+.admin-app .uo-tab[aria-current='page'] {
+  color: var(--adm-navy-900);
+  font-weight: 600;
+}
+.admin-app .uo-tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: var(--adm-sp-2);
+  right: var(--adm-sp-2);
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--adm-jade-700);
+}
+
+/* Bộ lọc: trạng thái + tìm kiếm + nút Lọc (mẫu .uo-filters). */
+.admin-app .uo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+.admin-app .uo-select {
+  flex: 0 1 12rem;
+}
+.admin-app .uo-search {
+  flex: 1 1 14rem;
+}
+
+/* Bảng user: cắt nền thead theo góc bo của card (mẫu .uo-card). */
+.admin-app .uo-users-card,
+.admin-app .uo-audit-card {
+  overflow: hidden;
+}
+.admin-app .uo-table {
+  min-width: 52rem;
+}
+.admin-app .uo-table td {
+  vertical-align: top;
+}
+.admin-app .uo-user-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-app .uo-user-cell strong {
+  color: var(--adm-navy-900);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.admin-app .uo-email {
+  font-size: var(--adm-fs-xs);
+  overflow-wrap: anywhere;
+}
+.admin-app .uo-nowrap {
+  white-space: nowrap;
+}
+/* N1: email không cắt giữa chữ; cột tự giãn theo nội dung, không đặt px. */
+.admin-app .uo-email-cell {
+  white-space: nowrap;
+}
+.admin-app .uo-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-1);
+  font-weight: 600;
+  font-size: var(--adm-fs-xs);
+  white-space: nowrap;
+}
+.admin-app .uo-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.admin-app .uo-status--active {
+  color: var(--adm-jade-800);
+}
+.admin-app .uo-status--suspended {
+  color: var(--adm-red-text);
+}
+.admin-app .uo-status--pending {
+  color: var(--adm-amber-text);
+}
+.admin-app .uo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-1);
+}
+.admin-app .uo-action-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-500);
+}
+
+/* Vùng live cho kết quả/lỗi thao tác (TL-72). */
+.admin-app .uo-live {
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-4) var(--adm-sp-3);
+  font-size: var(--adm-fs-sm);
+}
+/* N2: chưa có thông báo thì vùng live không chiếm chiều cao. React chỉ render
+   text khi có announcement nên không có text node rỗng cản :empty. */
+.admin-app .uo-live:empty {
+  min-height: 0;
+  padding: 0;
+}
+.admin-app .uo-live--ok {
+  color: var(--adm-jade-800);
+}
+.admin-app .uo-live--error {
+  color: var(--adm-red-text);
+}
+
+/* Dialog native (TL-72); nền mờ bằng --adm-backdrop-bg. */
+.admin-app .uo-dialog {
+  width: min(92vw, 32rem);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  padding: 0;
+  color: var(--adm-navy-900);
+  background: var(--adm-paper);
+  box-shadow: 0 24px 64px rgb(7 20 48 / 24%);
+}
+.admin-app .uo-dialog::backdrop {
+  background: var(--adm-backdrop-bg);
+}
+.admin-app .uo-dialog__body {
+  display: grid;
+  gap: var(--adm-sp-3);
+  padding: var(--adm-sp-5);
+}
+.admin-app .uo-dialog__title {
+  margin: 0;
+  font-size: var(--adm-fs-lg);
+}
+.admin-app .uo-dialog__who {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--adm-fs-sm);
+  overflow-wrap: anywhere;
+}
+.admin-app .uo-dialog__text {
+  margin: 0;
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .uo-field {
+  display: grid;
+  gap: var(--adm-sp-2);
+}
+.admin-app .uo-label {
+  font-weight: 600;
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .uo-textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  font: inherit;
+  color: inherit;
+}
+.admin-app .uo-hint {
+  margin: 0;
+  text-align: right;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+.admin-app .uo-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--adm-sp-2);
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border: 1px solid var(--adm-alert-error-border);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-red-100);
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .uo-dialog__error {
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border: 1px solid var(--adm-alert-error-border);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-red-100);
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .uo-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--adm-sp-2);
+}
+
+/* Khối audit dưới bảng user (TL-73). */
+.admin-app .uo-audit {
+  display: grid;
+  gap: var(--adm-sp-2);
+}
+.admin-app .uo-audit__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-3);
+}
+.admin-app .uo-audit__head h2 {
+  margin: 0;
+  font-size: var(--adm-fs-md);
+}
+.admin-app .uo-audit-table {
+  min-width: 44rem;
+}
+.admin-app .uo-audit-table td {
+  color: var(--adm-slate-700);
+}
+.admin-app .uo-audit-empty {
+  margin: 0;
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-slate-500);
+}
+.admin-app .uo-break-anywhere {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .admin-app .uo-table,
+  .admin-app .uo-audit-table {
+    min-width: 0;
+  }
+  .admin-app .uo-record-list .uo-actions,
+  .admin-app .uo-audit-record-list .adm-record-list__facts {
+    margin-top: var(--adm-sp-1);
+  }
+}
+
+@media (max-width: 430px) {
+  /* .adm-filters đổi sang flex column ở breakpoint này; flex-basis % theo
+     chiều cao sẽ làm ô phình to, nên khoá flex và cho rộng 100% theo chiều ngang. */
+  .admin-app .uo-filters {
+    align-items: stretch;
+  }
+  .admin-app .uo-select,
+  .admin-app .uo-search {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .admin-app .uo-filters .adm-btn {
+    width: 100%;
+  }
+  .admin-app .uo-dialog__actions > * {
+    width: 100%;
+  }
+}

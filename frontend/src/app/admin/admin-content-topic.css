@@ -1,0 +1,73 @@
+/**
+ * admin-content-topic.css — class riêng của trang chủ đề (M5.1a, Q90/Q91):
+ * form tạo/sửa topic (ô JSON monospace) và cột chính của trang chi tiết.
+ * Import từ app/admin/content/topics/new/page.tsx và
+ * app/admin/content/topics/[topicId]/page.tsx (CSS theo route).
+ * Biến --adm-* kế thừa từ .admin-app (admin.css); class mới bắt đầu adm-.
+ */
+
+/* Fieldset gom form: bỏ khung mặc định, xếp dọc theo nhịp admin. */
+.admin-app .adm-topic-form {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--adm-sp-4);
+}
+.admin-app .adm-topic-form:disabled {
+  opacity: 0.75;
+}
+
+/* Ô Nội dung JSON (Q90): monospace, cao ~14 dòng, chỉ giãn theo chiều dọc. */
+.admin-app .adm-topic-form__json {
+  font-family: var(--adm-font-mono);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.65;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+/* Nhãn checkbox (Premium / Khoá): hàng ngang gọn như .adm-review-form__option. */
+.admin-app .adm-topic-form__check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-navy-900);
+  cursor: pointer;
+}
+
+.admin-app .adm-topic-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .adm-topic-form-stack {
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .adm-topic-form__back {
+  margin: 0;
+}
+
+/* Cột chính của trang chi tiết: form + lịch sử bản sửa xếp dọc. */
+.admin-app .adm-topic-detail__main {
+  display: grid;
+  gap: var(--adm-sp-5);
+  align-content: start;
+  min-width: 0;
+}
+
+/* Trạng thái rỗng dạng cột cho not-found (admin.css chỉ có .adm-empty ngang;
+   bản --stack nằm ở admin-exercises.css, route này không import file đó). */
+.admin-app .adm-empty--stack {
+  flex-direction: column;
+}
+.admin-app .adm-empty h1 {
+  font-size: var(--adm-fs-xl);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+}

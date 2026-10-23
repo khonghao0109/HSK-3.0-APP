@@ -1,15 +1,14 @@
 import Link from 'next/link';
 
-import { StatusBadge } from '@/components/ui/status-badge';
+import { AdminBadge } from '@/features/admin-shell/admin-badge';
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
+import {
+  lifecycleLabel,
+  mediaTypeLabel,
+  processingStatusLabel,
+} from '@/features/admin-shell/admin-labels';
 
 import type { AdminMedia } from './media-contract';
-
-function titleCase(value: string): string {
-  return value
-    .split('_')
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ');
-}
 
 function fileSize(bytes: number | null): string {
   if (bytes === null) return '—';
@@ -21,70 +20,72 @@ function fileSize(bytes: number | null): string {
 export function MediaTable({ media }: { media: AdminMedia[] }) {
   if (media.length === 0) {
     return (
-      <div className="empty-state" role="status">
-        <span className="empty-state__mark" aria-hidden="true">
-          影
-        </span>
-        <h2>No media assets match</h2>
-        <p>Adjust the filters or clear them to return to the full library.</p>
+      <div className="adm-empty" role="status">
+        <AdminIcon name="search" />
+        <p>Không có media nào khớp bộ lọc.</p>
+        <Link
+          className="adm-btn adm-btn--outline adm-btn--sm"
+          href="/admin/media"
+        >
+          Xoá lọc
+        </Link>
       </div>
     );
   }
   return (
     <>
-      <div className="table-frame desktop-inventory">
-        <table className="exercise-table media-table">
-          <caption className="sr-only">
-            Media assets in the content library
-          </caption>
+      <div className="adm-table-wrap adm-table-wrap--swap">
+        <table className="adm-table">
+          <caption className="sr-only">Danh sách media, trang hiện tại</caption>
           <thead>
             <tr>
               <th scope="col">ID</th>
-              <th scope="col">Asset</th>
-              <th scope="col">Type</th>
-              <th scope="col">Size / duration</th>
-              <th scope="col">Processing</th>
-              <th scope="col">Usage</th>
-              <th scope="col">Lifecycle</th>
-              <th scope="col">
-                <span className="sr-only">Open</span>
-              </th>
+              <th scope="col">Tệp</th>
+              <th scope="col">Loại</th>
+              <th scope="col">Dung lượng / Thời lượng</th>
+              <th scope="col">Xử lý</th>
+              <th scope="col">Lượt dùng</th>
+              <th scope="col">Vòng đời</th>
+              <th scope="col">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {media.map((asset) => (
               <tr key={asset.id} aria-label={`Media ${asset.id}`}>
                 <td>
-                  <span className="mono">MD-{asset.id}</span>
+                  <span className="adm-mono">MD-{asset.id}</span>
                 </td>
                 <td>
-                  <strong>{asset.filename ?? `Media asset ${asset.id}`}</strong>
-                  <span className="table-subline mono">
-                    {asset.mimeType ?? 'Unknown MIME'}
+                  <strong className="adm-table__strong">
+                    {asset.filename ?? `Media ${asset.id}`}
+                  </strong>
+                  <span className="adm-table__sub adm-mono">
+                    {asset.mimeType ?? '—'}
                   </span>
                 </td>
-                <td>{titleCase(asset.type)}</td>
+                <td>{mediaTypeLabel(asset.type)}</td>
                 <td>
                   {fileSize(asset.size)}
-                  <span className="table-subline">
+                  <span className="adm-table__sub">
                     {asset.duration === null ? '—' : `${asset.duration}s`}
                   </span>
                 </td>
                 <td>
-                  <StatusBadge status={asset.processingStatus}>
-                    {titleCase(asset.processingStatus)}
-                  </StatusBadge>
+                  <AdminBadge
+                    status={asset.processingStatus}
+                    label={processingStatusLabel(asset.processingStatus)}
+                  />
                 </td>
-                <td className="mono">{asset.usageCount}</td>
+                <td className="adm-mono">{asset.usageCount}</td>
                 <td>
-                  <StatusBadge status={asset.lifecycle}>
-                    {titleCase(asset.lifecycle)}
-                  </StatusBadge>
+                  <AdminBadge
+                    status={asset.lifecycle}
+                    label={lifecycleLabel(asset.lifecycle)}
+                  />
                 </td>
                 <td>
-                  <Link className="row-link" href={`/admin/media/${asset.id}`}>
-                    Open media {asset.id}
-                    <span aria-hidden="true"> →</span>
+                  <Link className="adm-link" href={`/admin/media/${asset.id}`}>
+                    Mở media {asset.id}
                   </Link>
                 </td>
               </tr>
@@ -93,44 +94,41 @@ export function MediaTable({ media }: { media: AdminMedia[] }) {
         </table>
       </div>
       <ol
-        className="exercise-record-list media-record-list"
-        aria-label="Media for narrow screens"
+        className="adm-record-list adm-record-list--swap"
+        aria-label="Danh sách media cho màn hẹp"
       >
         {media.map((asset) => (
           <li key={asset.id} aria-label={`Media ${asset.id}`}>
-            <div className="exercise-record__header">
+            <div className="adm-record-list__head">
               <div>
-                <span className="mono exercise-record__id">MD-{asset.id}</span>
-                <strong>{asset.filename ?? `Media asset ${asset.id}`}</strong>
+                <span className="adm-mono">MD-{asset.id}</span>{' '}
+                <strong>{asset.filename ?? `Media ${asset.id}`}</strong>
               </div>
-              <StatusBadge status={asset.processingStatus}>
-                {titleCase(asset.processingStatus)}
-              </StatusBadge>
+              <AdminBadge
+                status={asset.processingStatus}
+                label={processingStatusLabel(asset.processingStatus)}
+              />
             </div>
-            <dl className="exercise-record__facts">
+            <dl className="adm-record-list__facts">
               <div>
-                <dt>Type</dt>
-                <dd>{titleCase(asset.type)}</dd>
+                <dt>Loại</dt>
+                <dd>{mediaTypeLabel(asset.type)}</dd>
               </div>
               <div>
-                <dt>Size</dt>
+                <dt>Dung lượng</dt>
                 <dd>{fileSize(asset.size)}</dd>
               </div>
               <div>
-                <dt>Usage</dt>
-                <dd className="mono">{asset.usageCount}</dd>
+                <dt>Lượt dùng</dt>
+                <dd className="adm-mono">{asset.usageCount}</dd>
               </div>
               <div>
-                <dt>Lifecycle</dt>
-                <dd>{titleCase(asset.lifecycle)}</dd>
+                <dt>Vòng đời</dt>
+                <dd>{lifecycleLabel(asset.lifecycle)}</dd>
               </div>
             </dl>
-            <Link
-              className="row-link exercise-record__action"
-              href={`/admin/media/${asset.id}`}
-            >
-              Open media {asset.id}
-              <span aria-hidden="true"> →</span>
+            <Link className="adm-link" href={`/admin/media/${asset.id}`}>
+              Mở media {asset.id}
             </Link>
           </li>
         ))}

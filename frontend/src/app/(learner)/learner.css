@@ -34,6 +34,8 @@
 
   --cinnabar-600: #d4502b;
   --cinnabar-500: #e2553a;
+  /* Q79: small text in cinnabar (5.18:1 on white; 500 and 600 fall short). */
+  --cinnabar-700: #c2410c;
   --cinnabar-100: #fde8e1;
   --red-600: #e0453a;
   --red-100: #fdeceb;
@@ -80,6 +82,29 @@
   --path-bar-bg: #f3f5ec;
   --path-tile-shadow: rgb(20 24 43 / 4%);
   --path-bar-shadow: rgb(20 24 43 / 5%);
+
+  /* Bài học (m02.css, 02-03). */
+  --lesson-violet: #8a6fe0;
+  --lesson-blue: #4a80e0;
+  --lesson-badge-text: #1f4f9c;
+
+  /* Bài luyện tập (m02.css, 02-04/02-05). */
+  --ex-feedback-bg: #f2f6ea;
+  --ex-feedback-border: #e3ead8;
+  --ex-chip-ok: #e1f0e8;
+  --ex-chip-ok-text: #1e5a45;
+  --ex-ok-text: #0f6b4c;
+  --ex-wrong-text: #b3261e;
+  --ex-wrong-chip-text: #9b2a22;
+  --ex-wrong-border: #f6c9c4;
+  --ex-right-border: #2f9c7f;
+  --ex-right-bg: #eef8f3;
+  --ex-progress-end: #19ad86;
+  --ex-chip-text: #111111;
+  --ex-play-top: #15ad8a;
+  --ex-wave-rest: #d9d8dd;
+  /* Hover stays >= 4.5:1 with white (jade-700 is 4.13:1). */
+  --ex-btn-hover: #055c48;
 
   /* Solid jade-700 on every control, inputs included (Q12): >= 3:1 vs
      cream-50/100, paper and jade-25 (WCAG 1.4.11). */
@@ -128,7 +153,9 @@
     var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-serif:
     var(--font-noto-serif), 'Noto Serif', Georgia, 'Times New Roman', serif;
-  --font-cn: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  --font-cn:
+    var(--font-noto-sans-sc), 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
+    sans-serif;
   --font-cn-serif:
     var(--font-noto-serif-sc), 'Noto Serif SC', 'Songti SC', serif;
 
@@ -262,6 +289,27 @@ html:has(.learner-app) {
 
 .learner-app [hidden] {
   display: none !important;
+}
+
+/* M2.10b hooks: grouping wrappers for the web card/grid layouts (mẫu
+   web/dictionary.html, word.html, lesson.html, lesson-complete.html). They
+   generate no box below 1024px, so the mobile flow and pixels are exactly
+   what they were before the wrappers existed; learner-web.css turns them
+   into the sample's grids and cards from 1024px. */
+.learner-app .dict-web,
+.learner-app .dict-web__main,
+.learner-app .dict-web__box,
+.learner-app .word-web,
+.learner-app .word-web__main,
+.learner-app .word-web__hero,
+.learner-app .word-web__hero-body,
+.learner-app .word-web__aside,
+.learner-app .word-web__act,
+.learner-app .lesson-content,
+.learner-app .ex-track,
+.learner-app .done-card,
+.learner-app .done-hero {
+  display: contents;
 }
 
 .learner-app .sr-only {
@@ -914,7 +962,8 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__terms a {
-  color: var(--jade-700);
+  /* Q80: jade-800, 5.09:1 on cream (jade-700 is 3.97:1). */
+  color: var(--jade-800);
   text-decoration: none;
   font-weight: 500;
   display: inline-block;
@@ -1213,14 +1262,21 @@ html:has(.learner-app) {
   border: 2px solid var(--jade-600);
 }
 
-.learner-app .minute[aria-checked='true'] b,
-.learner-app .minute[aria-checked='true'] span {
+.learner-app .minute[aria-checked='true'] b {
   color: var(--jade-600);
 }
 
-.learner-app .minute--fast b,
-.learner-app .minute--fast span {
+.learner-app .minute--fast b {
   color: var(--cinnabar-500);
+}
+
+/* Q79: the 16px "phút" needs 4.5:1; the large number keeps the mockup colour. */
+.learner-app .minute--fast span {
+  color: var(--cinnabar-700);
+}
+
+.learner-app .minute[aria-checked='true'] span {
+  color: var(--jade-800);
 }
 
 /* Must precede .time-select select (same specificity) so its arrow position wins. */
@@ -2369,6 +2425,14 @@ html:has(.learner-app) {
   padding: 10px 18px 0 15px;
 }
 
+.learner-app .path-panel:not(:has(.path-grid)) {
+  padding-bottom: 8px;
+}
+
+.learner-app .path-panel:focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
 .learner-app .path-title {
   font-family: var(--font-sans);
   font-size: 0.97rem;
@@ -2615,20 +2679,6 @@ html:has(.learner-app) {
     gap: 8px;
   }
 
-  /* Three columns leave ~46px tiles where the number overlaps the icon. */
-  .learner-app .path-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .learner-app .topic__art {
-    display: none;
-  }
-
-  .learner-app .topic {
-    padding-top: 28px;
-    min-height: 0;
-  }
-
   .learner-app .path-next__label {
     white-space: nowrap;
     overflow: hidden;
@@ -2641,8 +2691,1642 @@ html:has(.learner-app) {
   }
 }
 
+/* Large zoom (≤ 319px): at 300–319px three columns leave ~80–86px tiles
+   where the 42px art overlaps the number and the state icon by 2.5–5px.
+   Two columns and no tile art keep number and icon apart. From 320px the
+   art still touches by under 2px, as in the mockup. */
+@media (max-width: 319px) {
+  .learner-app .path-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learner-app .topic__art {
+    display: none;
+  }
+
+  .learner-app .topic {
+    padding-top: 28px;
+    min-height: 0;
+  }
+}
+
+/* ---------- Thanh tiêu đề navy (m02.css, 02-03) ---------- */
+.learner-app .m02-bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  height: 60px;
+  padding: 0 8px 8px;
+}
+
+/* Q12: the sheet below is pulled up 12px and painted later, so it would cover
+   the bottom of the back/heart focus ring; lift the buttons above it. */
+.learner-app .m02-bar .icon-btn {
+  position: relative;
+  z-index: 1;
+  color: var(--white);
+}
+
+.learner-app .m02-bar .icon-btn .icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke-width: 2;
+}
+
+.learner-app .m02-bar__title {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ---------- 02-03 Nội dung bài học (M2.5a, Q32–Q44) ---------- */
+.learner-app .lesson {
+  padding: 18px 17px calc(var(--tabbar-height) + 24px) 20px;
+}
+
+.learner-app .lesson-hero {
+  display: grid;
+  grid-template-columns: 139px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Q34: shared illustration tile in place of a per-lesson image, same box. */
+.learner-app .lesson-hero__img {
+  display: grid;
+  place-items: center;
+  width: 139px;
+  height: 116px;
+  margin-left: 1px;
+  border-radius: 12px;
+  background: var(--jade-50);
+  color: var(--jade-700);
+  aspect-ratio: 139 / 116;
+}
+
+.learner-app .lesson-hero__img .icon {
+  width: 44px;
+  height: 44px;
+  stroke-width: 1.8;
+}
+
+.learner-app .lesson-hero__info {
+  padding-top: 2px;
+  padding-right: 44px;
+}
+
+.learner-app .lesson-hero__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lesson-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 0;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--paper);
+  white-space: nowrap;
+  color: var(--lesson-badge-text);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.learner-app .lesson-hero__desc {
+  margin: 14px 0 0;
+  font-size: 0.75rem;
+  line-height: 14.5px;
+  color: var(--text-body);
+}
+
+.learner-app .lesson-hero__bar {
+  margin-top: 12px;
+  height: 4px;
+}
+
+.learner-app .lesson-hero__pct {
+  margin: 5px 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-body);
+}
+
+/* Q42: jade-700 on cream is 3.97:1; jade-800. */
+.learner-app .lesson-hero__pct b {
+  color: var(--jade-800);
+  font-weight: 600;
+}
+
+.learner-app .lesson-section {
+  margin: 3px 0 0;
+  font-size: 0.97rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink-900);
+}
+
+.learner-app .lesson-rows {
+  display: grid;
+  gap: 4.8px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .lrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 49px;
+  padding: 0 16.5px 0 13px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 1px 3px var(--path-tile-shadow);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+}
+
+.learner-app .lrow:hover {
+  border-color: var(--border-strong);
+}
+
+/* Q12: the card shadow above would replace the focus ring. */
+.learner-app .lrow:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .lrow > img {
+  width: 36px;
+  height: auto;
+  flex: none;
+}
+
+.learner-app .lrow .grow {
+  display: grid;
+  gap: 1.5px;
+  padding-top: 3px;
+}
+
+.learner-app .lrow__title {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lrow__meta {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--slate-500);
+}
+
+.learner-app .lrow__end {
+  position: relative;
+  align-self: stretch;
+  width: 84px;
+  flex: none;
+}
+
+.learner-app .lrow__bar {
+  position: absolute;
+  left: 0;
+  width: 59px;
+  top: 31px;
+  height: 4px;
+  background: var(--slate-200);
+}
+
+.learner-app .lrow__count {
+  position: absolute;
+  right: 0;
+  top: 15px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-900);
+}
+
+.learner-app .lrow__check {
+  position: absolute;
+  right: 0;
+  top: 17px;
+  width: 14px;
+  height: 14px;
+  color: var(--jade-600);
+}
+
+.learner-app .lrow--violet .lrow__bar > span {
+  background: var(--lesson-violet);
+}
+
+.learner-app .lrow--blue .lrow__bar > span {
+  background: var(--lesson-blue);
+}
+
+/* Q42, Q44: stone-500 lock (the demo's #d6d4d8 is 1.47:1). */
+.learner-app .lrow__lock {
+  position: absolute;
+  right: 1px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  color: var(--stone-500);
+  stroke-width: 2.4;
+}
+
+.learner-app .lrow.is-locked {
+  cursor: not-allowed;
+}
+
+/* Q42 (as Q28): a real 44px button on solid jade-800 (white on the demo
+   gradient is 2.58:1). Q38: a toast <button>, so it needs a width. */
+.learner-app .lesson-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 5px);
+  height: 44px;
+  margin: 8px 3px 0 2px;
+  padding: 0 26px 0 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--jade-800);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.learner-app .lesson-cta .icon {
+  position: absolute;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Q44: locked lesson — grey, aria-disabled (not `disabled`, so it still
+   focuses and shows the lock toast); slate-700 on slate-200 is 7.59:1. */
+.learner-app .lesson-cta[aria-disabled='true'],
+.learner-app .lesson-cta[aria-disabled='true']:hover {
+  background: var(--slate-200);
+  color: var(--slate-700);
+  cursor: not-allowed;
+}
+
+/* ---------- Không tìm thấy bài học (Q41) ---------- */
+.learner-app .lesson-nf {
+  flex: 1;
+  padding: 40px 20px calc(var(--tabbar-height) + 24px);
+}
+
+.learner-app .lesson-nf__body {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.learner-app .lesson-nf__art {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+  border-radius: 18px;
+  background: var(--cream-100);
+  color: var(--stone-600);
+}
+
+.learner-app .lesson-nf__art .icon {
+  width: 34px;
+  height: 34px;
+  stroke-width: 1.8;
+}
+
+.learner-app .lesson-nf__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lesson-nf__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+/* As "Tiếp tục học" (Q42): >= 44px, solid jade-800, white text 5.3:1. */
+.learner-app .lesson-nf__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 6px 16px;
+  border-radius: 10px;
+  background: var(--jade-800);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 02-04/02-05 Bài luyện tập (M2.5b, Q45–Q50) ---------- */
+/* The player has no tab bar (mẫu 04, 05); the lesson not-found page under
+   the same segment keeps it (Q41). */
+.learner-app .app:has(> .ex) > .tabbar {
+  display: none;
+}
+
+.learner-app .ex {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.learner-app .ex-bar {
+  position: relative;
+  height: 52px;
+  padding: 0 19px 10px 3px;
+}
+
+.learner-app .ex-bar .icon-btn .icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke-width: 2.2;
+}
+
+.learner-app .ex-bar .m02-bar__title {
+  position: absolute;
+  inset: 0 60px 10px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.learner-app .m02-bar__count {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.learner-app .ex-body {
+  flex: 1;
+  padding: 9px 19px 16px 16px;
+}
+
+.learner-app .ex-progress {
+  height: 6px;
+  background: var(--slate-100);
+}
+
+.learner-app .ex-progress > span {
+  background: linear-gradient(90deg, var(--jade-600), var(--ex-progress-end));
+}
+
+.learner-app .ex-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  padding: 0 9.5px calc(26px + env(safe-area-inset-bottom)) 12.5px;
+}
+
+.learner-app .ex-foot:empty {
+  display: none;
+}
+
+/* Result bar (Q50: wrong answers have no retry, only Tiếp tục). */
+.learner-app .m02-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8.5px;
+  min-height: 49px;
+  padding: 5px 8px 5px 11px;
+  border: 1px solid var(--ex-feedback-border);
+  border-radius: 10px;
+  background: var(--ex-feedback-bg);
+  animation: ex-pop var(--dur) ease-out;
+}
+
+@keyframes ex-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.learner-app .m02-feedback .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.learner-app .m02-feedback__art {
+  width: 36px;
+  height: auto;
+  flex: none;
+}
+
+.learner-app .m02-feedback__icon {
+  width: 30px;
+  height: 30px;
+  margin-left: 3px;
+  flex: none;
+  color: var(--red-600);
+}
+
+.learner-app .m02-feedback__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ex-ok-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.learner-app .m02-feedback__title img {
+  width: 21px;
+  height: auto;
+}
+
+.learner-app .m02-feedback__text {
+  margin: 1px 0 0;
+  color: var(--ink-900);
+  font-size: 0.77rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* Q42: 44px tall and >= 4.5:1 (white on jade-800 is 5.3:1; the demo's
+   jade-600 gradient is 3:1). */
+.learner-app .m02-feedback__btn,
+.learner-app .ex-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 93px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--jade-800);
+  color: var(--white);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.learner-app .m02-feedback__btn:hover,
+.learner-app .ex-check:hover {
+  background: var(--ex-btn-hover);
+}
+
+.learner-app .ex-check {
+  width: 100%;
+}
+
+.learner-app .ex-check[aria-disabled='true'],
+.learner-app .ex-check[aria-disabled='true']:hover {
+  background: var(--slate-200);
+  color: var(--slate-700);
+  cursor: default;
+}
+
+.learner-app .m02-feedback--wrong {
+  border-color: var(--ex-wrong-border);
+  background: var(--red-100);
+}
+
+.learner-app .m02-feedback--wrong .m02-feedback__title {
+  color: var(--ex-wrong-text);
+}
+
+/* White on red-600 is 4.1:1; the title red is 6.5:1. */
+.learner-app .m02-feedback--wrong .m02-feedback__btn {
+  background: var(--ex-wrong-text);
+}
+
+.learner-app .m02-feedback--wrong .m02-feedback__btn:hover {
+  background: var(--ex-wrong-chip-text);
+}
+
+.learner-app .ex-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ex-wrong-border);
+  border-radius: 10px;
+  background: var(--red-100);
+  color: var(--ex-wrong-text);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Prompt of every exercise: focus lands here when the next one opens. */
+.learner-app .pr-q {
+  margin: 14.5px 0 0;
+  padding-left: 3px;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 0.77rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.learner-app .pr-q:focus {
+  outline: none;
+}
+
+.learner-app .pr-q:focus-visible {
+  border-radius: 4px;
+  box-shadow: var(--focus-ring);
+}
+
+/* stone-600: stone-500 is 3.6:1 on cream (Q42). */
+.learner-app .pr-hint {
+  margin: 2px 0 0;
+  padding-left: 2px;
+  color: var(--stone-600);
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+/* arrange_sentence (mẫu 04): tap a word to move it; no drag (Q45). */
+.learner-app .pr-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5.6px;
+  margin: 10px -3px 0 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--path-hairline);
+}
+
+/* Q42: 44×44 for real (the demo draws 38px), no ::before hit area. */
+.learner-app .pr-chip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 0 1px 2px var(--path-bar-shadow);
+  color: var(--ex-chip-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast),
+    transform var(--dur-fast);
+}
+
+.learner-app .pr-chip:active {
+  transform: scale(0.96);
+}
+
+.learner-app .pr-chip:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .pr-chip.is-used {
+  border-style: dashed;
+  background: var(--slate-100);
+  box-shadow: none;
+  color: transparent;
+}
+
+/* A used word keeps focus after Enter; it still shows the ring (Q12). */
+.learner-app .pr-chip.is-used:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .pr-chip[aria-disabled='true'] {
+  cursor: default;
+}
+
+.learner-app .pr-chip[aria-disabled='true']:active {
+  transform: none;
+}
+
+.learner-app .pr-answer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 15px -3px 0 0;
+}
+
+.learner-app .pr-answer__row {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 5.8px;
+  min-width: 0;
+}
+
+.learner-app .pr-chip--answer {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 7px;
+  border: 0;
+  background: var(--ex-chip-ok);
+  box-shadow: none;
+  color: var(--ex-chip-ok-text);
+}
+
+.learner-app .pr-chip--answer.is-wrong {
+  background: var(--red-100);
+  color: var(--ex-wrong-chip-text);
+}
+
+.learner-app .pr-answer__ok {
+  width: 23px;
+  height: 23px;
+  flex: none;
+  color: var(--jade-600);
+}
+
+.learner-app .pr-answer__ok.is-hidden {
+  visibility: hidden;
+}
+
+.learner-app .pr-answer__empty {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--stone-600);
+  font-size: 0.8125rem;
+}
+
+/* mcq: the 2×2 grid of mẫu 05 without the audio block (Q45). */
+.learner-app .ls-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: minmax(53px, auto) minmax(49.3px, auto);
+  grid-auto-rows: minmax(49.3px, auto);
+  gap: 9px 10.7px;
+  margin: 13.5px 0 0 -1.6px;
+}
+
+.learner-app .ls-opt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 1px 3px var(--path-tile-shadow);
+  color: var(--ex-chip-text);
+  font: inherit;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  transition:
+    border-color var(--dur-fast),
+    background var(--dur-fast);
+}
+
+.learner-app .ls-opt .cn {
+  font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', var(--font-cn-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-indent: 0.1em;
+  line-height: 1;
+}
+
+.learner-app .ls-opt:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app .ls-opt:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* Chosen, not yet checked: no fill, so it does not read as correct. */
+.learner-app .ls-opt[aria-checked='true'] {
+  border: 1.5px solid var(--jade-700);
+}
+
+.learner-app .ls-opt[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* jade-800: jade-700 is 3.8:1 on this fill (Q42). */
+.learner-app .ls-opt.is-right {
+  border: 1.5px solid var(--ex-right-border);
+  background: var(--ex-right-bg);
+  color: var(--jade-800);
+}
+
+.learner-app .ls-opt.is-wrong {
+  border: 1.5px solid var(--red-600);
+  background: var(--red-100);
+  color: var(--ex-wrong-text);
+}
+
+.learner-app .ls-opt__mark {
+  position: absolute;
+  top: -2px;
+  right: -5.6px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--jade-600);
+}
+
+.learner-app .ls-opt.is-wrong .ls-opt__mark {
+  color: var(--red-600);
+}
+
+/* listening_choice (M2.5c, Q54–Q57): mẫu 05 with its M2.5c block; play and
+   "Nghe lại" are 44px for real (Q42), no transcript (Q54). */
+.learner-app .ls-audio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  margin: 10px 0 0 -1.6px;
+  padding: 0 10.8px 0 3.7px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.learner-app .play-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--jade-600);
+  color: var(--white);
+}
+
+.learner-app .ls-play {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(180deg, var(--ex-play-top), var(--jade-600));
+}
+
+.learner-app .ls-play .icon {
+  width: 21px;
+  height: 21px;
+}
+
+.learner-app .ls-audio__track {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Decorative (Q55): SVG bars, played ones jade-600. */
+.learner-app .ls-wave {
+  display: block;
+  position: relative;
+  width: calc(100% - 47px);
+  height: 24px;
+  overflow: visible;
+}
+
+.learner-app .ls-wave rect {
+  fill: var(--jade-600);
+}
+
+.learner-app .ls-wave rect.is-rest {
+  fill: var(--ex-wave-rest);
+}
+
+.learner-app .ls-audio__time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0;
+  color: var(--stone-600);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.learner-app .ls-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12.5px 0 0 -1.6px;
+}
+
+.learner-app .ls-tool {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 16px 0 14px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 0 1px 2px var(--path-tile-shadow);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.learner-app .ls-tool .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2;
+}
+
+.learner-app .ls-tool:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app .ls-play:focus-visible,
+.learner-app .ls-tool:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .ls-tools + .ex-error {
+  margin-top: 12px;
+}
+
+/* fill_blank (Q47): the sentence with an underlined blank, one input. */
+.learner-app .fb-q {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.learner-app .fb-blank {
+  display: inline-block;
+  min-width: 4em;
+  margin: 0 2px;
+  border-bottom: 2px solid var(--ink-900);
+  text-align: center;
+}
+
+.learner-app .fb-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.learner-app .fb-field .input {
+  /* The focus ring must show at once, not ease in. */
+  transition: border-color var(--dur-fast);
+}
+
+.learner-app .fb-field label {
+  color: var(--ink-900);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Q48: types the player cannot show yet. */
+.learner-app .ex-soon,
+.learner-app .ex-done {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 20px 16px;
+  border: 1px solid var(--path-hairline);
+  border-radius: 12px;
+  background: var(--paper);
+  text-align: center;
+}
+
+.learner-app .ex-soon__title,
+.learner-app .ex-done__title {
+  margin: 0;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.learner-app .ex-soon__title:focus,
+.learner-app .ex-done__title:focus {
+  outline: none;
+}
+
+.learner-app .ex-soon .m02-feedback__btn,
+.learner-app .ex-done .lesson-cta {
+  width: 100%;
+  margin: 0;
+  padding: 0 14px;
+}
+
+/* ---------- 02-06 Hoàn thành bài học (M2.5d, Q42, Q58–Q61) ---------- */
+/* m02.css 02-06 + khối M2.5d. Không có tab bar (mẫu 06); trang nằm trên nền
+   navy như mẫu. Q59: không ô XP, không thẻ thành tích. */
+.learner-app .app:has(> .done-main) {
+  --m02-c-pink: #e0507e;
+  --m02-c-lav: #8a83d8;
+  --m02-c-yellow: #f2c64c;
+  --m02-c-blue: #3e5bd8;
+  --m02-c-orange: #ef7348;
+  --m02-c-olive: #c8a24c;
+  --m02-c-teal: #4db39e;
+  --m02-c-red: #ef5262;
+  --m02-c-brown: #8c5a4c;
+  --m02-c-green: #9fc07c;
+  --m02-c-cyan: #36d3d6;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: radial-gradient(
+    120% 60% at 50% 22%,
+    #13265a 0%,
+    var(--navy-900) 55%,
+    #091842 100%
+  );
+}
+
+.learner-app .app:has(> .done-main) > .tabbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .learner-app:has(.done-main) {
+    background: var(--navy-950);
+  }
+}
+
+.learner-app .done-confetti {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 175px;
+  pointer-events: none;
+}
+
+/* Mẫu đặt vị trí bằng style="--x…"; CSP không cho thuộc tính style nên
+   vị trí theo thứ tự mảnh (README ghi chú 36). */
+.learner-app .done-confetti i {
+  position: absolute;
+  left: calc(var(--x) / 390 * 100%);
+  top: var(--y);
+  width: 6px;
+  height: 10px;
+  border-radius: 1.5px;
+  background: var(--c);
+  transform: rotate(var(--r));
+  opacity: 0.9;
+  animation:
+    done-confetti-in 900ms ease-out both,
+    done-confetti-float 3.2s ease-in-out 900ms infinite alternate;
+}
+
+.learner-app .done-confetti i:nth-child(3n) {
+  animation-delay: 80ms, 1.1s;
+}
+
+.learner-app .done-confetti i:nth-child(3n + 1) {
+  animation-delay: 160ms, 1.4s;
+}
+
+.learner-app .done-confetti i:nth-child(1) {
+  --x: 44;
+  --y: 9px;
+  --r: 20deg;
+}
+
+.learner-app .done-confetti i:nth-child(2) {
+  --x: 12;
+  --y: 31px;
+  --r: -35deg;
+}
+
+.learner-app .done-confetti i:nth-child(3) {
+  --x: 40;
+  --y: 44px;
+  --r: 30deg;
+}
+
+.learner-app .done-confetti i:nth-child(4) {
+  --x: 89;
+  --y: 55px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(5) {
+  --x: 22;
+  --y: 74px;
+  --r: -30deg;
+}
+
+.learner-app .done-confetti i:nth-child(6) {
+  --x: 63;
+  --y: 71px;
+  --r: -35deg;
+}
+
+.learner-app .done-confetti i:nth-child(7) {
+  --x: 119;
+  --y: 67px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(8) {
+  --x: 61;
+  --y: 100px;
+  --r: -50deg;
+}
+
+.learner-app .done-confetti i:nth-child(9) {
+  --x: 32;
+  --y: 104px;
+  --r: 20deg;
+}
+
+.learner-app .done-confetti i:nth-child(10) {
+  --x: 44;
+  --y: 147px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(11) {
+  --x: 293;
+  --y: 50px;
+  --r: 30deg;
+}
+
+.learner-app .done-confetti i:nth-child(12) {
+  --x: 352;
+  --y: 12px;
+  --r: 40deg;
+}
+
+.learner-app .done-confetti i:nth-child(13) {
+  --x: 373;
+  --y: 30px;
+  --r: 50deg;
+}
+
+.learner-app .done-confetti i:nth-child(14) {
+  --x: 358;
+  --y: 56px;
+  --r: 10deg;
+}
+
+.learner-app .done-confetti i:nth-child(15) {
+  --x: 342;
+  --y: 73px;
+  --r: -40deg;
+}
+
+.learner-app .done-confetti i:nth-child(16) {
+  --x: 263;
+  --y: 66px;
+  --r: -25deg;
+}
+
+.learner-app .done-confetti i:nth-child(17) {
+  --x: 371;
+  --y: 91px;
+  --r: 50deg;
+}
+
+.learner-app .done-confetti i:nth-child(18) {
+  --x: 331;
+  --y: 107px;
+  --r: -45deg;
+}
+
+.learner-app .done-confetti i:nth-child(19) {
+  --x: 364;
+  --y: 126px;
+  --r: 40deg;
+}
+
+.learner-app .done-confetti i:nth-child(20) {
+  --x: 342;
+  --y: 150px;
+  --r: 45deg;
+}
+
+.learner-app .done-confetti i:nth-child(21) {
+  --x: 299;
+  --y: 82px;
+  --r: 0deg;
+}
+
+.learner-app .done-confetti i.is-curl {
+  width: 5px;
+  height: 11px;
+  border-radius: 4px 4px 1px 1px;
+}
+
+.learner-app .done-confetti i.is-diamond {
+  width: 8px;
+  height: 8px;
+}
+
+.learner-app .done-confetti i.is-star {
+  width: 13px;
+  height: 13px;
+  border-radius: 0;
+  clip-path: polygon(
+    50% 0,
+    62% 38%,
+    100% 50%,
+    62% 62%,
+    50% 100%,
+    38% 62%,
+    0 50%,
+    38% 38%
+  );
+}
+
+.learner-app .c-pink {
+  --c: var(--m02-c-pink);
+}
+
+.learner-app .c-lav {
+  --c: var(--m02-c-lav);
+}
+
+.learner-app .c-yellow {
+  --c: var(--m02-c-yellow);
+}
+
+.learner-app .c-blue {
+  --c: var(--m02-c-blue);
+}
+
+.learner-app .c-orange {
+  --c: var(--m02-c-orange);
+}
+
+.learner-app .c-olive {
+  --c: var(--m02-c-olive);
+}
+
+.learner-app .c-teal {
+  --c: var(--m02-c-teal);
+}
+
+.learner-app .c-red {
+  --c: var(--m02-c-red);
+}
+
+.learner-app .c-brown {
+  --c: var(--m02-c-brown);
+}
+
+.learner-app .c-green {
+  --c: var(--m02-c-green);
+}
+
+.learner-app .c-cyan {
+  --c: var(--m02-c-cyan);
+}
+
+.learner-app .c-star {
+  --c: var(--amber-500);
+}
+
+@keyframes done-confetti-in {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) rotate(calc(var(--r) - 120deg));
+  }
+}
+
+@keyframes done-confetti-float {
+  to {
+    transform: translateY(4px) rotate(calc(var(--r) + 12deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-app .done-confetti i {
+    animation: none;
+  }
+}
+
+.learner-app .done-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12.5px 27px;
+}
+
+.learner-app .done-kicker {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.learner-app .done-title {
+  margin-top: 4px;
+  font-family: var(--font-sans);
+  text-align: center;
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.learner-app .done-medal {
+  position: relative;
+  height: 104px;
+  margin-top: -2.5px;
+}
+
+.learner-app .done-medal img {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 230px;
+  height: auto;
+  transform: translateX(calc(-50% - 1.5px));
+}
+
+.learner-app .done-medal__score {
+  position: absolute;
+  left: 50%;
+  top: 36px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  color: var(--jade-700);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.learner-app .done-medal__score small {
+  margin-left: 2px;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.learner-app .done-stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.learner-app .done-stat {
+  height: 62.3px;
+  padding-top: 12px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink-900);
+  text-align: center;
+}
+
+.learner-app .done-stat h2 {
+  font-size: 0.71rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.learner-app .done-stat__score {
+  margin-top: 6px;
+  color: var(--jade-700);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.learner-app .done-stat__score small {
+  margin-left: 1px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.learner-app .done-actions {
+  display: grid;
+  grid-template-columns: 164.8fr 187.8fr;
+  gap: 12.4px;
+  margin-top: 15.3px;
+}
+
+.learner-app .done-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  height: 48px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.learner-app .done-btn:focus-visible {
+  border-radius: 10px;
+}
+
+.learner-app .done-btn .icon {
+  width: 25px;
+  height: 25px;
+}
+
+.learner-app .done-btn--light {
+  padding-left: 4px;
+  background: var(--paper);
+  color: var(--ink-900);
+}
+
+.learner-app .done-btn--light .icon {
+  stroke-width: 2;
+  color: var(--navy-900);
+}
+
+/* Q42: nền jade-800 đặc (chữ trắng 5,3:1). */
+.learner-app .done-btn--primary {
+  gap: 30px;
+  padding-left: 14px;
+  background: var(--jade-800);
+  color: #fff;
+  font-size: 1.06rem;
+}
+
+.learner-app .done-btn--primary .icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
+}
+
+.learner-app .done-btn--light:hover {
+  background: var(--cream-100);
+}
+
+@media (max-width: 374px) {
+  .learner-app .done-btn {
+    gap: 10px;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .done-btn--primary {
+    gap: 12px;
+    padding-left: 0;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .done-btn .icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Zoom lớn (≤ 299px CSS): mẫu tràn ngang ở đây; hai nút xếp dọc và xuống
+   dòng, huy chương co theo bề ngang. */
+@media (max-width: 299px) {
+  .learner-app .done-kicker,
+  .learner-app .done-title {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .done-medal {
+    width: min(100%, 230px);
+    height: auto;
+    margin-inline: auto;
+    aspect-ratio: 230 / 105;
+  }
+
+  .learner-app .done-medal img {
+    position: static;
+    width: 100%;
+    transform: none;
+  }
+
+  .learner-app .done-medal__score {
+    top: 32%;
+    font-size: 2rem;
+  }
+
+  .learner-app .done-medal__score small {
+    font-size: 1.1rem;
+  }
+
+  .learner-app .done-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .learner-app .done-btn,
+  .learner-app .done-btn--primary {
+    height: auto;
+    min-height: 48px;
+    padding: 8px 12px;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .learner-app .done-btn {
+    border: 1px solid ButtonText;
+  }
+}
+
+/* Narrow screens (< 375px): smaller hero tile. */
+@media (max-width: 374px) {
+  .learner-app .lesson-hero {
+    grid-template-columns: 112px 1fr;
+    gap: 12px;
+  }
+
+  .learner-app .lesson-hero__img {
+    width: 112px;
+    height: auto;
+  }
+
+  .learner-app .lesson-hero__info {
+    padding-right: 0;
+  }
+
+  .learner-app .lesson-hero__desc {
+    margin-top: 8px;
+  }
+}
+
+/* Large zoom (≤ 299px): stacked hero, rows drop their art and wrap, count
+   and bar shrink; buttons stay >= 44px with no horizontal scroll at 195px. */
+@media (max-width: 299px) {
+  .learner-app .m02-bar__title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* A three-line title is taller than 60px; grow the bar and keep 12px for
+     the sheet pulled up over it. */
+  .learner-app .m02-bar {
+    height: auto;
+    min-height: 60px;
+    padding-bottom: 12px;
+  }
+
+  .learner-app .lesson {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .learner-app .lesson-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .learner-app .lesson-hero__img {
+    width: 139px;
+    height: 116px;
+  }
+
+  .learner-app .lesson-hero__info {
+    min-width: 0;
+    padding: 0;
+  }
+
+  .learner-app .lesson-hero__title,
+  .learner-app .lesson-hero__desc {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .lesson-hero__badge {
+    height: auto;
+    min-height: 20px;
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+
+  .learner-app .lesson-section {
+    margin-top: 12px;
+  }
+
+  .learner-app .lrow {
+    height: auto;
+    min-height: 49px;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  .learner-app .lrow > img {
+    display: none;
+  }
+
+  .learner-app .lrow .grow {
+    padding-top: 0;
+  }
+
+  .learner-app .lrow__title,
+  .learner-app .lrow__meta {
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .lrow__end {
+    display: grid;
+    justify-items: end;
+    align-content: center;
+    gap: 4px;
+    align-self: center;
+    width: 44px;
+  }
+
+  .learner-app .lrow__count,
+  .learner-app .lrow__check,
+  .learner-app .lrow__lock {
+    position: static;
+  }
+
+  .learner-app .lrow__bar {
+    position: static;
+    width: 100%;
+  }
+
+  .learner-app .lesson-cta {
+    height: auto;
+    min-height: 44px;
+    padding: 6px 12px;
+  }
+
+  .learner-app .lesson-cta .icon {
+    position: static;
+    flex: none;
+  }
+
+  .learner-app .lesson-nf {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 /* Forced colors. Keep this block last in the file: its rules share
    specificity with the component rules above and must come after them. */
+/* Player at large zoom (≤ 299px): options stack in one column, the result
+   bar wraps its button under the text. */
+@media (max-width: 299px) {
+  .learner-app .ex-body {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .learner-app .ls-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learner-app .m02-feedback {
+    flex-wrap: wrap;
+  }
+
+  .learner-app .m02-feedback__btn {
+    width: 100%;
+  }
+}
+
 @media (forced-colors: active) {
   .learner-app .home-hero__art {
     display: none;
@@ -2704,6 +4388,59 @@ html:has(.learner-app) {
     border: 1px solid ButtonText;
   }
 
+  /* Lesson page (M2.5a): state icons follow the row's system color; the
+     solid CTA fills are dropped, so outline them. */
+  .learner-app .lrow__check,
+  .learner-app .lrow__lock,
+  .learner-app .lesson-hero__img {
+    color: inherit;
+  }
+
+  .learner-app .lesson-cta,
+  .learner-app .lesson-nf__cta {
+    border: 1px solid ButtonText;
+  }
+
+  /* Q44: keep the locked CTA visibly unavailable. */
+  .learner-app .lesson-cta[aria-disabled='true'] {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .learner-app .lrow--violet .lrow__bar > span,
+  .learner-app .lrow--blue .lrow__bar > span {
+    background: Highlight;
+  }
+
+  /* Player (M2.5b): solid fills are dropped; outline the buttons, keep the
+     chosen and checked options apart with system colors. */
+  .learner-app .m02-feedback,
+  .learner-app .m02-feedback__btn,
+  .learner-app .ex-check,
+  .learner-app .ex-error,
+  .learner-app .ls-play {
+    border: 1px solid ButtonText;
+  }
+
+  .learner-app .ex-check[aria-disabled='true'] {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .learner-app .ls-opt[aria-checked='true'] {
+    border: 3px solid Highlight;
+  }
+
+  .learner-app .pr-answer__ok,
+  .learner-app .ls-opt__mark,
+  .learner-app .m02-feedback__icon {
+    color: inherit;
+  }
+
+  .learner-app .pr-chip.is-used {
+    color: GrayText;
+  }
+
   /* Box-shadow rings are dropped in forced colors; use a system-color outline. */
   .learner-app :focus-visible,
   .learner-app .levels button[aria-checked='true']:focus-visible,
@@ -2714,7 +4451,8 @@ html:has(.learner-app) {
   }
 
   /* Keep the outline inside the tab so the scrolling strip does not clip it. */
-  .learner-app .path-tab:focus-visible {
+  .learner-app .path-tab:focus-visible,
+  .learner-app .path-panel:focus-visible {
     outline-offset: -3px;
   }
 
@@ -2730,4 +4468,831 @@ html:has(.learner-app) {
     color: HighlightText;
     box-shadow: none;
   }
+}
+
+/* ---------- m03.css 03-01/03-02 + khối M2.6b (ghi chú 37): Tra từ và Chi tiết từ ----------
+   Chép từ docs/ui_reference/mobile/css/m03.css. `.m03` của mẫu là `.app` chứa `.dict` hoặc
+   `.word`; bỏ nút loa (Q66), nút tim chỉ toast (Q63). */
+.learner-app .app:has(> .dict, > .word) {
+  --m03-navy: var(--navy-900);
+  --m03-canvas: #fefefe;
+  --m03-line: #e9e7e4;
+  --m03-line-soft: #efedea;
+  --m03-ink: #101528;
+  --m03-jade: #0a8460;
+  --m03-jade-line: #a9dcc6;
+  --m03-sunken: #f6f5f2;
+  --m03-gray-btn: #b2b2b4;
+  --m03-blue-soft: #e4eaf8;
+  --m03-blue-ink: #1a4cae;
+  --m03-font-kai:
+    var(--font-lxgw-wenkai), 'LXGW WenKai TC', 'Kaiti SC', 'STKaiti', 'KaiTi',
+    var(--font-cn-serif);
+  background: var(--m03-canvas);
+  color: var(--m03-ink);
+}
+
+/* base.css / learner.css của mẫu mà app chưa có. */
+.learner-app .appbar__end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.learner-app .appbar--wide {
+  grid-template-columns: 3rem 1fr auto;
+}
+.learner-app .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Khung chung */
+.learner-app .app:has(> .dict, > .word) .appbar {
+  min-height: 48px;
+  padding: 7px 2px 0;
+  grid-template-columns: 48px 1fr 48px;
+  background: var(--m03-navy);
+}
+.learner-app .app:has(> .dict, > .word) .appbar--wide {
+  grid-template-columns: 48px 1fr auto;
+}
+.learner-app .app:has(> .dict, > .word) .appbar__title {
+  /* The global h1 rule (src/app/styles.css) is serif; the demo bar is Inter. */
+  font-family: var(--font-sans);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn {
+  color: #fff;
+  height: 41px;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn:hover {
+  background: rgb(255 255 255 / 10%);
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn .icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  stroke-width: 2;
+}
+.learner-app .app:has(> .dict, > .word) .appbar .icon-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 70%);
+}
+.learner-app .app:has(> .dict, > .word) .appbar__end {
+  gap: 0;
+}
+.learner-app .m03-tabbed {
+  padding-bottom: calc(
+    var(--tabbar-height) + 24px + env(safe-area-inset-bottom)
+  );
+}
+
+/* 03-01 Tìm kiếm từ điển */
+.learner-app .dict {
+  padding: 14px 18px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The demo's .dict padding drops .m03-tabbed's bottom space, so the last
+   control ends under the fixed tab bar at large zoom (Q69). */
+.learner-app .dict.m03-tabbed {
+  padding-bottom: calc(
+    var(--tabbar-height) + 24px + env(safe-area-inset-bottom)
+  );
+}
+.learner-app .dict-search {
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  border: 1px solid var(--m03-line);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(20 24 43 / 4%);
+}
+.learner-app .dict-search__field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.learner-app .dict-search__field > .icon {
+  position: absolute;
+  left: 11px;
+  width: 19px;
+  height: 19px;
+  color: #7b7e86;
+  stroke-width: 1.7;
+  pointer-events: none;
+}
+.learner-app .dict-search__input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 30px 0 40px;
+  border: 0;
+  border-radius: 9px 0 0 9px;
+  background: transparent;
+  color: var(--m03-ink);
+  font-size: 1rem;
+  line-height: 1;
+}
+.learner-app .dict-search__input::placeholder {
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+}
+.learner-app .dict-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+.learner-app .dict-search__input:focus {
+  outline: none;
+}
+.learner-app .dict-search:focus-within {
+  border-color: var(--jade-600);
+  box-shadow: var(--focus-ring);
+}
+.learner-app .dict-search__clear {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--m03-gray-btn);
+  display: grid;
+  place-items: center;
+}
+.learner-app .dict-search__clear .icon {
+  width: 16px;
+  height: 16px;
+}
+.learner-app .dict-search__tools {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+  border-left: 1px solid var(--m03-line);
+}
+.learner-app .dict-search__tools > * {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40.5px;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--jade-700);
+  text-decoration: none;
+  border-radius: 8px;
+}
+.learner-app .dict-search__tools .icon {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.9;
+}
+.learner-app .dict-search__tools > *:hover {
+  background: var(--jade-50);
+}
+.learner-app .dict__count {
+  margin: 17px 0 7px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--m03-ink);
+}
+.learner-app .dict-results {
+  display: grid;
+  gap: 9px;
+}
+.learner-app .dict-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 129px 1fr auto;
+  align-items: center;
+  min-height: 43px;
+  padding: 4px 14px 4px 14px;
+  background: #fff;
+  border: 1px solid var(--m03-line);
+  border-radius: 9px;
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
+}
+.learner-app .dict-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+.learner-app .dict-item__link {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 1;
+}
+.learner-app .dict-item__hz {
+  font-family: var(--font-cn-serif);
+  font-weight: 400;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  color: var(--m03-ink);
+  white-space: nowrap;
+}
+.learner-app .dict-item__body {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.learner-app .dict-item__py {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+  line-height: 1.35;
+}
+.learner-app .dict-item__vi {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--m03-jade);
+  line-height: 1.35;
+}
+.learner-app .dict-item .badge {
+  position: relative;
+  z-index: 0;
+  font-size: 0.625rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--m03-blue-soft);
+  color: var(--m03-blue-ink);
+}
+.learner-app .dict-item--top {
+  min-height: 81px;
+  padding: 6px 14px;
+  border-color: var(--m03-jade-line);
+}
+.learner-app .dict-item--top .dict-item__hz {
+  margin-bottom: 10px;
+  font-family: var(--m03-font-kai);
+  font-weight: 700;
+  font-size: 2.45rem;
+  letter-spacing: 0.02em;
+  color: var(--m03-jade);
+}
+.learner-app .dict-item--top .dict-item__py {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  gap: 9px;
+}
+.learner-app .dict-item--top .dict-item__vi {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-top: 3px;
+}
+.learner-app .dict-item--top .badge {
+  justify-self: start;
+  margin-top: 5px;
+  padding: 0 5px;
+  line-height: 14px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  background: var(--jade-600);
+  color: #fff;
+}
+.learner-app .dict-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.learner-app .dict-empty .icon {
+  width: 36px;
+  height: 36px;
+  color: var(--text-subtle);
+}
+.learner-app .dict-empty > [role='alert'] {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.learner-app .dict-empty strong {
+  color: var(--m03-ink);
+  font-size: 0.9375rem;
+}
+.learner-app .dict-more {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 18px;
+  min-height: 32px;
+  padding: 0 10px 0 16px;
+  width: 100%;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 9px;
+  background: var(--m03-sunken);
+  font-size: 0.75rem;
+  color: var(--m03-ink);
+  text-align: left;
+}
+.learner-app .dict-more > .icon:first-child {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.6;
+}
+.learner-app .dict-more > .icon:last-child {
+  margin-left: auto;
+  width: 15px;
+  height: 15px;
+  color: #4b4f5a;
+}
+.learner-app .dict-more:hover {
+  background: var(--cream-100);
+}
+
+/* 03-02 Chi tiết từ vựng */
+.learner-app .word {
+  position: relative;
+  padding: 0 21px 24px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.learner-app .word__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+.learner-app .word__hz {
+  margin: 21px 0 0 -1px;
+  font-family: var(--m03-font-kai);
+  font-weight: 700;
+  font-size: 3.5rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--m03-jade);
+}
+.learner-app .word__mid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  margin-top: 12px;
+}
+.learner-app .word__py {
+  justify-self: start;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--m03-ink);
+  border-bottom: 1.5px dashed #8a8c94;
+  padding-bottom: 1px;
+}
+.learner-app .word__vi {
+  margin-top: -3px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--m03-jade);
+}
+.learner-app .word .badge--lv {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 0 7px;
+  line-height: 18px;
+  border-radius: 6px;
+  background: var(--jade-600);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.learner-app .seg {
+  display: inline-flex;
+  margin: 12px 0 0;
+  padding: 2px;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 8px;
+  background: var(--m03-sunken);
+}
+.learner-app .seg button {
+  position: relative;
+  min-width: 69px;
+  height: 23px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2a2e3a;
+  white-space: nowrap;
+}
+.learner-app .seg button + button {
+  min-width: 80px;
+}
+.learner-app .seg button[aria-pressed='true'] {
+  background: #fff;
+  color: var(--jade-700);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(20 24 43 / 10%);
+}
+.learner-app .word-ex {
+  margin-top: 13px;
+  padding: 9px 12px 9px 5px;
+  border: 1px solid var(--m03-line);
+  border-radius: 10px;
+  background: #fff;
+}
+.learner-app .word-ex h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+  line-height: 1.3;
+}
+.learner-app .word-ex h2::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--jade-600);
+}
+.learner-app .word-ex__cn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0 7px;
+  font-family: var(--font-cn-serif);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--m03-ink);
+  letter-spacing: 0.02em;
+}
+.learner-app .word-ex footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 11px 0 0 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--m03-line-soft);
+  font-size: 0.6375rem;
+  color: #4a4e5a;
+}
+.learner-app .word-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 37px;
+  margin-top: 9px;
+  border: 1.5px solid var(--jade-700);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--jade-700);
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.learner-app .word-save .icon {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+}
+.learner-app .word-save:hover {
+  background: var(--jade-50);
+}
+.learner-app .word-save[aria-pressed='true'] {
+  background: var(--jade-600);
+  border-color: var(--jade-600);
+  color: #fff;
+}
+.learner-app .word-bar .icon-btn {
+  width: 42px;
+}
+.learner-app .word-bar .icon-btn .icon {
+  width: 24px;
+  height: 24px;
+}
+.learner-app .word-bar .appbar__end {
+  margin-right: -1px;
+}
+.learner-app .m03-menu {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 30;
+  min-width: 196px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--m03-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-float);
+}
+.learner-app .m03-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--m03-ink);
+  font-size: 0.875rem;
+  text-align: left;
+  text-decoration: none;
+}
+.learner-app .m03-menu button:hover {
+  background: var(--m03-sunken);
+}
+.learner-app .m03-menu .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+/* Chi tiết từ không có tab bar (mẫu 03-02), như .done-main. */
+.learner-app .app:has(> .word) > .tabbar {
+  display: none;
+}
+
+@media (max-width: 360px) {
+  .learner-app .dict-item {
+    grid-template-columns: 112px 1fr auto;
+    padding-right: 10px;
+  }
+  .learner-app .dict-item .badge {
+    padding: 2px 6px;
+  }
+}
+
+/* Lead patch của mẫu: vùng bấm ≥ 44px. */
+.learner-app .app:has(> .dict, > .word) .icon-btn {
+  position: relative;
+}
+.learner-app .app:has(> .dict, > .word) .icon-btn::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+.learner-app .dict-item__link {
+  min-height: 44px;
+}
+/* Ô vẫn vẽ như mẫu, input trong suốt cao 44px. */
+.learner-app .dict-search__input {
+  height: 44px;
+  margin-block: -5px;
+}
+
+/* Khối M2.6b của mẫu (Q69: control 44px thật, chữ ≥ 4,5:1; Q65). */
+.learner-app .app:has(> .dict) .appbar .icon-btn,
+.learner-app .app:has(> .dict, > .word) .word-bar .icon-btn {
+  width: 44px;
+  height: 44px;
+}
+.learner-app .app:has(> .dict) .appbar,
+.learner-app .app:has(> .word) .appbar {
+  padding-top: 4px;
+}
+.learner-app .dict-search {
+  height: 46px;
+}
+.learner-app .dict-search__input {
+  padding-right: 4px;
+}
+.learner-app .dict-search__input::placeholder {
+  color: var(--text-muted);
+}
+/* Nút xoá là phần tử flex cạnh ô nhập (không đè lên ô nhập), 44×44 thật. */
+.learner-app .dict-search__clear {
+  position: static;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border-radius: 8px;
+}
+.learner-app .dict-search__tools > * {
+  width: 44px;
+}
+.learner-app .dict-item {
+  min-height: 46px;
+}
+.learner-app .dict-item--top {
+  min-height: 81px;
+}
+.learner-app .dict-item__vi--none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.learner-app .dict-item--top .badge {
+  background: var(--jade-800);
+}
+.learner-app .dict-more {
+  min-height: 44px;
+}
+.learner-app .word .seg button {
+  height: 44px;
+}
+.learner-app .word .seg button[aria-pressed='true'] {
+  color: var(--jade-800);
+}
+.learner-app .word .badge--lv {
+  background: var(--jade-800);
+}
+.learner-app .word__vi--none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.learner-app .word-save {
+  min-height: 44px;
+  color: var(--jade-800);
+}
+.learner-app .word-save[aria-pressed='true'] {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+}
+/* Mẫu ẩn .seg bằng [hidden]; app không render nó. */
+.learner-app .word__mid:not(:has(> .seg)) {
+  margin-bottom: 9px;
+}
+/* Lỗi tra từ (M2.6b, không có trong mẫu): như .word-save, ≥ 44px. */
+.learner-app .dict-retry {
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 20px;
+  border: 1.5px solid var(--jade-700);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--jade-800);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.learner-app .dict-retry:hover {
+  background: var(--jade-50);
+}
+
+@media (max-width: 299px) {
+  .learner-app .dict {
+    padding: 14px 12px 0;
+  }
+  .learner-app .dict-search {
+    flex-wrap: wrap;
+    height: auto;
+  }
+  .learner-app .dict-search__field {
+    flex: 1 0 100%;
+    height: 44px;
+  }
+  .learner-app .dict-search__tools {
+    flex: 1 0 100%;
+    height: 45px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--m03-line);
+  }
+  .learner-app .dict-item {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+    padding: 6px 12px;
+  }
+  .learner-app .dict-item .badge {
+    justify-self: start;
+  }
+  .learner-app .dict-item--top .dict-item__hz {
+    margin-bottom: 4px;
+  }
+  .learner-app .word {
+    padding: 0 12px 24px;
+  }
+  .learner-app .word__mid {
+    grid-template-columns: 1fr;
+  }
+  .learner-app .word .seg {
+    justify-self: start;
+  }
+}
+
+/* ---------- 01 Quên mật khẩu, Đặt lại mật khẩu, Xác thực email (M2.1c/d, Q71–Q74) ---------- */
+/* As Q42: real 44px controls, text >= 4.5:1 (link jade-800). */
+.learner-app .auth__forgot {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 2px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--jade-800);
+  text-decoration: none;
+}
+
+.learner-app .auth__forgot:hover {
+  text-decoration: underline;
+}
+
+.learner-app .auth__forgot ~ .auth__submit {
+  margin-top: 14px;
+}
+
+.learner-app .auth-result__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 24px;
+  border-radius: 50%;
+  background: var(--jade-50);
+  color: var(--jade-700);
+}
+
+.learner-app .auth-result__icon .icon {
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 1.8;
+}
+
+.learner-app .auth-result__icon--warn {
+  background: var(--red-100);
+  color: var(--red-600);
+}
+
+.learner-app .auth__subtitle strong {
+  color: var(--navy-900);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .auth__actions {
+  display: grid;
+  margin-top: 32px;
+}
+
+.learner-app .auth__actions .alert {
+  margin-bottom: 18px;
+}
+
+.learner-app .auth__actions .btn {
+  min-height: 50px;
+  border-radius: 10px;
+  font-size: 1.125rem;
+  white-space: normal;
+  text-align: center;
+}
+
+.learner-app .auth [tabindex='-1']:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.learner-app .auth__submit {
+  white-space: normal;
+  text-align: center;
+}
+
+/* Q74: primary buttons of welcome, sign-up, sign-in and the recovery pages
+   on jade-800 (white 5.3:1 instead of 3.2:1 on jade-600), as Q42; Q78 adds
+   the onboarding goal and plan pages. */
+.learner-app .welcome .btn--primary,
+.learner-app .auth .btn--primary,
+.learner-app .ob .btn--primary,
+.learner-app .welcome .btn--primary:hover,
+.learner-app .auth .btn--primary:hover,
+.learner-app .ob .btn--primary:hover {
+  background: var(--jade-800);
+}
+
+/* Web-only parts (sidebar, top bar, M2.10a): out of layout and of the
+   accessibility tree below 1024px; learner-web.css shows them. Last rule of
+   this file on purpose: mobile rules above set `display` on some of the same
+   elements (`.icon-btn`, `.progress`, …) with the same specificity, and this
+   rule has to win below 1024px. At ≥1024px learner-web.css (imported after
+   this file) sets the display of the web parts back. */
+.learner-app .w-only {
+  display: none;
 }
