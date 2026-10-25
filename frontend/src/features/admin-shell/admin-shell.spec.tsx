@@ -60,7 +60,7 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       'Nội dung',
       'Bài tập',
       'Thư viện media',
-      'Ngân hàng câu hỏi (Sắp có)',
+      'Ngân hàng câu hỏi',
       'Nhập dữ liệu',
       'Người dùng',
       'Báo cáo (Sắp có)',
@@ -85,14 +85,14 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       document.querySelectorAll('.adm-nav__item--soon'),
     );
     // M5.1a: "Nội dung" có trang; M5.1b2: "Nhập dữ liệu" có trang;
-    // M5.3: "Người dùng" có trang → còn 6 mục "Sắp có".
-    expect(soonItems).toHaveLength(6);
+    // M5.3: "Người dùng" có trang; M4.1a: "Ngân hàng câu hỏi" có trang
+    // → còn 5 mục "Sắp có".
+    expect(soonItems).toHaveLength(5);
     // Q94: bỏ chip "Sắp có" khỏi sidebar.
     expect(document.querySelectorAll('.adm-nav__soon')).toHaveLength(0);
 
     const visibleLabels = [
       'Tổng quan',
-      'Ngân hàng câu hỏi',
       'Báo cáo',
       'AI Ops',
       'Phản hồi',
@@ -113,6 +113,10 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       'href',
       '/admin/import',
     );
+    // M4.1a (TL-89): "Ngân hàng câu hỏi" đã thành link /admin/questions.
+    expect(
+      screen.getByRole('link', { name: 'Ngân hàng câu hỏi' }),
+    ).toHaveAttribute('href', '/admin/questions');
     expect(screen.getByRole('link', { name: 'Người dùng' })).toHaveAttribute(
       'href',
       '/admin/users',

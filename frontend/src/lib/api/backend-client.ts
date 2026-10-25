@@ -38,6 +38,15 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/media\/ingestions\?dataSourceId=\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/ingestions\?page=\d+&limit=\d+$/,
   /^\/api\/v1\/admin\/cms\/media\/ingestions\/\d+\/cleanup$/,
+  // M4.1a (TL-88): ngân hàng câu hỏi. Chỉ các GET danh sách (questions,
+  // counts, tags) nhận query string; route mutation không nhận query.
+  /^\/api\/v1\/admin\/cms\/questions(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/cms\/questions\/counts(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/cms\/tags(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/cms\/questions\/\d+$/,
+  /^\/api\/v1\/admin\/cms\/questions\/\d+\/revisions$/,
+  /^\/api\/v1\/admin\/cms\/questions\/\d+\/revisions\/\d+\/(?:reviews|publish)$/,
+  /^\/api\/v1\/admin\/cms\/questions\/\d+\/archive$/,
   // M5.3 (TL-70): quản lý người dùng admin + nhật ký audit.
   /^\/api\/v1\/admin\/users(?:\?[^#]*)?$/,
   /^\/api\/v1\/admin\/users\/\d+\/(?:role|suspend|unsuspend)$/,

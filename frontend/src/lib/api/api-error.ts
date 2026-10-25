@@ -26,11 +26,20 @@ export type ApiErrorDetailRow = {
   path: string;
 };
 
+export type ApiErrorReason = {
+  /** Mã lý do máy đọc (vd `explanation_required`). */
+  code: string;
+  /** Field liên quan (vd `explanation`). */
+  field: string;
+};
+
 export type ApiErrorDetails = {
   /** Vị trí lỗi trong payload (ví dụ `content.options[1].text`). */
   path?: string;
   /** Lỗi theo dòng của import (tối đa 100 dòng). */
   errors?: ApiErrorDetailRow[];
+  /** M4.1a (TL-91): lý do publish bị chặn, tối đa 20 mục. */
+  reasons?: ApiErrorReason[];
 };
 
 export type ApiFailure = {
@@ -49,6 +58,7 @@ export const API_ERROR_DETAILS_LIMITS = {
   maxPathLength: 200,
   maxErrors: 100,
   maxCodeLength: 64,
+  maxReasons: 20,
 } as const;
 
 const FAILURE_BY_STATUS: Record<
@@ -122,9 +132,10 @@ export function normalizeApiFailure(input: {
 }
 
 /**
- * F1: giữ đúng `path` (string ≤ 200) và `errors` (≤ 100 × {rowNumber int,
- * code ≤ 64, path ≤ 200}), bỏ mọi khoá khác và mọi phần tử sai shape/quá dài.
- * Không có mục nào hợp lệ → undefined.
+ * F1: giữ đúng `path` (string ≤ 200), `errors` (≤ 100 × {rowNumber int,
+ * code ≤ 64, path ≤ 200}) và `reasons` (≤ 20 × {code ≤ 64, field ≤ 64}), bỏ mọi
+ * khoá khác và mọi phần tử sai shape/quá dài. Không có mục nào hợp lệ →
+ * undefined.
  */
 export function sanitizeErrorDetails(
   value: unknown,
@@ -153,10 +164,33 @@ export function sanitizeErrorDetails(
     if (rows.length > 0) errors = rows;
   }
 
-  if (path === undefined && errors === undefined) return undefined;
+  let reasons: ApiErrorReason[] | undefined;
+  if (Array.isArray(value.reasons)) {
+    const entries: ApiErrorReason[] = [];
+    for (const entry of value.reasons) {
+      if (entries.length >= API_ERROR_DETAILS_LIMITS.maxReasons) break;
+      if (!isPlainRecord(entry)) continue;
+      const code = validString(
+        entry.code,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      const field = validString(
+        entry.field,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      if (code === undefined || field === undefined) continue;
+      entries.push({ code, field });
+    }
+    if (entries.length > 0) reasons = entries;
+  }
+
+  if (path === undefined && errors === undefined && reasons === undefined) {
+    return undefined;
+  }
   return {
     ...(path === undefined ? {} : { path }),
     ...(errors === undefined ? {} : { errors }),
+    ...(reasons === undefined ? {} : { reasons }),
   };
 }
 

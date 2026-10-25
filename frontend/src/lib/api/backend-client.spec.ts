@@ -238,6 +238,53 @@ describe('server-only backend client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(7);
   });
 
+  it('allowlists only the explicit question bank endpoints (M4.1a, TL-88)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/admin/cms/questions?page=1&limit=20&skill=reading&tag=tu-vung',
+    );
+    await client.request('/api/v1/admin/cms/questions/counts');
+    await client.request('/api/v1/admin/cms/tags?q=gia&limit=50');
+    await client.request('/api/v1/admin/cms/questions/41');
+    await client.request('/api/v1/admin/cms/questions', { method: 'POST' });
+    await client.request('/api/v1/admin/cms/questions/41/revisions', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/questions/41/revisions/7/reviews', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/questions/41/revisions/7/publish', {
+      method: 'POST',
+    });
+    await client.request('/api/v1/admin/cms/questions/41/archive', {
+      method: 'POST',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
+
+    // Query string chỉ cho các GET danh sách; mutation và path biến thể bị chặn.
+    for (const path of [
+      '/api/v1/admin/cms/questions/41?x=1',
+      '/api/v1/admin/cms/questions/41/revisions/7/reviews?x=1',
+      '/api/v1/admin/cms/questions/abc',
+      '/api/v1/admin/cms/questions/1/../x',
+      '/api/v1/admin/cms/questions/41/revisions/7',
+      '/api/v1/admin/cms/tags/41',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
+  });
+
   it('allowlists only the explicit data-source and exercise-import endpoints (M5.1b2, F2)', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

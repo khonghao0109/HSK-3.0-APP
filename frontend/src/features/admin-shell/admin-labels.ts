@@ -65,6 +65,37 @@ const LIFECYCLE: Record<string, string> = {
   archived: 'Đã lưu trữ',
 };
 
+/* Loại câu hỏi ngân hàng (M4.1a, Q112): Trắc nghiệm / Đúng-Sai / Điền từ /
+   Sắp xếp câu */
+const QUESTION_TYPE: Record<string, string> = {
+  mcq: 'Trắc nghiệm',
+  true_false: 'Đúng/Sai',
+  fill_blank: 'Điền từ',
+  arrange_sentence: 'Sắp xếp câu',
+};
+
+/* Kỹ năng câu hỏi (Q113): Nghe hiểu / Đọc hiểu / Viết / Nói */
+const SKILL: Record<string, string> = {
+  listening: 'Nghe hiểu',
+  reading: 'Đọc hiểu',
+  writing: 'Viết',
+  speaking: 'Nói',
+};
+
+/* Trạng thái câu hỏi (TL-89): Bản nháp / Đã xuất bản / Lưu trữ */
+const QUESTION_STATUS: Record<string, string> = {
+  draft: 'Bản nháp',
+  published: 'Đã xuất bản',
+  archived: 'Lưu trữ',
+};
+
+/* Độ khó câu hỏi: Dễ / Trung bình / Khó */
+const DIFFICULTY: Record<string, string> = {
+  '1': 'Dễ',
+  '2': 'Trung bình',
+  '3': 'Khó',
+};
+
 export function exerciseStatusLabel(status: string): string {
   return CONTENT_STATUS[status] ?? status;
 }
@@ -195,6 +226,78 @@ export function exerciseValidationMessage(
     if (key.toLowerCase() === normalized) return message;
   }
   return EXERCISE_VALIDATION_FALLBACK;
+}
+
+/**
+ * M4.1a (TL-91): nhãn tiếng Việt cho mọi mã máy của ngân hàng câu hỏi.
+ * Message tiếng Anh của backend không hiển thị ra UI.
+ */
+const QUESTION_CONFLICT_MESSAGE: Record<string, string> = {
+  QUESTION_ARCHIVED: 'Câu hỏi đã lưu trữ, không thể thay đổi.',
+  QUESTION_NOT_PUBLISHABLE: 'Câu hỏi chưa đủ điều kiện xuất bản.',
+  QUESTION_IN_PUBLISHED_TEST:
+    'Câu hỏi đang thuộc một đề thi đã xuất bản nên không thể lưu trữ.',
+  MEDIA_NOT_USABLE:
+    'Media không dùng được: phải tồn tại, đúng loại, chưa bị cách ly và chưa bị xoá.',
+  REVISION_NOT_LATEST:
+    'Bản sửa này không còn là bản mới nhất. Tải lại trang rồi thử lại.',
+  REVIEW_NOT_APPROVED: 'Bản sửa mới nhất phải được duyệt trước khi xuất bản.',
+  QUESTION_UNIQUE_CONFLICT:
+    'Dữ liệu câu hỏi hoặc chủ đề bị trùng. Kiểm tra lại rồi thử lại.',
+  QUESTION_CONSTRAINT_CONFLICT:
+    'Câu hỏi vi phạm ràng buộc dữ liệu. Kiểm tra lại các trường liên kết.',
+  QUESTION_CONCURRENT_UPDATE:
+    'Có người vừa cập nhật câu hỏi này. Tải lại trang rồi thử lại.',
+  CONTENT_REVISION_INVALID: 'Bản sửa không hợp lệ. Tải lại trang rồi thử lại.',
+};
+
+const QUESTION_CONFLICT_FALLBACK =
+  'Thao tác xung đột với dữ liệu hiện tại. Tải lại trang rồi thử lại.';
+
+export function questionConflictMessage(
+  code: string | null | undefined,
+): string {
+  if (!code) return QUESTION_CONFLICT_FALLBACK;
+  return QUESTION_CONFLICT_MESSAGE[code] ?? QUESTION_CONFLICT_FALLBACK;
+}
+
+const QUESTION_VALIDATION_EXTRA: Record<string, string> = {
+  invalid_question_type: 'Loại câu hỏi không hợp lệ.',
+  invalid_skill: 'Kỹ năng không hợp lệ.',
+  invalid_difficulty: 'Độ khó phải là 1, 2 hoặc 3.',
+  invalid_tag: 'Tên chủ đề không hợp lệ.',
+  duplicate_tag: 'Hai chủ đề trùng nhau sau khi bỏ dấu và chuẩn hoá.',
+};
+
+export const QUESTION_VALIDATION_FALLBACK =
+  'Dữ liệu câu hỏi không hợp lệ. Kiểm tra lại các ô được đánh dấu.';
+
+/** Mã validator dùng chung với bài tập + mã riêng của ngân hàng câu hỏi. */
+export function questionValidationMessage(
+  code: string | null | undefined,
+): string {
+  if (!code) return QUESTION_VALIDATION_FALLBACK;
+  const normalized = code.toLowerCase();
+  for (const [key, message] of Object.entries({
+    ...EXERCISE_VALIDATION_MESSAGE,
+    ...QUESTION_VALIDATION_EXTRA,
+  })) {
+    if (key.toLowerCase() === normalized) return message;
+  }
+  return QUESTION_VALIDATION_FALLBACK;
+}
+
+/** Câu lỗi hiển thị ở vùng live/alert cho mọi response lỗi của câu hỏi. */
+export function questionErrorMessage(
+  status: number,
+  code: string | null | undefined,
+): string {
+  if (status === 409) return questionConflictMessage(code);
+  if (status === 422) return questionValidationMessage(code);
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.';
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.';
+  if (status === 400) return 'Dữ liệu gửi lên không hợp lệ.';
+  return 'Thao tác tạm thời không khả dụng. Hãy thử lại.';
 }
 
 /**
@@ -399,6 +502,60 @@ export const EXERCISE_FORM_MESSAGE = {
   referenceTextTooLong: 'Câu mẫu tối đa 4 096 ký tự.',
   generic: 'Kiểm tra lại các ô được đánh dấu.',
 } as const;
+
+export function questionTypeLabel(type: string): string {
+  return QUESTION_TYPE[type] ?? type;
+}
+
+export function skillLabel(skill: string): string {
+  return SKILL[skill] ?? skill;
+}
+
+export function questionStatusLabel(status: string): string {
+  return QUESTION_STATUS[status] ?? status;
+}
+
+export function difficultyLabel(value: number | null): string {
+  if (value === null) return '—';
+  return DIFFICULTY[String(value)] ?? '—';
+}
+
+/**
+ * TL-90: nhãn tiếng Việt của `changedFields` trong lịch sử phiên bản.
+ */
+const QUESTION_CHANGED_FIELD: Record<string, string> = {
+  type: 'Loại câu hỏi',
+  skill: 'Kỹ năng',
+  levelId: 'Cấp độ',
+  content: 'Nội dung',
+  answers: 'Đáp án',
+  correctAnswer: 'Đáp án đúng',
+  explanation: 'Giải thích',
+  objective: 'Mục tiêu',
+  difficulty: 'Độ khó',
+  audioId: 'Audio',
+  imageId: 'Ảnh',
+  tags: 'Chủ đề',
+};
+
+export function questionChangedFieldLabel(field: string): string {
+  return QUESTION_CHANGED_FIELD[field] ?? field;
+}
+
+/** TL-91: lý do publish bị chặn (`QUESTION_NOT_PUBLISHABLE.details.reasons`). */
+const QUESTION_PUBLISH_REASON: Record<string, string> = {
+  explanation_required: 'Thiếu giải thích.',
+  audio_required: 'Kỹ năng Nghe cần có audio.',
+  audio_not_ready: 'Audio chưa sẵn sàng.',
+  image_not_ready: 'Ảnh chưa sẵn sàng.',
+  level_not_found: 'Cấp độ không tồn tại.',
+};
+
+export function questionPublishReasonLabel(code: string): string {
+  return (
+    QUESTION_PUBLISH_REASON[code] ?? `Chưa đủ điều kiện xuất bản (${code}).`
+  );
+}
 
 /** `HSK1` → `HSK 1`; `HSK7_9` → `HSK 7–9` (Q3, TL-12). Mã lạ trả nguyên. */
 export function levelLabel(code: string): string {

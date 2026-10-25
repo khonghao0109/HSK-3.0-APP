@@ -711,6 +711,13 @@
   font-size: var(--adm-fs-sm);
   line-height: 1.45;
 }
+/* F4 (vòng sửa M4.1a): lỗi form giữ role="alert" trong DOM nhưng khi rỗng
+   không chiếm chỗ; không dùng display:none để không mất vùng thông báo. */
+.admin-app .adm-form-error:empty {
+  padding: 0;
+  border: 0;
+  background: none;
+}
 
 /* ----- Quy trình xuất bản nội dung (M5.1a, Q89–Q91) ----- */
 .admin-app .adm-content-workflow {
