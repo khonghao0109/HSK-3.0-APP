@@ -39,6 +39,7 @@
     "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
     "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",
+    "test:db:question-concurrency": "ts-node scripts/test/run-question-authoring-concurrency.ts",
     "test:db:exercise-integrity": "ts-node scripts/test/run-exercise-authoring-integrity.ts",
     "test:db:media-integrity": "ts-node scripts/test/run-media-ingestion-integrity.ts",
     "test:db:media-migration": "npm run build && node --test -r ts-node/register scripts/test/media-lifecycle-migration-validation.helpers.spec.ts && ts-node scripts/test/run-media-lifecycle-migration-validation.ts",

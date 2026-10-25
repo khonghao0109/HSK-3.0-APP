@@ -31,6 +31,29 @@ describe('CmsController route order (TL-47)', () => {
     );
   });
 
+  it('declares GET questions/counts before GET questions/:questionId', () => {
+    const routes = getRoutes();
+    expect(routes).toContain('questions/counts');
+    expect(routes).toContain('questions/:questionId');
+    expect(routes.indexOf('questions/counts')).toBeLessThan(
+      routes.indexOf('questions/:questionId'),
+    );
+  });
+
+  it('declares GET tags before every parametrised GET route', () => {
+    const routes = getRoutes();
+    expect(routes).toContain('tags');
+    for (const route of [
+      'media/:mediaId',
+      'questions/:questionId',
+      'exercises/:exerciseId',
+      'lessons/:lessonId',
+      'topics/:topicId',
+    ]) {
+      expect(routes.indexOf('tags')).toBeLessThan(routes.indexOf(route));
+    }
+  });
+
   it('does not gate the ingestion list on the ingestion flag', () => {
     const handler: unknown = Object.getOwnPropertyDescriptor(
       CmsController.prototype,

@@ -228,6 +228,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/cms/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_listTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cms/media/ingestions": {
         parameters: {
             query?: never;
@@ -654,6 +670,118 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CmsController_archiveTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_getQuestionCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_listQuestions"];
+        put?: never;
+        post: operations["CmsController_createQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/{questionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_getQuestion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/{questionId}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_createQuestionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/{questionId}/revisions/{revisionId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_reviewQuestionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/{questionId}/revisions/{revisionId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_publishQuestionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/questions/{questionId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_archiveQuestion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1392,6 +1520,12 @@ export interface components {
             reason: string | null;
             roleChange: components["schemas"]["AdminAuditRoleChangeDto"] | null;
         };
+        AdminTagDto: {
+            slug: string;
+            name: string;
+            /** @description Questions tagged with this tag that are not archived (TL-93). */
+            questionCount: number;
+        };
         AdminDataSourceDto: {
             id: number;
             code: string;
@@ -1714,6 +1848,154 @@ export interface components {
             orderIndex: number;
             isPremium: boolean;
             isLocked: boolean;
+        };
+        AdminQuestionCountsBySkillDto: {
+            listening: number;
+            reading: number;
+            writing: number;
+            speaking: number;
+        };
+        AdminQuestionCountsDto: {
+            total: number;
+            bySkill: components["schemas"]["AdminQuestionCountsBySkillDto"];
+            /** @description Questions tagged `tu-vung` or `ngu-phap` (Q113). */
+            vocabularyGrammar: number;
+        };
+        AdminQuestionLatestRevisionDto: {
+            id: number;
+            revision: number;
+            /** @enum {string|null} */
+            decision: "approved" | "changes_requested" | "rejected" | null;
+        };
+        AdminQuestionLevelDto: {
+            id: number;
+            code: string;
+        };
+        AdminQuestionTagDto: {
+            slug: string;
+            name: string;
+        };
+        AdminQuestionDto: {
+            answers: {
+                [key: string]: unknown;
+            };
+            correctAnswer: {
+                [key: string]: unknown;
+            };
+            latestRevision: components["schemas"]["AdminQuestionLatestRevisionDto"] | null;
+            id: number;
+            content: string;
+            /** @enum {string} */
+            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            audioId: number | null;
+            imageId: number | null;
+            explanation: string | null;
+            objective: string | null;
+            levelId: number;
+            difficulty: number | null;
+            version: number;
+            contentHash: string | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            dataSourceId: number | null;
+            createdById: number | null;
+            updatedById: number | null;
+            publishedById: number | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            deletedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            level: components["schemas"]["AdminQuestionLevelDto"];
+            tags: components["schemas"]["AdminQuestionTagDto"][];
+        };
+        AdminQuestionRevisionUserDto: {
+            id: number;
+            name: string | null;
+        };
+        AdminQuestionRevisionReviewDto: {
+            /** @enum {string} */
+            decision: "approved" | "changes_requested" | "rejected";
+            note: string | null;
+            reviewer: components["schemas"]["AdminQuestionRevisionUserDto"] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminQuestionRevisionDto: {
+            id: number;
+            revision: number;
+            contentHash: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            author: components["schemas"]["AdminQuestionRevisionUserDto"] | null;
+            /** @description Snapshot fields that differ from the previous revision; `[]` for v1. */
+            changedFields: string[];
+            reviews: components["schemas"]["AdminQuestionRevisionReviewDto"][];
+        };
+        AdminQuestionDetailDto: {
+            answers: {
+                [key: string]: unknown;
+            };
+            correctAnswer: {
+                [key: string]: unknown;
+            };
+            /** @description Newest first. */
+            revisions: components["schemas"]["AdminQuestionRevisionDto"][];
+            id: number;
+            content: string;
+            /** @enum {string} */
+            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            audioId: number | null;
+            imageId: number | null;
+            explanation: string | null;
+            objective: string | null;
+            levelId: number;
+            difficulty: number | null;
+            version: number;
+            contentHash: string | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            dataSourceId: number | null;
+            createdById: number | null;
+            updatedById: number | null;
+            publishedById: number | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            deletedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            level: components["schemas"]["AdminQuestionLevelDto"];
+            tags: components["schemas"]["AdminQuestionTagDto"][];
+        };
+        CreateQuestionRevisionDto: {
+            answers: {
+                [key: string]: unknown;
+            };
+            correctAnswer: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            type: "mcq" | "true_false" | "fill_blank" | "arrange_sentence";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            levelId: number;
+            content: string;
+            explanation?: string | null;
+            objective?: string | null;
+            difficulty?: number | null;
+            audioId?: number | null;
+            imageId?: number | null;
+            tags?: string[];
         };
         UserProfileResponseDto: {
             /**
@@ -2670,6 +2952,37 @@ export interface operations {
             default: components["responses"]["ErrorEnvelope"];
         };
     };
+    CmsController_listTags: {
+        parameters: {
+            query?: {
+                limit?: number;
+                q?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTagDto"][];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
     CmsController_listMediaIngestions: {
         parameters: {
             query?: {
@@ -3611,6 +3924,264 @@ export interface operations {
             };
             path: {
                 topicId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_getQuestionCounts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminQuestionCountsDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_listQuestions: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                levelId?: number;
+                skill?: "listening" | "reading" | "writing" | "speaking";
+                type?: "mcq" | "true_false" | "fill_blank" | "arrange_sentence";
+                difficulty?: number;
+                status?: "draft" | "published" | "archived";
+                tag?: string[];
+                q?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminQuestionDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_createQuestion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQuestionRevisionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_getQuestion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminQuestionDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_createQuestionRevision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQuestionRevisionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_reviewQuestionRevision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                questionId: number;
+                revisionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRevisionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_publishQuestionRevision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                questionId: number;
+                revisionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_archiveQuestion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                questionId: number;
             };
             cookie?: never;
         };

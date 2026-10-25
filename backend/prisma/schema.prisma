@@ -55,6 +55,10 @@ enum QuestionType {
   reading
   writing
   speaking
+  // M4.1a (TL-77): additive objective formats for the question bank.
+  true_false
+  fill_blank
+  arrange_sentence
 }
 
 enum Skill {

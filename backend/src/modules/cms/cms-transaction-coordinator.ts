@@ -17,6 +17,10 @@ export type CmsTransactionOperation =
   | 'exercise.publish'
   | 'exercise.archive'
   | 'exercise_import.commit'
+  | 'question.create_revision'
+  | 'question.review'
+  | 'question.publish'
+  | 'question.archive'
   | 'media_ingestion.cleanup';
 
 export type CmsTransactionCheckpoint = {
@@ -27,6 +31,7 @@ export type CmsTransactionCheckpoint = {
     | 'topic'
     | 'lesson_exercise'
     | 'exercise_import'
+    | 'question'
     | 'media_ingestion';
   entityId: number;
   parentLessonId?: number;

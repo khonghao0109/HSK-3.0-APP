@@ -758,6 +758,116 @@ Mã validator của `lesson-exercise-authoring.validator.ts` (422, kèm `details
 `positive_safe_integer_required`, `max_depth_exceeded`, `invalid_json`, `payload_too_large`,
 `string_required`, `non_empty_string_required`, `string_too_long`.
 
+### A.9b Admin CMS — Ngân hàng câu hỏi (admin, M4.1a)
+
+Envelope §1. Danh sách có `meta.pagination`; mọi response có `Cache-Control: no-store`.
+Mọi `POST` trả `201` kể cả `idempotent = true`. State machine giống bài tập: bản sửa nháp →
+review (`approved | changes_requested | rejected`) → publish bản sửa mới nhất đã approved →
+archive; revision/review/audit append-only. Row `Question` khoá `FOR UPDATE` sau
+`lockActiveCmsActor` trong mọi mutation (TL-85).
+
+| Method | Path | Query/Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/admin/cms/questions` | `levelId?`, `skill?` (4 kỹ năng), `type?` (4 dạng M4.1a), `difficulty?` (1–3), `status?`, `tag?` (1–5 slug, lặp lại `?tag=a&tag=b`, OR), `q?` (1–100, ILIKE trên `content`, ký tự `%`/`_` là literal), `page`, `limit` | `[{ …QuestionAdmin, latestRevision }]` + `meta`; sort `updatedAt desc, id desc` |
+| `GET` | `/admin/cms/questions/counts` | — | `{ total, bySkill: { listening, reading, writing, speaking }, vocabularyGrammar }`; không tính câu archived/`deletedAt`; `vocabularyGrammar` = số câu có tag `tu-vung` hoặc `ngu-phap` |
+| `GET` | `/admin/cms/questions/:questionId` | — | `{ …QuestionAdmin, revisions[] }`, revisions mới nhất trước |
+| `POST` | `/admin/cms/questions` | `QuestionRevision` | `{ question, revision, idempotent: false }` |
+| `POST` | `/admin/cms/questions/:questionId/revisions` | `QuestionRevision` | `{ question, revision, idempotent }`; snapshot trùng bản mới nhất → `idempotent: true` |
+| `POST` | `/admin/cms/questions/:questionId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
+| `POST` | `/admin/cms/questions/:questionId/revisions/:revisionId/publish` | — | `{ question, revision, idempotent }` |
+| `POST` | `/admin/cms/questions/:questionId/archive` | — | `{ question, idempotent }` |
+| `GET` | `/admin/cms/tags` | `q?` (1–40, ILIKE trên `name`, `%`/`_` literal), `limit` (1–100, mặc định 50) | `[{ slug, name, questionCount }]`; sort `name asc, id asc`; `questionCount` chỉ đếm câu chưa archived |
+
+`QuestionRevision` (body tạo bản sửa): `type` ∈ `mcq | true_false | fill_blank |
+arrange_sentence` (bốn giá trị `listening | reading | writing | speaking` bị từ chối `400`) ·
+`skill` ∈ 4 kỹ năng · `levelId` · `content` = đề bài 1–4096 · `answers`, `correctAnswer` JSON
+≤100 000 byte/depth 20 (validator sau DTO áp canonical ≤65 536 byte/depth 8) · `explanation?`
+≤4096 · `objective?` ≤500 · `difficulty?` 1–3 hoặc `null` · `audioId?`, `imageId?` · `tags?`
+≤10 tên, mỗi tên 1–40 ký tự, không trùng slug. `tags` được chuẩn hoá thành slug (bỏ dấu tiếng
+Việt, chữ thường, nối `-`), sắp xếp, dedupe theo slug (trùng slug → `422 duplicate_tag`).
+
+Hình dạng `answers`/`correctAnswer` theo từng loại (`content` của row = đề bài, không phải
+object):
+
+| `type` | `answers` (cột `Question.answers`) | `correctAnswer` |
+| --- | --- | --- |
+| `mcq` | `{ options: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ optionId }`, phải là `id` trong `answers.options` |
+| `true_false` | `{}` | `{ value: boolean }` |
+| `fill_blank` | `{}` | `{ acceptedTexts: string[] }` 1–100 + `caseSensitive?` boolean |
+| `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100 phần tử | `{ tokenIds: string[] }`, đủ mọi token, **thứ tự = đáp án đúng** |
+
+`QuestionAdmin`: `{ id, content, type, skill, audioId, imageId, answers, correctAnswer,
+explanation, objective, levelId, difficulty, version, contentHash, status, dataSourceId,
+createdById, updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt,
+level: { id, code }, tags: [{ slug, name }] }`. TL-82a: danh sách **mặc định chỉ gồm câu
+chưa lưu trữ** (`status <> 'archived'` và `deletedAt IS NULL`), nên `meta.total` bằng
+`counts.total` khi không lọc; truyền `status=archived` mới trả câu đã lưu trữ. TL-82b: `tag`
+nhận 1–5 slug lặp lại và kết hợp OR. `latestRevision` = `{ id, revision, decision }` hoặc
+`null`.
+`revisions[]` = `{ id, revision, contentHash, createdAt, author: { id, name } | null,
+changedFields: string[], reviews: [{ decision, note, reviewer: { id, name } | null,
+createdAt }] }`. `changedFields` so snapshot với bản liền trước trên đúng 12 field
+`type, skill, levelId, content, answers, correctAnswer, explanation, objective, difficulty,
+audioId, imageId, tags`; revision 1 trả `[]`.
+
+Snapshot của revision gồm đúng 12 field trên (không có `id`/`version`/`status`), `tags` là
+slug đã sort, `contentHash` = sha256 canonical JSON của snapshot. Câu `draft` materialize
+row `Question` ngay khi tạo bản sửa; câu `published` chỉ materialize khi publish.
+
+Tag: upsert `Tag` theo `slug` (`ON CONFLICT DO NOTHING`, an toàn khi 2 transaction tạo cùng
+slug); tên hiển thị lấy từ lần tạo đầu tiên; liên kết `QuestionTag` thừa bị xoá, thiếu được
+thêm trong cùng transaction. Tag row không bị xoá khi bỏ liên kết.
+
+`GET /admin/cms/tags` (TL-93) là danh sách gợi ý tag cho form soạn câu hỏi: admin-only,
+`no-store`, không phân trang. `questionCount` đếm câu có tag đó mà `status <> 'archived'` và
+`deletedAt IS NULL`, nên tag chỉ còn gắn với câu lưu trữ trả `0` nhưng vẫn xuất hiện trong gợi
+ý. Không có route `:param` ở cấp đầu nên `tags` không xung đột route; vẫn khai báo trước mọi
+route tham số hoá.
+
+Media (TL-81, TL-81a): `audioId` phải là Media `audio`, `imageId` phải là Media `image`; kiểm
+trong transaction với `FOR SHARE`. Hai mức kiểm:
+- **Lưu câu hỏi / lưu bản sửa:** chỉ chặn tham chiếu không thể dùng được — `not_found`,
+  `wrong_type`, `quarantined`, `archived` (đã xoá) → `409 MEDIA_NOT_USABLE` với `details.field`
+  và `details.reason`. Media `pending`/`processing` **được phép lưu** để tác giả soạn câu hỏi
+  trong lúc tệp đang xử lý.
+- **Publish:** media phải `processingStatus = ready` và chưa `deletedAt`; mọi trạng thái khác
+  → `409 QUESTION_NOT_PUBLISHABLE` với `details.reasons` chứa `audio_not_ready` (audio) hoặc
+  `image_not_ready` (ảnh).
+
+Publish (TL-83) chỉ áp dụng cho bản sửa mới nhất đã `approved`; vi phạm điều kiện →
+`409 QUESTION_NOT_PUBLISHABLE` với `details.reasons[]` = `{ code, field }`:
+`explanation_required` (`explanation`), `audio_required` (`audioId`, khi `skill = listening`),
+`level_not_found` (`levelId`), `audio_not_ready` (`audioId`), `image_not_ready` (`imageId`).
+`audio_not_ready`/`image_not_ready` áp cho mọi trạng thái media không phải `ready` (kể cả
+`pending`/`processing`/`quarantined`/đã xoá/không tồn tại).
+Câu đã archived không sửa/publish được. Archive bị chặn khi câu nằm trong `Test` đang
+`published` (TL-84).
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `QUESTION_ARCHIVED` | `Archived Question cannot be changed.` | Mutation/review/publish câu đã archived |
+| `QUESTION_NOT_PUBLISHABLE` | `Question does not meet the publish requirements.`, `details.reasons` | Publish thiếu điều kiện TL-83 |
+| `QUESTION_IN_PUBLISHED_TEST` | `Question belongs to a published test and cannot be archived.` | Archive câu đang thuộc `Test` published (TL-84) |
+| `MEDIA_NOT_USABLE` | `Question media must exist, be live and of the right type.`, `details.field`, `details.reason` ∈ `not_found \| wrong_type \| quarantined \| archived` | Lưu bản sửa với media không tồn tại/sai loại/bị cách ly/đã xoá |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` | Review/publish bản sửa không còn mới nhất (dùng chung A.8) |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved (dùng chung A.8) |
+| `QUESTION_UNIQUE_CONFLICT` | `Question content conflicts.` | Trùng unique của Question/Tag |
+| `QUESTION_CONSTRAINT_CONFLICT` | `Question violates a database integrity constraint.` | Vi phạm FK/check |
+| `QUESTION_CONCURRENT_UPDATE` | `Concurrent Question update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `Question revision snapshot is invalid.` / `Question revision snapshot integrity check failed.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+Lỗi `422`: `Question validation failed at <path>.` với `error.code` là mã validator và
+`details.path` là vị trí lỗi (client hiện đúng ô). Mã dùng chung với bài tập cho
+`mcq`/`fill_blank`/`arrange_sentence`; `true_false` thêm `boolean_required`. Mã riêng của
+ngân hàng câu hỏi: `invalid_question_type`, `invalid_skill`, `invalid_difficulty`,
+`invalid_tag`, `duplicate_tag`.
+
+Audit trong cùng transaction (TL-86): `question.created`, `question.revision_created`,
+`question.reviewed`, `question.published`, `question.archived`; `targetType = "question"`,
+`afterSummary = { entityType, entityId, revision, status, contentHash, decision? }`.
+
 ### A.10 Admin Media Library và Ingestion (admin)
 
 Response có `Cache-Control: no-store`.

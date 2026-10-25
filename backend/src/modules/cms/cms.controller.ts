@@ -44,8 +44,17 @@ import {
   AdminMediaListMetaDto,
   AdminMediaLifecycleResultDto,
 } from './dto/admin-media-response.dto';
+import {
+  AdminQuestionCountsDto,
+  AdminQuestionDetailDto,
+  AdminQuestionDto,
+} from './dto/admin-question-response.dto';
+import { AdminQuestionsQueryDto } from './dto/admin-questions-query.dto';
+import { AdminTagDto } from './dto/admin-tag-response.dto';
+import { AdminTagsQueryDto } from './dto/admin-tags-query.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
+import { CreateQuestionRevisionDto } from './dto/create-question-revision.dto';
 import {
   CommitExerciseImportDto,
   PreviewExerciseImportDto,
@@ -60,6 +69,7 @@ import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
 import { DataSourcesService } from './data-sources.service';
 import { AdminDataSourcesQueryDto } from './dto/admin-data-sources-query.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
+import { QuestionAuthoringService } from './question-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
 import {
@@ -94,12 +104,25 @@ export class CmsController {
   constructor(
     private readonly cmsService: CmsService,
     private readonly exerciseAuthoringService: ExerciseAuthoringService,
+    private readonly questionAuthoringService: QuestionAuthoringService,
     private readonly exerciseImportService: ExerciseImportService,
     private readonly mediaAdminService: MediaAdminService,
     private readonly mediaIngestionService: MediaIngestionService,
     private readonly dataSourcesService: DataSourcesService,
     private readonly mediaIngestionReconciliationService: MediaIngestionReconciliationService,
   ) {}
+
+  // TL-93: static `tags` is declared before every parametrised route so an
+  // id-style match can never shadow it.
+  @Get('tags')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminTagDto])
+  listTags(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminTagsQueryDto,
+  ): Promise<ApiSuccessResponse<AdminTagDto[]>> {
+    return this.questionAuthoringService.listTags(request.user, query);
+  }
 
   @Post('media/ingestions')
   @Header('Cache-Control', 'no-store')
@@ -494,6 +517,112 @@ export class CmsController {
     return this.cmsService.archiveTopic(request.user, topicId, {
       correlationId: correlationId(requestId),
     });
+  }
+  // TL-82: questions/counts must be declared before questions/:questionId,
+  // otherwise Express matches "counts" as a question id and the pipe answers 400.
+  @Get('questions/counts')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminQuestionCountsDto)
+  getQuestionCounts(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApiSuccessResponse<AdminQuestionCountsDto>> {
+    return this.questionAuthoringService.getQuestionCounts(request.user);
+  }
+
+  @Get('questions')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminQuestionDto], { paginated: true })
+  listQuestions(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminQuestionsQueryDto,
+  ): Promise<ApiSuccessResponse<AdminQuestionDto[]>> {
+    return this.questionAuthoringService.listQuestions(request.user, query);
+  }
+
+  @Get('questions/:questionId')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminQuestionDetailDto)
+  getQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+  ): Promise<ApiSuccessResponse<AdminQuestionDetailDto>> {
+    return this.questionAuthoringService.getQuestion(request.user, questionId);
+  }
+
+  @Post('questions')
+  @Header('Cache-Control', 'no-store')
+  createQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: CreateQuestionRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.createQuestion(request.user, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Post('questions/:questionId/revisions')
+  @Header('Cache-Control', 'no-store')
+  createQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Body() dto: CreateQuestionRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.createQuestionRevision(
+      request.user,
+      questionId,
+      dto,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/revisions/:revisionId/reviews')
+  @Header('Cache-Control', 'no-store')
+  reviewQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Param('revisionId', ParsePositiveIntPipe) revisionId: number,
+    @Body() dto: ReviewRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.reviewQuestionRevision(
+      request.user,
+      questionId,
+      revisionId,
+      dto,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/revisions/:revisionId/publish')
+  @Header('Cache-Control', 'no-store')
+  publishQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Param('revisionId', ParsePositiveIntPipe) revisionId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.publishQuestionRevision(
+      request.user,
+      questionId,
+      revisionId,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/archive')
+  @Header('Cache-Control', 'no-store')
+  archiveQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.archiveQuestion(
+      request.user,
+      questionId,
+      { correlationId: correlationId(requestId) },
+    );
   }
 }
 
