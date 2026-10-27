@@ -1,7 +1,9 @@
+import { randomInt as cryptoRandomInt } from 'node:crypto';
+
 import {
   MediaType,
+  QuestionType,
   type Prisma,
-  type QuestionType,
   type Skill,
 } from '@prisma/client';
 
@@ -154,12 +156,173 @@ export function projectExamSnapshotMedia(
   };
 }
 
+export type ArrangeRandomInt = (maxExclusive: number) => number;
+
+export type ArrangeTokenMask = {
+  answers: Prisma.JsonValue;
+  correctAnswer: Prisma.JsonValue;
+};
+
+/** TL-133: how many times to re-shuffle before forcing a different order. */
+const ARRANGE_MASK_MAX_ATTEMPTS = 32;
+
+/**
+ * TL-133: the authoring form stores `answers.tokens` in the correct order and
+ * derives `correctAnswer.tokenIds` from that same array, so keeping the stored
+ * order in the snapshot hands the learner the answer. The mask shuffles with
+ * Fisher–Yates, refuses an arrangement whose text order still equals the
+ * correct sentence, and renumbers ids by display position (`t1…tn`) so even
+ * sorting by id cannot recover the answer. The snapshot is built once per
+ * attempt and stored immutably, so both the order and the ids are local to that
+ * attempt.
+ *
+ * The publish validator already rejects malformed tokens/answers, so a payload
+ * that cannot be reinterpreted here is returned untouched rather than repaired
+ * (a live row edited after publish must not break start).
+ */
+export function maskArrangeTokens(
+  answers: Prisma.JsonValue,
+  correctAnswer: Prisma.JsonValue,
+  randomInt: ArrangeRandomInt,
+): ArrangeTokenMask {
+  const answersRecord = plainRecord(answers);
+  const correctRecord = plainRecord(correctAnswer);
+  const tokens = parseTokens(answersRecord);
+  const tokenIds = parseTokenIds(correctRecord, tokens);
+  if (tokens === null || tokenIds === null) {
+    return { answers, correctAnswer };
+  }
+
+  const textById = new Map(tokens.map((token) => [token.id, token.text]));
+  const correctTexts = tokenIds.map((id) => (textById.get(id) ?? '').trim());
+  const textOrder = (arrangement: ArrangeToken[]): string[] =>
+    arrangement.map((token) => token.text.trim());
+  const isAnswerOrder = (arrangement: ArrangeToken[]): boolean => {
+    const texts = textOrder(arrangement);
+    return (
+      texts.length === correctTexts.length &&
+      texts.every((text, index) => text === correctTexts[index])
+    );
+  };
+  const allSameText = tokens.every(
+    (token) => token.text.trim() === tokens[0]?.text.trim(),
+  );
+
+  let shuffled = shuffle(tokens, randomInt);
+  if (!allSameText) {
+    let attempts = 0;
+    while (isAnswerOrder(shuffled) && attempts < ARRANGE_MASK_MAX_ATTEMPTS) {
+      shuffled = shuffle(tokens, randomInt);
+      attempts += 1;
+    }
+    if (isAnswerOrder(shuffled)) {
+      shuffled = swapFirstDifferent(shuffled);
+    }
+  }
+
+  const newIdByOldId = new Map<string, string>();
+  const maskedTokens = shuffled.map((token, index) => {
+    const id = `t${String(index + 1)}`;
+    newIdByOldId.set(token.id, id);
+    return { id, text: token.text };
+  });
+  const maskedTokenIds = tokenIds.map((id) => newIdByOldId.get(id) ?? id);
+
+  return {
+    answers: { ...answersRecord, tokens: maskedTokens },
+    correctAnswer: { ...correctRecord, tokenIds: maskedTokenIds },
+  };
+}
+
+type ArrangeToken = { id: string; text: string };
+
+function plainRecord(value: unknown): Record<string, unknown> | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function parseTokens(
+  answers: Record<string, unknown> | null,
+): ArrangeToken[] | null {
+  if (answers === null) return null;
+  const raw = answers.tokens;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const tokens: ArrangeToken[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const record = plainRecord(item);
+    if (record === null) return null;
+    const { id, text } = record;
+    if (typeof id !== 'string' || typeof text !== 'string') return null;
+    if (seen.has(id)) return null;
+    seen.add(id);
+    tokens.push({ id, text });
+  }
+  return tokens;
+}
+
+function parseTokenIds(
+  correctAnswer: Record<string, unknown> | null,
+  tokens: ArrangeToken[] | null,
+): string[] | null {
+  if (correctAnswer === null || tokens === null) return null;
+  const raw = correctAnswer.tokenIds;
+  if (!Array.isArray(raw) || raw.length !== tokens.length) return null;
+  const known = new Set(tokens.map((token) => token.id));
+  const seen = new Set<string>();
+  const tokenIds: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string' || !known.has(item) || seen.has(item)) {
+      return null;
+    }
+    seen.add(item);
+    tokenIds.push(item);
+  }
+  return tokenIds;
+}
+
+function shuffle(
+  tokens: ArrangeToken[],
+  randomInt: ArrangeRandomInt,
+): ArrangeToken[] {
+  const result = [...tokens];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    const current = result[index];
+    const other = result[swapIndex];
+    if (current === undefined || other === undefined) continue;
+    result[index] = other;
+    result[swapIndex] = current;
+  }
+  return result;
+}
+
+/** Last resort when the RNG keeps producing the answer order (or identity). */
+function swapFirstDifferent(tokens: ArrangeToken[]): ArrangeToken[] {
+  const first = tokens[0];
+  if (first === undefined) return tokens;
+  const index = tokens.findIndex(
+    (token, position) =>
+      position > 0 && token.text.trim() !== first.text.trim(),
+  );
+  if (index === -1) return tokens;
+  const result = [...tokens];
+  const other = result[index];
+  if (other === undefined) return tokens;
+  result[0] = other;
+  result[index] = first;
+  return result;
+}
+
 /**
  * `key` values are the identity used by `ExamAnswer.snapshotQuestionKey` in
  * M4.2b: `s<order>`, `s<order>-g<order>` and `q<placement order>`.
  */
 export function buildExamSnapshot(
   source: ExamSnapshotSource,
+  randomInt: ArrangeRandomInt = cryptoRandomInt,
 ): BuiltExamSnapshot {
   const maxScore = EXAM_SECTION_MAX_SCORE * source.sections.length;
   const payload: ExamSnapshotPayload = {
@@ -189,24 +352,37 @@ export function buildExamSnapshot(
         content: group.content,
         audio: group.audio,
         image: group.image,
-        questions: group.questions.map((entry) => ({
-          key: `q${String(entry.placementOrderIndex)}`,
-          orderIndex: entry.placementOrderIndex,
-          questionId: entry.question.id,
-          questionVersion: entry.question.version,
-          type: entry.question.type,
-          skill: entry.question.skill,
-          content: entry.question.content,
-          // shortcut: `arrange_sentence` tokens are stored in the shuffled
-          // order the authoring form produced (M4.1a), so the snapshot keeps
-          // the stored order verbatim — re-sorting here would hand the learner
-          // the correct sentence.
-          answers: entry.question.answers,
-          audio: entry.question.audio,
-          image: entry.question.image,
-          correctAnswer: entry.question.correctAnswer,
-          explanation: entry.question.explanation,
-        })),
+        questions: group.questions.map((entry) => {
+          // TL-133: the authoring form stores the answer order, so the frozen
+          // copy shuffles and renumbers arrange tokens here — the snapshot is
+          // built per attempt and stored immutably (`ExamAttemptSnapshot.attemptId`
+          // is unique), which is what makes the masking per-attempt.
+          const projected =
+            entry.question.type === QuestionType.arrange_sentence
+              ? maskArrangeTokens(
+                  entry.question.answers,
+                  entry.question.correctAnswer,
+                  randomInt,
+                )
+              : {
+                  answers: entry.question.answers,
+                  correctAnswer: entry.question.correctAnswer,
+                };
+          return {
+            key: `q${String(entry.placementOrderIndex)}`,
+            orderIndex: entry.placementOrderIndex,
+            questionId: entry.question.id,
+            questionVersion: entry.question.version,
+            type: entry.question.type,
+            skill: entry.question.skill,
+            content: entry.question.content,
+            answers: projected.answers,
+            audio: entry.question.audio,
+            image: entry.question.image,
+            correctAnswer: projected.correctAnswer,
+            explanation: entry.question.explanation,
+          };
+        }),
       })),
     })),
   };

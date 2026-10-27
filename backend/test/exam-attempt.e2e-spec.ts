@@ -592,14 +592,16 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       ],
     });
     expect(firstQuestion.questionId).toBe(q1Id);
-    // arrange_sentence keeps the stored token order (shortcut).
+    // TL-133: arrange_sentence tokens are shuffled and renumbered per attempt.
+    // Two distinct tokens must be inverted, so the answer order is never shown.
     const arrangeQuestion = questions[3] as Prisma.JsonObject;
     expect(arrangeQuestion.answers).toEqual({
       tokens: [
-        { id: 't2', text: '二' },
-        { id: 't1', text: '一' },
+        { id: 't1', text: '二' },
+        { id: 't2', text: '一' },
       ],
     });
+    expect(arrangeQuestion.correctAnswer).toEqual({ tokenIds: ['t2', 't1'] });
     expect(snapshot.contentHash).toBe(sha256CanonicalJson(snapshot.payload));
     expect(snapshot.contentHash).toMatch(/^[0-9a-f]{64}$/);
     expect(snapshot.testVersion).toBe(1);
@@ -2330,6 +2332,105 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     expect(await intro()).toBe(1);
   });
 
+  it('34. shuffles and masks arrange_sentence tokens per attempt (TL-133)', async () => {
+    const authored = [
+      { id: 'orig-1', text: '我' },
+      { id: 'orig-2', text: '爱' },
+      { id: 'orig-3', text: '学习' },
+      { id: 'orig-4', text: '中文' },
+    ];
+    const questionId = await seedQuestion({
+      type: QuestionType.arrange_sentence,
+      skill: Skill.reading,
+      content: `Câu sắp xếp F9 ${suffix}`,
+      answers: { tokens: authored },
+      correctAnswer: { tokenIds: authored.map((token) => token.id) },
+    });
+    const testId = await seedTest({
+      title: `Đề sắp xếp F9 ${suffix}`,
+      status: ContentStatus.published,
+      passScore: 0,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          groups: [{ title: null, questionIds: [questionId] }],
+        },
+      ],
+    });
+    const learner = await register('f9-arrange');
+    const attemptId = await startAttempt(learner.token, testId);
+
+    const read = await get(
+      `/exam/attempts/${String(attemptId)}`,
+      learner.token,
+    ).expect(200);
+    expectNoForbiddenKeys(read.body);
+    const body = read.body.data as ExamAttemptBody;
+    const question = body.sections[0]?.groups[0]?.questions[0];
+    if (question === undefined) throw new Error('F9 question missing');
+    const tokens = (
+      question.answers as { tokens: Array<{ id: string; text: string }> }
+    ).tokens;
+
+    // (a) ids are renumbered per display position and none is the original id.
+    expect(tokens.map((token) => token.id)).toEqual(['t1', 't2', 't3', 't4']);
+    const originalIds = authored.map((token) => token.id);
+    expect(tokens.some((token) => originalIds.includes(token.id))).toBe(false);
+    // (b) the display order is not the authored (correct) sentence.
+    expect(tokens.map((token) => token.text)).not.toEqual(
+      authored.map((token) => token.text),
+    );
+
+    // (c) the frozen payload still rebuilds the correct sentence.
+    const snapshot = await prisma.examAttemptSnapshot.findUniqueOrThrow({
+      where: { attemptId },
+      select: { payload: true },
+    });
+    const storedQuestion = snapshotQuestionByKey(
+      snapshot.payload,
+      question.key,
+    );
+    const storedTokens = (
+      storedQuestion.answers as {
+        tokens: Array<{ id: string; text: string }>;
+      }
+    ).tokens;
+    const textByNewId = new Map(
+      storedTokens.map((token) => [token.id, token.text]),
+    );
+    const storedAnswer = storedQuestion.correctAnswer as { tokenIds: string[] };
+    expect(storedAnswer.tokenIds.map((id) => textByNewId.get(id))).toEqual(
+      authored.map((token) => token.text),
+    );
+
+    // (d) only the per-attempt ids are accepted by the answer validator.
+    const withOriginalIds = await saveAnswer(
+      learner.token,
+      attemptId,
+      question.key,
+      {
+        answer: { order: originalIds },
+        isFlagged: false,
+        expectedVersion: null,
+        idempotencyKey: newKey(),
+      },
+    ).expect(400);
+    expect(withOriginalIds.body.error).toMatchObject({
+      code: 'EXAM_ANSWER_INVALID',
+      details: { field: 'answer.order' },
+    });
+    expectNoForbiddenKeys(withOriginalIds.body);
+
+    const saved = await saveAnswer(learner.token, attemptId, question.key, {
+      answer: { order: tokens.map((token) => token.id) },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+    expectNoForbiddenKeys(saved.body);
+  });
+
   function put(path: string, token?: string) {
     const call = request(app.getHttpServer()).put(`/api/v1${path}`);
     return token === undefined
@@ -2472,6 +2573,26 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       testId,
       userId: learner.userId,
     };
+  }
+
+  function snapshotQuestionByKey(
+    payload: Prisma.JsonValue,
+    key: string,
+  ): Prisma.JsonObject {
+    const sections = (payload as Prisma.JsonObject)
+      .sections as Prisma.JsonArray;
+    for (const section of sections) {
+      const groups = (section as Prisma.JsonObject).groups as Prisma.JsonArray;
+      for (const group of groups) {
+        const questions = (group as Prisma.JsonObject)
+          .questions as Prisma.JsonArray;
+        for (const question of questions) {
+          const record = question as Prisma.JsonObject;
+          if (record.key === key) return record;
+        }
+      }
+    }
+    throw new Error(`Snapshot question ${key} missing.`);
   }
 
   function expectNoStore(response: { headers: Record<string, string> }): void {

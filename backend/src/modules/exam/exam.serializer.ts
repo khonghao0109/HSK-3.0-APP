@@ -240,7 +240,7 @@ function projectAnswers(
     return { options: projectOptionList(answers, 'options') };
   }
   if (type === QuestionType.arrange_sentence) {
-    // shortcut: tokens keep the stored order; the shuffle is authored data.
+    // TL-133: tokens were shuffled and renumbered inside the frozen snapshot.
     return { tokens: projectOptionList(answers, 'tokens') };
   }
   return {};

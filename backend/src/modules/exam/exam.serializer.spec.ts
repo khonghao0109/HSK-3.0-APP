@@ -200,9 +200,12 @@ function source(): ExamSnapshotSource {
 }
 
 const NOW = new Date('2026-10-27T09:30:00.000Z');
+// TL-133: build with an injected RNG so the masked arrange tokens are a worked
+// example instead of a random permutation.
+const FIXED_RANDOM_INT = (): number => 0;
 
 function attemptView() {
-  const { payload } = buildExamSnapshot(source());
+  const { payload } = buildExamSnapshot(source(), FIXED_RANDOM_INT);
   return toExamAttemptView({
     attempt: {
       id: 55,
@@ -281,12 +284,13 @@ describe('exam serializers (R11 / TL-114)', () => {
           { id: 'b', text: 'B' },
         ],
       });
-      // shortcut: tokens keep the stored order and drop every extra key.
+      // TL-133: the snapshot already shuffled and renumbered the tokens, so
+      // only the display payload (with extra keys dropped) is projected.
       expect(questions[1]?.answers).toEqual({
         tokens: [
+          { id: 't1', text: '二' },
+          { id: 't2', text: '一' },
           { id: 't3', text: '三' },
-          { id: 't1', text: '一' },
-          { id: 't2', text: '二' },
         ],
       });
       expect(questions[2]?.answers).toEqual({});
@@ -303,7 +307,10 @@ describe('exam serializers (R11 / TL-114)', () => {
 
     it('never exposes the snapshot hash or question identity of the payload', () => {
       const view = attemptView();
-      const contentHash = buildExamSnapshot(source()).contentHash;
+      const contentHash = buildExamSnapshot(
+        source(),
+        FIXED_RANDOM_INT,
+      ).contentHash;
       const keys = collectKeys(view);
 
       expect(keys).not.toContain('payload');
@@ -313,7 +320,7 @@ describe('exam serializers (R11 / TL-114)', () => {
     });
 
     it('clamps remainingSeconds at zero after expiry', () => {
-      const { payload } = buildExamSnapshot(source());
+      const { payload } = buildExamSnapshot(source(), FIXED_RANDOM_INT);
       const view = toExamAttemptView({
         attempt: {
           id: 55,
@@ -333,7 +340,7 @@ describe('exam serializers (R11 / TL-114)', () => {
     });
 
     it('maps stored answers through the same allow-list', () => {
-      const { payload } = buildExamSnapshot(source());
+      const { payload } = buildExamSnapshot(source(), FIXED_RANDOM_INT);
       const view = toExamAttemptView({
         attempt: {
           id: 55,

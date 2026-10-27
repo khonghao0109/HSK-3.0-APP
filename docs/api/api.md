@@ -1092,7 +1092,8 @@ learner (`{choice}`, `{value}`, `{text}`, `{order}`) hoặc `null` khi đã xoá
 `answer: null` xoá đáp án nhưng **giữ** `isFlagged`. Shape đáp án theo `snapshot.type` (TL-122):
 `mcq` = `{ choice: <id option trong snapshot> }`; `true_false` = `{ value: boolean }`;
 `fill_blank` = `{ text: string }` chuẩn hoá NFC, trim, 1–200 code point;
-`arrange_sentence` = `{ order: [<hoán vị đủ mọi token id trong snapshot>] }`. Sai shape/id →
+`arrange_sentence` = `{ order: [<hoán vị đủ mọi token id trong snapshot>] }`; các `id` này là
+id **đã che riêng cho attempt** (TL-133), không phải id soạn câu hỏi. Sai shape/id →
 `400 EXAM_ANSWER_INVALID` với `details.field` (`answer.choice`, `answer.value`, `answer.text`,
 `answer.order`). Server **không** chấm đúng/sai ở bước này (M4.3).
 
@@ -1176,6 +1177,12 @@ R11: response dựng theo allowlist từng trường; khi đang thi không bao g
 `contentHash`, `questionId`, `questionVersion`. Đáp án/giải thích chỉ có trong snapshot nội bộ
 và chỉ dùng để chấm điểm, xem lại sau khi nộp (A.9c nói về snapshot của đề; payload snapshot
 ghi ở `docs/database/P0_DATA_DICTIONARY.md`).
+
+Token của `arrange_sentence` được xáo (Fisher–Yates, không trùng thứ tự câu đúng) và đánh lại
+id `t1…tn` theo vị trí hiển thị **riêng cho từng attempt** ngay khi dựng snapshot (TL-133); id
+chỉ có nghĩa trong attempt đó, `correctAnswer.tokenIds` được viết lại theo map id cũ → mới, và
+`contentHash` vì thế khác nhau giữa các attempt. Snapshot của attempt đã tạo trước đó giữ
+nguyên, không backfill.
 
 Ghi chú: `remainingSeconds = max(0, expiresAt − now)` và `serverNow` theo giờ server (đồng hồ
 tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
