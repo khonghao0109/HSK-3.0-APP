@@ -3691,6 +3691,564 @@
         ]
       }
     },
+    "/api/v1/admin/cms/tests": {
+      "get": {
+        "operationId": "CmsController_listTests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminTestDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      },
+      "post": {
+        "operationId": "CmsController_createTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/tests/{testId}": {
+      "get": {
+        "operationId": "CmsController_getTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      },
+      "patch": {
+        "operationId": "CmsController_updateTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/tests/{testId}/structure": {
+      "put": {
+        "operationId": "CmsController_replaceTestStructure",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceTestStructureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/tests/{testId}/publish": {
+      "post": {
+        "operationId": "CmsController_publishTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/tests/{testId}/archive": {
+      "post": {
+        "operationId": "CmsController_archiveTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/tests/{testId}/duplicate": {
+      "post": {
+        "operationId": "CmsController_duplicateTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTestDetailDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
     "/api/v1/users/me/profile": {
       "get": {
         "operationId": "UserController_getMeProfile",
@@ -8665,6 +9223,532 @@
           "skill",
           "levelId",
           "content"
+        ]
+      },
+      "AdminTestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "levelId": {
+            "type": "number"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "description": "Whole-test duration in minutes (Q118)."
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "100 × sectionCount (Q118)."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "version": {
+            "type": "number"
+          },
+          "sectionCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "skills": {
+            "type": "array",
+            "description": "Distinct section skills, in section order.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "listening",
+                "reading",
+                "writing",
+                "speaking"
+              ]
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "levelId",
+          "levelCode",
+          "title",
+          "instruction",
+          "duration",
+          "passScore",
+          "maxScore",
+          "status",
+          "version",
+          "sectionCount",
+          "questionCount",
+          "skills",
+          "createdAt",
+          "updatedAt",
+          "publishedAt"
+        ]
+      },
+      "AdminTestQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "number"
+          },
+          "orderIndex": {
+            "type": "number",
+            "description": "Global 1..N order across the whole test (equals the placement order)."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "arrange_sentence",
+              "listening",
+              "reading",
+              "writing",
+              "speaking",
+              "true_false"
+            ]
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "levelId": {
+            "type": "number"
+          },
+          "difficulty": {
+            "type": "number",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "questionId",
+          "orderIndex",
+          "type",
+          "skill",
+          "levelId",
+          "difficulty",
+          "status",
+          "content"
+        ]
+      },
+      "AdminTestGroupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "audioId": {
+            "type": "number",
+            "nullable": true
+          },
+          "imageId": {
+            "type": "number",
+            "nullable": true
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTestQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "instruction",
+          "audioId",
+          "imageId",
+          "orderIndex",
+          "questions"
+        ]
+      },
+      "AdminTestSectionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTestGroupDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "skill",
+          "title",
+          "instruction",
+          "orderIndex",
+          "questionCount",
+          "groups"
+        ]
+      },
+      "AdminTestDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "levelId": {
+            "type": "number"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "description": "Whole-test duration in minutes (Q118)."
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "100 × sectionCount (Q118)."
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "sectionCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "skills": {
+            "type": "array",
+            "description": "Distinct section skills, in section order.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "listening",
+                "reading",
+                "writing",
+                "speaking"
+              ]
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "sections": {
+            "description": "Full tree. Section and group ids change on every PUT structure (TL-95);\nclients must re-read the detail instead of caching them.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTestSectionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "levelId",
+          "levelCode",
+          "title",
+          "instruction",
+          "duration",
+          "passScore",
+          "maxScore",
+          "status",
+          "version",
+          "sectionCount",
+          "questionCount",
+          "skills",
+          "createdAt",
+          "updatedAt",
+          "publishedAt",
+          "sections"
+        ]
+      },
+      "CreateTestDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "duration": {
+            "type": "number",
+            "description": "Whole-test duration in minutes (Q118).",
+            "minimum": 1,
+            "maximum": 300
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "levelId",
+          "title",
+          "duration"
+        ]
+      },
+      "UpdateTestDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 300
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "expectedUpdatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedUpdatedAt"
+        ]
+      },
+      "TestStructureGroupDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 100
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 1000
+          },
+          "audioId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "imageId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "questionIds": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "maximum": 2147483647,
+              "minimum": 1
+            }
+          }
+        },
+        "required": [
+          "questionIds"
+        ]
+      },
+      "TestStructureSectionDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 1000
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestStructureGroupDto"
+            }
+          }
+        },
+        "required": [
+          "skill",
+          "title",
+          "groups"
+        ]
+      },
+      "ReplaceTestStructureDto": {
+        "type": "object",
+        "properties": {
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestStructureSectionDto"
+            }
+          },
+          "expectedUpdatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sections",
+          "expectedUpdatedAt"
+        ]
+      },
+      "PublishTestDto": {
+        "type": "object",
+        "properties": {
+          "expectedUpdatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedUpdatedAt"
         ]
       },
       "UserProfileResponseDto": {

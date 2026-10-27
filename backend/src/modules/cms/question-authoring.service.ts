@@ -10,7 +10,6 @@ import {
 import {
   ContentEntityType,
   ContentStatus,
-  MediaProcessingStatus,
   MediaType,
   Prisma,
   QuestionType,
@@ -44,6 +43,12 @@ import {
   CmsTransactionOperation,
 } from './cms-transaction-coordinator';
 import { lockActiveCmsActor } from './cms-actor-lock';
+import {
+  CMS_MEDIA_SELECT,
+  CmsMediaRecord,
+  publishMediaBlocker,
+  unusableMediaReason,
+} from './media-usability';
 import { AdminQuestionsQueryDto } from './dto/admin-questions-query.dto';
 import { AdminTagDto } from './dto/admin-tag-response.dto';
 import { AdminTagsQueryDto } from './dto/admin-tags-query.dto';
@@ -116,15 +121,7 @@ type QuestionRevisionRecord = Prisma.ContentRevisionGetPayload<{
   select: typeof QUESTION_REVISION_SELECT;
 }>;
 
-type QuestionMediaRecord = {
-  id: number;
-  url: string;
-  type: MediaType;
-  mimeType: string | null;
-  duration: number | null;
-  processingStatus: MediaProcessingStatus;
-  deletedAt: Date | null;
-};
+type QuestionMediaRecord = CmsMediaRecord;
 
 export type QuestionMutationContext = {
   correlationId: string;
@@ -511,6 +508,30 @@ export class QuestionAuthoringService {
           snapshot,
           revision.contentHash,
         );
+        // TL-99/Q116: a question used by a published test may change content,
+        // answers, explanation, tags and media, but not its identity fields —
+        // the published test would then hold a question of another level,
+        // skill or type. Old attempts are protected by the M4.2a snapshot.
+        const changedIdentityField = firstChangedIdentityField(
+          snapshotFromQuestion(question),
+          snapshot,
+        );
+        if (changedIdentityField !== null) {
+          const publishedTestLinks = await tx.testQuestion.count({
+            where: {
+              questionId,
+              test: { status: ContentStatus.published, deletedAt: null },
+            },
+          });
+          if (publishedTestLinks > 0) {
+            throw new ConflictException({
+              code: 'QUESTION_IN_PUBLISHED_TEST',
+              message:
+                'A published test uses this question; level, skill and type cannot change.',
+              field: changedIdentityField,
+            });
+          }
+        }
         const action = decidePublishAction({
           requestedRevisionId: revisionId,
           latestRevisionId: revision.id,
@@ -808,15 +829,7 @@ export class QuestionAuthoringService {
     if (rows.length !== 1) return null;
     return tx.media.findUnique({
       where: { id: mediaId },
-      select: {
-        id: true,
-        url: true,
-        type: true,
-        mimeType: true,
-        duration: true,
-        processingStatus: true,
-        deletedAt: true,
-      },
+      select: CMS_MEDIA_SELECT,
     });
   }
 
@@ -1232,35 +1245,13 @@ function snapshotFromQuestion(question: {
   };
 }
 
-/**
- * TL-81a: saving a draft only rejects references that can never become usable
- * (missing, wrong type, quarantined, archived). A media row that is still
- * pending/processing is allowed so authors can prepare the question while the
- * file is being processed; publish re-checks readiness (publishMediaBlocker).
- */
-function unusableMediaReason(
-  media: QuestionMediaRecord | null,
-  expectedType: MediaType,
-): string | null {
-  if (!media) return 'not_found';
-  if (media.type !== expectedType) return 'wrong_type';
-  if (media.processingStatus === MediaProcessingStatus.quarantined) {
-    return 'quarantined';
-  }
-  if (media.deletedAt !== null) return 'archived';
-  return null;
-}
-
-/** Publish gate: additionally requires the media to be fully ready. */
-function publishMediaBlocker(
-  media: QuestionMediaRecord | null,
-  expectedType: MediaType,
-): string | null {
-  const unusable = unusableMediaReason(media, expectedType);
-  if (unusable !== null) return unusable;
-  if (media && media.processingStatus !== MediaProcessingStatus.ready) {
-    return 'not_ready';
-  }
+function firstChangedIdentityField(
+  previous: QuestionSnapshot,
+  next: QuestionSnapshot,
+): 'levelId' | 'skill' | 'type' | null {
+  if (previous.levelId !== next.levelId) return 'levelId';
+  if (previous.skill !== next.skill) return 'skill';
+  if (previous.type !== next.type) return 'type';
   return null;
 }
 

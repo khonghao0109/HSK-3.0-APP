@@ -850,6 +850,7 @@ Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `QUESTION_ARCHIVED` | `Archived Question cannot be changed.` | Mutation/review/publish câu đã archived |
 | `QUESTION_NOT_PUBLISHABLE` | `Question does not meet the publish requirements.`, `details.reasons` | Publish thiếu điều kiện TL-83 |
 | `QUESTION_IN_PUBLISHED_TEST` | `Question belongs to a published test and cannot be archived.` | Archive câu đang thuộc `Test` published (TL-84) |
+| `QUESTION_IN_PUBLISHED_TEST` | `A published test uses this question; level, skill and type cannot change.`, `details.field` ∈ `levelId \| skill \| type` | Publish bản sửa đổi levelId/skill/type của câu đang nằm trong đề đã xuất bản (Q116, TL-99) |
 | `MEDIA_NOT_USABLE` | `Question media must exist, be live and of the right type.`, `details.field`, `details.reason` ∈ `not_found \| wrong_type \| quarantined \| archived` | Lưu bản sửa với media không tồn tại/sai loại/bị cách ly/đã xoá |
 | `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` | Review/publish bản sửa không còn mới nhất (dùng chung A.8) |
 | `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved (dùng chung A.8) |
@@ -867,6 +868,166 @@ ngân hàng câu hỏi: `invalid_question_type`, `invalid_skill`, `invalid_diffi
 Audit trong cùng transaction (TL-86): `question.created`, `question.revision_created`,
 `question.reviewed`, `question.published`, `question.archived`; `targetType = "question"`,
 `afterSummary = { entityType, entityId, revision, status, contentHash, decision? }`.
+
+### A.9c Admin CMS — Đề thi (admin, M4.1b)
+
+Envelope §1. Danh sách có `meta.pagination`; mọi response có `Cache-Control: no-store`.
+8 endpoint admin-only (`JwtAuthGuard` + `RolesGuard` với `role = admin`), route tĩnh `tests`
+khai báo trước `tests/:testId`, `:testId` qua `ParsePositiveIntPipe` (không phải số nguyên
+dương `1..2147483647` → `400`). Mọi `POST` trả `201`. Đề `draft` sửa trực tiếp (kèm
+`expectedUpdatedAt`) và publish thẳng khi qua bộ kiểm tra; đề `published` chỉ đọc, muốn sửa
+phải archive rồi duplicate (Q117). `Test.duration` là **số phút** cho **cả đề** (một đồng hồ,
+1–300, Q118); `TestSection.duration` để trống, không dùng. Mọi mutation khoá actor
+(`lockActiveCmsActor`) rồi khoá row `Test` bằng `FOR UPDATE` và đọc lại trong cùng
+transaction (TL-97). Thứ tự khoá của mọi mutation: actor → row `Test` (`FOR UPDATE`) →
+các row `Question` được tham chiếu (`FOR SHARE`, theo `id` tăng dần) → các row `Media` của
+nhóm (`FOR SHARE`). `PUT structure` cũng khoá câu theo thứ tự này trước khi kiểm câu dùng
+được (H3), nên archive/publish một câu không chen được giữa bước kiểm và bước ghi.
+
+| Method | Path | Query/Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/admin/cms/tests` | `levelId?`, `status?` (`draft \| published \| archived`), `q?` (1–100, ILIKE trên `title`, `%`/`_` là literal), `page`, `limit` | `TestAdmin[]` + `meta`; sort `updatedAt desc, id desc`; mặc định ẩn đề đã lưu trữ (`status <> 'archived'` và `deletedAt IS NULL`), truyền `status=archived` mới thấy đề archived |
+| `GET` | `/admin/cms/tests/:testId` | — | `TestDetail`; id không tồn tại → `404` message `Test not found.`; vẫn trả được đề đã archive |
+| `POST` | `/admin/cms/tests` | `CreateTest` | `TestDetail`; tạo đề `draft` chưa có section |
+| `PATCH` | `/admin/cms/tests/:testId` | `UpdateTest` | `TestDetail`; chỉ đề `draft` |
+| `PUT` | `/admin/cms/tests/:testId/structure` | `ReplaceTestStructure` | `TestDetail`; thay toàn bộ cây section/group/câu, chỉ đề `draft` |
+| `POST` | `/admin/cms/tests/:testId/publish` | `PublishTest` = `{ expectedUpdatedAt }` | `TestDetail`; chỉ đề `draft` |
+| `POST` | `/admin/cms/tests/:testId/archive` | — | `TestDetail`; archive được từ `draft` hoặc `published` |
+| `POST` | `/admin/cms/tests/:testId/duplicate` | — | `TestDetail`; nhân bản mọi trạng thái thành đề `draft` mới |
+
+`CreateTest` (body tạo đề nháp, TL-100): `levelId` (level phải tồn tại, không → `422`
+`level_not_found`) · `title` trim 1–200 · `instruction?` trim ≤2000 (rỗng → `null`) ·
+`duration` nguyên 1–300 phút (Q118) · `passScore?` nguyên ≥ 0 hoặc `null`. `passScore` chỉ
+được so với `maxScore` khi publish, nên tạo/sửa vẫn lưu được giá trị ngoài khoảng.
+
+`UpdateTest` (body PATCH meta): bắt buộc `expectedUpdatedAt` (ISO8601, echo `updatedAt` của
+lần đọc gần nhất) + các field optional như `CreateTest`; `passScore: null` xoá điểm đỗ;
+`instruction: null` xoá hướng dẫn. `levelId`, `title`, `duration` **không nhận `null`** —
+gửi `null` (khác với bỏ trống field) trả `400 REQUEST_VALIDATION_FAILED` và đề không đổi
+(H1). Body chỉ có `expectedUpdatedAt` vẫn hợp lệ (chỉ chạm `updatedAt`). Chỉ áp dụng khi đề
+`draft`.
+
+`ReplaceTestStructure` (body PUT, TL-96): bắt buộc `expectedUpdatedAt` + `sections[]` 0–10
+phần (đề nháp được phép rỗng để dựng dần). Mỗi phần: `skill` ∈ `listening | reading |
+writing | speaking`, `title` trim 1–100, `instruction?` ≤1000, `groups[]` 1–20 nhóm. Mỗi
+nhóm: `title?` ≤100, `instruction?` ≤1000, `audioId?`/`imageId?`, `questionIds[]` 1–50 id
+câu; tổng ≤ 200 câu/đề. Câu "không nhóm" là group không có `title`.
+
+```json
+{
+  "expectedUpdatedAt": "2026-10-25T07:30:00.000Z",
+  "sections": [
+    {
+      "skill": "listening",
+      "title": "Phần 1 — Nghe",
+      "instruction": "Chọn đáp án đúng.",
+      "groups": [
+        {
+          "title": "Hội thoại 1",
+          "instruction": "Nghe hội thoại và chọn đáp án.",
+          "audioId": 42,
+          "imageId": null,
+          "questionIds": [101, 102, 103]
+        }
+      ]
+    }
+  ]
+}
+```
+
+- **Thay toàn bộ cây trong một transaction:** xoá placement → `TestQuestion` → `QuestionGroup`
+  → `TestSection` rồi tạo lại theo đúng thứ tự mảng. **Id section và group đổi sau mọi lần
+  PUT structure** (client phải `GET /admin/cms/tests/:testId` lại, không cache id).
+- **`orderIndex`:** section `1..N` liên tục theo thứ tự mảng (không sắp theo `skill`); group
+  `1..M` liên tục trong từng section; `TestQuestion.orderIndex` = `placement.orderIndex` =
+  thứ tự liên tục `1..N` trên toàn đề, không reset theo section/group; mọi placement đều có
+  `groupId` (câu "không nhóm" là group không có title).
+- **Lưu không kiểm level/skill/published của câu** — đó là việc của publish. Chỉ chặn tham
+  chiếu không thể dùng: câu không tồn tại/đã soft-delete/`archived` → `409
+  TEST_QUESTION_NOT_USABLE` với `details.field` = vị trí
+  (`sections[i].groups[j].questionIds[k]`) và `details.reason` ∈ `not_found | archived`;
+  media nhóm kiểm ở mức lưu theo TL-81a (`audioId` phải là Media `audio`, `imageId` là Media
+  `image`, khoá `FOR SHARE`) → `409 MEDIA_NOT_USABLE` với `details.field` ∈
+  `sections[i].groups[j].audioId | sections[i].groups[j].imageId` và `details.reason` ∈
+  `not_found | wrong_type | quarantined | archived`. Media `pending`/`processing` **được phép
+  lưu**; publish mới đòi `ready`.
+- Trước khi kiểm câu dùng được, service khoá các câu bằng `FOR SHARE` theo `id` tăng dần
+  (cùng thứ tự như publish), rồi mới kiểm (H3).
+- Archive được từ `draft` hoặc `published`, sau đó mọi mutation trả `TEST_ARCHIVED`. Duplicate
+  giữ nguyên level và cấu trúc section/group/placement cùng tham chiếu câu, bỏ kết quả thi,
+  luôn tạo đề `draft` mới với title `"<title> (bản sao)"`; tiêu đề nguồn được cắt theo code
+  point để tổng ≤200 ký tự (không tách đôi cặp surrogate của emoji, H6).
+
+`TestAdmin`: `{ id, levelId, levelCode, title, instruction, duration, passScore, maxScore,
+status, version, sectionCount, questionCount, skills, createdAt, updatedAt, publishedAt }`;
+`duration` tính bằng phút; `maxScore = 100 × sectionCount` (Q118 — mỗi câu điểm như nhau, mỗi
+phần 100 điểm); `skills` = các `skill` khác nhau của section theo thứ tự phần. `TestDetail` =
+`TestAdmin` + `sections[]`: section = `{ id, skill, title, instruction, orderIndex,
+questionCount, groups[] }`; group = `{ id, title, instruction, audioId, imageId, orderIndex,
+questions[] }`; question = `{ questionId, orderIndex, type, skill, levelId, difficulty,
+status, content }`. `GET tests` trả `TestAdmin` (không `sections`), `GET tests/:testId` và
+mọi mutation trả `TestDetail`. **Id section/group chỉ sống trong một lần đọc**: mỗi `PUT
+structure` tạo id mới.
+
+Publish (TL-98) chỉ áp dụng cho đề `draft`; mọi vi phạm gom vào một `409 TEST_NOT_PUBLISHABLE`
+với `details.reasons[]` = `{ code, field }`, tối đa 20 reason. Một câu có thể sinh **nhiều**
+reason cùng `field` (ví dụ vừa chưa xuất bản, vừa khác cấp, vừa khác kỹ năng) để tác giả sửa
+hết trong một vòng (H2); chỉ câu không còn tồn tại mới dừng ở `question_not_published`:
+
+| `reason.code` | `field` | Khi nào |
+| --- | --- | --- |
+| `level_not_found` | `levelId` | Level của đề không còn tồn tại |
+| `sections_required` | `sections` | Đề chưa có section nào |
+| `section_empty` | `sections[i]` | Section không có group nào |
+| `group_empty` | `sections[i].groups[j]` | Group không có câu nào |
+| `question_not_published` | `sections[i].groups[j].questionIds[k]` | Câu không tồn tại, đã soft-delete/archived hoặc chưa `published` |
+| `question_level_mismatch` | `sections[i].groups[j].questionIds[k]` | `levelId` của câu khác `levelId` của đề |
+| `question_skill_mismatch` | `sections[i].groups[j].questionIds[k]` | `skill` của câu khác `skill` của section |
+| `pass_score_required` | `passScore` | `passScore = null` |
+| `pass_score_out_of_range` | `passScore` | Ngoài khoảng `0..maxScore` |
+| `audio_not_ready` | `sections[i].groups[j].audioId` | Media audio của group không `ready`/không dùng được |
+| `image_not_ready` | `sections[i].groups[j].imageId` | Media ảnh của group không `ready`/không dùng được |
+
+Publish thành công: `status = published`, set `publishedAt`/`publishedById`, `version` và
+`scoringVersion` giữ nguyên (TL-98). Đề đã publish chỉ đọc: `PATCH`/`PUT structure`/publish
+lần nữa → `409 TEST_NOT_EDITABLE`; archive vẫn được.
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `TEST_NOT_EDITABLE` | `Only a draft Test can be changed.` / `Only a draft Test can be published.` | `PATCH`/`PUT structure`/`publish` khi đề không còn `draft` |
+| `TEST_ARCHIVED` | `Archived Test cannot be changed.` / `Archived Test cannot be published.` | Mutation/publish đề đã archive |
+| `TEST_CONCURRENT_UPDATE` | `The Test changed since it was read; reload and retry.` / `Concurrent Test update detected; retry the request.` | `expectedUpdatedAt` lệch `updatedAt` (đọc lại rồi retry) hoặc race transaction |
+| `TEST_NOT_PUBLISHABLE` | `Test does not meet the publish requirements.`, `details.reasons` | Publish thiếu điều kiện TL-98 |
+| `TEST_QUESTION_NOT_USABLE` | `Test questions must exist and must not be soft-deleted or archived.`, `details.field`, `details.reason` ∈ `not_found \| archived` | `PUT structure` chứa câu không tồn tại/đã xoá/archived |
+| `MEDIA_NOT_USABLE` | `Test group media must exist, be live and of the right type.`, `details.field`, `details.reason` ∈ `not_found \| wrong_type \| quarantined \| archived` | `PUT structure` với media nhóm không dùng được |
+| `TEST_UNIQUE_CONFLICT` | `Test content conflicts.` | Trùng unique của Test/TestSection/QuestionGroup |
+| `TEST_CONSTRAINT_CONFLICT` | `Test violates a database integrity constraint.` | Vi phạm FK/check |
+
+Timeout/connection hạ tầng → `503` message `Test operation is temporarily unavailable; retry
+the request.` (retry được).
+
+Lỗi body: DTO lồng nhau sai shape, field lạ (`whitelist` + `forbidNonWhitelisted` →
+`$.$unknown`) hoặc vượt giới hạn mảng/độ dài → `400 REQUEST_VALIDATION_FAILED` với
+`details.errors: [{ path, codes }]` (§1). Lỗi nghiệp vụ sau DTO là `422` với `details.path` =
+vị trí để client focus đúng ô: trùng `questionId` trong cùng đề → `TEST_STRUCTURE_INVALID`
+(`details.path` = vị trí lặp, vd `sections[0].groups[0].questionIds[1]`); tổng >200 câu →
+`TEST_STRUCTURE_INVALID` với `details.path = "sections"`; `levelId` không tồn tại →
+`level_not_found`, `details.path = "levelId"`, message `Test level does not exist.`.
+`:testId` hoặc query sai → `400`.
+
+Audit trong cùng transaction (TL-101): `test.created`, `test.updated`,
+`test.structure_updated`, `test.published`, `test.archived`, `test.duplicated`;
+`targetType = "test"`, `targetId` là chuỗi id; `afterSummary = { entityType: "test", entityId,
+status, sectionCount, questionCount }`, riêng `test.duplicated` thêm `sourceTestId`;
+`correlationId` = request id. Không ghi `beforeSummary`.
+
+Q116 (TL-99): publish bản sửa đổi `levelId`, `skill` hoặc `type` của câu đang nằm trong đề
+`published` → `409 QUESTION_IN_PUBLISHED_TEST` với `details.field` ∈ `levelId | skill | type`
+(message `A published test uses this question; level, skill and type cannot change.`); sửa
+`content`, `answers`, `correctAnswer`, `explanation`, `tags` hay media vẫn publish được. Lượt
+thi cũ bảo vệ bằng snapshot (M4.2a), không cần migration. Chi tiết ở A.9b.
 
 ### A.10 Admin Media Library và Ingestion (admin)
 
@@ -1080,7 +1241,7 @@ code sẽ tự vào spec đó.
 | `PATCH` | `/learning-plans/items/:id` | Trạng thái item trong plan | M2 |
 | `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
-| CRUD | `/admin/cms/questions`, `/admin/cms/tests` | Exam authoring | M4 |
+| CRUD | `/admin/cms/tests` (đã có ở A.9c); `/admin/cms/questions` (đã có ở A.9b) | Exam authoring | M4 |
 | `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |

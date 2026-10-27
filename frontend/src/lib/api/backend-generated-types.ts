@@ -788,6 +788,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/cms/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_listTests"];
+        put?: never;
+        post: operations["CmsController_createTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/tests/{testId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmsController_getTest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CmsController_updateTest"];
+        trace?: never;
+    };
+    "/api/v1/admin/cms/tests/{testId}/structure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CmsController_replaceTestStructure"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/tests/{testId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_publishTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/tests/{testId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_archiveTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/tests/{testId}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmsController_duplicateTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/profile": {
         parameters: {
             query?: never;
@@ -1996,6 +2092,131 @@ export interface components {
             audioId?: number | null;
             imageId?: number | null;
             tags?: string[];
+        };
+        AdminTestDto: {
+            id: number;
+            levelId: number;
+            levelCode: string;
+            title: string;
+            instruction: string | null;
+            /** @description Whole-test duration in minutes (Q118). */
+            duration: number;
+            passScore: number | null;
+            /** @description 100 × sectionCount (Q118). */
+            maxScore: number;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            version: number;
+            sectionCount: number;
+            questionCount: number;
+            /** @description Distinct section skills, in section order. */
+            skills: ("listening" | "reading" | "writing" | "speaking")[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+        };
+        AdminTestQuestionDto: {
+            questionId: number;
+            /** @description Global 1..N order across the whole test (equals the placement order). */
+            orderIndex: number;
+            /** @enum {string} */
+            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            levelId: number;
+            difficulty: number | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            content: string;
+        };
+        AdminTestGroupDto: {
+            id: number;
+            title: string | null;
+            instruction: string | null;
+            audioId: number | null;
+            imageId: number | null;
+            orderIndex: number;
+            questions: components["schemas"]["AdminTestQuestionDto"][];
+        };
+        AdminTestSectionDto: {
+            id: number;
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            title: string;
+            instruction: string | null;
+            orderIndex: number;
+            questionCount: number;
+            groups: components["schemas"]["AdminTestGroupDto"][];
+        };
+        AdminTestDetailDto: {
+            id: number;
+            levelId: number;
+            levelCode: string;
+            title: string;
+            instruction: string | null;
+            /** @description Whole-test duration in minutes (Q118). */
+            duration: number;
+            passScore: number | null;
+            /** @description 100 × sectionCount (Q118). */
+            maxScore: number;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            version: number;
+            sectionCount: number;
+            questionCount: number;
+            /** @description Distinct section skills, in section order. */
+            skills: ("listening" | "reading" | "writing" | "speaking")[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /**
+             * @description Full tree. Section and group ids change on every PUT structure (TL-95);
+             *     clients must re-read the detail instead of caching them.
+             */
+            sections: components["schemas"]["AdminTestSectionDto"][];
+        };
+        CreateTestDto: {
+            levelId: number;
+            title: string;
+            instruction?: string | null;
+            /** @description Whole-test duration in minutes (Q118). */
+            duration: number;
+            passScore?: number | null;
+        };
+        UpdateTestDto: {
+            levelId?: number;
+            title?: string;
+            instruction?: string | null;
+            duration?: number;
+            passScore?: number | null;
+            expectedUpdatedAt: string;
+        };
+        TestStructureGroupDto: {
+            title?: string | null;
+            instruction?: string | null;
+            audioId?: number | null;
+            imageId?: number | null;
+            questionIds: number[];
+        };
+        TestStructureSectionDto: {
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            title: string;
+            instruction?: string | null;
+            groups: components["schemas"]["TestStructureGroupDto"][];
+        };
+        ReplaceTestStructureDto: {
+            sections: components["schemas"]["TestStructureSectionDto"][];
+            expectedUpdatedAt: string;
+        };
+        PublishTestDto: {
+            expectedUpdatedAt: string;
         };
         UserProfileResponseDto: {
             /**
@@ -4196,6 +4417,264 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_listTests: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                levelId?: number;
+                status?: "draft" | "published" | "archived";
+                q?: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_createTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_getTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_updateTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_replaceTestStructure: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceTestStructureDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_publishTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishTestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_archiveTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_duplicateTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminTestDetailDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

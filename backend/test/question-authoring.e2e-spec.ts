@@ -850,6 +850,78 @@ describe('Question Authoring V1 E2E (M4.1a)', () => {
     expect(tooMany.body.error.code).toBe('REQUEST_VALIDATION_FAILED');
   });
 
+  it('13. blocks identity changes for a question used by a published test (Q116)', async () => {
+    const created = await adminPost('/admin/cms/questions')
+      .send(
+        mcqPayload({
+          tags: ['Q116'],
+          content: 'Câu hỏi dùng cho test đã publish (Q116)',
+        }),
+      )
+      .expect(201);
+    const questionId = created.body.data.question.id as number;
+    const revisionId = created.body.data.revision.id as number;
+    await review(questionId, revisionId, 'approved');
+    const initialPublish = await publish(questionId, revisionId);
+    expect(initialPublish.data.question.status).toBe('published');
+
+    // A published test uses the question, so level/skill/type are frozen.
+    const seededTitle = `Question authoring test ${suffix} Q116`;
+    const [seededTest] = await prisma.$queryRaw<Array<{ id: number }>>(
+      Prisma.sql`
+        INSERT INTO "Test" ("levelId", "title", "duration", "status", "publishedAt", "createdAt", "updatedAt")
+        VALUES (${levelId}, ${seededTitle}, 60, 'published', now(), now(), now())
+        RETURNING "id"
+      `,
+    );
+    if (!seededTest) throw new Error('Failed to seed the published test row.');
+    await prisma.$executeRaw(Prisma.sql`
+      INSERT INTO "TestQuestion" ("testId", "questionId", "orderIndex")
+      VALUES (${seededTest.id}, ${questionId}, 1)
+    `);
+
+    const skillChanged = await adminPost(
+      `/admin/cms/questions/${questionId}/revisions`,
+    )
+      .send(
+        mcqPayload({
+          skill: Skill.listening,
+          audioId: readyAudioId,
+          explanation: 'Nghe và chọn đáp án đúng.',
+        }),
+      )
+      .expect(201);
+    const skillRevisionId = skillChanged.body.data.revision.id as number;
+    await review(questionId, skillRevisionId, 'approved');
+    const blocked = await adminPost(
+      `/admin/cms/questions/${questionId}/revisions/${skillRevisionId}/publish`,
+    ).expect(409);
+    expect(blocked.body.error.code).toBe('QUESTION_IN_PUBLISHED_TEST');
+    expect(blocked.body.error.details.field).toBe('skill');
+
+    // The rejected publish left the live question untouched.
+    const unchanged = await adminGet(`/admin/cms/questions/${questionId}`);
+    expect(unchanged.body.data).toMatchObject({
+      status: 'published',
+      skill: 'reading',
+      type: 'mcq',
+    });
+
+    // A content-only revision keeps the identity and still publishes.
+    const contentChanged = await adminPost(
+      `/admin/cms/questions/${questionId}/revisions`,
+    )
+      .send(mcqPayload({ content: 'Nội dung mới cho câu hỏi' }))
+      .expect(201);
+    const contentRevisionId = contentChanged.body.data.revision.id as number;
+    expect(contentChanged.body.data.question.status).toBe('published');
+    await review(questionId, contentRevisionId, 'approved');
+    const republished = await publish(questionId, contentRevisionId);
+    expect(republished.data.idempotent).toBe(false);
+    expect(republished.data.question.status).toBe('published');
+    expect(republished.data.question.content).toBe('Nội dung mới cho câu hỏi');
+  });
+
   async function review(
     questionId: number,
     revisionId: number,

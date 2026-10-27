@@ -54,6 +54,15 @@ describe('CmsController route order (TL-47)', () => {
     }
   });
 
+  it('declares GET tests before GET tests/:testId', () => {
+    const routes = getRoutes();
+    expect(routes).toContain('tests');
+    expect(routes).toContain('tests/:testId');
+    expect(routes.indexOf('tests')).toBeLessThan(
+      routes.indexOf('tests/:testId'),
+    );
+  });
+
   it('does not gate the ingestion list on the ingestion flag', () => {
     const handler: unknown = Object.getOwnPropertyDescriptor(
       CmsController.prototype,
