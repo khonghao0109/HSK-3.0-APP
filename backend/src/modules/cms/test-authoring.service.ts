@@ -26,9 +26,9 @@ import { lockActiveCmsActor } from './cms-actor-lock';
 import {
   CMS_MEDIA_SELECT,
   CmsMediaRecord,
-  publishMediaBlocker,
   unusableMediaReason,
 } from './media-usability';
+import { collectTestPublishBlockers } from './test-publish-blockers';
 import { AdminTestsQueryDto } from './dto/admin-tests-query.dto';
 import {
   AdminTestDetailDto,
@@ -44,11 +44,6 @@ import { UpdateTestDto } from './dto/update-test.dto';
 
 export type TestMutationContext = {
   correlationId: string;
-};
-
-type PublishBlocker = {
-  code: string;
-  field: string;
 };
 
 const TEST_DETAIL_SELECT = {
@@ -416,7 +411,7 @@ export class TestAuthoringService {
             select: { id: true },
           }),
         ]);
-        const reasons = this.collectPublishBlockers({
+        const reasons = collectTestPublishBlockers({
           test,
           questions,
           media,
@@ -909,114 +904,6 @@ export class TestAuthoringService {
         }
       }
     }
-  }
-
-  private collectPublishBlockers(input: {
-    test: TestDetailRecord;
-    questions: TestQuestionIdentity[];
-    media: CmsMediaRecord[];
-    levelExists: boolean;
-  }): PublishBlocker[] {
-    const { test, questions, media, levelExists } = input;
-    const blockers: PublishBlocker[] = [];
-    const sectionCount = test.sections.length;
-    const maxScore = 100 * sectionCount;
-
-    if (!levelExists) {
-      blockers.push({ code: 'level_not_found', field: 'levelId' });
-    }
-    if (sectionCount === 0) {
-      blockers.push({ code: 'sections_required', field: 'sections' });
-    }
-
-    const questionsById = new Map(
-      questions.map((question) => [question.id, question]),
-    );
-    const mediaById = new Map(media.map((item) => [item.id, item]));
-
-    for (let i = 0; i < test.sections.length; i += 1) {
-      const section = test.sections[i];
-      if (!section) continue;
-      const sectionField = `sections[${String(i)}]`;
-      if (section.groups.length === 0) {
-        blockers.push({ code: 'section_empty', field: sectionField });
-        continue;
-      }
-      for (let j = 0; j < section.groups.length; j += 1) {
-        const group = section.groups[j];
-        if (!group) continue;
-        const groupField = `${sectionField}.groups[${String(j)}]`;
-        if (group.placements.length === 0) {
-          blockers.push({ code: 'group_empty', field: groupField });
-        }
-        for (let k = 0; k < group.placements.length; k += 1) {
-          const placement = group.placements[k];
-          if (!placement) continue;
-          const questionId = placement.testQuestion.questionId;
-          const question = questionsById.get(questionId);
-          const questionField = `${groupField}.questionIds[${String(k)}]`;
-          if (!question) {
-            // A question that no longer exists cannot be evaluated further.
-            blockers.push({
-              code: 'question_not_published',
-              field: questionField,
-            });
-            continue;
-          }
-          // H2: one question contributes every code that is true for it, so the
-          // author fixes all problems in one round.
-          if (
-            question.deletedAt !== null ||
-            question.status !== ContentStatus.published
-          ) {
-            blockers.push({
-              code: 'question_not_published',
-              field: questionField,
-            });
-          }
-          if (question.levelId !== test.levelId) {
-            blockers.push({
-              code: 'question_level_mismatch',
-              field: questionField,
-            });
-          }
-          if (question.skill !== section.skill) {
-            blockers.push({
-              code: 'question_skill_mismatch',
-              field: questionField,
-            });
-          }
-        }
-        if (group.audioId !== null) {
-          const audio = mediaById.get(group.audioId) ?? null;
-          if (publishMediaBlocker(audio, MediaType.audio) !== null) {
-            blockers.push({
-              code: 'audio_not_ready',
-              field: `${groupField}.audioId`,
-            });
-          }
-        }
-        if (group.imageId !== null) {
-          const image = mediaById.get(group.imageId) ?? null;
-          if (publishMediaBlocker(image, MediaType.image) !== null) {
-            blockers.push({
-              code: 'image_not_ready',
-              field: `${groupField}.imageId`,
-            });
-          }
-        }
-      }
-    }
-
-    if (test.passScore === null) {
-      blockers.push({ code: 'pass_score_required', field: 'passScore' });
-    } else if (test.passScore < 0 || test.passScore > maxScore) {
-      blockers.push({
-        code: 'pass_score_out_of_range',
-        field: 'passScore',
-      });
-    }
-    return blockers;
   }
 
   private toAdminTest(test: TestListRecord): AdminTestDto {
