@@ -38,6 +38,10 @@ type AuthenticatedMediaActor = { id: number; role: string };
  * (B-07, Q46). Admins keep `media.accessTtlSeconds` for previews. A rotated
  * signing secret must stay in the previous slot for at least the larger of
  * the two TTLs.
+ *
+ * F5: every entry point that hands out or verifies a signed content URL
+ * (`createAccess`, `readSignedObject`, exam media grants) calls
+ * `isUsableMediaContent`, so "usable" means exactly one thing.
  */
 export const LEARNER_MEDIA_ACCESS_TTL_SECONDS = 300;
 
@@ -69,6 +73,7 @@ export class MediaAccessService {
         id: true,
         checksum: true,
         mimeType: true,
+        size: true,
         storageProvider: true,
         storageKey: true,
         type: true,
@@ -87,16 +92,7 @@ export class MediaAccessService {
         },
       },
     });
-    if (
-      !media ||
-      media.processingStatus !== 'ready' ||
-      media.deletedAt !== null ||
-      !media.checksum ||
-      !isSupportedPrivateMedia(media) ||
-      !media.storageKey ||
-      !media.storageProvider ||
-      media.storageProvider !== this.storage.provider
-    ) {
+    if (!isUsableMediaContent(media, this.storage.provider)) {
       if (
         media?.storageProvider &&
         media.storageProvider !== this.storage.provider
@@ -160,16 +156,7 @@ export class MediaAccessService {
         },
       });
       if (
-        !media ||
-        !media.checksum ||
-        !media.mimeType ||
-        !media.size ||
-        !media.storageKey ||
-        !media.storageProvider ||
-        media.storageProvider !== this.storage.provider ||
-        !isSupportedPrivateMedia(media) ||
-        media.processingStatus !== 'ready' ||
-        media.deletedAt !== null ||
+        !isUsableMediaContent(media, this.storage.provider) ||
         !verifyMediaAccessSignature({
           mediaId,
           expiresAt,
@@ -262,7 +249,50 @@ function storageFailureKind(error: unknown): ObjectStorageErrorKind {
   return error instanceof ObjectStorageError ? error.kind : 'unavailable';
 }
 
-function isSupportedPrivateMedia(media: {
+/**
+ * F5: the single availability rule for a learner-facing signed content grant.
+ * `/media/:id/access`, `readSignedObject` and the exam media grants all call it,
+ * so the security invariant cannot drift between entry points. It is as strict
+ * as the content route: every field the signed read later needs (checksum,
+ * storage key, provider, MIME type and size) must be present and truthy.
+ */
+export type MediaContentRecord = {
+  checksum: string | null;
+  mimeType: string | null;
+  storageProvider: string | null;
+  storageKey: string | null;
+  type: string;
+  processingStatus: string;
+  deletedAt: Date | null;
+  size: number | null;
+};
+
+export function isUsableMediaContent(
+  media: MediaContentRecord | null | undefined,
+  provider: string,
+): media is MediaContentRecord & {
+  checksum: string;
+  storageKey: string;
+  storageProvider: string;
+  mimeType: string;
+  size: number;
+} {
+  return (
+    media !== null &&
+    media !== undefined &&
+    media.processingStatus === 'ready' &&
+    media.deletedAt === null &&
+    Boolean(media.checksum) &&
+    Boolean(media.storageKey) &&
+    Boolean(media.storageProvider) &&
+    Boolean(media.mimeType) &&
+    Boolean(media.size) &&
+    media.storageProvider === provider &&
+    isSupportedPrivateMedia(media)
+  );
+}
+
+export function isSupportedPrivateMedia(media: {
   type: string;
   mimeType: string | null;
 }): boolean {

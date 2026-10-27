@@ -195,6 +195,8 @@ export const TEST_PUBLISH_REASON_LABELS: Readonly<Record<string, string>> = {
   pass_score_out_of_range: 'Điểm đỗ vượt điểm tối đa',
   audio_not_ready: 'Audio của nhóm chưa sẵn sàng',
   image_not_ready: 'Ảnh của nhóm chưa sẵn sàng',
+  question_audio_not_ready: 'Audio của câu chưa sẵn sàng',
+  question_image_not_ready: 'Ảnh của câu chưa sẵn sàng',
   level_not_found: 'Cấp HSK không tồn tại',
 };
 

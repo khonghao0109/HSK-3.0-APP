@@ -140,6 +140,8 @@ type TestQuestionIdentity = {
   deletedAt: Date | null;
   levelId: number;
   skill: Skill;
+  audioId: number | null;
+  imageId: number | null;
 };
 
 @Injectable()
@@ -359,7 +361,11 @@ export class TestAuthoringService {
             ),
           ),
         );
-        const mediaIds = uniqueSorted(
+        // Group-level media ids come from the frozen tree (unchanged); the
+        // question-level ones are collected from the Question rows *after*
+        // lockQuestions, exactly like the exam start path (F7/TL-129), so the
+        // ids being locked are the ids the gate later reads.
+        const groupMediaIds = uniqueSorted(
           test.sections.flatMap((section) =>
             section.groups.flatMap((group) =>
               [group.audioId, group.imageId].filter(
@@ -378,19 +384,12 @@ export class TestAuthoringService {
           entityId: testId,
           transaction: tx,
         });
-        if (mediaIds.length > 0) {
-          await tx.$queryRaw(
-            Prisma.sql`SELECT "id" FROM "Media" WHERE "id" IN (${Prisma.join(
-              mediaIds,
-            )}) ORDER BY "id" FOR SHARE`,
-          );
-        }
         // Read the locked rows again so the publish decision uses the state
         // that cannot change until this transaction commits (TL-98).
-        const [questions, media, level] = await Promise.all([
+        const questions =
           questionIds.length === 0
-            ? Promise.resolve([] as TestQuestionIdentity[])
-            : tx.question.findMany({
+            ? ([] as TestQuestionIdentity[])
+            : await tx.question.findMany({
                 where: { id: { in: questionIds } },
                 select: {
                   id: true,
@@ -398,8 +397,26 @@ export class TestAuthoringService {
                   deletedAt: true,
                   levelId: true,
                   skill: true,
+                  audioId: true,
+                  imageId: true,
                 },
-              }),
+              });
+        const questionMediaIds = uniqueSorted(
+          questions.flatMap((question) =>
+            [question.audioId, question.imageId].filter(
+              (mediaId): mediaId is number => mediaId !== null,
+            ),
+          ),
+        );
+        const mediaIds = uniqueSorted([...groupMediaIds, ...questionMediaIds]);
+        if (mediaIds.length > 0) {
+          await tx.$queryRaw(
+            Prisma.sql`SELECT "id" FROM "Media" WHERE "id" IN (${Prisma.join(
+              mediaIds,
+            )}) ORDER BY "id" FOR SHARE`,
+          );
+        }
+        const [media, level] = await Promise.all([
           mediaIds.length === 0
             ? Promise.resolve([] as CmsMediaRecord[])
             : tx.media.findMany({

@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 04/09/2026 theo HEAD `3211bf8`. Tài liệu chia hai phần:
+Cập nhật 27/10/2026 theo HEAD `9de1eb0` (M4.2b: thêm `PUT /exam/attempts/:attemptId/answers/:questionKey`, `PUT /exam/attempts/:attemptId/answers`, `GET /exam/attempts/:attemptId/media-grants`). Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -87,9 +87,15 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
   `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
   5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
-  `POST /users/me/deletion-request` 5/15 phút. Khi `NODE_ENV=test`, mặc định và các
-  route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên 1.000 (trần
-  IP của route media content nâng lên 10.000); các
+  `POST /users/me/deletion-request` 5/15 phút, `POST /exam/tests/:testId/attempts` và
+  `GET /exam/attempts/:attemptId` 60/phút/user, `PUT /exam/attempts/:attemptId/answers/:questionKey`
+  240/phút/user, `PUT /exam/attempts/:attemptId/answers` 60/phút/user,
+  `GET /exam/attempts/:attemptId/media-grants` 30/phút/user (mục A.9d). Khi `NODE_ENV=test`,
+  mặc định và các route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên
+  1.000 (trần IP của route media content nâng lên 10.000), **trừ** route exam của M4.2b: chỉ
+  `POST /exam/tests/:testId/attempts` và `PUT /exam/attempts/:attemptId/answers/:questionKey`
+  được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers` (60), `GET /exam/attempts/:attemptId`
+  (60) và `GET /exam/attempts/:attemptId/media-grants` (30) giữ nguyên ở mọi môi trường. Các
   route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
@@ -987,6 +993,8 @@ hết trong một vòng (H2); chỉ câu không còn tồn tại mới dừng �
 | `pass_score_out_of_range` | `passScore` | Ngoài khoảng `0..maxScore` |
 | `audio_not_ready` | `sections[i].groups[j].audioId` | Media audio của group không `ready`/không dùng được |
 | `image_not_ready` | `sections[i].groups[j].imageId` | Media ảnh của group không `ready`/không dùng được |
+| `question_audio_not_ready` | `sections[i].groups[j].questionIds[k]` | Media audio của câu không `ready`/không dùng được (TL-129) |
+| `question_image_not_ready` | `sections[i].groups[j].questionIds[k]` | Media ảnh của câu không `ready`/không dùng được (TL-129) |
 
 Publish thành công: `status = published`, set `publishedAt`/`publishedById`, `version` và
 `scoringVersion` giữ nguyên (TL-98). Đề đã publish chỉ đọc: `PATCH`/`PUT structure`/publish
@@ -1029,9 +1037,15 @@ Q116 (TL-99): publish bản sửa đổi `levelId`, `skill` hoặc `type` của 
 `content`, `answers`, `correctAnswer`, `explanation`, `tags` hay media vẫn publish được. Lượt
 thi cũ bảo vệ bằng snapshot (M4.2a), không cần migration. Chi tiết ở A.9b.
 
-### A.9d Thi thử — học viên (M4.2a)
+TL-129: cổng publish kiểm cả media **mức câu** (`Question.audioId`, `Question.imageId`) với
+hai mã `question_audio_not_ready`/`question_image_not_ready`; bước bắt đầu thi chạy lại đúng
+hàm `collectTestPublishBlockers` này, nên đề đã xuất bản mà media của câu hỏng thì
+`POST /exam/tests/:testId/attempts` trả `409 EXAM_TEST_UNAVAILABLE` kèm vị trí câu. Bài đang
+làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot (Q120/Q121).
 
-Envelope §1. 3 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
+### A.9d Thi thử — học viên (M4.2a/M4.2b)
+
+Envelope §1. 6 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
 response có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
 `1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
 của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
@@ -1043,7 +1057,10 @@ không lộ đề nháp.
 | --- | --- | --- | --- |
 | `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
 | `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
-| `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án |
+| `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
+| `PUT` | `/exam/attempts/:attemptId/answers/:questionKey` | `SaveExamAnswer` | `ExamAnswerSaveView` — lưu một câu (TL-121) |
+| `PUT` | `/exam/attempts/:attemptId/answers` | `{ "items": [SaveExamAnswer & { questionKey }] }` 1–20 item | `{ results: [ExamAnswerBatchResult], serverNow, remainingSeconds }` (TL-124) |
+| `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128) |
 
 `ExamTestIntro`:
 
@@ -1051,11 +1068,52 @@ không lộ đề nháp.
 { id, title, instruction, levelCode, durationMinutes, questionCount, sectionCount, maxScore, passScore, sections:[{orderIndex,title,skill,questionCount,maxScore}], activeAttempt: null | {id,startedAt,expiresAt,answeredCount,questionCount} }
 ```
 
+`answeredCount` chỉ đếm câu có `answer` khác JSON `null`: câu mới đánh dấu (lưu `answer: null` với
+`isFlagged: true`) không tính, và xoá đáp án làm giảm số đếm (F3).
+
 `ExamAttemptView` (dùng cho cả `POST` và `GET` attempt):
 
 ```json
-{ id, testId, status, startedAt, expiresAt, serverNow, remainingSeconds, maxScore, questionCount, test:{title,instruction,levelCode,durationMinutes,passScore}, sections:[{key,orderIndex,title,instruction,skill,groups:[{key,orderIndex,title,instruction,content,audio,image,questions:[{key,orderIndex,type,skill,content,answers,audio,image}]}]}], answers: [] }
+{ id, testId, status, startedAt, expiresAt, serverNow, remainingSeconds, maxScore, questionCount, test:{title,instruction,levelCode,durationMinutes,passScore}, sections:[{key,orderIndex,title,instruction,skill,groups:[{key,orderIndex,title,instruction,content,audio,image,questions:[{key,orderIndex,type,skill,content,answers,audio,image}]}]}], answers:[{questionKey,answer,isFlagged,version,answeredAt,lastSavedAt}] }
 ```
+
+`ExamAnswerSaveView` = `ExamAnswerView` + `serverNow`, `remainingSeconds`; `ExamAnswerView` =
+`{ questionKey, answer, isFlagged, version, answeredAt, lastSavedAt }` (TL-127). `questionKey`
+chính là `ExamAnswer.snapshotQuestionKey` nội bộ (`q<orderIndex>`); `answer` là shape của
+learner (`{choice}`, `{value}`, `{text}`, `{order}`) hoặc `null` khi đã xoá đáp án.
+`answeredAt` là lần đầu lưu một đáp án khác `null`, giữ nguyên khi xoá đáp án.
+
+`SaveExamAnswer` (body lưu một câu, TL-121):
+
+```json
+{ "answer": { "choice": "a" } | null, "isFlagged": false, "expectedVersion": null, "idempotencyKey": "<uuid>", "clientElapsedMs": 12345 }
+```
+
+`answer: null` xoá đáp án nhưng **giữ** `isFlagged`. Shape đáp án theo `snapshot.type` (TL-122):
+`mcq` = `{ choice: <id option trong snapshot> }`; `true_false` = `{ value: boolean }`;
+`fill_blank` = `{ text: string }` chuẩn hoá NFC, trim, 1–200 code point;
+`arrange_sentence` = `{ order: [<hoán vị đủ mọi token id trong snapshot>] }`. Sai shape/id →
+`400 EXAM_ANSWER_INVALID` với `details.field` (`answer.choice`, `answer.value`, `answer.text`,
+`answer.order`). Server **không** chấm đúng/sai ở bước này (M4.3).
+
+`expectedVersion`: `null` nghĩa là "tạo mới" — nếu câu đã có row thì `409
+EXAM_ANSWER_VERSION_CONFLICT`; khác `null` phải bằng `version` hiện tại, lưu thành công thì
+`version` tăng 1. Conflict trả `details.current` = `ExamAnswerView` của row đang thắng hoặc
+`null` khi câu chưa có row. Mỗi lần lưu thành công ghi đúng **một** event `autosaved`
+(`idempotencyKey` = key của request, `metadata = { questionKey, version, clientElapsedMs,
+bodySha256 }`, **không** chứa nội dung đáp án); trùng key + cùng câu + cùng body →
+`200` trả lại row hiện tại (không tăng version, không thêm event), trùng key nhưng khác câu
+hoặc khác body → `409 EXAM_IDEMPOTENCY_KEY_REUSED` (TL-123). Cột
+`ExamAnswer.saveIdempotencyKey` chỉ giữ key mới nhất.
+
+Batch (TL-124): chạy trong **một** transaction, mỗi item dùng đúng logic trên; lỗi từng item
+không làm hỏng lô — **trừ** body chứa khoá `__proto__` (bị chặn ở tầng raw-body trước DTO và trả
+`400 EXAM_ANSWER_INVALID` cho cả request, vì class-transformer sẽ làm mất dấu vết của khoá này).
+`results[i].status` ∈ `saved | replayed | conflict | invalid | not_found`
+kèm `answer` (saved/replayed), `code` (invalid; `EXAM_ANSWER_INVALID` hoặc
+`EXAM_IDEMPOTENCY_KEY_REUSED`) hoặc `current` (conflict). 1–20 item, `questionKey` trùng
+trong lô → `400 REQUEST_VALIDATION_FAILED`, `questionKey` không có trong snapshot →
+`not_found` của riêng item. Attempt đã đóng/hết hạn thì **cả lô** `409` như dưới.
 
 Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 
@@ -1064,9 +1122,14 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `401` | `UNAUTHORIZED` | Thiếu/sai token |
 | `404` | `EXAM_TEST_NOT_FOUND` | Đề không tồn tại, đang nháp, đã lưu trữ hoặc ngoài cửa sổ `availableFrom`/`availableTo` — không lộ đề nháp |
 | `409` | `EXAM_TEST_UNAVAILABLE` | Nội dung đề không còn hợp lệ lúc bắt đầu; `details.reasons` dùng cùng bộ mã với bước publish ở A.9c |
-| `409` | `EXAM_IDEMPOTENCY_KEY_REUSED` | Cùng `idempotencyKey` đã dùng cho đề khác |
+| `409` | `EXAM_IDEMPOTENCY_KEY_REUSED` | Cùng `idempotencyKey` đã dùng cho đề khác (`POST` start) hoặc cho câu/body khác (`PUT` answers) |
 | `404` | `EXAM_ATTEMPT_NOT_FOUND` | Attempt không tồn tại hoặc không phải của người gọi |
-| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `idempotencyKey`, key không phải UUID, hoặc có field thừa |
+| `404` | `EXAM_QUESTION_NOT_FOUND` | `:questionKey` không khớp `^q\d+$` hoặc không có trong snapshot của attempt (TL-121) |
+| `400` | `EXAM_ANSWER_INVALID` | Sai kiểu hoặc sai shape với `snapshot.type`, hoặc sai id option/token: `details.field` theo type (`answer.choice`, `answer.value`, `answer.text`, `answer.order`); thiếu hẳn `answer` → `details.field = answer` |
+| `409` | `EXAM_ANSWER_VERSION_CONFLICT` | `expectedVersion` lệch version hiện tại, hoặc `null` khi câu đã có row; `details.current` |
+| `409` | `EXAM_ATTEMPT_EXPIRED` | Chỉ `PUT` (một câu hoặc lô) trả mã này khi quá `expiresAt + 5 s` và vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`, còn `media-grants` chỉ đọc và không đổi status |
+| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress` (submitted/timed_out/invalidated); `details.status` |
+| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa |
 
 Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
 ở `docs/database/P0_DATA_DICTIONARY.md`); bấm "Bắt đầu" khi đang có bài dở trả lại chính bài
@@ -1074,6 +1137,39 @@ Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗ
 đã đổi sau khi bắt đầu (Q121); cổng publish chỉ chạy khi tạo bài mới. Bài `in_progress` đã quá
 hạn bị chuyển `timed_out` (event `timed_out`, `metadata.reason = 'expired_on_start'`) rồi tạo
 bài mới (`201`); `GET` intro coi bài quá hạn là `activeAttempt: null` và **không** đổi dữ liệu.
+
+Đồng hồ và timeout lười (TL-126/TL-127, F1/F4): thời điểm hiện tại lấy bằng `clock_timestamp()`
+của PostgreSQL **sau khi** transaction đã giữ khoá `ExamAttempt` (start: sau khoá User và khoá
+attempt ở nhánh đóng; save/GET/media-grants: sau khoá attempt), nên ân hạn được xét đúng lúc
+khoá đã nằm trong tay (một save đang chờ khoá sẽ bị xét theo đồng hồ sau khi khoá về tay nó).
+Lưu được chấp nhận khi `now < expiresAt + 5 s` (hằng `EXAM_SAVE_GRACE_SECONDS`); quá ngưỡng đó
+mà status còn `in_progress` thì `PUT`/`GET` áp dụng timeout lười: `status = timed_out`,
+`submittedAt = expiresAt`, `remainingSeconds = 0`, ghi đúng **một** event `timed_out` với
+`metadata.reason = 'expired_on_save'` (PUT) hoặc `'expired_on_read'` (GET), rồi PUT trả
+`409 EXAM_ATTEMPT_EXPIRED` (lần lưu sau thấy `timed_out` nên trả `409 EXAM_ATTEMPT_CLOSED`).
+Riêng start **không** áp ân hạn: qua `expiresAt` là đóng attempt ngay
+(`reason = 'expired_on_start'`); ân hạn 5 s chỉ dành cho save đang bay, và save đang giữ khoá
+commit trước nên start thấy attempt đã đóng và bỏ qua bước đóng. Mọi chuyển
+`in_progress → timed_out` là update có điều kiện `status = 'in_progress'` và chỉ transaction
+thắng mới ghi event, nên một attempt có **đúng một** event `timed_out`. `GET` trả `200` với
+`status = timed_out`; lần đọc thứ hai không ghi thêm event. `remainingSeconds` không bao giờ âm.
+
+Khoá khi lưu (TL-125, F8d): `ExamAttempt FOR UPDATE` theo `id` đã lọc `userId` (không thuộc
+người gọi → `404`), rồi row `ExamAnswer`; đường lưu **không** khoá User/Test/Media. Lần insert
+đầu tiên của một câu có FK `questionId` nên PostgreSQL ngầm lấy `FOR KEY SHARE` trên row
+`Question` tương ứng, vì vậy lượt lưu đầu tiên của câu đó có thể phải chờ transaction admin
+đang sửa câu (`Question FOR UPDATE`). Không có vòng deadlock: start giữ `Question FOR SHARE`,
+tương thích với `FOR KEY SHARE`, nên save đang giữ khoá attempt không phải chờ start; còn
+admin không bao giờ chờ `ExamAttempt`. Thứ tự hiệu dụng: start = User → Test/Question/Media
+(`FOR SHARE`) → ExamAttempt (`FOR UPDATE`, chỉ ở nhánh đóng attempt hết hạn); save/GET =
+ExamAttempt (`FOR UPDATE`) → (chỉ lần insert đầu) Question `FOR KEY SHARE`.
+
+Media của bài thi (TL-128): `GET /exam/attempts/:attemptId/media-grants` chỉ trả khi attempt
+của người gọi còn `in_progress` và chưa quá `expiresAt + 5 s` (route **chỉ đọc**: có lấy khoá
+`ExamAttempt` để đọc đồng hồ sau khoá nhưng không đổi status, không áp dụng timeout lười); `grants` gồm mọi `mediaId` có trong snapshot (media của nhóm và của câu) với
+`url` đúng định dạng `/api/v1/media/:id/content?expires&signature` của signer hiện có, TTL =
+`min(remainingSeconds + 60, 300)` giây; media không còn dùng được thì bỏ khỏi `grants` và chỉ
+nêu `mediaId` ở `unavailable`. Không mở rộng `GET /media/:id/access` cho exam.
 
 R11: response dựng theo allowlist từng trường; khi đang thi không bao giờ trả `correctAnswer`,
 `explanation`, `acceptedTexts`, `caseSensitive`, `tokenIds`, `optionId`, `isCorrect`,
@@ -1083,7 +1179,9 @@ ghi ở `docs/database/P0_DATA_DICTIONARY.md`).
 
 Ghi chú: `remainingSeconds = max(0, expiresAt − now)` và `serverNow` theo giờ server (đồng hồ
 tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
-chính là `ExamAnswer.snapshotQuestionKey` ở M4.2b.
+chính là `ExamAnswer.snapshotQuestionKey` (đổi tên thành `questionKey` trong response từ
+M4.2b). Rate limit (TL-130): `PUT` một câu 240/phút (môi trường test 1 000), `PUT` lô 60/phút,
+`GET` attempt 60/phút, media-grants 30/phút.
 
 ### A.10 Admin Media Library và Ingestion (admin)
 

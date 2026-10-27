@@ -6950,6 +6950,214 @@
         ]
       }
     },
+    "/api/v1/exam/attempts/{attemptId}/media-grants": {
+      "get": {
+        "operationId": "ExamController_getMediaGrants",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamMediaGrantsDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
+    "/api/v1/exam/attempts/{attemptId}/answers/{questionKey}": {
+      "put": {
+        "operationId": "ExamController_saveAnswer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "questionKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveExamAnswerBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamAnswerSaveViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
+    "/api/v1/exam/attempts/{attemptId}/answers": {
+      "put": {
+        "operationId": "ExamController_saveAnswers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveExamAnswersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamAnswerBatchViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/media/{mediaId}/access": {
       "get": {
         "operationId": "MediaController_createAccess",
@@ -11892,17 +12100,24 @@
         "properties": {
           "answer": {
             "type": "object",
+            "nullable": true,
             "additionalProperties": true
           },
-          "snapshotQuestionKey": {
+          "questionKey": {
             "type": "string",
-            "description": "Snapshot question key the answer belongs to."
+            "description": "Snapshot question key the answer belongs to (`q<orderIndex>`)."
           },
           "isFlagged": {
             "type": "boolean"
           },
           "version": {
             "type": "number"
+          },
+          "answeredAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true,
+            "description": "Last time a non-null answer was stored; kept when the answer is cleared."
           },
           "lastSavedAt": {
             "format": "date-time",
@@ -11911,9 +12126,10 @@
         },
         "required": [
           "answer",
-          "snapshotQuestionKey",
+          "questionKey",
           "isFlagged",
           "version",
+          "answeredAt",
           "lastSavedAt"
         ]
       },
@@ -11998,6 +12214,252 @@
         },
         "required": [
           "idempotencyKey"
+        ]
+      },
+      "ExamMediaGrantItemDto": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "audio",
+              "image",
+              "pdf",
+              "video"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mediaId",
+          "kind",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "ExamMediaGrantsDto": {
+        "type": "object",
+        "properties": {
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamMediaGrantItemDto"
+            }
+          },
+          "unavailable": {
+            "description": "Snapshot media ids that are no longer available; nothing is signed.",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "grants",
+          "unavailable"
+        ]
+      },
+      "ExamAnswerSaveViewDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "questionKey": {
+            "type": "string"
+          },
+          "isFlagged": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "answeredAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastSavedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "serverNow": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Server clock at response time; the client never trusts its own clock."
+          },
+          "remainingSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "answer",
+          "questionKey",
+          "isFlagged",
+          "version",
+          "answeredAt",
+          "lastSavedAt",
+          "serverNow",
+          "remainingSeconds"
+        ]
+      },
+      "SaveExamAnswerBodyDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "description": "Any JSON value passes the DTO so that a *wrong shape* is reported by\n`validateExamAnswerShape` as `400 EXAM_ANSWER_INVALID` with the documented\n`details.field` (TL-122); `undefined` is rejected by the service too.\n`null` clears the answer and keeps the flag (TL-121)."
+          },
+          "isFlagged": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": "number",
+            "nullable": true,
+            "description": "Must be present and is `null` for \"create\"; `undefined` is a 400.",
+            "minimum": 1
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientElapsedMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          }
+        },
+        "required": [
+          "answer",
+          "isFlagged",
+          "expectedVersion",
+          "idempotencyKey"
+        ]
+      },
+      "ExamAnswerBatchResultDto": {
+        "type": "object",
+        "properties": {
+          "questionKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_found",
+              "invalid",
+              "saved",
+              "replayed",
+              "conflict"
+            ]
+          },
+          "answer": {
+            "$ref": "#/components/schemas/ExamAnswerViewDto"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine code for `invalid` items (`EXAM_ANSWER_INVALID`)."
+          },
+          "current": {
+            "nullable": true,
+            "description": "Current row for `conflict` items; `null` when the question has no row.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamAnswerViewDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "questionKey",
+          "status"
+        ]
+      },
+      "ExamAnswerBatchViewDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamAnswerBatchResultDto"
+            }
+          },
+          "serverNow": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "remainingSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "results",
+          "serverNow",
+          "remainingSeconds"
+        ]
+      },
+      "SaveExamAnswersItemDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "description": "Any JSON value passes the DTO so that a *wrong shape* is reported by\n`validateExamAnswerShape` as `400 EXAM_ANSWER_INVALID` with the documented\n`details.field` (TL-122); `undefined` is rejected by the service too.\n`null` clears the answer and keeps the flag (TL-121)."
+          },
+          "isFlagged": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": "number",
+            "nullable": true,
+            "description": "Must be present and is `null` for \"create\"; `undefined` is a 400.",
+            "minimum": 1
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientElapsedMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          },
+          "questionKey": {
+            "type": "string",
+            "description": "Shape/pattern is checked against the snapshot by the service.",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "answer",
+          "isFlagged",
+          "expectedVersion",
+          "idempotencyKey",
+          "questionKey"
+        ]
+      },
+      "SaveExamAnswersDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SaveExamAnswersItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "ApiResponseMetaDto": {

@@ -18,6 +18,9 @@ export type TestPublishBlockerQuestion = {
   deletedAt: Date | null;
   levelId: number;
   skill: Skill;
+  /** TL-129: question-level media is part of the publish gate too. */
+  audioId: number | null;
+  imageId: number | null;
 };
 
 /** The structural slice of `TestDetailRecord` the gate reads. */
@@ -60,6 +63,18 @@ export function collectTestPublishBlockers(
     questions.map((question) => [question.id, question]),
   );
   const mediaById = new Map(media.map((item) => [item.id, item]));
+  const checkMedia = (
+    mediaId: number | null,
+    expectedType: MediaType,
+    code: string,
+    field: string,
+  ): void => {
+    if (mediaId === null) return;
+    const item = mediaById.get(mediaId) ?? null;
+    if (publishMediaBlocker(item, expectedType) !== null) {
+      blockers.push({ code, field });
+    }
+  };
 
   for (let i = 0; i < test.sections.length; i += 1) {
     const section = test.sections[i];
@@ -113,25 +128,33 @@ export function collectTestPublishBlockers(
             field: questionField,
           });
         }
+        // TL-129: a question can carry its own audio/image; a published test
+        // whose question media degraded must not start a new attempt (Q120).
+        checkMedia(
+          question.audioId,
+          MediaType.audio,
+          'question_audio_not_ready',
+          questionField,
+        );
+        checkMedia(
+          question.imageId,
+          MediaType.image,
+          'question_image_not_ready',
+          questionField,
+        );
       }
-      if (group.audioId !== null) {
-        const audio = mediaById.get(group.audioId) ?? null;
-        if (publishMediaBlocker(audio, MediaType.audio) !== null) {
-          blockers.push({
-            code: 'audio_not_ready',
-            field: `${groupField}.audioId`,
-          });
-        }
-      }
-      if (group.imageId !== null) {
-        const image = mediaById.get(group.imageId) ?? null;
-        if (publishMediaBlocker(image, MediaType.image) !== null) {
-          blockers.push({
-            code: 'image_not_ready',
-            field: `${groupField}.imageId`,
-          });
-        }
-      }
+      checkMedia(
+        group.audioId,
+        MediaType.audio,
+        'audio_not_ready',
+        `${groupField}.audioId`,
+      );
+      checkMedia(
+        group.imageId,
+        MediaType.image,
+        'image_not_ready',
+        `${groupField}.imageId`,
+      );
     }
   }
 

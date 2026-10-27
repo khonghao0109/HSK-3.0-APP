@@ -1508,6 +1508,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/attempts/{attemptId}/media-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExamController_getMediaGrants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exam/attempts/{attemptId}/answers/{questionKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ExamController_saveAnswer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exam/attempts/{attemptId}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ExamController_saveAnswers"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/{mediaId}/access": {
         parameters: {
             query?: never;
@@ -2804,11 +2852,16 @@ export interface components {
         ExamAnswerViewDto: {
             answer: {
                 [key: string]: unknown;
-            };
-            /** @description Snapshot question key the answer belongs to. */
-            snapshotQuestionKey: string;
+            } | null;
+            /** @description Snapshot question key the answer belongs to (`q<orderIndex>`). */
+            questionKey: string;
             isFlagged: boolean;
             version: number;
+            /**
+             * Format: date-time
+             * @description Last time a non-null answer was stored; kept when the answer is cleared.
+             */
+            answeredAt: string | null;
             /** Format: date-time */
             lastSavedAt: string;
         };
@@ -2836,6 +2889,87 @@ export interface components {
         StartExamAttemptDto: {
             /** Format: uuid */
             idempotencyKey: string;
+        };
+        ExamMediaGrantItemDto: {
+            mediaId: number;
+            /** @enum {string} */
+            kind: "audio" | "image" | "pdf" | "video";
+            url: string;
+            expiresAt: string;
+        };
+        ExamMediaGrantsDto: {
+            grants: components["schemas"]["ExamMediaGrantItemDto"][];
+            /** @description Snapshot media ids that are no longer available; nothing is signed. */
+            unavailable: number[];
+        };
+        ExamAnswerSaveViewDto: {
+            answer: {
+                [key: string]: unknown;
+            } | null;
+            questionKey: string;
+            isFlagged: boolean;
+            version: number;
+            /** Format: date-time */
+            answeredAt: string | null;
+            /** Format: date-time */
+            lastSavedAt: string;
+            /**
+             * Format: date-time
+             * @description Server clock at response time; the client never trusts its own clock.
+             */
+            serverNow: string;
+            remainingSeconds: number;
+        };
+        SaveExamAnswerBodyDto: {
+            /**
+             * @description Any JSON value passes the DTO so that a *wrong shape* is reported by
+             *     `validateExamAnswerShape` as `400 EXAM_ANSWER_INVALID` with the documented
+             *     `details.field` (TL-122); `undefined` is rejected by the service too.
+             *     `null` clears the answer and keeps the flag (TL-121).
+             */
+            answer: Record<string, never>;
+            isFlagged: boolean;
+            /** @description Must be present and is `null` for "create"; `undefined` is a 400. */
+            expectedVersion: number | null;
+            /** Format: uuid */
+            idempotencyKey: string;
+            clientElapsedMs?: number;
+        };
+        ExamAnswerBatchResultDto: {
+            questionKey: string;
+            /** @enum {string} */
+            status: "not_found" | "invalid" | "saved" | "replayed" | "conflict";
+            answer?: components["schemas"]["ExamAnswerViewDto"];
+            /** @description Machine code for `invalid` items (`EXAM_ANSWER_INVALID`). */
+            code?: string;
+            /** @description Current row for `conflict` items; `null` when the question has no row. */
+            current?: components["schemas"]["ExamAnswerViewDto"] | null;
+        };
+        ExamAnswerBatchViewDto: {
+            results: components["schemas"]["ExamAnswerBatchResultDto"][];
+            /** Format: date-time */
+            serverNow: string;
+            remainingSeconds: number;
+        };
+        SaveExamAnswersItemDto: {
+            /**
+             * @description Any JSON value passes the DTO so that a *wrong shape* is reported by
+             *     `validateExamAnswerShape` as `400 EXAM_ANSWER_INVALID` with the documented
+             *     `details.field` (TL-122); `undefined` is rejected by the service too.
+             *     `null` clears the answer and keeps the flag (TL-121).
+             */
+            answer: Record<string, never>;
+            isFlagged: boolean;
+            /** @description Must be present and is `null` for "create"; `undefined` is a 400. */
+            expectedVersion: number | null;
+            /** Format: uuid */
+            idempotencyKey: string;
+            clientElapsedMs?: number;
+            /** @description Shape/pattern is checked against the snapshot by the service. */
+            questionKey: string;
+        };
+        SaveExamAnswersDto: {
+            items: components["schemas"]["SaveExamAnswersItemDto"][];
         };
         ApiResponseMetaDto: {
             /** Format: date-time */
@@ -6198,6 +6332,105 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ExamAttemptViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_getMediaGrants: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamMediaGrantsDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_saveAnswer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+                questionKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveExamAnswerBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamAnswerSaveViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_saveAnswers: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveExamAnswersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamAnswerBatchViewDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

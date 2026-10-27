@@ -12,6 +12,8 @@ const PUBLISHED_QUESTION: TestPublishBlockerQuestion = {
   deletedAt: null,
   levelId: 1,
   skill: Skill.reading,
+  audioId: null,
+  imageId: null,
 };
 
 function tree(
@@ -240,5 +242,94 @@ describe('collectTestPublishBlockers', () => {
     ).toEqual([
       { code: 'audio_not_ready', field: 'sections[0].groups[0].audioId' },
     ]);
+  });
+
+  it('reports question media that is not ready (TL-129)', () => {
+    const blockers = collectTestPublishBlockers({
+      test: tree(),
+      questions: [
+        {
+          ...PUBLISHED_QUESTION,
+          audioId: 30,
+          imageId: 31,
+        },
+      ],
+      media: [
+        {
+          id: 30,
+          url: 'https://cdn.example.test/question.mp3',
+          type: 'audio',
+          mimeType: 'audio/mpeg',
+          duration: 12,
+          processingStatus: 'pending',
+          deletedAt: null,
+        },
+        {
+          id: 31,
+          url: 'https://cdn.example.test/question.png',
+          type: 'image',
+          mimeType: 'image/png',
+          duration: null,
+          processingStatus: 'ready',
+          deletedAt: new Date(),
+        },
+      ],
+      levelExists: true,
+    });
+
+    expect(blockers).toEqual([
+      {
+        code: 'question_audio_not_ready',
+        field: 'sections[0].groups[0].questionIds[0]',
+      },
+      {
+        code: 'question_image_not_ready',
+        field: 'sections[0].groups[0].questionIds[0]',
+      },
+    ]);
+  });
+
+  it('reports missing question media and accepts ready question media', () => {
+    expect(
+      collectTestPublishBlockers({
+        test: tree(),
+        questions: [{ ...PUBLISHED_QUESTION, audioId: 77, imageId: null }],
+        media: [],
+        levelExists: true,
+      }),
+    ).toEqual([
+      {
+        code: 'question_audio_not_ready',
+        field: 'sections[0].groups[0].questionIds[0]',
+      },
+    ]);
+
+    expect(
+      collectTestPublishBlockers({
+        test: tree(),
+        questions: [{ ...PUBLISHED_QUESTION, audioId: 30, imageId: 31 }],
+        media: [
+          {
+            id: 30,
+            url: 'https://cdn.example.test/question.mp3',
+            type: 'audio',
+            mimeType: 'audio/mpeg',
+            duration: 12,
+            processingStatus: 'ready',
+            deletedAt: null,
+          },
+          {
+            id: 31,
+            url: 'https://cdn.example.test/question.png',
+            type: 'image',
+            mimeType: 'image/png',
+            duration: null,
+            processingStatus: 'ready',
+            deletedAt: null,
+          },
+        ],
+        levelExists: true,
+      }),
+    ).toEqual([]);
   });
 });

@@ -80,15 +80,79 @@ export class ExamAttemptTestDto {
 }
 
 export class ExamAnswerViewDto {
-  /** Snapshot question key the answer belongs to. */
-  snapshotQuestionKey!: string;
+  /** Snapshot question key the answer belongs to (`q<orderIndex>`). */
+  questionKey!: string;
 
   @ApiProperty(JSON_OBJECT_SCHEMA)
-  answer!: Prisma.JsonValue;
+  answer!: Prisma.JsonValue | null;
 
   isFlagged!: boolean;
   version!: number;
+  /** Last time a non-null answer was stored; kept when the answer is cleared. */
+  answeredAt!: Date | null;
   lastSavedAt!: Date;
+}
+
+/** TL-121: the 200 body of `PUT .../answers/:questionKey`. */
+export class ExamAnswerSaveViewDto {
+  questionKey!: string;
+
+  @ApiProperty(JSON_OBJECT_SCHEMA)
+  answer!: Prisma.JsonValue | null;
+
+  isFlagged!: boolean;
+  version!: number;
+  answeredAt!: Date | null;
+  lastSavedAt!: Date;
+  /** Server clock at response time; the client never trusts its own clock. */
+  serverNow!: Date;
+  remainingSeconds!: number;
+}
+
+export const EXAM_ANSWER_BATCH_STATUSES = [
+  'saved',
+  'replayed',
+  'conflict',
+  'invalid',
+  'not_found',
+] as const;
+
+export type ExamAnswerBatchStatus = (typeof EXAM_ANSWER_BATCH_STATUSES)[number];
+
+/** One item result of the batch save; errors are per item, never the batch. */
+export class ExamAnswerBatchResultDto {
+  questionKey!: string;
+  status!: ExamAnswerBatchStatus;
+  answer?: ExamAnswerViewDto;
+  /** Machine code for `invalid` items (`EXAM_ANSWER_INVALID`). */
+  code?: string;
+  /** Current row for `conflict` items; `null` when the question has no row. */
+  current?: ExamAnswerViewDto | null;
+}
+
+/** TL-124: the 200 body of `PUT .../answers` (batch). */
+export class ExamAnswerBatchViewDto {
+  results!: ExamAnswerBatchResultDto[];
+  serverNow!: Date;
+  remainingSeconds!: number;
+}
+
+/**
+ * TL-128: one signed media grant. `url` is the exact shape of
+ * `GET /media/:id/access` so the existing content route and learner BFF
+ * handler can be reused.
+ */
+export class ExamMediaGrantItemDto {
+  mediaId!: number;
+  kind!: MediaType;
+  url!: string;
+  expiresAt!: string;
+}
+
+export class ExamMediaGrantsDto {
+  grants!: ExamMediaGrantItemDto[];
+  /** Snapshot media ids that are no longer available; nothing is signed. */
+  unavailable!: number[];
 }
 
 /** `ExamAttemptView` — the body of POST attempts and GET attempt. */

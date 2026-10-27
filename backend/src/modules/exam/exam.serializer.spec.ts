@@ -10,7 +10,12 @@ import {
   type ExamSnapshotPayload,
   type ExamSnapshotSource,
 } from './exam-snapshot.builder';
-import { toExamAttemptView, toExamTestIntro } from './exam.serializer';
+import {
+  toExamAnswerSaveView,
+  toExamAnswerView,
+  toExamAttemptView,
+  toExamTestIntro,
+} from './exam.serializer';
 
 /**
  * R11 (TL-114): a learner-facing serializer may only copy an allow-list of
@@ -343,9 +348,10 @@ describe('exam serializers (R11 / TL-114)', () => {
         answers: [
           {
             snapshotQuestionKey: 'q1',
-            answer: { optionId: 'a' },
+            answer: { choice: 'a' },
             isFlagged: true,
             version: 2,
+            answeredAt: new Date('2026-10-27T09:10:00.000Z'),
             lastSavedAt: new Date('2026-10-27T09:20:00.000Z'),
           },
         ],
@@ -353,10 +359,11 @@ describe('exam serializers (R11 / TL-114)', () => {
 
       expect(view.answers).toEqual([
         {
-          snapshotQuestionKey: 'q1',
-          answer: { optionId: 'a' },
+          questionKey: 'q1',
+          answer: { choice: 'a' },
           isFlagged: true,
           version: 2,
+          answeredAt: new Date('2026-10-27T09:10:00.000Z'),
           lastSavedAt: new Date('2026-10-27T09:20:00.000Z'),
         },
       ]);
@@ -494,6 +501,59 @@ describe('exam serializers (R11 / TL-114)', () => {
         'startedAt',
       ]);
     });
+  });
+});
+
+describe('exam answer serializers (TL-121 / TL-127)', () => {
+  const stored = {
+    snapshotQuestionKey: 'q2',
+    answer: { value: true },
+    isFlagged: false,
+    version: 3,
+    answeredAt: new Date('2026-10-27T09:10:00.000Z'),
+    lastSavedAt: new Date('2026-10-27T09:20:00.000Z'),
+  };
+
+  it('exposes exactly the documented answer allow-list', () => {
+    const view = toExamAnswerView(stored);
+
+    expect(Object.keys(view).sort()).toEqual([
+      'answer',
+      'answeredAt',
+      'isFlagged',
+      'lastSavedAt',
+      'questionKey',
+      'version',
+    ]);
+    expect(view).toEqual({
+      questionKey: 'q2',
+      answer: { value: true },
+      isFlagged: false,
+      version: 3,
+      answeredAt: new Date('2026-10-27T09:10:00.000Z'),
+      lastSavedAt: new Date('2026-10-27T09:20:00.000Z'),
+    });
+  });
+
+  it('adds serverNow and a non-negative remainingSeconds to the save view', () => {
+    const view = toExamAnswerSaveView({
+      answer: stored,
+      now: new Date('2026-10-27T10:31:00.000Z'),
+      expiresAt: new Date('2026-10-27T10:30:00.000Z'),
+    });
+
+    expect(Object.keys(view).sort()).toEqual([
+      'answer',
+      'answeredAt',
+      'isFlagged',
+      'lastSavedAt',
+      'questionKey',
+      'remainingSeconds',
+      'serverNow',
+      'version',
+    ]);
+    expect(view.remainingSeconds).toBe(0);
+    expect(view.serverNow).toEqual(new Date('2026-10-27T10:31:00.000Z'));
   });
 });
 

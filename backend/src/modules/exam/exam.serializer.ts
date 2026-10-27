@@ -6,6 +6,8 @@ import {
 } from '@prisma/client';
 
 import type {
+  ExamAnswerSaveViewDto,
+  ExamAnswerViewDto,
   ExamAttemptViewDto,
   ExamQuestionAnswersDto,
   ExamQuestionOptionDto,
@@ -70,6 +72,7 @@ export type ExamStoredAnswer = {
   answer: Prisma.JsonValue;
   isFlagged: boolean;
   version: number;
+  answeredAt: Date | null;
   lastSavedAt: Date;
 };
 
@@ -139,13 +142,36 @@ export function toExamAttemptView(
       passScore: payload.test.passScore,
     },
     sections: payload.sections.map((section) => projectSection(section)),
-    answers: answers.map((answer) => ({
-      snapshotQuestionKey: answer.snapshotQuestionKey,
-      answer: answer.answer,
-      isFlagged: answer.isFlagged,
-      version: answer.version,
-      lastSavedAt: answer.lastSavedAt,
-    })),
+    answers: answers.map((answer) => toExamAnswerView(answer)),
+  };
+}
+
+/**
+ * TL-127: the answer projection shared by GET attempt and the save response.
+ * Copying an allow-list keeps internal columns (`questionId`, `score`,
+ * `detailJson`, `saveIdempotencyKey`) out of every learner body (R11).
+ */
+export function toExamAnswerView(answer: ExamStoredAnswer): ExamAnswerViewDto {
+  return {
+    questionKey: answer.snapshotQuestionKey,
+    answer: answer.answer,
+    isFlagged: answer.isFlagged,
+    version: answer.version,
+    answeredAt: answer.answeredAt,
+    lastSavedAt: answer.lastSavedAt,
+  };
+}
+
+/** TL-121: the 200 body of a single answer save. */
+export function toExamAnswerSaveView(input: {
+  answer: ExamStoredAnswer;
+  now: Date;
+  expiresAt: Date;
+}): ExamAnswerSaveViewDto {
+  return {
+    ...toExamAnswerView(input.answer),
+    serverNow: input.now,
+    remainingSeconds: remainingSeconds(input.expiresAt, input.now),
   };
 }
 

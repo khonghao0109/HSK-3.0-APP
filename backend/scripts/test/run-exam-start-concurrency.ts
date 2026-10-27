@@ -46,7 +46,10 @@ import { CreateQuestionRevisionDto } from '../../src/modules/cms/dto/create-ques
 import { QuestionAuthoringService } from '../../src/modules/cms/question-authoring.service';
 import { ReplaceTestStructureDto } from '../../src/modules/cms/dto/replace-test-structure.dto';
 import { TestAuthoringService } from '../../src/modules/cms/test-authoring.service';
-import { ExamService } from '../../src/modules/exam/exam.service';
+import {
+  EXAM_SAVE_GRACE_SECONDS,
+  ExamService,
+} from '../../src/modules/exam/exam.service';
 import {
   ExamTransactionCoordinator,
   type ExamTransactionCheckpoint,
@@ -54,6 +57,8 @@ import {
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 const ROUNDS = 20;
+/** S-d waits out the real 5 s grace window, so it runs fewer rounds. */
+const SAVE_GRACE_ROUNDS = 5;
 const COORDINATION_TIMEOUT_MS = 2_500;
 const BARRIER_TIMEOUT_MS = 8_000;
 const STATEMENT_TIMEOUT_MS = 7_000;
@@ -77,6 +82,8 @@ type Outcome =
   | { status: 'rejected'; reason: unknown };
 
 type StartResult = { created: boolean; data: { id: number } };
+
+type SaveResult = { data: { version: number } };
 
 const deadlockCodes: string[] = [];
 const serverFaults: string[] = [];
@@ -194,6 +201,15 @@ function check(condition: boolean, message: string): void {
   if (!condition) throw new ExamStartConcurrencyError(message);
 }
 
+function assertRejected(
+  label: string,
+  outcome: Outcome,
+): asserts outcome is { status: 'rejected'; reason: unknown } {
+  if (outcome.status !== 'rejected') {
+    throw new ExamStartConcurrencyError(`${label} was fulfilled`);
+  }
+}
+
 function assertFulfilled(
   label: string,
   outcome: Outcome,
@@ -212,6 +228,24 @@ class PidReportingCmsCoordinator extends CmsTransactionCoordinator {
     checkpoint: CmsTransactionCheckpoint,
   ): Promise<void> {
     if (checkpoint.phase !== 'before_lock') return;
+    this.backendPid.resolve(await configureTransaction(checkpoint.transaction));
+  }
+}
+
+/**
+ * Resolves the backend pid of a save transaction and applies the lock/statement
+ * timeouts without pausing it, so a scenario can wait until that transaction is
+ * actually blocked on the attempt lock.
+ */
+class ExamSavePidCoordinator extends ExamTransactionCoordinator {
+  constructor(private readonly backendPid: Deferred<number>) {
+    super();
+  }
+
+  override async checkpoint(
+    checkpoint: ExamTransactionCheckpoint,
+  ): Promise<void> {
+    if (checkpoint.phase !== 'before_attempt_lock') return;
     this.backendPid.resolve(await configureTransaction(checkpoint.transaction));
   }
 }
@@ -787,6 +821,500 @@ async function main(): Promise<void> {
       check(attempts === 2, `S6 left ${String(attempts)} attempts`);
     });
 
+    await runScenario('S-a', async () => {
+      const learnerId = await createLearner('sa');
+      const started = await examService.startAttempt(
+        learnerId,
+        publishedTest.testId,
+        randomUUID(),
+      );
+      const attemptId = started.data.id;
+      const questionKey = await firstQuestionKey(observer, attemptId);
+      const initial = await expectFulfilled(
+        'S-a',
+        examService.saveAnswer(learnerId, attemptId, questionKey, {
+          answer: { choice: 'a' },
+          isFlagged: false,
+          expectedVersion: null,
+          idempotencyKey: randomUUID(),
+        }),
+      );
+      check(
+        initial.data.version === 1,
+        'S-a the initial save is not version 1',
+      );
+
+      // Both writers see version 1 and try to move it to 2: only one may win.
+      const [left, right] = await Promise.all([
+        asOutcome(
+          examService.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'a' },
+            isFlagged: false,
+            expectedVersion: 1,
+            idempotencyKey: randomUUID(),
+          }),
+        ),
+        asOutcome(
+          examService.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'b' },
+            isFlagged: false,
+            expectedVersion: 1,
+            idempotencyKey: randomUUID(),
+          }),
+        ),
+      ]);
+      assertNoServerFault('S-a', left);
+      assertNoServerFault('S-a', right);
+      const saved = [left, right].filter(
+        (outcome) => outcome.status === 'fulfilled',
+      );
+      const conflicts = [left, right].filter(
+        (outcome) =>
+          outcome.status === 'rejected' &&
+          outcome.reason instanceof HttpException &&
+          outcome.reason.getStatus() === 409,
+      );
+      check(
+        saved.length === 1 && conflicts.length === 1,
+        `S-a expected exactly 1 saved and 1 conflict (saved ${String(saved.length)}, conflicts ${String(conflicts.length)})`,
+      );
+      const winner = saved[0];
+      check(
+        winner !== undefined &&
+          winner.status === 'fulfilled' &&
+          (winner.value as SaveResult).data.version === 2,
+        'S-a the winner is not version 2',
+      );
+      const row = await observer.examAnswer.findFirstOrThrow({
+        where: { attemptId },
+        select: { version: true },
+      });
+      check(row.version === 2, `S-a stored version is ${String(row.version)}`);
+      const autosaved = await observer.examAttemptEvent.count({
+        where: { attemptId, type: 'autosaved' },
+      });
+      check(
+        autosaved === 2,
+        `S-a wrote ${String(autosaved)} autosaved events (expected 2)`,
+      );
+    });
+
+    await runScenario('S-b', async () => {
+      const learnerId = await createLearner('sb');
+      const started = await examService.startAttempt(
+        learnerId,
+        publishedTest.testId,
+        randomUUID(),
+      );
+      const attemptId = started.data.id;
+      const questionKey = await firstQuestionKey(observer, attemptId);
+      const sharedKey = randomUUID();
+      const body = {
+        answer: { choice: 'a' },
+        isFlagged: true,
+        expectedVersion: null,
+        idempotencyKey: sharedKey,
+      };
+
+      const [left, right] = await Promise.all([
+        examService.saveAnswer(learnerId, attemptId, questionKey, body),
+        examService.saveAnswer(learnerId, attemptId, questionKey, body),
+      ]);
+      const versions = [left.data.version, right.data.version];
+      check(
+        versions[0] === 1 && versions[1] === 1,
+        `S-b replay changed the version (${versions.join(',')})`,
+      );
+      check(
+        (await observer.examAnswer.count({ where: { attemptId } })) === 1,
+        'S-b wrote more than one answer row',
+      );
+      const autosaved = await observer.examAttemptEvent.count({
+        where: { attemptId, type: 'autosaved' },
+      });
+      check(
+        autosaved === 1,
+        `S-b wrote ${String(autosaved)} autosaved events (expected 1)`,
+      );
+    });
+
+    await runScenario('S-c', async () => {
+      const learnerId = await createLearner('sc');
+      const started = await examService.startAttempt(
+        learnerId,
+        publishedTest.testId,
+        randomUUID(),
+      );
+      const attemptId = started.data.id;
+      const questionKey = await firstQuestionKey(observer, attemptId);
+
+      // Pause the start after its Test lock, then save into the live attempt it
+      // is about to return. The save never needs the User/Test locks, so the
+      // two transactions must not block each other or deadlock.
+      const control = createExamControl();
+      const pausedStartService = new ExamService(
+        prismaA,
+        new ExamHarnessCoordinator(
+          'after_test_lock',
+          control.paused,
+          control.release,
+          control.backendPid,
+        ),
+      );
+      const startOutcome = asOutcome(
+        pausedStartService.startAttempt(
+          learnerId,
+          publishedTest.testId,
+          randomUUID(),
+        ),
+      );
+      await withTimeout(
+        control.paused.promise,
+        BARRIER_TIMEOUT_MS,
+        'S-c exam start production-lock checkpoint',
+      );
+      const saved = await withTimeout(
+        asOutcome(
+          examService.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'a' },
+            isFlagged: false,
+            expectedVersion: null,
+            idempotencyKey: randomUUID(),
+          }),
+        ),
+        BARRIER_TIMEOUT_MS,
+        'S-c save while the start is paused',
+      );
+      control.release.resolve();
+      const start = await startOutcome;
+      assertNoServerFault('S-c', start);
+      assertNoServerFault('S-c', saved);
+      assertFulfilled('S-c start', start);
+      assertFulfilled('S-c save', saved);
+      check(
+        (start.value as StartResult).data.id === attemptId,
+        'S-c the start did not return the live attempt',
+      );
+      check(
+        (saved.value as SaveResult).data.version === 1,
+        'S-c the interleaved save was not persisted',
+      );
+    });
+
+    await runScenario(
+      'S-d',
+      async () => {
+        const learnerId = await createLearner('sd');
+        const started = await examService.startAttempt(
+          learnerId,
+          publishedTest.testId,
+          randomUUID(),
+        );
+        const attemptId = started.data.id;
+        const questionKey = await firstQuestionKey(observer, attemptId);
+        const nowMs = Date.now();
+        // expiresAt + 5 s grace lands ~3 s after this line: the first save is
+        // inside the window, the second one is past it.
+        await observer.examAttempt.update({
+          where: { id: attemptId },
+          data: {
+            startedAt: new Date(nowMs - 91 * 60_000),
+            expiresAt: new Date(nowMs - 2_000),
+          },
+        });
+
+        const inside = await expectFulfilled(
+          'S-d',
+          examService.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'a' },
+            isFlagged: false,
+            expectedVersion: null,
+            idempotencyKey: randomUUID(),
+          }),
+        );
+        check(
+          inside.data.version === 1,
+          'S-d the in-grace save is not version 1',
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 3_200));
+        const outside = await asOutcome(
+          examService.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'b' },
+            isFlagged: false,
+            expectedVersion: 1,
+            idempotencyKey: randomUUID(),
+          }),
+        );
+        assertNoServerFault('S-d', outside);
+        check(
+          outside.status === 'rejected' &&
+            outside.reason instanceof HttpException &&
+            outside.reason.getStatus() === 409,
+          'S-d the save past the grace window was not rejected with 409',
+        );
+
+        // No half state: either the row is untouched and still in progress, or
+        // it is exactly `timed_out` with submittedAt = expiresAt and 0 seconds
+        // left, and the late save wrote nothing.
+        const attempt = await observer.examAttempt.findUniqueOrThrow({
+          where: { id: attemptId },
+          select: {
+            status: true,
+            submittedAt: true,
+            expiresAt: true,
+            remainingSeconds: true,
+          },
+        });
+        check(
+          attempt.status === ExamAttemptStatus.timed_out,
+          `S-d the attempt is ${attempt.status} after the grace window`,
+        );
+        check(
+          attempt.remainingSeconds === 0,
+          'S-d remainingSeconds is not 0 after the timeout',
+        );
+        check(
+          attempt.submittedAt?.getTime() === attempt.expiresAt.getTime(),
+          'S-d submittedAt does not equal expiresAt',
+        );
+        const timedOut = await observer.examAttemptEvent.count({
+          where: { attemptId, type: 'timed_out' },
+        });
+        check(
+          timedOut === 1,
+          `S-d wrote ${String(timedOut)} timed_out events (expected 1)`,
+        );
+        const autosaved = await observer.examAttemptEvent.count({
+          where: { attemptId, type: 'autosaved' },
+        });
+        check(
+          autosaved === 1,
+          `S-d wrote ${String(autosaved)} autosaved events (expected 1)`,
+        );
+        const answers = await observer.examAnswer.findMany({
+          where: { attemptId },
+          select: { version: true, answer: true },
+        });
+        check(
+          answers.length === 1 && answers[0]?.version === 1,
+          'S-d the late save changed the answer row',
+        );
+      },
+      SAVE_GRACE_ROUNDS,
+    );
+
+    await runScenario('S-e', async () => {
+      const learnerId = await createLearner('se');
+      const first = await expectFulfilled(
+        'S-e',
+        examService.startAttempt(learnerId, publishedTest.testId, randomUUID()),
+      );
+      const attemptId = first.data.id;
+      const nowMs = Date.now();
+      await observer.examAttempt.update({
+        where: { id: attemptId },
+        data: {
+          startedAt: new Date(nowMs - 91 * 60_000),
+          expiresAt: new Date(nowMs - 10_000),
+        },
+      });
+
+      // T1 pauses after the media locks, before the end-of-start branch; T2
+      // (GET) times the attempt out first; T1 must then skip its own update.
+      const control = createExamControl();
+      const pausedStartService = new ExamService(
+        prismaA,
+        new ExamHarnessCoordinator(
+          'after_media_locks',
+          control.paused,
+          control.release,
+          control.backendPid,
+        ),
+      );
+      const startOutcome = asOutcome(
+        pausedStartService.startAttempt(
+          learnerId,
+          publishedTest.testId,
+          randomUUID(),
+        ),
+      );
+      await withTimeout(
+        control.paused.promise,
+        BARRIER_TIMEOUT_MS,
+        'S-e exam start production-lock checkpoint',
+      );
+      const lazyTimeout = await asOutcome(
+        examService.getAttemptView(learnerId, attemptId),
+      );
+      assertNoServerFault('S-e', lazyTimeout);
+      assertFulfilled('S-e GET attempt', lazyTimeout);
+      control.release.resolve();
+      const started = await startOutcome;
+      assertNoServerFault('S-e', started);
+      assertFulfilled('S-e start', started);
+
+      const timedOutEvents = await observer.examAttemptEvent.count({
+        where: { attemptId, type: 'timed_out' },
+      });
+      check(
+        timedOutEvents === 1,
+        `S-e wrote ${String(timedOutEvents)} timed_out events for the timed-out attempt (expected 1)`,
+      );
+      const row = await observer.examAttempt.findUniqueOrThrow({
+        where: { id: attemptId },
+        select: { status: true },
+      });
+      check(
+        row.status === ExamAttemptStatus.timed_out,
+        'S-e attempt is not timed_out',
+      );
+      const live = await observer.examAttempt.findMany({
+        where: {
+          userId: learnerId,
+          testId: publishedTest.testId,
+          status: ExamAttemptStatus.in_progress,
+        },
+        select: { id: true },
+      });
+      check(
+        live.length === 1 &&
+          live[0]?.id === (started.value as StartResult).data.id,
+        'S-e did not leave exactly one new in_progress attempt',
+      );
+      check(
+        (await observer.examAttempt.count({
+          where: { userId: learnerId, testId: publishedTest.testId },
+        })) === 2,
+        'S-e left an unexpected number of attempts',
+      );
+    });
+
+    await runScenario(
+      'S-f',
+      async () => {
+        const learnerId = await createLearner('sf');
+        const started = await examService.startAttempt(
+          learnerId,
+          publishedTest.testId,
+          randomUUID(),
+        );
+        const attemptId = started.data.id;
+        const questionKey = await firstQuestionKey(observer, attemptId);
+        const nowMs = Date.now();
+        // Threshold = expiresAt + 5 s is ~3 s away: T1 (holding the lock) is
+        // inside the window, T2 (waiting for the lock) must be judged with the
+        // clock read *after* it acquires the lock.
+        await observer.examAttempt.update({
+          where: { id: attemptId },
+          data: {
+            startedAt: new Date(nowMs - 91 * 60_000),
+            expiresAt: new Date(nowMs - 2_000),
+          },
+        });
+
+        const holdControl = createExamControl();
+        const holdingSave = new ExamService(
+          prismaA,
+          new ExamHarnessCoordinator(
+            'after_attempt_lock',
+            holdControl.paused,
+            holdControl.release,
+            holdControl.backendPid,
+          ),
+        );
+        const t1 = asOutcome(
+          holdingSave.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'a' },
+            isFlagged: false,
+            expectedVersion: null,
+            idempotencyKey: randomUUID(),
+          }),
+        );
+        await withTimeout(
+          holdControl.paused.promise,
+          BARRIER_TIMEOUT_MS,
+          'S-f save lock hold checkpoint',
+        );
+
+        const t2Pid = createDeferred<number>();
+        const waitingSave = new ExamService(
+          prismaB,
+          new ExamSavePidCoordinator(t2Pid),
+        );
+        const t2 = asOutcome(
+          waitingSave.saveAnswer(learnerId, attemptId, questionKey, {
+            answer: { choice: 'b' },
+            isFlagged: false,
+            expectedVersion: null,
+            idempotencyKey: randomUUID(),
+          }),
+        );
+        const waitingPid = await withTimeout(
+          t2Pid.promise,
+          BARRIER_TIMEOUT_MS,
+          'S-f waiting save backend pid',
+        );
+        await waitUntilLocked(observer, waitingPid);
+
+        // Release only after the grace window has passed. `expiresAt` was set
+        // to `nowMs - 2 s`, so the threshold is `nowMs + 3 s`; wait for that
+        // instant plus a small poll margin instead of a fixed sleep.
+        const graceDeadlineMs =
+          nowMs - 2_000 + EXAM_SAVE_GRACE_SECONDS * 1_000 + 150;
+        while (Date.now() < graceDeadlineMs) {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        holdControl.release.resolve();
+
+        const [held, rejected] = await Promise.all([t1, t2]);
+        assertNoServerFault('S-f', held);
+        assertNoServerFault('S-f', rejected);
+        assertFulfilled('S-f holding save', held);
+        check(
+          rejected.status === 'rejected' &&
+            rejected.reason instanceof HttpException &&
+            rejected.reason.getStatus() === 409,
+          'S-f the waiting save was not rejected with 409',
+        );
+        assertRejected('S-f waiting save', rejected);
+        const rejectedBody = (
+          rejected.reason as HttpException
+        ).getResponse() as {
+          code?: unknown;
+        };
+        check(
+          rejectedBody.code === 'EXAM_ATTEMPT_EXPIRED',
+          `S-f the waiting save returned ${String(rejectedBody.code)} instead of EXAM_ATTEMPT_EXPIRED`,
+        );
+        const attempt = await observer.examAttempt.findUniqueOrThrow({
+          where: { id: attemptId },
+          select: { status: true, submittedAt: true, expiresAt: true },
+        });
+        check(
+          attempt.status === ExamAttemptStatus.timed_out,
+          `S-f the attempt is ${attempt.status} after the grace window`,
+        );
+        check(
+          attempt.submittedAt?.getTime() === attempt.expiresAt.getTime(),
+          'S-f submittedAt does not equal expiresAt',
+        );
+        check(
+          (await observer.examAttemptEvent.count({
+            where: { attemptId, type: 'timed_out' },
+          })) === 1,
+          'S-f did not write exactly one timed_out event',
+        );
+        check(
+          (await observer.examAttemptEvent.count({
+            where: { attemptId, type: 'autosaved' },
+          })) === 1,
+          'S-f did not keep exactly one autosaved event',
+        );
+      },
+      SAVE_GRACE_ROUNDS,
+    );
+
     for (const testId of archivedTests) {
       const archived = await observer.test.findUniqueOrThrow({
         where: { id: testId },
@@ -825,6 +1353,29 @@ function asOutcome(promise: Promise<unknown>): Promise<Outcome> {
     (value) => ({ status: 'fulfilled' as const, value }),
     (reason: unknown) => ({ status: 'rejected' as const, reason }),
   );
+}
+
+/** The frozen snapshot key (`q<placement order>`) of the only harness question. */
+async function firstQuestionKey(
+  observer: PrismaClient,
+  attemptId: number,
+): Promise<string> {
+  const snapshot = await observer.examAttemptSnapshot.findUniqueOrThrow({
+    where: { attemptId },
+    select: { payload: true },
+  });
+  const payload = snapshot.payload as {
+    sections: Array<{
+      groups: Array<{ questions: Array<{ key: string }> }>;
+    }>;
+  };
+  const key = payload.sections[0]?.groups[0]?.questions[0]?.key;
+  if (key === undefined) {
+    throw new ExamStartConcurrencyError(
+      'The harness attempt snapshot has no question key.',
+    );
+  }
+  return key;
 }
 
 async function startAndHash(
@@ -880,8 +1431,9 @@ async function createPublishedTest(input: {
 async function runScenario(
   name: string,
   run: (round: number) => Promise<void>,
+  rounds: number = ROUNDS,
 ): Promise<void> {
-  for (let round = 1; round <= ROUNDS; round += 1) {
+  for (let round = 1; round <= rounds; round += 1) {
     try {
       await run(round);
     } catch (error: unknown) {
@@ -893,7 +1445,7 @@ async function runScenario(
       throw error;
     }
   }
-  console.log(`${name}: ${String(ROUNDS)} rounds GREEN`);
+  console.log(`${name}: ${String(rounds)} rounds GREEN`);
 }
 
 main()
