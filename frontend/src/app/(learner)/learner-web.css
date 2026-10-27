@@ -3200,3 +3200,221 @@
     width: 160px;
   }
 }
+
+/* ---------- M4.2a: giới thiệu đề thi (WB-10b, Q119–Q122) ---------- */
+@media (min-width: 1024px) {
+  .learner-app .app:has(> .ex.exi) {
+    background: var(--cream-100);
+  }
+
+  .learner-app .exi {
+    min-height: 100vh;
+  }
+
+  .learner-app .exi-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-6);
+    height: 72px;
+    padding: 0 var(--w-pad);
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  /* W2: the global h1 (src/app/styles.css) is serif with a fluid size. */
+  .learner-app .exi-bar__title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: normal;
+    color: var(--text-strong);
+  }
+
+  .learner-app .exi-bar__level {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* W5: the mockup body is 840px with 40px side padding, so the cards are
+     exactly 760px wide and start at x=340 on a 1440px viewport. */
+  .learner-app .exi-body {
+    width: 760px;
+    max-width: 100%;
+    margin: 0 auto;
+    gap: var(--sp-5);
+    padding: var(--sp-8) 0;
+  }
+
+  .learner-app .exi-hero {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  /* W3: the global h2 (src/app/styles.css) is sans and smaller; the mockup
+     exam title is the serif display face. */
+  .learner-app .exi-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    letter-spacing: normal;
+    color: var(--text-strong);
+  }
+
+  .learner-app .exi-instruction {
+    font-size: var(--fs-md);
+    color: var(--text-body);
+  }
+
+  /* W4: the mobile kicker already has the size/colour; web adds the overline. */
+  .learner-app .exi-kicker {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .learner-app .exi-meta {
+    gap: var(--sp-5);
+    font-size: var(--fs-md);
+    color: var(--text-body);
+  }
+
+  .learner-app .exi-panel,
+  .learner-app .exi-resume {
+    gap: var(--sp-4);
+    padding: var(--sp-6);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+  }
+
+  .learner-app .exi-h2 {
+    font-size: var(--fs-lg);
+    color: var(--text-strong);
+  }
+
+  .learner-app .exi-tablewrap {
+    display: block;
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .learner-app .exi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .exi-table th,
+  .learner-app .exi-table td {
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border-default);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .learner-app .exi-table th {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--cream-100);
+    white-space: nowrap;
+  }
+
+  .learner-app .exi-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .learner-app .exi-table__total td {
+    font-weight: 700;
+    color: var(--text-strong);
+    background: var(--cream-100);
+    border-top: 2px solid var(--border-strong);
+  }
+
+  .learner-app .exi-rules li {
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .exi-cellnote {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .exi-resume {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-6);
+  }
+
+  .learner-app .exi-resume__title {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+
+  /* M7: mobile hides the icon square; web keeps it (vòng UI 1). */
+  .learner-app .exi-resume__ico {
+    display: grid;
+  }
+
+  .learner-app .exi-resume__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .learner-app .exi-resume__cta {
+    grid-column: auto;
+    width: auto;
+    min-height: 48px;
+    font-size: var(--fs-base);
+    font-weight: 600;
+    background: var(--surface-card);
+    border-color: var(--border-default);
+    color: var(--text-strong);
+  }
+
+  .learner-app .exi-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+  }
+
+  .learner-app .exi-cta,
+  .learner-app .exi-actions__back {
+    width: auto;
+  }
+
+  .learner-app .exi-cta {
+    min-height: 56px;
+    padding: 0 var(--sp-8);
+    font-size: var(--fs-lg);
+  }
+
+  .learner-app .exi-actions__back {
+    min-height: 48px;
+    padding: 0 var(--sp-6);
+    font-size: var(--fs-base);
+  }
+
+  /* Web puts the play icon before the label; mobile keeps it after (mẫu). */
+  .learner-app .exi-cta .icon {
+    order: -1;
+  }
+
+  .learner-app .exi-nf {
+    padding: var(--sp-8) var(--sp-6);
+  }
+}

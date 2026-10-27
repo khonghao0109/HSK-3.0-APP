@@ -62,6 +62,7 @@ describe('CSP nonce proxy and session refresh router', () => {
     '/api/learner/dictionary?q=a',
     '/api/learner/dictionary/words/5/save',
     '/api/learner/email-verification/request',
+    '/api/learner/exam/tests/7/attempts',
   ])('runs for targeted request %s', (url) => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
   });
@@ -80,6 +81,7 @@ describe('CSP nonce proxy and session refresh router', () => {
         '/api/learner/topics/:path*',
         '/api/learner/dictionary/:path*',
         '/api/learner/email-verification/:path*',
+        '/api/learner/exam/:path*',
       ]),
     );
   });

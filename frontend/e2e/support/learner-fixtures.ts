@@ -75,7 +75,7 @@ type Envelope<T> = { data: T };
 
 export async function call<T>(
   api: APIRequestContext,
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PUT',
   route: string,
   token?: string,
   data?: unknown,
@@ -323,4 +323,188 @@ export async function readCspViolations(page: Page): Promise<string[] | null> {
     const value: unknown = Reflect.get(window, '__cspViolations');
     return Array.isArray(value) ? value.map(String) : null;
   });
+}
+
+type ExamQuestionDraft = Draft & { question?: { id: number } };
+
+/** Creates, approves and publishes one question through the Admin CMS. */
+async function publishExamQuestion(
+  api: APIRequestContext,
+  admin: string,
+  levelIdValue: number,
+  input: {
+    type: 'mcq' | 'true_false';
+    skill: 'reading' | 'writing';
+    content: string;
+    answers: unknown;
+    correctAnswer: unknown;
+    explanation: string;
+  },
+): Promise<number> {
+  const created = await call<ExamQuestionDraft>(
+    api,
+    'POST',
+    '/admin/cms/questions',
+    admin,
+    {
+      type: input.type,
+      skill: input.skill,
+      levelId: levelIdValue,
+      content: input.content,
+      answers: input.answers,
+      correctAnswer: input.correctAnswer,
+      explanation: input.explanation,
+    },
+  );
+  const questionId = created.question?.id;
+  if (!questionId) throw new Error('question draft has no id');
+  await call(
+    api,
+    'POST',
+    `/admin/cms/questions/${questionId}/revisions/${created.revision.id}/reviews`,
+    admin,
+    { decision: 'approved' },
+  );
+  await call(
+    api,
+    'POST',
+    `/admin/cms/questions/${questionId}/revisions/${created.revision.id}/publish`,
+    admin,
+  );
+  return questionId;
+}
+
+export type ExamIntroFixture = {
+  title: string;
+  publishedTestId: number;
+  draftTestId: number;
+  questionCount: number;
+  sectionCount: number;
+  passScore: number;
+  maxScore: number;
+  durationMinutes: number;
+};
+
+/**
+ * M4.2a (TL-120): one publishable exam test (2 sections, 3 questions) and one
+ * draft, seeded through the Admin CMS of the disposable DB. `prefix` keeps the
+ * four Playwright projects apart.
+ */
+export async function seedExamIntroFixtures(
+  prefix: string,
+): Promise<ExamIntroFixture> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const hsk3 = await levelId(api, 'HSK3');
+    const readingChoice = await publishExamQuestion(api, admin, hsk3, {
+      type: 'mcq',
+      skill: 'reading',
+      content: `Đề giới thiệu ${prefix}: chọn đáp án theo đoạn văn.`,
+      answers: {
+        options: [
+          { id: 'a', text: 'Đáp án đúng' },
+          { id: 'b', text: 'Đáp án sai' },
+        ],
+      },
+      correctAnswer: { optionId: 'b' },
+      explanation: 'Đoạn văn nói về mùa đông.',
+    });
+    const writingChoice = await publishExamQuestion(api, admin, hsk3, {
+      type: 'mcq',
+      skill: 'writing',
+      content: `Đề giới thiệu ${prefix}: chọn câu viết đúng.`,
+      answers: {
+        options: [
+          { id: 'a', text: 'Đáp án đúng' },
+          { id: 'b', text: 'Đáp án sai' },
+        ],
+      },
+      correctAnswer: { optionId: 'a' },
+      explanation: 'Câu viết đúng ngữ pháp.',
+    });
+    const readingTrueFalse = await publishExamQuestion(api, admin, hsk3, {
+      type: 'true_false',
+      skill: 'reading',
+      content: `Đề giới thiệu ${prefix}: câu này đúng hay sai?`,
+      answers: {},
+      // M4.1a DTO: a JSON object; the true_false flag lives in `value`.
+      correctAnswer: { value: true },
+      explanation: 'Đoạn văn khẳng định điều này.',
+    });
+
+    const title = `Đề thi thử ${prefix}`;
+    const publishedDraft = await call<{ id: number; updatedAt: string }>(
+      api,
+      'POST',
+      '/admin/cms/tests',
+      admin,
+      {
+        levelId: hsk3,
+        title,
+        instruction: 'Làm hết các phần trong 80 phút.',
+        duration: 80,
+        passScore: 120,
+      },
+    );
+    const structured = await call<{ id: number; updatedAt: string }>(
+      api,
+      'PUT',
+      `/admin/cms/tests/${publishedDraft.id}/structure`,
+      admin,
+      {
+        expectedUpdatedAt: publishedDraft.updatedAt,
+        sections: [
+          {
+            skill: 'reading',
+            title: 'Đọc hiểu',
+            groups: [
+              {
+                title: 'Phần đọc',
+                questionIds: [readingChoice, readingTrueFalse],
+              },
+            ],
+          },
+          {
+            skill: 'writing',
+            title: 'Viết câu',
+            groups: [{ title: 'Phần viết', questionIds: [writingChoice] }],
+          },
+        ],
+      },
+    );
+    await call(
+      api,
+      'POST',
+      `/admin/cms/tests/${publishedDraft.id}/publish`,
+      admin,
+      {
+        expectedUpdatedAt: structured.updatedAt,
+      },
+    );
+    const draftOnly = await call<{ id: number }>(
+      api,
+      'POST',
+      '/admin/cms/tests',
+      admin,
+      {
+        levelId: hsk3,
+        title: `Đề nháp ${prefix}`,
+        duration: 30,
+      },
+    );
+
+    return {
+      title,
+      publishedTestId: publishedDraft.id,
+      draftTestId: draftOnly.id,
+      questionCount: 3,
+      sectionCount: 2,
+      passScore: 120,
+      maxScore: 200,
+      durationMinutes: 80,
+    };
+  } finally {
+    await api.dispose();
+  }
 }

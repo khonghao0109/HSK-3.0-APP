@@ -339,6 +339,28 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
           <symbol id="i-check" viewBox="0 0 24 24">
             <path d="M20 6 9 17l-5-5" />
           </symbol>
+          {/* M4.2a (TL-119): ba symbol của màn giới thiệu đề, chép path từ
+              `docs/ui_reference/shared/js/icons.js` (play giữ
+              `fill="currentColor" stroke="none"`). */}
+          <symbol id="i-list" viewBox="0 0 24 24">
+            <path d="M8 6h13" />
+            <path d="M8 12h13" />
+            <path d="M8 18h13" />
+            <path d="M3 6h.01" />
+            <path d="M3 12h.01" />
+            <path d="M3 18h.01" />
+          </symbol>
+          <symbol id="i-play" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11.2-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14Z"
+            />
+          </symbol>
+          <symbol id="i-rotate-cw" viewBox="0 0 24 24">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </symbol>
           <symbol id="logo-google" viewBox="0 0 24 24">
             <path
               fill="var(--logo-google-blue)"

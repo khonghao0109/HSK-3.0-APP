@@ -74,6 +74,10 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/dictionary\?query=[^&#]+$/,
   /^\/api\/v1\/dictionary\/words\/\d+$/,
   /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
+  // M4.2a (TL-118): exam intro + start. The attempt detail route is not part
+  // of Pha B, so it stays out of the allowlist on purpose.
+  /^\/api\/v1\/exam\/tests\/\d+$/,
+  /^\/api\/v1\/exam\/tests\/\d+\/attempts$/,
 ];
 
 /**
