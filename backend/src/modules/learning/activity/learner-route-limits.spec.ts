@@ -1,4 +1,5 @@
 import { AuthController, authMeLimit } from '../../auth/auth.controller';
+import { ExamController, examAttemptLimit } from '../../exam/exam.controller';
 import { MediaController } from '../../media/media.controller';
 import {
   isNotMediaContentRoute,
@@ -26,14 +27,15 @@ function withNodeEnv(nodeEnv: string, run: () => void): void {
 
 describe('learner route limits', () => {
   it.each([
-    ['production', 120, 60, 60, 600, 120],
-    ['test', 1_000, 1_000, 1_000, 10_000, 1_000],
+    ['production', 120, 60, 60, 60, 600, 120],
+    ['test', 1_000, 1_000, 1_000, 1_000, 10_000, 1_000],
   ])(
     'resolves limits under NODE_ENV=%s',
     (
       nodeEnv,
       authMe,
       exerciseAttempt,
+      examAttempt,
       contentGrant,
       contentIp,
       mediaAccess,
@@ -41,6 +43,7 @@ describe('learner route limits', () => {
       withNodeEnv(nodeEnv, () => {
         expect(authMeLimit()).toBe(authMe);
         expect(exerciseAttemptLimit()).toBe(exerciseAttempt);
+        expect(examAttemptLimit()).toBe(examAttempt);
         expect(mediaContentGrantLimit()).toBe(contentGrant);
         expect(mediaContentIpLimit()).toBe(contentIp);
         expect(mediaAccessLimit()).toBe(mediaAccess);
@@ -60,6 +63,12 @@ describe('learner route limits', () => {
       LessonActivityController.prototype,
       'submitAttempt',
       exerciseAttemptLimit,
+    ],
+    [
+      'ExamController.startAttempt',
+      ExamController.prototype,
+      'startAttempt',
+      examAttemptLimit,
     ],
     [
       'MediaController.getContent',
@@ -106,6 +115,7 @@ describe('learner route limits', () => {
     [MediaController, 'createAccess', true],
     [AuthController, 'getProfile', true],
     [LessonActivityController, 'submitAttempt', true],
+    [ExamController, 'startAttempt', true],
   ] as const)(
     'mediaContentIp skipIf for %p.%s is %p',
     (controller, method, skipped) => {

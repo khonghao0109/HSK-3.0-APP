@@ -6760,6 +6760,196 @@
         ]
       }
     },
+    "/api/v1/exam/tests/{testId}": {
+      "get": {
+        "operationId": "ExamController_getTestIntro",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamTestIntroDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
+    "/api/v1/exam/tests/{testId}/attempts": {
+      "post": {
+        "operationId": "ExamController_startAttempt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "testId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartExamAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing attempt for this learner and test: idempotent replay or the live attempt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamAttemptViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
+    "/api/v1/exam/attempts/{attemptId}": {
+      "get": {
+        "operationId": "ExamController_getAttempt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamAttemptViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/media/{mediaId}/access": {
       "get": {
         "operationId": "MediaController_createAccess",
@@ -11309,6 +11499,505 @@
           "dailyMinutes",
           "reminderEnabled",
           "startDate"
+        ]
+      },
+      "ExamTestIntroSectionDto": {
+        "type": "object",
+        "properties": {
+          "orderIndex": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "100 per section (Q118)."
+          }
+        },
+        "required": [
+          "orderIndex",
+          "title",
+          "skill",
+          "questionCount",
+          "maxScore"
+        ]
+      },
+      "ExamTestActiveAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "answeredCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "startedAt",
+          "expiresAt",
+          "answeredCount",
+          "questionCount"
+        ]
+      },
+      "ExamTestIntroDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "sectionCount": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "100 × sectionCount (Q118)."
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamTestIntroSectionDto"
+            }
+          },
+          "activeAttempt": {
+            "nullable": true,
+            "description": "Only an in-progress attempt that has not expired (Q120/TL-112).",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamTestActiveAttemptDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "instruction",
+          "levelCode",
+          "durationMinutes",
+          "questionCount",
+          "sectionCount",
+          "maxScore",
+          "passScore",
+          "sections",
+          "activeAttempt"
+        ]
+      },
+      "ExamAttemptTestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "title",
+          "instruction",
+          "levelCode",
+          "durationMinutes",
+          "passScore"
+        ]
+      },
+      "ExamSnapshotMediaDto": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "audio",
+              "image",
+              "pdf",
+              "video"
+            ]
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "mediaId",
+          "kind",
+          "mimeType",
+          "durationMs"
+        ]
+      },
+      "ExamQuestionOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      },
+      "ExamQuestionAnswersDto": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamQuestionOptionDto"
+            }
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamQuestionOptionDto"
+            }
+          }
+        }
+      },
+      "ExamAttemptQuestionDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Snapshot question key; `ExamAnswer.snapshotQuestionKey` from M4.2b."
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "arrange_sentence",
+              "listening",
+              "reading",
+              "writing",
+              "speaking",
+              "true_false"
+            ]
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "answers": {
+            "$ref": "#/components/schemas/ExamQuestionAnswersDto"
+          },
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          },
+          "image": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "orderIndex",
+          "type",
+          "skill",
+          "content",
+          "answers",
+          "audio",
+          "image"
+        ]
+      },
+      "ExamAttemptGroupDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "key": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          },
+          "image": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamAttemptQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "content",
+          "key",
+          "orderIndex",
+          "title",
+          "instruction",
+          "audio",
+          "image",
+          "questions"
+        ]
+      },
+      "ExamAttemptSectionDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamAttemptGroupDto"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "orderIndex",
+          "title",
+          "instruction",
+          "skill",
+          "groups"
+        ]
+      },
+      "ExamAnswerViewDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "snapshotQuestionKey": {
+            "type": "string",
+            "description": "Snapshot question key the answer belongs to."
+          },
+          "isFlagged": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "lastSavedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "snapshotQuestionKey",
+          "isFlagged",
+          "version",
+          "lastSavedAt"
+        ]
+      },
+      "ExamAttemptViewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "testId": {
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "in_progress",
+              "submitted",
+              "timed_out",
+              "invalidated"
+            ],
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "serverNow": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Server clock at response time; the client never trusts its own clock."
+          },
+          "remainingSeconds": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "test": {
+            "$ref": "#/components/schemas/ExamAttemptTestDto"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamAttemptSectionDto"
+            }
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamAnswerViewDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "testId",
+          "status",
+          "startedAt",
+          "expiresAt",
+          "serverNow",
+          "remainingSeconds",
+          "maxScore",
+          "questionCount",
+          "test",
+          "sections",
+          "answers"
+        ]
+      },
+      "StartExamAttemptDto": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "idempotencyKey"
         ]
       },
       "ApiResponseMetaDto": {

@@ -515,6 +515,23 @@ BEGIN
     RAISE EXCEPTION 'ExamAttemptSnapshot mutation was accepted';
   END IF;
 
+  -- TL-112/Q120: the partial unique index rejects a second in-progress attempt
+  -- for the same (userId, testId), even with a different idempotency key.
+  rejected := false;
+  BEGIN
+    INSERT INTO "ExamAttempt" (
+      "userId", "testId", "expiresAt", "remainingSeconds", "scoringVersion", "idempotencyKey", "updatedAt"
+    ) VALUES (
+      user_id, test_1_id, CURRENT_TIMESTAMP + interval '10 minutes', 600, 'hsk-p0-v1',
+      'attempt-duplicate-in-progress', CURRENT_TIMESTAMP
+    );
+  EXCEPTION WHEN unique_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'a second in_progress ExamAttempt for the same user/test was accepted';
+  END IF;
+
   UPDATE "ExamAttempt"
   SET "status" = 'submitted', "submittedAt" = CURRENT_TIMESTAMP, "remainingSeconds" = 300, "score" = 1, "maxScore" = 1
   WHERE "id" = attempt_id;
@@ -565,6 +582,15 @@ BEGIN
   ) VALUES (
     user_id, test_1_id, CURRENT_TIMESTAMP + interval '10 minutes', 600, 'hsk-p0-v1', 'attempt-2', CURRENT_TIMESTAMP
   ) RETURNING "id" INTO attempt_2_id;
+
+  -- The finished attempt above no longer occupies the partial index, so the
+  -- same (userId, testId) may start again (Q120: unlimited retakes).
+  IF (
+    SELECT COUNT(*) FROM "ExamAttempt"
+    WHERE "userId" = user_id AND "testId" = test_1_id AND "status" = 'in_progress'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'submitted ExamAttempt still blocked a new in_progress attempt';
+  END IF;
   rejected := false;
   BEGIN
     INSERT INTO "Result" ("userId", "testId", "attemptId", "score", "scoringVersion", "detailJson")

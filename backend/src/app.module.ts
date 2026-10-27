@@ -23,6 +23,7 @@ import { AdminUsersModule } from './modules/admin-users/admin-users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
+import { ExamModule } from './modules/exam/exam.module';
 import { HealthModule } from './modules/health/health.module';
 import { LearningModule } from './modules/learning/learning.module';
 import {
@@ -80,6 +81,7 @@ import { PrismaModule } from './prisma/prisma.module';
     DictionaryModule,
     HealthModule,
     LearningModule,
+    ExamModule,
     MediaModule,
     OnboardingModule,
   ],

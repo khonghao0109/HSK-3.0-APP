@@ -1460,6 +1460,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/tests/{testId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExamController_getTestIntro"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exam/tests/{testId}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExamController_startAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exam/attempts/{attemptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExamController_getAttempt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/{mediaId}/access": {
         parameters: {
             query?: never;
@@ -2663,6 +2711,131 @@ export interface components {
             reminderEnabled: boolean;
             reminderTime?: string | null;
             startDate: string;
+        };
+        ExamTestIntroSectionDto: {
+            orderIndex: number;
+            title: string;
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            questionCount: number;
+            /** @description 100 per section (Q118). */
+            maxScore: number;
+        };
+        ExamTestActiveAttemptDto: {
+            id: number;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            answeredCount: number;
+            questionCount: number;
+        };
+        ExamTestIntroDto: {
+            id: number;
+            title: string;
+            instruction: string | null;
+            levelCode: string;
+            durationMinutes: number;
+            questionCount: number;
+            sectionCount: number;
+            /** @description 100 × sectionCount (Q118). */
+            maxScore: number;
+            passScore: number | null;
+            sections: components["schemas"]["ExamTestIntroSectionDto"][];
+            /** @description Only an in-progress attempt that has not expired (Q120/TL-112). */
+            activeAttempt: components["schemas"]["ExamTestActiveAttemptDto"] | null;
+        };
+        ExamAttemptTestDto: {
+            title: string;
+            instruction: string | null;
+            levelCode: string;
+            durationMinutes: number;
+            passScore: number | null;
+        };
+        ExamSnapshotMediaDto: {
+            mediaId: number;
+            /** @enum {string} */
+            kind: "audio" | "image" | "pdf" | "video";
+            mimeType: string | null;
+            durationMs: number | null;
+        };
+        ExamQuestionOptionDto: {
+            id: string;
+            text: string;
+        };
+        ExamQuestionAnswersDto: {
+            options?: components["schemas"]["ExamQuestionOptionDto"][];
+            tokens?: components["schemas"]["ExamQuestionOptionDto"][];
+        };
+        ExamAttemptQuestionDto: {
+            /** @description Snapshot question key; `ExamAnswer.snapshotQuestionKey` from M4.2b. */
+            key: string;
+            orderIndex: number;
+            /** @enum {string} */
+            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            content: string;
+            answers: components["schemas"]["ExamQuestionAnswersDto"];
+            audio: components["schemas"]["ExamSnapshotMediaDto"] | null;
+            image: components["schemas"]["ExamSnapshotMediaDto"] | null;
+        };
+        ExamAttemptGroupDto: {
+            content: {
+                [key: string]: unknown;
+            } | null;
+            key: string;
+            orderIndex: number;
+            title: string | null;
+            instruction: string | null;
+            audio: components["schemas"]["ExamSnapshotMediaDto"] | null;
+            image: components["schemas"]["ExamSnapshotMediaDto"] | null;
+            questions: components["schemas"]["ExamAttemptQuestionDto"][];
+        };
+        ExamAttemptSectionDto: {
+            key: string;
+            orderIndex: number;
+            title: string;
+            instruction: string | null;
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            groups: components["schemas"]["ExamAttemptGroupDto"][];
+        };
+        ExamAnswerViewDto: {
+            answer: {
+                [key: string]: unknown;
+            };
+            /** @description Snapshot question key the answer belongs to. */
+            snapshotQuestionKey: string;
+            isFlagged: boolean;
+            version: number;
+            /** Format: date-time */
+            lastSavedAt: string;
+        };
+        ExamAttemptViewDto: {
+            id: number;
+            testId: number;
+            /** @enum {string} */
+            status: "in_progress" | "submitted" | "timed_out" | "invalidated";
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /**
+             * Format: date-time
+             * @description Server clock at response time; the client never trusts its own clock.
+             */
+            serverNow: string;
+            remainingSeconds: number;
+            maxScore: number;
+            questionCount: number;
+            test: components["schemas"]["ExamAttemptTestDto"];
+            sections: components["schemas"]["ExamAttemptSectionDto"][];
+            answers: components["schemas"]["ExamAnswerViewDto"][];
+        };
+        StartExamAttemptDto: {
+            /** Format: uuid */
+            idempotencyKey: string;
         };
         ApiResponseMetaDto: {
             /** Format: date-time */
@@ -5930,6 +6103,101 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_getTestIntro: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamTestIntroDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_startAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartExamAttemptDto"];
+            };
+        };
+        responses: {
+            /** @description Existing attempt for this learner and test: idempotent replay or the live attempt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamAttemptViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_getAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamAttemptViewDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

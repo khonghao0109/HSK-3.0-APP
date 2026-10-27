@@ -1029,6 +1029,62 @@ Q116 (TL-99): publish bản sửa đổi `levelId`, `skill` hoặc `type` của 
 `content`, `answers`, `correctAnswer`, `explanation`, `tags` hay media vẫn publish được. Lượt
 thi cũ bảo vệ bằng snapshot (M4.2a), không cần migration. Chi tiết ở A.9b.
 
+### A.9d Thi thử — học viên (M4.2a)
+
+Envelope §1. 3 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
+response có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
+`1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
+của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
+chưa lưu trữ (`deletedAt IS NULL`), và `availableFrom ≤ now < availableTo` nếu hai trường này
+có đặt (Q119); đề nháp/đã lưu trữ/ngoài cửa sổ đều trả cùng `404 EXAM_TEST_NOT_FOUND` để
+không lộ đề nháp.
+
+| Method | Path | Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
+| `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
+| `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án |
+
+`ExamTestIntro`:
+
+```json
+{ id, title, instruction, levelCode, durationMinutes, questionCount, sectionCount, maxScore, passScore, sections:[{orderIndex,title,skill,questionCount,maxScore}], activeAttempt: null | {id,startedAt,expiresAt,answeredCount,questionCount} }
+```
+
+`ExamAttemptView` (dùng cho cả `POST` và `GET` attempt):
+
+```json
+{ id, testId, status, startedAt, expiresAt, serverNow, remainingSeconds, maxScore, questionCount, test:{title,instruction,levelCode,durationMinutes,passScore}, sections:[{key,orderIndex,title,instruction,skill,groups:[{key,orderIndex,title,instruction,content,audio,image,questions:[{key,orderIndex,type,skill,content,answers,audio,image}]}]}], answers: [] }
+```
+
+Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| HTTP | `error.code` | Khi nào |
+| --- | --- | --- |
+| `401` | `UNAUTHORIZED` | Thiếu/sai token |
+| `404` | `EXAM_TEST_NOT_FOUND` | Đề không tồn tại, đang nháp, đã lưu trữ hoặc ngoài cửa sổ `availableFrom`/`availableTo` — không lộ đề nháp |
+| `409` | `EXAM_TEST_UNAVAILABLE` | Nội dung đề không còn hợp lệ lúc bắt đầu; `details.reasons` dùng cùng bộ mã với bước publish ở A.9c |
+| `409` | `EXAM_IDEMPOTENCY_KEY_REUSED` | Cùng `idempotencyKey` đã dùng cho đề khác |
+| `404` | `EXAM_ATTEMPT_NOT_FOUND` | Attempt không tồn tại hoặc không phải của người gọi |
+| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `idempotencyKey`, key không phải UUID, hoặc có field thừa |
+
+Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
+ở `docs/database/P0_DATA_DICTIONARY.md`); bấm "Bắt đầu" khi đang có bài dở trả lại chính bài
+đó (`200`, đồng hồ vẫn chạy tiếp). Bài đang làm còn hạn được trả lại ngay cả khi nội dung đề
+đã đổi sau khi bắt đầu (Q121); cổng publish chỉ chạy khi tạo bài mới. Bài `in_progress` đã quá
+hạn bị chuyển `timed_out` (event `timed_out`, `metadata.reason = 'expired_on_start'`) rồi tạo
+bài mới (`201`); `GET` intro coi bài quá hạn là `activeAttempt: null` và **không** đổi dữ liệu.
+
+R11: response dựng theo allowlist từng trường; khi đang thi không bao giờ trả `correctAnswer`,
+`explanation`, `acceptedTexts`, `caseSensitive`, `tokenIds`, `optionId`, `isCorrect`,
+`contentHash`, `questionId`, `questionVersion`. Đáp án/giải thích chỉ có trong snapshot nội bộ
+và chỉ dùng để chấm điểm, xem lại sau khi nộp (A.9c nói về snapshot của đề; payload snapshot
+ghi ở `docs/database/P0_DATA_DICTIONARY.md`).
+
+Ghi chú: `remainingSeconds = max(0, expiresAt − now)` và `serverNow` theo giờ server (đồng hồ
+tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
+chính là `ExamAnswer.snapshotQuestionKey` ở M4.2b.
+
 ### A.10 Admin Media Library và Ingestion (admin)
 
 Response có `Cache-Control: no-store`.
@@ -1242,7 +1298,7 @@ code sẽ tự vào spec đó.
 | `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
 | CRUD | `/admin/cms/tests` (đã có ở A.9c); `/admin/cms/questions` (đã có ở A.9b) | Exam authoring | M4 |
-| `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
+| `PUT/POST/GET` | `PUT` `/exam/attempts/:id/answers/:key`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |
 | `POST` | `/support/tickets`, `/reports` | Support / Trust & Safety | M5 |
