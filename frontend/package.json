@@ -25,11 +25,11 @@
     "npm": ">=10"
   },
   "dependencies": {
-    "next": "16.3.0",
+    "next": "16.4.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "server-only": "0.0.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
@@ -52,6 +52,7 @@
   "overrides": {
     "openapi-typescript": {
       "typescript": "$typescript"
-    }
+    },
+    "source-map-js": "1.2.2"
   }
 }
