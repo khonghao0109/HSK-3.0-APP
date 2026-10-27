@@ -45,7 +45,7 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
     ).toBeInTheDocument();
   });
 
-  it('liệt kê đủ 11 mục sidebar theo thứ tự TL-6, mục đang chọn có aria-current', () => {
+  it('liệt kê đủ 12 mục sidebar theo thứ tự TL-6, mục đang chọn có aria-current', () => {
     renderShell();
 
     const sidebar = screen.getByRole('complementary', {
@@ -61,6 +61,8 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       'Bài tập',
       'Thư viện media',
       'Ngân hàng câu hỏi',
+      // M4.1b (TL-106): "Đề thi" đứng ngay sau Ngân hàng câu hỏi.
+      'Đề thi',
       'Nhập dữ liệu',
       'Người dùng',
       'Báo cáo (Sắp có)',
@@ -68,6 +70,15 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       'Phản hồi (Sắp có)',
       'Cài đặt hệ thống (Sắp có)',
     ]);
+
+    // TL-106: mục "Đề thi" là link thật tới /admin/tests, ngay sau
+    // "Ngân hàng câu hỏi" (không phải mục "Sắp có").
+    expect(screen.getByRole('link', { name: 'Đề thi' })).toHaveAttribute(
+      'href',
+      '/admin/tests',
+    );
+    const questionBankIndex = items.indexOf('Ngân hàng câu hỏi');
+    expect(items[questionBankIndex + 1]).toBe('Đề thi');
 
     expect(screen.getByRole('link', { name: 'Bài tập' })).toHaveAttribute(
       'aria-current',
@@ -85,8 +96,8 @@ describe('AdminShell (M5.0 — khung "Hán Lộ Admin")', () => {
       document.querySelectorAll('.adm-nav__item--soon'),
     );
     // M5.1a: "Nội dung" có trang; M5.1b2: "Nhập dữ liệu" có trang;
-    // M5.3: "Người dùng" có trang; M4.1a: "Ngân hàng câu hỏi" có trang
-    // → còn 5 mục "Sắp có".
+    // M5.3: "Người dùng" có trang; M4.1a: "Ngân hàng câu hỏi" có trang;
+    // M4.1b: "Đề thi" có trang → còn 5 mục "Sắp có".
     expect(soonItems).toHaveLength(5);
     // Q94: bỏ chip "Sắp có" khỏi sidebar.
     expect(document.querySelectorAll('.adm-nav__soon')).toHaveLength(0);

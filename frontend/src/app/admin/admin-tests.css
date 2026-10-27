@@ -1,0 +1,624 @@
+/* M4.1b — trình xây dựng đề thi (TL-108). Chỉ dùng biến --adm-*, không
+   Tailwind, không dùng cờ ưu tiên tuyệt đối. File riêng để không đụng .qn-* của M4.1a. */
+
+.admin-app .tst-page {
+  --tst-panel-min: 20rem;
+  --tst-panel-max: 24rem;
+}
+
+.admin-app .tst-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-1);
+  color: var(--adm-jade-800);
+  text-decoration: none;
+  font-size: var(--adm-fs-sm);
+  min-height: 2.75rem;
+}
+
+.admin-app .tst-back:hover {
+  text-decoration: underline;
+}
+
+/* ── Bố cục 2 cột (TL-108) ───────────────────────────────────────────── */
+.admin-app .tst-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(
+      var(--tst-panel-min),
+      var(--tst-panel-max)
+    );
+  gap: var(--adm-sp-4);
+  align-items: start;
+}
+
+.admin-app .tst-layout > * {
+  min-width: 0;
+}
+
+@media (max-width: 1199px) {
+  .admin-app .tst-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* <1200px: aside đứng trước bảng câu. */
+  .admin-app .tst-layout > .tst-panel {
+    order: -1;
+  }
+}
+
+/* ── Bảng ngân hàng câu hỏi bên trái ─────────────────────────────────── */
+.admin-app .tst-bank {
+  padding: var(--adm-sp-4);
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+
+.admin-app .tst-bank__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-bank__head h2 {
+  margin: 0;
+  font-size: var(--adm-fs-lg);
+}
+
+.admin-app .tst-chip {
+  border-radius: 999px;
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+  border: 1px solid var(--adm-jade-200);
+  padding: 0 var(--adm-sp-2);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.75rem;
+  white-space: nowrap;
+}
+
+.admin-app .tst-bank__filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 12rem)) minmax(0, 1fr);
+  gap: var(--adm-sp-2);
+  align-items: end;
+}
+
+.admin-app .tst-bank__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--adm-sp-2);
+  padding-block: var(--adm-sp-1);
+  border-block: 1px solid var(--adm-slate-200);
+}
+
+.admin-app .tst-field {
+  display: grid;
+  gap: 0.25rem;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-700);
+  min-width: 0;
+}
+
+.admin-app .tst-field--search {
+  min-width: 8rem;
+}
+
+.admin-app .tst-field--inline {
+  flex: 1;
+}
+
+.admin-app .tst-bank__scroll {
+  overflow-x: auto;
+}
+
+.admin-app .tst-bank__table {
+  table-layout: fixed;
+  width: 100%;
+  font-size: var(--adm-fs-sm);
+}
+
+.admin-app .tst-bank__table th:nth-child(1),
+.admin-app .tst-bank__table td:nth-child(1) {
+  width: 2.75rem;
+  text-align: center;
+}
+
+.admin-app .tst-bank__table th:nth-child(2),
+.admin-app .tst-bank__table td:nth-child(2) {
+  width: 4.5rem;
+  white-space: nowrap;
+}
+
+.admin-app .tst-bank__table th:nth-child(3),
+.admin-app .tst-bank__table td:nth-child(3) {
+  width: auto;
+}
+
+.admin-app .tst-bank__table th:nth-child(n + 4),
+.admin-app .tst-bank__table td:nth-child(n + 4) {
+  width: 6.5rem;
+  white-space: nowrap;
+}
+
+.admin-app .tst-bank__content span:first-child {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-app .tst-bank__used {
+  display: inline-block;
+  margin-top: 0.125rem;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+
+.admin-app .tst-bank__row--used {
+  color: var(--adm-slate-500);
+}
+
+.admin-app .tst-bank__state {
+  text-align: center;
+  color: var(--adm-slate-500);
+  padding-block: var(--adm-sp-4);
+}
+
+.admin-app .tst-bank__checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--adm-jade-700);
+}
+
+.admin-app .tst-bank__checkbox:focus-visible {
+  outline: 3px solid var(--adm-focus-ring);
+  outline-offset: 2px;
+}
+
+.admin-app .tst-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-slate-700);
+}
+
+/* ── Panel bên phải ──────────────────────────────────────────────────── */
+.admin-app .tst-panel {
+  padding: var(--adm-sp-4);
+  display: grid;
+  gap: var(--adm-sp-3);
+  position: sticky;
+  top: calc(var(--adm-topbar-h) + var(--adm-sp-2));
+}
+
+@media (max-width: 1199px) {
+  .admin-app .tst-panel {
+    position: static;
+  }
+}
+
+.admin-app .tst-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-panel__eyebrow {
+  margin: 0;
+  font-size: var(--adm-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--adm-slate-500);
+}
+
+.admin-app .tst-panel__title {
+  margin: 0;
+  font-size: var(--adm-fs-lg);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.admin-app .tst-panel__meta {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-slate-700);
+}
+
+.admin-app .tst-panel__sections {
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+
+.admin-app .tst-panel__empty {
+  margin: 0;
+}
+
+.admin-app .tst-section {
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  background: var(--adm-paper);
+}
+
+.admin-app .tst-section__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+  padding: var(--adm-sp-2);
+}
+
+.admin-app .tst-section__text {
+  min-width: 0;
+}
+
+.admin-app .tst-section__toggle {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--adm-navy-900);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.admin-app .tst-section__toggle:focus-visible {
+  outline: 3px solid var(--adm-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--adm-r-sm);
+}
+
+.admin-app .tst-section__meta {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-700);
+}
+
+.admin-app .tst-badge {
+  border-radius: 999px;
+  border: 1px solid var(--adm-jade-200);
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+.admin-app .tst-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.admin-app .tst-section__body {
+  display: grid;
+  gap: var(--adm-sp-3);
+  padding: 0 var(--adm-sp-2) var(--adm-sp-2);
+}
+
+.admin-app .tst-icon-up {
+  /* chevron-left xoay 90° → mũi tên chỉ lên. */
+  transform: rotate(90deg);
+}
+
+.admin-app .tst-icon-down {
+  /* U1: chevron-right xoay 90° → mũi tên chỉ xuống (bản trước xoay -90°). */
+  transform: rotate(90deg);
+}
+
+.admin-app .tst-group {
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-sm);
+  padding: var(--adm-sp-2);
+  display: grid;
+  gap: var(--adm-sp-2);
+  background: var(--adm-slate-50);
+}
+
+.admin-app .tst-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-input--title {
+  width: 100%;
+}
+
+.admin-app .tst-group__media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-questions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.admin-app .tst-questions > li {
+  min-width: 0;
+}
+
+.admin-app .tst-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px dashed var(--adm-slate-200);
+  border-radius: var(--adm-r-sm);
+  padding: 0.125rem 0.5rem;
+  background: var(--adm-paper);
+  font-size: var(--adm-fs-sm);
+}
+
+.admin-app .tst-question__id {
+  font-variant-numeric: tabular-nums;
+  color: var(--adm-slate-700);
+}
+
+.admin-app .tst-panel__add-section {
+  width: 100%;
+}
+
+.admin-app .tst-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--adm-sp-2);
+  border-top: 1px solid var(--adm-slate-200);
+  padding-top: var(--adm-sp-3);
+}
+
+.admin-app .tst-summary div {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.admin-app .tst-summary dt {
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-500);
+}
+
+.admin-app .tst-summary dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-app .tst-live {
+  margin: 0;
+  min-height: 0;
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-jade-800);
+}
+
+.admin-app .tst-live:empty {
+  display: none;
+}
+
+.admin-app .tst-panel__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  border-top: 1px solid var(--adm-slate-200);
+  padding-top: var(--adm-sp-3);
+}
+
+.admin-app .tst-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-700);
+}
+
+/* ── Dialog ──────────────────────────────────────────────────────────── */
+.admin-app .tst-dialog {
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  padding: 0;
+  max-width: min(34rem, calc(100vw - 2rem));
+  width: 100%;
+  background: var(--adm-paper);
+  color: var(--adm-navy-900);
+}
+
+.admin-app .tst-dialog::backdrop {
+  background: var(--adm-backdrop-bg);
+}
+
+.admin-app .tst-dialog__body {
+  display: grid;
+  gap: var(--adm-sp-3);
+  padding: var(--adm-sp-4);
+}
+
+.admin-app .tst-dialog__title {
+  margin: 0;
+  font-size: var(--adm-fs-lg);
+}
+
+.admin-app .tst-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-dialog__failure {
+  display: grid;
+  gap: var(--adm-sp-2);
+  border: 1px solid var(--adm-alert-error-border);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-red-100);
+  color: var(--adm-red-text);
+  padding: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+}
+
+.admin-app .tst-dialog__failure p {
+  margin: 0;
+}
+
+.admin-app .tst-reasons {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-app .tst-reasons li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.admin-app .tst-reasons__where {
+  color: var(--adm-slate-700);
+}
+
+.admin-app .tst-textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+/* ── ≤900px: vùng chạm ≥ 2.75rem, bảng câu thu gọn ──────────────────── */
+@media (max-width: 900px) {
+  .admin-app .tst-bank,
+  .admin-app .tst-panel {
+    padding: var(--adm-sp-3);
+  }
+
+  .admin-app .tst-icon-btn,
+  .admin-app .tst-controls .adm-icon-btn,
+  .admin-app .tst-panel__head .adm-icon-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  .admin-app .tst-section__toggle {
+    min-height: 2.75rem;
+  }
+
+  .admin-app .tst-bank__filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-app .tst-bank__table th:nth-child(2),
+  .admin-app .tst-bank__table td:nth-child(2),
+  .admin-app .tst-bank__table th:nth-child(6),
+  .admin-app .tst-bank__table td:nth-child(6) {
+    display: none;
+  }
+
+  .admin-app .tst-bank__table th:nth-child(n + 4),
+  .admin-app .tst-bank__table td:nth-child(n + 4) {
+    width: 5.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-app .tst-bank__table th:nth-child(4),
+  .admin-app .tst-bank__table td:nth-child(4),
+  .admin-app .tst-bank__table th:nth-child(5),
+  .admin-app .tst-bank__table td:nth-child(5) {
+    display: none;
+  }
+
+  .admin-app .tst-group__media {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-app .tst-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── U7: đề published/archived chỉ đọc, một cột toàn chiều rộng ────────── */
+.admin-app .tst-layout--readonly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-app .tst-panel--readonly {
+  position: static;
+  width: 100%;
+  max-width: none;
+}
+
+.admin-app .tst-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+
+.admin-app .tst-group__title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.admin-app .tst-group__media-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-1) var(--adm-sp-4);
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-sm);
+}
+
+.admin-app .tst-group__media-text p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── U5: dòng câu có đoạn trích một dòng, ellipsis + title ─────────────── */
+.admin-app .tst-question__content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--adm-slate-700);
+}
+
+/* ── C4: ghi chú chỗ trống của nhóm đích ───────────────────────────────── */
+.admin-app .tst-bank__room-note {
+  margin: 0;
+  font-size: var(--adm-fs-xs);
+}
+
+/* C3: dòng trạng thái nhận focus sau khi lưu. */
+.admin-app .tst-live:focus-visible {
+  outline: 3px solid var(--adm-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--adm-r-sm);
+}
+
+.admin-app .tst-section__add-group {
+  justify-self: start;
+}

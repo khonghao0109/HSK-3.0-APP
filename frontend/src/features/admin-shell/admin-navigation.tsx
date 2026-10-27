@@ -46,6 +46,12 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     href: '/admin/questions',
   },
   {
+    key: 'tests',
+    label: 'Đề thi',
+    icon: 'clipboard-list',
+    href: '/admin/tests',
+  },
+  {
     key: 'import',
     label: 'Nhập dữ liệu',
     icon: 'upload',

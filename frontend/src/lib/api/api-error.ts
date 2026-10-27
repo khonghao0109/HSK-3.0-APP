@@ -36,6 +36,10 @@ export type ApiErrorReason = {
 export type ApiErrorDetails = {
   /** Vị trí lỗi trong payload (ví dụ `content.options[1].text`). */
   path?: string;
+  /** C1: vị trí cụ thể backend trả cho lỗi cấu trúc (`sections[0]…`), ≤ 200. */
+  field?: string;
+  /** C1: mã lý do của lỗi 409 (`archived`, `not_found`, `wrong_type`, …), ≤ 64. */
+  reason?: string;
   /** Lỗi theo dòng của import (tối đa 100 dòng). */
   errors?: ApiErrorDetailRow[];
   /** M4.1a (TL-91): lý do publish bị chặn, tối đa 20 mục. */
@@ -56,6 +60,8 @@ export type ApiFailure = {
 
 export const API_ERROR_DETAILS_LIMITS = {
   maxPathLength: 200,
+  maxFieldLength: 200,
+  maxReasonLength: 64,
   maxErrors: 100,
   maxCodeLength: 64,
   maxReasons: 20,
@@ -132,16 +138,26 @@ export function normalizeApiFailure(input: {
 }
 
 /**
- * F1: giữ đúng `path` (string ≤ 200), `errors` (≤ 100 × {rowNumber int,
- * code ≤ 64, path ≤ 200}) và `reasons` (≤ 20 × {code ≤ 64, field ≤ 64}), bỏ mọi
- * khoá khác và mọi phần tử sai shape/quá dài. Không có mục nào hợp lệ →
- * undefined.
+ * F1: giữ đúng `path` (string ≤ 200), `field` (≤ 200), `reason` (≤ 64),
+ * `errors` (≤ 100 × {rowNumber int, code ≤ 64, path ≤ 200}) và `reasons`
+ * (≤ 20 × {code ≤ 64, field ≤ 64}), bỏ mọi khoá khác và mọi phần tử sai
+ * shape/quá dài. Không có mục nào hợp lệ → undefined.
  */
 export function sanitizeErrorDetails(
   value: unknown,
 ): ApiErrorDetails | undefined {
   if (!isPlainRecord(value)) return undefined;
   const path = validString(value.path, API_ERROR_DETAILS_LIMITS.maxPathLength);
+  // C1 (M4.1b vòng sửa 2): `TEST_QUESTION_NOT_USABLE`/`MEDIA_NOT_USABLE` trả
+  // `field` + `reason` ở details để UI hiện đúng vị trí câu/nhóm.
+  const field = validString(
+    value.field,
+    API_ERROR_DETAILS_LIMITS.maxFieldLength,
+  );
+  const reason = validString(
+    value.reason,
+    API_ERROR_DETAILS_LIMITS.maxReasonLength,
+  );
 
   let errors: ApiErrorDetailRow[] | undefined;
   if (Array.isArray(value.errors)) {
@@ -184,11 +200,19 @@ export function sanitizeErrorDetails(
     if (entries.length > 0) reasons = entries;
   }
 
-  if (path === undefined && errors === undefined && reasons === undefined) {
+  if (
+    path === undefined &&
+    field === undefined &&
+    reason === undefined &&
+    errors === undefined &&
+    reasons === undefined
+  ) {
     return undefined;
   }
   return {
     ...(path === undefined ? {} : { path }),
+    ...(field === undefined ? {} : { field }),
+    ...(reason === undefined ? {} : { reason }),
     ...(errors === undefined ? {} : { errors }),
     ...(reasons === undefined ? {} : { reasons }),
   };

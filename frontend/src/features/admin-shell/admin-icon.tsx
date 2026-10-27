@@ -9,6 +9,7 @@ export const ADMIN_ICON_NAMES = [
   'layout-dashboard',
   'file-stack',
   'clipboard-check',
+  'clipboard-list',
   'image',
   'file-question',
   'upload',

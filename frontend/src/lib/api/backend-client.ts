@@ -47,6 +47,12 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/questions\/\d+\/revisions$/,
   /^\/api\/v1\/admin\/cms\/questions\/\d+\/revisions\/\d+\/(?:reviews|publish)$/,
   /^\/api\/v1\/admin\/cms\/questions\/\d+\/archive$/,
+  // M4.1b (TL-105): trình xây dựng đề. GET danh sách nhận query string;
+  // các route mutation/structure không nhận query.
+  /^\/api\/v1\/admin\/cms\/tests(?:\?[^#]*)?$/,
+  /^\/api\/v1\/admin\/cms\/tests\/\d+$/,
+  /^\/api\/v1\/admin\/cms\/tests\/\d+\/structure$/,
+  /^\/api\/v1\/admin\/cms\/tests\/\d+\/(?:publish|archive|duplicate)$/,
   // M5.3 (TL-70): quản lý người dùng admin + nhật ký audit.
   /^\/api\/v1\/admin\/users(?:\?[^#]*)?$/,
   /^\/api\/v1\/admin\/users\/\d+\/(?:role|suspend|unsuspend)$/,
@@ -106,7 +112,7 @@ type UploadOptions = {
 
 type RequestOptions = {
   token?: string;
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   /** Sent as `Idempotency-Key` (docs/api/api.md §A.7). */
   idempotencyKey?: string;

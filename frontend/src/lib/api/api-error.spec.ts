@@ -51,6 +51,47 @@ describe('safe API error normalization', () => {
     expect(new BackendRequestError(failure).code).toBe('INVALID_RESET_TOKEN');
   });
 
+  it('keeps details.field and details.reason for structure save errors (M4.1b R2, C1)', () => {
+    const failure = normalizeApiFailure({
+      status: 409,
+      body: {
+        success: false,
+        error: {
+          code: 'TEST_QUESTION_NOT_USABLE',
+          message: 'not usable',
+          details: {
+            field: 'sections[0].groups[0].questionIds[0]',
+            reason: 'archived',
+            pathHint: 'ignored',
+            fieldTooLong: `f${'x'.repeat(
+              API_ERROR_DETAILS_LIMITS.maxFieldLength,
+            )}`,
+          },
+        },
+      },
+    });
+    expect(failure.details).toEqual({
+      field: 'sections[0].groups[0].questionIds[0]',
+      reason: 'archived',
+    });
+
+    const oversized = normalizeApiFailure({
+      status: 409,
+      body: {
+        success: false,
+        error: {
+          code: 'MEDIA_NOT_USABLE',
+          message: 'not usable',
+          details: {
+            field: `s${'x'.repeat(API_ERROR_DETAILS_LIMITS.maxFieldLength)}`,
+            reason: 'r'.repeat(API_ERROR_DETAILS_LIMITS.maxReasonLength + 1),
+          },
+        },
+      },
+    });
+    expect(oversized.details).toBeUndefined();
+  });
+
   it('keeps only the filtered path and per-row errors of details (M5.1b1, F1)', () => {
     const failure = normalizeApiFailure({
       status: 422,
