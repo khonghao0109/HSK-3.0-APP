@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
@@ -787,6 +788,13 @@ describe('ExamTake island logic (D)', () => {
       .mocked(globalThis.fetch)
       .mock.calls.map(([input]) => String(input));
     expect(urls.filter((url) => url.endsWith('/media-grants'))).toHaveLength(0);
+    // R12 (TL-148): mount trong trạng thái khoá thì preloader không được tạo
+    // request content nào.
+    expect(
+      urls.filter(
+        (url) => /\/media\/\d+/u.test(url) && !url.endsWith('/media-grants'),
+      ),
+    ).toHaveLength(0);
   });
 
   it('G1: khoá giữa phiên thì ngừng gọi lại media-grants khi media lỗi (2c)', async () => {
@@ -1683,5 +1691,415 @@ describe('ExamTake island logic (D)', () => {
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith('/learn/exam/7'),
     );
+  });
+});
+
+/**
+ * R12 (TL-145…TL-147): audio tải trước thành blob và `src` bị ghim trong lượt
+ * nghe. jsdom không có URL.createObjectURL nên mỗi test tự định nghĩa.
+ */
+describe('ExamTake R12 audio preload (TL-145..TL-147)', () => {
+  const FAR = () => new Date(Date.now() + 280_000).toISOString();
+  const SOON = () => new Date(Date.now() + 10_000).toISOString();
+
+  function listingAttempt(
+    questions: Array<Record<string, unknown>>,
+  ): ExamAttemptView {
+    return attempt({
+      sections: [
+        {
+          key: 's1',
+          orderIndex: 1,
+          title: 'Nghe hiểu',
+          instruction: null,
+          skill: 'listening',
+          groups: [
+            {
+              key: 's1-g1',
+              orderIndex: 1,
+              title: null,
+              instruction: null,
+              content: null,
+              audio: null,
+              image: null,
+              questions,
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  function stubObjectUrls() {
+    let counter = 0;
+    const created: string[] = [];
+    const create = vi.fn(() => {
+      counter += 1;
+      const url = `blob:r12-${String(counter)}`;
+      created.push(url);
+      return url;
+    });
+    const revoke = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: create,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revoke,
+    });
+    return { create, revoke, created };
+  }
+
+  function clearObjectUrls(): void {
+    Reflect.deleteProperty(URL, 'createObjectURL');
+    Reflect.deleteProperty(URL, 'revokeObjectURL');
+  }
+
+  function audioBytes(): Response {
+    return new Response(new Uint8Array([1, 2, 3, 4]), {
+      status: 200,
+      headers: { 'content-type': 'audio/mpeg' },
+    });
+  }
+
+  afterEach(() => {
+    clearObjectUrls();
+  });
+
+  it('mount: mỗi audio duy nhất chỉ fetch content đúng một lần', async () => {
+    stubObjectUrls();
+    const contentFetches: string[] = [];
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: {
+            grants: [{ mediaId: 9, src: '/media/9', expiresAt: FAR() }],
+            unavailable: [],
+          },
+        });
+      }
+      if (/^\/media\/9/u.test(url)) {
+        contentFetches.push(url);
+        return audioBytes();
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    const view = renderTake(
+      listingAttempt([
+        question({ key: 'q1', audio: media('audio', 9) }),
+        question({ key: 'q2', orderIndex: 2, audio: media('audio', 9) }),
+      ]),
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(audioEl.getAttribute('src')).toMatch(/^blob:/u));
+    await settleFetch();
+    expect(contentFetches).toHaveLength(1);
+  });
+
+  it('onReady cùng act với click Phát: play 1 lần, không có mutation src thêm', async () => {
+    stubObjectUrls();
+    const grantsPayload = () =>
+      Response.json({
+        success: true,
+        data: {
+          grants: [{ mediaId: 9, src: '/media/9', expiresAt: FAR() }],
+          unavailable: [],
+        },
+      });
+    let releaseContent: ((value: Response) => void) | undefined;
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) return grantsPayload();
+      if (/^\/media\/9/u.test(url)) {
+        return new Promise<Response>((resolve) => {
+          releaseContent = resolve;
+        });
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const view = renderTake(
+      listingAttempt([question({ key: 'q1', audio: media('audio', 9) })]),
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(audioEl.getAttribute('src')).toBe('/media/9'));
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records);
+    });
+    observer.observe(audioEl, { attributes: true, attributeFilter: ['src'] });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+      // Blob onReady về ngay sau click, trong cùng act.
+      releaseContent?.(audioBytes());
+      await settleFetch();
+    });
+    observer.disconnect();
+    expect(play).toHaveBeenCalledTimes(1);
+    await settleFetch();
+    // `src` đã được đồng bộ trước lượt nghe, nên click không phải ghi lại;
+    // blob commit trong cùng act cũng KHÔNG được ghi (thiếu ghim thì effect
+    // ghi blob thành một mutation và test này đỏ).
+    expect(
+      mutations.filter((record) => record.attributeName === 'src'),
+    ).toHaveLength(0);
+    expect(audioEl.getAttribute('src')).toBe('/media/9');
+  });
+
+  it('blob về giữa lượt nghe: 0 mutation src', async () => {
+    stubObjectUrls();
+    let releaseContent: ((value: Response) => void) | undefined;
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: {
+            grants: [{ mediaId: 9, src: '/media/9', expiresAt: FAR() }],
+            unavailable: [],
+          },
+        });
+      }
+      if (/^\/media\/9/u.test(url)) {
+        return new Promise<Response>((resolve) => {
+          releaseContent = resolve;
+        });
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const view = renderTake(
+      listingAttempt([question({ key: 'q1', audio: media('audio', 9) })]),
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(audioEl.getAttribute('src')).toBe('/media/9'));
+    fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+    await settleFetch();
+    expect(play).toHaveBeenCalledTimes(1);
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records);
+    });
+    observer.observe(audioEl, { attributes: true, attributeFilter: ['src'] });
+    await act(async () => {
+      releaseContent?.(audioBytes());
+      await settleFetch();
+    });
+    observer.disconnect();
+    expect(
+      mutations.filter((record) => record.attributeName === 'src'),
+    ).toHaveLength(0);
+    expect(audioEl.getAttribute('src')).toBe('/media/9');
+  });
+
+  it('media-grants trả src mới khi đang phát: chỉ 1 lần ghi src trong click', async () => {
+    stubObjectUrls();
+    let grantsFetches = 0;
+    let releaseRefresh: ((value: Response) => void) | undefined;
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        grantsFetches += 1;
+        if (grantsFetches === 1) {
+          return Response.json({
+            success: true,
+            data: {
+              grants: [{ mediaId: 9, src: '/media/9?v=1', expiresAt: SOON() }],
+              unavailable: [],
+            },
+          });
+        }
+        return new Promise<Response>((resolve) => {
+          releaseRefresh = resolve;
+        });
+      }
+      if (/^\/media\/9/u.test(url)) return audioBytes();
+      return Response.json({ success: true, data: attempt() });
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const view = renderTake(
+      listingAttempt([question({ key: 'q1', audio: media('audio', 9) })]),
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(grantsFetches).toBe(1));
+    // Preloader bắt đầu refresh grant vì URL còn < 15 s.
+    await waitFor(() => expect(grantsFetches).toBe(2));
+    await waitFor(() =>
+      expect(audioEl.getAttribute('src')).toBe('/media/9?v=1'),
+    );
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records);
+    });
+    observer.observe(audioEl, { attributes: true, attributeFilter: ['src'] });
+    mutations.length = 0;
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+      await settleFetch();
+      // Grant mới về đúng lúc đang phát; `play(fresh)` ghi src một lần, commit
+      // state sau đó không được ghi lần hai.
+      releaseRefresh?.(
+        Response.json({
+          success: true,
+          data: {
+            grants: [{ mediaId: 9, src: '/media/9?v=2', expiresAt: FAR() }],
+            unavailable: [],
+          },
+        }),
+      );
+      await settleFetch();
+    });
+    observer.disconnect();
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(grantsFetches).toBe(2);
+    expect(
+      mutations.filter((record) => record.attributeName === 'src'),
+    ).toHaveLength(1);
+    expect(audioEl.getAttribute('src')).toBe('/media/9?v=2');
+  });
+
+  it('unmount revoke mọi object URL và StrictMode vẫn tới trạng thái có blob', async () => {
+    const { create, revoke } = stubObjectUrls();
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: {
+            grants: [{ mediaId: 9, src: '/media/9', expiresAt: FAR() }],
+            unavailable: [],
+          },
+        });
+      }
+      if (/^\/media\/9/u.test(url)) return audioBytes();
+      return Response.json({ success: true, data: attempt() });
+    });
+    const view = render(
+      <StrictMode>
+        <LearnerToastProvider>
+          <ExamTake
+            attempt={listingAttempt([
+              question({ key: 'q1', audio: media('audio', 9) }),
+            ])}
+          />
+        </LearnerToastProvider>
+      </StrictMode>,
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(audioEl.getAttribute('src')).toMatch(/^blob:/u));
+    view.unmount();
+    expect(revoke.mock.calls).toHaveLength(create.mock.calls.length);
+  });
+
+  it('lỗi trên blob: bỏ blob, không play lần 2, vẫn còn lượt retry grant', async () => {
+    stubObjectUrls();
+    let grantsFetches = 0;
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        grantsFetches += 1;
+        return Response.json({
+          success: true,
+          data: {
+            grants: [{ mediaId: 9, src: '/media/9', expiresAt: FAR() }],
+            unavailable: [],
+          },
+        });
+      }
+      if (/^\/media\/9/u.test(url)) return audioBytes();
+      return Response.json({ success: true, data: attempt() });
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const view = renderTake(
+      listingAttempt([question({ key: 'q1', audio: media('audio', 9) })]),
+    );
+    const audioEl = view.container.querySelector('audio') as HTMLAudioElement;
+    await waitFor(() => expect(audioEl.getAttribute('src')).toMatch(/^blob:/u));
+    fireEvent.error(audioEl);
+    await settleFetch();
+    expect(play).not.toHaveBeenCalled();
+    expect(screen.getAllByText('Không tải được âm thanh.').length).toBe(1);
+    expect(grantsFetches).toBe(1);
+    expect(view.container.querySelector('audio')?.getAttribute('src')).toBe(
+      '/media/9',
+    );
+    fireEvent.error(view.container.querySelector('audio') as HTMLAudioElement);
+    await waitFor(() => expect(grantsFetches).toBe(2));
+  });
+
+  it('40 câu, grant sắp hết hạn: click Phát khi preloader đang refresh chỉ dùng chung 1 lần gọi loader', async () => {
+    stubObjectUrls();
+    let grantsFetches = 0;
+    let releaseRefresh: ((value: Response) => void) | undefined;
+    const ids = Array.from({ length: 40 }, (_, index) => 100 + index);
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        grantsFetches += 1;
+        if (grantsFetches === 1) {
+          return Response.json({
+            success: true,
+            data: {
+              grants: ids.map((mediaId) => ({
+                mediaId,
+                src: `/media/${String(mediaId)}`,
+                expiresAt: SOON(),
+              })),
+              unavailable: [],
+            },
+          });
+        }
+        return new Promise<Response>((resolve) => {
+          releaseRefresh = resolve;
+        });
+      }
+      if (/^\/media\/\d+/u.test(url)) return audioBytes();
+      return Response.json({ success: true, data: attempt() });
+    });
+    const view = renderTake(
+      listingAttempt(
+        ids.map((mediaId, index) =>
+          question({
+            key: `q${String(index + 1)}`,
+            orderIndex: index + 1,
+            audio: media('audio', mediaId),
+          }),
+        ),
+      ),
+    );
+    await waitFor(() => expect(grantsFetches).toBe(1));
+    // Preloader gọi getSrc cho item đầu và bắt đầu refresh grant; click Phát
+    // trong lúc đó phải dùng chung promise đó thay vì phát sinh request thứ ba
+    // (bỏ single-flight: grantsFetches = 3 → test đỏ).
+    await waitFor(() => expect(grantsFetches).toBe(2));
+    fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+    await settleFetch();
+    expect(grantsFetches).toBe(2);
+    view.unmount();
+    releaseRefresh?.(
+      Response.json({
+        success: true,
+        data: {
+          grants: ids.map((mediaId) => ({
+            mediaId,
+            src: `/media/${String(mediaId)}?fresh=1`,
+            expiresAt: FAR(),
+          })),
+          unavailable: [],
+        },
+      }),
+    );
+    await settleFetch();
   });
 });

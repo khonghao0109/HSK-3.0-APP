@@ -52,7 +52,8 @@ session API. Hết hạn token yêu cầu đăng nhập lại. Xem
 Production dùng CSP nonce sinh ngẫu nhiên cho từng request trong `src/proxy.ts`.
 Nonce được chuyển vào request để Next.js gắn vào framework/page scripts và được
 trả trong response CSP. `script-src` production không dùng `unsafe-inline` hoặc
-`unsafe-eval`; `media-src` hiện chỉ cho `'self'`. Do nonce cần request-time
+`unsafe-eval`; `media-src` cho `'self'` và `blob:` — exam tải trước audio
+thành Blob (M4.2b R12, ADR-003). Do nonce cần request-time
 rendering, root layout chủ động dynamic và không dùng static/ISR/PPR caching.
 Matcher không chạy cho API, Next static/image, favicon/sitemap/robots hoặc router
 prefetch (`next-router-prefetch`, `purpose: prefetch`). Vì vậy document request
@@ -180,8 +181,8 @@ Không ghi số case cố định trong tài liệu; lấy kết quả từ gate
 
 ## BFF media của learner
 
-Audio của câu nghe đi qua BFF cùng origin, nên CSP giữ `media-src 'self'`
-(ADR-003):
+Audio của câu nghe đi qua BFF cùng origin; exam tải trước audio thành Blob nên
+CSP là `media-src 'self' blob:` (M4.2b R12, ADR-003):
 
 - `GET /api/learner/media/:id/access`: cần phiên learner; gọi backend
   `GET /api/v1/media/:id/access` và trả `{ success: true, data: { src, expiresAt } }`

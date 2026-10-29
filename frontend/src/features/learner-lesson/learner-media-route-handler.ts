@@ -71,7 +71,9 @@ function mediaFailure(status: number): NextResponse {
 
 /**
  * `GET /api/learner/media/:id/access`: a same-origin `src` for the audio
- * element, rebuilt from the backend grant, so the CSP keeps `media-src 'self'`.
+ * element, rebuilt from the backend grant. Since M4.2b R12 the exam island
+ * preloads those same-origin bytes into a Blob and plays it through a `blob:`
+ * URL, so the CSP keeps `media-src 'self' blob:` (no storage origin).
  */
 export async function handleMediaAccess(
   request: NextRequest,

@@ -29,6 +29,11 @@ import {
   createExamSaveQueue,
   type ExamQueueEvents,
 } from './exam-save-queue';
+import {
+  createExamAudioPreloader,
+  createSingleFlight,
+  type AudioPreload,
+} from './exam-audio-preload';
 import { createExamTransport } from './exam-take-transport';
 import {
   EXAM_CLOSED_MESSAGE,
@@ -86,6 +91,11 @@ function grantExpiresSoon(
   nowMs: number,
 ): boolean {
   return expiresAt !== undefined && expiresAt - nowMs < GRANT_REFRESH_WINDOW_MS;
+}
+
+/** R12 (TL-145): audio của entry là của câu, fallback sang audio của nhóm. */
+function audioOf(entry: FlatQuestion) {
+  return entry.question.audio ?? entry.group.audio;
 }
 
 /* Mockup player shows two-digit minutes (`00:12 / 00:18`). */
@@ -146,6 +156,14 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const [audioDuration, setAudioDuration] = useState(0);
   const [playError, setPlayError] = useState<string | null>(null);
   const [dialogKind, setDialogKind] = useState<'quit' | null>(null);
+  /**
+   * R12 (TL-145): byte audio đã tải trước, giữ theo mediaId dưới dạng blob URL.
+   * Ref đồng bộ song song để `startAudio`/`onMediaError` đọc được ngay, không
+   * phải chờ commit như state.
+   */
+  const [preloadUrls, setPreloadUrls] = useState<Map<number, string>>(
+    () => new Map(),
+  );
 
   const queueRef = useRef<ReturnType<typeof createExamSaveQueue> | null>(null);
   const timerRef = useRef<ReturnType<typeof createExamTimer> | null>(null);
@@ -164,19 +182,26 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const pendingRef = useRef(0);
   const lockedRef = useRef(locked);
   const currentKeyRef = useRef<string | null>(null);
-  const grantsRef = useRef(grants);
-  const grantsLoaderRef = useRef<
+  /**
+   * TL-146: bản đồ grant được cập nhật NGAY khi response tới (trước commit),
+   * vì preloader và effect `currentMediaId` cần `expiresAt`/`src` tươi mà
+   * `grants` state chỉ có sau render.
+   */
+  const grantsSyncRef = useRef<Grants>({
+    byMedia: new Map(),
+    expiresAt: new Map(),
+    unavailable: new Set(),
+  });
+  const loadGrantsRef = useRef<
     (() => Promise<Map<number, string> | null>) | null
   >(null);
+  const preloadUrlsRef = useRef<Map<number, string>>(new Map());
+  const preloaderRef = useRef<AudioPreload | null>(null);
   const mediaRetryRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     lockedRef.current = locked;
   }, [locked]);
-
-  useEffect(() => {
-    grantsRef.current = grants;
-  });
 
   const current = flat[index];
   // Layout effect: the ref must be fresh at commit, before any async grants
@@ -224,6 +249,8 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       dialogRef.current?.close();
       // F11: skip the backoff so the last edits can still land in the 5 s grace.
       void queueRef.current?.retryNow();
+      // R12 (TL-148): bài đã khoá thì dừng preload, không tải byte tiếp.
+      preloaderRef.current?.abort();
     },
     [],
   );
@@ -415,13 +442,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   useEffect(() => {
     const entries = callbacksRef.current.flat;
     const hasMedia = entries.some((entry) => {
-      const audio = entry.question.audio ?? entry.group.audio;
+      const audio = audioOf(entry);
       const image = entry.question.image ?? entry.group.image;
       return audio !== null || image !== null;
     });
     if (!hasMedia) return;
     let cancelled = false;
-    const load = async (): Promise<Map<number, string> | null> => {
+    const loadOnce = async (): Promise<Map<number, string> | null> => {
       // G1 (2c): bài đã khoá (mount hoặc giữa phiên) thì không gọi grant —
       // loader là đường duy nhất cho cả lần đầu lẫn retry.
       if (lockedRef.current) return null;
@@ -456,11 +483,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
               unavailable.add(entry.question.image.mediaId);
             if (entry.group.image) unavailable.add(entry.group.image.mediaId);
           }
-          setGrants({
+          const failed: Grants = {
             byMedia: new Map(),
             expiresAt: new Map(),
             unavailable,
-          });
+          };
+          grantsSyncRef.current = failed;
+          setGrants(failed);
           setGrantsLoaded(true);
           return null;
         }
@@ -485,11 +514,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
               : Number.NaN;
           if (Number.isFinite(parsed)) expiresAt.set(grant.mediaId, parsed);
         }
-        setGrants({
+        // TL-146: cập nhật ref ngay, trước commit — preloader dùng bản này.
+        grantsSyncRef.current = {
           byMedia,
           expiresAt,
           unavailable: new Set(payload?.data?.unavailable ?? []),
-        });
+        };
+        setGrants(grantsSyncRef.current);
         setGrantsLoaded(true);
         return byMedia;
       } catch {
@@ -500,23 +531,114 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         return null;
       }
     };
-    grantsLoaderRef.current = load;
+    // TL-146: mọi caller (mount, effect câu hiện tại, startAudio, onMediaError,
+    // preloader) dùng chung một promise đang bay.
+    const load = createSingleFlight(loadOnce);
+    loadGrantsRef.current = load;
     void load();
     return () => {
       cancelled = true;
-      grantsLoaderRef.current = null;
+      loadGrantsRef.current = null;
     };
   }, [attempt.id]);
 
+  /**
+   * TL-146: `getSrc` cho preloader. Grant sắp hết hạn (< 15 s) thì refresh qua
+   * loader single-flight rồi lấy `src` từ Map loader trả về — không đọc state
+   * (chỉ đồng bộ sau commit).
+   */
+  const getGrantSrc = useCallback(async (mediaId: number) => {
+    if (lockedRef.current) return null;
+    const sync = grantsSyncRef.current;
+    const src = sync.byMedia.get(mediaId);
+    if (!grantExpiresSoon(sync.expiresAt.get(mediaId), Date.now())) {
+      return src ?? null;
+    }
+    const load = loadGrantsRef.current;
+    if (load === null) return src ?? null;
+    const fresh = await load();
+    return fresh?.get(mediaId) ?? null;
+  }, []);
+
   useEffect(() => {
     if (currentMediaId === null) return;
-    const expiresAt = grantsRef.current.expiresAt.get(currentMediaId);
+    const audio = current === undefined ? null : audioOf(current);
+    const image = current?.question.image ?? current?.group.image ?? null;
+    // TL-146: audio của câu đã có blob và câu không có ảnh thì không cần
+    // refresh grant nữa (nguồn phát không còn phụ thuộc URL ký).
+    if (audio !== null && preloadUrlsRef.current.has(audio.mediaId)) {
+      if (image === null) return;
+    }
+    const expiresAt = grantsSyncRef.current.expiresAt.get(currentMediaId);
     if (!grantExpiresSoon(expiresAt, Date.now())) return;
-    void grantsLoaderRef.current?.();
-  }, [currentMediaId]);
+    void loadGrantsRef.current?.();
+  }, [currentMediaId, current]);
+
+  /**
+   * TL-148: preloader sống theo vòng đời attempt. StrictMode (next.config.ts)
+   * mount → cleanup → mount nên effect phải dispose + revoke trong cleanup.
+   */
+  useEffect(() => {
+    if (lockedRef.current) return;
+    if (
+      typeof URL.createObjectURL !== 'function' ||
+      typeof URL.revokeObjectURL !== 'function'
+    ) {
+      return;
+    }
+    const entries = callbacksRef.current.flat;
+    const mediaIds: number[] = [];
+    for (const entry of entries) {
+      const audio = audioOf(entry);
+      if (audio !== null && !mediaIds.includes(audio.mediaId)) {
+        mediaIds.push(audio.mediaId);
+      }
+    }
+    if (mediaIds.length === 0) return;
+    const preloader = createExamAudioPreloader({
+      fetch: (input, init) => fetch(input, init),
+      createObjectURL: (blob) => URL.createObjectURL(blob),
+      revokeObjectURL: (url) => URL.revokeObjectURL(url),
+      sleep: (ms) =>
+        new Promise<void>((resolve) => {
+          const handle = window.setTimeout(() => {
+            sleepTimers.delete(handle);
+            resolve();
+          }, ms);
+          sleepTimers.add(handle);
+        }),
+      isOnline: () => navigator.onLine,
+      getSrc: getGrantSrc,
+      onReady: (mediaId, url) => {
+        const next = new Map(preloadUrlsRef.current);
+        next.set(mediaId, url);
+        preloadUrlsRef.current = next;
+        setPreloadUrls(next);
+      },
+    });
+    preloaderRef.current = preloader;
+    const sleepTimers = new Set<number>();
+    let cancelled = false;
+    void loadGrantsRef.current?.().then((map) => {
+      if (cancelled || map === null || lockedRef.current) return;
+      if (preloaderRef.current !== preloader) return;
+      preloader.start(mediaIds);
+    });
+    return () => {
+      cancelled = true;
+      preloader.dispose();
+      // Không để timer gap 6 s sống tiếp sau khi preloader bị dispose.
+      for (const handle of sleepTimers) window.clearTimeout(handle);
+      sleepTimers.clear();
+      if (preloaderRef.current === preloader) preloaderRef.current = null;
+    };
+  }, [attempt.id, getGrantSrc]);
 
   useEffect(() => {
     const onOnline = () => {
+      // TL-148: mạng trở lại thì chạy tiếp preload đang pause — phải gọi TRƯỚC
+      // guard queue bên dưới (bài không có bài làm chờ vẫn cần tải audio).
+      preloaderRef.current?.resume();
       const queue = queueRef.current;
       if (queue === null) return;
       // Only clear the banner when nothing needs saving; otherwise it stays
@@ -674,6 +796,28 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     setDialogKind('quit');
   };
 
+  /**
+   * TL-147: `src` của `<audio>` chỉ được đồng bộ khi KHÔNG có lượt nghe. Trong
+   * lượt nghe, `startAudio` là nơi ghi `src` duy nhất — ghi lại (kể cả cùng
+   * giá trị) sẽ chạy load algorithm, abort `play()` và reset `playbackRate`.
+   */
+  const currentAudio = current === undefined ? null : audioOf(current);
+  const currentBlobSrc = currentAudio
+    ? preloadUrls.get(currentAudio.mediaId)
+    : undefined;
+  const currentGrantSrc = currentAudio
+    ? grants.byMedia.get(currentAudio.mediaId)
+    : undefined;
+  const renderedAudioSrc = currentBlobSrc ?? currentGrantSrc;
+  useEffect(() => {
+    const element = audioRef.current;
+    if (!element) return;
+    if (listeningKeyRef.current !== null) return;
+    if (renderedAudioSrc === undefined) return;
+    if (element.getAttribute('src') === renderedAudioSrc) return;
+    element.src = renderedAudioSrc;
+  }, [renderedAudioSrc, current?.question.key]);
+
   if (current === undefined || currentState === null) {
     return (
       <div className="ex ext">
@@ -684,13 +828,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     );
   }
 
-  const audio = current.question.audio ?? current.group.audio;
+  const audio = currentAudio;
   const image = current.question.image ?? current.group.image;
-  const audioSrc = audio ? grants.byMedia.get(audio.mediaId) : undefined;
   const imageSrc = image ? grants.byMedia.get(image.mediaId) : undefined;
   const audioUnavailable = audio
-    ? grantsLoaded &&
-      (grants.unavailable.has(audio.mediaId) || audioSrc === undefined)
+    ? currentBlobSrc === undefined &&
+      grantsLoaded &&
+      (grants.unavailable.has(audio.mediaId) || renderedAudioSrc === undefined)
     : false;
   const isPlaying = listeningKey === current.question.key;
   const hasPlayed = playedKeys.has(current.question.key);
@@ -699,18 +843,19 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     audioDuration > 0 ? Math.min(1, audioProgress / audioDuration) : 0;
 
   const grantExpiringSoon = (mediaId: number): boolean =>
-    grantExpiresSoon(grantsRef.current.expiresAt.get(mediaId), Date.now());
+    grantExpiresSoon(grantsSyncRef.current.expiresAt.get(mediaId), Date.now());
 
   const startAudio = () => {
     if (locked || audioUnavailable || isPlaying || hasPlayed) return;
     const element = audioRef.current;
-    if (!element || !audioSrc) return;
-    const play = (src?: string) => {
+    if (!element || renderedAudioSrc === undefined) return;
+    const play = (src: string | undefined) => {
       const target = audioRef.current;
-      if (!target) return;
-      // Use the URL returned by the refresh directly: React has not necessarily
-      // committed the new `src` prop when this callback runs.
-      if (src !== undefined) target.src = src;
+      if (!target || src === undefined) return;
+      // TL-147: trong lượt nghe, đây là lần ghi `src` DUY NHẤT. Ghi lại cùng
+      // giá trị cũng chạy load algorithm (abort play(), reset playbackRate)
+      // nên chỉ ghi khi khác.
+      if (target.getAttribute('src') !== src) target.src = src;
       target.playbackRate = speed === '0.75' ? 0.75 : 1;
       listeningKeyRef.current = current.question.key;
       setListeningKey(current.question.key);
@@ -720,10 +865,15 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         setListeningKey(null);
       });
     };
+    // R12: blob đã tải trước thì phát ngay và không refresh grant nữa.
+    if (currentBlobSrc !== undefined) {
+      play(currentBlobSrc);
+      return;
+    }
     // The signed URL is about to expire: refresh it before handing the source
     // to the browser, otherwise playback starts on a dead URL.
     if (audio !== null && grantExpiringSoon(audio.mediaId)) {
-      const loader = grantsLoaderRef.current;
+      const loader = loadGrantsRef.current;
       if (loader !== null) {
         const mediaId = audio.mediaId;
         void loader().then((fresh) => {
@@ -732,7 +882,7 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         return;
       }
     }
-    play();
+    play(renderedAudioSrc);
   };
 
   const onMediaError = (mediaId: number, kind: 'audio' | 'image') => {
@@ -740,16 +890,27 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     // Q123: read the listening key *before* resetting it. A load error before
     // the learner pressed play must not start playback or open a turn.
     const wasListening = listeningKeyRef.current === questionKey;
+    const isBlobSource = preloadUrlsRef.current.has(mediaId);
     if (kind === 'audio') {
       setPlayError('Không tải được âm thanh.');
       listeningKeyRef.current = null;
       setListeningKey(null);
     }
+    if (kind === 'audio' && isBlobSource) {
+      // TL-147: lỗi trên blob thì bỏ blob đó, không retry grant, không tự phát
+      // lại lần hai và không đụng `mediaRetryRef`.
+      preloaderRef.current?.drop(mediaId);
+      const next = new Map(preloadUrlsRef.current);
+      next.delete(mediaId);
+      preloadUrlsRef.current = next;
+      setPreloadUrls(next);
+      return;
+    }
     // One retry per media: refetch the signed URLs, then replay only if the
     // learner was listening to this question when the error happened.
     if (mediaRetryRef.current.has(mediaId)) return;
     mediaRetryRef.current.add(mediaId);
-    const loader = grantsLoaderRef.current;
+    const loader = loadGrantsRef.current;
     if (loader === null) return;
     void loader().then((fresh) => {
       if (kind !== 'audio') return;
@@ -1128,10 +1289,11 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
                   ) : (
                     <>
                       <div className="ext-player">
+                        {/* TL-147: `src` do effect/`startAudio` ghi, không do
+                            React, để không có lần ghi nào giữa lượt nghe. */}
                         <audio
                           key={current.question.key}
                           ref={audioRef}
-                          src={audioSrc}
                           preload="none"
                           onTimeUpdate={(event) => {
                             setAudioProgress(event.currentTarget.currentTime);

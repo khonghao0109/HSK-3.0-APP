@@ -398,8 +398,12 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     await startAttempt(page, baseURL, fixtures);
     const attemptId = Number(page.url().match(/attempts\/(\d+)/u)?.[1]);
     const grants: string[] = [];
+    const mediaRequests: string[] = [];
     page.on('request', (request) => {
       if (request.url().includes('/media-grants')) grants.push(request.url());
+      if (request.url().includes('/api/learner/media/')) {
+        mediaRequests.push(request.url());
+      }
     });
     queryDisposableDb(
       `UPDATE "ExamAttempt" SET "expiresAt" = (now() at time zone 'UTC' + interval '15 seconds') WHERE id = ${String(attemptId)}`,
@@ -436,6 +440,7 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     ).toBeGreaterThan(0);
     // G1: reload khi attempt ĐÃ khoá không được gọi media-grants nữa.
     grants.length = 0;
+    mediaRequests.length = 0;
     await page.reload();
     await expect(page.getByText('Hết giờ. Bài làm đã được lưu.')).toBeVisible({
       timeout: 20_000,
@@ -444,6 +449,10 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
       grants,
       'không còn request media-grants sau reload khi đã khoá',
     ).toEqual([]);
+    // R12 (TL-148): mount ở trạng thái khoá thì preloader không tải byte nào.
+    expect(mediaRequests, 'không tải media content khi bài đã khoá').toEqual(
+      [],
+    );
     await expectClean(page, 'case-6', consoleErrors, cspConsole);
   });
 
@@ -455,9 +464,13 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     const consoleErrors = captureConsoleErrors(page);
     await startAttempt(page, baseURL, fixtures);
     await gotoQuestion(page, 1);
+    const audio = page.locator('audio');
+    // R12 (TL-145): audio đã được tải trước thành blob trước khi bấm Phát.
+    await expect(audio).toHaveAttribute('src', /^blob:/u, {
+      timeout: 30_000,
+    });
     await page.getByRole('button', { name: '0,75×' }).click();
     await page.getByRole('button', { name: 'Phát' }).click();
-    const audio = page.locator('audio');
     await expect
       .poll(
         () => audio.evaluate((el) => (el as HTMLAudioElement).playbackRate),
@@ -477,6 +490,113 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     await expect(page.getByRole('button', { name: '1×' })).toBeDisabled();
     await expect(page.getByText('Nghe lại')).toHaveCount(0);
     await expectClean(page, 'case-7', consoleErrors, cspConsole);
+  });
+
+  test('15. preloaded audio plays offline from a blob (R12 / TL-145, TL-149)', async ({
+    page,
+    baseURL,
+    context,
+  }) => {
+    const cspConsole = await watchCsp(page);
+    const consoleErrors = captureConsoleErrors(page);
+    await startAttempt(page, baseURL, fixtures);
+    // Q1 có audio; Q2 có ảnh nên phải ở Q1.
+    await gotoQuestion(page, 1);
+    const audio = page.locator('audio');
+    await expect(audio).toHaveAttribute('src', /^blob:/u, {
+      timeout: 30_000,
+    });
+    const mediaRequests: string[] = [];
+    const failedMediaRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/api/learner/media/')) {
+        mediaRequests.push(request.url());
+      }
+    });
+    page.on('requestfailed', (request) => {
+      if (request.url().includes('/api/learner/media/')) {
+        failedMediaRequests.push(request.url());
+      }
+    });
+    await context.setOffline(true);
+    await page.getByRole('button', { name: '0,75×' }).click();
+    await page.getByRole('button', { name: 'Phát' }).click();
+    await expect(page.getByRole('button', { name: 'Đang phát' })).toBeVisible();
+    await expect
+      .poll(() => audio.evaluate((el) => (el as HTMLAudioElement).ended), {
+        timeout: 90_000,
+        intervals: [250],
+      })
+      .toBe(true);
+    await expect(page.getByRole('button', { name: 'Đã nghe' })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('button', { name: 'Đã nghe' })).toBeDisabled();
+    expect(
+      await audio.evaluate((el) => (el as HTMLAudioElement).playbackRate),
+    ).toBe(0.75);
+    await expect(page.getByText('Không tải được âm thanh.')).toHaveCount(0);
+    // Phát từ blob: không phát sinh request media nào khi offline.
+    expect(mediaRequests, 'offline không request media').toEqual([]);
+    await context.setOffline(false);
+    // Chromium log ERR_INTERNET_DISCONNECTED không kèm URL, nên thay vì lọc
+    // mù ta chứng minh ở tầng network là KHÔNG request media nào thất bại
+    // (thanh `failedMediaRequests` ở trên) rồi mới bỏ qua đúng chuỗi đó.
+    expect(
+      failedMediaRequests,
+      'không request media nào thất bại khi offline',
+    ).toEqual([]);
+    const unexpected = consoleErrors.filter(
+      (message) => !message.includes('net::ERR_INTERNET_DISCONNECTED'),
+    );
+    await audit(page, 'case-15');
+    await expectNoHorizontalScroll(page);
+    expect(await readCspViolations(page), 'csp case-15').toEqual([]);
+    expect(cspConsole, 'csp-console case-15').toEqual([]);
+    expect(unexpected, 'console case-15').toEqual([]);
+  });
+
+  test('16. fallback streams through the grant when preload is not audio (R12)', async ({
+    page,
+    baseURL,
+  }) => {
+    const cspConsole = await watchCsp(page);
+    const consoleErrors = captureConsoleErrors(page);
+    let preloadFetches = 0;
+    await page.route('**/api/learner/media/**', async (route) => {
+      if (route.request().resourceType() === 'fetch') {
+        preloadFetches += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: 'text/plain',
+          body: 'not-audio',
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await startAttempt(page, baseURL, fixtures);
+    await gotoQuestion(page, 1);
+    await expect
+      .poll(() => preloadFetches, { timeout: 30_000 })
+      .toBeGreaterThan(0);
+    const audio = page.locator('audio');
+    await expect(audio).not.toHaveAttribute('src', /^blob:/u);
+    await expect(audio).toHaveAttribute(
+      'src',
+      /\/api\/learner\/media\/\d+\/content/u,
+    );
+    await page.getByRole('button', { name: 'Phát' }).click();
+    await expect
+      .poll(() => audio.evaluate((el) => (el as HTMLAudioElement).ended), {
+        timeout: 90_000,
+        intervals: [250],
+      })
+      .toBe(true);
+    await expect(page.getByRole('button', { name: 'Đã nghe' })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expectClean(page, 'case-16', consoleErrors, cspConsole);
   });
 
   test('9. the quit dialog keeps working: stay, then leave to the intro with a resume card', async ({

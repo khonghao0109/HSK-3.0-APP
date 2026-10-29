@@ -29,7 +29,10 @@ export function buildContentSecurityPolicy(
     `style-src 'self' 'nonce-${nonce}'${development ? " 'unsafe-inline'" : ''}`,
     "img-src 'self' data:",
     "font-src 'self'",
-    "media-src 'self'",
+    // R12 (M4.2b, TL-149): audio tải trước thành Blob rồi phát qua blob: URL.
+    // Blob chỉ sinh từ byte fetch same-origin qua BFF; vẫn cấm https:,
+    // wildcard và origin storage.
+    "media-src 'self' blob:",
     "connect-src 'self'",
   ].join('; ');
 }
