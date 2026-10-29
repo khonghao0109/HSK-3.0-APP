@@ -66,6 +66,7 @@ describe('ExamStartButton', () => {
     vi.stubGlobal('fetch', fetchMock);
     router.replace.mockClear();
     router.refresh.mockClear();
+    router.push.mockClear();
   });
 
   afterEach(() => {
@@ -84,7 +85,25 @@ describe('ExamStartButton', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ idempotencyKey: 'key-1' }),
     });
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith('/learn/exam/attempts/77'),
+    );
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a refresh when the start response has no attempt id', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(200, {
+        success: true,
+        data: { status: 'in_progress', expiresAt: '2026-10-27T03:20:00.000Z' },
+      }),
+    );
+    renderButton();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thi' }));
+
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('sends one request for a double click and disables the button', async () => {
@@ -105,7 +124,9 @@ describe('ExamStartButton', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(button).toBeDisabled());
     resolve?.(okResponse());
-    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith('/learn/exam/attempts/77'),
+    );
   });
 
   it('reuses the key after a network error', async () => {

@@ -241,7 +241,8 @@ describe('LearnerExamIntroPage', () => {
       screen.getByText('Đã làm 0/3 câu · hết giờ lúc 10:20'),
     ).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Bắt đầu thi' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Làm tiếp' })).toBeDefined();
+    const resume = screen.getByRole('link', { name: 'Làm tiếp' });
+    expect(resume.getAttribute('href')).toBe('/learn/exam/attempts/77');
   });
 });
 

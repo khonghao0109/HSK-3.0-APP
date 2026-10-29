@@ -74,10 +74,14 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/dictionary\?query=[^&#]+$/,
   /^\/api\/v1\/dictionary\/words\/\d+$/,
   /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
-  // M4.2a (TL-118): exam intro + start. The attempt detail route is not part
-  // of Pha B, so it stays out of the allowlist on purpose.
+  // M4.2a (TL-118): exam intro + start. M4.2b Pha B (TL-134) adds the four
+  // attempt routes; the question key is the snapshot key `q<number>` only.
   /^\/api\/v1\/exam\/tests\/\d+$/,
   /^\/api\/v1\/exam\/tests\/\d+\/attempts$/,
+  /^\/api\/v1\/exam\/attempts\/\d+$/,
+  /^\/api\/v1\/exam\/attempts\/\d+\/media-grants$/,
+  /^\/api\/v1\/exam\/attempts\/\d+\/answers$/,
+  /^\/api\/v1\/exam\/attempts\/\d+\/answers\/q\d+$/,
 ];
 
 /**

@@ -929,4 +929,44 @@ describe('server-only backend client', () => {
       }
     });
   });
+
+  it('allowlists the four exam attempt routes and rejects path variants (M4.2b, TL-134)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/exam/attempts/41', { token: 't' });
+    await client.request('/api/v1/exam/attempts/41/media-grants', {
+      token: 't',
+    });
+    await client.request('/api/v1/exam/attempts/41/answers', {
+      token: 't',
+      method: 'PUT',
+      body: { items: [] },
+    });
+    await client.request('/api/v1/exam/attempts/41/answers/q12', {
+      token: 't',
+      method: 'PUT',
+      body: {},
+    });
+
+    for (const path of [
+      '/api/v1/exam/attempts/41?x=1',
+      '/api/v1/exam/attempts/41/x',
+      '/api/v1/exam/attempts/41/answers/x1',
+      '/api/v1/exam/attempts/41/answers/q12/x',
+      '/api/v1/exam/attempts/41/media-grants?x=1',
+      '/api/v1/exam/attempts/abc',
+    ]) {
+      await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
 });

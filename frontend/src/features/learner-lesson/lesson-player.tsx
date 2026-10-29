@@ -64,7 +64,7 @@ function Icon({ name, className }: { name: string; className?: string }) {
   );
 }
 
-function ChoiceText({ text }: { text: string }) {
+export function ChoiceText({ text }: { text: string }) {
   return hasHan(text) ? (
     <span className="cn" lang="zh-Hans">
       {text}
@@ -747,7 +747,7 @@ export function LessonPlayer({
   );
 }
 
-function ArrangeSentence({
+export function ArrangeSentence({
   prompt,
   tokens,
   tokenIds,
@@ -846,13 +846,15 @@ function ArrangeSentence({
   );
 }
 
-function FillBlank({
+export function FillBlank({
   prompt,
   text,
   locked,
   headingRef,
   onChange,
   onKeyDown,
+  maxLength = FILL_BLANK_MAX_LENGTH,
+  onBlur,
 }: {
   prompt: string;
   text: string;
@@ -860,6 +862,9 @@ function FillBlank({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onChange: (text: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  /** The exam passes 200; the lesson keeps its own larger bound. */
+  maxLength?: number;
+  onBlur?: () => void;
 }) {
   const [before, after] = splitBlank(prompt);
   const filled = text.trim();
@@ -880,7 +885,7 @@ function FillBlank({
           id="fb-input"
           type="text"
           value={text}
-          maxLength={FILL_BLANK_MAX_LENGTH}
+          maxLength={maxLength}
           autoComplete="off"
           autoCapitalize="off"
           autoCorrect="off"
@@ -888,6 +893,7 @@ function FillBlank({
           readOnly={locked}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
+          onBlur={onBlur}
         />
       </div>
     </>

@@ -115,6 +115,42 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
           </symbol>
+          {/* 2b-5 V12: wifi-off (feather, cùng bộ với mockup
+              web/state-offline.html) cho banner mất kết nối. */}
+          <symbol id="i-wifi-off" viewBox="0 0 24 24">
+            <path d="M1 1l22 22" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+            <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <path d="M12 20h.01" />
+          </symbol>
+          {/* M4.2b Pha B: four icons copied from the mockup sets
+              (docs/ui_reference/shared/js/icons-ux-b.js `stopwatch`,
+              `bookmark-fill`; icons.js `volume`; `bookmark` is the same
+              silhouette as bookmark-fill without the fill, matching the
+              outline style of this sprite). */}
+          <symbol id="i-stopwatch" viewBox="0 0 24 24">
+            <path d="M10 2h4" />
+            <path d="m12 14 3-3" />
+            <circle cx="12" cy="14" r="8" />
+          </symbol>
+          <symbol id="i-bookmark" viewBox="0 0 24 24">
+            <path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" />
+          </symbol>
+          <symbol id="i-bookmark-fill" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              stroke="none"
+              d="M6 3h12a1 1 0 0 1 1 1v18l-7-4-7 4V4a1 1 0 0 1 1-1Z"
+            />
+          </symbol>
+          <symbol id="i-volume" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M11 5 6 9H2v6h4l5 4Z" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M19 5a10 10 0 0 1 0 14" />
+          </symbol>
           <symbol id="i-heart" viewBox="0 0 24 24">
             <path d="M19.5 12.6 12 20l-7.5-7.4A4.9 4.9 0 0 1 12 6.1a4.9 4.9 0 0 1 7.5 6.5Z" />
           </symbol>

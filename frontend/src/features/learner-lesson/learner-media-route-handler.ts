@@ -46,7 +46,7 @@ const backendAccessSchema = backendEnvelope(
 );
 
 /** `expires` and `signature`, each exactly once and nothing else, or null. */
-function readGrant(
+export function readGrant(
   params: URLSearchParams,
 ): { expires: string; signature: string } | null {
   const entries = [...params];
@@ -60,7 +60,7 @@ function readGrant(
 }
 
 /** Positive safe integer id, as the backend pipe accepts. */
-function isMediaId(rawId: string): boolean {
+export function isMediaId(rawId: string): boolean {
   return MEDIA_ID_PATTERN.test(rawId) && Number.isSafeInteger(Number(rawId));
 }
 

@@ -3418,3 +3418,667 @@
     padding: var(--sp-8) var(--sp-6);
   }
 }
+
+/* M4.2b Pha B — exam take, two columns ≥1024 (TL-143). */
+@media (min-width: 1024px) {
+  .learner-app .ex.ext .ext-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--sp-4);
+    max-width: 1200px;
+    align-items: start;
+  }
+
+  .learner-app .ex.ext .ext-panel {
+    display: block;
+    position: sticky;
+    top: 84px;
+    margin-top: 0;
+  }
+
+  .learner-app .ex.ext .ext-count.tk__count {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-question {
+    padding: var(--sp-4);
+  }
+
+  .learner-app .ex.ext .uxb-fine {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .learner-app .ex.ext .ext-foot {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Q124: the ≥1024 layout shows the footer and panel submits; the last
+     question keeps the mobile submit in the navigation row instead. */
+  .learner-app .ex.ext .ext-foot .uxa-submit,
+  .learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+    display: inline-flex;
+  }
+
+  .learner-app .ex.ext .ext-qnav__submit {
+    display: none;
+  }
+}
+
+/* M4.2b 2b-3 (F16-F20, F23): exam-take wireframe from web/exam-take.html,
+   matched by measurement. All rules are scoped to the exam page. */
+@media (min-width: 1024px) {
+  .learner-app .ex.ext {
+    color: var(--text-body);
+  }
+
+  /* 2b-6: wrapper .ext-bar__row trong suốt trên web — các con tham gia
+     flex của chính .ext-bar, giữ nguyên từng pixel layout F18. */
+  .learner-app .ex.ext .ext-bar__row {
+    display: contents;
+  }
+
+  /* F18: 72px sticky bar — X, title+progress, timer, count, saved. */
+  .learner-app .ex.ext .ext-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    height: 72px;
+    padding: 0 40px;
+    gap: 24px;
+    background: var(--white);
+    color: var(--text-body);
+  }
+
+  .learner-app .ex.ext .ext-bar .icon-btn {
+    min-width: 48px;
+    min-height: 48px;
+    color: var(--text-strong);
+  }
+
+  .learner-app .ex.ext .ext-bar__main {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .learner-app .ex.ext .ext-bar__title {
+    flex: none;
+    max-width: 45%;
+    color: var(--text-strong);
+    font-size: 1.125rem;
+    text-align: left;
+  }
+
+  /* W8/F17: slate track, jade fill. */
+  .learner-app .ex.ext .ext-progress {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--slate-200);
+  }
+
+  .learner-app .ex.ext .ext-progress::-webkit-progress-bar {
+    background: var(--slate-200);
+    border-radius: 999px;
+  }
+
+  .learner-app .ex.ext .ext-progress::-webkit-progress-value {
+    background: var(--jade-600);
+    border-radius: 999px;
+  }
+
+  .learner-app .ex.ext .ext-progress::-moz-progress-bar {
+    background: var(--jade-600);
+    border-radius: 999px;
+  }
+
+  .learner-app .ex.ext .ext-status {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
+    max-width: none;
+    margin-inline: 0;
+    height: auto;
+    padding: 0;
+  }
+
+  .learner-app .ex.ext .ext-timer {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--sand-300);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--text-strong);
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .ex.ext .ext-timer.is-low {
+    color: var(--cinnabar-700);
+    border-color: var(--cinnabar-600);
+    background: var(--white);
+  }
+
+  .learner-app .ex.ext .ext-count {
+    display: block;
+    color: var(--text-strong);
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  .learner-app .ex.ext .ext-count-btn {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-saved {
+    color: var(--jade-800);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  /* W1: 1040px centred column — 656 card + 24 gap + 360 panel. */
+  .learner-app .ex.ext .ext-main {
+    background: transparent;
+  }
+
+  .learner-app .ex.ext .ext-body {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    max-width: 1120px;
+    /* M3: khe đáy = footer sticky (~80px) + 16px thở — khi cuộn, ô lưới
+       cuối không nằm dưới footer (đo bằng check che khuất measure4). */
+    padding: 32px 40px var(--exam-foot-clearance);
+  }
+
+  .learner-app .ex.ext .ext-question {
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--sand-300);
+    border-radius: 16px;
+    background: var(--white);
+  }
+
+  .learner-app .ex.ext .ext-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* W2: boxed, centred, jade, uppercase eyebrow. */
+  .learner-app .ex.ext .uxb-part,
+  .learner-app .ex.ext .tk-part {
+    padding: 12px 16px;
+    border: 1px solid var(--sand-300);
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--jade-800);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  /* W3: sans prompt ~22px. */
+  .learner-app .ex.ext .uxb-qask,
+  .learner-app .ex.ext .tk-qask {
+    margin: 4px 0 0;
+    color: var(--text-strong);
+    font-family: var(--font-sans);
+    font-size: 1.375rem;
+    font-weight: 700;
+  }
+
+  .learner-app .ex.ext .ext-content {
+    font-family: var(--font-sans);
+  }
+
+  /* W3/W4: audio block — speed pill row (Q123) above play+wave+clock. */
+  .learner-app .ex.ext .ext-live {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    color: var(--jade-800);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .learner-app .ex.ext .ext-audio {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'speed'
+      'player';
+    row-gap: 12px;
+    margin: 12px 0;
+  }
+
+  .learner-app .ex.ext .ext-audio .ext-speed {
+    grid-area: speed;
+    flex-wrap: nowrap;
+  }
+
+  /* U5: hộp player — play 64 trái, wave giữa, thời gian dưới wave (U12). */
+  .learner-app .ex.ext .ext-player {
+    grid-area: player;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      'play wave'
+      'play clock';
+    column-gap: 16px;
+    row-gap: 8px;
+    align-items: center;
+    padding: 16px 20px;
+  }
+
+  .learner-app .ex.ext .ext-audio audio {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-audio .uxb-seg {
+    padding: 4px;
+    border-color: var(--sand-300);
+    background: var(--cream-100);
+  }
+
+  .learner-app .ex.ext .ext-audio .uxb-note {
+    color: var(--stone-600);
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .ex.ext .uxb-seg__btn {
+    min-width: 66px;
+    min-height: 44px;
+    color: var(--stone-700);
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .ex.ext .uxb-seg__btn.is-on {
+    background: var(--jade-800);
+    border-color: var(--jade-800);
+    color: var(--white);
+  }
+
+  .learner-app .ex.ext .uxb-play {
+    grid-area: play;
+    justify-self: start;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--jade-800);
+  }
+
+  .learner-app .ex.ext .uxb-play .icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .learner-app .ex.ext .pq-wave {
+    grid-area: wave;
+    height: 44px;
+    gap: 0;
+    justify-content: space-between;
+  }
+
+  .learner-app .ex.ext .pq-wave > i {
+    flex: none;
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    background: var(--sand-400);
+  }
+
+  .learner-app .ex.ext .pq-wave > i:nth-child(odd) {
+    height: 8px;
+  }
+
+  .learner-app .ex.ext .pq-wave > i.is-played {
+    background: var(--jade-600);
+  }
+
+  .learner-app .ex.ext .ext-audioclock {
+    grid-area: clock;
+    display: flex;
+    justify-content: space-between;
+    color: var(--stone-600);
+    font-size: 0.875rem;
+  }
+
+  /* U12: web hiển thị hai đầu MM:SS, không có dấu "/". */
+  .learner-app .ex.ext .ext-clocksep {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-audio .ext-error {
+    grid-column: 1 / -1;
+  }
+
+  /* W5: 64px option cards, 36px badge, jade-50 when selected. */
+  .learner-app .ex.ext .uxb-opts {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .learner-app .ex.ext .uxb-opt {
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 20px;
+    border: 1px solid var(--sand-300);
+    border-radius: 16px;
+    background: var(--white);
+    color: var(--text-body);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .learner-app .ex.ext .uxb-opt__radio {
+    display: none;
+  }
+
+  .learner-app .ex.ext .uxb-opt__key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--sand-400);
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--text-body);
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .learner-app .ex.ext .uxb-opt__key::after {
+    content: none;
+  }
+
+  .learner-app .ex.ext .uxb-opt[aria-checked='true'] {
+    border-color: var(--jade-700);
+    background: var(--jade-50);
+    color: var(--jade-800);
+  }
+
+  .learner-app .ex.ext .uxb-opt[aria-checked='true'] .uxb-opt__key {
+    border-color: var(--jade-800);
+    background: var(--jade-800);
+    color: var(--white);
+  }
+
+  /* W6: nav inside the card, hairline on top, content-wide buttons. */
+  .learner-app .ex.ext .ext-qnav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sand-300);
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn {
+    min-height: 48px;
+    height: 48px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn[aria-pressed] {
+    padding: 0 14px;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn--outline {
+    color: var(--text-strong);
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn[aria-pressed] {
+    justify-self: auto;
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn--primary {
+    justify-self: auto;
+  }
+
+  /* W7: panel — badge pill, bookmark legend, jade done cells, block submit. */
+  .learner-app .ex.ext .ext-panel {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    position: sticky;
+    top: 96px;
+    margin-top: 0;
+    padding: 24px;
+    border-color: var(--sand-300);
+    border-radius: 16px;
+  }
+
+  .learner-app .ex.ext .uxb-takepanel__head {
+    display: flex;
+  }
+
+  .learner-app .ex.ext .uxb-takepanel__head h2 {
+    font-size: 1.125rem;
+  }
+
+  .learner-app .ex.ext .uxb-countbadge {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .learner-app .ex.ext .uxb-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin: 10px 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--stone-600);
+  }
+
+  .learner-app .ex.ext .uxb-legend__dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .learner-app .ex.ext .uxb-qgrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .learner-app .ex.ext .uxb-qcell {
+    aspect-ratio: 1;
+    min-height: 44px;
+    height: auto;
+  }
+
+  .learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 0;
+    background: var(--jade-800);
+    border-color: var(--jade-800);
+    font-size: 1rem;
+  }
+
+  /* W1/F23: sticky footer, centred 1040 row. */
+  .learner-app .ex.ext .ext-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 16px 40px;
+    background: var(--white);
+    border-top: 1px solid var(--sand-300);
+  }
+
+  .learner-app .ex.ext .ext-foot__row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .learner-app .ex.ext .uxb-fine {
+    flex: 1 1 auto;
+    max-width: none;
+    margin: 0 auto 0 0;
+    color: var(--stone-600);
+    font-size: 0.8125rem;
+  }
+
+  .learner-app .ex.ext .uxa-submit {
+    display: inline-flex;
+    min-height: 48px;
+    padding: 0 24px;
+    font-size: 1rem;
+  }
+
+  .learner-app .ex.ext .ext-qnav__submit {
+    display: none;
+  }
+}
+
+/* M4.2b 2b-4 (U1-U13): các sửa đổi theo ảnh TL duyệt. */
+@media (min-width: 1024px) {
+  /* U1: chip trạng thái phát cạnh prompt, có icon loa như mockup. */
+  .learner-app .ex.ext .ext-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .learner-app .ex.ext .ext-live .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* U13: chữ trong option web = 1.25rem (ux-b.css:265 .uxb-opt__text) —
+     áp cho cả chữ Hán lẫn Latin vì mockup đo ở phần tử chứa chữ. */
+  .learner-app .ex.ext .uxb-opt__text {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  /* U8: legend web — bookmark outline amber, dot trơn không icon. */
+  .learner-app .ex.ext .uxb-legend__flag--fill {
+    display: none;
+  }
+
+  .learner-app .ex.ext .uxb-legend__dot .icon {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-panelrule {
+    display: none;
+  }
+
+  /* U11/V5: banner = đúng khung lưới card+panel ở MỌI viewport ≥1024:
+     1440 → 1040 giữa (x200); 1024 → 944 (x40). Không hardcode một mốc. */
+  .learner-app .ex.ext .ext-offline,
+  .learner-app .ex.ext .ext-locked {
+    box-sizing: border-box;
+    width: calc(100% - 80px);
+    max-width: 1040px;
+    margin: 16px auto 0;
+  }
+
+  /* U10: cụm timer/count/saved trên header không nền, không padding thừa. */
+  .learner-app .ex.ext .ext-status {
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* U5/U1 web: play 64px, wave 44px — thắng các rule mobile .ext-player. */
+  .learner-app .ex.ext .ext-player .uxb-play {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    border-radius: 50%;
+    background: var(--jade-800);
+  }
+
+  .learner-app .ex.ext .ext-player .uxb-play .icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .learner-app .ex.ext .ext-player .pq-wave {
+    height: 44px;
+  }
+
+  .learner-app .ex.ext .ext-player .pq-wave > i {
+    width: 4px;
+    height: 20px;
+  }
+
+  .learner-app .ex.ext .ext-player .pq-wave > i:nth-child(odd) {
+    height: 8px;
+  }
+
+  /* U8: legend web một dòng, icon bookmark outline 12px. */
+  .learner-app .ex.ext .uxb-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 0;
+  }
+
+  .learner-app .ex.ext .uxb-legend__dot {
+    margin-right: 0;
+  }
+
+  .learner-app .ex.ext .uxb-legend__flag {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    color: var(--amber-500);
+    fill: var(--amber-500);
+  }
+
+  /* V1: rule ẩn bản fill phải đứng SAU (cùng specificity với rule hiện). */
+  .learner-app .ex.ext .uxb-legend__flag--fill {
+    display: none;
+  }
+
+  /* V15: legend → lưới 22px như mockup (margin 10 + gap 12 của panel;
+     base .uxb-qgrid margin-bottom 8px chỉ dành cho mobile). */
+  .learner-app .ex.ext .uxb-qgrid {
+    margin-bottom: 0;
+  }
+
+  /* V11: đáy toast ≥ 12px trên đỉnh footer sticky (~92px). */
+  .learner-app:has(.ex.ext) .toast-region {
+    bottom: 104px;
+  }
+}

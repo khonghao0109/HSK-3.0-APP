@@ -60,6 +60,24 @@
   --alert-error-border: #f6c9c4;
   --alert-info-text: #1a4fae;
 
+  /* M4.2b 2b-3: exam-take palette, values measured from mockup m04/ux-b.
+     (--text-strong đã có sẵn ở khối token chung = var(--navy-900).) */
+  --exam-sel-bg: #e2efda;
+  --exam-sel-border: #93c69c;
+  --exam-radio: #2e9a50;
+  --exam-green-text: #1d7d3c;
+  --exam-ink: #10131f;
+  --exam-line: #ddd9d1;
+  --exam-radio-border: #c4c3be;
+  --exam-line-soft: #e6e0d6;
+  --exam-opt-bg: #fefbf5;
+  --exam-player-bg: #fefcf8;
+  --exam-legend-todo: #eceae6;
+  --exam-legend-todo-line: #c9c4bb;
+  /* M3: khe đáy vùng nội dung web để ô lưới cuối không chui dưới footer
+     sticky giữa chừng cuộn (đo bằng check che khuất của measure4). */
+  --exam-foot-clearance: 96px;
+
   --logo-google-blue: #4285f4;
   --logo-google-green: #34a853;
   --logo-google-yellow: #fbbc05;
@@ -5606,4 +5624,1615 @@ html:has(.learner-app) {
    this file) sets the display of the web parts back. */
 .learner-app .w-only {
   display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   M4.2b Pha B — trang làm bài thi (TL-143). Scope `.ex.ext`; token lấy từ
+   theme kem của learner.css. Web 2 cột nằm ở learner-web.css.
+   --------------------------------------------------------------------------- */
+.learner-app .ex.ext {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--cream-50);
+  color: var(--ink-900);
+}
+
+/* F28: the island keeps header/main/footer as siblings; main carries the
+   banners plus the exam body without changing the column layout. */
+.learner-app .ex.ext .ext-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.learner-app .ext-bar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--cream-50);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.learner-app .ext-bar__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.learner-app .ext-progress {
+  width: 96px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--cream-100);
+  overflow: hidden;
+}
+
+.learner-app .ext-progress > i {
+  display: block;
+  height: 100%;
+  background: var(--jade-700);
+}
+
+.learner-app .ext-count {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.learner-app .ext-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--cream-100);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.learner-app .ext-timer.is-low {
+  color: var(--cinnabar-600);
+  background: color-mix(in srgb, var(--cinnabar-600) 12%, var(--cream-50));
+}
+
+.learner-app .ext-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-700);
+  white-space: nowrap;
+}
+
+.learner-app .ext-body {
+  flex: 1;
+  width: 100%;
+  max-width: var(--learner-max);
+  margin: 0 auto;
+  padding: var(--sp-3);
+}
+
+.learner-app .ext-question {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: var(--sp-3);
+}
+
+.learner-app .ext-count.tk__count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--cream-50);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.learner-app .ext-content {
+  margin: var(--sp-2) 0;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.learner-app .ext-audio {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+}
+
+.learner-app .uxb-seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: var(--cream-50);
+  width: fit-content;
+}
+
+.learner-app .uxb-seg__btn {
+  min-width: 44px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Q123: the speed control is a real 44 px touch target in the exam. */
+.learner-app .ex.ext .uxb-seg__btn {
+  min-height: 44px;
+}
+
+.learner-app .uxb-seg__btn.is-on {
+  background: var(--jade-700);
+  color: var(--white);
+}
+
+.learner-app .uxb-seg__btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.learner-app .ext .pq-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+}
+
+.learner-app .ext .pq-wave > i {
+  flex: 1;
+  min-width: 2px;
+  height: 40%;
+  border-radius: 2px;
+  background: var(--border-default);
+}
+
+.learner-app .ext .pq-wave > i.is-played {
+  background: var(--jade-700);
+}
+
+.learner-app .ext-audioclock {
+  margin: 0;
+  color: var(--ink-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.learner-app .uxb-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--jade-700);
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.learner-app .uxb-play[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.learner-app .ext-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: var(--sp-2) auto;
+  border-radius: 12px;
+}
+
+.learner-app .ext-answer {
+  margin-top: var(--sp-2);
+}
+
+.learner-app .ext-qnav {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.learner-app .ext-qnav .btn {
+  min-height: 44px;
+}
+
+.learner-app .ext-qnav__placeholder {
+  display: block;
+  min-height: 44px;
+}
+
+.learner-app .ext-offline,
+.learner-app .ext-locked {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 var(--sp-3) var(--sp-2);
+  padding: var(--sp-2);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cinnabar-600) 10%, var(--cream-50));
+  border: 1px solid color-mix(in srgb, var(--cinnabar-600) 35%, transparent);
+}
+
+.learner-app .ext-locked {
+  display: block;
+  font-weight: 600;
+}
+
+.learner-app .ext-error {
+  margin: 4px 0;
+  color: var(--cinnabar-600);
+  font-size: 0.875rem;
+}
+
+.learner-app .ext-panel {
+  display: none;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--white);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+}
+
+.learner-app .ext-panel.is-open {
+  display: block;
+}
+
+.learner-app .uxb-takepanel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.learner-app .uxb-takepanel__head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.learner-app .uxb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--ink-700);
+}
+
+.learner-app .uxb-legend__dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 3px;
+  border: 1px solid var(--border-default);
+}
+
+.learner-app .uxb-legend__dot.is-done {
+  background: var(--jade-700);
+  border-color: var(--jade-700);
+}
+
+.learner-app .uxb-legend__dot.is-flag {
+  background: var(--cinnabar-600);
+  border-color: var(--cinnabar-600);
+}
+
+.learner-app .uxb-qgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  margin-bottom: var(--sp-2);
+}
+
+.learner-app .uxb-qcell {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--cream-50);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.learner-app .uxb-qcell.is-done {
+  background: color-mix(in srgb, var(--jade-700) 14%, var(--white));
+  border-color: var(--jade-700);
+}
+
+.learner-app .uxb-qcell.is-flag {
+  border-color: var(--cinnabar-600);
+  box-shadow: inset 0 -3px 0 var(--cinnabar-600);
+}
+
+.learner-app .uxb-qcell[aria-current='step'] {
+  outline: 2px solid var(--jade-700);
+  outline-offset: 1px;
+}
+
+.learner-app .uxb-takefoot__submit,
+.learner-app .uxa-submit {
+  min-height: 44px;
+}
+
+/* Q124: footer submit is web-only; the panel submit is ≥1024; the last
+   question carries the mobile submit in the navigation row. */
+.learner-app .ex.ext .ext-foot .uxa-submit,
+.learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+  display: none;
+}
+
+.learner-app .ext-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-4);
+}
+
+.learner-app .uxb-fine {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: 0.8125rem;
+}
+
+.learner-app .ext-dialog {
+  max-width: min(440px, calc(100vw - 32px));
+  padding: var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  background: var(--cream-50);
+  color: var(--ink-900);
+}
+
+.learner-app .ext-dialog::backdrop {
+  background: rgb(11 28 70 / 0.45);
+}
+
+.learner-app .ext-dialog h2 {
+  margin: 0 0 var(--sp-2);
+  font-size: 1.25rem;
+}
+
+.learner-app .ext-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.learner-app .ext-dialog .btn--danger {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  /* AA contrast with white text (Q42): cinnabar-700, not 600. */
+  background: var(--cinnabar-700);
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+}
+
+.learner-app .ext-note {
+  margin: 0;
+  color: var(--ink-700);
+}
+
+.learner-app .ext-nf__body {
+  max-width: var(--learner-max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-3);
+  text-align: center;
+}
+
+.learner-app .ext-nf__title {
+  font-size: 1.5rem;
+}
+
+.learner-app .ext-nf__text {
+  color: var(--ink-700);
+}
+
+/* F16: exam answer options (mockup .uxb-opt / .tk-opt). */
+.learner-app .ext .uxb-opts,
+.learner-app .ext .tk-opts {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-app .ext .uxb-opt,
+.learner-app .ext .tk-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink-900);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.learner-app .ext .uxb-opt__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.learner-app .ext .uxb-opt[aria-checked='true'],
+.learner-app .ext .tk-opt[aria-checked='true'] {
+  border-color: var(--jade-700);
+  background: color-mix(in srgb, var(--jade-700) 10%, var(--white));
+  box-shadow: inset 0 0 0 1px var(--jade-700);
+}
+
+.learner-app .ext .uxb-opt[aria-checked='true'] .uxb-opt__key {
+  border-color: var(--jade-700);
+  background: var(--jade-700);
+  color: var(--white);
+}
+
+.learner-app .ext .uxb-opt[aria-disabled='true'],
+.learner-app .ext .tk-opt[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* F16: eyebrow kicker + question line, matching the mockup's eyebrow rule. */
+.learner-app .ext .uxb-part,
+.learner-app .ext .tk-part {
+  margin: 0 0 6px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-700);
+}
+
+.learner-app .ext .uxb-qask,
+.learner-app .ext .tk-qask {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+/* F24: speed note outside the segmented group. */
+.learner-app .ext .uxb-note {
+  font-size: 0.8125rem;
+  color: var(--ink-700);
+}
+
+/* F21: question navigation keeps 44 px targets and wraps at 320. */
+.learner-app .ext .ext-qnav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.learner-app .ext .ext-qnav .btn {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+}
+
+/* M4.2b 2b-3 (F16-F20, F23): exam-take layout matched to the mockups by
+   measurement (/tmp measure.mjs). Base = mobile (<1024); the ≥1024 wireframe
+   lives in learner-web.css. */
+
+/* Base text colour follows the mockups: ink-900 on mobile, text-body on web. */
+.learner-app .ex.ext {
+  color: var(--ink-900);
+}
+
+/* M1 (2b-3, cấu trúc 2b-6): bar = wrapper .ext-bar__row (navy, X+title) +
+   hàng trạng thái; layout chi tiết nằm ở khối 2b-6 cuối file (≤519),
+   root-grid 520–1023 và learner-web.css (≥1024). */
+.learner-app .ex.ext .ext-bar .icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--white);
+}
+
+.learner-app .ex.ext .ext-bar__main {
+  display: block;
+  min-width: 0;
+}
+
+.learner-app .ex.ext .ext-bar__title {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 1.125rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-app .ex.ext .ext-progress {
+  display: none;
+}
+
+/* M2/F19: status row under the bar — timer, N/M, saved. */
+.learner-app .ex.ext .ext-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  /* <1024 hàng cao đúng 30px như m04 .tk__status (rule 2b-8 cuối file);
+     con cao hơn (nút N/M 44px, timer 33px) tràn xuống như mockup. */
+  min-height: 30px;
+  margin: 0 -6px;
+  padding: 0 12px;
+  background: var(--cream-50);
+  color: var(--ink-900);
+}
+
+.learner-app .ex.ext .ext-timer {
+  justify-self: start;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--navy-900);
+  font-size: 1.375rem;
+}
+
+.learner-app .ex.ext .ext-timer .icon {
+  width: 23px;
+  height: 23px;
+}
+
+.learner-app .ex.ext .ext-timer.is-low {
+  color: var(--cinnabar-600);
+  background: transparent;
+}
+
+.learner-app .ex.ext .ext-count {
+  display: none;
+}
+
+.learner-app .ex.ext .ext-count-btn {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 2px;
+  justify-self: center;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--sand-300);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--navy-900);
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.learner-app .ex.ext .ext-count-btn .icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+}
+
+.learner-app .ex.ext .ext-saved {
+  justify-self: end;
+  margin-left: 0;
+  color: var(--exam-green-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* F20: <520 panel collapses and stacks before the card; 520-1023 it is a
+   permanent narrow right column without a head (m04.css:200-240). */
+.learner-app .ex.ext .ext-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 0 12px 24px;
+}
+
+@media (max-width: 519px) {
+  .learner-app .ex.ext .ext-panel {
+    order: -1;
+    margin-top: 0;
+  }
+
+  .learner-app .ex.ext .uxb-qcell {
+    border-radius: 5px;
+  }
+}
+
+@media (min-width: 520px) and (max-width: 1023px) {
+  /* M7: mockup centres the exam layout in a ~536px frame at 768. */
+  .learner-app .ex.ext .ext-body,
+  .learner-app .ex.ext .ext-foot {
+    max-width: 536px;
+    margin-inline: auto;
+  }
+
+  /* V6 (2b-6): lưới gốc 2 cột như m04 .tk__layout — 'status panel' rồi
+     'question panel'; bar/main/body mở phẳng bằng display:contents nên
+     panel span từ hàng status mà KHÔNG cần margin âm hay số bù chiều cao.
+     Web ≥1024 không đổi pixel (media này không chạm). */
+  .learner-app .ex.ext {
+    display: grid;
+    /* 4 cột: gutter trái | cột card | cột panel | gutter phải — bar span
+       cả 4 (full shell), banner span 2 cột nội dung, KHÔNG cần margin âm.
+       align-content:start + hàng cuối 1fr: min-height 100dvh của root không
+       bị chia đều vào các hàng auto (làm status/panel trôi xuống). */
+    grid-template-columns: 12px minmax(0, 1fr) 8.5rem 12px;
+    column-gap: 12px;
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      'bar bar bar bar'
+      '. banner banner .'
+      '. status panel .'
+      '. question panel .';
+    align-items: start;
+    align-content: start;
+    /* bằng padding-bottom cũ của .ext-body (24px) — body là display:contents. */
+    padding-bottom: 24px;
+  }
+
+  .learner-app .ex.ext .ext-bar,
+  .learner-app .ex.ext .ext-main,
+  .learner-app .ex.ext .ext-body {
+    display: contents;
+  }
+
+  .learner-app .ex.ext .ext-bar__row {
+    grid-area: bar;
+  }
+
+  .learner-app .ex.ext .ext-status {
+    grid-area: status;
+  }
+
+  .learner-app .ex.ext .ext-offline,
+  .learner-app .ex.ext .ext-locked {
+    grid-area: banner;
+  }
+
+  .learner-app .ex.ext .ext-question {
+    grid-area: question;
+    margin-top: 12px;
+  }
+
+  .learner-app .ex.ext .ext-panel {
+    display: block;
+    position: static;
+    grid-area: panel;
+    align-self: start;
+    order: 0;
+    padding: 12px 7px 10px 11px;
+    border-radius: 12px;
+  }
+
+  .learner-app .ex.ext .ext-count-btn {
+    justify-self: center;
+    min-height: 0;
+    height: auto;
+    padding: 1px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    line-height: 1;
+  }
+
+  .learner-app .ex.ext .ext-count-btn .icon {
+    display: none;
+  }
+
+  .learner-app .ex.ext .uxb-takepanel__head {
+    display: none;
+  }
+
+  .learner-app .ex.ext .uxb-qgrid {
+    grid-template-columns: repeat(4, minmax(24px, 1fr));
+    gap: 5px;
+  }
+
+  .learner-app .ex.ext .uxb-qcell {
+    min-width: 24px;
+    min-height: 24px;
+    height: 24px;
+    border-radius: 5px;
+    font-size: 0.875rem;
+  }
+}
+
+/* M3: card, part heading, prompt. */
+.learner-app .ex.ext .ext-question {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.learner-app .ex.ext .ext-card {
+  padding: 14px 13px 8px;
+  border: 1px solid var(--exam-line-soft);
+  border-radius: 14px 14px 8px 8px;
+  background: var(--white);
+}
+
+.learner-app .ex.ext .uxb-part,
+.learner-app .ex.ext .tk-part {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.learner-app .ex.ext .uxb-qask,
+.learner-app .ex.ext .tk-qask {
+  margin: 8px 0 0;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+/* W3: prompt row — question text left, "Đang phát" chip right (web). */
+.learner-app .ex.ext .ext-qhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* U1: chip trạng thái phát cạnh prompt ở MỌI viewport (m04 .tk-card__live:
+   0.76rem/500 xanh lá; web override jade-800 700 trong learner-web.css). */
+.learner-app .ex.ext .ext-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--exam-green-text);
+  font-size: 0.76rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.learner-app .ex.ext .ext-live .icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* M3/F16 options: radio dot + "A." row, green when selected. */
+.learner-app .ex.ext .uxb-opts {
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.learner-app .ex.ext .uxb-opt {
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--exam-line);
+  border-radius: 8px;
+  background: var(--exam-opt-bg);
+  color: var(--exam-ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.learner-app .ex.ext .uxb-opt__radio {
+  display: inline-block;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--exam-radio-border);
+  border-radius: 50%;
+  background: var(--white);
+}
+
+.learner-app .ex.ext .uxb-opt[aria-checked='true'] {
+  border-color: var(--exam-sel-border);
+  background: var(--exam-sel-bg);
+  box-shadow: none;
+}
+
+.learner-app .ex.ext .uxb-opt[aria-checked='true'] .uxb-opt__radio {
+  border: 4px solid var(--exam-radio);
+  box-shadow: 0 0 0 1px var(--exam-sel-border);
+}
+
+.learner-app .ex.ext .uxb-opt__key {
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.learner-app .ex.ext .uxb-opt__key::after {
+  content: '.';
+}
+
+.learner-app .ex.ext .uxb-opt[aria-checked='true'] .uxb-opt__key {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+/* M4: nav row outside the card, pill buttons, no line breaks at 390. */
+.learner-app .ex.ext .ext-qnav {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.learner-app .ex.ext .ext-qnav .btn {
+  min-height: 44px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.learner-app .ex.ext .ext-qnav .btn--outline {
+  border-color: var(--sand-300);
+  background: var(--white);
+  color: var(--ink-900);
+}
+
+.learner-app .ex.ext .ext-qnav .btn {
+  justify-content: center;
+}
+
+.learner-app .ex.ext .ext-qnav .btn--outline:first-child {
+  justify-content: flex-start;
+}
+
+/* M5: the "Còn … phút" footer line is web-only. */
+.learner-app .ex.ext .ext-foot {
+  display: none;
+}
+
+/* M6: mobile panel — vertical legend, amber flag icon, divider, small cells. */
+.learner-app .ex.ext .ext-panel {
+  border-color: var(--exam-line-soft);
+  border-radius: 12px;
+}
+
+.learner-app .ex.ext .uxb-legend {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--stone-600);
+}
+
+.learner-app .ex.ext .uxb-legend__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+}
+
+.learner-app .ex.ext .uxb-legend li:last-child .uxb-legend__dot {
+  background: var(--orange-500);
+  border-color: var(--orange-500);
+}
+
+.learner-app .ex.ext .uxb-legend {
+  border-bottom: 1px solid var(--sand-300);
+  padding-bottom: 8px;
+}
+
+.learner-app .ex.ext .uxb-qgrid {
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+}
+
+/* Legend + cell state colours (web mockup values; shared with ≥1024). */
+.learner-app .ex.ext .uxb-legend__dot.is-done {
+  background: var(--jade-600);
+  border-color: var(--jade-600);
+}
+
+.learner-app .ex.ext .uxb-legend__dot.is-new {
+  background: var(--white);
+  border-color: var(--stone-500);
+}
+
+.learner-app .ex.ext .uxb-qcell {
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-900);
+  background: var(--white);
+  border-color: var(--sand-400);
+}
+
+.learner-app .ex.ext .uxb-qcell.is-done {
+  background: var(--jade-50);
+  border-color: var(--jade-200);
+  color: var(--jade-800);
+}
+
+.learner-app .ex.ext .uxb-qcell.is-flag {
+  border-color: var(--sand-400);
+  box-shadow: inset 0 0 0 2px var(--amber-500);
+}
+
+.learner-app .ex.ext .uxb-qcell[aria-current='step'] {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+  color: var(--white);
+  outline: none;
+}
+
+/* Q124/F23: mobile submit lives in the nav row; footer/panel submits are
+   web-only. */
+.learner-app .ex.ext .ext-qnav__submit {
+  min-height: 44px;
+}
+
+.learner-app .ex.ext .ext-foot .uxa-submit,
+.learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+  display: none;
+}
+
+/* Q42/Q74: primary actions use jade-800 for AA contrast. */
+.learner-app .ex.ext .btn--primary {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+}
+
+/* Q124: "Nộp bài" aria-disabled vẫn phải nhận click để báo toast — hoàn tác
+   pointer-events:none của rule .btn[aria-disabled] toàn cục (learner.css:463). */
+.learner-app .ex.ext .uxa-submit[aria-disabled='true'],
+.learner-app .ex.ext .uxb-takefoot__submit[aria-disabled='true'],
+.learner-app .ex.ext .ext-qnav__submit[aria-disabled='true'] {
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+/* Mockup mobile submits keep jade-600 (m04.css:225). */
+.learner-app .ex.ext .ext-qnav__submit,
+.learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+  background: var(--jade-600);
+  border-color: var(--jade-600);
+}
+
+/* AA contrast (Q42) for the play button and the selected speed on mobile too. */
+.learner-app .ex.ext .uxb-play {
+  background: var(--jade-800);
+}
+
+.learner-app .ex.ext .uxb-seg__btn.is-on {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+}
+
+/* W4: speed pill row (Q123 — before the play block) and wave bars. */
+.learner-app .ex.ext .ext-speed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.learner-app .ex.ext .uxb-seg__btn {
+  padding: 0 16px;
+}
+
+.learner-app .ex.ext .pq-wave {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+}
+
+.learner-app .ex.ext .pq-wave > i {
+  flex: none;
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--sand-400);
+}
+
+.learner-app .ex.ext .pq-wave > i:nth-child(4n + 1) {
+  height: 4px;
+}
+
+.learner-app .ex.ext .pq-wave > i:nth-child(4n + 2),
+.learner-app .ex.ext .pq-wave > i:nth-child(4n + 4) {
+  height: 20px;
+}
+
+.learner-app .ex.ext .pq-wave > i:nth-child(4n + 3) {
+  height: 12px;
+}
+
+.learner-app .ex.ext .pq-wave > i.is-played {
+  background: var(--jade-600);
+}
+
+/* M3: the question prompt hugs its text like the mockup head row. */
+.learner-app .ex.ext .uxb-qask,
+.learner-app .ex.ext .tk-qask {
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* M4.2b 2b-3 (đặt cuối để thắng rule base): cell radius 5px theo m04, tiêu
+   đề bar line-height 1.2, icon "Đã lưu" 19px. */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-qcell {
+    border-radius: 5px;
+  }
+
+  .learner-app .ex.ext .ext-bar__title {
+    line-height: 1.2;
+  }
+
+  .learner-app .ex.ext .ext-saved {
+    gap: 5px;
+  }
+
+  .learner-app .ex.ext .ext-saved .icon {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+/* M4.2b 2b-4 (U1-U13): sửa theo ảnh TL duyệt; base = mobile (<1024). */
+
+@media (max-width: 1023px) {
+  /* U2: card cách hàng trạng thái 12px (m04 .tk-card margin-top 0.75rem).
+     Có hiệu lực ở <520 (body là grid thật); 520–1023 body display:contents
+     nên khoảng cách do root-grid đảm nhiệm. */
+  .learner-app .ex.ext .ext-body {
+    padding-top: 12px;
+  }
+}
+
+/* U4: nội dung câu theo font mockup ở mọi viewport. */
+.learner-app .ex.ext .ext-content {
+  font-family: var(--font-sans);
+}
+
+.learner-app .ex.ext .ext-content.cn {
+  font-family: var(--font-cn);
+}
+
+/* U13/V2: chữ option mobile = 0.9375rem (m04.css:184 .tk-opt .cn) — chỉ
+   dưới 1024; web đo theo .uxb-opt__text 1.25rem trong learner-web.css. */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-opt .cn {
+    font-size: 0.9375rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+@media (max-width: 1023px) {
+  /* U5: hộp player mobile — play tròn nhỏ, wave giữa, MM:SS / MM:SS phải. */
+  .learner-app .ex.ext .ext-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 63px;
+    margin: 8px 0;
+    padding: 0 6px 0 11px;
+    border: 1px solid var(--exam-line-soft);
+    border-radius: 10px;
+    background: var(--exam-player-bg);
+  }
+
+  .learner-app .ex.ext .ext-player audio {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-player .uxb-play {
+    order: 1;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--jade-800);
+  }
+
+  .learner-app .ex.ext .ext-player .uxb-play .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .learner-app .ex.ext .ext-player .pq-wave {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 34px;
+  }
+
+  .learner-app .ex.ext .ext-player .ext-audioclock {
+    order: 3;
+    flex: none;
+    margin: 0;
+    color: var(--ink-900);
+    font-size: 0.68rem;
+    font-weight: 500;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* U8: legend mobile — dot "Đã làm" có tick trắng, "Đánh dấu" là bookmark
+     fill amber (m04.css:204-207); hr ngăn cách trước lưới. */
+  .learner-app .ex.ext .uxb-legend__dot.is-done {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .learner-app .ex.ext .uxb-legend__dot .icon {
+    width: 9px;
+    height: 9px;
+    color: var(--white);
+    stroke-width: 3.5;
+  }
+
+  .learner-app .ex.ext .uxb-legend__flag {
+    display: none;
+    width: 13px;
+    height: 13px;
+    margin-right: 4px;
+    color: var(--amber-500);
+    fill: var(--amber-500);
+  }
+
+  .learner-app .ex.ext .uxb-legend__flag--fill {
+    display: inline-block;
+  }
+
+  .learner-app .ex.ext .ext-panelrule {
+    margin: 8px 0;
+    border: 0;
+    height: 1px;
+    background: var(--exam-line-soft);
+  }
+}
+
+/* U7: panel mở <520 — không head, legend 3 cột ngang, ô 44px như mockup. */
+@media (max-width: 519px) {
+  .learner-app .ex.ext .uxb-takepanel__head {
+    display: none;
+  }
+
+  .learner-app .ex.ext .ext-panel {
+    padding: 12px;
+  }
+
+  .learner-app .ex.ext .uxb-legend {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    gap: 12px;
+  }
+
+  .learner-app .ex.ext .uxb-legend li {
+    margin-right: 0;
+  }
+
+  .learner-app .ex.ext .uxb-qgrid {
+    gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+  }
+
+  .learner-app .ex.ext .uxb-qcell {
+    height: 44px;
+    font-size: 0.9375rem;
+  }
+
+  /* V4 (TL): <520 panel mở có nút "Nộp bài" full-width, aria-disabled +
+     toast (Q124) — như mockup panel-open (.tk-panel__submit, m04:231). */
+  .learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
+    display: flex;
+    width: 100%;
+    margin-top: 12px;
+  }
+}
+
+/* U3: nav 520-1023 — ba nút vừa cột 480, không cắt chữ, không chồng. */
+@media (min-width: 520px) and (max-width: 1023px) {
+  .learner-app .ex.ext .ext-qnav {
+    gap: 6px;
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn {
+    gap: 4px;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+
+  .learner-app .ex.ext .ext-qnav .btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* U6: lưới panel 520-1023 — 4 cột, ô ≥24px, không tiêu đề (m04.css:209). */
+@media (min-width: 520px) and (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-takepanel__head {
+    display: none;
+  }
+
+  .learner-app .ex.ext .uxb-qgrid {
+    gap: 6px 5px;
+    grid-template-columns: repeat(4, minmax(24px, 1fr));
+  }
+
+  .learner-app .ex.ext .uxb-qcell {
+    height: 25px;
+    min-height: 25px;
+    padding: 0;
+    font-size: 0.8125rem;
+  }
+
+  .learner-app .ex.ext .uxb-legend {
+    gap: 5px;
+  }
+}
+
+/* U11: banner trong cột nội dung, card trắng giữa như uxd-state. */
+.learner-app .ex.ext .ext-offline,
+.learner-app .ex.ext .ext-locked {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 12px 12px 0;
+  padding: 16px 12px;
+  border: 1px solid var(--sand-300);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink-900);
+  text-align: center;
+}
+
+.learner-app .ex.ext .ext-offline > .icon {
+  box-sizing: content-box;
+  width: 28px;
+  height: 28px;
+  padding: 10px;
+  border-radius: 50%;
+  background: var(--red-100);
+  color: var(--alert-error-text);
+}
+
+.learner-app .ex.ext .ext-offline p,
+.learner-app .ex.ext .ext-locked p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.learner-app .ex.ext .ext-offline .btn--primary {
+  min-height: 44px;
+}
+
+/* m04 04-02: dot "Chưa làm" mobile nền xám ấm + viền trong (dùng token
+   --exam-legend-todo; web giữ dot trắng viền border-strong theo ux-b.css:553). */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-legend__dot.is-new {
+    background: var(--exam-legend-todo);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 1px var(--exam-legend-todo-line);
+  }
+}
+
+/* M4.2b 2b-5 (V1-V16). */
+
+/* V7: scrim dialog phải thấy rõ trên cả bar navy. */
+.learner-app .ex.ext .ext-dialog::backdrop {
+  background: rgb(7 20 48 / 0.62);
+}
+
+/* V11: exam không có tabbar — nâng toast khỏi mép dưới; web còn phải
+   trên footer sticky (learner-web.css đặt bottom: 104px). */
+.learner-app:has(.ex.ext) .toast-region {
+  bottom: 72px;
+}
+
+/* V13: prompt của fill_blank/arrange (h2.pr-q dùng chung với bài học)
+   phải cùng kiểu và cùng mép trái với dòng nội dung MCQ trong exam. */
+.learner-app .ex.ext .pr-q {
+  margin: var(--sp-2) 0;
+  padding-left: 0;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* V8: option bị khoá khi hết giờ — cùng kiểu disabled với nút "Đánh dấu"
+   (aria-disabled): xám như .btn toàn cục, không chỉ mờ nhẹ. */
+.learner-app .ex.ext .uxb-opt[aria-disabled='true'] {
+  background: var(--cream-100);
+  border-color: var(--sand-300);
+  color: var(--stone-500);
+  opacity: 0.6;
+}
+
+.learner-app .ex.ext .uxb-opt[aria-disabled='true'] .uxb-opt__radio {
+  border-color: var(--stone-500);
+}
+
+/* V9: "Chưa lưu" dùng màu cảnh báo + icon x-circle, khác xanh "Đã lưu". */
+.learner-app .ex.ext .ext-saved.is-unsaved {
+  color: var(--alert-error-text);
+}
+
+/* V14 (m04 213-221 + 04-02): ô lưới mobile tô đặc — chưa làm xám ấm,
+   đã làm jade-800 chữ trắng, đánh dấu amber chữ navy (contrast 8.1:1;
+   trắng trên amber chỉ 2.1:1), ô hiện tại navy-900 + halo navy-100. */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-qcell {
+    background: var(--exam-legend-todo);
+    border-color: var(--exam-legend-todo-line);
+    color: var(--ink-900);
+  }
+
+  .learner-app .ex.ext .uxb-qcell.is-done {
+    background: var(--jade-800);
+    border-color: var(--jade-800);
+    color: var(--white);
+  }
+
+  .learner-app .ex.ext .uxb-qcell.is-flag {
+    background: var(--amber-500);
+    border-color: var(--amber-500);
+    box-shadow: none;
+    color: var(--navy-900);
+  }
+
+  .learner-app .ex.ext .uxb-qcell[aria-current='step'] {
+    border-color: var(--navy-700);
+    box-shadow: 0 0 0 2px var(--navy-100);
+  }
+
+  /* Legend mobile đồng bộ màu ô lưới (m04 204-206 + 04-02). */
+  .learner-app .ex.ext .uxb-legend__dot.is-done {
+    background: var(--jade-800);
+    border-color: var(--jade-800);
+  }
+
+  .learner-app .ex.ext .uxb-legend li:last-child .uxb-legend__flag,
+  .learner-app .ex.ext .uxb-legend li:last-child .uxb-legend__flag--fill {
+    color: var(--amber-500);
+    fill: var(--amber-500);
+  }
+}
+
+/* V14: hr ngăn cách legend/lưới ở <1024 (m04 .tk-panel hr). */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .ext-panelrule {
+    margin: 2px 0 10px;
+  }
+}
+
+/* M4.2b 2b-6 (V3, V6, M1): bar <1024 = hàng navy 58px chỉ chứa X+title;
+   hàng trạng thái chuyển vào lưới .ext-body (như m04 .tk__layout) nên nền
+   navy không thể phủ lên nó. Không margin âm, không số bù chiều cao. */
+/* <520: header là lưới 2 hàng (row navy + status kem). Ở 520–1023 khối
+   root-grid đặt .ext-bar display:contents (rule đó phải thắng — nên khối
+   này BẮT BUỘC scope ≤519, không để unconditional ở cuối file). */
+@media (max-width: 519px) {
+  .learner-app .ex.ext .ext-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'row'
+      'status';
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  .learner-app .ex.ext .ext-bar__row {
+    grid-area: row;
+  }
+
+  .learner-app .ex.ext .ext-bar > .ext-status {
+    grid-area: status;
+  }
+}
+
+/* 2b-6 V3 (<1024): nền navy chỉ thuộc hàng X+title, cao 58px theo m04.
+   ≥1024 learner-web.css đặt .ext-bar__row display:contents (hàng biến mất,
+   X/title tham gia flex của bar như 2b-5). */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .ext-bar__row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    height: 58px;
+    padding: 0 6px;
+    background: var(--navy-900);
+    color: var(--white);
+  }
+
+  .learner-app .ex.ext .ext-bar__row > .icon-btn {
+    margin: 0;
+  }
+}
+
+.learner-app .ex.ext .ext-bar__main {
+  min-width: 0;
+  margin-top: 0;
+}
+
+/* <520: khe navy→hàng trạng thái 10px (m04: bar 58 → status 68); status là
+   hàng thứ hai của header (grid 'row'/'status'). */
+@media (max-width: 519px) {
+  .learner-app .ex.ext .ext-status {
+    margin: 10px 0 0;
+    padding: 0 12px 0 10px;
+    background: transparent;
+  }
+}
+
+/* M1 (TL): dưới 1024, ô câu hiện tại THẮNG trạng thái đã làm/đánh dấu —
+   hai biến thể kép (0,6,0) thắng is-done/is-flag (0,5,0); biến thể trần
+   (0,5,0) bằng specificity rule 2b-3 nhưng đứng cuối file nên thắng theo thứ tự. */
+@media (max-width: 1023px) {
+  .learner-app .ex.ext .uxb-qcell.is-done[aria-current='step'],
+  .learner-app .ex.ext .uxb-qcell.is-flag[aria-current='step'],
+  .learner-app .ex.ext .uxb-qcell[aria-current='step'] {
+    background: var(--navy-900);
+    border-color: var(--navy-700);
+    box-shadow: 0 0 0 2px var(--navy-100);
+    color: var(--white);
+  }
+}
+
+/* 2b-6 V6 (520–1023): status/panel cùng bắt đầu 10px dưới bar (m04: bar 58 →
+   status/panel 68); banner span đúng 2 cột nội dung. Đặt cuối file để thắng
+   các shorthand margin cũ (2b-4/2b-5) cùng specificity. */
+@media (min-width: 520px) and (max-width: 1023px) {
+  .learner-app .ex.ext .ext-status {
+    margin: 10px 0 0;
+    padding: 0 0 0 10px;
+    background: transparent;
+  }
+
+  .learner-app .ex.ext .ext-panel {
+    margin-top: 10px;
+  }
+
+  .learner-app .ex.ext .ext-offline,
+  .learner-app .ex.ext .ext-locked {
+    margin: 12px 0 0;
+  }
+}
+
+/* M4.2b 2b-7 (X1, X2) + điều kiện "chứa" <1024. */
+@media (max-width: 1023px) {
+  /* X1: .ext-audio là grid nhưng <1024 không khai báo cột → track auto lấy
+     max-content của .ext-player (play 34 + wave 134 + clock nowrap 72 + gap/
+     padding ≈ 279px) > bề rộng nội dung card (256px) → player tràn card 9.1px
+     và vạch sóng bị ép. Cột minmax(0,1fr) + min-width:0 chặn lại. */
+  .learner-app .ex.ext .ext-audio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learner-app .ex.ext .ext-audio > * {
+    min-width: 0;
+  }
+
+  /* Vạch sóng co theo chỗ còn lại: giữ đúng 2px khi đủ chỗ (390 như 2b-4),
+     co còn ~1.6px khi hẹp (768). Một hàng flex + gap 0 nên không thể đè lên
+     nhau; min-width 1px để 65 vạch luôn tách được. */
+  .learner-app .ex.ext .ext-player .pq-wave > i {
+    flex: 0 1 2px;
+    width: auto;
+    min-width: 1px;
+  }
+
+  /* 2b-8 (TL: mockup thắng): hàng cao đúng 30px như m04 .tk__status. Track
+     lưới auto vẫn lấy chiều cao con lớn nhất nên con căn giữa trong track đó
+     và tràn xuống dưới hộp 30px — đúng hình học m04 (timer 33px ở 768, nút
+     N/M 44px ở 390). Track max-content: timer có min-height:0 nên đóng góp
+     tối thiểu 0, track auto chỉ giãn tới 30px và timer bị căn lệch -1.5px;
+     m04 không đặt min-height nên track = 33px. */
+  .learner-app .ex.ext .ext-status {
+    height: 30px;
+    grid-template-rows: max-content;
+  }
+
+  /* X2: đúng MỘT đường kẻ giữa legend và lưới — bỏ viền dưới legend,
+     giữ hr (.ext-panelrule) như m04 .tk-panel hr. */
+  .learner-app .ex.ext .ext-panel .uxb-legend {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* M4.2b 2b-8 (<520): khung dọc theo m04 — bar 58 → status 68 (cao 30) → card.
+   Nút N/M 44px cùng top với hàng (align-self:start) và tràn xuống bằng chiều
+   cao thật; thân bài bắt đầu ngay dưới đáy nút (phần tràn = count − status)
+   nên nút không đè lên card/panel. */
+@media (max-width: 519px) {
+  .learner-app .ex.ext {
+    --ext-status-h: 30px;
+    --ext-count-h: 44px;
+  }
+
+  /* header là lưới 2 hàng (row/status): gap flex 8px của .ext-bar gốc thành
+     row-gap và đẩy status xuống 76 — khe navy→status chỉ do margin 10px. */
+  .learner-app .ex.ext .ext-bar {
+    gap: 0;
+  }
+
+  .learner-app .ex.ext .ext-status {
+    height: var(--ext-status-h);
+  }
+
+  .learner-app .ex.ext .ext-count-btn {
+    align-self: start;
+    min-height: var(--ext-count-h);
+    height: var(--ext-count-h);
+  }
+
+  .learner-app .ex.ext .ext-body {
+    padding-top: calc(var(--ext-count-h) - var(--ext-status-h));
+  }
+
+  /* C1 (TL 2c-b): banner (offline/hết giờ) là phần tử đầu .ext-main nên phải
+     dời xuống đúng bằng phần nút đếm tràn khỏi hàng trạng thái — cùng biểu
+     thức count − status của 2b-8, cùng kết quả với card ở state 1 (112). */
+  .learner-app .ex.ext .ext-locked,
+  .learner-app .ex.ext .ext-offline {
+    margin-top: calc(var(--ext-count-h) - var(--ext-status-h));
+  }
 }

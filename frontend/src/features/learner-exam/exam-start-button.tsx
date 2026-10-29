@@ -63,7 +63,22 @@ export function ExamStartButton({ testId }: { testId: number }) {
     setPending(false);
 
     if (response.ok) {
-      router.refresh();
+      // TL-140/Q126: a successful start goes straight to the attempt page; an
+      // unexpected payload falls back to the intro refresh.
+      const body: unknown = await response.json().catch(() => null);
+      const data =
+        typeof body === 'object' && body !== null
+          ? (body as { data?: unknown }).data
+          : null;
+      const id =
+        typeof data === 'object' && data !== null
+          ? (data as { id?: unknown }).id
+          : null;
+      if (typeof id === 'number' && Number.isInteger(id) && id > 0) {
+        router.push(`/learn/exam/attempts/${String(id)}`);
+      } else {
+        router.refresh();
+      }
       return;
     }
     if (response.status === 401) {

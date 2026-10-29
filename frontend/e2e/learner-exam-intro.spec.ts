@@ -275,6 +275,10 @@ test.describe('Learner exam intro (M4.2a / TL-120)', () => {
     await page.goto(`/learn/exam/${String(fixtures.publishedTestId)}`);
 
     await page.getByRole('button', { name: 'Bắt đầu thi' }).click();
+    // Q126/TL-140: a successful start opens the attempt page; coming back to
+    // the intro shows the in-progress card.
+    await expect(page).toHaveURL(/\/learn\/exam\/attempts\/\d+$/u);
+    await page.goto(`/learn/exam/${String(fixtures.publishedTestId)}`);
     await expect(page.getByText('Bài đang làm')).toBeVisible();
     await expect(
       page.getByText(
@@ -287,7 +291,7 @@ test.describe('Learner exam intro (M4.2a / TL-120)', () => {
     await expect(page.getByRole('button', { name: 'Bắt đầu thi' })).toHaveCount(
       0,
     );
-    await expect(page.getByRole('button', { name: 'Làm tiếp' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Làm tiếp' })).toBeVisible();
     await shot(page, testInfo, 'in-progress');
 
     await page.reload();

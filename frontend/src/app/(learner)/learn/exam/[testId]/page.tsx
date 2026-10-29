@@ -15,8 +15,6 @@ import {
 } from '@/features/learner-exam/exam-intro-service';
 import { levelLabel } from '@/features/learner-home/level-label';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
-import { ToastButton } from '@/features/learner-shell/learner-toast';
-import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
 export const metadata: Metadata = {
@@ -215,15 +213,15 @@ export default async function LearnerExamIntroPage({
                 {expiryTime(activeAttempt.expiresAt)}
               </p>
             </div>
-            <ToastButton
+            <Link
               className="btn btn--outline exi-resume__cta"
-              message={TOAST_COMING_SOON}
+              href={`/learn/exam/attempts/${String(activeAttempt.id)}`}
             >
               Làm tiếp
               <svg className="icon" aria-hidden="true">
                 <use href="#i-arrow-right" />
               </svg>
-            </ToastButton>
+            </Link>
           </section>
         ) : null}
 

@@ -12,6 +12,7 @@ import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
 import { examStartBackendSchema, examStartInputSchema } from './exam-contract';
 
+/** M4.2b Pha B (TL-134) uses the same dependency shape for the attempt routes. */
 export type ExamHandlerDependencies = {
   appOrigin: string;
   learnerCookieName: string;
@@ -20,7 +21,7 @@ export type ExamHandlerDependencies = {
     path: string,
     options?: {
       token?: string;
-      method?: 'GET' | 'POST';
+      method?: 'GET' | 'POST' | 'PUT';
       body?: unknown;
     },
   ) => Promise<unknown>;
