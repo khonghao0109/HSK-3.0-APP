@@ -5,6 +5,7 @@ import {
   examAnswerSaveLimit,
   examAttemptLimit,
   examAttemptReadLimit,
+  examAttemptSubmitLimit,
   examMediaGrantLimit,
 } from '../../exam/exam.controller';
 import { MediaController } from '../../media/media.controller';
@@ -60,8 +61,22 @@ describe('learner route limits', () => {
 
   it('resolves the M4.2b exam answer limits under both environments (TL-130)', () => {
     const expected = [
-      { nodeEnv: 'production', save: 240, batch: 60, read: 60, grants: 30 },
-      { nodeEnv: 'test', save: 1_000, batch: 60, read: 60, grants: 30 },
+      {
+        nodeEnv: 'production',
+        save: 240,
+        batch: 60,
+        read: 60,
+        grants: 30,
+        submit: 10,
+      },
+      {
+        nodeEnv: 'test',
+        save: 1_000,
+        batch: 60,
+        read: 60,
+        grants: 30,
+        submit: 1_000,
+      },
     ];
     for (const row of expected) {
       withNodeEnv(row.nodeEnv, () => {
@@ -69,6 +84,7 @@ describe('learner route limits', () => {
         expect(examAnswerBatchLimit()).toBe(row.batch);
         expect(examAttemptReadLimit()).toBe(row.read);
         expect(examMediaGrantLimit()).toBe(row.grants);
+        expect(examAttemptSubmitLimit()).toBe(row.submit);
       });
     }
   });
@@ -115,6 +131,12 @@ describe('learner route limits', () => {
       ExamController.prototype,
       'getMediaGrants',
       examMediaGrantLimit,
+    ],
+    [
+      'ExamController.submitAttempt',
+      ExamController.prototype,
+      'submitAttempt',
+      examAttemptSubmitLimit,
     ],
     [
       'MediaController.getContent',

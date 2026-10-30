@@ -81,6 +81,17 @@ type ExamAttemptBody = {
   answers: unknown[];
 };
 
+type ExamSubmitBody = {
+  id: number;
+  status: string;
+  submittedAt: string;
+  serverNow: string;
+  answeredCount: number;
+  unansweredCount: number;
+  flaggedCount: number;
+  replayed: boolean;
+};
+
 type ExamIntroBody = {
   id: number;
   title: string;
@@ -2429,6 +2440,612 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       idempotencyKey: newKey(),
     }).expect(200);
     expectNoForbiddenKeys(saved.body);
+  });
+
+  function submit(
+    attemptId: number,
+    token: string,
+    idempotencyKey: string = newKey(),
+  ) {
+    return post(`/exam/attempts/${String(attemptId)}/submit`, token).send({
+      idempotencyKey,
+    });
+  }
+
+  it('35. submits an in-progress attempt once and reports the aggregate counts (TL-150/TL-151)', async () => {
+    const fixture = await fourTypeAttempt('submit-basic');
+    await saveAnswer(fixture.token, fixture.attemptId, 'q1', {
+      answer: { choice: 'a' },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(200);
+    const data = response.body.data as ExamSubmitBody;
+    expect(data).toMatchObject({
+      id: fixture.attemptId,
+      status: 'submitted',
+      answeredCount: 1,
+      unansweredCount: 3,
+      flaggedCount: 0,
+      replayed: false,
+    });
+    expect(Number.isFinite(Date.parse(data.submittedAt))).toBe(true);
+    expect(Number.isFinite(Date.parse(data.serverNow))).toBe(true);
+    expectNoStore(response);
+    expectNoForbiddenKeys(response.body);
+
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: {
+        status: true,
+        submittedAt: true,
+        remainingSeconds: true,
+      },
+    });
+    expect(attempt.status).toBe('submitted');
+    expect(attempt.submittedAt).not.toBeNull();
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: {
+          attemptId: fixture.attemptId,
+          type: { in: ['submitted', 'timed_out'] },
+        },
+      }),
+    ).toBe(1);
+    // The submit path writes no answer, score or result.
+    expect(
+      await prisma.examAnswer.count({
+        where: { attemptId: fixture.attemptId },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'autosaved' },
+      }),
+    ).toBe(1);
+  });
+
+  it('36. replays the same submit key without a second transition or event (TL-151 step 2)', async () => {
+    const fixture = await fourTypeAttempt('submit-replay');
+    await saveAnswer(fixture.token, fixture.attemptId, 'q1', {
+      answer: { choice: 'a' },
+      isFlagged: true,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+
+    const key = newKey();
+    const first = await submit(fixture.attemptId, fixture.token, key).expect(
+      200,
+    );
+    const firstData = first.body.data as ExamSubmitBody;
+    const submittedAt = (
+      await prisma.examAttempt.findUniqueOrThrow({
+        where: { id: fixture.attemptId },
+        select: { submittedAt: true },
+      })
+    ).submittedAt;
+
+    const second = await submit(fixture.attemptId, fixture.token, key).expect(
+      200,
+    );
+    const secondData = second.body.data as ExamSubmitBody;
+    expect(secondData).toMatchObject({
+      replayed: true,
+      submittedAt: firstData.submittedAt,
+      answeredCount: firstData.answeredCount,
+      unansweredCount: firstData.unansweredCount,
+      flaggedCount: firstData.flaggedCount,
+    });
+    expectNoForbiddenKeys(second.body);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(1);
+    expect(
+      (
+        await prisma.examAttempt.findUniqueOrThrow({
+          where: { id: fixture.attemptId },
+          select: { submittedAt: true },
+        })
+      ).submittedAt,
+    ).toEqual(submittedAt);
+  });
+
+  it('37. maps a timed-out attempt to CLOSED and a second submit to ALREADY_SUBMITTED', async () => {
+    const timedOut = await fourTypeAttempt('submit-timed-out');
+    await prisma.examAttempt.update({
+      where: { id: timedOut.attemptId },
+      data: { status: 'timed_out', submittedAt: new Date() },
+    });
+    const closed = await submit(
+      timedOut.attemptId,
+      timedOut.token,
+      newKey(),
+    ).expect(409);
+    expect(closed.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'timed_out' },
+    });
+
+    const submitted = await fourTypeAttempt('submit-second-key');
+    await submit(submitted.attemptId, submitted.token, newKey()).expect(200);
+    const again = await submit(
+      submitted.attemptId,
+      submitted.token,
+      newKey(),
+    ).expect(409);
+    expect(again.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_ALREADY_SUBMITTED',
+      details: { status: 'submitted' },
+    });
+    expectNoForbiddenKeys(again.body);
+  });
+
+  it('38. two concurrent submits with different keys write exactly one terminal event', async () => {
+    const fixture = await fourTypeAttempt('submit-race');
+    const firstKey = newKey();
+    const secondKey = newKey();
+    const [first, second] = await Promise.all([
+      submit(fixture.attemptId, fixture.token, firstKey),
+      submit(fixture.attemptId, fixture.token, secondKey),
+    ]);
+    expect([first.status, second.status].sort()).toEqual([200, 409]);
+
+    const mismatch = [first, second].find(
+      (response) => response.status === 409,
+    );
+    const code = (mismatch?.body.error as { code?: string } | undefined)?.code;
+    expect(code).toBe('EXAM_ATTEMPT_ALREADY_SUBMITTED');
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: {
+          attemptId: fixture.attemptId,
+          type: { in: ['submitted', 'timed_out'] },
+        },
+      }),
+    ).toBe(1);
+    expect(
+      (
+        await prisma.examAttempt.findUniqueOrThrow({
+          where: { id: fixture.attemptId },
+          select: { status: true },
+        })
+      ).status,
+    ).toBe('submitted');
+  });
+
+  it('39. a submit racing the lazy timeout leaves exactly one terminal state', async () => {
+    const fixture = await fourTypeAttempt('submit-vs-timeout');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const [submitted, read] = await Promise.all([
+      submit(fixture.attemptId, fixture.token, newKey()),
+      get(`/exam/attempts/${String(fixture.attemptId)}`, fixture.token),
+    ]);
+    expect(read.status).toBe(200);
+    expect(submitted.status).toBe(409);
+    const code = (submitted.body.error as { code?: string }).code;
+    expect(['EXAM_ATTEMPT_EXPIRED', 'EXAM_ATTEMPT_CLOSED']).toContain(code);
+
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { status: true },
+    });
+    expect(attempt.status).toBe('timed_out');
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(0);
+  });
+
+  it('40. a submit past the grace window closes the attempt with expired_on_submit', async () => {
+    const fixture = await fourTypeAttempt('submit-expired');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(409);
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_EXPIRED',
+    });
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: {
+        status: true,
+        submittedAt: true,
+        expiresAt: true,
+        remainingSeconds: true,
+      },
+    });
+    expect(attempt.status).toBe('timed_out');
+    expect(attempt.remainingSeconds).toBe(0);
+    expect(attempt.submittedAt?.getTime()).toBe(attempt.expiresAt.getTime());
+    expect(
+      await prisma.examAttemptEvent.findMany({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+        select: { metadata: true },
+      }),
+    ).toEqual([{ metadata: { reason: 'expired_on_submit' } }]);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(0);
+  });
+
+  it('41. a submit inside the grace window is a normal submitted attempt (Q133)', async () => {
+    const fixture = await fourTypeAttempt('submit-grace');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 2_000),
+      },
+    });
+
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(200);
+    expect((response.body.data as ExamSubmitBody).status).toBe('submitted');
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { status: true, remainingSeconds: true },
+    });
+    expect(attempt.status).toBe('submitted');
+    expect(attempt.remainingSeconds).toBe(0);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+      }),
+    ).toBe(0);
+  });
+
+  it("42. hides another learner's or an unknown attempt behind 404", async () => {
+    const fixture = await fourTypeAttempt('submit-not-found');
+    const foreign = await submit(
+      fixture.attemptId,
+      otherToken,
+      newKey(),
+    ).expect(404);
+    expect(foreign.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+    const unknown = await submit(2_147_000_000, fixture.token, newKey()).expect(
+      404,
+    );
+    expect(unknown.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+  });
+
+  it('43. maps an invalidated attempt to EXAM_ATTEMPT_CLOSED', async () => {
+    const fixture = await fourTypeAttempt('submit-invalidated');
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        status: 'invalidated',
+        invalidatedReason: 'operator repair',
+      },
+    });
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(409);
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'invalidated' },
+    });
+  });
+
+  it('44. carries no forbidden key and no score/result in the submit body (R11/TL-150)', async () => {
+    const fixture = await fourTypeAttempt('submit-r11');
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(200);
+    expectNoForbiddenKeys(response.body);
+    const data = response.body.data as Record<string, unknown>;
+    expect(Object.keys(data).sort()).toEqual([
+      'answeredCount',
+      'flaggedCount',
+      'id',
+      'replayed',
+      'serverNow',
+      'status',
+      'submittedAt',
+      'unansweredCount',
+    ]);
+    expect(JSON.stringify(response.body)).not.toContain('score');
+  });
+
+  it('45. rejects a malformed or non-strict submit body with 400', async () => {
+    const fixture = await fourTypeAttempt('submit-body');
+    const missing = await post(
+      `/exam/attempts/${String(fixture.attemptId)}/submit`,
+      fixture.token,
+    )
+      .send({})
+      .expect(400);
+    expect(missing.body.error).toMatchObject({
+      code: 'REQUEST_VALIDATION_FAILED',
+    });
+
+    const badUuid = await post(
+      `/exam/attempts/${String(fixture.attemptId)}/submit`,
+      fixture.token,
+    )
+      .send({ idempotencyKey: 'not-a-uuid' })
+      .expect(400);
+    expect(badUuid.body.error).toMatchObject({
+      code: 'REQUEST_VALIDATION_FAILED',
+    });
+
+    for (const extra of [{ score: 100 }, { answers: [] }, { result: null }]) {
+      const response = await post(
+        `/exam/attempts/${String(fixture.attemptId)}/submit`,
+        fixture.token,
+      )
+        .send({ idempotencyKey: newKey(), ...extra })
+        .expect(400);
+      expect(response.body.error).toMatchObject({
+        code: 'REQUEST_VALIDATION_FAILED',
+      });
+    }
+    // None of the rejected bodies may have closed the attempt.
+    expect(
+      (
+        await prisma.examAttempt.findUniqueOrThrow({
+          where: { id: fixture.attemptId },
+          select: { status: true },
+        })
+      ).status,
+    ).toBe('in_progress');
+  });
+
+  it('46. the database rejects a second Result and a Result for an open attempt', async () => {
+    const fixture = await fourTypeAttempt('submit-result-integrity');
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+    const base = {
+      userId: fixture.userId,
+      testId: fixture.testId,
+      attemptId: fixture.attemptId,
+      score: 0,
+      scoringVersion: 'hsk-p0-v1',
+      detailJson: {},
+    };
+    const firstResult = await prisma.result.create({
+      data: base,
+      select: { id: true },
+    });
+    expect(firstResult.id).toBeGreaterThan(0);
+    const duplicate = await prisma.result.create({ data: base }).then(
+      () => null,
+      (error: unknown) => error as { code?: string },
+    );
+    expect(duplicate?.code).toBe('P2002');
+
+    const open = await fourTypeAttempt('submit-result-open');
+    const rejected = await prisma.result
+      .create({
+        data: {
+          userId: open.userId,
+          testId: open.testId,
+          attemptId: open.attemptId,
+          score: 0,
+          scoringVersion: 'hsk-p0-v1',
+          detailJson: {},
+        },
+      })
+      .then(
+        () => null,
+        (error: unknown) => error as Error & { code?: string },
+      );
+    expect(String(rejected?.message)).toContain(
+      'Result can only reference a submitted or timed-out ExamAttempt',
+    );
+  });
+
+  it('47. keeps the attempt closed for single saves, batches and media grants after submit', async () => {
+    const fixture = await fourTypeAttempt('submit-closed-ops');
+    await saveAnswer(fixture.token, fixture.attemptId, 'q1', {
+      answer: { choice: 'a' },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+    const before = await prisma.examAttemptEvent.count({
+      where: { attemptId: fixture.attemptId, type: 'autosaved' },
+    });
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const single = await saveAnswer(fixture.token, fixture.attemptId, 'q2', {
+      answer: { value: true },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(409);
+    expect(single.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'submitted' },
+    });
+
+    const batch = await put(
+      `/exam/attempts/${String(fixture.attemptId)}/answers`,
+      fixture.token,
+    )
+      .send({
+        items: [
+          {
+            questionKey: 'q2',
+            answer: { value: true },
+            isFlagged: false,
+            expectedVersion: null,
+            idempotencyKey: newKey(),
+          },
+        ],
+      })
+      .expect(409);
+    expect(batch.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'submitted' },
+    });
+
+    const grants = await get(
+      `/exam/attempts/${String(fixture.attemptId)}/media-grants`,
+      fixture.token,
+    ).expect(409);
+    expect(grants.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'submitted' },
+    });
+
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'autosaved' },
+      }),
+    ).toBe(before);
+    const answer = await prisma.examAnswer.findUniqueOrThrow({
+      where: {
+        attemptId_snapshotQuestionKey: {
+          attemptId: fixture.attemptId,
+          snapshotQuestionKey: 'q1',
+        },
+      },
+      select: { version: true },
+    });
+    expect(answer.version).toBe(1);
+  });
+
+  it('48. starts a fresh attempt after submit and reports no active attempt (Q120)', async () => {
+    const fixture = await fourTypeAttempt('submit-restart');
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const intro = await get(
+      `/exam/tests/${String(fixture.testId)}`,
+      fixture.token,
+    ).expect(200);
+    expect((intro.body.data as ExamIntroBody).activeAttempt).toBeNull();
+
+    const nextAttemptId = await startAttempt(fixture.token, fixture.testId);
+    expect(nextAttemptId).not.toBe(fixture.attemptId);
+    expect(
+      await prisma.examAttempt.count({
+        where: { userId: fixture.userId, testId: fixture.testId },
+      }),
+    ).toBe(2);
+  });
+
+  it('49. replays a committed submit key even after the grace window (TL-151 step 2)', async () => {
+    const fixture = await fourTypeAttempt('submit-replay-late');
+    const key = newKey();
+    await submit(fixture.attemptId, fixture.token, key).expect(200);
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const replayed = await submit(fixture.attemptId, fixture.token, key).expect(
+      200,
+    );
+    expect((replayed.body.data as ExamSubmitBody).replayed).toBe(true);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+      }),
+    ).toBe(0);
+    expect(
+      (
+        await prisma.examAttempt.findUniqueOrThrow({
+          where: { id: fixture.attemptId },
+          select: { status: true },
+        })
+      ).status,
+    ).toBe('submitted');
+  });
+
+  it('50. a submitted attempt reports zero remaining before and after its deadline (TL-152)', async () => {
+    const fixture = await fourTypeAttempt('submit-past-deadline');
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    // TL-152: the clock stops at submit, even with ~90 minutes left.
+    const beforeDeadline = await get(
+      `/exam/attempts/${String(fixture.attemptId)}`,
+      fixture.token,
+    ).expect(200);
+    const beforeBody = beforeDeadline.body.data as ExamAttemptBody;
+    expect(beforeBody.status).toBe('submitted');
+    expect(beforeBody.remainingSeconds).toBe(0);
+
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const read = await get(
+      `/exam/attempts/${String(fixture.attemptId)}`,
+      fixture.token,
+    ).expect(200);
+    const body = read.body.data as ExamAttemptBody;
+    expect(body.status).toBe('submitted');
+    expect(body.remainingSeconds).toBe(0);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+      }),
+    ).toBe(0);
   });
 
   function put(path: string, token?: string) {

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Header,
+  HttpCode,
   HttpStatus,
   Param,
   Post,
@@ -25,6 +26,7 @@ import {
   ExamAnswerSaveViewDto,
   ExamAttemptViewDto,
   ExamMediaGrantsDto,
+  ExamSubmitViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
 import {
@@ -32,6 +34,7 @@ import {
   SaveExamAnswersDto,
 } from './dto/save-exam-answer.dto';
 import { StartExamAttemptDto } from './dto/start-exam-attempt.dto';
+import { SubmitExamAttemptDto } from './dto/submit-exam-attempt.dto';
 import { ExamMediaGrantsService } from './exam-media-grants.service';
 import { ExamService } from './exam.service';
 
@@ -41,6 +44,7 @@ type AuthenticatedRequest = Request & {
 
 /** Learner write-route limit, matching the M2.4 exercise attempt route. */
 export const EXAM_ATTEMPT_LIMIT_PER_MINUTE = 60;
+export const EXAM_ATTEMPT_SUBMIT_LIMIT_PER_MINUTE = 10;
 
 /**
  * TL-130: autosave is chatty (one request per answered question) and only the
@@ -59,6 +63,10 @@ function testAwareLimit(limit: number): number {
 
 export function examAttemptLimit(): number {
   return testAwareLimit(EXAM_ATTEMPT_LIMIT_PER_MINUTE);
+}
+
+export function examAttemptSubmitLimit(): number {
+  return testAwareLimit(EXAM_ATTEMPT_SUBMIT_LIMIT_PER_MINUTE);
 }
 
 export function examAnswerSaveLimit(): number {
@@ -138,6 +146,25 @@ export class ExamController {
     @Param('attemptId', ParsePositiveSafeIntegerPipe) attemptId: number,
   ): Promise<ApiSuccessResponse<ExamAttemptViewDto>> {
     return this.examService.getAttemptView(request.user.id, attemptId);
+  }
+
+  @Post('attempts/:attemptId/submit')
+  // TL-150: submit is idempotent, so both the first call and a replay answer
+  // 200 (unlike start, which distinguishes 201 for a new resource).
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: examAttemptSubmitLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ExamSubmitViewDto)
+  submitAttempt(
+    @Req() request: AuthenticatedRequest,
+    @Param('attemptId', ParsePositiveSafeIntegerPipe) attemptId: number,
+    @Body() dto: SubmitExamAttemptDto,
+  ): Promise<ApiSuccessResponse<ExamSubmitViewDto>> {
+    return this.examService.submitAttempt(
+      request.user.id,
+      attemptId,
+      dto.idempotencyKey,
+    );
   }
 
   @Get('attempts/:attemptId/media-grants')

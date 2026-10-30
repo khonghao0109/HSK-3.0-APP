@@ -4,12 +4,13 @@ import { Prisma } from '@prisma/client';
 export type ExamTransactionOperation =
   | 'exam.start'
   | 'exam.answer.save'
-  | 'exam.attempt.read';
+  | 'exam.attempt.read'
+  | 'exam.submit';
 
-/** Operations that lock one `ExamAttempt` row (TL-125/TL-127). */
+/** Operations that lock one `ExamAttempt` row (TL-125/TL-127/TL-151). */
 export type ExamAttemptLockOperation = Extract<
   ExamTransactionOperation,
-  'exam.answer.save' | 'exam.attempt.read'
+  'exam.answer.save' | 'exam.attempt.read' | 'exam.submit'
 >;
 
 export type ExamStartCheckpoint = {
@@ -53,10 +54,24 @@ export type ExamAttemptReadCheckpoint = {
   transaction: Prisma.TransactionClient;
 };
 
+/**
+ * TL-151/TL-154: submit takes the attempt lock exactly like save/GET. The
+ * checkpoints exist so the concurrency harness can pause the real production
+ * transaction before/after the lock; runtime behaviour stays a no-op.
+ */
+export type ExamSubmitCheckpoint = {
+  operation: 'exam.submit';
+  phase: 'before_attempt_lock' | 'after_attempt_lock';
+  userId: number;
+  attemptId: number;
+  transaction: Prisma.TransactionClient;
+};
+
 export type ExamTransactionCheckpoint =
   | ExamStartCheckpoint
   | ExamAnswerSaveCheckpoint
-  | ExamAttemptReadCheckpoint;
+  | ExamAttemptReadCheckpoint
+  | ExamSubmitCheckpoint;
 
 /**
  * Production-path observation point for the learner -> Test -> Question ->

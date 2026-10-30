@@ -339,6 +339,26 @@ describe('exam serializers (R11 / TL-114)', () => {
       expect(view.status).toBe(ExamAttemptStatus.timed_out);
     });
 
+    it('reports zero remainingSeconds for a submitted attempt before its deadline (TL-152)', () => {
+      const { payload } = buildExamSnapshot(source(), FIXED_RANDOM_INT);
+      const view = toExamAttemptView({
+        attempt: {
+          id: 56,
+          testId: 7,
+          status: ExamAttemptStatus.submitted,
+          startedAt: new Date('2026-10-27T09:00:00.000Z'),
+          expiresAt: new Date('2026-10-27T10:30:00.000Z'),
+          maxScore: 200,
+        },
+        snapshot: { payload },
+        now: NOW,
+        answers: [],
+      });
+
+      expect(view.remainingSeconds).toBe(0);
+      expect(view.status).toBe(ExamAttemptStatus.submitted);
+    });
+
     it('maps stored answers through the same allow-list', () => {
       const { payload } = buildExamSnapshot(source(), FIXED_RANDOM_INT);
       const view = toExamAttemptView({

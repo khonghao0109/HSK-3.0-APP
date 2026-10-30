@@ -74,6 +74,25 @@ describe('markAttemptTimedOut', () => {
     ]);
   });
 
+  it('records the submit path reason when it owns the transition (TL-151)', async () => {
+    const { tx, events } = writer(1);
+
+    await expect(
+      markAttemptTimedOut(tx, { ...input, reason: 'expired_on_submit' }),
+    ).resolves.toBe(true);
+
+    expect(events).toEqual([
+      {
+        data: {
+          attemptId: 42,
+          type: 'timed_out',
+          metadata: { reason: 'expired_on_submit' },
+          occurredAt: input.occurredAt,
+        },
+      },
+    ]);
+  });
+
   it('writes nothing when the attempt is already closed', async () => {
     const { tx, updates, events } = writer(0);
 

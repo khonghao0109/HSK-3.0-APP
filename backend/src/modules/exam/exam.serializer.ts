@@ -1,6 +1,6 @@
 import {
+  ExamAttemptStatus,
   QuestionType,
-  type ExamAttemptStatus,
   type Prisma,
   type Skill,
 } from '@prisma/client';
@@ -131,7 +131,13 @@ export function toExamAttemptView(
     startedAt: attempt.startedAt,
     expiresAt: attempt.expiresAt,
     serverNow: now,
-    remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+    // TL-152: a closed attempt has no running clock, even if the learner
+    // submitted before its deadline. The client uses `status` to lock the
+    // screen; a positive remaining time would contradict that.
+    remainingSeconds:
+      attempt.status === ExamAttemptStatus.in_progress
+        ? remainingSeconds(attempt.expiresAt, now)
+        : 0,
     maxScore: attempt.maxScore ?? payload.test.maxScore,
     questionCount: questions.length,
     test: {

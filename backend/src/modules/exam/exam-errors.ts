@@ -23,6 +23,7 @@ export const EXAM_ERROR_CODES = {
   answerVersionConflict: 'EXAM_ANSWER_VERSION_CONFLICT',
   attemptExpired: 'EXAM_ATTEMPT_EXPIRED',
   attemptClosed: 'EXAM_ATTEMPT_CLOSED',
+  attemptAlreadySubmitted: 'EXAM_ATTEMPT_ALREADY_SUBMITTED',
 } as const;
 
 export const EXAM_REASONS_LIMIT = 20;
@@ -121,5 +122,18 @@ export function examAttemptClosed(
     code: EXAM_ERROR_CODES.attemptClosed,
     message: 'Exam attempt is no longer in progress.',
     status,
+  });
+}
+
+/**
+ * TL-151: a different submit key arrived for an attempt that is already
+ * `submitted`. It is distinct from `EXAM_ATTEMPT_CLOSED` so a second tab can
+ * treat the outcome as "already done" instead of a failed action.
+ */
+export function examAttemptAlreadySubmitted(): ConflictException {
+  return new ConflictException({
+    code: EXAM_ERROR_CODES.attemptAlreadySubmitted,
+    message: 'Exam attempt was already submitted.',
+    status: 'submitted',
   });
 }

@@ -6950,6 +6950,76 @@
         ]
       }
     },
+    "/api/v1/exam/attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "ExamController_submitAttempt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitExamAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamSubmitViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/exam/attempts/{attemptId}/media-grants": {
       "get": {
         "operationId": "ExamController_getMediaGrants",
@@ -12205,6 +12275,67 @@
         ]
       },
       "StartExamAttemptDto": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "ExamSubmitViewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "submitted",
+              "timed_out",
+              "invalidated"
+            ]
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "serverNow": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Server clock at response time; the client never trusts its own clock."
+          },
+          "answeredCount": {
+            "type": "number"
+          },
+          "unansweredCount": {
+            "type": "number"
+          },
+          "flaggedCount": {
+            "type": "number"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "True when this request replayed a previously committed submit key."
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "submittedAt",
+          "serverNow",
+          "answeredCount",
+          "unansweredCount",
+          "flaggedCount",
+          "replayed"
+        ]
+      },
+      "SubmitExamAttemptDto": {
         "type": "object",
         "properties": {
           "idempotencyKey": {

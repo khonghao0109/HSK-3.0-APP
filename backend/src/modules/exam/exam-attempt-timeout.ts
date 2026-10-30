@@ -11,7 +11,8 @@ import { ExamAttemptStatus } from '@prisma/client';
 export type AttemptTimeoutReason =
   | 'expired_on_start'
   | 'expired_on_save'
-  | 'expired_on_read';
+  | 'expired_on_read'
+  | 'expired_on_submit';
 
 export type AttemptTimeoutWriter = {
   examAttempt: {

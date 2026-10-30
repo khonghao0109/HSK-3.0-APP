@@ -205,3 +205,20 @@ export class ExamTestIntroDto {
   /** Only an in-progress attempt that has not expired (Q120/TL-112). */
   activeAttempt!: ExamTestActiveAttemptDto | null;
 }
+
+/**
+ * TL-150: the 200 body of `POST /exam/attempts/:attemptId/submit`. Counts are
+ * aggregate numbers only; no answer content, score or result is returned.
+ */
+export class ExamSubmitViewDto {
+  id!: number;
+  status!: ExamAttemptStatus;
+  submittedAt!: Date;
+  /** Server clock at response time; the client never trusts its own clock. */
+  serverNow!: Date;
+  answeredCount!: number;
+  unansweredCount!: number;
+  flaggedCount!: number;
+  /** True when this request replayed a previously committed submit key. */
+  replayed!: boolean;
+}

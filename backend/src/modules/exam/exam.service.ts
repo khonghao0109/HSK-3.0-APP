@@ -17,6 +17,7 @@ import {
   ExamAnswerBatchViewDto,
   ExamAnswerSaveViewDto,
   ExamAttemptViewDto,
+  ExamSubmitViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
 import {
@@ -33,6 +34,7 @@ import {
   EXAM_ERROR_CODES,
   examAnswerInvalid,
   examAnswerVersionConflict,
+  examAttemptAlreadySubmitted,
   examAttemptClosed,
   examAttemptExpired,
   examAttemptNotFound,
@@ -172,6 +174,7 @@ const EXAM_ATTEMPT_SELECT = {
   status: true,
   startedAt: true,
   expiresAt: true,
+  submittedAt: true,
   maxScore: true,
 } satisfies Prisma.ExamAttemptSelect;
 
@@ -251,6 +254,36 @@ type StartAttemptResult = {
   created: boolean;
   data: ExamAttemptViewDto;
 };
+
+type SubmitCounts = {
+  answeredCount: number;
+  unansweredCount: number;
+  flaggedCount: number;
+};
+
+/**
+ * TL-151: every branch of the submit transaction is a value, not an exception.
+ * The lazy-timeout branch must commit, so the service maps these to HTTP errors
+ * only after the transaction resolves.
+ */
+type AttemptSubmitResult =
+  | { kind: 'not_found' }
+  | { kind: 'key_reused' }
+  | { kind: 'already_submitted' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | { kind: 'expired' }
+  | {
+      kind: 'submitted';
+      attempt: LockedAttempt;
+      now: Date;
+      counts: SubmitCounts;
+    }
+  | {
+      kind: 'replayed';
+      attempt: LockedAttempt;
+      now: Date;
+      counts: SubmitCounts;
+    };
 
 @Injectable()
 export class ExamService {
@@ -370,6 +403,63 @@ export class ExamService {
     );
     if (result.kind === 'not_found') throw examAttemptNotFound();
     return { success: true, data: result.view };
+  }
+
+  /**
+   * TL-150/TL-151: close the attempt exactly once. The idempotency key is the
+   * same kind of replay ledger as autosave: the `(attemptId, idempotencyKey)`
+   * unique row on `ExamAttemptEvent` is claimed inside the transaction that
+   * flips the status, so two concurrent submits cannot both win.
+   */
+  async submitAttempt(
+    userId: number,
+    attemptId: number,
+    idempotencyKey: string,
+  ): Promise<ApiSuccessResponse<ExamSubmitViewDto>> {
+    let result: AttemptSubmitResult;
+    try {
+      result = await this.prisma.$transaction((tx) =>
+        this.submitAttemptInTransaction(tx, userId, attemptId, idempotencyKey),
+      );
+    } catch (error: unknown) {
+      // TL-151: a unique conflict can only come from a writer that bypassed the
+      // attempt lock. The whole transaction rolled back, so re-running it once
+      // reads the committed winner (replay or status) instead of a 500.
+      if (classifyExamPersistenceError(error) !== 'unique_conflict') {
+        throw error;
+      }
+      result = await this.prisma.$transaction((tx) =>
+        this.submitAttemptInTransaction(tx, userId, attemptId, idempotencyKey),
+      );
+    }
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'key_reused':
+        throw examIdempotencyKeyReused();
+      case 'already_submitted':
+        throw examAttemptAlreadySubmitted();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'expired':
+        throw examAttemptExpired();
+      case 'submitted':
+      case 'replayed':
+        return {
+          success: true,
+          data: {
+            id: result.attempt.id,
+            status: ExamAttemptStatus.submitted,
+            submittedAt: result.attempt.submittedAt ?? result.now,
+            serverNow: result.now,
+            answeredCount: result.counts.answeredCount,
+            unansweredCount: result.counts.unansweredCount,
+            flaggedCount: result.counts.flaggedCount,
+            replayed: result.kind === 'replayed',
+          },
+        };
+    }
   }
 
   /** TL-121: save one answer (create, update or idempotent replay). */
@@ -806,6 +896,116 @@ export class ExamService {
   }
 
   /**
+   * TL-151: the submit state machine. Order matters: replay first (so a retry
+   * of the winning request is always 200), then the status branches, then the
+   * lazy timeout, then the conditional update.
+   */
+  private async submitAttemptInTransaction(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    idempotencyKey: string,
+  ): Promise<AttemptSubmitResult> {
+    const locked = await this.lockAttempt(tx, userId, attemptId, 'exam.submit');
+    if (locked.kind === 'not_found') return { kind: 'not_found' };
+    const { attempt, now } = locked;
+
+    // The append-only event log is the replay ledger (TL-123 pattern). A key
+    // that belongs to another event type was never a submit for this attempt.
+    const replay = await tx.examAttemptEvent.findUnique({
+      where: { attemptId_idempotencyKey: { attemptId, idempotencyKey } },
+      select: { type: true, metadata: true },
+    });
+    if (replay !== null) {
+      if (replay.type !== 'submitted') return { kind: 'key_reused' };
+      return {
+        kind: 'replayed',
+        attempt,
+        now,
+        counts: await this.replaySubmitCounts(tx, attemptId, replay.metadata),
+      };
+    }
+
+    if (attempt.status === ExamAttemptStatus.submitted) {
+      return { kind: 'already_submitted' };
+    }
+    if (attempt.status !== ExamAttemptStatus.in_progress) {
+      // timed_out and invalidated are both "closed" for a submit, matching the
+      // save-path convention (TL-126).
+      return { kind: 'closed', status: attempt.status };
+    }
+
+    // A submit that lands past the save grace window is another timeout writer:
+    // it closes the attempt and answers 409, but the transition must commit, so
+    // this branch returns a value instead of throwing (TL-151 step 5).
+    if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+      await markAttemptTimedOut(tx, {
+        attemptId,
+        expiresAt: attempt.expiresAt,
+        occurredAt: now,
+        reason: 'expired_on_submit',
+      });
+      return { kind: 'expired' };
+    }
+
+    const payload = await this.loadSnapshotPayload(tx, attemptId);
+    const counts = await this.countSubmitAnswers(
+      tx,
+      attemptId,
+      this.indexSnapshotQuestions(payload).size,
+    );
+
+    const updated = await tx.examAttempt.updateMany({
+      where: { id: attemptId, status: ExamAttemptStatus.in_progress },
+      data: {
+        status: ExamAttemptStatus.submitted,
+        submittedAt: now,
+        remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+      },
+    });
+    if (updated.count !== 1) {
+      // Defensive: a writer that did not take the row lock changed the status
+      // between our read and our update. Report the committed state.
+      const current = await tx.examAttempt.findUnique({
+        where: { id: attemptId },
+        select: { status: true },
+      });
+      if (current === null) return { kind: 'not_found' };
+      if (current.status === ExamAttemptStatus.submitted) {
+        return { kind: 'already_submitted' };
+      }
+      return { kind: 'closed', status: current.status };
+    }
+
+    await tx.examAttemptEvent.create({
+      data: {
+        attemptId,
+        type: 'submitted',
+        idempotencyKey,
+        // Counts only: no answer content, score or result (R11/TL-150).
+        metadata: {
+          reason: 'user_submit',
+          answeredCount: counts.answeredCount,
+          unansweredCount: counts.unansweredCount,
+          flaggedCount: counts.flaggedCount,
+        },
+        occurredAt: now,
+      },
+    });
+
+    return {
+      kind: 'submitted',
+      attempt: {
+        ...attempt,
+        status: ExamAttemptStatus.submitted,
+        submittedAt: now,
+      },
+      now,
+      counts,
+    };
+  }
+
+  /**
    * TL-125: the only row this path locks is the attempt itself, and only after
    * filtering by `userId` — another learner's attempt is indistinguishable from
    * a missing one (404). No User/Test/Question/Media lock is taken, so the
@@ -1087,6 +1287,53 @@ export class ExamService {
       },
     });
     return { status: 'saved', record };
+  }
+
+  /**
+   * TL-150: `answeredCount` uses exactly the intro predicate (F3): a flagged
+   * row with no answer is not an answered question. `unansweredCount` is
+   * derived from the frozen snapshot so it cannot disagree with `questionCount`.
+   */
+  private async countSubmitAnswers(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+    questionCount: number,
+  ): Promise<SubmitCounts> {
+    const [answeredRows, flaggedCount] = await Promise.all([
+      tx.examAnswer.count({
+        where: {
+          attemptId,
+          NOT: { answer: { equals: Prisma.JsonNull } },
+        },
+      }),
+      tx.examAnswer.count({ where: { attemptId, isFlagged: true } }),
+    ]);
+    const answeredCount = Math.min(answeredRows, questionCount);
+    return {
+      answeredCount,
+      unansweredCount: Math.max(0, questionCount - answeredCount),
+      flaggedCount,
+    };
+  }
+
+  /**
+   * TL-151 step 2: replay returns the counts frozen on the first submit's
+   * event. If that metadata is unreadable (corruption), recompute from the
+   * committed rows instead of failing the replay.
+   */
+  private async replaySubmitCounts(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+    metadata: Prisma.JsonValue,
+  ): Promise<SubmitCounts> {
+    const stored = submitCountsFromMetadata(metadata);
+    if (stored !== null) return stored;
+    const payload = await this.loadSnapshotPayload(tx, attemptId);
+    return this.countSubmitAnswers(
+      tx,
+      attemptId,
+      this.indexSnapshotQuestions(payload).size,
+    );
   }
 
   private findAnswerRow(
@@ -1471,4 +1718,32 @@ export class ExamService {
     }
     return row.now;
   }
+}
+
+/**
+ * TL-151: the submit event metadata is the replay source of truth. Only a
+ * fully numeric triple is accepted; anything else falls back to a recount.
+ */
+function submitCountsFromMetadata(
+  metadata: Prisma.JsonValue,
+): SubmitCounts | null {
+  if (
+    metadata === null ||
+    typeof metadata !== 'object' ||
+    Array.isArray(metadata)
+  ) {
+    return null;
+  }
+  const record = metadata as Record<string, Prisma.JsonValue>;
+  const answeredCount = record['answeredCount'];
+  const unansweredCount = record['unansweredCount'];
+  const flaggedCount = record['flaggedCount'];
+  if (
+    typeof answeredCount !== 'number' ||
+    typeof unansweredCount !== 'number' ||
+    typeof flaggedCount !== 'number'
+  ) {
+    return null;
+  }
+  return { answeredCount, unansweredCount, flaggedCount };
 }
