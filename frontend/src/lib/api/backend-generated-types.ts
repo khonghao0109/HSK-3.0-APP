@@ -1508,6 +1508,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/attempts/{attemptId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExamController_submitAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exam/attempts/{attemptId}/media-grants": {
         parameters: {
             query?: never;
@@ -2887,6 +2903,27 @@ export interface components {
             answers: components["schemas"]["ExamAnswerViewDto"][];
         };
         StartExamAttemptDto: {
+            /** Format: uuid */
+            idempotencyKey: string;
+        };
+        ExamSubmitViewDto: {
+            id: number;
+            /** @enum {string} */
+            status: "in_progress" | "submitted" | "timed_out" | "invalidated";
+            /** Format: date-time */
+            submittedAt: string;
+            /**
+             * Format: date-time
+             * @description Server clock at response time; the client never trusts its own clock.
+             */
+            serverNow: string;
+            answeredCount: number;
+            unansweredCount: number;
+            flaggedCount: number;
+            /** @description True when this request replayed a previously committed submit key. */
+            replayed: boolean;
+        };
+        SubmitExamAttemptDto: {
             /** Format: uuid */
             idempotencyKey: string;
         };
@@ -6332,6 +6369,40 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ExamAttemptViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_submitAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitExamAttemptDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamSubmitViewDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };
