@@ -71,6 +71,10 @@ describe('Media ingestion stale-attempt fencing', () => {
       expect((attemptB.reason as ConflictException).message).toBe(
         'Media ingestion is already in progress.',
       );
+      expect((attemptB.reason as ConflictException).getResponse()).toEqual({
+        code: 'MEDIA_INGESTION_IN_PROGRESS',
+        message: 'Media ingestion is already in progress.',
+      });
     }
     const final = await prisma.mediaIngestion.findUniqueOrThrow({
       where: { id: ingestion.id },

@@ -12,6 +12,7 @@ import {
 } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import {
   TOAST_COMING_SOON,
   TOAST_NOTIFICATIONS,
@@ -82,6 +83,7 @@ export default async function LearnerHomePage() {
 
   return (
     <>
+      <LearnerWebTopbar streakDays={home.streakDays} />
       <header className="home-hero">
         <img
           className="home-hero__art"
@@ -166,7 +168,10 @@ export default async function LearnerHomePage() {
         {continueLesson && (
           <>
             <h2 className="home-section">Tiếp tục học</h2>
-            <ToastButton className="home-lesson" message={TOAST_COMING_SOON}>
+            <Link
+              className="home-lesson"
+              href={`/learn/lessons/${continueLesson.lessonId}`}
+            >
               <span className="home-lesson__art" aria-hidden="true">
                 <Icon name="book-open" />
               </span>
@@ -184,8 +189,13 @@ export default async function LearnerHomePage() {
                   {lessonPercent}%
                 </span>
               </span>
+              {/* Web card button (Q83): label by state, hidden below 1024px. */}{' '}
+              <span className="home-lesson__cta w-only">
+                {lessonPercent === 0 ? 'Bắt đầu' : 'Tiếp tục học'}
+                <Icon name="arrow-right" />
+              </span>
               <Icon name="chevron-right" />
-            </ToastButton>
+            </Link>
           </>
         )}
 

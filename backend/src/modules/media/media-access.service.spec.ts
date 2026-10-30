@@ -6,9 +6,11 @@ import {
 import type { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 
+import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
 import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
+import { PUBLIC_LESSON_EXERCISE_WHERE } from '../learning/public-exercise.policy';
 import {
   createMediaAccessSignature,
   verifyMediaAccessSignature,
@@ -88,7 +90,7 @@ describe('MediaAccessService storage-provider affinity', () => {
     ).toBe(true);
   });
 
-  it('issues learner grants for 60 seconds regardless of the admin TTL', async () => {
+  it('issues learner grants for 300 seconds regardless of the admin TTL', async () => {
     const { service } = createFixture('s3', 's3', {
       lessonExercises: [{ id: 5 }],
     });
@@ -100,10 +102,36 @@ describe('MediaAccessService storage-provider affinity', () => {
     expect(Number(url.searchParams.get('expires'))).toBe(
       1_700_000_000 + LEARNER_MEDIA_ACCESS_TTL_SECONDS,
     );
-    expect(LEARNER_MEDIA_ACCESS_TTL_SECONDS).toBe(60);
+    expect(LEARNER_MEDIA_ACCESS_TTL_SECONDS).toBe(300);
     expect(result.data.expiresAt).toBe(
-      new Date((1_700_000_000 + 60) * 1000).toISOString(),
+      new Date((1_700_000_000 + 300) * 1000).toISOString(),
     );
+  });
+
+  it('gates learner grants with the public attempt-route exercise predicate', async () => {
+    const { prisma, service } = createFixture('s3', 's3', {
+      lessonExercises: [{ id: 5 }],
+    });
+
+    await service.createAccess({ id: 8, role: 'learner' }, 41);
+
+    const [args] = prisma.media.findUnique.mock.calls[0] as [
+      { select: { lessonExercises: { where: unknown } } },
+    ];
+    expect(args.select.lessonExercises.where).toEqual({
+      AND: [
+        PUBLIC_LESSON_EXERCISE_WHERE,
+        { lesson: { is: buildLessonReadyWhere() } },
+      ],
+    });
+  });
+
+  it('refuses a learner grant when no public exercise uses the media', async () => {
+    const { service } = createFixture('s3', 's3', { lessonExercises: [] });
+
+    await expect(
+      service.createAccess({ id: 8, role: 'learner' }, 41),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('signs new grants with the current secret even when a previous secret is configured', async () => {

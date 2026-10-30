@@ -52,7 +52,8 @@ session API. Hết hạn token yêu cầu đăng nhập lại. Xem
 Production dùng CSP nonce sinh ngẫu nhiên cho từng request trong `src/proxy.ts`.
 Nonce được chuyển vào request để Next.js gắn vào framework/page scripts và được
 trả trong response CSP. `script-src` production không dùng `unsafe-inline` hoặc
-`unsafe-eval`; `media-src` hiện chỉ cho `'self'`. Do nonce cần request-time
+`unsafe-eval`; `media-src` cho `'self'` và `blob:` — exam tải trước audio
+thành Blob (M4.2b R12, ADR-003). Do nonce cần request-time
 rendering, root layout chủ động dynamic và không dùng static/ISR/PPR caching.
 Matcher không chạy cho API, Next static/image, favicon/sitemap/robots hoặc router
 prefetch (`next-router-prefetch`, `purpose: prefetch`). Vì vậy document request
@@ -156,6 +157,7 @@ MAIL_PROVIDER=memory \
 MAIL_FROM='noreply@hsk.local' \
 MEDIA_STORAGE_PROVIDER=memory \
 MEDIA_SCANNER_PROVIDER=test \
+MEDIA_INGESTION_ENABLED=true \
 MEDIA_SIGNING_SECRET='test-media-signing-secret-at-least-32-characters' \
 MEDIA_METRICS_BEARER_TOKEN='test-media-metrics-token-at-least-32-chars' \
 MEDIA_METRICS_HOST='127.0.0.1' \
@@ -169,10 +171,44 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
+`MEDIA_INGESTION_ENABLED=true` cho fixture câu nghe (M2.5c) tải một file WAV qua
+`POST /admin/cms/media/ingestions` vào storage memory của chính backend đang chạy.
+
 Credential mặc định chỉ dành cho fixture disposable được ghi trong `.env.example`.
 `npm run test:e2e` build và chạy production server trên Chromium ở 4 project:
 `desktop-1440`, `desktop-1024`, `mobile-390`, `tablet-768` (đều là Chromium).
 Không ghi số case cố định trong tài liệu; lấy kết quả từ gate gần nhất.
+
+## BFF media của learner
+
+Audio của câu nghe đi qua BFF cùng origin; exam tải trước audio thành Blob nên
+CSP là `media-src 'self' blob:` (M4.2b R12, ADR-003):
+
+- `GET /api/learner/media/:id/access`: cần phiên learner; gọi backend
+  `GET /api/v1/media/:id/access` và trả `{ success: true, data: { src, expiresAt } }`
+  với `src = /api/learner/media/:id/content?expires=&signature=` (`no-store`).
+  Backend `403`/`404`/`429` giữ nguyên, lỗi khác `503`, URL grant lạ `502`.
+- `GET /api/learner/media/:id/content?expires=&signature=`: cần cookie phiên đúng
+  định dạng (không gọi `/auth/me`); stream bytes của backend, chuyển tiếp một
+  `Range: bytes=…`, giữ `200`/`206`/`416`, luôn `Cache-Control: private, no-store`.
+  Không gửi cookie hay token sang backend. Route này không đi qua `limit_req` nginx
+  của location content; backend vẫn giới hạn theo grant và theo IP.
+
+## BFF hoàn thành bài của learner
+
+Player đóng topic và hoàn thành bài qua BFF (M2.5d, Q58); trang
+`/learn/lessons/:id/complete` chỉ mở được khi bài đã `done`:
+
+- `POST /api/learner/topics/:id/complete` với body `{ lessonId }`: đọc activity của
+  bài, start topic nếu còn `not_started` rồi complete. Topic đã `done` (kể cả sau
+  `409`) trả `{ success: true, data: { topicId } }`; còn lại `409`.
+- `POST /api/learner/lessons/:id/complete`: đóng mọi topic chưa `done` mà bài tập
+  public nào cũng đã có attempt, rồi complete bài. Backend trả `409` thì đọc
+  `GET /api/v1/progress/lessons/:id`: `done` là thành công, còn lại `409`.
+
+Mỗi lệnh ghi gửi backend một `Idempotency-Key` UUID mới sinh phía server. Cả hai
+route cần cùng origin và phiên learner (`401` khi thiếu; backend `401`/`403` xoá
+cookie), id sai trả `404`, phản hồi `no-store`.
 
 ## Cấu trúc chính
 

@@ -1,7 +1,7 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.10.0`
-> Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
+> Phiên bản runbook: `1.11.0`
+> Áp dụng cho chuỗi migration P0 đến ngày `2026-10-23`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
 ## 1. Chuỗi migration bắt buộc
@@ -26,9 +26,11 @@
 | ONB-U  | `20260916090000_user_active_goal_plan_unique`            | Partial unique index: tối đa một `UserGoal` active và một `LearningPlan` active mỗi user (mục 20).         |
 | PGB-S  | `20260929162559_pgboss_schema`                           | Worker job queue schema `pgboss` cho pg-boss 12 (mục 21).                                                  |
 | ONB-LP | `20261005023447_user_goal_learning_purpose`             | Enum `LearningPurpose` và cột `learningPurpose` trên `UserGoal` lưu lý do học (mục 22).                   |
+| QB-1   | `20261023170000_question_objective_types`                | Enum `QuestionType` thêm `true_false`, `fill_blank`, `arrange_sentence` cho ngân hàng câu hỏi (mục 23).   |
+| EXAM-U | `20261027090000_exam_attempt_one_in_progress`            | Partial unique index: tối đa một `ExamAttempt` `in_progress` mỗi `(userId, testId)` (mục 24).             |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 23 migration (đến `20261005023447_user_goal_learning_purpose`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 25 migration (đến `20261027090000_exam_attempt_one_in_progress`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -920,3 +922,49 @@ Khởi động Worker (và API) đều có hook gọi `boss.createQueue()` nhưn
 - Thêm cột nullable `learningPurpose` kiểu enum `LearningPurpose` vào bảng `UserGoal`. Không đặt default, không backfill dữ liệu cũ.
 - Forward-only, thuần `CREATE TYPE` + `ALTER TABLE ... ADD COLUMN`, an toàn cho migration zero-downtime.
 
+## 23. Ngân hàng câu hỏi — dạng câu khách quan (M4.1a)
+
+### 23.1. Migration 24 — `20261023170000_question_objective_types`
+
+- Bổ sung ba giá trị vào enum PostgreSQL `QuestionType`: `true_false` (Đúng/Sai), `fill_blank` (Điền từ), `arrange_sentence` (Sắp xếp câu). Mỗi giá trị một câu `ALTER TYPE "QuestionType" ADD VALUE`.
+- Không xoá hoặc đổi tên giá trị cũ: `mcq` tiếp tục là trắc nghiệm một đáp án; `listening`, `reading`, `writing`, `speaking` giữ cho dữ liệu lịch sử và cho M4.1b/M4.3. DTO của M4.1a từ chối bốn giá trị này.
+- Forward-only, additive thuần enum; không backfill, không đổi bảng `Question` (các cột `content`, `answers`, `correctAnswer`, `difficulty`, `objective`, `audioId`, `imageId` đã có từ P0-04) và không đổi trigger nào.
+- PostgreSQL 12+ cho phép `ALTER TYPE … ADD VALUE` trong transaction của Prisma miễn là giá trị mới không được dùng trong cùng transaction; migration này không dùng.
+- Impact API: chỉ thêm giá trị hợp lệ của `QuestionType`; không endpoint nào đang chạy bị đổi hành vi. Rollback không cần thiết — giá trị enum dư không ảnh hưởng reader cũ; muốn lùi phải xoá dữ liệu dùng giá trị mới trước (không hỗ trợ).
+- Bằng chứng fresh-migration: DB disposable mới `hsk_m41a_fresh_verify`, `npx prisma migrate deploy` áp 24/24 migration, `pg_enum` trả 8 giá trị `QuestionType` theo thứ tự thêm.
+
+## 24. Exam attempt — một bài `in_progress` mỗi người mỗi đề (M4.2a)
+
+### 24.1. Migration 25 — `20261027090000_exam_attempt_one_in_progress`
+
+Nghiệp vụ (Q120): mỗi học viên có tối đa một bài `in_progress` trên mỗi đề. `ExamService`
+serialize người bắt đầu thi bằng `"User" FOR NO KEY UPDATE`; migration thêm backstop ở
+database cho mọi writer khác (SQL vận hành, script, code tương lai):
+
+```sql
+CREATE UNIQUE INDEX "ExamAttempt_one_in_progress_per_user_test"
+  ON "ExamAttempt" ("userId", "testId")
+  WHERE "status" = 'in_progress';
+```
+
+Thứ tự trong file: `LOCK TABLE "ExamAttempt" IN SHARE MODE` (chặn insert/update giữa
+preflight và build index), preflight `P0001` đếm số cặp `(userId, testId)` có nhiều hơn một
+bài `in_progress` (chỉ in số lượng, không in ID), rồi tạo index. Không có `BEGIN/COMMIT`
+(mục 19.1). Với bảng lớn cần maintenance window và cân nhắc `MIGRATION_STATEMENT_TIMEOUT_MS`
+(mục 19.3).
+
+Nếu preflight fail (`P3018` + `P0001`): tắt luồng bắt đầu thi, lấy danh sách cặp vi phạm bằng
+query đếm tương tự, data owner duyệt chuyển các bài cũ hơn sang `timed_out` (không hard-delete;
+`ExamAttemptSnapshot`/`ExamAttemptEvent` bất biến theo trigger), rồi
+`npm run migrate:resolve:rolled-back:production -- --target-migration 20261027090000_exam_attempt_one_in_progress`
+và `npm run migrate:deploy:production`.
+
+Quy ước partial unique index (như mục 20): Prisma 5 không biểu diễn được predicate `WHERE`
+trong `schema.prisma`, nên index chỉ nằm trong migration SQL và được ghi chú cạnh model
+`ExamAttempt`; `migrate diff` hai chiều vẫn rỗng.
+
+Hành vi API (TL-112): hai lần bắt đầu đồng thời cùng người cùng đề trả cùng một attempt; nếu
+insert vẫn va index (do race ngoài service) thì bắt `P2002` rồi đọc lại attempt của bên thắng
+và trả `200`, không trả `500`. E2E `test/exam-attempt.e2e-spec.ts` và harness
+`npm run test:db:exam-start-concurrency` (6 kịch bản × 20 vòng trên
+`hsk_m42a_hardening`, 0 deadlock) là bằng chứng.

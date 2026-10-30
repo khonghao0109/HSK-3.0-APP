@@ -1,5 +1,7 @@
 'use client';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
+
 export default function MediaError({
   reset,
 }: {
@@ -7,23 +9,25 @@ export default function MediaError({
   reset: () => void;
 }) {
   return (
-    <div className="inline-error" role="alert">
-      <span className="inline-error__mark" aria-hidden="true">
-        !
+    <div className="adm-state-card" role="alert">
+      <span
+        className="adm-state-card__mark adm-state-card__mark--danger"
+        aria-hidden="true"
+      >
+        <AdminIcon name="alert-triangle" />
       </span>
-      <div>
-        <p className="eyebrow">SERVICE INTERRUPTION</p>
-        <h1>Media library could not be loaded</h1>
-        <p>
-          The console received an invalid or unavailable response. No provider
-          details were exposed.
-        </p>
+      <h1>Không tải được thư viện media</h1>
+      <p>
+        Máy chủ trả về dữ liệu không hợp lệ hoặc tạm thời không khả dụng. Không
+        có thông tin nhà cung cấp nào bị lộ.
+      </p>
+      <div className="adm-state-card__actions">
         <button
-          className="button button--primary"
+          className="adm-btn adm-btn--primary"
           type="button"
           onClick={reset}
         >
-          Retry
+          Thử lại
         </button>
       </div>
     </div>

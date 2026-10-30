@@ -55,6 +55,10 @@ enum QuestionType {
   reading
   writing
   speaking
+  // M4.1a (TL-77): additive objective formats for the question bank.
+  true_false
+  fill_blank
+  arrange_sentence
 }
 
 enum Skill {
@@ -1603,6 +1607,10 @@ model ExamAttempt {
   result   Result?
 
   @@unique([userId, idempotencyKey])
+  // TL-112/Q120: partial unique index "ExamAttempt_one_in_progress_per_user_test"
+  // on ("userId", "testId") WHERE "status" = 'in_progress' is raw SQL only —
+  // Prisma cannot express the predicate, so it lives in
+  // prisma/migrations/20261027090000_exam_attempt_one_in_progress.
   @@index([userId, status, expiresAt])
   @@index([testId, status])
 }

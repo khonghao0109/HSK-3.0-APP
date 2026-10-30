@@ -6,6 +6,7 @@ import {
 import {
   buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
+  PUBLIC_LESSON_WORD_WHERE,
 } from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LevelItemDto } from './dto/level-response.dto';
@@ -132,9 +133,7 @@ export class LearningService {
           },
         },
         lessonWords: {
-          where: {
-            word: { is: PUBLIC_CONTENT_WHERE },
-          },
+          where: PUBLIC_LESSON_WORD_WHERE,
           orderBy: {
             orderIndex: 'asc',
           },

@@ -7,7 +7,9 @@ import {
   Header,
   Headers,
   Param,
+  Patch,
   Post,
+  Put,
   Query,
   Req,
   UploadedFile,
@@ -23,6 +25,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
 import { isAcceptedRequestId } from '../../common/middleware/request-id.middleware';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -30,6 +33,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CmsActor } from './cms-workflow';
 import { CmsService } from './cms.service';
 import {
+  AdminDataSourceDto,
   AdminExerciseDetailDto,
   AdminExerciseDto,
 } from './dto/admin-exercise-response.dto';
@@ -39,10 +43,29 @@ import { AdminMediaQueryDto } from './dto/admin-media-query.dto';
 import {
   AdminMediaDetailDto,
   AdminMediaDto,
+  AdminMediaListMetaDto,
   AdminMediaLifecycleResultDto,
 } from './dto/admin-media-response.dto';
+import {
+  AdminQuestionCountsDto,
+  AdminQuestionDetailDto,
+  AdminQuestionDto,
+} from './dto/admin-question-response.dto';
+import { AdminQuestionsQueryDto } from './dto/admin-questions-query.dto';
+import {
+  AdminTestDetailDto,
+  AdminTestDto,
+} from './dto/admin-test-response.dto';
+import { AdminTestsQueryDto } from './dto/admin-tests-query.dto';
+import { AdminTagDto } from './dto/admin-tag-response.dto';
+import { AdminTagsQueryDto } from './dto/admin-tags-query.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
+import { CreateQuestionRevisionDto } from './dto/create-question-revision.dto';
+import { CreateTestDto } from './dto/create-test.dto';
+import { PublishTestDto } from './dto/publish-test.dto';
+import { ReplaceTestStructureDto } from './dto/replace-test-structure.dto';
+import { UpdateTestDto } from './dto/update-test.dto';
 import {
   CommitExerciseImportDto,
   PreviewExerciseImportDto,
@@ -52,8 +75,13 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
+import { AdminMediaIngestionDto } from './dto/admin-media-ingestion-response.dto';
 import { MediaIngestionQueryDto } from './dto/media-ingestion-query.dto';
+import { DataSourcesService } from './data-sources.service';
+import { AdminDataSourcesQueryDto } from './dto/admin-data-sources-query.dto';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
+import { QuestionAuthoringService } from './question-authoring.service';
+import { TestAuthoringService } from './test-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
 import {
@@ -61,6 +89,7 @@ import {
   MediaIngestionService,
   UploadedMediaFile,
 } from './media-ingestion/media-ingestion.service';
+import { MediaIngestionReconciliationService } from './media-ingestion/media-ingestion-reconciliation.service';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
 import {
   getMediaIngestionObservation,
@@ -87,10 +116,26 @@ export class CmsController {
   constructor(
     private readonly cmsService: CmsService,
     private readonly exerciseAuthoringService: ExerciseAuthoringService,
+    private readonly questionAuthoringService: QuestionAuthoringService,
+    private readonly testAuthoringService: TestAuthoringService,
     private readonly exerciseImportService: ExerciseImportService,
     private readonly mediaAdminService: MediaAdminService,
     private readonly mediaIngestionService: MediaIngestionService,
+    private readonly dataSourcesService: DataSourcesService,
+    private readonly mediaIngestionReconciliationService: MediaIngestionReconciliationService,
   ) {}
+
+  // TL-93: static `tags` is declared before every parametrised route so an
+  // id-style match can never shadow it.
+  @Get('tags')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminTagDto])
+  listTags(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminTagsQueryDto,
+  ): Promise<ApiSuccessResponse<AdminTagDto[]>> {
+    return this.questionAuthoringService.listTags(request.user, query);
+  }
 
   @Post('media/ingestions')
   @Header('Cache-Control', 'no-store')
@@ -145,12 +190,31 @@ export class CmsController {
 
   @Get('media')
   @Header('Cache-Control', 'no-store')
-  @ApiEnvelope([AdminMediaDto], { paginated: true })
+  @ApiEnvelope([AdminMediaDto], {
+    paginated: true,
+    meta: AdminMediaListMetaDto,
+  })
   listMedia(
     @Req() request: AuthenticatedRequest,
     @Query() query: AdminMediaQueryDto,
   ): Promise<ApiSuccessResponse<AdminMediaDto[]>> {
     return this.mediaAdminService.listMedia(request.user, query);
+  }
+
+  // TL-47: declared before `media/:mediaId`, otherwise Express matches
+  // "ingestions" as a media id and the id pipe answers 400. No ingestion flag
+  // guard: reconciliation must work while ingestion is switched off (ADR-005).
+  @Get('media/ingestions')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminMediaIngestionDto], { paginated: true })
+  listMediaIngestions(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ApiSuccessResponse<AdminMediaIngestionDto[]>> {
+    return this.mediaIngestionReconciliationService.listIngestions(
+      request.user,
+      query,
+    );
   }
 
   @Get('media/:mediaId')
@@ -187,6 +251,16 @@ export class CmsController {
     return this.mediaAdminService.archiveMedia(request.user, mediaId, {
       correlationId: correlationId(requestId),
     });
+  }
+
+  @Get('data-sources')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminDataSourceDto], { paginated: true })
+  listDataSources(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminDataSourcesQueryDto,
+  ): Promise<ApiSuccessResponse<AdminDataSourceDto[]>> {
+    return this.dataSourcesService.listDataSources(request.user, query);
   }
 
   @Get('exercises')
@@ -454,6 +528,218 @@ export class CmsController {
     @Headers('x-request-id') requestId?: string,
   ) {
     return this.cmsService.archiveTopic(request.user, topicId, {
+      correlationId: correlationId(requestId),
+    });
+  }
+  // TL-82: questions/counts must be declared before questions/:questionId,
+  // otherwise Express matches "counts" as a question id and the pipe answers 400.
+  @Get('questions/counts')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminQuestionCountsDto)
+  getQuestionCounts(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApiSuccessResponse<AdminQuestionCountsDto>> {
+    return this.questionAuthoringService.getQuestionCounts(request.user);
+  }
+
+  @Get('questions')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminQuestionDto], { paginated: true })
+  listQuestions(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminQuestionsQueryDto,
+  ): Promise<ApiSuccessResponse<AdminQuestionDto[]>> {
+    return this.questionAuthoringService.listQuestions(request.user, query);
+  }
+
+  @Get('questions/:questionId')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminQuestionDetailDto)
+  getQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+  ): Promise<ApiSuccessResponse<AdminQuestionDetailDto>> {
+    return this.questionAuthoringService.getQuestion(request.user, questionId);
+  }
+
+  @Post('questions')
+  @Header('Cache-Control', 'no-store')
+  createQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: CreateQuestionRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.createQuestion(request.user, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Post('questions/:questionId/revisions')
+  @Header('Cache-Control', 'no-store')
+  createQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Body() dto: CreateQuestionRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.createQuestionRevision(
+      request.user,
+      questionId,
+      dto,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/revisions/:revisionId/reviews')
+  @Header('Cache-Control', 'no-store')
+  reviewQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Param('revisionId', ParsePositiveIntPipe) revisionId: number,
+    @Body() dto: ReviewRevisionDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.reviewQuestionRevision(
+      request.user,
+      questionId,
+      revisionId,
+      dto,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/revisions/:revisionId/publish')
+  @Header('Cache-Control', 'no-store')
+  publishQuestionRevision(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Param('revisionId', ParsePositiveIntPipe) revisionId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.publishQuestionRevision(
+      request.user,
+      questionId,
+      revisionId,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('questions/:questionId/archive')
+  @Header('Cache-Control', 'no-store')
+  archiveQuestion(
+    @Req() request: AuthenticatedRequest,
+    @Param('questionId', ParsePositiveIntPipe) questionId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.questionAuthoringService.archiveQuestion(
+      request.user,
+      questionId,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  // TL-94: static `tests` is declared before `tests/:testId` so Express can
+  // never match the id pipe against the collection path.
+  @Get('tests')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([AdminTestDto], { paginated: true })
+  listTests(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: AdminTestsQueryDto,
+  ): Promise<ApiSuccessResponse<AdminTestDto[]>> {
+    return this.testAuthoringService.listTests(request.user, query);
+  }
+
+  @Post('tests')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  createTest(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: CreateTestDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.createTest(request.user, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Get('tests/:testId')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  getTest(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+  ): Promise<ApiSuccessResponse<AdminTestDetailDto>> {
+    return this.testAuthoringService.getTest(request.user, testId);
+  }
+
+  @Patch('tests/:testId')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  updateTest(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+    @Body() dto: UpdateTestDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.updateTest(request.user, testId, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Put('tests/:testId/structure')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  replaceTestStructure(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+    @Body() dto: ReplaceTestStructureDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.replaceTestStructure(
+      request.user,
+      testId,
+      dto,
+      { correlationId: correlationId(requestId) },
+    );
+  }
+
+  @Post('tests/:testId/publish')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  publishTest(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+    @Body() dto: PublishTestDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.publishTest(request.user, testId, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Post('tests/:testId/archive')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  archiveTest(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.archiveTest(request.user, testId, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Post('tests/:testId/duplicate')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminTestDetailDto)
+  duplicateTest(
+    @Req() request: AuthenticatedRequest,
+    @Param('testId', ParsePositiveIntPipe) testId: number,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.testAuthoringService.duplicateTest(request.user, testId, {
       correlationId: correlationId(requestId),
     });
   }

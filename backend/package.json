@@ -39,6 +39,9 @@
     "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
     "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",
+    "test:db:question-concurrency": "ts-node scripts/test/run-question-authoring-concurrency.ts",
+    "test:db:test-builder-concurrency": "ts-node scripts/test/run-test-builder-concurrency.ts",
+    "test:db:exam-start-concurrency": "ts-node scripts/test/run-exam-start-concurrency.ts",
     "test:db:exercise-integrity": "ts-node scripts/test/run-exercise-authoring-integrity.ts",
     "test:db:media-integrity": "ts-node scripts/test/run-media-ingestion-integrity.ts",
     "test:db:media-migration": "npm run build && node --test -r ts-node/register scripts/test/media-lifecycle-migration-validation.helpers.spec.ts && ts-node scripts/test/run-media-lifecycle-migration-validation.ts",
@@ -52,7 +55,10 @@
     "render:ops:media": "ts-node scripts/operations/render-media-observability.ts",
     "test:db:concurrency": "ts-node scripts/test/run-p0-integrity-concurrency.ts",
     "test:db:cms-concurrency": "ts-node scripts/test/run-cms-lifecycle-concurrency.ts",
-    "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts"
+    "test:db:admin-users-concurrency": "ts-node scripts/test/run-admin-users-concurrency.ts",
+    "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts",
+    "analytics:p0": "ts-node scripts/analytics/p0-product-metrics.ts",
+    "test:db:exam-submit-concurrency": "ts-node scripts/test/run-exam-submit-concurrency.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
@@ -69,7 +75,7 @@
     "argon2": "^0.44.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "joi": "^18.2.1",
+    "joi": "^18.3.0",
     "music-metadata": "^11.8.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -77,7 +83,7 @@
     "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -106,8 +112,9 @@
     "typescript-eslint": "^8.20.0"
   },
   "overrides": {
-    "body-parser": "2.3.0",
-    "qs": "6.15.3"
+    "body-parser": "2.4.0",
+    "qs": "6.16.0",
+    "multer": "2.5.0"
   },
   "jest": {
     "moduleFileExtensions": [

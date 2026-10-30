@@ -17,16 +17,28 @@ export type CmsTransactionOperation =
   | 'exercise.publish'
   | 'exercise.archive'
   | 'exercise_import.commit'
+  | 'question.create_revision'
+  | 'question.review'
+  | 'question.publish'
+  | 'question.archive'
+  | 'test.create'
+  | 'test.update'
+  | 'test.structure_update'
+  | 'test.publish'
+  | 'test.archive'
+  | 'test.duplicate'
   | 'media_ingestion.cleanup';
 
 export type CmsTransactionCheckpoint = {
   operation: CmsTransactionOperation;
-  phase: 'before_lock' | 'after_lock';
+  phase: 'before_lock' | 'after_lock' | 'after_question_locks';
   entityType:
     | 'lesson'
     | 'topic'
     | 'lesson_exercise'
     | 'exercise_import'
+    | 'question'
+    | 'test'
     | 'media_ingestion';
   entityId: number;
   parentLessonId?: number;

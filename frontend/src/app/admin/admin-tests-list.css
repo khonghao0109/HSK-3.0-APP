@@ -1,0 +1,259 @@
+/**
+ * admin-tests-list.css — lớp riêng của danh sách đề thi (TL-107) và form tạo
+ * đề (TL-107). Chỉ dùng biến CSS của admin (ADR-008), không dùng cờ ưu tiên tuyệt đối;
+ * import từ `app/admin/tests/page.tsx` và `app/admin/tests/new/page.tsx`.
+ */
+
+/* ---------- Hàng filter ---------- */
+.admin-app .tst-list-filters__search {
+  flex: 1 1 14rem;
+  min-width: 0;
+  height: 2.75rem;
+}
+
+@media (max-width: 430px) {
+  /* U3: ô tìm kiếm cao bằng input khác, không bị flex giãn theo hàng. */
+  .admin-app .tst-list-filters .tst-list-filters__search {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 2.75rem;
+    align-self: center;
+  }
+}
+
+/* ---------- Khung danh sách ---------- */
+.admin-app .tst-list-card {
+  /* Cùng vai trò `adm-card--clip` của M4.1a: bo góc card giữ bảng/card bên
+     trong, không phụ thuộc CSS của route khác. */
+  overflow: hidden;
+}
+
+/* ---------- Bảng đề thi (desktop) ---------- */
+/*
+ * 9 cột, `table-layout: fixed`. 8 cột phụ đủ chỗ cho chữ đầy đủ ở 1440
+ * (container ~1158px): tổng width cố định 49.5rem = 792px, cột "Tên đề" nhận
+ * phần còn lại (~366px) và là cột duy nhất cắt bằng ellipsis. Padding ngang
+ * 0.375rem mỗi bên đã tính trong width (đo Inter 13px: "24/10/2026 06:43"
+ * ~112px, "Đã xuất bản" ~74px + badge, "HSK 7–9" ~52px).
+ */
+.admin-app .tst-list-table {
+  table-layout: fixed;
+  width: 100%;
+}
+.admin-app .tst-list-table th,
+.admin-app .tst-list-table td {
+  white-space: nowrap;
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+.admin-app .tst-list-table th:nth-child(2),
+.admin-app .tst-list-table td:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* U2: cột Kỹ năng được xuống dòng thay vì đè sang cột Số câu. */
+.admin-app .tst-list-table th:nth-child(4),
+.admin-app .tst-list-table td:nth-child(4) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.admin-app .tst-list-table th:nth-child(1),
+.admin-app .tst-list-table td:nth-child(1) {
+  width: 4rem;
+}
+.admin-app .tst-list-table th:nth-child(3),
+.admin-app .tst-list-table td:nth-child(3) {
+  width: 4.5rem;
+}
+.admin-app .tst-list-table th:nth-child(4),
+.admin-app .tst-list-table td:nth-child(4) {
+  width: 9.5rem;
+}
+.admin-app .tst-list-table th:nth-child(5),
+.admin-app .tst-list-table td:nth-child(5) {
+  width: 4rem;
+}
+.admin-app .tst-list-table th:nth-child(6),
+.admin-app .tst-list-table td:nth-child(6) {
+  width: 5rem;
+}
+.admin-app .tst-list-table th:nth-child(7),
+.admin-app .tst-list-table td:nth-child(7) {
+  width: 5.75rem;
+}
+.admin-app .tst-list-table th:nth-child(8),
+.admin-app .tst-list-table td:nth-child(8) {
+  width: 8.5rem;
+}
+.admin-app .tst-list-table th:nth-child(9),
+.admin-app .tst-list-table td:nth-child(9) {
+  width: 8.25rem;
+}
+.admin-app .tst-list-table__id {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.admin-app .tst-list-table__title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+}
+.admin-app .tst-list-table__row:hover .tst-list-table__title,
+.admin-app .tst-list-table__title:focus-visible {
+  text-decoration: underline;
+}
+
+/* Hẹp hơn 1280px: thu các cột phụ để bảng không đẩy con trỏ ngang ra khỏi
+   card; vẫn giữ bảng desktop tới 900px rồi mới đổi sang card. */
+@media (max-width: 1279px) {
+  .admin-app .tst-list-table th:nth-child(1),
+  .admin-app .tst-list-table td:nth-child(1) {
+    width: 3.25rem;
+  }
+  .admin-app .tst-list-table th:nth-child(3),
+  .admin-app .tst-list-table td:nth-child(3) {
+    width: 4rem;
+  }
+  .admin-app .tst-list-table th:nth-child(4),
+  .admin-app .tst-list-table td:nth-child(4) {
+    width: 7.5rem;
+  }
+  .admin-app .tst-list-table th:nth-child(5),
+  .admin-app .tst-list-table td:nth-child(5) {
+    width: 3.5rem;
+  }
+  .admin-app .tst-list-table th:nth-child(6),
+  .admin-app .tst-list-table td:nth-child(6) {
+    width: 4.25rem;
+  }
+  .admin-app .tst-list-table th:nth-child(7),
+  .admin-app .tst-list-table td:nth-child(7) {
+    width: 4.75rem;
+  }
+  .admin-app .tst-list-table th:nth-child(8),
+  .admin-app .tst-list-table td:nth-child(8) {
+    width: 7rem;
+  }
+  .admin-app .tst-list-table th:nth-child(9),
+  .admin-app .tst-list-table td:nth-child(9) {
+    width: 7rem;
+  }
+}
+
+/* ---------- Card đề thi (≤900px, pattern M4.1a) ---------- */
+.admin-app .tst-list-record__id {
+  display: block;
+  margin-bottom: var(--adm-sp-1);
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  letter-spacing: 0.02em;
+}
+.admin-app .tst-list-record__title {
+  display: block;
+  color: var(--adm-navy-900);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.admin-app .tst-list-record__title:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.admin-app .tst-list-record__facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ---------- Phân trang ---------- */
+@media (max-width: 900px) {
+  /* Vùng chạm tối thiểu 2.75rem cho nút Trước/Sau trên màn hẹp. */
+  .admin-app .tst-list-pagination .adm-page-btn {
+    height: auto;
+    min-height: 2.75rem;
+  }
+  .admin-app .tst-list-record__title {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .admin-app .tst-list-record__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Trang tạo đề thi ---------- */
+.admin-app .tst-create__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  justify-self: start;
+}
+.admin-app .tst-create-form {
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .tst-create-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--adm-sp-3);
+}
+.admin-app .tst-create__textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+.admin-app .tst-create__hint {
+  margin: 0;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+.admin-app .tst-create__error {
+  margin: 0;
+  color: var(--adm-red-text);
+  font-size: var(--adm-fs-xs);
+}
+/* Ô lỗi rỗng không chiếm chỗ; thông báo thành công cũng vậy. */
+.admin-app .tst-create__error:empty,
+.admin-app .tst-create__live:empty {
+  display: none;
+}
+.admin-app .tst-create__live {
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .tst-create-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  margin-top: var(--adm-sp-2);
+}
+
+@media (max-width: 900px) {
+  .admin-app .tst-create-form__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Desktop: bảng là bản hiển thị chính; danh sách card chỉ dùng ≤900px
+   (admin.css đã ẩn .adm-table-wrap--swap ở breakpoint đó). */
+.admin-app .tst-list-record {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .admin-app .tst-list-record {
+    display: grid;
+  }
+}

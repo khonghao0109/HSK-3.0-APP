@@ -57,11 +57,13 @@ export function toSuccessEnvelope(
   if (!isHandlerEnvelope(body)) {
     return { success: true, data: body ?? null, meta };
   }
+  if (body.extraMeta !== undefined) Object.assign(meta, body.extraMeta);
   if (body.meta !== undefined) meta.pagination = body.meta;
   return { success: true, data: body.data, meta };
 }
 
-const HANDLER_ENVELOPE_KEYS = new Set(['success', 'data', 'meta']);
+const RESERVED_META_KEYS = new Set(['requestId', 'timestamp', 'pagination']);
+const HANDLER_ENVELOPE_KEYS = new Set(['success', 'data', 'meta', 'extraMeta']);
 
 /**
  * Services that already return `{ success: true, data, meta? }` are unwrapped
@@ -69,9 +71,12 @@ const HANDLER_ENVELOPE_KEYS = new Set(['success', 'data', 'meta']);
  * only be pagination; anything more is a programming error and fails loudly
  * rather than reaching clients in an undocumented shape.
  */
-function isHandlerEnvelope(
-  body: unknown,
-): body is { success: true; data: unknown; meta?: PaginationMeta } {
+function isHandlerEnvelope(body: unknown): body is {
+  success: true;
+  data: unknown;
+  meta?: PaginationMeta;
+  extraMeta?: Record<string, unknown>;
+} {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     return false;
   }
@@ -84,11 +89,23 @@ function isHandlerEnvelope(
   }
   if (
     !Object.keys(record).every((key) => HANDLER_ENVELOPE_KEYS.has(key)) ||
-    (record.meta !== undefined && !isPaginationMeta(record.meta))
+    (record.meta !== undefined && !isPaginationMeta(record.meta)) ||
+    (record.extraMeta !== undefined && !isScalarRecord(record.extraMeta))
   ) {
     throw new Error('Handler envelope carries unsupported fields.');
   }
   return true;
+}
+
+function isScalarRecord(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.entries(value).every(
+    ([key, item]) =>
+      !RESERVED_META_KEYS.has(key) &&
+      ['boolean', 'number', 'string'].includes(typeof item),
+  );
 }
 
 function isPaginationMeta(value: unknown): value is PaginationMeta {

@@ -45,9 +45,10 @@ describe('Media admin runtime contract', () => {
     const list = backendMediaListSchema.parse({
       success: true,
       data: [{ ...asset(), storageKey: 'must-not-survive' }],
-      meta: { ...BACKEND_META, pagination },
+      meta: { ...BACKEND_META, pagination, ingestionEnabled: true },
     });
     expect(list.meta).toEqual(pagination);
+    expect(list.ingestionEnabled).toBe(true);
     expect(JSON.stringify(list)).not.toContain('must-not-survive');
     expect(JSON.stringify(list)).not.toContain(BACKEND_META.requestId);
 
@@ -71,6 +72,7 @@ describe('Media admin runtime contract', () => {
         },
       ],
       meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      ingestionEnabled: true,
     });
     expect(JSON.stringify(list)).not.toContain('must-not-survive');
 

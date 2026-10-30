@@ -78,6 +78,13 @@ export const config = {
     '/api/session/me',
     '/api/session/recover',
     '/api/learner/session/me',
+    '/api/learner/media/:path*',
     '/api/learner/onboarding/:path*',
+    '/api/learner/lessons/:path*',
+    '/api/learner/exercises/:path*',
+    '/api/learner/topics/:path*',
+    '/api/learner/dictionary/:path*',
+    '/api/learner/email-verification/:path*',
+    '/api/learner/exam/:path*',
   ],
 };

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { LearnerLogoutButton } from '@/features/learner-auth/learner-logout-button';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { isAuthFailure } from '@/lib/api/api-error';
 
@@ -20,10 +21,13 @@ export default async function LearnerProfilePage() {
   // Only the display name comes from /learning/home: any failure other than
   // a lost session still renders email and sign-out.
   let greetingName: string | null = null;
+  let streakDays: number | null = null;
   let nameUnavailable = false;
   let authFailed = false;
   try {
-    greetingName = (await getLearningHome(session.token)).greetingName;
+    const home = await getLearningHome(session.token);
+    greetingName = home.greetingName;
+    streakDays = home.streakDays;
   } catch (error) {
     if (isAuthFailure(error)) authFailed = true;
     else nameUnavailable = true;
@@ -34,23 +38,32 @@ export default async function LearnerProfilePage() {
   }
 
   return (
-    <main className="profile">
-      <h1 className="profile__title">Hồ sơ</h1>
-      <dl className="profile__card">
-        <div className="profile__row">
-          <dt>Tên</dt>
-          <dd>
-            {nameUnavailable
-              ? 'Không tải được tên hiển thị.'
-              : (greetingName ?? 'Chưa có tên hiển thị')}
-          </dd>
-        </div>
-        <div className="profile__row">
-          <dt>Email</dt>
-          <dd>{session.user.email}</dd>
-        </div>
-      </dl>
-      <LearnerLogoutButton />
-    </main>
+    <>
+      <LearnerWebTopbar streakDays={streakDays} />
+      <main className="profile">
+        <h1 className="profile__title">Hồ sơ</h1>
+        {/* Web hero card art (mẫu web/profile.html); no avatar API yet. */}
+        <span className="profile__avatar w-only" aria-hidden="true">
+          <svg className="icon">
+            <use href="#i-user" />
+          </svg>
+        </span>
+        <dl className="profile__card">
+          <div className="profile__row">
+            <dt>Tên</dt>
+            <dd>
+              {nameUnavailable
+                ? 'Không tải được tên hiển thị.'
+                : (greetingName ?? 'Chưa có tên hiển thị')}
+            </dd>
+          </div>
+          <div className="profile__row">
+            <dt>Email</dt>
+            <dd>{session.user.email}</dd>
+          </div>
+        </dl>
+        <LearnerLogoutButton />
+      </main>
+    </>
   );
 }

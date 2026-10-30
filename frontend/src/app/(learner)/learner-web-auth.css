@@ -1,0 +1,435 @@
+/* Hán Lộ — nhóm trang công khai "auth" bản web (M2.10c, PO Q81).
+   Nguồn: docs/ui_reference/web/{sign-in,sign-up,forgot-password,
+   reset-password,verify-email}.html, web/css/web.css (khung "Chưa đăng nhập"
+   và `.w-authpage`/`.w-auth`) và web/css/auth.css (toàn bộ, tiền tố `.wa-`).
+
+   Mọi rule nằm trong `@media (min-width: 1024px)` và có phạm vi
+   `.learner-app .w-public …` (hoặc root riêng của nhóm bên trong `.w-public`),
+   nên không rule nào lan sang sidebar của `.w-app` (K3b). Dưới 1024px không
+   rule nào ở đây áp dụng: `.w-public` là `display: contents`
+   (learner-web-public.css), phần chỉ có ở web đều bọc `.w-only` và chrome
+   mobile bọc `.m-only` (learner-web.css), nên trang mobile giữ nguyên từng
+   pixel (K3a).
+
+   Cột form dùng lại chính `main.app.auth` của bản mobile: số control trong DOM
+   không đổi (input, nút hiện/ẩn mật khẩu, nút submit, 3 nút social chỉ có MỘT
+   bản), chỉ dàn lại thành 2 cột của mẫu. Cột art và nav là phần tĩnh/trang trí
+   nên có bản web riêng (`.w-only`). */
+
+@media (min-width: 1024px) {
+  /* ---------- Khung `.w-authpage` + `.w-auth` (web.css dòng 146–155) ----------
+     `.w-public` giữ nền kem và `main.auth` chính là thẻ `.w-auth`: mẫu đặt thẻ
+     trong một `main.w-authpage` canh giữa; ở đây thẻ là `main` và `margin: auto`
+     canh giữa nó (reset `flex: 1` của `.w-public > main` để auto margin có chỗ
+     trống). Chiều rộng `min(1040px, 100% - 2*w-pad)` cho đúng 944px ở 1024px. */
+  .learner-app .w-public:has(> main.auth) {
+    background: var(--cream-100);
+    /* Mẫu: `.w-authpage { padding: var(--sp-10) var(--w-pad) }` — 40px cũng là
+       khoảng đệm tối thiểu quanh thẻ, không chỉ canh giữa. */
+    padding-block: var(--sp-10);
+  }
+
+  /* Nav nằm ngoài khoảng đệm đó: kéo lên đúng 40px rồi trả lại 40px bằng
+     margin dưới, nên nav vẫn chiếm 72px trong dòng chảy (không có dải kem nào
+     phía trên) và thẻ vẫn được canh giữa trong phần còn lại, y hệt mẫu ở cả
+     trường hợp thẻ cao hơn vùng trống (1024px). */
+  .learner-app .w-public:has(> main.auth) .w-pubnav {
+    margin-top: calc(-1 * var(--sp-10));
+    margin-bottom: var(--sp-10);
+  }
+
+  .learner-app .w-public > main.auth {
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: min(1040px, calc(100% - 2 * var(--w-pad)));
+    max-width: none;
+    min-height: 600px;
+    margin: auto;
+    padding: 0;
+    background: var(--surface-card);
+    border-radius: 24px;
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+  }
+
+  /* `.w-auth__form` (web.css): cột trái, canh giữa theo chiều dọc. Wrapper mang
+     thêm `.w-public` vì đó là wrapper duy nhất đã là `display: contents` dưới
+     1024px, nên khối mobile không xê dịch một pixel. */
+  .learner-app .w-public > main.auth > .w-public.w-auth__form {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 0;
+    padding: var(--sp-12) 56px;
+  }
+
+  /* `.w-auth__art` (web.css): cột phải, nền navy tràn hết thẻ. */
+  .learner-app .w-public > main.auth > .w-auth__art {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: var(--sp-5);
+    padding: var(--sp-10);
+    background: var(--navy-900);
+    color: #fff;
+    text-align: center;
+  }
+
+  /* ---------- Nav (auth.css .wa-nav/.wa-home) ---------- */
+  .learner-app .w-public .wa-nav {
+    justify-content: space-between;
+  }
+
+  .learner-app .w-public .wa-home {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 44px;
+    padding: 0 var(--sp-2);
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .wa-home:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .w-public .wa-home .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* ---------- Link quay lại trong cột form (auth.css .wa-back) ---------- */
+  .learner-app .w-public .wa-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    align-self: flex-start;
+    min-height: 44px;
+    margin: calc(-1 * var(--sp-3)) 0 var(--sp-4) calc(-1 * var(--sp-2));
+    padding: 0 var(--sp-2);
+    font-weight: 600;
+    color: var(--stone-700);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .wa-back:hover {
+    color: var(--jade-800);
+    text-decoration: underline;
+  }
+
+  .learner-app .w-public .wa-back .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* V6: `web/verify-email.html` không có `.wa-back` (khác 4 trang auth còn
+     lại). Modifier do trang verify-email truyền vào; mobile vốn đã ẩn link này
+     vì nó mang `.w-only`, nên dưới 1024px không đổi gì. */
+  .learner-app .w-public .wa-back--verify {
+    display: none;
+  }
+
+  /* ---------- Tiêu đề và phụ đề (auth.css .wa-title/.wa-sub) ---------- */
+  .learner-app .w-public .auth__title {
+    margin-top: 0;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+    color: var(--text-strong);
+  }
+
+  /* Mẫu để "Hán Lộ" cùng dòng với câu chào (mobile xuống dòng). */
+  .learner-app .w-public .auth__title span {
+    display: inline;
+    color: var(--jade-700);
+    white-space: nowrap;
+  }
+
+  .learner-app .w-public .auth__subtitle {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-base);
+    line-height: 1.55;
+    color: var(--stone-700);
+  }
+
+  /* ---------- Form (auth.css .wa-form) ---------- */
+  .learner-app .w-public .auth__form {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-6);
+  }
+
+  .learner-app .w-public .auth__form .field {
+    gap: var(--sp-2);
+  }
+
+  /* Mobile xếp hai ô cách nhau 26px; bản web dùng gap của `.wa-form`. */
+  .learner-app .w-public .auth__form .field + .field {
+    margin-top: 0;
+  }
+
+  .learner-app .w-public .auth__form .field__label {
+    font-size: var(--fs-md);
+    /* Mobile đặt 1.375rem (22px); mẫu dùng line-height 1.5 kế thừa (22.5px). */
+    line-height: 1.5;
+  }
+
+  .learner-app .w-public .auth__form .input {
+    min-height: 50px;
+    padding-left: 48px;
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .w-public .auth__form .input-wrap > .icon {
+    left: var(--sp-4);
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.8;
+  }
+
+  .learner-app .w-public .auth__form .input-wrap > .icon-btn {
+    right: var(--sp-1);
+    width: 44px;
+    height: 44px;
+  }
+
+  .learner-app .w-public .auth__form .alert {
+    margin-top: 0;
+  }
+
+  /* ---------- Quên mật khẩu (auth.css .wa-forgot, Q71) ---------- */
+  .learner-app .w-public .auth__forgot {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    min-height: 44px;
+    margin: calc(-1 * var(--sp-3)) 0;
+    padding: 0;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .auth__forgot:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- Nút chính (auth.css .wa-submit; Q74 giữ jade-800) ---------- */
+  .learner-app .w-public .auth__submit {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 0;
+    padding: 0 var(--sp-6);
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* ---------- "hoặc" + 3 nút social (auth.css .wa-divider/.wa-social) ---------- */
+  .learner-app .w-public .auth__divider {
+    height: auto;
+    margin: var(--sp-6) 0 var(--sp-4);
+    font-size: var(--fs-sm);
+    /* Giữ stone-600 của bản mobile: màu `.divider-text` của mẫu
+       (text-subtle #8a8079 trên nền trắng) chỉ đạt 3,9:1, axe báo
+       color-contrast; stone-600 đạt 5,96:1. */
+    color: var(--stone-600);
+  }
+
+  .learner-app .w-public .auth__social {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-3);
+    margin-top: 0;
+  }
+
+  .learner-app .w-public .social-btn {
+    flex-direction: column;
+    gap: 6px;
+    min-height: 64px;
+    padding: var(--sp-2);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .learner-app .w-public .social-btn svg {
+    position: static;
+    width: 24px;
+    height: 24px;
+  }
+
+  /* ---------- Dòng chuyển đăng nhập/đăng ký (auth.css .wa-switch) ----------
+     Chỉ có ở bản web: đặt sau khối social và trước `.wa-terms` trong DOM
+     (slot `switchLink` của form), nên thứ tự Tab trùng thứ tự nhìn. */
+  .learner-app .w-public .wa-switch {
+    display: block;
+    margin-top: var(--sp-4);
+    text-align: center;
+    color: var(--stone-700);
+  }
+
+  .learner-app .w-public .wa-switch a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .wa-switch a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- Điều khoản/Bảo mật (auth.css .wa-terms, Q80 jade-800) ---------- */
+  .learner-app .w-public .auth__terms {
+    margin-top: var(--sp-3);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+    color: var(--stone-700);
+  }
+
+  /* Mẫu một dòng; mobile xuống dòng giữa câu. */
+  .learner-app .w-public .auth__terms br {
+    display: none;
+  }
+
+  /* inline-block + padding/margin âm: vùng bấm 44px mà dòng chữ không giãn.
+     Đệm trên 14 / dưới 12 (thay vì 12/12 của mẫu) để hộp link cao 44px mà
+     đáy vẫn trùng baseline như mẫu — chữ không xê dịch pixel nào. */
+  .learner-app .w-public .auth__terms a {
+    display: inline-block;
+    padding: 14px 0 12px;
+    margin: -14px 0 -12px;
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .auth__terms a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- Trạng thái kết quả (auth.css .wa-icon/.wa-actions/.wa-note) ---------- */
+  .learner-app .w-public .auth-result__icon {
+    width: 72px;
+    height: 72px;
+    margin-top: 0;
+    margin-bottom: var(--sp-6);
+  }
+
+  .learner-app .w-public .auth-result__icon .icon {
+    width: 34px;
+    height: 34px;
+    stroke-width: 1.8;
+  }
+
+  .learner-app .w-public .auth__actions {
+    gap: var(--sp-3);
+    margin-top: var(--sp-8);
+  }
+
+  .learner-app .w-public .auth__actions .alert {
+    margin-bottom: 0;
+  }
+
+  .learner-app .w-public .auth__actions .btn {
+    width: 100%;
+    min-height: 48px;
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+    white-space: normal;
+    text-align: center;
+  }
+
+  .learner-app .w-public .wa-note {
+    display: flex;
+    gap: var(--sp-3);
+    align-items: flex-start;
+    margin: var(--sp-6) 0 0;
+    padding: var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--cream-100);
+    color: var(--stone-700);
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .w-public .wa-note .icon {
+    flex: none;
+    margin-top: 2px;
+    color: var(--jade-700);
+  }
+
+  /* ---------- Cột art (auth.css .wa-art/.wa-points) ---------- */
+  .learner-app .w-public .wa-art figure {
+    margin: 0;
+    padding: var(--sp-3);
+    border-radius: var(--r-xl);
+    background: var(--cream-50);
+  }
+
+  .learner-app .w-public .wa-art figure img {
+    display: block;
+    border-radius: var(--r-lg);
+  }
+
+  .learner-app .w-public .wa-art--tall figure img {
+    width: 210px;
+    height: auto;
+  }
+
+  .learner-app .w-public .wa-art--wide figure img {
+    width: min(340px, 100%);
+    height: auto;
+  }
+
+  .learner-app .w-public .wa-art h2 {
+    text-wrap: balance;
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+  }
+
+  .learner-app .w-public .wa-art p {
+    max-width: 360px;
+    margin-top: calc(-1 * var(--sp-3));
+    text-wrap: balance;
+    color: #d7ddeb;
+  }
+
+  .learner-app .w-public .wa-points {
+    list-style: none;
+    display: grid;
+    gap: var(--sp-2);
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    color: #d7ddeb;
+  }
+
+  .learner-app .w-public .wa-points li {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+  }
+
+  .learner-app .w-public .wa-points .icon {
+    flex: none;
+    color: var(--jade-200);
+  }
+}

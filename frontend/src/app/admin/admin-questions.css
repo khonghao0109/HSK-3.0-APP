@@ -1,0 +1,451 @@
+/**
+ * admin-questions.css — lớp riêng của Ngân hàng câu hỏi (M4.1a, TL-89…TL-92).
+ * Chỉ dùng biến CSS của admin (ADR-008); import từ ba route
+ * app/admin/questions/{page,new,[questionId]}; không đặt `!important`.
+ */
+
+/* ---------- Hàng filter ---------- */
+.admin-app .qn-filters__search {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.admin-app .qn-filters__more {
+  position: relative;
+}
+.admin-app .qn-filters__more > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.admin-app .qn-filters__more > summary::-webkit-details-marker {
+  display: none;
+}
+.admin-app .qn-filters__more-body {
+  display: grid;
+  gap: var(--adm-sp-1);
+  padding: var(--adm-sp-2) 0 var(--adm-sp-1);
+}
+.admin-app .qn-filters__label {
+  font-size: var(--adm-fs-xs);
+  color: var(--adm-slate-700);
+}
+
+/* ---------- Bố cục: cột Ngân hàng + bảng ---------- */
+.admin-app .qn-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 10.5rem) minmax(0, 1fr);
+  gap: var(--adm-sp-3);
+  align-items: start;
+}
+.admin-app .qn-list-card {
+  min-width: 0;
+}
+
+.admin-app .qn-bank {
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  background: var(--adm-paper);
+  padding: var(--adm-sp-3);
+}
+.admin-app .qn-bank__title {
+  margin: 0 0 var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  font-weight: 700;
+  color: var(--adm-navy-900);
+}
+.admin-app .qn-bank__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-app .qn-bank__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-2);
+  min-height: 44px;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border-radius: var(--adm-r-sm);
+  color: var(--adm-navy-900);
+  text-decoration: none;
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .qn-bank__item:hover {
+  background: var(--adm-slate-050);
+}
+.admin-app .qn-bank__item[aria-current='true'] {
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+  font-weight: 700;
+}
+.admin-app .qn-bank__count {
+  color: var(--adm-slate-500);
+  font-variant-numeric: tabular-nums;
+}
+.admin-app .qn-bank__item[aria-current='true'] .qn-bank__count {
+  color: var(--adm-jade-800);
+}
+
+/* ---------- Bảng câu hỏi ---------- */
+/*
+ * G1 (vòng sửa 2): 7 cột phụ hiện đủ chữ, không ellipsis; chỉ cột "Nội dung
+ * câu hỏi" co và cắt. Width bằng rem đã gồm padding ngang 0.375rem mỗi bên
+ * (đo Inter 13px: "Trung bình" 67, "Phiên bản" 63, "24/10/2026 06:43" 112,
+ * "Đã xuất bản" 74, "Có bản sửa chờ duyệt" 135, "n"×40 = 308). Giữ
+ * table-layout: fixed; cột 2 nhận phần còn lại (~336px ở 1440 ⇒ >40 ký tự).
+ */
+.admin-app .qn-table {
+  table-layout: fixed;
+  width: 100%;
+}
+.admin-app .qn-table th,
+.admin-app .qn-table td {
+  white-space: nowrap;
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+/* Chỉ cột nội dung được cắt bằng ellipsis. */
+.admin-app .qn-table th:nth-child(2),
+.admin-app .qn-table td:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-app .qn-table th:nth-child(1),
+.admin-app .qn-table td:nth-child(1) {
+  width: 3rem;
+}
+.admin-app .qn-table th:nth-child(3),
+.admin-app .qn-table td:nth-child(3) {
+  width: 5rem;
+}
+.admin-app .qn-table th:nth-child(4),
+.admin-app .qn-table td:nth-child(4) {
+  width: 4.5rem;
+}
+.admin-app .qn-table th:nth-child(5),
+.admin-app .qn-table td:nth-child(5) {
+  width: 5.25rem;
+}
+.admin-app .qn-table th:nth-child(6),
+.admin-app .qn-table td:nth-child(6) {
+  width: 5rem;
+}
+.admin-app .qn-table th:nth-child(7),
+.admin-app .qn-table td:nth-child(7) {
+  width: 8rem;
+}
+.admin-app .qn-table th:nth-child(8),
+.admin-app .qn-table td:nth-child(8) {
+  width: 9.5rem;
+}
+.admin-app .qn-cell-content {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+}
+.admin-app .qn-row:hover .qn-cell-content,
+.admin-app .qn-cell-content:focus-visible {
+  text-decoration: underline;
+}
+.admin-app .qn-row__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.admin-app .qn-row--selected {
+  /* F6: nền nổi bật + viền trái bằng biến sẵn có, AA với chữ navy-900. */
+  background: var(--adm-jade-50);
+  box-shadow: inset 3px 0 0 var(--adm-jade-800);
+}
+.admin-app .qn-pending {
+  /* F6: nhãn cảnh báo amber (không phải màu lỗi), một dòng dưới badge. */
+  display: block;
+  margin-top: 2px;
+  color: var(--adm-amber-text);
+  font-size: var(--adm-fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-app .qn-record-list__id {
+  /* G2: ID là nhãn nhỏ riêng trên tiêu đề, không dính chữ vào tiêu đề. */
+  display: block;
+  margin-bottom: var(--adm-sp-1);
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  letter-spacing: 0.02em;
+}
+/* F7: card hẹp — meta 2 cột như card admin-users; link chọn câu ≥44px. */
+.admin-app .qn-record-list .adm-record-list__facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-app .qn-record-list > li > .adm-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  justify-self: start;
+}
+
+/* ---------- Lịch sử phiên bản ---------- */
+.admin-app .qn-history__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-3);
+}
+.admin-app .qn-history__table td {
+  vertical-align: top;
+}
+.admin-app .qn-history .adm-record-list {
+  margin: var(--adm-sp-2) 0 0;
+}
+
+/* ---------- Form ---------- */
+.admin-app .qn-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--adm-sp-3);
+}
+.admin-app .qn-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+.admin-app .qn-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.admin-app .qn-fieldset > legend {
+  margin-bottom: var(--adm-sp-2);
+  font-size: var(--adm-fs-sm);
+  font-weight: 700;
+  color: var(--adm-navy-900);
+}
+.admin-app .qn-option-list,
+.admin-app .qn-accepted-list,
+.admin-app .qn-token-list {
+  display: grid;
+  gap: var(--adm-sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-app .qn-option {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+.admin-app .qn-option__radio {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+/* G5: radio theo house pattern của form bài tập (admin-exercise-form.css). */
+.admin-app .qn-option__radio input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  flex: none;
+  margin: 0;
+  accent-color: var(--adm-jade-700);
+}
+.admin-app .qn-option__radio input:focus-visible {
+  outline: 3px solid var(--adm-jade-700);
+  outline-offset: 2px;
+}
+.admin-app .qn-option .adm-input,
+.admin-app .qn-token .adm-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.admin-app .qn-token {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+.admin-app .qn-token__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--adm-slate-100);
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-xs);
+  flex: none;
+}
+.admin-app .qn-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  margin-top: var(--adm-sp-2);
+}
+.admin-app .qn-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  min-height: 44px;
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .qn-radio-row {
+  display: flex;
+  gap: var(--adm-sp-4);
+}
+.admin-app .qn-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  min-height: 44px;
+  font-size: var(--adm-fs-sm);
+}
+.admin-app .qn-tag-row {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+}
+.admin-app .qn-tag-row .adm-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.admin-app .qn-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-1);
+  margin: var(--adm-sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-app .qn-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--adm-sp-1);
+  padding: 2px var(--adm-sp-1) 2px var(--adm-sp-2);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: 999px;
+  background: var(--adm-slate-050);
+  font-size: var(--adm-fs-xs);
+}
+
+/* ---------- Vùng live + workflow ---------- */
+.admin-app .qn-live {
+  margin: 0;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
+  border-radius: var(--adm-r-sm);
+  font-size: var(--adm-fs-sm);
+}
+/* N2: chưa có thông báo thì vùng live không chiếm chỗ (React render null). */
+.admin-app .qn-live:empty {
+  min-height: 0;
+  padding: 0;
+}
+.admin-app .qn-live--ok {
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+}
+.admin-app .qn-live--error {
+  background: var(--adm-red-100);
+  color: var(--adm-red-text);
+}
+.admin-app .qn-reasons {
+  margin: var(--adm-sp-1) 0 0;
+  padding-left: var(--adm-sp-4);
+}
+.admin-app .qn-workflow {
+  display: grid;
+  gap: var(--adm-sp-3);
+}
+.admin-app .qn-detail__title {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Dialog lưu trữ (TL-91) ---------- */
+.admin-app .qn-dialog {
+  width: min(92vw, 32rem);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: var(--adm-r-md);
+  padding: 0;
+  color: var(--adm-navy-900);
+  background: var(--adm-paper);
+  box-shadow: 0 24px 64px rgb(7 20 48 / 24%);
+}
+.admin-app .qn-dialog::backdrop {
+  background: var(--adm-backdrop-bg);
+}
+.admin-app .qn-dialog__body {
+  display: grid;
+  gap: var(--adm-sp-3);
+  padding: var(--adm-sp-5);
+}
+.admin-app .qn-dialog__title {
+  margin: 0;
+  font-size: var(--adm-fs-lg);
+}
+.admin-app .qn-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--adm-sp-2);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .admin-app .qn-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-app .qn-bank {
+    padding: var(--adm-sp-2);
+  }
+  .admin-app .qn-bank__list {
+    display: flex;
+    gap: var(--adm-sp-2);
+    overflow-x: auto;
+    padding-bottom: var(--adm-sp-1);
+  }
+  .admin-app .qn-bank__item {
+    white-space: nowrap;
+    min-height: 44px;
+  }
+  .admin-app .qn-form__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 430px) {
+  /* F7: giống card admin-users ở ≤430px — meta về một cột. */
+  .admin-app .qn-record-list .adm-record-list__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* G3: mỗi lựa chọn/mảnh câu trên MỘT hàng: radio | input co giãn | nút ×. */
+  .admin-app .qn-option,
+  .admin-app .qn-token {
+    flex-wrap: nowrap;
+  }
+  .admin-app .qn-option .adm-input,
+  .admin-app .qn-token .adm-input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* G3+G5: radio | input | nút × cùng một hàng, top thẳng nhau. Vùng chạm
+     44px nằm ở label; bản thân input vẫn 1.1rem theo house pattern. */
+  .admin-app .qn-option__radio {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+  }
+  .admin-app .qn-option > .adm-btn:last-child,
+  .admin-app .qn-token > .adm-btn:last-child {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .admin-app .qn-token__index {
+    display: none;
+  }
+}

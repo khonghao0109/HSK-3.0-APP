@@ -53,8 +53,37 @@ describe('CSP nonce proxy and session refresh router', () => {
     '/api/session/recover',
     '/api/learner/session/me',
     '/api/learner/onboarding/complete',
+    '/api/learner/lessons/12/start',
+    '/api/learner/lessons/12/complete',
+    '/api/learner/topics/7/complete',
+    '/api/learner/exercises/34/attempts',
+    '/api/learner/media/7/access',
+    '/api/learner/media/7/content',
+    '/api/learner/dictionary?q=a',
+    '/api/learner/dictionary/words/5/save',
+    '/api/learner/email-verification/request',
+    '/api/learner/exam/tests/7/attempts',
   ])('runs for targeted request %s', (url) => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
+  });
+
+  it('keeps every learner BFF route in the matcher (M2.6b, M2.1c)', () => {
+    expect(config.matcher).toEqual(
+      expect.arrayContaining([
+        '/api/admin/:path*',
+        '/api/session/me',
+        '/api/session/recover',
+        '/api/learner/session/me',
+        '/api/learner/media/:path*',
+        '/api/learner/onboarding/:path*',
+        '/api/learner/lessons/:path*',
+        '/api/learner/exercises/:path*',
+        '/api/learner/topics/:path*',
+        '/api/learner/dictionary/:path*',
+        '/api/learner/email-verification/:path*',
+        '/api/learner/exam/:path*',
+      ]),
+    );
   });
 
   it.each([{ 'next-router-prefetch': '1' }, { purpose: 'prefetch' }])(
@@ -129,6 +158,52 @@ describe('CSP nonce proxy and session refresh router', () => {
         'rotated-learner-refresh',
       );
       expect(res.cookies.get('hsk_admin_session')).toBeUndefined();
+    });
+
+    it('refreshes an expired learner access cookie on the dictionary BFF route', async () => {
+      const expiredAccess = makeJwt(-60);
+      const newLearnerAccess = makeJwt(900);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        Response.json({
+          success: true,
+          data: {
+            user: { id: 2, email: 'learner@example.test', role: 'user' },
+            accessToken: newLearnerAccess,
+            refreshToken: 'rotated-learner-refresh',
+            refreshTokenExpiresAt: new Date(
+              Date.now() + 86400000,
+            ).toISOString(),
+          },
+          meta: {
+            requestId: 'test-request-id',
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      );
+
+      const req = new NextRequest(
+        'https://frontend.example.test/api/learner/dictionary?q=a',
+        {
+          headers: {
+            cookie: `hsk_learner_session=${expiredAccess}; hsk_learner_session_refresh=current-learner-refresh`,
+          },
+        },
+      );
+
+      expect(
+        doesProxyMatch({ config, nextConfig: {}, url: req.nextUrl.pathname }),
+      ).toBe(true);
+      const res = await proxy(req);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(String(fetchSpy.mock.calls[0]?.[0])).toContain(
+        '/api/v1/auth/refresh',
+      );
+      expect(res.cookies.get('hsk_learner_session')?.value).toBe(
+        newLearnerAccess,
+      );
+      expect(res.cookies.get('hsk_learner_session_refresh')?.value).toBe(
+        'rotated-learner-refresh',
+      );
     });
 
     it('refreshes admin cookie on admin routes maintaining existing behavior', async () => {

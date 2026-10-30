@@ -8,8 +8,10 @@ import { serverEnv } from '@/lib/config/server-env';
 
 import {
   backendMediaDetailSchema,
+  backendMediaIngestionListSchema,
   backendMediaListSchema,
   type AdminMediaDetail,
+  type AdminMediaIngestion,
   type MediaListResponse,
 } from './media-contract';
 import { serializeMediaQuery, type MediaQuery } from './media-query';
@@ -44,4 +46,20 @@ export async function loadMediaAsset(
   return backendMediaDetailSchema.parse(
     await backend.request(`/api/v1/admin/cms/media/${mediaId}`, { token }),
   ).data;
+}
+
+/** TL-51: 20 lượt mỗi trang, mới nhất trước. */
+export const MEDIA_INGESTION_PAGE_LIMIT = 20;
+
+export async function loadMediaIngestions(page: number): Promise<{
+  data: AdminMediaIngestion[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}> {
+  const token = await sessionToken();
+  return backendMediaIngestionListSchema.parse(
+    await backend.request(
+      `/api/v1/admin/cms/media/ingestions?page=${page}&limit=${MEDIA_INGESTION_PAGE_LIMIT}`,
+      { token },
+    ),
+  );
 }

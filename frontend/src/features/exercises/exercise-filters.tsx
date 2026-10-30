@@ -1,69 +1,85 @@
 import Link from 'next/link';
 
+import {
+  exerciseStatusLabel,
+  exerciseTypeLabel,
+} from '@/features/admin-shell/admin-labels';
+
 import { exerciseStatuses, exerciseTypes } from './exercise-contract';
 import type { ExerciseQuery } from './exercise-query';
 
-function label(value: string): string {
-  return value
-    .split('_')
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ');
-}
-
 export function ExerciseFilters({ query }: { query: ExerciseQuery }) {
   return (
-    <form className="filter-bar" method="get" action="/admin/exercises">
+    <form
+      className="adm-filters"
+      method="get"
+      action="/admin/exercises"
+      role="search"
+      aria-label="Lọc bài tập"
+    >
       <input type="hidden" name="page" value="1" />
       <input type="hidden" name="limit" value={query.limit} />
-      <div className="field-inline">
-        <label htmlFor="status">Status</label>
-        <select id="status" name="status" defaultValue={query.status ?? ''}>
-          <option value="">All statuses</option>
-          {exerciseStatuses.map((status) => (
-            <option key={status} value={status}>
-              {label(status)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field-inline">
-        <label htmlFor="type">Type</label>
-        <select id="type" name="type" defaultValue={query.type ?? ''}>
-          <option value="">All types</option>
-          {exerciseTypes.map((type) => (
-            <option key={type} value={type}>
-              {label(type)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field-inline field-inline--short">
-        <label htmlFor="lessonId">Lesson ID</label>
-        <input
-          id="lessonId"
-          name="lessonId"
-          type="number"
-          min="1"
-          defaultValue={query.lessonId}
-          placeholder="Any"
-        />
-      </div>
-      <div className="field-inline field-inline--short">
-        <label htmlFor="topicId">Topic ID</label>
-        <input
-          id="topicId"
-          name="topicId"
-          type="number"
-          min="1"
-          defaultValue={query.topicId}
-          placeholder="Any"
-        />
-      </div>
-      <button className="button button--primary" type="submit">
-        Apply filters
+      <label className="sr-only" htmlFor="status">
+        Trạng thái
+      </label>
+      <select
+        className="adm-input"
+        id="status"
+        name="status"
+        defaultValue={query.status ?? ''}
+      >
+        <option value="">Tất cả trạng thái</option>
+        {exerciseStatuses.map((status) => (
+          <option key={status} value={status}>
+            {exerciseStatusLabel(status)}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="type">
+        Loại bài tập
+      </label>
+      <select
+        className="adm-input"
+        id="type"
+        name="type"
+        defaultValue={query.type ?? ''}
+      >
+        <option value="">Tất cả loại bài tập</option>
+        {exerciseTypes.map((type) => (
+          <option key={type} value={type}>
+            {exerciseTypeLabel(type)}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="lessonId">
+        ID bài học
+      </label>
+      <input
+        className="adm-input"
+        id="lessonId"
+        name="lessonId"
+        type="number"
+        min="1"
+        defaultValue={query.lessonId}
+        placeholder="ID bài học"
+      />
+      <label className="sr-only" htmlFor="topicId">
+        ID chủ đề
+      </label>
+      <input
+        className="adm-input"
+        id="topicId"
+        name="topicId"
+        type="number"
+        min="1"
+        defaultValue={query.topicId}
+        placeholder="ID chủ đề"
+      />
+      <button className="adm-btn adm-btn--primary" type="submit">
+        Lọc
       </button>
-      <Link className="button button--ghost" href="/admin/exercises">
-        Clear
+      <Link className="adm-btn adm-btn--ghost" href="/admin/exercises">
+        Xoá lọc
       </Link>
     </form>
   );

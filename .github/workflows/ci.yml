@@ -149,3 +149,44 @@ jobs:
 
       - name: Generated types
         run: npm run test:generated-types
+
+  # M1.8 / ADR-008 §11: build 2 image production (linux/amd64) và ghi image ID
+  # vào job summary làm immutable artifact reference. Không push registry,
+  # không ký/attest (đó là M6.2).
+  images:
+    name: images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Build backend image
+        run: docker build -t hsk-backend:ci backend/
+
+      - name: Build frontend image
+        run: docker build -t hsk-frontend:ci frontend/
+
+      - name: Verify non-root user
+        run: |
+          backend_uid="$(docker run --rm --entrypoint id hsk-backend:ci -u)"
+          frontend_uid="$(docker run --rm --entrypoint id hsk-frontend:ci -u)"
+          echo "backend uid=$backend_uid, frontend uid=$frontend_uid"
+          test "$backend_uid" != "0"
+          test "$frontend_uid" != "0"
+
+      - name: Write image IDs to summary
+        run: |
+          backend_id="$(docker image inspect --format '{{.Id}}' hsk-backend:ci)"
+          frontend_id="$(docker image inspect --format '{{.Id}}' hsk-frontend:ci)"
+          {
+            echo "## Container images (M1.8, build linux/amd64, không push)"
+            echo ""
+            echo "| Image | ID (docker image inspect .Id) |"
+            echo "| --- | --- |"
+            echo "| backend | \`${backend_id}\` |"
+            echo "| frontend | \`${frontend_id}\` |"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

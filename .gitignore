@@ -101,3 +101,6 @@ report.*.*.*.*.json
 
 # Bộ giao diện mẫu HTML dựng local từ docs/ui_image (tham chiếu thiết kế, không commit)
 /docs/ui_reference/
+
+# Reverse-engineering outputs (local only)
+/reverse/

@@ -14,6 +14,8 @@ export interface ApiSuccessResponse<T = unknown, TMeta = PaginationMeta> {
   success: true;
   data: T;
   meta?: TMeta;
+  /** Extra top-level `meta` fields (scalars only); never overrides the base ones. */
+  extraMeta?: Record<string, boolean | number | string>;
 }
 
 export interface ApiResponseMeta {

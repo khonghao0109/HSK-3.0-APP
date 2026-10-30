@@ -16,17 +16,60 @@ export type ApiFailureKind =
   | 'timeout'
   | 'unknown';
 
+/**
+ * M5.1b1 (F1/TL-20): chi tiết lỗi 422 mà form cần để hiện đúng ô — chỉ hai
+ * khoá này được đi qua BFF, mọi khoá khác của `error.details` bị bỏ.
+ */
+export type ApiErrorDetailRow = {
+  rowNumber: number;
+  code: string;
+  path: string;
+};
+
+export type ApiErrorReason = {
+  /** Mã lý do máy đọc (vd `explanation_required`). */
+  code: string;
+  /** Field liên quan (vd `explanation`). */
+  field: string;
+};
+
+export type ApiErrorDetails = {
+  /** Vị trí lỗi trong payload (ví dụ `content.options[1].text`). */
+  path?: string;
+  /** C1: vị trí cụ thể backend trả cho lỗi cấu trúc (`sections[0]…`), ≤ 200. */
+  field?: string;
+  /** C1: mã lý do của lỗi 409 (`archived`, `not_found`, `wrong_type`, …), ≤ 64. */
+  reason?: string;
+  /** Lỗi theo dòng của import (tối đa 100 dòng). */
+  errors?: ApiErrorDetailRow[];
+  /** M4.1a (TL-91): lý do publish bị chặn, tối đa 20 mục. */
+  reasons?: ApiErrorReason[];
+};
+
 export type ApiFailure = {
   status: number;
   kind: ApiFailureKind;
   message: string;
   retryable: boolean;
   requestId?: string;
+  /** `error.code` of the backend error envelope, when it is a string. */
+  code?: string;
+  /** Chi tiết lỗi đã lọc (chỉ `path` và `errors`). */
+  details?: ApiErrorDetails;
 };
+
+export const API_ERROR_DETAILS_LIMITS = {
+  maxPathLength: 200,
+  maxFieldLength: 200,
+  maxReasonLength: 64,
+  maxErrors: 100,
+  maxCodeLength: 64,
+  maxReasons: 20,
+} as const;
 
 const FAILURE_BY_STATUS: Record<
   number,
-  Omit<ApiFailure, 'status' | 'requestId'>
+  Omit<ApiFailure, 'status' | 'requestId' | 'code'>
 > = {
   400: {
     kind: 'invalid_request',
@@ -79,6 +122,8 @@ export function normalizeApiFailure(input: {
     ? (input.status as number)
     : 500;
   const known = FAILURE_BY_STATUS[status];
+  const code = envelopeCode(input.body);
+  const details = sanitizeErrorDetails(envelopeDetails(input.body));
   return {
     status,
     ...(known ?? {
@@ -87,7 +132,117 @@ export function normalizeApiFailure(input: {
       retryable: status >= 500,
     }),
     ...(input.requestId ? { requestId: input.requestId } : {}),
+    ...(code === undefined ? {} : { code }),
+    ...(details === undefined ? {} : { details }),
   };
+}
+
+/**
+ * F1: giữ đúng `path` (string ≤ 200), `field` (≤ 200), `reason` (≤ 64),
+ * `errors` (≤ 100 × {rowNumber int, code ≤ 64, path ≤ 200}) và `reasons`
+ * (≤ 20 × {code ≤ 64, field ≤ 64}), bỏ mọi khoá khác và mọi phần tử sai
+ * shape/quá dài. Không có mục nào hợp lệ → undefined.
+ */
+export function sanitizeErrorDetails(
+  value: unknown,
+): ApiErrorDetails | undefined {
+  if (!isPlainRecord(value)) return undefined;
+  const path = validString(value.path, API_ERROR_DETAILS_LIMITS.maxPathLength);
+  // C1 (M4.1b vòng sửa 2): `TEST_QUESTION_NOT_USABLE`/`MEDIA_NOT_USABLE` trả
+  // `field` + `reason` ở details để UI hiện đúng vị trí câu/nhóm.
+  const field = validString(
+    value.field,
+    API_ERROR_DETAILS_LIMITS.maxFieldLength,
+  );
+  const reason = validString(
+    value.reason,
+    API_ERROR_DETAILS_LIMITS.maxReasonLength,
+  );
+
+  let errors: ApiErrorDetailRow[] | undefined;
+  if (Array.isArray(value.errors)) {
+    const rows: ApiErrorDetailRow[] = [];
+    for (const entry of value.errors) {
+      if (rows.length >= API_ERROR_DETAILS_LIMITS.maxErrors) break;
+      if (!isPlainRecord(entry)) continue;
+      if (!Number.isInteger(entry.rowNumber)) continue;
+      const code = validString(
+        entry.code,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      const rowPath = validString(
+        entry.path,
+        API_ERROR_DETAILS_LIMITS.maxPathLength,
+      );
+      if (code === undefined || rowPath === undefined) continue;
+      rows.push({ rowNumber: entry.rowNumber as number, code, path: rowPath });
+    }
+    if (rows.length > 0) errors = rows;
+  }
+
+  let reasons: ApiErrorReason[] | undefined;
+  if (Array.isArray(value.reasons)) {
+    const entries: ApiErrorReason[] = [];
+    for (const entry of value.reasons) {
+      if (entries.length >= API_ERROR_DETAILS_LIMITS.maxReasons) break;
+      if (!isPlainRecord(entry)) continue;
+      const code = validString(
+        entry.code,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      const field = validString(
+        entry.field,
+        API_ERROR_DETAILS_LIMITS.maxCodeLength,
+      );
+      if (code === undefined || field === undefined) continue;
+      entries.push({ code, field });
+    }
+    if (entries.length > 0) reasons = entries;
+  }
+
+  if (
+    path === undefined &&
+    field === undefined &&
+    reason === undefined &&
+    errors === undefined &&
+    reasons === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(path === undefined ? {} : { path }),
+    ...(field === undefined ? {} : { field }),
+    ...(reason === undefined ? {} : { reason }),
+    ...(errors === undefined ? {} : { errors }),
+    ...(reasons === undefined ? {} : { reasons }),
+  };
+}
+
+function validString(value: unknown, maxLength: number): string | undefined {
+  return typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= maxLength
+    ? value
+    : undefined;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function envelopeDetails(body: unknown): unknown {
+  if (typeof body !== 'object' || body === null) return undefined;
+  const error = (body as { error?: unknown }).error;
+  if (typeof error !== 'object' || error === null) return undefined;
+  return (error as { details?: unknown }).details;
+}
+
+function envelopeCode(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null) return undefined;
+  const error = (body as { error?: unknown }).error;
+  if (typeof error !== 'object' || error === null) return undefined;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
 }
 
 export class BackendRequestError extends Error implements ApiFailure {
@@ -95,6 +250,8 @@ export class BackendRequestError extends Error implements ApiFailure {
   kind: ApiFailureKind;
   retryable: boolean;
   requestId?: string;
+  code?: string;
+  details?: ApiErrorDetails;
 
   constructor(failure: ApiFailure) {
     super(failure.message);
@@ -103,6 +260,8 @@ export class BackendRequestError extends Error implements ApiFailure {
     this.kind = failure.kind;
     this.retryable = failure.retryable;
     this.requestId = failure.requestId;
+    this.code = failure.code;
+    this.details = failure.details;
   }
 }
 
