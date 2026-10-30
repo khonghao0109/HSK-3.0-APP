@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 27/10/2026 theo HEAD `9de1eb0` (M4.2b: thêm `PUT /exam/attempts/:attemptId/answers/:questionKey`, `PUT /exam/attempts/:attemptId/answers`, `GET /exam/attempts/:attemptId/media-grants`). Tài liệu chia hai phần:
+Cập nhật 30/10/2026 theo HEAD `8033fc2` (M4.2c Pha A: thêm `POST /exam/attempts/:attemptId/submit`, event `submitted`, mã `EXAM_ATTEMPT_ALREADY_SUBMITTED`, `remainingSeconds = 0` khi attempt đã terminal). Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -90,12 +90,14 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `POST /users/me/deletion-request` 5/15 phút, `POST /exam/tests/:testId/attempts` và
   `GET /exam/attempts/:attemptId` 60/phút/user, `PUT /exam/attempts/:attemptId/answers/:questionKey`
   240/phút/user, `PUT /exam/attempts/:attemptId/answers` 60/phút/user,
-  `GET /exam/attempts/:attemptId/media-grants` 30/phút/user (mục A.9d). Khi `NODE_ENV=test`,
+  `GET /exam/attempts/:attemptId/media-grants` 30/phút/user,
+  `POST /exam/attempts/:attemptId/submit` 10/phút/user (mục A.9d). Khi `NODE_ENV=test`,
   mặc định và các route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên
-  1.000 (trần IP của route media content nâng lên 10.000), **trừ** route exam của M4.2b: chỉ
-  `POST /exam/tests/:testId/attempts` và `PUT /exam/attempts/:attemptId/answers/:questionKey`
-  được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers` (60), `GET /exam/attempts/:attemptId`
-  (60) và `GET /exam/attempts/:attemptId/media-grants` (30) giữ nguyên ở mọi môi trường. Các
+  1.000 (trần IP của route media content nâng lên 10.000), **trừ** route exam: `POST
+  /exam/tests/:testId/attempts`, `PUT /exam/attempts/:attemptId/answers/:questionKey` và `POST
+  /exam/attempts/:attemptId/submit` được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers`
+  (60), `GET /exam/attempts/:attemptId` (60) và `GET /exam/attempts/:attemptId/media-grants` (30)
+  giữ nguyên ở mọi môi trường. Các
   route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
@@ -1043,9 +1045,9 @@ hàm `collectTestPublishBlockers` này, nên đề đã xuất bản mà media c
 `POST /exam/tests/:testId/attempts` trả `409 EXAM_TEST_UNAVAILABLE` kèm vị trí câu. Bài đang
 làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot (Q120/Q121).
 
-### A.9d Thi thử — học viên (M4.2a/M4.2b)
+### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c)
 
-Envelope §1. 6 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
+Envelope §1. 7 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
 response có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
 `1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
 của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
@@ -1058,6 +1060,7 @@ không lộ đề nháp.
 | `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
 | `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
 | `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
+| `POST` | `/exam/attempts/:attemptId/submit` | `{ "idempotencyKey": "<uuid>" }` | `ExamSubmitView` — chốt bài đúng một lần; cùng key → `200` với `replayed: true`, key khác trên bài đã nộp → `409 EXAM_ATTEMPT_ALREADY_SUBMITTED` (TL-150/TL-151) |
 | `PUT` | `/exam/attempts/:attemptId/answers/:questionKey` | `SaveExamAnswer` | `ExamAnswerSaveView` — lưu một câu (TL-121) |
 | `PUT` | `/exam/attempts/:attemptId/answers` | `{ "items": [SaveExamAnswer & { questionKey }] }` 1–20 item | `{ results: [ExamAnswerBatchResult], serverNow, remainingSeconds }` (TL-124) |
 | `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128) |
@@ -1076,6 +1079,17 @@ không lộ đề nháp.
 ```json
 { id, testId, status, startedAt, expiresAt, serverNow, remainingSeconds, maxScore, questionCount, test:{title,instruction,levelCode,durationMinutes,passScore}, sections:[{key,orderIndex,title,instruction,skill,groups:[{key,orderIndex,title,instruction,content,audio,image,questions:[{key,orderIndex,type,skill,content,answers,audio,image}]}]}], answers:[{questionKey,answer,isFlagged,version,answeredAt,lastSavedAt}] }
 ```
+
+`ExamSubmitView` (200 của `POST /exam/attempts/:attemptId/submit`, TL-150):
+
+```json
+{ id, status: "submitted", submittedAt, serverNow, answeredCount, unansweredCount, flaggedCount, replayed }
+```
+
+`answeredCount` dùng đúng predicate của intro (F3: `answer` khác JSON `null`); `unansweredCount =
+questionCount − answeredCount` với `questionCount` đếm từ snapshot đã đóng băng; `flaggedCount` là
+số row `isFlagged = true`. `replayed: true` nghĩa là request này trả lại kết quả của một lần nộp
+đã commit trước đó cùng `idempotencyKey` (không ghi thêm event, không đổi `submittedAt`).
 
 `ExamAnswerSaveView` = `ExamAnswerView` + `serverNow`, `remainingSeconds`; `ExamAnswerView` =
 `{ questionKey, answer, isFlagged, version, answeredAt, lastSavedAt }` (TL-127). `questionKey`
@@ -1128,8 +1142,9 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `404` | `EXAM_QUESTION_NOT_FOUND` | `:questionKey` không khớp `^q\d+$` hoặc không có trong snapshot của attempt (TL-121) |
 | `400` | `EXAM_ANSWER_INVALID` | Sai kiểu hoặc sai shape với `snapshot.type`, hoặc sai id option/token: `details.field` theo type (`answer.choice`, `answer.value`, `answer.text`, `answer.order`); thiếu hẳn `answer` → `details.field = answer` |
 | `409` | `EXAM_ANSWER_VERSION_CONFLICT` | `expectedVersion` lệch version hiện tại, hoặc `null` khi câu đã có row; `details.current` |
-| `409` | `EXAM_ATTEMPT_EXPIRED` | Chỉ `PUT` (một câu hoặc lô) trả mã này khi quá `expiresAt + 5 s` và vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`, còn `media-grants` chỉ đọc và không đổi status |
-| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress` (submitted/timed_out/invalidated); `details.status` |
+| `409` | `EXAM_ATTEMPT_EXPIRED` | `PUT` (một câu hoặc lô) **hoặc** `POST .../submit` trả mã này khi quá `expiresAt + 5 s` và chính request đó vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`, còn `media-grants` chỉ đọc và không đổi status |
+| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress` (submitted/timed_out/invalidated); `details.status`. Riêng submit trên bài đã `submitted` trả `EXAM_ATTEMPT_ALREADY_SUBMITTED` |
+| `409` | `EXAM_ATTEMPT_ALREADY_SUBMITTED` | Chỉ `POST .../submit`: attempt đã `submitted` và request mang `idempotencyKey` khác; `details.status = "submitted"` (TL-151) |
 | `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa |
 
 Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
@@ -1154,6 +1169,27 @@ commit trước nên start thấy attempt đã đóng và bỏ qua bước đón
 `in_progress → timed_out` là update có điều kiện `status = 'in_progress'` và chỉ transaction
 thắng mới ghi event, nên một attempt có **đúng một** event `timed_out`. `GET` trả `200` với
 `status = timed_out`; lần đọc thứ hai không ghi thêm event. `remainingSeconds` không bao giờ âm.
+
+Nộp bài (TL-150…TL-156, Q133/Q134): `POST /exam/attempts/:attemptId/submit` chạy trong **một**
+transaction, sau `ExamAttempt FOR UPDATE` lọc `userId` (không thuộc người gọi → `404`). Thứ tự:
+(1) replay ledger — event `(attemptId, idempotencyKey)` đã có: type `submitted` → `200` với
+`replayed: true` và các con số lấy từ `metadata` của event đó; type khác (`started`/`autosaved`)
+→ `409 EXAM_IDEMPOTENCY_KEY_REUSED`; (2) attempt đã `submitted` → `409
+EXAM_ATTEMPT_ALREADY_SUBMITTED`; (3) `timed_out`/`invalidated` → `409 EXAM_ATTEMPT_CLOSED`;
+(4) quá `expiresAt + 5 s` → timeout lười với `metadata.reason = 'expired_on_submit'`, commit rồi
+trả `409 EXAM_ATTEMPT_EXPIRED`; (5) còn lại → update có điều kiện `status = 'in_progress'` sang
+`submitted`, set `submittedAt = now`, `remainingSeconds = max(0, floor((expiresAt − now)/1000))`
+(Q133: nộp trong 5 s ân hạn vẫn là `submitted`), ghi đúng **một** event `submitted` với
+`metadata = { reason: 'user_submit', answeredCount, unansweredCount, flaggedCount }` (không có nội
+dung đáp án, điểm hay result — R11). Lần nộp thứ hai với key khác nhận
+`EXAM_ATTEMPT_ALREADY_SUBMITTED`; hai request song song tranh khoá attempt nên chỉ một request
+đổi được status và ghi event. Submit **không** tạo `Result` và **không** chấm điểm (M4.3); với
+attempt đã terminal, mọi `PUT` answer tiếp theo (một câu, lô) và `GET media-grants` trả `409
+EXAM_ATTEMPT_CLOSED`, còn start tạo attempt mới như Q120. `submittedAt` của bài nộp trong
+ân hạn có thể muộn hơn `expiresAt` tối đa 5 s (Q133).
+
+Rate limit của submit (TL-153): `POST /exam/attempts/:attemptId/submit` 10/phút/user, nâng lên
+1.000 khi `NODE_ENV=test`; các route exam khác giữ nguyên như §1.
 
 Khoá khi lưu (TL-125, F8d): `ExamAttempt FOR UPDATE` theo `id` đã lọc `userId` (không thuộc
 người gọi → `404`), rồi row `ExamAnswer`; đường lưu **không** khoá User/Test/Media. Lần insert
@@ -1184,8 +1220,9 @@ chỉ có nghĩa trong attempt đó, `correctAnswer.tokenIds` được viết l�
 `contentHash` vì thế khác nhau giữa các attempt. Snapshot của attempt đã tạo trước đó giữ
 nguyên, không backfill.
 
-Ghi chú: `remainingSeconds = max(0, expiresAt − now)` và `serverNow` theo giờ server (đồng hồ
-tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
+Ghi chú: `remainingSeconds = max(0, expiresAt − now)` khi `status = in_progress`; với mọi status
+khác (`submitted`, `timed_out`, `invalidated`) trường này luôn `0` (TL-152). `serverNow` theo giờ
+server (đồng hồ tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
 chính là `ExamAnswer.snapshotQuestionKey` (đổi tên thành `questionKey` trong response từ
 M4.2b). Rate limit (TL-130): `PUT` một câu 240/phút (môi trường test 1 000), `PUT` lô 60/phút,
 `GET` attempt 60/phút, media-grants 30/phút.
@@ -1403,7 +1440,7 @@ code sẽ tự vào spec đó.
 | `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
 | CRUD | `/admin/cms/tests` (đã có ở A.9c); `/admin/cms/questions` (đã có ở A.9b) | Exam authoring | M4 |
-| `PUT/POST/GET` | `PUT` `/exam/attempts/:id/answers/:key`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
+| `PUT/POST/GET` | `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/results/*` (submit đã có ở A.9d) | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |
 | `POST` | `/support/tickets`, `/reports` | Support / Trust & Safety | M5 |
