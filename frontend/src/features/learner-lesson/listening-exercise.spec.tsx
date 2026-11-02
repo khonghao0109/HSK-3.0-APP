@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
   afterEach,
   beforeEach,
@@ -39,6 +40,15 @@ const times = new WeakMap<HTMLMediaElement, number>();
 const durations = new WeakMap<HTMLMediaElement, number>();
 let playSpy: MockInstance<HTMLMediaElement['play']>;
 let pauseSpy: MockInstance<HTMLMediaElement['pause']>;
+
+// jsdom has no media load algorithm: assigning `src` never resets
+// `playbackRate`. Keep the original descriptor so the suite can simulate the
+// browser rule (a new src resets playbackRate to defaultPlaybackRate), which
+// is what TL-200 protects against.
+const mediaSrcDescriptor = Object.getOwnPropertyDescriptor(
+  HTMLMediaElement.prototype,
+  'src',
+);
 
 function grantResponse() {
   grantSeq += 1;
@@ -94,6 +104,25 @@ function renderListening() {
   );
 }
 
+function speedGroup() {
+  return screen.getByRole('group', { name: 'Tốc độ phát' });
+}
+
+function speedButton(label: '0,75×' | '1×') {
+  return screen.getByRole('button', { name: label });
+}
+
+function speedNote() {
+  return document.querySelector<HTMLElement>('.ls-speed-note');
+}
+
+function rate(element: HTMLAudioElement) {
+  return {
+    playbackRate: element.playbackRate,
+    defaultPlaybackRate: element.defaultPlaybackRate,
+  };
+}
+
 describe('ListeningExercise (M2.5c)', () => {
   beforeEach(() => {
     grantSeq = 0;
@@ -142,9 +171,28 @@ describe('ListeningExercise (M2.5c)', () => {
         return durations.get(this) ?? Number.NaN;
       },
     );
+    if (mediaSrcDescriptor?.get && mediaSrcDescriptor.set) {
+      Object.defineProperty(HTMLMediaElement.prototype, 'src', {
+        configurable: true,
+        enumerable: mediaSrcDescriptor.enumerable,
+        get: mediaSrcDescriptor.get,
+        set(this: HTMLMediaElement, value: string) {
+          mediaSrcDescriptor.set?.call(this, value);
+          // The media load algorithm: playbackRate = defaultPlaybackRate.
+          this.playbackRate = this.defaultPlaybackRate;
+        },
+      });
+    }
   });
 
   afterEach(() => {
+    if (mediaSrcDescriptor) {
+      Object.defineProperty(
+        HTMLMediaElement.prototype,
+        'src',
+        mediaSrcDescriptor,
+      );
+    }
     vi.restoreAllMocks();
   });
 
@@ -166,7 +214,7 @@ describe('ListeningExercise (M2.5c)', () => {
     expect(container.querySelector('.ls-wave [style]')).toBeNull();
     expect(timesText(container)).toEqual(['0:00', '0:03']);
     expect(
-      [...container.querySelectorAll('.ls-tools button')].map(
+      [...container.querySelectorAll('.ls-tools .ls-tool')].map(
         (b) => b.textContent,
       ),
     ).toEqual(['Nghe lại']);
@@ -253,13 +301,29 @@ describe('ListeningExercise (M2.5c)', () => {
     expect(element.getAttribute('src')).toContain('expires=1791000002');
     expect(playSpy).toHaveBeenCalledTimes(2);
     expect(container.querySelector('.ex-error')).toBeNull();
+    expect(
+      container
+        .querySelector('.ls-tools')!
+        .compareDocumentPosition(container.querySelector('.ls-options')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     fireEvent(element, new Event('error'));
     await settle();
     expect(urls()).toHaveLength(2);
-    expect(container.querySelector('.ex-error')?.textContent).toBe(
-      'Không tải được audio.',
-    );
+    const failure = container.querySelector('.ex-error');
+    expect(failure?.textContent).toBe('Không tải được audio.');
+    expect(failure?.getAttribute('role')).toBe('alert');
+    // Q170 layout: audio -> tools -> [failure] -> options.
+    expect(
+      container.querySelector('.ls-tools')!.compareDocumentPosition(failure!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      failure!.compareDocumentPosition(
+        container.querySelector('.ls-options')!,
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(playButton()?.getAttribute('aria-label')).toBe('Phát');
     expect(playButton()?.getAttribute('aria-pressed')).toBe('false');
   });
@@ -338,5 +402,118 @@ describe('ListeningExercise (M2.5c)', () => {
     // The grant fetched by the retry is still fresh: src again, in the click.
     expect(element.getAttribute('src')).toContain('expires=1791000002');
     expect(playSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it('U1: shows the speed group at 1× by default (Q170, Q171)', async () => {
+    const { container } = renderListening();
+    await settle();
+    const group = speedGroup();
+    expect(group.querySelectorAll('button')).toHaveLength(2);
+    expect(speedButton('1×').getAttribute('aria-pressed')).toBe('true');
+    expect(speedButton('0,75×').getAttribute('aria-pressed')).toBe('false');
+    expect(speedNote()?.textContent).toBe('Tốc độ 1×');
+    expect(speedNote()?.getAttribute('aria-live')).toBe('polite');
+    expect(container.querySelector('.ls-tools [role="group"]')).not.toBeNull();
+  });
+
+  it('U2: choosing 0,75× while idle loads no audio and does not play (Q56)', async () => {
+    const { container } = renderListening();
+    await settle();
+    expect(urls()).toEqual(['/api/learner/media/7/access']);
+    fireEvent.click(speedButton('0,75×'));
+    expect(speedButton('0,75×').getAttribute('aria-pressed')).toBe('true');
+    expect(speedButton('1×').getAttribute('aria-pressed')).toBe('false');
+    expect(speedNote()?.textContent).toBe('Tốc độ 0,75×');
+    expect(urls()).toEqual(['/api/learner/media/7/access']);
+    expect(audio(container).hasAttribute('src')).toBe(false);
+    expect(playSpy).not.toHaveBeenCalled();
+  });
+
+  it('U3: playing after choosing 0,75× applies the rate with src (TL-200)', async () => {
+    const { container } = renderListening();
+    await settle();
+    fireEvent.click(speedButton('0,75×'));
+    fireEvent.click(playButton() as HTMLButtonElement);
+    const element = audio(container);
+    expect(element.getAttribute('src')).toContain('/content?');
+    expect(rate(element)).toEqual({
+      playbackRate: 0.75,
+      defaultPlaybackRate: 0.75,
+    });
+  });
+
+  it('U4: changing speed while playing applies at once, no replay (Q171)', async () => {
+    const { container } = renderListening();
+    await settle();
+    fireEvent.click(speedButton('0,75×'));
+    fireEvent.click(playButton() as HTMLButtonElement);
+    const element = audio(container);
+    element.currentTime = 1.6;
+    fireEvent(element, new Event('timeupdate'));
+
+    fireEvent.click(speedButton('1×'));
+    expect(element.playbackRate).toBe(1);
+    expect(playSpy).toHaveBeenCalledTimes(1);
+    expect(element.currentTime).toBe(1.6);
+    expect(speedNote()?.textContent).toBe('Tốc độ 1×');
+  });
+
+  it('U5: Nghe lại at 0,75× replays from the start at 0.75 (TL-200)', async () => {
+    const { container } = renderListening();
+    await settle();
+    fireEvent.click(speedButton('0,75×'));
+    fireEvent.click(playButton() as HTMLButtonElement);
+    const element = audio(container);
+    element.currentTime = 2.5;
+    fireEvent(element, new Event('ended'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe lại' }));
+    expect(element.currentTime).toBe(0);
+    expect(playSpy).toHaveBeenCalledTimes(2);
+    expect(element.playbackRate).toBe(0.75);
+  });
+
+  it('U6: a renewed grant keeps 0,75× (TL-200)', async () => {
+    grantTtlMs = 5_000;
+    const { container } = renderListening();
+    await settle();
+    fireEvent.click(speedButton('0,75×'));
+    fireEvent.click(playButton() as HTMLButtonElement);
+    expect(playSpy).not.toHaveBeenCalled();
+    await settle();
+    const element = audio(container);
+    expect(element.getAttribute('src')).toContain('expires=1791000002');
+    expect(rate(element)).toEqual({
+      playbackRate: 0.75,
+      defaultPlaybackRate: 0.75,
+    });
+    expect(playSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('U8: controls sit between audio and options and work by keyboard (Q170)', async () => {
+    const { container } = renderListening();
+    await settle();
+    const tools = container.querySelector<HTMLElement>('.ls-tools');
+    const options = container.querySelector<HTMLElement>('.ls-options');
+    if (!tools || !options) throw new Error('missing listening layout');
+    expect(
+      tools.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const group = speedGroup();
+    const note = speedNote();
+    if (!note) throw new Error('missing speed note');
+    const replay = screen.getByRole('button', { name: 'Nghe lại' });
+    expect(
+      group.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      note.compareDocumentPosition(replay) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    const user = userEvent.setup();
+    const slow = speedButton('0,75×');
+    slow.focus();
+    await user.keyboard('{Enter}');
+    expect(slow.getAttribute('aria-pressed')).toBe('true');
   });
 });

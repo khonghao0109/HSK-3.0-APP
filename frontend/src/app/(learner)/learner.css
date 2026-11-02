@@ -3570,10 +3570,81 @@ html:has(.learner-app) {
   line-height: 1.2;
 }
 
+/* M2.5e (Q170, Q171): speed group, live note, then "Nghe lại". This is the
+   MB-05 look (space-between puts the replay on the right); WB-03c keeps the
+   replay right after the note at >=1024px. The group reuses
+   .uxb-seg/.uxb-seg__btn/is-on (TL-202) and the exam keeps its own. */
 .learner-app .ls-tools {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin: 12.5px 0 0 -1.6px;
+}
+
+.learner-app .ls-tools .uxb-seg {
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-sunken);
+}
+
+.learner-app .ls-tools .uxb-seg__btn {
+  min-width: 56px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--stone-700);
+  font-size: 0.8125rem;
+}
+
+.learner-app .ls-tools .uxb-seg__btn.is-on {
+  background: var(--surface-card);
+  color: var(--jade-800);
+  box-shadow: 0 1px 2px rgb(20 24 43 / 10%);
+}
+
+/* TL-204: keyboard focus must be visible on the speed buttons, including the
+   selected one (its card shadow alone is not a focus indicator). */
+.learner-app .ls-tools .uxb-seg__btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .ls-tools .uxb-seg__btn.is-on:focus-visible {
+  box-shadow: var(--focus-ring), var(--shadow-card);
+}
+
+.learner-app .ls-speed-note {
+  font-size: 0.75rem;
+  color: var(--stone-600);
+}
+
+.learner-app .ls-tools .ls-tool {
+  margin-left: auto;
+}
+
+/* Forced colors drop the jade/card fill: mark the selected speed with system
+   colors like .levels button[aria-checked='true'], and keep a CanvasText
+   outline as the focus ring (box-shadow is suppressed in this mode). */
+@media (forced-colors: active) {
+  .learner-app .ls-tools .uxb-seg__btn {
+    border: 1px solid ButtonBorder;
+  }
+
+  .learner-app .ls-tools .uxb-seg__btn:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+
+  .learner-app .ls-tools .uxb-seg__btn.is-on,
+  .learner-app .ls-tools .uxb-seg__btn.is-on:focus-visible {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+    border-color: Highlight;
+  }
 }
 
 .learner-app .ls-tool {

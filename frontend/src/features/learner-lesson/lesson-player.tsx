@@ -25,7 +25,7 @@ import {
   type PlayerExercise,
   type PlayerInput,
 } from './lesson-player-model';
-import { ListeningExercise } from './listening-exercise';
+import { ListeningExercise, type ListeningSpeed } from './listening-exercise';
 
 export const PLAYER_MESSAGES = {
   correctTitle: 'Chính xác!',
@@ -131,6 +131,10 @@ export function LessonPlayer({
   const [completion, setCompletion] = useState<'idle' | 'busy' | 'failed'>(
     allAnsweredAtOpen ? 'busy' : 'idle',
   );
+  // M2.5e (Q171, TL-201): one choice for every listening question of this
+  // lesson-player turn. It lives here because ListeningExercise is keyed by
+  // exercise id; leaving the page resets it to 1×.
+  const [listeningSpeed, setListeningSpeed] = useState<ListeningSpeed>('1');
 
   const submittingRef = useRef(false);
   const pendingRef = useRef<Pending | null>(null);
@@ -626,6 +630,8 @@ export function LessonPlayer({
             prompt={current.prompt}
             media={current.media}
             headingRef={headingRef}
+            speed={listeningSpeed}
+            onSpeedChange={setListeningSpeed}
           >
             {options}
           </ListeningExercise>

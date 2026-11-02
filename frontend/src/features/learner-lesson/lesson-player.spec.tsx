@@ -696,4 +696,140 @@ describe('LessonPlayer', () => {
     await screen.findByRole('button', { name: 'Kiểm tra' });
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
+
+  // M2.5e (Q171, TL-201): the speed choice lives in LessonPlayer, so the
+  // per-question `key` on ListeningExercise cannot reset it.
+  it('U7: keeps 0,75× for the next listening question of the turn (Q171)', async () => {
+    const first: PlayerExercise = {
+      id: 21,
+      topicId: null,
+      prompt: 'Nghe và chọn đáp án đúng.',
+      answered: false,
+      kind: 'listening',
+      options: [
+        { id: 'shop', text: '商店' },
+        { id: 'market', text: '超市' },
+      ],
+      media: { id: 7, duration: 3 },
+    };
+    const second: PlayerExercise = {
+      ...first,
+      id: 22,
+      prompt: 'Nghe câu thứ hai và chọn đáp án.',
+    };
+    const grantSrc = `/api/learner/media/7/content?expires=1791000000&signature=${'ab'.repeat(32)}`;
+    fetchSpy.mockImplementation((input) => {
+      const url = String(input);
+      if (url.endsWith('/access')) {
+        return Promise.resolve(
+          ok({
+            success: true,
+            data: {
+              src: grantSrc,
+              expiresAt: new Date(Date.now() + 300_000).toISOString(),
+            },
+          }),
+        );
+      }
+      if (url.includes('/attempts')) return Promise.resolve(attempt(true));
+      return Promise.reject(new Error(`unexpected fetch ${url}`));
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(function (this: HTMLMediaElement) {
+        this.dispatchEvent(new Event('play'));
+        return Promise.resolve();
+      });
+
+    const { container } = renderPlayer([first, second]);
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      first.prompt,
+    );
+    const firstAudio = container.querySelector<HTMLAudioElement>('.ex audio');
+    fireEvent.click(screen.getByRole('button', { name: '0,75×' }));
+    expect(
+      screen
+        .getByRole('button', { name: '0,75×' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+
+    fireEvent.click(screen.getByRole('radio', { name: '超市' }));
+    fireEvent.click(checkButton());
+    await screen.findByRole('button', { name: 'Tiếp tục' });
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+
+    // The second question of the same turn: new prompt, new audio element.
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      second.prompt,
+    );
+    const secondAudio = container.querySelector<HTMLAudioElement>('.ex audio');
+    expect(secondAudio).not.toBe(firstAudio);
+    expect(
+      screen
+        .getByRole('button', { name: '0,75×' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(screen.getByText('Tốc độ 0,75×')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+    // The second question fetches its grant after mount: wait for the click
+    // handler's playFrom to assign src and both rates.
+    await waitFor(() => expect(secondAudio?.playbackRate).toBe(0.75));
+    expect(secondAudio?.getAttribute('src')).toBe(grantSrc);
+    expect(secondAudio?.defaultPlaybackRate).toBe(0.75);
+    expect(play).toHaveBeenCalledTimes(1);
+    play.mockRestore();
+  });
+
+  // M2.5e (Q171): the choice belongs to one lesson-player turn; a new mount
+  // starts from 1× again.
+  it('U9: a newly mounted player starts again at 1× (Q171)', async () => {
+    const listeningChoice: PlayerExercise = {
+      id: 31,
+      topicId: null,
+      prompt: 'Nghe và chọn đáp án đúng.',
+      answered: false,
+      kind: 'listening',
+      options: [
+        { id: 'shop', text: '商店' },
+        { id: 'market', text: '超市' },
+      ],
+      media: { id: 7, duration: 3 },
+    };
+    fetchSpy.mockImplementation((input) => {
+      const url = String(input);
+      if (url.endsWith('/access')) {
+        return Promise.resolve(
+          ok({
+            success: true,
+            data: {
+              src: `/api/learner/media/7/content?expires=1791000000&signature=${'ab'.repeat(32)}`,
+              expiresAt: new Date(Date.now() + 300_000).toISOString(),
+            },
+          }),
+        );
+      }
+      return Promise.reject(new Error(`unexpected fetch ${url}`));
+    });
+
+    const firstMount = renderPlayer([listeningChoice]);
+    fireEvent.click(screen.getByRole('button', { name: '0,75×' }));
+    expect(
+      screen
+        .getByRole('button', { name: '0,75×' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    firstMount.unmount();
+
+    renderPlayer([listeningChoice]);
+    expect(
+      screen.getByRole('button', { name: '1×' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(
+      screen
+        .getByRole('button', { name: '0,75×' })
+        .getAttribute('aria-pressed'),
+    ).toBe('false');
+    expect(screen.getByText('Tốc độ 1×')).toBeInTheDocument();
+  });
 });

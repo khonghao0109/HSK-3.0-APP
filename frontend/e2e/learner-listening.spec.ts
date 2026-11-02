@@ -276,4 +276,133 @@ test.describe('Listening question (M2.5c)', () => {
       await api.dispose();
     }
   });
+
+  // M2.5e (Q170, Q171): the speed picker reaches the media element, and
+  // picking it while idle still downloads no audio bytes (Q56).
+  test('E1: plays at 0,75× after choosing it (Q170, Q171)', async ({
+    page,
+    baseURL,
+  }) => {
+    await openListening(page, baseURL);
+    const group = page.getByRole('group', { name: 'Tốc độ phát' });
+    const slow = group.getByRole('button', { name: '0,75×' });
+    const normal = group.getByRole('button', { name: '1×' });
+    await expect(normal).toHaveAttribute('aria-pressed', 'true');
+    await expect(slow).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('.ls-speed-note')).toHaveText('Tốc độ 1×');
+
+    await slow.click();
+    await expect(slow).toHaveAttribute('aria-pressed', 'true');
+    await expect(normal).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('.ls-speed-note')).toHaveText('Tốc độ 0,75×');
+
+    await page.locator('.ls-play').click();
+    const rate = () =>
+      page
+        .locator('audio')
+        .evaluate((element) => (element as HTMLAudioElement).playbackRate);
+    const defaultRate = () =>
+      page
+        .locator('audio')
+        .evaluate(
+          (element) => (element as HTMLAudioElement).defaultPlaybackRate,
+        );
+    await expect.poll(rate, { timeout: 8000 }).toBe(0.75);
+    await expect.poll(defaultRate, { timeout: 8000 }).toBe(0.75);
+  });
+
+  test('E2: changing speed before Phát loads no audio bytes (Q56, Q171)', async ({
+    page,
+    baseURL,
+  }) => {
+    const media: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/api/learner/media/')) {
+        media.push(request.url());
+      }
+    });
+    // Hydration marker: the mount grant has been answered, so the speed
+    // button's handler is live before the click below.
+    const mountGrant = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/access') && response.status() === 200,
+    );
+    await openListening(page, baseURL);
+    await mountGrant;
+    await expect(page.locator('.ls-audio__time > span')).toHaveText([
+      '0:00',
+      '0:03',
+    ]);
+    // Q56: the only up-front call is the access grant, never the bytes.
+    expect(
+      media.filter((url) => new URL(url).pathname.endsWith('/access')),
+    ).toHaveLength(1);
+    const before = media.length;
+
+    const slow = page
+      .getByRole('group', { name: 'Tốc độ phát' })
+      .getByRole('button', { name: '0,75×' });
+    await slow.click();
+    await expect(slow).toHaveAttribute('aria-pressed', 'true');
+    await page.waitForTimeout(750);
+    expect(media.length).toBe(before);
+    expect(
+      media.filter((url) => /\/content$/u.test(new URL(url).pathname)),
+    ).toEqual([]);
+    expect((await audioState(page))?.src ?? '').toBe('');
+    expect((await audioState(page))?.paused).toBe(true);
+  });
+
+  // M2.5e (Q170, TL-204): the arrow/space focus ring must be visible on the
+  // speed buttons, including the selected one.
+  test('E3: speed buttons show a focus ring from the keyboard (Q170)', async ({
+    page,
+    baseURL,
+  }) => {
+    await openListening(page, baseURL);
+    const slow = page
+      .getByRole('group', { name: 'Tốc độ phát' })
+      .getByRole('button', { name: '0,75×' });
+
+    let reached = false;
+    for (let attempt = 0; attempt < 40 && !reached; attempt += 1) {
+      await page.keyboard.press('Tab');
+      reached = await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        return (
+          active !== null &&
+          active.textContent?.trim() === '0,75×' &&
+          active.closest('.ls-tools') !== null
+        );
+      });
+    }
+    expect(reached, 'keyboard reached the 0,75× button').toBe(true);
+
+    // Read the token in the learner scope (the exam/admin root has another
+    // --jade-700), then convert it to the rgb() form box-shadow computes.
+    const ring = () =>
+      slow.evaluate((element) => {
+        const root =
+          element.closest('.learner-app') ?? document.documentElement;
+        const token = getComputedStyle(root)
+          .getPropertyValue('--jade-700')
+          .trim();
+        const probe = document.createElement('span');
+        probe.style.color = token;
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return { shadow: getComputedStyle(element).boxShadow, token, color };
+      });
+
+    const unselected = await ring();
+    expect(unselected.token).not.toBe('');
+    expect(unselected.shadow).toContain(unselected.color);
+
+    await page.keyboard.press('Space');
+    await expect(slow).toHaveAttribute('aria-pressed', 'true');
+    const selected = await ring();
+    expect(selected.shadow).toContain(selected.color);
+    await expect(page.locator('.ls-speed-note')).toHaveText('Tốc độ 0,75×');
+  });
 });

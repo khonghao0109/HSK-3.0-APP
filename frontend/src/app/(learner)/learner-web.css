@@ -2805,9 +2805,53 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* M2.5e (Q170): WB-03c toolbar inside the lesson. */
   .learner-app .ls-tools {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    gap: 12px 16px;
     margin: var(--sp-4) 0 0;
+  }
+
+  .learner-app .ls-tools .uxb-seg {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--cream-100);
+  }
+
+  .learner-app .ls-tools .uxb-seg__btn {
+    min-width: 64px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .ls-tools .uxb-seg__btn.is-on {
+    background: var(--surface-card);
+    color: var(--jade-800);
+    box-shadow:
+      var(--shadow-card),
+      inset 0 0 0 1px var(--jade-200);
+  }
+
+  /* TL-204: visible keyboard focus, after the is-on rule so it wins. */
+  .learner-app .ls-tools .uxb-seg__btn:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .learner-app .ls-tools .uxb-seg__btn.is-on:focus-visible {
+    box-shadow:
+      var(--focus-ring),
+      var(--shadow-card),
+      inset 0 0 0 1px var(--jade-200);
+  }
+
+  .learner-app .ls-tools .ls-tool {
+    margin-left: 0;
+  }
+
+  .learner-app .ls-speed-note {
+    font-size: 0.9375rem;
   }
 
   /* The foot (mẫu .w-focus__foot). */
@@ -4080,5 +4124,18 @@
   /* V11: đáy toast ≥ 12px trên đỉnh footer sticky (~92px). */
   .learner-app:has(.ex.ext) .toast-region {
     bottom: 104px;
+  }
+}
+
+/* M2.5e/TL-204: the web is-on rules load after learner.css, so forced colors
+   must be re-stated here to keep Highlight instead of the card fill. */
+@media (min-width: 1024px) and (forced-colors: active) {
+  .learner-app .ls-tools .uxb-seg__btn.is-on,
+  .learner-app .ls-tools .uxb-seg__btn.is-on:focus-visible {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+    border-color: Highlight;
   }
 }

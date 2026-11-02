@@ -24,6 +24,16 @@ export const LISTENING_MESSAGES = {
   failed: 'Không tải được audio.',
 } as const;
 
+/** M2.5e: the two speeds the learner can pick (Q170, Q171). */
+export type ListeningSpeed = '0.75' | '1';
+
+const SPEED_RATE: Record<ListeningSpeed, number> = { '0.75': 0.75, '1': 1 };
+const SPEED_LABEL: Record<ListeningSpeed, string> = {
+  '0.75': '0,75×',
+  '1': '1×',
+};
+const SPEED_OPTIONS: ReadonlyArray<ListeningSpeed> = ['0.75', '1'];
+
 /** A grant this close to expiry is renewed before it is played. */
 const GRANT_MARGIN_MS = 15_000;
 const WAVE_HEIGHT = 24;
@@ -64,20 +74,26 @@ function Icon({ name }: { name: string }) {
 }
 
 /**
- * listening_choice (M2.5c, Q54–Q57): prompt, audio row, the options passed
- * as children, then "Nghe lại". Nothing plays or downloads until the learner
- * presses play (Q56); only the access grant is fetched up front so play()
- * still runs inside the click (Safari).
+ * listening_choice (M2.5c, Q54–Q57; M2.5e, Q170–Q171): prompt, audio row, the
+ * speed tools (group, live note, "Nghe lại"), then the options passed as
+ * children. Nothing plays or downloads until the learner presses play (Q56);
+ * only the access grant is fetched up front so play() still runs inside the
+ * click (Safari). The speed itself is owned by the player so it survives the
+ * per-question key (TL-201).
  */
 export function ListeningExercise({
   prompt,
   media,
   headingRef,
+  speed,
+  onSpeedChange,
   children,
 }: {
   prompt: string;
   media: PlayerMedia;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  speed: ListeningSpeed;
+  onSpeedChange: (speed: ListeningSpeed) => void;
   children: ReactNode;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -85,6 +101,15 @@ export function ListeningExercise({
   const grantRef = useRef<Grant | null>(null);
   const hasSrcRef = useRef(false);
   const retriedRef = useRef(false);
+  // The speed as of the latest render/click: a grant that arrives later must
+  // apply the learner's current choice, not the one from the render that
+  // asked. The ref is also set synchronously in changeSpeed; this effect keeps
+  // it in step when the player re-renders with a new prop (assigning a ref
+  // during render is rejected by react-hooks/refs).
+  const speedRef = useRef<ListeningSpeed>(speed);
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
   // Bumped on pause and unmount: a grant that arrives later must not play.
   const generationRef = useRef(0);
 
@@ -137,7 +162,12 @@ export function ListeningExercise({
   };
 
   const playFrom = (audio: HTMLAudioElement, grant: Grant, at: number) => {
+    // TL-200: a new `src` runs the media load algorithm, which resets
+    // `playbackRate` to `defaultPlaybackRate`; assign both after the src.
     audio.src = grant.src;
+    const rate = SPEED_RATE[speedRef.current];
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
     hasSrcRef.current = true;
     if (at > 0) audio.currentTime = at;
     play(audio);
@@ -153,6 +183,10 @@ export function ListeningExercise({
     // at once with no new error event: start over from a grant.
     if (audio.error) hasSrcRef.current = false;
     if (hasSrcRef.current) {
+      // Q171/TL-200: "Nghe lại" and a resumed play keep the chosen speed too
+      // (no new src, so the media load algorithm does not run).
+      audio.defaultPlaybackRate = SPEED_RATE[speedRef.current];
+      audio.playbackRate = SPEED_RATE[speedRef.current];
       if (fromStart) audio.currentTime = 0;
       play(audio);
       return;
@@ -169,6 +203,16 @@ export function ListeningExercise({
       if (fresh) playFrom(audio, fresh, 0);
       else showFailure();
     });
+  };
+
+  const changeSpeed = (value: ListeningSpeed) => {
+    speedRef.current = value;
+    onSpeedChange(value);
+    // Q171: mid-playback the new rate applies at once, with no reload, no
+    // play() and no seek; while idle it only changes the choice (Q56: no
+    // bytes, no grant, no play until Phát).
+    const audio = audioRef.current;
+    if (audio) audio.playbackRate = SPEED_RATE[value];
   };
 
   const togglePlay = () => {
@@ -252,19 +296,37 @@ export function ListeningExercise({
         </div>
       </div>
 
-      {children}
-
       <div className="ls-tools">
+        <div className="uxb-seg" role="group" aria-label="Tốc độ phát">
+          {SPEED_OPTIONS.map((value) => (
+            <button
+              key={value}
+              className={`uxb-seg__btn${speed === value ? ' is-on' : ''}`}
+              type="button"
+              aria-pressed={speed === value}
+              onClick={() => changeSpeed(value)}
+            >
+              {SPEED_LABEL[value]}
+            </button>
+          ))}
+        </div>
+        <span className="ls-speed-note" aria-live="polite">
+          {`Tốc độ ${SPEED_LABEL[speed]}`}
+        </span>
         <button className="ls-tool" type="button" onClick={() => start(true)}>
           <Icon name="rotate-ccw" />
           <span>{LISTENING_MESSAGES.replay}</span>
         </button>
       </div>
+
       {failed && (
         <p className="ex-error" role="alert">
           {LISTENING_MESSAGES.failed}
         </p>
       )}
+
+      {children}
+
       {/* No controls: the row above drives it. */}
       <audio
         ref={audioRef}
