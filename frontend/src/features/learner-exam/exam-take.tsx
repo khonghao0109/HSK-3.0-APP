@@ -139,6 +139,8 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     attempt.status !== 'in_progress' || attempt.remainingSeconds === 0,
   );
   const [submitted, setSubmitted] = useState(attempt.status === 'submitted');
+  // Q164: only a server-confirmed terminal attempt has a stored result.
+  const resultAvailable = submitted || attempt.status === 'timed_out';
   const [lockText, setLockText] = useState(
     attempt.status !== 'in_progress' ? lockMessage(attempt.status) : '',
   );
@@ -1420,12 +1422,6 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
               <>
                 <p>{EXAM_SUBMITTED_MESSAGE}</p>
                 {unsavedCount > 0 ? <p>{EXAM_UNSAVED_BEFORE_SUBMIT}</p> : null}
-                <a
-                  className="btn btn--outline"
-                  href={`/learn/exam/${String(attempt.testId)}`}
-                >
-                  Về màn giới thiệu đề
-                </a>
               </>
             ) : (
               <>
@@ -1438,6 +1434,25 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
                 {unsavedCount > 0 ? <p>{EXAM_UNSAVED_BEFORE_EXPIRY}</p> : null}
               </>
             )}
+            {/* Q164: submitted and timed_out both have a stored result, so the
+                locked panel leads with "Xem kết quả"; the intro stays the
+                secondary action. invalidated/closed keeps no result link. */}
+            {resultAvailable ? (
+              <div className="ext-locked__actions">
+                <a
+                  className="btn btn--primary"
+                  href={`/learn/exam/attempts/${String(attempt.id)}/result`}
+                >
+                  Xem kết quả
+                </a>
+                <a
+                  className="btn btn--outline"
+                  href={`/learn/exam/${String(attempt.testId)}`}
+                >
+                  Về màn giới thiệu đề
+                </a>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

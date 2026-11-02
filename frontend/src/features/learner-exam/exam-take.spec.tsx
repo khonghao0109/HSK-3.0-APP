@@ -2451,6 +2451,13 @@ describe('ExamTake submit (TL-157/TL-158)', () => {
     ).toBeDefined();
     const back = screen.getByRole('link', { name: 'Về màn giới thiệu đề' });
     expect(back.getAttribute('href')).toBe('/learn/exam/7');
+    // Q164: the primary action of a terminal attempt is the result page.
+    const resultLink = within(screen.getByRole('alert')).getByRole('link', {
+      name: 'Xem kết quả',
+    });
+    expect(resultLink.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/result',
+    );
     const footerSubmit = within(screen.getByRole('contentinfo')).getByRole(
       'button',
       { name: 'Nộp bài' },
@@ -2458,6 +2465,27 @@ describe('ExamTake submit (TL-157/TL-158)', () => {
     expect((footerSubmit as HTMLButtonElement).disabled).toBe(true);
     await new Promise<void>((resolve) => window.setTimeout(resolve, 600));
     expect(screen.queryByText('Còn dưới 5 phút.')).toBeNull();
+  });
+
+  it('Q164: a timed-out attempt offers "Xem kết quả" as primary and the intro as secondary', () => {
+    renderTake(attempt({ status: 'timed_out', remainingSeconds: 0 }));
+    expect(screen.getByText('Hết giờ. Bài làm đã được lưu.')).toBeDefined();
+    const alert = screen.getByRole('alert');
+    const resultLink = within(alert).getByRole('link', { name: 'Xem kết quả' });
+    expect(resultLink.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/result',
+    );
+    expect(resultLink.className).toContain('btn--primary');
+    const back = within(alert).getByRole('link', {
+      name: 'Về màn giới thiệu đề',
+    });
+    expect(back.getAttribute('href')).toBe('/learn/exam/7');
+    expect(back.className).toContain('btn--outline');
+  });
+
+  it('Q164: an invalidated attempt has no result link', () => {
+    renderTake(attempt({ status: 'invalidated', remainingSeconds: 0 }));
+    expect(screen.queryByRole('link', { name: 'Xem kết quả' })).toBeNull();
   });
 
   it('F1 (M4.2c): after a submit the clock pill is gone and the footer carries the copy', async () => {
