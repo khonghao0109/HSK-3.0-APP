@@ -6831,6 +6831,131 @@
         ]
       }
     },
+    "/api/v1/exam/tests": {
+      "get": {
+        "operationId": "ExamController_listTests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelCode",
+            "required": false,
+            "in": "query",
+            "description": "Level code (`Level.code`); omit for every level.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HSK1",
+                "HSK2",
+                "HSK3",
+                "HSK4",
+                "HSK5",
+                "HSK6",
+                "HSK7_9"
+              ]
+            }
+          },
+          {
+            "name": "skill",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "listening",
+                "reading",
+                "writing",
+                "speaking"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "newest/oldest by publishedAt, score by the latest finished attempt.",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "oldest",
+                "score"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ExamTestListItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "M4.5 B1 (Q209–Q214): the learner exam list. Declared before\n`tests/:testId` so the static segment always wins; the query DTO rejects\nan unknown level/skill/sort with the shared 400 envelope.",
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/exam/tests/{testId}": {
       "get": {
         "operationId": "ExamController_getTestIntro",
@@ -11302,9 +11427,9 @@
           "status": {
             "type": "string",
             "enum": [
-              "done",
+              "not_started",
               "learning",
-              "not_started"
+              "done"
             ]
           },
           "completionPercent": {
@@ -11345,9 +11470,9 @@
           "status": {
             "type": "string",
             "enum": [
-              "done",
+              "not_started",
               "learning",
-              "not_started"
+              "done"
             ]
           },
           "completionPercent": {
@@ -12015,6 +12140,131 @@
           "dailyMinutes",
           "reminderEnabled",
           "startDate"
+        ]
+      },
+      "ExamListActiveAttemptDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attemptId",
+          "expiresAt"
+        ]
+      },
+      "ExamListLatestAttemptDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "submitted",
+              "timed_out"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "resultAvailable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status",
+          "attemptId",
+          "score",
+          "maxScore",
+          "submittedAt",
+          "resultAvailable"
+        ]
+      },
+      "ExamTestListItemDto": {
+        "type": "object",
+        "properties": {
+          "skills": {
+            "type": "array",
+            "description": "Q210: distinct skills in `TestSection.orderIndex` order.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "listening",
+                "reading",
+                "writing",
+                "speaking"
+              ]
+            }
+          },
+          "status": {
+            "enum": [
+              "not_started",
+              "in_progress",
+              "done"
+            ],
+            "type": "string"
+          },
+          "testId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Whole-test duration in minutes (Q118)."
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "activeAttempt": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamListActiveAttemptDto"
+              }
+            ]
+          },
+          "latestAttempt": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamListLatestAttemptDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "skills",
+          "status",
+          "testId",
+          "title",
+          "levelCode",
+          "duration",
+          "questionCount",
+          "activeAttempt",
+          "latestAttempt"
         ]
       },
       "ExamTestIntroSectionDto": {

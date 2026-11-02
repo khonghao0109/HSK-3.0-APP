@@ -7,12 +7,14 @@ import {
 import { ExamAttemptStatus, Prisma } from '@prisma/client';
 
 import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
+import type { PaginationMeta } from '../../common/interfaces/api-response.interface';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CMS_MEDIA_SELECT, type CmsMediaRecord } from '../cms/media-usability';
 import {
   collectTestPublishBlockers,
   type TestPublishBlockerQuestion,
 } from '../cms/test-publish-blockers';
+import type { ListExamTestsQueryDto } from './dto/list-exam-tests-query.dto';
 import {
   ExamAnswerBatchResultDto,
   ExamAnswerBatchViewDto,
@@ -22,6 +24,7 @@ import {
   ExamReviewViewDto,
   ExamSubmitViewDto,
   ExamTestIntroDto,
+  ExamTestListItemDto,
 } from './dto/exam-response.dto';
 import {
   toExamAnswerHashBody,
@@ -32,7 +35,13 @@ import {
   isSameExamAnswerRequest,
 } from './exam-answer-replay';
 import { validateExamAnswerShape } from './exam-answer.validator';
-import { isExamTestVisible } from './exam-eligibility';
+import { isExamTestVisible, visibleExamTestWhere } from './exam-eligibility';
+import {
+  compareExamListByScore,
+  EXAM_LIST_FINISHED_STATUSES,
+  EXAM_LIST_SCORE_SORT_MAX,
+  isExamListFinishedStatus,
+} from './exam-list.model';
 import {
   EXAM_ERROR_CODES,
   examAnswerInvalid,
@@ -75,7 +84,9 @@ import {
   toExamResultView,
   toExamReviewView,
   toExamTestIntro,
+  toExamTestListItem,
   type ExamResultViewRecord,
+  type ExamTestListLatestAttemptSource,
   type ExamStoredAnswer,
   type ExamTerminalAttemptRecord,
 } from './exam.serializer';
@@ -414,6 +425,184 @@ export class ExamService {
                 answeredCount,
               },
       }),
+    };
+  }
+
+  /**
+   * M4.5 B1 (Q209–Q214): the learner exam list. Read-only — it never grades a
+   * finished-but-ungraded attempt, never times out a stale one and never
+   * creates a `Result`. Fixed number of statements: the database clock, one
+   * transaction with the paginated tests + total count, and one transaction
+   * with the placement counts + the caller's live + finished attempts.
+   */
+  async listTests(
+    userId: number,
+    query: ListExamTestsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamTestListItemDto[], PaginationMeta>> {
+    const now = await this.databaseNow(this.prisma);
+    const page = query.page;
+    const limit = query.limit;
+    const sort = query.sort ?? 'newest';
+    const offset = (page - 1) * limit;
+
+    const where: Prisma.TestWhereInput = {
+      ...visibleExamTestWhere(now),
+      ...(query.levelCode === undefined
+        ? {}
+        : { level: { code: query.levelCode } }),
+      ...(query.skill === undefined
+        ? {}
+        : { sections: { some: { skill: query.skill } } }),
+    };
+    // Q211: `newest`/`oldest` order by `publishedAt` then `id`. A test that is
+    // published without `publishedAt` (a legacy import) sorts last in both
+    // directions instead of Postgres' "NULLS FIRST on DESC" default; the id
+    // keeps the order total.
+    const orderBy: Prisma.TestOrderByWithRelationInput[] =
+      sort === 'oldest'
+        ? [{ publishedAt: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }]
+        : [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { id: 'desc' }];
+
+    // shortcut: sort=score sorts in memory because the score belongs to the
+    // latest attempt, not to `Test`; at most EXAM_LIST_SCORE_SORT_MAX (500)
+    // visible tests are loaded, then sliced. Upgrade when the published
+    // catalogue can exceed 500 (denormalise the last score onto `Test`, or
+    // page with a raw `DISTINCT ON` + subquery).
+    const pageable = sort !== 'score';
+
+    const [tests, total] = await this.prisma.$transaction([
+      this.prisma.test.findMany({
+        where,
+        orderBy,
+        skip: pageable ? offset : undefined,
+        take: pageable ? limit : EXAM_LIST_SCORE_SORT_MAX,
+        select: {
+          id: true,
+          title: true,
+          duration: true,
+          publishedAt: true,
+          level: { select: { code: true } },
+          sections: {
+            orderBy: [{ orderIndex: 'asc' as const }],
+            select: { orderIndex: true, skill: true },
+          },
+        },
+      }),
+      this.prisma.test.count({ where }),
+    ]);
+
+    const testIds = tests.map((test) => test.id);
+    const [placementCounts, activeAttempts, finishedAttempts] =
+      await this.prisma.$transaction([
+        this.prisma.testQuestionPlacement.groupBy({
+          by: ['testId'],
+          where: { testId: { in: testIds } },
+          _count: { _all: true },
+        }),
+        // Q212: only an in-progress attempt whose clock still runs is
+        // "active"; an expired one is ignored here (the list writes nothing,
+        // unlike GET attempt).
+        this.prisma.examAttempt.findMany({
+          where: {
+            userId,
+            testId: { in: testIds },
+            status: ExamAttemptStatus.in_progress,
+            expiresAt: { gt: now },
+          },
+          orderBy: { id: 'desc' },
+          select: { id: true, testId: true, expiresAt: true },
+        }),
+        // Q211/Q213: finished attempts only, newest first; the first row of
+        // each test wins below.
+        this.prisma.examAttempt.findMany({
+          where: {
+            userId,
+            testId: { in: testIds },
+            status: { in: [...EXAM_LIST_FINISHED_STATUSES] },
+          },
+          orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
+          select: {
+            id: true,
+            testId: true,
+            status: true,
+            submittedAt: true,
+            maxScore: true,
+            result: { select: { score: true, maxScore: true } },
+          },
+        }),
+      ]);
+
+    const questionCounts = new Map<number, number>();
+    for (const row of placementCounts) {
+      questionCounts.set(row.testId, row._count._all);
+    }
+    const activeByTest = new Map<number, { id: number; expiresAt: Date }>();
+    for (const row of activeAttempts) {
+      // The partial unique index allows one live attempt per test; `id desc`
+      // makes the pick total even if that index is ever relaxed.
+      if (!activeByTest.has(row.testId)) {
+        activeByTest.set(row.testId, { id: row.id, expiresAt: row.expiresAt });
+      }
+    }
+    const finishedByTest = new Map<number, ExamTestListLatestAttemptSource>();
+    for (const row of finishedAttempts) {
+      if (finishedByTest.has(row.testId)) continue;
+      // Terminal transitions always write `submittedAt`; a null here is a data
+      // bug outside this endpoint, so the row is treated as "no attempt"
+      // instead of failing the whole list.
+      if (row.submittedAt === null) continue;
+      // Q213: `invalidated` never reaches the list, even if a row predates the
+      // status filter above.
+      if (!isExamListFinishedStatus(row.status)) continue;
+      finishedByTest.set(row.testId, {
+        id: row.id,
+        status: row.status,
+        submittedAt: row.submittedAt,
+        score: row.result === null ? null : row.result.score,
+        maxScore: row.result === null ? row.maxScore : row.result.maxScore,
+        resultAvailable: row.result !== null,
+      });
+    }
+
+    const rows = tests.map((test) => ({
+      test,
+      item: toExamTestListItem({
+        test: {
+          id: test.id,
+          title: test.title,
+          levelCode: test.level.code,
+          duration: test.duration,
+          questionCount: questionCounts.get(test.id) ?? 0,
+          sections: test.sections,
+        },
+        activeAttempt: activeByTest.get(test.id) ?? null,
+        latestAttempt: finishedByTest.get(test.id) ?? null,
+      }),
+    }));
+
+    // Q211: items without a score sort last, ties fall back to newest.
+    const ordered = pageable
+      ? rows
+      : [...rows].sort((left, right) =>
+          compareExamListByScore(
+            {
+              score: left.item.latestAttempt?.score ?? null,
+              publishedAt: left.test.publishedAt,
+              testId: left.test.id,
+            },
+            {
+              score: right.item.latestAttempt?.score ?? null,
+              publishedAt: right.test.publishedAt,
+              testId: right.test.id,
+            },
+          ),
+        );
+    const pageRows = pageable ? ordered : ordered.slice(offset, offset + limit);
+
+    return {
+      success: true,
+      data: pageRows.map((row) => row.item),
+      meta: this.buildPaginationMeta(page, limit, total),
     };
   }
 
@@ -2038,6 +2227,23 @@ export class ExamService {
       select: { id: true },
     });
     return level !== null;
+  }
+
+  /**
+   * The pagination meta every learner list shares (`LearningService` has the
+   * same shape); `total` is the filtered count, not the page size.
+   */
+  private buildPaginationMeta(
+    page: number,
+    limit: number,
+    total: number,
+  ): PaginationMeta {
+    return {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   private async databaseNow(

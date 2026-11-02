@@ -15,37 +15,12 @@ import {
 
 import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 import { LESSON_EXERCISE_ORDER_INDEX_LIMITS } from '../../../common/validation/lesson-exercise-authoring.validator';
 
 import { BoundedJsonPayload } from './bounded-json-payload.validator';
 
-/**
- * The Swagger CLI plugin bakes `enum` values for `type` from the TypeScript
- * union of `ExerciseType` in checker order, which depends on which
- * string-literal types were created first elsewhere in the program. Pin the
- * runtime order from the Prisma enum object (schema order) so `openapi.json`
- * stays byte-identical regardless of which other files are compiled.
- */
-export function PinExerciseTypeEnumOrder(): ClassDecorator {
-  return (target) => {
-    const ctor = target as {
-      _OPENAPI_METADATA_FACTORY?: () => Record<string, unknown>;
-    };
-    const original = ctor._OPENAPI_METADATA_FACTORY;
-    if (typeof original !== 'function') return;
-    ctor._OPENAPI_METADATA_FACTORY = () => {
-      const metadata = original();
-      const property = metadata.type;
-      if (property !== undefined && typeof property === 'object') {
-        const typed = property as { enum?: readonly string[] };
-        if ('enum' in typed) typed.enum = Object.values(ExerciseType);
-      }
-      return metadata;
-    };
-  };
-}
-
-@PinExerciseTypeEnumOrder()
+@PinSwaggerEnumOrder('type', Object.values(ExerciseType))
 export class CreateExerciseRevisionDto {
   @IsEnum(ExerciseType)
   type!: ExerciseType;

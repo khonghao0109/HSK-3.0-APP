@@ -10,8 +10,7 @@ import {
 } from '@prisma/client';
 
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
-
-import { PinExerciseTypeEnumOrder } from './create-exercise-revision.dto';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
 // Response models of GET /admin/cms/exercises and /admin/cms/exercises/:id,
 // matching EXERCISE_ADMIN_SELECT and EXERCISE_REVISION_SELECT.
@@ -71,7 +70,7 @@ export class AdminExerciseRevisionDto {
   reviews!: AdminContentReviewDto[];
 }
 
-@PinExerciseTypeEnumOrder()
+@PinSwaggerEnumOrder('type', Object.values(ExerciseType))
 class AdminExerciseBaseDto {
   id!: number;
   lessonId!: number;

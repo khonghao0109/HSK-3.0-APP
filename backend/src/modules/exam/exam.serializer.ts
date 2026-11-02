@@ -14,8 +14,14 @@ import type {
   ExamResultViewDto,
   ExamReviewViewDto,
   ExamTestIntroDto,
+  ExamTestListItemDto,
 } from './dto/exam-response.dto';
 import { ExamResultInternalError } from './exam-errors';
+import {
+  collectExamTestSkills,
+  deriveExamListStatus,
+  type ExamListSectionRef,
+} from './exam-list.model';
 import type { ExamResultDetail } from './exam-result.reader';
 import {
   EXAM_SECTION_MAX_SCORE,
@@ -448,4 +454,75 @@ function projectOptionList(
     }
   }
   return items;
+}
+
+/** M4.5 B1: the attempt rows the list projection is allowed to read. */
+export type ExamTestListActiveAttemptSource = {
+  id: number;
+  expiresAt: Date;
+};
+
+export type ExamTestListLatestAttemptSource = {
+  id: number;
+  /** Terminal, non-invalidated status (Q213). */
+  status: 'submitted' | 'timed_out';
+  submittedAt: Date;
+  /** `Result.score`; `null` when the finished attempt is not graded. */
+  score: number | null;
+  /** `Result.maxScore` falling back to the frozen attempt maximum. */
+  maxScore: number | null;
+  resultAvailable: boolean;
+};
+
+export type ExamTestListSource = {
+  test: {
+    id: number;
+    title: string;
+    levelCode: string;
+    /** Whole-test duration in minutes (Q118). */
+    duration: number;
+    questionCount: number;
+    sections: ExamListSectionRef[];
+  };
+  activeAttempt: ExamTestListActiveAttemptSource | null;
+  latestAttempt: ExamTestListLatestAttemptSource | null;
+};
+
+/**
+ * Q210–Q214: one list card. Fields are copied one by one (no spread), so an
+ * attempt row that is not the caller's cannot leak through a future `include`.
+ * The list never returns answer content, scores of unfinished attempts, or the
+ * test's live structure beyond the skill order.
+ */
+export function toExamTestListItem(
+  source: ExamTestListSource,
+): ExamTestListItemDto {
+  const { test, activeAttempt, latestAttempt } = source;
+  return {
+    testId: test.id,
+    title: test.title,
+    levelCode: test.levelCode,
+    duration: test.duration,
+    questionCount: test.questionCount,
+    skills: collectExamTestSkills(test.sections),
+    status: deriveExamListStatus(
+      activeAttempt !== null,
+      latestAttempt !== null,
+    ),
+    activeAttempt:
+      activeAttempt === null
+        ? null
+        : { attemptId: activeAttempt.id, expiresAt: activeAttempt.expiresAt },
+    latestAttempt:
+      latestAttempt === null
+        ? null
+        : {
+            attemptId: latestAttempt.id,
+            status: latestAttempt.status,
+            score: latestAttempt.score,
+            maxScore: latestAttempt.maxScore,
+            submittedAt: latestAttempt.submittedAt,
+            resultAvailable: latestAttempt.resultAvailable,
+          },
+  };
 }

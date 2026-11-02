@@ -98,8 +98,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   /exam/tests/:testId/attempts`, `PUT /exam/attempts/:attemptId/answers/:questionKey` và `POST
   /exam/attempts/:attemptId/submit` được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers`
   (60), `GET /exam/attempts/:attemptId` (60), `GET /exam/attempts/:attemptId/result` (60),
-  `GET /exam/attempts/:attemptId/review` (60) và `GET /exam/attempts/:attemptId/media-grants` (30)
-  giữ nguyên ở mọi môi trường. Các
+  `GET /exam/attempts/:attemptId/review` (60), `GET /exam/attempts/:attemptId/media-grants` (30) và
+  `GET /exam/tests` (60) giữ nguyên ở mọi môi trường. Các
   route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
@@ -1058,7 +1058,7 @@ làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot
 
 ### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c/M4.3)
 
-Envelope §1. 9 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
+Envelope §1. 10 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
 response 2xx có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
 `1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
 của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
@@ -1068,6 +1068,7 @@ không lộ đề nháp.
 
 | Method | Path | Body | `data` |
 | --- | --- | --- | --- |
+| `GET` | `/exam/tests` | — | `ExamTestListPage` — danh sách đề được ở mọi cấp + trạng thái bài làm của chính người gọi, phân trang `page`/`limit` (B1, Q209–Q214) |
 | `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
 | `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
 | `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
@@ -1077,6 +1078,31 @@ không lộ đề nháp.
 | `PUT` | `/exam/attempts/:attemptId/answers/:questionKey` | `SaveExamAnswer` | `ExamAnswerSaveView` — lưu một câu (TL-121) |
 | `PUT` | `/exam/attempts/:attemptId/answers` | `{ "items": [SaveExamAnswer & { questionKey }] }` 1–20 item | `{ results: [ExamAnswerBatchResult], serverNow, remainingSeconds }` (TL-124) |
 | `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128) |
+
+`GET /exam/tests` (B1, Q209–Q214): query `levelCode?` (một trong `HSK1`…`HSK6`, `HSK7_9` — tập
+`Level.code` của chương trình HSK 3.0; giá trị khác → `400`), `skill?` (`Skill`), `sort?` (`newest` |
+`oldest` | `score`, mặc định `newest`), `page?` (số nguyên ≥ 1) và `limit?` (1–100, mặc định 20).
+Giá trị sai → `400 REQUEST_VALIDATION_FAILED`. Chỉ cần đăng nhập, cùng predicate hiển thị với màn
+giới thiệu đề (Q119) và **không** lọc theo cấp của học viên — cấp chỉ là filter của query.
+
+```json
+[{ testId, title, levelCode, duration, questionCount, skills: [<Skill>], status: "not_started" | "in_progress" | "done", activeAttempt: null | { attemptId, expiresAt }, latestAttempt: null | { attemptId, status: "submitted" | "timed_out", score, maxScore, submittedAt, resultAvailable } }]
+```
+
+`meta.pagination` = `{ page, limit, total, totalPages }`. `duration` là thời gian làm bài của cả đề
+(phút, Q118); `questionCount` đếm số câu theo cấu trúc; `skills` là các kỹ năng khác nhau của các
+phần theo `TestSection.orderIndex` (Q210) — `skill=X` khớp đề có **ít nhất một** phần mang X.
+`activeAttempt` chỉ có khi học viên đang có bài `in_progress` **còn hạn** (`expiresAt > now`); bài
+quá hạn bị coi như không có và **không** bị chuyển `timed_out` ở route này (Q212). `latestAttempt`
+là lần làm **đã xong** gần nhất theo `submittedAt` rồi `id`, chỉ `submitted`/`timed_out` —
+`invalidated` bị bỏ qua (Q213). `score`/`maxScore` đọc từ row `Result` của lần đó; chưa có `Result`
+→ `score: null`, `resultAvailable: false` và route **không** chấm lười (Q214). Chỉ attempt của user
+trong token xuất hiện (owner-only).
+
+`sort=newest`/`oldest` theo `publishedAt` rồi `id` (đề thiếu `publishedAt` xếp cuối);
+`sort=score` theo điểm lần gần nhất giảm dần, đề chưa có điểm xếp cuối, hoà thì theo `newest`.
+Đường `score` sắp xếp trong bộ nhớ: tối đa 500 đề được nạp (`EXAM_LIST_SCORE_SORT_MAX`), nâng cấp
+khi catalogue vượt 500. Endpoint dùng số câu SQL cố định (không N+1).
 
 `ExamTestIntro`:
 
@@ -1214,7 +1240,7 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `409` | `EXAM_ATTEMPT_ALREADY_SUBMITTED` | Chỉ `POST .../submit`: attempt đã `submitted` và request mang `idempotencyKey` khác; `details.status = "submitted"` (TL-151) |
 | `409` | `EXAM_ATTEMPT_NOT_TERMINAL` | Chỉ `GET result`/`GET review`: attempt còn `in_progress` và chưa quá `expiresAt + 5 s`; body chỉ `{code, message}`, không có nội dung bài (Q147) |
 | `409` | `EXAM_RESULT_UNAVAILABLE` | Chỉ `GET result`/`GET review`: chấm lỗi (shape đáp án lạ) nên không ghi `Result`; phần timeout lười vừa ghi vẫn commit, lần đọc sau chấm lại. Log `exam.grading.failed` chỉ gồm `attemptId` + tên lỗi (Q156) |
-| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa |
+| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa; hoặc query của `GET /exam/tests` sai (`levelCode` ngoài 7 mã, `skill`/`sort` lạ, `page`/`limit` ngoài biên) |
 
 Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
 ở `docs/database/P0_DATA_DICTIONARY.md`); bấm "Bắt đầu" khi đang có bài dở trả lại chính bài
@@ -1401,6 +1427,7 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/admin/users/:id/role` | `PATCH` | Đổi vai trò (M5.3, TL-70): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401, JSON body 400 nếu không phải object có `role` là `user`/`admin`; chỉ chuyển tiếp đúng `{ role }`, trả `200` + `no-store`, giữ `code` lỗi backend |
 | `/api/admin/users/:id/suspend` | `POST` | Khoá tài khoản (M5.3): như route role, body phải có `reason` là string (backend tự trim/kiểm 1–500 → 400); chỉ chuyển tiếp đúng `{ reason }`, trả `201` + `no-store`, giữ `code` lỗi backend |
 | `/api/admin/users/:id/unsuspend` | `POST` | Mở khoá (M5.3): như route role nhưng không đọc body, chuyển tiếp `POST /admin/users/:id/unsuspend`, trả `201` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/deletion-request` | `POST` | Xoá tài khoản dưới 16 tuổi (M1.7d, Q203–Q208): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401, body phải đúng object một khoá `{ reason: 'under_age' }` (body khác → 400 và **không** gọi backend); chỉ chuyển tiếp đúng `{ reason: 'under_age' }`, trả `201` + `no-store`, giữ `code` lỗi backend (`ADMIN_SELF_ACTION_FORBIDDEN`, `LAST_ADMIN_REQUIRED`, `USER_NOT_FOUND`, `USER_NOT_MODIFIABLE`, `USER_DELETION_ALREADY_DUE`); `data` trả `{ requestId, scheduledAt, initiatedBy: 'admin' }` kể cả replay/escalate |
 
 Trang admin đọc dữ liệu bằng Server Component gọi thẳng backend (`exercise-service.ts`,
 `media-service.ts`), không qua BFF route. Bốn route `GET` `/api/admin/exercises`,

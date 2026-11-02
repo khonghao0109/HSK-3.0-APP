@@ -1,4 +1,4 @@
-import { ContentStatus } from '@prisma/client';
+import { ContentStatus, type Prisma } from '@prisma/client';
 
 /**
  * Q119 / TL-111: a learner may start a test when it is published, not
@@ -32,4 +32,21 @@ export function isExamTestVisible(
     return false;
   }
   return true;
+}
+
+/**
+ * M4.5 B1: the same predicate as `isExamTestVisible`, as a Prisma filter so the
+ * list stays a fixed number of queries instead of loading every row and
+ * filtering it in memory. Both must stay in sync; the e2e visibility cases
+ * (`backend/test/exam-list.e2e-spec.ts`) pin the SQL version to the predicate.
+ */
+export function visibleExamTestWhere(now: Date): Prisma.TestWhereInput {
+  return {
+    status: ContentStatus.published,
+    deletedAt: null,
+    AND: [
+      { OR: [{ availableFrom: null }, { availableFrom: { lte: now } }] },
+      { OR: [{ availableTo: null }, { availableTo: { gt: now } }] },
+    ],
+  };
 }

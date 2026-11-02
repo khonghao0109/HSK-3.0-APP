@@ -7,6 +7,7 @@ import {
   examAttemptReadLimit,
   examAttemptSubmitLimit,
   examMediaGrantLimit,
+  examTestListLimit,
 } from '../../exam/exam.controller';
 import { MediaController } from '../../media/media.controller';
 import {
@@ -89,6 +90,14 @@ describe('learner route limits', () => {
     }
   });
 
+  it('resolves the M4.5 exam list limit in every environment (B1)', () => {
+    for (const nodeEnv of ['production', 'test']) {
+      withNodeEnv(nodeEnv, () => {
+        expect(examTestListLimit()).toBe(60);
+      });
+    }
+  });
+
   it.each([
     [
       'AuthController.getProfile',
@@ -107,6 +116,12 @@ describe('learner route limits', () => {
       ExamController.prototype,
       'startAttempt',
       examAttemptLimit,
+    ],
+    [
+      'ExamController.listTests',
+      ExamController.prototype,
+      'listTests',
+      examTestListLimit,
     ],
     [
       'ExamController.saveAnswer',

@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -17,7 +18,10 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
+import type {
+  ApiSuccessResponse,
+  PaginationMeta,
+} from '../../common/interfaces/api-response.interface';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
@@ -30,7 +34,9 @@ import {
   ExamReviewViewDto,
   ExamSubmitViewDto,
   ExamTestIntroDto,
+  ExamTestListItemDto,
 } from './dto/exam-response.dto';
+import { ListExamTestsQueryDto } from './dto/list-exam-tests-query.dto';
 import {
   SaveExamAnswerBodyDto,
   SaveExamAnswersDto,
@@ -57,6 +63,8 @@ export const EXAM_ATTEMPT_SUBMIT_LIMIT_PER_MINUTE = 10;
 export const EXAM_ANSWER_SAVE_LIMIT_PER_MINUTE = 240;
 export const EXAM_ANSWER_BATCH_LIMIT_PER_MINUTE = 60;
 export const EXAM_ATTEMPT_READ_LIMIT_PER_MINUTE = 60;
+/** M4.5 B1: the list is a read route, fixed in every environment like GET attempt. */
+export const EXAM_TEST_LIST_LIMIT_PER_MINUTE = 60;
 export const EXAM_MEDIA_GRANT_LIMIT_PER_MINUTE = 30;
 
 function testAwareLimit(limit: number): number {
@@ -87,6 +95,10 @@ export function examMediaGrantLimit(): number {
   return EXAM_MEDIA_GRANT_LIMIT_PER_MINUTE;
 }
 
+export function examTestListLimit(): number {
+  return EXAM_TEST_LIST_LIMIT_PER_MINUTE;
+}
+
 /**
  * M4.2a/M4.2b learner exam endpoints (TL-110, TL-121, TL-124, TL-127, TL-128).
  * Every route is JWT-only, `no-store` and validates its path ids with
@@ -101,6 +113,22 @@ export class ExamController {
     private readonly examService: ExamService,
     private readonly examMediaGrants: ExamMediaGrantsService,
   ) {}
+
+  /**
+   * M4.5 B1 (Q209–Q214): the learner exam list. Declared before
+   * `tests/:testId` so the static segment always wins; the query DTO rejects
+   * an unknown level/skill/sort with the shared 400 envelope.
+   */
+  @Get('tests')
+  @Throttle({ default: { limit: examTestListLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([ExamTestListItemDto], { paginated: true })
+  listTests(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: ListExamTestsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamTestListItemDto[], PaginationMeta>> {
+    return this.examService.listTests(request.user.id, query);
+  }
 
   @Get('tests/:testId')
   @Header('Cache-Control', 'no-store')

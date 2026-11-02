@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ExerciseType, ProgressStatus, TopicType } from '@prisma/client';
 
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../../common/openapi/pin-swagger-enum-order';
 import { LessonDetailExerciseMediaDto } from '../../dto/lesson-response.dto';
 import { PUBLIC_LESSON_EXERCISE_TYPES } from '../../public-exercise.policy';
 import {
@@ -64,6 +65,7 @@ export class LessonActivitySectionsDto {
   practice!: LessonActivityPracticeSectionDto;
 }
 
+@PinSwaggerEnumOrder('status', Object.values(ProgressStatus))
 export class LessonActivityTopicProgressDto {
   status!: ProgressStatus;
   completionPercent!: number;
@@ -73,6 +75,7 @@ export class LessonActivityTopicProgressDto {
   lastActivityAt!: Date | null;
 }
 
+@PinSwaggerEnumOrder('status', Object.values(ProgressStatus))
 export class LessonActivityProgressDto extends LessonActivityTopicProgressDto {
   score!: number | null;
 }

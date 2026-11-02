@@ -336,3 +336,49 @@ export class ExamReviewViewDto {
   submittedAt!: Date;
   questions!: ExamReviewQuestionDto[];
 }
+
+/**
+ * M4.5 B1 — `GET /exam/tests` (Q209…Q214). One item is one visible test of the
+ * caller plus their own attempt state; no other learner's attempt can appear.
+ */
+
+/** Q212: the caller's unfinished attempt while its clock still runs. */
+export class ExamListActiveAttemptDto {
+  attemptId!: number;
+  expiresAt!: Date;
+}
+
+/**
+ * Q211/Q213/Q214: the latest finished attempt (`submitted`/`timed_out`).
+ * `invalidated` attempts are skipped. A finished attempt that has no `Result`
+ * yet reports `score: null` and `resultAvailable: false` — the list never
+ * grades lazily.
+ */
+export class ExamListLatestAttemptDto {
+  attemptId!: number;
+  @ApiProperty({ enum: ['submitted', 'timed_out'] })
+  status!: 'submitted' | 'timed_out';
+  score!: number | null;
+  maxScore!: number | null;
+  submittedAt!: Date;
+  resultAvailable!: boolean;
+}
+
+/** One card of the learner exam list. */
+export class ExamTestListItemDto {
+  testId!: number;
+  title!: string;
+  levelCode!: string;
+  /** Whole-test duration in minutes (Q118). */
+  duration!: number;
+  questionCount!: number;
+  /** Q210: distinct skills in `TestSection.orderIndex` order. */
+  @ApiProperty({ enum: Skill, isArray: true })
+  skills!: Skill[];
+
+  @ApiProperty({ enum: ['not_started', 'in_progress', 'done'] })
+  status!: 'not_started' | 'in_progress' | 'done';
+
+  activeAttempt!: ExamListActiveAttemptDto | null;
+  latestAttempt!: ExamListLatestAttemptDto | null;
+}

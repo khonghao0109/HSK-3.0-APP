@@ -1481,6 +1481,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * M4.5 B1 (Q209–Q214): the learner exam list. Declared before
+         *     `tests/:testId` so the static segment always wins; the query DTO rejects
+         *     an unknown level/skill/sort with the shared 400 envelope.
+         */
+        get: operations["ExamController_listTests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exam/tests/{testId}": {
         parameters: {
             query?: never;
@@ -2700,7 +2721,7 @@ export interface components {
         LessonActivityProgressDto: {
             score: number | null;
             /** @enum {string} */
-            status: "done" | "learning" | "not_started";
+            status: "not_started" | "learning" | "done";
             completionPercent: number;
             timeSpentSeconds: number;
             /** Format: date-time */
@@ -2712,7 +2733,7 @@ export interface components {
         };
         LessonActivityTopicProgressDto: {
             /** @enum {string} */
-            status: "done" | "learning" | "not_started";
+            status: "not_started" | "learning" | "done";
             completionPercent: number;
             timeSpentSeconds: number;
             /** Format: date-time */
@@ -2865,6 +2886,35 @@ export interface components {
             reminderEnabled: boolean;
             reminderTime?: string | null;
             startDate: string;
+        };
+        ExamListActiveAttemptDto: {
+            attemptId: number;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ExamListLatestAttemptDto: {
+            /** @enum {string} */
+            status: "submitted" | "timed_out";
+            attemptId: number;
+            score: number | null;
+            maxScore: number | null;
+            /** Format: date-time */
+            submittedAt: string;
+            resultAvailable: boolean;
+        };
+        ExamTestListItemDto: {
+            /** @description Q210: distinct skills in `TestSection.orderIndex` order. */
+            skills: ("listening" | "reading" | "writing" | "speaking")[];
+            /** @enum {string} */
+            status: "not_started" | "in_progress" | "done";
+            testId: number;
+            title: string;
+            levelCode: string;
+            /** @description Whole-test duration in minutes (Q118). */
+            duration: number;
+            questionCount: number;
+            activeAttempt: components["schemas"]["ExamListActiveAttemptDto"] | null;
+            latestAttempt: components["schemas"]["ExamListLatestAttemptDto"] | null;
         };
         ExamTestIntroSectionDto: {
             orderIndex: number;
@@ -6497,6 +6547,42 @@ export interface operations {
                         success: true;
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_listTests: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                /** @description Level code (`Level.code`); omit for every level. */
+                levelCode?: "HSK1" | "HSK2" | "HSK3" | "HSK4" | "HSK5" | "HSK6" | "HSK7_9";
+                skill?: "listening" | "reading" | "writing" | "speaking";
+                /** @description newest/oldest by publishedAt, score by the latest finished attempt. */
+                sort?: "newest" | "oldest" | "score";
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamTestListItemDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
                     };
                 };
             };
