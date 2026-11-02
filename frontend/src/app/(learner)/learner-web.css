@@ -3461,6 +3461,313 @@
   .learner-app .exi-nf {
     padding: var(--sp-8) var(--sp-6);
   }
+
+  /* ---------- M4.3 Pha B: trang kết quả bài thi (TL-172, FIX B1) ----------
+     Số đo từ WB-10e: body 840 (content 760), hero 760×200,84 padding 32,
+     radius 16; hai card 368×401,98 (stretch), padding 24; hàng kỹ năng 22,5,
+     thanh 70×8, tên/giá trị 15px; hàng điểm yếu 46,5 padding 12/16. */
+  .learner-app .exr {
+    min-height: 100vh;
+  }
+
+  .learner-app .exr-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-6);
+    height: 72px;
+    padding: 0 var(--w-pad);
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .learner-app .exr-bar__title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: normal;
+    color: var(--text-strong);
+  }
+
+  .learner-app .exr-bar__spacer {
+    display: block;
+    width: 48px;
+  }
+
+  .learner-app .exr-body {
+    width: 760px;
+    max-width: 100%;
+    margin: 0 auto;
+    gap: 24px;
+    padding: 32px 0 40px;
+  }
+
+  /* Hero web: eyebrow → title → score row (badge/chip inline) → meta. */
+  .learner-app .exr-hero--web {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    padding: 32px;
+    background: var(--surface-card);
+    border: 1px solid var(--sand-300);
+    border-radius: var(--r-lg);
+  }
+
+  .learner-app .exr-hero--web .exr-hero__body {
+    display: grid;
+    flex: 1 1 320px;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .learner-app .exr-kicker {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 19.5px;
+    letter-spacing: 1.04px;
+    text-transform: uppercase;
+    color: var(--jade-800);
+  }
+
+  .learner-app .exr-title--web,
+  .learner-app .exr-title--web.is-pass {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 35px;
+    letter-spacing: normal;
+    color: var(--navy-900);
+  }
+
+  .learner-app .exr-score--web {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 15px;
+    line-height: 22.5px;
+    color: var(--stone-600);
+  }
+
+  .learner-app .exr-score--web b {
+    font-size: 36px;
+    line-height: 36px;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--jade-800);
+  }
+
+  .learner-app .exr-score--web.is-pass b {
+    color: var(--jade-800);
+  }
+
+  .learner-app .exr-score--web.is-fail b,
+  .learner-app .exr-score--web.is-unset b {
+    color: var(--navy-900);
+  }
+
+  .learner-app .exr-score--web .exr-score__unit,
+  .learner-app .exr-score--web.is-pass .exr-score__unit {
+    font-size: 15px;
+    line-height: 22.5px;
+    font-weight: 400;
+    color: var(--stone-600);
+  }
+
+  .learner-app .exr-score--web .exr-badge,
+  .learner-app .exr-score--web .exr-chip {
+    margin-left: 8px;
+  }
+
+  .learner-app .exr-meta--web {
+    display: block;
+    padding: 0;
+    border: 0;
+    font-size: 13px;
+    line-height: 18.85px;
+    color: var(--stone-600);
+  }
+
+  .learner-app .exr-meta--web > span + span {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .learner-app .exr-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .learner-app .exr-card,
+  .learner-app .exr-card--skills,
+  .learner-app .exr-card--weak {
+    gap: 12px;
+    padding: 24px;
+    background: var(--surface-card);
+    border: 1px solid var(--sand-300);
+    border-radius: var(--r-lg);
+  }
+
+  .learner-app .exr-h2,
+  .learner-app .exr-card--weak .exr-h2 {
+    padding-left: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24.3px;
+    color: var(--navy-900);
+  }
+
+  .learner-app .exr-skills {
+    margin-top: 0;
+    gap: 16px;
+  }
+
+  .learner-app .exr-skill {
+    grid-template-columns: 26px 110px minmax(0, 1fr) 76px;
+    gap: 12px;
+    height: 22.5px;
+    padding-left: 0;
+    --exr-fill: var(--jade-700);
+  }
+
+  .learner-app .exr-skill__icon {
+    width: 26px;
+    height: 20px;
+    border-radius: 0;
+    background: transparent;
+    color: var(--jade-800);
+  }
+
+  .learner-app .exr-skill__icon .icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.7;
+  }
+
+  .learner-app .exr-skill__name {
+    padding-left: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 22.5px;
+    color: var(--navy-900);
+  }
+
+  .learner-app .exr-skill__value {
+    padding-left: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 22.5px;
+    color: var(--navy-900);
+  }
+
+  .learner-app .exr-progress {
+    height: 8px;
+    background: var(--slate-200);
+  }
+
+  .learner-app .exr-progress::-webkit-progress-bar {
+    background: var(--slate-200);
+  }
+
+  .learner-app .exr-card--skills .exr-fine {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18.85px;
+    color: var(--stone-600);
+  }
+
+  .learner-app .exr-weak {
+    margin-top: 0;
+    gap: 8px;
+  }
+
+  .learner-app .exr-weak__row {
+    height: 46.5px;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--r-md);
+    background: var(--cream-100);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 22.5px;
+    letter-spacing: normal;
+    color: var(--text-body);
+  }
+
+  .learner-app .exr-card--weak .exr-text {
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 22.5px;
+    color: var(--text-body);
+  }
+
+  .learner-app .exr-level,
+  .learner-app .exr-level--weak,
+  .learner-app .exr-level--medium {
+    height: 22px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+
+  /* Web badge palette from base.css: danger #b3261e/--red-100,
+     warning #93600a/--amber-100 (mobile keeps the m04 palette). */
+  .learner-app .exr-level--weak {
+    background: var(--red-100);
+    color: var(--ex-wrong-text);
+  }
+
+  .learner-app .exr-level--medium {
+    background: var(--amber-100);
+    color: #93600a;
+  }
+
+  .learner-app .exr-level .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .learner-app .exr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 48px;
+    padding-left: 0;
+  }
+
+  .learner-app .exr-actions .btn {
+    width: auto;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+    font-weight: 600;
+  }
+
+  .learner-app .exr > .exr-fine {
+    margin-top: 12px;
+    padding: 0;
+    font-size: 13px;
+    line-height: 18.85px;
+    color: var(--stone-600);
+  }
+
+  .learner-app .exr-notice {
+    padding: var(--sp-6);
+  }
 }
 
 /* M4.2b Pha B — exam take, two columns ≥1024 (TL-143). */

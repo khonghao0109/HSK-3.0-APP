@@ -6,6 +6,7 @@ import { BackendRequestError } from '@/lib/api/api-error';
 import {
   handleExamAttemptRead,
   handleExamMediaGrants,
+  handleExamResultRead,
   handleExamSaveAnswer,
   handleExamSaveAnswers,
   handleExamSubmit,
@@ -805,5 +806,165 @@ describe('exam attempt BFF handlers (M4.2b, TL-134)', () => {
     ]) {
       expect(rewriteGrantUrl(7, url)).toBeNull();
     }
+  });
+});
+
+function resultView(extra: Record<string, unknown> = {}): unknown {
+  return envelope({
+    attemptId: 41,
+    testId: 7,
+    status: 'submitted',
+    testTitle: 'Đề thi thử',
+    startedAt: '2026-10-27T09:00:00.000Z',
+    submittedAt: '2026-10-27T10:00:00.000Z',
+    score: 150,
+    maxScore: 200,
+    passScore: 120,
+    passed: true,
+    scoringVersion: 'exam-score-v1',
+    gradedAt: '2026-10-27T10:00:01.000Z',
+    counts: {
+      answeredCount: 3,
+      correctCount: 2,
+      incorrectCount: 1,
+      unansweredCount: 1,
+    },
+    sections: [
+      {
+        key: 's1',
+        title: 'Đọc hiểu',
+        skill: 'reading',
+        questionCount: 2,
+        correctCount: 1,
+        score: 50,
+        maxScore: 100,
+      },
+    ],
+    skills: [{ skill: 'reading', score: 50, maxScore: 100 }],
+    weakAreas: [
+      {
+        slug: 'grammar',
+        name: 'Ngữ pháp',
+        answered: 2,
+        correct: 0,
+        accuracy: 0,
+        level: 'weak',
+      },
+    ],
+    ...extra,
+  });
+}
+
+describe('exam result BFF route (M4.3, TL-171)', () => {
+  it('forwards the stored result with no-store and no forbidden key', async () => {
+    const d = deps(() => Promise.resolve(resultView()));
+    const response = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      d,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(d.calls).toEqual([
+      {
+        path: '/api/v1/exam/attempts/41/result',
+        options: { token: TOKEN, method: 'GET' },
+      },
+    ]);
+    const body = (await response.json()) as { data: Record<string, unknown> };
+    expect(body.data).toMatchObject({ attemptId: 41, testId: 7, score: 150 });
+    const serialized = JSON.stringify(body);
+    for (const forbidden of FORBIDDEN_KEYS) {
+      expect(serialized).not.toContain(forbidden);
+    }
+  });
+
+  it('rejects an invalid attempt id with 404 and a missing cookie with 401', async () => {
+    const invalid = await handleExamResultRead(
+      request('/api/learner/exam/attempts/x/result'),
+      'x',
+      deps(() => Promise.reject(new Error('must not call'))),
+    );
+    expect(invalid.status).toBe(404);
+
+    const anonymous = new NextRequest(
+      'http://127.0.0.1:3200/api/learner/exam/attempts/41/result',
+    );
+    const missing = await handleExamResultRead(
+      anonymous,
+      ATTEMPT_ID,
+      deps(() => Promise.reject(new Error('must not call'))),
+    );
+    expect(missing.status).toBe(401);
+  });
+
+  it('keeps the three documented 409 codes and maps the rest to 503', async () => {
+    for (const code of [
+      'EXAM_ATTEMPT_NOT_TERMINAL',
+      'EXAM_RESULT_UNAVAILABLE',
+      'EXAM_ATTEMPT_CLOSED',
+    ]) {
+      const response = await handleExamResultRead(
+        request('/api/learner/exam/attempts/41/result'),
+        ATTEMPT_ID,
+        deps(() => Promise.reject(failure(409, code))),
+      );
+      expect(response.status).toBe(409);
+      const body = (await response.json()) as {
+        error: { code?: string };
+      };
+      expect(body.error.code).toBe(code);
+    }
+
+    const unknown = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() => Promise.reject(failure(409, 'EXAM_SOMETHING_ELSE'))),
+    );
+    expect(unknown.status).toBe(503);
+  });
+
+  it('maps 404 and 429, clears the session on 401, and fails closed on a bad shape', async () => {
+    const notFound = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() => Promise.reject(failure(404))),
+    );
+    expect(notFound.status).toBe(404);
+
+    const limited = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() => Promise.reject(failure(429))),
+    );
+    expect(limited.status).toBe(429);
+
+    const expired = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() => Promise.reject(failure(401))),
+    );
+    expect(expired.status).toBe(401);
+    expect(expired.headers.get('set-cookie')).toContain(COOKIE);
+
+    const broken = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() => Promise.resolve({ success: true, data: { score: 1 } })),
+    );
+    expect(broken.status).toBe(503);
+  });
+
+  it('fails closed with 503 when the raw backend payload carries a forbidden key', async () => {
+    const response = await handleExamResultRead(
+      request('/api/learner/exam/attempts/41/result'),
+      ATTEMPT_ID,
+      deps(() =>
+        Promise.resolve(resultView({ explanation: 'leak from the backend' })),
+      ),
+    );
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('leak from the backend');
   });
 });

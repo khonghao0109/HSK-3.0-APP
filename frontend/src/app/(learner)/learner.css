@@ -162,6 +162,9 @@
 
   --status-success: var(--jade-600);
   --status-warning: var(--orange-500);
+  /* Q154: chữ "Trung bình" trên --amber-100 (6,6:1, đạt AA); token chữ amber
+     chưa có trong bảng gốc. */
+  --text-on-amber: #7a5300;
   --status-danger: var(--red-600);
   --status-info: var(--blue-600);
   --status-xp: var(--amber-500);
@@ -5687,6 +5690,597 @@ html:has(.learner-app) {
   color: var(--text-body);
 }
 
+/* ---------------------------------------------------------------------------
+   M4.3 Pha B — trang kết quả bài thi (TL-172, Q149/Q165/Q166/Q168; FIX B1).
+   Số đo lấy từ docs/ui_reference/mobile/exam-result.html + m04.css:
+   - hero 371×119,44 tại 390 (bar 53 + body), padding 11/12/9, radius 10;
+   - hàng kỹ năng 24px, thanh 11px, tile 24px, tên 11,52/500, giá trị 10,56;
+   - card điểm yếu trắng, viền 1px, radius 10, hàng 12px/tag 11px;
+   - ≥400px: 2 cột 1fr / 143px, gap 11 (mốc 768 của mẫu).
+   Glass: learner-web.css dựng lại hero/card theo WB-10e cho ≥1024.
+   --------------------------------------------------------------------------- */
+.learner-app {
+  /* Bảng màu riêng của trang kết quả (đo từ mockup + kiểm AA). */
+  --exr-jade-text: #1d7d3c;
+  --exr-jade-unit: #1f6b38;
+  --exr-blue-fill: #1f6fd6;
+  --exr-orange-fill: #b26a00;
+  --exr-weak-low-bg: #fde4df;
+  --exr-weak-low-text: #a3271f;
+  --exr-weak-mid-bg: #fdf0cf;
+  --exr-weak-mid-text: #8a5a00;
+  --exr-meta-line: #e3ddd3;
+  --exr-meta-divider: #d9d3c8;
+}
+
+.learner-app .app:has(> .ex.exr) {
+  background: var(--cream-50);
+}
+
+.learner-app .exr {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--cream-50);
+}
+
+.learner-app .exr-mbar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 60px;
+  padding: 10px 6px 6px 0;
+  background: var(--navy-900);
+  color: var(--white);
+}
+
+.learner-app .exr-mbar .icon-btn,
+.learner-app .exr-mbar .icon-btn .icon {
+  color: var(--white);
+}
+
+.learner-app .exr-mbar .icon-btn {
+  margin-left: -2px;
+}
+
+.learner-app .exr-mbar .icon-btn .icon {
+  width: 1.875rem;
+  height: 1.875rem;
+  stroke-width: 1.7;
+}
+
+.learner-app .exr-mbar__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-align: center;
+  color: var(--white);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exr-mbar__spacer {
+  display: block;
+  width: 44px;
+}
+
+.learner-app .exr-body {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  /* FIX vòng 2: mockup MB-11 có 11px giữa đáy bar (53) và đỉnh hero (64);
+     trước đó padding-top 0 làm hero dính sát bar. */
+  padding: 11px 9px var(--sp-6) 10px;
+}
+
+/* ---------- Hero mobile/tablet (MB-11) ---------- */
+.learner-app .exr-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  min-width: 0;
+  padding: 11px 12px 9px 0;
+  background: var(--surface-card);
+  border: 1px solid var(--exam-line-soft);
+  border-radius: 10px;
+  color: var(--ink-900);
+}
+
+.learner-app .exr-hero:not(.is-nobadge) {
+  grid-template-columns: 76px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.learner-app .exr-hero__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 76px;
+  margin-left: 12px;
+  padding-top: 3px;
+  font-size: 11.52px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--jade-800);
+}
+
+.learner-app .exr-hero__badge.is-fail {
+  color: var(--ex-wrong-text);
+}
+
+.learner-app .exr-hero__badge .icon {
+  width: 42px;
+  height: 42px;
+  stroke-width: 1.6;
+}
+
+.learner-app .exr-hero.is-nobadge {
+  padding-left: 12px;
+}
+
+.learner-app .exr-hero__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.learner-app .exr-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  font-size: var(--fs-base);
+  line-height: 1;
+  color: var(--stone-600);
+}
+
+.learner-app .exr-score b {
+  font-size: 31px;
+  line-height: 31px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+}
+
+.learner-app .exr-score__unit {
+  font-size: 20px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.learner-app .exr-score.is-pass b {
+  color: var(--exr-jade-text);
+}
+
+.learner-app .exr-score.is-pass .exr-score__unit {
+  color: var(--exr-jade-unit);
+}
+
+.learner-app .exr-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13.44px;
+  font-weight: 500;
+  line-height: 16.128px;
+  letter-spacing: normal;
+  color: var(--text-strong);
+}
+
+.learner-app .exr-title.is-pass {
+  color: var(--exr-jade-text);
+}
+
+.learner-app .exr-kicker {
+  margin: 0;
+  font-size: 11.52px;
+  font-weight: 600;
+  line-height: 13.824px;
+  letter-spacing: normal;
+  text-transform: none;
+  /* Mockup mobile .rs-hero__exam = --m04-ink (#14182b). Web kicker keeps
+     jade via the ≥1024 override below. */
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--exr-meta-line);
+  font-size: 9.6px;
+  line-height: 11.52px;
+  color: #1f2330;
+}
+
+.learner-app .exr-meta > span + span {
+  margin-left: 17px;
+  padding-left: 14px;
+  border-left: 1px solid var(--exr-meta-divider);
+}
+
+.learner-app .exr-passline {
+  margin: 0;
+  font-size: 9.6px;
+  line-height: 11.52px;
+  color: var(--stone-600);
+}
+
+.learner-app .exr-chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--navy-100);
+  color: var(--navy-900);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 15px;
+}
+
+.learner-app .exr-chip .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.learner-app .exr-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.learner-app .exr-badge.is-pass {
+  background: var(--jade-100);
+  color: var(--jade-800);
+}
+
+.learner-app .exr-badge.is-fail {
+  background: var(--red-100);
+  color: var(--ex-wrong-text);
+}
+
+.learner-app .exr-badge .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ---------- Hai khối kỹ năng / điểm yếu ---------- */
+.learner-app .exr-grid {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.learner-app .exr-card {
+  display: grid;
+  min-width: 0;
+}
+
+.learner-app .exr-card--skills {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.learner-app .exr-card--weak {
+  gap: 0;
+  padding: 10px 11px 10px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--exam-line-soft);
+  border-radius: 10px;
+}
+
+.learner-app .exr-h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 11.04px;
+  font-weight: 600;
+  line-height: 16.56px;
+  letter-spacing: normal;
+  color: var(--ink-900);
+  padding-left: 5px;
+}
+
+.learner-app .exr-card--weak .exr-h2 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 15.6px;
+  padding-left: 0;
+}
+
+.learner-app .exr-skills {
+  display: grid;
+  gap: 7px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .exr-skill {
+  display: grid;
+  grid-template-columns: 24px 32px minmax(0, 1fr) 45.3px;
+  align-items: center;
+  gap: 0 6px;
+  min-width: 0;
+  height: 24px;
+  padding-left: 4px;
+  --exr-fill: var(--exam-green-text);
+  --exr-tile: #2b9a52;
+}
+
+.learner-app .exr-skill--reading {
+  --exr-fill: var(--exr-blue-fill);
+  --exr-tile: var(--exr-blue-fill);
+}
+
+.learner-app .exr-skill--writing {
+  --exr-fill: var(--exr-orange-fill);
+  --exr-tile: var(--exr-orange-fill);
+}
+
+.learner-app .exr-skill__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--exr-tile);
+  color: var(--white);
+}
+
+.learner-app .exr-skill__icon .icon {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+
+.learner-app .exr-skill__name {
+  min-width: 0;
+  padding-left: 2px;
+  font-size: 11.52px;
+  font-weight: 500;
+  line-height: 17.28px;
+  color: var(--ink-900);
+  white-space: nowrap;
+}
+
+.learner-app .exr-skill__bar {
+  min-width: 0;
+}
+
+.learner-app .exr-skill__value {
+  padding-left: 2px;
+  font-size: 10.56px;
+  font-weight: 400;
+  line-height: 15.84px;
+  color: var(--ink-900);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.learner-app .exr-progress {
+  display: block;
+  width: 100%;
+  height: 11px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--sand-300);
+  overflow: hidden;
+  appearance: none;
+}
+
+.learner-app .exr-progress::-webkit-progress-bar {
+  border-radius: var(--r-pill);
+  background: var(--sand-300);
+}
+
+.learner-app .exr-progress::-webkit-progress-value {
+  border-radius: var(--r-pill);
+  background: var(--exr-fill);
+}
+
+.learner-app .exr-progress::-moz-progress-bar {
+  border-radius: var(--r-pill);
+  background: var(--exr-fill);
+}
+
+.learner-app .exr-weak {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .exr-weak__row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: -0.005em;
+  color: var(--ink-900);
+}
+
+.learner-app .exr-weak__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-app .exr-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16.5px;
+}
+
+.learner-app .exr-level .icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.learner-app .exr-level--weak {
+  background: var(--exr-weak-low-bg);
+  color: var(--exr-weak-low-text);
+}
+
+.learner-app .exr-level--medium {
+  background: var(--exr-weak-mid-bg);
+  color: var(--exr-weak-mid-text);
+}
+
+.learner-app .exr-text,
+.learner-app .exr-fine {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exr-card--weak .exr-text {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.learner-app .exr-card--skills .exr-fine {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--stone-600);
+}
+
+.learner-app .exr-actions {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: 9px;
+  padding-left: 2px;
+}
+
+.learner-app .exr-actions .btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.learner-app .exr .btn--primary {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .exr .btn--primary:hover {
+  background: var(--jade-700);
+  border-color: var(--jade-700);
+}
+
+.learner-app .exr > .exr-fine {
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--stone-600);
+}
+
+.learner-app .exr-notice {
+  justify-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+}
+
+.learner-app .exr-notice__cta {
+  width: 100%;
+}
+
+/* Tablet/mobile rộng: 2 cột như mẫu ở 768 (trái 1fr, phải 143px, gap 11).
+   Mẫu MB-11 là app 402px căn giữa ở 768, nên thân trang cũng cap 402 để cột
+   trái/phải đúng 229/143 như số đo mockup. */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .learner-app .exr-body {
+    width: 402px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 400px) {
+  .learner-app .exr-grid {
+    grid-template-columns: minmax(0, 1fr) 143px;
+    align-items: start;
+    gap: 11px;
+  }
+
+  .learner-app .exr-card--weak {
+    padding: 10px 3px 10px 10px;
+  }
+
+  .learner-app .exr-card--weak .exr-h2 {
+    font-size: 11.04px;
+    line-height: 13.248px;
+  }
+
+  .learner-app .exr-weak {
+    margin-top: 8px;
+  }
+
+  .learner-app .exr-weak__row {
+    height: 16px;
+    font-size: 9px;
+    line-height: 13.5px;
+  }
+
+  .learner-app .exr-level {
+    height: 16px;
+    padding: 0 3px;
+    font-size: 8.48px;
+    line-height: 12.72px;
+  }
+
+  .learner-app .exr-level .icon {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+}
+
 /* Web-only parts (sidebar, top bar, M2.10a): out of layout and of the
    accessibility tree below 1024px; learner-web.css shows them. Last rule of
    this file on purpose: mobile rules above set `display` on some of the same
@@ -5955,6 +6549,19 @@ html:has(.learner-app) {
 .learner-app .ext-locked {
   display: block;
   font-weight: 600;
+}
+
+/* Q164: the two locked-panel actions wrap instead of overflowing at 320–390. */
+.learner-app .ext-locked__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.learner-app .ext-locked__actions .btn {
+  min-height: 44px;
+  white-space: normal;
 }
 
 .learner-app .ext-error {

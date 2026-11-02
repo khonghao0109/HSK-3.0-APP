@@ -246,3 +246,72 @@ export const examSubmitEnvelopeSchema = backendEnvelope(examSubmitViewSchema);
 
 export type ExamSubmitInput = z.infer<typeof examSubmitInputSchema>;
 export type ExamSubmitViewParsed = z.infer<typeof examSubmitViewSchema>;
+
+// ---------------------------------------------------------------------------
+// M4.3 Pha B (TL-171/TL-172): the attempt-result contract. The schema is the
+// allow-list of the BFF projection and of the server page; unknown backend
+// keys are stripped, and the route handler additionally fails closed on any
+// FORBIDDEN_KEYS hit in the raw payload (R11).
+// ---------------------------------------------------------------------------
+
+const examResultSkillSchema = z.enum([
+  'listening',
+  'reading',
+  'writing',
+  'speaking',
+]);
+
+const examResultCountsSchema = z.object({
+  answeredCount: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+  incorrectCount: z.number().int().nonnegative(),
+  unansweredCount: z.number().int().nonnegative(),
+});
+
+const examResultSectionSchema = z.object({
+  key: z.string(),
+  title: z.string(),
+  skill: examResultSkillSchema,
+  questionCount: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+  score: z.number().int().nonnegative(),
+  maxScore: z.number().int().nonnegative(),
+});
+
+const examResultSkillRowSchema = z.object({
+  skill: examResultSkillSchema,
+  score: z.number().int().nonnegative(),
+  maxScore: z.number().int().nonnegative(),
+});
+
+const examResultWeakAreaSchema = z.object({
+  slug: z.string().min(1).max(200),
+  name: z.string().min(1).max(200),
+  answered: z.number().int().nonnegative(),
+  correct: z.number().int().nonnegative(),
+  accuracy: z.number().min(0).max(100),
+  level: z.enum(['weak', 'medium']),
+});
+
+export const examResultViewSchema = z.object({
+  attemptId: z.number().int().positive(),
+  testId: z.number().int().positive(),
+  status: z.enum(['submitted', 'timed_out']),
+  testTitle: z.string(),
+  startedAt: z.iso.datetime(),
+  submittedAt: z.iso.datetime(),
+  score: z.number().int().nonnegative(),
+  maxScore: z.number().int().nonnegative(),
+  passScore: z.number().int().nonnegative().nullable(),
+  passed: z.boolean().nullable(),
+  scoringVersion: z.string(),
+  gradedAt: z.iso.datetime(),
+  counts: examResultCountsSchema,
+  sections: z.array(examResultSectionSchema),
+  skills: z.array(examResultSkillRowSchema),
+  weakAreas: z.array(examResultWeakAreaSchema),
+});
+
+export const examResultEnvelopeSchema = backendEnvelope(examResultViewSchema);
+
+export type ExamResultViewParsed = z.infer<typeof examResultViewSchema>;

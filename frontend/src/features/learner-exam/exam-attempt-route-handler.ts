@@ -21,11 +21,13 @@ import {
   examAnswerSaveEnvelopeSchema,
   examAttemptEnvelopeSchema,
   examMediaGrantsBackendEnvelopeSchema,
+  examResultEnvelopeSchema,
   examSaveAnswerInputSchema,
   examSaveAnswersInputSchema,
   examSubmitEnvelopeSchema,
   examSubmitInputSchema,
 } from './exam-contract';
+import { firstForbiddenKey } from './exam-forbidden-keys';
 import type { ExamHandlerDependencies } from './exam-route-handler';
 
 /** TL-134.5: 409 codes the answer routes may forward to the browser. */
@@ -47,6 +49,13 @@ const SUBMIT_CONFLICT_CODES = new Set([
 /** TL-134.5: the grants route forwards the two attempt-terminal codes only. */
 const GRANT_CONFLICT_CODES = new Set([
   'EXAM_ATTEMPT_EXPIRED',
+  'EXAM_ATTEMPT_CLOSED',
+]);
+
+/** TL-171/Q167: the result route forwards exactly these three 409 codes. */
+const RESULT_CONFLICT_CODES = new Set([
+  'EXAM_ATTEMPT_NOT_TERMINAL',
+  'EXAM_RESULT_UNAVAILABLE',
   'EXAM_ATTEMPT_CLOSED',
 ]);
 
@@ -448,6 +457,43 @@ export async function handleExamSubmit(
   }
 
   const parsed = examSubmitEnvelopeSchema.safeParse(raw);
+  if (!parsed.success) return safeResponse(503);
+  return json(200, { success: true, data: parsed.data.data });
+}
+
+/**
+ * `GET /api/learner/exam/attempts/:attemptId/result` (TL-171). Reads the
+ * stored result server-side with the learner token and forwards only the
+ * result allow-list. The raw backend payload is walked for R11 keys before the
+ * projection, so a backend regression fails closed (503) instead of leaking an
+ * answer key; `details` of a 409 stay on the server and the machine code is
+ * kept so the page can tell "not terminal" from "closed".
+ */
+export async function handleExamResultRead(
+  request: NextRequest,
+  rawAttemptId: string,
+  deps: ExamHandlerDependencies,
+): Promise<NextResponse> {
+  const attemptId = parseAttemptId(rawAttemptId);
+  if (attemptId === null) return safeResponse(404);
+  const token = request.cookies.get(deps.learnerCookieName)?.value;
+  if (!token) return safeResponse(401);
+
+  let raw: unknown;
+  try {
+    raw = await deps.requestBackend(
+      `/api/v1/exam/attempts/${attemptId}/result`,
+      { token, method: 'GET' },
+    );
+  } catch (error: unknown) {
+    return mapAttemptError(error, {
+      deps,
+      conflictCodes: RESULT_CONFLICT_CODES,
+    });
+  }
+
+  if (firstForbiddenKey(raw) !== null) return safeResponse(503);
+  const parsed = examResultEnvelopeSchema.safeParse(raw);
   if (!parsed.success) return safeResponse(503);
   return json(200, { success: true, data: parsed.data.data });
 }
