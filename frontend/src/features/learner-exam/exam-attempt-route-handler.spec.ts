@@ -8,6 +8,7 @@ import {
   handleExamMediaGrants,
   handleExamSaveAnswer,
   handleExamSaveAnswers,
+  handleExamSubmit,
   rewriteGrantUrl,
 } from './exam-attempt-route-handler';
 import type { ExamHandlerDependencies } from './exam-route-handler';
@@ -608,6 +609,179 @@ describe('exam attempt BFF handlers (M4.2b, TL-134)', () => {
     );
     expect(response.status).toBe(503);
     expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+
+  describe('submit (TL-159)', () => {
+    const SUBMIT_PATH = `/api/learner/exam/attempts/${ATTEMPT_ID}/submit`;
+
+    function submitView(extra: Record<string, unknown> = {}): unknown {
+      return envelope({
+        id: 41,
+        status: 'submitted',
+        submittedAt: '2026-10-27T09:05:00.000Z',
+        serverNow: '2026-10-27T09:05:00.000Z',
+        answeredCount: 2,
+        unansweredCount: 1,
+        flaggedCount: 1,
+        replayed: false,
+        ...extra,
+      });
+    }
+
+    function submitRequest(init: {
+      body?: unknown;
+      origin?: string | null;
+      cookie?: boolean;
+    }): NextRequest {
+      const headers = new Headers();
+      if (init.cookie !== false) headers.set('cookie', `${COOKIE}=${TOKEN}`);
+      if (init.origin !== null) {
+        headers.set('origin', init.origin ?? APP_ORIGIN);
+      }
+      if (init.body !== undefined) {
+        headers.set('content-type', 'application/json');
+      }
+      return new NextRequest(`http://127.0.0.1:3200${SUBMIT_PATH}`, {
+        method: 'POST',
+        headers,
+        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      });
+    }
+
+    it('rejects a cross-origin request with 403 before touching the backend', async () => {
+      const handlerDeps = deps(vi.fn());
+      const response = await handleExamSubmit(
+        submitRequest({
+          origin: 'http://evil.example',
+          body: { idempotencyKey: crypto.randomUUID() },
+        }),
+        ATTEMPT_ID,
+        handlerDeps,
+      );
+      expect(response.status).toBe(403);
+      expect(handlerDeps.calls).toHaveLength(0);
+    });
+
+    it('maps a malformed attempt id to 404', async () => {
+      const handlerDeps = deps(vi.fn());
+      const response = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey: crypto.randomUUID() } }),
+        'not-an-id',
+        handlerDeps,
+      );
+      expect(response.status).toBe(404);
+      expect(handlerDeps.calls).toHaveLength(0);
+    });
+
+    it.each([
+      ['missing key', {}],
+      ['bad uuid', { idempotencyKey: 'nope' }],
+      ['extra field', { idempotencyKey: crypto.randomUUID(), score: 100 }],
+      ['extra answers', { idempotencyKey: crypto.randomUUID(), answers: [] }],
+    ])('rejects %s with 400', async (_label, body) => {
+      const handlerDeps = deps(vi.fn());
+      const response = await handleExamSubmit(
+        submitRequest({ body }),
+        ATTEMPT_ID,
+        handlerDeps,
+      );
+      expect(response.status).toBe(400);
+      expect(handlerDeps.calls).toHaveLength(0);
+    });
+
+    it('returns 401 without the learner cookie', async () => {
+      const handlerDeps = deps(vi.fn());
+      const response = await handleExamSubmit(
+        submitRequest({
+          cookie: false,
+          body: { idempotencyKey: crypto.randomUUID() },
+        }),
+        ATTEMPT_ID,
+        handlerDeps,
+      );
+      expect(response.status).toBe(401);
+      expect(handlerDeps.calls).toHaveLength(0);
+    });
+
+    it('forwards exactly { idempotencyKey } and returns the documented projection', async () => {
+      const handlerDeps = deps(vi.fn().mockResolvedValue(submitView()));
+      const idempotencyKey = crypto.randomUUID();
+      const response = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey } }),
+        ATTEMPT_ID,
+        handlerDeps,
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(handlerDeps.calls).toHaveLength(1);
+      expect(handlerDeps.calls[0]).toMatchObject({
+        path: `/api/v1/exam/attempts/${ATTEMPT_ID}/submit`,
+        options: {
+          token: TOKEN,
+          method: 'POST',
+          body: { idempotencyKey },
+        },
+      });
+      expect(JSON.stringify(handlerDeps.calls[0]?.options?.body)).toBe(
+        JSON.stringify({ idempotencyKey }),
+      );
+      const body = await response.json();
+      expect(body.data).toMatchObject({
+        status: 'submitted',
+        replayed: false,
+        answeredCount: 2,
+        unansweredCount: 1,
+        flaggedCount: 1,
+      });
+    });
+
+    it.each([
+      'EXAM_ATTEMPT_ALREADY_SUBMITTED',
+      'EXAM_ATTEMPT_EXPIRED',
+      'EXAM_ATTEMPT_CLOSED',
+      'EXAM_IDEMPOTENCY_KEY_REUSED',
+    ])('keeps the %s 409 code without forwarding details', async (code) => {
+      const handlerDeps = deps(
+        vi.fn().mockRejectedValue(failure(409, code, { field: 'internal' })),
+      );
+      const response = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey: crypto.randomUUID() } }),
+        ATTEMPT_ID,
+        handlerDeps,
+      );
+      expect(response.status).toBe(409);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      const body = await response.json();
+      expect(body.error).toMatchObject({ code });
+      expect(JSON.stringify(body)).not.toContain('details');
+      expect(JSON.stringify(body)).not.toContain('internal');
+    });
+
+    it('maps an unknown 409 code to 503 and forwards 429', async () => {
+      const unknown = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey: crypto.randomUUID() } }),
+        ATTEMPT_ID,
+        deps(vi.fn().mockRejectedValue(failure(409, 'EXAM_OTHER'))),
+      );
+      expect(unknown.status).toBe(503);
+
+      const limited = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey: crypto.randomUUID() } }),
+        ATTEMPT_ID,
+        deps(vi.fn().mockRejectedValue(failure(429))),
+      );
+      expect(limited.status).toBe(429);
+    });
+
+    it('returns 503 when the backend envelope is not the documented shape', async () => {
+      const response = await handleExamSubmit(
+        submitRequest({ body: { idempotencyKey: crypto.randomUUID() } }),
+        ATTEMPT_ID,
+        deps(vi.fn().mockResolvedValue(envelope({ nope: true }))),
+      );
+      expect(response.status).toBe(503);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+    });
   });
 
   it('rewriteGrantUrl accepts only the canonical content path', () => {

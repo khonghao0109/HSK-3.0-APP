@@ -6636,11 +6636,11 @@ html:has(.learner-app) {
   pointer-events: auto;
 }
 
-/* Mockup mobile submits keep jade-600 (m04.css:225). */
+/* F3 (M4.2c): jade-600/white chỉ 3,22:1 < 4,5:1 nên mobile submit đổi sang jade-800 có sẵn (5,30:1), như tiền lệ A1 (cinnabar-700). */
 .learner-app .ex.ext .ext-qnav__submit,
 .learner-app .ex.ext .ext-panel .uxb-takefoot__submit {
-  background: var(--jade-600);
-  border-color: var(--jade-600);
+  background: var(--jade-800);
+  border-color: var(--jade-800);
 }
 
 /* AA contrast (Q42) for the play button and the selected speed on mobile too. */

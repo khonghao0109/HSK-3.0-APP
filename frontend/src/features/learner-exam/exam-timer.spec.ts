@@ -138,7 +138,9 @@ describe('exam timer (TL-137)', () => {
       }),
     ).toBe(false);
     expect(lockMessage('timed_out')).toBe('Hết giờ. Bài làm đã được lưu.');
-    expect(lockMessage('submitted')).toBe('Bài thi đã kết thúc.');
+    expect(lockMessage('submitted')).toBe('Bài đã được nộp.');
+    expect(lockMessage('invalidated')).toBe('Bài thi đã kết thúc.');
+    expect(lockMessage('closed')).toBe('Bài thi đã kết thúc.');
   });
 
   it('rebase never extends the deadline when a late response arrives', () => {

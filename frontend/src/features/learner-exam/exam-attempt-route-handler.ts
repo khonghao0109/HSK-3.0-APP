@@ -23,12 +23,22 @@ import {
   examMediaGrantsBackendEnvelopeSchema,
   examSaveAnswerInputSchema,
   examSaveAnswersInputSchema,
+  examSubmitEnvelopeSchema,
+  examSubmitInputSchema,
 } from './exam-contract';
 import type { ExamHandlerDependencies } from './exam-route-handler';
 
 /** TL-134.5: 409 codes the answer routes may forward to the browser. */
 const ANSWER_CONFLICT_CODES = new Set([
   'EXAM_ANSWER_VERSION_CONFLICT',
+  'EXAM_ATTEMPT_EXPIRED',
+  'EXAM_ATTEMPT_CLOSED',
+  'EXAM_IDEMPOTENCY_KEY_REUSED',
+]);
+
+/** TL-159: 409 codes the submit route may forward to the browser. */
+const SUBMIT_CONFLICT_CODES = new Set([
+  'EXAM_ATTEMPT_ALREADY_SUBMITTED',
   'EXAM_ATTEMPT_EXPIRED',
   'EXAM_ATTEMPT_CLOSED',
   'EXAM_IDEMPOTENCY_KEY_REUSED',
@@ -391,4 +401,53 @@ export async function handleExamSaveAnswers(
       remainingSeconds,
     },
   });
+}
+
+/**
+ * `POST /api/learner/exam/attempts/:attemptId/submit` (TL-159). The body is
+ * rebuilt from the parsed strict input, so a raw body with extra fields or a
+ * score can never reach the backend. The response projection is the allowlist
+ * of `examSubmitViewSchema`; `details` of a 409 stays on the server.
+ */
+export async function handleExamSubmit(
+  request: NextRequest,
+  rawAttemptId: string,
+  deps: ExamHandlerDependencies,
+): Promise<NextResponse> {
+  if (!isSameOrigin(request, deps.appOrigin)) return safeResponse(403);
+  const attemptId = parseAttemptId(rawAttemptId);
+  if (attemptId === null) return safeResponse(404);
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return safeResponse(400);
+  }
+  const input = examSubmitInputSchema.safeParse(body);
+  if (!input.success) return safeResponse(400);
+
+  const token = request.cookies.get(deps.learnerCookieName)?.value;
+  if (!token) return safeResponse(401);
+
+  let raw: unknown;
+  try {
+    raw = await deps.requestBackend(
+      `/api/v1/exam/attempts/${attemptId}/submit`,
+      {
+        token,
+        method: 'POST',
+        body: { idempotencyKey: input.data.idempotencyKey },
+      },
+    );
+  } catch (error: unknown) {
+    return mapAttemptError(error, {
+      deps,
+      conflictCodes: SUBMIT_CONFLICT_CODES,
+    });
+  }
+
+  const parsed = examSubmitEnvelopeSchema.safeParse(raw);
+  if (!parsed.success) return safeResponse(503);
+  return json(200, { success: true, data: parsed.data.data });
 }

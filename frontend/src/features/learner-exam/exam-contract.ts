@@ -221,3 +221,28 @@ export type ExamAnswerSaveViewParsed = z.infer<typeof examAnswerSaveViewSchema>;
 export type ExamAnswerBatchViewParsed = z.infer<
   typeof examAnswerBatchViewSchema
 >;
+
+// ---------------------------------------------------------------------------
+// TL-159: submit BFF contract. Input is strict (only the idempotency key);
+// the response carries aggregate counts, never answers/score/result (R11).
+// ---------------------------------------------------------------------------
+
+export const examSubmitInputSchema = z.strictObject({
+  idempotencyKey: z.uuid(),
+});
+
+export const examSubmitViewSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.literal('submitted'),
+  submittedAt: z.iso.datetime(),
+  serverNow: z.iso.datetime(),
+  answeredCount: z.number().int().nonnegative(),
+  unansweredCount: z.number().int().nonnegative(),
+  flaggedCount: z.number().int().nonnegative(),
+  replayed: z.boolean(),
+});
+
+export const examSubmitEnvelopeSchema = backendEnvelope(examSubmitViewSchema);
+
+export type ExamSubmitInput = z.infer<typeof examSubmitInputSchema>;
+export type ExamSubmitViewParsed = z.infer<typeof examSubmitViewSchema>;

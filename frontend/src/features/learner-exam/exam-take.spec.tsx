@@ -174,6 +174,26 @@ function savedView(questionKey: string, version: number, answer: unknown) {
 let putBodies: Array<Record<string, unknown>> = [];
 let putInits: RequestInit[] = [];
 let putHandler: (url: string, body: Record<string, unknown>) => Response;
+let submitBodies: Array<Record<string, unknown>> = [];
+let fetchOrder: string[] = [];
+let submitHandler: (
+  url: string,
+  body: Record<string, unknown>,
+) => Response | Promise<Response>;
+
+function submitView(overrides: Record<string, unknown> = {}): unknown {
+  return {
+    id: 41,
+    status: 'submitted',
+    submittedAt: '2026-10-27T09:05:00.000Z',
+    serverNow: '2026-10-27T09:05:00.000Z',
+    answeredCount: 0,
+    unansweredCount: 2,
+    flaggedCount: 0,
+    replayed: false,
+    ...overrides,
+  };
+}
 
 function mockFetch() {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
@@ -184,9 +204,16 @@ function mockFetch() {
         data: { grants: [], unavailable: [] },
       });
     }
+    if (url.endsWith('/submit') && init?.method === 'POST') {
+      const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+      submitBodies.push(body);
+      fetchOrder.push('post');
+      return submitHandler(url, body);
+    }
     if (url.includes('/answers') && init?.method === 'PUT') {
       const body = JSON.parse(String(init.body)) as Record<string, unknown>;
       putBodies.push(body);
+      fetchOrder.push('put');
       if (init !== undefined) putInits.push(init);
       return putHandler(url, body);
     }
@@ -214,6 +241,9 @@ beforeEach(() => {
   }
   putBodies = [];
   putInits = [];
+  submitBodies = [];
+  fetchOrder = [];
+  submitHandler = () => Response.json({ success: true, data: submitView() });
   putHandler = (_url, body) => {
     const key = String(body.questionKey ?? 'q1');
     return Response.json({
@@ -353,17 +383,46 @@ describe('ExamTake island logic (D)', () => {
     });
   });
 
-  it('D9 marks every submit button aria-disabled and toasts on click', async () => {
-    renderTake(attempt());
-    const submitButtons = screen
-      .getAllByRole('button')
-      .filter((button) => /Nộp bài/u.test(button.textContent ?? ''));
-    expect(submitButtons.length).toBeGreaterThan(0);
-    for (const button of submitButtons) {
-      expect(button.getAttribute('aria-disabled')).toBe('true');
-    }
-    fireEvent.click(submitButtons[0] as HTMLElement);
-    expect(await screen.findByText('Tính năng sắp ra mắt.')).toBeDefined();
+  it('D9 opens one submit dialog from the footer and the panel with the current counts', () => {
+    renderTake(
+      attempt({
+        answers: [
+          {
+            questionKey: 'q1',
+            answer: { choice: 'a' },
+            isFlagged: true,
+            version: 1,
+            answeredAt: '2026-10-27T09:00:00.000Z',
+            lastSavedAt: '2026-10-27T09:00:00.000Z',
+          },
+        ],
+      }),
+    );
+    const footer = screen.getByRole('contentinfo');
+    fireEvent.click(within(footer).getByRole('button', { name: 'Nộp bài' }));
+    let dialog = screen.getByRole('dialog');
+    expect(
+      within(dialog).getByRole('heading', { name: 'Nộp bài?' }),
+    ).toBeDefined();
+    expect(dialog.textContent).toContain('Bạn còn 1 câu chưa làm.');
+    expect(dialog.textContent).toContain('1 câu đã đánh dấu.');
+    expect(dialog.textContent).toContain('Sau khi nộp, bạn không thể sửa bài.');
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
+    expect(submitBodies).toHaveLength(0);
+
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: 'Tiếp tục làm' }),
+    );
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    const panel = screen.getByRole('complementary', {
+      name: 'Danh sách câu',
+    });
+    fireEvent.click(within(panel).getByRole('button', { name: 'Nộp bài' }));
+    dialog = screen.getByRole('dialog');
+    expect(
+      within(dialog).getByRole('heading', { name: 'Nộp bài?' }),
+    ).toBeDefined();
   });
 
   it('D10 hides "Câu sau" on the last question', () => {
@@ -372,17 +431,20 @@ describe('ExamTake island logic (D)', () => {
     expect(screen.queryByRole('button', { name: 'Câu sau' })).toBeNull();
   });
 
-  it('V4 (2b-5): submit in the panel is aria-disabled and only toasts (Q124)', async () => {
+  it('V4: the last-question submit opens the same dialog instead of toasting', () => {
     renderTake(attempt());
-    const panel = screen.getByRole('complementary', {
-      name: 'Danh sách câu',
+    fireEvent.click(screen.getByRole('button', { name: 'Câu sau' }));
+    const nav = screen.getByRole('navigation', {
+      name: 'Điều hướng câu hỏi',
     });
-    const submit = within(panel).getByRole('button', { name: 'Nộp bài' });
-    expect(submit.getAttribute('aria-disabled')).toBe('true');
-    fireEvent.click(submit);
-    expect(await screen.findByText('Tính năng sắp ra mắt.')).toBeDefined();
-    const calls = vi.mocked(globalThis.fetch).mock.calls;
-    expect(calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+    fireEvent.click(within(nav).getByRole('button', { name: 'Nộp bài' }));
+    expect(
+      within(screen.getByRole('dialog')).getByRole('heading', {
+        name: 'Nộp bài?',
+      }),
+    ).toBeDefined();
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
+    expect(submitBodies).toHaveLength(0);
   });
 
   it('D11 never renders a forbidden R11 key', () => {
@@ -1502,32 +1564,15 @@ describe('ExamTake island logic (D)', () => {
     expect(screen.getByRole('button', { name: 'Đã nghe' })).toBeDefined();
   });
 
-  it('Q124: submit buttons are disabled and toast without a submit request', async () => {
-    renderTake(attempt());
-    const footer = screen.getByRole('contentinfo');
-    const submitButtons = within(footer).getAllByRole('button', {
-      name: 'Nộp bài',
-    });
-    expect(submitButtons).toHaveLength(1);
-    expect(submitButtons[0]?.getAttribute('aria-disabled')).toBe('true');
-    fireEvent.click(submitButtons[0] as HTMLElement);
-    expect(await screen.findByText('Tính năng sắp ra mắt.')).toBeDefined();
-    const calls = vi.mocked(globalThis.fetch).mock.calls;
-    expect(calls.some(([, init]) => init?.method === 'POST')).toBe(false);
-    const panel = screen.getByRole('complementary', {
-      name: 'Danh sách câu',
-    });
-    expect(
-      within(panel)
-        .getByRole('button', { name: 'Nộp bài' })
-        .getAttribute('aria-disabled'),
-    ).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: 'Câu sau' }));
-    const nav = screen.getByRole('navigation', {
-      name: 'Điều hướng câu hỏi',
-    });
-    const navSubmit = within(nav).getByRole('button', { name: 'Nộp bài' });
-    expect(navSubmit.getAttribute('aria-disabled')).toBe('true');
+  it('Q124: a locked attempt disables every submit entry', () => {
+    renderTake(attempt({ remainingSeconds: 0 }));
+    const submitButtons = screen
+      .getAllByRole('button')
+      .filter((button) => /Nộp bài/u.test(button.textContent ?? ''));
+    expect(submitButtons.length).toBeGreaterThan(0);
+    for (const button of submitButtons) {
+      expect((button as HTMLButtonElement).disabled).toBe(true);
+    }
   });
 
   it('D3: expiring with one unsaved question shows the unsaved line', async () => {
@@ -2101,5 +2146,367 @@ describe('ExamTake R12 audio preload (TL-145..TL-147)', () => {
       }),
     );
     await settleFetch();
+  });
+});
+
+/**
+ * TL-157/TL-158: the submit flow. The dialog is the only confirmation step;
+ * the server result owns the locked banner copy, and a submit in flight must
+ * never be closed or overwritten by the local clock.
+ */
+describe('ExamTake submit (TL-157/TL-158)', () => {
+  function openSubmit(): HTMLElement {
+    const footer = screen.getByRole('contentinfo');
+    fireEvent.click(within(footer).getByRole('button', { name: 'Nộp bài' }));
+    return screen.getByRole('dialog');
+  }
+
+  async function confirm(): Promise<void> {
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Nộp bài' }));
+  }
+
+  it('restores focus to the trigger and sends nothing on cancel', () => {
+    renderTake(attempt());
+    const footer = screen.getByRole('contentinfo');
+    const trigger = within(footer).getByRole('button', { name: 'Nộp bài' });
+    fireEvent.click(trigger);
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Tiếp tục làm',
+      }),
+    );
+    expect(document.activeElement).toBe(trigger);
+    expect(fetchOrder).toEqual([]);
+  });
+
+  it('flushes pending saves before one POST that carries only the key', async () => {
+    // A debounced fill is still pending when the learner confirms: the forced
+    // flush must settle before the POST, so the PUT is observable first.
+    renderTake(singleQuestionAttempt({ type: 'fill_blank', answers: {} }));
+    fireEvent.change(screen.getByLabelText('Câu trả lời của bạn'), {
+      target: { value: '你好' },
+    });
+    openSubmit();
+    await confirm();
+    await waitFor(() => expect(submitBodies).toHaveLength(1));
+    expect(putBodies.length).toBeGreaterThan(0);
+    expect(fetchOrder.indexOf('put')).toBeLessThan(fetchOrder.indexOf('post'));
+    expect(Object.keys(submitBodies[0] ?? {})).toEqual(['idempotencyKey']);
+    expect(String(submitBodies[0]?.idempotencyKey)).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u,
+    );
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+  });
+
+  it('sends exactly one POST when the confirm button is double-clicked', async () => {
+    let resolveSubmit: ((value: Response) => void) | undefined;
+    submitHandler = () =>
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      });
+    renderTake(attempt());
+    openSubmit();
+    const dialog = screen.getByRole('dialog');
+    const confirmButton = within(dialog).getByRole('button', {
+      name: 'Nộp bài',
+    });
+    fireEvent.click(confirmButton);
+    fireEvent.click(confirmButton);
+    await waitFor(() => expect(submitBodies).toHaveLength(1));
+    resolveSubmit?.(Response.json({ success: true, data: submitView() }));
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+    expect(submitBodies).toHaveLength(1);
+  });
+
+  it('posts within 3 s even when the queue flush hangs', async () => {
+    vi.useFakeTimers();
+    vi.mocked(globalThis.fetch).mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: { grants: [], unavailable: [] },
+        });
+      }
+      if (url.includes('/answers') && init?.method === 'PUT') {
+        return new Promise<Response>(() => undefined);
+      }
+      if (url.endsWith('/submit') && init?.method === 'POST') {
+        submitBodies.push(
+          JSON.parse(String(init.body)) as Record<string, unknown>,
+        );
+        return Response.json({ success: true, data: submitView() });
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    renderTake(attempt());
+    fireEvent.click(screen.getAllByRole('radio')[0] as HTMLElement);
+    await vi.advanceTimersByTimeAsync(700);
+    openSubmit();
+    await confirm();
+    await vi.advanceTimersByTimeAsync(3_000);
+    await settleFetch();
+    expect(submitBodies).toHaveLength(1);
+  });
+
+  it('does not POST while offline and keeps the key for the retry', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    renderTake(attempt());
+    openSubmit();
+    await confirm();
+    await waitFor(() =>
+      expect(
+        screen.getByText('Không có kết nối. Kiểm tra mạng rồi thử lại.'),
+      ).toBeDefined(),
+    );
+    expect(submitBodies).toHaveLength(0);
+    expect(screen.queryByRole('dialog')).not.toBeNull();
+  });
+
+  it('retries a network failure with the same idempotency key', async () => {
+    submitHandler = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    renderTake(attempt());
+    openSubmit();
+    await confirm();
+    await waitFor(() =>
+      expect(screen.getByText('Không nộp được. Thử lại.')).toBeDefined(),
+    );
+    const firstKey = submitBodies[0]?.idempotencyKey;
+    expect(submitBodies).toHaveLength(1);
+
+    submitHandler = () => Response.json({ success: true, data: submitView() });
+    await confirm();
+    await waitFor(() => expect(submitBodies).toHaveLength(2));
+    expect(submitBodies[1]?.idempotencyKey).toBe(firstKey);
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+  });
+
+  it.each([
+    ['EXAM_ATTEMPT_ALREADY_SUBMITTED', 'Bài đã được nộp.'],
+    ['EXAM_ATTEMPT_EXPIRED', 'Hết giờ. Bài làm đã được lưu.'],
+    ['EXAM_ATTEMPT_CLOSED', 'Bài thi đã kết thúc.'],
+  ])('maps 409 %s to its locked copy', async (code, copy) => {
+    submitHandler = () =>
+      Response.json(
+        { success: false, error: { kind: 'conflict', message: 'x', code } },
+        { status: 409 },
+      );
+    renderTake(attempt());
+    openSubmit();
+    await confirm();
+    await waitFor(() =>
+      expect(within(screen.getByRole('alert')).getByText(copy)).toBeDefined(),
+    );
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(submitBodies).toHaveLength(1);
+  });
+
+  it('retries a reused key once with a fresh key, then submits', async () => {
+    let call = 0;
+    submitHandler = () => {
+      call += 1;
+      if (call === 1) {
+        return Response.json(
+          {
+            success: false,
+            error: {
+              kind: 'conflict',
+              message: 'x',
+              code: 'EXAM_IDEMPOTENCY_KEY_REUSED',
+            },
+          },
+          { status: 409 },
+        );
+      }
+      return Response.json({ success: true, data: submitView() });
+    };
+    renderTake(attempt());
+    openSubmit();
+    await confirm();
+    await waitFor(() => expect(submitBodies).toHaveLength(2));
+    expect(submitBodies[0]?.idempotencyKey).not.toBe(
+      submitBodies[1]?.idempotencyKey,
+    );
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+  });
+
+  it('keeps the dialog open when the clock hits zero during the POST, then the server wins', async () => {
+    let resolveSubmit: ((value: Response) => void) | undefined;
+    submitHandler = () =>
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      });
+    renderTake(attempt({ remainingSeconds: 1 }));
+    openSubmit();
+    await confirm();
+    await waitFor(() => expect(submitBodies).toHaveLength(1));
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 1_400));
+    // Prove the local clock really reached zero before the server answered.
+    expect(screen.getByRole('timer').textContent).toContain('00:00');
+    expect(screen.queryByRole('dialog')).not.toBeNull();
+    expect(screen.queryByText('Hết giờ. Bài làm đã được lưu.')).toBeNull();
+    resolveSubmit?.(Response.json({ success: true, data: submitView() }));
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+  });
+
+  it('F2 (M4.2c): a zero mid-POST followed by a failed POST locks with the Q127 copy', async () => {
+    vi.useFakeTimers();
+    let resolveSubmit: ((value: Response) => void) | undefined;
+    submitHandler = () =>
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      });
+    renderTake(attempt({ remainingSeconds: 1 }));
+    openSubmit();
+    await confirm();
+    // The 3 s flush guard elapses; the POST is hanging and the clock hits zero.
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(submitBodies).toHaveLength(1);
+    expect(screen.queryByRole('dialog')).not.toBeNull();
+    expect(screen.queryByText('Hết giờ. Bài làm đã được lưu.')).toBeNull();
+    // The server answer is a plain failure: the lock must come from `finally`,
+    // and the submit error must not replace the Q127 copy.
+    await act(async () => {
+      resolveSubmit?.(
+        Response.json(
+          { success: false, error: { kind: 'server', message: 'x' } },
+          { status: 503 },
+        ),
+      );
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByText('Hết giờ. Bài làm đã được lưu.')).toBeDefined();
+    expect(screen.queryByText('Không nộp được. Thử lại.')).toBeNull();
+  });
+
+  it('after a submit there are no more PUTs, no expiry copy and no low-time notice', async () => {
+    renderTake(attempt({ remainingSeconds: 200 }));
+    openSubmit();
+    await confirm();
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+    const putsAfterSubmit = putBodies.length;
+    const footerText = screen.getByRole('contentinfo').textContent;
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 1_300));
+    expect(putBodies.length).toBe(putsAfterSubmit);
+    // The clock is stopped: the footer countdown must not move after a submit.
+    expect(screen.getByRole('contentinfo').textContent).toBe(footerText);
+    expect(
+      screen.queryByText('Có câu chưa lưu được trước khi hết giờ.'),
+    ).toBeNull();
+    expect(screen.queryByText('Còn dưới 5 phút.')).toBeNull();
+  });
+
+  it('blocks Esc while the submit is in flight', async () => {
+    let resolveSubmit: ((value: Response) => void) | undefined;
+    submitHandler = () =>
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      });
+    renderTake(attempt());
+    openSubmit();
+    await confirm();
+    await waitFor(() => expect(submitBodies).toHaveLength(1));
+    fireEvent(screen.getByRole('dialog'), new Event('cancel'));
+    expect(screen.queryByRole('dialog')).not.toBeNull();
+    resolveSubmit?.(Response.json({ success: true, data: submitView() }));
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+  });
+
+  it('mounts a submitted attempt locked with its own copy and a link back', async () => {
+    renderTake(attempt({ status: 'submitted', remainingSeconds: 0 }));
+    expect(
+      within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+    ).toBeDefined();
+    const back = screen.getByRole('link', { name: 'Về màn giới thiệu đề' });
+    expect(back.getAttribute('href')).toBe('/learn/exam/7');
+    const footerSubmit = within(screen.getByRole('contentinfo')).getByRole(
+      'button',
+      { name: 'Nộp bài' },
+    );
+    expect((footerSubmit as HTMLButtonElement).disabled).toBe(true);
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 600));
+    expect(screen.queryByText('Còn dưới 5 phút.')).toBeNull();
+  });
+
+  it('F1 (M4.2c): after a submit the clock pill is gone and the footer carries the copy', async () => {
+    renderTake(attempt({ remainingSeconds: 200 }));
+    openSubmit();
+    await confirm();
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+    expect(screen.queryByRole('timer')).toBeNull();
+    expect(document.querySelector('.ext-timer')).toBeNull();
+    expect(
+      screen.getByRole('contentinfo').querySelector('.uxb-fine')?.textContent,
+    ).toBe('Bài đã được nộp.');
+  });
+
+  it('F1 (M4.2c): mounting a submitted attempt hides the clock and has no is-low', () => {
+    renderTake(attempt({ status: 'submitted', remainingSeconds: 200 }));
+    expect(screen.queryByRole('timer')).toBeNull();
+    expect(document.querySelector('.ext-timer')).toBeNull();
+    expect(document.querySelector('.is-low')).toBeNull();
+    expect(
+      screen.getByRole('contentinfo').querySelector('.uxb-fine')?.textContent,
+    ).toBe('Bài đã được nộp.');
+  });
+
+  it('F1 (M4.2c): a live attempt under five minutes still gets is-low', () => {
+    renderTake(attempt({ remainingSeconds: 200 }));
+    const timer = screen.getByRole('timer');
+    expect(timer.className).toContain('is-low');
+  });
+
+  it('F1 (M4.2c): a timed-out attempt keeps the 00:00 readout without is-low', () => {
+    renderTake(attempt({ remainingSeconds: 0 }));
+    const timer = screen.getByRole('timer');
+    expect(timer.textContent).toContain('00:00');
+    expect(timer.className).not.toContain('is-low');
+    expect(
+      screen.getByRole('contentinfo').querySelector('.uxb-fine')?.textContent,
+    ).toContain('Còn 00:00 phút');
+  });
+
+  it('F1 (M4.2c): a remounted timed_out attempt keeps 00:00 and the Q127 copy', () => {
+    renderTake(attempt({ status: 'timed_out', remainingSeconds: 0 }));
+    expect(screen.getByText('Hết giờ. Bài làm đã được lưu.')).toBeDefined();
+    const timer = screen.getByRole('timer');
+    expect(timer.textContent).toContain('00:00');
+    expect(timer.className).not.toContain('is-low');
   });
 });

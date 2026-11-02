@@ -22,7 +22,6 @@ import {
   isBarPlayed,
 } from '@/features/learner-lesson/lesson-player-model';
 import { useLearnerToast } from '@/features/learner-shell/learner-toast';
-import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
 
 import {
   EXAM_QUEUE_DEBOUNCE_MS,
@@ -39,7 +38,9 @@ import {
   EXAM_CLOSED_MESSAGE,
   EXAM_EXPIRED_MESSAGE,
   EXAM_LOW_NOTICE,
+  EXAM_SUBMITTED_MESSAGE,
   EXAM_UNSAVED_BEFORE_EXPIRY,
+  EXAM_UNSAVED_BEFORE_SUBMIT,
   createExamTimer,
   formatTimer,
   lockMessage,
@@ -66,6 +67,9 @@ const OFFLINE_TEXT =
   'Không kết nối được máy chủ. Kiểm tra kết nối mạng rồi thử lại.';
 const OFFLINE_TAIL = 'Bài làm sẽ được lưu khi có mạng lại.';
 const QUIT_TITLE = 'Thoát bài thi?';
+const SUBMIT_TITLE = 'Nộp bài?';
+const SUBMIT_OFFLINE_TEXT = 'Không có kết nối. Kiểm tra mạng rồi thử lại.';
+const SUBMIT_ERROR_TEXT = 'Không nộp được. Thử lại.';
 const QUIT_BODY =
   'Đồng hồ vẫn chạy khi bạn thoát. Bài làm đã được lưu, bạn có thể quay lại làm tiếp trước khi hết giờ.';
 
@@ -134,6 +138,7 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const [locked, setLocked] = useState(
     attempt.status !== 'in_progress' || attempt.remainingSeconds === 0,
   );
+  const [submitted, setSubmitted] = useState(attempt.status === 'submitted');
   const [lockText, setLockText] = useState(
     attempt.status !== 'in_progress' ? lockMessage(attempt.status) : '',
   );
@@ -155,7 +160,9 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [playError, setPlayError] = useState<string | null>(null);
-  const [dialogKind, setDialogKind] = useState<'quit' | null>(null);
+  const [dialogKind, setDialogKind] = useState<'quit' | 'submit' | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   /**
    * R12 (TL-145): byte audio đã tải trước, giữ theo mediaId dưới dạng blob URL.
    * Ref đồng bộ song song để `startAudio`/`onMediaError` đọc được ngay, không
@@ -176,6 +183,18 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const quitButtonRef = useRef<HTMLButtonElement | null>(null);
   const quitTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const submitCancelRef = useRef<HTMLButtonElement | null>(null);
+  const submitTriggerRef = useRef<HTMLElement | null>(null);
+  const submitKeyRef = useRef<string | null>(null);
+  const submitKeyReusedRef = useRef(false);
+  const submittingRef = useRef(false);
+  /**
+   * M4.2c F2: the local clock can reach zero while a POST is in flight. The
+   * server result still decides the outcome, so the zero is only remembered
+   * here and applied by `submit`'s `finally` when the POST does not submit.
+   */
+  const zeroWhileSubmittingRef = useRef(false);
+  const submittedRef = useRef(attempt.status === 'submitted');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const listeningKeyRef = useRef<string | null>(null);
   const attemptedAfterLock = useRef(false);
@@ -245,6 +264,8 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         current.length > 0 ? current : (message ?? lockMessage(status)),
       );
       setLocked(true);
+      setLowNotice(false);
+      timerRef.current?.stop();
       setDialogKind(null);
       dialogRef.current?.close();
       // F11: skip the backoff so the last edits can still land in the 5 s grace.
@@ -354,6 +375,8 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         console.error('[exam-autosave]', questionKey, code);
       },
       onLocked: (status, unsavedKeys) => {
+        // TL-157 step 9: a submit in flight owns the final copy.
+        if (submittingRef.current) return;
         if ((unsavedKeys ?? []).length > 0) {
           setFailedKeys((previous) => {
             const next = new Set(previous);
@@ -368,7 +391,15 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       onRemainingSeconds: (seconds) => {
         setRemaining(seconds);
         timerRef.current?.rebase(seconds);
-        if (seconds === 0) callbacksRef.current.lockExam('expired');
+        if (seconds > 0) {
+          // F2 (M4.2c): a server rebase with time left supersedes a local zero,
+          // so a later failed POST must not lock an exam that still has time.
+          zeroWhileSubmittingRef.current = false;
+          return;
+        }
+        if (!submittingRef.current) {
+          callbacksRef.current.lockExam('expired');
+        }
       },
       onOffline: (isOffline) => setOffline(isOffline),
     };
@@ -400,6 +431,9 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   }, [attempt.id]);
 
   useEffect(() => {
+    // TL-157: a submitted/terminal attempt has no running clock and must not
+    // announce low time.
+    if (attempt.status !== 'in_progress') return;
     const timer = createExamTimer({
       remainingSeconds: attempt.remainingSeconds,
       deps: {
@@ -409,6 +443,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       },
       onTick: (state) => setRemaining(state.remainingSeconds),
       onZero: () => {
+        // TL-157 step 9: while a submit is in flight the server result decides.
+        // M4.2c F2: keep the zero for `submit`'s `finally`, which locks only if
+        // the POST comes back without submitting.
+        if (submittingRef.current) {
+          zeroWhileSubmittingRef.current = true;
+          return;
+        }
         lockExam('expired');
       },
     });
@@ -418,10 +459,11 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       timer.stop();
       timerRef.current = null;
     };
-  }, [attempt.remainingSeconds, lockExam]);
+  }, [attempt.remainingSeconds, attempt.status, lockExam]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
+      if (lockedRef.current || submittedRef.current) return;
       if (lowNotice) return;
       if (remaining > 0 && remaining < 300) setLowNotice(true);
     }, 500);
@@ -430,6 +472,9 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
 
   useEffect(() => {
     if (!locked) return;
+    // TL-157: after a successful submit the queue is disposed and the attempt
+    // is final; no 6 s GET and no extra flush must run.
+    if (submittedRef.current) return;
     void queueRef.current?.flush();
     if (attemptedAfterLock.current) return;
     attemptedAfterLock.current = true;
@@ -677,11 +722,14 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   }, []);
 
   useEffect(() => {
+    if (dialogKind !== 'quit' && dialogKind !== 'submit') return;
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
     if (dialogKind === 'quit') {
-      const dialog = dialogRef.current;
-      if (dialog && !dialog.open) dialog.showModal();
       dialog?.querySelector<HTMLButtonElement>('button')?.focus();
+      return;
     }
+    submitCancelRef.current?.focus();
   }, [dialogKind]);
 
   const currentState = current
@@ -771,7 +819,127 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     );
   };
 
-  const submitNotReady = () => showToast(TOAST_COMING_SOON, 'status');
+  /** TL-157: the server result always wins the banner copy. */
+  const finishSubmitted = useCallback(() => {
+    submittedRef.current = true;
+    zeroWhileSubmittingRef.current = false;
+    setSubmitted(true);
+    lockedRef.current = true;
+    setLockText(EXAM_SUBMITTED_MESSAGE);
+    setLocked(true);
+    setLowNotice(false);
+    setSubmitting(false);
+    submittingRef.current = false;
+    submitKeyRef.current = null;
+    setDialogKind(null);
+    dialogRef.current?.close();
+    timerRef.current?.stop();
+    preloaderRef.current?.abort();
+    queueRef.current?.dispose();
+  }, []);
+
+  const openSubmit = (trigger: HTMLElement) => {
+    if (lockedRef.current || submittingRef.current) return;
+    submitTriggerRef.current = trigger;
+    submitKeyReusedRef.current = false;
+    setSubmitError(null);
+    setDialogKind('submit');
+  };
+
+  const closeSubmit = () => {
+    if (submittingRef.current) return;
+    dialogRef.current?.close();
+    setDialogKind(null);
+    submitTriggerRef.current?.focus();
+  };
+
+  const submit = async () => {
+    if (submittingRef.current || lockedRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // F14/TL-157: a hanging flush must not delay the POST by more than 3 s.
+      await Promise.race([
+        flushPending(true),
+        new Promise<void>((resolve) => window.setTimeout(resolve, 3_000)),
+      ]);
+      for (;;) {
+        if (!navigator.onLine) {
+          setSubmitError(SUBMIT_OFFLINE_TEXT);
+          return;
+        }
+        const key = (submitKeyRef.current ??= crypto.randomUUID());
+        let response: Response;
+        try {
+          response = await fetch(
+            `/api/learner/exam/attempts/${attempt.id}/submit`,
+            {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ idempotencyKey: key }),
+            },
+          );
+        } catch {
+          setSubmitError(SUBMIT_ERROR_TEXT);
+          return;
+        }
+        if (response.ok) {
+          finishSubmitted();
+          return;
+        }
+        const payload = (await response.json().catch(() => null)) as {
+          error?: { code?: string };
+        } | null;
+        const code = payload?.error?.code ?? null;
+        if (
+          response.status === 409 &&
+          code === 'EXAM_ATTEMPT_ALREADY_SUBMITTED'
+        ) {
+          finishSubmitted();
+          return;
+        }
+        if (
+          response.status === 409 &&
+          (code === 'EXAM_ATTEMPT_EXPIRED' || code === 'EXAM_ATTEMPT_CLOSED')
+        ) {
+          submitKeyRef.current = null;
+          lockExam(code === 'EXAM_ATTEMPT_EXPIRED' ? 'expired' : 'closed');
+          return;
+        }
+        if (response.status === 409 && code === 'EXAM_IDEMPOTENCY_KEY_REUSED') {
+          if (submitKeyReusedRef.current) {
+            setSubmitError(SUBMIT_ERROR_TEXT);
+            return;
+          }
+          submitKeyReusedRef.current = true;
+          submitKeyRef.current = crypto.randomUUID();
+          continue;
+        }
+        if (response.status === 401 || response.status === 403) {
+          router.replace('/sign-in');
+          return;
+        }
+        if (response.status === 404) {
+          router.refresh();
+          return;
+        }
+        setSubmitError(SUBMIT_ERROR_TEXT);
+        return;
+      }
+    } finally {
+      const zeroWhileSubmitting = zeroWhileSubmittingRef.current;
+      zeroWhileSubmittingRef.current = false;
+      submittingRef.current = false;
+      setSubmitting(false);
+      // F2 (M4.2c): the clock reached zero while this POST was in flight and the
+      // server did not submit the attempt, so the local zero still owns the lock.
+      // The first lock copy wins, so a submit error never replaces Q127.
+      if (!submittedRef.current && !lockedRef.current && zeroWhileSubmitting) {
+        lockExam('expired');
+      }
+    }
+  };
 
   const quit = async () => {
     // F14: leave after at most 3 s even if the flush is still in flight.
@@ -789,7 +957,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   };
 
   const openQuit = () => {
-    if (locked) {
+    // TL-157: once the attempt is locked (submitted/expired/closed) X goes
+    // straight back to the intro; the quit dialog's "clock still runs" copy is
+    // wrong in that state.
+    if (lockedRef.current) {
       router.push(`/learn/exam/${String(attempt.testId)}`);
       return;
     }
@@ -1111,6 +1282,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       : showSavedCheck
         ? SAVE_SAVED
         : SAVE_PENDING;
+  const unansweredCount = flat.length - answeredCount;
+  const flaggedCount = flat.reduce(
+    (total, entry) =>
+      total + (answers.get(entry.question.key)?.isFlagged === true ? 1 : 0),
+    0,
+  );
+  const unsavedCount = pendingCount + failedKeys.size;
 
   return (
     <div className="ex ext">
@@ -1139,19 +1317,23 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
           </div>
         </div>
         <div className="ext-status">
-          <p
-            className={`ext-timer${remaining < 300 ? ' is-low' : ''}`}
-            role="timer"
-            aria-live="off"
-            aria-label={timerLabel(remaining)}
-          >
-            <svg className="icon icon--sm" aria-hidden="true">
-              <use href="#i-stopwatch" />
-            </svg>
-            <span className="tabular" aria-hidden="true">
-              {formatTimer(remaining)}
-            </span>
-          </p>
+          {/* F1 (M4.2c): a submitted attempt has no clock to show, so the pill
+              (and its role="timer") is not rendered at all. */}
+          {submitted ? null : (
+            <p
+              className={`ext-timer${remaining < 300 && !locked ? ' is-low' : ''}`}
+              role="timer"
+              aria-live="off"
+              aria-label={timerLabel(remaining)}
+            >
+              <svg className="icon icon--sm" aria-hidden="true">
+                <use href="#i-stopwatch" />
+              </svg>
+              <span className="tabular" aria-hidden="true">
+                {formatTimer(remaining)}
+              </span>
+            </p>
+          )}
           <p className="ext-count" aria-hidden="true">
             Câu {current.number}/{flat.length}
           </p>
@@ -1234,13 +1416,28 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
 
         {locked ? (
           <div className="ext-locked" role="alert">
-            <p>
-              {lockText ||
-                (remaining === 0 ? EXAM_EXPIRED_MESSAGE : EXAM_CLOSED_MESSAGE)}
-            </p>
-            {failedKeys.size > 0 || pendingCount > 0 ? (
-              <p>{EXAM_UNSAVED_BEFORE_EXPIRY}</p>
-            ) : null}
+            {submitted ? (
+              <>
+                <p>{EXAM_SUBMITTED_MESSAGE}</p>
+                {unsavedCount > 0 ? <p>{EXAM_UNSAVED_BEFORE_SUBMIT}</p> : null}
+                <a
+                  className="btn btn--outline"
+                  href={`/learn/exam/${String(attempt.testId)}`}
+                >
+                  Về màn giới thiệu đề
+                </a>
+              </>
+            ) : (
+              <>
+                <p>
+                  {lockText ||
+                    (remaining === 0
+                      ? EXAM_EXPIRED_MESSAGE
+                      : EXAM_CLOSED_MESSAGE)}
+                </p>
+                {unsavedCount > 0 ? <p>{EXAM_UNSAVED_BEFORE_EXPIRY}</p> : null}
+              </>
+            )}
           </div>
         ) : null}
 
@@ -1419,8 +1616,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
                 <button
                   type="button"
                   className="btn btn--primary ext-qnav__submit"
-                  aria-disabled="true"
-                  onClick={submitNotReady}
+                  disabled={locked || submitting}
+                  onClick={(event) => {
+                    openSubmit(event.currentTarget);
+                  }}
                 >
                   Nộp bài
                 </button>
@@ -1499,8 +1698,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
             <button
               className="btn btn--primary uxb-takefoot__submit"
               type="button"
-              aria-disabled="true"
-              onClick={submitNotReady}
+              disabled={locked || submitting}
+              onClick={(event) => {
+                openSubmit(event.currentTarget);
+              }}
             >
               Nộp bài
             </button>
@@ -1511,14 +1712,17 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       <footer className="ext-foot">
         <div className="ext-foot__row">
           <p className="uxb-fine">
-            Còn {formatTimer(remaining)} phút. Bài làm được lưu tự động sau mỗi
-            câu.
+            {submitted
+              ? EXAM_SUBMITTED_MESSAGE
+              : `Còn ${formatTimer(remaining)} phút. Bài làm được lưu tự động sau mỗi câu.`}
           </p>
           <button
             className="btn btn--primary uxa-submit tk-panel__submit"
             type="button"
-            aria-disabled="true"
-            onClick={submitNotReady}
+            disabled={locked || submitting}
+            onClick={(event) => {
+              openSubmit(event.currentTarget);
+            }}
           >
             Nộp bài
             <svg className="icon" aria-hidden="true">
@@ -1531,34 +1735,92 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       <dialog
         className="ext-dialog"
         ref={dialogRef}
-        aria-labelledby="quit-title"
+        aria-labelledby={
+          dialogKind === 'submit' ? 'submit-title' : 'quit-title'
+        }
         onClose={() => setDialogKind(null)}
-        onCancel={() => closeQuit()}
+        onCancel={(event) => {
+          // TL-157: while posting, Esc must not close the dialog.
+          if (submittingRef.current) {
+            event.preventDefault();
+            return;
+          }
+          if (dialogKind === 'submit') {
+            closeSubmit();
+            return;
+          }
+          closeQuit();
+        }}
       >
-        <h2 id="quit-title">{QUIT_TITLE}</h2>
-        <p>
-          {QUIT_BODY}
-          {pendingCount > 0 ? ` Còn ${String(pendingCount)} câu chưa lưu.` : ''}
-        </p>
-        <div className="ext-dialog__actions">
-          <button
-            type="button"
-            className="btn btn--outline"
-            ref={quitButtonRef}
-            onClick={() => {
-              closeQuit();
-            }}
-          >
-            Tiếp tục làm
-          </button>
-          <button
-            type="button"
-            className="btn btn--danger"
-            onClick={() => void quit()}
-          >
-            Thoát
-          </button>
-        </div>
+        {dialogKind === 'submit' ? (
+          <>
+            <h2 id="submit-title">{SUBMIT_TITLE}</h2>
+            {unansweredCount > 0 ? (
+              <p>{`Bạn còn ${String(unansweredCount)} câu chưa làm.`}</p>
+            ) : null}
+            {flaggedCount > 0 ? (
+              <p>{`${String(flaggedCount)} câu đã đánh dấu.`}</p>
+            ) : null}
+            <p>Sau khi nộp, bạn không thể sửa bài.</p>
+            {unsavedCount > 0 ? (
+              <p>{`Còn ${String(unsavedCount)} câu chưa lưu được.`}</p>
+            ) : null}
+            {submitError !== null ? <p role="alert">{submitError}</p> : null}
+            <p className="sr-only" aria-live="polite">
+              {submitting ? 'Đang nộp bài…' : ''}
+            </p>
+            <div className="ext-dialog__actions">
+              <button
+                type="button"
+                className="btn btn--outline"
+                ref={submitCancelRef}
+                disabled={submitting}
+                onClick={() => {
+                  closeSubmit();
+                }}
+              >
+                Tiếp tục làm
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={submitting}
+                onClick={() => void submit()}
+              >
+                Nộp bài
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 id="quit-title">{QUIT_TITLE}</h2>
+            <p>
+              {QUIT_BODY}
+              {pendingCount > 0
+                ? ` Còn ${String(pendingCount)} câu chưa lưu.`
+                : ''}
+            </p>
+            <div className="ext-dialog__actions">
+              <button
+                type="button"
+                className="btn btn--outline"
+                ref={quitButtonRef}
+                onClick={() => {
+                  closeQuit();
+                }}
+              >
+                Tiếp tục làm
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => void quit()}
+              >
+                Thoát
+              </button>
+            </div>
+          </>
+        )}
       </dialog>
     </div>
   );

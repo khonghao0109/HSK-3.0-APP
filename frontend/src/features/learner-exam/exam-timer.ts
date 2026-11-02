@@ -63,8 +63,12 @@ export function timerLabel(totalSeconds: number): string {
 /** Q127 copy (TL-137). */
 export const EXAM_EXPIRED_MESSAGE = 'Hết giờ. Bài làm đã được lưu.';
 export const EXAM_CLOSED_MESSAGE = 'Bài thi đã kết thúc.';
+/** TL-157: a submitted attempt has its own banner copy (server result wins). */
+export const EXAM_SUBMITTED_MESSAGE = 'Bài đã được nộp.';
 export const EXAM_UNSAVED_BEFORE_EXPIRY =
   'Có câu chưa lưu được trước khi hết giờ.';
+/** TL-157: the unsaved line must not say "before the deadline" after a submit. */
+export const EXAM_UNSAVED_BEFORE_SUBMIT = 'Có câu chưa lưu được trước khi nộp.';
 export const EXAM_LOW_NOTICE = 'Còn dưới 5 phút.';
 
 /** Q127 triggers on the local zero, `remainingSeconds === 0` or a closed status. */
@@ -81,11 +85,8 @@ export function shouldLockExam(input: {
 }
 
 export function lockMessage(status: string): string {
-  if (
-    status === 'submitted' ||
-    status === 'invalidated' ||
-    status === 'closed'
-  ) {
+  if (status === 'submitted') return EXAM_SUBMITTED_MESSAGE;
+  if (status === 'invalidated' || status === 'closed') {
     return EXAM_CLOSED_MESSAGE;
   }
   return EXAM_EXPIRED_MESSAGE;

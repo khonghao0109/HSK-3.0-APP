@@ -954,6 +954,11 @@ describe('server-only backend client', () => {
       method: 'PUT',
       body: {},
     });
+    await client.request('/api/v1/exam/attempts/41/submit', {
+      token: 't',
+      method: 'POST',
+      body: { idempotencyKey: 'key' },
+    });
 
     for (const path of [
       '/api/v1/exam/attempts/41?x=1',
@@ -961,12 +966,14 @@ describe('server-only backend client', () => {
       '/api/v1/exam/attempts/41/answers/x1',
       '/api/v1/exam/attempts/41/answers/q12/x',
       '/api/v1/exam/attempts/41/media-grants?x=1',
+      '/api/v1/exam/attempts/41/submit?x=1',
+      '/api/v1/exam/attempts/41/submit/x',
       '/api/v1/exam/attempts/abc',
     ]) {
       await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }
-    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    expect(fetchImpl).toHaveBeenCalledTimes(5);
   });
 });

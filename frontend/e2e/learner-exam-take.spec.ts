@@ -106,6 +106,77 @@ async function expectClean(
   expect(consoleErrors, `console ${state}`).toEqual([]);
 }
 
+function submitPosts(page: Page): { count: () => number } {
+  let count = 0;
+  page.on('request', (request) => {
+    if (request.method() !== 'POST') return;
+    if (!request.url().includes('/submit')) return;
+    count += 1;
+  });
+  return { count: () => count };
+}
+
+async function openSubmitDialog(page: Page) {
+  const footer = page
+    .getByRole('contentinfo')
+    .getByRole('button', { name: 'Nộp bài' });
+  const panelList = page.getByRole('complementary', { name: 'Danh sách câu' });
+  const panel = panelList.getByRole('button', { name: 'Nộp bài' });
+  const nav = page
+    .getByRole('navigation', { name: 'Điều hướng câu hỏi' })
+    .getByRole('button', { name: 'Nộp bài' });
+  // Q124: the footer submit is web-only; on <1024 the panel submit appears
+  // when the panel is open, and mobile keeps the nav submit on the last
+  // question. `isVisible()` avoids the unbounded click wait on hidden nodes.
+  if (await footer.isVisible()) {
+    await footer.click();
+  } else if (await panel.isVisible()) {
+    await panel.click();
+  } else {
+    // <520: the open panel carries the full-width submit; 520-1023 keeps it
+    // hidden, so the last-question nav row is the only entry.
+    if (!(await panelList.isVisible())) {
+      const opener = page.getByRole('button', {
+        name: /Mở danh sách câu hỏi/u,
+      });
+      if (await opener.isVisible()) await opener.click();
+      else await page.getByRole('button', { name: /Mở danh sách/u }).click();
+    }
+    if (await panel.isVisible()) {
+      await panel.click();
+    } else {
+      await panelList.getByRole('button', { name: /^Câu /u }).last().click();
+      await nav.click();
+    }
+  }
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'Nộp bài?' })).toBeVisible();
+  return dialog;
+}
+
+async function confirmSubmit(page: Page): Promise<void> {
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Nộp bài' })
+    .click();
+}
+
+/**
+ * Reads a captured response body with a bound: a document body being replaced
+ * by a reload must never hang the test on `Promise.all`.
+ */
+function textWithin(response: {
+  text: () => Promise<string>;
+}): Promise<string> {
+  return Promise.race([
+    response.text().catch(() => ''),
+    new Promise<string>((resolve) => {
+      setTimeout(() => resolve(''), 5_000);
+    }),
+  ]);
+}
+
 async function startAttempt(
   page: Page,
   baseURL: string | undefined,
@@ -211,24 +282,31 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     await audit(page, 'answered');
   });
 
-  test('8. @web submit is disabled and toasts; the last question has no next', async ({
+  test('8. @web submit opens the dialog and the last question has no next', async ({
     page,
     baseURL,
   }, testInfo) => {
     await startAttempt(page, baseURL, fixtures);
-    const submit = page
-      .getByRole('contentinfo')
-      .getByRole('button', { name: 'Nộp bài' });
-    await expect(submit).toHaveAttribute('aria-disabled', 'true');
-    // Q124: aria-disabled (không phải `disabled`) — nút vẫn nhận click để toast.
-    await submit.click({ force: true });
-    await expect(page.getByText('Tính năng sắp ra mắt.')).toBeVisible();
     await page
       .getByRole('complementary', { name: 'Danh sách câu' })
       .getByRole('button', { name: /^Câu /u })
       .last()
       .click();
     await expect(page.getByRole('button', { name: 'Câu sau' })).toHaveCount(0);
+    // @web hides the mobile nav submit (Q124); the footer submit is the entry.
+    await page
+      .getByRole('contentinfo')
+      .getByRole('button', { name: 'Nộp bài' })
+      .click();
+    const dialog = page.getByRole('dialog');
+    await expect(
+      dialog.getByRole('heading', { name: 'Nộp bài?' }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText('Sau khi nộp, bạn không thể sửa bài.'),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Tiếp tục làm' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await expectNoHorizontalScroll(page);
     await audit(page, 'last-question');
     await shot(page, testInfo, '8-last-question');
@@ -421,7 +499,8 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     ).toHaveAttribute('aria-disabled', 'true');
     const timer = page.locator('.ext-timer');
     await expect(timer).toHaveText('00:00');
-    await expect(timer).toHaveClass(/is-low/u);
+    // F1.3 (M4.2c): is-low only applies while the attempt is not locked.
+    await expect(timer).not.toHaveClass(/is-low/u);
     // Sau ân hạn 5 s, GET attempt trả timed_out.
     await page.waitForTimeout(7_000);
     const state = await page.evaluate(async (id) => {
@@ -722,7 +801,7 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
       if (!isExamApi && !isRsc && !isDocument) return;
       if (isDocument) documentResponses += 1;
       if (isRsc) rscResponses += 1;
-      bodies.push(response.text().catch(() => ''));
+      bodies.push(textWithin(response));
     });
     await startAttempt(page, baseURL, fixtures);
     await answerMcq(page, 1);
@@ -811,9 +890,15 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     const vw = testInfo.project.use.viewport?.width ?? 0;
     if (vw < 520) {
       await expect(panelSubmit).toBeVisible();
-      await panelSubmit.click({ force: true });
-      await expect(page.getByText('Tính năng sắp ra mắt.')).toBeVisible();
-      await toastGone();
+      await panelSubmit.click();
+      await expect(
+        page.getByRole('dialog').getByRole('heading', { name: 'Nộp bài?' }),
+      ).toBeVisible();
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Tiếp tục làm' })
+        .click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
     } else if (vw < 1024) {
       await expect(panelSubmit).toBeHidden();
     } else {
@@ -906,5 +991,323 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     expect(consoleErrors).toEqual([]);
     expect(await readCspViolations(page)).toEqual([]);
     expect(cspConsole).toEqual([]);
+  });
+
+  test('17. submit dialog shows the current counts and cancels without a request', async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    const cspConsole = await watchCsp(page);
+    const consoleErrors = captureConsoleErrors(page);
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+    await page.getByRole('radio').first().click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Đã lưu' }),
+    ).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'Đánh dấu' }).click();
+    const dialog = await openSubmitDialog(page);
+    await expect(
+      dialog.getByText(
+        `Bạn còn ${String(fixtures.questionCount - 1)} câu chưa làm.`,
+      ),
+    ).toBeVisible();
+    await expect(dialog.getByText('1 câu đã đánh dấu.')).toBeVisible();
+    await expect(
+      dialog.getByText('Sau khi nộp, bạn không thể sửa bài.'),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Tiếp tục làm' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(posts.count()).toBe(0);
+    // F3 (M4.2c): axe must run while the enabled "Nộp bài" is on screen — the
+    // old path navigated back to question 1 and hid the panel submit, which is
+    // exactly how the 3,22:1 jade-600 background escaped review.
+    const panelList = page.getByRole('complementary', {
+      name: 'Danh sách câu',
+    });
+    const panelSubmit = panelList.locator('.uxb-takefoot__submit');
+    const navSubmit = page
+      .getByRole('navigation', { name: 'Điều hướng câu hỏi' })
+      .getByRole('button', { name: 'Nộp bài' });
+    if (!(await panelList.isVisible())) {
+      await page.getByRole('button', { name: /Mở danh sách câu hỏi/u }).click();
+      await expect(panelList).toBeVisible();
+    }
+    // Which entry carries the submit is a per-breakpoint design rule (Q124), so
+    // assert the exact one instead of "either of the two is fine".
+    const vw = testInfo.project.use.viewport?.width ?? 0;
+    if (vw >= 520 && vw < 1024) {
+      // 520–1023: the panel submit is hidden by design; the nav row carries the
+      // submit on the last question.
+      if (!(await navSubmit.isVisible())) {
+        await panelList.getByRole('button', { name: /^Câu /u }).last().click();
+      }
+      await expect(
+        navSubmit,
+        'nav submit on the last question (520–1023)',
+      ).toBeVisible();
+      // axe skips disabled form controls (WCAG 1.4.3 exempts them), so an
+      // enabled assertion is what makes the 0-violation result meaningful.
+      await expect(navSubmit).toBeEnabled();
+    } else {
+      await expect(
+        panelSubmit,
+        'panel submit visible (390 / ≥1024)',
+      ).toBeVisible();
+      await expect(panelSubmit).toBeEnabled();
+    }
+    const contrast = await new AxeBuilder({ page })
+      .withTags(AXE_TAGS)
+      .withRules(['color-contrast'])
+      .analyze();
+    expect(
+      contrast.violations.map((violation) => violation.id),
+      'color-contrast with the submit on screen',
+    ).toEqual([]);
+    // The other rules keep the known-clean question-1 state from the previous
+    // round; the F3 assertion above is what proves the submit button is AA.
+    await gotoQuestion(page, 1);
+    await expectClean(page, 'case-17', consoleErrors, cspConsole);
+  });
+
+  test('18. a successful submit locks the screen, keeps one POST and survives reload', async ({
+    page,
+    baseURL,
+  }) => {
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+    await openSubmitDialog(page);
+    const submitted = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/submit'),
+    );
+    await confirmSubmit(page);
+    expect((await submitted).status()).toBe(200);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    // F1 (M4.2c): after the submit the clock pill is gone and the footer shows
+    // the submitted copy instead of "Còn … phút".
+    await expect(page.getByRole('timer')).toHaveCount(0);
+    await expect(page.locator('.uxb-fine')).toHaveText('Bài đã được nộp.');
+    expect(posts.count()).toBe(1);
+    // The submit entry may live on the last question at tablet/mobile widths;
+    // go back to the first (mcq) question to assert the inputs are locked.
+    await gotoQuestion(page, 1);
+    await expect(page.getByRole('radio').first()).toBeDisabled();
+
+    await page.reload();
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    // F1 (M4.2c): a remounted submitted attempt is just as clock-less.
+    await expect(page.getByRole('timer')).toHaveCount(0);
+    await expect(page.locator('.uxb-fine')).toHaveText('Bài đã được nộp.');
+    await expect(
+      page.getByRole('link', { name: 'Về màn giới thiệu đề' }),
+    ).toBeVisible();
+    expect(posts.count()).toBe(1);
+    await expectNoHorizontalScroll(page);
+  });
+
+  test('19. a second tab gets 409 ALREADY_SUBMITTED and shows the submitted banner', async ({
+    page,
+    baseURL,
+    context,
+  }) => {
+    const consoleErrors = captureConsoleErrors(page);
+    await startAttempt(page, baseURL, fixtures);
+    const attemptUrl = page.url();
+    const other = await context.newPage();
+    await other.goto(attemptUrl);
+    await expect(other.locator('.ext-question')).toBeVisible();
+
+    await openSubmitDialog(other);
+    await confirmSubmit(other);
+    await expect(
+      other.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await openSubmitDialog(page);
+    const conflict = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/submit'),
+    );
+    await confirmSubmit(page);
+    expect((await conflict).status()).toBe(409);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () => document.querySelectorAll('dialog[open]').length,
+      ),
+    ).toBe(0);
+    // The browser logs the deliberate 409 as a console error; that is the
+    // expected second-tab outcome, so only unexpected errors fail this test.
+    expect(
+      consoleErrors.filter((message) => !/409 \(Conflict\)/u.test(message)),
+    ).toEqual([]);
+    await other.close();
+  });
+
+  test('20. submitting with unanswered questions keeps the saved answers after reload (Q130)', async ({
+    page,
+    baseURL,
+  }) => {
+    await startAttempt(page, baseURL, fixtures);
+    await answerMcq(page, 1);
+    const dialog = await openSubmitDialog(page);
+    await expect(
+      dialog.getByText(
+        `Bạn còn ${String(fixtures.questionCount - 1)} câu chưa làm.`,
+      ),
+    ).toBeVisible();
+    await confirmSubmit(page);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.reload();
+    await expect(
+      page.getByRole('link', { name: 'Về màn giới thiệu đề' }),
+    ).toBeVisible({ timeout: 15_000 });
+    const panel = page.getByRole('complementary', { name: 'Danh sách câu' });
+    if (!(await panel.isVisible())) {
+      await page.getByRole('button', { name: /Mở danh sách câu hỏi/u }).click();
+    }
+    await panel.getByRole('button', { name: /^Câu 1,/u }).click();
+    await expect(page.getByRole('radio').first()).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  test('21. offline submit shows an error and posts nothing; online retry succeeds', async ({
+    page,
+    baseURL,
+    context,
+  }) => {
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+    await context.setOffline(true);
+    await openSubmitDialog(page);
+    await confirmSubmit(page);
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByText('Không có kết nối. Kiểm tra mạng rồi thử lại.'),
+    ).toBeVisible({ timeout: 15_000 });
+    expect(posts.count()).toBe(0);
+    await context.setOffline(false);
+    const submitted = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/submit'),
+    );
+    await confirmSubmit(page);
+    expect((await submitted).status()).toBe(200);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    expect(posts.count()).toBe(1);
+  });
+
+  test('22. an expired attempt refuses the submit with the Q127 copy and posts once', async ({
+    page,
+    baseURL,
+  }) => {
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+    const attemptId = page.url().match(/attempts\/(\d+)/u)?.[1] ?? '';
+    expect(attemptId).not.toBe('');
+    await openSubmitDialog(page);
+    // The constraint requires expiresAt > startedAt, and the submit path only
+    // times out beyond the 5 s save grace.
+    queryDisposableDb(
+      `UPDATE "ExamAttempt" SET "startedAt" = (now() at time zone 'utc' - interval '91 minutes'), "expiresAt" = (now() at time zone 'utc' - interval '10 seconds') WHERE id = ${Number(attemptId)}`,
+    );
+    await confirmSubmit(page);
+    await expect(page.getByText('Hết giờ. Bài làm đã được lưu.')).toBeVisible({
+      timeout: 15_000,
+    });
+    expect(posts.count()).toBe(1);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  test('23. the submit response and rendered HTML/RSC carry no forbidden key', async ({
+    page,
+    baseURL,
+  }) => {
+    await startAttempt(page, baseURL, fixtures);
+    await openSubmitDialog(page);
+    const submitted = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/submit'),
+    );
+    await confirmSubmit(page);
+    const response = await submitted;
+    expect(response.status()).toBe(200);
+    const responseText = await textWithin(response);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.reload();
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.waitForLoadState('networkidle');
+    // Next embeds the RSC stream in script tags of the server-rendered
+    // document, so the reloaded HTML covers both the HTML and RSC payload.
+    const html = await page.content();
+    const scanned = [html, responseText].join('\n');
+    expect(scanned.length).toBeGreaterThan(1_000);
+    const leaked = [...FORBIDDEN_KEYS].filter((key) => scanned.includes(key));
+    expect(leaked, 'key cấm rò rỉ').toEqual([]);
+  });
+
+  test('24. @shots submit dialog and submitted banner for the TL review', async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+    await openSubmitDialog(page);
+    await audit(page, 'shots-submit-dialog');
+    await shot(page, testInfo, '24-submit-dialog');
+    await confirmSubmit(page);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    // F1 (M4.2c): the shot must show the submitted state — no timer pill and
+    // the footer copy swapped to the submitted message.
+    await expect(page.getByRole('timer')).toHaveCount(0);
+    await expect(page.locator('.uxb-fine')).toHaveText('Bài đã được nộp.');
+    await page.waitForLoadState('networkidle');
+    await shot(page, testInfo, '24-submitted');
+    await expectNoHorizontalScroll(page);
+    expect(posts.count()).toBe(1);
   });
 });
