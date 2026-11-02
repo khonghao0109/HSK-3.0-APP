@@ -30,9 +30,10 @@
 | EXAM-U | `20261027090000_exam_attempt_one_in_progress`            | Partial unique index: tối đa một `ExamAttempt` `in_progress` mỗi `(userId, testId)` (mục 24).             |
 | EXAM-R | `20261102103000_exam_result_score_summary`               | `Result.maxScore`/`passed` nullable + CHECK `score <= maxScore` khi có `maxScore` (mục 25).                |
 | PILOT  | `20261102150000_pilot_content_data_source`               | Data-only: nguồn `HSK30_PILOT_ORIGINAL_V1` cho nội dung pilot HSK1, `ON CONFLICT ("code") DO NOTHING` (mục 26). |
+| DEL-ADM | `20261102160000_admin_initiated_account_deletion`       | `AccountDeletionInitiator` enum, `initiatedBy`/`actorId`, partial unique index một `requested`/user (mục 27). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 27 migration (đến `20261102150000_pilot_content_data_source`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 28 migration (đến `20261102160000_admin_initiated_account_deletion`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -1046,3 +1047,60 @@ ON CONFLICT ("code") DO NOTHING;
 - Bằng chứng: `npx prisma migrate deploy` trên database disposable áp 27/27 migration; e2e
   `test/pilot-content-import.e2e-spec.ts` test 1 đọc lại row và kiểm `name`, `version`, `license`,
   `attribution`.
+
+## 27. Admin khởi tạo xoá tài khoản dưới 16 tuổi (M1.7d)
+
+### 27.1. Migration 28 — `20261102160000_admin_initiated_account_deletion`
+
+Nghiệp vụ (Q203–Q208): admin mở luồng xoá M1.7c cho tài khoản dưới 16 tuổi, lý do
+`under_age`, người dùng không nhập mật khẩu. Migration thêm ai khởi tạo request và một partial
+unique index bảo vệ "tối đa một request `requested` mỗi user":
+
+```sql
+CREATE TYPE "AccountDeletionInitiator" AS ENUM ('user', 'admin');
+
+ALTER TABLE "AccountDeletionRequest"
+  ADD COLUMN "initiatedBy" "AccountDeletionInitiator" NOT NULL DEFAULT 'user',
+  ADD COLUMN "actorId" INTEGER;
+
+CREATE UNIQUE INDEX "AccountDeletionRequest_one_requested_per_user"
+  ON "AccountDeletionRequest" ("userId")
+  WHERE "status" = 'requested';
+```
+
+Thứ tự trong file: tạo enum → `ALTER TABLE` → preflight `P0001` đếm số user có nhiều hơn một
+row `requested` → tạo index. Không có `BEGIN/COMMIT` (mục 19.1). Khác các migration index-only ở
+mục 20/24, file này buộc phải `ALTER TABLE` nên đã giữ `ACCESS EXCLUSIVE` tới hết transaction
+thay cho `LOCK TABLE ... IN SHARE MODE`: không writer nào chen được giữa preflight và build
+index, và bảng request hiện rất nhỏ. `initiatedBy` default `user` để mọi row cũ (M1.7c) giữ
+nguyên nghĩa; `actorId` cố ý **không** FK/relation để audit sống lâu hơn vòng đời admin (không
+có CHECK ràng buộc `actorId` với `initiatedBy`; service là nơi ghi hai cột này cùng nhau).
+Prisma 5 không biểu diễn được predicate `WHERE`, nên index chỉ nằm trong migration SQL và được
+ghi chú cạnh model `AccountDeletionRequest`; `migrate diff` hai chiều vẫn rỗng.
+
+Preflight SQL (chạy trước deploy trên DB đích; phải rỗng, migration cũng tự chạy lại đúng query
+này và fail `P0001` nếu không rỗng):
+
+```sql
+SELECT "userId", COUNT(*)
+FROM "AccountDeletionRequest"
+WHERE "status" = 'requested'
+GROUP BY "userId"
+HAVING COUNT(*) > 1;
+```
+
+Nếu preflight fail (`P3018` + `P0001`): dừng deploy, lấy danh sách user vi phạm bằng query trên,
+data owner duyệt huỷ các request cũ hơn (`status = 'cancelled'`, `cancelledAt = now`; không
+hard-delete), rồi
+`npm run migrate:resolve:rolled-back:production -- --target-migration 20261102160000_admin_initiated_account_deletion`
+và `npm run migrate:deploy:production`.
+
+- Impact API: additive, không đổi endpoint cũ. Endpoint mới
+  `POST /admin/users/:id/deletion-request` (A.13) đọc/ghi cột mới; `POST /auth/login` chỉ huỷ
+  request `initiatedBy = 'user'`; worker anonymize đổi thứ tự khoá sang `User` → request; mail
+  branch theo `initiatedBy`. Reader cũ bỏ qua cột mới nên tương thích ngược.
+- Rollback/forward-fix: không rollback DDL; muốn lùi phải migration mới drop index/columns
+  (không hỗ trợ trong release này). Sự cố dữ liệu xử lý bằng forward-fix theo mục 12.
+- Bằng chứng: `npx prisma migrate deploy` trên database disposable mới áp 28/28 migration;
+  preflight rỗng; `npm run test:db:account-deletion-concurrency` (4 kịch bản × 20 vòng trên
+  `hsk_b1_hardening`, 0 deadlock) và phá thử bỏ predicate `initiatedBy` ở login ra đỏ.
