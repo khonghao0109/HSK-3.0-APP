@@ -21,14 +21,34 @@ export const metadata: Metadata = {
   title: 'Giới thiệu đề',
 };
 
-const EXPIRY_TIME = new Intl.DateTimeFormat('vi-VN', {
-  hour: '2-digit',
-  minute: '2-digit',
-  timeZone: 'Asia/Ho_Chi_Minh',
-});
+/**
+ * The intro payload has no `serverNow` (Q122 fixes the deadline, not the wire
+ * shape), and the JSX must not call the clock inline (react-hooks purity). A
+ * server component renders once per request, so this helper reads the request
+ * time in the data layer and the JSX stays a pure function of its inputs.
+ */
+async function requestNowMs(): Promise<number> {
+  return Date.now();
+}
 
-function expiryTime(iso: string): string {
-  return EXPIRY_TIME.format(new Date(iso));
+/**
+ * M4.5 B1: the resume card counts down on the server (`expiresAt − now`), the
+ * same `mm:ss` / `h:mm:ss` convention as the result page (Q168). Q122 defines
+ * the deadline but not its display, so the old "hết giờ lúc HH:mm" line is
+ * replaced instead of kept.
+ */
+export function remainingLabel(expiresAtIso: string, nowMs: number): string {
+  const totalSeconds = Math.max(
+    0,
+    Math.floor((new Date(expiresAtIso).getTime() - nowMs) / 1000),
+  );
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const two = (value: number) => String(value).padStart(2, '0');
+  return hours > 0
+    ? `${String(hours)}:${two(minutes)}:${two(seconds)}`
+    : `${two(minutes)}:${two(seconds)}`;
 }
 
 type IconName = 'list' | 'clock' | 'layers' | 'check' | 'rotate-cw';
@@ -74,16 +94,20 @@ export default async function LearnerExamIntroPage({
 
   const level = levelLabel(intro.levelCode);
   const activeAttempt = intro.activeAttempt;
+  const resumeRemaining =
+    activeAttempt === null
+      ? null
+      : remainingLabel(activeAttempt.expiresAt, await requestNowMs());
 
   return (
     <main className="ex exi">
       <header className="exi-bar w-only">
-        <LearnerBackButton fallbackHref="/learn" ariaLabel="Quay lại" />
+        <LearnerBackButton fallbackHref="/learn/exam" ariaLabel="Quay lại" />
         <h1 className="exi-bar__title">Giới thiệu đề</h1>
         <span className="exi-bar__level">{level}</span>
       </header>
       <header className="exi-mbar m-only">
-        <LearnerBackButton fallbackHref="/learn" ariaLabel="Quay lại" />
+        <LearnerBackButton fallbackHref="/learn/exam" ariaLabel="Quay lại" />
         <h1 className="exi-mbar__title">Giới thiệu đề</h1>
         <span aria-hidden="true" className="exi-mbar__spacer" />
       </header>
@@ -209,8 +233,7 @@ export default async function LearnerExamIntroPage({
               </h3>
               <p className="exi-resume__meta">
                 Đã làm {activeAttempt.answeredCount}/
-                {activeAttempt.questionCount} câu · hết giờ lúc{' '}
-                {expiryTime(activeAttempt.expiresAt)}
+                {activeAttempt.questionCount} câu · còn {resumeRemaining}
               </p>
             </div>
             <Link
@@ -229,7 +252,10 @@ export default async function LearnerExamIntroPage({
           {activeAttempt === null ? (
             <ExamStartButton testId={intro.id} />
           ) : null}
-          <Link className="btn btn--outline exi-actions__back" href="/learn">
+          <Link
+            className="btn btn--outline exi-actions__back"
+            href="/learn/exam"
+          >
             Quay lại
           </Link>
         </div>

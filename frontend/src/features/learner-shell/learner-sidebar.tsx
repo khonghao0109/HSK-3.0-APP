@@ -46,6 +46,9 @@ export function LearnerSidebar() {
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');
   const onProfile = pathname === '/learn/profile';
+  // M4.5 B1: the exam list and every screen below it keep "Thi thử HSK" active.
+  const onExam =
+    pathname === '/learn/exam' || pathname.startsWith('/learn/exam/');
 
   return (
     <aside className="w-side w-only" aria-label="Thanh bên">
@@ -77,7 +80,10 @@ export function LearnerSidebar() {
         Luyện thêm
       </p>
       <nav className="w-nav" aria-labelledby="w-side-more">
-        <SoonButton icon="trophy" label="Thi thử HSK" />
+        <Link href="/learn/exam" aria-current={onExam ? 'page' : undefined}>
+          <Icon name="trophy" />
+          Thi thử HSK
+        </Link>
         <SoonButton icon="mic" label="Phát âm" />
         <SoonButton icon="book-marked" label="Đọc hiểu" />
         <SoonButton icon="sparkles" label="Trợ lý AI" />

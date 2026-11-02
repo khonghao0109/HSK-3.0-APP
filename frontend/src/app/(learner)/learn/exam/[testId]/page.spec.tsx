@@ -10,7 +10,7 @@ import { EXAM_INTRO_RULES } from '@/features/learner-exam/exam-labels';
 import type { ExamTestIntro } from '@/features/learner-exam/exam-intro-service';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
-import LearnerExamIntroPage, { metadata } from './page';
+import LearnerExamIntroPage, { metadata, remainingLabel } from './page';
 import ExamIntroNotFound from './not-found';
 
 vi.mock('next/navigation', () => ({
@@ -211,6 +211,14 @@ describe('LearnerExamIntroPage', () => {
     expect(within(list).getByText('3 câu · 80 phút')).toBeDefined();
   });
 
+  it('formats the resume countdown as mm:ss or h:mm:ss and clamps past deadlines', () => {
+    const now = new Date('2026-10-27T02:00:00.000Z').getTime();
+    expect(remainingLabel('2026-10-27T02:01:05.000Z', now)).toBe('01:05');
+    expect(remainingLabel('2026-10-27T02:00:00.000Z', now)).toBe('00:00');
+    expect(remainingLabel('2026-10-27T01:00:00.000Z', now)).toBe('00:00');
+    expect(remainingLabel('2026-10-27T03:20:00.000Z', now)).toBe('1:20:00');
+  });
+
   it('renders exactly the three exam rules', async () => {
     await renderPage();
     const rules = screen.getByRole('list', { name: 'Quy định khi thi' });
@@ -229,17 +237,28 @@ describe('LearnerExamIntroPage', () => {
     expect(
       within(actions).getByRole('link', { name: 'Quay lại' }),
     ).toBeDefined();
+    // M4.5 B1: the intro is entered from the exam list, so every back link
+    // falls back there (never to the lesson home a learner did not come from).
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Quay lại' })
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['/learn/exam', '/learn/exam', '/learn/exam']);
     expect(screen.queryByText('Bài đang làm')).toBeNull();
   });
 
   it('shows the in-progress card and hides the start button', async () => {
     vi.mocked(getExamIntro).mockResolvedValue(activeIntro());
+    // expiresAt is 03:20Z; the server-rendered countdown is measured from
+    // `Date.now()`, so pin it to 02:00Z → exactly 01:20:00 left.
+    const nowSpy = vi
+      .spyOn(Date, 'now')
+      .mockReturnValue(new Date('2026-10-27T02:00:00.000Z').getTime());
     await renderPage();
+    nowSpy.mockRestore();
 
     expect(screen.getByText('Bài đang làm')).toBeDefined();
-    expect(
-      screen.getByText('Đã làm 0/3 câu · hết giờ lúc 10:20'),
-    ).toBeDefined();
+    expect(screen.getByText('Đã làm 0/3 câu · còn 1:20:00')).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Bắt đầu thi' })).toBeNull();
     const resume = screen.getByRole('link', { name: 'Làm tiếp' });
     expect(resume.getAttribute('href')).toBe('/learn/exam/attempts/77');
@@ -259,6 +278,8 @@ describe('ExamIntroNotFound', () => {
     expect(
       screen.getByText('Đề thi này không tồn tại hoặc chưa mở.'),
     ).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Về trang học' })).toBeDefined();
+    expect(
+      screen.getByRole('link', { name: 'Về danh sách đề' }),
+    ).toHaveAttribute('href', '/learn/exam');
   });
 });

@@ -980,4 +980,33 @@ describe('server-only backend client', () => {
     }
     expect(fetchImpl).toHaveBeenCalledTimes(6);
   });
+
+  it('allowlists the learner exam list with a filtered query string (M4.5 B1)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/exam/tests?levelCode=HSK3');
+    await client.request(
+      '/api/v1/exam/tests?levelCode=HSK7_9&skill=reading&sort=score&page=2&limit=20',
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    for (const path of [
+      '/api/v1/exam/tests/',
+      '/api/v1/exam/tests/abc',
+      '/api/v1/exam/tests?x=1#fragment',
+      '/api/v1/exam/testsx',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
 });

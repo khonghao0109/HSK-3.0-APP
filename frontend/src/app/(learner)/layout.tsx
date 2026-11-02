@@ -440,6 +440,13 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
           <symbol id="i-chevron-down" viewBox="0 0 24 24">
             <path d="m6 9 6 6 6-6" />
           </symbol>
+          {/* M4.5 B1: kỹ năng Nghe (mẫu exams.html) và trạng thái "Chưa làm". */}
+          <symbol id="i-headphones" viewBox="0 0 24 24">
+            <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+          </symbol>
+          <symbol id="i-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+          </symbol>
           <symbol id="i-info" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="9.5" />
             <path d="M12 16v-4" />

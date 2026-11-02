@@ -67,6 +67,18 @@ describe('LearnerSidebar', () => {
     expect(cell).toHaveAttribute('aria-current', 'page');
   });
 
+  it.each([['/learn/exam'], ['/learn/exam/12'], ['/learn/exam/attempts/7']])(
+    'marks "Thi thử HSK" active under %s (M4.5 B1)',
+    (pathname) => {
+      renderAt(pathname);
+      const nav = screen.getByRole('navigation', { name: 'Luyện thêm' });
+      const link = within(nav).getByRole('link', { name: 'Thi thử HSK' });
+      expect(link).toHaveAttribute('href', '/learn/exam');
+      expect(link).toHaveAttribute('aria-current', 'page');
+      expect(nav.querySelectorAll('[aria-current]')).toHaveLength(1);
+    },
+  );
+
   it('renders on the player screens too; CSS frames them (M2.10d F5)', () => {
     // URL-based hiding could not tell a real player page from the not-found
     // page of the same /practice URL, so the frame switch lives in
@@ -88,7 +100,6 @@ describe('LearnerSidebar', () => {
     renderAt('/learn');
     const names = [
       'Ôn tập Sắp có',
-      'Thi thử HSK Sắp có',
       'Phát âm Sắp có',
       'Đọc hiểu Sắp có',
       'Trợ lý AI Sắp có',
@@ -102,7 +113,7 @@ describe('LearnerSidebar', () => {
       within(
         screen.getByRole('navigation', { name: 'Luyện thêm' }),
       ).getAllByRole('button'),
-    ).toHaveLength(4);
+    ).toHaveLength(3);
   });
 
   it('has no sign-out (Q82) and distinct navigation names', () => {

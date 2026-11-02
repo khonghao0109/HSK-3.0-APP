@@ -40,6 +40,7 @@ function appOrigin(baseURL: string | undefined): string {
 export async function registerReadyLearner(
   page: Page,
   baseURL: string | undefined,
+  targetBand = 1,
 ): Promise<string> {
   const origin = appOrigin(baseURL);
   const email = uniqueEmail('band1');
@@ -50,7 +51,7 @@ export async function registerReadyLearner(
   expect(register.status()).toBe(201);
 
   await page.goto('/sign-in');
-  const completeStatus = await page.evaluate(async () => {
+  const completeStatus = await page.evaluate(async (band: number) => {
     const now = new Date();
     const startDate = [
       String(now.getFullYear()),
@@ -62,7 +63,7 @@ export async function registerReadyLearner(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         learningPurpose: 'hsk_exam',
-        targetBand: 1,
+        targetBand: band,
         dailyMinutes: 15,
         reminderEnabled: true,
         reminderTime: '07:00',
@@ -70,7 +71,7 @@ export async function registerReadyLearner(
       }),
     });
     return res.status;
-  });
+  }, targetBand);
   expect(completeStatus).toBe(200);
   return email;
 }

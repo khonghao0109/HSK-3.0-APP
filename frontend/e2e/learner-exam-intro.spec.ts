@@ -283,7 +283,7 @@ test.describe('Learner exam intro (M4.2a / TL-120)', () => {
     await expect(
       page.getByText(
         new RegExp(
-          `Đã làm 0/${String(fixtures.questionCount)} câu · hết giờ lúc \\d{2}:\\d{2}`,
+          `Đã làm 0/${String(fixtures.questionCount)} câu · còn (?:\\d{1,2}:)?\\d{2}:\\d{2}`,
           'u',
         ),
       ),
@@ -398,7 +398,7 @@ test.describe('Learner exam intro (M4.2a / TL-120)', () => {
         page.getByText('Đề thi này không tồn tại hoặc chưa mở.'),
       ).toBeVisible();
       await expect(
-        page.getByRole('link', { name: 'Về trang học' }),
+        page.getByRole('link', { name: 'Về danh sách đề' }),
       ).toBeVisible();
       await audit(page, 'not-found');
       await expectNoHorizontalScroll(page);

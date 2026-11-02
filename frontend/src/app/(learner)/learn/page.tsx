@@ -25,9 +25,17 @@ export const metadata: Metadata = {
   title: 'Trang chủ',
 };
 
-/** "Khám phá" shortcuts (Q1); none of the targets has shipped yet (Q16). */
-const EXPLORE = [
-  { label: 'Thi thử', icon: 'trophy', tone: 'amber' },
+/**
+ * "Khám phá" shortcuts (Q1). Q16: only "Thi thử" has shipped (M4.5 B1) and is
+ * a real link; the rest still toast "sắp ra mắt".
+ */
+const EXPLORE: ReadonlyArray<{
+  label: string;
+  icon: string;
+  tone: string;
+  href?: string;
+}> = [
+  { label: 'Thi thử', icon: 'trophy', tone: 'amber', href: '/learn/exam' },
   { label: 'Phát âm', icon: 'mic', tone: 'red' },
   { label: 'Đọc hiểu', icon: 'book-open', tone: 'jade' },
   { label: 'Tài liệu', icon: 'file-text', tone: 'blue' },
@@ -35,7 +43,7 @@ const EXPLORE = [
   { label: 'Hội thoại', icon: 'message-circle', tone: 'jade' },
   { label: 'Nhận diện chữ', icon: 'file-stack', tone: 'blue' },
   { label: 'Hỗ trợ', icon: 'help-circle', tone: 'amber' },
-] as const;
+];
 
 function Icon({ name }: { name: string }) {
   return (
@@ -205,15 +213,27 @@ export default async function LearnerHomePage() {
         <ul className="home-explore" aria-labelledby="explore-title">
           {EXPLORE.map((item) => (
             <li key={item.label}>
-              <ToastButton message={TOAST_COMING_SOON}>
-                <span
-                  className={`home-explore__icon home-explore__icon--${item.tone}`}
-                  aria-hidden="true"
-                >
-                  <Icon name={item.icon} />
-                </span>
-                {item.label}
-              </ToastButton>
+              {item.href === undefined ? (
+                <ToastButton message={TOAST_COMING_SOON}>
+                  <span
+                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </ToastButton>
+              ) : (
+                <Link href={item.href}>
+                  <span
+                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

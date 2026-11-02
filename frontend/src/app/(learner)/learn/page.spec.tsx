@@ -271,12 +271,17 @@ describe('LearnerHomePage', () => {
   it('lists the eight explore shortcuts in order', async () => {
     await renderHome(readyHome);
     const list = screen.getByRole('list', { name: 'Khám phá' });
+    // M4.5 B1: "Thi thử" is a real link now, the other seven still toast.
+    expect(
+      within(list)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Thi thử']);
     expect(
       within(list)
         .getAllByRole('button')
         .map((button) => button.textContent),
     ).toEqual([
-      'Thi thử',
       'Phát âm',
       'Đọc hiểu',
       'Tài liệu',
@@ -285,6 +290,10 @@ describe('LearnerHomePage', () => {
       'Nhận diện chữ',
       'Hỗ trợ',
     ]);
+    expect(within(list).getByRole('link', { name: 'Thi thử' })).toHaveAttribute(
+      'href',
+      '/learn/exam',
+    );
 
     fireEvent.click(within(list).getByRole('button', { name: 'Đọc hiểu' }));
     expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
