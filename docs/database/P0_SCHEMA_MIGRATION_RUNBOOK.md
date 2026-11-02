@@ -29,9 +29,10 @@
 | QB-1   | `20261023170000_question_objective_types`                | Enum `QuestionType` thêm `true_false`, `fill_blank`, `arrange_sentence` cho ngân hàng câu hỏi (mục 23).   |
 | EXAM-U | `20261027090000_exam_attempt_one_in_progress`            | Partial unique index: tối đa một `ExamAttempt` `in_progress` mỗi `(userId, testId)` (mục 24).             |
 | EXAM-R | `20261102103000_exam_result_score_summary`               | `Result.maxScore`/`passed` nullable + CHECK `score <= maxScore` khi có `maxScore` (mục 25).                |
+| PILOT  | `20261102150000_pilot_content_data_source`               | Data-only: nguồn `HSK30_PILOT_ORIGINAL_V1` cho nội dung pilot HSK1, `ON CONFLICT ("code") DO NOTHING` (mục 26). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 26 migration (đến `20261102103000_exam_result_score_summary`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 27 migration (đến `20261102150000_pilot_content_data_source`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -998,3 +999,50 @@ ALTER TABLE "Result"
   rồi drop cột bằng migration mới (không hỗ trợ trong release này).
 - Bằng chứng: `npm run test:db:p0` trên DB disposable (CHECK bắt `score > maxScore`, row
   `maxScore` NULL vẫn hợp lệ); fresh `npx prisma migrate deploy` áp 26/26 migration.
+
+## 26. Nguồn dữ liệu nội dung pilot HSK1 (M2.9a)
+
+### 26.1. Migration 27 — `20261102150000_pilot_content_data_source`
+
+Nghiệp vụ (Q178, M2.9a): 5 bài nội dung pilot HSK1 nằm trong
+`backend/content/pilot/hsk1/` cần một `DataSource` có thật trong DB trước khi script nạp gọi
+`POST /admin/cms/exercise-imports/preview`. CMS chỉ có `GET /admin/cms/data-sources`, không có
+route tạo, nên nguồn được tạo bằng migration forward idempotent theo `code` (cùng pattern 8 nguồn
+từ điển ở migration P0-02):
+
+```sql
+INSERT INTO "DataSource" (
+  "code", "name", "version", "referenceUrl", "license", "attribution",
+  "receivedAt", "importedAt", "contentHash", "notes", "createdAt", "updatedAt"
+) VALUES (
+  'HSK30_PILOT_ORIGINAL_V1',
+  'HSK 3.0 pilot content (AI-authored)',
+  '1.0.0',
+  NULL,
+  'Original content authored for HSK 3.0 APP',
+  'HSK 3.0 APP (AI-authored draft; human review required before publish)',
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Q178/M2.9a: nguồn của 5 bài pilot HSK1 … mọi bản ghi ở draft (Q172).',
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+)
+ON CONFLICT ("code") DO NOTHING;
+```
+
+- Data-only: **1 row** `DataSource`, không đổi schema/index/constraint/API, không thêm endpoint.
+  File `backend/content/pilot/hsk1/*.json` tham chiếu đúng `code = HSK30_PILOT_ORIGINAL_V1`,
+  `version = 1.0.0`.
+- Không chạm trigger `DataSource_media_provenance_guard`
+  (`20260813120000_media_provenance_provider_hardening/migration.sql:172-202`): trigger chỉ là
+  `BEFORE UPDATE OF code, version, license, "referenceUrl", attribution, "contentHash"` và chỉ
+  chặn khi row đã bị `MediaIngestion` tham chiếu; INSERT của migration không đi qua trigger này.
+  License/attribution ghi trung thực ngay từ đầu vì các field này bị đóng băng nếu sau này nguồn
+  được dùng cho media.
+- Impact API: không đổi endpoint/DTO; `GET /admin/cms/data-sources` chỉ trả thêm một row.
+  Script nạp (Q179/TL-216) resolve `dataSourceId` qua `code` + `version`.
+- Rollback/forward-fix: theo quy ước chung của runbook — không sửa migration đã áp; nếu cần đổi
+  provenance phải tạo migration mới (trigger đóng băng field khi bị media tham chiếu). Migration
+  idempotent theo `code` nên chạy lại không nhân bản; xoá row chỉ khi chắc chắn chưa có
+  `ImportJob`/`LessonExercise`/`Lesson` tham chiếu (`dataSourceId` là FK `SetNull`, không cascade).
+- Bằng chứng: `npx prisma migrate deploy` trên database disposable áp 27/27 migration; e2e
+  `test/pilot-content-import.e2e-spec.ts` test 1 đọc lại row và kiểm `name`, `version`, `license`,
+  `attribution`.
