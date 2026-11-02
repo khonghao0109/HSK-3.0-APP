@@ -6,7 +6,7 @@ không viết code**: mọi lệnh trong tài liệu là lệnh *dự kiến*, c
 
 - Task: `docs/PLAN.md:281` (và bản lặp `docs/PLAN.md:588`), cải tiến R21 `docs/PLAN.md:752`.
 - Bài mẫu: `backend/content/pilot/hsk1/lesson-01.json`.
-- Dải mã của M2.9a: **Q172–Q179 và TL-210…TL-229** (TL-224 trở đi còn trống); **Q194** là mã do
+- Dải mã của M2.9a: **Q172–Q179 và TL-210…TL-229** (TL-224 đã dùng, TL-225 trở đi còn trống); **Q194** là mã do
   TL cấp riêng cho luật `fill_blank` ở Pha 2 (nằm ngoài dải Q172–Q179, không phải quyết định PO).
 - "Pha 1b" = vòng sửa tài liệu + bài mẫu sau review của TL đối với Pha 1. Các mã này **chưa được ghi** vào `docs/PLAN.md` hay
   `docs/product/learner-ui-decisions.md`; đề xuất bổ sung ở §8.
@@ -484,9 +484,10 @@ mới khi chưa có renderer. Đây là quyết định **Q175** — xem §4.3 c
 
 ## 3. Trình tự gọi API của script Pha 2
 
-Script dự kiến: `backend/scripts/content/import-pilot-content.ts` (đề xuất, Pha 2 tạo), chạy bằng
-`npx ts-node`, nhận đường dẫn file JSON + biến môi trường `API_BASE_URL`, `ADMIN_TOKEN` **từ
-environment của tiến trình** (không đọc/ghi `.env`, không hard-code token).
+Script: `backend/scripts/content/import-pilot-content.ts` (Pha 2 đã tạo), chạy bằng
+`npm run content:import:pilot -- --file <path> [--dry-run]` trong `backend/`, nhận đường dẫn file
+JSON + biến môi trường `API_BASE_URL`, `ADMIN_TOKEN`, `DATABASE_URL` **từ environment của tiến
+trình** (không đọc/ghi `.env`, không hard-code token).
 
 ### 3.1 Các bước
 
@@ -664,30 +665,45 @@ sách archive ở Pha 3.
 `explanation` tiếng Việt; khối `review` ghi rõ **pinyin và nghĩa tiếng Việt phải được người kiểm
 lại** trước khi approve.
 
-**Tự kiểm:** script `/tmp/hsk-m29a/check.mjs` (ngoài repo; prompt §4 cấm đặt script trong repo ở
-Pha 1). Lệnh đã dùng trên máy tạo bằng chứng: `node /tmp/hsk-m29a/check.mjs` (mặc định đọc
-bài 1) hoặc `node /tmp/hsk-m29a/check.mjs <path>` — chỉ chạy được khi còn `/tmp/hsk-m29a/`.
+**Tự kiểm (từ Pha 2 — TL-223):** luật của `/tmp/hsk-m29a/check.mjs` (Pha 1/1b) đã được chuyển
+thành test **trong repo**, không còn phụ thuộc `/tmp`:
 
-Script kiểm: `hanzi` ∈ `hsk1.json`; đúng 20 từ không trùng; `pinyin` khớp **dấu thanh** với
-`parsed/final_words.json` sau khi chuẩn hoá như `normalizePinyin` (bỏ số thanh, `ü → u:`, bỏ hết
-khoảng trắng); từ có trong `final_words.json` với `level = HSK1`; câu ví dụ chỉ dùng chữ Hán thuộc
-HSK1; ≥ 2 topic có `vocabulary` + (`grammar`|`key_text`); block chỉ `text`/`vocabulary_list`;
-≥ 8 bài, ≥ 3 loại, không `listening_choice`/`speaking_repeat`; `mcq` ≥ 4 option, `optionId` ∈
-options, option chữ Hán phải là từ HSK1, và **mỗi vị trí đáp án chỉ dùng 1 lần** trong bài;
-`fill_blank.acceptedTexts` có đủ chữ Hán + pinyin có dấu + pinyin không dấu (Q194) và ô trống
-thống nhất `___`; `arrange_sentence.tokenIds` là hoán vị đủ token, **id không lộ thứ tự đáp án**,
-`content.tokens` đã xáo; `id` không trùng/không khoảng trắng; mọi string ≤ 4096; payload mỗi bài
-≤ 65 536 byte, depth ≤ 8; `sourceKey` đúng `pilot-hsk1:lNN:eNN`; slug không trùng mẫu placeholder.
+| Thành phần | Đường dẫn |
+| --- | --- |
+| Validator dùng chung (test + script nạp) | `backend/src/modules/content-pilot/pilot-content.validator.ts` |
+| Test Jest unit, không cần DB | `backend/src/modules/content-pilot/pilot-content.validator.spec.ts` |
+| Fixture hỏng (84 file) cho 84 mã lỗi; 5 mã còn lại (4 `cross_lesson_*` + `word_level_mismatch`) kiểm bằng test tổng hợp — tổng 89 mã | `backend/test/fixtures/pilot-content/broken/<mã-lỗi>.json` |
 
-Kết quả (bản đúng): `OK`, `words=20 topics=3 exercises=10`, sha256 của file
-`aee51f6fc2ced6c98aaf792965f58ccf891b95b8fc51169291359048286718d0`. Bản cố ý sai
-(`/tmp/hsk-m29a/lesson-01.broken.json`) bị bắt **20 lỗi**, trong đó mỗi luật mới
-(`mcq_answer_position_skew`, `arrange_ids_reveal_order`, `fill_blank_missing_pinyin`,
-`blank_marker_inconsistent`) xuất hiện ít nhất 1 lần — xem báo cáo task.
+Test đọc **mọi** `backend/content/pilot/hsk1/lesson-NN.json` (hiện `lesson-01`…`lesson-05`) và kiểm
+cả luật liên file: 100 từ HSK1 không lặp giữa 5 bài, `slug`/`orderIndex`/`sourceKey` không trùng.
+Mỗi fixture trong `broken/` mô tả **một** lỗi áp lên `lesson-01.json` thật, tên file = mã lỗi mà
+test phải bắt; nhờ vậy mỗi mã lỗi có bằng chứng tái lập được trong CI.
 
-**Giới hạn bằng chứng:** script và bản cố ý sai chỉ nằm ở `/tmp`, **không tái lập được từ repo**
-cho tới khi **TL-223** (Pha 2) chuyển `check.mjs` thành test trong `backend/test/`. Từ đó mới có
-bằng chứng tái lập được trong CI.
+Lệnh chạy (từ `backend/`):
+
+```bash
+npx jest pilot-content.validator.spec
+```
+
+Luật giữ nguyên từ `check.mjs`: `hanzi` ∈ `hsk1.json`; đúng 20 từ không trùng; `pinyin` khớp **dấu
+thanh** với `parsed/final_words.json` sau khi chuẩn hoá như `normalizePinyin`; từ có trong
+`final_words.json` với `level = HSK1`; câu ví dụ chỉ dùng chữ Hán thuộc HSK1; ≥ 2 topic có
+`vocabulary` + (`grammar`|`key_text`); block chỉ `text`/`vocabulary_list`; ≥ 8 bài, ≥ 3 loại,
+không `listening_choice`/`speaking_repeat`; `mcq` ≥ 4 option, `optionId` ∈ options, option chữ Hán
+phải là từ HSK1, và **mỗi vị trí đáp án chỉ dùng 1 lần** trong bài (Q176); `fill_blank.acceptedTexts`
+có đủ chữ Hán + pinyin có dấu + pinyin không dấu (Q194) và ô trống thống nhất `___`;
+`arrange_sentence.tokenIds` là hoán vị đủ token, **id không lộ thứ tự đáp án**, `content.tokens` đã
+xáo; `id` không trùng/không khoảng trắng; mọi string ≤ 4096; payload mỗi bài ≤ 65 536 byte, depth
+≤ 8; `sourceKey` đúng `pilot-hsk1:lNN:eNN`; slug không trùng mẫu placeholder.
+
+**Ngoại lệ có bằng chứng (Pha 2 — TL-224):** luật `pinyin_without_tone` chỉ áp cho
+pinyin **không khớp** reading thanh nhẹ trong repo — 的 có `pinyin_tone = de5`, thanh nhẹ nên
+pinyin chuẩn `de` không có dấu thanh để viết. Ngoại lệ hẹp này không nới lỏng kiểm tra vì
+`pinyin_tone_mismatch` vẫn bắt mọi pinyin sai thanh. Đây là **TL-224** trong dải mã của M2.9a
+(TL-224…TL-229), do Tech Lead cấp.
+
+Kết quả (2026-11-02, 5 file): `96 tests passed`, `0 lỗi`; bản cố ý sai của Pha 1 vẫn bị bắt 20 lỗi
+và nay mỗi mã lỗi có fixture riêng trong repo.
 
 ---
 
@@ -701,9 +717,13 @@ bằng chứng tái lập được trong CI.
   `docs/PLAN.md:101`, `:214` — **chưa xác minh trạng thái DB dev**.
 - **Chưa xác minh:** hàng `Word` thật trong DB dev có đủ 500 HSK1; row `DataSource` pilot đã tồn
   tại chưa; DataSource nào đang được UI import liệt kê.
-- Mọi endpoint trong tài liệu là endpoint **đã có trong code**; tài liệu này không thêm endpoint
-  nào. Tài liệu này **không** chứa migration; migration `DataSource` (Q178) và script `LessonWord`
-  (Q179) thuộc Pha 2.
+- Mọi endpoint trong tài liệu là endpoint **đã có trong code**; Pha 2 không thêm endpoint nào.
+  Pha 2 đã thêm: migration forward `backend/prisma/migrations/20261102150000_pilot_content_data_source`
+  (Q178, `ON CONFLICT ("code") DO NOTHING`), module `backend/src/modules/content-pilot/` (validator
+  TL-223 + script Q179/TL-216) và CLI `backend/scripts/content/import-pilot-content.ts`
+  (`npm run content:import:pilot`).
+- Script nạp chỉ được chạy trên database disposable khi kiểm thử (`TEST_DATABASE_URL`, tên kết thúc
+  `test|e2e|verify|disposable|hardening`); Pha 3 mới chạy trên DB dev theo kế hoạch của PO.
 - Index dùng chung với hai session khác trên cùng checkout, nên `git diff --cached` có thể chứa
   file ngoài task. Commit của task này dùng `git commit -- <path>` (TL-222) để chỉ ghi 2 file của
   M2.9a; không dùng `git add -A`/`git add .`.
@@ -752,13 +772,12 @@ và chờ M5.4 (Q177).
 ### Bước 3 — Import nội dung draft
 
 ```bash
+cd backend
 # Xem trước: chỉ kiểm, không ghi DB
-npx ts-node backend/scripts/content/import-pilot-content.ts \
-  --file backend/content/pilot/hsk1/lesson-01.json --dry-run
+npm run content:import:pilot -- --file content/pilot/hsk1/lesson-01.json --dry-run
 
 # Ghi thật: tạo Lesson draft + Topic draft + exercise draft (preview → commit)
-npx ts-node backend/scripts/content/import-pilot-content.ts \
-  --file backend/content/pilot/hsk1/lesson-01.json
+npm run content:import:pilot -- --file content/pilot/hsk1/lesson-01.json
 ```
 
 Kỳ vọng: lesson `draft`, 3 topic `draft`, 10 exercise `draft`, `ImportJob` 1 row.
