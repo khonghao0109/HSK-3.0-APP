@@ -210,6 +210,23 @@ Mỗi lệnh ghi gửi backend một `Idempotency-Key` UUID mới sinh phía ser
 route cần cùng origin và phiên learner (`401` khi thiếu; backend `401`/`403` xoá
 cookie), id sai trả `404`, phản hồi `no-store`.
 
+## BFF nộp bài thi của learner
+
+M4.2c Pha B: nút "Nộp bài" gọi BFF same-origin, browser không giữ token và
+không gửi body thô sang backend:
+
+- `POST /api/learner/exam/attempts/:attemptId/submit`: kiểm tra Origin (`403`),
+  id dương (`404`), body strict `{ idempotencyKey: uuid }` (`400` khi thiếu/sai/thừa),
+  cookie phiên learner (`401`). BFF dựng lại body chỉ với `idempotencyKey` rồi gọi
+  backend `POST /api/v1/exam/attempts/:attemptId/submit`; response 200 là
+  `ExamSubmitView` (đếm câu đã làm/chưa làm/đánh dấu + `replayed`), không có đáp án,
+  điểm hay result (R11).
+- `409` chỉ chuyển tiếp 4 mã `EXAM_ATTEMPT_ALREADY_SUBMITTED`,
+  `EXAM_ATTEMPT_EXPIRED`, `EXAM_ATTEMPT_CLOSED`, `EXAM_IDEMPOTENCY_KEY_REUSED` và bỏ
+  `details`; `429`/`404`/`401`/`403` giữ nguyên cách xử lý của các route attempt;
+  envelope sai `503`; mọi response `no-store`. Proxy không cần matcher mới
+  (`/api/learner/exam/:path*` đã phủ).
+
 ## Cấu trúc chính
 
 ```text
