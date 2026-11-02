@@ -1,0 +1,11 @@
+{
+  "description": "exercise.orderIndex < 1",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].orderIndex",
+      "value": 0
+    }
+  ]
+}

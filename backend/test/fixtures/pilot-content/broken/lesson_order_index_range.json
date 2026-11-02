@@ -1,0 +1,11 @@
+{
+  "description": "lesson.orderIndex ngoài dải pilot 1001–1005",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.orderIndex",
+      "value": 2001
+    }
+  ]
+}

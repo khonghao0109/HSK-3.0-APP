@@ -1,0 +1,11 @@
+{
+  "description": "review.status khác draft (Q172)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "review.status",
+      "value": "published"
+    }
+  ]
+}

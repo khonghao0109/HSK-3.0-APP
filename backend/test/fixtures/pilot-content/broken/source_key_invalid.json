@@ -1,0 +1,11 @@
+{
+  "description": "sourceKey sai định dạng TL-212",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].sourceKey",
+      "value": "pilot-hsk1:e01"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "options vượt 100 phần tử",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "arrayOptions",
+      "path": "exercises[0].content.options",
+      "count": 101
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "arrange thiếu tokenIds",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "exercises[7].answer.tokenIds"
+    }
+  ]
+}

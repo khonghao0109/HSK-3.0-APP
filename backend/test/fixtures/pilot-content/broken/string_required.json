@@ -1,0 +1,10 @@
+{
+  "description": "words[0].pinyin không phải string",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "words[0].pinyin"
+    }
+  ]
+}

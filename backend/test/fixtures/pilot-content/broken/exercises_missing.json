@@ -1,0 +1,10 @@
+{
+  "description": "thiếu mảng exercises",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "exercises"
+    }
+  ]
+}

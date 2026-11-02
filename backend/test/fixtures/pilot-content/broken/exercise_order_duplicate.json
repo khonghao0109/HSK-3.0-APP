@@ -1,0 +1,11 @@
+{
+  "description": "hai bài trùng orderIndex",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[0].orderIndex",
+      "to": "exercises[1].orderIndex"
+    }
+  ]
+}

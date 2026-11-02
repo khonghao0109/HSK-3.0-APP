@@ -1,0 +1,11 @@
+{
+  "description": "tokenIds lặp id",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[7].answer.tokenIds[0]",
+      "to": "exercises[7].answer.tokenIds[1]"
+    }
+  ]
+}

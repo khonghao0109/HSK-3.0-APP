@@ -1,0 +1,11 @@
+{
+  "description": "block type ngoài text/vocabulary_list",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[0].content[1].type",
+      "value": "image"
+    }
+  ]
+}

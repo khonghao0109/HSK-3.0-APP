@@ -1,0 +1,11 @@
+{
+  "description": "option chữ Hán không thuộc HSK1 (R21)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].content.options[1].text",
+      "value": "苹果"
+    }
+  ]
+}
