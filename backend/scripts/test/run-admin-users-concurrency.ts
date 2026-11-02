@@ -1,6 +1,7 @@
 import { ForbiddenException, HttpException } from '@nestjs/common';
 
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
+import { InMemoryJobQueue } from '../../src/infrastructure/jobs/in-memory-job-queue.adapter';
 import { AdminUsersService } from '../../src/modules/admin-users/admin-users.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
@@ -30,7 +31,7 @@ const database = assertDisposableTestDatabase();
 console.log(`database under test: ${database.databaseName}`);
 
 const prisma = new PrismaService();
-const service = new AdminUsersService(prisma);
+const service = new AdminUsersService(prisma, new InMemoryJobQueue());
 
 let failed = false;
 

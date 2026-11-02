@@ -25,6 +25,20 @@ describe('admin users policy', () => {
       expect(auditReason('user.unsuspended', { reason: 'leak' })).toBeNull();
     });
 
+    it('returns the closed reason of an admin-initiated deletion', () => {
+      expect(
+        auditReason('account.deletion_requested_by_admin', {
+          requestId: 12,
+          initiatedBy: 'admin',
+          reason: 'under_age',
+          escalated: false,
+        }),
+      ).toBe('under_age');
+      expect(
+        auditReason('account.deletion_requested_by_admin', { requestId: 12 }),
+      ).toBeNull();
+    });
+
     it('ignores missing, non-string and malformed summaries', () => {
       expect(auditReason('user.suspended', null)).toBeNull();
       expect(auditReason('user.suspended', { reason: 42 })).toBeNull();

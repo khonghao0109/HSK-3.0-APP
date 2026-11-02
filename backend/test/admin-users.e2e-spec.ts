@@ -6,6 +6,11 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
+import {
+  JOB_NAMES,
+  JobQueuePort,
+} from '../src/infrastructure/jobs/job-queue.port';
+import { InMemoryJobQueue } from '../src/infrastructure/jobs/in-memory-job-queue.adapter';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
 
@@ -52,6 +57,7 @@ const ADMIN_USER_KEYS = [
 describe('Admin users E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let inMemoryQueue: InMemoryJobQueue;
 
   const prefix = `e2e_admin_users_${Date.now()}`;
   const password = 'Test123!';
@@ -112,6 +118,10 @@ describe('Admin users E2E', () => {
     );
     await app.listen(0, '127.0.0.1');
     prisma = app.get(PrismaService);
+
+    const queuePort = app.get<JobQueuePort>(JobQueuePort);
+    expect(queuePort).toBeInstanceOf(InMemoryJobQueue);
+    inMemoryQueue = queuePort as InMemoryJobQueue;
 
     for (const label of [
       'admin_actor',
@@ -715,6 +725,381 @@ describe('Admin users E2E', () => {
       };
       expect(body.data.length).toBeLessThanOrEqual(2);
       expect(body.meta.pagination).toMatchObject({ page: 1, limit: 2 });
+    });
+  });
+
+  describe('POST /admin/users/:id/deletion-request', () => {
+    type AdminDeletionResponse = {
+      requestId: number;
+      scheduledAt: string;
+      initiatedBy: 'admin';
+    };
+
+    const requestDeletion = (
+      targetId: number,
+      body: Record<string, unknown> = { reason: 'under_age' },
+    ) =>
+      asAdmin('post', `/api/v1/admin/users/${targetId}/deletion-request`).send(
+        body,
+      );
+
+    const deletionAuditRows = (targetId: number) =>
+      prisma.auditLog.findMany({
+        where: {
+          action: 'account.deletion_requested_by_admin',
+          targetId: String(targetId),
+        },
+        orderBy: { id: 'asc' },
+      });
+
+    beforeAll(async () => {
+      for (const label of [
+        'del_target',
+        'del_suspended',
+        'del_escalate',
+        'del_replay',
+        'del_due',
+        'del_suspended_admin',
+      ]) {
+        await register(label);
+      }
+
+      await prisma.user.update({
+        where: { id: id('del_suspended') },
+        data: { status: 'suspended' },
+      });
+      await prisma.user.update({
+        where: { id: id('del_suspended_admin') },
+        data: { role: 'admin', status: 'suspended' },
+      });
+      await prisma.user.update({
+        where: { id: id('del_due') },
+        data: { status: 'deletion_pending', deletedAt: new Date() },
+      });
+      await prisma.accountDeletionRequest.create({
+        data: {
+          userId: id('del_due'),
+          status: 'requested',
+          initiatedBy: 'user',
+          verifiedAt: new Date(),
+          scheduledAt: new Date(Date.now() - 60 * 60_000),
+        },
+      });
+    });
+
+    beforeEach(() => {
+      inMemoryQueue.clear();
+    });
+
+    it('rejects unauthenticated and non-admin callers', async () => {
+      await http()
+        .post(`/api/v1/admin/users/${id('del_target')}/deletion-request`)
+        .send({ reason: 'under_age' })
+        .expect(401);
+
+      const forbidden = await http()
+        .post(`/api/v1/admin/users/${id('del_target')}/deletion-request`)
+        // learner_search kept role `user` throughout this spec; learner_primary
+        // is promoted to admin by the role-change suite above.
+        .set('Authorization', `Bearer ${token('learner_search')}`)
+        .send({ reason: 'under_age' })
+        .expect(403);
+      expect((forbidden.body as ErrorBody).error.code).toBe('FORBIDDEN');
+    });
+
+    it('validates the path id and the body', async () => {
+      await asAdmin('post', '/api/v1/admin/users/0/deletion-request')
+        .send({ reason: 'under_age' })
+        .expect(400);
+
+      const target = `/api/v1/admin/users/${id('del_target')}/deletion-request`;
+      await asAdmin('post', target).send({ reason: 'spam' }).expect(400);
+      await asAdmin('post', target).send({}).expect(400);
+      await asAdmin('post', target)
+        .send({ reason: 'under_age', note: 'PO approved' })
+        .expect(400);
+    });
+
+    it('returns 404 for unknown and anonymized targets', async () => {
+      const missing = await requestDeletion(2_000_000_000).expect(404);
+      expect((missing.body as ErrorBody).error.code).toBe('USER_NOT_FOUND');
+
+      const anonymized = await requestDeletion(id('anonymized_user')).expect(
+        404,
+      );
+      expect((anonymized.body as ErrorBody).error.code).toBe('USER_NOT_FOUND');
+    });
+
+    it('creates the request, revokes sessions, drops tokens, enqueues 2 jobs and audits', async () => {
+      const userId = id('del_target');
+      await prisma.passwordResetToken.create({
+        data: {
+          userId,
+          tokenHash: `${prefix}-del-target-reset-token`,
+          expiresAt: new Date(Date.now() + 3_600_000),
+        },
+      });
+      await prisma.emailVerificationToken.create({
+        data: {
+          userId,
+          tokenHash: `${prefix}-del-target-verify-token`,
+          expiresAt: new Date(Date.now() + 3_600_000),
+        },
+      });
+
+      const correlationId = '9d1d0b1e-6f1e-4c3a-8c6e-6d0f7f4c2a11';
+      const before = Date.now();
+      const response = await requestDeletion(userId)
+        .set('x-request-id', correlationId)
+        .expect('cache-control', 'no-store')
+        .expect(201);
+
+      const data = (response.body as { data: AdminDeletionResponse }).data;
+      expect(data.initiatedBy).toBe('admin');
+      const scheduledAt = new Date(data.scheduledAt);
+      const days = (scheduledAt.getTime() - before) / 86_400_000;
+      expect(days).toBeGreaterThan(6.9);
+      expect(days).toBeLessThan(7.1);
+
+      const request = await prisma.accountDeletionRequest.findUniqueOrThrow({
+        where: { id: data.requestId },
+      });
+      expect(request).toMatchObject({
+        userId,
+        status: 'requested',
+        initiatedBy: 'admin',
+        actorId: id('admin_actor'),
+        reason: 'under_age',
+      });
+      expect(request.scheduledAt?.toISOString()).toBe(
+        scheduledAt.toISOString(),
+      );
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+      });
+      expect(user.status).toBe('deletion_pending');
+      expect(user.deletedAt).not.toBeNull();
+
+      expect(
+        await prisma.userSession.count({
+          where: { userId, revokedAt: null },
+        }),
+      ).toBe(0);
+      expect(await prisma.passwordResetToken.count({ where: { userId } })).toBe(
+        0,
+      );
+      expect(
+        await prisma.emailVerificationToken.count({ where: { userId } }),
+      ).toBe(0);
+
+      const anonymizeJobs = inMemoryQueue.getJobsByName(
+        JOB_NAMES.ANONYMIZE_ACCOUNT,
+      );
+      expect(anonymizeJobs).toHaveLength(1);
+      expect(anonymizeJobs[0].data).toEqual({ requestId: data.requestId });
+      expect(anonymizeJobs[0].options?.singletonKey).toBe(
+        `anonymize:${data.requestId}`,
+      );
+      expect(anonymizeJobs[0].options?.startAfter).toBeDefined();
+
+      const mailJobs = inMemoryQueue.getJobsByName(
+        JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+      );
+      expect(mailJobs).toHaveLength(1);
+      expect(mailJobs[0].data).toEqual({ requestId: data.requestId });
+      expect(mailJobs[0].options?.singletonKey).toBe(
+        `deletion-mail:${data.requestId}`,
+      );
+
+      const audits = await deletionAuditRows(userId);
+      expect(audits).toHaveLength(1);
+      expect(audits[0]).toMatchObject({
+        actorId: id('admin_actor'),
+        targetType: 'user',
+        targetId: String(userId),
+        correlationId,
+        beforeSummary: { status: 'active' },
+      });
+      expect(audits[0].afterSummary).toMatchObject({
+        requestId: data.requestId,
+        initiatedBy: 'admin',
+        reason: 'under_age',
+        escalated: false,
+      });
+    });
+
+    it('replays idempotently without a second row, job or audit row', async () => {
+      const userId = id('del_replay');
+      const first = await requestDeletion(userId).expect(201);
+      const firstData = (first.body as { data: AdminDeletionResponse }).data;
+      expect(inMemoryQueue.getJobs()).toHaveLength(2);
+      inMemoryQueue.clear();
+
+      const second = await requestDeletion(userId).expect(201);
+      const secondData = (second.body as { data: AdminDeletionResponse }).data;
+
+      expect(secondData.requestId).toBe(firstData.requestId);
+      expect(new Date(secondData.scheduledAt).toISOString()).toBe(
+        new Date(firstData.scheduledAt).toISOString(),
+      );
+      expect(secondData.initiatedBy).toBe('admin');
+
+      expect(inMemoryQueue.getJobs()).toHaveLength(0);
+      expect(
+        await prisma.accountDeletionRequest.count({ where: { userId } }),
+      ).toBe(1);
+      expect(await deletionAuditRows(userId)).toHaveLength(1);
+    });
+
+    it('escalates a user-initiated request in place, keeps scheduledAt and sends the correction mail', async () => {
+      const userId = id('del_escalate');
+      const self = await http()
+        .post('/api/v1/users/me/deletion-request')
+        .set('Authorization', `Bearer ${token('del_escalate')}`)
+        .send({ password })
+        .expect(202);
+      const selfData = (
+        self.body as { data: { requestId: number; scheduledAt: string } }
+      ).data;
+      inMemoryQueue.clear();
+
+      const response = await requestDeletion(userId).expect(201);
+      const data = (response.body as { data: AdminDeletionResponse }).data;
+
+      expect(data.requestId).toBe(selfData.requestId);
+      expect(new Date(data.scheduledAt).toISOString()).toBe(
+        new Date(selfData.scheduledAt).toISOString(),
+      );
+
+      const rows = await prisma.accountDeletionRequest.findMany({
+        where: { userId },
+      });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        id: selfData.requestId,
+        status: 'requested',
+        initiatedBy: 'admin',
+        actorId: id('admin_actor'),
+        reason: 'under_age',
+      });
+      expect(rows[0].scheduledAt?.toISOString()).toBe(
+        new Date(selfData.scheduledAt).toISOString(),
+      );
+
+      // The anonymize job from the self-service request is not enqueued again.
+      expect(
+        inMemoryQueue.getJobsByName(JOB_NAMES.ANONYMIZE_ACCOUNT),
+      ).toHaveLength(0);
+      const mailJobs = inMemoryQueue.getJobsByName(
+        JOB_NAMES.SEND_ACCOUNT_DELETION_SCHEDULED,
+      );
+      expect(mailJobs).toHaveLength(1);
+      expect(mailJobs[0].options?.singletonKey).toBe(
+        `deletion-mail:${selfData.requestId}:admin`,
+      );
+
+      const audits = await deletionAuditRows(userId);
+      expect(audits).toHaveLength(1);
+      // F1: the escalation records who owned the request before it was
+      // escalated, and never the user's free-text reason (PII).
+      expect(audits[0].beforeSummary).toEqual({
+        status: 'deletion_pending',
+        initiatedBy: 'user',
+      });
+      expect(JSON.stringify(audits[0].beforeSummary)).not.toContain('reason');
+      expect(audits[0].afterSummary).toMatchObject({
+        requestId: selfData.requestId,
+        initiatedBy: 'admin',
+        reason: 'under_age',
+        escalated: true,
+      });
+    });
+
+    it('rejects targeting yourself', async () => {
+      const response = await requestDeletion(id('admin_actor')).expect(409);
+      expect((response.body as ErrorBody).error.code).toBe(
+        'ADMIN_SELF_ACTION_FORBIDDEN',
+      );
+    });
+
+    it('allows targeting a suspended user', async () => {
+      const userId = id('del_suspended');
+      const response = await requestDeletion(userId).expect(201);
+      const data = (response.body as { data: AdminDeletionResponse }).data;
+      expect(data.initiatedBy).toBe('admin');
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+      });
+      expect(user.status).toBe('deletion_pending');
+      const request = await prisma.accountDeletionRequest.findUniqueOrThrow({
+        where: { id: data.requestId },
+      });
+      expect(request.initiatedBy).toBe('admin');
+      expect(await deletionAuditRows(userId)).toHaveLength(1);
+    });
+
+    it('rejects a requested deletion that is already due', async () => {
+      const response = await requestDeletion(id('del_due')).expect(409);
+      expect((response.body as ErrorBody).error.code).toBe(
+        'USER_DELETION_ALREADY_DUE',
+      );
+      expect(
+        await prisma.accountDeletionRequest.count({
+          where: { userId: id('del_due') },
+        }),
+      ).toBe(1);
+    });
+
+    it('rejects deleting the last admin seat', async () => {
+      // Earlier suites promote learners and suspend admins, so snapshot every
+      // other admin instead of assuming a fixed cast. The target stays admin.
+      const demoted = await prisma.user.findMany({
+        where: {
+          role: 'admin',
+          id: { notIn: [id('admin_actor'), id('del_suspended_admin')] },
+        },
+        select: { id: true },
+      });
+      const demotedIds = demoted.map((row) => row.id);
+      try {
+        await prisma.user.updateMany({
+          where: { id: { in: demotedIds } },
+          data: { role: 'user' },
+        });
+        const response = await requestDeletion(
+          id('del_suspended_admin'),
+        ).expect(409);
+        expect((response.body as ErrorBody).error.code).toBe(
+          'LAST_ADMIN_REQUIRED',
+        );
+      } finally {
+        await prisma.user.updateMany({
+          where: { id: { in: demotedIds } },
+          data: { role: 'admin' },
+        });
+      }
+    });
+
+    it('rejects an actor that lost admin rights after the roles guard', async () => {
+      await prisma.user.update({
+        where: { id: id('admin_peer') },
+        data: { role: 'user' },
+      });
+      try {
+        const response = await http()
+          .post(`/api/v1/admin/users/${id('del_suspended')}/deletion-request`)
+          .set('Authorization', `Bearer ${token('admin_peer')}`)
+          .send({ reason: 'under_age' })
+          .expect(403);
+        expect((response.body as ErrorBody).error.code).toBe('FORBIDDEN');
+      } finally {
+        await prisma.user.update({
+          where: { id: id('admin_peer') },
+          data: { role: 'admin' },
+        });
+      }
     });
   });
 });

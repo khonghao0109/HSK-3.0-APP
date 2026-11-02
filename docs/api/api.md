@@ -307,13 +307,22 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
     - Toàn bộ `UserSession` hiện tại bị thu hồi (`revokedAt = CURRENT_TIMESTAMP`), các token reset mật khẩu hoặc xác minh email chưa dùng bị xoá. Access token cũ bị từ chối với `401 Unauthorized` ngay lập tức.
     - Hai job nền được enqueue trong transaction: `privacy.anonymize-account` (`startAfter` = `scheduledAt`, `singletonKey = 'anonymize:' + requestId`) và `mail.account-deletion-scheduled` (`singletonKey = 'deletion-mail:' + requestId`).
     - Idempotent: gọi trùng khi đã có request ở trạng thái `requested` sẽ trả lại request hiện có mà không tạo dòng mới.
-- Huỷ yêu cầu xoá bằng đăng nhập (`POST /auth/login`):
+- Huỷ yêu cầu xoá bằng đăng nhập (`POST /auth/login`, chỉ áp dụng cho request do user khởi
+  tạo — `initiatedBy = 'user'`):
   - Trong thời gian chờ 7 ngày (`scheduledAt > CURRENT_TIMESTAMP`), người dùng đăng nhập lại đúng mật khẩu sẽ tự động huỷ yêu cầu xoá:
     - Yêu cầu cập nhật `status = 'cancelled'`, `cancelledAt = CURRENT_TIMESTAMP`.
     - User được kích hoạt lại: `status = 'active'`, `deletedAt = NULL`, các bộ đếm khoá đăng nhập được xoá.
     - Đăng nhập thành công trả về HTTP 200/201 cùng token phiên mới bình thường.
   - Sai mật khẩu trong thời gian chờ → trả về HTTP `401 Unauthorized`, yêu cầu xoá vẫn giữ nguyên trạng thái `requested`.
   - Đã quá hạn 7 ngày (`scheduledAt <= CURRENT_TIMESTAMP`), đăng nhập bị chặn (trả về HTTP `401` qua decoy hash) và worker sẽ thực hiện ẩn danh tài khoản theo ADR-001.
+  - Request do admin khởi tạo (M1.7d, `initiatedBy = 'admin'`, lý do `under_age`) **không**
+    bị huỷ bởi đăng nhập. Trong thời gian chờ, đăng nhập đúng mật khẩu rơi vào nhánh decoy
+    H.7 và trả `401` (verify dummy hash, không reserve login attempt, không ghi audit);
+    request giữ `status = 'requested'` và account giữ `deletion_pending` tới khi worker ẩn
+    danh. Hai câu truy vấn của luồng huỷ (đọc trước và `UPDATE` trong transaction) đều lọc
+    `initiatedBy = 'user'`, và transaction khoá `User` trước khi khoá request.
+  - Audit `account.anonymized` do worker ghi có `actorId` là user sở hữu tài khoản (không
+    phải admin đã lên lịch) và `targetType = 'User'`.
 - `POST /users/me/data-exports` (`JwtAuthGuard`): Yêu cầu xuất dữ liệu cá nhân của người dùng thành một file JSON lưu trữ trong bucket private.
   - User phải ở trạng thái `active`, `deletedAt IS NULL`, nếu không trả về HTTP `404 "User not found."`.
   - Rate limit: Tối đa 1 export / 24 giờ / user. Nếu đã có export job trong vòng 24 giờ (`createdAt > CURRENT_TIMESTAMP - INTERVAL '24 hours'`) có trạng thái `requested`, `processing`, hoặc `completed` → trả về HTTP `429 Too Many Requests` với mã lỗi `EXPORT_RATE_LIMITED`. Export ở trạng thái `failed` không tính vào giới hạn này.
@@ -1413,7 +1422,7 @@ body (Z12), vẫn giữ kiểm theo độ dài thật sau khi đọc cho request
 
 ### A.13 Admin Users và Audit (admin)
 
-Response có `Cache-Control: no-store`. Cả 5 route yêu cầu JWT admin: thiếu/sai token
+Response có `Cache-Control: no-store`. Cả 6 route yêu cầu JWT admin: thiếu/sai token
 → `401`, role `user` → `403`.
 
 | Method | Path | Input | `data` | Status |
@@ -1422,10 +1431,15 @@ Response có `Cache-Control: no-store`. Cả 5 route yêu cầu JWT admin: thi�
 | `PATCH` | `/admin/users/:id/role` | `{ role: 'user' \| 'admin' }` | `AdminUser` | 200 |
 | `POST` | `/admin/users/:id/suspend` | `{ reason: string }` 1–500 ký tự sau trim | `AdminUser` | 201 |
 | `POST` | `/admin/users/:id/unsuspend` | — | `AdminUser` | 201 |
+| `POST` | `/admin/users/:id/deletion-request` | `{ reason: 'under_age' }` (enum một giá trị; không có `note`) | `AdminDeletionRequest` | 201 |
 | `GET` | `/admin/audit-logs` | `targetType?`, `targetId?` (≤64 ký tự sau trim), `page`, `limit` | `AdminAuditLog[]` + `meta` phân trang; sort `createdAt DESC, id DESC` | 200 |
 
 `AdminUser`: `{ id, email, name, role, status, lastLoginAt, createdAt }` — không bao giờ
 trả `password`, `failedLoginAttempts`, `lockUntil` hay token.
+
+`AdminDeletionRequest`: `{ requestId: number, scheduledAt: string, initiatedBy: 'admin' }` —
+response của route xoá do admin khởi tạo; `initiatedBy` luôn `'admin'`, kể cả khi hàng bắt
+đầu là request user rồi được escalate.
 
 - Mặc định `GET /admin/users` loại `status = 'anonymized'` và mọi bản ghi đã có
   `deletedAt`. `status=deletion_pending` là cách duy nhất thấy bản ghi chờ xoá (bản ghi
@@ -1443,16 +1457,23 @@ targetId, target: { email } | null, reason, roleChange }`.
 - `actor` null khi hành động do hệ thống thực hiện.
 - `target` chỉ có khi `targetType` là user (không phân biệt hoa/thường, vì audit cũ ghi
   `User`) và user đó chưa anonymized; ngược lại `null`.
-- `reason` chỉ với `user.suspended`; `roleChange: { from, to } | null` chỉ với
+- `reason` chỉ với `user.suspended` và `account.deletion_requested_by_admin`;
+  `roleChange: { from, to } | null` chỉ với
   `user.role_changed` (TL-67a — ngoại lệ duy nhất cho quy tắc cấm trả summary, chỉ hai giá
   trị role). Không trả `ipAddress`, `userAgent`, `beforeSummary`, `afterSummary` hay bất kỳ
   phần nào khác của summary.
 - Lọc `targetType` so khớp chính xác chuỗi đã lưu (audit cũ có thể là `User`).
 
-Ghi audit (TL-66): action `user.role_changed`, `user.suspended`, `user.unsuspended`;
-`targetType = 'user'`, `targetId` là chuỗi id, `actorId` là admin thực hiện,
-`correlationId` = request id, `beforeSummary`/`afterSummary` chỉ chứa `{ role }` hoặc
-`{ status }` (+ `{ reason }` với `user.suspended`). Không ghi IP/UA.
+Ghi audit (TL-66): action `user.role_changed`, `user.suspended`, `user.unsuspended`,
+`account.deletion_requested_by_admin` (M1.7d); `targetType = 'user'`, `targetId` là chuỗi
+id, `actorId` là admin thực hiện, `correlationId` = request id,
+`beforeSummary`/`afterSummary` chỉ chứa `{ role }` hoặc `{ status }` (+ `{ reason }` với
+`user.suspended` và `account.deletion_requested_by_admin`). Với
+`account.deletion_requested_by_admin`, `afterSummary` chỉ gồm
+`{ requestId, initiatedBy: 'admin', reason: 'under_age', scheduledAt, escalated }`;
+`beforeSummary` là `{ status }` của target trước khi đổi — khi escalate một request do user
+khởi tạo, `beforeSummary` là `{ status: 'deletion_pending', initiatedBy: 'user' }`; lý do
+free-text cũ của user **không** được đưa vào audit. Không ghi IP/UA/PII.
 
 Nghiệp vụ:
 
@@ -1474,6 +1495,38 @@ Nghiệp vụ:
   cùng → `409 LAST_ADMIN_REQUIRED`.
 - `POST unsuspend`: chỉ `suspended` → `active`; không mở khoá tài khoản
   `deletion_pending`/`anonymized`.
+- `POST /admin/users/:id/deletion-request` (M1.7d, Q203–Q208): admin mở luồng xoá M1.7c cho
+  tài khoản dưới 16 tuổi. Body **chỉ** `{ reason: 'under_age' }` (enum một giá trị,
+  whitelist; field lạ như `note` → `400 REQUEST_VALIDATION_FAILED`). Luôn trả `201` với
+  `{ requestId, scheduledAt, initiatedBy: 'admin' }` — kể cả replay idempotent và escalate.
+  Lock order trong transaction: `pg_advisory_xact_lock` → actor `FOR UPDATE` → target `User`
+  `FOR UPDATE` → request `FOR UPDATE`.
+  - Target `active`/`suspended` chưa có request `requested`: tạo request
+    `initiatedBy = 'admin'`, `actorId` = admin gọi, `reason = 'under_age'`,
+    `scheduledAt = now + 7 ngày`; user chuyển `deletion_pending` + `deletedAt`, thu hồi mọi
+    `UserSession` chưa revoke, xoá `PasswordResetToken`/`EmailVerificationToken` chưa dùng
+    (đúng hình dạng M1.7c); enqueue `privacy.anonymize-account` (`startAfter = scheduledAt`,
+    `singletonKey = 'anonymize:<id>'`) và `mail.account-deletion-scheduled`
+    (`singletonKey = 'deletion-mail:<id>'`) trong cùng transaction.
+  - Target `deletion_pending` với request `initiatedBy = 'user'` chưa quá hạn: escalate tại
+    chỗ (conditional `UPDATE ... WHERE "initiatedBy" = 'user' AND status = 'requested'`), giữ
+    nguyên `scheduledAt`, không enqueue lại anonymize; enqueue mail đính chính
+    `singletonKey = 'deletion-mail:<id>:admin'`.
+  - Request đã `initiatedBy = 'admin'`: idempotent — trả cùng `requestId`/`scheduledAt`,
+    không thêm job/audit.
+  - Request `requested` đã quá hạn (`scheduledAt <= CURRENT_TIMESTAMP`) →
+    `409 USER_DELETION_ALREADY_DUE`.
+  - Trạng thái request/tài khoản không khớp lifecycle (ví dụ target `active`/`suspended` đã có
+    request `requested`, hoặc `deletion_pending` không có request `requested`) →
+    `409 USER_NOT_MODIFIABLE` (fail-closed; đây là state service không tạo ra).
+  - Tự xoá chính mình → `409 ADMIN_SELF_ACTION_FORBIDDEN`. Target là admin trong khi chỉ còn
+    một admin `active` (trường hợp gặp được: target admin đang `suspended`) →
+    `409 LAST_ADMIN_REQUIRED`. Không đổi `GET /admin/users` (Q208); không có endpoint admin
+    huỷ request (Q206); escalate giữ `scheduledAt` (Q207).
+  - Mail của request admin (Q204/Q205) không có link `/login`, không có câu huỷ hay câu mời
+    đăng nhập lại; chỉ nêu ngày ẩn danh và một dòng liên hệ trỏ
+    `${APP_PUBLIC_URL}/privacy` mục 11 (không thêm config). Mail của request user giữ nguyên
+    từng byte, gồm link huỷ qua đăng nhập.
 
 Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng chữ):
 
@@ -1481,10 +1534,11 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng ch�
 | --- | --- | --- |
 | `USER_NOT_FOUND` | 404 | Id không tồn tại hoặc user đã anonymized |
 | `ADMIN_SELF_ACTION_FORBIDDEN` | 409 | Admin tự đổi role hoặc tự khoá tài khoản mình |
-| `USER_NOT_MODIFIABLE` | 409 | Đổi role user không ở trạng thái `active`/`suspended` (vd `deletion_pending`) |
+| `USER_NOT_MODIFIABLE` | 409 | Đổi role user không ở trạng thái `active`/`suspended` (vd `deletion_pending`), hoặc request xoá/trạng thái tài khoản không khớp lifecycle (M1.7d, fail-closed) |
 | `LAST_ADMIN_REQUIRED` | 409 | Hạ quyền hoặc khoá admin `active` cuối cùng |
 | `USER_NOT_ACTIVE` | 409 | Khoá user không ở trạng thái `active` |
 | `USER_NOT_SUSPENDED` | 409 | Mở khoá user không ở trạng thái `suspended` |
+| `USER_DELETION_ALREADY_DUE` | 409 | Request `requested` đã quá `scheduledAt` nên không tạo/escalate được |
 | `FORBIDDEN` | 403 | Token không phải admin |
 | `UNAUTHORIZED` | 401 | Thiếu/sai token |
 | `REQUEST_VALIDATION_FAILED` | 400 | `:id`, body hoặc query sai shape/giới hạn (chi tiết như §1) |

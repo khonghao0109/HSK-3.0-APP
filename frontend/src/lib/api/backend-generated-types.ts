@@ -212,6 +212,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{id}/deletion-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * M1.7d / Q203: schedule the M1.7c deletion flow for an under-age account, or
+         *     escalate an existing user-initiated request. Always `201`, including replay
+         *     and escalation.
+         */
+        post: operations["AdminUsersController_requestDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/audit-logs": {
         parameters: {
             query?: never;
@@ -1742,6 +1763,33 @@ export interface components {
              *     The controller narrows it after validation proves it is a string.
              */
             reason: string;
+        };
+        AdminDeletionRequestResponseDto: {
+            /**
+             * @description ID of the account deletion request.
+             * @example 1
+             */
+            requestId: number;
+            /**
+             * Format: date-time
+             * @description Scheduled date and time when the account will be permanently anonymized.
+             * @example 2026-11-09T09:00:00.000Z
+             */
+            scheduledAt: string;
+            /**
+             * @description Who owns the request after this call; always `admin`.
+             * @example admin
+             * @enum {string}
+             */
+            initiatedBy: "admin";
+        };
+        AdminDeletionRequestDto: {
+            /**
+             * @description Only `under_age` is accepted (Q203).
+             * @example under_age
+             * @enum {string}
+             */
+            reason: "under_age";
         };
         AdminAuditLogActorDto: {
             id: number;
@@ -3617,6 +3665,40 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["AdminUserDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    AdminUsersController_requestDeletion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminDeletionRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["AdminDeletionRequestResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

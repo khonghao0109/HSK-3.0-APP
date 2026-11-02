@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
 import { AdminAuditLogsQueryDto } from './admin-audit-logs-query.dto';
+import { AdminDeletionRequestDto } from './admin-deletion-request.dto';
 import { AdminUsersQueryDto } from './admin-users-query.dto';
 import { ChangeUserRoleDto } from './change-user-role.dto';
 import { SuspendUserDto } from './suspend-user.dto';
@@ -100,6 +101,32 @@ describe('admin users DTOs', () => {
       expect(
         await validateDto(SuspendUserDto, { reason: 'x'.repeat(500) }),
       ).toHaveLength(0);
+    });
+  });
+
+  describe('AdminDeletionRequestDto', () => {
+    it('accepts only the under_age reason', async () => {
+      expect(
+        await validateDto(AdminDeletionRequestDto, { reason: 'under_age' }),
+      ).toHaveLength(0);
+    });
+
+    it('rejects a reason outside the enum', async () => {
+      expect(
+        await errorProperties(AdminDeletionRequestDto, { reason: 'spam' }),
+      ).toContain('reason');
+      expect(await errorProperties(AdminDeletionRequestDto, {})).toContain(
+        'reason',
+      );
+    });
+
+    it('rejects extra fields such as note', async () => {
+      expect(
+        await errorProperties(AdminDeletionRequestDto, {
+          reason: 'under_age',
+          note: 'PO approved',
+        }),
+      ).toContain('note');
     });
   });
 

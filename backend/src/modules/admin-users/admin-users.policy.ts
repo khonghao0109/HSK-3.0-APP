@@ -40,13 +40,15 @@ function toAdminRole(value: string | null): AdminRole | null {
 
 /**
  * TL-66/TL-67: the suspension reason is the only summary value the API may
- * return, and only for `user.suspended`.
+ * return, and only for `user.suspended`. M1.7d adds the closed `under_age`
+ * reason of an admin-initiated deletion.
  */
 export function auditReason(
   action: string,
   afterSummary: Prisma.JsonValue | null,
 ): string | null {
-  return action === 'user.suspended'
+  return action === 'user.suspended' ||
+    action === 'account.deletion_requested_by_admin'
     ? readSummaryString(afterSummary, 'reason')
     : null;
 }

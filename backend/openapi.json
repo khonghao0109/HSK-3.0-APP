@@ -806,6 +806,77 @@
         ]
       }
     },
+    "/api/v1/admin/users/{id}/deletion-request": {
+      "post": {
+        "operationId": "AdminUsersController_requestDeletion",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminDeletionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminDeletionRequestResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "M1.7d / Q203: schedule the M1.7c deletion flow for an under-age account, or\nescalate an existing user-initiated request. Always `201`, including replay\nand escalation.",
+        "tags": [
+          "AdminUsers"
+        ]
+      }
+    },
     "/api/v1/admin/audit-logs": {
       "get": {
         "operationId": "AdminUsersController_listAuditLogs",
@@ -7738,6 +7809,51 @@
             "description": "TL-63: the stored reason is the trimmed input and must be 1–500 chars.\nDeclared `unknown` on purpose: with `enableImplicitConversion`, a JSON\nnumber or boolean would be coerced to text before validation and accepted.\nThe controller narrows it after validation proves it is a string.",
             "minLength": 1,
             "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "AdminDeletionRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "number",
+            "description": "ID of the account deletion request.",
+            "example": 1
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Scheduled date and time when the account will be permanently anonymized.",
+            "example": "2026-11-09T09:00:00.000Z"
+          },
+          "initiatedBy": {
+            "type": "string",
+            "enum": [
+              "admin"
+            ],
+            "example": "admin",
+            "description": "Who owns the request after this call; always `admin`."
+          }
+        },
+        "required": [
+          "requestId",
+          "scheduledAt",
+          "initiatedBy"
+        ]
+      },
+      "AdminDeletionRequestDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "under_age"
+            ],
+            "example": "under_age",
+            "description": "Only `under_age` is accepted (Q203)."
           }
         },
         "required": [

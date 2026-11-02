@@ -25,6 +25,8 @@ import { correlationId } from '../../common/utils/request-correlation';
 
 import { AdminAuditLogsService } from './admin-audit-logs.service';
 import { AdminUsersService } from './admin-users.service';
+import { AdminDeletionRequestResponseDto } from './dto/admin-deletion-request-response.dto';
+import { AdminDeletionRequestDto } from './dto/admin-deletion-request.dto';
 import { AdminAuditLogDto } from './dto/admin-audit-log-response.dto';
 import { AdminAuditLogsQueryDto } from './dto/admin-audit-logs-query.dto';
 import { AdminUserDto } from './dto/admin-user-response.dto';
@@ -100,6 +102,28 @@ export class AdminUsersController {
     return this.adminUsersService.unsuspend(request.user, userId, {
       correlationId: correlationId(requestId),
     });
+  }
+
+  /**
+   * M1.7d / Q203: schedule the M1.7c deletion flow for an under-age account, or
+   * escalate an existing user-initiated request. Always `201`, including replay
+   * and escalation.
+   */
+  @Post('users/:id/deletion-request')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(AdminDeletionRequestResponseDto)
+  requestDeletion(
+    @Req() request: AuthenticatedRequest,
+    @Param('id', ParsePositiveSafeIntegerPipe) userId: number,
+    @Body() dto: AdminDeletionRequestDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.adminUsersService.requestDeletionByAdmin(
+      request.user,
+      userId,
+      dto.reason,
+      { correlationId: correlationId(requestId) },
+    );
   }
 
   @Get('audit-logs')
