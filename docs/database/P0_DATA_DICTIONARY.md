@@ -136,7 +136,7 @@ Database chỉ kiểm tra được kiểu `jsonb`; API/service phải validate c
 | `ImportJob.summary` | Counts, warnings, manifest/version; không thay thế `ImportRowError`. |
 | `ExamAttemptSnapshot.payload` | Test/section/group/question placement, content và scoring metadata đã đóng băng; có `schemaVersion` (v1); `test` gồm id/title/instruction/levelCode/durationMinutes/passScore/maxScore/scoringVersion; `sections[].groups[].questions[]` có đủ nội dung + media + `correctAnswer`/`explanation` (chỉ nội bộ) và `key` câu dạng `q<orderIndex>`; `contentHash` = sha256 của canonical JSON payload; `snapshotVersion = 1`, `testVersion = Test.version`. |
 | `ExamAnswer.answer` | Answer typed theo question type; DTO giới hạn kích thước và cấu trúc. |
-| `Result.detail` | Breakdown có `schemaVersion`, scoringVersion và snapshot hash. |
+| `Result.detailJson` | Breakdown của lần chấm (M4.3/`exam-score-v1`): `schemaVersion` (1), `attemptScoringVersion` (`ExamAttempt.scoringVersion` đóng băng lúc bắt đầu), `snapshotContentHash` (sha256 payload `ExamAttemptSnapshot`), `counts` (`answeredCount`/`correctCount`/`incorrectCount`/`unansweredCount`), `sections[]` (`key`/`skill`/`questionCount`/`correctCount`/`score`/`maxScore`), `weakAreas[]` (`slug`/`name`/`answered`/`correct`/`accuracy`/`level`) và `questions[]` (`key`/`isCorrect`). Không chứa đáp án, giải thích hay nội dung câu (Q155); endpoint review đọc lại snapshot khi cần. |
 
 ## 10. Ownership, xóa và lưu trữ
 
