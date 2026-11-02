@@ -7,6 +7,7 @@ import { AdminIcon } from '@/features/admin-shell/admin-icon';
 import { adminDateTime } from '@/features/admin-shell/admin-labels';
 
 import {
+  ADMIN_USER_STATUSES,
   SUSPEND_REASON_MAX_LENGTH,
   adminUserErrorMessage,
   adminUserRoleLabel,
@@ -18,12 +19,27 @@ import {
 type DialogState =
   | { kind: 'role'; user: AdminUserRow }
   | { kind: 'suspend'; user: AdminUserRow }
-  | { kind: 'unsuspend'; user: AdminUserRow };
+  | { kind: 'unsuspend'; user: AdminUserRow }
+  | { kind: 'deletion'; user: AdminUserRow };
 
 type Announcement = { tone: 'ok' | 'error'; text: string };
 
 type MutationResult =
-  { ok: true } | { ok: false; status: number; code: string | null };
+  | { ok: true; body: unknown }
+  | { ok: false; status: number; code: string | null };
+
+/** M1.7d: copy của dialog xoá; PO chốt Q203–Q208. */
+export const DELETION_DIALOG_TITLE = 'Xoá tài khoản người dưới 16 tuổi?';
+export const DELETION_CONFIRM_LABEL = 'Xoá tài khoản';
+export const DELETION_VERIFY_LABEL = 'Tôi đã xác minh người dùng dưới 16 tuổi.';
+export const DELETION_ACTIVE_COPY =
+  'Tài khoản bị khoá ngay và mọi phiên đăng nhập bị thu hồi. Sau 7 ngày, ' +
+  'dữ liệu cá nhân được ẩn danh. Người dùng nhận email thông báo kèm kênh ' +
+  'liên hệ ở trang Quyền riêng tư. Quản trị viên không huỷ được yêu cầu này.';
+export const DELETION_PENDING_COPY =
+  'Tài khoản đang chờ xoá theo yêu cầu của người dùng. Xác nhận sẽ ghi lý do ' +
+  'dưới 16 tuổi; ngày xoá giữ nguyên và người dùng không còn tự huỷ được bằng ' +
+  'cách đăng nhập. Quản trị viên không huỷ được yêu cầu này.';
 
 function userLabel(user: AdminUserRow): string {
   return user.name ?? user.email;
@@ -45,7 +61,15 @@ async function mutate(
             body: JSON.stringify(body),
           }),
     });
-    if (response.ok) return { ok: true };
+    if (response.ok) {
+      let body: unknown = null;
+      try {
+        body = await response.json();
+      } catch {
+        body = null;
+      }
+      return { ok: true, body };
+    }
     let code: string | null = null;
     try {
       const parsed: unknown = await response.json();
@@ -79,6 +103,31 @@ function disabledReason(
   return null;
 }
 
+/**
+ * M1.7d: nút "Xoá tài khoản" mở cho cả 3 trạng thái của contract (Q206: chỉ
+ * admin không huỷ được, không có nút huỷ); chặn tự xoá mình ở UI và để backend
+ * trả lỗi "admin cuối cùng".
+ */
+function deletionDisabledReason(
+  user: AdminUserRow,
+  currentUserId: number | null,
+): string | null {
+  if (user.id === currentUserId) return 'Không thể thao tác trên chính mình.';
+  if (!ADMIN_USER_STATUSES.some((status) => status === user.status)) {
+    return 'Trạng thái tài khoản không cho phép xoá.';
+  }
+  return null;
+}
+
+/** Đọc `data.scheduledAt` từ body BFF; shape lạ trả null để fail-closed. */
+function readScheduledAt(body: unknown): string | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const data = (body as { data?: unknown }).data;
+  if (typeof data !== 'object' || data === null) return null;
+  const value = (data as { scheduledAt?: unknown }).scheduledAt;
+  return typeof value === 'string' ? value : null;
+}
+
 export function AdminUsersTable({
   users,
   currentUserId,
@@ -92,10 +141,12 @@ export function AdminUsersTable({
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const verifyRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [roleDraft, setRoleDraft] = useState<'user' | 'admin'>('user');
   const [reasonDraft, setReasonDraft] = useState('');
+  const [deletionVerified, setDeletionVerified] = useState(false);
   const [pending, setPending] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
@@ -111,6 +162,7 @@ export function AdminUsersTable({
     // Focus phần tử đầu tiên của nội dung (TL-72), sau khi dialog đã mở.
     if (dialog.kind === 'role') selectRef.current?.focus();
     else if (dialog.kind === 'suspend') reasonRef.current?.focus();
+    else if (dialog.kind === 'deletion') verifyRef.current?.focus();
     else confirmRef.current?.focus();
   }, [dialog]);
 
@@ -121,6 +173,7 @@ export function AdminUsersTable({
     openerRef.current = opener;
     setDialogError(null);
     setReasonDraft('');
+    setDeletionVerified(false);
     setRoleDraft(next.user.role);
     setDialog(next);
   }
@@ -134,6 +187,7 @@ export function AdminUsersTable({
     openerRef.current = null;
     setDialog(null);
     setPending(false);
+    setDeletionVerified(false);
     // TL-72: đóng xong focus quay về đúng nút đã mở dialog.
     opener?.focus();
   }
@@ -143,6 +197,7 @@ export function AdminUsersTable({
     const { kind, user } = dialog;
     if (kind === 'role' && roleDraft === user.role) return;
     if (kind === 'suspend' && reasonDraft.trim().length === 0) return;
+    if (kind === 'deletion' && !deletionVerified) return;
 
     setPending(true);
     setDialogError(null);
@@ -157,7 +212,13 @@ export function AdminUsersTable({
           ? await mutate(`/api/admin/users/${user.id}/suspend`, 'POST', {
               reason: reasonDraft,
             })
-          : await mutate(`/api/admin/users/${user.id}/unsuspend`, 'POST');
+          : kind === 'deletion'
+            ? await mutate(
+                `/api/admin/users/${user.id}/deletion-request`,
+                'POST',
+                { reason: 'under_age' },
+              )
+            : await mutate(`/api/admin/users/${user.id}/unsuspend`, 'POST');
 
     if (!result.ok) {
       setPending(false);
@@ -172,6 +233,26 @@ export function AdminUsersTable({
     }
 
     const label = userLabel(user);
+    if (kind === 'deletion') {
+      const scheduledAt = readScheduledAt(result.body);
+      if (scheduledAt === null) {
+        // Backend đã 201 nhưng BFF trả thiếu scheduledAt: fail-closed, không
+        // báo thành công và giữ dialog để người dùng thử lại.
+        setPending(false);
+        const text = adminUserErrorMessage(0, null);
+        setDialogError(text);
+        setAnnouncement({ tone: 'error', text });
+        return;
+      }
+      closeDialog();
+      setAnnouncement({
+        tone: 'ok',
+        text: `Đã lên lịch xoá tài khoản ${label} vào ${adminDateTime(scheduledAt)}.`,
+      });
+      router.refresh();
+      return;
+    }
+
     const text =
       kind === 'role'
         ? `Đã đổi vai trò của ${label} thành ${adminUserRoleLabel(roleDraft)}.`
@@ -187,6 +268,14 @@ export function AdminUsersTable({
     const reason = disabledReason(user, currentUserId);
     const disabled = reason !== null || pending;
     const reasonId = `${listId}-${user.id}-reason`;
+    const deletionReason = deletionDisabledReason(user, currentUserId);
+    const deletionReasonId = `${listId}-${user.id}-deletion-reason`;
+    const deletionDescribedBy =
+      deletionReason === null
+        ? undefined
+        : deletionReason === reason
+          ? reasonId
+          : deletionReasonId;
     return (
       <div className="uo-actions">
         <button
@@ -228,9 +317,26 @@ export function AdminUsersTable({
             Khoá
           </button>
         )}
+        <button
+          className="adm-btn adm-btn--danger adm-btn--sm"
+          type="button"
+          disabled={deletionReason !== null || pending}
+          aria-describedby={deletionDescribedBy}
+          aria-label={`Xoá tài khoản ${userLabel(user)}`}
+          onClick={(event) =>
+            openDialog({ kind: 'deletion', user }, event.currentTarget)
+          }
+        >
+          Xoá tài khoản
+        </button>
         {reason !== null ? (
           <p className="uo-action-note" id={reasonId}>
             {reason}
+          </p>
+        ) : null}
+        {deletionReason !== null && deletionReason !== reason ? (
+          <p className="uo-action-note" id={deletionReasonId}>
+            {deletionReason}
           </p>
         ) : null}
       </div>
@@ -361,7 +467,9 @@ export function AdminUsersTable({
                 ? 'Đổi vai trò'
                 : dialog.kind === 'suspend'
                   ? 'Khoá tài khoản'
-                  : 'Mở khoá tài khoản'}
+                  : dialog.kind === 'deletion'
+                    ? DELETION_DIALOG_TITLE
+                    : 'Mở khoá tài khoản'}
             </h2>
             <p className="uo-dialog__who">
               <strong>{userLabel(dialog.user)}</strong>
@@ -430,6 +538,29 @@ export function AdminUsersTable({
               </p>
             ) : null}
 
+            {dialog.kind === 'deletion' ? (
+              <div className="uo-field">
+                <p className="uo-dialog__text">
+                  {dialog.user.status === 'deletion_pending'
+                    ? DELETION_PENDING_COPY
+                    : DELETION_ACTIVE_COPY}
+                </p>
+                <label className="uo-check" htmlFor="uo-deletion-verify">
+                  <input
+                    className="uo-checkbox"
+                    id="uo-deletion-verify"
+                    ref={verifyRef}
+                    type="checkbox"
+                    checked={deletionVerified}
+                    onChange={(event) =>
+                      setDeletionVerified(event.target.checked)
+                    }
+                  />
+                  <span>{DELETION_VERIFY_LABEL}</span>
+                </label>
+              </div>
+            ) : null}
+
             {dialogError ? (
               <p className="uo-dialog__error" role="alert">
                 {dialogError}
@@ -452,7 +583,9 @@ export function AdminUsersTable({
                 disabled={
                   pending ||
                   (dialog.kind === 'role' && roleDraft === dialog.user.role) ||
-                  (dialog.kind === 'suspend' && reasonDraft.trim().length === 0)
+                  (dialog.kind === 'suspend' &&
+                    reasonDraft.trim().length === 0) ||
+                  (dialog.kind === 'deletion' && !deletionVerified)
                 }
                 onClick={() => void confirm()}
               >
@@ -462,7 +595,9 @@ export function AdminUsersTable({
                     ? 'Xác nhận đổi vai trò'
                     : dialog.kind === 'suspend'
                       ? 'Khoá tài khoản'
-                      : 'Mở khoá tài khoản'}
+                      : dialog.kind === 'deletion'
+                        ? DELETION_CONFIRM_LABEL
+                        : 'Mở khoá tài khoản'}
               </button>
             </div>
           </div>

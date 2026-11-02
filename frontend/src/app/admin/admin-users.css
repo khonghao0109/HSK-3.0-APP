@@ -232,6 +232,24 @@
   gap: var(--adm-sp-2);
 }
 
+/* M1.7d: checkbox xác minh dưới 16 tuổi trong dialog xoá; vùng bấm ≥ 44px. */
+.admin-app .uo-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--adm-sp-2);
+  min-height: 2.75rem;
+  font-size: var(--adm-fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-app .uo-checkbox {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--adm-red-strong);
+}
+
 /* Khối audit dưới bảng user (TL-73). */
 .admin-app .uo-audit {
   display: grid;

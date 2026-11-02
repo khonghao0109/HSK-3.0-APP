@@ -55,7 +55,7 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/admin\/cms\/tests\/\d+\/(?:publish|archive|duplicate)$/,
   // M5.3 (TL-70): quản lý người dùng admin + nhật ký audit.
   /^\/api\/v1\/admin\/users(?:\?[^#]*)?$/,
-  /^\/api\/v1\/admin\/users\/\d+\/(?:role|suspend|unsuspend)$/,
+  /^\/api\/v1\/admin\/users\/\d+\/(?:role|suspend|unsuspend|deletion-request)$/,
   /^\/api\/v1\/admin\/audit-logs(?:\?[^#]*)?$/,
   /^\/api\/v1\/levels$/,
   /^\/api\/v1\/onboarding\/status$/,

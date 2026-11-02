@@ -97,12 +97,13 @@ const ERROR_MESSAGE: Record<string, string> = {
   ADMIN_SELF_ACTION_FORBIDDEN:
     'Bạn không thể thao tác trên tài khoản của chính mình.',
   LAST_ADMIN_REQUIRED:
-    'Không thể hạ quyền hoặc khoá quản trị viên đang hoạt động cuối cùng.',
+    'Không thể hạ quyền, khoá hoặc xoá quản trị viên đang hoạt động cuối cùng.',
   USER_NOT_MODIFIABLE:
-    'Chỉ có thể đổi vai trò người dùng đang hoạt động hoặc đã khoá.',
+    'Trạng thái tài khoản không cho phép thao tác này. Tải lại trang rồi thử lại.',
   USER_NOT_ACTIVE: 'Chỉ có thể khoá tài khoản đang hoạt động.',
   USER_NOT_SUSPENDED: 'Chỉ có thể mở khoá tài khoản đang bị khoá.',
   USER_NOT_FOUND: 'Không tìm thấy người dùng. Tải lại trang rồi thử lại.',
+  USER_DELETION_ALREADY_DUE: 'Yêu cầu xoá đã đến hạn, không thể thay đổi.',
 };
 
 export function adminUserErrorMessage(

@@ -50,11 +50,29 @@ describe('adminUserErrorMessage', () => {
       'USER_NOT_ACTIVE',
       'USER_NOT_SUSPENDED',
       'USER_NOT_FOUND',
+      'USER_DELETION_ALREADY_DUE',
     ]) {
       expect(adminUserErrorMessage(409, code)).not.toMatch(/[a-z]_[a-z]/u);
+      expect(adminUserErrorMessage(409, code)).toMatch(/[À-ỹ]/u);
     }
     expect(adminUserErrorMessage(409, 'ADMIN_SELF_ACTION_FORBIDDEN')).toContain(
       'chính mình',
+    );
+  });
+
+  it('labels the admin-initiated deletion conflict (M1.7d)', () => {
+    expect(adminUserErrorMessage(409, 'USER_DELETION_ALREADY_DUE')).toBe(
+      'Yêu cầu xoá đã đến hạn, không thể thay đổi.',
+    );
+  });
+
+  it('covers the remaining A.13 codes through their status fallback', () => {
+    expect(adminUserErrorMessage(403, 'FORBIDDEN')).toContain('không có quyền');
+    expect(adminUserErrorMessage(401, 'UNAUTHORIZED')).toContain(
+      'Phiên đăng nhập',
+    );
+    expect(adminUserErrorMessage(400, 'REQUEST_VALIDATION_FAILED')).toContain(
+      'không hợp lệ',
     );
   });
 

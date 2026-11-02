@@ -10,7 +10,10 @@ import {
 import { BackendRequestError } from '@/lib/api/api-error';
 import { backend } from '@/lib/api/server-backend';
 
-import { backendAdminUserMutationSchema } from './admin-users-contract';
+import {
+  backendAdminDeletionRequestSchema,
+  backendAdminUserMutationSchema,
+} from './admin-users-contract';
 
 const USER_ID = /^[1-9]\d{0,9}$/u;
 
@@ -122,4 +125,56 @@ export async function handleAdminUserUnsuspend(
     { method: 'POST' },
     201,
   );
+}
+
+/**
+ * POST /api/admin/users/:id/deletion-request (M1.7d, Q203–Q208): admin mở luồng
+ * xoá M1.7c cho tài khoản dưới 16 tuổi. Body phải đúng là object một khoá
+ * `{ reason: 'under_age' }`; mọi body khác bị 400 trước khi chạm backend.
+ */
+export async function handleAdminUserDeletionRequest(
+  request: NextRequest,
+  rawId: string,
+): Promise<NextResponse> {
+  if (!exactOrigin(request)) return failure(403);
+  const userId = parseUserId(rawId);
+  if (!userId) return failure(400);
+  const session = token(request);
+  if (!session) return failure(401);
+  const body = await readJsonObject(request);
+  if (!body) return failure(400);
+  if (Object.keys(body).length !== 1 || body.reason !== 'under_age') {
+    return failure(400);
+  }
+  return forwardDeletion(
+    session,
+    `/api/v1/admin/users/${userId}/deletion-request`,
+  );
+}
+
+/**
+ * BFF contract riêng cho route xoá: backend trả `{ requestId, scheduledAt,
+ * initiatedBy }`, không phải `AdminUser`; shape lệch → 503 fail-closed.
+ */
+async function forwardDeletion(
+  session: string,
+  path: string,
+): Promise<NextResponse> {
+  try {
+    const parsed = backendAdminDeletionRequestSchema.parse(
+      await backend.request(path, {
+        token: session,
+        method: 'POST',
+        body: { reason: 'under_age' },
+      }),
+    );
+    const response = NextResponse.json(parsed, { status: 201 });
+    response.headers.set('cache-control', 'no-store');
+    return response;
+  } catch (error) {
+    if (error instanceof BackendRequestError) {
+      return failure(error.status, error.code);
+    }
+    return failure(503);
+  }
 }

@@ -1009,4 +1009,37 @@ describe('server-only backend client', () => {
     }
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
+
+  it('allowlists admin user mutations including deletion-request (M1.7d)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    for (const path of [
+      '/api/v1/admin/users/7/role',
+      '/api/v1/admin/users/7/suspend',
+      '/api/v1/admin/users/7/unsuspend',
+      '/api/v1/admin/users/7/deletion-request',
+    ]) {
+      await client.request(path, { method: 'POST', body: {} });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+
+    for (const path of [
+      '/api/v1/admin/users/abc/deletion-request',
+      '/api/v1/admin/users/1/deletion-request/x',
+      '/api/v1/admin/users/1/deletion-request?x=1',
+      '/api/v1/admin/users/1/deletion-requests',
+    ]) {
+      await expect(
+        client.request(path, { method: 'POST', body: {} }),
+      ).rejects.toMatchObject({ kind: 'invalid_request' });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
 });

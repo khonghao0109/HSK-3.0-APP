@@ -419,4 +419,257 @@ test.describe('Admin người dùng (M5.3)', () => {
       overflow.viewport,
     );
   });
+
+  /**
+   * M1.7d (Q203–Q208): admin khởi tạo xoá tài khoản người dưới 16 tuổi.
+   *
+   * Seed riêng trong describe này để các test M5.3 phía trên giữ nguyên số
+   * lượng user họ đang đếm (prefix `m17d` không khớp `q=${prefix}` của M5.3).
+   */
+  test.describe('M1.7d xoá tài khoản dưới 16 tuổi', () => {
+    const m17dEmails = { active: '', pendingEscalate: '', pendingAxe: '' };
+    const m17dNames = { active: '', pendingEscalate: '', pendingAxe: '' };
+
+    const DATETIME = /(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/u;
+
+    function seedActiveUser(email: string, name: string): void {
+      queryDisposableDb(`
+        INSERT INTO "User" (email, password, name, role, status, "emailVerifiedAt", "createdAt", "updatedAt")
+        SELECT ${sqlLiteral(email)}, password, ${sqlLiteral(name)},
+          'user'::"Role", 'active'::"AccountStatus",
+          CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        FROM "User" WHERE email = ${sqlLiteral(learnerEmail)}
+        ON CONFLICT (email) DO UPDATE SET
+          name = EXCLUDED.name,
+          status = 'active'::"AccountStatus",
+          "deletedAt" = NULL,
+          "updatedAt" = CURRENT_TIMESTAMP;
+      `);
+    }
+
+    function seedDeletionPendingUser(email: string, name: string): void {
+      seedActiveUser(email, name);
+      queryDisposableDb(`
+        UPDATE "User" SET status = 'deletion_pending'::"AccountStatus",
+          "deletedAt" = CURRENT_TIMESTAMP, "updatedAt" = CURRENT_TIMESTAMP
+        WHERE email = ${sqlLiteral(email)};
+      `);
+      queryDisposableDb(`
+        INSERT INTO "AccountDeletionRequest"
+          ("userId", status, "initiatedBy", reason, "verifiedAt", "scheduledAt", "createdAt", "updatedAt")
+        SELECT id, 'requested'::"PrivacyRequestStatus", 'user'::"AccountDeletionInitiator",
+          NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '7 days',
+          CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        FROM "User" u
+        WHERE u.email = ${sqlLiteral(email)}
+          AND NOT EXISTS (
+            SELECT 1 FROM "AccountDeletionRequest" r
+            WHERE r."userId" = u.id AND r.status = 'requested'
+          );
+      `);
+    }
+
+    test.beforeAll(({}, testInfo) => {
+      const project = testInfo.project.name.replace(/[^a-z0-9]+/giu, '-');
+      const prefix = `m17d-${project}`;
+      const suffix = `(${testInfo.project.name})`;
+      m17dEmails.active = `${prefix}-active@example.test`;
+      m17dEmails.pendingEscalate = `${prefix}-pending-escalate@example.test`;
+      m17dEmails.pendingAxe = `${prefix}-pending-axe@example.test`;
+      m17dNames.active = `M17d Delete Target ${suffix}`;
+      m17dNames.pendingEscalate = `M17d Escalate Target ${suffix}`;
+      m17dNames.pendingAxe = `M17d Axe Target ${suffix}`;
+      // M1.7d FIX 1: U12 và U13 mỗi test một hàng deletion_pending riêng để
+      // không phụ thuộc thứ tự (U12 escalate làm hàng đổi audit state).
+      seedActiveUser(m17dEmails.active, m17dNames.active);
+      seedDeletionPendingUser(
+        m17dEmails.pendingEscalate,
+        m17dNames.pendingEscalate,
+      );
+      seedDeletionPendingUser(m17dEmails.pendingAxe, m17dNames.pendingAxe);
+    });
+
+    /** Giờ ẩn danh = now + 7 ngày; so tolerance 2 phút vì lệch đồng hồ. */
+    function assertScheduledNearNowPlusSevenDays(label: string): void {
+      const match = DATETIME.exec(label);
+      expect(match, label).not.toBeNull();
+      if (!match) return;
+      const [, day, month, year, hour, minute] = match;
+      const actual = Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hour) - 7,
+        Number(minute),
+      );
+      const expected = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      expect(Math.abs(actual - expected), label).toBeLessThan(120_000);
+    }
+
+    async function openDeletionDialog(
+      page: Page,
+      email: string,
+      name: string,
+      options: { pending?: boolean } = {},
+    ) {
+      await loginAsAdmin(page);
+      // Hàng deletion_pending đã có deletedAt nên danh sách mặc định ẩn; chỉ
+      // hiện khi lọc status=deletion_pending (A.13).
+      const status = options.pending ? '&status=deletion_pending' : '';
+      await openUsers(page, `?q=${encodeURIComponent(email)}${status}`);
+      await page.getByRole('button', { name: `Xoá tài khoản ${name}` }).click();
+      const dialog = page.getByRole('dialog', {
+        name: 'Xoá tài khoản người dưới 16 tuổi?',
+      });
+      await expect(dialog).toBeVisible();
+      return dialog;
+    }
+
+    test('U9: dialog xoá bắt buộc xác minh, focus checkbox, Esc trả focus (TL-72)', async ({
+      page,
+    }) => {
+      const opener = page.getByRole('button', {
+        name: `Xoá tài khoản ${m17dNames.active}`,
+      });
+      await openDeletionDialog(page, m17dEmails.active, m17dNames.active);
+
+      const dialog = page.getByRole('dialog', {
+        name: 'Xoá tài khoản người dưới 16 tuổi?',
+      });
+      const verify = dialog.getByLabel(
+        'Tôi đã xác minh người dùng dưới 16 tuổi.',
+      );
+      await expect(verify).toBeFocused();
+      const confirm = dialog.getByRole('button', {
+        name: 'Xoá tài khoản',
+        exact: true,
+      });
+      await expect(confirm).toBeDisabled();
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await expect(opener).toBeFocused();
+    });
+
+    test('U10: xoá thành công → announcement có ngày và hàng chuyển "Chờ xoá"', async ({
+      page,
+    }) => {
+      const dialog = await openDeletionDialog(
+        page,
+        m17dEmails.active,
+        m17dNames.active,
+      );
+      await dialog
+        .getByLabel('Tôi đã xác minh người dùng dưới 16 tuổi.')
+        .check();
+      const confirm = dialog.getByRole('button', {
+        name: 'Xoá tài khoản',
+        exact: true,
+      });
+      await expect(confirm).toBeEnabled();
+      await confirm.click();
+
+      await expect(dialog).toHaveCount(0);
+      const status = page.getByRole('status').filter({
+        hasText: `Đã lên lịch xoá tài khoản ${m17dNames.active} vào `,
+      });
+      await expect(status).toBeVisible();
+      const text = (await status.textContent()) ?? '';
+      assertScheduledNearNowPlusSevenDays(text);
+
+      // deletedAt đã set nên danh sách mặc định ẩn hàng; `status=deletion_pending`
+      // là cách duy nhất thấy hàng chờ xoá (đúng A.13) và trạng thái phải là "Chờ xoá".
+      await openUsers(
+        page,
+        `?q=${encodeURIComponent(m17dEmails.active)}&status=deletion_pending`,
+      );
+      const region = page.getByRole('region', {
+        name: 'Danh sách người dùng',
+      });
+      await expect(
+        visible(region.getByText(m17dNames.active)).first(),
+      ).toBeVisible();
+      await expect(
+        visible(region.getByText('Chờ xoá', { exact: true })).first(),
+      ).toBeVisible();
+    });
+
+    test('U11: hàng của chính mình bị tắt nút xoá kèm lý do đọc được', async ({
+      page,
+    }) => {
+      await loginAsAdmin(page);
+      await openUsers(page, `?q=${encodeURIComponent(adminEmail)}`);
+      const own = page.getByRole('button', {
+        name: 'Xoá tài khoản Lin Qiao',
+      });
+      await expect(own).toBeDisabled();
+      const describedBy = await own.getAttribute('aria-describedby');
+      expect(describedBy).toBeTruthy();
+      await expect(
+        visible(
+          page.getByText('Không thể thao tác trên chính mình.', {
+            exact: true,
+          }),
+        ).first(),
+      ).toBeVisible();
+    });
+
+    test('U12: hàng deletion_pending mở dialog escalate và xác nhận được', async ({
+      page,
+    }) => {
+      const dialog = await openDeletionDialog(
+        page,
+        m17dEmails.pendingEscalate,
+        m17dNames.pendingEscalate,
+        { pending: true },
+      );
+      await expect(
+        dialog.getByText(
+          /Tài khoản đang chờ xoá theo yêu cầu của người dùng\./u,
+        ),
+      ).toBeVisible();
+      await expect(dialog.getByText(/ngày xoá giữ nguyên/u)).toBeVisible();
+      await dialog
+        .getByLabel('Tôi đã xác minh người dùng dưới 16 tuổi.')
+        .check();
+      await dialog
+        .getByRole('button', { name: 'Xoá tài khoản', exact: true })
+        .click();
+      await expect(
+        page.getByRole('status').filter({
+          hasText: `Đã lên lịch xoá tài khoản ${m17dNames.pendingEscalate} vào `,
+        }),
+      ).toBeVisible();
+    });
+
+    test('U13: axe 0 vi phạm khi dialog xoá mở; 390px không cuộn ngang', async ({
+      page,
+    }) => {
+      await openDeletionDialog(
+        page,
+        m17dEmails.pendingAxe,
+        m17dNames.pendingAxe,
+        { pending: true },
+      );
+      // Axe phải phủ cả dialog đang mở: quét `main` (nội dung trang) và
+      // `dialog` (nội dung modal) để không bỏ sót phần tử trong modal.
+      const audit = await new AxeBuilder({ page })
+        .include('main')
+        .include('dialog')
+        .analyze();
+      expect(audit.violations.map((violation) => violation.id)).toEqual([]);
+
+      const overflow = await page.evaluate(() => ({
+        html: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+        viewport: window.innerWidth,
+      }));
+      expect(overflow.html, JSON.stringify(overflow)).toBeLessThanOrEqual(
+        overflow.viewport,
+      );
+      expect(overflow.body, JSON.stringify(overflow)).toBeLessThanOrEqual(
+        overflow.viewport,
+      );
+    });
+  });
 });

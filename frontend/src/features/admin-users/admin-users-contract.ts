@@ -34,6 +34,13 @@ const auditLogSchema = z.object({
     .nullable(),
 });
 
+/** M1.7d: `POST /admin/users/:id/deletion-request` trả request + lịch ẩn danh. */
+const adminDeletionRequestSchema = z.object({
+  requestId: z.number().int().positive(),
+  scheduledAt: z.string().datetime(),
+  initiatedBy: z.literal('admin'),
+});
+
 export type AdminUsersListPage = {
   data: AdminUserRow[];
   meta: { page: number; limit: number; total: number; totalPages: number };
@@ -49,3 +56,8 @@ export const backendAdminAuditPageSchema = backendPage(auditLogSchema);
 
 /** PATCH role / POST suspend / POST unsuspend trả đúng một `AdminUser`. */
 export const backendAdminUserMutationSchema = backendEnvelope(adminUserSchema);
+
+/** POST deletion-request trả `{ requestId, scheduledAt, initiatedBy: 'admin' }`. */
+export const backendAdminDeletionRequestSchema = backendEnvelope(
+  adminDeletionRequestSchema,
+);
