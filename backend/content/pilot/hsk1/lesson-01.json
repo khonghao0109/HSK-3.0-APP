@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l01",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l01-chao-hoi-gioi-thieu",
+    "title": "Chào hỏi và giới thiệu bản thân",
+    "description": "Bài mở đầu HSK1: chào hỏi, hỏi tên, giới thiệu tên, quốc tịch, nghề nghiệp và quan hệ bạn bè bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1001
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "我",
+      "pinyin": "wǒ",
+      "meaningVi": "tôi, mình",
+      "example": {
+        "hanzi": "我是学生。",
+        "pinyin": "Wǒ shì xuésheng.",
+        "meaningVi": "Tôi là học sinh."
+      }
+    },
+    {
+      "hanzi": "你",
+      "pinyin": "nǐ",
+      "meaningVi": "bạn",
+      "example": {
+        "hanzi": "你好！",
+        "pinyin": "Nǐ hǎo!",
+        "meaningVi": "Xin chào bạn!"
+      }
+    },
+    {
+      "hanzi": "您",
+      "pinyin": "nín",
+      "meaningVi": "ngài, ông, bà (dạng lịch sự của 你)",
+      "example": {
+        "hanzi": "您好，老师！",
+        "pinyin": "Nín hǎo, lǎoshī!",
+        "meaningVi": "Chào thầy/cô ạ!"
+      }
+    },
+    {
+      "hanzi": "他",
+      "pinyin": "tā",
+      "meaningVi": "anh ấy, ông ấy",
+      "example": {
+        "hanzi": "他是我的老师。",
+        "pinyin": "Tā shì wǒ de lǎoshī.",
+        "meaningVi": "Thầy ấy là giáo viên của tôi."
+      }
+    },
+    {
+      "hanzi": "她",
+      "pinyin": "tā",
+      "meaningVi": "cô ấy, bà ấy",
+      "example": {
+        "hanzi": "她是我的朋友。",
+        "pinyin": "Tā shì wǒ de péngyou.",
+        "meaningVi": "Cô ấy là bạn của tôi."
+      }
+    },
+    {
+      "hanzi": "我们",
+      "pinyin": "wǒmen",
+      "meaningVi": "chúng tôi, chúng ta",
+      "example": {
+        "hanzi": "我们都是学生。",
+        "pinyin": "Wǒmen dōu shì xuésheng.",
+        "meaningVi": "Chúng tôi đều là học sinh."
+      }
+    },
+    {
+      "hanzi": "叫",
+      "pinyin": "jiào",
+      "meaningVi": "gọi là, tên là; gọi",
+      "example": {
+        "hanzi": "老师叫我的名字。",
+        "pinyin": "Lǎoshī jiào wǒ de míngzi.",
+        "meaningVi": "Giáo viên gọi tên tôi."
+      }
+    },
+    {
+      "hanzi": "名字",
+      "pinyin": "míngzi",
+      "meaningVi": "tên",
+      "example": {
+        "hanzi": "这是你的名字吗？",
+        "pinyin": "Zhè shì nǐ de míngzi ma?",
+        "meaningVi": "Đây là tên của bạn à?"
+      }
+    },
+    {
+      "hanzi": "是",
+      "pinyin": "shì",
+      "meaningVi": "là",
+      "example": {
+        "hanzi": "我是中国人。",
+        "pinyin": "Wǒ shì Zhōngguórén.",
+        "meaningVi": "Tôi là người Trung Quốc."
+      }
+    },
+    {
+      "hanzi": "认识",
+      "pinyin": "rènshi",
+      "meaningVi": "quen biết, nhận biết",
+      "example": {
+        "hanzi": "很高兴认识你。",
+        "pinyin": "Hěn gāoxìng rènshi nǐ.",
+        "meaningVi": "Rất vui được biết bạn."
+      }
+    },
+    {
+      "hanzi": "高兴",
+      "pinyin": "gāoxìng",
+      "meaningVi": "vui, vui mừng",
+      "example": {
+        "hanzi": "今天我很高兴。",
+        "pinyin": "Jīntiān wǒ hěn gāoxìng.",
+        "meaningVi": "Hôm nay tôi rất vui."
+      }
+    },
+    {
+      "hanzi": "老师",
+      "pinyin": "lǎoshī",
+      "meaningVi": "giáo viên, thầy cô",
+      "example": {
+        "hanzi": "我的老师很好。",
+        "pinyin": "Wǒ de lǎoshī hěn hǎo.",
+        "meaningVi": "Giáo viên của tôi rất tốt."
+      }
+    },
+    {
+      "hanzi": "学生",
+      "pinyin": "xuésheng",
+      "meaningVi": "học sinh, sinh viên",
+      "example": {
+        "hanzi": "你是学生吗？",
+        "pinyin": "Nǐ shì xuésheng ma?",
+        "meaningVi": "Bạn là học sinh à?"
+      }
+    },
+    {
+      "hanzi": "同学",
+      "pinyin": "tóngxué",
+      "meaningVi": "bạn học, bạn cùng trường",
+      "example": {
+        "hanzi": "他是我的同学。",
+        "pinyin": "Tā shì wǒ de tóngxué.",
+        "meaningVi": "Anh ấy là bạn học của tôi."
+      }
+    },
+    {
+      "hanzi": "朋友",
+      "pinyin": "péngyou",
+      "meaningVi": "bạn bè",
+      "example": {
+        "hanzi": "你是我的朋友。",
+        "pinyin": "Nǐ shì wǒ de péngyou.",
+        "meaningVi": "Cậu là bạn của tôi."
+      }
+    },
+    {
+      "hanzi": "中国",
+      "pinyin": "Zhōngguó",
+      "meaningVi": "Trung Quốc",
+      "example": {
+        "hanzi": "我有中国朋友。",
+        "pinyin": "Wǒ yǒu Zhōngguó péngyou.",
+        "meaningVi": "Tôi có bạn Trung Quốc."
+      }
+    },
+    {
+      "hanzi": "人",
+      "pinyin": "rén",
+      "meaningVi": "người",
+      "example": {
+        "hanzi": "他是中国人吗？",
+        "pinyin": "Tā shì Zhōngguórén ma?",
+        "meaningVi": "Anh ấy là người Trung Quốc à?"
+      }
+    },
+    {
+      "hanzi": "什么",
+      "pinyin": "shénme",
+      "meaningVi": "cái gì, gì",
+      "example": {
+        "hanzi": "你叫什么名字？",
+        "pinyin": "Nǐ jiào shénme míngzi?",
+        "meaningVi": "Bạn tên là gì?"
+      }
+    },
+    {
+      "hanzi": "谢谢",
+      "pinyin": "xièxie",
+      "meaningVi": "cảm ơn",
+      "example": {
+        "hanzi": "谢谢你！",
+        "pinyin": "Xièxie nǐ!",
+        "meaningVi": "Cảm ơn bạn!"
+      }
+    },
+    {
+      "hanzi": "再见",
+      "pinyin": "zàijiàn",
+      "meaningVi": "tạm biệt, hẹn gặp lại",
+      "example": {
+        "hanzi": "老师，再见！",
+        "pinyin": "Lǎoshī, zàijiàn!",
+        "meaningVi": "Thầy/cô, tạm biệt ạ!"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: chào hỏi và giới thiệu bản thân",
+      "subtitle": "20 từ HSK1 dùng khi chào, hỏi tên và tự giới thiệu",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 1 gồm 20 từ vựng HSK1 dùng khi chào hỏi và giới thiệu bản thân. Đọc và lặp lại từng từ trước khi làm phần luyện tập."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 是, 叫, 吗, 很, 也/都",
+      "subtitle": "Năm điểm ngữ pháp cần cho bài tự giới thiệu",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Câu khẳng định với 是 (là): chủ ngữ + 是 + danh từ. Ví dụ: 我是学生。 = Tôi là học sinh."
+        },
+        {
+          "type": "text",
+          "value": "2. Hỏi tên: 你 + 叫 + 什么 + 名字？ Ví dụ: 你叫什么名字？ = Bạn tên là gì? Trả lời bằng 叫: 我叫…。"
+        },
+        {
+          "type": "text",
+          "value": "3. Câu hỏi có/không: thêm 吗 ở cuối câu kể. Ví dụ: 你是学生吗？ = Bạn là học sinh à? Trả lời ngắn: 是。 hoặc 不是。"
+        },
+        {
+          "type": "text",
+          "value": "4. 很 đứng trước tính từ trong câu khẳng định thường không được nhấn mạnh (vẫn đọc hěn, thanh 3); khi dịch có thể dùng “rất” hoặc bỏ tuỳ ngữ cảnh. Ví dụ: 我很高兴。 = Tôi vui. / Tôi rất vui."
+        },
+        {
+          "type": "text",
+          "value": "5. 也 (cũng) và 都 (đều) đứng trước động từ hoặc tính từ: 我也是学生。 = Tôi cũng là học sinh. / 我们都是学生。 = Chúng tôi đều là học sinh."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: lần đầu gặp nhau",
+      "subtitle": "Hội thoại ngắn; tên riêng 小雨 ghép từ hai từ HSK1 小 và 雨",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你好！你叫什么名字？ (Nǐ hǎo! Nǐ jiào shénme míngzi?) — Xin chào! Bạn tên là gì?"
+        },
+        {
+          "type": "text",
+          "value": "B: 我叫小雨。我是老师。 (Wǒ jiào Xiǎoyǔ. Wǒ shì lǎoshī.) — Tôi tên là Tiểu Vũ. Tôi là giáo viên."
+        },
+        {
+          "type": "text",
+          "value": "A: 老师，您好！我是学生。 (Lǎoshī, nín hǎo! Wǒ shì xuésheng.) — Thầy/cô ơi, chào thầy/cô ạ! Em là học sinh."
+        },
+        {
+          "type": "text",
+          "value": "B: 很高兴认识你！ (Hěn gāoxìng rènshi nǐ!) — Rất vui được biết bạn!"
+        },
+        {
+          "type": "text",
+          "value": "A: 我也很高兴。谢谢，再见！ (Wǒ yě hěn gāoxìng. Xièxie, zàijiàn!) — Em cũng rất vui. Cảm ơn, tạm biệt!"
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l01:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “cảm ơn”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "再见"
+          },
+          {
+            "id": "opt-b",
+            "text": "谢谢"
+          },
+          {
+            "id": "opt-c",
+            "text": "认识"
+          },
+          {
+            "id": "opt-d",
+            "text": "名字"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "谢谢 (xièxie) nghĩa là “cảm ơn”. 再见 là “tạm biệt”, 认识 là “quen biết”, 名字 là “tên”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我们___学生。 (Chúng tôi là học sinh.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "是"
+          },
+          {
+            "id": "opt-b",
+            "text": "很"
+          },
+          {
+            "id": "opt-c",
+            "text": "名字"
+          },
+          {
+            "id": "opt-d",
+            "text": "高兴"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "Câu khẳng định dùng 是: 我们是学生。 Ba từ còn lại đặt vào ô trống đều không tạo được câu đúng ngữ pháp (我们很学生, 我们名字学生, 我们高兴学生).",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 他___什么名字？ (Anh ấy tên là gì?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "很"
+          },
+          {
+            "id": "opt-b",
+            "text": "在"
+          },
+          {
+            "id": "opt-c",
+            "text": "叫"
+          },
+          {
+            "id": "opt-d",
+            "text": "好"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "Hỏi tên dùng 叫: 他叫什么名字？ Ba từ còn lại đặt vào ô trống đều sai (他很什么名字, 他在什么名字, 他好什么名字).",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “quen biết”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "再见"
+          },
+          {
+            "id": "opt-b",
+            "text": "学生"
+          },
+          {
+            "id": "opt-c",
+            "text": "高兴"
+          },
+          {
+            "id": "opt-d",
+            "text": "认识"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "认识 (rènshi) nghĩa là “quen biết”. 再见 là “tạm biệt”, 学生 là “học sinh”, 高兴 là “vui, vui mừng”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 她很___。(Cô ấy rất vui.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "高兴",
+          "gāoxìng",
+          "gaoxing"
+        ]
+      },
+      "explanation": "高兴 (gāoxìng) nghĩa là “vui, vui mừng”; 她很高兴 = cô ấy rất vui.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 他___学生。(Anh ấy là học sinh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "是",
+          "shì",
+          "shi"
+        ]
+      },
+      "explanation": "Câu khẳng định với 是: 他是学生。 是 (shì) nghĩa là “là”.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e07",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 她是___。(Cô ấy là học sinh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "学生",
+          "xuésheng",
+          "xuesheng"
+        ]
+      },
+      "explanation": "学生 (xuésheng) nghĩa là “học sinh”; 她是学生 = cô ấy là học sinh.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi rất vui.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k4",
+            "text": "高兴"
+          },
+          {
+            "id": "tkn-q7",
+            "text": "我"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-q7",
+          "tkn-b2",
+          "tkn-k4"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我很高兴. Năm hoán vị còn lại đều sai vì 很 phải đứng ngay trước tính từ và không được đứng trước chủ ngữ (我高兴很, 很我高兴, 很高兴我, 高兴我很, 高兴很我).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đều rất vui.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k4",
+            "text": "高兴"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "很"
+          },
+          {
+            "id": "tkn-d3",
+            "text": "都"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-d3",
+          "tkn-b2",
+          "tkn-k4"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 我们都很高兴. 23 hoán vị còn lại sai vì 都 phải đứng trước 很, 很 phải đứng ngay trước tính từ và không được đứng trước chủ ngữ (ví dụ: 都我们很高兴, 我们很都高兴, 我们高兴都很, 很高兴我们都).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l01:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi cũng rất vui.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-e2",
+            "text": "也"
+          },
+          {
+            "id": "tkn-k4",
+            "text": "高兴"
+          },
+          {
+            "id": "tkn-w4",
+            "text": "我"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w4",
+          "tkn-e2",
+          "tkn-b2",
+          "tkn-k4"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 我也很高兴. 23 hoán vị còn lại sai vì 也 phải đứng trước 很, 很 phải đứng ngay trước tính từ và không được đứng trước chủ ngữ (ví dụ: 也我很高兴, 我很也高兴, 我很高兴也, 高兴我也很, 很高兴我也).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 认识 rènshi, 名字 míngzi, 学生 xuésheng, 朋友 péngyou)",
+      "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh HSK1",
+      "câu ví dụ chỉ dùng từ có trong HSK1",
+      "đáp án và explanation của cả 10 bài tập",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy chỉ kiểm được chữ Hán thuộc HSK1, không kiểm được dấu thanh và ngữ nghĩa. Tên nhân vật 小雨 trong hội thoại là tên riêng ghép từ hai từ HSK1 小 và 雨, không phải từ vựng của bài.",
+    "notes": []
+  }
+}
