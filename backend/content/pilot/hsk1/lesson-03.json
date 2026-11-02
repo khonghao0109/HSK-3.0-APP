@@ -1,0 +1,590 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l03",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l03-thoi-gian-ngay-thang",
+    "title": "Thời gian và ngày tháng",
+    "description": "Bài 3 HSK1: mười số đếm đầu tiên, hỏi giờ và phút, hỏi ngày tháng, thứ trong tuần và trật tự thời gian trong câu bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1003
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "一",
+      "pinyin": "yī",
+      "meaningVi": "một (số 1)",
+      "example": {
+        "hanzi": "今天是我第一天上课。",
+        "pinyin": "Jīntiān shì wǒ dìyī tiān shàngkè.",
+        "meaningVi": "Hôm nay là ngày đầu tiên tôi đi học."
+      }
+    },
+    {
+      "hanzi": "二",
+      "pinyin": "èr",
+      "meaningVi": "hai (số 2)",
+      "example": {
+        "hanzi": "今天是二月二日。",
+        "pinyin": "Jīntiān shì èr yuè èr rì.",
+        "meaningVi": "Hôm nay là ngày 2 tháng 2."
+      }
+    },
+    {
+      "hanzi": "三",
+      "pinyin": "sān",
+      "meaningVi": "ba (số 3)",
+      "example": {
+        "hanzi": "我有三个朋友。",
+        "pinyin": "Wǒ yǒu sān gè péngyou.",
+        "meaningVi": "Tôi có ba người bạn."
+      }
+    },
+    {
+      "hanzi": "四",
+      "pinyin": "sì",
+      "meaningVi": "bốn (số 4)",
+      "example": {
+        "hanzi": "我们下午四点见。",
+        "pinyin": "Wǒmen xiàwǔ sì diǎn jiàn.",
+        "meaningVi": "Chúng ta gặp nhau lúc 4 giờ chiều."
+      }
+    },
+    {
+      "hanzi": "五",
+      "pinyin": "wǔ",
+      "meaningVi": "năm (số 5)",
+      "example": {
+        "hanzi": "我今天五点下课。",
+        "pinyin": "Wǒ jīntiān wǔ diǎn xiàkè.",
+        "meaningVi": "Hôm nay tôi tan học lúc 5 giờ."
+      }
+    },
+    {
+      "hanzi": "六",
+      "pinyin": "liù",
+      "meaningVi": "sáu (số 6)",
+      "example": {
+        "hanzi": "我早上六点起床。",
+        "pinyin": "Wǒ zǎoshang liù diǎn qǐchuáng.",
+        "meaningVi": "Tôi thức dậy lúc 6 giờ sáng."
+      }
+    },
+    {
+      "hanzi": "七",
+      "pinyin": "qī",
+      "meaningVi": "bảy (số 7)",
+      "example": {
+        "hanzi": "我七点吃早饭。",
+        "pinyin": "Wǒ qī diǎn chī zǎofàn.",
+        "meaningVi": "Tôi ăn sáng lúc 7 giờ."
+      }
+    },
+    {
+      "hanzi": "八",
+      "pinyin": "bā",
+      "meaningVi": "tám (số 8)",
+      "example": {
+        "hanzi": "我们八点上课。",
+        "pinyin": "Wǒmen bā diǎn shàngkè.",
+        "meaningVi": "Chúng tôi vào học lúc 8 giờ."
+      }
+    },
+    {
+      "hanzi": "九",
+      "pinyin": "jiǔ",
+      "meaningVi": "chín (số 9)",
+      "example": {
+        "hanzi": "现在九点十分。",
+        "pinyin": "Xiànzài jiǔ diǎn shí fēn.",
+        "meaningVi": "Bây giờ là 9 giờ 10 phút."
+      }
+    },
+    {
+      "hanzi": "十",
+      "pinyin": "shí",
+      "meaningVi": "mười (số 10)",
+      "example": {
+        "hanzi": "我晚上十点睡觉。",
+        "pinyin": "Wǒ wǎnshang shí diǎn shuìjiào.",
+        "meaningVi": "Tôi đi ngủ lúc 10 giờ tối."
+      }
+    },
+    {
+      "hanzi": "点",
+      "pinyin": "diǎn",
+      "meaningVi": "giờ (đơn vị chỉ giờ); điểm",
+      "example": {
+        "hanzi": "请问，现在几点？",
+        "pinyin": "Qǐngwèn, xiànzài jǐ diǎn?",
+        "meaningVi": "Xin hỏi, bây giờ là mấy giờ?"
+      }
+    },
+    {
+      "hanzi": "分",
+      "pinyin": "fēn",
+      "meaningVi": "phút",
+      "example": {
+        "hanzi": "现在八点二十分。",
+        "pinyin": "Xiànzài bā diǎn èrshí fēn.",
+        "meaningVi": "Bây giờ là 8 giờ 20 phút."
+      }
+    },
+    {
+      "hanzi": "今天",
+      "pinyin": "jīntiān",
+      "meaningVi": "hôm nay",
+      "example": {
+        "hanzi": "今天是星期几？",
+        "pinyin": "Jīntiān shì xīngqī jǐ?",
+        "meaningVi": "Hôm nay là thứ mấy?"
+      }
+    },
+    {
+      "hanzi": "明天",
+      "pinyin": "míngtiān",
+      "meaningVi": "ngày mai",
+      "example": {
+        "hanzi": "明天我去北京。",
+        "pinyin": "Míngtiān wǒ qù Běijīng.",
+        "meaningVi": "Ngày mai tôi đi Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "昨天",
+      "pinyin": "zuótiān",
+      "meaningVi": "hôm qua",
+      "example": {
+        "hanzi": "昨天是星期日。",
+        "pinyin": "Zuótiān shì xīngqīrì.",
+        "meaningVi": "Hôm qua là Chủ nhật."
+      }
+    },
+    {
+      "hanzi": "星期",
+      "pinyin": "xīngqī",
+      "meaningVi": "tuần lễ; thứ (trong tuần)",
+      "example": {
+        "hanzi": "这个星期我很忙。",
+        "pinyin": "Zhège xīngqī wǒ hěn máng.",
+        "meaningVi": "Tuần này tôi rất bận."
+      }
+    },
+    {
+      "hanzi": "月",
+      "pinyin": "yuè",
+      "meaningVi": "tháng",
+      "example": {
+        "hanzi": "我五月去中国。",
+        "pinyin": "Wǒ wǔ yuè qù Zhōngguó.",
+        "meaningVi": "Tháng 5 tôi đi Trung Quốc."
+      }
+    },
+    {
+      "hanzi": "日",
+      "pinyin": "rì",
+      "meaningVi": "ngày (trong ngày tháng)",
+      "example": {
+        "hanzi": "今天是几月几日？",
+        "pinyin": "Jīntiān shì jǐ yuè jǐ rì?",
+        "meaningVi": "Hôm nay là ngày mấy tháng mấy?"
+      }
+    },
+    {
+      "hanzi": "年",
+      "pinyin": "nián",
+      "meaningVi": "năm",
+      "example": {
+        "hanzi": "今年我二十岁。",
+        "pinyin": "Jīnnián wǒ èrshí suì.",
+        "meaningVi": "Năm nay tôi 20 tuổi."
+      }
+    },
+    {
+      "hanzi": "现在",
+      "pinyin": "xiànzài",
+      "meaningVi": "bây giờ, hiện nay",
+      "example": {
+        "hanzi": "现在我想睡觉。",
+        "pinyin": "Xiànzài wǒ xiǎng shuìjiào.",
+        "meaningVi": "Bây giờ tôi muốn đi ngủ."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: thời gian và ngày tháng",
+      "subtitle": "20 từ HSK1 dùng khi nói giờ, ngày, tháng, năm và thứ trong tuần",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 3 gồm 20 từ vựng HSK1 về thời gian và ngày tháng. Đọc và lặp lại từng từ trước khi làm phần luyện tập.\n\nSố đếm: 一 yī (một), 二 èr (hai), 三 sān (ba), 四 sì (bốn), 五 wǔ (năm), 六 liù (sáu), 七 qī (bảy), 八 bā (tám), 九 jiǔ (chín), 十 shí (mười).\nĐơn vị thời gian: 点 diǎn (giờ), 分 fēn (phút), 星期 xīngqī (tuần lễ), 月 yuè (tháng), 日 rì (ngày), 年 nián (năm).\nMốc thời gian: 今天 jīntiān (hôm nay), 明天 míngtiān (ngày mai), 昨天 zuótiān (hôm qua), 现在 xiànzài (bây giờ)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: số đếm, giờ, ngày tháng, 星期, trật tự thời gian",
+      "subtitle": "Năm điểm ngữ pháp cần cho bài nói về thời gian",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Số đếm 1–10: 一 二 三 四 五 六 七 八 九 十 (yī, èr, sān, sì, wǔ, liù, qī, bā, jiǔ, shí). Khi đếm sự vật, số đứng trước lượng từ theo công thức số + lượng từ + danh từ. Ví dụ: 三个朋友 (sān gè péngyou) = ba người bạn; 五本书 (wǔ běn shū) = năm quyển sách. Lưu ý: trước lượng từ, “hai” dùng 两 (liǎng) chứ không dùng 二: 两个人 (liǎng gè rén) = hai người."
+        },
+        {
+          "type": "text",
+          "value": "2. Hỏi giờ: 现在 + 几 + 点？ → 现在几点？ (Xiànzài jǐ diǎn?) = Bây giờ là mấy giờ? Trả lời theo công thức số + 点 + (số + 分). Ví dụ: 现在九点。 (Xiànzài jiǔ diǎn.) = Bây giờ là 9 giờ. / 现在九点十分。 (Xiànzài jiǔ diǎn shí fēn.) = Bây giờ là 9 giờ 10 phút. “2 giờ” phải nói là 两点 (liǎng diǎn), không nói 二点; “rưỡi” dùng 半: 三点半 (sān diǎn bàn) = 3 giờ rưỡi."
+        },
+        {
+          "type": "text",
+          "value": "3. Hỏi ngày tháng: 今天 + 几 + 月 + 几 + 日？ → 今天几月几日？ (Jīntiān jǐ yuè jǐ rì?) = Hôm nay là ngày mấy tháng mấy? Câu trả lời theo thứ tự lớn đến nhỏ, 月 trước rồi mới đến 日. Ví dụ: 今天五月一日。 (Jīntiān wǔ yuè yī rì.) = Hôm nay là ngày 1 tháng 5. / 今天二月二日。 (Jīntiān èr yuè èr rì.) = Hôm nay là ngày 2 tháng 2."
+        },
+        {
+          "type": "text",
+          "value": "4. Hỏi thứ trong tuần: 今天 + 星期 + 几？ → 今天星期几？ (Jīntiān xīngqī jǐ?) = Hôm nay là thứ mấy? Trả lời bằng 星期 + số: 星期一 (xīngqīyī) thứ Hai, 星期二 (xīngqī'èr) thứ Ba, 星期三 (xīngqīsān) thứ Tư, 星期四 (xīngqīsì) thứ Năm, 星期五 (xīngqīwǔ) thứ Sáu, 星期六 (xīngqīliù) thứ Bảy. Chủ nhật nói là 星期日 (xīngqīrì) hoặc 星期天 (xīngqītiān). Ví dụ: 今天星期三。 (Jīntiān xīngqīsān.) = Hôm nay là thứ Tư."
+        },
+        {
+          "type": "text",
+          "value": "5. Trật tự thời gian: trạng ngữ thời gian (今天, 明天, 昨天, giờ, thứ) đứng trước động từ, không đứng sau động từ. Ví dụ: 明天我去北京。 (Míngtiān wǒ qù Běijīng.) = Ngày mai tôi đi Bắc Kinh. / 我早上六点起床。 (Wǒ zǎoshang liù diǎn qǐchuáng.) = Tôi thức dậy lúc 6 giờ sáng. / 我们八点上课。 (Wǒmen bā diǎn shàngkè.) = Chúng tôi vào học lúc 8 giờ. Khi có nhiều mốc thời gian, sắp từ lớn đến nhỏ: 明天上午八点 (ngày mai → buổi sáng → 8 giờ)."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hỏi giờ, hỏi ngày, lịch học",
+      "subtitle": "Hội thoại ngắn dùng số đếm, 点, 分, 星期, 月, 日",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 请问，现在几点？ (Qǐngwèn, xiànzài jǐ diǎn?) — Xin hỏi, bây giờ là mấy giờ?\nB: 现在九点十分。 (Xiànzài jiǔ diǎn shí fēn.) — Bây giờ là 9 giờ 10 phút."
+        },
+        {
+          "type": "text",
+          "value": "A: 我们几点上课？ (Wǒmen jǐ diǎn shàngkè?) — Chúng ta vào học lúc mấy giờ?\nB: 我们八点上课。 (Wǒmen bā diǎn shàngkè.) — Chúng ta vào học lúc 8 giờ.\nA: 好，八点见。 (Hǎo, bā diǎn jiàn.) — Vâng, 8 giờ gặp nhé."
+        },
+        {
+          "type": "text",
+          "value": "A: 今天几月几日？ (Jīntiān jǐ yuè jǐ rì?) — Hôm nay là ngày mấy tháng mấy?\nB: 今天五月一日。 (Jīntiān wǔ yuè yī rì.) — Hôm nay là ngày 1 tháng 5."
+        },
+        {
+          "type": "text",
+          "value": "A: 今天星期几？ (Jīntiān xīngqī jǐ?) — Hôm nay là thứ mấy?\nB: 今天星期三。明天星期四。 (Jīntiān xīngqīsān. Míngtiān xīngqīsì.) — Hôm nay là thứ Tư. Ngày mai là thứ Năm."
+        },
+        {
+          "type": "text",
+          "value": "我明天上午八点上课，下午四点下课。晚上我学习汉语。 (Wǒ míngtiān shàngwǔ bā diǎn shàngkè, xiàwǔ sì diǎn xiàkè. Wǎnshang wǒ xuéxí hànyǔ.) — Ngày mai tôi vào học lúc 8 giờ sáng, tan học lúc 4 giờ chiều. Buổi tối tôi học tiếng Hán."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l03:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “tuần lễ”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "星期"
+          },
+          {
+            "id": "opt-b",
+            "text": "月"
+          },
+          {
+            "id": "opt-c",
+            "text": "日"
+          },
+          {
+            "id": "opt-d",
+            "text": "年"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "星期 (xīngqī) nghĩa là “tuần lễ”, cũng dùng để chỉ thứ trong tuần: 星期一 = thứ Hai. 月 (yuè) là “tháng”, 日 (rì) là “ngày”, 年 (nián) là “năm”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 现在___点？ (Bây giờ là mấy giờ?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "是"
+          },
+          {
+            "id": "opt-b",
+            "text": "几"
+          },
+          {
+            "id": "opt-c",
+            "text": "点"
+          },
+          {
+            "id": "opt-d",
+            "text": "分"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "Hỏi giờ dùng 几 (jǐ) = “mấy”: 现在几点？ Ba từ còn lại đặt vào ô trống đều sai: 现在是点？ (thiếu số chỉ giờ), 现在点点？ (lặp 点), 现在分点？ (分 đứng sai vị trí).",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e03",
+      "topicKey": "t03",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我明天___北京。 (Ngày mai tôi đi Bắc Kinh.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "是"
+          },
+          {
+            "id": "opt-b",
+            "text": "有"
+          },
+          {
+            "id": "opt-c",
+            "text": "去"
+          },
+          {
+            "id": "opt-d",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "去 (qù) = “đi”, đứng trước nơi đến: 我明天去北京。 是 (là) và 有 (có) không hợp nghĩa; 很 (rất) không đứng trước danh từ chỉ nơi chốn nên 我明天很北京 là câu sai.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “bây giờ”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "昨天"
+          },
+          {
+            "id": "opt-b",
+            "text": "明天"
+          },
+          {
+            "id": "opt-c",
+            "text": "今天"
+          },
+          {
+            "id": "opt-d",
+            "text": "现在"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "现在 (xiànzài) nghĩa là “bây giờ”, dùng để hỏi giờ: 现在几点？ 昨天 (zuótiān) là “hôm qua”, 明天 (míngtiān) là “ngày mai”, 今天 (jīntiān) là “hôm nay”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 现在九___十分。 (Bây giờ là 9 giờ 10 phút.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "点",
+          "diǎn",
+          "dian"
+        ]
+      },
+      "explanation": "点 (diǎn) là đơn vị chỉ giờ, đứng ngay sau số chỉ giờ: 现在九点十分 = bây giờ là 9 giờ 10 phút. 分 (fēn) là “phút”, đứng sau số chỉ phút nên không điền vào ô trống này.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền đơn vị thời gian còn thiếu: 现在八点二十___。 (Bây giờ là 8 giờ 20 phút.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "分",
+          "fēn",
+          "fen"
+        ]
+      },
+      "explanation": "分 (fēn) nghĩa là “phút”, đứng sau số chỉ phút: 八点二十分 = 8 giờ 20 phút. 点 là “giờ”, đứng ngay sau số chỉ giờ nên không hợp ở vị trí cuối câu này. Trong khẩu ngữ có thể lược 分 (八点二十 vẫn đúng), nhưng đề yêu cầu điền đơn vị thời gian nên đáp án là 分.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: ___是九月十日。 (Hôm nay là ngày 10 tháng 9.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "今天",
+          "jīntiān",
+          "jintian"
+        ]
+      },
+      "explanation": "今天 (jīntiān) = “hôm nay”, đứng đầu câu làm trạng ngữ thời gian: 今天是九月十日 = hôm nay là ngày 10 tháng 9. 明天 (ngày mai) và 昨天 (hôm qua) không khớp nghĩa “hôm nay”.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Hôm nay là Chủ nhật.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k9",
+            "text": "星期日"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "今天"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "是"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-b2",
+          "tkn-k9"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 今天是星期日 (chủ ngữ 今天 + 是 + danh từ chỉ ngày 星期日). Bốn hoán vị còn lại sai rõ: 今天星期日是, 是今天星期日, 是星期日今天, 星期日今天是. (Hoán vị 星期日是今天 chỉ không tự nhiên, không phải đáp án của câu.)",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e09",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 我: “Ngày mai tôi lên lớp vào buổi sáng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k8",
+            "text": "上课"
+          },
+          {
+            "id": "tkn-m3",
+            "text": "明天"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "我"
+          },
+          {
+            "id": "tkn-s7",
+            "text": "上午"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-m3",
+          "tkn-s7",
+          "tkn-k8"
+        ]
+      },
+      "explanation": "Có 24 hoán vị; với ràng buộc bắt đầu bằng 我, chỉ 1 hoán vị đúng là 我明天上午上课: 明天 (ngày) đứng trước 上午 (buổi) theo thứ tự mốc lớn đến mốc nhỏ, và trạng ngữ thời gian đứng trước động từ 上课. Ví dụ sai: 我上午明天上课, 我上课明天上午, 我明天上课上午. (Trong tiếng Trung, trạng ngữ thời gian cũng có thể đứng trước chủ ngữ — bài này giới hạn bằng yêu cầu bắt đầu bằng 我.)",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l03:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 我: “Tôi thức dậy lúc 6 giờ sáng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-q4",
+            "text": "六点"
+          },
+          {
+            "id": "tkn-c2",
+            "text": "起床"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "我"
+          },
+          {
+            "id": "tkn-z6",
+            "text": "早上"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-z6",
+          "tkn-q4",
+          "tkn-c2"
+        ]
+      },
+      "explanation": "Có 24 hoán vị; với ràng buộc bắt đầu bằng 我, chỉ 1 hoán vị đúng là 我早上六点起床: 早上 đứng trước 六点 (mốc lớn đến nhỏ), 六点 đứng trước động từ 起床. Ví dụ sai: 我六点早上起床, 我起床早上六点, 我早上起床六点.",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 点 diǎn, 分 fēn, 星期 xīngqī, 现在 xiànzài, 起床 qǐchuáng, 星期几 xīngqī jǐ)",
+      "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh HSK1 (点 vừa là “giờ” vừa là “điểm”)",
+      "câu ví dụ chỉ dùng chữ Hán có trong HSK1",
+      "đáp án và explanation của cả 10 bài tập, gồm vị trí đáp án mcq và pinyin không dấu ở fill_blank",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)",
+      "quy ước nói giờ và ngày: 2 giờ là 两点 chứ không phải 二点, còn ngày tháng vẫn dùng 二 (二月二日)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy kiểm được chữ Hán HSK1 trong words[].example và option mcq (không kiểm text block), khớp pinyin với dữ liệu từ điển trong repo, nhưng không kiểm được ngữ nghĩa và độ tự nhiên. Bài không đặt tên nhân vật: hội thoại chỉ dùng đại từ 我/我们; địa danh 北京 (từ HSK1) chỉ xuất hiện trong câu ví dụ và bài tập, không phải từ vựng của bài.",
+    "notes": []
+  }
+}

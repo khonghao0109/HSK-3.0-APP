@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l04",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l04-an-uong-mua-sam",
+    "title": "Ăn uống và mua sắm",
+    "description": "Bài 4 HSK1: nói về đồ ăn, đồ uống, ba bữa trong ngày, hỏi giá và mua hàng ở cửa hàng bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1004
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "吃",
+      "pinyin": "chī",
+      "meaningVi": "ăn",
+      "example": {
+        "hanzi": "我喜欢吃米饭。",
+        "pinyin": "Wǒ xǐhuan chī mǐfàn.",
+        "meaningVi": "Tôi thích ăn cơm."
+      }
+    },
+    {
+      "hanzi": "喝",
+      "pinyin": "hē",
+      "meaningVi": "uống",
+      "example": {
+        "hanzi": "你早上喝牛奶吗？",
+        "pinyin": "Nǐ zǎoshang hē niúnǎi ma?",
+        "meaningVi": "Buổi sáng bạn có uống sữa bò không?"
+      }
+    },
+    {
+      "hanzi": "水",
+      "pinyin": "shuǐ",
+      "meaningVi": "nước",
+      "example": {
+        "hanzi": "我喝水，不喝茶。",
+        "pinyin": "Wǒ hē shuǐ, bù hē chá.",
+        "meaningVi": "Tôi uống nước, không uống trà."
+      }
+    },
+    {
+      "hanzi": "茶",
+      "pinyin": "chá",
+      "meaningVi": "trà",
+      "example": {
+        "hanzi": "妈妈喜欢喝茶。",
+        "pinyin": "Māma xǐhuan hē chá.",
+        "meaningVi": "Mẹ thích uống trà."
+      }
+    },
+    {
+      "hanzi": "米饭",
+      "pinyin": "mǐfàn",
+      "meaningVi": "cơm",
+      "example": {
+        "hanzi": "我吃米饭，也吃面包。",
+        "pinyin": "Wǒ chī mǐfàn, yě chī miànbāo.",
+        "meaningVi": "Tôi ăn cơm, cũng ăn bánh mì."
+      }
+    },
+    {
+      "hanzi": "菜",
+      "pinyin": "cài",
+      "meaningVi": "món ăn, rau",
+      "example": {
+        "hanzi": "今天的菜很贵。",
+        "pinyin": "Jīntiān de cài hěn guì.",
+        "meaningVi": "Rau hôm nay rất đắt."
+      }
+    },
+    {
+      "hanzi": "水果",
+      "pinyin": "shuǐguǒ",
+      "meaningVi": "hoa quả",
+      "example": {
+        "hanzi": "我很喜欢水果。",
+        "pinyin": "Wǒ hěn xǐhuan shuǐguǒ.",
+        "meaningVi": "Tôi rất thích hoa quả."
+      }
+    },
+    {
+      "hanzi": "牛奶",
+      "pinyin": "niúnǎi",
+      "meaningVi": "sữa bò",
+      "example": {
+        "hanzi": "我的孩子喝牛奶。",
+        "pinyin": "Wǒ de háizi hē niúnǎi.",
+        "meaningVi": "Con tôi uống sữa bò."
+      }
+    },
+    {
+      "hanzi": "面包",
+      "pinyin": "miànbāo",
+      "meaningVi": "bánh mì",
+      "example": {
+        "hanzi": "我买面包和牛奶。",
+        "pinyin": "Wǒ mǎi miànbāo hé niúnǎi.",
+        "meaningVi": "Tôi mua bánh mì và sữa bò."
+      }
+    },
+    {
+      "hanzi": "鸡蛋",
+      "pinyin": "jīdàn",
+      "meaningVi": "trứng gà",
+      "example": {
+        "hanzi": "早饭我吃鸡蛋。",
+        "pinyin": "Zǎofàn wǒ chī jīdàn.",
+        "meaningVi": "Bữa sáng tôi ăn trứng gà."
+      }
+    },
+    {
+      "hanzi": "早饭",
+      "pinyin": "zǎofàn",
+      "meaningVi": "bữa sáng",
+      "example": {
+        "hanzi": "早饭你吃什么？",
+        "pinyin": "Zǎofàn nǐ chī shénme?",
+        "meaningVi": "Bữa sáng bạn ăn gì?"
+      }
+    },
+    {
+      "hanzi": "午饭",
+      "pinyin": "wǔfàn",
+      "meaningVi": "bữa trưa",
+      "example": {
+        "hanzi": "我们吃午饭吧。",
+        "pinyin": "Wǒmen chī wǔfàn ba.",
+        "meaningVi": "Chúng ta ăn trưa nhé."
+      }
+    },
+    {
+      "hanzi": "晚饭",
+      "pinyin": "wǎnfàn",
+      "meaningVi": "bữa tối",
+      "example": {
+        "hanzi": "晚饭我们在家吃。",
+        "pinyin": "Wǎnfàn wǒmen zài jiā chī.",
+        "meaningVi": "Bữa tối chúng tôi ăn ở nhà."
+      }
+    },
+    {
+      "hanzi": "喜欢",
+      "pinyin": "xǐhuan",
+      "meaningVi": "thích",
+      "example": {
+        "hanzi": "你喜欢中国茶吗？",
+        "pinyin": "Nǐ xǐhuan Zhōngguó chá ma?",
+        "meaningVi": "Bạn thích trà Trung Quốc không?"
+      }
+    },
+    {
+      "hanzi": "买",
+      "pinyin": "mǎi",
+      "meaningVi": "mua",
+      "example": {
+        "hanzi": "我想买水果和茶。",
+        "pinyin": "Wǒ xiǎng mǎi shuǐguǒ hé chá.",
+        "meaningVi": "Tôi muốn mua hoa quả và trà."
+      }
+    },
+    {
+      "hanzi": "钱",
+      "pinyin": "qián",
+      "meaningVi": "tiền",
+      "example": {
+        "hanzi": "今天我没有钱。",
+        "pinyin": "Jīntiān wǒ méiyǒu qián.",
+        "meaningVi": "Hôm nay tôi không có tiền."
+      }
+    },
+    {
+      "hanzi": "块",
+      "pinyin": "kuài",
+      "meaningVi": "tệ (đồng nhân dân tệ)",
+      "example": {
+        "hanzi": "这个面包五块。",
+        "pinyin": "Zhège miànbāo wǔ kuài.",
+        "meaningVi": "Cái bánh mì này năm tệ."
+      }
+    },
+    {
+      "hanzi": "多少",
+      "pinyin": "duōshǎo",
+      "meaningVi": "bao nhiêu",
+      "example": {
+        "hanzi": "这个牛奶多少钱？",
+        "pinyin": "Zhège niúnǎi duōshǎo qián?",
+        "meaningVi": "Sữa bò này bao nhiêu tiền?"
+      }
+    },
+    {
+      "hanzi": "贵",
+      "pinyin": "guì",
+      "meaningVi": "đắt",
+      "example": {
+        "hanzi": "这里的菜很贵。",
+        "pinyin": "Zhèlǐ de cài hěn guì.",
+        "meaningVi": "Món ăn ở đây rất đắt."
+      }
+    },
+    {
+      "hanzi": "商店",
+      "pinyin": "shāngdiàn",
+      "meaningVi": "cửa hàng",
+      "example": {
+        "hanzi": "那个商店很大。",
+        "pinyin": "Nàge shāngdiàn hěn dà.",
+        "meaningVi": "Cửa hàng kia rất lớn."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: ăn uống và mua sắm",
+      "subtitle": "20 từ HSK1 dùng khi nói về đồ ăn, đồ uống, bữa ăn, giá cả và cửa hàng",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 4 gồm 20 từ HSK1 về ăn uống và mua sắm: đồ ăn, đồ uống, ba bữa trong ngày, giá cả và cửa hàng. Danh sách từ: 吃 (chī) ăn; 喝 (hē) uống; 水 (shuǐ) nước; 茶 (chá) trà; 米饭 (mǐfàn) cơm; 菜 (cài) món ăn, rau; 水果 (shuǐguǒ) hoa quả; 牛奶 (niúnǎi) sữa bò; 面包 (miànbāo) bánh mì; 鸡蛋 (jīdàn) trứng gà; 早饭 (zǎofàn) bữa sáng; 午饭 (wǔfàn) bữa trưa; 晚饭 (wǎnfàn) bữa tối; 喜欢 (xǐhuan) thích; 买 (mǎi) mua; 钱 (qián) tiền; 块 (kuài) tệ (đồng nhân dân tệ); 多少 (duōshǎo) bao nhiêu; 贵 (guì) đắt; 商店 (shāngdiàn) cửa hàng. Đọc to từng từ, chú ý thanh điệu rồi mới làm phần luyện tập."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 吃/喝, 喜欢, 多少钱/块, 早饭/午饭/晚饭, 没有",
+      "subtitle": "Năm điểm ngữ pháp dùng khi nói về ăn uống và mua hàng",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 吃 (ăn) và 喝 (uống) là ngoại động từ, đứng trước tân ngữ: chủ ngữ + 吃/喝 + danh từ. 吃 dùng với đồ ăn, 喝 dùng với đồ uống. Ví dụ: 我吃米饭。 (Wǒ chī mǐfàn.) = Tôi ăn cơm. / 你喝茶吗？ (Nǐ hē chá ma?) = Bạn uống trà không? / 孩子喝牛奶。 (Háizi hē niúnǎi.) = Đứa trẻ uống sữa bò."
+        },
+        {
+          "type": "text",
+          "value": "2. 喜欢 (thích) + danh từ hoặc cụm động từ: chủ ngữ + 喜欢 + tân ngữ. Ví dụ: 我喜欢水果。 (Wǒ xǐhuan shuǐguǒ.) = Tôi thích hoa quả. / 妈妈喜欢喝茶。 (Māma xǐhuan hē chá.) = Mẹ thích uống trà. / 我不喜欢茶。 (Wǒ bù xǐhuan chá.) = Tôi không thích trà. Phủ định đặt 不 ngay trước 喜欢."
+        },
+        {
+          "type": "text",
+          "value": "3. Hỏi giá: …多少钱？ (… bao nhiêu tiền?). Trả lời: số đếm + 块 (tệ). Ví dụ: 这个面包多少钱？ (Zhège miànbāo duōshǎo qián?) = Cái bánh mì này bao nhiêu tiền? / 五块。 (Wǔ kuài.) = Năm tệ. / 牛奶三块。 (Niúnǎi sān kuài.) = Sữa bò ba tệ. Trong khẩu ngữ nhanh, 多少 trong 多少钱 có thể đọc nhẹ thành duōshao."
+        },
+        {
+          "type": "text",
+          "value": "4. 早饭 (bữa sáng), 午饭 (bữa trưa), 晚饭 (bữa tối) là danh từ chỉ bữa ăn; khi làm trạng ngữ thời gian, chúng đứng trước động từ, có thể đứng đầu câu hoặc sau chủ ngữ. Ví dụ: 我早饭吃鸡蛋。 (Wǒ zǎofàn chī jīdàn.) = Bữa sáng tôi ăn trứng gà. / 我们午饭吃米饭。 (Wǒmen wǔfàn chī mǐfàn.) = Bữa trưa chúng tôi ăn cơm. / 晚饭你吃什么？ (Wǎnfàn nǐ chī shénme?) = Bữa tối bạn ăn gì?"
+        },
+        {
+          "type": "text",
+          "value": "5. 有 (có) và 没有 (không có) + danh từ: chủ ngữ + 有/没有 + danh từ. Ví dụ: 我有钱。 (Wǒ yǒu qián.) = Tôi có tiền. / 我没有钱。 (Wǒ méiyǒu qián.) = Tôi không có tiền. / 商店没有水果。 (Shāngdiàn méiyǒu shuǐguǒ.) = Cửa hàng không có hoa quả. Không dùng 不 đứng một mình trước 有; phủ định của 有 là 没有."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: gọi món, mua hoa quả, hỏi giá",
+      "subtitle": "Năm đoạn hội thoại ngắn trong bữa ăn và ở cửa hàng",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你吃什么？ (Nǐ chī shénme?) — Bạn ăn gì? / B: 我吃米饭和鸡蛋。 (Wǒ chī mǐfàn hé jīdàn.) — Tôi ăn cơm và trứng gà. / A: 你喝茶吗？ (Nǐ hē chá ma?) — Bạn uống trà không? / B: 不，我喝水。 (Bù, wǒ hē shuǐ.) — Không, tôi uống nước."
+        },
+        {
+          "type": "text",
+          "value": "A: 早饭你吃什么？ (Zǎofàn nǐ chī shénme?) — Bữa sáng bạn ăn gì? / B: 我吃面包，喝牛奶。 (Wǒ chī miànbāo, hē niúnǎi.) — Tôi ăn bánh mì, uống sữa bò. / A: 我也喜欢面包。 (Wǒ yě xǐhuan miànbāo.) — Tôi cũng thích bánh mì."
+        },
+        {
+          "type": "text",
+          "value": "A: 我想买水果。 (Wǒ xiǎng mǎi shuǐguǒ.) — Tôi muốn mua hoa quả. / B: 这些水果很好吃。 (Zhèxiē shuǐguǒ hěn hǎochī.) — Những quả này rất ngon. / A: 多少钱？ (Duōshǎo qián?) — Bao nhiêu tiền? / B: 五块。 (Wǔ kuài.) — Năm tệ."
+        },
+        {
+          "type": "text",
+          "value": "A: 这个商店的面包贵吗？ (Zhège shāngdiàn de miànbāo guì ma?) — Bánh mì của cửa hàng này có đắt không? / B: 不贵。 (Bù guì.) — Không đắt. / A: 我买两个面包。 (Wǒ mǎi liǎng ge miànbāo.) — Tôi mua hai cái bánh mì."
+        },
+        {
+          "type": "text",
+          "value": "A: 晚饭我们在家吃。 (Wǎnfàn wǒmen zài jiā chī.) — Bữa tối chúng tôi ăn ở nhà. / B: 好，我做饭。 (Hǎo, wǒ zuò fàn.) — Được, tôi nấu cơm. (做饭 = 做 + 饭, hai từ HSK1 ghép thành cụm động – tân ngữ nên viết rời “zuò fàn”; cả cụm 做饭 được xếp HSK2 trong từ điển.)"
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l04:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “cửa hàng”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "商店"
+          },
+          {
+            "id": "opt-b",
+            "text": "水果"
+          },
+          {
+            "id": "opt-c",
+            "text": "面包"
+          },
+          {
+            "id": "opt-d",
+            "text": "牛奶"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "商店 (shāngdiàn) nghĩa là “cửa hàng”. 水果 (shuǐguǒ) là “hoa quả”, 面包 (miànbāo) là “bánh mì”, 牛奶 (niúnǎi) là “sữa bò”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___米饭。 (Tôi ăn cơm.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "喝"
+          },
+          {
+            "id": "opt-b",
+            "text": "吃"
+          },
+          {
+            "id": "opt-c",
+            "text": "贵"
+          },
+          {
+            "id": "opt-d",
+            "text": "块"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "Câu cần động từ “ăn” là 吃 (chī): 我吃米饭。 喝 (hē) là “uống”, chỉ dùng với đồ uống nên 我喝米饭 sai nghĩa. 贵 (guì) là tính từ “đắt”, 块 (kuài) là đơn vị tiền — cả hai không thể đứng trước tân ngữ 米饭.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e03",
+      "topicKey": "t03",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 这个商店的水果很___。 (Hoa quả của cửa hàng này rất đắt.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "多少"
+          },
+          {
+            "id": "opt-b",
+            "text": "钱"
+          },
+          {
+            "id": "opt-c",
+            "text": "贵"
+          },
+          {
+            "id": "opt-d",
+            "text": "块"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "贵 (guì) là tính từ “đắt”, đứng sau 很 thành 很贵: 这个商店的水果很贵。 多少 (duōshǎo) là “bao nhiêu”, 钱 (qián) là “tiền”, 块 (kuài) là đơn vị tiền — không từ nào đứng sau 很 để chỉ mức độ.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “uống”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "吃"
+          },
+          {
+            "id": "opt-b",
+            "text": "买"
+          },
+          {
+            "id": "opt-c",
+            "text": "茶"
+          },
+          {
+            "id": "opt-d",
+            "text": "喝"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "喝 (hē) nghĩa là “uống”. 吃 (chī) là “ăn”, 买 (mǎi) là “mua”, 茶 (chá) là “trà”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我___牛奶。(Tôi uống sữa bò.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "喝",
+          "hē",
+          "he"
+        ]
+      },
+      "explanation": "喝 (hē) nghĩa là “uống”; 我喝牛奶 = tôi uống sữa bò. Đây là mẫu 喝 + tân ngữ chỉ đồ uống.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 妈妈喜欢喝___。(Mẹ thích uống trà.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "茶",
+          "chá",
+          "cha"
+        ]
+      },
+      "explanation": "茶 (chá) nghĩa là “trà”; 妈妈喜欢喝茶 = mẹ thích uống trà. Mẫu 喜欢 + cụm động từ 喝茶.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这个水果多少___？(Hoa quả này bao nhiêu tiền?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "钱",
+          "qián",
+          "qian"
+        ]
+      },
+      "explanation": "钱 (qián) nghĩa là “tiền”; 多少钱 là mẫu cố định để hỏi giá: 这个水果多少钱？ = hoa quả này bao nhiêu tiền?",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Cửa hàng rất lớn.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-d4",
+            "text": "大"
+          },
+          {
+            "id": "tkn-s9",
+            "text": "商店"
+          },
+          {
+            "id": "tkn-h3",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-s9",
+          "tkn-h3",
+          "tkn-d4"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 商店很大 (chủ ngữ 商店 + 很 + tính từ 大). Năm hoán vị còn lại đều sai: 商店大很, 很商店大, 很大商店, 大商店很, 大很商店.",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e09",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 这个: “Cửa hàng này rất đắt.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-h2",
+            "text": "很"
+          },
+          {
+            "id": "tkn-g6",
+            "text": "贵"
+          },
+          {
+            "id": "tkn-z4",
+            "text": "这个"
+          },
+          {
+            "id": "tkn-s8",
+            "text": "商店"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z4",
+          "tkn-s8",
+          "tkn-h2",
+          "tkn-g6"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 这个商店很贵. Hai mươi ba hoán vị còn lại sai vì 这个 (chỉ định từ) phải đứng ngay trước danh từ 商店, 很 phải đứng ngay trước tính từ 贵, và câu phải bắt đầu bằng 这个 (cụm chủ ngữ 这个商店) (ví dụ sai: 商店这个很贵, 这个很商店贵, 很贵这个商店).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l04:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 妈妈: “Mẹ mua hoa quả không?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s6",
+            "text": "水果"
+          },
+          {
+            "id": "tkn-m8",
+            "text": "吗"
+          },
+          {
+            "id": "tkn-m1",
+            "text": "妈妈"
+          },
+          {
+            "id": "tkn-b3",
+            "text": "买"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-m1",
+          "tkn-b3",
+          "tkn-s6",
+          "tkn-m8"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 妈妈买水果吗. Hai mươi ba hoán vị còn lại sai vì 吗 là trợ từ nghi vấn, bắt buộc đứng cuối câu; câu phải bắt đầu bằng 妈妈 (chủ ngữ); 买 là động từ phải đứng trước tân ngữ 水果 (ví dụ sai: 妈妈买吗水果, 吗妈妈买水果, 水果买妈妈吗).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 喜欢 xǐhuan, 多少 duōshǎo, 米饭 mǐfàn, 鸡蛋 jīdàn, 牛奶 niúnǎi)",
+      "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh ăn uống, mua sắm ở HSK1",
+      "câu ví dụ và text block chỉ dùng chữ Hán có trong HSK1",
+      "đáp án và explanation của cả 10 bài tập, gồm vị trí đáp án mcq và thứ tự token",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy kiểm được chữ Hán HSK1 trong words[].example và option mcq (không kiểm text block), khớp pinyin với dữ liệu từ điển trong repo, nhưng không kiểm được ngữ nghĩa và độ tự nhiên. t03 không dùng tên riêng; nhân vật chỉ là 我, 你 và 我们 (đều là từ HSK1). Lưu ý pinyin: 多少 trong 多少钱 có thể đọc nhẹ thành duōshao trong khẩu ngữ; 做饭 là cụm 做 + 饭 nên viết rời.",
+    "notes": []
+  }
+}
