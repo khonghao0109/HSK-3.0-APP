@@ -18,6 +18,8 @@ import {
   ExamAnswerBatchViewDto,
   ExamAnswerSaveViewDto,
   ExamAttemptViewDto,
+  ExamResultViewDto,
+  ExamReviewViewDto,
   ExamSubmitViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
@@ -39,15 +41,24 @@ import {
   examAttemptClosed,
   examAttemptExpired,
   examAttemptNotFound,
+  examAttemptNotTerminal,
   examBatchValidationFailed,
   examIdempotencyKeyReused,
   examQuestionNotFound,
+  examResultUnavailable,
   examTestNotFound,
   examTestUnavailable,
 } from './exam-errors';
 import { classifyExamPersistenceError } from './exam-persistence';
 import { markAttemptTimedOut } from './exam-attempt-timeout';
-import { ensureAttemptResult } from './exam-result.persistence';
+import {
+  ensureAttemptResult,
+  type ExamResultAttempt,
+} from './exam-result.persistence';
+import {
+  ExamResultDetailError,
+  readExamResultDetail,
+} from './exam-result.reader';
 import {
   buildExamSnapshot,
   EXAM_SECTION_MAX_SCORE,
@@ -62,8 +73,12 @@ import {
   toExamAnswerSaveView,
   toExamAnswerView,
   toExamAttemptView,
+  toExamResultView,
+  toExamReviewView,
   toExamTestIntro,
+  type ExamResultViewRecord,
   type ExamStoredAnswer,
+  type ExamTerminalAttemptRecord,
 } from './exam.serializer';
 import {
   ExamTransactionCoordinator,
@@ -249,6 +264,32 @@ type AttemptReadResult =
   | { kind: 'not_found' }
   | { kind: 'open'; view: ExamAttemptViewDto };
 
+/**
+ * TL-165/TL-166: a result/review read only serves a terminal attempt. The
+ * lazy timeout and the grading failure are values because the transaction has
+ * to commit the timeout (if any) and only then answer 409.
+ */
+type TerminalAttemptOpenResult =
+  | { kind: 'not_found' }
+  | { kind: 'not_terminal' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | {
+      kind: 'terminal';
+      attempt: ExamTerminalAttemptRecord;
+      gradeAttempt: ExamResultAttempt;
+      now: Date;
+    };
+
+type AttemptResultReadResult =
+  | Exclude<TerminalAttemptOpenResult, { kind: 'terminal' }>
+  | { kind: 'scoring_failed' }
+  | { kind: 'ok'; view: ExamResultViewDto };
+
+type AttemptReviewReadResult =
+  | Exclude<TerminalAttemptOpenResult, { kind: 'terminal' }>
+  | { kind: 'scoring_failed' }
+  | { kind: 'ok'; view: ExamReviewViewDto };
+
 type AttemptGrantResult =
   | { kind: 'not_found' }
   | { kind: 'closed'; status: ExamAttemptStatus }
@@ -410,6 +451,139 @@ export class ExamService {
     );
     if (result.kind === 'not_found') throw examAttemptNotFound();
     return { success: true, data: result.view };
+  }
+
+  /**
+   * TL-165/Q147: the result of a terminal attempt. The read may write exactly
+   * once per attempt: the lazy timeout of an in-progress attempt past the save
+   * grace, and the lazy grading of a terminal attempt that has no `Result` yet
+   * (the submit committed without grading, Q156). The response is always built
+   * from the stored `Result`, never by grading again.
+   */
+  async getAttemptResult(
+    userId: number,
+    attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamResultViewDto>> {
+    const result = await this.prisma.$transaction(
+      async (tx): Promise<AttemptResultReadResult> => {
+        const opened = await this.openTerminalAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.result.read',
+        );
+        if (opened.kind !== 'terminal') return opened;
+
+        const grading = await ensureAttemptResult(
+          tx,
+          opened.gradeAttempt,
+          opened.now,
+        );
+        if (grading.kind === 'scoring_failed') {
+          // Q156: fixed ids + error name only, never the error text or an
+          // answer (R11). The lazy timeout above still commits with this
+          // transaction, so the next read sees the same terminal status.
+          this.logger.warn('exam.grading.failed', {
+            attemptId,
+            error: grading.error.name,
+          });
+          return { kind: 'scoring_failed' };
+        }
+
+        const [payload, stored] = await Promise.all([
+          this.loadSnapshotPayload(tx, attemptId),
+          this.loadStoredResult(tx, attemptId),
+        ]);
+        return {
+          kind: 'ok',
+          view: toExamResultView({
+            attempt: opened.attempt,
+            snapshot: { payload },
+            result: stored,
+          }),
+        };
+      },
+    );
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'not_terminal':
+        throw examAttemptNotTerminal();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'scoring_failed':
+        throw examResultUnavailable();
+      case 'ok':
+        return { success: true, data: result.view };
+    }
+  }
+
+  /**
+   * TL-166/Q148: every question of the frozen snapshot plus the answer key and
+   * explanation, only after the attempt is terminal. The read shares the
+   * result path's lock, lazy timeout and lazy grading (Q147/Q156/Q157).
+   */
+  async getAttemptReview(
+    userId: number,
+    attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamReviewViewDto>> {
+    const result = await this.prisma.$transaction(
+      async (tx): Promise<AttemptReviewReadResult> => {
+        const opened = await this.openTerminalAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.review.read',
+        );
+        if (opened.kind !== 'terminal') return opened;
+
+        const grading = await ensureAttemptResult(
+          tx,
+          opened.gradeAttempt,
+          opened.now,
+        );
+        if (grading.kind === 'scoring_failed') {
+          this.logger.warn('exam.grading.failed', {
+            attemptId,
+            error: grading.error.name,
+          });
+          return { kind: 'scoring_failed' };
+        }
+
+        const [payload, stored, answers] = await Promise.all([
+          this.loadSnapshotPayload(tx, attemptId),
+          this.loadStoredResult(tx, attemptId),
+          tx.examAnswer.findMany({
+            where: { attemptId },
+            orderBy: [{ lastSavedAt: 'asc' }, { id: 'asc' }],
+            select: { snapshotQuestionKey: true, answer: true },
+          }),
+        ]);
+        return {
+          kind: 'ok',
+          view: toExamReviewView({
+            attempt: opened.attempt,
+            snapshot: { payload },
+            result: { detail: stored.detail },
+            answers,
+          }),
+        };
+      },
+    );
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'not_terminal':
+        throw examAttemptNotTerminal();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'scoring_failed':
+        throw examResultUnavailable();
+      case 'ok':
+        return { success: true, data: result.view };
+    }
   }
 
   /**
@@ -1072,6 +1246,126 @@ export class ExamService {
       select: EXAM_ATTEMPT_SELECT,
     });
     return { kind: 'open', attempt, now };
+  }
+
+  /**
+   * TL-165/TL-166: the shared prologue of GET result/review. The row lock makes
+   * the lazy timeout safe; a caller that timed out the attempt observes the
+   * same `timed_out` value it just committed instead of re-reading a stale row.
+   * `invalidated` is closed (Q157) and an open attempt is "not terminal" (Q147).
+   */
+  private async openTerminalAttempt(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    operation: ExamAttemptLockOperation,
+  ): Promise<TerminalAttemptOpenResult> {
+    const locked = await this.lockAttempt(tx, userId, attemptId, operation);
+    if (locked.kind === 'not_found') return { kind: 'not_found' };
+    const { attempt, now } = locked;
+
+    let status = attempt.status;
+    let submittedAt = attempt.submittedAt;
+    if (
+      status === ExamAttemptStatus.in_progress &&
+      this.isPastSaveGrace(attempt.expiresAt, now)
+    ) {
+      await this.applyLazyTimeout(tx, attempt, now, 'expired_on_read');
+      status = ExamAttemptStatus.timed_out;
+      submittedAt = attempt.expiresAt;
+    }
+    if (status === ExamAttemptStatus.in_progress) {
+      return { kind: 'not_terminal' };
+    }
+    if (status === ExamAttemptStatus.invalidated) {
+      return { kind: 'closed', status };
+    }
+    if (submittedAt === null) {
+      // submitted/timed_out always carry a submission instant (the timeout
+      // sets it to `expiresAt`), so a null here is a data bug.
+      throw new InternalServerErrorException(
+        'Terminal exam attempt has no submission time.',
+      );
+    }
+
+    return {
+      kind: 'terminal',
+      attempt: {
+        id: attempt.id,
+        status,
+        startedAt: attempt.startedAt,
+        submittedAt,
+      },
+      gradeAttempt: {
+        id: attempt.id,
+        userId: attempt.userId,
+        testId: attempt.testId,
+        status,
+        scoringVersion: attempt.scoringVersion,
+        maxScore: attempt.maxScore,
+      },
+      now,
+    };
+  }
+
+  /**
+   * TL-165: the stored grading output. `publishedAt` and `scoringVersion` are
+   * written by `ensureAttemptResult`, so a null means the row is a data bug;
+   * `detailJson` is parsed with the versioned reader and fails closed.
+   */
+  private async loadStoredResult(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+  ): Promise<ExamResultViewRecord> {
+    const result = await tx.result.findUnique({
+      where: { attemptId },
+      select: {
+        id: true,
+        score: true,
+        maxScore: true,
+        passed: true,
+        scoringVersion: true,
+        publishedAt: true,
+        detailJson: true,
+      },
+    });
+    if (result === null) {
+      throw new InternalServerErrorException(
+        'Exam result row is missing after grading.',
+      );
+    }
+    if (result.publishedAt === null || result.scoringVersion === null) {
+      throw new InternalServerErrorException('Exam result row is incomplete.');
+    }
+    const skillScores = await tx.resultSkillScore.findMany({
+      where: { resultId: result.id },
+      select: { skill: true, score: true, total: true },
+      orderBy: { skill: 'asc' },
+    });
+    let detail: ReturnType<typeof readExamResultDetail>;
+    try {
+      detail = readExamResultDetail(result.detailJson);
+    } catch (error: unknown) {
+      // Fixed client message + ids only: the stored breakdown may contain
+      // answer-derived data, so the field path is logged on the server without
+      // any stored content (R11).
+      const field =
+        error instanceof ExamResultDetailError ? error.field : undefined;
+      this.logger.error(
+        'exam.result.detail.invalid',
+        field === undefined ? { attemptId } : { attemptId, field },
+      );
+      throw error;
+    }
+    return {
+      score: result.score,
+      maxScore: result.maxScore,
+      passed: result.passed,
+      scoringVersion: result.scoringVersion,
+      publishedAt: result.publishedAt,
+      detail,
+      skillScores,
+    };
   }
 
   private isPastSaveGrace(expiresAt: Date, now: Date): boolean {

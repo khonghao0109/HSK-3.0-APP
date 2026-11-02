@@ -24,6 +24,12 @@ export type ExamResultAttempt = {
    * attempt started, recorded in the breakdown next to the grading version.
    */
   scoringVersion: string;
+  /**
+   * `ExamAttempt.maxScore` — null when the attempt row never carried the frozen
+   * maximum (legacy/imported attempt). A3a/Q155: the attempt keeps `score` only
+   * when it also has the denominator, so a null maxScore skips that update.
+   */
+  maxScore: number | null;
 };
 
 export type EnsureAttemptResultOutcome =
@@ -120,12 +126,15 @@ export async function ensureAttemptResult(
     select: { id: true },
   });
 
-  // Q155: the attempt keeps the score only; per-answer grading is not stored on
-  // `ExamAnswer`.
-  await tx.examAttempt.update({
-    where: { id: attempt.id },
-    data: { score: scoring.score },
-  });
+  // Q155/A3a: the attempt keeps the score only; per-answer grading is not stored
+  // on `ExamAnswer`. The score is mirrored only when the attempt carries its
+  // frozen maximum too — a score without `maxScore` is not a usable pair.
+  if (attempt.maxScore !== null) {
+    await tx.examAttempt.update({
+      where: { id: attempt.id },
+      data: { score: scoring.score },
+    });
+  }
 
   return { kind: 'created', resultId: created.id };
 }

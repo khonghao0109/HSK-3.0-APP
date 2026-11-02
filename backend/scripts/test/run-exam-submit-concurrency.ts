@@ -22,6 +22,14 @@
  *  S5  submit vs start (expired)        -> submit-first: EXPIRED;
  *                                          start-first: CLOSED (no EXPIRED)
  *  S6  2 submits + 1 save with barrier  -> no 500, no deadlock, 1 terminal event
+ *  S7  2 GET result on a timed_out attempt -> both 200, exactly one Result,
+ *                                           reason expired_on_read
+ *  S8  submit vs GET result             -> submit-first: GET result 200 and
+ *                                          matches the stored Result;
+ *                                          GET-first: GET result 409
+ *                                          NOT_TERMINAL, submit then 200
+ *  S9  User FOR UPDATE (account delete) vs submit -> submit waits on the FK
+ *                                          then 200, 0 deadlock
  *
  * The `-pre` controls keep the previous `before_attempt_lock` variants ("the
  * opponent commits first"): the paused transaction has not taken the row lock
@@ -30,7 +38,8 @@
  * Runs on a fresh migration-only disposable database. Fails on any deadlock
  * (40P01), lock/statement timeout, unexpected 500, more than one terminal
  * event, a `submitted` attempt without exactly one `Result` covering every
- * test-section skill, or a `timed_out` attempt that owns a `Result` (A2 scores
+ * test-section skill, a `timed_out` attempt without exactly one lazily graded
+ * `Result` in the S7 rounds, or a `Result` on any other status (A2 scores
  * inside the submit transaction; A3 grades `timed_out` lazily on GET result).
  */
 import { randomUUID } from 'node:crypto';
@@ -39,6 +48,8 @@ import { HttpException } from '@nestjs/common';
 import {
   ContentStatus,
   ExamAttemptStatus,
+  MediaProcessingStatus,
+  MediaType,
   Prisma,
   PrismaClient,
   QuestionType,
@@ -95,6 +106,17 @@ type SubmitValue = {
 };
 
 type AttemptReadValue = { data: { status: string; remainingSeconds: number } };
+
+/** A3: the 200 body of GET result, as far as the harness asserts it. */
+type ExamResultValue = {
+  data: {
+    attemptId: number;
+    status: string;
+    score: number;
+    maxScore: number;
+    counts: { answeredCount: number };
+  };
+};
 
 const deadlockCodes: string[] = [];
 const serverFaults: string[] = [];
@@ -254,6 +276,13 @@ function attemptReadValue(outcome: Outcome): AttemptReadValue {
   return outcome.value as AttemptReadValue;
 }
 
+/** A3: a GET result must be a documented 200, never a 500/deadlock. */
+function resultValue(label: string, outcome: Outcome): ExamResultValue {
+  assertNoServerFault(label, outcome);
+  assertFulfilled(label, outcome);
+  return outcome.value as ExamResultValue;
+}
+
 function timeoutReason(event: { metadata: Prisma.JsonValue }): string | null {
   const metadata = event.metadata;
   if (
@@ -279,7 +308,8 @@ class HoldCoordinator extends ExamTransactionCoordinator {
     private readonly operation:
       | 'exam.submit'
       | 'exam.answer.save'
-      | 'exam.attempt.read',
+      | 'exam.attempt.read'
+      | 'exam.result.read',
     private readonly holdPhase: 'before_attempt_lock' | 'after_attempt_lock',
     private readonly paused: Deferred<void>,
     private readonly release: Deferred<void>,
@@ -326,7 +356,8 @@ class PidCoordinator extends ExamTransactionCoordinator {
     private readonly operation:
       | 'exam.submit'
       | 'exam.answer.save'
-      | 'exam.attempt.read',
+      | 'exam.attempt.read'
+      | 'exam.result.read',
     private readonly backendPid: Deferred<number>,
   ) {
     super();
@@ -403,10 +434,12 @@ class StartPidCoordinator extends ExamTransactionCoordinator {
 function questionPayload(input: {
   levelId: number;
   content: string;
+  skill?: Skill;
+  audioId?: number;
 }): CreateQuestionRevisionDto {
   return {
     type: QuestionType.mcq,
-    skill: Skill.reading,
+    skill: input.skill ?? Skill.reading,
     levelId: input.levelId,
     content: input.content,
     answers: {
@@ -418,14 +451,19 @@ function questionPayload(input: {
     correctAnswer: { optionId: 'a' },
     explanation: 'Vì đáp án A khớp đoạn văn.',
     difficulty: 2,
-    audioId: null,
+    audioId: input.audioId ?? null,
     tags: ['Gia đình'],
   };
 }
 
+/**
+ * A3a: the seeded test has one section per skill so the Result breakdown must
+ * cover both `ResultSkillScore` rows, exactly like a real mixed exam.
+ */
 function structurePayload(input: {
   expectedUpdatedAt: string;
   questionId: number;
+  listeningQuestionId: number;
 }): ReplaceTestStructureDto {
   return {
     expectedUpdatedAt: input.expectedUpdatedAt,
@@ -434,6 +472,11 @@ function structurePayload(input: {
         skill: Skill.reading,
         title: 'Đọc hiểu',
         groups: [{ title: 'Nhóm 1', questionIds: [input.questionId] }],
+      },
+      {
+        skill: Skill.listening,
+        title: 'Nghe hiểu',
+        groups: [{ title: 'Nhóm 2', questionIds: [input.listeningQuestionId] }],
       },
     ],
   };
@@ -642,6 +685,42 @@ async function main(): Promise<void> {
       { correlationId: `exam-submit-harness-publish-${suffix}` },
     );
 
+    // A3a: a second, listening-skill question so the test has two sections.
+    // A listening question must carry a ready audio at publish time.
+    const listeningAudio = await observer.media.create({
+      data: {
+        url: `urn:hsk:test:harness-listening-${suffix}`,
+        type: MediaType.audio,
+        mimeType: 'audio/mpeg',
+        processingStatus: MediaProcessingStatus.ready,
+      },
+      select: { id: true },
+    });
+    const listeningCreated = await questionService.createQuestion(
+      actor,
+      questionPayload({
+        levelId: level.id,
+        content: 'Câu nghe của harness submit',
+        skill: Skill.listening,
+        audioId: listeningAudio.id,
+      }),
+      { correlationId: `exam-submit-harness-listening-question-${suffix}` },
+    );
+    const listeningQuestionId = listeningCreated.data.question.id;
+    await questionService.reviewQuestionRevision(
+      actor,
+      listeningQuestionId,
+      listeningCreated.data.revision.id,
+      { decision: 'approved' },
+      { correlationId: `exam-submit-harness-listening-approve-${suffix}` },
+    );
+    await questionService.publishQuestionRevision(
+      actor,
+      listeningQuestionId,
+      listeningCreated.data.revision.id,
+      { correlationId: `exam-submit-harness-listening-publish-${suffix}` },
+    );
+
     const draft = await testService.createTest(
       actor,
       {
@@ -658,6 +737,7 @@ async function main(): Promise<void> {
       structurePayload({
         expectedUpdatedAt: draft.data.updatedAt.toISOString(),
         questionId,
+        listeningQuestionId,
       }),
       { correlationId: `exam-submit-harness-structure-${suffix}` },
     );
@@ -730,6 +810,17 @@ async function main(): Promise<void> {
       attemptId: number,
     ): Promise<unknown> =>
       new ExamService(prisma, coordinator).getAttemptView(learnerId, attemptId);
+
+    const resultWith = (
+      prisma: PrismaService,
+      coordinator: ExamTransactionCoordinator,
+      learnerId: number,
+      attemptId: number,
+    ): Promise<unknown> =>
+      new ExamService(prisma, coordinator).getAttemptResult(
+        learnerId,
+        attemptId,
+      );
 
     const saveWith = (
       prisma: PrismaService,
@@ -1574,26 +1665,348 @@ async function main(): Promise<void> {
       await assertRoundInvariants('S6', attemptId, testId);
     });
 
-    // A2 harness-wide sanity: exactly one Result per committed `submitted`
-    // attempt across the whole run, and no Result attached to any attempt that
-    // is not `submitted` (timed_out must stay unscored for A3, in_progress and
-    // invalidated must never be scored at all).
+    // ---------------------------------------------------------------- S7 ----
+    // A3/TL-165: two GET result calls on the same `timed_out` attempt race for
+    // the attempt row lock. The winner applies the lazy timeout and grades; the
+    // waiter then sees the committed Result. Exactly one Result, no deadlock.
+    for (const order of ['a', 'b'] as const) {
+      await runScenario(`S7${order}`, async () => {
+        const learnerId = await createLearner(`s7${order}`);
+        const attemptId = await startFor(learnerId);
+        await expirePastGrace(attemptId);
+        const paused = createDeferred<void>();
+        const release = createDeferred<void>();
+        const holderPid = createDeferred<number>();
+        const waiterPid = createDeferred<number>();
+        const holder = asOutcome(
+          resultWith(
+            order === 'a' ? prismaA : prismaB,
+            new HoldCoordinator(
+              'exam.result.read',
+              'after_attempt_lock',
+              paused,
+              release,
+              holderPid,
+            ),
+            learnerId,
+            attemptId,
+          ),
+        );
+        await withTimeout(
+          holderPid.promise,
+          COORDINATION_TIMEOUT_MS,
+          `S7${order} holder pid`,
+        );
+        await withTimeout(
+          paused.promise,
+          COORDINATION_TIMEOUT_MS,
+          `S7${order} holder row lock`,
+        );
+        const waiter = asOutcome(
+          resultWith(
+            order === 'a' ? prismaB : prismaA,
+            new PidCoordinator('exam.result.read', waiterPid),
+            learnerId,
+            attemptId,
+          ),
+        );
+        await withTimeout(
+          waiterPid.promise,
+          COORDINATION_TIMEOUT_MS,
+          `S7${order} waiter pid`,
+        );
+        await waitUntilLocked(observer, await waiterPid.promise);
+        release.resolve();
+        const [held, waited] = await Promise.all([holder, waiter]);
+        const first = resultValue(`S7${order} holder`, held);
+        const second = resultValue(`S7${order} waiter`, waited);
+        check(
+          first.data.attemptId === attemptId &&
+            second.data.attemptId === attemptId,
+          `S7${order}: GET result returned another attempt`,
+        );
+        check(
+          first.data.status === 'timed_out' &&
+            second.data.status === 'timed_out',
+          `S7${order}: GET result status is ${first.data.status}/${second.data.status} (expected timed_out)`,
+        );
+        check(
+          first.data.score === second.data.score &&
+            first.data.counts.answeredCount ===
+              second.data.counts.answeredCount,
+          `S7${order}: the two GET result bodies disagree`,
+        );
+        const results = await observer.result.findMany({
+          where: { attemptId },
+          select: { id: true, score: true, maxScore: true },
+        });
+        check(
+          results.length === 1,
+          `S7${order}: ${String(results.length)} Result rows (expected exactly 1)`,
+        );
+        check(
+          results[0]?.score === first.data.score &&
+            results[0]?.maxScore === first.data.maxScore,
+          `S7${order}: GET result does not match the stored Result`,
+        );
+        const events = await timedOutEvents(attemptId);
+        check(
+          events.length === 1 &&
+            timeoutReason(events[0] ?? { metadata: null }) ===
+              'expired_on_read',
+          `S7${order}: timed_out event is not the single expired_on_read transition`,
+        );
+      });
+    }
+
+    // ---------------------------------------------------------------- S8 ----
+    // A3: submit vs GET result on the same attempt. S8a: submit holds the lock,
+    // so GET result observes the committed submission and returns the same
+    // Result. S8b: GET result holds the lock first, so it answers 409
+    // NOT_TERMINAL and the submit is the only writer.
+    await runScenario('S8a', async () => {
+      const learnerId = await createLearner('s8a');
+      const attemptId = await startFor(learnerId);
+      const paused = createDeferred<void>();
+      const release = createDeferred<void>();
+      const holderPid = createDeferred<number>();
+      const waiterPid = createDeferred<number>();
+      const submitOutcome = asOutcome(
+        submitWith(
+          prismaA,
+          new HoldCoordinator(
+            'exam.submit',
+            'after_attempt_lock',
+            paused,
+            release,
+            holderPid,
+          ),
+          learnerId,
+          attemptId,
+          randomUUID(),
+        ),
+      );
+      await withTimeout(
+        holderPid.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8a submit holder pid',
+      );
+      await withTimeout(
+        paused.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8a submit row lock',
+      );
+      const resultOutcome = asOutcome(
+        resultWith(
+          prismaB,
+          new PidCoordinator('exam.result.read', waiterPid),
+          learnerId,
+          attemptId,
+        ),
+      );
+      await withTimeout(
+        waiterPid.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8a result waiter pid',
+      );
+      await waitUntilLocked(observer, await waiterPid.promise);
+      release.resolve();
+      const [submitted, readResult] = await Promise.all([
+        submitOutcome,
+        resultOutcome,
+      ]);
+      submitValue(submitted);
+      const view = resultValue('S8a GET result', readResult);
+      const results = await observer.result.findMany({
+        where: { attemptId },
+        select: { score: true, maxScore: true },
+      });
+      check(
+        results.length === 1,
+        `S8a: ${String(results.length)} Result rows (expected exactly 1)`,
+      );
+      check(
+        view.data.status === 'submitted',
+        `S8a: GET result status is ${view.data.status} (expected submitted)`,
+      );
+      check(
+        view.data.score === results[0]?.score &&
+          view.data.maxScore === results[0]?.maxScore,
+        'S8a: GET result does not match the Result written by submit',
+      );
+      await assertRoundInvariants('S8a', attemptId, testId);
+    });
+
+    await runScenario('S8b', async () => {
+      const learnerId = await createLearner('s8b');
+      const attemptId = await startFor(learnerId);
+      const paused = createDeferred<void>();
+      const release = createDeferred<void>();
+      const holderPid = createDeferred<number>();
+      const waiterPid = createDeferred<number>();
+      const resultOutcome = asOutcome(
+        resultWith(
+          prismaA,
+          new HoldCoordinator(
+            'exam.result.read',
+            'after_attempt_lock',
+            paused,
+            release,
+            holderPid,
+          ),
+          learnerId,
+          attemptId,
+        ),
+      );
+      await withTimeout(
+        holderPid.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8b result holder pid',
+      );
+      await withTimeout(
+        paused.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8b result row lock',
+      );
+      const submitOutcome = asOutcome(
+        submitWith(
+          prismaB,
+          new PidCoordinator('exam.submit', waiterPid),
+          learnerId,
+          attemptId,
+          randomUUID(),
+        ),
+      );
+      await withTimeout(
+        waiterPid.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S8b submit waiter pid',
+      );
+      await waitUntilLocked(observer, await waiterPid.promise);
+      release.resolve();
+      const [readResult, submitted] = await Promise.all([
+        resultOutcome,
+        submitOutcome,
+      ]);
+      expectConflict('S8b GET result', readResult, 'EXAM_ATTEMPT_NOT_TERMINAL');
+      submitValue(submitted);
+      check(
+        (await observer.result.count({ where: { attemptId } })) === 1,
+        'S8b: the submit did not leave exactly one Result',
+      );
+      await assertRoundInvariants('S8b', attemptId, testId);
+    });
+
+    // ---------------------------------------------------------------- S9 ----
+    // A3: a transaction that holds `User FOR UPDATE` (the shape of account
+    // deletion) vs submit. The submit itself never locks User, but its Result
+    // insert takes an implicit `FOR KEY SHARE` on the User row, so the submit
+    // must wait and then finish — never deadlock.
+    await runScenario('S9', async () => {
+      const learnerId = await createLearner('s9');
+      const attemptId = await startFor(learnerId);
+      const userLocked = createDeferred<void>();
+      const releaseUser = createDeferred<void>();
+      const userLockTx = observer.$transaction(
+        async (tx) => {
+          await tx.$executeRawUnsafe(
+            `SET LOCAL statement_timeout = '${String(STATEMENT_TIMEOUT_MS)}ms'`,
+          );
+          await tx.$executeRawUnsafe(
+            `SET LOCAL lock_timeout = '${String(LOCK_TIMEOUT_MS)}ms'`,
+          );
+          const rows = await tx.$queryRaw<Array<{ id: number }>>`
+            SELECT "id" FROM "User" WHERE "id" = ${learnerId} FOR UPDATE
+          `;
+          check(rows.length === 1, 'S9 user lock did not find the learner row');
+          userLocked.resolve();
+          await withTimeout(
+            releaseUser.promise,
+            BARRIER_TIMEOUT_MS,
+            'S9 user lock release barrier',
+          );
+        },
+        { timeout: BARRIER_TIMEOUT_MS + 2_000 },
+      );
+      await withTimeout(
+        userLocked.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S9 user lock',
+      );
+      const submitPid = createDeferred<number>();
+      const submitOutcome = asOutcome(
+        submitWith(
+          prismaB,
+          new PidCoordinator('exam.submit', submitPid),
+          learnerId,
+          attemptId,
+          randomUUID(),
+        ),
+      );
+      await withTimeout(
+        submitPid.promise,
+        COORDINATION_TIMEOUT_MS,
+        'S9 submit pid',
+      );
+      // The Result insert waits on the User row lock taken above.
+      await waitUntilLocked(observer, await submitPid.promise);
+      releaseUser.resolve();
+      const [locked, submitted] = await Promise.all([
+        asOutcome(userLockTx),
+        submitOutcome,
+      ]);
+      assertFulfilled('S9 user lock tx', locked);
+      submitValue(submitted);
+      const attempt = await observer.examAttempt.findUniqueOrThrow({
+        where: { id: attemptId },
+        select: { status: true },
+      });
+      check(
+        attempt.status === ExamAttemptStatus.submitted,
+        `S9: attempt status is ${attempt.status} (expected submitted)`,
+      );
+      check(
+        (await observer.result.count({ where: { attemptId } })) === 1,
+        'S9: the submit did not leave exactly one Result',
+      );
+      await assertRoundInvariants('S9', attemptId, testId);
+    });
+
+    // Harness-wide sanity. A2: every committed `submitted` attempt owns exactly
+    // one Result. A3: a `timed_out` attempt may own exactly one lazily graded
+    // Result (S7 grades one per round) and no other status may own any.
     const submittedAttempts = await observer.examAttempt.count({
       where: { status: ExamAttemptStatus.submitted },
     });
-    const scoredRows = await observer.result.findMany({
-      select: { attempt: { select: { status: true } } },
-    });
+    // A3a: the global Result checks below are only meaningful if at least one
+    // round actually committed a submit; a broken fixture must fail here.
     check(
-      scoredRows.length === submittedAttempts,
-      `harness left ${String(scoredRows.length)} Result rows for ${String(submittedAttempts)} submitted attempts (expected exactly one Result per submitted attempt)`,
+      submittedAttempts > 0,
+      'harness committed no submitted attempt: the grading checks would be vacuous',
     );
-    const scoredNonSubmitted = scoredRows.filter(
-      (row) => row.attempt?.status !== ExamAttemptStatus.submitted,
+    const scoredRows = await observer.result.findMany({
+      select: { attemptId: true, attempt: { select: { status: true } } },
+    });
+    const scoredSubmitted = scoredRows.filter(
+      (row) => row.attempt?.status === ExamAttemptStatus.submitted,
+    ).length;
+    const scoredTimedOut = scoredRows.filter(
+      (row) => row.attempt?.status === ExamAttemptStatus.timed_out,
     ).length;
     check(
-      scoredNonSubmitted === 0,
-      `harness left ${String(scoredNonSubmitted)} Result rows on attempts that are not submitted`,
+      scoredSubmitted === submittedAttempts,
+      `harness left ${String(scoredSubmitted)} Result rows for ${String(submittedAttempts)} submitted attempts (expected exactly one Result per submitted attempt)`,
+    );
+    check(
+      scoredRows.length === scoredSubmitted + scoredTimedOut,
+      `harness left ${String(scoredRows.length - scoredSubmitted - scoredTimedOut)} Result rows on attempts that are neither submitted nor timed_out`,
+    );
+    // S7 runs both orders (S7a and S7b), so each round grades two timed_out
+    // attempts exactly once.
+    const expectedLazyResults = ROUNDS * 2;
+    check(
+      scoredTimedOut === expectedLazyResults,
+      `harness left ${String(scoredTimedOut)} lazily graded timed_out Results (expected ${String(expectedLazyResults)}, one per S7 round)`,
     );
   } finally {
     await Promise.all([

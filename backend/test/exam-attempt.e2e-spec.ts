@@ -92,6 +92,68 @@ type ExamSubmitBody = {
   replayed: boolean;
 };
 
+/** A3/TL-165: the 200 body of GET /exam/attempts/:attemptId/result. */
+type ExamResultBody = {
+  attemptId: number;
+  status: string;
+  testTitle: string;
+  startedAt: string;
+  submittedAt: string;
+  score: number;
+  maxScore: number;
+  passScore: number | null;
+  passed: boolean | null;
+  scoringVersion: string;
+  gradedAt: string;
+  counts: {
+    answeredCount: number;
+    correctCount: number;
+    incorrectCount: number;
+    unansweredCount: number;
+  };
+  sections: Array<{
+    key: string;
+    title: string;
+    skill: string;
+    questionCount: number;
+    correctCount: number;
+    score: number;
+    maxScore: number;
+  }>;
+  skills: Array<{ skill: string; score: number; maxScore: number }>;
+  weakAreas: Array<{
+    slug: string;
+    name: string;
+    answered: number;
+    correct: number;
+    accuracy: number;
+    level: string;
+  }>;
+};
+
+/** A3/TL-166: the 200 body of GET /exam/attempts/:attemptId/review. */
+type ExamReviewBody = {
+  attemptId: number;
+  status: string;
+  testTitle: string;
+  startedAt: string;
+  submittedAt: string;
+  questions: Array<{
+    key: string;
+    orderIndex: number;
+    type: string;
+    skill: string;
+    content: string;
+    answers: Record<string, unknown>;
+    learnerAnswer: unknown;
+    correctAnswer: unknown;
+    explanation: string | null;
+    isCorrect: boolean;
+    audio: unknown;
+    image: unknown;
+  }>;
+};
+
 type ExamIntroBody = {
   id: number;
   title: string;
@@ -2696,11 +2758,18 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
         submittedAt: true,
         expiresAt: true,
         remainingSeconds: true,
+        score: true,
       },
     });
     expect(attempt.status).toBe('timed_out');
     expect(attempt.remainingSeconds).toBe(0);
     expect(attempt.submittedAt?.getTime()).toBe(attempt.expiresAt.getTime());
+    // A3a: a timeout on the submit path never grades, so no Result exists and
+    // the attempt keeps a null score.
+    expect(attempt.score).toBeNull();
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
     expect(
       await prisma.examAttemptEvent.findMany({
         where: { attemptId: fixture.attemptId, type: 'timed_out' },
@@ -3259,15 +3328,16 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     expect(failedResult.score).toBe(25);
     expect(failedResult.passed).toBe(false);
 
-    // Q145: a frozen passScore of null means "unknown", not "failed". The start
-    // gate refuses a published test with passScore null (`pass_score_required`),
-    // so the attempt is frozen directly with the same payload an imported or
-    // legacy attempt carries; save and submit still run over HTTP.
+    // Q145: a frozen passScore of null means "unknown", not "failed". The live
+    // Test still has a pass line (A3a: 50), so this case proves the result reads
+    // the FROZEN snapshot value, not the live `Test.passScore`. The frozen
+    // payload below is the same shape an imported or legacy attempt carries;
+    // save and submit still run over HTTP.
     const nullPassQuestionId = await seedMcqQuestion('pass-null');
     const nullPassTestId = await seedTest({
       title: `Đề không có điểm đỗ A2 ${suffix}`,
       status: ContentStatus.published,
-      passScore: null,
+      passScore: 50,
       sections: [
         {
           skill: Skill.reading,
@@ -3497,6 +3567,9 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       await seedMcqQuestion('medium-1'),
       await seedMcqQuestion('medium-2'),
     ];
+    // A3a: a third tagged question that stays unanswered must not change the
+    // tag's answered/accuracy/level.
+    const blankMediumQuestionId = await seedMcqQuestion('medium-3');
     const singleQuestionId = await seedMcqQuestion('single-1');
     for (const questionId of weakQuestionIds) {
       await attachTag(questionId, weakSlug, weakName);
@@ -3504,6 +3577,7 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     for (const questionId of mediumQuestionIds) {
       await attachTag(questionId, mediumSlug, mediumName);
     }
+    await attachTag(blankMediumQuestionId, mediumSlug, mediumName);
     await attachTag(singleQuestionId, singleSlug, singleName);
 
     const testId = await seedTest({
@@ -3521,6 +3595,9 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
                 ...weakQuestionIds,
                 ...mediumQuestionIds,
                 singleQuestionId,
+                // The blank medium question goes last so q1–q5 keep their
+                // meaning for the assertions below.
+                blankMediumQuestionId,
               ],
             },
           ],
@@ -3529,8 +3606,9 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     });
     const learner = await register('a2-weak-areas');
     const weakAttemptId = await startAttempt(learner.token, testId);
-    // q1/q2 are both wrong (weak), q3 right and q4 wrong (medium), q5 is the
-    // only answered question of its tag and must never be listed.
+    // q1/q2 are both wrong (weak), q3 right and q4 wrong (medium) while q6 of
+    // that same tag stays blank, q5 is the only answered question of its tag
+    // and must never be listed. Blank questions never count toward a tag.
     await saveAnswerFor(learner.token, weakAttemptId, 'q1', { choice: 'b' });
     await saveAnswerFor(learner.token, weakAttemptId, 'q2', { choice: 'b' });
     await saveAnswerFor(learner.token, weakAttemptId, 'q3', { choice: 'a' });
@@ -3565,13 +3643,19 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     const fixture = await fourTypeAttempt('a2-replay');
     const key = newKey();
     await submit(fixture.attemptId, fixture.token, key).expect(200);
-    const firstResult = await attemptResult(fixture.attemptId);
+    const firstResult = await prisma.result.findUniqueOrThrow({
+      where: { attemptId: fixture.attemptId },
+    });
     const replayed = await submit(fixture.attemptId, fixture.token, key).expect(
       200,
     );
     expect((replayed.body.data as ExamSubmitBody).replayed).toBe(true);
-    // The same row is returned: a replay must not rewrite the graded Result.
-    expect((await attemptResult(fixture.attemptId)).id).toBe(firstResult.id);
+    // A3a: the replay must not rewrite ANY column of the graded Result.
+    expect(
+      await prisma.result.findUniqueOrThrow({
+        where: { attemptId: fixture.attemptId },
+      }),
+    ).toEqual(firstResult);
     expect(
       await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
     ).toBe(1);
@@ -3710,6 +3794,827 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       select: { status: true, score: true },
     });
     expect(attemptRow).toEqual({ status: 'submitted', score: null });
+  });
+
+  /**
+   * A3 helpers: the two read routes, and a manually frozen attempt for the
+   * fixture the start gate rejects (a snapshot whose `passScore` is null while
+   * the live Test still has a pass line).
+   */
+  function getResult(token: string, attemptId: number) {
+    return get(`/exam/attempts/${String(attemptId)}/result`, token);
+  }
+
+  function getReview(token: string, attemptId: number) {
+    return get(`/exam/attempts/${String(attemptId)}/review`, token);
+  }
+
+  async function createFrozenAttempt(input: {
+    userId: number;
+    testId: number;
+    payload: Prisma.InputJsonValue;
+    maxScore: number;
+  }): Promise<number> {
+    const now = new Date();
+    const attempt = await prisma.examAttempt.create({
+      data: {
+        userId: input.userId,
+        testId: input.testId,
+        status: 'in_progress',
+        startedAt: now,
+        expiresAt: new Date(now.getTime() + 90 * 60_000),
+        remainingSeconds: 90 * 60,
+        maxScore: input.maxScore,
+        scoringVersion: 'hsk-p0-v1',
+        snapshotVersion: 1,
+        idempotencyKey: newKey(),
+      },
+      select: { id: true },
+    });
+    await prisma.examAttemptSnapshot.create({
+      data: {
+        attemptId: attempt.id,
+        testVersion: 1,
+        snapshotVersion: 1,
+        contentHash: sha256CanonicalJson(input.payload),
+        payload: input.payload,
+      },
+    });
+    return attempt.id;
+  }
+
+  it('52a. returns the stored result of a submitted attempt with no-store (A3/TL-165)', async () => {
+    const learner = await register('a3-result-owner');
+    const gradedAttemptId = await startAttempt(learner.token, publishedTestId);
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q1', { choice: 'a' });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q2', { value: true });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q3', { text: '你好' });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q5', { choice: 'b' });
+    await submit(gradedAttemptId, learner.token, newKey()).expect(200);
+
+    const [resultRow, attemptRow, snapshot, response] = await Promise.all([
+      attemptResult(gradedAttemptId),
+      prisma.examAttempt.findUniqueOrThrow({
+        where: { id: gradedAttemptId },
+        select: { startedAt: true, submittedAt: true },
+      }),
+      prisma.examAttemptSnapshot.findUniqueOrThrow({
+        where: { attemptId: gradedAttemptId },
+        select: { payload: true },
+      }),
+      getResult(learner.token, gradedAttemptId).expect(200),
+    ]);
+    expectNoStore(response);
+
+    const body = response.body.data as ExamResultBody;
+    expect(Object.keys(body).sort()).toEqual([
+      'attemptId',
+      'counts',
+      'gradedAt',
+      'maxScore',
+      'passScore',
+      'passed',
+      'score',
+      'scoringVersion',
+      'sections',
+      'skills',
+      'startedAt',
+      'status',
+      'submittedAt',
+      'testTitle',
+      'weakAreas',
+    ]);
+    expect(body).toMatchObject({
+      attemptId: gradedAttemptId,
+      status: 'submitted',
+      testTitle: `Đề thi thử M4.2a ${suffix}`,
+      startedAt: attemptRow.startedAt.toISOString(),
+      submittedAt: attemptRow.submittedAt?.toISOString(),
+      score: resultRow.score,
+      maxScore: resultRow.maxScore,
+      passScore: 120,
+      passed: true,
+      scoringVersion: 'exam-score-v1',
+      gradedAt: resultRow.publishedAt?.toISOString(),
+      counts: {
+        answeredCount: 4,
+        correctCount: 4,
+        incorrectCount: 0,
+        unansweredCount: 1,
+      },
+    });
+    // Q118/Q143: reading 3/4 => 75, listening 1/1 => 100.
+    expect(body.sections).toEqual([
+      {
+        key: 's1',
+        title: 'Đọc hiểu',
+        skill: Skill.reading,
+        questionCount: 4,
+        correctCount: 3,
+        score: 75,
+        maxScore: 100,
+      },
+      {
+        key: 's2',
+        title: 'Nghe hiểu',
+        skill: Skill.listening,
+        questionCount: 1,
+        correctCount: 1,
+        score: 100,
+        maxScore: 100,
+      },
+    ]);
+    // Q153: sorted by skill enum (listening before reading).
+    expect(body.skills).toEqual([
+      { skill: Skill.listening, score: 100, maxScore: 100 },
+      { skill: Skill.reading, score: 75, maxScore: 100 },
+    ]);
+    expect(body.weakAreas).toEqual([]);
+    // The title is the frozen snapshot title, not the live `Test.title`.
+    const frozenTest = (snapshot.payload as Prisma.JsonObject)
+      .test as Prisma.JsonObject;
+    expect(frozenTest['title']).toBe(body.testTitle);
+  });
+
+  it("52b. hides another learner's or an unknown attempt behind 404", async () => {
+    const learner = await register('a3-result-owner-404');
+    const attemptId = await startAttempt(learner.token, publishedTestId);
+    await submit(attemptId, learner.token, newKey()).expect(200);
+
+    const foreign = await getResult(otherToken, attemptId).expect(404);
+    expect(foreign.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+    const unknown = await getResult(learner.token, 2_147_000_000).expect(404);
+    expect(unknown.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+  });
+
+  it('52c. answers 409 EXAM_ATTEMPT_NOT_TERMINAL while the attempt is in progress', async () => {
+    const fixture = await fourTypeAttempt('a3-result-open');
+    const response = await getResult(fixture.token, fixture.attemptId).expect(
+      409,
+    );
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_TERMINAL',
+    });
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+  });
+
+  it('52d. lazily times out an expired attempt and grades it on the first result read', async () => {
+    const fixture = await fourTypeAttempt('a3-result-timeout');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const response = await getResult(fixture.token, fixture.attemptId).expect(
+      200,
+    );
+    expectNoStore(response);
+    const body = response.body.data as ExamResultBody;
+    const attemptRow = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { status: true, submittedAt: true, expiresAt: true, score: true },
+    });
+    expect(attemptRow.status).toBe('timed_out');
+    expect(body.status).toBe('timed_out');
+    // Q146: a timed-out attempt is graded like a submitted one; the timeout sets
+    // submittedAt to the attempt deadline.
+    expect(body.submittedAt).toBe(attemptRow.expiresAt.toISOString());
+    expect(
+      await prisma.examAttemptEvent.findMany({
+        where: { attemptId: fixture.attemptId, type: 'timed_out' },
+        select: { metadata: true },
+      }),
+    ).toEqual([{ metadata: { reason: 'expired_on_read' } }]);
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+    const [resultRow] = await prisma.result.findMany({
+      where: { attemptId: fixture.attemptId },
+      select: { score: true },
+    });
+    expect(resultRow?.score).toBe(body.score);
+    // A3a/Q155: the attempt mirrors the score because it has a maxScore.
+    expect(attemptRow.score).toBe(body.score);
+  });
+
+  it('52e. grades a timed_out attempt exactly once and repeats the same result', async () => {
+    const fixture = await fourTypeAttempt('a3-result-once');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const first = await getResult(fixture.token, fixture.attemptId).expect(200);
+    const stored = await prisma.result.findUniqueOrThrow({
+      where: { attemptId: fixture.attemptId },
+    });
+    const second = await getResult(fixture.token, fixture.attemptId).expect(
+      200,
+    );
+
+    expect(second.body.data).toEqual(first.body.data);
+    expect(
+      await prisma.result.findUniqueOrThrow({
+        where: { attemptId: fixture.attemptId },
+      }),
+    ).toEqual(stored);
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+  });
+
+  it('52f. maps an invalidated attempt to EXAM_ATTEMPT_CLOSED without the answer key (Q157)', async () => {
+    const fixture = await fourTypeAttempt('a3-result-invalidated');
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        status: 'invalidated',
+        invalidatedReason: 'operator repair',
+      },
+    });
+
+    const response = await getResult(fixture.token, fixture.attemptId).expect(
+      409,
+    );
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'invalidated' },
+    });
+    const serialized = JSON.stringify(response.body);
+    for (const leaked of ['correctAnswer', 'explanation', 'questions']) {
+      expect(serialized).not.toContain(leaked);
+    }
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+  });
+
+  it('52g. answers 409 EXAM_RESULT_UNAVAILABLE when grading fails (Q156)', async () => {
+    const fixture = await fourTypeAttempt('a3-result-unavailable');
+    // Bypass the validator on purpose: the stored row is readable JSON but not
+    // the documented mcq shape, so grading fails closed.
+    await prisma.examAnswer.create({
+      data: {
+        attemptId: fixture.attemptId,
+        snapshotQuestionKey: 'q1',
+        answer: { choice: 123 },
+        isFlagged: false,
+        answeredAt: new Date(),
+      },
+    });
+    // A2: the submit still commits, without a Result.
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const response = await getResult(fixture.token, fixture.attemptId).expect(
+      409,
+    );
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_RESULT_UNAVAILABLE',
+    });
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+    expect(
+      (
+        await prisma.examAttempt.findUniqueOrThrow({
+          where: { id: fixture.attemptId },
+          select: { status: true },
+        })
+      ).status,
+    ).toBe('submitted');
+
+    // Q156 applies to both read routes.
+    const review = await getReview(fixture.token, fixture.attemptId).expect(
+      409,
+    );
+    expect(review.body.error).toMatchObject({
+      code: 'EXAM_RESULT_UNAVAILABLE',
+    });
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+  });
+
+  it('52h. returns passed null when the frozen passScore is null (Q145)', async () => {
+    const questionId = await seedMcqQuestion('a3-pass-null');
+    const testId = await seedTest({
+      title: `Đề A3 pass null ${suffix}`,
+      status: ContentStatus.published,
+      // A3a: the live test has a pass line; the frozen snapshot does not.
+      passScore: 50,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          groups: [{ title: null, questionIds: [questionId] }],
+        },
+      ],
+    });
+    const learner = await register('a3-pass-null');
+    const payload: Prisma.InputJsonValue = {
+      schemaVersion: 1,
+      test: {
+        id: testId,
+        title: `Đề A3 pass null ${suffix}`,
+        instruction: null,
+        levelCode: 'HSK4',
+        durationMinutes: 90,
+        passScore: null,
+        maxScore: 100,
+        scoringVersion: 'hsk-p0-v1',
+      },
+      sections: [
+        {
+          key: 's1',
+          orderIndex: 1,
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          instruction: null,
+          maxScore: 100,
+          groups: [
+            {
+              key: 's1-g1',
+              orderIndex: 1,
+              title: null,
+              instruction: null,
+              content: null,
+              audio: null,
+              image: null,
+              questions: [
+                {
+                  key: 'q1',
+                  orderIndex: 1,
+                  questionId,
+                  questionVersion: 1,
+                  type: QuestionType.mcq,
+                  skill: Skill.reading,
+                  content: `Câu A3 pass null ${suffix}`,
+                  answers: { options: [{ id: 'a', text: 'A' }] },
+                  audio: null,
+                  image: null,
+                  correctAnswer: { optionId: 'a' },
+                  explanation: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const attemptId = await createFrozenAttempt({
+      userId: learner.userId,
+      testId,
+      payload,
+      maxScore: 100,
+    });
+    await saveAnswerFor(learner.token, attemptId, 'q1', { choice: 'a' });
+    await submit(attemptId, learner.token, newKey()).expect(200);
+
+    const response = await getResult(learner.token, attemptId).expect(200);
+    const body = response.body.data as ExamResultBody;
+    expect(body.score).toBe(100);
+    expect(body.passScore).toBeNull();
+    expect(body.passed).toBeNull();
+  });
+
+  it('52i. carries no forbidden key on the result body (R11)', async () => {
+    const fixture = await fourTypeAttempt('a3-result-r11');
+    await saveAnswerFor(fixture.token, fixture.attemptId, 'q1', {
+      choice: 'a',
+    });
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const response = await getResult(fixture.token, fixture.attemptId).expect(
+      200,
+    );
+    expectNoForbiddenKeys(response.body);
+  });
+
+  it('52j. commits the lazy timeout even when the first read fails scoring (Q156)', async () => {
+    // The scoring_failed branch must not throw inside the transaction: the
+    // timeout transition has to commit, and only then the request answers 409.
+    const resultFixture = await fourTypeAttempt('a3-q156-lazy-timeout');
+    await prisma.examAnswer.create({
+      data: {
+        attemptId: resultFixture.attemptId,
+        snapshotQuestionKey: 'q1',
+        answer: { choice: 123 },
+        isFlagged: false,
+        answeredAt: new Date(),
+      },
+    });
+    const resultNowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: resultFixture.attemptId },
+      data: {
+        startedAt: new Date(resultNowMs - 91 * 60_000),
+        expiresAt: new Date(resultNowMs - 10_000),
+      },
+    });
+
+    const response = await getResult(
+      resultFixture.token,
+      resultFixture.attemptId,
+    ).expect(409);
+    expect(response.body.error).toMatchObject({
+      code: 'EXAM_RESULT_UNAVAILABLE',
+    });
+    const resultAttempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: resultFixture.attemptId },
+      select: { status: true, submittedAt: true, expiresAt: true },
+    });
+    expect(resultAttempt.status).toBe('timed_out');
+    expect(resultAttempt.submittedAt?.getTime()).toBe(
+      resultAttempt.expiresAt.getTime(),
+    );
+    expect(
+      await prisma.examAttemptEvent.findMany({
+        where: { attemptId: resultFixture.attemptId, type: 'timed_out' },
+        select: { metadata: true },
+      }),
+    ).toEqual([{ metadata: { reason: 'expired_on_read' } }]);
+    expect(
+      await prisma.result.count({
+        where: { attemptId: resultFixture.attemptId },
+      }),
+    ).toBe(0);
+
+    // The same contract on the review route, with a different attempt.
+    const reviewFixture = await fourTypeAttempt('a3-q156-lazy-timeout-review');
+    await prisma.examAnswer.create({
+      data: {
+        attemptId: reviewFixture.attemptId,
+        snapshotQuestionKey: 'q1',
+        answer: { choice: 123 },
+        isFlagged: false,
+        answeredAt: new Date(),
+      },
+    });
+    const reviewNowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: reviewFixture.attemptId },
+      data: {
+        startedAt: new Date(reviewNowMs - 91 * 60_000),
+        expiresAt: new Date(reviewNowMs - 10_000),
+      },
+    });
+
+    const reviewResponse = await getReview(
+      reviewFixture.token,
+      reviewFixture.attemptId,
+    ).expect(409);
+    expect(reviewResponse.body.error).toMatchObject({
+      code: 'EXAM_RESULT_UNAVAILABLE',
+    });
+    const reviewAttempt = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: reviewFixture.attemptId },
+      select: { status: true, submittedAt: true, expiresAt: true },
+    });
+    expect(reviewAttempt.status).toBe('timed_out');
+    expect(reviewAttempt.submittedAt?.getTime()).toBe(
+      reviewAttempt.expiresAt.getTime(),
+    );
+    expect(
+      await prisma.examAttemptEvent.findMany({
+        where: { attemptId: reviewFixture.attemptId, type: 'timed_out' },
+        select: { metadata: true },
+      }),
+    ).toEqual([{ metadata: { reason: 'expired_on_read' } }]);
+    expect(
+      await prisma.result.count({
+        where: { attemptId: reviewFixture.attemptId },
+      }),
+    ).toBe(0);
+  });
+
+  it('53a. reviews every frozen question in order with the stored correctness (A3/TL-166)', async () => {
+    const learner = await register('a3-review-owner');
+    const reviewAttemptId = await startAttempt(learner.token, publishedTestId);
+    await saveAnswerFor(learner.token, reviewAttemptId, 'q1', { choice: 'a' });
+    await saveAnswerFor(learner.token, reviewAttemptId, 'q2', { value: false });
+    await saveAnswerFor(learner.token, reviewAttemptId, 'q3', { text: '你好' });
+    await saveAnswerFor(learner.token, reviewAttemptId, 'q5', { choice: 'b' });
+    await submit(reviewAttemptId, learner.token, newKey()).expect(200);
+
+    const [response, resultRow, snapshot] = await Promise.all([
+      getReview(learner.token, reviewAttemptId).expect(200),
+      attemptResult(reviewAttemptId),
+      prisma.examAttemptSnapshot.findUniqueOrThrow({
+        where: { attemptId: reviewAttemptId },
+        select: { payload: true },
+      }),
+    ]);
+    expectNoStore(response);
+    const body = response.body.data as ExamReviewBody;
+    expect(body).toMatchObject({
+      attemptId: reviewAttemptId,
+      status: 'submitted',
+      testTitle: `Đề thi thử M4.2a ${suffix}`,
+    });
+
+    // Q148: every question of the frozen snapshot, section → group → question.
+    expect(body.questions.map((question) => question.key)).toEqual([
+      'q1',
+      'q2',
+      'q3',
+      'q4',
+      'q5',
+    ]);
+    expect(body.questions.map((question) => question.orderIndex)).toEqual([
+      1, 2, 3, 4, 5,
+    ]);
+    expect(body.questions.map((question) => question.type)).toEqual([
+      'mcq',
+      'true_false',
+      'fill_blank',
+      'arrange_sentence',
+      'mcq',
+    ]);
+    expect(body.questions.map((question) => question.skill)).toEqual([
+      Skill.reading,
+      Skill.reading,
+      Skill.reading,
+      Skill.reading,
+      Skill.listening,
+    ]);
+    // Q148: isCorrect is read from Result.detailJson.questions by key.
+    const detail = resultRow.detailJson as Prisma.JsonObject;
+    const graded = new Map(
+      (detail['questions'] as Prisma.JsonArray).map((entry) => {
+        const record = entry as Prisma.JsonObject;
+        return [record['key'] as string, record['isCorrect'] as boolean];
+      }),
+    );
+    expect(body.questions.map((question) => question.isCorrect)).toEqual(
+      body.questions.map((question) => graded.get(question.key)),
+    );
+    expect(body.questions.map((question) => question.isCorrect)).toEqual([
+      true,
+      false,
+      true,
+      false,
+      true,
+    ]);
+    // The blank question reads as null and wrong.
+    expect(body.questions[3]).toMatchObject({
+      key: 'q4',
+      learnerAnswer: null,
+      isCorrect: false,
+    });
+    // The answer key and explanation are the frozen snapshot copies. The live
+    // row of q1 was edited by earlier cases, so the fixture here is the stored
+    // snapshot itself (that is exactly the Q148 invariant).
+    const snapshotQ1 = snapshotQuestionByKey(snapshot.payload, 'q1');
+    const snapshotQ3 = snapshotQuestionByKey(snapshot.payload, 'q3');
+    expect(snapshotQ1.correctAnswer).toEqual({ optionId: 'a' });
+    expect(snapshotQ3.correctAnswer).toEqual({
+      acceptedTexts: ['你好'],
+      caseSensitive: false,
+    });
+    expect(body.questions[0]).toMatchObject({
+      content: snapshotQ1.content,
+      learnerAnswer: { choice: 'a' },
+      correctAnswer: snapshotQ1.correctAnswer,
+      explanation: snapshotQ1.explanation,
+      isCorrect: true,
+    });
+    expect(body.questions[2]).toMatchObject({
+      answers: {},
+      learnerAnswer: { text: '你好' },
+      correctAnswer: snapshotQ3.correctAnswer,
+      explanation: snapshotQ3.explanation,
+    });
+    // Q158: media is null in the review even though the attempt had media.
+    for (const question of body.questions) {
+      expect(question.audio).toBeNull();
+      expect(question.image).toBeNull();
+    }
+  });
+
+  it('53b. keeps arrange ids in the masked snapshot space in all three places (Q158/TL-133)', async () => {
+    const arrangeQuestionId = await seedQuestion({
+      type: QuestionType.arrange_sentence,
+      skill: Skill.reading,
+      content: `Câu arrange masked A3 ${suffix}`,
+      answers: {
+        tokens: [
+          { id: 'authored-b', text: '二' },
+          { id: 'authored-a', text: '一' },
+        ],
+      },
+      correctAnswer: { tokenIds: ['authored-a', 'authored-b'] },
+    });
+    const testId = await seedTest({
+      title: `Đề arrange masked A3 ${suffix}`,
+      status: ContentStatus.published,
+      passScore: 0,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Sắp xếp',
+          groups: [{ title: null, questionIds: [arrangeQuestionId] }],
+        },
+      ],
+    });
+    const learner = await register('a3-review-masked');
+    const attemptId = await startAttempt(learner.token, testId);
+    const read = await get(
+      `/exam/attempts/${String(attemptId)}`,
+      learner.token,
+    ).expect(200);
+    const displayedTokens = (
+      (read.body.data as ExamAttemptBody).sections[0]?.groups[0]?.questions[0]
+        ?.answers as { tokens: Array<{ id: string; text: string }> }
+    ).tokens;
+    const snapshot = await prisma.examAttemptSnapshot.findUniqueOrThrow({
+      where: { attemptId },
+      select: { payload: true },
+    });
+    const storedQuestion = snapshotQuestionByKey(snapshot.payload, 'q1');
+    const storedTokens = (
+      storedQuestion.answers as { tokens: Array<{ id: string; text: string }> }
+    ).tokens;
+    const textById = new Map(
+      storedTokens.map((token) => [token.id, token.text]),
+    );
+    const correctTexts = (
+      storedQuestion.correctAnswer as { tokenIds: string[] }
+    ).tokenIds.map((tokenId) => textById.get(tokenId) ?? '');
+    const order = correctTexts.map((text) => {
+      const match = displayedTokens.find((token) => token.text === text);
+      if (match === undefined) throw new Error('A3 masked token missing');
+      return match.id;
+    });
+    await saveAnswerFor(learner.token, attemptId, 'q1', { order });
+    await submit(attemptId, learner.token, newKey()).expect(200);
+
+    const review = await getReview(learner.token, attemptId).expect(200);
+    const body = review.body.data as ExamReviewBody;
+    const question = body.questions[0];
+    if (question === undefined) throw new Error('A3 review question missing');
+    const tokenIds = (
+      question.answers as { tokens: Array<{ id: string }> }
+    ).tokens.map((token) => token.id);
+    const correct = question.correctAnswer as { tokenIds: string[] };
+
+    // TL-133: the display ids are t1…tn in display order; the authored ids
+    // never leave the frozen snapshot.
+    expect(tokenIds).toEqual(['t1', 't2']);
+    expect([...correct.tokenIds].sort()).toEqual([...tokenIds].sort());
+    expect(question.learnerAnswer).toEqual({ order });
+    expect(correct.tokenIds).toEqual(order);
+    expect(JSON.stringify(review.body)).not.toContain('authored');
+  });
+
+  it('53c. returns the frozen snapshot after the live question changes (Q148)', async () => {
+    const fixture = await fourTypeAttempt('a3-review-frozen');
+    // The first question of the fixture test is the mcq (q1).
+    const placement = await prisma.testQuestion.findFirstOrThrow({
+      where: { testId: fixture.testId },
+      orderBy: { orderIndex: 'asc' },
+      select: { questionId: true },
+    });
+    // Mutate the LIVE row after the snapshot was frozen at start.
+    await prisma.question.update({
+      where: { id: placement.questionId },
+      data: {
+        content: 'Nội dung live đã sửa',
+        correctAnswer: { optionId: 'b' },
+        explanation: 'Giải thích live',
+      },
+    });
+
+    await saveAnswerFor(fixture.token, fixture.attemptId, 'q1', {
+      choice: 'a',
+    });
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const review = await getReview(fixture.token, fixture.attemptId).expect(
+      200,
+    );
+    const question = (review.body.data as ExamReviewBody).questions[0];
+    if (question === undefined) throw new Error('A3 review question missing');
+    expect(question).toMatchObject({
+      key: 'q1',
+      content: `Câu mcq M4.2b a3-review-frozen ${suffix}`,
+      correctAnswer: { optionId: 'a' },
+      explanation: null,
+      isCorrect: true,
+    });
+  });
+
+  it('53d. grades a timed_out attempt lazily on review and only once (Q147)', async () => {
+    const fixture = await fourTypeAttempt('a3-review-timeout');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const first = await getReview(fixture.token, fixture.attemptId).expect(200);
+    const body = first.body.data as ExamReviewBody;
+    expect(body.status).toBe('timed_out');
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+    const second = await getReview(fixture.token, fixture.attemptId).expect(
+      200,
+    );
+    expect(second.body.data).toEqual(first.body.data);
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+  });
+
+  it('53e. rejects an open or invalidated review without the answer key', async () => {
+    const open = await fourTypeAttempt('a3-review-open');
+    const openResponse = await getReview(open.token, open.attemptId).expect(
+      409,
+    );
+    expect(openResponse.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_TERMINAL',
+    });
+
+    const invalidated = await fourTypeAttempt('a3-review-invalidated');
+    await prisma.examAttempt.update({
+      where: { id: invalidated.attemptId },
+      data: { status: 'invalidated', invalidatedReason: 'operator repair' },
+    });
+    const closed = await getReview(
+      invalidated.token,
+      invalidated.attemptId,
+    ).expect(409);
+    expect(closed.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'invalidated' },
+    });
+    const serialized = JSON.stringify(closed.body);
+    for (const leaked of ['correctAnswer', 'explanation', 'questions']) {
+      expect(serialized).not.toContain(leaked);
+    }
+    expect(
+      await prisma.result.count({
+        where: { attemptId: invalidated.attemptId },
+      }),
+    ).toBe(0);
+
+    const foreign = await getReview(otherToken, open.attemptId).expect(404);
+    expect(foreign.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+
+    // A foreign caller of a TERMINAL attempt must still see 404, not the answer
+    // key: the ownership filter runs before the terminal/status branches.
+    const submitted = await fourTypeAttempt('a3-review-foreign-submitted');
+    await submit(submitted.attemptId, submitted.token, newKey()).expect(200);
+    const foreignTerminal = await getReview(
+      otherToken,
+      submitted.attemptId,
+    ).expect(404);
+    expect(foreignTerminal.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_NOT_FOUND',
+    });
+    expect(JSON.stringify(foreignTerminal.body)).not.toContain('correctAnswer');
+    expect(JSON.stringify(foreignTerminal.body)).not.toContain('explanation');
+  });
+
+  it('53f. returns null media for every review question (Q158)', async () => {
+    const learner = await register('a3-review-media');
+    const attemptId = await startAttempt(learner.token, publishedTestId);
+    // Prove the fixture really has media on the attempt view.
+    const attemptView = await get(
+      `/exam/attempts/${String(attemptId)}`,
+      learner.token,
+    ).expect(200);
+    const viewBody = attemptView.body.data as ExamAttemptBody;
+    expect(viewBody.sections[0]?.groups[0]?.image).not.toBeNull();
+    expect(viewBody.sections[1]?.groups[0]?.questions[0]?.audio).not.toBeNull();
+
+    await submit(attemptId, learner.token, newKey()).expect(200);
+    const review = await getReview(learner.token, attemptId).expect(200);
+    const body = review.body.data as ExamReviewBody;
+    expect(body.questions).toHaveLength(5);
+    for (const question of body.questions) {
+      expect(question.audio).toBeNull();
+      expect(question.image).toBeNull();
+    }
   });
 
   function put(path: string, token?: string) {

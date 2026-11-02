@@ -24,6 +24,8 @@ export const EXAM_ERROR_CODES = {
   attemptExpired: 'EXAM_ATTEMPT_EXPIRED',
   attemptClosed: 'EXAM_ATTEMPT_CLOSED',
   attemptAlreadySubmitted: 'EXAM_ATTEMPT_ALREADY_SUBMITTED',
+  attemptNotTerminal: 'EXAM_ATTEMPT_NOT_TERMINAL',
+  resultUnavailable: 'EXAM_RESULT_UNAVAILABLE',
 } as const;
 
 export const EXAM_REASONS_LIMIT = 20;
@@ -135,5 +137,29 @@ export function examAttemptAlreadySubmitted(): ConflictException {
     code: EXAM_ERROR_CODES.attemptAlreadySubmitted,
     message: 'Exam attempt was already submitted.',
     status: 'submitted',
+  });
+}
+
+/**
+ * TL-165: GET result/review on an attempt that is still `in_progress` (Q147
+ * grades lazily only after a terminal transition, so the client must keep
+ * waiting instead of seeing a partial result). 409 and not 404: the attempt
+ * exists and belongs to the caller.
+ */
+export function examAttemptNotTerminal(): ConflictException {
+  return new ConflictException({
+    code: EXAM_ERROR_CODES.attemptNotTerminal,
+    message: 'Exam attempt is still in progress.',
+  });
+}
+
+/**
+ * Q156: grading failed closed on a terminal attempt (unknown frozen shape), so
+ * no `Result` was written. A later read retries the lazy grading.
+ */
+export function examResultUnavailable(): ConflictException {
+  return new ConflictException({
+    code: EXAM_ERROR_CODES.resultUnavailable,
+    message: 'Exam result is not available yet.',
   });
 }

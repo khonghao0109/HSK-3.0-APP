@@ -5,12 +5,18 @@ export type ExamTransactionOperation =
   | 'exam.start'
   | 'exam.answer.save'
   | 'exam.attempt.read'
-  | 'exam.submit';
+  | 'exam.submit'
+  | 'exam.result.read'
+  | 'exam.review.read';
 
-/** Operations that lock one `ExamAttempt` row (TL-125/TL-127/TL-151). */
+/** Operations that lock one `ExamAttempt` row (TL-125/TL-127/TL-151/TL-165). */
 export type ExamAttemptLockOperation = Extract<
   ExamTransactionOperation,
-  'exam.answer.save' | 'exam.attempt.read' | 'exam.submit'
+  | 'exam.answer.save'
+  | 'exam.attempt.read'
+  | 'exam.submit'
+  | 'exam.result.read'
+  | 'exam.review.read'
 >;
 
 export type ExamStartCheckpoint = {
@@ -67,11 +73,35 @@ export type ExamSubmitCheckpoint = {
   transaction: Prisma.TransactionClient;
 };
 
+/**
+ * TL-165: GET result takes the same attempt lock before its lazy timeout and
+ * lazy grading. The checkpoint lets the harness pause the real production
+ * transaction before/after the row lock; runtime behaviour stays a no-op.
+ */
+export type ExamResultReadCheckpoint = {
+  operation: 'exam.result.read';
+  phase: 'before_attempt_lock' | 'after_attempt_lock';
+  userId: number;
+  attemptId: number;
+  transaction: Prisma.TransactionClient;
+};
+
+/** TL-166: GET review locks the attempt exactly like GET result (TL-165). */
+export type ExamReviewReadCheckpoint = {
+  operation: 'exam.review.read';
+  phase: 'before_attempt_lock' | 'after_attempt_lock';
+  userId: number;
+  attemptId: number;
+  transaction: Prisma.TransactionClient;
+};
+
 export type ExamTransactionCheckpoint =
   | ExamStartCheckpoint
   | ExamAnswerSaveCheckpoint
   | ExamAttemptReadCheckpoint
-  | ExamSubmitCheckpoint;
+  | ExamSubmitCheckpoint
+  | ExamResultReadCheckpoint
+  | ExamReviewReadCheckpoint;
 
 /**
  * Production-path observation point for the learner -> Test -> Question ->

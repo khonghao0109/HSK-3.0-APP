@@ -534,6 +534,24 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     ]);
   });
 
+  it('does not grade or mirror the score when the Result already exists (A3a)', async () => {
+    const grader = jest.spyOn(scoring, 'scoreExamAttempt');
+    const h = harness({ existingResultId: 77 });
+
+    const response = await h.service.submitAttempt(1, 42, 'key-1');
+
+    expect(response.data).toMatchObject({
+      id: 42,
+      status: 'submitted',
+      replayed: false,
+    });
+    // Read-first: an existing Result is reused as-is, so no second grading pass
+    // and no second attempt-score write can happen.
+    expect(grader).not.toHaveBeenCalled();
+    expect(h.resultCreates).toEqual([]);
+    expect(h.scoreUpdates).toEqual([]);
+  });
+
   it('does not grade a replayed submit (the ledger is the answer)', async () => {
     const grader = jest.spyOn(scoring, 'scoreExamAttempt');
     const h = harness({

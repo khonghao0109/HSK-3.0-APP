@@ -133,6 +133,7 @@ function attemptRow(overrides: Partial<AttemptFixture> = {}): AttemptFixture {
     testId: 7,
     status: ExamAttemptStatus.submitted,
     scoringVersion: 'hsk-p0-v1',
+    maxScore: 200,
     ...overrides,
   };
 }
@@ -385,6 +386,25 @@ describe('ensureAttemptResult (TL-163)', () => {
     expect(data?.['score']).toBe(100);
     expect(data?.['passed']).toBe(false);
     expect(h.attemptUpdates[0]?.data).toEqual({ score: 100 });
+  });
+
+  // A3a/Q155: `ExamAttempt.score` is only meaningful next to its maximum, so a
+  // null `maxScore` skips the mirror without skipping the Result.
+  it('skips the attempt score update when the attempt has no maxScore', async () => {
+    const h = await run({ attempt: attemptRow({ maxScore: null }) });
+
+    expect(h.outcome).toEqual({ kind: 'created', resultId: 99 });
+    expect(h.creates[0]?.data).toMatchObject({ score: 0, maxScore: 200 });
+    expect(h.attemptUpdates).toEqual([]);
+  });
+
+  it('writes the attempt score when the attempt has a maxScore', async () => {
+    const h = await run({ attempt: attemptRow({ maxScore: 200 }) });
+
+    expect(h.outcome).toEqual({ kind: 'created', resultId: 99 });
+    expect(h.attemptUpdates).toEqual([
+      { where: { id: 42 }, data: { score: 0 } },
+    ]);
   });
 
   it('reads tags only for the question ids frozen in the snapshot (Q154)', async () => {

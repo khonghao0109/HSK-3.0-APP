@@ -1,3 +1,4 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import {
   ExamAttemptStatus,
   QuestionType,
@@ -11,8 +12,11 @@ import type {
   ExamAttemptViewDto,
   ExamQuestionAnswersDto,
   ExamQuestionOptionDto,
+  ExamResultViewDto,
+  ExamReviewViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
+import type { ExamResultDetail } from './exam-result.reader';
 import {
   EXAM_SECTION_MAX_SCORE,
   type ExamSnapshotGroup,
@@ -81,6 +85,48 @@ export type ExamAttemptViewSource = {
   snapshot: { payload: ExamSnapshotPayload };
   now: Date;
   answers: ExamStoredAnswer[];
+};
+
+/** Terminal states only, matching the result/review DTO (TL-165/TL-166). */
+export type ExamTerminalStatus = 'submitted' | 'timed_out';
+
+/** The committed fields of a terminal attempt serving result/review. */
+export type ExamTerminalAttemptRecord = {
+  id: number;
+  status: ExamTerminalStatus;
+  startedAt: Date;
+  submittedAt: Date;
+};
+
+/**
+ * TL-165: the persisted grading output plus the `ResultSkillScore` rows. The
+ * fields written once by `ensureAttemptResult` (`scoringVersion`,
+ * `publishedAt`) are non-null because the service fails closed on an incomplete
+ * row; `maxScore`/`passed` stay nullable in the schema and are projected as
+ * `maxScore ?? snapshot maxScore` / `passed` (Q145).
+ */
+export type ExamResultViewRecord = {
+  score: number;
+  maxScore: number | null;
+  passed: boolean | null;
+  scoringVersion: string;
+  publishedAt: Date;
+  detail: ExamResultDetail;
+  skillScores: Array<{ skill: Skill; score: number; total: number }>;
+};
+
+export type ExamResultViewSource = {
+  attempt: ExamTerminalAttemptRecord;
+  snapshot: { payload: ExamSnapshotPayload };
+  result: ExamResultViewRecord;
+};
+
+/** TL-166: the frozen snapshot plus the stored answer rows. */
+export type ExamReviewViewSource = {
+  attempt: ExamTerminalAttemptRecord;
+  snapshot: { payload: ExamSnapshotPayload };
+  result: { detail: ExamResultDetail };
+  answers: Array<Pick<ExamStoredAnswer, 'snapshotQuestionKey' | 'answer'>>;
 };
 
 export function toExamTestIntro(source: ExamTestIntroSource): ExamTestIntroDto {
@@ -184,6 +230,132 @@ export function toExamAnswerSaveView(input: {
 export function remainingSeconds(expiresAt: Date, now: Date): number {
   const remaining = Math.floor((expiresAt.getTime() - now.getTime()) / 1_000);
   return remaining > 0 ? remaining : 0;
+}
+
+/**
+ * TL-165/Q151: the result view is an allow-listed projection of the stored
+ * `Result` row, its `detailJson` breakdown and the frozen snapshot. Section
+ * titles and the frozen pass line come from the snapshot (Q148/Q151), the
+ * skill totals from `ResultSkillScore` rows, and nothing is re-graded.
+ */
+export function toExamResultView(
+  source: ExamResultViewSource,
+): ExamResultViewDto {
+  const { attempt, snapshot, result } = source;
+  const payload = snapshot.payload;
+  const titlesByKey = new Map(
+    payload.sections.map((section) => [section.key, section.title]),
+  );
+
+  return {
+    attemptId: attempt.id,
+    status: attempt.status,
+    testTitle: payload.test.title,
+    startedAt: attempt.startedAt,
+    submittedAt: attempt.submittedAt,
+    score: result.score,
+    maxScore: result.maxScore ?? payload.test.maxScore,
+    passScore: payload.test.passScore,
+    passed: result.passed,
+    scoringVersion: result.scoringVersion,
+    gradedAt: result.publishedAt,
+    // The DTO is the reader's validated counts object; copying field by field
+    // would let the persisted contract and the response drift apart.
+    counts: result.detail.counts,
+    sections: result.detail.sections.map((section) => {
+      const title = titlesByKey.get(section.key);
+      if (title === undefined) {
+        // A persisted breakdown that names an unknown section is a data bug:
+        // fail closed rather than serve an incomplete result.
+        throw new InternalServerErrorException(
+          'Exam result detail references an unknown snapshot section.',
+        );
+      }
+      return {
+        key: section.key,
+        title,
+        skill: section.skill,
+        questionCount: section.questionCount,
+        correctCount: section.correctCount,
+        score: section.score,
+        maxScore: section.maxScore,
+      };
+    }),
+    skills: result.skillScores.map((skill) => ({
+      skill: skill.skill,
+      score: skill.score,
+      maxScore: skill.total,
+    })),
+    weakAreas: result.detail.weakAreas.map((area) => ({
+      slug: area.slug,
+      name: area.name,
+      answered: area.answered,
+      correct: area.correct,
+      accuracy: area.accuracy,
+      level: area.level,
+    })),
+  };
+}
+
+/**
+ * TL-166/Q148/Q158: the post-terminal review. Question order is the frozen
+ * snapshot order (section → group → question), `correctAnswer`/`explanation`
+ * are the snapshot copies (never the live question row), and `isCorrect` comes
+ * from `Result.detailJson.questions` — the single grading source of truth.
+ * Media is always `null` in M4.3 (Q158); grants arrive in M4.5.
+ */
+export function toExamReviewView(
+  source: ExamReviewViewSource,
+): ExamReviewViewDto {
+  const { attempt, snapshot, result, answers } = source;
+  const payload = snapshot.payload;
+  const answerByKey = new Map(
+    answers.map((answer) => [answer.snapshotQuestionKey, answer.answer]),
+  );
+  const correctnessByKey = new Map(
+    result.detail.questions.map((question) => [
+      question.key,
+      question.isCorrect,
+    ]),
+  );
+
+  const questions = payload.sections.flatMap((section) =>
+    section.groups.flatMap((group) =>
+      group.questions.map((question) => {
+        const isCorrect = correctnessByKey.get(question.key);
+        if (isCorrect === undefined) {
+          // The review must never guess a grading outcome.
+          throw new InternalServerErrorException(
+            'Exam result detail is missing a graded snapshot question.',
+          );
+        }
+        const learnerAnswer = answerByKey.get(question.key);
+        return {
+          key: question.key,
+          orderIndex: question.orderIndex,
+          type: question.type,
+          skill: question.skill,
+          content: question.content,
+          answers: projectAnswers(question.type, question.answers),
+          learnerAnswer: learnerAnswer ?? null,
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation,
+          isCorrect,
+          audio: null,
+          image: null,
+        };
+      }),
+    ),
+  );
+
+  return {
+    attemptId: attempt.id,
+    status: attempt.status,
+    testTitle: payload.test.title,
+    startedAt: attempt.startedAt,
+    submittedAt: attempt.submittedAt,
+    questions,
+  };
 }
 
 function projectSection(section: ExamSnapshotSection) {

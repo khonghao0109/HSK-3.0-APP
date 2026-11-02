@@ -26,6 +26,8 @@ import {
   ExamAnswerSaveViewDto,
   ExamAttemptViewDto,
   ExamMediaGrantsDto,
+  ExamResultViewDto,
+  ExamReviewViewDto,
   ExamSubmitViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
@@ -146,6 +148,38 @@ export class ExamController {
     @Param('attemptId', ParsePositiveSafeIntegerPipe) attemptId: number,
   ): Promise<ApiSuccessResponse<ExamAttemptViewDto>> {
     return this.examService.getAttemptView(request.user.id, attemptId);
+  }
+
+  /**
+   * TL-165/Q151: the minimal result page of a terminal attempt. Like GET
+   * attempt it may write exactly once (lazy timeout); it also grades lazily on
+   * the first read of a `timed_out` attempt with no Result (Q147).
+   */
+  @Get('attempts/:attemptId/result')
+  @Throttle({ default: { limit: examAttemptReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ExamResultViewDto)
+  getAttemptResult(
+    @Req() request: AuthenticatedRequest,
+    @Param('attemptId', ParsePositiveSafeIntegerPipe) attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamResultViewDto>> {
+    return this.examService.getAttemptResult(request.user.id, attemptId);
+  }
+
+  /**
+   * TL-166/Q148: every question of the frozen snapshot plus the answer key and
+   * explanation, available only after the attempt is terminal. Not paginated
+   * (Q151 caps a test at 200 questions).
+   */
+  @Get('attempts/:attemptId/review')
+  @Throttle({ default: { limit: examAttemptReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ExamReviewViewDto)
+  getAttemptReview(
+    @Req() request: AuthenticatedRequest,
+    @Param('attemptId', ParsePositiveSafeIntegerPipe) attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamReviewViewDto>> {
+    return this.examService.getAttemptReview(request.user.id, attemptId);
   }
 
   @Post('attempts/:attemptId/submit')

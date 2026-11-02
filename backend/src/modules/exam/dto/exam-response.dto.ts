@@ -222,3 +222,115 @@ export class ExamSubmitViewDto {
   /** True when this request replayed a previously committed submit key. */
   replayed!: boolean;
 }
+
+/**
+ * TL-165: aggregate counts read back from `Result.detailJson` (schemaVersion 1).
+ * They are the persisted grading output, not a fresh count of `ExamAnswer`.
+ */
+export class ExamResultCountsDto {
+  answeredCount!: number;
+  correctCount!: number;
+  incorrectCount!: number;
+  unansweredCount!: number;
+}
+
+/** One graded section; `title` comes from the frozen snapshot (Q151). */
+export class ExamResultSectionDto {
+  key!: string;
+  title!: string;
+  skill!: Skill;
+  questionCount!: number;
+  correctCount!: number;
+  score!: number;
+  maxScore!: number;
+}
+
+/** One skill total (Q153: the sum of its rounded section scores). */
+export class ExamResultSkillDto {
+  skill!: Skill;
+  score!: number;
+  maxScore!: number;
+}
+
+/** Q154: a tag with at least two answered questions and accuracy below 70%. */
+export class ExamResultWeakAreaDto {
+  slug!: string;
+  name!: string;
+  answered!: number;
+  correct!: number;
+  accuracy!: number;
+  @ApiProperty({ enum: ['weak', 'medium'] })
+  level!: 'weak' | 'medium';
+}
+
+/**
+ * `ExamResultView` — the 200 body of `GET /exam/attempts/:attemptId/result`
+ * (TL-165/Q151). It is built from the stored `Result` row and the frozen
+ * snapshot; it never re-grades and never carries an answer key.
+ */
+export class ExamResultViewDto {
+  attemptId!: number;
+  /** Terminal states only: result is never served for in_progress/invalidated. */
+  @ApiProperty({ enum: ['submitted', 'timed_out'] })
+  status!: 'submitted' | 'timed_out';
+  /** Test title frozen in the attempt snapshot, not the live `Test.title`. */
+  testTitle!: string;
+  startedAt!: Date;
+  submittedAt!: Date;
+  score!: number;
+  maxScore!: number;
+  /** `Test.passScore` frozen in the snapshot; null means "not set". */
+  passScore!: number | null;
+  /** null when the frozen passScore is null (Q145). */
+  passed!: boolean | null;
+  scoringVersion!: string;
+  /** `Result.publishedAt` — the moment the lazy/atomic grading ran. */
+  gradedAt!: Date;
+  counts!: ExamResultCountsDto;
+  sections!: ExamResultSectionDto[];
+  skills!: ExamResultSkillDto[];
+  weakAreas!: ExamResultWeakAreaDto[];
+}
+
+/**
+ * TL-166/Q148: one question of the post-terminal review. The answer key and
+ * the explanation come from the frozen snapshot, never from the live row, and
+ * `isCorrect` comes from `Result.detailJson` (one source of truth). Q158: media
+ * stays `null` in M4.3; signed grants for review arrive in M4.5.
+ */
+export class ExamReviewQuestionDto {
+  /** Snapshot question key (`q<placement order>`), same as the attempt view. */
+  key!: string;
+  orderIndex!: number;
+  type!: QuestionType;
+  skill!: Skill;
+  content!: string;
+  answers!: ExamQuestionAnswersDto;
+
+  @ApiProperty(JSON_OBJECT_SCHEMA)
+  learnerAnswer!: Prisma.JsonValue | null;
+
+  @ApiProperty(JSON_OBJECT_SCHEMA)
+  correctAnswer!: Prisma.JsonValue;
+
+  explanation!: string | null;
+  isCorrect!: boolean;
+  audio!: ExamSnapshotMediaDto | null;
+  image!: ExamSnapshotMediaDto | null;
+}
+
+/**
+ * `ExamReviewView` — the 200 body of `GET /exam/attempts/:attemptId/review`
+ * (TL-166/Q149). Questions are the frozen snapshot order (section → group →
+ * question) and the list is never paginated (Q151 caps a test at 200).
+ */
+export class ExamReviewViewDto {
+  attemptId!: number;
+  /** Terminal states only: review is never served for in_progress/invalidated. */
+  @ApiProperty({ enum: ['submitted', 'timed_out'] })
+  status!: 'submitted' | 'timed_out';
+  testTitle!: string;
+  startedAt!: Date;
+  submittedAt!: Date;
+  questions!: ExamReviewQuestionDto[];
+}

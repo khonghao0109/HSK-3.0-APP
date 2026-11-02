@@ -127,6 +127,18 @@ describe('learner route limits', () => {
       examAttemptReadLimit,
     ],
     [
+      'ExamController.getAttemptResult',
+      ExamController.prototype,
+      'getAttemptResult',
+      examAttemptReadLimit,
+    ],
+    [
+      'ExamController.getAttemptReview',
+      ExamController.prototype,
+      'getAttemptReview',
+      examAttemptReadLimit,
+    ],
+    [
       'ExamController.getMediaGrants',
       ExamController.prototype,
       'getMediaGrants',

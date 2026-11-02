@@ -1508,6 +1508,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/attempts/{attemptId}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TL-165/Q151: the minimal result page of a terminal attempt. Like GET
+         *     attempt it may write exactly once (lazy timeout); it also grades lazily on
+         *     the first read of a `timed_out` attempt with no Result (Q147).
+         */
+        get: operations["ExamController_getAttemptResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exam/attempts/{attemptId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TL-166/Q148: every question of the frozen snapshot plus the answer key and
+         *     explanation, available only after the attempt is terminal. Not paginated
+         *     (Q151 caps a test at 200 questions).
+         */
+        get: operations["ExamController_getAttemptReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exam/attempts/{attemptId}/submit": {
         parameters: {
             query?: never;
@@ -2905,6 +2947,102 @@ export interface components {
         StartExamAttemptDto: {
             /** Format: uuid */
             idempotencyKey: string;
+        };
+        ExamResultCountsDto: {
+            answeredCount: number;
+            correctCount: number;
+            incorrectCount: number;
+            unansweredCount: number;
+        };
+        ExamResultSectionDto: {
+            key: string;
+            title: string;
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            questionCount: number;
+            correctCount: number;
+            score: number;
+            maxScore: number;
+        };
+        ExamResultSkillDto: {
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            score: number;
+            maxScore: number;
+        };
+        ExamResultWeakAreaDto: {
+            /** @enum {string} */
+            level: "weak" | "medium";
+            slug: string;
+            name: string;
+            answered: number;
+            correct: number;
+            accuracy: number;
+        };
+        ExamResultViewDto: {
+            /**
+             * @description Terminal states only: result is never served for in_progress/invalidated.
+             * @enum {string}
+             */
+            status: "submitted" | "timed_out";
+            attemptId: number;
+            /** @description Test title frozen in the attempt snapshot, not the live `Test.title`. */
+            testTitle: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            submittedAt: string;
+            score: number;
+            maxScore: number;
+            /** @description `Test.passScore` frozen in the snapshot; null means "not set". */
+            passScore: number | null;
+            /** @description null when the frozen passScore is null (Q145). */
+            passed: boolean | null;
+            scoringVersion: string;
+            /**
+             * Format: date-time
+             * @description `Result.publishedAt` — the moment the lazy/atomic grading ran.
+             */
+            gradedAt: string;
+            counts: components["schemas"]["ExamResultCountsDto"];
+            sections: components["schemas"]["ExamResultSectionDto"][];
+            skills: components["schemas"]["ExamResultSkillDto"][];
+            weakAreas: components["schemas"]["ExamResultWeakAreaDto"][];
+        };
+        ExamReviewQuestionDto: {
+            learnerAnswer: {
+                [key: string]: unknown;
+            } | null;
+            correctAnswer: {
+                [key: string]: unknown;
+            };
+            /** @description Snapshot question key (`q<placement order>`), same as the attempt view. */
+            key: string;
+            orderIndex: number;
+            /** @enum {string} */
+            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            content: string;
+            answers: components["schemas"]["ExamQuestionAnswersDto"];
+            explanation: string | null;
+            isCorrect: boolean;
+            audio: components["schemas"]["ExamSnapshotMediaDto"] | null;
+            image: components["schemas"]["ExamSnapshotMediaDto"] | null;
+        };
+        ExamReviewViewDto: {
+            /**
+             * @description Terminal states only: review is never served for in_progress/invalidated.
+             * @enum {string}
+             */
+            status: "submitted" | "timed_out";
+            attemptId: number;
+            testTitle: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            submittedAt: string;
+            questions: components["schemas"]["ExamReviewQuestionDto"][];
         };
         ExamSubmitViewDto: {
             id: number;
@@ -6369,6 +6507,66 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ExamAttemptViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_getAttemptResult: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamResultViewDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_getAttemptReview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                attemptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamReviewViewDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

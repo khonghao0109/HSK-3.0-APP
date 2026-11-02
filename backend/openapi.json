@@ -6950,6 +6950,128 @@
         ]
       }
     },
+    "/api/v1/exam/attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "ExamController_getAttemptResult",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamResultViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "TL-165/Q151: the minimal result page of a terminal attempt. Like GET\nattempt it may write exactly once (lazy timeout); it also grades lazily on\nthe first read of a `timed_out` attempt with no Result (Q147).",
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
+    "/api/v1/exam/attempts/{attemptId}/review": {
+      "get": {
+        "operationId": "ExamController_getAttemptReview",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamReviewViewDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "TL-166/Q148: every question of the frozen snapshot plus the answer key and\nexplanation, available only after the attempt is terminal. Not paginated\n(Q151 caps a test at 200 questions).",
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/exam/attempts/{attemptId}/submit": {
       "post": {
         "operationId": "ExamController_submitAttempt",
@@ -12284,6 +12406,349 @@
         },
         "required": [
           "idempotencyKey"
+        ]
+      },
+      "ExamResultCountsDto": {
+        "type": "object",
+        "properties": {
+          "answeredCount": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "incorrectCount": {
+            "type": "number"
+          },
+          "unansweredCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "answeredCount",
+          "correctCount",
+          "incorrectCount",
+          "unansweredCount"
+        ]
+      },
+      "ExamResultSectionDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "skill",
+          "questionCount",
+          "correctCount",
+          "score",
+          "maxScore"
+        ]
+      },
+      "ExamResultSkillDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "score": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "skill",
+          "score",
+          "maxScore"
+        ]
+      },
+      "ExamResultWeakAreaDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "enum": [
+              "weak",
+              "medium"
+            ],
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "answered": {
+            "type": "number"
+          },
+          "correct": {
+            "type": "number"
+          },
+          "accuracy": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "level",
+          "slug",
+          "name",
+          "answered",
+          "correct",
+          "accuracy"
+        ]
+      },
+      "ExamResultViewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Terminal states only: result is never served for in_progress/invalidated.",
+            "enum": [
+              "submitted",
+              "timed_out"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "number"
+          },
+          "testTitle": {
+            "type": "string",
+            "description": "Test title frozen in the attempt snapshot, not the live `Test.title`."
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "`Test.passScore` frozen in the snapshot; null means \"not set\"."
+          },
+          "passed": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "null when the frozen passScore is null (Q145)."
+          },
+          "scoringVersion": {
+            "type": "string"
+          },
+          "gradedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "`Result.publishedAt` — the moment the lazy/atomic grading ran."
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ExamResultCountsDto"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamResultSectionDto"
+            }
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamResultSkillDto"
+            }
+          },
+          "weakAreas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamResultWeakAreaDto"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "attemptId",
+          "testTitle",
+          "startedAt",
+          "submittedAt",
+          "score",
+          "maxScore",
+          "passScore",
+          "passed",
+          "scoringVersion",
+          "gradedAt",
+          "counts",
+          "sections",
+          "skills",
+          "weakAreas"
+        ]
+      },
+      "ExamReviewQuestionDto": {
+        "type": "object",
+        "properties": {
+          "learnerAnswer": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "correctAnswer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Snapshot question key (`q<placement order>`), same as the attempt view."
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mcq",
+              "fill_blank",
+              "arrange_sentence",
+              "listening",
+              "reading",
+              "writing",
+              "speaking",
+              "true_false"
+            ]
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "answers": {
+            "$ref": "#/components/schemas/ExamQuestionAnswersDto"
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          },
+          "image": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "learnerAnswer",
+          "correctAnswer",
+          "key",
+          "orderIndex",
+          "type",
+          "skill",
+          "content",
+          "answers",
+          "explanation",
+          "isCorrect",
+          "audio",
+          "image"
+        ]
+      },
+      "ExamReviewViewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Terminal states only: review is never served for in_progress/invalidated.",
+            "enum": [
+              "submitted",
+              "timed_out"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "number"
+          },
+          "testTitle": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamReviewQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "attemptId",
+          "testTitle",
+          "startedAt",
+          "submittedAt",
+          "questions"
         ]
       },
       "ExamSubmitViewDto": {

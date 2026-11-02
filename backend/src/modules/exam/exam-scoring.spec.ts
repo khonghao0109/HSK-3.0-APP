@@ -1002,6 +1002,18 @@ describe('scoreExamAttempt', () => {
   });
 
   describe('input guards', () => {
+    it('throws when the snapshot has no sections (A3a)', () => {
+      const payload = makePayload([]);
+
+      expect(() => scoreExamAttempt(makeInput(payload, []))).toThrow(
+        ExamScoringError,
+      );
+      // 0 of 0 with passScore 0 would otherwise grade as "passed".
+      expect(() =>
+        scoreExamAttempt(makeInput(payload, [], { passScore: 0 })),
+      ).toThrow('snapshot has no sections');
+    });
+
     it('throws when a section has no questions', () => {
       const payload = makePayload([{ skill: Skill.reading, questions: [] }]);
 

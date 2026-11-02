@@ -104,6 +104,12 @@ export class ExamScoringError extends Error {
 }
 
 export function scoreExamAttempt(input: ExamScoringInput): ExamScoringResult {
+  // A3a: an empty section list would grade to 0 of 0 and `passed` could become
+  // true for a passScore of 0, so it is a frozen-payload bug, not a result.
+  if (input.payload.sections.length === 0) {
+    throw new ExamScoringError('snapshot has no sections');
+  }
+
   const seenKeys = new Set<string>();
   const questions: ExamScoringQuestion[] = [];
   const sections: ExamScoringSection[] = [];
