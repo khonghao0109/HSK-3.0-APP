@@ -114,7 +114,9 @@ describe('TopicForm (M5.1a, Q90)', () => {
     const textarea = screen.getByLabelText(/Nội dung JSON/);
     expect(textarea).toHaveAttribute('aria-invalid', 'true');
     expect(textarea).toHaveAttribute('aria-describedby', 'topic-form-error');
-    expect(textarea).toHaveFocus();
+    // Focus trì hoãn: fieldset còn disabled ở render báo lỗi, effect chỉ focus
+    // ở render sau khi `finally` mở khoá — chờ thay vì assert đồng bộ.
+    await waitFor(() => expect(textarea).toHaveFocus());
   });
 
   it('server INVALID_JSON không vị trí → câu chung; JSON_TOO_LARGE → câu 100 KB', async () => {

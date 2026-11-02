@@ -158,7 +158,11 @@ describe('MediaLifecycleActions', () => {
           processingStatus="ready"
         />,
       );
-      expect(screen.getByText(/giữ lại cho lịch sử/)).toHaveFocus();
+      // Focus do nhánh thành công của POST đặt (focusTarget) rồi mới áp ở
+      // render sau refresh — chờ thay vì assert đồng bộ.
+      await waitFor(() =>
+        expect(screen.getByText(/giữ lại cho lịch sử/)).toHaveFocus(),
+      );
     });
 
     it('keeps focus in the action group after quarantine', async () => {
@@ -182,7 +186,11 @@ describe('MediaLifecycleActions', () => {
       );
 
       expect(screen.getByRole('button', { name: 'Cách ly' })).toBeDisabled();
-      expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus();
+      // Focus do nhánh thành công của POST đặt (focusTarget) rồi mới áp ở
+      // render sau refresh — chờ thay vì assert đồng bộ.
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Lưu trữ' })).toHaveFocus(),
+      );
     });
 
     it('returns focus to quarantine when it fails', async () => {
