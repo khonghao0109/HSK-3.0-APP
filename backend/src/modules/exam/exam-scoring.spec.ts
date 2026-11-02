@@ -880,6 +880,77 @@ describe('scoreExamAttempt', () => {
       ]);
     });
 
+    it('breaks an accuracy tie by code unit for slugs "b-x" and "bx" (A2 mandate)', () => {
+      // Q154/A2: the persisted breakdown needs a deterministic tie-break, so a
+      // hyphen-bearing slug pair must keep one stable order. On the current ICU
+      // build `localeCompare` happens to return the same order for this pair;
+      // the discriminating case below is the one that pins the implementation.
+      const { payload, tagsByQuestionId } = tagPayload(4, [
+        [1, [tag('bx')]],
+        [2, [tag('bx')]],
+        [3, [tag('b-x')]],
+        [4, [tag('b-x')]],
+      ]);
+
+      const result = scoreExamAttempt(
+        makeInput(
+          payload,
+          [
+            ['q1', { choice: 'a' }],
+            ['q2', { choice: 'b' }],
+            ['q3', { choice: 'a' }],
+            ['q4', { choice: 'b' }],
+          ],
+          { tagsByQuestionId },
+        ),
+      );
+
+      expect(
+        result.weakAreas.map((area) => ({
+          slug: area.slug,
+          accuracy: area.accuracy,
+        })),
+      ).toEqual([
+        { slug: 'b-x', accuracy: 0.5 },
+        { slug: 'bx', accuracy: 0.5 },
+      ]);
+    });
+
+    it('breaks an accuracy tie by code unit, not by locale collation ("f" before "é")', () => {
+      // `localeCompare('é', 'f')` is -1 (collation reads `é` as `e`), while the
+      // raw code units put `f` (0x66) before `é` (0xE9). A Result row is
+      // persisted, so the tie-break must not depend on the ICU/locale build.
+      const { payload, tagsByQuestionId } = tagPayload(4, [
+        [1, [tag('é')]],
+        [2, [tag('é')]],
+        [3, [tag('f')]],
+        [4, [tag('f')]],
+      ]);
+
+      const result = scoreExamAttempt(
+        makeInput(
+          payload,
+          [
+            ['q1', { choice: 'a' }],
+            ['q2', { choice: 'b' }],
+            ['q3', { choice: 'a' }],
+            ['q4', { choice: 'b' }],
+          ],
+          { tagsByQuestionId },
+        ),
+      );
+
+      expect(
+        result.weakAreas.map((area) => ({
+          slug: area.slug,
+          accuracy: area.accuracy,
+        })),
+      ).toEqual([
+        { slug: 'f', accuracy: 0.5 },
+        { slug: 'é', accuracy: 0.5 },
+      ]);
+    });
+
     it('freezes tag stats from the provided questionId → tag map', () => {
       const payload = makePayload([
         {

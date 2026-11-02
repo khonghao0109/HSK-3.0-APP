@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ExamAttemptStatus, Prisma } from '@prisma/client';
@@ -46,6 +47,7 @@ import {
 } from './exam-errors';
 import { classifyExamPersistenceError } from './exam-persistence';
 import { markAttemptTimedOut } from './exam-attempt-timeout';
+import { ensureAttemptResult } from './exam-result.persistence';
 import {
   buildExamSnapshot,
   EXAM_SECTION_MAX_SCORE,
@@ -170,12 +172,15 @@ type ExamQuestionRow = Prisma.QuestionGetPayload<{
 
 const EXAM_ATTEMPT_SELECT = {
   id: true,
+  userId: true,
   testId: true,
   status: true,
   startedAt: true,
   expiresAt: true,
   submittedAt: true,
   maxScore: true,
+  // TL-163: the Result writer needs the owner and the frozen authoring version.
+  scoringVersion: true,
 } satisfies Prisma.ExamAttemptSelect;
 
 const EXAM_ANSWER_SELECT = {
@@ -287,6 +292,8 @@ type AttemptSubmitResult =
 
 @Injectable()
 export class ExamService {
+  private readonly logger = new Logger(ExamService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly coordinator: ExamTransactionCoordinator,
@@ -993,13 +1000,32 @@ export class ExamService {
       },
     });
 
+    // TL-164: grading runs in the same transaction as the terminal transition.
+    // It must come after the `submitted` event (the append-only ledger is the
+    // replay guard) and before the commit, so a Result can never outlive a
+    // rolled-back submit. `scoring_failed` is not a submit failure: the attempt
+    // stays submitted and A3 grades lazily on the result endpoint (Q147).
+    // The committed shape of the locked row: the conditional update above made
+    // the status terminal inside this transaction, which is what the Result
+    // integrity trigger requires. The `timed_out` branch is reserved for the
+    // lazy A3 grading path, hence `ensureAttemptResult` keeps its own guard.
+    const submittedAttempt: LockedAttempt = {
+      ...attempt,
+      status: ExamAttemptStatus.submitted,
+      submittedAt: now,
+    };
+    const grading = await ensureAttemptResult(tx, submittedAttempt, now);
+    if (grading.kind === 'scoring_failed') {
+      // Fixed message + ids only: never the error text, never an answer (R11).
+      this.logger.warn('exam.grading.failed', {
+        attemptId,
+        error: grading.error.name,
+      });
+    }
+
     return {
       kind: 'submitted',
-      attempt: {
-        ...attempt,
-        status: ExamAttemptStatus.submitted,
-        submittedAt: now,
-      },
+      attempt: submittedAttempt,
       now,
       counts,
     };

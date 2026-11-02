@@ -1,6 +1,7 @@
 /**
- * M4.2c / TL-155 + review H1: production-path concurrency evidence for
- * "submit exam", proved **on the row lock** instead of on timing.
+ * M4.2c / TL-155 + review H1 (A2 re-targeted by M4.3 / TL-167): production-
+ * path concurrency evidence for "submit exam", proved **on the row lock**
+ * instead of on timing.
  *
  * Every main scenario runs in **both orders** with the same shape:
  *   A pauses inside the real transaction (`after_attempt_lock`) and keeps the
@@ -28,7 +29,9 @@
  *
  * Runs on a fresh migration-only disposable database. Fails on any deadlock
  * (40P01), lock/statement timeout, unexpected 500, more than one terminal
- * event, or a `Result` row (M4.2c closes the attempt but never scores it).
+ * event, a `submitted` attempt without exactly one `Result` covering every
+ * test-section skill, or a `timed_out` attempt that owns a `Result` (A2 scores
+ * inside the submit transaction; A3 grades `timed_out` lazily on GET result).
  */
 import { randomUUID } from 'node:crypto';
 
@@ -470,22 +473,85 @@ async function main(): Promise<void> {
     });
 
   /**
-   * Every round, in every scenario, keeps the two M4.2c invariants: exactly one
-   * terminal event and no Result (M4.2c never scores).
+   * Every round, in every scenario, keeps exactly one terminal event. The
+   * `Result` rows follow the committed attempt status: A2 scores on the
+   * `in_progress -> submitted` transition, so a `submitted` attempt owns exactly
+   * one `Result` whose skill scores cover every skill of the frozen test
+   * sections; a `timed_out` attempt stays unscored until A3 grades it lazily on
+   * GET result. Any other terminal status is a harness bug, not a pass.
    */
   const assertRoundInvariants = async (
     label: string,
     attemptId: number,
+    testIdValue: number,
   ): Promise<void> => {
     const terminal = await terminalCount(attemptId);
     check(
       terminal === 1,
       `${label}: ${String(terminal)} terminal events (expected 1)`,
     );
-    const results = await observer.result.count({ where: { attemptId } });
-    check(
-      results === 0,
-      `${label}: ${String(results)} Result rows (M4.2c must not score)`,
+    const attempt = await observer.examAttempt.findUnique({
+      where: { id: attemptId },
+      select: { status: true },
+    });
+    if (attempt === null) {
+      throw new ExamSubmitConcurrencyError(
+        `${label}: attempt ${String(attemptId)} is missing`,
+      );
+    }
+
+    if (attempt.status === ExamAttemptStatus.submitted) {
+      const results = await observer.result.findMany({
+        where: { attemptId },
+        select: { id: true },
+      });
+      check(
+        results.length === 1,
+        `${label}: submitted attempt has ${String(results.length)} Result rows (expected exactly 1)`,
+      );
+      const resultId = results[0].id;
+      const sections = await observer.testSection.findMany({
+        where: { testId: testIdValue },
+        select: { skill: true },
+      });
+      const expectedSkills = new Set(sections.map((section) => section.skill));
+      check(
+        expectedSkills.size > 0,
+        `${label}: test ${String(testIdValue)} has no sections to score`,
+      );
+      const skillScores = await observer.resultSkillScore.findMany({
+        where: { resultId },
+        select: { skill: true },
+      });
+      check(
+        skillScores.length === expectedSkills.size,
+        `${label}: Result ${String(resultId)} has ${String(skillScores.length)} skill scores for ${String(expectedSkills.size)} section skills`,
+      );
+      const scoredSkills = new Set(skillScores.map((row) => row.skill));
+      check(
+        scoredSkills.size === skillScores.length,
+        `${label}: Result ${String(resultId)} has duplicate skill score rows`,
+      );
+      for (const skill of expectedSkills) {
+        check(
+          scoredSkills.has(skill),
+          `${label}: Result ${String(resultId)} is missing the ${skill} skill score`,
+        );
+      }
+      return;
+    }
+
+    if (attempt.status === ExamAttemptStatus.timed_out) {
+      const results = await observer.result.count({ where: { attemptId } });
+      check(
+        results === 0,
+        `${label}: timed_out attempt has ${String(results)} Result rows (A3 grades lazily; expected 0)`,
+      );
+      return;
+    }
+
+    throw new ExamSubmitConcurrencyError(
+      `${label}: attempt status is ${attempt.status} (expected submitted or timed_out)`,
     );
   };
 
@@ -743,7 +809,14 @@ async function main(): Promise<void> {
           waited,
           'EXAM_ATTEMPT_ALREADY_SUBMITTED',
         );
-        await assertRoundInvariants(`S1${order}`, attemptId);
+        // S1 is the canonical double-submit shape: the holder transitions the
+        // attempt and writes the one Result, the waiter must not write another.
+        const s1Results = await observer.result.count({ where: { attemptId } });
+        check(
+          s1Results === 1,
+          `S1${order}: submitted attempt has ${String(s1Results)} Result rows (expected exactly 1)`,
+        );
+        await assertRoundInvariants(`S1${order}`, attemptId, testId);
       });
     }
 
@@ -830,7 +903,7 @@ async function main(): Promise<void> {
           })) === 1,
           `S2${order}: more than one submitted event`,
         );
-        await assertRoundInvariants(`S2${order}`, attemptId);
+        await assertRoundInvariants(`S2${order}`, attemptId, testId);
       });
     }
 
@@ -900,7 +973,7 @@ async function main(): Promise<void> {
           timeoutReason(events[0] ?? { metadata: null }) === 'expired_on_read',
         `S3a: timed_out event reason is ${String(events[0] === undefined ? null : timeoutReason(events[0]))}`,
       );
-      await assertRoundInvariants('S3a', attemptId);
+      await assertRoundInvariants('S3a', attemptId, testId);
     });
 
     // S3b: submit holds the row lock -> submit EXPIRED, reason expired_on_submit.
@@ -968,7 +1041,7 @@ async function main(): Promise<void> {
             'expired_on_submit',
         `S3b: timed_out event reason is ${String(events[0] === undefined ? null : timeoutReason(events[0]))}`,
       );
-      await assertRoundInvariants('S3b', attemptId);
+      await assertRoundInvariants('S3b', attemptId, testId);
     });
 
     // S3-pre (control): submit pauses before the lock, GET commits first.
@@ -1020,7 +1093,7 @@ async function main(): Promise<void> {
           timeoutReason(events[0] ?? { metadata: null }) === 'expired_on_read',
         `S3-pre: timed_out event reason is ${String(events[0] === undefined ? null : timeoutReason(events[0]))}`,
       );
-      await assertRoundInvariants('S3-pre', attemptId);
+      await assertRoundInvariants('S3-pre', attemptId, testId);
     });
 
     // ---------------------------------------------------------------- S4 ----
@@ -1085,7 +1158,7 @@ async function main(): Promise<void> {
         (await autosavedCount(attemptId)) === 0,
         'S4a wrote an autosaved event after submit',
       );
-      await assertRoundInvariants('S4a', attemptId);
+      await assertRoundInvariants('S4a', attemptId, testId);
     });
 
     // S4b: save holds the row lock -> save 200, submit 200 counts that answer.
@@ -1152,7 +1225,7 @@ async function main(): Promise<void> {
         (await autosavedCount(attemptId)) === 1,
         'S4b did not keep exactly one autosaved event',
       );
-      await assertRoundInvariants('S4b', attemptId);
+      await assertRoundInvariants('S4b', attemptId, testId);
     });
 
     // S4-pre (control): save pauses before the lock, submit commits first.
@@ -1205,7 +1278,7 @@ async function main(): Promise<void> {
         (await autosavedCount(attemptId)) === 0,
         'S4-pre wrote an autosaved event after submit',
       );
-      await assertRoundInvariants('S4-pre', attemptId);
+      await assertRoundInvariants('S4-pre', attemptId, testId);
     });
 
     // ---------------------------------------------------------------- S5 ----
@@ -1284,7 +1357,7 @@ async function main(): Promise<void> {
         (await attemptCount(learnerId, testId)) === 2,
         'S5a did not leave exactly two attempts',
       );
-      await assertRoundInvariants('S5a', attemptId);
+      await assertRoundInvariants('S5a', attemptId, testId);
     });
 
     // S5b: start holds the row lock -> submit CLOSED (never EXPIRED).
@@ -1359,7 +1432,7 @@ async function main(): Promise<void> {
           (await attemptCount(learnerId, testId)) === 2,
           'S5b did not leave exactly two attempts',
         );
-        await assertRoundInvariants('S5b', attemptId);
+        await assertRoundInvariants('S5b', attemptId, testId);
       } finally {
         startRowHold = null;
       }
@@ -1415,7 +1488,7 @@ async function main(): Promise<void> {
         (await attemptCount(learnerId, testId)) === 2,
         'S5-pre did not leave exactly two attempts',
       );
-      await assertRoundInvariants('S5-pre', attemptId);
+      await assertRoundInvariants('S5-pre', attemptId, testId);
     });
 
     // ---------------------------------------------------------------- S6 ----
@@ -1498,11 +1571,30 @@ async function main(): Promise<void> {
         'EXAM_ATTEMPT_ALREADY_SUBMITTED',
       );
       expectConflict('S6 save', saved, 'EXAM_ATTEMPT_CLOSED');
-      await assertRoundInvariants('S6', attemptId);
+      await assertRoundInvariants('S6', attemptId, testId);
     });
 
-    const results = await observer.result.count();
-    check(results === 0, `harness created ${String(results)} Result rows`);
+    // A2 harness-wide sanity: exactly one Result per committed `submitted`
+    // attempt across the whole run, and no Result attached to any attempt that
+    // is not `submitted` (timed_out must stay unscored for A3, in_progress and
+    // invalidated must never be scored at all).
+    const submittedAttempts = await observer.examAttempt.count({
+      where: { status: ExamAttemptStatus.submitted },
+    });
+    const scoredRows = await observer.result.findMany({
+      select: { attempt: { select: { status: true } } },
+    });
+    check(
+      scoredRows.length === submittedAttempts,
+      `harness left ${String(scoredRows.length)} Result rows for ${String(submittedAttempts)} submitted attempts (expected exactly one Result per submitted attempt)`,
+    );
+    const scoredNonSubmitted = scoredRows.filter(
+      (row) => row.attempt?.status !== ExamAttemptStatus.submitted,
+    ).length;
+    check(
+      scoredNonSubmitted === 0,
+      `harness left ${String(scoredNonSubmitted)} Result rows on attempts that are not submitted`,
+    );
   } finally {
     await Promise.all([
       observer.$disconnect(),

@@ -406,9 +406,20 @@ function buildWeakAreas(
   return areas
     .sort(
       (left, right) =>
-        left.accuracy - right.accuracy || left.slug.localeCompare(right.slug),
+        left.accuracy - right.accuracy ||
+        compareCodeUnits(left.slug, right.slug),
     )
     .slice(0, EXAM_WEAK_AREA_LIMIT);
+}
+
+/**
+ * Q154: the breakdown is persisted, so the tie-break must not depend on the
+ * runtime locale or on an ICU build; raw code-unit order is deterministic.
+ */
+function compareCodeUnits(left: string, right: string): number {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
 }
 
 function weakAreaLevel(

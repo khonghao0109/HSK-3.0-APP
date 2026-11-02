@@ -1,6 +1,7 @@
 import { ExamAttemptStatus, Prisma, QuestionType, Skill } from '@prisma/client';
-import type { HttpException } from '@nestjs/common';
+import { Logger, type HttpException } from '@nestjs/common';
 
+import * as scoring from './exam-scoring';
 import { ExamService } from './exam.service';
 
 /**
@@ -13,6 +14,7 @@ import { ExamService } from './exam.service';
 
 type AttemptRow = {
   id: number;
+  userId: number;
   testId: number;
   status: ExamAttemptStatus;
   startedAt: Date;
@@ -87,8 +89,13 @@ type SubmitHarness = {
     where: Record<string, unknown>;
     data: Record<string, unknown>;
   }>;
+  scoreUpdates: Array<{
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }>;
   events: Array<{ data: Record<string, unknown> }>;
   counts: Array<Record<string, unknown>>;
+  resultCreates: Array<{ data: Record<string, unknown> }>;
   findAttemptCalls: number;
 };
 
@@ -101,9 +108,12 @@ function harness(input: {
   flaggedCount?: number;
   questionCount?: number;
   now?: Date;
+  existingResultId?: number;
+  answers?: Array<{ snapshotQuestionKey: string; answer: Prisma.JsonValue }>;
 }): SubmitHarness {
   const attempt: AttemptRow | null = input.attempt ?? {
     id: 42,
+    userId: 1,
     testId: 7,
     status: ExamAttemptStatus.in_progress,
     startedAt: new Date(NOW.getTime() - 60_000),
@@ -113,9 +123,12 @@ function harness(input: {
   };
   const now = input.now ?? NOW;
   const updates: SubmitHarness['updates'] = [];
+  const scoreUpdates: SubmitHarness['scoreUpdates'] = [];
   const events: SubmitHarness['events'] = [];
   const counts: SubmitHarness['counts'] = [];
+  const resultCreates: SubmitHarness['resultCreates'] = [];
   const state = { findAttemptCalls: 0 };
+  const questionCount = input.questionCount ?? 2;
 
   const tx = {
     $queryRaw: jest.fn((strings: TemplateStringsArray) => {
@@ -145,6 +158,31 @@ function harness(input: {
           return Promise.resolve({ count: input.updateCount ?? 1 });
         },
       ),
+      update: jest.fn(
+        (data: {
+          where: Record<string, unknown>;
+          data: Record<string, unknown>;
+        }) => {
+          scoreUpdates.push(data);
+          return Promise.resolve({ id: 42 });
+        },
+      ),
+    },
+    result: {
+      findUnique: jest.fn(() =>
+        Promise.resolve(
+          input.existingResultId === undefined
+            ? null
+            : { id: input.existingResultId },
+        ),
+      ),
+      create: jest.fn((data: { data: Record<string, unknown> }) => {
+        resultCreates.push(data);
+        return Promise.resolve({ id: 77 });
+      }),
+    },
+    questionTag: {
+      findMany: jest.fn(() => Promise.resolve([])),
     },
     examAttemptEvent: {
       findUnique: jest.fn(() => Promise.resolve(input.event ?? null)),
@@ -156,11 +194,21 @@ function harness(input: {
     examAttemptSnapshot: {
       findUnique: jest.fn(() =>
         Promise.resolve({
-          payload: snapshotPayload(input.questionCount ?? 2),
+          payload: snapshotPayload(questionCount),
+          contentHash: 'frozen-content-hash',
         }),
       ),
     },
     examAnswer: {
+      findMany: jest.fn(() =>
+        Promise.resolve(
+          input.answers ??
+            Array.from({ length: questionCount }, (_unused, index) => ({
+              snapshotQuestionKey: `q${String(index + 1)}`,
+              answer: { choice: 'a' },
+            })),
+        ),
+      ),
       count: jest.fn((args: Record<string, unknown>) => {
         counts.push(args);
         const value =
@@ -186,8 +234,10 @@ function harness(input: {
   return {
     service,
     updates,
+    scoreUpdates,
     events,
     counts,
+    resultCreates,
     get findAttemptCalls() {
       return state.findAttemptCalls;
     },
@@ -268,6 +318,7 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     const h = harness({
       attempt: {
         id: 42,
+        userId: 1,
         testId: 7,
         status: ExamAttemptStatus.submitted,
         startedAt: new Date(NOW.getTime() - 60_000),
@@ -318,6 +369,7 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     const h = harness({
       attempt: {
         id: 42,
+        userId: 1,
         testId: 7,
         status: ExamAttemptStatus.submitted,
         startedAt: new Date(NOW.getTime() - 60_000),
@@ -340,6 +392,7 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
       const h = harness({
         attempt: {
           id: 42,
+          userId: 1,
           testId: 7,
           status,
           startedAt: new Date(NOW.getTime() - 60_000),
@@ -361,6 +414,7 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     const h = harness({
       attempt: {
         id: 42,
+        userId: 1,
         testId: 7,
         status: ExamAttemptStatus.in_progress,
         startedAt: new Date(NOW.getTime() - 91 * 60_000),
@@ -435,6 +489,7 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     const h = harness({
       attempt: {
         id: 42,
+        userId: 1,
         testId: 7,
         status: ExamAttemptStatus.in_progress,
         startedAt: new Date(NOW.getTime() - 91 * 60_000),
@@ -446,6 +501,120 @@ describe('ExamService.submitAttempt (TL-150/TL-151)', () => {
     const response = await h.service.submitAttempt(1, 42, 'key-grace');
     expect(h.updates[0]?.data['remainingSeconds']).toBe(0);
     expect(response.data.status).toBe('submitted');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('grades a normal submit exactly once and stores one Result', async () => {
+    const grader = jest.spyOn(scoring, 'scoreExamAttempt');
+    const h = harness({});
+
+    const response = await h.service.submitAttempt(1, 42, 'key-1');
+
+    expect(response.data).toMatchObject({
+      id: 42,
+      status: 'submitted',
+      replayed: false,
+    });
+    expect(grader).toHaveBeenCalledTimes(1);
+    expect(h.resultCreates).toHaveLength(1);
+    expect(h.resultCreates[0]?.data).toMatchObject({
+      userId: 1,
+      attemptId: 42,
+      score: 100,
+      maxScore: 100,
+      passed: true,
+      awardedBand: null,
+      scoringVersion: 'exam-score-v1',
+    });
+    expect(h.scoreUpdates).toEqual([
+      { where: { id: 42 }, data: { score: 100 } },
+    ]);
+  });
+
+  it('does not grade a replayed submit (the ledger is the answer)', async () => {
+    const grader = jest.spyOn(scoring, 'scoreExamAttempt');
+    const h = harness({
+      attempt: {
+        id: 42,
+        userId: 1,
+        testId: 7,
+        status: ExamAttemptStatus.submitted,
+        startedAt: new Date(NOW.getTime() - 60_000),
+        expiresAt: EXPIRES_LATER,
+        maxScore: 100,
+        submittedAt: new Date(NOW.getTime() - 5_000),
+      },
+      event: {
+        type: 'submitted',
+        metadata: {
+          reason: 'user_submit',
+          answeredCount: 3,
+          unansweredCount: 4,
+          flaggedCount: 1,
+        },
+      },
+      questionCount: 7,
+    });
+
+    const response = await h.service.submitAttempt(1, 42, 'key-1');
+
+    expect(response.data.replayed).toBe(true);
+    expect(grader).not.toHaveBeenCalled();
+    expect(h.resultCreates).toEqual([]);
+    expect(h.scoreUpdates).toEqual([]);
+  });
+
+  it('does not grade when the submit only closes an expired attempt', async () => {
+    const grader = jest.spyOn(scoring, 'scoreExamAttempt');
+    const h = harness({
+      attempt: {
+        id: 42,
+        userId: 1,
+        testId: 7,
+        status: ExamAttemptStatus.in_progress,
+        startedAt: new Date(NOW.getTime() - 91 * 60_000),
+        expiresAt: EXPIRES_PAST_GRACE,
+        maxScore: 100,
+        submittedAt: null,
+      },
+    });
+
+    const error = await rejection(h.service.submitAttempt(1, 42, 'key-1'));
+
+    expect(error.getStatus()).toBe(409);
+    expect(grader).not.toHaveBeenCalled();
+    expect(h.resultCreates).toEqual([]);
+    expect(h.scoreUpdates).toEqual([]);
+  });
+
+  it('still answers 200 and logs a fixed warn when grading fails', async () => {
+    const warn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    const grader = jest.spyOn(scoring, 'scoreExamAttempt');
+    const h = harness({
+      answers: [{ snapshotQuestionKey: 'q1', answer: { choice: 123 } }],
+    });
+
+    const response = await h.service.submitAttempt(1, 42, 'key-1');
+
+    // The attempt is committed (submit is not a grading failure) but no Result
+    // is written; A3 grades lazily and the client never sees the error.
+    expect(response.data).toMatchObject({
+      id: 42,
+      status: 'submitted',
+      replayed: false,
+    });
+    expect(grader).toHaveBeenCalledTimes(1);
+    expect(h.resultCreates).toEqual([]);
+    expect(h.scoreUpdates).toEqual([]);
+    expect(warn).toHaveBeenCalledWith('exam.grading.failed', {
+      attemptId: 42,
+      error: 'ExamScoringError',
+    });
   });
 
   it('counts unanswered questions from the frozen snapshot', async () => {

@@ -239,7 +239,7 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       skill: Skill.reading,
       content: 'Câu đúng sai của đề thi thử',
       answers: {},
-      correctAnswer: true,
+      correctAnswer: { value: true },
       explanation: 'Đoạn văn khẳng định điều này.',
     });
     const q3Id = await seedQuestion({
@@ -2503,7 +2503,8 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
         },
       }),
     ).toBe(1);
-    // The submit path writes no answer, score or result.
+    // A2: submit itself grades the attempt into a Result (case 51), but it still
+    // writes no answer row of its own and no extra autosave event.
     expect(
       await prisma.examAnswer.count({
         where: { attemptId: fixture.attemptId },
@@ -2850,6 +2851,12 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
   it('46. the database rejects a second Result and a Result for an open attempt', async () => {
     const fixture = await fourTypeAttempt('submit-result-integrity');
     await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+    // A2: the submit transaction itself writes the Result, so the unique
+    // `attemptId` is already claimed when the case starts.
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+
     const base = {
       userId: fixture.userId,
       testId: fixture.testId,
@@ -2858,11 +2865,6 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       scoringVersion: 'hsk-p0-v1',
       detailJson: {},
     };
-    const firstResult = await prisma.result.create({
-      data: base,
-      select: { id: true },
-    });
-    expect(firstResult.id).toBeGreaterThan(0);
     const duplicate = await prisma.result.create({ data: base }).then(
       () => null,
       (error: unknown) => error as { code?: string },
@@ -3048,6 +3050,668 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     ).toBe(0);
   });
 
+  /**
+   * A2 helpers: the graded `Result` row of one attempt (with its per-skill
+   * breakdown), a convenience save for an already valid answer shape, and a
+   * tag attached straight to a seeded question (`seedQuestion` has no tags).
+   */
+  async function attemptResult(attemptId: number) {
+    return prisma.result.findUniqueOrThrow({
+      where: { attemptId },
+      select: {
+        id: true,
+        userId: true,
+        testId: true,
+        score: true,
+        maxScore: true,
+        passed: true,
+        awardedBand: true,
+        scoringVersion: true,
+        publishedAt: true,
+        detailJson: true,
+        skillScores: { select: { skill: true, score: true, total: true } },
+      },
+    });
+  }
+
+  async function saveAnswerFor(
+    token: string,
+    attemptId: number,
+    questionKey: string,
+    answer: Prisma.InputJsonValue,
+    isFlagged = false,
+  ): Promise<void> {
+    await saveAnswer(token, attemptId, questionKey, {
+      answer,
+      isFlagged,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+  }
+
+  async function seedMcqQuestion(label: string): Promise<number> {
+    return seedQuestion({
+      type: QuestionType.mcq,
+      skill: Skill.reading,
+      content: `Câu A2 ${label} ${suffix}`,
+      answers: {
+        options: [
+          { id: 'a', text: 'A' },
+          { id: 'b', text: 'B' },
+        ],
+      },
+      correctAnswer: { optionId: 'a' },
+    });
+  }
+
+  async function attachTag(
+    questionId: number,
+    slug: string,
+    name: string,
+  ): Promise<void> {
+    const tag = await prisma.tag.upsert({
+      where: { slug },
+      update: {},
+      create: { slug, name },
+      select: { id: true },
+    });
+    await prisma.questionTag.create({
+      data: { questionId, tagId: tag.id },
+    });
+  }
+
+  it('51a. submit grades the attempt into exactly one Result with the frozen breakdown (A2)', async () => {
+    const learner = await register('a2-result-shape');
+    const gradedAttemptId = await startAttempt(learner.token, publishedTestId);
+
+    // Reading: q1 (mcq), q2 (true_false), q3 (fill_blank) right, q4 (arrange)
+    // left blank; listening: q5 right.
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q1', { choice: 'a' });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q2', { value: true });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q3', { text: '你好' });
+    await saveAnswerFor(learner.token, gradedAttemptId, 'q5', { choice: 'b' });
+
+    await submit(gradedAttemptId, learner.token, newKey()).expect(200);
+
+    const [result, snapshot, attemptRow] = await Promise.all([
+      attemptResult(gradedAttemptId),
+      prisma.examAttemptSnapshot.findUniqueOrThrow({
+        where: { attemptId: gradedAttemptId },
+        select: { contentHash: true },
+      }),
+      prisma.examAttempt.findUniqueOrThrow({
+        where: { id: gradedAttemptId },
+        select: { scoringVersion: true },
+      }),
+    ]);
+
+    expect(
+      await prisma.result.count({ where: { attemptId: gradedAttemptId } }),
+    ).toBe(1);
+    // The frozen authoring/config version is recorded next to the grading one.
+    expect(attemptRow.scoringVersion).toBe('hsk-p0-v1');
+    // Q118/Q143: reading 3/4 => round(75), listening 1/1 => 100, so 175 of 200.
+    expect(result).toMatchObject({
+      userId: learner.userId,
+      testId: publishedTestId,
+      score: 175,
+      maxScore: 200,
+      passed: true,
+      awardedBand: null,
+      scoringVersion: 'exam-score-v1',
+    });
+    expect(result.publishedAt).toBeInstanceOf(Date);
+    expect(result.detailJson).toEqual({
+      schemaVersion: 1,
+      attemptScoringVersion: attemptRow.scoringVersion,
+      snapshotContentHash: snapshot.contentHash,
+      counts: {
+        answeredCount: 4,
+        correctCount: 4,
+        incorrectCount: 0,
+        unansweredCount: 1,
+      },
+      sections: [
+        {
+          key: 's1',
+          skill: Skill.reading,
+          questionCount: 4,
+          correctCount: 3,
+          score: 75,
+          maxScore: 100,
+        },
+        {
+          key: 's2',
+          skill: Skill.listening,
+          questionCount: 1,
+          correctCount: 1,
+          score: 100,
+          maxScore: 100,
+        },
+      ],
+      weakAreas: [],
+      questions: [
+        { key: 'q1', isCorrect: true },
+        { key: 'q2', isCorrect: true },
+        { key: 'q3', isCorrect: true },
+        { key: 'q4', isCorrect: false },
+        { key: 'q5', isCorrect: true },
+      ],
+    });
+    // Q155: the persisted breakdown never carries a key, an explanation or
+    // question content.
+    const serialized = JSON.stringify(result.detailJson);
+    for (const leakedKey of [
+      'optionId',
+      'correctAnswer',
+      'explanation',
+      'acceptedTexts',
+      'tokenIds',
+    ]) {
+      expect(serialized).not.toContain(leakedKey);
+    }
+    // Q153: a skill's score is the sum of its sections' rounded scores.
+    expect(
+      [...result.skillScores].sort((left, right) =>
+        left.skill.localeCompare(right.skill),
+      ),
+    ).toEqual([
+      { skill: Skill.listening, score: 100, total: 100 },
+      { skill: Skill.reading, score: 75, total: 100 },
+    ]);
+  });
+
+  it('51b. maps the frozen passScore to passed true, false and null', async () => {
+    // publishedTestId freezes passScore 120 against maxScore 200.
+    const passLearner = await register('a2-pass');
+    const passAttemptId = await startAttempt(
+      passLearner.token,
+      publishedTestId,
+    );
+    await saveAnswerFor(passLearner.token, passAttemptId, 'q1', {
+      choice: 'a',
+    });
+    await saveAnswerFor(passLearner.token, passAttemptId, 'q2', {
+      value: true,
+    });
+    await saveAnswerFor(passLearner.token, passAttemptId, 'q3', {
+      text: '你好',
+    });
+    await saveAnswerFor(passLearner.token, passAttemptId, 'q5', {
+      choice: 'b',
+    });
+    await submit(passAttemptId, passLearner.token, newKey()).expect(200);
+    const passedResult = await attemptResult(passAttemptId);
+    expect(passedResult.score).toBe(175);
+    expect(passedResult.passed).toBe(true);
+
+    // 25 of 200: one right reading answer, listening blank.
+    const failLearner = await register('a2-fail');
+    const failAttemptId = await startAttempt(
+      failLearner.token,
+      publishedTestId,
+    );
+    await saveAnswerFor(failLearner.token, failAttemptId, 'q1', {
+      choice: 'a',
+    });
+    await submit(failAttemptId, failLearner.token, newKey()).expect(200);
+    const failedResult = await attemptResult(failAttemptId);
+    expect(failedResult.score).toBe(25);
+    expect(failedResult.passed).toBe(false);
+
+    // Q145: a frozen passScore of null means "unknown", not "failed". The start
+    // gate refuses a published test with passScore null (`pass_score_required`),
+    // so the attempt is frozen directly with the same payload an imported or
+    // legacy attempt carries; save and submit still run over HTTP.
+    const nullPassQuestionId = await seedMcqQuestion('pass-null');
+    const nullPassTestId = await seedTest({
+      title: `Đề không có điểm đỗ A2 ${suffix}`,
+      status: ContentStatus.published,
+      passScore: null,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          groups: [{ title: null, questionIds: [nullPassQuestionId] }],
+        },
+      ],
+    });
+    const nullPassLearner = await register('a2-pass-null');
+    const nullPassPayload: Prisma.InputJsonValue = {
+      schemaVersion: 1,
+      test: {
+        id: nullPassTestId,
+        title: `Đề không có điểm đỗ A2 ${suffix}`,
+        instruction: null,
+        levelCode: 'HSK4',
+        durationMinutes: 90,
+        passScore: null,
+        maxScore: 100,
+        scoringVersion: 'hsk-p0-v1',
+      },
+      sections: [
+        {
+          key: 's1',
+          orderIndex: 1,
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          instruction: null,
+          maxScore: 100,
+          groups: [
+            {
+              key: 's1-g1',
+              orderIndex: 1,
+              title: null,
+              instruction: null,
+              content: null,
+              audio: null,
+              image: null,
+              questions: [
+                {
+                  key: 'q1',
+                  orderIndex: 1,
+                  questionId: nullPassQuestionId,
+                  questionVersion: 1,
+                  type: QuestionType.mcq,
+                  skill: Skill.reading,
+                  content: `Câu A2 pass-null ${suffix}`,
+                  answers: { options: [{ id: 'a', text: 'A' }] },
+                  audio: null,
+                  image: null,
+                  correctAnswer: { optionId: 'a' },
+                  explanation: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const nullPassNow = new Date();
+    const nullPassAttempt = await prisma.examAttempt.create({
+      data: {
+        userId: nullPassLearner.userId,
+        testId: nullPassTestId,
+        status: 'in_progress',
+        startedAt: nullPassNow,
+        expiresAt: new Date(nullPassNow.getTime() + 90 * 60_000),
+        remainingSeconds: 5_400,
+        maxScore: 100,
+        scoringVersion: 'hsk-p0-v1',
+        snapshotVersion: 1,
+        idempotencyKey: newKey(),
+      },
+      select: { id: true },
+    });
+    await prisma.examAttemptSnapshot.create({
+      data: {
+        attemptId: nullPassAttempt.id,
+        testVersion: 1,
+        snapshotVersion: 1,
+        contentHash: sha256CanonicalJson(nullPassPayload),
+        payload: nullPassPayload,
+      },
+    });
+    await saveAnswerFor(nullPassLearner.token, nullPassAttempt.id, 'q1', {
+      choice: 'a',
+    });
+    await submit(nullPassAttempt.id, nullPassLearner.token, newKey()).expect(
+      200,
+    );
+    const nullPassResult = await attemptResult(nullPassAttempt.id);
+    expect(nullPassResult.score).toBe(100);
+    expect(nullPassResult.passed).toBeNull();
+  });
+
+  it('51c. scores a blank answer as wrong without counting it as answered (Q143)', async () => {
+    const questionIds = [
+      await seedMcqQuestion('blank-1'),
+      await seedMcqQuestion('blank-2'),
+      await seedMcqQuestion('blank-3'),
+    ];
+    const testId = await seedTest({
+      title: `Đề câu trống A2 ${suffix}`,
+      status: ContentStatus.published,
+      passScore: 0,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          groups: [{ title: null, questionIds }],
+        },
+      ],
+    });
+    const learner = await register('a2-blank');
+    const blankAttemptId = await startAttempt(learner.token, testId);
+    await saveAnswerFor(learner.token, blankAttemptId, 'q1', { choice: 'a' });
+    await saveAnswerFor(learner.token, blankAttemptId, 'q2', { choice: 'a' });
+    await submit(blankAttemptId, learner.token, newKey()).expect(200);
+
+    const result = await attemptResult(blankAttemptId);
+    // 2 correct of 3 in one section: round-half-up(100 × 2 / 3) = 67.
+    expect(result.score).toBe(67);
+    expect(result.detailJson).toMatchObject({
+      counts: {
+        answeredCount: 2,
+        correctCount: 2,
+        incorrectCount: 0,
+        unansweredCount: 1,
+      },
+      sections: [
+        {
+          key: 's1',
+          skill: Skill.reading,
+          questionCount: 3,
+          correctCount: 2,
+          score: 67,
+          maxScore: 100,
+        },
+      ],
+      questions: [
+        { key: 'q1', isCorrect: true },
+        { key: 'q2', isCorrect: true },
+        { key: 'q3', isCorrect: false },
+      ],
+    });
+    const attemptRow = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: blankAttemptId },
+      select: { score: true },
+    });
+    expect(attemptRow.score).toBe(67);
+  });
+
+  it('51d. grades arrange_sentence against the per-attempt masked token ids (TL-133)', async () => {
+    const fixture = await fourTypeAttempt('a2-arrange');
+    const read = await get(
+      `/exam/attempts/${String(fixture.attemptId)}`,
+      fixture.token,
+    ).expect(200);
+    const body = read.body.data as ExamAttemptBody;
+    const arrangeQuestion = body.sections[0]?.groups[0]?.questions.find(
+      (entry) => entry.type === 'arrange_sentence',
+    );
+    if (arrangeQuestion === undefined) {
+      throw new Error('A2 arrange question missing');
+    }
+    const displayedTokens = (
+      arrangeQuestion.answers as {
+        tokens: Array<{ id: string; text: string }>;
+      }
+    ).tokens;
+
+    // The correct sentence, as texts, comes from the frozen snapshot; the ids
+    // the learner must submit are the masked display ids of those texts (TL-133).
+    const snapshot = await prisma.examAttemptSnapshot.findUniqueOrThrow({
+      where: { attemptId: fixture.attemptId },
+      select: { payload: true },
+    });
+    const storedQuestion = snapshotQuestionByKey(
+      snapshot.payload,
+      arrangeQuestion.key,
+    );
+    const storedTokens = (
+      storedQuestion.answers as { tokens: Array<{ id: string; text: string }> }
+    ).tokens;
+    const textByStoredId = new Map(
+      storedTokens.map((token) => [token.id, token.text]),
+    );
+    const correctTexts = (
+      storedQuestion.correctAnswer as { tokenIds: string[] }
+    ).tokenIds.map((tokenId) => textByStoredId.get(tokenId) ?? '');
+    const order = correctTexts.map((text) => {
+      const match = displayedTokens.find((token) => token.text === text);
+      if (match === undefined) {
+        throw new Error(`A2 masked token "${text}" missing`);
+      }
+      return match.id;
+    });
+    expect(order).toHaveLength(correctTexts.length);
+
+    await saveAnswerFor(fixture.token, fixture.attemptId, arrangeQuestion.key, {
+      order,
+    });
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const result = await attemptResult(fixture.attemptId);
+    const detail = result.detailJson as Prisma.JsonObject;
+    expect(detail['questions']).toContainEqual({
+      key: arrangeQuestion.key,
+      isCorrect: true,
+    });
+    expect(result.score).toBe(25);
+  });
+
+  it('51e. builds weak areas from answered questions only, two answers minimum (Q154)', async () => {
+    const weakSlug = `a2-weak-${suffix}`;
+    const mediumSlug = `a2-medium-${suffix}`;
+    const singleSlug = `a2-single-${suffix}`;
+    const weakName = `A2 weak ${suffix}`;
+    const mediumName = `A2 medium ${suffix}`;
+    const singleName = `A2 single ${suffix}`;
+
+    const weakQuestionIds = [
+      await seedMcqQuestion('weak-1'),
+      await seedMcqQuestion('weak-2'),
+    ];
+    const mediumQuestionIds = [
+      await seedMcqQuestion('medium-1'),
+      await seedMcqQuestion('medium-2'),
+    ];
+    const singleQuestionId = await seedMcqQuestion('single-1');
+    for (const questionId of weakQuestionIds) {
+      await attachTag(questionId, weakSlug, weakName);
+    }
+    for (const questionId of mediumQuestionIds) {
+      await attachTag(questionId, mediumSlug, mediumName);
+    }
+    await attachTag(singleQuestionId, singleSlug, singleName);
+
+    const testId = await seedTest({
+      title: `Đề weak area A2 ${suffix}`,
+      status: ContentStatus.published,
+      passScore: 0,
+      sections: [
+        {
+          skill: Skill.reading,
+          title: 'Đọc hiểu',
+          groups: [
+            {
+              title: null,
+              questionIds: [
+                ...weakQuestionIds,
+                ...mediumQuestionIds,
+                singleQuestionId,
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const learner = await register('a2-weak-areas');
+    const weakAttemptId = await startAttempt(learner.token, testId);
+    // q1/q2 are both wrong (weak), q3 right and q4 wrong (medium), q5 is the
+    // only answered question of its tag and must never be listed.
+    await saveAnswerFor(learner.token, weakAttemptId, 'q1', { choice: 'b' });
+    await saveAnswerFor(learner.token, weakAttemptId, 'q2', { choice: 'b' });
+    await saveAnswerFor(learner.token, weakAttemptId, 'q3', { choice: 'a' });
+    await saveAnswerFor(learner.token, weakAttemptId, 'q4', { choice: 'b' });
+    await saveAnswerFor(learner.token, weakAttemptId, 'q5', { choice: 'b' });
+    await submit(weakAttemptId, learner.token, newKey()).expect(200);
+
+    const detail = (await attemptResult(weakAttemptId))
+      .detailJson as Prisma.JsonObject;
+    // Accuracy 0 sorts before 0.5; the single-answer tag is excluded.
+    expect(detail['weakAreas']).toEqual([
+      {
+        slug: weakSlug,
+        name: weakName,
+        answered: 2,
+        correct: 0,
+        accuracy: 0,
+        level: 'weak',
+      },
+      {
+        slug: mediumSlug,
+        name: mediumName,
+        answered: 2,
+        correct: 1,
+        accuracy: 0.5,
+        level: 'medium',
+      },
+    ]);
+  });
+
+  it('51f. replays the submit key without writing a second Result', async () => {
+    const fixture = await fourTypeAttempt('a2-replay');
+    const key = newKey();
+    await submit(fixture.attemptId, fixture.token, key).expect(200);
+    const firstResult = await attemptResult(fixture.attemptId);
+    const replayed = await submit(fixture.attemptId, fixture.token, key).expect(
+      200,
+    );
+    expect((replayed.body.data as ExamSubmitBody).replayed).toBe(true);
+    // The same row is returned: a replay must not rewrite the graded Result.
+    expect((await attemptResult(fixture.attemptId)).id).toBe(firstResult.id);
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(1);
+  });
+
+  it('51g. keeps ExamAttempt.score equal to Result.score', async () => {
+    const fixture = await fourTypeAttempt('a2-attempt-score');
+    await saveAnswerFor(fixture.token, fixture.attemptId, 'q1', {
+      choice: 'a',
+    });
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    const attemptRow = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { score: true },
+    });
+    const result = await attemptResult(fixture.attemptId);
+    // 1 correct of 4 in the only section: round(25).
+    expect(result.score).toBe(25);
+    expect(attemptRow.score).toBe(result.score);
+  });
+
+  it('51h. keeps score out of the submitted event metadata', async () => {
+    const fixture = await fourTypeAttempt('a2-event-metadata');
+    await saveAnswerFor(
+      fixture.token,
+      fixture.attemptId,
+      'q1',
+      { choice: 'a' },
+      true,
+    );
+    await submit(fixture.attemptId, fixture.token, newKey()).expect(200);
+
+    // The Result proves grading ran, so the metadata check is not vacuous.
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(1);
+    const events = await prisma.examAttemptEvent.findMany({
+      where: { attemptId: fixture.attemptId, type: 'submitted' },
+      select: { metadata: true },
+    });
+    expect(events).toEqual([
+      {
+        metadata: {
+          reason: 'user_submit',
+          answeredCount: 1,
+          unansweredCount: 3,
+          flaggedCount: 1,
+        },
+      },
+    ]);
+    expect(JSON.stringify(events)).not.toContain('score');
+  });
+
+  it('51i. never grades a timed-out attempt', async () => {
+    const fixture = await fourTypeAttempt('a2-timed-out');
+    const nowMs = Date.now();
+    await prisma.examAttempt.update({
+      where: { id: fixture.attemptId },
+      data: {
+        startedAt: new Date(nowMs - 91 * 60_000),
+        expiresAt: new Date(nowMs - 10_000),
+      },
+    });
+
+    const lateSave = await saveAnswer(fixture.token, fixture.attemptId, 'q1', {
+      answer: { choice: 'a' },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(409);
+    expect(lateSave.body.error).toMatchObject({ code: 'EXAM_ATTEMPT_EXPIRED' });
+
+    const read = await get(
+      `/exam/attempts/${String(fixture.attemptId)}`,
+      fixture.token,
+    ).expect(200);
+    expect((read.body.data as ExamAttemptBody).status).toBe('timed_out');
+
+    const closed = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(409);
+    expect(closed.body.error).toMatchObject({
+      code: 'EXAM_ATTEMPT_CLOSED',
+      details: { status: 'timed_out' },
+    });
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+    const attemptRow = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { score: true },
+    });
+    expect(attemptRow.score).toBeNull();
+  });
+
+  it('51j. commits the submit but writes no Result when an answer has an unknown shape', async () => {
+    const fixture = await fourTypeAttempt('a2-scoring-failed');
+    // Bypass the answer validator on purpose: the stored row is readable JSON
+    // but not the documented mcq shape, so grading fails closed.
+    await prisma.examAnswer.create({
+      data: {
+        attemptId: fixture.attemptId,
+        snapshotQuestionKey: 'q1',
+        answer: { choice: 123 },
+        isFlagged: false,
+        answeredAt: new Date(),
+      },
+    });
+
+    const response = await submit(
+      fixture.attemptId,
+      fixture.token,
+      newKey(),
+    ).expect(200);
+    expect((response.body.data as ExamSubmitBody).status).toBe('submitted');
+    expect(
+      await prisma.result.count({ where: { attemptId: fixture.attemptId } }),
+    ).toBe(0);
+    // The terminal transition and its event still committed; only grading was
+    // skipped, so the attempt can be graded lazily later (A3).
+    expect(
+      await prisma.examAttemptEvent.count({
+        where: { attemptId: fixture.attemptId, type: 'submitted' },
+      }),
+    ).toBe(1);
+    const attemptRow = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: fixture.attemptId },
+      select: { status: true, score: true },
+    });
+    expect(attemptRow).toEqual({ status: 'submitted', score: null });
+  });
+
   function put(path: string, token?: string) {
     const call = request(app.getHttpServer()).put(`/api/v1${path}`);
     return token === undefined
@@ -3145,7 +3809,7 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       skill: Skill.reading,
       content: `Câu đúng sai M4.2b ${label} ${suffix}`,
       answers: {},
-      correctAnswer: true,
+      correctAnswer: { value: true },
     });
     const fillBlankId = await seedQuestion({
       type: QuestionType.fill_blank,
@@ -3287,7 +3951,8 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
   async function seedTest(input: {
     title: string;
     status: ContentStatus;
-    passScore: number;
+    // A2: a test may freeze no pass line at all (`Test.passScore` is nullable).
+    passScore: number | null;
     deletedAt?: Date;
     availableFrom?: Date;
     availableTo?: Date;
