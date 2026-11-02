@@ -5,6 +5,9 @@ import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
+import { PinExerciseTypeEnumOrder } from './create-exercise-revision.dto';
+
+@PinExerciseTypeEnumOrder()
 export class AdminExercisesQueryDto extends PaginationQueryDto {
   @IsOptional()
   @Type(() => Number)
