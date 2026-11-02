@@ -1050,7 +1050,7 @@ làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot
 ### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c/M4.3)
 
 Envelope §1. 9 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
-response 2xx có `Cache-Control: no-store` (response lỗi không đặt header này); `:testId`/`:attemptId` qua pipe số nguyên dương
+response 2xx có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
 `1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
 của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
 chưa lưu trữ (`deletedAt IS NULL`), và `availableFrom ≤ now < availableTo` nếu hai trường này
