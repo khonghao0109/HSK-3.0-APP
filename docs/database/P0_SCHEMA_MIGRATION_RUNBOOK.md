@@ -1,7 +1,7 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.11.0`
-> Áp dụng cho chuỗi migration P0 đến ngày `2026-10-23`.
+> Phiên bản runbook: `1.11.1`
+> Áp dụng cho chuỗi migration P0 đến ngày `2026-11-02`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
 ## 1. Chuỗi migration bắt buộc
@@ -28,9 +28,10 @@
 | ONB-LP | `20261005023447_user_goal_learning_purpose`             | Enum `LearningPurpose` và cột `learningPurpose` trên `UserGoal` lưu lý do học (mục 22).                   |
 | QB-1   | `20261023170000_question_objective_types`                | Enum `QuestionType` thêm `true_false`, `fill_blank`, `arrange_sentence` cho ngân hàng câu hỏi (mục 23).   |
 | EXAM-U | `20261027090000_exam_attempt_one_in_progress`            | Partial unique index: tối đa một `ExamAttempt` `in_progress` mỗi `(userId, testId)` (mục 24).             |
+| EXAM-R | `20261102103000_exam_result_score_summary`               | `Result.maxScore`/`passed` nullable + CHECK `score <= maxScore` khi có `maxScore` (mục 25).                |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 25 migration (đến `20261027090000_exam_attempt_one_in_progress`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 26 migration (đến `20261102103000_exam_result_score_summary`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -968,3 +969,32 @@ insert vẫn va index (do race ngoài service) thì bắt `P2002` rồi đọc l
 và trả `200`, không trả `500`. E2E `test/exam-attempt.e2e-spec.ts` và harness
 `npm run test:db:exam-start-concurrency` (6 kịch bản × 20 vòng trên
 `hsk_m42a_hardening`, 0 deadlock) là bằng chứng.
+
+## 25. Exam result score summary — `Result.maxScore`/`passed` (M4.3)
+
+### 25.1. Migration 26 — `20261102103000_exam_result_score_summary`
+
+Nghiệp vụ (Q152/Q153): kết quả bài thi cần `maxScore` của đề và trạng thái đỗ/trượt do server
+tính. Migration chỉ bổ sung hai cột nullable trên `Result` để tương thích row cũ (không
+backfill, không sửa dữ liệu):
+
+```sql
+ALTER TABLE "Result"
+  ADD COLUMN "maxScore" INTEGER,
+  ADD COLUMN "passed" BOOLEAN;
+
+ALTER TABLE "Result"
+  ADD CONSTRAINT "Result_maxScore_check"
+  CHECK ("maxScore" IS NULL OR ("maxScore" > 0 AND "score" >= 0 AND "score" <= "maxScore"));
+```
+
+- `maxScore` NULL = row legacy trước M4.3 hoặc đề chưa có `maxScore`; khi có giá trị thì
+  `score` bắt buộc nằm trong `0..maxScore`.
+- `passed` NULL = chưa xác định (ví dụ `Test.passScore` NULL); service chỉ set khi tính được.
+- Không đụng trigger `Result_attempt_integrity`/`Result_band_integrity` hay bất kỳ bảng khác.
+- Impact API: additive, không đổi endpoint nào đang chạy. Result/review endpoint của M4.3
+  (TL-165/166) đọc hai cột này; reader cũ bỏ qua cột mới nên tương thích ngược.
+- Rollback không cần thiết: cột NULL không ảnh hưởng reader cũ; muốn lùi phải drop constraint
+  rồi drop cột bằng migration mới (không hỗ trợ trong release này).
+- Bằng chứng: `npm run test:db:p0` trên DB disposable (CHECK bắt `score > maxScore`, row
+  `maxScore` NULL vẫn hợp lệ); fresh `npx prisma migrate deploy` áp 26/26 migration.

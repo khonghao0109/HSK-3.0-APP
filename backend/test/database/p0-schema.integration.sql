@@ -34,6 +34,7 @@ DECLARE
   attempt_id INTEGER;
   attempt_2_id INTEGER;
   attempt_7_9_id INTEGER;
+  attempt_score_id INTEGER;
   content_revision_id INTEGER;
   content_review_id INTEGER;
   audit_log_id BIGINT;
@@ -551,6 +552,31 @@ BEGIN
   INSERT INTO "Result" (
     "userId", "testId", "attemptId", "score", "awardedBand", "scoringVersion", "detailJson"
   ) VALUES (user_id, test_1_id, attempt_id, 1, 1, 'hsk-p0-v1', '{}'::jsonb);
+
+  -- TL-161: Result.maxScore bounds score when present; legacy rows may keep it NULL.
+  INSERT INTO "ExamAttempt" (
+    "userId", "testId", "status", "startedAt", "expiresAt", "submittedAt", "remainingSeconds",
+    "score", "maxScore", "scoringVersion", "idempotencyKey", "updatedAt"
+  ) VALUES (
+    user_id, test_1_id, 'submitted', CURRENT_TIMESTAMP - interval '20 minutes', CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP, 0, 5, 10, 'hsk-p0-v1', 'attempt-result-score-check', CURRENT_TIMESTAMP
+  ) RETURNING "id" INTO attempt_score_id;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "Result" (
+      "userId", "testId", "attemptId", "score", "maxScore", "scoringVersion", "detailJson"
+    ) VALUES (user_id, test_1_id, attempt_score_id, 5, 3, 'hsk-p0-v1', '{}'::jsonb);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Result accepted score greater than maxScore';
+  END IF;
+
+  INSERT INTO "Result" (
+    "userId", "testId", "attemptId", "score", "maxScore", "scoringVersion", "detailJson"
+  ) VALUES (user_id, test_1_id, attempt_score_id, 5, NULL, 'hsk-p0-v1', '{}'::jsonb);
 
   rejected := false;
   BEGIN
