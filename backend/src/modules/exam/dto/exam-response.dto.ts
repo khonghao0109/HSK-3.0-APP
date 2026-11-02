@@ -270,6 +270,8 @@ export class ExamResultWeakAreaDto {
  */
 export class ExamResultViewDto {
   attemptId!: number;
+  /** TL-181: the frozen test id, so the result page can link back to the intro. */
+  testId!: number;
   /** Terminal states only: result is never served for in_progress/invalidated. */
   @ApiProperty({ enum: ['submitted', 'timed_out'] })
   status!: 'submitted' | 'timed_out';

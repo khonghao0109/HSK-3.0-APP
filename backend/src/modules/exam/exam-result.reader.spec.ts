@@ -2,9 +2,9 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { Skill } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 
+import { ExamResultDetailError } from './exam-errors';
 import {
   EXAM_RESULT_DETAIL_SCHEMA_VERSION,
-  ExamResultDetailError,
   readExamResultDetail,
 } from './exam-result.reader';
 

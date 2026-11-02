@@ -642,6 +642,7 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
   function terminalAttempt() {
     return {
       id: 55,
+      testId: 7,
       status: ExamAttemptStatus.submitted,
       startedAt: new Date('2026-10-27T09:00:00.000Z'),
       submittedAt: new Date('2026-10-27T10:00:00.000Z'),
@@ -715,11 +716,13 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
       'startedAt',
       'status',
       'submittedAt',
+      'testId',
       'testTitle',
       'weakAreas',
     ]);
     expect(view).toMatchObject({
       attemptId: 55,
+      testId: 7,
       status: ExamAttemptStatus.submitted,
       // Title and pass line come from the frozen snapshot, not the live row.
       testTitle: 'Đề thi HSK 2 giữa kỳ',
@@ -850,7 +853,7 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
           skillScores: [],
         },
       }),
-    ).toThrow('Exam result detail references an unknown snapshot section.');
+    ).toThrow('Exam result is unavailable.');
   });
 
   it('pins the review allow-list and the snapshot question order', () => {
@@ -949,7 +952,7 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
         result: { detail: broken },
         answers: [],
       }),
-    ).toThrow('Exam result detail is missing a graded snapshot question.');
+    ).toThrow('Exam result is unavailable.');
   });
 });
 

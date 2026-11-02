@@ -1098,7 +1098,7 @@ số row `isFlagged = true`. `replayed: true` nghĩa là request này trả lạ
 `ExamResultView` (200 của `GET /exam/attempts/:attemptId/result`, TL-165/Q147/Q151):
 
 ```json
-{ attemptId, status, testTitle, startedAt, submittedAt, score, maxScore, passScore, passed, scoringVersion, gradedAt, counts:{answeredCount,correctCount,incorrectCount,unansweredCount}, sections:[{key,title,skill,questionCount,correctCount,score,maxScore}], skills:[{skill,score,maxScore}], weakAreas:[{slug,name,answered,correct,accuracy,level}] }
+{ attemptId, testId, status, testTitle, startedAt, submittedAt, score, maxScore, passScore, passed, scoringVersion, gradedAt, counts:{answeredCount,correctCount,incorrectCount,unansweredCount}, sections:[{key,title,skill,questionCount,correctCount,score,maxScore}], skills:[{skill,score,maxScore}], weakAreas:[{slug,name,answered,correct,accuracy,level}] }
 ```
 
 Response đọc lại `Result` đã lưu (không chấm lại): `score`/`passed`/`scoringVersion` lấy từ row
@@ -1109,7 +1109,14 @@ Response đọc lại `Result` đã lưu (không chấm lại): `score`/`passed`
 từ các row `ResultSkillScore` (`maxScore` = `total`); `passed: null` khi snapshot không có
 `passScore` (Q145). `weakAreas` tối đa 5 tag, chỉ tag có ≥2 câu đã trả lời và độ chính xác
 < 70% (Q154). Không phân trang (Q151 giới hạn đề ≤200 câu). Không chứa `correctAnswer`,
-`explanation`, `optionId`, `acceptedTexts`, `tokenIds` hay nội dung câu (R11).
+`explanation`, `optionId`, `acceptedTexts`, `tokenIds` hay nội dung câu (R11). `testId`
+(TL-181) là id đề đã đóng băng trong snapshot, để màn kết quả quay lại đúng đề; trường này
+additive, các field cũ giữ nguyên. Mọi nhánh `500` nội bộ của result/review (dữ liệu terminal
+thiếu `submittedAt`, row `Result` mất/thiếu, breakdown trỏ phần lạ, review thiếu câu đã chấm)
+trả cùng message cố định `Exam result is unavailable.` và log `exam.result.internal` kèm
+`attemptId` + mã lý do ngắn (`missing_submitted_at`, `missing_result_row`,
+`incomplete_result_row`, `unknown_section`, `missing_graded_question`), không kèm nội dung
+câu (TL-179).
 
 Chấm lười (Q147): `GET result` mở transaction, khoá `ExamAttempt FOR UPDATE` lọc `userId`
 (không thuộc người gọi → `404 EXAM_ATTEMPT_NOT_FOUND`), áp timeout lười nếu attempt

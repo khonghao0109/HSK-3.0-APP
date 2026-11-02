@@ -2986,6 +2986,8 @@ export interface components {
              */
             status: "submitted" | "timed_out";
             attemptId: number;
+            /** @description TL-181: the frozen test id, so the result page can link back to the intro. */
+            testId: number;
             /** @description Test title frozen in the attempt snapshot, not the live `Test.title`. */
             testTitle: string;
             /** Format: date-time */

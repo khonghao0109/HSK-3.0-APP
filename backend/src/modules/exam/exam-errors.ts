@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import type { ExamAttemptStatus } from '@prisma/client';
@@ -162,4 +163,40 @@ export function examResultUnavailable(): ConflictException {
     code: EXAM_ERROR_CODES.resultUnavailable,
     message: 'Exam result is not available yet.',
   });
+}
+
+/**
+ * TL-180: the result/review internals live here so the reader, the serializer
+ * and the service share one error and one message. TL-179: every fail-closed
+ * branch of the result read answers this exact text, never the internal detail.
+ */
+export const EXAM_RESULT_UNAVAILABLE_MESSAGE = 'Exam result is unavailable.';
+
+/** TL-165: the stored `Result.detailJson` does not match schema v1. */
+export class ExamResultDetailError extends InternalServerErrorException {
+  constructor(readonly field?: string) {
+    super(EXAM_RESULT_UNAVAILABLE_MESSAGE);
+    this.name = 'ExamResultDetailError';
+  }
+}
+
+/**
+ * TL-179: the five internal 500 branches of GET result/review (a terminal row
+ * without `submittedAt`, a missing/incomplete `Result` row, a breakdown that
+ * names an unknown section, a review missing a graded question). The reason is
+ * a short code logged server-side with the attempt id; it never reaches the
+ * client and never carries answer content.
+ */
+export type ExamResultInternalReason =
+  | 'missing_submitted_at'
+  | 'missing_result_row'
+  | 'incomplete_result_row'
+  | 'unknown_section'
+  | 'missing_graded_question';
+
+export class ExamResultInternalError extends InternalServerErrorException {
+  constructor(readonly reason: ExamResultInternalReason) {
+    super(EXAM_RESULT_UNAVAILABLE_MESSAGE);
+    this.name = 'ExamResultInternalError';
+  }
 }

@@ -1,5 +1,6 @@
-import { InternalServerErrorException } from '@nestjs/common';
 import { Skill, type Prisma } from '@prisma/client';
+
+import { ExamResultDetailError } from './exam-errors';
 
 import type {
   ExamScoringCounts,
@@ -23,15 +24,6 @@ import type {
  * can log it server-side without echoing answer-derived content.
  */
 export const EXAM_RESULT_DETAIL_SCHEMA_VERSION = 1;
-
-export const EXAM_RESULT_UNAVAILABLE_MESSAGE = 'Exam result is unavailable.';
-
-export class ExamResultDetailError extends InternalServerErrorException {
-  constructor(readonly field?: string) {
-    super(EXAM_RESULT_UNAVAILABLE_MESSAGE);
-    this.name = 'ExamResultDetailError';
-  }
-}
 
 export type ExamResultDetail = {
   schemaVersion: typeof EXAM_RESULT_DETAIL_SCHEMA_VERSION;

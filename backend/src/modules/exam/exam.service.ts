@@ -48,6 +48,8 @@ import {
   examResultUnavailable,
   examTestNotFound,
   examTestUnavailable,
+  ExamResultDetailError,
+  ExamResultInternalError,
 } from './exam-errors';
 import { classifyExamPersistenceError } from './exam-persistence';
 import { markAttemptTimedOut } from './exam-attempt-timeout';
@@ -55,10 +57,7 @@ import {
   ensureAttemptResult,
   type ExamResultAttempt,
 } from './exam-result.persistence';
-import {
-  ExamResultDetailError,
-  readExamResultDetail,
-} from './exam-result.reader';
+import { readExamResultDetail } from './exam-result.reader';
 import {
   buildExamSnapshot,
   EXAM_SECTION_MAX_SCORE,
@@ -454,6 +453,28 @@ export class ExamService {
   }
 
   /**
+   * TL-179: every internal 500 of the result/review read answers the shared
+   * fixed message and logs one short reason code with the attempt id. The
+   * internal detail never reaches the client and no answer content is logged.
+   */
+  private async readResultTransaction<T>(
+    attemptId: number,
+    run: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await run();
+    } catch (error: unknown) {
+      if (error instanceof ExamResultInternalError) {
+        this.logger.error('exam.result.internal', {
+          attemptId,
+          reason: error.reason,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
    * TL-165/Q147: the result of a terminal attempt. The read may write exactly
    * once per attempt: the lazy timeout of an in-progress attempt past the save
    * grace, and the lazy grading of a terminal attempt that has no `Result` yet
@@ -464,8 +485,8 @@ export class ExamService {
     userId: number,
     attemptId: number,
   ): Promise<ApiSuccessResponse<ExamResultViewDto>> {
-    const result = await this.prisma.$transaction(
-      async (tx): Promise<AttemptResultReadResult> => {
+    const result = await this.readResultTransaction(attemptId, () =>
+      this.prisma.$transaction(async (tx): Promise<AttemptResultReadResult> => {
         const opened = await this.openTerminalAttempt(
           tx,
           userId,
@@ -502,7 +523,7 @@ export class ExamService {
             result: stored,
           }),
         };
-      },
+      }),
     );
 
     switch (result.kind) {
@@ -528,8 +549,8 @@ export class ExamService {
     userId: number,
     attemptId: number,
   ): Promise<ApiSuccessResponse<ExamReviewViewDto>> {
-    const result = await this.prisma.$transaction(
-      async (tx): Promise<AttemptReviewReadResult> => {
+    const result = await this.readResultTransaction(attemptId, () =>
+      this.prisma.$transaction(async (tx): Promise<AttemptReviewReadResult> => {
         const opened = await this.openTerminalAttempt(
           tx,
           userId,
@@ -569,7 +590,7 @@ export class ExamService {
             answers,
           }),
         };
-      },
+      }),
     );
 
     switch (result.kind) {
@@ -1282,16 +1303,15 @@ export class ExamService {
     }
     if (submittedAt === null) {
       // submitted/timed_out always carry a submission instant (the timeout
-      // sets it to `expiresAt`), so a null here is a data bug.
-      throw new InternalServerErrorException(
-        'Terminal exam attempt has no submission time.',
-      );
+      // sets it to `expiresAt`), so a null here is a data bug (TL-179).
+      throw new ExamResultInternalError('missing_submitted_at');
     }
 
     return {
       kind: 'terminal',
       attempt: {
         id: attempt.id,
+        testId: attempt.testId,
         status,
         startedAt: attempt.startedAt,
         submittedAt,
@@ -1330,12 +1350,10 @@ export class ExamService {
       },
     });
     if (result === null) {
-      throw new InternalServerErrorException(
-        'Exam result row is missing after grading.',
-      );
+      throw new ExamResultInternalError('missing_result_row');
     }
     if (result.publishedAt === null || result.scoringVersion === null) {
-      throw new InternalServerErrorException('Exam result row is incomplete.');
+      throw new ExamResultInternalError('incomplete_result_row');
     }
     const skillScores = await tx.resultSkillScore.findMany({
       where: { resultId: result.id },

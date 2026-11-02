@@ -12546,6 +12546,10 @@
           "attemptId": {
             "type": "number"
           },
+          "testId": {
+            "type": "number",
+            "description": "TL-181: the frozen test id, so the result page can link back to the intro."
+          },
           "testTitle": {
             "type": "string",
             "description": "Test title frozen in the attempt snapshot, not the live `Test.title`."
@@ -12607,6 +12611,7 @@
         "required": [
           "status",
           "attemptId",
+          "testId",
           "testTitle",
           "startedAt",
           "submittedAt",

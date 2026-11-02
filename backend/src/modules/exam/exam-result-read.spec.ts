@@ -143,6 +143,8 @@ type HarnessInput = {
   locked?: boolean;
   /** A committed Result already exists (the second read after grading). */
   existingResult?: StoredResultRow | null;
+  /** Simulates a Result row that vanished between grading and the read back. */
+  missingStoredResult?: boolean;
   answers?: Array<{ snapshotQuestionKey: string; answer: Prisma.JsonValue }>;
 };
 
@@ -178,6 +180,7 @@ function harness(input: HarnessInput = {}): Harness {
       : input.attempt;
   const locked = input.locked ?? true;
   const existingResult = input.existingResult ?? null;
+  const missingStoredResult = input.missingStoredResult ?? false;
   const answers = input.answers ?? [
     { snapshotQuestionKey: 'q1', answer: { choice: 'a' } },
   ];
@@ -250,7 +253,9 @@ function harness(input: HarnessInput = {}): Harness {
             existingResult === null ? null : { id: existingResult.id },
           );
         }
-        return Promise.resolve(existingResult ?? createdResult);
+        return Promise.resolve(
+          missingStoredResult ? null : (existingResult ?? createdResult),
+        );
       }),
       create: jest.fn((data: { data: Record<string, unknown> }) => {
         resultCreates.push(data);
@@ -523,6 +528,103 @@ describe('ExamService.getAttemptResult (A3/TL-165)', () => {
       attemptId: 42,
     });
   });
+
+  it('fails closed and logs exam.result.internal when the terminal attempt has no submittedAt', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const h = harness({
+      attempt: {
+        id: 42,
+        userId: 1,
+        testId: 7,
+        status: ExamAttemptStatus.submitted,
+        startedAt: STARTED_AT,
+        expiresAt: EXPIRES_LATER,
+        submittedAt: null,
+        maxScore: 100,
+        scoringVersion: 'hsk-p0-v1',
+      },
+    });
+    const error = await rejection(h.service.getAttemptResult(1, 42));
+
+    expect(error).toBeInstanceOf(InternalServerErrorException);
+    expect(error.getStatus()).toBe(500);
+    expect(bodyOf(error)).toMatchObject({
+      message: 'Exam result is unavailable.',
+    });
+    expect(errorLog).toHaveBeenCalledWith('exam.result.internal', {
+      attemptId: 42,
+      reason: 'missing_submitted_at',
+    });
+  });
+
+  it('fails closed and logs exam.result.internal when the stored Result row vanished', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const h = harness({
+      existingResult: storedResult(),
+      missingStoredResult: true,
+    });
+    const error = await rejection(h.service.getAttemptResult(1, 42));
+
+    expect(error.getStatus()).toBe(500);
+    expect(bodyOf(error)).toMatchObject({
+      message: 'Exam result is unavailable.',
+    });
+    expect(errorLog).toHaveBeenCalledWith('exam.result.internal', {
+      attemptId: 42,
+      reason: 'missing_result_row',
+    });
+  });
+
+  it('fails closed and logs exam.result.internal when the stored Result row is incomplete', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const h = harness({
+      existingResult: storedResult({ publishedAt: null }),
+    });
+    const error = await rejection(h.service.getAttemptResult(1, 42));
+
+    expect(error.getStatus()).toBe(500);
+    expect(bodyOf(error)).toMatchObject({
+      message: 'Exam result is unavailable.',
+    });
+    expect(errorLog).toHaveBeenCalledWith('exam.result.internal', {
+      attemptId: 42,
+      reason: 'incomplete_result_row',
+    });
+  });
+
+  it('fails closed and logs exam.result.internal when the breakdown names an unknown section', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const broken = storedDetail();
+    broken.sections = [
+      {
+        key: 's9',
+        skill: Skill.reading,
+        questionCount: 1,
+        correctCount: 1,
+        score: 100,
+        maxScore: 100,
+      },
+    ];
+    const h = harness({ existingResult: storedResult({ detailJson: broken }) });
+    const error = await rejection(h.service.getAttemptResult(1, 42));
+
+    expect(error.getStatus()).toBe(500);
+    expect(bodyOf(error)).toMatchObject({
+      message: 'Exam result is unavailable.',
+    });
+    expect(errorLog).toHaveBeenCalledWith('exam.result.internal', {
+      attemptId: 42,
+      reason: 'unknown_section',
+    });
+  });
 });
 
 describe('ExamService.getAttemptReview (A3/TL-166)', () => {
@@ -684,6 +786,25 @@ describe('ExamService.getAttemptReview (A3/TL-166)', () => {
     });
     expect(errorLog).toHaveBeenCalledWith('exam.result.detail.invalid', {
       attemptId: 42,
+    });
+  });
+
+  it('fails closed and logs exam.result.internal when the breakdown misses a graded question', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const broken = storedDetail();
+    broken.questions = [];
+    const h = harness({ existingResult: storedResult({ detailJson: broken }) });
+    const error = await rejection(h.service.getAttemptReview(1, 42));
+
+    expect(error.getStatus()).toBe(500);
+    expect(bodyOf(error)).toMatchObject({
+      message: 'Exam result is unavailable.',
+    });
+    expect(errorLog).toHaveBeenCalledWith('exam.result.internal', {
+      attemptId: 42,
+      reason: 'missing_graded_question',
     });
   });
 

@@ -1,4 +1,3 @@
-import { InternalServerErrorException } from '@nestjs/common';
 import {
   ExamAttemptStatus,
   QuestionType,
@@ -16,6 +15,7 @@ import type {
   ExamReviewViewDto,
   ExamTestIntroDto,
 } from './dto/exam-response.dto';
+import { ExamResultInternalError } from './exam-errors';
 import type { ExamResultDetail } from './exam-result.reader';
 import {
   EXAM_SECTION_MAX_SCORE,
@@ -93,6 +93,7 @@ export type ExamTerminalStatus = 'submitted' | 'timed_out';
 /** The committed fields of a terminal attempt serving result/review. */
 export type ExamTerminalAttemptRecord = {
   id: number;
+  testId: number;
   status: ExamTerminalStatus;
   startedAt: Date;
   submittedAt: Date;
@@ -249,6 +250,7 @@ export function toExamResultView(
 
   return {
     attemptId: attempt.id,
+    testId: attempt.testId,
     status: attempt.status,
     testTitle: payload.test.title,
     startedAt: attempt.startedAt,
@@ -266,10 +268,8 @@ export function toExamResultView(
       const title = titlesByKey.get(section.key);
       if (title === undefined) {
         // A persisted breakdown that names an unknown section is a data bug:
-        // fail closed rather than serve an incomplete result.
-        throw new InternalServerErrorException(
-          'Exam result detail references an unknown snapshot section.',
-        );
+        // fail closed rather than serve an incomplete result (TL-179).
+        throw new ExamResultInternalError('unknown_section');
       }
       return {
         key: section.key,
@@ -324,10 +324,8 @@ export function toExamReviewView(
       group.questions.map((question) => {
         const isCorrect = correctnessByKey.get(question.key);
         if (isCorrect === undefined) {
-          // The review must never guess a grading outcome.
-          throw new InternalServerErrorException(
-            'Exam result detail is missing a graded snapshot question.',
-          );
+          // The review must never guess a grading outcome (TL-179).
+          throw new ExamResultInternalError('missing_graded_question');
         }
         const learnerAnswer = answerByKey.get(question.key);
         return {

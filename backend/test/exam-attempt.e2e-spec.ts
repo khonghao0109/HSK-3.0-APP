@@ -95,6 +95,7 @@ type ExamSubmitBody = {
 /** A3/TL-165: the 200 body of GET /exam/attempts/:attemptId/result. */
 type ExamResultBody = {
   attemptId: number;
+  testId: number;
   status: string;
   testTitle: string;
   startedAt: string;
@@ -3881,11 +3882,13 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       'startedAt',
       'status',
       'submittedAt',
+      'testId',
       'testTitle',
       'weakAreas',
     ]);
     expect(body).toMatchObject({
       attemptId: gradedAttemptId,
+      testId: publishedTestId,
       status: 'submitted',
       testTitle: `Đề thi thử M4.2a ${suffix}`,
       startedAt: attemptRow.startedAt.toISOString(),
