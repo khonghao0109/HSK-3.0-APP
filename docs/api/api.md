@@ -1111,12 +1111,17 @@ từ các row `ResultSkillScore` (`maxScore` = `total`); `passed: null` khi snap
 < 70% (Q154). Không phân trang (Q151 giới hạn đề ≤200 câu). Không chứa `correctAnswer`,
 `explanation`, `optionId`, `acceptedTexts`, `tokenIds` hay nội dung câu (R11). `testId`
 (TL-181) là id đề đã đóng băng trong snapshot, để màn kết quả quay lại đúng đề; trường này
-additive, các field cũ giữ nguyên. Mọi nhánh `500` nội bộ của result/review (dữ liệu terminal
-thiếu `submittedAt`, row `Result` mất/thiếu, breakdown trỏ phần lạ, review thiếu câu đã chấm)
-trả cùng message cố định `Exam result is unavailable.` và log `exam.result.internal` kèm
-`attemptId` + mã lý do ngắn (`missing_submitted_at`, `missing_result_row`,
-`incomplete_result_row`, `unknown_section`, `missing_graded_question`), không kèm nội dung
-câu (TL-179).
+additive, các field cũ giữ nguyên. Đúng **năm** nhánh `500` nội bộ của result/review — dữ
+liệu terminal thiếu `submittedAt`, row `Result` mất, row `Result` thiếu, breakdown trỏ phần
+lạ, review thiếu câu đã chấm — trả cùng message cố định `Exam result is unavailable.` và log
+`exam.result.internal` kèm `attemptId` + mã lý do ngắn (`missing_submitted_at`,
+`missing_result_row`, `incomplete_result_row`, `unknown_section`,
+`missing_graded_question`), không kèm nội dung câu (TL-179). Hai nhánh `500` fail-closed khác
+của cùng đường đọc **không** thuộc nhóm này và không log `exam.result.internal`: snapshot
+thiếu → `Exam attempt snapshot is missing.`, payload snapshot hỏng →
+`Exam snapshot payload is invalid.` (guard dữ liệu nền, không phải breakdown đã chấm). Riêng
+`Result.detailJson` sai shape trả cùng message trên nhưng log `exam.result.detail.invalid`
+kèm `field` (không có nội dung câu) — TL-186.
 
 Chấm lười (Q147): `GET result` mở transaction, khoá `ExamAttempt FOR UPDATE` lọc `userId`
 (không thuộc người gọi → `404 EXAM_ATTEMPT_NOT_FOUND`), áp timeout lười nếu attempt
