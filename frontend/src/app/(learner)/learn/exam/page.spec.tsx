@@ -337,6 +337,10 @@ describe('LearnerExamListPage', () => {
     expect(cards[3]).toHaveAttribute('href', '/learn/exam/14');
     expect(cards[3]).toHaveTextContent('Chưa làm');
     expect(cards[3]).toHaveTextContent('Bắt đầu thi');
+    // U2: the jade card border selector needs this class on the rendered link;
+    // `done` cards must not carry it.
+    expect(cards[3]).toHaveClass(/exl-item--not_started/u);
+    expect(cards[0]).not.toHaveClass(/exl-item--not_started/u);
   });
 
   it('links the three sort orders through searchParams (Q211)', async () => {

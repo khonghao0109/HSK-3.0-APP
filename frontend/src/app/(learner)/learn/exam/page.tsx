@@ -186,7 +186,7 @@ function ExamCard({ item }: { item: ExamTestListItem }) {
   return (
     <li className="exl-grid__cell">
       <Link
-        className="exl-item"
+        className={`exl-item exl-item--${item.status}`}
         href={cardHref(item)}
         aria-label={cardAriaLabel(item)}
       >
