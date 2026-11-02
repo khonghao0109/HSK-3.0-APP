@@ -294,11 +294,19 @@ export class ExamResultViewDto {
   weakAreas!: ExamResultWeakAreaDto[];
 }
 
+/** Q217: group-level snapshot media refs for one review question. */
+export class ExamReviewGroupMediaDto {
+  audio!: ExamSnapshotMediaDto | null;
+  image!: ExamSnapshotMediaDto | null;
+}
+
 /**
- * TL-166/Q148: one question of the post-terminal review. The answer key and
- * the explanation come from the frozen snapshot, never from the live row, and
- * `isCorrect` comes from `Result.detailJson` (one source of truth). Q158: media
- * stays `null` in M4.3; signed grants for review arrive in M4.5.
+ * TL-166/Q148/Q217: one question of the post-terminal review. The answer key
+ * and the explanation come from the frozen snapshot, never from the live row,
+ * and `isCorrect` comes from `Result.detailJson` (one source of truth). Q217
+ * adds the frozen `sectionKey`/`groupKey`, the stored `isFlagged` and the
+ * snapshot media refs (`mediaId`/`kind`, no URL) used to match media grants;
+ * Q158 keeps signed grants for review in M4.5.
  */
 export class ExamReviewQuestionDto {
   /** Snapshot question key (`q<placement order>`), same as the attempt view. */
@@ -317,6 +325,14 @@ export class ExamReviewQuestionDto {
 
   explanation!: string | null;
   isCorrect!: boolean;
+  /** Q217: `ExamAnswer.isFlagged` of the stored row (false when unanswered). */
+  isFlagged!: boolean;
+  /** Q217: frozen `ExamSnapshotSection.key` (`s<orderIndex>`). */
+  sectionKey!: string;
+  /** Q217: frozen `ExamSnapshotGroup.key` (`s<orderIndex>-g<orderIndex>`). */
+  groupKey!: string;
+  /** Q217: media refs of the containing group (null members when absent). */
+  groupMedia!: ExamReviewGroupMediaDto;
   audio!: ExamSnapshotMediaDto | null;
   image!: ExamSnapshotMediaDto | null;
 }

@@ -133,7 +133,9 @@ export type ExamReviewViewSource = {
   attempt: ExamTerminalAttemptRecord;
   snapshot: { payload: ExamSnapshotPayload };
   result: { detail: ExamResultDetail };
-  answers: Array<Pick<ExamStoredAnswer, 'snapshotQuestionKey' | 'answer'>>;
+  answers: Array<
+    Pick<ExamStoredAnswer, 'snapshotQuestionKey' | 'answer' | 'isFlagged'>
+  >;
 };
 
 export function toExamTestIntro(source: ExamTestIntroSource): ExamTestIntroDto {
@@ -304,11 +306,13 @@ export function toExamResultView(
 }
 
 /**
- * TL-166/Q148/Q158: the post-terminal review. Question order is the frozen
- * snapshot order (section → group → question), `correctAnswer`/`explanation`
- * are the snapshot copies (never the live question row), and `isCorrect` comes
- * from `Result.detailJson.questions` — the single grading source of truth.
- * Media is always `null` in M4.3 (Q158); grants arrive in M4.5.
+ * TL-166/Q148/Q158/Q217/Q218: the post-terminal review. Question order is the
+ * frozen snapshot order (section → group → question), `correctAnswer`/
+ * `explanation` are the snapshot copies (never the live question row), and
+ * `isCorrect` comes from `Result.detailJson.questions` — the single grading
+ * source of truth. Q217 adds the frozen `sectionKey`/`groupKey`, the stored
+ * `isFlagged`, and the snapshot media references (no URL) the client needs to
+ * match a media grant; Q158 keeps the answer key and explanation paywall-free.
  */
 export function toExamReviewView(
   source: ExamReviewViewSource,
@@ -316,7 +320,7 @@ export function toExamReviewView(
   const { attempt, snapshot, result, answers } = source;
   const payload = snapshot.payload;
   const answerByKey = new Map(
-    answers.map((answer) => [answer.snapshotQuestionKey, answer.answer]),
+    answers.map((answer) => [answer.snapshotQuestionKey, answer]),
   );
   const correctnessByKey = new Map(
     result.detail.questions.map((question) => [
@@ -333,7 +337,7 @@ export function toExamReviewView(
           // The review must never guess a grading outcome (TL-179).
           throw new ExamResultInternalError('missing_graded_question');
         }
-        const learnerAnswer = answerByKey.get(question.key);
+        const stored = answerByKey.get(question.key);
         return {
           key: question.key,
           orderIndex: question.orderIndex,
@@ -341,12 +345,19 @@ export function toExamReviewView(
           skill: question.skill,
           content: question.content,
           answers: projectAnswers(question.type, question.answers),
-          learnerAnswer: learnerAnswer ?? null,
+          learnerAnswer: stored?.answer ?? null,
           correctAnswer: question.correctAnswer,
           explanation: question.explanation,
           isCorrect,
-          audio: null,
-          image: null,
+          isFlagged: stored?.isFlagged ?? false,
+          sectionKey: section.key,
+          groupKey: group.key,
+          groupMedia: {
+            audio: group.audio,
+            image: group.image,
+          },
+          audio: question.audio,
+          image: question.image,
         };
       }),
     ),

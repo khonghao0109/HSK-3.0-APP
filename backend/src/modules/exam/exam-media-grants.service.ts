@@ -21,20 +21,28 @@ import type {
 } from './dto/exam-response.dto';
 
 /**
- * TL-128: a learner taking an exam needs the same kind of signed, short-lived
- * capability URL as the lesson player, but the media belongs to a frozen
- * snapshot rather than to a lesson exercise — so `GET /media/:id/access`
- * (which requires lesson usage) is deliberately not widened for exams. The
- * grant TTL outlives the attempt clock by one minute but never exceeds the
+ * TL-128/Q158/Q218: a learner taking an exam needs the same kind of signed,
+ * short-lived capability URL as the lesson player, but the media belongs to a
+ * frozen snapshot rather than to a lesson exercise — so `GET /media/:id/access`
+ * (which requires lesson usage) is deliberately not widened for exams. While
+ * the attempt is live the TTL outlives its clock by one minute; a finished
+ * attempt gets the fixed review TTL instead (Q158/Q218). Neither exceeds the
  * existing learner signer cap; the URL shape is byte-for-byte the one the
  * content route already verifies, and the availability rule is shared with
  * `createAccess`/`readSignedObject` (F5) rather than copied.
  */
 export const EXAM_MEDIA_GRANT_EXTRA_SECONDS = 60;
 
+/**
+ * Q158/Q218: a finished attempt (submitted/timed_out) gets a fixed review grant
+ * TTL instead of the remaining-clock TTL of a live attempt.
+ */
+export const EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS = 300;
+
 export type ExamMediaGrantInput = {
   mediaIds: number[];
-  remainingSeconds: number;
+  /** Seconds the caller wants; the signer cap `LEARNER_MEDIA_ACCESS_TTL_SECONDS` still applies. */
+  ttlSeconds: number;
 };
 
 @Injectable()
@@ -78,10 +86,7 @@ export class ExamMediaGrantsService {
 
     const ttlSeconds = Math.max(
       1,
-      Math.min(
-        input.remainingSeconds + EXAM_MEDIA_GRANT_EXTRA_SECONDS,
-        LEARNER_MEDIA_ACCESS_TTL_SECONDS,
-      ),
+      Math.min(input.ttlSeconds, LEARNER_MEDIA_ACCESS_TTL_SECONDS),
     );
     const expiresAt = Math.floor(Date.now() / 1_000) + ttlSeconds;
 

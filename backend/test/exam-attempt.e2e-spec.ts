@@ -150,6 +150,10 @@ type ExamReviewBody = {
     correctAnswer: unknown;
     explanation: string | null;
     isCorrect: boolean;
+    isFlagged: boolean;
+    sectionKey: string;
+    groupKey: string;
+    groupMedia: { audio: unknown; image: unknown };
     audio: unknown;
     image: unknown;
   }>;
@@ -1994,18 +1998,30 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     ).expect(200);
     expect(bare.body.data).toEqual({ grants: [], unavailable: [] });
 
-    // Closed and expired attempts are refused.
+    // Q218: a finished attempt now gets review grants (fixed TTL) instead of
+    // the old 409; an attempt that can no longer be used stays closed.
     await prisma.examAttempt.update({
       where: { id: bareAttempt },
       data: { status: 'submitted', submittedAt: new Date() },
     });
-    const closed = await get(
+    const finished = await get(
       `/exam/attempts/${String(bareAttempt)}/media-grants`,
       learner.token,
+    ).expect(200);
+    expect(finished.body.data).toEqual({ grants: [], unavailable: [] });
+
+    const closedFixture = await fourTypeAttempt('grant-closed');
+    await prisma.examAttempt.update({
+      where: { id: closedFixture.attemptId },
+      data: { status: 'invalidated', invalidatedReason: 'e2e review grant' },
+    });
+    const closed = await get(
+      `/exam/attempts/${String(closedFixture.attemptId)}/media-grants`,
+      closedFixture.token,
     ).expect(409);
     expect(closed.body.error).toMatchObject({
       code: 'EXAM_ATTEMPT_CLOSED',
-      details: { status: 'submitted' },
+      details: { status: 'invalidated' },
     });
 
     const expiredFixture = await fourTypeAttempt('grant-expired');
@@ -3007,14 +3023,15 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       details: { status: 'submitted' },
     });
 
+    // Q158/Q218: a submitted attempt now gets review media grants instead of
+    // the old 409; the grant TTL is the fixed 300 s review TTL.
     const grants = await get(
       `/exam/attempts/${String(fixture.attemptId)}/media-grants`,
       fixture.token,
-    ).expect(409);
-    expect(grants.body.error).toMatchObject({
-      code: 'EXAM_ATTEMPT_CLOSED',
-      details: { status: 'submitted' },
-    });
+    ).expect(200);
+    // This fixture's snapshot has no media, so the terminal branch returns an
+    // empty list instead of the old 409 (Q158/Q218).
+    expect(grants.body.data).toEqual({ grants: [], unavailable: [] });
 
     expect(
       await prisma.examAttemptEvent.count({
@@ -4401,11 +4418,11 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
       correctAnswer: snapshotQ3.correctAnswer,
       explanation: snapshotQ3.explanation,
     });
-    // Q158: media is null in the review even though the attempt had media.
-    for (const question of body.questions) {
-      expect(question.audio).toBeNull();
-      expect(question.image).toBeNull();
-    }
+    // Q158/Q217: the review now carries the frozen snapshot media refs (no
+    // signed URL) so the client can match a media grant.
+    expect(body.questions[0]?.groupMedia.image).not.toBeNull();
+    expect(body.questions[4]?.audio).not.toBeNull();
+    expect(JSON.stringify(body)).not.toContain('/media/');
   });
 
   it('53b. keeps arrange ids in the masked snapshot space in all three places (Q158/TL-133)', async () => {
@@ -4598,7 +4615,7 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     expect(JSON.stringify(foreignTerminal.body)).not.toContain('explanation');
   });
 
-  it('53f. returns null media for every review question (Q158)', async () => {
+  it('53f. returns the frozen snapshot media refs for every review question (Q158/Q217)', async () => {
     const learner = await register('a3-review-media');
     const attemptId = await startAttempt(learner.token, publishedTestId);
     // Prove the fixture really has media on the attempt view.
@@ -4614,10 +4631,20 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     const review = await getReview(learner.token, attemptId).expect(200);
     const body = review.body.data as ExamReviewBody;
     expect(body.questions).toHaveLength(5);
-    for (const question of body.questions) {
-      expect(question.audio).toBeNull();
-      expect(question.image).toBeNull();
-    }
+    // Q158/Q217: question- and group-level refs come from the frozen snapshot,
+    // not from the live rows, and never contain a signed URL.
+    expect(body.questions[0]?.groupMedia.image).toMatchObject({
+      mediaId: viewBody.sections[0]?.groups[0]?.image?.mediaId,
+      kind: 'image',
+    });
+    expect(body.questions[4]?.audio).toMatchObject({
+      mediaId: viewBody.sections[1]?.groups[0]?.questions[0]?.audio?.mediaId,
+      kind: 'audio',
+    });
+    expect(body.questions[4]?.groupMedia.audio).toMatchObject({
+      mediaId: viewBody.sections[1]?.groups[0]?.audio?.mediaId,
+    });
+    expect(JSON.stringify(body)).not.toContain('/media/');
   });
 
   function put(path: string, token?: string) {

@@ -60,6 +60,10 @@ import {
   ExamResultDetailError,
   ExamResultInternalError,
 } from './exam-errors';
+import {
+  EXAM_MEDIA_GRANT_EXTRA_SECONDS,
+  EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
+} from './exam-media-grants.service';
 import { classifyExamPersistenceError } from './exam-persistence';
 import { markAttemptTimedOut } from './exam-attempt-timeout';
 import {
@@ -304,7 +308,7 @@ type AttemptGrantResult =
   | { kind: 'not_found' }
   | { kind: 'closed'; status: ExamAttemptStatus }
   | { kind: 'expired' }
-  | { kind: 'ok'; mediaIds: number[]; remainingSeconds: number };
+  | { kind: 'ok'; mediaIds: number[]; ttlSeconds: number };
 
 type StartAttemptResult = {
   created: boolean;
@@ -767,7 +771,11 @@ export class ExamService {
           tx.examAnswer.findMany({
             where: { attemptId },
             orderBy: [{ lastSavedAt: 'asc' }, { id: 'asc' }],
-            select: { snapshotQuestionKey: true, answer: true },
+            select: {
+              snapshotQuestionKey: true,
+              answer: true,
+              isFlagged: true,
+            },
           }),
         ]);
         return {
@@ -975,14 +983,22 @@ export class ExamService {
   }
 
   /**
-   * TL-128: the attempt must belong to the learner, be `in_progress` and still
-   * be inside the clock (plus the save grace window). This read is read-only:
-   * unlike GET attempt it does not apply the lazy timeout.
+   * Q158/Q218/TL-128: signed media grants for the caller's own attempt.
+   * - `in_progress` inside the clock (+ save grace): TTL follows the remaining
+   *   clock plus the one-minute grant margin (unchanged TL-128 behaviour).
+   * - `submitted`/`timed_out` (Q218): every snapshot media id, shared fixed
+   *   `EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS` (300 s), independent of the clock.
+   * - any other status (`invalidated`): `409 EXAM_ATTEMPT_CLOSED`.
+   *
+   * An `in_progress` attempt past the deadline keeps the existing read-only
+   * answer: this call does not time the row out and answers `409
+   * EXAM_ATTEMPT_EXPIRED`; the same request never reclassifies it as a terminal
+   * review grant.
    */
   async getMediaGrantTarget(
     userId: number,
     attemptId: number,
-  ): Promise<{ mediaIds: number[]; remainingSeconds: number }> {
+  ): Promise<{ mediaIds: number[]; ttlSeconds: number }> {
     // F4: the clock and the deadline check are read after the attempt lock,
     // like save/GET. The transaction is read-only: it never changes the status.
     const result = await this.prisma.$transaction(
@@ -995,6 +1011,17 @@ export class ExamService {
         );
         if (locked.kind === 'not_found') return { kind: 'not_found' };
         const { attempt, now } = locked;
+        const finished =
+          attempt.status === ExamAttemptStatus.submitted ||
+          attempt.status === ExamAttemptStatus.timed_out;
+        if (finished) {
+          const payload = await this.loadSnapshotPayload(tx, attemptId);
+          return {
+            kind: 'ok',
+            mediaIds: this.collectSnapshotMediaIds(payload),
+            ttlSeconds: EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
+          };
+        }
         if (attempt.status !== ExamAttemptStatus.in_progress) {
           return { kind: 'closed', status: attempt.status };
         }
@@ -1005,7 +1032,11 @@ export class ExamService {
         return {
           kind: 'ok',
           mediaIds: this.collectSnapshotMediaIds(payload),
-          remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+          ttlSeconds: Math.min(
+            remainingSeconds(attempt.expiresAt, now) +
+              EXAM_MEDIA_GRANT_EXTRA_SECONDS,
+            EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
+          ),
         };
       },
     );
@@ -1014,7 +1045,7 @@ export class ExamService {
     if (result.kind === 'expired') throw examAttemptExpired();
     return {
       mediaIds: result.mediaIds,
-      remainingSeconds: result.remainingSeconds,
+      ttlSeconds: result.ttlSeconds,
     };
   }
 

@@ -1074,10 +1074,10 @@ không lộ đề nháp.
 | `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
 | `POST` | `/exam/attempts/:attemptId/submit` | `{ "idempotencyKey": "<uuid>" }` | `ExamSubmitView` — chốt bài đúng một lần; cùng key → `200` với `replayed: true`, key khác trên bài đã nộp → `409 EXAM_ATTEMPT_ALREADY_SUBMITTED` (TL-150/TL-151) |
 | `GET` | `/exam/attempts/:attemptId/result` | — | `ExamResultView` — điểm + breakdown của bài đã terminal; **route này có thể ghi** (timeout lười ở lần đọc đầu, rồi chấm lười) (TL-165/Q147) |
-| `GET` | `/exam/attempts/:attemptId/review` | — | `ExamReviewView` — toàn bộ câu theo thứ tự snapshot + `learnerAnswer`, `correctAnswer`, `explanation`, `isCorrect`; `audio`/`image` = `null` (TL-166/Q148/Q158) |
+| `GET` | `/exam/attempts/:attemptId/review` | — | `ExamReviewView` — toàn bộ câu theo thứ tự snapshot + `learnerAnswer`, `correctAnswer`, `explanation`, `isCorrect`, `isFlagged`, `sectionKey`/`groupKey` và tham chiếu media snapshot (`mediaId`/`kind`, không URL) (TL-166/Q148/Q158/Q217) |
 | `PUT` | `/exam/attempts/:attemptId/answers/:questionKey` | `SaveExamAnswer` | `ExamAnswerSaveView` — lưu một câu (TL-121) |
 | `PUT` | `/exam/attempts/:attemptId/answers` | `{ "items": [SaveExamAnswer & { questionKey }] }` 1–20 item | `{ results: [ExamAnswerBatchResult], serverNow, remainingSeconds }` (TL-124) |
-| `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128) |
+| `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128); attempt terminal (`submitted`/`timed_out`) cũng được cấp với TTL cố định 300 s (Q158/Q218) |
 
 `GET /exam/tests` (B1, Q209–Q214): query `levelCode?` (một trong `HSK1`…`HSK6`, `HSK7_9` — tập
 `Level.code` của chương trình HSK 3.0; giá trị khác → `400`), `skill?` (`Skill`), `sort?` (`newest` |
@@ -1170,18 +1170,22 @@ dung bài); chấm lỗi (shape đáp án lạ) → không ghi `Result`, log `ex
 lại (Q156). Lần đọc thứ hai trả đúng row đã lưu (không tạo thêm `Result`, không đổi
 `publishedAt`).
 
-`ExamReviewView` (200 của `GET /exam/attempts/:attemptId/review`, TL-166/Q148/Q158):
+`ExamReviewView` (200 của `GET /exam/attempts/:attemptId/review`, TL-166/Q148/Q158/Q217):
 
 ```json
-{ attemptId, status, testTitle, startedAt, submittedAt, questions:[{key,orderIndex,type,skill,content,answers:{options?,tokens?},learnerAnswer,correctAnswer,explanation,isCorrect,audio,image}] }
+{ attemptId, status, testTitle, startedAt, submittedAt, questions:[{key,orderIndex,type,skill,sectionKey,groupKey,content,answers:{options?,tokens?},learnerAnswer,correctAnswer,explanation,isCorrect,isFlagged,groupMedia:{audio,image},audio,image}] }
 ```
 
 Cùng guard/khoá/timeout lười/404/409/Q156/Q157 và chấm lười như result. `questions` đúng thứ
 tự snapshot (section → group → question), không phân trang. `learnerAnswer` là `answer` đã lưu
 (`null` khi chưa trả lời hoặc đã xoá); `correctAnswer` và `explanation` lấy từ **snapshot**,
 không phải câu live; `isCorrect` lấy từ `Result.detailJson.questions` theo `key` (một nguồn
-duy nhất). `audio`/`image` luôn `null` ở M4.3 vì grant media cho review để M4.5 (Q158). Với
-`arrange_sentence`, id trong `answers.tokens`, `learnerAnswer.order` và
+duy nhất). Q217: `isFlagged` là cờ đã lưu của câu (`false` khi chưa có row), `sectionKey`/
+`groupKey` là key đóng băng của snapshot (`s<orderIndex>`, `s<orderIndex>-g<orderIndex>`);
+`audio`/`image` là tham chiếu media của **câu**, `groupMedia.audio`/`groupMedia.image` là tham
+chiếu media của **nhóm** — tất cả lấy từ snapshot, chỉ gồm `mediaId`/`kind`/`mimeType`/
+`durationMs`, **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
+Với `arrange_sentence`, id trong `answers.tokens`, `learnerAnswer.order` và
 `correctAnswer.tokenIds` cùng không gian id đã che của snapshot (TL-133), không lộ id soạn câu.
 
 `ExamAnswerSaveView` = `ExamAnswerView` + `serverNow`, `remainingSeconds`; `ExamAnswerView` =
@@ -1235,8 +1239,8 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `404` | `EXAM_QUESTION_NOT_FOUND` | `:questionKey` không khớp `^q\d+$` hoặc không có trong snapshot của attempt (TL-121) |
 | `400` | `EXAM_ANSWER_INVALID` | Sai kiểu hoặc sai shape với `snapshot.type`, hoặc sai id option/token: `details.field` theo type (`answer.choice`, `answer.value`, `answer.text`, `answer.order`); thiếu hẳn `answer` → `details.field = answer` |
 | `409` | `EXAM_ANSWER_VERSION_CONFLICT` | `expectedVersion` lệch version hiện tại, hoặc `null` khi câu đã có row; `details.current` |
-| `409` | `EXAM_ATTEMPT_EXPIRED` | `PUT` (một câu hoặc lô) **hoặc** `POST .../submit` trả mã này khi quá `expiresAt + 5 s` và chính request đó vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`, còn `media-grants` chỉ đọc và không đổi status |
-| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress`. Với `PUT` (một câu hoặc lô) và `POST .../submit`: `timed_out` hoặc `invalidated` (submit trên bài đã `submitted` → `EXAM_ATTEMPT_ALREADY_SUBMITTED`); với `GET result`/`GET review`: **chỉ** `invalidated` (Q157). `details.status` |
+| `409` | `EXAM_ATTEMPT_EXPIRED` | `PUT` (một câu hoặc lô) **hoặc** `POST .../submit` trả mã này khi quá `expiresAt + 5 s` và chính request đó vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`; `media-grants` với attempt `in_progress` quá hạn trả mã này, chỉ đọc và không đổi status (không tự chuyển sang nhánh grant terminal) |
+| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress`. Với `PUT` (một câu hoặc lô) và `POST .../submit`: `timed_out` hoặc `invalidated` (submit trên bài đã `submitted` → `EXAM_ATTEMPT_ALREADY_SUBMITTED`); với `GET result`/`GET review`: **chỉ** `invalidated` (Q157); với `GET media-grants`: **chỉ** `invalidated` (Q158/Q218 — `submitted`/`timed_out` được cấp grant review). `details.status` |
 | `409` | `EXAM_ATTEMPT_ALREADY_SUBMITTED` | Chỉ `POST .../submit`: attempt đã `submitted` và request mang `idempotencyKey` khác; `details.status = "submitted"` (TL-151) |
 | `409` | `EXAM_ATTEMPT_NOT_TERMINAL` | Chỉ `GET result`/`GET review`: attempt còn `in_progress` và chưa quá `expiresAt + 5 s`; body chỉ `{code, message}`, không có nội dung bài (Q147) |
 | `409` | `EXAM_RESULT_UNAVAILABLE` | Chỉ `GET result`/`GET review`: chấm lỗi (shape đáp án lạ) nên không ghi `Result`; phần timeout lười vừa ghi vẫn commit, lần đọc sau chấm lại. Log `exam.grading.failed` chỉ gồm `attemptId` + tên lỗi (Q156) |
@@ -1300,12 +1304,16 @@ admin không bao giờ chờ `ExamAttempt`. Thứ tự hiệu dụng: start = Us
 (`FOR SHARE`) → ExamAttempt (`FOR UPDATE`, chỉ ở nhánh đóng attempt hết hạn); save/GET =
 ExamAttempt (`FOR UPDATE`) → (chỉ lần insert đầu) Question `FOR KEY SHARE`.
 
-Media của bài thi (TL-128): `GET /exam/attempts/:attemptId/media-grants` chỉ trả khi attempt
-của người gọi còn `in_progress` và chưa quá `expiresAt + 5 s` (route **chỉ đọc**: có lấy khoá
-`ExamAttempt` để đọc đồng hồ sau khoá nhưng không đổi status, không áp dụng timeout lười); `grants` gồm mọi `mediaId` có trong snapshot (media của nhóm và của câu) với
-`url` đúng định dạng `/api/v1/media/:id/content?expires&signature` của signer hiện có, TTL =
-`min(remainingSeconds + 60, 300)` giây; media không còn dùng được thì bỏ khỏi `grants` và chỉ
-nêu `mediaId` ở `unavailable`. Không mở rộng `GET /media/:id/access` cho exam.
+Media của bài thi (TL-128/Q158/Q218): `GET /exam/attempts/:attemptId/media-grants` cấp cho
+attempt của chính người gọi. Với attempt `in_progress` còn trong cửa sổ `expiresAt + 5 s`,
+TTL = `min(remainingSeconds + 60, 300)` giây như cũ; gọi khi đã quá hạn trả `409
+EXAM_ATTEMPT_EXPIRED` và **không** đổi status (route chỉ đọc, không áp dụng timeout lười, nên
+không tự chuyển sang nhánh terminal trong cùng request). Với attempt đã kết thúc
+(`submitted`/`timed_out`), route cấp mọi `mediaId` trong snapshot với **TTL cố định 300 s**
+(Q158/Q218), không phụ thuộc đồng hồ; `invalidated` trả `409 EXAM_ATTEMPT_CLOSED`. `grants` dùng
+`url` đúng định dạng `/api/v1/media/:id/content?expires&signature` của signer hiện có; media
+không còn dùng được thì bỏ khỏi `grants` và chỉ nêu `mediaId` ở `unavailable`. Không mở rộng
+`GET /media/:id/access` cho exam.
 
 R11: response dựng theo allowlist từng trường; khi đang thi không bao giờ trả `correctAnswer`,
 `explanation`, `acceptedTexts`, `caseSensitive`, `tokenIds`, `optionId`, `isCorrect`,

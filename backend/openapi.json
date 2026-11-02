@@ -12993,6 +12993,33 @@
           "weakAreas"
         ]
       },
+      "ExamReviewGroupMediaDto": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          },
+          "image": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamSnapshotMediaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "audio",
+          "image"
+        ]
+      },
       "ExamReviewQuestionDto": {
         "type": "object",
         "properties": {
@@ -13047,6 +13074,26 @@
           "isCorrect": {
             "type": "boolean"
           },
+          "isFlagged": {
+            "type": "boolean",
+            "description": "Q217: `ExamAnswer.isFlagged` of the stored row (false when unanswered)."
+          },
+          "sectionKey": {
+            "type": "string",
+            "description": "Q217: frozen `ExamSnapshotSection.key` (`s<orderIndex>`)."
+          },
+          "groupKey": {
+            "type": "string",
+            "description": "Q217: frozen `ExamSnapshotGroup.key` (`s<orderIndex>-g<orderIndex>`)."
+          },
+          "groupMedia": {
+            "description": "Q217: media refs of the containing group (null members when absent).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExamReviewGroupMediaDto"
+              }
+            ]
+          },
           "audio": {
             "nullable": true,
             "type": "object",
@@ -13077,6 +13124,10 @@
           "answers",
           "explanation",
           "isCorrect",
+          "isFlagged",
+          "sectionKey",
+          "groupKey",
+          "groupMedia",
           "audio",
           "image"
         ]

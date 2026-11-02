@@ -673,7 +673,7 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
     {
       snapshotQuestionKey: 'q1',
       answer: { choice: 'a' },
-      isFlagged: false,
+      isFlagged: true,
       version: 1,
       answeredAt: new Date('2026-10-27T09:10:00.000Z'),
       lastSavedAt: new Date('2026-10-27T09:10:00.000Z'),
@@ -883,17 +883,18 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
         'content',
         'correctAnswer',
         'explanation',
+        'groupKey',
+        'groupMedia',
         'image',
         'isCorrect',
+        'isFlagged',
         'key',
         'learnerAnswer',
         'orderIndex',
+        'sectionKey',
         'skill',
         'type',
       ]);
-      // Q158: media is null for every question in M4.3.
-      expect(question.audio).toBeNull();
-      expect(question.image).toBeNull();
     }
     expect(view.questions.map((question) => question.isCorrect)).toEqual([
       true,
@@ -901,6 +902,72 @@ describe('exam result and review serializers (A3 / TL-165 / TL-166)', () => {
       true,
       false,
     ]);
+  });
+
+  it('exposes the Q217 context and the Q158 snapshot media refs', () => {
+    const questions = reviewView().questions;
+    const image = {
+      mediaId: 31,
+      kind: MediaType.image,
+      mimeType: 'image/png',
+      durationMs: null,
+    };
+    const audio = {
+      mediaId: 32,
+      kind: MediaType.audio,
+      mimeType: 'audio/mpeg',
+      durationMs: 12_000,
+    };
+
+    // q1/q2 live in section 1 group 1 (frozen keys s1 / s1-g1) whose media is
+    // the image; the question itself has no media.
+    expect(questions[0]).toMatchObject({
+      sectionKey: 's1',
+      groupKey: 's1-g1',
+      isFlagged: true,
+      audio: null,
+      image: null,
+      groupMedia: { audio: null, image },
+    });
+    expect(questions[1]).toMatchObject({
+      key: 'q2',
+      sectionKey: 's1',
+      groupKey: 's1-g1',
+      isFlagged: false,
+      groupMedia: { audio: null, image },
+    });
+    // q3 carries its own audio AND sits in the group with audio; q4 only
+    // inherits the group audio.
+    expect(questions[2]).toMatchObject({
+      key: 'q3',
+      sectionKey: 's2',
+      groupKey: 's2-g1',
+      isFlagged: false,
+      audio,
+      image: null,
+      groupMedia: { audio, image: null },
+    });
+    expect(questions[3]).toMatchObject({
+      key: 'q4',
+      sectionKey: 's2',
+      groupKey: 's2-g1',
+      isFlagged: false,
+      audio: null,
+      image: null,
+      groupMedia: { audio, image: null },
+    });
+
+    // Q158: the refs are snapshot metadata only — never a signed URL and never
+    // an internal identity the learner must not see.
+    const serialized = JSON.stringify(questions);
+    for (const forbidden of [
+      'questionId',
+      'questionVersion',
+      'contentHash',
+      '/media/',
+    ]) {
+      expect(serialized).not.toContain(forbidden);
+    }
   });
 
   it('returns learnerAnswer null for a blank question and the stored shape otherwise', () => {

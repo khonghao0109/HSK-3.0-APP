@@ -245,7 +245,7 @@ export class ExamController {
       success: true,
       data: await this.examMediaGrants.createGrants({
         mediaIds: target.mediaIds,
-        remainingSeconds: target.remainingSeconds,
+        ttlSeconds: target.ttlSeconds,
       }),
     };
   }

@@ -3109,6 +3109,10 @@ export interface components {
             skills: components["schemas"]["ExamResultSkillDto"][];
             weakAreas: components["schemas"]["ExamResultWeakAreaDto"][];
         };
+        ExamReviewGroupMediaDto: {
+            audio: components["schemas"]["ExamSnapshotMediaDto"] | null;
+            image: components["schemas"]["ExamSnapshotMediaDto"] | null;
+        };
         ExamReviewQuestionDto: {
             learnerAnswer: {
                 [key: string]: unknown;
@@ -3127,6 +3131,14 @@ export interface components {
             answers: components["schemas"]["ExamQuestionAnswersDto"];
             explanation: string | null;
             isCorrect: boolean;
+            /** @description Q217: `ExamAnswer.isFlagged` of the stored row (false when unanswered). */
+            isFlagged: boolean;
+            /** @description Q217: frozen `ExamSnapshotSection.key` (`s<orderIndex>`). */
+            sectionKey: string;
+            /** @description Q217: frozen `ExamSnapshotGroup.key` (`s<orderIndex>-g<orderIndex>`). */
+            groupKey: string;
+            /** @description Q217: media refs of the containing group (null members when absent). */
+            groupMedia: components["schemas"]["ExamReviewGroupMediaDto"];
             audio: components["schemas"]["ExamSnapshotMediaDto"] | null;
             image: components["schemas"]["ExamSnapshotMediaDto"] | null;
         };
