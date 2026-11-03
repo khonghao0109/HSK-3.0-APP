@@ -20,7 +20,13 @@ import {
   weakAreaLevelLabel,
 } from '@/features/learner-exam/exam-result-model';
 import { getExamResult } from '@/features/learner-exam/exam-result-service';
-import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
+import { parseAttemptId } from '@/features/learner-exam/exam-ids';
+import {
+  correctAnswerText,
+  firstWrongQuestion,
+  learnerAnswerText,
+} from '@/features/learner-exam/exam-review-model';
+import { getExamReview } from '@/features/learner-exam/exam-review-service';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
 export const metadata: Metadata = {
@@ -115,7 +121,7 @@ export default async function LearnerExamResultPage({
 }: {
   params: Promise<{ attemptId: string }>;
 }) {
-  const attemptId = parseLessonId((await params).attemptId);
+  const attemptId = parseAttemptId((await params).attemptId);
   if (attemptId === null) notFound();
 
   const session = await getServerLearnerSession();
@@ -155,6 +161,31 @@ export default async function LearnerExamResultPage({
       );
     }
     throw error;
+  }
+
+  // Q219: one review read on the result page feeds the mobile explanation
+  // preview; a failed preview must never break the result itself.
+  let wrongPreview: {
+    orderIndex: number;
+    content: string;
+    chosen: string;
+    correct: string;
+    attemptId: number;
+  } | null = null;
+  try {
+    const review = await getExamReview(attemptId, session.token);
+    const firstWrong = firstWrongQuestion(review.questions);
+    if (firstWrong !== null) {
+      wrongPreview = {
+        orderIndex: firstWrong.orderIndex,
+        content: firstWrong.content,
+        chosen: learnerAnswerText(firstWrong),
+        correct: correctAnswerText(firstWrong),
+        attemptId: review.attemptId,
+      };
+    }
+  } catch {
+    // The preview is optional; the result page still renders without it.
   }
 
   const badge = passBadgeLabel(result.passed);
@@ -328,7 +359,47 @@ export default async function LearnerExamResultPage({
         </section>
       </div>
 
+      {wrongPreview !== null ? (
+        <section className="exr-explain m-only" aria-labelledby="explain-title">
+          <div className="exr-explain__head">
+            <h2 className="exr-explain__title" id="explain-title">
+              Giải thích chi tiết
+            </h2>
+            <Link
+              className="exr-explain__all"
+              href={`/learn/exam/attempts/${String(
+                wrongPreview.attemptId,
+              )}/review`}
+            >
+              Xem tất cả
+            </Link>
+          </div>
+          <p className="exr-explain__q">
+            Câu {wrongPreview.orderIndex}{' '}
+            <span className="exr-explain__badge">
+              <Icon name="x" />
+              Sai
+            </span>
+          </p>
+          <p className="exr-explain__content">{wrongPreview.content}</p>
+          <p className="exr-explain__ans">
+            Bạn chọn:{' '}
+            {wrongPreview.chosen === '' ? 'Chưa trả lời' : wrongPreview.chosen}
+            {wrongPreview.correct === '' ? null : (
+              <> · Đáp án đúng: {wrongPreview.correct}</>
+            )}
+          </p>
+        </section>
+      ) : null}
+
       <div className="exr-actions">
+        <Link
+          className="btn btn--outline exr-review"
+          href={`/learn/exam/attempts/${String(attemptId)}/review`}
+        >
+          <Icon name="list" />
+          Xem lại bài
+        </Link>
         <Link
           className="btn btn--primary exr-retry"
           href={`/learn/exam/${String(result.testId)}`}

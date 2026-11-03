@@ -11,7 +11,9 @@ import {
   EXAM_RESULT_NO_XP,
   EXAM_RESULT_RETRY_TEXT,
 } from '@/features/learner-exam/exam-result-model';
+import type { ExamReviewViewParsed } from '@/features/learner-exam/exam-contract';
 import { getExamResult } from '@/features/learner-exam/exam-result-service';
+import { getExamReview } from '@/features/learner-exam/exam-review-service';
 import { BackendRequestError } from '@/lib/api/api-error';
 
 import LearnerExamResultPage, { metadata } from './page';
@@ -33,6 +35,9 @@ vi.mock('@/features/learner-exam/exam-result-service', () => ({
 }));
 vi.mock('@/features/learner-exam/exam-attempt-service', () => ({
   getExamAttempt: vi.fn(),
+}));
+vi.mock('@/features/learner-exam/exam-review-service', () => ({
+  getExamReview: vi.fn(),
 }));
 
 function result(
@@ -117,6 +122,62 @@ async function renderPage(id = '41') {
   );
 }
 
+function reviewPreview(
+  overrides: Partial<ExamReviewViewParsed> = {},
+): ExamReviewViewParsed {
+  return {
+    attemptId: 41,
+    status: 'submitted',
+    testTitle: 'Đề thi thử HSK 3',
+    startedAt: '2025-05-19T01:28:18.000Z',
+    submittedAt: '2025-05-19T02:00:00.000Z',
+    questions: [
+      {
+        key: 'q1',
+        orderIndex: 1,
+        type: 'mcq',
+        skill: 'reading',
+        sectionKey: 's1',
+        groupKey: 's1-g1',
+        content: 'Câu đúng.',
+        answers: {
+          options: [
+            { id: 'a', text: 'A' },
+            { id: 'b', text: 'B' },
+          ],
+        },
+        learnerAnswer: { choice: 'a' },
+        correctAnswer: { optionId: 'a' },
+        explanation: null,
+        isCorrect: true,
+        isFlagged: false,
+        groupMedia: { audio: null, image: null },
+        audio: null,
+        image: null,
+      },
+      {
+        key: 'q2',
+        orderIndex: 2,
+        type: 'true_false',
+        skill: 'reading',
+        sectionKey: 's1',
+        groupKey: 's1-g1',
+        content: 'Câu đúng sai bị làm sai.',
+        answers: {},
+        learnerAnswer: { value: false },
+        correctAnswer: { value: true },
+        explanation: 'Giải thích câu hai.',
+        isCorrect: false,
+        isFlagged: false,
+        groupMedia: { audio: null, image: null },
+        audio: null,
+        image: null,
+      },
+    ],
+    ...overrides,
+  };
+}
+
 describe('LearnerExamResultPage (M4.3, TL-172)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,6 +187,7 @@ describe('LearnerExamResultPage (M4.3, TL-172)', () => {
     } as never);
     vi.mocked(getExamResult).mockResolvedValue(result());
     vi.mocked(getExamAttempt).mockResolvedValue({ testId: 7 } as never);
+    vi.mocked(getExamReview).mockResolvedValue(reviewPreview());
   });
 
   it('renders the score, skills, weak areas, retry link and the Q14 line', async () => {
@@ -261,5 +323,38 @@ describe('LearnerExamResultPage (M4.3, TL-172)', () => {
       state: 'anonymous',
     } as never);
     await expect(renderPage()).rejects.toThrow('NEXT_REDIRECT:/sign-in');
+  });
+
+  it('links the web review action and the mobile Q219 explanation preview (B2b)', async () => {
+    const { container } = await renderPage();
+    const reviewLink = screen.getByRole('link', { name: 'Xem lại bài' });
+    expect(reviewLink.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/review',
+    );
+
+    const explain = container.querySelector('.exr-explain');
+    expect(explain).not.toBeNull();
+    const mobile = within(explain as HTMLElement);
+    expect(mobile.getByText('Giải thích chi tiết')).toBeDefined();
+    expect(mobile.getByText('Câu 2')).toBeDefined();
+    expect(mobile.getByText('Câu đúng sai bị làm sai.')).toBeDefined();
+    expect(mobile.getByText(/Đáp án đúng: Đúng/u)).toBeDefined();
+    const all = mobile.getByRole('link', { name: 'Xem tất cả' });
+    expect(all.getAttribute('href')).toBe('/learn/exam/attempts/41/review');
+    // Q222: the mistake book is out of scope.
+    expect(container.textContent).not.toContain('Sổ lỗi');
+  });
+
+  it('hides the Q219 block when no answer is wrong or the review read fails', async () => {
+    vi.mocked(getExamReview).mockResolvedValue(
+      reviewPreview({ questions: reviewPreview().questions.slice(0, 1) }),
+    );
+    const noWrong = await renderPage();
+    expect(noWrong.container.querySelector('.exr-explain')).toBeNull();
+
+    vi.mocked(getExamReview).mockRejectedValue(new Error('review down'));
+    const failed = await renderPage();
+    expect(failed.container.querySelector('.exr-explain')).toBeNull();
+    expect(failed.container.querySelector('.exr-hero')).not.toBeNull();
   });
 });

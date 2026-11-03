@@ -6211,6 +6211,96 @@ html:has(.learner-app) {
   border-color: var(--jade-700);
 }
 
+/* ---------- Q219 (M4.5 B2b): mobile "Giải thích chi tiết" preview ---------- */
+.learner-app .exr-explain {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 8px 16px 13px;
+  background: #faf6f0;
+  border-radius: 10px;
+}
+
+.learner-app .exr-explain__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.learner-app .exr-explain__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--ink-900);
+}
+
+.learner-app .exr-explain__all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  color: #1d4fae;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.learner-app .exr-explain__all:hover {
+  text-decoration: underline;
+}
+
+.learner-app .exr-explain__q {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.learner-app .exr-explain__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 21px;
+  padding: 0 9px;
+  background: #fdeceb;
+  border: 1px solid #f6c9c4;
+  border-radius: 11px;
+  color: #b3261e;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.learner-app .exr-explain__badge .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.learner-app .exr-explain__content {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exr-explain__ans {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--stone-700);
+  overflow-wrap: anywhere;
+}
+
 .learner-app .exr > .exr-fine {
   padding: 0 2px;
   font-size: 11px;
