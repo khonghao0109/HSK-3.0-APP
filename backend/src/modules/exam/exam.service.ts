@@ -1032,11 +1032,11 @@ export class ExamService {
         return {
           kind: 'ok',
           mediaIds: this.collectSnapshotMediaIds(payload),
-          ttlSeconds: Math.min(
+          // B2b cleanup: the signer cap (`LEARNER_MEDIA_ACCESS_TTL_SECONDS`)
+          // already limits the TTL; keep the live formula uncapped here.
+          ttlSeconds:
             remainingSeconds(attempt.expiresAt, now) +
-              EXAM_MEDIA_GRANT_EXTRA_SECONDS,
-            EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
-          ),
+            EXAM_MEDIA_GRANT_EXTRA_SECONDS,
         };
       },
     );
