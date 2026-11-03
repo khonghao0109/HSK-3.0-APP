@@ -15,16 +15,15 @@ import {
 import { FORBIDDEN_KEYS } from '../src/features/learner-exam/exam-forbidden-keys';
 import { queryDisposableDb } from './support/disposable-db';
 import {
-  BACKEND,
   backendLogin,
   call,
   readCspViolations,
   registerReadyLearner,
   seedExamTakeFixtures,
+  sharedExamMedia,
   watchCsp,
   type ExamTakeFixture,
 } from './support/learner-fixtures';
-import { ingestListeningAudio } from './support/listening-audio';
 
 /**
  * M4.3 Pha B (TL-172/TL-174, FIX B1): the learner result page on the real
@@ -215,12 +214,7 @@ async function seedResultFixture(prefix: string): Promise<ResultFixture> {
     const hsk3 = levels.find((level) => level.code === 'HSK3');
     if (hsk3 === undefined) throw new Error('seed has no HSK3 level');
 
-    const audioId = await ingestListeningAudio(
-      api,
-      BACKEND,
-      admin,
-      `e2e-result-audio-${prefix}`.slice(0, 64).padEnd(64, '0'),
-    );
+    const { audioId } = await sharedExamMedia(api, admin);
 
     const publish = async (input: PublishQuestionInput): Promise<number> => {
       const created = await call<{

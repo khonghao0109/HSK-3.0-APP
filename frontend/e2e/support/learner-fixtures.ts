@@ -506,7 +506,7 @@ async function ingestQuestionImage(
   throw new Error(`image media ${id} is not ready after 30 seconds`);
 }
 
-type ExamMedia = { audioId: number; imageId: number };
+export type ExamMedia = { audioId: number; imageId: number };
 
 /**
  * Idempotency-Key cố định cho hai tài sản media dùng chung của đề thi. Chạy lại
@@ -542,7 +542,7 @@ const examMediaByWorker = new Map<string, Promise<ExamMedia>>();
  * nên request ingest phải ít hơn hẳn trần: trước FIX 1 mỗi project gửi 5-7
  * request (audio + ảnh ingest lại) và project 2/4 nhận 429.
  */
-function sharedExamMedia(
+export function sharedExamMedia(
   api: APIRequestContext,
   admin: string,
 ): Promise<ExamMedia> {

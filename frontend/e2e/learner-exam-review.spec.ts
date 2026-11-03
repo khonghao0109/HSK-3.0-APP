@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -12,7 +12,11 @@ import {
   type TestInfo,
 } from '@playwright/test';
 
-import { queryDisposableDb } from './support/disposable-db';
+import {
+  disposableDbUrl,
+  queryDisposableDb,
+  sqlLiteral,
+} from './support/disposable-db';
 import {
   call,
   registerReadyLearner,
@@ -31,24 +35,53 @@ const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const SHOT_DIR = process.env.HSK_SHOTS_DIR;
 const REVIEW_TITLE = 'Xem lại bài thi';
 
+/**
+ * The heavy audio/image fixture is seeded once per disposable DB and reused by
+ * the remaining projects of a run, instead of letting every project re-seed it
+ * (the admin CMS rejects a full re-seed with 429). The default cache file is
+ * keyed by the DB URL and every read is validated against that same DB, so a
+ * fresh DB — or a run that re-seeded — never reads a stale file.
+ */
+function reviewFixtureFile(): string {
+  const override = process.env.HSK_REVIEW_FIXTURE_FILE;
+  if (override) return override;
+  const dbKey = createHash('sha256')
+    .update(disposableDbUrl())
+    .digest('hex')
+    .slice(0, 16);
+  return path.join('/tmp', `hsk-m45b2b-review-${dbKey}.json`);
+}
+
+/** True only while the cached fixture's published test still exists as-is. */
+function cachedReviewFixtureMatchesDb(cached: ExamReviewFixture): boolean {
+  if (!Number.isInteger(cached.publishedTestId)) return false;
+  if (typeof cached.title !== 'string' || cached.title === '') return false;
+  try {
+    const row = queryDisposableDb(
+      `SELECT id FROM "Test" WHERE id = ${String(cached.publishedTestId)} AND title = ${sqlLiteral(cached.title)} LIMIT 1`,
+    );
+    return row !== '';
+  } catch {
+    return false;
+  }
+}
+
 test.describe('Learner exam review (M4.5 B2b)', () => {
   let fixtures: ExamReviewFixture;
-  // One fixture for all four projects: the admin CMS chokes (429) when every
-  // project re-seeds the same heavy audio/image fixture inside beforeAll, so
-  // the first project writes it to the per-run file and the rest read it.
-  const fixtureFile =
-    process.env.HSK_REVIEW_FIXTURE_FILE ??
-    path.join('/tmp', 'hsk-m45b2b-review-fixture.json');
 
   test.beforeAll(async () => {
     if (SHOT_DIR) await mkdir(SHOT_DIR, { recursive: true });
+    const fixtureFile = reviewFixtureFile();
     try {
-      fixtures = JSON.parse(
+      const cached = JSON.parse(
         await readFile(fixtureFile, 'utf8'),
       ) as ExamReviewFixture;
-      return;
+      if (cachedReviewFixtureMatchesDb(cached)) {
+        fixtures = cached;
+        return;
+      }
     } catch {
-      // First project of this run (or a fresh DB) seeds the fixture.
+      // Missing, unreadable or stale cache: this project seeds the fixture.
     }
     fixtures = await seedExamReviewFixtures(`shared-${String(Date.now())}`);
     await writeFile(fixtureFile, JSON.stringify(fixtures), 'utf8');
