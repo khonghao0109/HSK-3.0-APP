@@ -321,7 +321,9 @@ test.describe('Learner exam list (M4.5 B1 / Q209–Q214)', () => {
       await expect(page).toHaveURL(/\/learn\/exam$/u);
     }
 
-    await page.getByRole('link', { name: 'HSK 3' }).click();
+    // Exact: another spec's seeded card accessible name also starts with
+    // "HSK 3 – …", so the chip must be matched exactly (accumulated e2e DB).
+    await page.getByRole('link', { name: 'HSK 3', exact: true }).click();
     await expect(page).toHaveURL(/[?&]levelCode=HSK3/u);
     const list = page.getByRole('list', { name: 'Danh sách đề thi' });
     const card = list.getByRole('link', {
