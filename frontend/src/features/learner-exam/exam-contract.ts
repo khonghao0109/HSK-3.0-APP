@@ -315,3 +315,49 @@ export const examResultViewSchema = z.object({
 export const examResultEnvelopeSchema = backendEnvelope(examResultViewSchema);
 
 export type ExamResultViewParsed = z.infer<typeof examResultViewSchema>;
+
+// ---------------------------------------------------------------------------
+// M4.5 B2b: the post-submit review contract. Q148 allows the answer key and
+// the explanation here, so this is a Zod whitelist of the fields the review
+// UI renders — not the attempt-time FORBIDDEN_KEYS walker (that walker must
+// never see this payload). Q217 adds the frozen context and the media refs.
+// ---------------------------------------------------------------------------
+
+const examReviewMediaSchema = mediaSchema;
+
+const examReviewQuestionSchema = z.object({
+  key: z.string().regex(EXAM_QUESTION_KEY_PATTERN),
+  orderIndex: z.number().int().positive(),
+  type: questionTypeSchema,
+  skill: z.enum(['listening', 'reading', 'writing', 'speaking']),
+  sectionKey: z.string().regex(/^s[1-9]\d{0,8}$/u),
+  groupKey: z.string().regex(/^s[1-9]\d{0,8}-g[1-9]\d{0,8}$/u),
+  content: z.string(),
+  answers: questionAnswersSchema,
+  learnerAnswer: z.json().nullable(),
+  correctAnswer: z.json(),
+  explanation: z.string().nullable(),
+  isCorrect: z.boolean(),
+  isFlagged: z.boolean(),
+  groupMedia: z.object({
+    audio: examReviewMediaSchema.nullable(),
+    image: examReviewMediaSchema.nullable(),
+  }),
+  audio: examReviewMediaSchema.nullable(),
+  image: examReviewMediaSchema.nullable(),
+});
+
+export const examReviewViewSchema = z.object({
+  attemptId: z.number().int().positive(),
+  status: z.enum(['submitted', 'timed_out']),
+  testTitle: z.string(),
+  startedAt: z.iso.datetime(),
+  submittedAt: z.iso.datetime(),
+  questions: z.array(examReviewQuestionSchema),
+});
+
+export const examReviewEnvelopeSchema = backendEnvelope(examReviewViewSchema);
+
+export type ExamReviewViewParsed = z.infer<typeof examReviewViewSchema>;
+export type ExamReviewQuestionParsed = z.infer<typeof examReviewQuestionSchema>;
+export type ExamReviewMediaParsed = z.infer<typeof examReviewMediaSchema>;

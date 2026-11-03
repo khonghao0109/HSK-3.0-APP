@@ -961,6 +961,8 @@ describe('server-only backend client', () => {
     });
     // M4.3 Pha B (TL-171): the result read is server-only, no query string.
     await client.request('/api/v1/exam/attempts/41/result', { token: 't' });
+    // M4.5 B2b: the review read follows the same rule.
+    await client.request('/api/v1/exam/attempts/41/review', { token: 't' });
 
     for (const path of [
       '/api/v1/exam/attempts/41?x=1',
@@ -972,13 +974,17 @@ describe('server-only backend client', () => {
       '/api/v1/exam/attempts/41/submit/x',
       '/api/v1/exam/attempts/41/result?x=1',
       '/api/v1/exam/attempts/41/result/x',
+      '/api/v1/exam/attempts/41/review?x=1',
+      '/api/v1/exam/attempts/41/review/x',
+      '/api/v1/exam/attempts/41/reviews',
+      '/api/v1/exam/attempts/abc/review',
       '/api/v1/exam/attempts/abc',
     ]) {
       await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }
-    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
   });
 
   it('allowlists the learner exam list with a filtered query string (M4.5 B1)', async () => {

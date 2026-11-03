@@ -87,6 +87,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/exam\/attempts\/\d+\/submit$/,
   // M4.3 Pha B (TL-171/TL-172): the stored result read; no query string.
   /^\/api\/v1\/exam\/attempts\/\d+\/result$/,
+  // M4.5 B2b: the post-submit review read; server page only, no query string.
+  /^\/api\/v1\/exam\/attempts\/\d+\/review$/,
   /^\/api\/v1\/exam\/attempts\/\d+\/answers$/,
   /^\/api\/v1\/exam\/attempts\/\d+\/answers\/q\d+$/,
 ];

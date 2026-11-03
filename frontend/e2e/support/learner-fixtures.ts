@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 
 import {
@@ -8,7 +9,11 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { queryDisposableDb } from './disposable-db';
+import {
+  disposableDbUrl,
+  queryDisposableDb,
+  sqlLiteral,
+} from './disposable-db';
 import { ingestListeningAudio } from './listening-audio';
 
 // Shared by the lesson page (M2.5a), player (M2.5b) and listening (M2.5c)
@@ -396,7 +401,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 const RETRY_ATTEMPTS = 3;
-/** Cửa sổ media guard: 5 upload/60 s, server không gửi Retry-After. */
+/** Global throttle dùng cửa sổ 60 s; không có Retry-After thì chờ trọn cửa sổ. */
 const RETRY_WINDOW_MS = 61_000;
 
 function retryDelayMs(response?: APIResponse): number {
@@ -406,11 +411,11 @@ function retryDelayMs(response?: APIResponse): number {
 }
 
 /**
- * F1 (2c): một đường retry 429 duy nhất cho cả ba chỗ trước đây
- * (postWithRetry / callWithRetry / withAudioRetry). `classify` trả response
- * 429 (fetch) hoặc null; lỗi ném ra có message chứa "429" cũng được thử lại.
- * Hành vi giữ nguyên: tối đa RETRY_ATTEMPTS lần, chờ Retry-After hoặc một
- * cửa sổ media guard.
+ * Retry 429 cho các lệnh ghi Admin CMS (global throttle 1000/phút ở test,
+ * 20/phút ở prod), chờ Retry-After hoặc một cửa sổ 60 s. Media ingestion KHÔNG
+ * đi qua đây: audio + ảnh của đề được ingest đúng một lần cho mỗi DB disposable
+ * (sharedExamMedia), nên 429 ở ingest là hồi quy thật và phải đỏ ngay, không
+ * retry mù.
  */
 async function retryOn429<T>(
   run: () => Promise<T>,
@@ -428,18 +433,6 @@ async function retryOn429<T>(
       await sleep(Math.max(retryDelayMs(), attempt * RETRY_WINDOW_MS));
     }
   }
-}
-
-/** POST with up to 3 attempts on 429, honouring Retry-After. */
-async function postWithRetry(
-  api: APIRequestContext,
-  url: string,
-  init: Parameters<APIRequestContext['fetch']>[1],
-): Promise<APIResponse> {
-  return retryOn429(
-    () => api.fetch(url, init),
-    (response) => (response.status() === 429 ? response : null),
-  );
 }
 
 /** Admin CMS call with up to 3 attempts on 429, honouring Retry-After. */
@@ -464,8 +457,9 @@ async function callWithRetry<T>(
 }
 
 /**
- * Uploads the generated 320x180 PNG through the ingestion API (retrying 429
- * with Retry-After) and waits until the media is ready.
+ * Uploads the generated 320x180 PNG through the ingestion API and waits until
+ * the media is ready. Chỉ được gọi từ sharedExamMedia; nếu DB đã có media của
+ * Idempotency-Key này thì không upload lại.
  */
 async function ingestQuestionImage(
   api: APIRequestContext,
@@ -477,11 +471,9 @@ async function ingestQuestionImage(
     'SELECT id FROM "DataSource" ORDER BY id LIMIT 1',
   );
   if (!/^\d+$/u.test(source)) throw new Error('seed has no DataSource');
-  const response = await postWithRetry(
-    api,
+  const response = await api.post(
     `${backend}/admin/cms/media/ingestions?dataSourceId=${source}`,
     {
-      method: 'POST',
       headers: {
         authorization: `Bearer ${adminToken}`,
         'idempotency-key': idempotencyKey,
@@ -512,6 +504,82 @@ async function ingestQuestionImage(
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   throw new Error(`image media ${id} is not ready after 30 seconds`);
+}
+
+type ExamMedia = { audioId: number; imageId: number };
+
+/**
+ * Idempotency-Key cố định cho hai tài sản media dùng chung của đề thi. Chạy lại
+ * trên cùng DB thì backend replay kết quả cũ thay vì tạo media thứ hai.
+ */
+const EXAM_MEDIA_KEY = (kind: 'audio' | 'image'): string =>
+  `e2e-exam-media-${kind}-v1`.padEnd(64, '0');
+
+/**
+ * mediaId của lần ingest đã completed với Idempotency-Key cố định, nếu có.
+ * Backend lưu `sha256(key)` ở `MediaIngestion.idempotencyKeyHash`, nên đọc thẳng
+ * id ra là dùng lại được media mà không gửi request ingest nào.
+ */
+function completedExamMediaId(idempotencyKey: string): number | null {
+  const keyHash = createHash('sha256').update(idempotencyKey).digest('hex');
+  const row = queryDisposableDb(
+    `SELECT "mediaId" FROM "MediaIngestion" WHERE "idempotencyKeyHash" = ${sqlLiteral(keyHash)} AND status = 'completed' AND "mediaId" IS NOT NULL ORDER BY id LIMIT 1`,
+  );
+  return /^\d+$/u.test(row) ? Number(row) : null;
+}
+
+/**
+ * Cache trong process: Playwright tạo worker riêng cho từng project nên đây chỉ
+ * tránh gửi trùng trong một project; nguồn sự thật để dùng lại mediaId là bảng
+ * MediaIngestion (project sau đọc id đã completed, 0 request ingest).
+ */
+const examMediaByWorker = new Map<string, Promise<ExamMedia>>();
+
+/**
+ * Audio + ảnh của đề thi: ingest đúng một lần cho mỗi DB disposable rồi mọi
+ * seed/project dùng lại mediaId. Media guard cho 5 upload/actor/60 s
+ * (`backend/src/modules/cms/media-ingestion/media-upload-rate-limit.guard.ts:12,32`),
+ * nên request ingest phải ít hơn hẳn trần: trước FIX 1 mỗi project gửi 5-7
+ * request (audio + ảnh ingest lại) và project 2/4 nhận 429.
+ */
+function sharedExamMedia(
+  api: APIRequestContext,
+  admin: string,
+): Promise<ExamMedia> {
+  const cacheKey = disposableDbUrl();
+  const cached = examMediaByWorker.get(cacheKey);
+  if (cached !== undefined) return cached;
+  const pending = resolveExamMedia(api, admin);
+  examMediaByWorker.set(cacheKey, pending);
+  void pending.catch(() => {
+    if (examMediaByWorker.get(cacheKey) === pending) {
+      examMediaByWorker.delete(cacheKey);
+    }
+  });
+  return pending;
+}
+
+async function resolveExamMedia(
+  api: APIRequestContext,
+  admin: string,
+): Promise<ExamMedia> {
+  const audioKey = EXAM_MEDIA_KEY('audio');
+  const imageKey = EXAM_MEDIA_KEY('image');
+  const existingAudio = completedExamMediaId(audioKey);
+  const existingImage = completedExamMediaId(imageKey);
+  const toIngest =
+    Number(existingAudio === null) + Number(existingImage === null);
+  console.log(
+    toIngest === 0
+      ? '[learner-fixtures] exam media: reuse from DB (0 ingest requests)'
+      : `[learner-fixtures] exam media: ingest ${String(toIngest)} request(s)`,
+  );
+  const audioId =
+    existingAudio ??
+    (await ingestListeningAudio(api, BACKEND, admin, audioKey));
+  const imageId =
+    existingImage ?? (await ingestQuestionImage(api, BACKEND, admin, imageKey));
+  return { audioId, imageId };
 }
 
 export type ExamQuestionInput = {
@@ -756,7 +824,8 @@ const WRITING_COUNT = 14;
  * audio, Q1 first and Q2 carrying a real 320x180 image), Doc (20: 12 mcq +
  * 8 true_false), Viet (14: 7 fill_blank + 7 arrange_sentence) — so the panel
  * grid matches the 40-cell mockup. Listening is section 1, so the attempt
- * opens on a listening mcq. Every ingest/publish retries 429 with Retry-After.
+ * opens on a listening mcq. Audio + ảnh dùng chung, ingest một lần cho mỗi DB
+ * (sharedExamMedia); các lệnh ghi CMS vẫn retry 429 với Retry-After.
  */
 export async function seedExamTakeFixtures(
   prefix: string,
@@ -765,17 +834,7 @@ export async function seedExamTakeFixtures(
   try {
     const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
     const hsk3 = await levelId(api, 'HSK3');
-    const idempotency = (kind: string) =>
-      `e2e-exam-take-${kind}-${prefix}`.slice(0, 64).padEnd(64, '0');
-    const audioId = await withAudioRetry(() =>
-      ingestListeningAudio(api, BACKEND, admin, idempotency('audio')),
-    );
-    const imageId = await ingestQuestionImage(
-      api,
-      BACKEND,
-      admin,
-      idempotency('image'),
-    );
+    const { audioId, imageId } = await sharedExamMedia(api, admin);
 
     const listeningPrompt = `Nghe ${prefix} và chọn đáp án đúng.`;
     const fillPrompt = `Câu điền ${prefix}: 我想___东西。`;
@@ -941,11 +1000,175 @@ export async function seedExamTakeFixtures(
   }
 }
 
+export type ExamReviewFixture = {
+  title: string;
+  publishedTestId: number;
+  /** q1 mcq, answered correctly in the review e2e. */
+  mcqPrompt: string;
+  mcqOptionText: string;
+  /** q2 true_false, answered wrong and flagged. */
+  wrongPrompt: string;
+  /** q3 fill_blank, left unanswered. */
+  blankPrompt: string;
+  /** q4 arrange_sentence, left unanswered. */
+  arrangePrompt: string;
+  /** q5 listening mcq with real audio, left unanswered. */
+  listeningPrompt: string;
+  imageQuestionNumber: number;
+  audioQuestionNumber: number;
+  questionCount: number;
+  durationMinutes: number;
+};
+
 /**
- * ingestListeningAudio lives in a shared helper outside this round's allowed
- * files, so its 429 is retried here with a fixed backoff (it replays through
- * the fixed Idempotency-Key).
+ * M4.5 B2b: one published test with the four objective formats, a real audio
+ * question and a group image, seeded through the Admin CMS. The e2e answers q1
+ * correctly and q2 wrongly+flagged so the review has every state in one page.
  */
-async function withAudioRetry<T>(fn: () => Promise<T>): Promise<T> {
-  return retryOn429(fn, () => null);
+export async function seedExamReviewFixtures(
+  prefix: string,
+): Promise<ExamReviewFixture> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const hsk3 = await levelId(api, 'HSK3');
+    const { audioId, imageId } = await sharedExamMedia(api, admin);
+
+    const mcqPrompt = `Review ${prefix}: chọn đáp án đúng.`;
+    const mcqOptionText = `Đáp án đúng ${prefix}`;
+    const wrongPrompt = `Review ${prefix}: câu này đúng hay sai?`;
+    const blankPrompt = `Review ${prefix}: điền từ 你好.`;
+    const arrangePrompt = `Review ${prefix}: sắp xếp 我 / 想 / 买.`;
+    const listeningPrompt = `Review ${prefix}: nghe và chọn đáp án.`;
+
+    const mcqId = await publishExamQuestion(api, admin, hsk3, {
+      type: 'mcq',
+      skill: 'reading',
+      content: mcqPrompt,
+      answers: {
+        options: [
+          { id: 'a', text: mcqOptionText },
+          { id: 'b', text: `Đáp án sai ${prefix}` },
+        ],
+      },
+      correctAnswer: { optionId: 'a' },
+      explanation: 'Chọn A vì đáp án A đúng.',
+    });
+    const trueFalseId = await publishExamQuestion(api, admin, hsk3, {
+      type: 'true_false',
+      skill: 'reading',
+      content: wrongPrompt,
+      answers: {},
+      correctAnswer: { value: true },
+      explanation: 'Khẳng định này đúng.',
+    });
+    const fillId = await publishExamQuestion(api, admin, hsk3, {
+      type: 'fill_blank',
+      skill: 'reading',
+      content: blankPrompt,
+      answers: {},
+      correctAnswer: { acceptedTexts: ['你好'], caseSensitive: false },
+      explanation: 'Điền 你好.',
+    });
+    const arrangeId = await publishExamQuestion(api, admin, hsk3, {
+      type: 'arrange_sentence',
+      skill: 'reading',
+      content: arrangePrompt,
+      answers: {
+        tokens: [
+          { id: 'wo', text: '我' },
+          { id: 'xiang', text: '想' },
+          { id: 'mai', text: '买' },
+        ],
+      },
+      correctAnswer: { tokenIds: ['wo', 'xiang', 'mai'] },
+      explanation: 'Câu đúng: 我想买。',
+    });
+    const listeningId = await publishExamQuestion(api, admin, hsk3, {
+      type: 'mcq',
+      skill: 'listening',
+      content: listeningPrompt,
+      answers: {
+        options: [
+          { id: 'a', text: `Nghe A ${prefix}` },
+          { id: 'b', text: `Nghe B ${prefix}` },
+        ],
+      },
+      correctAnswer: { optionId: 'b' },
+      explanation: 'Đáp án B theo đoạn nghe.',
+      audioId,
+    });
+
+    const title = `Đề xem lại ${prefix}`;
+    const draft = await callWithRetry<{ id: number; updatedAt: string }>(
+      api,
+      'POST',
+      '/admin/cms/tests',
+      admin,
+      {
+        levelId: hsk3,
+        title,
+        instruction: 'Làm hết các phần trong 45 phút.',
+        duration: 45,
+        passScore: 60,
+      },
+    );
+    const structured = await callWithRetry<{ id: number; updatedAt: string }>(
+      api,
+      'PUT',
+      `/admin/cms/tests/${draft.id}/structure`,
+      admin,
+      {
+        expectedUpdatedAt: draft.updatedAt,
+        sections: [
+          {
+            skill: 'reading',
+            title: 'Đọc hiểu',
+            groups: [
+              {
+                title: 'Phần đọc',
+                imageId,
+                questionIds: [mcqId, trueFalseId, fillId, arrangeId],
+              },
+            ],
+          },
+          {
+            skill: 'listening',
+            title: 'Nghe hiểu',
+            groups: [
+              {
+                title: 'Phần nghe',
+                audioId,
+                questionIds: [listeningId],
+              },
+            ],
+          },
+        ],
+      },
+    );
+    await callWithRetry(
+      api,
+      'POST',
+      `/admin/cms/tests/${draft.id}/publish`,
+      admin,
+      { expectedUpdatedAt: structured.updatedAt },
+    );
+
+    return {
+      title,
+      publishedTestId: draft.id,
+      mcqPrompt,
+      mcqOptionText,
+      wrongPrompt,
+      blankPrompt,
+      arrangePrompt,
+      listeningPrompt,
+      imageQuestionNumber: 1,
+      audioQuestionNumber: 5,
+      questionCount: 5,
+      durationMinutes: 45,
+    };
+  } finally {
+    await api.dispose();
+  }
 }
