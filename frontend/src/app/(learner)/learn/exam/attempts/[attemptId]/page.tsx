@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import { getExamAttempt } from '@/features/learner-exam/exam-attempt-service';
 import { ExamTake } from '@/features/learner-exam/exam-take';
-import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
+import { parseAttemptId } from '@/features/learner-exam/exam-ids';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default async function LearnerExamTakePage({
 }: {
   params: Promise<{ attemptId: string }>;
 }) {
-  const attemptId = parseLessonId((await params).attemptId);
+  const attemptId = parseAttemptId((await params).attemptId);
   if (attemptId === null) notFound();
 
   const session = await getServerLearnerSession();

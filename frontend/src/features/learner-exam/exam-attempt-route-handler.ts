@@ -7,7 +7,6 @@ import {
   setClearedCookies,
   statusFromError,
 } from '@/features/auth/session-route-handlers';
-import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import {
   isMediaId,
   readGrant,
@@ -27,37 +26,17 @@ import {
   examSubmitEnvelopeSchema,
   examSubmitInputSchema,
 } from './exam-contract';
+import { conflictCodesFor } from './exam-409-matrix';
 import { firstForbiddenKey } from './exam-forbidden-keys';
+import { parseAttemptId } from './exam-ids';
 import type { ExamHandlerDependencies } from './exam-route-handler';
 
-/** TL-134.5: 409 codes the answer routes may forward to the browser. */
-const ANSWER_CONFLICT_CODES = new Set([
-  'EXAM_ANSWER_VERSION_CONFLICT',
-  'EXAM_ATTEMPT_EXPIRED',
-  'EXAM_ATTEMPT_CLOSED',
-  'EXAM_IDEMPOTENCY_KEY_REUSED',
-]);
-
-/** TL-159: 409 codes the submit route may forward to the browser. */
-const SUBMIT_CONFLICT_CODES = new Set([
-  'EXAM_ATTEMPT_ALREADY_SUBMITTED',
-  'EXAM_ATTEMPT_EXPIRED',
-  'EXAM_ATTEMPT_CLOSED',
-  'EXAM_IDEMPOTENCY_KEY_REUSED',
-]);
-
-/** TL-134.5: the grants route forwards the two attempt-terminal codes only. */
-const GRANT_CONFLICT_CODES = new Set([
-  'EXAM_ATTEMPT_EXPIRED',
-  'EXAM_ATTEMPT_CLOSED',
-]);
-
-/** TL-171/Q167: the result route forwards exactly these three 409 codes. */
-const RESULT_CONFLICT_CODES = new Set([
-  'EXAM_ATTEMPT_NOT_TERMINAL',
-  'EXAM_RESULT_UNAVAILABLE',
-  'EXAM_ATTEMPT_CLOSED',
-]);
+// TL-188: one matrix owns every 409 → route behaviour; the per-route sets are
+// derived so a new code cannot be forwarded by only one of the handlers.
+const ANSWER_CONFLICT_CODES = conflictCodesFor('answer');
+const SUBMIT_CONFLICT_CODES = conflictCodesFor('submit');
+const GRANT_CONFLICT_CODES = conflictCodesFor('grant');
+const RESULT_CONFLICT_CODES = conflictCodesFor('result');
 
 const ANSWER_INVALID_CODE = 'EXAM_ANSWER_INVALID';
 
@@ -141,10 +120,6 @@ function mapAttemptError(
   }
   if (status === 404 || status === 429) return safeResponse(status);
   return safeResponse(503);
-}
-
-function parseAttemptId(rawAttemptId: string): number | null {
-  return parseLessonId(rawAttemptId);
 }
 
 /** `GET /api/learner/exam/attempts/:attemptId` (TL-134). GET skips Origin. */
