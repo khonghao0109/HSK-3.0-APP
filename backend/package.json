@@ -60,7 +60,8 @@
     "test:db:account-deletion-concurrency": "ts-node scripts/test/run-account-deletion-concurrency.ts",
     "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts",
     "analytics:p0": "ts-node scripts/analytics/p0-product-metrics.ts",
-    "test:db:exam-submit-concurrency": "ts-node scripts/test/run-exam-submit-concurrency.ts"
+    "test:db:exam-submit-concurrency": "ts-node scripts/test/run-exam-submit-concurrency.ts",
+    "test:capacity:exam": "ts-node scripts/test/run-exam-capacity.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
