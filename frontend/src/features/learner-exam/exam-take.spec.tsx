@@ -2538,3 +2538,370 @@ describe('ExamTake submit (TL-157/TL-158)', () => {
     expect(timer.className).not.toContain('is-low');
   });
 });
+
+describe('ExamTake pre-submit review (M4.5 B2c / Q225)', () => {
+  function reviewAttempt(
+    overrides: Record<string, unknown> = {},
+  ): ExamAttemptView {
+    const seed = (key: string, orderIndex: number) =>
+      question({ key, orderIndex });
+    return attempt({
+      questionCount: 4,
+      sections: [
+        {
+          key: 's1',
+          orderIndex: 1,
+          title: 'Đọc hiểu',
+          instruction: null,
+          skill: 'reading',
+          groups: [
+            {
+              key: 's1-g1',
+              orderIndex: 1,
+              title: null,
+              instruction: 'Chọn đáp án đúng.',
+              content: null,
+              audio: null,
+              image: null,
+              questions: [seed('q1', 1), seed('q2', 2)],
+            },
+          ],
+        },
+        {
+          key: 's2',
+          orderIndex: 2,
+          title: 'Viết câu',
+          instruction: null,
+          skill: 'writing',
+          groups: [
+            {
+              key: 's2-g1',
+              orderIndex: 1,
+              title: null,
+              instruction: null,
+              content: null,
+              audio: null,
+              image: null,
+              questions: [seed('q3', 1), seed('q4', 2)],
+            },
+          ],
+        },
+      ],
+      answers: [
+        {
+          questionKey: 'q1',
+          answer: { choice: 'a' },
+          isFlagged: true,
+          version: 1,
+          answeredAt: '2026-10-27T09:00:00.000Z',
+          lastSavedAt: '2026-10-27T09:00:00.000Z',
+        },
+        {
+          questionKey: 'q2',
+          answer: { choice: 'b' },
+          isFlagged: false,
+          version: 1,
+          answeredAt: '2026-10-27T09:00:00.000Z',
+          lastSavedAt: '2026-10-27T09:00:00.000Z',
+        },
+        {
+          questionKey: 'q3',
+          answer: null,
+          isFlagged: true,
+          version: 1,
+          answeredAt: null,
+          lastSavedAt: '2026-10-27T09:00:00.000Z',
+        },
+      ],
+      ...overrides,
+    });
+  }
+
+  function openReview(): void {
+    const panel = screen.getByRole('complementary', { name: 'Danh sách câu' });
+    fireEvent.click(within(panel).getByRole('button', { name: 'Xem lại' }));
+  }
+
+  function reviewRegion(): HTMLElement {
+    return screen.getByRole('region', { name: 'Chọn câu hỏi để xem lại' });
+  }
+
+  function summaryCount(label: string): string | null | undefined {
+    const list = screen.getByRole('list', { name: 'Tổng quan bài làm' });
+    const item = within(list).getByText(label).closest('li');
+    return item?.querySelector('b')?.textContent;
+  }
+
+  it('Q225: opens the review with counts, part groups, legend and the tip', () => {
+    renderTake(reviewAttempt());
+    expect(
+      screen.queryByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+    ).toBeNull();
+
+    openReview();
+
+    expect(
+      screen.getByRole('heading', { name: 'Xem lại bài thi' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+    ).toBeDefined();
+    // Đếm đúng 4 câu: 2 trả lời, 2 chưa trả lời, 2 đánh dấu.
+    expect(summaryCount('Đã trả lời')).toBe('2');
+    expect(summaryCount('Chưa trả lời')).toBe('2');
+    expect(summaryCount('Đánh dấu')).toBe('2');
+    // Nhóm theo phần, giữ thứ tự phần.
+    expect(screen.getByRole('heading', { name: 'Phần 1 · Đọc' })).toBeDefined();
+    expect(
+      screen.getByRole('heading', { name: 'Phần 2 · Viết' }),
+    ).toBeDefined();
+    // Legend có icon + chữ, không chỉ màu.
+    const legend = screen.getByRole('list', {
+      name: 'Chú thích trạng thái câu',
+    });
+    expect(legend.textContent).toContain('Đã trả lời');
+    expect(legend.textContent).toContain('Chưa trả lời');
+    expect(legend.textContent).toContain('Đánh dấu');
+    expect(
+      screen.getByText('Nhấn số câu để quay lại câu đó.', { exact: false }),
+    ).toBeDefined();
+    // Q225 aria-label từng ô.
+    expect(
+      screen.getByRole('button', { name: 'Câu 3, chưa trả lời, đã đánh dấu' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: 'Câu 1, đã trả lời, đã đánh dấu' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: 'Câu 2, đã trả lời' }),
+    ).toBeDefined();
+    // Đồng hồ vẫn chạy và lối ra là nút quay lại của mockup.
+    expect(screen.getByRole('timer')).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: 'Quay lại bài thi' }),
+    ).toBeDefined();
+    // SKILL §7: class mới của lưới/ô phải có trên phần tử thật.
+    const doneCell = screen.getByRole('button', {
+      name: 'Câu 1, đã trả lời, đã đánh dấu',
+    });
+    expect(doneCell.className).toContain('extr-cell');
+    expect(doneCell.className).toContain('is-done');
+    expect(doneCell.className).toContain('is-flag');
+    expect(reviewRegion().querySelector('.extr-grid')).not.toBeNull();
+    expect(reviewRegion().querySelector('.extr-sum')).not.toBeNull();
+    expect(reviewRegion().querySelector('.extr-tip')).not.toBeNull();
+  });
+
+  it('Q225: Escape leaves the review and returns to the current question', async () => {
+    renderTake(reviewAttempt());
+    openReview();
+    expect(reviewRegion()).toBeDefined();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+      ).toBeNull(),
+    );
+    await waitFor(() => expect(document.activeElement?.id).toBe('q-part'));
+  });
+
+  it('Q225: pressing a number goes back to that question and focuses it', async () => {
+    renderTake(reviewAttempt());
+    // Câu hiện tại là câu đầu tiên chưa trả lời (q3); về q1 bằng lưới.
+    openReview();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Câu 1, đã trả lời, đã đánh dấu' }),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('exam-count-live').textContent).toBe(
+        'Câu 1 trên 4',
+      ),
+    );
+    await waitFor(() => expect(document.activeElement?.id).toBe('q-part'));
+    expect(
+      screen.queryByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+    ).toBeNull();
+  });
+
+  it('Q225: the review never shows answers, right/wrong state or explanations', () => {
+    const { container } = renderTake(reviewAttempt());
+    openReview();
+
+    const text = container.textContent ?? '';
+    expect(text).not.toContain('Đáp án đúng');
+    expect(text).not.toContain('Giải thích');
+    // Không render lại khối trả lời của màn làm bài.
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-correct]')).toHaveLength(0);
+    expect(container.innerHTML.toLowerCase()).not.toContain('correct');
+  });
+
+  it('Q225: "Nộp bài" on the review reuses the existing dialog and "Tiếp tục làm" stays', async () => {
+    renderTake(reviewAttempt());
+    openReview();
+
+    fireEvent.click(
+      within(reviewRegion()).getByRole('button', { name: 'Nộp bài' }),
+    );
+    expect(screen.getByRole('heading', { name: 'Nộp bài?' })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục làm' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Nộp bài?' })).toBeNull(),
+    );
+    // Huỷ dialog thì vẫn ở màn xem lại.
+    expect(reviewRegion()).toBeDefined();
+  });
+
+  it('Q225: submitting from the review lands on the locked screen with "Xem kết quả"', async () => {
+    renderTake(reviewAttempt());
+    openReview();
+
+    fireEvent.click(
+      within(reviewRegion()).getByRole('button', { name: 'Nộp bài' }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Nộp bài',
+      }),
+    );
+
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('alert')).getByText('Bài đã được nộp.'),
+      ).toBeDefined(),
+    );
+    expect(
+      screen.queryByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+    ).toBeNull();
+    expect(screen.getByRole('link', { name: 'Xem kết quả' })).toBeDefined();
+  });
+
+  it('Q225/TL-137: the clock reaching zero inside the review keeps the Q127 lock', async () => {
+    vi.useFakeTimers();
+    let now = 1_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    renderTake(reviewAttempt({ remainingSeconds: 2 }));
+    openReview();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    now += 5_000;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    expect(screen.getByText('Hết giờ. Bài làm đã được lưu.')).toBeDefined();
+    expect(
+      (
+        within(reviewRegion()).getByRole('button', {
+          name: 'Nộp bài',
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  it('Q225: entering the review during a listening turn stops it and the audio stays usable', async () => {
+    const grant = {
+      mediaId: 9,
+      src: '/media/9',
+      expiresAt: new Date(Date.now() + 280_000).toISOString(),
+    };
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: { grants: [grant], unavailable: [] },
+        });
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const { container } = renderTake(
+      singleQuestionAttempt({ audio: media('audio', 9) }),
+    );
+    await waitFor(() =>
+      expect(container.querySelector('audio')?.getAttribute('src')).toBe(
+        '/media/9',
+      ),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Phát' }));
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Đang phát' })).toBeDefined();
+
+    openReview();
+    // Rời câu giữa lượt nghe không được để lại trạng thái "đang phát" ma.
+    expect(screen.queryByRole('button', { name: 'Đang phát' })).toBeNull();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    // <audio> được mount lại phải có src và lượt nghe đã kết thúc (F13).
+    await waitFor(() =>
+      expect(container.querySelector('audio')?.getAttribute('src')).toBe(
+        '/media/9',
+      ),
+    );
+    expect(screen.getByRole('button', { name: 'Đã nghe' })).toBeDefined();
+  });
+
+  it('Q225: entering the review does not interrupt an autosave already in flight', async () => {
+    const pending: { release: (() => void) | null } = {
+      release: null,
+    };
+    vi.mocked(globalThis.fetch).mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/media-grants')) {
+        return Response.json({
+          success: true,
+          data: { grants: [], unavailable: [] },
+        });
+      }
+      if (url.includes('/answers') && init?.method === 'PUT') {
+        const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Promise<Response>((resolve) => {
+          pending.release = () =>
+            resolve(
+              Response.json({
+                success: true,
+                data: savedView(
+                  String(body.questionKey ?? 'q3'),
+                  2,
+                  body.answer,
+                ),
+              }),
+            );
+        });
+      }
+      return Response.json({ success: true, data: attempt() });
+    });
+    renderTake(reviewAttempt());
+    fireEvent.click(screen.getAllByRole('radio')[1] as HTMLElement);
+    await waitFor(() => expect(pending.release).not.toBeNull());
+
+    openReview();
+    expect(
+      screen
+        .getAllByRole('status')
+        .some((status) => (status.textContent ?? '').includes('Đang lưu')),
+    ).toBe(true);
+
+    const release = pending.release;
+    if (release === null) throw new Error('save request did not start');
+    release();
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole('status')
+          .some((status) => (status.textContent ?? '').includes('Đã lưu')),
+      ).toBe(true),
+    );
+    // Autosave chạy tiếp trong mode xem lại; mode không bị đóng.
+    expect(reviewRegion()).toBeDefined();
+  });
+});

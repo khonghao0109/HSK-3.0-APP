@@ -59,6 +59,11 @@ import {
   type ExamAttemptView,
   type FlatQuestion,
 } from './exam-take-model';
+import { ExamPreSubmitReview } from './exam-pre-submit-review';
+import {
+  PRE_SUBMIT_REVIEW_TITLE,
+  buildPreSubmitReview,
+} from './exam-pre-submit-review-model';
 
 const SAVE_SAVED = 'Đã lưu';
 const SAVE_SAVING = 'Đang lưu…';
@@ -163,6 +168,9 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const [audioDuration, setAudioDuration] = useState(0);
   const [playError, setPlayError] = useState<string | null>(null);
   const [dialogKind, setDialogKind] = useState<'quit' | 'submit' | null>(null);
+  // M4.5 B2c (Q225): the pre-submit review is a mode of this island, not a
+  // route; the attempt, the clock and the autosave queue all stay mounted.
+  const [reviewMode, setReviewMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   /**
@@ -219,12 +227,19 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const preloadUrlsRef = useRef<Map<number, string>>(new Map());
   const preloaderRef = useRef<AudioPreload | null>(null);
   const mediaRetryRef = useRef<Set<number>>(new Set());
+  const reviewHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
     lockedRef.current = locked;
   }, [locked]);
 
   const current = flat[index];
+  // Q225: counts, section grouping and aria labels come from the pure model;
+  // the map only holds the learner's own state (never correct answers).
+  const reviewModel = useMemo(
+    () => buildPreSubmitReview({ flat, answers, currentIndex: index }),
+    [answers, flat, index],
+  );
   // Layout effect: the ref must be fresh at commit, before any async grants
   // continuation can observe it.
   useLayoutEffect(() => {
@@ -773,20 +788,35 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     await queueRef.current?.flush(force ? { force: true } : undefined);
   }, []);
 
+  const focusQuestionHeading = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      document.getElementById('q-part')?.focus();
+    });
+  }, []);
+
+  /**
+   * F13/Q225: leaving a playing question (navigation or the review mode, which
+   * unmounts the question card) stops playback and counts the question as
+   * heard, exactly like moving to the next question.
+   */
+  const stopListeningTurn = useCallback(() => {
+    const playingKey = listeningKeyRef.current;
+    if (playingKey !== null) {
+      audioRef.current?.pause();
+      setPlayedKeys((previous) => new Set(previous).add(playingKey));
+      setListeningKey(null);
+      listeningKeyRef.current = null;
+    }
+    setAudioProgress(0);
+    setAudioDuration(0);
+    setPlayError(null);
+  }, []);
+
   const goTo = useCallback(
     (next: number) => {
       if (next < 0 || next >= flat.length) return;
       // F13: leaving a playing question stops it and counts it as heard.
-      const playingKey = listeningKeyRef.current;
-      if (playingKey !== null) {
-        audioRef.current?.pause();
-        setPlayedKeys((previous) => new Set(previous).add(playingKey));
-        setListeningKey(null);
-        listeningKeyRef.current = null;
-      }
-      setAudioProgress(0);
-      setAudioDuration(0);
-      setPlayError(null);
+      stopListeningTurn();
       if (current) {
         const state = answers.get(current.question.key);
         if (state) {
@@ -795,12 +825,56 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
       }
       setIndex(next);
       setPanelOpen(false);
-      window.requestAnimationFrame(() => {
-        document.getElementById('q-part')?.focus();
-      });
+      focusQuestionHeading();
     },
-    [answers, current, flat.length],
+    [answers, current, flat.length, focusQuestionHeading, stopListeningTurn],
   );
+
+  /**
+   * Q225: enter/leave the review mode. The attempt keeps running (clock, queue,
+   * preloader) because the island never unmounts.
+   */
+  const openReview = useCallback(() => {
+    if (lockedRef.current) return;
+    // The review mode unmounts the question card: end the current listening
+    // turn first so a remounted <audio> is not left stale/playing.
+    stopListeningTurn();
+    setPanelOpen(false);
+    setReviewMode(true);
+  }, [stopListeningTurn]);
+
+  const closeReview = useCallback(() => {
+    setReviewMode(false);
+    focusQuestionHeading();
+  }, [focusQuestionHeading]);
+
+  /** Q225: pressing a number goes back to that question and focuses it. */
+  const pickReviewQuestion = useCallback(
+    (position: number) => {
+      setReviewMode(false);
+      goTo(position);
+    },
+    [goTo],
+  );
+
+  /**
+   * Q225 keyboard contract: the heading takes focus when the mode opens, Tab
+   * reaches every cell, and Escape leaves the mode like the back arrow (the
+   * confirm dialog keeps its own Escape handling).
+   */
+  useEffect(() => {
+    if (!reviewMode) return;
+    reviewHeadingRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (dialogRef.current?.open === true) return;
+      if (submittingRef.current) return;
+      event.preventDefault();
+      closeReview();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [reviewMode, closeReview]);
 
   const onSelect = (entry: FlatQuestion, answer: ExamAnswer) => {
     const state = answers.get(entry.question.key);
@@ -826,6 +900,9 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     submittedRef.current = true;
     zeroWhileSubmittingRef.current = false;
     setSubmitted(true);
+    // Q225: after submitting, the canonical locked panel (with "Xem kết quả")
+    // replaces the review mode.
+    setReviewMode(false);
     lockedRef.current = true;
     setLockText(EXAM_SUBMITTED_MESSAGE);
     setLocked(true);
@@ -989,7 +1066,7 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
     if (renderedAudioSrc === undefined) return;
     if (element.getAttribute('src') === renderedAudioSrc) return;
     element.src = renderedAudioSrc;
-  }, [renderedAudioSrc, current?.question.key]);
+  }, [renderedAudioSrc, current?.question.key, reviewMode]);
 
   if (current === undefined || currentState === null) {
     return (
@@ -1293,23 +1370,40 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
   const unsavedCount = pendingCount + failedKeys.size;
 
   return (
-    <div className="ex ext">
+    <div className={`ex ext${reviewMode ? ' is-review' : ''}`}>
       <header className="ex-bar ext-bar">
         {/* 2b-6 V3: nền navy chỉ thuộc hàng X+title (58px theo m04). */}
         <div className="ext-bar__row">
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Thoát bài thi"
-            ref={quitTriggerRef}
-            onClick={openQuit}
-          >
-            <svg className="icon" aria-hidden="true">
-              <use href="#i-x" />
-            </svg>
-          </button>
+          {/* Q225: inside the review mode the left button returns to the
+              question, like the mockup's back arrow. */}
+          {reviewMode ? (
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Quay lại bài thi"
+              onClick={closeReview}
+            >
+              <svg className="icon" aria-hidden="true">
+                <use href="#i-arrow-left" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Thoát bài thi"
+              ref={quitTriggerRef}
+              onClick={openQuit}
+            >
+              <svg className="icon" aria-hidden="true">
+                <use href="#i-x" />
+              </svg>
+            </button>
+          )}
           <div className="ext-bar__main">
-            <h1 className="ext-bar__title">{attempt.test.title}</h1>
+            <h1 className="ext-bar__title">
+              {reviewMode ? PRE_SUBMIT_REVIEW_TITLE : attempt.test.title}
+            </h1>
             <progress
               className="ext-progress"
               aria-label="Tiến độ bài thi"
@@ -1336,24 +1430,28 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
               </span>
             </p>
           )}
-          <p className="ext-count" aria-hidden="true">
-            Câu {current.number}/{flat.length}
-          </p>
-          <button
-            className="ext-count-btn"
-            type="button"
-            aria-expanded={panelOpen}
-            aria-controls="exam-panel"
-            aria-label={`Câu ${String(current.number)} trên ${String(flat.length)}. Mở danh sách câu hỏi`}
-            onClick={() => setPanelOpen((open) => !open)}
-          >
-            <span aria-hidden="true">
-              {current.number}/{flat.length}
-            </span>
-            <svg className="icon icon--sm" aria-hidden="true">
-              <use href="#i-chevron-down" />
-            </svg>
-          </button>
+          {reviewMode ? null : (
+            <>
+              <p className="ext-count" aria-hidden="true">
+                Câu {current.number}/{flat.length}
+              </p>
+              <button
+                className="ext-count-btn"
+                type="button"
+                aria-expanded={panelOpen}
+                aria-controls="exam-panel"
+                aria-label={`Câu ${String(current.number)} trên ${String(flat.length)}. Mở danh sách câu hỏi`}
+                onClick={() => setPanelOpen((open) => !open)}
+              >
+                <span aria-hidden="true">
+                  {current.number}/{flat.length}
+                </span>
+                <svg className="icon icon--sm" aria-hidden="true">
+                  <use href="#i-chevron-down" />
+                </svg>
+              </button>
+            </>
+          )}
           <p
             className={`ext-saved${
               saving ? ' is-saving' : showSavedCheck ? '' : ' is-unsaved'
@@ -1456,262 +1554,310 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
           </div>
         ) : null}
 
-        <div className="ext-body">
-          <section className="ext-question" aria-labelledby="q-part">
-            <div className="ext-card">
-              <h2 className="uxb-part tk-part" id="q-part" tabIndex={-1}>
-                {questionKicker(current)}
-              </h2>
-              <div className="ext-qhead">
-                <p className="uxb-qask tk-qask" id="q-ask">
-                  {questionPrompt(current)}
-                </p>
-                <p className="ext-live" aria-live="polite">
-                  {isPlaying || hasPlayed ? (
-                    <>
-                      <svg className="icon" aria-hidden="true">
-                        <use href="#i-volume" />
-                      </svg>
-                      {isPlaying ? 'Đang phát' : 'Đã nghe'}
-                    </>
-                  ) : (
-                    ''
-                  )}
-                </p>
-              </div>
-
-              {current.question.content.trim().length > 0 &&
-              current.question.type !== 'fill_blank' &&
-              current.question.type !== 'arrange_sentence' ? (
-                <p
-                  className={`ext-content${hasHan(current.question.content) ? ' cn' : ''}`}
-                  lang={
-                    hasHan(current.question.content) ? 'zh-Hans' : undefined
-                  }
-                >
-                  {current.question.content}
-                </p>
-              ) : null}
-
-              {audio ? (
-                <div className="ext-audio">
-                  {speedBlock}
-                  {audioUnavailable ? (
-                    <p className="ext-error">{'Không tải được âm thanh.'}</p>
-                  ) : (
-                    <>
-                      <div className="ext-player">
-                        {/* TL-147: `src` do effect/`startAudio` ghi, không do
-                            React, để không có lần ghi nào giữa lượt nghe. */}
-                        <audio
-                          key={current.question.key}
-                          ref={audioRef}
-                          preload="none"
-                          onTimeUpdate={(event) => {
-                            setAudioProgress(event.currentTarget.currentTime);
-                            setAudioDuration(event.currentTarget.duration || 0);
-                          }}
-                          onEnded={() => {
-                            const key = listeningKeyRef.current;
-                            if (key !== null) {
-                              setPlayedKeys((previous) =>
-                                new Set(previous).add(key),
-                              );
-                            }
-                            setListeningKey(null);
-                          }}
-                          onError={() => {
-                            onMediaError(audio.mediaId, 'audio');
-                          }}
-                        />
-                        <div className="pq-wave" aria-hidden="true">
-                          {WAVE_BARS.map(([barX], position) => {
-                            const played = isBarPlayed(barX, playedFraction);
-                            return (
-                              <i
-                                key={position}
-                                className={played ? 'is-played' : undefined}
-                                data-played={played ? 'true' : 'false'}
-                              />
-                            );
-                          })}
-                        </div>
-                        <p className="tabular ext-audioclock">
-                          <span>{formatClockMM(audioProgress)}</span>
-                          <span className="ext-clocksep" aria-hidden="true">
-                            {' / '}
-                          </span>
-                          <span>{formatClockMM(audioDuration)}</span>
-                        </p>
-                        <button
-                          type="button"
-                          className={`uxb-play${hasPlayed ? ' is-done' : ''}`}
-                          aria-disabled={
-                            locked || hasPlayed || isPlaying
-                              ? 'true'
-                              : undefined
-                          }
-                          aria-label={
-                            hasPlayed
-                              ? 'Đã nghe'
-                              : isPlaying
-                                ? 'Đang phát'
-                                : 'Phát'
-                          }
-                          onClick={startAudio}
-                        >
-                          <svg className="icon" aria-hidden="true">
-                            <use href="#i-play" />
-                          </svg>
-                        </button>
-                      </div>
-                      {playError ? (
-                        <p className="ext-error">{playError}</p>
-                      ) : null}
-                    </>
-                  )}
+        {reviewMode ? (
+          <div className="extr-body">
+            <ExamPreSubmitReview
+              model={reviewModel}
+              locked={locked}
+              submitting={submitting}
+              headingRef={reviewHeadingRef}
+              onPick={pickReviewQuestion}
+              onExit={closeReview}
+              onSubmit={(trigger) => {
+                openSubmit(trigger);
+              }}
+            />
+          </div>
+        ) : (
+          <div className="ext-body">
+            <section className="ext-question" aria-labelledby="q-part">
+              <div className="ext-card">
+                <h2 className="uxb-part tk-part" id="q-part" tabIndex={-1}>
+                  {questionKicker(current)}
+                </h2>
+                <div className="ext-qhead">
+                  <p className="uxb-qask tk-qask" id="q-ask">
+                    {questionPrompt(current)}
+                  </p>
+                  <p className="ext-live" aria-live="polite">
+                    {isPlaying || hasPlayed ? (
+                      <>
+                        <svg className="icon" aria-hidden="true">
+                          <use href="#i-volume" />
+                        </svg>
+                        {isPlaying ? 'Đang phát' : 'Đã nghe'}
+                      </>
+                    ) : (
+                      ''
+                    )}
+                  </p>
                 </div>
-              ) : null}
 
-              {image && imageSrc !== undefined ? (
-                <img
-                  className="ext-image"
-                  src={imageSrc}
-                  alt={`Hình minh hoạ câu ${String(current.number)}`}
-                  onError={() => {
-                    onMediaError(image.mediaId, 'image');
-                  }}
-                />
-              ) : null}
-
-              <div className="ext-answer">{answerBlock}</div>
-            </div>
-            <nav className="ext-qnav" aria-label="Điều hướng câu hỏi">
-              <button
-                type="button"
-                className="btn btn--outline"
-                aria-disabled={current.number === 1 ? 'true' : undefined}
-                onClick={() => goTo(index - 1)}
-              >
-                <svg className="icon" aria-hidden="true">
-                  <use href="#i-chevron-left" />
-                </svg>
-                Câu trước
-              </button>
-              <button
-                type="button"
-                className="btn btn--outline"
-                aria-pressed={currentState.isFlagged}
-                aria-disabled={locked ? 'true' : undefined}
-                onClick={toggleFlag}
-              >
-                <svg className="icon" aria-hidden="true">
-                  <use
-                    href={
-                      currentState.isFlagged
-                        ? '#i-bookmark-fill'
-                        : '#i-bookmark'
+                {current.question.content.trim().length > 0 &&
+                current.question.type !== 'fill_blank' &&
+                current.question.type !== 'arrange_sentence' ? (
+                  <p
+                    className={`ext-content${hasHan(current.question.content) ? ' cn' : ''}`}
+                    lang={
+                      hasHan(current.question.content) ? 'zh-Hans' : undefined
                     }
-                  />
-                </svg>
-                Đánh dấu
-              </button>
-              {current.number < flat.length ? (
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={() => goTo(index + 1)}
-                >
-                  Câu sau
-                  <svg className="icon" aria-hidden="true">
-                    <use href="#i-chevron-right" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn--primary ext-qnav__submit"
-                  disabled={locked || submitting}
-                  onClick={(event) => {
-                    openSubmit(event.currentTarget);
-                  }}
-                >
-                  Nộp bài
-                </button>
-              )}
-            </nav>
-          </section>
-
-          <aside
-            className={`ext-panel${panelOpen ? ' is-open' : ''}`}
-            id="exam-panel"
-            aria-label="Danh sách câu"
-          >
-            <div className="uxb-takepanel__head">
-              <h2>Danh sách câu</h2>
-              <span className="uxb-countbadge tabular">
-                {answeredCount}/{flat.length}
-              </span>
-            </div>
-            <ul className="uxb-legend">
-              <li>
-                <span className="uxb-legend__dot is-done" aria-hidden="true">
-                  <svg className="icon">
-                    <use href="#i-check" />
-                  </svg>
-                </span>
-                Đã làm
-              </li>
-              <li>
-                <span className="uxb-legend__dot is-new" aria-hidden="true" />
-                Chưa làm
-              </li>
-              <li>
-                <svg className="icon uxb-legend__flag" aria-hidden="true">
-                  <use href="#i-bookmark" />
-                </svg>
-                <svg
-                  className="icon uxb-legend__flag uxb-legend__flag--fill"
-                  aria-hidden="true"
-                >
-                  <use href="#i-bookmark-fill" />
-                </svg>
-                Đánh dấu
-              </li>
-            </ul>
-            <hr className="ext-panelrule" />
-            <div className="uxb-qgrid">
-              {flat.map((entry, position) => {
-                const state = answers.get(entry.question.key);
-                const done = (state?.answer ?? null) !== null;
-                const flagged = state?.isFlagged ?? false;
-                const label = `Câu ${String(entry.number)}, ${
-                  entry.number === current.number
-                    ? 'câu hiện tại'
-                    : flagged
-                      ? 'đánh dấu'
-                      : done
-                        ? 'đã làm'
-                        : 'chưa làm'
-                }`;
-                return (
-                  <button
-                    key={entry.question.key}
-                    type="button"
-                    className={`uxb-qcell${done ? ' is-done' : ''}${flagged ? ' is-flag' : ''}`}
-                    aria-label={label}
-                    aria-current={
-                      entry.number === current.number ? 'step' : undefined
-                    }
-                    onClick={() => goTo(position)}
                   >
-                    {entry.number}
+                    {current.question.content}
+                  </p>
+                ) : null}
+
+                {audio ? (
+                  <div className="ext-audio">
+                    {speedBlock}
+                    {audioUnavailable ? (
+                      <p className="ext-error">{'Không tải được âm thanh.'}</p>
+                    ) : (
+                      <>
+                        <div className="ext-player">
+                          {/* TL-147: `src` do effect/`startAudio` ghi, không do
+                            React, để không có lần ghi nào giữa lượt nghe. */}
+                          <audio
+                            key={current.question.key}
+                            ref={audioRef}
+                            preload="none"
+                            onTimeUpdate={(event) => {
+                              setAudioProgress(event.currentTarget.currentTime);
+                              setAudioDuration(
+                                event.currentTarget.duration || 0,
+                              );
+                            }}
+                            onEnded={() => {
+                              const key = listeningKeyRef.current;
+                              if (key !== null) {
+                                setPlayedKeys((previous) =>
+                                  new Set(previous).add(key),
+                                );
+                              }
+                              setListeningKey(null);
+                            }}
+                            onError={() => {
+                              onMediaError(audio.mediaId, 'audio');
+                            }}
+                          />
+                          <div className="pq-wave" aria-hidden="true">
+                            {WAVE_BARS.map(([barX], position) => {
+                              const played = isBarPlayed(barX, playedFraction);
+                              return (
+                                <i
+                                  key={position}
+                                  className={played ? 'is-played' : undefined}
+                                  data-played={played ? 'true' : 'false'}
+                                />
+                              );
+                            })}
+                          </div>
+                          <p className="tabular ext-audioclock">
+                            <span>{formatClockMM(audioProgress)}</span>
+                            <span className="ext-clocksep" aria-hidden="true">
+                              {' / '}
+                            </span>
+                            <span>{formatClockMM(audioDuration)}</span>
+                          </p>
+                          <button
+                            type="button"
+                            className={`uxb-play${hasPlayed ? ' is-done' : ''}`}
+                            aria-disabled={
+                              locked || hasPlayed || isPlaying
+                                ? 'true'
+                                : undefined
+                            }
+                            aria-label={
+                              hasPlayed
+                                ? 'Đã nghe'
+                                : isPlaying
+                                  ? 'Đang phát'
+                                  : 'Phát'
+                            }
+                            onClick={startAudio}
+                          >
+                            <svg className="icon" aria-hidden="true">
+                              <use href="#i-play" />
+                            </svg>
+                          </button>
+                        </div>
+                        {playError ? (
+                          <p className="ext-error">{playError}</p>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                ) : null}
+
+                {image && imageSrc !== undefined ? (
+                  <img
+                    className="ext-image"
+                    src={imageSrc}
+                    alt={`Hình minh hoạ câu ${String(current.number)}`}
+                    onError={() => {
+                      onMediaError(image.mediaId, 'image');
+                    }}
+                  />
+                ) : null}
+
+                <div className="ext-answer">{answerBlock}</div>
+              </div>
+              <nav className="ext-qnav" aria-label="Điều hướng câu hỏi">
+                <button
+                  type="button"
+                  className="btn btn--outline"
+                  aria-disabled={current.number === 1 ? 'true' : undefined}
+                  onClick={() => goTo(index - 1)}
+                >
+                  <svg className="icon" aria-hidden="true">
+                    <use href="#i-chevron-left" />
+                  </svg>
+                  Câu trước
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--outline"
+                  aria-pressed={currentState.isFlagged}
+                  aria-disabled={locked ? 'true' : undefined}
+                  onClick={toggleFlag}
+                >
+                  <svg className="icon" aria-hidden="true">
+                    <use
+                      href={
+                        currentState.isFlagged
+                          ? '#i-bookmark-fill'
+                          : '#i-bookmark'
+                      }
+                    />
+                  </svg>
+                  Đánh dấu
+                </button>
+                {current.number < flat.length ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={() => goTo(index + 1)}
+                  >
+                    Câu sau
+                    <svg className="icon" aria-hidden="true">
+                      <use href="#i-chevron-right" />
+                    </svg>
                   </button>
-                );
-              })}
-            </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--primary ext-qnav__submit"
+                    disabled={locked || submitting}
+                    onClick={(event) => {
+                      openSubmit(event.currentTarget);
+                    }}
+                  >
+                    Nộp bài
+                  </button>
+                )}
+              </nav>
+            </section>
+
+            <aside
+              className={`ext-panel${panelOpen ? ' is-open' : ''}`}
+              id="exam-panel"
+              aria-label="Danh sách câu"
+            >
+              <div className="uxb-takepanel__head">
+                <h2>Danh sách câu</h2>
+                <span className="uxb-countbadge tabular">
+                  {answeredCount}/{flat.length}
+                </span>
+              </div>
+              <ul className="uxb-legend">
+                <li>
+                  <span className="uxb-legend__dot is-done" aria-hidden="true">
+                    <svg className="icon">
+                      <use href="#i-check" />
+                    </svg>
+                  </span>
+                  Đã làm
+                </li>
+                <li>
+                  <span className="uxb-legend__dot is-new" aria-hidden="true" />
+                  Chưa làm
+                </li>
+                <li>
+                  <svg className="icon uxb-legend__flag" aria-hidden="true">
+                    <use href="#i-bookmark" />
+                  </svg>
+                  <svg
+                    className="icon uxb-legend__flag uxb-legend__flag--fill"
+                    aria-hidden="true"
+                  >
+                    <use href="#i-bookmark-fill" />
+                  </svg>
+                  Đánh dấu
+                </li>
+              </ul>
+              <hr className="ext-panelrule" />
+              <div className="uxb-qgrid">
+                {flat.map((entry, position) => {
+                  const state = answers.get(entry.question.key);
+                  const done = (state?.answer ?? null) !== null;
+                  const flagged = state?.isFlagged ?? false;
+                  const label = `Câu ${String(entry.number)}, ${
+                    entry.number === current.number
+                      ? 'câu hiện tại'
+                      : flagged
+                        ? 'đánh dấu'
+                        : done
+                          ? 'đã làm'
+                          : 'chưa làm'
+                  }`;
+                  return (
+                    <button
+                      key={entry.question.key}
+                      type="button"
+                      className={`uxb-qcell${done ? ' is-done' : ''}${flagged ? ' is-flag' : ''}`}
+                      aria-label={label}
+                      aria-current={
+                        entry.number === current.number ? 'step' : undefined
+                      }
+                      onClick={() => goTo(position)}
+                    >
+                      {entry.number}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                className="btn btn--outline uxb-takefoot__review"
+                type="button"
+                disabled={locked}
+                onClick={openReview}
+              >
+                Xem lại
+              </button>
+              <button
+                className="btn btn--primary uxb-takefoot__submit"
+                type="button"
+                disabled={locked || submitting}
+                onClick={(event) => {
+                  openSubmit(event.currentTarget);
+                }}
+              >
+                Nộp bài
+              </button>
+            </aside>
+          </div>
+        )}
+      </main>
+
+      {reviewMode ? null : (
+        <footer className="ext-foot">
+          <div className="ext-foot__row">
+            <p className="uxb-fine">
+              {submitted
+                ? EXAM_SUBMITTED_MESSAGE
+                : `Còn ${formatTimer(remaining)} phút. Bài làm được lưu tự động sau mỗi câu.`}
+            </p>
             <button
-              className="btn btn--primary uxb-takefoot__submit"
+              className="btn btn--primary uxa-submit tk-panel__submit"
               type="button"
               disabled={locked || submitting}
               onClick={(event) => {
@@ -1719,33 +1865,13 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
               }}
             >
               Nộp bài
+              <svg className="icon" aria-hidden="true">
+                <use href="#i-check" />
+              </svg>
             </button>
-          </aside>
-        </div>
-      </main>
-
-      <footer className="ext-foot">
-        <div className="ext-foot__row">
-          <p className="uxb-fine">
-            {submitted
-              ? EXAM_SUBMITTED_MESSAGE
-              : `Còn ${formatTimer(remaining)} phút. Bài làm được lưu tự động sau mỗi câu.`}
-          </p>
-          <button
-            className="btn btn--primary uxa-submit tk-panel__submit"
-            type="button"
-            disabled={locked || submitting}
-            onClick={(event) => {
-              openSubmit(event.currentTarget);
-            }}
-          >
-            Nộp bài
-            <svg className="icon" aria-hidden="true">
-              <use href="#i-check" />
-            </svg>
-          </button>
-        </div>
-      </footer>
+          </div>
+        </footer>
+      )}
 
       <dialog
         className="ext-dialog"

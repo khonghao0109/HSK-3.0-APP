@@ -29,6 +29,9 @@ async function shot(
   page: Page,
   testInfo: TestInfo,
   state: string,
+  // M4.5 B2c: ảnh so mockup phải ở CSS pixel (mobile-390 chạy DPR 3) nên
+  // truyền `css: true`; mặc định giữ ảnh device-scale của các state 2b-6.
+  options: { css?: boolean } = {},
 ): Promise<void> {
   if (!SHOTS_DIR) return;
   await mkdir(SHOTS_DIR, { recursive: true });
@@ -38,11 +41,71 @@ async function shot(
   // 2b-6: chụp viewport thật (fullPage dán footer sticky giữa ảnh gây ảo giác
   // che khuất — M3); scroll về đỉnh để ảnh nhất quán giữa các state.
   await page.screenshot({
-    path: path.join(SHOTS_DIR, `${testInfo.project.name}-${state}.png`),
+    path: path.join(
+      SHOTS_DIR,
+      `${testInfo.project.name}-${state}${options.css ? '-css' : ''}.png`,
+    ),
     fullPage: false,
     animations: 'disabled',
     caret: 'hide',
+    ...(options.css ? { scale: 'css' as const } : {}),
   });
+}
+
+/** M4.5 B2c: đo computed style của màn xem lại để so mockup (HSK_STYLES_DIR). */
+async function measureReview(page: Page, testInfo: TestInfo): Promise<void> {
+  const dir = process.env.HSK_STYLES_DIR;
+  if (!dir) return;
+  const metrics = await page.evaluate(() => {
+    const pick = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (element === null) return null;
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      return {
+        width: Math.round(box.width * 10) / 10,
+        height: Math.round(box.height * 10) / 10,
+        display: style.display,
+        background: style.backgroundColor,
+        color: style.color,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        lineHeight: style.lineHeight,
+        borderRadius: style.borderRadius,
+        border: style.border,
+        padding: style.padding,
+        margin: style.margin,
+        gap: style.gap,
+        gridTemplateColumns: style.gridTemplateColumns,
+      };
+    };
+    return {
+      barTitle: pick('.ext-bar__title'),
+      card: pick('.extr-card'),
+      sum: pick('.extr-sum'),
+      sumIco: pick('.extr-sum__ico--answered'),
+      sumLabel: pick('.extr-sum__label'),
+      sumCount: pick('.extr-sum__body b'),
+      heading: pick('.extr-heading'),
+      legend: pick('.extr-legend'),
+      sectionTitle: pick('.extr-section__title'),
+      grid: pick('.extr-grid'),
+      cell: pick('.extr-cell'),
+      cellDone: pick('.extr-cell.is-done'),
+      cellUnanswered: pick('.extr-cell:not(.is-done)'),
+      tip: pick('.extr-tip'),
+      actions: pick('.extr-actions'),
+      submit: pick('.extr-actions__submit'),
+      continue: pick('.extr-actions__continue'),
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+    };
+  });
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, `${testInfo.project.name}-25-review.json`),
+    JSON.stringify(metrics, null, 2),
+  );
 }
 
 const TAKE_TITLE = 'Làm bài thi · Hán Lộ';
@@ -163,6 +226,24 @@ async function confirmSubmit(page: Page): Promise<void> {
 }
 
 /**
+ * M4.5 B2c (Q225): the pre-submit review is a mode of the take screen, entered
+ * from the "Xem lại" button of the "Danh sách câu" panel. Mobile keeps the
+ * panel collapsible, so open it first when it is not visible.
+ */
+async function openReview(page: Page) {
+  const panelList = page.getByRole('complementary', { name: 'Danh sách câu' });
+  if (!(await panelList.isVisible())) {
+    await page.getByRole('button', { name: /Mở danh sách câu hỏi/u }).click();
+    await expect(panelList).toBeVisible();
+  }
+  await panelList.getByRole('button', { name: 'Xem lại' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+  ).toBeVisible();
+  return page.getByRole('region', { name: 'Chọn câu hỏi để xem lại' });
+}
+
+/**
  * Reads a captured response body with a bound: a document body being replaced
  * by a reload must never hang the test on `Promise.all`.
  */
@@ -199,21 +280,25 @@ async function startAttempt(
 }
 
 test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
-  // Two media ingestions + forty published questions exceed the 30 s default;
+  // Forty published questions through the Admin CMS exceed the 30 s default;
   // the @shots walk also plays a 3 s audio clip.
   test.describe.configure({ timeout: 420_000 });
   let fixtures: ExamTakeFixture;
 
   test.beforeAll(async ({ browser }, testInfo) => {
     void browser;
-    // F1 (2c): seed = 2 media ingest, media guard 5 upload/60 s; mỗi ingest
-    // tối đa RETRY_ATTEMPTS=3 lần ⇒ 2 lần chờ 61 s/ingest ⇒ 4 × 61 = 244 s
-    // worst case + ~60 s publish 40 câu ⇒ chốt 360 s (mặc định hook 30 s đã
-    // từng làm đỏ lần chạy sạch khi 4 project cùng seed).
+    // M4.5 B2c Pha 0: audio + ảnh của đề dùng chung theo DB qua
+    // sharedExamMedia (Idempotency-Key cố định) — project đầu ingest tối đa 2
+    // request, các project sau đọc MediaIngestion đã completed nên 0 request
+    // ingest; không còn 4 × 61 s chờ 429. Worst case còn lại là ~60 s publish
+    // 40 câu qua CMS (retry 429 theo Retry-After) ⇒ chốt 360 s (mặc định hook
+    // 30 s đã từng làm đỏ lần chạy sạch khi 4 project cùng seed).
     testInfo.setTimeout(360_000);
     // Local runs may share one seed across the four projects through
-    // HSK_FIXTURE_CACHE: the media guard only allows 5 uploads/60 s, and a
-    // per-project seed needs 2. CI leaves the env unset and seeds per project.
+    // HSK_FIXTURE_CACHE: media is already shared per DB (0 ingest after the
+    // first project), but a per-project seed still republishes 40 questions
+    // through the throttled Admin CMS. CI leaves the env unset and seeds per
+    // project.
     const cachePath = process.env.HSK_FIXTURE_CACHE;
     if (cachePath) {
       const cached = await readFile(cachePath, 'utf8').catch(() => null);
@@ -1308,6 +1393,101 @@ test.describe('Learner exam taking (M4.2b / TL-141..143)', () => {
     await page.waitForLoadState('networkidle');
     await shot(page, testInfo, '24-submitted');
     await expectNoHorizontalScroll(page);
+    expect(posts.count()).toBe(1);
+  });
+
+  test('25. pre-submit review: pick a question, answer it, counts update, submit reaches the result', async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    const cspConsole = await watchCsp(page);
+    const consoleErrors = captureConsoleErrors(page);
+    const posts = submitPosts(page);
+    await startAttempt(page, baseURL, fixtures);
+
+    const review = await openReview(page);
+    const summary = page.getByRole('list', { name: 'Tổng quan bài làm' });
+    const countOf = (label: string) =>
+      summary.locator('li').filter({ hasText: label }).locator('b');
+
+    // Q225: dòng mẹo nói "quay lại câu", màn xem lại không hứa đáp án.
+    await expect(
+      review.getByText('Nhấn số câu để quay lại câu đó.', { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByText('Đáp án đúng')).toHaveCount(0);
+    await expect(countOf('Đã trả lời')).toHaveText('0');
+    await expect(countOf('Chưa trả lời')).toHaveText(
+      String(fixtures.questionCount),
+    );
+    await expect(countOf('Đánh dấu')).toHaveText('0');
+
+    // Bàn phím: heading nhận focus, Tab tới ô đầu, Escape quay lại câu đang làm.
+    await expect(
+      page.getByRole('heading', { name: 'Chọn câu hỏi để xem lại' }),
+    ).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(
+      review.getByRole('button', { name: 'Câu 1, chưa trả lời' }),
+    ).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(review).toHaveCount(0);
+    await expect(page.locator('#q-part')).toBeFocused();
+
+    const reviewAgain = await openReview(page);
+    await expectClean(page, 'review-mode', consoleErrors, cspConsole);
+    await expectNoHorizontalScroll(page);
+    await shot(page, testInfo, '25-review', { css: true });
+    await measureReview(page, testInfo);
+    // SKILL §7: selector mới (.extr-cell/.extr-grid) phải khớp phần tử thật —
+    // ô chưa trả lời viền nét đứt, ô đã trả lời nền jade-700 sau khi trả lời.
+    await expect(
+      reviewAgain.getByRole('button', { name: 'Câu 1, chưa trả lời' }),
+    ).toHaveCSS('border-style', 'dashed');
+    await expect(reviewAgain.locator('.extr-grid').first()).toHaveCSS(
+      'display',
+      'grid',
+    );
+
+    // Q225: nhấn số câu chưa trả lời → về đúng câu đó, focus vào câu.
+    await reviewAgain
+      .getByRole('button', { name: 'Câu 5, chưa trả lời' })
+      .click();
+    await expect(page.getByTestId('exam-count-live')).toHaveText(
+      `Câu 5 trên ${String(fixtures.questionCount)}`,
+    );
+    await expect(page.locator('#q-part')).toBeFocused();
+
+    // Trả lời câu 5 (listening mcq) → quay lại màn xem lại thấy đếm đổi.
+    await page.getByRole('radio').first().click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Đã lưu' }),
+    ).toBeVisible();
+    const reviewAfter = await openReview(page);
+    await expect(countOf('Đã trả lời')).toHaveText('1');
+    await expect(countOf('Chưa trả lời')).toHaveText(
+      String(fixtures.questionCount - 1),
+    );
+    await expect(
+      reviewAfter.getByRole('button', { name: 'Câu 5, đã trả lời' }),
+    ).toBeVisible();
+    await expect(
+      reviewAfter.getByRole('button', { name: 'Câu 5, đã trả lời' }),
+    ).toHaveCSS('background-color', 'rgb(2, 142, 106)');
+
+    // Nộp bài từ màn xem lại dùng đúng dialog sẵn có rồi sang màn kết quả.
+    await reviewAfter.getByRole('button', { name: 'Nộp bài' }).click();
+    await expect(
+      page.getByRole('dialog').getByRole('heading', { name: 'Nộp bài?' }),
+    ).toBeVisible();
+    await confirmSubmit(page);
+    await expect(
+      page.getByRole('alert').getByText('Bài đã được nộp.'),
+    ).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('link', { name: 'Xem kết quả' }).click();
+    await page.waitForURL(/\/learn\/exam\/attempts\/\d+\/result$/u);
+    await expect(
+      page.getByRole('heading', { name: 'Kết quả bài thi' }),
+    ).toBeVisible();
     expect(posts.count()).toBe(1);
   });
 });

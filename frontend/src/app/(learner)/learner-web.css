@@ -4446,3 +4446,99 @@
     border-color: Highlight;
   }
 }
+
+/* M4.5 B2c (Q225) — mode xem lại trước khi nộp trên web: thẻ 760px canh giữa
+   như cột nội dung màn làm bài, lưới 10 cột (nhịp web/exam-review.html) và 2
+   nút ngang hàng. Mobile/tablet nằm ở learner.css. */
+@media (min-width: 1024px) {
+  .learner-app .extr-body {
+    max-width: 760px;
+    padding: 24px 0 40px;
+  }
+
+  .learner-app .extr-card {
+    padding: 20px 24px 16px;
+    border-radius: 16px;
+  }
+
+  .learner-app .extr-sum {
+    gap: 16px;
+    padding-bottom: 16px;
+  }
+
+  .learner-app .extr-sum__label {
+    font-size: 13px;
+  }
+
+  .learner-app .extr-sum__body b {
+    font-size: 24px;
+  }
+
+  .learner-app .extr-heading {
+    margin-top: 18px;
+    font-size: 0.875rem;
+  }
+
+  .learner-app .extr-legend {
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 0.8125rem;
+  }
+
+  .learner-app .extr-section {
+    margin-top: 16px;
+  }
+
+  .learner-app .extr-section__title {
+    font-size: 0.875rem;
+    margin-bottom: 10px;
+  }
+
+  .learner-app .extr-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .learner-app .extr-cell {
+    height: 48px;
+    min-height: 48px;
+    border-radius: 8px;
+  }
+
+  .learner-app .extr-cell__n {
+    font-size: 0.9375rem;
+  }
+
+  .learner-app .extr-tip {
+    margin-top: 20px;
+    font-size: 0.8125rem;
+  }
+
+  .learner-app .extr-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .learner-app .extr-actions .btn {
+    min-height: 48px;
+    min-width: 176px;
+    font-size: 1rem;
+  }
+
+  .learner-app .extr-actions__submit {
+    order: 2;
+  }
+
+  .learner-app .extr-actions .extr-actions__continue {
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .learner-app .ex.ext .uxb-takefoot__review {
+    min-height: 48px;
+    margin: 0 0 8px;
+    font-size: 1rem;
+  }
+}

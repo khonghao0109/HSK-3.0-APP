@@ -74,6 +74,10 @@
   --exam-player-bg: #fefcf8;
   --exam-legend-todo: #eceae6;
   --exam-legend-todo-line: #c9c4bb;
+  /* M4.5 B2c (Q225): hộp "Mẹo" của màn xem lại trước khi nộp, đo từ
+     docs/ui_reference/mobile/exam-review.html (.rv-tip). */
+  --exam-tip-bg: #dbe8f6;
+  --exam-tip-border: #c9dcf0;
   /* M3: khe đáy vùng nội dung web để ô lưới cuối không chui dưới footer
      sticky giữa chừng cuộn (đo bằng check che khuất của measure4). */
   --exam-foot-clearance: 96px;
@@ -8002,5 +8006,386 @@ html:has(.learner-app) {
   .learner-app .ex.ext .ext-locked,
   .learner-app .ex.ext .ext-offline {
     margin-top: calc(var(--ext-count-h) - var(--ext-status-h));
+  }
+}
+
+/* ==========================================================================
+   M4.5 B2c (Q225) — màn xem lại trước khi nộp. Đây là MODE trong màn làm bài
+   (client state), không route mới: bar + đồng hồ + pill "Đã lưu" giữ nguyên,
+   body thay bằng thẻ tổng quan, lưới câu nhóm theo phần, legend, mẹo và 2 nút.
+   Bố cục/nhịp theo docs/ui_reference/mobile/exam-review.html; chữ, icon và
+   màu lấy token của learner.css (ADR-008: CSS variables, không Tailwind).
+   Ô câu giữ vùng bấm ≥44px (khác mockup 26–43px chỉ có số) và trạng thái có
+   thêm glyph để không chỉ dựa vào màu (Q225/R14).
+   ========================================================================== */
+
+/* 520–1023 dựng .ex.ext thành grid 2 cột cho màn làm bài; mode xem lại cần
+   layout cột đơn nên trả bar/main về flex. */
+.learner-app .ex.ext.is-review {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+
+.learner-app .ex.ext.is-review .ext-bar,
+.learner-app .ex.ext.is-review .ext-main {
+  display: flex;
+}
+
+.learner-app .ex.ext.is-review .ext-main {
+  flex-direction: column;
+}
+
+.learner-app .extr-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--learner-max);
+  margin: 0 auto;
+  padding: 10px 10px 0;
+}
+
+.learner-app .extr {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Thẻ tổng quan (mockup .rv-card). */
+.learner-app .extr-card {
+  margin-top: 4px;
+  padding: 14px 14px 8px;
+  background: var(--white);
+  border: 1px solid var(--exam-line-soft);
+  border-radius: 10px;
+  color: var(--ink-900);
+}
+
+.learner-app .extr-sum {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 12px 4px;
+  list-style: none;
+  border-bottom: 1px solid var(--sand-300);
+}
+
+.learner-app .extr-sum__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.learner-app .extr-sum__ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 7px;
+  border-radius: 50%;
+  color: var(--white);
+}
+
+/* Mockup: ô Đã trả lời/Chưa trả lời hạ xuống 12px, cờ đánh dấu ở 2px. */
+.learner-app .extr-sum__ico--answered,
+.learner-app .extr-sum__ico--unanswered {
+  margin-top: 12px;
+}
+
+.learner-app .extr-sum__ico .icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 3;
+}
+
+.learner-app .extr-sum__ico--answered {
+  background: var(--jade-700);
+}
+
+.learner-app .extr-sum__ico--unanswered {
+  background: var(--stone-600);
+}
+
+.learner-app .extr-sum__ico--unanswered::before {
+  content: '';
+  width: 11px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--white);
+}
+
+/* Hình cờ của mockup (.rv-sum__icon--flag) để "đánh dấu" không chỉ là màu. */
+.learner-app .extr-sum__ico--flagged {
+  width: 21px;
+  height: 31px;
+  border-radius: 2px 2px 0 0;
+  margin-top: 2px;
+  padding-top: 6px;
+  place-items: start center;
+  background: var(--amber-500);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+}
+
+.learner-app .extr-sum__ico--flagged .icon {
+  width: 11px;
+  height: 11px;
+}
+
+.learner-app .extr-sum__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 5px;
+}
+
+.learner-app .extr-sum__label {
+  font-size: 12px;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ink-900) 90%, var(--white));
+}
+
+.learner-app .extr-sum__body b {
+  margin-top: 1px;
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.learner-app .extr-heading {
+  margin: 14px 0 0 3px;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--ink-900) 90%, var(--white));
+}
+
+.learner-app .extr-heading:focus {
+  outline: none;
+}
+
+.learner-app .extr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-700);
+}
+
+.learner-app .extr-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.learner-app .extr-legend__ico {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: var(--white);
+}
+
+.learner-app .extr-legend__ico--answered {
+  background: var(--jade-700);
+}
+
+.learner-app .extr-legend__ico--unanswered {
+  background: var(--stone-600);
+}
+
+.learner-app .extr-legend__ico--flagged {
+  background: var(--amber-500);
+  color: var(--ink-900);
+}
+
+.learner-app .extr-legend__ico .icon {
+  width: 10px;
+  height: 10px;
+}
+
+.learner-app .extr-legend__dash {
+  display: block;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--white);
+}
+
+.learner-app .extr-section {
+  margin-top: 12px;
+}
+
+.learner-app .extr-section__title {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink-900);
+}
+
+.learner-app .extr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.learner-app .extr-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px dashed var(--slate-300);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--stone-600);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.learner-app .extr-cell__n {
+  font-size: 0.8125rem;
+}
+
+/* Hit area 44px của quy tắc dự án dù ô vẽ 36px như mockup. */
+.learner-app .extr-cell::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+.learner-app .extr-cell__state {
+  width: 10px;
+  height: 10px;
+}
+
+.learner-app .extr-cell__state--none {
+  display: block;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.learner-app .extr-cell.is-done {
+  background: var(--jade-700);
+  border-color: var(--jade-800);
+  border-style: solid;
+  color: var(--white);
+}
+
+.learner-app .extr-cell.is-flag {
+  background: var(--amber-500);
+  border-color: color-mix(in srgb, var(--amber-500) 70%, var(--stone-600));
+  border-style: solid;
+  color: var(--ink-900);
+}
+
+.learner-app .extr-cell__flag {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+}
+
+.learner-app .extr-cell.is-current {
+  outline: 2px solid var(--navy-900);
+  outline-offset: 1px;
+}
+
+.learner-app .extr-cell:hover {
+  filter: brightness(1.05);
+}
+
+.learner-app .extr-cell:focus-visible {
+  outline: 2px solid var(--navy-900);
+  outline-offset: 2px;
+}
+
+.learner-app .extr-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 15px 0 0;
+  padding: 7px 12px 7px 13px;
+  border-radius: 8px;
+  background: var(--exam-tip-bg);
+  border: 1px solid var(--exam-tip-border);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--ink-900);
+}
+
+.learner-app .extr-tip .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--navy-900);
+}
+
+.learner-app .extr-tip b {
+  font-weight: 600;
+}
+
+.learner-app .extr-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.learner-app .extr-actions .btn {
+  min-height: 44px;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.learner-app .extr-actions .extr-actions__continue {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+/* Nút vào mode xem lại: nằm trong panel "Danh sách câu" như nút
+   "Xem lại & nộp bài" của mockup mobile (mobile/exam-take.html .tk-panel__submit). */
+.learner-app .ex.ext .uxb-takefoot__review {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+}
+
+@media (min-width: 520px) and (max-width: 1023px) {
+  .learner-app .extr-body {
+    max-width: 536px;
+    padding: 12px 0 0;
+  }
+
+  .learner-app .extr-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .learner-app .ex.ext .uxb-takefoot__review {
+    min-height: 44px;
+    padding: 0 4px;
+    font-size: 0.75rem;
   }
 }
