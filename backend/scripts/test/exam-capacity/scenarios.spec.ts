@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { extractAudioPreloadList } from './preload-planner';
 import {
   defaultAnswerIntervalMs,
   parseCapacityArgs,
@@ -163,4 +164,44 @@ void test('parseCapacityArgs đọc cờ B2 và validate scenario/ratio', () => 
     () => parseCapacityArgs(['--submit-window-seconds', '0']),
     /--submit-window-seconds/u,
   );
+});
+
+void test('parseCapacityArgs nhận scenario B3a (w6, w45, probe429) và cờ audio/images', () => {
+  const w6 = parseCapacityArgs([
+    '--scenario',
+    'w6',
+    '--audio',
+    '40',
+    '--images',
+    '10',
+    '--label',
+    'smoke-w6',
+  ]);
+  assert.equal(w6.scenario, 'w6');
+  assert.equal(w6.audio, 40);
+  assert.equal(w6.images, 10);
+  assert.equal(w6.label, 'smoke-w6');
+
+  const w45 = parseCapacityArgs(['--scenario', 'w45']);
+  assert.equal(w45.scenario, 'w45');
+
+  const probe = parseCapacityArgs(['--scenario', 'probe429']);
+  assert.equal(probe.scenario, 'probe429');
+
+  assert.throws(() => parseCapacityArgs(['--audio', '-1']), /--audio/u);
+  assert.throws(() => parseCapacityArgs(['--images', '201']), /--images/u);
+});
+
+void test('extractAudioPreloadList lọc đúng audio và loại trừ trùng lặp', () => {
+  const grants = [
+    { mediaId: 10, kind: 'audio', url: '/api/v1/media/10/content?expires=1' },
+    { mediaId: 20, kind: 'image', url: '/api/v1/media/20/content?expires=1' },
+    { mediaId: 10, kind: 'audio', url: '/api/v1/media/10/content?expires=2' },
+    { mediaId: 30, kind: 'audio', url: '/api/v1/media/30/content?expires=1' },
+  ];
+  const list = extractAudioPreloadList(grants);
+  assert.deepEqual(list, [
+    { mediaId: 10, url: '/api/v1/media/10/content?expires=1' },
+    { mediaId: 30, url: '/api/v1/media/30/content?expires=1' },
+  ]);
 });

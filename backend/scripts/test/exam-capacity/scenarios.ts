@@ -1,10 +1,18 @@
+import { randomUUID } from 'node:crypto';
+
 import {
+  asRecord,
+  CAPACITY_ROUTES,
   createExamClient,
+  extractQuestionKeys,
   runLearnerLifecycle,
+  type ExamClient,
   type LearnerFixture,
   type LearnerRun,
 } from './driver';
 import type { LatencySample } from './metrics';
+import { DEFAULT_PRELOAD_GAP_MS } from './preload-planner';
+import type { Probe429Result } from './thresholds';
 
 /**
  * M4.4 B1 — cấu hình kịch bản và bộ chạy học viên ảo.
@@ -13,7 +21,15 @@ import type { LatencySample } from './metrics';
  * `node --test`; phần IO chỉ gọi driver HTTP và không tự đánh giá ngưỡng.
  */
 
-export type CapacityScenario = 'w1' | 'w3' | 'w4' | 'w5' | 'w7';
+export type CapacityScenario =
+  | 'w1'
+  | 'w3'
+  | 'w4'
+  | 'w5'
+  | 'w7'
+  | 'w6'
+  | 'w45'
+  | 'probe429';
 
 export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
   'w1',
@@ -21,6 +37,9 @@ export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
   'w4',
   'w5',
   'w7',
+  'w6',
+  'w45',
+  'probe429',
 ];
 
 export type CapacityArgs = {
@@ -268,17 +287,203 @@ export type LearnerScenarioInput = {
   answerCount: number;
   answerIntervalMs: number;
   rampSeconds: number;
+  minutes?: number;
   timeoutMs: number;
+  mediaSha256?: Map<number, string>;
   onLearnerDone?: (run: LearnerRun) => void;
 };
 
 export type LearnerScenarioResult = {
   samples: LatencySample[];
   learners: LearnerRun[];
+  probe429?: Probe429Result;
 };
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+async function runProbe429(
+  input: LearnerScenarioInput,
+  client: ExamClient,
+  samples: LatencySample[],
+): Promise<LearnerScenarioResult> {
+  const learner1 = input.learners[0];
+  const learner2 = input.learners[1];
+  if (!learner1 || !learner2) {
+    throw new Error('scenario probe429 requires at least 2 learners');
+  }
+
+  // 1. Cả hai learner start attempt
+  const started1 = await client.post(
+    CAPACITY_ROUTES.start,
+    `/exam/tests/${String(input.testId)}/attempts`,
+    learner1.accessToken,
+    { idempotencyKey: randomUUID() },
+  );
+  const startedData1 = asRecord(asRecord(started1.payload)?.['data']);
+  const attemptId1 =
+    typeof startedData1?.['id'] === 'number' ? startedData1['id'] : 0;
+
+  const started2 = await client.post(
+    CAPACITY_ROUTES.start,
+    `/exam/tests/${String(input.testId)}/attempts`,
+    learner2.accessToken,
+    { idempotencyKey: randomUUID() },
+  );
+  const startedData2 = asRecord(asRecord(started2.payload)?.['data']);
+  const attemptId2 =
+    typeof startedData2?.['id'] === 'number' ? startedData2['id'] : 0;
+
+  // Lấy question key của mỗi attempt
+  const attemptView1 = await client.get(
+    CAPACITY_ROUTES.attempt,
+    `/exam/attempts/${String(attemptId1)}`,
+    learner1.accessToken,
+  );
+  const keys1 = extractQuestionKeys(asRecord(attemptView1.payload)?.['data']);
+  const questionKey1 = keys1[0] ?? 'q1';
+
+  const attemptView2 = await client.get(
+    CAPACITY_ROUTES.attempt,
+    `/exam/attempts/${String(attemptId2)}`,
+    learner2.accessToken,
+  );
+  const keys2 = extractQuestionKeys(asRecord(attemptView2.payload)?.['data']);
+  const questionKey2 = keys2[0] ?? 'q1';
+
+  // Probe (a): PUT answer vượt 240/phút/user
+  let autosave200Count = 0;
+  let autosaveFirst429At = 0;
+  let autosaveErrorCode: string | null = null;
+  let currentVersion1: number | null = null;
+
+  for (let i = 1; i <= 245; i += 1) {
+    const res = await client.put(
+      CAPACITY_ROUTES.save,
+      `/exam/attempts/${String(attemptId1)}/answers/${questionKey1}`,
+      learner1.accessToken,
+      {
+        answer: { choice: 'a' },
+        isFlagged: false,
+        expectedVersion: currentVersion1,
+        idempotencyKey: randomUUID(),
+      },
+    );
+    if (res.status === 200) {
+      if (autosaveFirst429At === 0) autosave200Count += 1;
+      const data = asRecord(asRecord(res.payload)?.['data']);
+      if (typeof data?.['version'] === 'number') {
+        currentVersion1 = data['version'];
+      }
+    } else if (res.status === 429 && autosaveFirst429At === 0) {
+      autosaveFirst429At = i;
+      autosaveErrorCode = res.code;
+    }
+  }
+
+  // Learner 2 gửi 5 PUT answer: bảo đảm 0 lỗi 429
+  let learner2Errors429 = 0;
+  let currentVersion2: number | null = null;
+  for (let i = 1; i <= 5; i += 1) {
+    const res = await client.put(
+      CAPACITY_ROUTES.save,
+      `/exam/attempts/${String(attemptId2)}/answers/${questionKey2}`,
+      learner2.accessToken,
+      {
+        answer: { choice: 'a' },
+        isFlagged: false,
+        expectedVersion: currentVersion2,
+        idempotencyKey: randomUUID(),
+      },
+    );
+    if (res.status === 200) {
+      const data = asRecord(asRecord(res.payload)?.['data']);
+      if (typeof data?.['version'] === 'number') {
+        currentVersion2 = data['version'];
+      }
+    } else if (res.status === 429) {
+      learner2Errors429 += 1;
+    }
+  }
+
+  // Probe (b): Media content per IP vượt 600/phút
+  const grantsRes = await client.get(
+    CAPACITY_ROUTES.mediaGrants,
+    `/exam/attempts/${String(attemptId1)}/media-grants`,
+    learner1.accessToken,
+  );
+  const grantsData = asRecord(asRecord(grantsRes.payload)?.['data']);
+  const grants = Array.isArray(grantsData?.['grants'])
+    ? (grantsData['grants'] as Array<{ url: string }>)
+    : [];
+
+  let media200Count = 0;
+  let mediaFirst429At = 0;
+
+  if (grants.length > 0) {
+    for (let i = 1; i <= 610; i += 1) {
+      const targetGrant = grants[(i - 1) % grants.length];
+      if (!targetGrant) break;
+      const res = await client.getMedia(
+        CAPACITY_ROUTES.mediaContent,
+        targetGrant.url,
+        learner1.accessToken,
+      );
+      if (res.status === 200 && mediaFirst429At === 0) {
+        media200Count += 1;
+      } else if (res.status === 429 && mediaFirst429At === 0) {
+        mediaFirst429At = i;
+      }
+    }
+  }
+
+  const aOk =
+    autosave200Count >= 239 &&
+    autosave200Count <= 241 &&
+    autosaveErrorCode === 'TOO_MANY_REQUESTS' &&
+    learner2Errors429 === 0;
+
+  const bOk = media200Count >= 599 && media200Count <= 601;
+
+  const ok = aOk && bOk;
+  const detail = `(a) ${String(autosave200Count)} ok trước 429 (req ${String(autosaveFirst429At)}), code ${autosaveErrorCode ?? 'none'}, user 2: ${String(learner2Errors429)} 429; (b) ${String(media200Count)} ok trước 429 (req ${String(mediaFirst429At)})`;
+
+  const probe429: Probe429Result = {
+    autosave200Count,
+    autosaveFirst429At,
+    autosaveErrorCode,
+    learner2Errors429,
+    media200Count,
+    mediaFirst429At,
+    ok,
+    detail,
+  };
+
+  const learners: LearnerRun[] = [
+    {
+      index: learner1.index,
+      userId: learner1.userId,
+      attemptId: attemptId1,
+      mode: 'full',
+      requestedAnswerCount: 0,
+      savedQuestionKeys: [],
+      completed: true,
+      failures: [],
+    },
+    {
+      index: learner2.index,
+      userId: learner2.userId,
+      attemptId: attemptId2,
+      mode: 'full',
+      requestedAnswerCount: 0,
+      savedQuestionKeys: [],
+      completed: true,
+      failures: [],
+    },
+  ];
+
+  return { samples, learners, probe429 };
+}
 
 /** Chạy toàn bộ học viên ảo song song theo offset ramp; trả mẫu + kết quả. */
 export async function runLearnerScenario(
@@ -290,6 +495,11 @@ export async function runLearnerScenario(
     timeoutMs: input.timeoutMs,
     samples,
   });
+
+  if (input.scenario === 'probe429') {
+    return runProbe429(input, client, samples);
+  }
+
   const rampMs = input.rampSeconds * 1_000;
   const offsets = planStartOffsets(input.learners.length, rampMs);
   const reconnectIndices = new Set(
@@ -298,30 +508,58 @@ export async function runLearnerScenario(
       : [],
   );
   const timeoutIndices = new Set(
-    input.scenario === 'w5'
+    input.scenario === 'w5' || input.scenario === 'w45'
       ? pickRatioIndices(input.learners.length, input.timeoutRatio)
       : [],
   );
-  const submitOffsets =
-    input.scenario === 'w4'
-      ? planSubmitWaveOffsets(
-          input.learners.length,
-          input.submitWindowSeconds * 1_000,
-        )
-      : [];
-  // W4: cửa sổ submit bắt đầu sau khi học viên chậm nhất trả lời xong.
-  const submitAtEpochMs =
-    input.scenario === 'w4'
-      ? Date.now() +
-        rampMs +
-        Math.max(0, input.answerCount - 1) * input.answerIntervalMs +
-        2_000
-      : undefined;
 
+  const isSubmitWave = input.scenario === 'w4' || input.scenario === 'w45';
+  const submitLearnerCount = input.learners.length - timeoutIndices.size;
+  const submitOffsets = isSubmitWave
+    ? planSubmitWaveOffsets(
+        submitLearnerCount,
+        input.submitWindowSeconds * 1_000,
+      )
+    : [];
+
+  // Cửa sổ submit bắt đầu sau khi học viên chậm nhất trả lời xong.
+  let submitAtEpochMs = isSubmitWave
+    ? Date.now() +
+      rampMs +
+      Math.max(0, input.answerCount - 1) * input.answerIntervalMs +
+      2_000
+    : undefined;
+
+  // Nếu đề ngắn hoặc cấu hình ramp/interval dài, co submit window để
+  // toàn bộ submit hoàn tất trước khi attempt hết giờ (an toàn biên 10s).
+  if (
+    submitAtEpochMs !== undefined &&
+    isSubmitWave &&
+    typeof input.minutes === 'number' &&
+    input.minutes > 0
+  ) {
+    const testDurationMs = input.minutes * 60_000;
+    const maxSafeSubmitEnd = Date.now() + testDurationMs - 10_000;
+    const submitEnd = submitAtEpochMs + input.submitWindowSeconds * 1_000;
+    if (submitEnd > maxSafeSubmitEnd) {
+      submitAtEpochMs = Math.max(
+        Date.now(),
+        maxSafeSubmitEnd - input.submitWindowSeconds * 1_000,
+      );
+    }
+  }
+
+  let submitOffsetIndex = 0;
   const learners = await Promise.all(
     input.learners.map(async (learner, index) => {
       const offset = offsets[index] ?? 0;
       if (offset > 0) await sleep(offset);
+      const isTimeout = timeoutIndices.has(index);
+      const submitOffsetMs =
+        !isTimeout && isSubmitWave
+          ? (submitOffsets[submitOffsetIndex++] ?? 0)
+          : 0;
+
       const run = await runLearnerLifecycle({
         client,
         learner,
@@ -329,17 +567,20 @@ export async function runLearnerScenario(
         answerCount: input.answerCount,
         answerIntervalMs: input.answerIntervalMs,
         mode:
-          input.scenario === 'w7'
-            ? 'browse'
-            : timeoutIndices.has(index)
-              ? 'timeout'
-              : 'full',
+          input.scenario === 'w7' ? 'browse' : isTimeout ? 'timeout' : 'full',
+        preloadAudio:
+          input.scenario === 'w6'
+            ? {
+                gapMs: DEFAULT_PRELOAD_GAP_MS,
+                expectedSha256: input.mediaSha256,
+              }
+            : undefined,
         reconnect:
           reconnectIndices.has(index) && input.answerCount > 1
             ? { afterAnswers: Math.floor(input.answerCount / 2), batchSize: 20 }
             : undefined,
-        submitAtEpochMs,
-        submitOffsetMs: submitOffsets[index] ?? 0,
+        submitAtEpochMs: isTimeout ? undefined : submitAtEpochMs,
+        submitOffsetMs,
       });
       input.onLearnerDone?.(run);
       return run;

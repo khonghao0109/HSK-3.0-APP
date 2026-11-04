@@ -25,7 +25,7 @@ import {
   EXAM_TEST_LIST_LIMIT_PER_MINUTE,
 } from '../../src/modules/exam/exam.controller';
 
-import type { LearnerRun } from './exam-capacity/driver';
+import { CAPACITY_ROUTES, type LearnerRun } from './exam-capacity/driver';
 import {
   collectInvariants,
   createDisposableDatabase,
@@ -38,16 +38,27 @@ import {
   startRssSampler,
 } from './exam-capacity/fixtures';
 import {
+  createMockS3Server,
+  MOCK_TLS_CERT,
+  type MockS3Server,
+  type StoredMediaObject,
+} from './exam-capacity/media-fixtures';
+import {
   renderSummaryMarkdown,
   summarizeSamples,
   type CapacitySummaryInput,
   type DatabaseMetrics,
   type InvariantResult,
 } from './exam-capacity/metrics';
+import { calculatePeakRequestsPerMinute } from './exam-capacity/preload-planner';
 import {
   parseCapacityArgs,
   runLearnerScenario,
 } from './exam-capacity/scenarios';
+import {
+  evaluateThresholds,
+  isThresholdsPassing,
+} from './exam-capacity/thresholds';
 
 /**
  * M4.4 B1 — runner capacity luồng thi (không dependency mới).
@@ -91,6 +102,7 @@ type Cleanup = {
   databaseUrl: string;
   keepDatabase: boolean;
   serverPidFile: string | null;
+  mockS3: MockS3Server | null;
 };
 
 function timestampForPath(date: Date): string {
@@ -145,6 +157,12 @@ function buildServerEnvironment(input: {
   serverEnvironment: string;
   kid: string;
   secrets: Record<string, string>;
+  mediaStorageEndpoint?: string;
+  /**
+   * Đường dẫn tuyệt đối tới file CA của mock S3. Server tin chain bằng
+   * `NODE_EXTRA_CA_CERTS`, không tắt TLS verify.
+   */
+  mockS3CaPath?: string;
 }): NodeJS.ProcessEnv {
   return {
     ...process.env,
@@ -162,6 +180,15 @@ function buildServerEnvironment(input: {
     APP_PUBLIC_URL: 'https://app.example.com',
     MEDIA_STORAGE_PROVIDER: 's3',
     MEDIA_STORAGE_BUCKET: 'hsk-capacity',
+    MEDIA_STORAGE_ENDPOINT:
+      input.mediaStorageEndpoint ?? 'https://127.0.0.1:9000',
+    // Mock S3 dùng chứng chỉ self-signed loopback: server tin chain qua CA của
+    // chính nó, KHÔNG tắt TLS verify bằng biến môi trường.
+    ...(input.mockS3CaPath === undefined
+      ? {}
+      : { NODE_EXTRA_CA_CERTS: input.mockS3CaPath }),
+    AWS_ACCESS_KEY_ID: 'hsk-capacity-test-key',
+    AWS_SECRET_ACCESS_KEY: 'hsk-capacity-test-secret',
     MEDIA_STORAGE_REGION: 'ap-southeast-1',
     MEDIA_SCANNER_PROVIDER: 'clamav',
     MEDIA_SCANNER_HOST: 'localhost',
@@ -248,11 +275,6 @@ function writeArtifacts(
 
 async function main(): Promise<void> {
   const args = parseCapacityArgs(process.argv.slice(2));
-  if (args.audio > 0 || args.images > 0) {
-    throw new Error(
-      'B1 chỉ seed đề không media (--audio 0 --images 0); fixture media để B2',
-    );
-  }
   const connectionLimit = process.env.CAPACITY_CONNECTION_LIMIT;
   const disposable = assertDisposableTestDatabase();
   // Guard chỉ bắt hậu tố *_test; harness này DROP/CREATE database nên chỉ nhận
@@ -303,6 +325,7 @@ async function main(): Promise<void> {
     databaseUrl: disposable.databaseUrl,
     keepDatabase: args.keepDatabase,
     serverPidFile: null,
+    mockS3: null,
   };
   // Ghi lại cách server kết thúc (code/signal) để phân biệt crash, OOM hay bị
   // process khác kill khi đo dài.
@@ -316,6 +339,7 @@ async function main(): Promise<void> {
     if (cleanupPromise !== null) return cleanupPromise;
     cleanupPromise = (async () => {
       await stopServer(cleanup.server);
+      if (cleanup.mockS3 !== null) await cleanup.mockS3.close();
       if (cleanup.serverLogFd !== null) closeSync(cleanup.serverLogFd);
       if (cleanup.prisma !== null) await cleanup.prisma.$disconnect();
       if (!cleanup.keepDatabase) {
@@ -374,15 +398,28 @@ async function main(): Promise<void> {
       nodeExecutable: process.execPath,
     });
 
+    const mockS3Store = new Map<string, StoredMediaObject>();
+    const mockS3 = await createMockS3Server(mockS3Store, 'hsk-capacity');
+    cleanup.mockS3 = mockS3;
+
     const seedStartedAt = Date.now();
     const runnerDatabaseUrl = withApplicationName(
       disposable.databaseUrl,
       RUNNER_APPLICATION_NAME,
     );
+    const fixtureAudio =
+      args.scenario === 'probe429' ? Math.max(15, args.audio) : args.audio;
+    const fixtureQuestions =
+      args.scenario === 'probe429'
+        ? Math.max(15, args.questions)
+        : args.questions;
     const fixture = await seedExamFixture({
       databaseUrl: runnerDatabaseUrl,
-      questions: args.questions,
+      questions: fixtureQuestions,
       minutes: args.minutes,
+      audio: fixtureAudio,
+      images: args.images,
+      mockS3Store,
     });
     cleanup.prisma = fixture.prisma;
     console.log(
@@ -399,6 +436,10 @@ async function main(): Promise<void> {
     );
 
     mkdirSync(artifactDir, { recursive: true });
+    // Chứng chỉ self-signed của mock S3 được ghi thành file CA trong artifact
+    // dir của run, rồi server tin nó qua NODE_EXTRA_CA_CERTS (verify TLS bật).
+    const mockS3CaPath = join(artifactDir, 'mock-s3-ca.pem');
+    writeFileSync(mockS3CaPath, MOCK_TLS_CERT);
     await assertPortFree(port);
     const serverLogFd = openSync(join(artifactDir, 'server.log'), 'w');
     cleanup.serverLogFd = serverLogFd;
@@ -423,6 +464,8 @@ async function main(): Promise<void> {
         serverEnvironment,
         kid,
         secrets,
+        mediaStorageEndpoint: mockS3.url,
+        mockS3CaPath,
       }),
       stdio: ['ignore', serverLogFd, serverLogFd],
     });
@@ -479,7 +522,9 @@ async function main(): Promise<void> {
       answerCount: scenarioAnswerCount,
       answerIntervalMs: args.answerIntervalMs,
       rampSeconds: args.rampSeconds,
+      minutes: args.minutes,
       timeoutMs: CLIENT_TIMEOUT_MS,
+      mediaSha256: fixture.mediaSha256,
       onLearnerDone: (run: LearnerRun) => {
         console.log(
           `capacity: learner ${String(run.index)}/${String(learners.length)} attempt=${String(run.attemptId ?? -1)} saved=${String(run.savedQuestionKeys.length)} completed=${String(run.completed)} failures=${String(run.failures.length)}`,
@@ -511,6 +556,7 @@ async function main(): Promise<void> {
       expectations,
       requestedAnswerCount: scenarioAnswerCount,
       samples: scenario.samples,
+      scenario: args.scenario,
     });
     const deadlockDelta = deadlocksAfter - deadlocksBefore;
     invariants.push({
@@ -593,6 +639,91 @@ async function main(): Promise<void> {
         detail: `${String(timedOut)} timed_out`,
       });
     }
+    if (args.scenario === 'w6') {
+      const media5xx = scenario.samples.filter(
+        (sample) =>
+          (sample.route === CAPACITY_ROUTES.mediaContent ||
+            sample.route === CAPACITY_ROUTES.mediaGrants) &&
+          sample.status >= 500,
+      );
+      invariants.push({
+        name: 'W6 0 lỗi 5xx media',
+        ok: media5xx.length === 0,
+        detail: `${String(media5xx.length)} lỗi 5xx media`,
+      });
+      const media429 = scenario.samples.filter(
+        (sample) =>
+          sample.route === CAPACITY_ROUTES.mediaContent &&
+          sample.status === 429,
+      );
+      invariants.push({
+        name: 'W6 số 429 media được ghi rõ',
+        ok: true,
+        detail: `${String(media429.length)} request 429 media`,
+      });
+      const sha256Mismatch = scenario.learners
+        .flatMap((run) => run.failures)
+        .filter((fail) => fail.includes('sha256 mismatch'));
+      invariants.push({
+        name: 'W6 SHA-256 media khớp seed',
+        ok: sha256Mismatch.length === 0,
+        detail:
+          sha256Mismatch.length === 0
+            ? 'ok'
+            : sha256Mismatch.slice(0, 3).join(' | '),
+      });
+    }
+    if (args.scenario === 'w45') {
+      const submitted = await fixture.prisma.examAttempt.count({
+        where: {
+          userId: { in: learners.map((learner) => learner.userId) },
+          status: 'submitted',
+        },
+      });
+      const timedOut = await fixture.prisma.examAttempt.count({
+        where: {
+          userId: { in: learners.map((learner) => learner.userId) },
+          status: 'timed_out',
+        },
+      });
+      invariants.push({
+        name: 'W45 có cả submitted và timed_out',
+        ok: submitted > 0 && timedOut > 0,
+        detail: `${String(submitted)} submitted, ${String(timedOut)} timed_out`,
+      });
+      invariants.push({
+        name: 'W45 lock wait = 0',
+        ok: activityMetrics.maxLockWaits === 0,
+        detail: `${String(activityMetrics.maxLockWaits)} lock wait quan sát`,
+      });
+    }
+    if (args.scenario === 'probe429') {
+      const probe = scenario.probe429;
+      invariants.push({
+        name: 'P15 probe429 (a) autosave biên 240/phút/user & không lan',
+        ok:
+          probe !== undefined &&
+          probe.autosave200Count >= 239 &&
+          probe.autosave200Count <= 241 &&
+          probe.autosaveErrorCode === 'TOO_MANY_REQUESTS' &&
+          probe.learner2Errors429 === 0,
+        detail:
+          probe !== undefined
+            ? `user 1: ${String(probe.autosave200Count)} ok trước 429 (req #${String(probe.autosaveFirst429At)}), code ${probe.autosaveErrorCode ?? 'none'}; user 2: ${String(probe.learner2Errors429)} 429`
+            : 'thiếu kết quả probe',
+      });
+      invariants.push({
+        name: 'P15 probe429 (b) media biên 600/phút/IP',
+        ok:
+          probe !== undefined &&
+          probe.media200Count >= 599 &&
+          probe.media200Count <= 601,
+        detail:
+          probe !== undefined
+            ? `${String(probe.media200Count)} ok trước 429 (req #${String(probe.mediaFirst429At)})`
+            : 'thiếu kết quả probe',
+      });
+    }
     const database: DatabaseMetrics = {
       deadlocksBefore,
       deadlocksAfter,
@@ -602,6 +733,29 @@ async function main(): Promise<void> {
       samples: activityMetrics.samples,
       samplerErrors: activityMetrics.samplerErrors,
     };
+    const mediaSamples = scenario.samples.filter(
+      (sample) => sample.route === CAPACITY_ROUTES.mediaContent,
+    );
+    const peakMedia =
+      mediaSamples.length > 0
+        ? calculatePeakRequestsPerMinute(
+            mediaSamples
+              .map((sample) => sample.startedAtMs)
+              .filter((time): time is number => time !== undefined),
+          )
+        : null;
+    const evaluations = evaluateThresholds({
+      scenario: args.scenario,
+      routeSummaries: summarizeSamples(scenario.samples),
+      database,
+      serverRssKb: {
+        firstKb: rssSummary.firstKb,
+        lastKb: rssSummary.lastKb ?? readServerRssKb(serverPid),
+        peakKb: rssSummary.peakKb,
+      },
+      invariants,
+      probe429: scenario.probe429,
+    });
     const summaryInput: CapacitySummaryInput = {
       label: args.label,
       startedAt: startedAt.toISOString(),
@@ -639,6 +793,10 @@ async function main(): Promise<void> {
       database,
       invariants,
       totalRequests: scenario.samples.length,
+      evaluations,
+      mediaDigestList: fixture.mediaDigestList,
+      peakMediaRequestsPerMinute: peakMedia,
+      probe429: scenario.probe429,
     };
     const repositoryRoot = resolve(BACKEND_ROOT, '..');
     const buildHead = spawnSync('git', ['rev-parse', 'HEAD'], {
@@ -671,13 +829,24 @@ async function main(): Promise<void> {
     console.log(markdown);
 
     const failed = invariants.filter((invariant) => !invariant.ok);
-    if (failed.length > 0) {
-      console.error(
-        `capacity: INVARIANTS FAILED: ${failed.map((invariant) => invariant.name).join(' | ')}`,
-      );
+    const thresholdsPass = isThresholdsPassing(evaluations);
+    if (failed.length > 0 || !thresholdsPass) {
+      if (failed.length > 0) {
+        console.error(
+          `capacity: INVARIANTS FAILED: ${failed.map((invariant) => invariant.name).join(' | ')}`,
+        );
+      }
+      if (!thresholdsPass) {
+        const failedThresholds = evaluations.filter(
+          (item) => item.verdict === 'FAIL',
+        );
+        console.error(
+          `capacity: THRESHOLDS FAILED: ${failedThresholds.map((item) => `${item.code} (${item.criterion}: ${item.observed})`).join(' | ')}`,
+        );
+      }
       process.exitCode = 1;
     } else {
-      console.log('capacity: invariants PASS');
+      console.log('capacity: PASS (invariants OK, thresholds PASS)');
     }
   } finally {
     await runCleanup();

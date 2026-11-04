@@ -1,7 +1,11 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 
 import type { LatencySample } from './metrics';
+import {
+  DEFAULT_PRELOAD_GAP_MS,
+  extractAudioPreloadList,
+} from './preload-planner';
 
 /**
  * M4.4 B1 — HTTP driver cho một học viên ảo.
@@ -21,6 +25,8 @@ export const CAPACITY_ROUTES = {
   saveBatch: 'PUT /exam/attempts/:id/answers',
   submit: 'POST /exam/attempts/:id/submit',
   result: 'GET /exam/attempts/:id/result',
+  mediaGrants: 'GET /exam/attempts/:id/media-grants',
+  mediaContent: 'GET /media/:id/content',
 } as const;
 
 export type JsonRecord = Record<string, unknown>;
@@ -81,8 +87,17 @@ export type HttpResult = {
   durationMs: number;
 };
 
+export type HttpMediaResult = HttpResult & {
+  buffer: Buffer | null;
+};
+
 export type ExamClient = {
   get(route: string, path: string, token: string): Promise<HttpResult>;
+  getMedia(
+    route: string,
+    path: string,
+    token: string,
+  ): Promise<HttpMediaResult>;
   post(
     route: string,
     path: string,
@@ -102,6 +117,9 @@ export function createExamClient(input: {
   timeoutMs: number;
   samples: LatencySample[];
 }): ExamClient {
+  const normalizePath = (path: string): string =>
+    path.startsWith('/api/v1') ? path.slice('/api/v1'.length) : path;
+
   const send = async (
     method: 'GET' | 'POST' | 'PUT',
     route: string,
@@ -114,8 +132,9 @@ export function createExamClient(input: {
     let status = 0;
     let payload: unknown = null;
     let code: string | null = null;
+    const finalPath = normalizePath(path);
     try {
-      const response = await fetch(`${input.baseUrl}${path}`, {
+      const response = await fetch(`${input.baseUrl}${finalPath}`, {
         method,
         headers: {
           authorization: `Bearer ${token}`,
@@ -137,7 +156,7 @@ export function createExamClient(input: {
     input.samples.push({
       route,
       method,
-      path,
+      path: finalPath,
       status,
       code,
       durationMs,
@@ -145,14 +164,67 @@ export function createExamClient(input: {
     });
     if (status === 401) {
       throw new SessionFixtureError(
-        `session fixture lệch shape AuthService: 401 at ${method} ${path}`,
+        `session fixture lệch shape AuthService: 401 at ${method} ${finalPath}`,
       );
     }
     return { status, code, payload, durationMs };
   };
 
+  const sendMedia = async (
+    route: string,
+    path: string,
+    token: string,
+  ): Promise<HttpMediaResult> => {
+    const startedAtEpochMs = Date.now();
+    const startedAt = performance.now();
+    let status = 0;
+    let payload: unknown = null;
+    let buffer: Buffer | null = null;
+    let code: string | null = null;
+    const finalPath = normalizePath(path);
+    try {
+      const response = await fetch(`${input.baseUrl}${finalPath}`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+        signal: AbortSignal.timeout(input.timeoutMs),
+      });
+      status = response.status;
+      if (response.ok) {
+        const arrayBuf = await response.arrayBuffer();
+        buffer = Buffer.from(arrayBuf);
+      } else {
+        payload = await response.json().catch(() => null);
+        code = parseErrorCode(payload);
+      }
+    } catch (error: unknown) {
+      code =
+        error instanceof Error && error.name === 'TimeoutError'
+          ? 'CLIENT_TIMEOUT'
+          : 'NETWORK_ERROR';
+    }
+    const durationMs = performance.now() - startedAt;
+    input.samples.push({
+      route,
+      method: 'GET',
+      path: finalPath,
+      status,
+      code,
+      durationMs,
+      startedAtMs: startedAtEpochMs,
+    });
+    if (status === 401) {
+      throw new SessionFixtureError(
+        `session fixture lệch shape AuthService: 401 at GET ${finalPath}`,
+      );
+    }
+    return { status, code, payload, buffer, durationMs };
+  };
+
   return {
     get: (route, path, token) => send('GET', route, path, token, undefined),
+    getMedia: (route, path, token) => sendMedia(route, path, token),
     post: (route, path, token, body) => send('POST', route, path, token, body),
     put: (route, path, token, body) => send('PUT', route, path, token, body),
   };
@@ -186,9 +258,15 @@ export type LearnerRun = {
   failures: string[];
 };
 
+export type PreloadAudioOptions = {
+  gapMs?: number;
+  expectedSha256?: Map<number, string>;
+};
+
 export type LearnerLifecycleOptions = {
   mode?: LearnerMode;
   reconnect?: ReconnectPlan;
+  preloadAudio?: PreloadAudioOptions;
   /** W4: mốc epoch chung bắt đầu cửa sổ submit. */
   submitAtEpochMs?: number;
   /** W4: offset của học viên trong cửa sổ submit. */
@@ -393,6 +471,61 @@ export async function runLearnerLifecycle(
     token,
   );
   if (!expectStatus(failures, 'attempt', attempt, [200])) return run;
+
+  if (input.preloadAudio) {
+    const grantsRes = await client.get(
+      CAPACITY_ROUTES.mediaGrants,
+      `/exam/attempts/${String(attemptId)}/media-grants`,
+      token,
+    );
+    if (expectStatus(failures, 'media-grants', grantsRes, [200])) {
+      const grantsData = asRecord(asRecord(grantsRes.payload)?.['data']);
+      const grantsList = Array.isArray(grantsData?.['grants'])
+        ? (grantsData['grants'] as Array<{
+            mediaId: number;
+            kind: string;
+            url: string;
+          }>)
+        : [];
+      const audioList = extractAudioPreloadList(grantsList);
+      const gapMs = input.preloadAudio.gapMs ?? DEFAULT_PRELOAD_GAP_MS;
+      for (let i = 0; i < audioList.length; i += 1) {
+        const item = audioList[i];
+        if (!item) continue;
+        const mediaRes = await client.getMedia(
+          CAPACITY_ROUTES.mediaContent,
+          item.url,
+          token,
+        );
+        if (mediaRes.status === 200 && mediaRes.buffer) {
+          if (input.preloadAudio.expectedSha256) {
+            const expected = input.preloadAudio.expectedSha256.get(
+              item.mediaId,
+            );
+            const actual = createHash('sha256')
+              .update(mediaRes.buffer)
+              .digest('hex');
+            if (expected !== undefined && expected !== actual) {
+              failures.push(
+                `media ${String(item.mediaId)} sha256 mismatch: ${actual} vs ${expected}`,
+              );
+            }
+          }
+        } else if (mediaRes.status === 429) {
+          // Preload dừng cả phiên khi gặp 429 mà không báo lỗi lifecycle
+          break;
+        } else if (mediaRes.status >= 500) {
+          failures.push(
+            `media ${String(item.mediaId)} error 5xx: ${String(mediaRes.status)}`,
+          );
+          break;
+        }
+        if (i < audioList.length - 1 && gapMs > 0) {
+          await sleep(gapMs);
+        }
+      }
+    }
+  }
 
   const view = asRecord(attempt.payload)?.['data'];
   const questionKeys = extractQuestionKeys(view);

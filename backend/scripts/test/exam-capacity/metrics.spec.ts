@@ -8,6 +8,13 @@ import {
   type CapacitySummaryInput,
   type LatencySample,
 } from './metrics';
+import { calculatePeakRequestsPerMinute } from './preload-planner';
+import {
+  evaluateThresholds,
+  isThresholdsPassing,
+  renderThresholdsMarkdownTable,
+  type EvaluateThresholdsInput,
+} from './thresholds';
 
 function sample(input: Partial<LatencySample>): LatencySample {
   return {
@@ -139,4 +146,234 @@ void test('renderSummaryMarkdown chứa cấu hình, trần hiệu lực và b�
   assert.match(markdown, /deadlocks: 0 → 0/u);
   assert.match(markdown, /one in-progress attempt per learner/u);
   assert.match(markdown, /PASS|FAIL/u);
+});
+
+void test('calculatePeakRequestsPerMinute tính đúng cửa sổ trượt', () => {
+  assert.equal(calculatePeakRequestsPerMinute([]), 0);
+  assert.equal(calculatePeakRequestsPerMinute([1000]), 1);
+
+  // 5 request trong 10 giây -> peak là 5
+  const quick = [0, 2000, 4000, 6000, 8000];
+  assert.equal(calculatePeakRequestsPerMinute(quick, 60_000), 5);
+
+  // 10 request rải đều qua 180s:
+  // [0, 10s, 20s, 70s, 80s, 90s, 100s, 110s, 160s, 170s]
+  // Cửa sổ [60s, 120s] có 5 request (70, 80, 90, 100, 110)
+  const spread = [
+    0, 10_000, 20_000, 70_000, 80_000, 90_000, 100_000, 110_000, 160_000,
+    170_000,
+  ];
+  assert.equal(calculatePeakRequestsPerMinute(spread, 60_000), 5);
+});
+
+void test('evaluateThresholds đánh giá PASS khi mọi số đo đạt chuẩn', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w1',
+    routeSummaries: [
+      {
+        route: 'GET /exam/tests',
+        count: 40,
+        p50Ms: 15,
+        p95Ms: 28,
+        p99Ms: 50,
+        maxMs: 60,
+        statusCounts: { '200': 40 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+      {
+        route: 'POST /exam/tests/:testId/attempts',
+        count: 40,
+        p50Ms: 35,
+        p95Ms: 50,
+        p99Ms: 70,
+        maxMs: 80,
+        statusCounts: { '201': 40 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+      {
+        route: 'PUT /exam/attempts/:id/answers/:key',
+        count: 3200,
+        p50Ms: 25,
+        p95Ms: 45,
+        p99Ms: 65,
+        maxMs: 120,
+        statusCounts: { '200': 3200 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+      {
+        route: 'POST /exam/attempts/:id/submit',
+        count: 40,
+        p50Ms: 30,
+        p95Ms: 55,
+        p99Ms: 75,
+        maxMs: 90,
+        statusCounts: { '200': 40 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+      {
+        route: 'GET /exam/attempts/:id/result',
+        count: 40,
+        p50Ms: 12,
+        p95Ms: 20,
+        p99Ms: 30,
+        maxMs: 40,
+        statusCounts: { '200': 40 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+    ],
+    database: {
+      deadlocksBefore: 0,
+      deadlocksAfter: 0,
+      maxConnections: 18,
+      maxTotalConnections: 20,
+      maxLockWaits: 0,
+      samples: 100,
+      samplerErrors: 0,
+    },
+    serverRssKb: { firstKb: 200_000, lastKb: 150_000, peakKb: 250_000 },
+    invariants: [
+      {
+        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
+        ok: true,
+        detail: 'ok',
+      },
+      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
+      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  assert.equal(isThresholdsPassing(evals), true);
+  const p5 = evals.find((item) => item.code === 'P5');
+  assert.equal(p5?.verdict, 'PASS');
+  const p7 = evals.find((item) => item.code === 'P7');
+  assert.equal(p7?.verdict, 'PASS');
+  const p17 = evals.find((item) => item.code === 'P17');
+  assert.equal(p17?.verdict, 'PASS');
+  const rss = evals.find((item) => item.code === 'RSS');
+  assert.equal(rss?.verdict, 'PASS');
+  const p15 = evals.find((item) => item.code === 'P15');
+  assert.equal(p15?.verdict, 'n/a');
+});
+
+void test('evaluateThresholds đánh dấu n/a khi route không có mẫu, không ghi PASS', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w7',
+    routeSummaries: [
+      {
+        route: 'GET /exam/tests',
+        count: 10,
+        p50Ms: 10,
+        p95Ms: 20,
+        p99Ms: 30,
+        maxMs: 40,
+        statusCounts: { '200': 10 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+    ],
+    database: {
+      deadlocksBefore: 0,
+      deadlocksAfter: 0,
+      maxConnections: 5,
+      maxTotalConnections: 7,
+      maxLockWaits: 0,
+      samples: 20,
+      samplerErrors: 0,
+    },
+    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    invariants: [
+      {
+        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
+        ok: true,
+        detail: 'không áp dụng (W7 không trả lời)',
+      },
+      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
+      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  const p7 = evals.find((item) => item.code === 'P7');
+  assert.equal(p7?.verdict, 'n/a');
+  assert.equal(p7?.observed, 'n/a (0 mẫu)');
+  const p9 = evals.find((item) => item.code === 'P9');
+  assert.equal(p9?.verdict, 'n/a');
+  const p10 = evals.find((item) => item.code === 'P10');
+  assert.equal(p10?.verdict, 'n/a');
+  const p13 = evals.find((item) => item.code === 'P13');
+  assert.equal(p13?.verdict, 'n/a');
+});
+
+void test('evaluateThresholds báo FAIL khi vi phạm p95, lock wait hoặc RSS', () => {
+  const baseInput: EvaluateThresholdsInput = {
+    scenario: 'w1',
+    routeSummaries: [
+      {
+        route: 'GET /exam/tests',
+        count: 40,
+        p50Ms: 150,
+        p95Ms: 350, // Vượt 300 ms
+        p99Ms: 400,
+        maxMs: 500,
+        statusCounts: { '200': 40 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+      {
+        route: 'PUT /exam/attempts/:id/answers/:key',
+        count: 100,
+        p50Ms: 25,
+        p95Ms: 45,
+        p99Ms: 65,
+        maxMs: 120,
+        statusCounts: { '200': 100 },
+        errorCodes: {},
+        serverErrors: 0,
+        rateLimited: 0,
+      },
+    ],
+    database: {
+      deadlocksBefore: 0,
+      deadlocksAfter: 0,
+      maxConnections: 25, // Vượt 22
+      maxTotalConnections: 27,
+      maxLockWaits: 1, // Vượt 0
+      samples: 50,
+      samplerErrors: 0,
+    },
+    serverRssKb: { firstKb: 200_000, lastKb: 550_000, peakKb: 600_000 }, // 600 MiB vượt 512
+    invariants: [
+      {
+        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
+        ok: false,
+        detail: 'mất 2 answer',
+      },
+      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
+      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+    ],
+  };
+
+  const evals = evaluateThresholds(baseInput);
+  assert.equal(isThresholdsPassing(evals), false);
+  assert.equal(evals.find((item) => item.code === 'P5')?.verdict, 'FAIL');
+  assert.equal(evals.find((item) => item.code === 'P13')?.verdict, 'FAIL');
+  assert.equal(evals.find((item) => item.code === 'P17')?.verdict, 'FAIL');
+  assert.equal(evals.find((item) => item.code === 'RSS')?.verdict, 'FAIL');
+
+  const md = renderThresholdsMarkdownTable(evals);
+  assert.match(md, /P5/u);
+  assert.match(md, /FAIL/u);
 });

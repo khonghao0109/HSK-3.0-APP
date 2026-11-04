@@ -6,6 +6,12 @@
  * status lỗi). Runner `run-exam-capacity.ts` là nơi duy nhất ghi artifact.
  */
 
+import {
+  type Probe429Result,
+  type ThresholdEvaluation,
+  renderThresholdsMarkdownTable,
+} from './thresholds';
+
 export type LatencySample = {
   /** Nhãn route đã chuẩn hoá, ví dụ `PUT /exam/attempts/:id/answers/:key`. */
   route: string;
@@ -89,6 +95,15 @@ export type CapacitySummaryInput = {
   database: DatabaseMetrics;
   invariants: readonly InvariantResult[];
   totalRequests: number;
+  evaluations?: readonly ThresholdEvaluation[];
+  mediaDigestList?: readonly {
+    id: number;
+    kind: string;
+    sha256: string;
+    size: number;
+  }[];
+  peakMediaRequestsPerMinute?: number | null;
+  probe429?: Probe429Result | null;
 };
 
 /**
@@ -242,11 +257,63 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
         `| ${item.name} | ${item.ok ? 'OK' : 'VI PHẠM'} | ${item.detail} |`,
     ),
     '',
-    `## Kết luận (invariant): ${invariantVerdict}`,
-    '',
-    'B1 chỉ đo và in số; ngưỡng PASS/FAIL P1–P19 chờ PO duyệt (Q227–Q236).',
-    '',
   ];
+
+  if (input.mediaDigestList && input.mediaDigestList.length > 0) {
+    lines.push(
+      '## Media Fixtures (SHA-256)',
+      '',
+      '| Media ID | Loại | Kích thước (bytes) | SHA-256 |',
+      '| --- | --- | --- | --- |',
+      ...input.mediaDigestList.map(
+        (item) =>
+          `| ${String(item.id)} | ${item.kind} | ${String(item.size)} | \`${item.sha256}\` |`,
+      ),
+      '',
+    );
+  }
+
+  if (
+    input.peakMediaRequestsPerMinute !== undefined &&
+    input.peakMediaRequestsPerMinute !== null
+  ) {
+    lines.push(
+      '## Tải Media',
+      '',
+      `- Đỉnh tải media: ${String(input.peakMediaRequestsPerMinute)} req/phút/IP (cửa sổ trượt 60 s)`,
+      '',
+    );
+  }
+
+  if (input.probe429) {
+    lines.push(
+      '## Probe 429 (P15)',
+      '',
+      `- Autosave (user 1): ${String(input.probe429.autosave200Count)} req 200 trước 429 (req #${String(input.probe429.autosaveFirst429At)}), mã lỗi: \`${input.probe429.autosaveErrorCode ?? 'none'}\``,
+      `- Autosave (user 2): ${String(input.probe429.learner2Errors429)} lỗi 429 (không lan throttle)`,
+      `- Media content (IP): ${String(input.probe429.media200Count)} req 200 trước 429 (req #${String(input.probe429.mediaFirst429At)})`,
+      `- Kết quả probe: ${input.probe429.ok ? 'PASS' : 'FAIL'} (${input.probe429.detail})`,
+      '',
+    );
+  }
+
+  if (input.evaluations && input.evaluations.length > 0) {
+    lines.push(renderThresholdsMarkdownTable(input.evaluations), '');
+  }
+
+  const thresholdsPassing = input.evaluations
+    ? input.evaluations.every((e) => e.verdict !== 'FAIL')
+    : true;
+  const overallVerdict =
+    invariantVerdict === 'PASS' && thresholdsPassing ? 'PASS' : 'FAIL';
+
+  lines.push(
+    `## Kết luận tổng thể: ${overallVerdict}`,
+    '',
+    `- Invariant: ${invariantVerdict}`,
+    `- Ngưỡng dung năng (P5–P17, RSS): ${thresholdsPassing ? 'PASS' : 'FAIL'}`,
+    '',
+  );
 
   return lines.join('\n');
 }

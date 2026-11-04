@@ -20,6 +20,7 @@ import { TestAuthoringService } from '../../../src/modules/cms/test-authoring.se
 import { PrismaService } from '../../../src/prisma/prisma.service';
 
 import type { LearnerFixture } from './driver';
+import { seedMediaAssets, type StoredMediaObject } from './media-fixtures';
 import type {
   InvariantResult,
   LatencySample,
@@ -51,6 +52,13 @@ export type SeededFixture = {
   prisma: PrismaService;
   testId: number;
   questionCount: number;
+  mediaSha256: Map<number, string>;
+  mediaDigestList: Array<{
+    id: number;
+    kind: string;
+    sha256: string;
+    size: number;
+  }>;
 };
 
 export type LearnerSessionConfig = JwtConfig & {
@@ -235,10 +243,13 @@ export function dropDisposableDatabase(input: {
 function questionPayload(
   levelId: number,
   index: number,
+  audioId: number | null = null,
+  imageId: number | null = null,
 ): CreateQuestionRevisionDto {
+  const skill = audioId !== null ? Skill.listening : Skill.reading;
   return {
     type: QuestionType.mcq,
-    skill: Skill.reading,
+    skill,
     levelId,
     content: `Câu ${String(index)}: chọn đáp án đúng.`,
     answers: {
@@ -250,37 +261,67 @@ function questionPayload(
     correctAnswer: { optionId: 'a' },
     explanation: `Giải thích câu ${String(index)}.`,
     difficulty: 2,
-    audioId: null,
+    audioId,
+    imageId,
     tags: ['Gia đình'],
   };
 }
 
 function structurePayload(input: {
   expectedUpdatedAt: string;
-  questionIds: readonly number[];
+  listeningQuestionIds: readonly number[];
+  readingQuestionIds: readonly number[];
 }): ReplaceTestStructureDto {
-  const groups: Array<{ title: string; questionIds: number[] }> = [];
-  for (let start = 0; start < input.questionIds.length; start += 50) {
-    groups.push({
-      title: `Nhóm ${String(groups.length + 1)}`,
-      questionIds: input.questionIds.slice(start, start + 50),
-    });
+  const sections: ReplaceTestStructureDto['sections'] = [];
+
+  if (input.listeningQuestionIds.length > 0) {
+    const groups: Array<{ title: string; questionIds: number[] }> = [];
+    for (
+      let start = 0;
+      start < input.listeningQuestionIds.length;
+      start += 50
+    ) {
+      groups.push({
+        title: `Nhóm nghe ${String(groups.length + 1)}`,
+        questionIds: input.listeningQuestionIds.slice(start, start + 50),
+      });
+    }
+    sections.push({ skill: Skill.listening, title: 'Nghe hiểu', groups });
   }
+
+  if (input.readingQuestionIds.length > 0) {
+    const groups: Array<{ title: string; questionIds: number[] }> = [];
+    for (let start = 0; start < input.readingQuestionIds.length; start += 50) {
+      groups.push({
+        title: `Nhóm đọc ${String(groups.length + 1)}`,
+        questionIds: input.readingQuestionIds.slice(start, start + 50),
+      });
+    }
+    sections.push({ skill: Skill.reading, title: 'Đọc hiểu', groups });
+  }
+
   return {
     expectedUpdatedAt: input.expectedUpdatedAt,
-    sections: [{ skill: Skill.reading, title: 'Đọc hiểu', groups }],
+    sections,
   };
 }
+
+export type SeedExamFixtureInput = {
+  databaseUrl: string;
+  questions: number;
+  minutes: number;
+  audio?: number;
+  images?: number;
+  mockS3Store?: Map<string, StoredMediaObject>;
+};
 
 /**
  * Seed level + admin + N câu mcq đã publish + một đề đã publish.
  * Trả `testId` và số câu thật để driver đối chiếu `q<orderIndex>`.
  */
-export async function seedExamFixture(input: {
-  databaseUrl: string;
-  questions: number;
-  minutes: number;
-}): Promise<SeededFixture> {
+export async function seedExamFixture(
+  input: SeedExamFixtureInput,
+): Promise<SeededFixture> {
   const prisma = new PrismaService({
     datasources: { db: { url: input.databaseUrl } },
   });
@@ -327,11 +368,33 @@ export async function seedExamFixture(input: {
     select: { id: true },
   });
 
+  const store = input.mockS3Store ?? new Map<string, StoredMediaObject>();
+  const mediaSeed = await seedMediaAssets({
+    prisma,
+    adminId: admin.id,
+    audioCount: input.audio ?? 0,
+    imagesCount: input.images ?? 0,
+    store,
+    suffix,
+  });
+
   const questionIds: number[] = [];
+  const listeningQuestionIds: number[] = [];
+  const readingQuestionIds: number[] = [];
+
   for (let index = 1; index <= input.questions; index += 1) {
+    const audioId =
+      index <= mediaSeed.audioMediaIds.length
+        ? (mediaSeed.audioMediaIds[index - 1] ?? null)
+        : null;
+    const imageId =
+      index <= mediaSeed.imageMediaIds.length
+        ? (mediaSeed.imageMediaIds[index - 1] ?? null)
+        : null;
+
     const created = await questionService.createQuestion(
       actor,
-      questionPayload(level.id, index),
+      questionPayload(level.id, index, audioId, imageId),
       { correlationId: `capacity-question-${suffix}-${String(index)}` },
     );
     const questionId = created.data.question.id;
@@ -350,6 +413,11 @@ export async function seedExamFixture(input: {
       { correlationId: `capacity-question-publish-${suffix}-${String(index)}` },
     );
     questionIds.push(questionId);
+    if (audioId !== null) {
+      listeningQuestionIds.push(questionId);
+    } else {
+      readingQuestionIds.push(questionId);
+    }
   }
 
   const draft = await testService.createTest(
@@ -367,7 +435,8 @@ export async function seedExamFixture(input: {
     draft.data.id,
     structurePayload({
       expectedUpdatedAt: draft.data.updatedAt.toISOString(),
-      questionIds,
+      listeningQuestionIds,
+      readingQuestionIds,
     }),
     { correlationId: `capacity-structure-${suffix}` },
   );
@@ -382,6 +451,8 @@ export async function seedExamFixture(input: {
     prisma,
     testId: draft.data.id,
     questionCount: questionIds.length,
+    mediaSha256: mediaSeed.mediaSha256,
+    mediaDigestList: mediaSeed.mediaDigestList,
   };
 }
 
@@ -607,6 +678,7 @@ export async function collectInvariants(input: {
   /** Số câu mỗi học viên phải trả lời theo workload (--questions). */
   requestedAnswerCount: number;
   samples: readonly LatencySample[];
+  scenario?: string;
 }): Promise<InvariantResult[]> {
   const results: InvariantResult[] = [];
   const userIds = input.learners.map((learner) => learner.userId);
@@ -619,6 +691,8 @@ export async function collectInvariants(input: {
       },
     ];
   }
+  const isSpecialScenario =
+    input.scenario === 'w7' || input.scenario === 'probe429';
   // Server-side truth thay vì đếm sample: W3 lưu phần còn lại bằng route batch
   // (một request 200 chứa nhiều item), nên đếm request sẽ sai.
   const expectationIds = input.expectations.map(
@@ -640,13 +714,19 @@ export async function collectInvariants(input: {
   const expectedPutOk = userIds.length * input.requestedAnswerCount;
   results.push({
     name: 'tổng answer đã lưu = số học viên × số câu',
-    ok: (answerTotals[0]?.total ?? 0) === expectedPutOk,
-    detail: `${String(answerTotals[0]?.total ?? 0)}/${String(expectedPutOk)}`,
+    ok: isSpecialScenario || (answerTotals[0]?.total ?? 0) === expectedPutOk,
+    detail: isSpecialScenario
+      ? `không áp dụng (${input.scenario ?? 'w7'})`
+      : `${String(answerTotals[0]?.total ?? 0)}/${String(expectedPutOk)}`,
   });
   results.push({
     name: 'số answer duy nhất theo (attempt, câu) = học viên × câu',
-    ok: (answerTotals[0]?.distinct_pairs ?? 0) === expectedPutOk,
-    detail: `${String(answerTotals[0]?.distinct_pairs ?? 0)}/${String(expectedPutOk)}`,
+    ok:
+      isSpecialScenario ||
+      (answerTotals[0]?.distinct_pairs ?? 0) === expectedPutOk,
+    detail: isSpecialScenario
+      ? `không áp dụng (${input.scenario ?? 'w7'})`
+      : `${String(answerTotals[0]?.distinct_pairs ?? 0)}/${String(expectedPutOk)}`,
   });
 
   const inProgress = await input.prisma.$queryRaw<
@@ -720,10 +800,12 @@ export async function collectInvariants(input: {
   results.push({
     name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
     ok:
+      isSpecialScenario ||
       input.requestedAnswerCount === 0 ||
       (input.expectations.length > 0 && mismatches.length === 0),
-    detail:
-      input.requestedAnswerCount === 0
+    detail: isSpecialScenario
+      ? `không áp dụng (${input.scenario ?? 'w7'})`
+      : input.requestedAnswerCount === 0
         ? 'không áp dụng (W7 không trả lời)'
         : input.expectations.length === 0
           ? 'không có attempt nào để đối chiếu'
