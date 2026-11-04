@@ -36,6 +36,7 @@ import {
   seedExamFixture,
   startActivitySampler,
   startRssSampler,
+  type CapacityInvariant,
 } from './exam-capacity/fixtures';
 import {
   createMockS3Server,
@@ -730,6 +731,7 @@ async function main(): Promise<void> {
       maxConnections: activityMetrics.maxConnections,
       maxTotalConnections: activityMetrics.maxTotalConnections,
       maxLockWaits: activityMetrics.maxLockWaits,
+      lockWaitDetails: activityMetrics.lockWaitDetails,
       samples: activityMetrics.samples,
       samplerErrors: activityMetrics.samplerErrors,
     };
@@ -744,6 +746,12 @@ async function main(): Promise<void> {
               .filter((time): time is number => time !== undefined),
           )
         : null;
+    // `collectInvariants` đã mang `applicable`; các invariant runner tự thêm
+    // sau đó đều áp dụng (không có nhánh n/a), nên mặc định true và giữ
+    // nguyên cờ có sẵn nhờ thứ tự spread.
+    const thresholdInvariants: CapacityInvariant[] = invariants.map(
+      (invariant) => ({ applicable: true, ...invariant }),
+    );
     const evaluations = evaluateThresholds({
       scenario: args.scenario,
       routeSummaries: summarizeSamples(scenario.samples),
@@ -753,7 +761,7 @@ async function main(): Promise<void> {
         lastKb: rssSummary.lastKb ?? readServerRssKb(serverPid),
         peakKb: rssSummary.peakKb,
       },
-      invariants,
+      invariants: thresholdInvariants,
       probe429: scenario.probe429,
     });
     const summaryInput: CapacitySummaryInput = {

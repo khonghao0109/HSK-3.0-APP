@@ -2,13 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  appendLockWaitDetails,
+  INVARIANT_NAMES,
+  LOCK_WAIT_DETAIL_LIMIT,
+  type LockWaitDetail,
+} from './fixtures';
+import {
   percentile,
   renderSummaryMarkdown,
   summarizeSamples,
   type CapacitySummaryInput,
   type LatencySample,
+  type RouteSummary,
 } from './metrics';
 import { calculatePeakRequestsPerMinute } from './preload-planner';
+import { REQUIRED_THRESHOLD_CODES, requiredThresholdCodes } from './scenarios';
 import {
   evaluateThresholds,
   isThresholdsPassing,
@@ -25,6 +33,62 @@ function sample(input: Partial<LatencySample>): LatencySample {
     code: null,
     durationMs: 1,
     ...input,
+  };
+}
+
+type ThresholdInvariantFixture = EvaluateThresholdsInput['invariants'][number];
+
+function invariant(
+  name: string,
+  ok: boolean,
+  detail: string,
+  applicable = true,
+): ThresholdInvariantFixture {
+  return { name, ok, detail, applicable };
+}
+
+function routeSummary(
+  route: string,
+  count: number,
+  p95Ms: number,
+  p99Ms: number,
+  status = '200',
+): RouteSummary {
+  return {
+    route,
+    count,
+    p50Ms: p95Ms,
+    p95Ms,
+    p99Ms,
+    maxMs: p99Ms,
+    statusCounts: { [status]: count },
+    errorCodes: {},
+    serverErrors: 0,
+    rateLimited: 0,
+  };
+}
+
+/** Đủ route cho w1..w6/w45: đọc, start, autosave, submit, result. */
+function completeRouteSummaries(): RouteSummary[] {
+  return [
+    routeSummary('GET /exam/tests', 40, 28, 50),
+    routeSummary('POST /exam/tests/:testId/attempts', 40, 50, 70, '201'),
+    routeSummary('PUT /exam/attempts/:id/answers/:key', 3200, 45, 65),
+    routeSummary('POST /exam/attempts/:id/submit', 40, 55, 75),
+    routeSummary('GET /exam/attempts/:id/result', 40, 20, 30),
+  ];
+}
+
+function passingDatabase(): EvaluateThresholdsInput['database'] {
+  return {
+    deadlocksBefore: 0,
+    deadlocksAfter: 0,
+    maxConnections: 18,
+    maxTotalConnections: 20,
+    maxLockWaits: 0,
+    samples: 100,
+    samplerErrors: 0,
+    lockWaitDetails: { kept: [], total: 0 },
   };
 }
 
@@ -132,6 +196,7 @@ void test('renderSummaryMarkdown chứa cấu hình, trần hiệu lực và b�
       maxLockWaits: 2,
       samples: 10,
       samplerErrors: 0,
+      lockWaitDetails: { kept: [], total: 0 },
     },
     invariants: [
       { name: 'one in-progress attempt per learner', ok: true, detail: 'ok' },
@@ -146,6 +211,77 @@ void test('renderSummaryMarkdown chứa cấu hình, trần hiệu lực và b�
   assert.match(markdown, /deadlocks: 0 → 0/u);
   assert.match(markdown, /one in-progress attempt per learner/u);
   assert.match(markdown, /PASS|FAIL/u);
+});
+
+void test('renderSummaryMarkdown hiển thị bảng chẩn đoán khi có lock wait', () => {
+  const input: CapacitySummaryInput = {
+    label: 'w6-lock-diagnostics',
+    startedAt: '2026-11-04T00:00:00.000Z',
+    finishedAt: '2026-11-04T00:10:00.000Z',
+    nodeVersion: 'v24.21.0',
+    serverPid: 12345,
+    serverEnvironment: 'production',
+    baseUrl: 'http://127.0.0.1:4310',
+    config: {
+      users: 40,
+      rampSeconds: 120,
+      questions: 40,
+      minutes: 10,
+      answerIntervalMs: 12000,
+      scenario: 'w6',
+      reconnectRatio: 0,
+      timeoutRatio: 0,
+      submitWindowSeconds: 0,
+      connectionLimit: 'default',
+      audioPerTest: 10,
+      imagesPerTest: 4,
+    },
+    effectiveLimits: [],
+    loadAverageStart: '1.00 1.00 1.00',
+    loadAverageEnd: '1.00 1.00 1.00',
+    routeSummaries: [],
+    serverRssKb: { firstKb: 100_000, lastKb: 120_000, peakKb: 125_000 },
+    database: {
+      deadlocksBefore: 0,
+      deadlocksAfter: 0,
+      maxConnections: 9,
+      maxTotalConnections: 11,
+      maxLockWaits: 1,
+      samples: 10,
+      samplerErrors: 0,
+      lockWaitDetails: {
+        kept: [
+          {
+            sampledAt: '2026-11-04T00:05:00.000Z',
+            pid: 4321,
+            waitEventType: 'Lock',
+            waitEvent: 'transactionid',
+            state: 'active',
+            queryAgeMs: 45,
+            xactAgeMs: 90,
+            query: 'UPDATE "ExamAnswer" SET value = $1',
+            blockingPids: [9876],
+            blockers: [
+              {
+                pid: 9876,
+                waitEvent: null,
+                state: 'idle in transaction',
+                query: 'COMMIT',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    },
+    invariants: [],
+    totalRequests: 10,
+  };
+  const markdown = renderSummaryMarkdown(input);
+  assert.match(markdown, /## Chẩn đoán lock wait/u);
+  assert.match(markdown, /Số lần sampler thấy lock wait: 1/u);
+  assert.match(markdown, /UPDATE "ExamAnswer"/u);
+  assert.match(markdown, /pid 9876/u);
 });
 
 void test('calculatePeakRequestsPerMinute tính đúng cửa sổ trượt', () => {
@@ -239,16 +375,13 @@ void test('evaluateThresholds đánh giá PASS khi mọi số đo đạt chuẩn
       maxLockWaits: 0,
       samples: 100,
       samplerErrors: 0,
+      lockWaitDetails: { kept: [], total: 0 },
     },
     serverRssKb: { firstKb: 200_000, lastKb: 150_000, peakKb: 250_000 },
     invariants: [
-      {
-        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
-        ok: true,
-        detail: 'ok',
-      },
-      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
-      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
     ],
   };
 
@@ -291,16 +424,18 @@ void test('evaluateThresholds đánh dấu n/a khi route không có mẫu, khôn
       maxLockWaits: 0,
       samples: 20,
       samplerErrors: 0,
+      lockWaitDetails: { kept: [], total: 0 },
     },
     serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
     invariants: [
-      {
-        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
-        ok: true,
-        detail: 'không áp dụng (W7 không trả lời)',
-      },
-      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
-      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+      invariant(
+        INVARIANT_NAMES.ANSWER_COUNT,
+        true,
+        'n/a (w7 không trả lời)',
+        false,
+      ),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
     ],
   };
 
@@ -353,16 +488,13 @@ void test('evaluateThresholds báo FAIL khi vi phạm p95, lock wait hoặc RSS'
       maxLockWaits: 1, // Vượt 0
       samples: 50,
       samplerErrors: 0,
+      lockWaitDetails: { kept: [], total: 0 },
     },
     serverRssKb: { firstKb: 200_000, lastKb: 550_000, peakKb: 600_000 }, // 600 MiB vượt 512
     invariants: [
-      {
-        name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
-        ok: false,
-        detail: 'mất 2 answer',
-      },
-      { name: 'mỗi attempt đã nộp có đúng 1 Result', ok: true, detail: 'ok' },
-      { name: 'mỗi học viên ≤1 attempt in_progress', ok: true, detail: 'ok' },
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, false, 'mất 2 answer'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
     ],
   };
 
@@ -376,4 +508,266 @@ void test('evaluateThresholds báo FAIL khi vi phạm p95, lock wait hoặc RSS'
   const md = renderThresholdsMarkdownTable(evals);
   assert.match(md, /P5/u);
   assert.match(md, /FAIL/u);
+});
+
+void test('evaluateThresholds FAIL khi thiếu invariant P13, không trả n/a', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w1',
+    routeSummaries: completeRouteSummaries(),
+    database: passingDatabase(),
+    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    invariants: [
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  const p13 = evals.find((item) => item.code === 'P13');
+  assert.equal(p13?.verdict, 'FAIL');
+  assert.equal(
+    p13?.observed,
+    `thiếu invariant ${INVARIANT_NAMES.ANSWER_COUNT}`,
+  );
+  assert.equal(isThresholdsPassing(evals), false);
+});
+
+void test('evaluateThresholds trả n/a cho invariant có applicable=false', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w7',
+    routeSummaries: [routeSummary('GET /exam/tests', 10, 20, 30)],
+    database: passingDatabase(),
+    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    invariants: [
+      invariant(
+        INVARIANT_NAMES.ANSWER_COUNT,
+        true,
+        'n/a (w7 không trả lời)',
+        false,
+      ),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  const p13 = evals.find((item) => item.code === 'P13');
+  assert.equal(p13?.verdict, 'n/a');
+  assert.equal(p13?.observed, 'n/a (w7 không trả lời)');
+});
+
+void test('evaluateThresholds FAIL khi mã bắt buộc của scenario có 0 mẫu', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w1',
+    routeSummaries: [
+      routeSummary('GET /exam/tests', 40, 28, 50),
+      routeSummary('PUT /exam/attempts/:id/answers/:key', 3200, 45, 65),
+      routeSummary('POST /exam/attempts/:id/submit', 40, 55, 75),
+      routeSummary('GET /exam/attempts/:id/result', 40, 20, 30),
+    ],
+    database: passingDatabase(),
+    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    invariants: [
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  const p9 = evals.find((item) => item.code === 'P9');
+  assert.equal(p9?.verdict, 'FAIL');
+  assert.equal(p9?.observed, 'bắt buộc nhưng 0 mẫu');
+  assert.equal(isThresholdsPassing(evals), false);
+});
+
+void test('evaluateThresholds giữ n/a cho mã không bắt buộc có 0 mẫu', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'w7',
+    routeSummaries: [routeSummary('GET /exam/tests', 10, 20, 30)],
+    database: passingDatabase(),
+    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    invariants: [
+      invariant(
+        INVARIANT_NAMES.ANSWER_COUNT,
+        true,
+        'n/a (w7 không trả lời)',
+        false,
+      ),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  };
+
+  const evals = evaluateThresholds(input);
+  const p7 = evals.find((item) => item.code === 'P7');
+  assert.equal(p7?.verdict, 'n/a');
+  assert.equal(p7?.observed, 'n/a (0 mẫu)');
+  assert.equal(evals.find((item) => item.code === 'P5')?.verdict, 'PASS');
+});
+
+void test('probe429: P13 n/a vì ANSWER_COUNT applicable=false', () => {
+  const input: EvaluateThresholdsInput = {
+    scenario: 'probe429',
+    routeSummaries: [
+      routeSummary('GET /exam/tests', 10, 20, 30),
+      routeSummary('POST /exam/tests/:testId/attempts', 2, 30, 40, '201'),
+      routeSummary('PUT /exam/attempts/:id/answers/:key', 245, 25, 35),
+    ],
+    database: passingDatabase(),
+    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    invariants: [
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'n/a (probe429)', false),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+    probe429: {
+      autosave200Count: 240,
+      autosaveFirst429At: 241,
+      autosaveErrorCode: 'TOO_MANY_REQUESTS',
+      learner2Errors429: 0,
+      media200Count: 600,
+      mediaFirst429At: 601,
+      ok: true,
+      detail: 'ok',
+    },
+  };
+
+  const evals = evaluateThresholds(input);
+  assert.equal(evals.find((item) => item.code === 'P13')?.verdict, 'n/a');
+  assert.equal(isThresholdsPassing(evals), true);
+});
+
+void test('requiredThresholdCodes từ chối scenario lạ', () => {
+  assert.throws(
+    () => requiredThresholdCodes('w2'),
+    /unknown capacity scenario: w2/u,
+  );
+  assert.throws(
+    () =>
+      evaluateThresholds({
+        scenario: 'w2',
+        routeSummaries: [],
+        database: passingDatabase(),
+        serverRssKb: { firstKb: null, lastKb: null, peakKb: null },
+        invariants: [],
+      }),
+    /unknown capacity scenario: w2/u,
+  );
+});
+
+void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
+  assert.deepStrictEqual(REQUIRED_THRESHOLD_CODES, {
+    w1: [
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+    ],
+    w3: [
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+    ],
+    w4: [
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+    ],
+    w5: ['P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+    w7: ['P5', 'P6', 'P17', 'RSS'],
+    w6: [
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+    ],
+    w45: [
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+    ],
+    probe429: ['P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+  });
+});
+
+void test('appendLockWaitDetails cắt 20 bản ghi nhưng vẫn đếm đủ', () => {
+  const record = (index: number): LockWaitDetail => ({
+    sampledAt: `2026-11-04T00:00:${String(index).padStart(2, '0')}.000Z`,
+    pid: 1000 + index,
+    waitEventType: 'Lock',
+    waitEvent: 'transactionid',
+    state: 'active',
+    queryAgeMs: index,
+    xactAgeMs: index * 2,
+    query: `select ${String(index)}`,
+    blockingPids: [9999],
+    blockers: [
+      { pid: 9999, waitEvent: null, state: 'idle in transaction', query: 'x' },
+    ],
+  });
+
+  assert.deepStrictEqual(appendLockWaitDetails({ kept: [], total: 0 }, []), {
+    kept: [],
+    total: 0,
+  });
+
+  const once = appendLockWaitDetails(
+    { kept: [], total: 0 },
+    Array.from({ length: 25 }, (_value, index) => record(index)),
+  );
+  assert.equal(once.kept.length, LOCK_WAIT_DETAIL_LIMIT);
+  assert.equal(once.total, 25);
+
+  let incremental: { kept: LockWaitDetail[]; total: number } = {
+    kept: [],
+    total: 0,
+  };
+  for (let batch = 0; batch < 5; batch += 1) {
+    incremental = appendLockWaitDetails(
+      incremental,
+      Array.from({ length: 5 }, (_value, index) => record(batch * 5 + index)),
+    );
+  }
+  assert.equal(incremental.kept.length, LOCK_WAIT_DETAIL_LIMIT);
+  assert.equal(incremental.total, 25);
+  assert.equal(incremental.kept[0]?.pid, 1000);
 });

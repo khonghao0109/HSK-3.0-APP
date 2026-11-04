@@ -42,6 +42,38 @@ export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
   'probe429',
 ];
 
+/**
+ * Mã ngưỡng bắt buộc phải có mẫu đo, suy từ đúng những route mà scenario gọi
+ * (xem `runLearnerLifecycle` + `runProbe429`):
+ *
+ * - `w1`, `w3`, `w4`, `w6`, `w45`: vòng đời đầy đủ list → intro → start →
+ *   attempt → save → submit → result, nên P5/P6 (đọc), P7/P8 (autosave),
+ *   P9 (start), P10 (submit), P11 (result), P13/P14 (invariant DB), P17, RSS
+ *   đều phải có mẫu.
+ * - `w5`: trả lời hết nhưng KHÔNG submit (mode timeout), nên P10 không có mẫu
+ *   và không bắt buộc; P11 có (GET result sau khi hết giờ).
+ * - `w7`: chỉ list + intro, không tạo attempt, nên chỉ P5/P6/P17/RSS bắt buộc.
+ * - `probe429`: start + GET attempt + PUT save + media, không submit/result,
+ *   nên P5/P6/P7/P8/P9/P14/P17/RSS bắt buộc; P15 do chính scenario này sinh
+ *   ra và được đánh giá riêng. probe429 cố ý gửi PUT vượt 240/phút để nhận
+ *   429, nên không có kỳ vọng "số ExamAnswer = số PUT 200"; việc kiểm mất
+ *   autosave nằm ở các scenario có vòng đời đầy đủ. Vì vậy P13 không nằm trong
+ *   danh sách bắt buộc của probe429.
+ */
+export const REQUIRED_THRESHOLD_CODES: Record<
+  CapacityScenario,
+  readonly string[]
+> = {
+  w1: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w3: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w4: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w5: ['P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w7: ['P5', 'P6', 'P17', 'RSS'],
+  w6: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w45: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  probe429: ['P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+};
+
 export type CapacityArgs = {
   scenario: CapacityScenario;
   reconnectRatio: number;
@@ -274,6 +306,17 @@ export function parseCapacityArgs(argv: readonly string[]): CapacityArgs {
     keepDatabase,
     label,
   };
+}
+
+/**
+ * Mã bắt buộc của một scenario. Scenario lạ phải ném lỗi: trả rỗng sẽ làm
+ * bước F3 trong `evaluateThresholds` thành no-op (fail-open).
+ */
+export function requiredThresholdCodes(scenario: string): readonly string[] {
+  if (!CAPACITY_SCENARIOS.includes(scenario as CapacityScenario)) {
+    throw new Error(`unknown capacity scenario: ${scenario}`);
+  }
+  return REQUIRED_THRESHOLD_CODES[scenario as CapacityScenario];
 }
 
 export type LearnerScenarioInput = {

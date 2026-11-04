@@ -1,9 +1,10 @@
+import { INVARIANT_NAMES, type CapacityInvariant } from './fixtures';
 import type {
   DatabaseMetrics,
-  InvariantResult,
   RouteSummary,
   ServerRssSummary,
 } from './metrics';
+import { requiredThresholdCodes } from './scenarios';
 
 /**
  * M4.4 B3a — Ngưỡng dung năng và invariant (P5–P17, RSS, probe429).
@@ -51,7 +52,11 @@ export type EvaluateThresholdsInput = {
   routeSummaries: readonly RouteSummary[];
   database: DatabaseMetrics;
   serverRssKb: ServerRssSummary;
-  invariants: readonly InvariantResult[];
+  /**
+   * Invariant kèm cờ áp dụng. Thiếu invariant mà mã cần = FAIL; `n/a` chỉ hợp
+   * lệ khi invariant có mặt và `applicable === false`.
+   */
+  invariants: readonly CapacityInvariant[];
   probe429?: Probe429Result | null;
 };
 
@@ -120,6 +125,56 @@ function evaluateSingleRoutePercentile(
   return {
     observed: formatMs(val),
     verdict: val <= limitMs ? 'PASS' : 'FAIL',
+  };
+}
+
+/** Tìm invariant theo đúng tên (===). Không dò chuỗi con trong `name`/`detail`. */
+function findInvariant(
+  invariants: readonly CapacityInvariant[],
+  name: string,
+): CapacityInvariant | undefined {
+  return invariants.find((invariant) => invariant.name === name);
+}
+
+/**
+ * Đánh giá một mã dựa trên các invariant bắt buộc:
+ * - thiếu bất kỳ invariant nào → FAIL (`thiếu invariant <tên>`), không n/a;
+ * - có đủ, tất cả `applicable === false` → n/a (không có gì để đo);
+ * - còn lại → PASS khi mọi invariant áp dụng đều ok, ngược lại FAIL.
+ */
+function evaluateInvariantCode(input: {
+  invariants: readonly CapacityInvariant[];
+  required: readonly string[];
+  notApplicableDetail: (present: readonly CapacityInvariant[]) => string;
+}): { observed: string; verdict: 'PASS' | 'FAIL' | 'n/a' } {
+  const missing = input.required.filter(
+    (name) => findInvariant(input.invariants, name) === undefined,
+  );
+  if (missing.length > 0) {
+    return {
+      observed: missing.map((name) => `thiếu invariant ${name}`).join('; '),
+      verdict: 'FAIL',
+    };
+  }
+  const present = input.required.map(
+    (name) => findInvariant(input.invariants, name)!,
+  );
+  const applicable = present.filter((invariant) => invariant.applicable);
+  if (applicable.length === 0) {
+    return {
+      observed: input.notApplicableDetail(present),
+      verdict: 'n/a',
+    };
+  }
+  const ok = applicable.every((invariant) => invariant.ok);
+  return {
+    observed: ok
+      ? '0'
+      : applicable
+          .filter((invariant) => !invariant.ok)
+          .map((invariant) => invariant.detail)
+          .join('; '),
+    verdict: ok ? 'PASS' : 'FAIL',
   };
 }
 
@@ -234,50 +289,35 @@ export function evaluateThresholds(
   });
 
   // P13: mất autosave = 0
-  const lostInvariant = input.invariants.find((inv) =>
-    inv.name.includes('PUT 200 duy nhất'),
-  );
-  let p13Verdict: 'PASS' | 'FAIL' | 'n/a' = 'n/a';
-  let p13Observed = 'n/a';
-  if (lostInvariant) {
-    if (lostInvariant.detail.includes('không áp dụng')) {
-      p13Verdict = 'n/a';
-      p13Observed = lostInvariant.detail;
-    } else {
-      p13Verdict = lostInvariant.ok ? 'PASS' : 'FAIL';
-      p13Observed = lostInvariant.ok ? '0' : lostInvariant.detail;
-    }
-  }
+  const p13 = evaluateInvariantCode({
+    invariants: input.invariants,
+    required: [INVARIANT_NAMES.ANSWER_COUNT],
+    notApplicableDetail: (present) => present[0]?.detail ?? 'n/a',
+  });
   evaluations.push({
     code: 'P13',
     criterion: 'mất autosave',
     threshold: '= 0',
-    observed: p13Observed,
-    verdict: p13Verdict,
+    observed: p13.observed,
+    verdict: p13.verdict,
   });
 
   // P14: double terminal/Result = 0
-  const doubleResultInv = input.invariants.find((inv) =>
-    inv.name.includes('đúng 1 Result'),
-  );
-  const doubleAttemptInv = input.invariants.find((inv) =>
-    inv.name.includes('≤1 attempt in_progress'),
-  );
-  let p14Verdict: 'PASS' | 'FAIL' | 'n/a' = 'n/a';
-  let p14Observed = 'n/a';
-  if (doubleResultInv && doubleAttemptInv) {
-    const ok = doubleResultInv.ok && doubleAttemptInv.ok;
-    p14Verdict = ok ? 'PASS' : 'FAIL';
-    p14Observed = ok
-      ? '0'
-      : `${doubleResultInv.detail}; ${doubleAttemptInv.detail}`;
-  }
+  const p14 = evaluateInvariantCode({
+    invariants: input.invariants,
+    required: [
+      INVARIANT_NAMES.SINGLE_RESULT,
+      INVARIANT_NAMES.SINGLE_IN_PROGRESS,
+    ],
+    notApplicableDetail: (present) =>
+      present.map((invariant) => invariant.detail).join('; '),
+  });
   evaluations.push({
     code: 'P14',
     criterion: 'double terminal/Result',
     threshold: '= 0',
-    observed: p14Observed,
-    verdict: p14Verdict,
+    observed: p14.observed,
+    verdict: p14.verdict,
   });
 
   // P17: connection server ≤ 22 và lock wait = 0
@@ -342,6 +382,21 @@ export function evaluateThresholds(
       observed: 'n/a (chỉ chạy ở scenario probe429)',
       verdict: 'n/a',
     });
+  }
+
+  // F3 — mã bắt buộc của scenario không được n/a. Danh sách bắt buộc suy từ
+  // đúng các route mà scenario gọi (`REQUIRED_THRESHOLD_CODES`), nên n/a ở đây
+  // nghĩa là thiếu mẫu đo thật, không phải trường hợp miễn đo.
+  const required = requiredThresholdCodes(input.scenario);
+  for (let index = 0; index < evaluations.length; index += 1) {
+    const evaluation = evaluations[index];
+    if (evaluation.verdict === 'n/a' && required.includes(evaluation.code)) {
+      evaluations[index] = {
+        ...evaluation,
+        observed: 'bắt buộc nhưng 0 mẫu',
+        verdict: 'FAIL',
+      };
+    }
   }
 
   return evaluations;

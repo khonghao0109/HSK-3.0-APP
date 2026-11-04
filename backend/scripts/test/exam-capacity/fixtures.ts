@@ -43,6 +43,24 @@ const UUID_SLASH = /-+/gu;
 const SAFE_DATABASE_NAME = /^[A-Za-z0-9_]+$/u;
 const LEARNER_PASSWORD_PLACEHOLDER = '$argon2id$capacity-fixture-unusable';
 
+/**
+ * Tên invariant dùng chung cho cả ba nơi: fixtures tạo, thresholds đánh giá,
+ * metrics.spec đối chiếu. Một nguồn duy nhất để `thresholds.ts` tìm theo `===`
+ * thay vì dò chuỗi con, và để không còn literal trùng ở file nào khác.
+ */
+export const INVARIANT_NAMES = {
+  ANSWER_COUNT: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
+  SINGLE_RESULT: 'mỗi attempt đã nộp có đúng 1 Result',
+  SINGLE_IN_PROGRESS: 'mỗi học viên ≤1 attempt in_progress',
+} as const;
+
+/**
+ * Invariant kèm cờ áp dụng. `applicable: false` là nguồn duy nhất của verdict
+ * n/a: thresholds không dò chuỗi trong `detail` để đoán lý do bỏ qua.
+ * Mặc định (mọi invariant khác) là `true`, tức phải có kết luận PASS/FAIL.
+ */
+export type CapacityInvariant = InvariantResult & { applicable: boolean };
+
 type JwtConfig = {
   secrets: Record<string, string>;
   activeKid: string;
@@ -520,7 +538,81 @@ export async function createLearnerSessions(
   return learners;
 }
 
-/** Số connection + lock wait của chính database đang đo. */
+/** Một phiên đang chặn phiên khác giữ lock. */
+export type LockWaitBlocker = {
+  pid: number;
+  waitEvent: string | null;
+  state: string | null;
+  query: string;
+};
+
+/** Một lần sampler bắt gặp server đang chờ lock. */
+export type LockWaitDetail = {
+  sampledAt: string;
+  pid: number;
+  waitEventType: string | null;
+  waitEvent: string | null;
+  state: string | null;
+  queryAgeMs: number | null;
+  xactAgeMs: number | null;
+  query: string;
+  blockingPids: number[];
+  blockers: LockWaitBlocker[];
+};
+
+export type LockWaitDetailSummary = {
+  /** Tối đa `LOCK_WAIT_DETAIL_LIMIT` bản ghi chi tiết đầu tiên. */
+  kept: LockWaitDetail[];
+  /** Tổng số lần sampler thấy lock wait, kể cả phần không giữ chi tiết. */
+  total: number;
+};
+
+/** Trần số bản ghi chi tiết giữ lại trong artifact. */
+export const LOCK_WAIT_DETAIL_LIMIT = 20;
+
+/**
+ * Giữ tối đa `limit` bản ghi chi tiết nhưng vẫn đếm toàn bộ số lần quan sát.
+ * Hàm thuần để unit test điều khiển được phần cắt/đếm.
+ */
+export function appendLockWaitDetails(
+  state: LockWaitDetailSummary,
+  records: readonly LockWaitDetail[],
+  limit: number = LOCK_WAIT_DETAIL_LIMIT,
+): LockWaitDetailSummary {
+  const total = state.total + records.length;
+  const kept =
+    state.kept.length >= limit
+      ? state.kept
+      : [...state.kept, ...records].slice(0, limit);
+  return { kept, total };
+}
+
+function asNullableString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+/** `json_agg` có thể về dạng chuỗi hoặc object tuỳ driver; chuẩn hoá cả hai. */
+function normalizeBlockers(value: unknown): LockWaitBlocker[] {
+  const parsed: unknown =
+    typeof value === 'string' ? (JSON.parse(value) as unknown) : value;
+  if (!Array.isArray(parsed)) return [];
+  const blockers: LockWaitBlocker[] = [];
+  for (const entry of parsed) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const record = entry as Record<string, unknown>;
+    const pid = record['pid'];
+    if (typeof pid !== 'number') continue;
+    blockers.push({
+      pid,
+      waitEvent: asNullableString(record['waitEvent']),
+      state: asNullableString(record['state']),
+      query: asNullableString(record['query']) ?? '',
+    });
+  }
+  return blockers;
+}
+
+/** Số connection + lock wait và chi tiết phiên chờ của database đang đo. */
 export async function readActivitySnapshot(
   prisma: PrismaClient,
   serverApplicationName: string,
@@ -528,30 +620,96 @@ export async function readActivitySnapshot(
   serverConnections: number;
   totalConnections: number;
   serverLockWaits: number;
+  lockWaitRecords: LockWaitDetail[];
 }> {
   const rows = await prisma.$queryRaw<
     Array<{
       server_connections: number;
       total_connections: number;
       server_lock_waits: number;
+      lock_waits: unknown;
     }>
   >`
     SELECT
       COUNT(*) FILTER (
-        WHERE application_name = ${serverApplicationName}
+        WHERE a.application_name = ${serverApplicationName}
       )::int AS server_connections,
       COUNT(*)::int AS total_connections,
       COUNT(*) FILTER (
-        WHERE application_name = ${serverApplicationName}
-          AND wait_event_type = 'Lock'
-      )::int AS server_lock_waits
-    FROM pg_stat_activity
-    WHERE datname = current_database()
+        WHERE a.application_name = ${serverApplicationName}
+          AND a.wait_event_type = 'Lock'
+      )::int AS server_lock_waits,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'pid', a.pid,
+            'waitEventType', a.wait_event_type,
+            'waitEvent', a.wait_event,
+            'state', a.state,
+            'queryAgeMs', (EXTRACT(EPOCH FROM (now() - a.query_start)) * 1000)::int,
+            'xactAgeMs', (EXTRACT(EPOCH FROM (now() - a.xact_start)) * 1000)::int,
+            'query', left(a.query, 200),
+            'blockingPids', pg_blocking_pids(a.pid),
+            'blockers', (
+              SELECT json_agg(
+                json_build_object(
+                  'pid', b.pid,
+                  'waitEvent', b.wait_event,
+                  'state', b.state,
+                  'query', left(b.query, 200)
+                )
+              )
+              FROM pg_stat_activity b
+              WHERE b.pid = ANY (pg_blocking_pids(a.pid))
+            )
+          )
+        ) FILTER (
+          WHERE a.application_name = ${serverApplicationName}
+            AND a.wait_event_type = 'Lock'
+        ),
+        '[]'::json
+      ) AS lock_waits
+    FROM pg_stat_activity a
+    WHERE a.datname = current_database()
   `;
+  const row = rows[0];
+  const sampledAt = new Date().toISOString();
+  const rawLockWaits = row?.lock_waits;
+  const parsedLockWaits: unknown =
+    typeof rawLockWaits === 'string'
+      ? (JSON.parse(rawLockWaits) as unknown)
+      : rawLockWaits;
+  const lockWaitRecords: LockWaitDetail[] = [];
+  if (Array.isArray(parsedLockWaits)) {
+    for (const entry of parsedLockWaits) {
+      if (typeof entry !== 'object' || entry === null) continue;
+      const rec = entry as Record<string, unknown>;
+      const pid = rec['pid'];
+      if (typeof pid !== 'number') continue;
+      const blockingPids = Array.isArray(rec['blockingPids'])
+        ? (rec['blockingPids'] as number[])
+        : [];
+      lockWaitRecords.push({
+        sampledAt,
+        pid,
+        waitEventType: asNullableString(rec['waitEventType']),
+        waitEvent: asNullableString(rec['waitEvent']),
+        state: asNullableString(rec['state']),
+        queryAgeMs:
+          typeof rec['queryAgeMs'] === 'number' ? rec['queryAgeMs'] : null,
+        xactAgeMs:
+          typeof rec['xactAgeMs'] === 'number' ? rec['xactAgeMs'] : null,
+        query: asNullableString(rec['query']) ?? '',
+        blockingPids,
+        blockers: normalizeBlockers(rec['blockers']),
+      });
+    }
+  }
   return {
-    serverConnections: rows[0]?.server_connections ?? 0,
-    totalConnections: rows[0]?.total_connections ?? 0,
-    serverLockWaits: rows[0]?.server_lock_waits ?? 0,
+    serverConnections: row?.server_connections ?? 0,
+    totalConnections: row?.total_connections ?? 0,
+    serverLockWaits: row?.server_lock_waits ?? 0,
+    lockWaitRecords,
   };
 }
 
@@ -564,7 +722,6 @@ export async function readDeadlockCount(prisma: PrismaClient): Promise<number> {
   return rows[0]?.deadlocks ?? 0;
 }
 
-/** Mẫu pg_stat_activity mỗi 1 s; chỉ giữ đỉnh để artifact gọn. */
 export function startActivitySampler(input: {
   prisma: PrismaClient;
   serverApplicationName: string;
@@ -574,6 +731,7 @@ export function startActivitySampler(input: {
     maxConnections: number;
     maxTotalConnections: number;
     maxLockWaits: number;
+    lockWaitDetails: LockWaitDetailSummary;
     samples: number;
     samplerErrors: number;
   }>;
@@ -583,6 +741,7 @@ export function startActivitySampler(input: {
   let maxLockWaits = 0;
   let samples = 0;
   let samplerErrors = 0;
+  let lockWaitDetails: LockWaitDetailSummary = { kept: [], total: 0 };
   let inFlight: Promise<void> | null = null;
   const takeSample = (): void => {
     if (inFlight !== null) return;
@@ -595,6 +754,19 @@ export function startActivitySampler(input: {
           snapshot.totalConnections,
         );
         maxLockWaits = Math.max(maxLockWaits, snapshot.serverLockWaits);
+        if (snapshot.serverLockWaits > 0) {
+          if (snapshot.lockWaitRecords.length > 0) {
+            lockWaitDetails = appendLockWaitDetails(
+              lockWaitDetails,
+              snapshot.lockWaitRecords,
+            );
+          } else {
+            lockWaitDetails = {
+              kept: lockWaitDetails.kept,
+              total: lockWaitDetails.total + snapshot.serverLockWaits,
+            };
+          }
+        }
       })
       .catch(() => {
         samplerErrors += 1;
@@ -615,6 +787,7 @@ export function startActivitySampler(input: {
         maxConnections,
         maxTotalConnections,
         maxLockWaits,
+        lockWaitDetails,
         samples,
         samplerErrors,
       };
@@ -679,8 +852,8 @@ export async function collectInvariants(input: {
   requestedAnswerCount: number;
   samples: readonly LatencySample[];
   scenario?: string;
-}): Promise<InvariantResult[]> {
-  const results: InvariantResult[] = [];
+}): Promise<CapacityInvariant[]> {
+  const results: CapacityInvariant[] = [];
   const userIds = input.learners.map((learner) => learner.userId);
   if (userIds.length === 0) {
     return [
@@ -688,11 +861,16 @@ export async function collectInvariants(input: {
         name: 'có học viên để đối chiếu',
         ok: false,
         detail: '0 learner trong run',
+        applicable: true,
       },
     ];
   }
   const isSpecialScenario =
     input.scenario === 'w7' || input.scenario === 'probe429';
+  // Một cờ duy nhất quyết định n/a: scenario không đi qua đường trả lời
+  // (w7/probe429) hoặc workload không yêu cầu trả lời câu nào.
+  const answersApplicable =
+    !isSpecialScenario && input.requestedAnswerCount > 0;
   // Server-side truth thay vì đếm sample: W3 lưu phần còn lại bằng route batch
   // (một request 200 chứa nhiều item), nên đếm request sẽ sai.
   const expectationIds = input.expectations.map(
@@ -714,19 +892,21 @@ export async function collectInvariants(input: {
   const expectedPutOk = userIds.length * input.requestedAnswerCount;
   results.push({
     name: 'tổng answer đã lưu = số học viên × số câu',
-    ok: isSpecialScenario || (answerTotals[0]?.total ?? 0) === expectedPutOk,
-    detail: isSpecialScenario
-      ? `không áp dụng (${input.scenario ?? 'w7'})`
-      : `${String(answerTotals[0]?.total ?? 0)}/${String(expectedPutOk)}`,
+    ok: !answersApplicable || (answerTotals[0]?.total ?? 0) === expectedPutOk,
+    applicable: answersApplicable,
+    detail: answersApplicable
+      ? `${String(answerTotals[0]?.total ?? 0)}/${String(expectedPutOk)}`
+      : `n/a (${input.scenario ?? 'w7'} không trả lời)`,
   });
   results.push({
     name: 'số answer duy nhất theo (attempt, câu) = học viên × câu',
     ok:
-      isSpecialScenario ||
+      !answersApplicable ||
       (answerTotals[0]?.distinct_pairs ?? 0) === expectedPutOk,
-    detail: isSpecialScenario
-      ? `không áp dụng (${input.scenario ?? 'w7'})`
-      : `${String(answerTotals[0]?.distinct_pairs ?? 0)}/${String(expectedPutOk)}`,
+    applicable: answersApplicable,
+    detail: answersApplicable
+      ? `${String(answerTotals[0]?.distinct_pairs ?? 0)}/${String(expectedPutOk)}`
+      : `n/a (${input.scenario ?? 'w7'} không trả lời)`,
   });
 
   const inProgress = await input.prisma.$queryRaw<
@@ -740,8 +920,9 @@ export async function collectInvariants(input: {
   `;
   const offenders = inProgress.filter((row) => row.count > 1);
   results.push({
-    name: 'mỗi học viên ≤1 attempt in_progress',
+    name: INVARIANT_NAMES.SINGLE_IN_PROGRESS,
     ok: offenders.length === 0,
+    applicable: true,
     detail:
       offenders.length === 0
         ? 'ok'
@@ -762,8 +943,9 @@ export async function collectInvariants(input: {
   `;
   const badResults = submitted.filter((row) => row.results !== 1);
   results.push({
-    name: 'mỗi attempt đã nộp có đúng 1 Result',
+    name: INVARIANT_NAMES.SINGLE_RESULT,
     ok: badResults.length === 0,
+    applicable: true,
     detail:
       badResults.length === 0
         ? `ok (${String(submitted.length)} attempt)`
@@ -798,27 +980,25 @@ export async function collectInvariants(input: {
       expectation.expectedAnswerCount,
   );
   results.push({
-    name: 'số ExamAnswer = số PUT 200 duy nhất theo câu',
+    name: INVARIANT_NAMES.ANSWER_COUNT,
     ok:
-      isSpecialScenario ||
-      input.requestedAnswerCount === 0 ||
+      !answersApplicable ||
       (input.expectations.length > 0 && mismatches.length === 0),
-    detail: isSpecialScenario
-      ? `không áp dụng (${input.scenario ?? 'w7'})`
-      : input.requestedAnswerCount === 0
-        ? 'không áp dụng (W7 không trả lời)'
-        : input.expectations.length === 0
-          ? 'không có attempt nào để đối chiếu'
-          : mismatches.length === 0
-            ? `ok (${String(input.expectations.length)} attempt)`
-            : mismatches
-                .map(
-                  (expectation) =>
-                    `attempt ${String(expectation.attemptId)}: db ${String(
-                      answersByAttempt.get(expectation.attemptId) ?? 0,
-                    )} vs gửi ${String(expectation.expectedAnswerCount)}`,
-                )
-                .join(', '),
+    applicable: answersApplicable,
+    detail: !answersApplicable
+      ? `n/a (${input.scenario ?? 'w7'} không trả lời)`
+      : input.expectations.length === 0
+        ? 'không có attempt nào để đối chiếu'
+        : mismatches.length === 0
+          ? `ok (${String(input.expectations.length)} attempt)`
+          : mismatches
+              .map(
+                (expectation) =>
+                  `attempt ${String(expectation.attemptId)}: db ${String(
+                    answersByAttempt.get(expectation.attemptId) ?? 0,
+                  )} vs gửi ${String(expectation.expectedAnswerCount)}`,
+              )
+              .join(', '),
   });
 
   const serverErrors = input.samples.filter(
@@ -827,6 +1007,7 @@ export async function collectInvariants(input: {
   results.push({
     name: '0 lỗi 5xx',
     ok: serverErrors === 0,
+    applicable: true,
     detail: `${String(serverErrors)} response 5xx`,
   });
 

@@ -6,6 +6,7 @@
  * status lỗi). Runner `run-exam-capacity.ts` là nơi duy nhất ghi artifact.
  */
 
+import type { LockWaitDetailSummary } from './fixtures';
 import {
   type Probe429Result,
   type ThresholdEvaluation,
@@ -52,6 +53,8 @@ export type DatabaseMetrics = {
   /** Tổng connection tới database để tham chiếu. */
   maxTotalConnections: number;
   maxLockWaits: number;
+  /** Chẩn đoán lock wait: tối đa 20 bản ghi đầu, `total` là số lần quan sát. */
+  lockWaitDetails: LockWaitDetailSummary;
   samples: number;
   /** Số lần sampler pg_stat_activity lỗi — phải là 0 để số đo đáng tin. */
   samplerErrors: number;
@@ -185,6 +188,40 @@ function formatKb(value: number | null): string {
  * Render `summary.md`. Chỉ in số đã đo; không tự kết luận PASS/FAIL theo ngưỡng
  * P1–P19 (B1 không áp ngưỡng — chờ PO). Kết luận duy nhất là invariant đúng/sai.
  */
+function renderLockWaitDiagnostics(summary: LockWaitDetailSummary): string[] {
+  if (summary.total === 0) {
+    return [
+      '## Chẩn đoán lock wait',
+      '',
+      '- Không quan sát thấy lock wait nào trong lượt đo.',
+      '',
+    ];
+  }
+  const lines: string[] = [
+    '## Chẩn đoán lock wait',
+    '',
+    `- Số lần sampler thấy lock wait: ${String(summary.total)}`,
+    `- Số bản ghi chi tiết giữ lại: ${String(summary.kept.length)}`,
+    '',
+    '| Lúc | pid | wait_event | state | chờ (ms) | transaction (ms) | query | bị chặn bởi |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  for (const record of summary.kept) {
+    const blockers =
+      record.blockers
+        .map(
+          (blocker) =>
+            `pid ${String(blocker.pid)} ${blocker.waitEvent ?? '—'} (${blocker.state ?? '—'}): ${blocker.query}`,
+        )
+        .join(' <br> ') || '—';
+    lines.push(
+      `| ${record.sampledAt} | ${String(record.pid)} | ${record.waitEvent ?? '—'} | ${record.state ?? '—'} | ${record.queryAgeMs === null ? '—' : String(record.queryAgeMs)} | ${record.xactAgeMs === null ? '—' : String(record.xactAgeMs)} | ${record.query} | ${blockers} |`,
+    );
+  }
+  lines.push('');
+  return lines;
+}
+
 export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
   const failedInvariants = input.invariants.filter((item) => !item.ok);
   const invariantVerdict = failedInvariants.length === 0 ? 'PASS' : 'FAIL';
@@ -247,6 +284,8 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
     `- lock wait tối đa quan sát: ${String(input.database.maxLockWaits)}`,
     `- số mẫu pg_stat_activity: ${String(input.database.samples)}`,
     `- lỗi sampler: ${String(input.database.samplerErrors)}`,
+    '',
+    ...renderLockWaitDiagnostics(input.database.lockWaitDetails),
     '',
     '## Invariant sau run',
     '',
