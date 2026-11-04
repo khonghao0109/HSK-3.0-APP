@@ -15,6 +15,8 @@ export type LatencySample = {
   /** `error.code` của envelope khi có, null khi thành công. */
   code: string | null;
   durationMs: number;
+  /** Epoch ms lúc bắt đầu request; chỉ dùng cho cửa sổ submit (W4). */
+  startedAtMs?: number;
 };
 
 export type RouteSummary = {
@@ -39,7 +41,10 @@ export type ServerRssSummary = {
 export type DatabaseMetrics = {
   deadlocksBefore: number;
   deadlocksAfter: number;
+  /** Connection của server (application_name riêng), không tính runner/sampler. */
   maxConnections: number;
+  /** Tổng connection tới database để tham chiếu. */
+  maxTotalConnections: number;
   maxLockWaits: number;
   samples: number;
   /** Số lần sampler pg_stat_activity lỗi — phải là 0 để số đo đáng tin. */
@@ -53,6 +58,11 @@ export type InvariantResult = {
 };
 
 export type CapacityRunConfig = {
+  scenario: string;
+  reconnectRatio: number;
+  timeoutRatio: number;
+  submitWindowSeconds: number;
+  connectionLimit: string;
   users: number;
   rampSeconds: number;
   questions: number;
@@ -182,6 +192,7 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
     '',
     '| Tham số | Giá trị |',
     '| --- | --- |',
+    `| scenario | ${input.config.scenario} |`,
     `| users | ${String(input.config.users)} |`,
     `| rampSeconds | ${String(input.config.rampSeconds)} |`,
     `| questions | ${String(input.config.questions)} |`,
@@ -189,6 +200,10 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
     `| answerIntervalMs | ${String(input.config.answerIntervalMs)} |`,
     `| audioPerTest | ${String(input.config.audioPerTest)} |`,
     `| imagesPerTest | ${String(input.config.imagesPerTest)} |`,
+    `| reconnectRatio | ${String(input.config.reconnectRatio)} |`,
+    `| timeoutRatio | ${String(input.config.timeoutRatio)} |`,
+    `| submitWindowSeconds | ${String(input.config.submitWindowSeconds)} |`,
+    `| connection_limit (server) | ${input.config.connectionLimit} |`,
     '',
     '## Trần rate limit hiệu lực',
     '',
@@ -212,7 +227,8 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
     '## Database',
     '',
     `- deadlocks: ${String(input.database.deadlocksBefore)} → ${String(input.database.deadlocksAfter)} (delta ${String(deadlockDelta)})`,
-    `- connection tối đa quan sát: ${String(input.database.maxConnections)}`,
+    `- connection server tối đa (application_name): ${String(input.database.maxConnections)}`,
+    `- tổng connection tối đa: ${String(input.database.maxTotalConnections)}`,
     `- lock wait tối đa quan sát: ${String(input.database.maxLockWaits)}`,
     `- số mẫu pg_stat_activity: ${String(input.database.samples)}`,
     `- lỗi sampler: ${String(input.database.samplerErrors)}`,

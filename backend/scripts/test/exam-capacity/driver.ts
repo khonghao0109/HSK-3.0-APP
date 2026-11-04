@@ -18,6 +18,7 @@ export const CAPACITY_ROUTES = {
   start: 'POST /exam/tests/:testId/attempts',
   attempt: 'GET /exam/attempts/:id',
   save: 'PUT /exam/attempts/:id/answers/:key',
+  saveBatch: 'PUT /exam/attempts/:id/answers',
   submit: 'POST /exam/attempts/:id/submit',
   result: 'GET /exam/attempts/:id/result',
 } as const;
@@ -62,6 +63,17 @@ export function extractQuestionKeys(attemptView: unknown): string[] {
   return keys;
 }
 
+/**
+ * Fixture token không được server chấp nhận (401) — nghĩa là session/JWT fixture
+ * lệch shape AuthService. Dừng toàn run thay vì đo tiếp bằng request 401.
+ */
+export class SessionFixtureError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SessionFixtureError';
+  }
+}
+
 export type HttpResult = {
   status: number;
   code: string | null;
@@ -97,6 +109,7 @@ export function createExamClient(input: {
     token: string,
     body: unknown,
   ): Promise<HttpResult> => {
+    const startedAtEpochMs = Date.now();
     const startedAt = performance.now();
     let status = 0;
     let payload: unknown = null;
@@ -128,7 +141,13 @@ export function createExamClient(input: {
       status,
       code,
       durationMs,
+      startedAtMs: startedAtEpochMs,
     });
+    if (status === 401) {
+      throw new SessionFixtureError(
+        `session fixture lệch shape AuthService: 401 at ${method} ${path}`,
+      );
+    }
     return { status, code, payload, durationMs };
   };
 
@@ -146,15 +165,34 @@ export type LearnerFixture = {
   accessToken: string;
 };
 
+export type LearnerMode = 'full' | 'browse' | 'timeout';
+
+export type ReconnectPlan = {
+  /** Sau bao nhiêu câu thì giả lập reload: GET attempt + batch phần còn lại. */
+  afterAnswers: number;
+  /** Kích thước lô batch (route PUT /answers giới hạn 20). */
+  batchSize: number;
+};
+
 export type LearnerRun = {
   index: number;
   userId: number;
   attemptId: number | null;
+  mode: LearnerMode;
   /** Số câu harness yêu cầu trả lời (--questions), không phải số server trả về. */
   requestedAnswerCount: number;
   savedQuestionKeys: string[];
   completed: boolean;
   failures: string[];
+};
+
+export type LearnerLifecycleOptions = {
+  mode?: LearnerMode;
+  reconnect?: ReconnectPlan;
+  /** W4: mốc epoch chung bắt đầu cửa sổ submit. */
+  submitAtEpochMs?: number;
+  /** W4: offset của học viên trong cửa sổ submit. */
+  submitOffsetMs?: number;
 };
 
 const sleep = (ms: number): Promise<void> =>
@@ -175,25 +213,127 @@ function expectStatus(
   return false;
 }
 
+function answerBody(): { answer: { choice: string }; isFlagged: boolean } {
+  return { answer: { choice: 'a' }, isFlagged: false };
+}
+
+type BatchAnswer = {
+  questionKey: string;
+  answer: { choice: string };
+  isFlagged: boolean;
+  expectedVersion: null;
+  idempotencyKey: string;
+};
+
 /**
- * Vòng đời một học viên: list → intro → start → GET attempt → N lần PUT answer
- * (nhịp `answerIntervalMs`) → submit → result. Lỗi được ghi lại và vòng đời
- * dừng ở bước không thể tiếp tục; runner quyết định exit code từ invariant.
+ * W3: lưu phần còn lại bằng route batch sau khi GET attempt (giả lập reload).
+ * Trả về các questionKey đã được server xác nhận saved/replayed.
  */
-export async function runLearnerLifecycle(input: {
+async function saveRemainingByBatch(input: {
   client: ExamClient;
-  learner: LearnerFixture;
-  testId: number;
-  answerCount: number;
-  answerIntervalMs: number;
-}): Promise<LearnerRun> {
+  token: string;
+  attemptId: number;
+  questionKeys: readonly string[];
+  batchSize: number;
+  failures: string[];
+}): Promise<string[]> {
+  const acked: string[] = [];
+  const size = Math.max(1, Math.min(20, input.batchSize));
+  for (let start = 0; start < input.questionKeys.length; start += size) {
+    const chunk = input.questionKeys.slice(start, start + size);
+    const items: BatchAnswer[] = chunk.map((questionKey) => ({
+      questionKey,
+      ...answerBody(),
+      expectedVersion: null,
+      idempotencyKey: randomUUID(),
+    }));
+    const response = await input.client.put(
+      CAPACITY_ROUTES.saveBatch,
+      `/exam/attempts/${String(input.attemptId)}/answers`,
+      input.token,
+      { items },
+    );
+    if (!expectStatus(input.failures, 'saveBatch', response, [200]))
+      return acked;
+    const results = asRecord(asRecord(response.payload)?.['data'])?.['results'];
+    if (!Array.isArray(results)) {
+      input.failures.push('saveBatch: response has no results');
+      return acked;
+    }
+    const byKey = new Map<string, string>();
+    for (const entry of results) {
+      const record = asRecord(entry);
+      const key = record?.['questionKey'];
+      const status = record?.['status'];
+      if (typeof key === 'string' && typeof status === 'string') {
+        byKey.set(key, status);
+      }
+    }
+    for (const questionKey of chunk) {
+      const status = byKey.get(questionKey);
+      if (status === 'saved' || status === 'replayed') {
+        acked.push(questionKey);
+      } else {
+        input.failures.push(
+          `saveBatch ${questionKey}: unexpected item status ${status ?? 'missing'}`,
+        );
+      }
+    }
+  }
+  return acked;
+}
+
+async function saveSingle(input: {
+  client: ExamClient;
+  token: string;
+  attemptId: number;
+  questionKey: string;
+  failures: string[];
+}): Promise<boolean> {
+  const saved = await input.client.put(
+    CAPACITY_ROUTES.save,
+    `/exam/attempts/${String(input.attemptId)}/answers/${input.questionKey}`,
+    input.token,
+    {
+      ...answerBody(),
+      expectedVersion: null,
+      idempotencyKey: randomUUID(),
+    },
+  );
+  if (
+    !expectStatus(input.failures, `save ${input.questionKey}`, saved, [200])
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Vòng đời một học viên ảo, tham số hoá theo kịch bản:
+ * - `full`: list → intro → start → GET attempt → N answer → submit → result;
+ *   có thể chèn reload + batch (W3) hoặc chờ cửa sổ submit (W4).
+ * - `timeout` (W5): trả lời hết, không submit, chờ hết giờ rồi GET result để
+ *   server chấm lười.
+ * - `browse` (W7): chỉ list + intro trước giờ thi.
+ */
+export async function runLearnerLifecycle(
+  input: {
+    client: ExamClient;
+    learner: LearnerFixture;
+    testId: number;
+    answerCount: number;
+    answerIntervalMs: number;
+  } & LearnerLifecycleOptions,
+): Promise<LearnerRun> {
   const { client, learner } = input;
+  const mode = input.mode ?? 'full';
   const failures: string[] = [];
   const token = learner.accessToken;
   const run: LearnerRun = {
     index: learner.index,
     userId: learner.userId,
     attemptId: null,
+    mode,
     requestedAnswerCount: input.answerCount,
     savedQuestionKeys: [],
     completed: false,
@@ -213,6 +353,24 @@ export async function runLearnerLifecycle(input: {
     token,
   );
   if (!expectStatus(failures, 'intro', intro, [200])) return run;
+
+  if (mode === 'browse') {
+    // W7: học viên xem danh sách/giới thiệu đề trước giờ thi (2 lượt).
+    const againList = await client.get(
+      CAPACITY_ROUTES.list,
+      '/exam/tests?page=1&limit=20',
+      token,
+    );
+    expectStatus(failures, 'list#2', againList, [200]);
+    const againIntro = await client.get(
+      CAPACITY_ROUTES.intro,
+      `/exam/tests/${String(input.testId)}`,
+      token,
+    );
+    expectStatus(failures, 'intro#2', againIntro, [200]);
+    run.completed = failures.length === 0;
+    return run;
+  }
 
   const started = await client.post(
     CAPACITY_ROUTES.start,
@@ -239,32 +397,78 @@ export async function runLearnerLifecycle(input: {
   const view = asRecord(attempt.payload)?.['data'];
   const questionKeys = extractQuestionKeys(view);
   if (questionKeys.length < input.answerCount) {
-    // Không clamp im lặng: thiếu key nghĩa là workload không chạy đủ và invariant
-    // đối chiếu số answer sẽ vô nghĩa nếu expected lấy từ chính run này.
     failures.push(
       `attempt: ${String(questionKeys.length)} question keys < ${String(input.answerCount)} requested`,
     );
     return run;
   }
+
+  const reconnectAt =
+    input.reconnect === undefined
+      ? -1
+      : Math.min(input.reconnect.afterAnswers, input.answerCount);
   for (let index = 0; index < input.answerCount; index += 1) {
+    if (index === reconnectAt) {
+      // W3: reload giữa bài — GET attempt rồi batch phần còn lại.
+      const reloaded = await client.get(
+        CAPACITY_ROUTES.attempt,
+        `/exam/attempts/${String(attemptId)}`,
+        token,
+      );
+      if (!expectStatus(failures, 'reload', reloaded, [200])) return run;
+      const acked = await saveRemainingByBatch({
+        client,
+        token,
+        attemptId,
+        questionKeys: questionKeys.slice(index, input.answerCount),
+        batchSize: input.reconnect?.batchSize ?? 20,
+        failures,
+      });
+      run.savedQuestionKeys.push(...acked);
+      break;
+    }
     const questionKey = questionKeys[index];
-    const saved = await client.put(
-      CAPACITY_ROUTES.save,
-      `/exam/attempts/${String(attemptId)}/answers/${questionKey}`,
+    const ok = await saveSingle({
+      client,
       token,
-      {
-        answer: { choice: 'a' },
-        isFlagged: false,
-        expectedVersion: null,
-        idempotencyKey: randomUUID(),
-      },
-    );
-    if (!expectStatus(failures, `save ${questionKey}`, saved, [200]))
-      return run;
+      attemptId,
+      questionKey,
+      failures,
+    });
+    if (!ok) return run;
     run.savedQuestionKeys.push(questionKey);
     if (index < input.answerCount - 1 && input.answerIntervalMs > 0) {
       await sleep(input.answerIntervalMs);
     }
+  }
+
+  if (run.savedQuestionKeys.length !== input.answerCount) {
+    failures.push(
+      `saved ${String(run.savedQuestionKeys.length)}/${String(input.answerCount)} answers`,
+    );
+  }
+
+  if (mode === 'timeout') {
+    // W5: không submit; chờ hết hạn + grace 5 s rồi GET result (server tự
+    // chuyển timed_out và chấm lười ở lần đọc đầu tiên).
+    const remaining = startedData?.['remainingSeconds'];
+    const waitMs =
+      (typeof remaining === 'number' ? remaining : 0) * 1_000 + 6_000;
+    if (waitMs > 0) await sleep(waitMs);
+    const result = await client.get(
+      CAPACITY_ROUTES.result,
+      `/exam/attempts/${String(attemptId)}/result`,
+      token,
+    );
+    expectStatus(failures, 'result-after-timeout', result, [200]);
+    run.completed = failures.length === 0;
+    return run;
+  }
+
+  if (input.submitAtEpochMs !== undefined) {
+    const target = input.submitAtEpochMs + (input.submitOffsetMs ?? 0);
+    const waitMs = target - Date.now();
+    if (waitMs > 0) await sleep(waitMs);
   }
 
   const submitted = await client.post(
@@ -282,11 +486,6 @@ export async function runLearnerLifecycle(input: {
   );
   expectStatus(failures, 'result', result, [200]);
 
-  if (run.savedQuestionKeys.length !== input.answerCount) {
-    failures.push(
-      `saved ${String(run.savedQuestionKeys.length)}/${String(input.answerCount)} answers`,
-    );
-  }
   run.completed = failures.length === 0;
   return run;
 }

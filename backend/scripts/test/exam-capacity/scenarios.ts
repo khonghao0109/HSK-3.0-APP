@@ -13,7 +13,21 @@ import type { LatencySample } from './metrics';
  * `node --test`; phần IO chỉ gọi driver HTTP và không tự đánh giá ngưỡng.
  */
 
+export type CapacityScenario = 'w1' | 'w3' | 'w4' | 'w5' | 'w7';
+
+export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
+  'w1',
+  'w3',
+  'w4',
+  'w5',
+  'w7',
+];
+
 export type CapacityArgs = {
+  scenario: CapacityScenario;
+  reconnectRatio: number;
+  timeoutRatio: number;
+  submitWindowSeconds: number;
   users: number;
   rampSeconds: number;
   questions: number;
@@ -28,6 +42,10 @@ export type CapacityArgs = {
 };
 
 export const CAPACITY_DEFAULTS = {
+  scenario: 'w1' as CapacityScenario,
+  reconnectRatio: 0.2,
+  timeoutRatio: 0.3,
+  submitWindowSeconds: 300,
   users: 40,
   rampSeconds: 120,
   questions: 80,
@@ -59,6 +77,35 @@ export function planStartOffsets(users: number, rampMs: number): number[] {
   );
 }
 
+/**
+ * Chọn tập con rải đều theo tỉ lệ (deterministic, không random): W3 dùng cho
+ * reconnect, W5 cho timeout. `ratio=0` → rỗng, `ratio=1` → toàn bộ.
+ */
+export function pickRatioIndices(count: number, ratio: number): number[] {
+  if (!Number.isFinite(ratio) || ratio < 0 || ratio > 1) {
+    throw new RangeError('ratio must be in [0, 1]');
+  }
+  if (count <= 0 || ratio === 0) return [];
+  const picked = Math.floor(count * ratio + 1e-9);
+  if (picked <= 0) return [];
+  if (picked >= count) return Array.from({ length: count }, (_v, i) => i);
+  return Array.from({ length: picked }, (_v, index) =>
+    Math.floor((index * count) / picked),
+  );
+}
+
+/** W4: rải thời điểm submit của `count` học viên trong `windowMs`. */
+export function planSubmitWaveOffsets(
+  count: number,
+  windowMs: number,
+): number[] {
+  if (count <= 0) return [];
+  if (windowMs <= 0) return Array.from({ length: count }, () => 0);
+  return Array.from({ length: count }, (_value, index) =>
+    Math.floor((index * windowMs) / count),
+  );
+}
+
 const KNOWN_FLAGS = new Set([
   '--users',
   '--ramp-seconds',
@@ -69,6 +116,10 @@ const KNOWN_FLAGS = new Set([
   '--answer-interval-ms',
   '--base-port',
   '--label',
+  '--scenario',
+  '--reconnect-ratio',
+  '--timeout-ratio',
+  '--submit-window-seconds',
 ]);
 
 function readInteger(
@@ -87,6 +138,17 @@ function readInteger(
     throw new Error(
       `${flag} must be an integer between ${String(minimum)} and ${String(maximum)}`,
     );
+  }
+  return value;
+}
+
+function readRatio(flag: string, raw: string): number {
+  if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/u.test(raw)) {
+    throw new Error(`${flag} must be a ratio in [0, 1]`);
+  }
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new Error(`${flag} must be a ratio in [0, 1]`);
   }
   return value;
 }
@@ -142,6 +204,27 @@ export function parseCapacityArgs(argv: readonly string[]): CapacityArgs {
   const basePort = values.has('--base-port')
     ? readInteger('--base-port', values.get('--base-port')!, 1_024, 65_535)
     : CAPACITY_DEFAULTS.basePort;
+  const scenarioValue = values.get('--scenario') ?? CAPACITY_DEFAULTS.scenario;
+  if (!CAPACITY_SCENARIOS.includes(scenarioValue as CapacityScenario)) {
+    throw new Error(
+      `--scenario must be one of ${CAPACITY_SCENARIOS.join('|')} (got "${scenarioValue}")`,
+    );
+  }
+  const scenario = scenarioValue as CapacityScenario;
+  const reconnectRatio = values.has('--reconnect-ratio')
+    ? readRatio('--reconnect-ratio', values.get('--reconnect-ratio')!)
+    : CAPACITY_DEFAULTS.reconnectRatio;
+  const timeoutRatio = values.has('--timeout-ratio')
+    ? readRatio('--timeout-ratio', values.get('--timeout-ratio')!)
+    : CAPACITY_DEFAULTS.timeoutRatio;
+  const submitWindowSeconds = values.has('--submit-window-seconds')
+    ? readInteger(
+        '--submit-window-seconds',
+        values.get('--submit-window-seconds')!,
+        1,
+        3_600,
+      )
+    : CAPACITY_DEFAULTS.submitWindowSeconds;
   const label = values.get('--label') ?? CAPACITY_DEFAULTS.label;
   if (!/^[A-Za-z0-9._-]{1,60}$/u.test(label)) {
     throw new Error('--label must match [A-Za-z0-9._-]{1,60}');
@@ -156,6 +239,10 @@ export function parseCapacityArgs(argv: readonly string[]): CapacityArgs {
     : defaultAnswerIntervalMs(minutes, questions);
 
   return {
+    scenario,
+    reconnectRatio,
+    timeoutRatio,
+    submitWindowSeconds,
     users,
     rampSeconds,
     questions,
@@ -171,6 +258,10 @@ export function parseCapacityArgs(argv: readonly string[]): CapacityArgs {
 }
 
 export type LearnerScenarioInput = {
+  scenario: CapacityScenario;
+  reconnectRatio: number;
+  timeoutRatio: number;
+  submitWindowSeconds: number;
   baseUrl: string;
   testId: number;
   learners: readonly LearnerFixture[];
@@ -199,10 +290,33 @@ export async function runLearnerScenario(
     timeoutMs: input.timeoutMs,
     samples,
   });
-  const offsets = planStartOffsets(
-    input.learners.length,
-    input.rampSeconds * 1_000,
+  const rampMs = input.rampSeconds * 1_000;
+  const offsets = planStartOffsets(input.learners.length, rampMs);
+  const reconnectIndices = new Set(
+    input.scenario === 'w3'
+      ? pickRatioIndices(input.learners.length, input.reconnectRatio)
+      : [],
   );
+  const timeoutIndices = new Set(
+    input.scenario === 'w5'
+      ? pickRatioIndices(input.learners.length, input.timeoutRatio)
+      : [],
+  );
+  const submitOffsets =
+    input.scenario === 'w4'
+      ? planSubmitWaveOffsets(
+          input.learners.length,
+          input.submitWindowSeconds * 1_000,
+        )
+      : [];
+  // W4: cửa sổ submit bắt đầu sau khi học viên chậm nhất trả lời xong.
+  const submitAtEpochMs =
+    input.scenario === 'w4'
+      ? Date.now() +
+        rampMs +
+        Math.max(0, input.answerCount - 1) * input.answerIntervalMs +
+        2_000
+      : undefined;
 
   const learners = await Promise.all(
     input.learners.map(async (learner, index) => {
@@ -214,6 +328,18 @@ export async function runLearnerScenario(
         testId: input.testId,
         answerCount: input.answerCount,
         answerIntervalMs: input.answerIntervalMs,
+        mode:
+          input.scenario === 'w7'
+            ? 'browse'
+            : timeoutIndices.has(index)
+              ? 'timeout'
+              : 'full',
+        reconnect:
+          reconnectIndices.has(index) && input.answerCount > 1
+            ? { afterAnswers: Math.floor(input.answerCount / 2), batchSize: 20 }
+            : undefined,
+        submitAtEpochMs,
+        submitOffsetMs: submitOffsets[index] ?? 0,
       });
       input.onLearnerDone?.(run);
       return run;

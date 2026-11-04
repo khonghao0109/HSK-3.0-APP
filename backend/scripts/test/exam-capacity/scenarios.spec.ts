@@ -4,7 +4,9 @@ import test from 'node:test';
 import {
   defaultAnswerIntervalMs,
   parseCapacityArgs,
+  pickRatioIndices,
   planStartOffsets,
+  planSubmitWaveOffsets,
 } from './scenarios';
 
 void test('planStartOffsets rải đều trong cửa sổ ramp, bắt đầu ở 0', () => {
@@ -100,4 +102,65 @@ void test('parseCapacityArgs cho override nhịp và từ chối giá trị sai'
   assert.throws(() => parseCapacityArgs(['--ramp-seconds', '-1']), /--ramp/u);
   assert.throws(() => parseCapacityArgs(['--bogus']), /Unknown argument/u);
   assert.throws(() => parseCapacityArgs(['--users']), /Missing value/u);
+});
+
+void test('pickRatioIndices chọn tập con rải đều, biên 0 và 1', () => {
+  assert.deepEqual(pickRatioIndices(10, 0), []);
+  assert.deepEqual(pickRatioIndices(10, 1), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(pickRatioIndices(10, 0.3), [0, 3, 6]);
+  assert.deepEqual(
+    pickRatioIndices(40, 0.25),
+    [0, 4, 8, 12, 16, 20, 24, 28, 32, 36],
+  );
+  assert.throws(() => pickRatioIndices(10, -0.1), RangeError);
+  assert.throws(() => pickRatioIndices(10, 1.1), RangeError);
+});
+
+void test('planSubmitWaveOffsets rải submit trong cửa sổ, không vượt biên', () => {
+  const offsets = planSubmitWaveOffsets(10, 300_000);
+  assert.equal(offsets.length, 10);
+  assert.equal(offsets[0], 0);
+  assert.equal(offsets[9], 270_000);
+  assert.ok(offsets.every((offset) => offset >= 0 && offset < 300_000));
+  for (let index = 1; index < offsets.length; index += 1) {
+    assert.ok(offsets[index] > offsets[index - 1]);
+  }
+  assert.deepEqual(planSubmitWaveOffsets(5, 0), [0, 0, 0, 0, 0]);
+});
+
+void test('parseCapacityArgs đọc cờ B2 và validate scenario/ratio', () => {
+  const defaults = parseCapacityArgs([]);
+  assert.equal(defaults.scenario, 'w1');
+  assert.equal(defaults.reconnectRatio, 0.2);
+  assert.equal(defaults.timeoutRatio, 0.3);
+  assert.equal(defaults.submitWindowSeconds, 300);
+
+  const w4 = parseCapacityArgs([
+    '--scenario',
+    'w4',
+    '--submit-window-seconds',
+    '120',
+    '--reconnect-ratio',
+    '0.5',
+    '--timeout-ratio',
+    '0',
+  ]);
+  assert.equal(w4.scenario, 'w4');
+  assert.equal(w4.submitWindowSeconds, 120);
+  assert.equal(w4.reconnectRatio, 0.5);
+  assert.equal(w4.timeoutRatio, 0);
+
+  assert.throws(() => parseCapacityArgs(['--scenario', 'w9']), /--scenario/u);
+  assert.throws(
+    () => parseCapacityArgs(['--reconnect-ratio', '1.5']),
+    /--reconnect-ratio/u,
+  );
+  assert.throws(
+    () => parseCapacityArgs(['--timeout-ratio', 'abc']),
+    /--timeout-ratio/u,
+  );
+  assert.throws(
+    () => parseCapacityArgs(['--submit-window-seconds', '0']),
+    /--submit-window-seconds/u,
+  );
 });

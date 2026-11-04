@@ -66,6 +66,22 @@ const BACKEND_ROOT = resolve(__dirname, '../..');
 const ARTIFACT_ROOT = '/tmp/hsk-m44/runs';
 const HEALTH_TIMEOUT_MS = 90_000;
 const CLIENT_TIMEOUT_MS = 15_000;
+const SERVER_APPLICATION_NAME = 'hsk_capacity_server';
+const RUNNER_APPLICATION_NAME = 'hsk_capacity_runner';
+
+/** Gắn thêm query param (dùng cho `connection_limit` của thí nghiệm pool). */
+function withQueryParam(url: string, key: string, value: string): string {
+  const parsed = new URL(url);
+  parsed.searchParams.set(key, value);
+  return parsed.toString();
+}
+
+/** Gắn `application_name` để tách connection của server khỏi runner/sampler. */
+function withApplicationName(url: string, applicationName: string): string {
+  const parsed = new URL(url);
+  parsed.searchParams.set('application_name', applicationName);
+  return parsed.toString();
+}
 
 type Cleanup = {
   server: ChildProcess | null;
@@ -237,6 +253,7 @@ async function main(): Promise<void> {
       'B1 chỉ seed đề không media (--audio 0 --images 0); fixture media để B2',
     );
   }
+  const connectionLimit = process.env.CAPACITY_CONNECTION_LIMIT;
   const disposable = assertDisposableTestDatabase();
   // Guard chỉ bắt hậu tố *_test; harness này DROP/CREATE database nên chỉ nhận
   // database thuộc sở hữu riêng của M4.4 (tránh xoá hsk_system_test).
@@ -287,6 +304,13 @@ async function main(): Promise<void> {
     keepDatabase: args.keepDatabase,
     serverPidFile: null,
   };
+  // Ghi lại cách server kết thúc (code/signal) để phân biệt crash, OOM hay bị
+  // process khác kill khi đo dài.
+  let serverExit: {
+    code: number | null;
+    signal: NodeJS.Signals | null;
+    at: string;
+  } | null = null;
   let cleanupPromise: Promise<void> | null = null;
   const runCleanup = (): Promise<void> => {
     if (cleanupPromise !== null) return cleanupPromise;
@@ -336,7 +360,7 @@ async function main(): Promise<void> {
       `capacity: users=${String(args.users)} ramp=${String(args.rampSeconds)}s questions=${String(args.questions)} minutes=${String(args.minutes)} interval=${String(args.answerIntervalMs)}ms`,
     );
     console.log(
-      `capacity: server NODE_ENV=${serverEnvironment} port=${String(port)} database=${disposable.databaseName}`,
+      `capacity: server NODE_ENV=${serverEnvironment} port=${String(port)} database=${disposable.databaseName} connection_limit=${connectionLimit ?? 'default'}`,
     );
     for (const limit of describeEffectiveLimits(serverEnvironment)) {
       console.log(`capacity: limit ${limit}`);
@@ -351,8 +375,12 @@ async function main(): Promise<void> {
     });
 
     const seedStartedAt = Date.now();
+    const runnerDatabaseUrl = withApplicationName(
+      disposable.databaseUrl,
+      RUNNER_APPLICATION_NAME,
+    );
     const fixture = await seedExamFixture({
-      databaseUrl: disposable.databaseUrl,
+      databaseUrl: runnerDatabaseUrl,
       questions: args.questions,
       minutes: args.minutes,
     });
@@ -374,12 +402,24 @@ async function main(): Promise<void> {
     await assertPortFree(port);
     const serverLogFd = openSync(join(artifactDir, 'server.log'), 'w');
     cleanup.serverLogFd = serverLogFd;
+    const baseServerDatabaseUrl = withApplicationName(
+      databaseUrlForServer(disposable.databaseUrl),
+      SERVER_APPLICATION_NAME,
+    );
+    const serverDatabaseUrl =
+      connectionLimit === undefined || connectionLimit.length === 0
+        ? baseServerDatabaseUrl
+        : withQueryParam(
+            baseServerDatabaseUrl,
+            'connection_limit',
+            connectionLimit,
+          );
     const server = spawn(process.execPath, [mainEntry], {
       cwd: BACKEND_ROOT,
       env: buildServerEnvironment({
         port,
         metricsPort,
-        databaseUrl: databaseUrlForServer(disposable.databaseUrl),
+        databaseUrl: serverDatabaseUrl,
         serverEnvironment,
         kid,
         secrets,
@@ -395,11 +435,10 @@ async function main(): Promise<void> {
       console.error(`capacity: server spawn error: ${error.message}`);
     });
     server.once('exit', (code, signal) => {
-      if (code !== 0 && signal === null) {
-        console.error(
-          `capacity: server exited early with code ${String(code)}`,
-        );
-      }
+      serverExit = { code, signal, at: new Date().toISOString() };
+      console.error(
+        `capacity: server exited code=${String(code)} signal=${String(signal)} at ${serverExit.at}`,
+      );
     });
     const baseUrl = `http://127.0.0.1:${String(port)}/api/v1`;
     await waitForHealth({ baseUrl, server, timeoutMs: HEALTH_TIMEOUT_MS });
@@ -415,6 +454,7 @@ async function main(): Promise<void> {
     const deadlocksBefore = await readDeadlockCount(fixture.prisma);
     const activity = startActivitySampler({
       prisma: fixture.prisma,
+      serverApplicationName: SERVER_APPLICATION_NAME,
       intervalMs: 1_000,
     });
     const rss = startRssSampler({
@@ -427,11 +467,16 @@ async function main(): Promise<void> {
     const startedAt = new Date();
     const runStartedAt = Date.now();
 
+    const scenarioAnswerCount = args.scenario === 'w7' ? 0 : args.questions;
     const scenario = await runLearnerScenario({
+      scenario: args.scenario,
+      reconnectRatio: args.reconnectRatio,
+      timeoutRatio: args.timeoutRatio,
+      submitWindowSeconds: args.submitWindowSeconds,
       baseUrl,
       testId: fixture.testId,
       learners,
-      answerCount: args.questions,
+      answerCount: scenarioAnswerCount,
       answerIntervalMs: args.answerIntervalMs,
       rampSeconds: args.rampSeconds,
       timeoutMs: CLIENT_TIMEOUT_MS,
@@ -464,7 +509,7 @@ async function main(): Promise<void> {
       prisma: fixture.prisma,
       learners,
       expectations,
-      requestedAnswerCount: args.questions,
+      requestedAnswerCount: scenarioAnswerCount,
       samples: scenario.samples,
     });
     const deadlockDelta = deadlocksAfter - deadlocksBefore;
@@ -494,10 +539,65 @@ async function main(): Promise<void> {
               .join(' | ')}`,
     });
 
+    if (args.scenario === 'w7') {
+      const attempts = await fixture.prisma.examAttempt.count({
+        where: { userId: { in: learners.map((learner) => learner.userId) } },
+      });
+      invariants.push({
+        name: 'W7 không tạo attempt',
+        ok: attempts === 0,
+        detail: `${String(attempts)} attempt`,
+      });
+    }
+    if (args.scenario === 'w3') {
+      const batchSamples = scenario.samples.filter(
+        (sample) =>
+          sample.route === 'PUT /exam/attempts/:id/answers' &&
+          sample.status === 200,
+      );
+      invariants.push({
+        name: 'W3 có batch answer 200 sau reconnect',
+        ok: batchSamples.length > 0,
+        detail: `${String(batchSamples.length)} request batch`,
+      });
+    }
+    if (args.scenario === 'w4') {
+      const submitSamples = scenario.samples.filter(
+        (sample) =>
+          sample.route === 'POST /exam/attempts/:id/submit' &&
+          sample.status === 200,
+      );
+      const times = submitSamples
+        .map((sample) => sample.startedAtMs)
+        .filter((value): value is number => value !== undefined);
+      const spreadMs =
+        times.length < 2 ? 0 : Math.max(...times) - Math.min(...times);
+      invariants.push({
+        name: 'W4 100% submit trong cửa sổ',
+        ok:
+          submitSamples.length === learners.length &&
+          spreadMs <= args.submitWindowSeconds * 1_000,
+        detail: `${String(submitSamples.length)}/${String(learners.length)} submit, spread ${String(spreadMs)} ms (window ${String(args.submitWindowSeconds * 1_000)} ms)`,
+      });
+    }
+    if (args.scenario === 'w5') {
+      const timedOut = await fixture.prisma.examAttempt.count({
+        where: {
+          userId: { in: learners.map((learner) => learner.userId) },
+          status: 'timed_out',
+        },
+      });
+      invariants.push({
+        name: 'W5 có attempt timed_out được chấm lười',
+        ok: timedOut > 0,
+        detail: `${String(timedOut)} timed_out`,
+      });
+    }
     const database: DatabaseMetrics = {
       deadlocksBefore,
       deadlocksAfter,
       maxConnections: activityMetrics.maxConnections,
+      maxTotalConnections: activityMetrics.maxTotalConnections,
       maxLockWaits: activityMetrics.maxLockWaits,
       samples: activityMetrics.samples,
       samplerErrors: activityMetrics.samplerErrors,
@@ -516,6 +616,14 @@ async function main(): Promise<void> {
         questions: args.questions,
         minutes: args.minutes,
         answerIntervalMs: args.answerIntervalMs,
+        scenario: args.scenario,
+        reconnectRatio: args.reconnectRatio,
+        timeoutRatio: args.timeoutRatio,
+        submitWindowSeconds: args.submitWindowSeconds,
+        connectionLimit:
+          connectionLimit === undefined || connectionLimit.length === 0
+            ? 'default'
+            : connectionLimit,
         audioPerTest: args.audio,
         imagesPerTest: args.images,
       },
@@ -546,6 +654,7 @@ async function main(): Promise<void> {
         distEntryModifiedAt: builtAt,
         builtByRunner: args.build,
       },
+      serverExit,
       durationSeconds: (Date.now() - runStartedAt) / 1_000,
       machine: {
         platform: process.platform,

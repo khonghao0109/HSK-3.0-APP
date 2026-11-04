@@ -61,7 +61,8 @@
     "test:seed:frontend-console": "ts-node scripts/test/seed-frontend-admin-console.ts",
     "analytics:p0": "ts-node scripts/analytics/p0-product-metrics.ts",
     "test:db:exam-submit-concurrency": "ts-node scripts/test/run-exam-submit-concurrency.ts",
-    "test:capacity:exam": "ts-node scripts/test/run-exam-capacity.ts"
+    "test:capacity:exam": "ts-node scripts/test/run-exam-capacity.ts",
+    "test:capacity:exam:unit": "node --test -r ts-node/register scripts/test/exam-capacity/metrics.spec.ts scripts/test/exam-capacity/scenarios.spec.ts scripts/test/exam-capacity/driver.spec.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
