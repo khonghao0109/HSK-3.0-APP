@@ -3,9 +3,12 @@ import test from 'node:test';
 
 import {
   appendLockWaitDetails,
+  emptyLockWaitTracker,
   INVARIANT_NAMES,
   LOCK_WAIT_DETAIL_LIMIT,
+  recordLockWaitTick,
   type LockWaitDetail,
+  type LockWaitDetailSummary,
 } from './fixtures';
 import {
   percentile,
@@ -18,11 +21,24 @@ import {
 import { calculatePeakRequestsPerMinute } from './preload-planner';
 import { REQUIRED_THRESHOLD_CODES, requiredThresholdCodes } from './scenarios';
 import {
+  CAPACITY_THRESHOLDS,
+  evaluateSoak,
   evaluateThresholds,
   isThresholdsPassing,
   renderThresholdsMarkdownTable,
   type EvaluateThresholdsInput,
 } from './thresholds';
+
+function noLockWaits(): LockWaitDetailSummary {
+  return {
+    kept: [],
+    total: 0,
+    maxQueryAgeMs: 0,
+    maxConsecutiveSamples: 0,
+    unattributedSamples: 0,
+    unknownAgeRecords: 0,
+  };
+}
 
 function sample(input: Partial<LatencySample>): LatencySample {
   return {
@@ -88,7 +104,8 @@ function passingDatabase(): EvaluateThresholdsInput['database'] {
     maxLockWaits: 0,
     samples: 100,
     samplerErrors: 0,
-    lockWaitDetails: { kept: [], total: 0 },
+    connectionSeries: [],
+    lockWaitDetails: noLockWaits(),
   };
 }
 
@@ -187,7 +204,12 @@ void test('renderSummaryMarkdown chứa cấu hình, trần hiệu lực và b�
       sample({ durationMs: 10 }),
       sample({ durationMs: 20 }),
     ]),
-    serverRssKb: { firstKb: 100_000, lastKb: 120_000, peakKb: 125_000 },
+    serverRssKb: {
+      firstKb: 100_000,
+      lastKb: 120_000,
+      peakKb: 125_000,
+      rssSeries: [],
+    },
     database: {
       deadlocksBefore: 0,
       deadlocksAfter: 0,
@@ -196,7 +218,8 @@ void test('renderSummaryMarkdown chứa cấu hình, trần hiệu lực và b�
       maxLockWaits: 2,
       samples: 10,
       samplerErrors: 0,
-      lockWaitDetails: { kept: [], total: 0 },
+      connectionSeries: [],
+      lockWaitDetails: noLockWaits(),
     },
     invariants: [
       { name: 'one in-progress attempt per learner', ok: true, detail: 'ok' },
@@ -240,7 +263,12 @@ void test('renderSummaryMarkdown hiển thị bảng chẩn đoán khi có lock 
     loadAverageStart: '1.00 1.00 1.00',
     loadAverageEnd: '1.00 1.00 1.00',
     routeSummaries: [],
-    serverRssKb: { firstKb: 100_000, lastKb: 120_000, peakKb: 125_000 },
+    serverRssKb: {
+      firstKb: 100_000,
+      lastKb: 120_000,
+      peakKb: 125_000,
+      rssSeries: [],
+    },
     database: {
       deadlocksBefore: 0,
       deadlocksAfter: 0,
@@ -249,6 +277,7 @@ void test('renderSummaryMarkdown hiển thị bảng chẩn đoán khi có lock 
       maxLockWaits: 1,
       samples: 10,
       samplerErrors: 0,
+      connectionSeries: [],
       lockWaitDetails: {
         kept: [
           {
@@ -272,6 +301,10 @@ void test('renderSummaryMarkdown hiển thị bảng chẩn đoán khi có lock 
           },
         ],
         total: 1,
+        maxQueryAgeMs: 45,
+        maxConsecutiveSamples: 1,
+        unattributedSamples: 0,
+        unknownAgeRecords: 0,
       },
     },
     invariants: [],
@@ -375,9 +408,15 @@ void test('evaluateThresholds đánh giá PASS khi mọi số đo đạt chuẩn
       maxLockWaits: 0,
       samples: 100,
       samplerErrors: 0,
-      lockWaitDetails: { kept: [], total: 0 },
+      connectionSeries: [],
+      lockWaitDetails: noLockWaits(),
     },
-    serverRssKb: { firstKb: 200_000, lastKb: 150_000, peakKb: 250_000 },
+    serverRssKb: {
+      firstKb: 200_000,
+      lastKb: 150_000,
+      peakKb: 250_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
       invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
@@ -424,9 +463,15 @@ void test('evaluateThresholds đánh dấu n/a khi route không có mẫu, khôn
       maxLockWaits: 0,
       samples: 20,
       samplerErrors: 0,
-      lockWaitDetails: { kept: [], total: 0 },
+      connectionSeries: [],
+      lockWaitDetails: noLockWaits(),
     },
-    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    serverRssKb: {
+      firstKb: 100_000,
+      lastKb: 100_000,
+      peakKb: 110_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(
         INVARIANT_NAMES.ANSWER_COUNT,
@@ -488,9 +533,15 @@ void test('evaluateThresholds báo FAIL khi vi phạm p95, lock wait hoặc RSS'
       maxLockWaits: 1, // Vượt 0
       samples: 50,
       samplerErrors: 0,
-      lockWaitDetails: { kept: [], total: 0 },
+      connectionSeries: [],
+      lockWaitDetails: noLockWaits(),
     },
-    serverRssKb: { firstKb: 200_000, lastKb: 550_000, peakKb: 600_000 }, // 600 MiB vượt 512
+    serverRssKb: {
+      firstKb: 200_000,
+      lastKb: 550_000,
+      peakKb: 600_000,
+      rssSeries: [],
+    }, // 600 MiB vượt 512
     invariants: [
       invariant(INVARIANT_NAMES.ANSWER_COUNT, false, 'mất 2 answer'),
       invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
@@ -515,7 +566,12 @@ void test('evaluateThresholds FAIL khi thiếu invariant P13, không trả n/a',
     scenario: 'w1',
     routeSummaries: completeRouteSummaries(),
     database: passingDatabase(),
-    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    serverRssKb: {
+      firstKb: 200_000,
+      lastKb: 210_000,
+      peakKb: 220_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
       invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
@@ -537,7 +593,12 @@ void test('evaluateThresholds trả n/a cho invariant có applicable=false', () 
     scenario: 'w7',
     routeSummaries: [routeSummary('GET /exam/tests', 10, 20, 30)],
     database: passingDatabase(),
-    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    serverRssKb: {
+      firstKb: 100_000,
+      lastKb: 100_000,
+      peakKb: 110_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(
         INVARIANT_NAMES.ANSWER_COUNT,
@@ -566,7 +627,12 @@ void test('evaluateThresholds FAIL khi mã bắt buộc của scenario có 0 m�
       routeSummary('GET /exam/attempts/:id/result', 40, 20, 30),
     ],
     database: passingDatabase(),
-    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    serverRssKb: {
+      firstKb: 200_000,
+      lastKb: 210_000,
+      peakKb: 220_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
       invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
@@ -586,7 +652,12 @@ void test('evaluateThresholds giữ n/a cho mã không bắt buộc có 0 mẫu'
     scenario: 'w7',
     routeSummaries: [routeSummary('GET /exam/tests', 10, 20, 30)],
     database: passingDatabase(),
-    serverRssKb: { firstKb: 100_000, lastKb: 100_000, peakKb: 110_000 },
+    serverRssKb: {
+      firstKb: 100_000,
+      lastKb: 100_000,
+      peakKb: 110_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(
         INVARIANT_NAMES.ANSWER_COUNT,
@@ -615,7 +686,12 @@ void test('probe429: P13 n/a vì ANSWER_COUNT applicable=false', () => {
       routeSummary('PUT /exam/attempts/:id/answers/:key', 245, 25, 35),
     ],
     database: passingDatabase(),
-    serverRssKb: { firstKb: 200_000, lastKb: 210_000, peakKb: 220_000 },
+    serverRssKb: {
+      firstKb: 200_000,
+      lastKb: 210_000,
+      peakKb: 220_000,
+      rssSeries: [],
+    },
     invariants: [
       invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'n/a (probe429)', false),
       invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
@@ -649,16 +725,22 @@ void test('requiredThresholdCodes từ chối scenario lạ', () => {
         scenario: 'w2',
         routeSummaries: [],
         database: passingDatabase(),
-        serverRssKb: { firstKb: null, lastKb: null, peakKb: null },
+        serverRssKb: {
+          firstKb: null,
+          lastKb: null,
+          peakKb: null,
+          rssSeries: [],
+        },
         invariants: [],
       }),
     /unknown capacity scenario: w2/u,
   );
 });
 
-void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
+void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario (P3 ở mọi scenario, P18 chỉ w8)', () => {
   assert.deepStrictEqual(REQUIRED_THRESHOLD_CODES, {
     w1: [
+      'P3',
       'P5',
       'P6',
       'P7',
@@ -672,6 +754,7 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
       'RSS',
     ],
     w3: [
+      'P3',
       'P5',
       'P6',
       'P7',
@@ -685,6 +768,7 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
       'RSS',
     ],
     w4: [
+      'P3',
       'P5',
       'P6',
       'P7',
@@ -697,9 +781,10 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
       'P17',
       'RSS',
     ],
-    w5: ['P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-    w7: ['P5', 'P6', 'P17', 'RSS'],
+    w5: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+    w7: ['P3', 'P5', 'P6', 'P17', 'RSS'],
     w6: [
+      'P3',
       'P5',
       'P6',
       'P7',
@@ -713,6 +798,7 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
       'RSS',
     ],
     w45: [
+      'P3',
       'P5',
       'P6',
       'P7',
@@ -725,8 +811,26 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario', () => {
       'P17',
       'RSS',
     ],
-    probe429: ['P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+    w8: [
+      'P3',
+      'P5',
+      'P6',
+      'P7',
+      'P8',
+      'P9',
+      'P10',
+      'P11',
+      'P13',
+      'P14',
+      'P17',
+      'RSS',
+      'P18',
+    ],
+    probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
   });
+  for (const codes of Object.values(REQUIRED_THRESHOLD_CODES)) {
+    assert.ok(codes.includes('P3'));
+  }
 });
 
 void test('appendLockWaitDetails cắt 20 bản ghi nhưng vẫn đếm đủ', () => {
@@ -770,4 +874,410 @@ void test('appendLockWaitDetails cắt 20 bản ghi nhưng vẫn đếm đủ', 
   assert.equal(incremental.kept.length, LOCK_WAIT_DETAIL_LIMIT);
   assert.equal(incremental.total, 25);
   assert.equal(incremental.kept[0]?.pid, 1000);
+});
+
+function lockRecord(pid: number, queryAgeMs: number): LockWaitDetail {
+  return {
+    sampledAt: '2026-11-04T00:00:00.000Z',
+    pid,
+    waitEventType: 'Lock',
+    waitEvent: 'transactionid',
+    state: 'active',
+    queryAgeMs,
+    xactAgeMs: queryAgeMs,
+    query: 'INSERT INTO "RateLimitCounter"',
+    blockingPids: [],
+    blockers: [],
+  };
+}
+
+function lockTicks(
+  ticks: readonly (readonly LockWaitDetail[] | { unattributed: number })[],
+): LockWaitDetailSummary {
+  let tracker = emptyLockWaitTracker();
+  for (const tick of ticks) {
+    tracker =
+      'unattributed' in tick
+        ? recordLockWaitTick(tracker, {
+            serverLockWaits: tick.unattributed,
+            records: [],
+          })
+        : recordLockWaitTick(tracker, {
+            serverLockWaits: tick.length,
+            records: tick,
+          });
+  }
+  return tracker.summary;
+}
+
+function p3For(summary: LockWaitDetailSummary, samples = 100) {
+  const evals = evaluateThresholds({
+    scenario: 'w1',
+    routeSummaries: completeRouteSummaries(),
+    database: { ...passingDatabase(), samples, lockWaitDetails: summary },
+    serverRssKb: { firstKb: 1, lastKb: 1, peakKb: 1, rssSeries: [] },
+    invariants: [
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  });
+  const p3 = evals.find((item) => item.code === 'P3');
+  assert.ok(p3, 'thiếu hàng P3');
+  return p3;
+}
+
+void test('P3 lock wait 999 ms PASS, 1000 ms FAIL', () => {
+  assert.equal(CAPACITY_THRESHOLDS.P3_MAX_LOCK_WAIT_MS, 1_000);
+  assert.equal(p3For(lockTicks([[lockRecord(1, 999)]])).verdict, 'PASS');
+  assert.equal(p3For(lockTicks([[lockRecord(1, 1_000)]])).verdict, 'FAIL');
+});
+
+void test('P3 cùng pid 2 tick liên tiếp PASS, 3 tick FAIL', () => {
+  assert.equal(CAPACITY_THRESHOLDS.P3_MAX_CONSECUTIVE_LOCK_WAIT_SAMPLES, 2);
+  const two = lockTicks([[lockRecord(7, 5)], [lockRecord(7, 5)]]);
+  assert.equal(two.maxConsecutiveSamples, 2);
+  assert.equal(p3For(two).verdict, 'PASS');
+  const three = lockTicks([
+    [lockRecord(7, 5)],
+    [lockRecord(7, 5)],
+    [lockRecord(7, 5)],
+  ]);
+  assert.equal(three.maxConsecutiveSamples, 3);
+  assert.equal(p3For(three).verdict, 'FAIL');
+});
+
+void test('P3 pid A, B, A cho maxConsecutiveSamples = 1', () => {
+  const summary = lockTicks([
+    [lockRecord(1, 5)],
+    [lockRecord(2, 5)],
+    [lockRecord(1, 5)],
+  ]);
+  assert.equal(summary.maxConsecutiveSamples, 1);
+  assert.equal(summary.total, 3);
+});
+
+void test('P3 tick không có lock wait reset chuỗi liên tiếp', () => {
+  const summary = lockTicks([
+    [lockRecord(1, 5)],
+    [lockRecord(1, 5)],
+    [],
+    [lockRecord(1, 5)],
+    [lockRecord(1, 5)],
+  ]);
+  assert.equal(summary.maxConsecutiveSamples, 2);
+});
+
+void test('P3 FAIL khi có 1 mẫu unattributed', () => {
+  const summary = lockTicks([{ unattributed: 1 }]);
+  assert.equal(summary.unattributedSamples, 1);
+  assert.equal(summary.total, 1);
+  const p3 = p3For(summary);
+  assert.equal(p3.verdict, 'FAIL');
+  assert.match(p3.observed, /unattributed 1/u);
+});
+
+void test('P3 sampler 0 mẫu thành FAIL "bắt buộc nhưng 0 mẫu"', () => {
+  const p3 = p3For(noLockWaits(), 0);
+  assert.equal(p3.verdict, 'FAIL');
+  assert.equal(p3.observed, 'bắt buộc nhưng 0 mẫu');
+});
+
+void test('P3 25 bản ghi: kept 20 nhưng maxQueryAgeMs tính trên đủ 25', () => {
+  const records = Array.from({ length: 25 }, (_value, index) =>
+    lockRecord(100 + index, index === 24 ? 1_500 : 10),
+  );
+  const summary = lockTicks([records]);
+  assert.equal(summary.kept.length, LOCK_WAIT_DETAIL_LIMIT);
+  assert.equal(summary.total, 25);
+  assert.equal(summary.maxQueryAgeMs, 1_500);
+  assert.equal(p3For(summary).verdict, 'FAIL');
+});
+
+void test('P3 observed ghi tổng, max ms, tick liên tiếp và unattributed', () => {
+  const p3 = p3For(lockTicks([[lockRecord(1, 8)]]));
+  assert.equal(p3.verdict, 'PASS');
+  assert.equal(
+    p3.observed,
+    'lock wait 1, max 8 ms, liên tiếp tối đa 1 tick, unattributed 0, không rõ thời lượng 0',
+  );
+});
+
+void test('P3 FAIL khi 1 bản ghi có queryAgeMs null (không rõ thời lượng)', () => {
+  const summary = lockTicks([[{ ...lockRecord(9, 5), queryAgeMs: null }]]);
+  assert.equal(summary.unknownAgeRecords, 1);
+  const p3 = p3For(summary);
+  assert.equal(p3.verdict, 'FAIL');
+  assert.match(p3.observed, /không rõ thời lượng 1/u);
+});
+
+void test('P3 25 bản ghi, bản thứ 25 null: unknownAgeRecords = 1 dù kept chỉ 20', () => {
+  const records = Array.from({ length: 25 }, (_value, index) =>
+    index === 24
+      ? { ...lockRecord(100 + index, 10), queryAgeMs: null }
+      : lockRecord(100 + index, 10),
+  );
+  const summary = lockTicks([records]);
+  assert.equal(summary.kept.length, LOCK_WAIT_DETAIL_LIMIT);
+  assert.equal(summary.unknownAgeRecords, 1);
+  assert.equal(p3For(summary).verdict, 'FAIL');
+});
+
+void test('P17 chỉ kiểm connection: lock wait 5 với conn 10 vẫn PASS', () => {
+  const evals = evaluateThresholds({
+    scenario: 'w1',
+    routeSummaries: completeRouteSummaries(),
+    database: { ...passingDatabase(), maxConnections: 10, maxLockWaits: 5 },
+    serverRssKb: { firstKb: 1, lastKb: 1, peakKb: 1, rssSeries: [] },
+    invariants: [
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+  });
+  const p17 = evals.find((item) => item.code === 'P17');
+  assert.equal(p17?.verdict, 'PASS');
+  assert.equal(p17?.threshold, 'conn ≤ 22');
+  assert.equal(p17?.observed, 'conn 10');
+});
+
+const MINUTE = 60_000;
+
+/** Series đều đặn từ 0 tới `endMs` theo bước `stepMs`. */
+function series<T>(
+  endMs: number,
+  stepMs: number,
+  value: (tMs: number) => T,
+): { tMs: number; value: T }[] {
+  const out: { tMs: number; value: T }[] = [];
+  for (let tMs = 0; tMs <= endMs; tMs += stepMs)
+    out.push({ tMs, value: value(tMs) });
+  return out;
+}
+
+/** RSS mỗi 5 s từ 0 tới `endMs`; mặc định ramp 5 phút, request cuối 65 phút. */
+function soakInput(input: {
+  rssKb: (tMs: number) => number;
+  endMs?: number;
+  rampEndMs?: number;
+  lastRequestMs?: number;
+}) {
+  const endMs = input.endMs ?? 70 * MINUTE;
+  return {
+    rssSeries: series(endMs, 5_000, input.rssKb).map((entry) => ({
+      tMs: entry.tMs,
+      kb: entry.value,
+    })),
+    rampEndMs: input.rampEndMs ?? 5 * MINUTE,
+    lastRequestMs: input.lastRequestMs ?? 65 * MINUTE,
+  };
+}
+
+/** RSS tăng tuyến tính đúng `ratio` trên pha 5–65 phút, bắt đầu 100 000 kB. */
+function linearRss(ratio: number) {
+  return (tMs: number) =>
+    100_000 * (1 + (ratio * (tMs - 5 * MINUTE)) / (60 * MINUTE));
+}
+
+void test('P18 series phẳng răng cưa ±25% PASS với |growth| < 2%', () => {
+  assert.equal(CAPACITY_THRESHOLDS.P18_RSS_GROWTH_MAX_RATIO, 0.1);
+  // Răng cưa chu kỳ 2 phút, biên độ ±25% quanh 200 000 kB.
+  const result = evaluateSoak(
+    soakInput({
+      rssKb: (tMs) =>
+        200_000 * (1 + 0.25 * ((tMs % (2 * MINUTE)) / MINUTE - 1)),
+    }),
+  );
+  assert.equal(result.verdict, 'PASS');
+  assert.ok(Math.abs(result.growth ?? Infinity) < 0.02, String(result.growth));
+});
+
+void test('P18 tăng tuyến tính 9.9% PASS', () => {
+  const pass = evaluateSoak(soakInput({ rssKb: linearRss(0.099) }));
+  assert.equal(pass.verdict, 'PASS');
+  assert.equal(
+    pass.observed,
+    '721 mẫu, pha 60.0 phút, RSS fit đầu 97.7 MiB, cuối 107.3 MiB, tăng +9.9%',
+  );
+});
+
+void test('P18 tăng tuyến tính 10.1% FAIL', () => {
+  assert.equal(
+    evaluateSoak(soakInput({ rssKb: linearRss(0.101) })).verdict,
+    'FAIL',
+  );
+});
+
+void test('P18 tăng tuyến tính 10.5% FAIL', () => {
+  assert.equal(
+    evaluateSoak(soakInput({ rssKb: linearRss(0.105) })).verdict,
+    'FAIL',
+  );
+});
+
+void test('P18 RSS fit đầu ≤ 0 thì FAIL với lý do fit không hợp lệ', () => {
+  // kb = (tMs − rampEndMs)/1000: fit tại rampEndMs đúng bằng 0; pha 31 phút.
+  const result = evaluateSoak(
+    soakInput({
+      rssKb: (tMs) => (tMs - 5 * MINUTE) / 1_000,
+      endMs: 36 * MINUTE,
+      lastRequestMs: 36 * MINUTE,
+    }),
+  );
+  assert.equal(result.verdict, 'FAIL');
+  assert.match(result.observed, /^n\/a \(RSS fit đầu không hợp lệ: /u);
+});
+
+void test('P18 pha ổn định 29 phút là n/a', () => {
+  const result = evaluateSoak(
+    soakInput({ rssKb: () => 100_000, lastRequestMs: 34 * MINUTE }),
+  );
+  assert.equal(result.verdict, 'n/a');
+});
+
+void test('P18 pha ổn định chỉ 59 mẫu RSS là n/a', () => {
+  // Mỗi 40 s một mẫu: [5, 44.33] phút có 60 mẫu, nên cắt pha ở 44 phút → 59 mẫu.
+  const rssSeries = series(70 * MINUTE, 40_000, () => 100_000).map((entry) => ({
+    tMs: entry.tMs,
+    kb: entry.value,
+  }));
+  const inPhase = rssSeries.filter(
+    (s) => s.tMs >= 5 * MINUTE && s.tMs <= 44 * MINUTE,
+  ).length;
+  assert.equal(inPhase, 59);
+  const result = evaluateSoak({
+    rssSeries,
+    rampEndMs: 5 * MINUTE,
+    lastRequestMs: 44 * MINUTE,
+  });
+  assert.equal(result.verdict, 'n/a');
+});
+
+void test('P18 bỏ qua mẫu trước rampEnd và sau lastRequest', () => {
+  const inside = evaluateSoak(soakInput({ rssKb: linearRss(0.05) }));
+  const withOutliers = evaluateSoak(
+    soakInput({
+      rssKb: (tMs) =>
+        tMs < 5 * MINUTE || tMs > 65 * MINUTE ? 900_000 : linearRss(0.05)(tMs),
+    }),
+  );
+  assert.deepEqual(withOutliers, inside);
+  assert.equal(inside.verdict, 'PASS');
+});
+
+function soakThresholdInput(input: {
+  rssSeries: { tMs: number; kb: number }[];
+  connectionSeries: { tMs: number; serverConnections: number }[];
+  rampEndMs: number;
+  lastRequestMs: number;
+}) {
+  return {
+    routeSummaries: completeRouteSummaries(),
+    database: {
+      ...passingDatabase(),
+      connectionSeries: input.connectionSeries,
+    },
+    serverRssKb: {
+      firstKb: 1,
+      lastKb: 1,
+      peakKb: 1,
+      rssSeries: input.rssSeries,
+    },
+    invariants: [
+      invariant(INVARIANT_NAMES.ANSWER_COUNT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_RESULT, true, 'ok'),
+      invariant(INVARIANT_NAMES.SINGLE_IN_PROGRESS, true, 'ok'),
+    ],
+    rampEndMs: input.rampEndMs,
+    lastRequestMs: input.lastRequestMs,
+  };
+}
+
+void test('P18 connection tăng 3 → 22 không làm P18 FAIL; max connection chỉ để tham khảo', () => {
+  const soak = soakInput({ rssKb: () => 100_000 });
+  const connectionSeries = series(70 * MINUTE, 1_000, (tMs) =>
+    Math.min(22, 3 + Math.floor(tMs / (3 * MINUTE))),
+  ).map((entry) => ({ tMs: entry.tMs, serverConnections: entry.value }));
+  const p18 = evaluateThresholds({
+    scenario: 'w8',
+    ...soakThresholdInput({ ...soak, connectionSeries }),
+  }).find((item) => item.code === 'P18');
+  assert.equal(p18?.verdict, 'PASS');
+  assert.equal(p18?.criterion, 'soak RSS (hồi quy pha ổn định)');
+  assert.equal(
+    p18?.observed,
+    '721 mẫu, pha 60.0 phút, RSS fit đầu 97.7 MiB, cuối 97.7 MiB, tăng +0.0%, conn max pha 22 (tham khảo)',
+  );
+});
+
+void test('P18 w8 chạy ngắn thành FAIL "bắt buộc nhưng 0 mẫu"; scenario khác không có hàng P18', () => {
+  const shortRun = soakInput({
+    rssKb: () => 100_000,
+    endMs: 3 * MINUTE,
+    rampEndMs: 30_000,
+    lastRequestMs: 3 * MINUTE,
+  });
+  const base = soakThresholdInput({
+    ...shortRun,
+    connectionSeries: series(3 * MINUTE, 1_000, () => 10).map((entry) => ({
+      tMs: entry.tMs,
+      serverConnections: entry.value,
+    })),
+  });
+  const w8 = evaluateThresholds({ scenario: 'w8', ...base });
+  const p18 = w8.find((item) => item.code === 'P18');
+  assert.equal(p18?.verdict, 'FAIL');
+  assert.equal(p18?.observed, 'bắt buộc nhưng 0 mẫu');
+  const w1 = evaluateThresholds({ scenario: 'w1', ...base });
+  assert.equal(
+    w1.find((item) => item.code === 'P18'),
+    undefined,
+  );
+});
+
+void test('renderSummaryMarkdown gộp query nhiều dòng thành 1 dòng và escape |', () => {
+  const summary: LockWaitDetailSummary = {
+    ...noLockWaits(),
+    kept: [{ ...lockRecord(42, 8), query: 'SELECT a |\n   b\tFROM t' }],
+    total: 1,
+  };
+  const markdown = renderSummaryMarkdown({
+    label: 'render',
+    startedAt: '2026-11-04T00:00:00.000Z',
+    finishedAt: '2026-11-04T00:10:00.000Z',
+    nodeVersion: 'v24.21.0',
+    serverPid: 1,
+    serverEnvironment: 'production',
+    baseUrl: 'http://127.0.0.1:4310',
+    config: {
+      users: 1,
+      rampSeconds: 0,
+      questions: 1,
+      minutes: 1,
+      answerIntervalMs: 1,
+      scenario: 'w1',
+      reconnectRatio: 0,
+      timeoutRatio: 0,
+      submitWindowSeconds: 0,
+      connectionLimit: 'default',
+      audioPerTest: 0,
+      imagesPerTest: 0,
+    },
+    effectiveLimits: [],
+    loadAverageStart: '1.00 1.00 1.00',
+    loadAverageEnd: '1.00 1.00 1.00',
+    routeSummaries: [],
+    serverRssKb: { firstKb: 1, lastKb: 1, peakKb: 1, rssSeries: [] },
+    database: {
+      ...passingDatabase(),
+      maxLockWaits: 1,
+      lockWaitDetails: summary,
+    },
+    invariants: [],
+    totalRequests: 1,
+  });
+  const row = markdown.split('\n').find((line) => line.includes('| 42 |'));
+  assert.ok(row, 'thiếu hàng lock wait');
+  assert.ok(row.includes('| SELECT a \\| b FROM t |'), row);
+  assert.equal(summary.kept[0]?.query, 'SELECT a |\n   b\tFROM t');
 });

@@ -59,6 +59,7 @@ import {
 import {
   evaluateThresholds,
   isThresholdsPassing,
+  lastRequestStartedAtMs,
 } from './exam-capacity/thresholds';
 
 /**
@@ -732,6 +733,7 @@ async function main(): Promise<void> {
       maxTotalConnections: activityMetrics.maxTotalConnections,
       maxLockWaits: activityMetrics.maxLockWaits,
       lockWaitDetails: activityMetrics.lockWaitDetails,
+      connectionSeries: activityMetrics.connectionSeries,
       samples: activityMetrics.samples,
       samplerErrors: activityMetrics.samplerErrors,
     };
@@ -760,9 +762,14 @@ async function main(): Promise<void> {
         firstKb: rssSummary.firstKb,
         lastKb: rssSummary.lastKb ?? readServerRssKb(serverPid),
         peakKb: rssSummary.peakKb,
+        rssSeries: rssSummary.rssSeries,
       },
       invariants: thresholdInvariants,
       probe429: scenario.probe429,
+      // Mốc bắt đầu tải là `runStartedAt` (ngay trước runLearnerScenario, nơi
+      // offset ramp tính từ 0), nên ramp kết thúc sau rampSeconds.
+      rampEndMs: runStartedAt + args.rampSeconds * 1_000,
+      lastRequestMs: lastRequestStartedAtMs(scenario.samples),
     });
     const summaryInput: CapacitySummaryInput = {
       label: args.label,
@@ -797,6 +804,7 @@ async function main(): Promise<void> {
         firstKb: rssSummary.firstKb,
         lastKb: rssSummary.lastKb ?? readServerRssKb(serverPid),
         peakKb: rssSummary.peakKb,
+        rssSeries: rssSummary.rssSeries,
       },
       database,
       invariants,

@@ -29,6 +29,7 @@ export type CapacityScenario =
   | 'w7'
   | 'w6'
   | 'w45'
+  | 'w8'
   | 'probe429';
 
 export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
@@ -39,6 +40,7 @@ export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
   'w7',
   'w6',
   'w45',
+  'w8',
   'probe429',
 ];
 
@@ -59,19 +61,38 @@ export const CAPACITY_SCENARIOS: readonly CapacityScenario[] = [
  *   429, nên không có kỳ vọng "số ExamAnswer = số PUT 200"; việc kiểm mất
  *   autosave nằm ở các scenario có vòng đời đầy đủ. Vì vậy P13 không nằm trong
  *   danh sách bắt buộc của probe429.
+ * - `w8` (soak): hành xử y hệt w1 (không nhánh riêng), thêm P18 so cửa sổ
+ *   10 phút sau ramp với 10 phút cuối.
+ * - P3 (lock wait dài) bắt buộc ở mọi scenario vì sampler chạy ở mọi run.
  */
+const FULL_LIFECYCLE_CODES: readonly string[] = [
+  'P3',
+  'P5',
+  'P6',
+  'P7',
+  'P8',
+  'P9',
+  'P10',
+  'P11',
+  'P13',
+  'P14',
+  'P17',
+  'RSS',
+];
+
 export const REQUIRED_THRESHOLD_CODES: Record<
   CapacityScenario,
   readonly string[]
 > = {
-  w1: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  w3: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  w4: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  w5: ['P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  w7: ['P5', 'P6', 'P17', 'RSS'],
-  w6: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  w45: ['P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P13', 'P14', 'P17', 'RSS'],
-  probe429: ['P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+  w1: FULL_LIFECYCLE_CODES,
+  w3: FULL_LIFECYCLE_CODES,
+  w4: FULL_LIFECYCLE_CODES,
+  w5: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P11', 'P13', 'P14', 'P17', 'RSS'],
+  w7: ['P3', 'P5', 'P6', 'P17', 'RSS'],
+  w6: FULL_LIFECYCLE_CODES,
+  w45: FULL_LIFECYCLE_CODES,
+  w8: [...FULL_LIFECYCLE_CODES, 'P18'],
+  probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
 };
 
 export type CapacityArgs = {
@@ -528,6 +549,71 @@ async function runProbe429(
   return { samples, learners, probe429 };
 }
 
+export type LearnerPlan = {
+  offsetMs: number;
+  mode: 'browse' | 'timeout' | 'full';
+  isTimeout: boolean;
+  preloadAudio: boolean;
+  reconnect: { afterAnswers: number; batchSize: number } | undefined;
+  submitOffsetMs: number;
+};
+
+/**
+ * Kế hoạch thuần cho từng học viên (offset, mode, reconnect, timeout, submit
+ * wave). w8 không có nhánh riêng nên kế hoạch trùng w1 khi cùng cấu hình.
+ */
+export function planLearnerScenario(input: {
+  scenario: CapacityScenario;
+  learnerCount: number;
+  rampSeconds: number;
+  answerCount: number;
+  reconnectRatio: number;
+  timeoutRatio: number;
+  submitWindowSeconds: number;
+}): { isSubmitWave: boolean; learners: LearnerPlan[] } {
+  const offsets = planStartOffsets(
+    input.learnerCount,
+    input.rampSeconds * 1_000,
+  );
+  const reconnectIndices = new Set(
+    input.scenario === 'w3'
+      ? pickRatioIndices(input.learnerCount, input.reconnectRatio)
+      : [],
+  );
+  const timeoutIndices = new Set(
+    input.scenario === 'w5' || input.scenario === 'w45'
+      ? pickRatioIndices(input.learnerCount, input.timeoutRatio)
+      : [],
+  );
+  const isSubmitWave = input.scenario === 'w4' || input.scenario === 'w45';
+  const submitOffsets = isSubmitWave
+    ? planSubmitWaveOffsets(
+        input.learnerCount - timeoutIndices.size,
+        input.submitWindowSeconds * 1_000,
+      )
+    : [];
+  let submitOffsetIndex = 0;
+  const learners: LearnerPlan[] = [];
+  for (let index = 0; index < input.learnerCount; index += 1) {
+    const isTimeout = timeoutIndices.has(index);
+    learners.push({
+      offsetMs: offsets[index] ?? 0,
+      mode: input.scenario === 'w7' ? 'browse' : isTimeout ? 'timeout' : 'full',
+      isTimeout,
+      preloadAudio: input.scenario === 'w6',
+      reconnect:
+        reconnectIndices.has(index) && input.answerCount > 1
+          ? { afterAnswers: Math.floor(input.answerCount / 2), batchSize: 20 }
+          : undefined,
+      submitOffsetMs:
+        !isTimeout && isSubmitWave
+          ? (submitOffsets[submitOffsetIndex++] ?? 0)
+          : 0,
+    });
+  }
+  return { isSubmitWave, learners };
+}
+
 /** Chạy toàn bộ học viên ảo song song theo offset ramp; trả mẫu + kết quả. */
 export async function runLearnerScenario(
   input: LearnerScenarioInput,
@@ -544,26 +630,16 @@ export async function runLearnerScenario(
   }
 
   const rampMs = input.rampSeconds * 1_000;
-  const offsets = planStartOffsets(input.learners.length, rampMs);
-  const reconnectIndices = new Set(
-    input.scenario === 'w3'
-      ? pickRatioIndices(input.learners.length, input.reconnectRatio)
-      : [],
-  );
-  const timeoutIndices = new Set(
-    input.scenario === 'w5' || input.scenario === 'w45'
-      ? pickRatioIndices(input.learners.length, input.timeoutRatio)
-      : [],
-  );
-
-  const isSubmitWave = input.scenario === 'w4' || input.scenario === 'w45';
-  const submitLearnerCount = input.learners.length - timeoutIndices.size;
-  const submitOffsets = isSubmitWave
-    ? planSubmitWaveOffsets(
-        submitLearnerCount,
-        input.submitWindowSeconds * 1_000,
-      )
-    : [];
+  const plan = planLearnerScenario({
+    scenario: input.scenario,
+    learnerCount: input.learners.length,
+    rampSeconds: input.rampSeconds,
+    answerCount: input.answerCount,
+    reconnectRatio: input.reconnectRatio,
+    timeoutRatio: input.timeoutRatio,
+    submitWindowSeconds: input.submitWindowSeconds,
+  });
+  const isSubmitWave = plan.isSubmitWave;
 
   // Cửa sổ submit bắt đầu sau khi học viên chậm nhất trả lời xong.
   let submitAtEpochMs = isSubmitWave
@@ -592,16 +668,10 @@ export async function runLearnerScenario(
     }
   }
 
-  let submitOffsetIndex = 0;
   const learners = await Promise.all(
     input.learners.map(async (learner, index) => {
-      const offset = offsets[index] ?? 0;
-      if (offset > 0) await sleep(offset);
-      const isTimeout = timeoutIndices.has(index);
-      const submitOffsetMs =
-        !isTimeout && isSubmitWave
-          ? (submitOffsets[submitOffsetIndex++] ?? 0)
-          : 0;
+      const learnerPlan = plan.learners[index];
+      if (learnerPlan.offsetMs > 0) await sleep(learnerPlan.offsetMs);
 
       const run = await runLearnerLifecycle({
         client,
@@ -609,21 +679,16 @@ export async function runLearnerScenario(
         testId: input.testId,
         answerCount: input.answerCount,
         answerIntervalMs: input.answerIntervalMs,
-        mode:
-          input.scenario === 'w7' ? 'browse' : isTimeout ? 'timeout' : 'full',
-        preloadAudio:
-          input.scenario === 'w6'
-            ? {
-                gapMs: DEFAULT_PRELOAD_GAP_MS,
-                expectedSha256: input.mediaSha256,
-              }
-            : undefined,
-        reconnect:
-          reconnectIndices.has(index) && input.answerCount > 1
-            ? { afterAnswers: Math.floor(input.answerCount / 2), batchSize: 20 }
-            : undefined,
-        submitAtEpochMs: isTimeout ? undefined : submitAtEpochMs,
-        submitOffsetMs,
+        mode: learnerPlan.mode,
+        preloadAudio: learnerPlan.preloadAudio
+          ? {
+              gapMs: DEFAULT_PRELOAD_GAP_MS,
+              expectedSha256: input.mediaSha256,
+            }
+          : undefined,
+        reconnect: learnerPlan.reconnect,
+        submitAtEpochMs: learnerPlan.isTimeout ? undefined : submitAtEpochMs,
+        submitOffsetMs: learnerPlan.submitOffsetMs,
       });
       input.onLearnerDone?.(run);
       return run;

@@ -1,13 +1,14 @@
 import { INVARIANT_NAMES, type CapacityInvariant } from './fixtures';
 import type {
   DatabaseMetrics,
+  LatencySample,
   RouteSummary,
   ServerRssSummary,
 } from './metrics';
 import { requiredThresholdCodes } from './scenarios';
 
 /**
- * M4.4 B3a — Ngưỡng dung năng và invariant (P5–P17, RSS, probe429).
+ * M4.4 B3a — Ngưỡng dung năng và invariant (P3, P5–P18, RSS, probe429).
  *
  * Module thuần: không I/O, không đụng mạng hay filesystem. Đánh giá trả về
  * mảng kết quả từng mã (PASS, FAIL, hoặc n/a khi không có mẫu quan sát).
@@ -24,9 +25,89 @@ export const CAPACITY_THRESHOLDS = {
   P13_LOST_AUTOSAVE: 0,
   P14_DOUBLE_TERMINAL: 0,
   P17_MAX_SERVER_CONNECTIONS: 22,
-  P17_MAX_LOCK_WAITS: 0,
   RSS_PEAK_MIB: 512,
+  P3_MAX_LOCK_WAIT_MS: 1_000,
+  P3_MAX_CONSECUTIVE_LOCK_WAIT_SAMPLES: 2,
+  P18_RSS_GROWTH_MAX_RATIO: 0.1,
 } as const;
+
+export type SoakInput = {
+  rssSeries: ServerRssSummary['rssSeries'];
+  rampEndMs: number;
+  /** `startedAtMs` lớn nhất trong samples: hết tải. */
+  lastRequestMs: number;
+};
+
+/** Mốc request cuối của P18: `startedAtMs` lớn nhất trong samples. */
+export function lastRequestStartedAtMs(
+  samples: readonly LatencySample[],
+): number | undefined {
+  let last: number | undefined;
+  for (const sample of samples) {
+    if (
+      sample.startedAtMs !== undefined &&
+      (last === undefined || sample.startedAtMs > last)
+    ) {
+      last = sample.startedAtMs;
+    }
+  }
+  return last;
+}
+
+const P18_MIN_PHASE_MS = 30 * 60_000;
+const P18_MIN_RSS_SAMPLES = 60;
+
+/**
+ * P18 soak: hồi quy tuyến tính bình phương tối thiểu RSS theo thời gian trên
+ * pha ổn định `[rampEndMs, lastRequestMs]`. Tăng trưởng = slope × độ dài pha /
+ * giá trị fit tại rampEndMs. Pha < 30 phút hoặc < 60 mẫu RSS → n/a. Một median
+ * cửa sổ không đo được rò rỉ vì RSS Node dao động răng cưa GC ±25%.
+ */
+export function evaluateSoak(input: SoakInput): {
+  observed: string;
+  verdict: 'PASS' | 'FAIL' | 'n/a';
+  growth?: number;
+} {
+  const phaseMs = input.lastRequestMs - input.rampEndMs;
+  const points = input.rssSeries.filter(
+    (s) => s.tMs >= input.rampEndMs && s.tMs <= input.lastRequestMs,
+  );
+  if (phaseMs < P18_MIN_PHASE_MS || points.length < P18_MIN_RSS_SAMPLES) {
+    return {
+      observed: `n/a (pha ổn định ${(phaseMs / 60_000).toFixed(1)} phút, ${String(points.length)} mẫu RSS)`,
+      verdict: 'n/a',
+    };
+  }
+  // Lấy gốc thời gian tại rampEndMs để tránh mất chính xác với epoch ms.
+  const n = points.length;
+  const meanX =
+    points.reduce((sum, s) => sum + (s.tMs - input.rampEndMs), 0) / n;
+  const meanY = points.reduce((sum, s) => sum + s.kb, 0) / n;
+  let sxy = 0;
+  let sxx = 0;
+  for (const s of points) {
+    const dx = s.tMs - input.rampEndMs - meanX;
+    sxy += dx * (s.kb - meanY);
+    sxx += dx * dx;
+  }
+  const slope = sxx === 0 ? 0 : sxy / sxx;
+  const startKb = meanY - slope * meanX;
+  const endKb = startKb + slope * phaseMs;
+  if (!(startKb > 0)) {
+    return {
+      observed: `n/a (RSS fit đầu không hợp lệ: ${(startKb / 1024).toFixed(1)} MiB)`,
+      verdict: 'FAIL',
+    };
+  }
+  const growth = (slope * phaseMs) / startKb;
+  const growthPct = growth * 100;
+  return {
+    observed: `${String(n)} mẫu, pha ${(phaseMs / 60_000).toFixed(1)} phút, RSS fit đầu ${(startKb / 1024).toFixed(1)} MiB, cuối ${(endKb / 1024).toFixed(1)} MiB, tăng ${growthPct >= 0 ? '+' : ''}${growthPct.toFixed(1)}%`,
+    verdict:
+      growth <= CAPACITY_THRESHOLDS.P18_RSS_GROWTH_MAX_RATIO ? 'PASS' : 'FAIL',
+    growth,
+  };
+}
 
 export type ThresholdEvaluation = {
   code: string;
@@ -58,6 +139,10 @@ export type EvaluateThresholdsInput = {
    */
   invariants: readonly CapacityInvariant[];
   probe429?: Probe429Result | null;
+  /** Mốc kết thúc ramp (epoch ms), dùng cho P18 của w8. */
+  rampEndMs?: number;
+  /** `startedAtMs` lớn nhất trong samples (epoch ms), dùng cho P18 của w8. */
+  lastRequestMs?: number;
 };
 
 const READ_ROUTES = new Set([
@@ -182,6 +267,26 @@ export function evaluateThresholds(
   input: EvaluateThresholdsInput,
 ): ThresholdEvaluation[] {
   const evaluations: ThresholdEvaluation[] = [];
+
+  // P3: lock wait dài (M44-DECISIONS mục 1). Lock wait ngắn vẫn PASS.
+  const lockWaits = input.database.lockWaitDetails;
+  const p3Ok =
+    lockWaits.maxQueryAgeMs < CAPACITY_THRESHOLDS.P3_MAX_LOCK_WAIT_MS &&
+    lockWaits.maxConsecutiveSamples <=
+      CAPACITY_THRESHOLDS.P3_MAX_CONSECUTIVE_LOCK_WAIT_SAMPLES &&
+    lockWaits.unattributedSamples === 0 &&
+    // Fail closed: lock wait không rõ thời lượng thì không chứng minh được < 1 s.
+    lockWaits.unknownAgeRecords === 0;
+  evaluations.push({
+    code: 'P3',
+    criterion: 'lock wait dài',
+    threshold: `< ${String(CAPACITY_THRESHOLDS.P3_MAX_LOCK_WAIT_MS)} ms, ≤ ${String(CAPACITY_THRESHOLDS.P3_MAX_CONSECUTIVE_LOCK_WAIT_SAMPLES)} tick liên tiếp/pid, 0 unattributed, 0 không rõ thời lượng`,
+    observed:
+      input.database.samples === 0
+        ? 'n/a (0 mẫu sampler)'
+        : `lock wait ${String(lockWaits.total)}, max ${String(lockWaits.maxQueryAgeMs)} ms, liên tiếp tối đa ${String(lockWaits.maxConsecutiveSamples)} tick, unattributed ${String(lockWaits.unattributedSamples)}, không rõ thời lượng ${String(lockWaits.unknownAgeRecords)}`,
+    verdict: input.database.samples === 0 ? 'n/a' : p3Ok ? 'PASS' : 'FAIL',
+  });
 
   // P5: p95 đọc ≤ 300 ms
   const p5 = evaluateMaxPercentile(
@@ -320,20 +425,55 @@ export function evaluateThresholds(
     verdict: p14.verdict,
   });
 
-  // P17: connection server ≤ 22 và lock wait = 0
-  const connOk =
-    input.database.maxConnections <=
-    CAPACITY_THRESHOLDS.P17_MAX_SERVER_CONNECTIONS;
-  const lockWaitOk =
-    input.database.maxLockWaits <= CAPACITY_THRESHOLDS.P17_MAX_LOCK_WAITS;
-  const p17Verdict = connOk && lockWaitOk ? 'PASS' : 'FAIL';
+  // P17: pool — chỉ còn connection server ≤ 22 (lock wait chuyển sang P3).
   evaluations.push({
     code: 'P17',
-    criterion: 'connection server & lock wait',
-    threshold: `conn ≤ ${String(CAPACITY_THRESHOLDS.P17_MAX_SERVER_CONNECTIONS)}, lock wait = ${String(CAPACITY_THRESHOLDS.P17_MAX_LOCK_WAITS)}`,
-    observed: `conn ${String(input.database.maxConnections)}, lock wait ${String(input.database.maxLockWaits)}`,
-    verdict: p17Verdict,
+    criterion: 'connection server (pool)',
+    threshold: `conn ≤ ${String(CAPACITY_THRESHOLDS.P17_MAX_SERVER_CONNECTIONS)}`,
+    observed: `conn ${String(input.database.maxConnections)}`,
+    verdict:
+      input.database.maxConnections <=
+      CAPACITY_THRESHOLDS.P17_MAX_SERVER_CONNECTIONS
+        ? 'PASS'
+        : 'FAIL',
   });
+
+  // P18: soak, chỉ có hàng ở w8 (scenario khác không hiện P18).
+  if (input.scenario === 'w8') {
+    const { rampEndMs, lastRequestMs } = input;
+    let p18: { observed: string; verdict: 'PASS' | 'FAIL' | 'n/a' };
+    if (rampEndMs === undefined || lastRequestMs === undefined) {
+      p18 = {
+        observed: 'n/a (thiếu mốc ramp hoặc request cuối)',
+        verdict: 'n/a',
+      };
+    } else {
+      p18 = evaluateSoak({
+        rssSeries: input.serverRssKb.rssSeries,
+        rampEndMs,
+        lastRequestMs,
+      });
+      if (p18.verdict !== 'n/a') {
+        // Connection không vào verdict (trần do P17 kiểm), chỉ để tham khảo.
+        const phaseConn = input.database.connectionSeries
+          .filter((s) => s.tMs >= rampEndMs && s.tMs <= lastRequestMs)
+          .map((s) => s.serverConnections);
+        const maxConn =
+          phaseConn.length === 0 ? 'n/a' : String(Math.max(...phaseConn));
+        p18 = {
+          ...p18,
+          observed: `${p18.observed}, conn max pha ${maxConn} (tham khảo)`,
+        };
+      }
+    }
+    evaluations.push({
+      code: 'P18',
+      criterion: 'soak RSS (hồi quy pha ổn định)',
+      threshold: `RSS tăng ≤ ${String(CAPACITY_THRESHOLDS.P18_RSS_GROWTH_MAX_RATIO * 100)}% trên pha [hết ramp, request cuối], ≥ 30 phút và ≥ 60 mẫu`,
+      observed: p18.observed,
+      verdict: p18.verdict,
+    });
+  }
 
   // RSS: RSS server đỉnh ≤ 512 MiB
   const peakKb = input.serverRssKb.peakKb;
@@ -412,7 +552,7 @@ export function renderThresholdsMarkdownTable(
   evaluations: readonly ThresholdEvaluation[],
 ): string {
   const lines: string[] = [
-    '## Ngưỡng dung năng (P5–P17, RSS)',
+    '## Ngưỡng dung năng (P3, P5–P18, RSS)',
     '',
     '| Mã | Tiêu chí | Ngưỡng | Giá trị quan sát | Kết quả |',
     '| --- | --- | --- | --- | --- |',

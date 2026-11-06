@@ -43,6 +43,8 @@ export type ServerRssSummary = {
   firstKb: number | null;
   lastKb: number | null;
   peakKb: number | null;
+  /** Mẫu RSS theo thời gian (epoch ms), chu kỳ sampler RSS. */
+  rssSeries: { tMs: number; kb: number }[];
 };
 
 export type DatabaseMetrics = {
@@ -58,6 +60,8 @@ export type DatabaseMetrics = {
   samples: number;
   /** Số lần sampler pg_stat_activity lỗi — phải là 0 để số đo đáng tin. */
   samplerErrors: number;
+  /** Connection server theo thời gian (epoch ms), chu kỳ sampler activity. */
+  connectionSeries: { tMs: number; serverConnections: number }[];
 };
 
 export type InvariantResult = {
@@ -184,6 +188,11 @@ function formatKb(value: number | null): string {
   return value === null ? '—' : `${(value / 1024).toFixed(1)} MiB`;
 }
 
+/** Ô bảng markdown một dòng: gộp mọi khoảng trắng, escape `|`. */
+function markdownCell(text: string): string {
+  return text.replace(/\s+/gu, ' ').trim().replace(/\|/gu, '\\|');
+}
+
 /**
  * Render `summary.md`. Chỉ in số đã đo; không tự kết luận PASS/FAIL theo ngưỡng
  * P1–P19 (B1 không áp ngưỡng — chờ PO). Kết luận duy nhất là invariant đúng/sai.
@@ -211,11 +220,11 @@ function renderLockWaitDiagnostics(summary: LockWaitDetailSummary): string[] {
       record.blockers
         .map(
           (blocker) =>
-            `pid ${String(blocker.pid)} ${blocker.waitEvent ?? '—'} (${blocker.state ?? '—'}): ${blocker.query}`,
+            `pid ${String(blocker.pid)} ${blocker.waitEvent ?? '—'} (${blocker.state ?? '—'}): ${markdownCell(blocker.query)}`,
         )
         .join(' <br> ') || '—';
     lines.push(
-      `| ${record.sampledAt} | ${String(record.pid)} | ${record.waitEvent ?? '—'} | ${record.state ?? '—'} | ${record.queryAgeMs === null ? '—' : String(record.queryAgeMs)} | ${record.xactAgeMs === null ? '—' : String(record.xactAgeMs)} | ${record.query} | ${blockers} |`,
+      `| ${record.sampledAt} | ${String(record.pid)} | ${record.waitEvent ?? '—'} | ${record.state ?? '—'} | ${record.queryAgeMs === null ? '—' : String(record.queryAgeMs)} | ${record.xactAgeMs === null ? '—' : String(record.xactAgeMs)} | ${markdownCell(record.query)} | ${blockers} |`,
     );
   }
   lines.push('');
@@ -350,7 +359,7 @@ export function renderSummaryMarkdown(input: CapacitySummaryInput): string {
     `## Kết luận tổng thể: ${overallVerdict}`,
     '',
     `- Invariant: ${invariantVerdict}`,
-    `- Ngưỡng dung năng (P5–P17, RSS): ${thresholdsPassing ? 'PASS' : 'FAIL'}`,
+    `- Ngưỡng dung năng (P3, P5–P18, RSS): ${thresholdsPassing ? 'PASS' : 'FAIL'}`,
     '',
   );
 

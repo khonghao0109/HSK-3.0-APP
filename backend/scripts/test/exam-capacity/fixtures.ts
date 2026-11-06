@@ -22,6 +22,7 @@ import { PrismaService } from '../../../src/prisma/prisma.service';
 import type { LearnerFixture } from './driver';
 import { seedMediaAssets, type StoredMediaObject } from './media-fixtures';
 import type {
+  DatabaseMetrics,
   InvariantResult,
   LatencySample,
   ServerRssSummary,
@@ -565,7 +566,76 @@ export type LockWaitDetailSummary = {
   kept: LockWaitDetail[];
   /** Tổng số lần sampler thấy lock wait, kể cả phần không giữ chi tiết. */
   total: number;
+  /** `queryAgeMs` lớn nhất trên mọi tick, không chỉ phần `kept`. */
+  maxQueryAgeMs: number;
+  /** Số tick liên tiếp tối đa mà cùng một pid nằm trong lock wait. */
+  maxConsecutiveSamples: number;
+  /** Số tick có `serverLockWaits > 0` nhưng không có bản ghi chi tiết. */
+  unattributedSamples: number;
+  /** Số bản ghi lock wait có `queryAgeMs` null, đếm trên mọi tick. */
+  unknownAgeRecords: number;
 };
+
+/** Trạng thái sampler: summary cộng chuỗi tick liên tiếp hiện tại theo pid. */
+export type LockWaitTracker = {
+  summary: LockWaitDetailSummary;
+  streaks: ReadonlyMap<number, number>;
+};
+
+export function emptyLockWaitTracker(): LockWaitTracker {
+  return {
+    summary: {
+      kept: [],
+      total: 0,
+      maxQueryAgeMs: 0,
+      maxConsecutiveSamples: 0,
+      unattributedSamples: 0,
+      unknownAgeRecords: 0,
+    },
+    streaks: new Map(),
+  };
+}
+
+/**
+ * Cập nhật P3 với một tick của sampler. `maxQueryAgeMs` và chuỗi liên tiếp tính
+ * trên mọi bản ghi của tick, không chỉ phần được giữ trong `kept`. Pid vắng mặt
+ * ở tick này (kể cả tick không có lock wait) thì chuỗi của nó về 0.
+ */
+export function recordLockWaitTick(
+  tracker: LockWaitTracker,
+  tick: { serverLockWaits: number; records: readonly LockWaitDetail[] },
+): LockWaitTracker {
+  const streaks = new Map<number, number>();
+  let { maxQueryAgeMs, maxConsecutiveSamples, unknownAgeRecords } =
+    tracker.summary;
+  for (const record of tick.records) {
+    const streak = (tracker.streaks.get(record.pid) ?? 0) + 1;
+    streaks.set(record.pid, streak);
+    maxConsecutiveSamples = Math.max(maxConsecutiveSamples, streak);
+    if (record.queryAgeMs === null) {
+      unknownAgeRecords += 1;
+    } else {
+      maxQueryAgeMs = Math.max(maxQueryAgeMs, record.queryAgeMs);
+    }
+  }
+  let summary = {
+    ...tracker.summary,
+    maxQueryAgeMs,
+    maxConsecutiveSamples,
+    unknownAgeRecords,
+  };
+  if (tick.records.length > 0) {
+    summary = appendLockWaitDetails(summary, tick.records);
+  } else if (tick.serverLockWaits > 0) {
+    // Fail closed: thấy lock wait mà không có chi tiết thì P3 không được PASS.
+    summary = {
+      ...summary,
+      total: summary.total + tick.serverLockWaits,
+      unattributedSamples: summary.unattributedSamples + 1,
+    };
+  }
+  return { summary, streaks };
+}
 
 /** Trần số bản ghi chi tiết giữ lại trong artifact. */
 export const LOCK_WAIT_DETAIL_LIMIT = 20;
@@ -574,17 +644,19 @@ export const LOCK_WAIT_DETAIL_LIMIT = 20;
  * Giữ tối đa `limit` bản ghi chi tiết nhưng vẫn đếm toàn bộ số lần quan sát.
  * Hàm thuần để unit test điều khiển được phần cắt/đếm.
  */
-export function appendLockWaitDetails(
-  state: LockWaitDetailSummary,
+export function appendLockWaitDetails<
+  T extends { kept: LockWaitDetail[]; total: number },
+>(
+  state: T,
   records: readonly LockWaitDetail[],
   limit: number = LOCK_WAIT_DETAIL_LIMIT,
-): LockWaitDetailSummary {
+): T {
   const total = state.total + records.length;
   const kept =
     state.kept.length >= limit
       ? state.kept
       : [...state.kept, ...records].slice(0, limit);
-  return { kept, total };
+  return { ...state, kept, total };
 }
 
 function asNullableString(value: unknown): string | null {
@@ -732,6 +804,7 @@ export function startActivitySampler(input: {
     maxTotalConnections: number;
     maxLockWaits: number;
     lockWaitDetails: LockWaitDetailSummary;
+    connectionSeries: DatabaseMetrics['connectionSeries'];
     samples: number;
     samplerErrors: number;
   }>;
@@ -741,7 +814,8 @@ export function startActivitySampler(input: {
   let maxLockWaits = 0;
   let samples = 0;
   let samplerErrors = 0;
-  let lockWaitDetails: LockWaitDetailSummary = { kept: [], total: 0 };
+  let lockWaits = emptyLockWaitTracker();
+  const connectionSeries: DatabaseMetrics['connectionSeries'] = [];
   let inFlight: Promise<void> | null = null;
   const takeSample = (): void => {
     if (inFlight !== null) return;
@@ -754,19 +828,14 @@ export function startActivitySampler(input: {
           snapshot.totalConnections,
         );
         maxLockWaits = Math.max(maxLockWaits, snapshot.serverLockWaits);
-        if (snapshot.serverLockWaits > 0) {
-          if (snapshot.lockWaitRecords.length > 0) {
-            lockWaitDetails = appendLockWaitDetails(
-              lockWaitDetails,
-              snapshot.lockWaitRecords,
-            );
-          } else {
-            lockWaitDetails = {
-              kept: lockWaitDetails.kept,
-              total: lockWaitDetails.total + snapshot.serverLockWaits,
-            };
-          }
-        }
+        connectionSeries.push({
+          tMs: Date.now(),
+          serverConnections: snapshot.serverConnections,
+        });
+        lockWaits = recordLockWaitTick(lockWaits, {
+          serverLockWaits: snapshot.serverLockWaits,
+          records: snapshot.lockWaitRecords,
+        });
       })
       .catch(() => {
         samplerErrors += 1;
@@ -787,7 +856,8 @@ export function startActivitySampler(input: {
         maxConnections,
         maxTotalConnections,
         maxLockWaits,
-        lockWaitDetails,
+        lockWaitDetails: lockWaits.summary,
+        connectionSeries,
         samples,
         samplerErrors,
       };
@@ -816,9 +886,11 @@ export function startRssSampler(input: {
   let firstKb: number | null = null;
   let lastKb: number | null = null;
   let peakKb: number | null = null;
+  const rssSeries: ServerRssSummary['rssSeries'] = [];
   const sample = (): void => {
     const value = readServerRssKb(input.pid);
     if (value === null) return;
+    rssSeries.push({ tMs: Date.now(), kb: value });
     if (firstKb === null) firstKb = value;
     lastKb = value;
     peakKb = Math.max(peakKb ?? 0, value);
@@ -830,7 +902,7 @@ export function startRssSampler(input: {
     stop: () => {
       clearInterval(timer);
       sample();
-      return { firstKb, lastKb, peakKb };
+      return { firstKb, lastKb, peakKb, rssSeries };
     },
   };
 }

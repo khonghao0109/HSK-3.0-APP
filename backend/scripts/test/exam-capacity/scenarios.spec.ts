@@ -6,6 +6,7 @@ import {
   defaultAnswerIntervalMs,
   parseCapacityArgs,
   pickRatioIndices,
+  planLearnerScenario,
   planStartOffsets,
   planSubmitWaveOffsets,
 } from './scenarios';
@@ -204,4 +205,35 @@ void test('extractAudioPreloadList lọc đúng audio và loại trừ trùng l�
     { mediaId: 10, url: '/api/v1/media/10/content?expires=1' },
     { mediaId: 30, url: '/api/v1/media/30/content?expires=1' },
   ]);
+});
+
+void test('parseCapacityArgs nhận --scenario w8', () => {
+  const args = parseCapacityArgs(['--scenario', 'w8', '--users', '5']);
+  assert.equal(args.scenario, 'w8');
+  assert.equal(args.users, 5);
+});
+
+void test('planLearnerScenario: w8 có kế hoạch học viên giống hệt w1 khi cùng cấu hình', () => {
+  const config = {
+    learnerCount: 12,
+    rampSeconds: 30,
+    answerCount: 40,
+    reconnectRatio: 0.25,
+    timeoutRatio: 0.3,
+    submitWindowSeconds: 60,
+  };
+  const w1 = planLearnerScenario({ scenario: 'w1', ...config });
+  const w8 = planLearnerScenario({ scenario: 'w8', ...config });
+  assert.deepStrictEqual(w8, w1);
+  assert.equal(w8.learners.length, 12);
+  assert.ok(w8.learners.every((learner) => learner.mode === 'full'));
+  // Kế hoạch phải nhạy với scenario: w3 (reconnect) và w45 (timeout + submit wave) khác w1.
+  assert.notDeepStrictEqual(
+    planLearnerScenario({ scenario: 'w3', ...config }),
+    w1,
+  );
+  assert.notDeepStrictEqual(
+    planLearnerScenario({ scenario: 'w45', ...config }),
+    w1,
+  );
 });
