@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
-import {
-  buildLessonReadyWhere,
-  PUBLIC_CONTENT_WHERE,
-} from '../../../common/policies/lesson-readiness.policy';
+import { PUBLIC_CONTENT_WHERE } from '../../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { OnboardingService } from '../../onboarding/onboarding.service';
 import {
@@ -12,12 +9,10 @@ import {
   LearningPathResponseDto,
 } from './dto/learning-path-response.dto';
 import {
-  buildLevelPath,
   selectNextLesson,
   type LearningPathLevel,
-  type LearningPathProgress,
-  type LearningPathReadyLesson,
 } from './learning-path.policy';
+import { loadLevelPaths } from './learning-path.reader';
 
 @Injectable()
 export class LearningPathService {
@@ -75,7 +70,7 @@ export class LearningPathService {
    * one onboarding status call and a fixed set of queries per request.
    */
   async loadPathState(userId: number) {
-    const [status, goal, levels, readyLessons, progresses] = await Promise.all([
+    const [status, goal, levels, levelPaths] = await Promise.all([
       this.onboarding.getStatus(userId),
       this.prisma.userGoal.findFirst({
         where: { userId, isActive: true },
@@ -92,45 +87,13 @@ export class LearningPathService {
         orderBy: { orderIndex: 'asc' },
         select: { id: true, code: true, name: true, orderIndex: true },
       }),
-      this.prisma.lesson.findMany({
-        where: buildLessonReadyWhere(),
-        orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
-        select: {
-          id: true,
-          levelId: true,
-          title: true,
-          slug: true,
-          orderIndex: true,
-        },
-      }),
-      this.prisma.progress.findMany({
-        where: { userId, lesson: { is: buildLessonReadyWhere() } },
-        select: {
-          lessonId: true,
-          status: true,
-          completionPercent: true,
-          lastActivityAt: true,
-        },
-      }),
+      loadLevelPaths(this.prisma, userId),
     ]);
-
-    const progressByLessonId = new Map<number, LearningPathProgress>(
-      progresses.map((progress) => [progress.lessonId, progress]),
-    );
-    const lessonsByLevelId = new Map<number, LearningPathReadyLesson[]>();
-    for (const { levelId, ...lesson } of readyLessons) {
-      const list = lessonsByLevelId.get(levelId) ?? [];
-      list.push(lesson);
-      lessonsByLevelId.set(levelId, list);
-    }
 
     const pathLevels: Array<LearningPathLevel & { id: number; name: string }> =
       levels.map((level) => ({
         ...level,
-        lessons: buildLevelPath(
-          lessonsByLevelId.get(level.id) ?? [],
-          progressByLessonId,
-        ),
+        lessons: levelPaths.get(level.id) ?? [],
       }));
 
     return { nextStep: status.data.nextStep, goal, pathLevels };

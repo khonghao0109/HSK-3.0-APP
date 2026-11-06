@@ -425,9 +425,11 @@ export class ExerciseAuthoringService {
         );
         const snapshot = parseExerciseSnapshot(revision.snapshot, 'publish');
         if (snapshot.type === ExerciseType.speaking_repeat) {
-          throw new UnprocessableEntityException(
-            'speaking_repeat is unsupported for publishing in Lesson Activity V1.',
-          );
+          throw new UnprocessableEntityException({
+            code: 'EXERCISE_TYPE_NOT_PUBLISHABLE',
+            message:
+              'speaking_repeat is unsupported for publishing in Lesson Activity V1.',
+          });
         }
         const revisionHash = assertExerciseRevisionHash(
           snapshot,
@@ -616,9 +618,10 @@ export class ExerciseAuthoringService {
         FOR UPDATE
       `;
       if (topicRows.length !== 1) {
-        throw new ConflictException(
-          'Topic must belong to the exercise parent lesson.',
-        );
+        throw new ConflictException({
+          code: 'TOPIC_LESSON_MISMATCH',
+          message: 'Topic must belong to the exercise parent lesson.',
+        });
       }
     }
     if (emitCheckpoint) {
@@ -649,9 +652,10 @@ export class ExerciseAuthoringService {
       select: { id: true },
     });
     if (!topic) {
-      throw new ConflictException(
-        'Topic must be live and belong to the exercise parent lesson.',
-      );
+      throw new ConflictException({
+        code: 'TOPIC_LESSON_MISMATCH',
+        message: 'Topic must be live and belong to the exercise parent lesson.',
+      });
     }
   }
 
@@ -678,7 +682,10 @@ export class ExerciseAuthoringService {
     T extends { deletedAt: Date | null; status: string },
   >(exercise: T): void {
     if (isExerciseArchived(exercise)) {
-      throw new ConflictException('Archived LessonExercise cannot be changed.');
+      throw new ConflictException({
+        code: 'CONTENT_ARCHIVED',
+        message: 'Archived LessonExercise cannot be changed.',
+      });
     }
   }
 
@@ -708,9 +715,11 @@ export class ExerciseAuthoringService {
     ]);
     if (!requested) throw new NotFoundException('Content revision not found.');
     if (!latest || latest.id !== requested.id) {
-      throw new ConflictException(
-        'Only the latest content revision can be used for this action.',
-      );
+      throw new ConflictException({
+        code: 'REVISION_NOT_LATEST',
+        message:
+          'Only the latest content revision can be used for this action.',
+      });
     }
     return requested;
   }
@@ -777,17 +786,23 @@ export class ExerciseAuthoringService {
       }
       const classification = classifyCmsPersistenceError(error);
       if (classification === 'unique_conflict') {
-        throw new ConflictException('LessonExercise content conflicts.');
+        throw new ConflictException({
+          code: 'CONTENT_UNIQUE_CONFLICT',
+          message: 'LessonExercise content conflicts.',
+        });
       }
       if (classification === 'constraint_conflict') {
-        throw new ConflictException(
-          'LessonExercise violates a database integrity constraint.',
-        );
+        throw new ConflictException({
+          code: 'CONTENT_CONSTRAINT_CONFLICT',
+          message: 'LessonExercise violates a database integrity constraint.',
+        });
       }
       if (classification === 'concurrent_retry') {
-        throw new ConflictException(
-          'Concurrent LessonExercise update detected; retry the request.',
-        );
+        throw new ConflictException({
+          code: 'CONTENT_CONCURRENT_UPDATE',
+          message:
+            'Concurrent LessonExercise update detected; retry the request.',
+        });
       }
       if (classification === 'timeout' || classification === 'connection') {
         throw new ServiceUnavailableException(
@@ -838,7 +853,7 @@ export function createExerciseSnapshot(input: {
   }
 }
 
-function parseExerciseSnapshot(
+export function parseExerciseSnapshot(
   snapshot: Prisma.JsonValue,
   mode: 'draft' | 'publish',
 ): ExerciseSnapshot {
@@ -848,7 +863,10 @@ function parseExerciseSnapshot(
     forbidNonWhitelisted: true,
   });
   if (errors.length > 0) {
-    throw new ConflictException('LessonExercise revision snapshot is invalid.');
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'LessonExercise revision snapshot is invalid.',
+    });
   }
   let value: LessonExerciseAuthoringValue;
   try {
@@ -868,9 +886,11 @@ function parseExerciseSnapshot(
   } catch (error) {
     if (error instanceof LessonExerciseAuthoringValidationError) {
       if (error.code === 'unsupported_publish_type') {
-        throw new UnprocessableEntityException(
-          'speaking_repeat is unsupported for publishing in Lesson Activity V1.',
-        );
+        throw new UnprocessableEntityException({
+          code: 'EXERCISE_TYPE_NOT_PUBLISHABLE',
+          message:
+            'speaking_repeat is unsupported for publishing in Lesson Activity V1.',
+        });
       }
       throw authoringException(error);
     }
@@ -920,9 +940,10 @@ export function assertExerciseRevisionHash(
 ): string {
   const expected = requireContentHash(contentHash);
   if (sha256CanonicalJson(snapshot) !== expected) {
-    throw new ConflictException(
-      'LessonExercise revision snapshot integrity check failed.',
-    );
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'LessonExercise revision snapshot integrity check failed.',
+    });
   }
   return expected;
 }
@@ -939,7 +960,12 @@ export function isExerciseArchived(exercise: {
 }
 
 function requireContentHash(value: string | null): string {
-  if (!value) throw new ConflictException('Content revision hash is missing.');
+  if (!value) {
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'Content revision hash is missing.',
+    });
+  }
   return value;
 }
 

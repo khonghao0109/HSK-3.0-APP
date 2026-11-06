@@ -1,0 +1,11 @@
+{
+  "description": "topicKey không trỏ topic nào",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].topicKey",
+      "value": "t99"
+    }
+  ]
+}

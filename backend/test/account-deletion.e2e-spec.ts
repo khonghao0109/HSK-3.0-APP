@@ -338,6 +338,72 @@ describe('Account Deletion E2E', () => {
     expect(expReqStillPending.status).toBe('requested');
   });
 
+  it('P6b (M1.7d): login never cancels an admin-initiated request and keeps the H.7 decoy', async () => {
+    const label = 'p6b_admin_request';
+    const email = emailFor(label);
+    const { userId } = await registerUser(label);
+
+    const scheduledAt = new Date(Date.now() + 7 * 86_400_000);
+    const adminRequest = await prisma.accountDeletionRequest.create({
+      data: {
+        userId,
+        status: 'requested',
+        initiatedBy: 'admin',
+        reason: 'under_age',
+        verifiedAt: new Date(),
+        scheduledAt,
+      },
+    });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { status: 'deletion_pending', deletedAt: new Date() },
+    });
+    await prisma.userSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    // Baseline: an unknown email also runs the decoy verification.
+    const unknownStart = process.hrtime.bigint();
+    await http()
+      .post('/api/v1/auth/login')
+      .send({ email: `${prefix}_no_such_account@example.com`, password })
+      .expect(HttpStatus.UNAUTHORIZED);
+    const unknownMs = Number(process.hrtime.bigint() - unknownStart) / 1e6;
+
+    const start = process.hrtime.bigint();
+    await http()
+      .post('/api/v1/auth/login')
+      .send({ email, password })
+      .expect(HttpStatus.UNAUTHORIZED);
+    const adminRequestMs = Number(process.hrtime.bigint() - start) / 1e6;
+
+    // H.7: the 401 costs a full decoy verification, so it cannot be an order
+    // of magnitude cheaper than the unknown-email path.
+    expect(adminRequestMs).toBeGreaterThan(unknownMs * 0.2);
+
+    const after = await prisma.accountDeletionRequest.findUniqueOrThrow({
+      where: { id: adminRequest.id },
+    });
+    expect(after.status).toBe('requested');
+    expect(after.initiatedBy).toBe('admin');
+    expect(after.cancelledAt).toBeNull();
+    expect(
+      await prisma.auditLog.count({
+        where: {
+          action: 'account.deletion_cancelled',
+          targetId: String(userId),
+        },
+      }),
+    ).toBe(0);
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+    expect(user.status).toBe('deletion_pending');
+    expect(user.deletedAt).not.toBeNull();
+  });
+
   it('P7, P8, P9, P10: full anonymization, idempotency, email release, and zero PII', async () => {
     const { token, userId, email } = await registerUser('p7_full');
 

@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 04/09/2026 theo HEAD `3211bf8`. Tài liệu chia hai phần:
+Cập nhật 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -21,8 +21,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `npm run openapi:check` và fail khi file commit bị lệch.
 - `data` có schema đầy đủ cho các endpoint có response DTO: `auth/register`, `auth/login`,
   `auth/me`, admin exercise list/detail, admin media list/detail/archive/quarantine (mọi
-  call của BFF), public learning (`levels`, `lessons`, `topics`, `stories`) và
-  `learning/path`, `learning/home`. Endpoint
+  call của BFF), admin users list và admin audit logs, public learning (`levels`, `lessons`,
+  `topics`, `stories`) và `learning/path`, `learning/home`. Endpoint
   khác mới có envelope, `data` để trống schema (bất kỳ JSON), shape xem Part A.
 - Frontend: `npm run typegen:backend` sinh `frontend/src/lib/api/backend-generated-types.ts`
   bằng `openapi-typescript`, chỉ dùng làm type. Không sinh fetch client (ADR-003): allowlist
@@ -36,7 +36,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 
 - Base path: `/api/v1`; versioning theo path; JSON UTF-8.
 - Auth: `Authorization: Bearer <jwt>` cho route đánh dấu `JWT`/`admin`. Public content,
-  dictionary, health và signed media content không cần token. JWT HS256 có header `kid`,
+  dictionary (trừ các route `…/save`), health và signed media content không cần token. JWT HS256 có header `kid`,
   claims `sub`, `email`, `role`; strategy đọc lại `status`, `deletedAt`, `role` từ DB mỗi
   request. Chưa có refresh/revocation.
 - Validation: `whitelist`, `forbidNonWhitelisted`, `transform`. Field lạ → `400` với
@@ -77,14 +77,39 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Status code: `200` GET; **mọi `POST` trả `201` kể cả idempotent replay** (chưa dùng
   `@HttpCode`); `204` chưa dùng; `400`, `401`, `403`, `404`, `409`, `413`, `422`, `429`,
   `500`, `503`.
-- Rate limit: toàn cục 20 req/phút (`register` 100, `login` 10); `429` với
+- Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
+  mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
+  `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
+  60/phút/user, `GET /dictionary`, `GET /dictionary/words/:id` và `GET /dictionary/words/:id/save`
+  120/phút/user hoặc IP, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
+  `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
+  `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
+  `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
+  `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
+  5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
+  `POST /users/me/deletion-request` 5/15 phút, `POST /exam/tests/:testId/attempts`,
+  `GET /exam/attempts/:attemptId`, `GET /exam/attempts/:attemptId/result` và
+  `GET /exam/attempts/:attemptId/review` 60/phút/user, `PUT /exam/attempts/:attemptId/answers/:questionKey`
+  240/phút/user, `PUT /exam/attempts/:attemptId/answers` 60/phút/user,
+  `GET /exam/attempts/:attemptId/media-grants` 30/phút/user,
+  `POST /exam/attempts/:attemptId/submit` 10/phút/user (mục A.9d). Khi `NODE_ENV=test`,
+  mặc định và các route trên có giới hạn qua hàm (`authMeLimit`, `loginIpLimit`, …) nâng lên
+  1.000 (trần IP của route media content nâng lên 10.000), **trừ** route exam: `POST
+  /exam/tests/:testId/attempts`, `PUT /exam/attempts/:attemptId/answers/:questionKey` và `POST
+  /exam/attempts/:attemptId/submit` được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers`
+  (60), `GET /exam/attempts/:attemptId` (60), `GET /exam/attempts/:attemptId/result` (60),
+  `GET /exam/attempts/:attemptId/review` (60), `GET /exam/attempts/:attemptId/media-grants` (30) và
+  `GET /exam/tests` (60) giữ nguyên ở mọi môi trường. Các
+  route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
   `error: { code: "TOO_MANY_REQUESTS", message: "ThrottlerException: Too Many Requests" }`. Khoá
   `user:<id>` khi bearer JWT hợp lệ (kid, chữ ký HS256, hạn; không tra DB), còn lại
-  `ip:<req.ip>`. `register`/`login` luôn khoá theo IP. `req.ip` lấy từ
+  `ip:<req.ip>`. Các route ghi /IP luôn khoá theo IP. Route đếm theo user sẽ đếm theo IP
+  khi request không có bearer hợp lệ (không gửi bearer, hoặc token sai chữ ký hay hết
+  hạn; token còn hạn nhưng session đã bị thu hồi vẫn đếm theo user). `req.ip` lấy từ
   `X-Forwarded-For` qua `TRUST_PROXY_HOPS` (mặc định 1: nginx hoặc BFF). Bộ đếm là
   cửa sổ cố định lưu ở bảng PostgreSQL `RateLimitCounter`, dùng chung mọi replica;
-  vượt giới hạn thì khoá hết thời gian `ttl` (60 giây), hit trong lúc bị khoá không
-  được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
+  vượt giới hạn thì khoá hết thời gian `ttl` của route (60 giây hoặc 15 phút), hit
+  trong lúc bị khoá không được đếm. Mỗi request thêm một câu upsert; lỗi database làm request thất bại
   (fail-closed), không bỏ qua giới hạn.
 - Idempotency: header `Idempotency-Key`; activity 8–128 ký tự `^[A-Za-z0-9][A-Za-z0-9._:-]*$`;
   exercise import 8–128; media ingestion 32–128. Cùng key cùng body → `data` gốc (`meta`
@@ -282,13 +307,22 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
     - Toàn bộ `UserSession` hiện tại bị thu hồi (`revokedAt = CURRENT_TIMESTAMP`), các token reset mật khẩu hoặc xác minh email chưa dùng bị xoá. Access token cũ bị từ chối với `401 Unauthorized` ngay lập tức.
     - Hai job nền được enqueue trong transaction: `privacy.anonymize-account` (`startAfter` = `scheduledAt`, `singletonKey = 'anonymize:' + requestId`) và `mail.account-deletion-scheduled` (`singletonKey = 'deletion-mail:' + requestId`).
     - Idempotent: gọi trùng khi đã có request ở trạng thái `requested` sẽ trả lại request hiện có mà không tạo dòng mới.
-- Huỷ yêu cầu xoá bằng đăng nhập (`POST /auth/login`):
+- Huỷ yêu cầu xoá bằng đăng nhập (`POST /auth/login`, chỉ áp dụng cho request do user khởi
+  tạo — `initiatedBy = 'user'`):
   - Trong thời gian chờ 7 ngày (`scheduledAt > CURRENT_TIMESTAMP`), người dùng đăng nhập lại đúng mật khẩu sẽ tự động huỷ yêu cầu xoá:
     - Yêu cầu cập nhật `status = 'cancelled'`, `cancelledAt = CURRENT_TIMESTAMP`.
     - User được kích hoạt lại: `status = 'active'`, `deletedAt = NULL`, các bộ đếm khoá đăng nhập được xoá.
     - Đăng nhập thành công trả về HTTP 200/201 cùng token phiên mới bình thường.
   - Sai mật khẩu trong thời gian chờ → trả về HTTP `401 Unauthorized`, yêu cầu xoá vẫn giữ nguyên trạng thái `requested`.
   - Đã quá hạn 7 ngày (`scheduledAt <= CURRENT_TIMESTAMP`), đăng nhập bị chặn (trả về HTTP `401` qua decoy hash) và worker sẽ thực hiện ẩn danh tài khoản theo ADR-001.
+  - Request do admin khởi tạo (M1.7d, `initiatedBy = 'admin'`, lý do `under_age`) **không**
+    bị huỷ bởi đăng nhập. Trong thời gian chờ, đăng nhập đúng mật khẩu rơi vào nhánh decoy
+    H.7 và trả `401` (verify dummy hash, không reserve login attempt, không ghi audit);
+    request giữ `status = 'requested'` và account giữ `deletion_pending` tới khi worker ẩn
+    danh. Hai câu truy vấn của luồng huỷ (đọc trước và `UPDATE` trong transaction) đều lọc
+    `initiatedBy = 'user'`, và transaction khoá `User` trước khi khoá request.
+  - Audit `account.anonymized` do worker ghi có `actorId` là user sở hữu tài khoản (không
+    phải admin đã lên lịch) và `targetType = 'User'`.
 - `POST /users/me/data-exports` (`JwtAuthGuard`): Yêu cầu xuất dữ liệu cá nhân của người dùng thành một file JSON lưu trữ trong bucket private.
   - User phải ở trạng thái `active`, `deletedAt IS NULL`, nếu không trả về HTTP `404 "User not found."`.
   - Rate limit: Tối đa 1 export / 24 giờ / user. Nếu đã có export job trong vòng 24 giờ (`createdAt > CURRENT_TIMESTAMP - INTERVAL '24 hours'`) có trạng thái `requested`, `processing`, hoặc `completed` → trả về HTTP `429 Too Many Requests` với mã lỗi `EXPORT_RATE_LIMITED`. Export ở trạng thái `failed` không tính vào giới hạn này.
@@ -354,20 +388,83 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 
 ### A.5 Dictionary
 
-| Method | Path | Auth |
-| --- | --- | --- |
-| `GET` | `/dictionary?query=<hanzi hoặc pinyin>` | public |
+| Method | Path | Auth | Throttle |
+| --- | --- | --- | --- |
+| `GET` | `/dictionary?query=<hanzi, pinyin hoặc nghĩa Việt/Anh>` | public | 120/phút/user hoặc IP (`dictionaryReadLimit`, 1.000 khi `NODE_ENV=test`) |
+| `GET` | `/dictionary/words/:id` | public | 120/phút/user hoặc IP (cùng `dictionaryReadLimit`) |
+| `GET` | `/dictionary/words/:id/save` | JWT | 120/phút/user (cùng `dictionaryReadLimit`) |
+| `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
+| `DELETE` | `/dictionary/words/:id/save` | JWT | 60/phút/user (cùng `wordSaveLimit`) |
 
-Prefix match trên `hanzi` (khi query chứa ký tự `㐀-鿿`) hoặc `pinyinNormalized`.
-Query rỗng hoặc chứa ký tự ngoài `[a-zA-Z1-5:üÜ' ]`/hanzi → trả `[]` (không `400`). Tối
-đa 20 kết quả; chỉ Word `published`, `isPure = true`, có ít nhất một meaning.
+"Từ public" = Word `published`, chưa soft-delete, `isPure = true`, có ít nhất một meaning
+(`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho cả 5 route). Không route
+nào đặt header cache.
 
-`data` `200` là mảng, không `id`:
+**Search.** Query được chuẩn NFC rồi `trim`; hợp lệ khi dài 1–64 ký tự và:
+
+- có ký tự hanzi `㐀-鿿`: chỉ gồm hanzi, `[a-zA-Z1-5:üÜ' ]`;
+- không có hanzi: chỉ gồm chữ Latin có hoặc không dấu, số `1-5`, dấu cách, `'`, `:`.
+
+Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]` với `200` (không `400`).
+"Có cấp HSK" = từ có ít nhất một Level `published`, chưa soft-delete (cùng điều kiện với
+`level` trong response). Mỗi request tối đa 3 truy vấn DB.
+
+- **Hanzi:** `hanzi` bắt đầu bằng query. Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; `hanzi` ngắn trước,
+  rồi `hanzi`, rồi `id`. Tối đa 20.
+- **Latin**, tối đa 20 từ, không trùng `id`, nhóm 1 trước rồi nhóm 2 lấp chỗ còn lại:
+  1. Pinyin: `pinyinNormalized` bắt đầu bằng query đã chuẩn pinyin (bỏ số thanh, chữ
+     thường, `ü` → `u:`). Chỉ chạy khi query không có dấu tiếng Việt (gồm toàn ký tự
+     `[a-zA-Z1-5:üÜ' ]`). Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; khớp trọn (`pinyinNormalized` bằng
+     query) trước, pinyin ngắn trước, rồi `pinyinNormalized`, rồi `id`.
+  2. Nghĩa: chạy khi query sau chuẩn nghĩa (bỏ dấu, `đ` → `d`, chữ thường, gộp khoảng
+     trắng) dài ≥ 2 ký tự và nhóm 1 chưa đủ 20; chỉ gồm từ chưa có ở nhóm 1. Một meaning
+     khớp khi `meaningViNormalized` hoặc `meaningEnNormalized` khớp **đầu từ**: cột bắt
+     đầu bằng query, hoặc chứa query ngay sau một ký tự không phải chữ/số. Query có dấu
+     còn khớp đầu từ `meaningViNormalized` với query viết thường giữ dấu, cho dòng cũ do
+     backfill P0 chuẩn hoá giữ dấu. Thứ tự: khớp chính xác trước (cột bằng query, bằng
+     `"to " + query`, hoặc bằng query giữ dấu), cấp HSK thấp hơn trước (theo `orderIndex`
+     của Level published), từ không có cấp xếp sau, nghĩa khớp ngắn nhất
+     trước, rồi `id`.
+
+Chỉ từ public; `level` là tên Level published đầu tiên theo `orderIndex`. Dữ liệu từ điển
+thật hiện chỉ có nghĩa tiếng Anh (CC-CEDICT, 0 nghĩa Việt cho tới M1.2a), nên hôm nay
+tra theo nghĩa chỉ ra kết quả nhờ nghĩa Anh. Ví dụ: `?query=hoc` và `?query=học` khớp từ
+có nghĩa Việt "học tập" và nghĩa Anh "hockey", không khớp "shocking"; `?query=study` đưa
+từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` trả từ có pinyin
+`xue…` trước, rồi tới từ có nghĩa bắt đầu bằng "xue". `data` `200` là mảng:
 
 ```json
-[{ "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+[{ "id": 12, "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
    "meanings": [{ "en": "to study", "vi": "học tập" }], "level": "HSK 1" }]
 ```
+
+**Chi tiết từ** `GET /dictionary/words/:id`. `:id` không phải số nguyên dương an toàn →
+`400`; không phải từ public → `404` (`error.code` `WORD_NOT_FOUND`). `data` `200`:
+
+```json
+{ "id": 12, "hanzi": "学习", "traditional": "學習", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+  "example": "我每天都学习中文。",
+  "meanings": [{ "order": 1, "en": "to study", "vi": "học tập", "partOfSpeech": "verb", "usage": null, "note": null }],
+  "levels": [{ "code": "HSK1", "name": "HSK 1" }],
+  "sources": [{ "name": "…", "version": "1.0.0", "license": null, "attribution": null }] }
+```
+
+`meanings` theo `meaningOrder`; `levels` chỉ Level published, chưa xoá, theo `orderIndex`;
+`sources` để nguồn `isPrimary` đứng đầu rồi theo id nguồn. Trường nullable trả `null`.
+Không trả trạng thái, audio, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`
+(audio từ vựng thuộc backlog M2.B12).
+
+**Lưu từ** (Q62: chỉ lưu `UserWord`, chưa tạo thẻ ôn SRS). Thiếu token → `401`; `:id` sai
+dạng → `400`. Không response nào chứa `userId` hay `Idempotency-Key`.
+
+| Route | `data` | Lỗi |
+| --- | --- | --- |
+| `GET …/save` | `{ wordId, saved }`. Đã lưu → `saved: true`, kể cả khi từ đã bị gỡ public (để còn bỏ lưu được) | chưa lưu và từ không public → `404 WORD_NOT_FOUND` |
+| `POST …/save` | `{ wordId, saved: true, eventId, occurredAt }`; trả `201` kể cả replay. Lưu lần đầu tạo `UserWord` và `LearningEvent` `word_saved` (`resourceType: "word"`, `resourceId: wordId`) trong một transaction khoá `User`; đã lưu rồi → `eventId: null`, `occurredAt: null`, không tạo event | thiếu/sai key → `400`; key đã dùng cho request khác → `409`; key quá 24 giờ → `400`; từ không public → `404 WORD_NOT_FOUND`; tài khoản không active → `401` |
+| `DELETE …/save` | `{ wordId, saved: false }`; idempotent, `200` cả khi chưa lưu hoặc từ không tồn tại. **Bỏ lưu không ghi event** (`LearningEventType` chưa có loại bỏ lưu) | tài khoản không active → `401` |
+
+Replay một `Idempotency-Key` trả lại kết quả gốc, kể cả khi từ đã bị bỏ lưu sau đó; trạng thái hiện tại đọc bằng `GET …/save`. Replay cùng key trả lại đúng kết quả cũ (cùng `eventId`). Hai request lưu song song của
+một user được tuần tự hoá bằng khoá `User`: đúng một `UserWord` và một event.
 
 ### A.6 Onboarding và Learning plan (JWT)
 
@@ -428,11 +525,26 @@ raw answer.
 timeSpentSeconds, startedAt, completedAt, lastActivityAt, lesson: { title, slug } }`.
 Score bài học là trung bình điểm tốt nhất của các bài **đã làm** (D-03).
 
-Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, progress,
+Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, level,
+position, state, sections, progress,
 topics: [{ …topic, progress: {…}, exercises: PublicExercise[] }], standaloneExercises:
 PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
+Trường thêm cho màn bài học (M2.B13, Q43):
+- `level`: `{ id, code, name }` của Level chứa bài.
+- `position`, `state`: cùng định nghĩa và cùng code với `GET /learning/path` (đọc từ
+  `loadLevelPaths`, chỉ thu hẹp về level của bài); `state ∈ done | current | available | locked`.
+  Bài đang khoá vẫn trả `200` với `state: "locked"`; chỉ `POST start` chặn.
+- `sections.vocabulary`: `{ wordCount, topicCount, topicsDone }`. `wordCount` = đúng tập
+  `words` của `GET /learning/lessons/:id` (LessonWord có Word published, chưa xoá).
+- `sections.grammar`: `{ topicCount, topicsDone }`.
+  `topicCount` đếm topic public (published, chưa xoá) có `type` `vocabulary` hoặc `grammar`
+  tương ứng; `topicsDone` là số topic đó có UserTopicProgress `done` của user.
+- `sections.practice`: `{ exerciseCount, attempted }`. `exerciseCount` = số exercise public
+  của bài (cùng tập `topics[].exercises` + `standaloneExercises`, loại `speaking_repeat`);
+  `attempted` = số exercise trong tập đó có ít nhất một attempt đã submit của user.
+- Mọi trường của activity đọc từ cùng một snapshot (REPEATABLE READ).
 
 Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextLesson }`.
 - `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`, cùng giá trị
@@ -493,8 +605,9 @@ lesson first.`. Thứ tự lỗi:
 `409
 lesson_locked` rollback cả transaction: không tạo Progress hay event, plan item giữ `planned`,
 key không bị tiêu (gọi lại cùng key sau khi bài trước xong sẽ thành công). `GET
-/learning/lessons/:lessonId/activity` không phản ánh khoá: `nextAction` vẫn có thể là
-`start_lesson` cho bài đang khoá; frontend dựa vào `GET /learning/path`. Topic start, attempt
+/learning/lessons/:lessonId/activity` trả `state` (cùng giá trị với `GET /learning/path`);
+chỉ `POST start` chặn bằng `409 lesson_locked`. `nextAction` vẫn có thể là `start_lesson`
+cho bài đang khoá. Topic start, attempt
 và complete trên bài chưa start vẫn trả `409` `Lesson must be started first.`.
 
 Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text }`;
@@ -511,7 +624,7 @@ revision đã approved mới nhất → archive. Revision/review/audit append-on
 | Method | Path | Query/Body | `data` |
 | --- | --- | --- | --- |
 | `GET` | `/admin/cms/lessons` | `levelId?`, `status?`, `search?` (1–200), `page`, `limit` | `[{ …LessonAdmin, latestRevision }]` + `meta` |
-| `GET` | `/admin/cms/lessons/:lessonId` | — | `{ lesson, revisions }` |
+| `GET` | `/admin/cms/lessons/:lessonId` | — | `{ lesson, revisions, topics }` |
 | `POST` | `/admin/cms/lessons` | `CreateLesson` | `{ lesson, revision, idempotent: false }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions` | `LessonRevision` | `{ lesson, revision, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
@@ -535,13 +648,38 @@ Không có `GET /admin/cms/topics` (list).
 `LessonAdmin`: `{ id, levelId, title, description, orderIndex, slug, status, createdById,
 updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt }`.
 
-Lỗi: `400` DTO; `403` role; `404` entity; `409` stale/không approved/unique; `503` lock
-timeout. Lock order và hash: ADR-002, overview §3.4.
+`GET /admin/cms/lessons/:lessonId` (M5.1a, B1): `topics` là mọi Topic của bài học (kể cả
+archived), sắp xếp `orderIndex` asc rồi `id` asc, KHÔNG có trường `content`; mỗi phần tử kèm
+`latestRevision` tóm tắt `{ id, revision, authorId, createdAt, reviews }` với `reviews` tối đa
+1 bản mới nhất `{ decision, reviewerId, createdAt }` (không snapshot, không contentHash), hoặc
+`null` khi chủ đề chưa có bản sửa. Không phân trang (một bài học có ít chủ đề).
+
+Lỗi: `400` DTO; `403` role; `404` entity; `409` (mã máy trong `error.code`, bảng dưới);
+`503` lock timeout. Lock order và hash: ADR-002, overview §3.4.
+
+Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sang câu tiếng Việt):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `CONTENT_ARCHIVED` | `Archived content cannot be changed.` / `Archived <Lesson\|Topic> cannot be changed.` | Mutation vào content đã archived |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` / `… can be published.` | Review/publish bản sửa không còn là mới nhất |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved |
+| `LESSON_LEVEL_NOT_PUBLISHED` | `Lesson requires a published, non-deleted parent level.` | Publish lesson mà Level chưa published |
+| `LESSON_NO_PUBLISHED_CHILD` | `Lesson requires at least one published Topic or Story.` | Publish lesson chưa có Topic/Story published |
+| `CONTENT_UNIQUE_CONFLICT` | `Content conflicts with an existing slug or order.` | Trùng unique (ví dụ slug lesson) |
+| `CONTENT_CONSTRAINT_CONFLICT` | `Content violates a database integrity constraint.` | Vi phạm ràng buộc FK/check |
+| `CONTENT_CONCURRENT_UPDATE` | `Concurrent content update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `Lesson revision snapshot is invalid.` / `Topic revision snapshot is invalid.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+`REVISION_NOT_LATEST`/`REVIEW_NOT_APPROVED` từ `decidePublishAction` dùng chung, nên publish
+LessonExercise (A.9) cũng trả hai mã này. M5.1b1 bổ sung mã máy cho mọi `409` riêng của
+Exercise ở bảng A.9.
 
 ### A.9 Admin CMS — Exercise và Import (admin)
 
 | Method | Path | Query/Body/Header | `data` |
 | --- | --- | --- | --- |
+| `GET` | `/admin/cms/data-sources` | `page`, `limit` (1–100, mặc định 20), `eligibleFor?` (chỉ `media`: giữ nguồn mà finalize ingestion chấp nhận — code, version, license không rỗng; field tuỳ chọn nếu có thì không rỗng; giá trị khác → `400`); chỉ đọc, dùng cho trang Nhập dữ liệu và Tải media | `[{ id, code, name, version }]` + `meta`; sort `name ASC, version DESC, id ASC` |
 | `GET` | `/admin/cms/exercises` | `lessonId?`, `topicId?`, `type?`, `status?`, `page`, `limit` | `[{ …ExerciseAdmin, latestRevision }]` + `meta` |
 | `GET` | `/admin/cms/exercises/:exerciseId` | — | `{ …ExerciseAdmin, revisions }` |
 | `POST` | `/admin/cms/exercises` | `CreateExercise` | `{ exercise, revision, idempotent: false }` |
@@ -560,11 +698,643 @@ chỉ lưu draft, không publish. `listening_choice` publish cần audio `ready`
 `CreateExercise` = + `lessonId`, `topicId?`. `ImportBody`: `dataSourceId`, `fileName` 1–255,
 `rows` 1–100.
 
+Import bài tập (M5.1b2) chạy hai bước trên cùng payload: `preview` chỉ kiểm và trả
+`previewHash` (sha256 canonical của `dataSourceId`, `fileName` đã chuẩn hoá, các dòng hợp lệ
+và danh sách lỗi; không ghi DB); `commit` bắt buộc `previewHash` khớp payload hiện tại và
+header `Idempotency-Key` 8–128 ký tự `[A-Za-z0-9][A-Za-z0-9._:-]*` — replay cùng key với
+cùng payload trả lại kết quả cũ (`idempotent: true`), thiếu key → `422`
+(`error.code = UNPROCESSABLE_ENTITY`, không có mã riêng). Commit all-or-nothing: chỉ cần một
+dòng lỗi thì không ghi gì.
+
+Giới hạn body: JSON mặc định của backend là 100 KB (không cấu hình riêng cho route này);
+body lớn hơn → `413` (`error.code = PAYLOAD_TOO_LARGE`, message không lặp lại body); JSON
+hỏng → `400` (`error.code = MALFORMED_REQUEST`). Client chặn sớm ở 90 000 byte, BFF chặn
+102 400 byte (A.12).
+
+Lỗi `422` khi commit gặp dòng không hợp lệ (`error.code = IMPORT_VALIDATION_FAILED`,
+`error.message = Exercise import contains invalid rows.`): `details.errors` là mảng
+`{ rowNumber (1-based), code, path }` đã sắp theo `rowNumber`, `path`, `code`. Preview trả
+cùng shape lỗi trong `data.errors` (không phải 422). `code` là mã public viết HOA: các mã
+riêng của import là `SOURCE_KEY_ALREADY_EXISTS`, `DUPLICATE_SOURCE_KEY_IN_BATCH`,
+`UNEXPECTED_FIELD`, `OPTION_ID_NOT_FOUND`, `PARENT_LESSON_NOT_FOUND`,
+`TOPIC_LESSON_MISMATCH`, `MEDIA_NOT_FOUND`, `INVALID_SOURCE_KEY`, `INVALID_ROW`; các mã
+validator bài tập khác lấy nguyên mã viết HOA (vd `REQUIRED_FIELD`, `PAYLOAD_TOO_LARGE`).
+`path` dùng `$` cho cả dòng (`object_required`), `$.$unknown` cho trường lạ và tên trường
+cho lỗi từng ô (`sourceKey`, `lessonId`, `topicId`, `mediaId`, `content.options[0].id`…).
+
+Lỗi `409` của import chỉ có `error.message` tiếng Anh, KHÔNG có mã máy riêng
+(`error.code = CONFLICT`): preview hash không khớp payload (`Preview hash does not match; the
+import payload changed.`), replay `Idempotency-Key` với payload khác, hoặc bản ghi import cũ
+không đầy đủ (`… manual review is required.`). Race/timeout hạ tầng → `503` message
+`Exercise import is temporarily unavailable; retry the request.` (retry được với cùng key).
+
 `ExerciseAdmin`: `{ id, lessonId, topicId, mediaId, type, prompt, content, answer,
 explanation, version, orderIndex, status, dataSourceId, sourceKey, createdById, updatedById,
 publishedById, publishedAt, deletedAt, createdAt, updatedAt, media: { id, url, type,
 mimeType, duration, processingStatus, deletedAt } | null, lesson: { id, title, slug },
 topic | null, dataSource | null }`.
+
+Hình dạng `content`/`answer` theo từng loại (canonical sau validator; `id` ổn định 1–128 ký
+tự, không khoảng trắng; `text` 1–4096; `prompt` 1–4096; `explanation` ≤4096; `orderIndex`
+1–1 000 000):
+
+| `type` | `content` | `answer` |
+| --- | --- | --- |
+| `mcq`, `listening_choice` | `{ options: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ optionId }`, phải là một `id` trong `content.options` |
+| `fill_blank` | `{}` | `{ acceptedTexts: string[] }` 1–100 phần tử + `caseSensitive?` boolean |
+| `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ tokenIds: string[] }` đủ mọi token, không trùng, **thứ tự = đáp án đúng** |
+| `speaking_repeat` | `{ referenceText? }` | `{}`; chỉ lưu draft, không publish được |
+
+Canonical payload ≤ 65 536 byte, depth ≤ 8. `mediaId` chỉ dùng cho `listening_choice`; publish
+cần Media `audio`, `processingStatus = ready`, chưa xoá.
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng chữ):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `TOPIC_LESSON_MISMATCH` | `Topic must belong to the exercise parent lesson.` / `Topic must be live and belong to the exercise parent lesson.` | `topicId` không thuộc `lessonId` hoặc Topic không live |
+| `CONTENT_ARCHIVED` | `Archived LessonExercise cannot be changed.` | Mutation vào bài tập đã archived |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` / `… can be published.` | Review/publish bản sửa không còn mới nhất (dùng chung A.8) |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved (dùng chung A.8) |
+| `CONTENT_UNIQUE_CONFLICT` | `LessonExercise content conflicts.` | Trùng unique của LessonExercise |
+| `CONTENT_CONSTRAINT_CONFLICT` | `LessonExercise violates a database integrity constraint.` | Vi phạm FK/check (ví dụ `mediaId` không tồn tại) |
+| `CONTENT_CONCURRENT_UPDATE` | `Concurrent LessonExercise update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `LessonExercise revision snapshot is invalid.` / `LessonExercise revision snapshot integrity check failed.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+Lỗi `422` (mã máy trong `error.code`; `details.path` là vị trí lỗi để client hiện đúng ô):
+
+| `error.code` | `error.message` / `details` | Khi nào |
+| --- | --- | --- |
+| `EXERCISE_TYPE_NOT_PUBLISHABLE` | `speaking_repeat is unsupported for publishing in Lesson Activity V1.` | Publish bản sửa `speaking_repeat` |
+| `listening_media_not_ready` | `Listening audio media must be ready and live.`, `details.path = "mediaId"` | Publish `listening_choice` khi audio thiếu/chưa ready/đã xoá |
+| mã validator bảng dưới | `LessonExercise validation failed at <path>.`, `details.path` = đường dẫn | Payload sai shape/giới hạn theo từng loại |
+
+Mã validator của `lesson-exercise-authoring.validator.ts` (422, kèm `details.path`): `required_field`,
+`invalid_exercise_type`, `unsupported_publish_type`, `object_required`, `unknown_field`,
+`array_required`, `array_too_small`, `array_too_large`, `duplicate_stable_id`,
+`invalid_stable_id`, `authoritative_option_not_found`, `accepted_texts_required`,
+`boolean_required`, `invalid_token_set`, `media_not_allowed`, `media_required`,
+`positive_safe_integer_required`, `max_depth_exceeded`, `invalid_json`, `payload_too_large`,
+`string_required`, `non_empty_string_required`, `string_too_long`.
+
+### A.9b Admin CMS — Ngân hàng câu hỏi (admin, M4.1a)
+
+Envelope §1. Danh sách có `meta.pagination`; mọi response có `Cache-Control: no-store`.
+Mọi `POST` trả `201` kể cả `idempotent = true`. State machine giống bài tập: bản sửa nháp →
+review (`approved | changes_requested | rejected`) → publish bản sửa mới nhất đã approved →
+archive; revision/review/audit append-only. Row `Question` khoá `FOR UPDATE` sau
+`lockActiveCmsActor` trong mọi mutation (TL-85).
+
+| Method | Path | Query/Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/admin/cms/questions` | `levelId?`, `skill?` (4 kỹ năng), `type?` (4 dạng M4.1a), `difficulty?` (1–3), `status?`, `tag?` (1–5 slug, lặp lại `?tag=a&tag=b`, OR), `q?` (1–100, ILIKE trên `content`, ký tự `%`/`_` là literal), `page`, `limit` | `[{ …QuestionAdmin, latestRevision }]` + `meta`; sort `updatedAt desc, id desc` |
+| `GET` | `/admin/cms/questions/counts` | — | `{ total, bySkill: { listening, reading, writing, speaking }, vocabularyGrammar }`; không tính câu archived/`deletedAt`; `vocabularyGrammar` = số câu có tag `tu-vung` hoặc `ngu-phap` |
+| `GET` | `/admin/cms/questions/:questionId` | — | `{ …QuestionAdmin, revisions[] }`, revisions mới nhất trước |
+| `POST` | `/admin/cms/questions` | `QuestionRevision` | `{ question, revision, idempotent: false }` |
+| `POST` | `/admin/cms/questions/:questionId/revisions` | `QuestionRevision` | `{ question, revision, idempotent }`; snapshot trùng bản mới nhất → `idempotent: true` |
+| `POST` | `/admin/cms/questions/:questionId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
+| `POST` | `/admin/cms/questions/:questionId/revisions/:revisionId/publish` | — | `{ question, revision, idempotent }` |
+| `POST` | `/admin/cms/questions/:questionId/archive` | — | `{ question, idempotent }` |
+| `GET` | `/admin/cms/tags` | `q?` (1–40, ILIKE trên `name`, `%`/`_` literal), `limit` (1–100, mặc định 50) | `[{ slug, name, questionCount }]`; sort `name asc, id asc`; `questionCount` chỉ đếm câu chưa archived |
+
+`QuestionRevision` (body tạo bản sửa): `type` ∈ `mcq | true_false | fill_blank |
+arrange_sentence` (bốn giá trị `listening | reading | writing | speaking` bị từ chối `400`) ·
+`skill` ∈ 4 kỹ năng · `levelId` · `content` = đề bài 1–4096 · `answers`, `correctAnswer` JSON
+≤100 000 byte/depth 20 (validator sau DTO áp canonical ≤65 536 byte/depth 8) · `explanation?`
+≤4096 · `objective?` ≤500 · `difficulty?` 1–3 hoặc `null` · `audioId?`, `imageId?` · `tags?`
+≤10 tên, mỗi tên 1–40 ký tự, không trùng slug. `tags` được chuẩn hoá thành slug (bỏ dấu tiếng
+Việt, chữ thường, nối `-`), sắp xếp, dedupe theo slug (trùng slug → `422 duplicate_tag`).
+
+Hình dạng `answers`/`correctAnswer` theo từng loại (`content` của row = đề bài, không phải
+object):
+
+| `type` | `answers` (cột `Question.answers`) | `correctAnswer` |
+| --- | --- | --- |
+| `mcq` | `{ options: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ optionId }`, phải là `id` trong `answers.options` |
+| `true_false` | `{}` | `{ value: boolean }` |
+| `fill_blank` | `{}` | `{ acceptedTexts: string[] }` 1–100 + `caseSensitive?` boolean |
+| `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100 phần tử | `{ tokenIds: string[] }`, đủ mọi token, **thứ tự = đáp án đúng** |
+
+`QuestionAdmin`: `{ id, content, type, skill, audioId, imageId, answers, correctAnswer,
+explanation, objective, levelId, difficulty, version, contentHash, status, dataSourceId,
+createdById, updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt,
+level: { id, code }, tags: [{ slug, name }] }`. TL-82a: danh sách **mặc định chỉ gồm câu
+chưa lưu trữ** (`status <> 'archived'` và `deletedAt IS NULL`), nên `meta.total` bằng
+`counts.total` khi không lọc; truyền `status=archived` mới trả câu đã lưu trữ. TL-82b: `tag`
+nhận 1–5 slug lặp lại và kết hợp OR. `latestRevision` = `{ id, revision, decision }` hoặc
+`null`.
+`revisions[]` = `{ id, revision, contentHash, createdAt, author: { id, name } | null,
+changedFields: string[], reviews: [{ decision, note, reviewer: { id, name } | null,
+createdAt }] }`. `changedFields` so snapshot với bản liền trước trên đúng 12 field
+`type, skill, levelId, content, answers, correctAnswer, explanation, objective, difficulty,
+audioId, imageId, tags`; revision 1 trả `[]`.
+
+Snapshot của revision gồm đúng 12 field trên (không có `id`/`version`/`status`), `tags` là
+slug đã sort, `contentHash` = sha256 canonical JSON của snapshot. Câu `draft` materialize
+row `Question` ngay khi tạo bản sửa; câu `published` chỉ materialize khi publish.
+
+Tag: upsert `Tag` theo `slug` (`ON CONFLICT DO NOTHING`, an toàn khi 2 transaction tạo cùng
+slug); tên hiển thị lấy từ lần tạo đầu tiên; liên kết `QuestionTag` thừa bị xoá, thiếu được
+thêm trong cùng transaction. Tag row không bị xoá khi bỏ liên kết.
+
+`GET /admin/cms/tags` (TL-93) là danh sách gợi ý tag cho form soạn câu hỏi: admin-only,
+`no-store`, không phân trang. `questionCount` đếm câu có tag đó mà `status <> 'archived'` và
+`deletedAt IS NULL`, nên tag chỉ còn gắn với câu lưu trữ trả `0` nhưng vẫn xuất hiện trong gợi
+ý. Không có route `:param` ở cấp đầu nên `tags` không xung đột route; vẫn khai báo trước mọi
+route tham số hoá.
+
+Media (TL-81, TL-81a): `audioId` phải là Media `audio`, `imageId` phải là Media `image`; kiểm
+trong transaction với `FOR SHARE`. Hai mức kiểm:
+- **Lưu câu hỏi / lưu bản sửa:** chỉ chặn tham chiếu không thể dùng được — `not_found`,
+  `wrong_type`, `quarantined`, `archived` (đã xoá) → `409 MEDIA_NOT_USABLE` với `details.field`
+  và `details.reason`. Media `pending`/`processing` **được phép lưu** để tác giả soạn câu hỏi
+  trong lúc tệp đang xử lý.
+- **Publish:** media phải `processingStatus = ready` và chưa `deletedAt`; mọi trạng thái khác
+  → `409 QUESTION_NOT_PUBLISHABLE` với `details.reasons` chứa `audio_not_ready` (audio) hoặc
+  `image_not_ready` (ảnh).
+
+Publish (TL-83) chỉ áp dụng cho bản sửa mới nhất đã `approved`; vi phạm điều kiện →
+`409 QUESTION_NOT_PUBLISHABLE` với `details.reasons[]` = `{ code, field }`:
+`explanation_required` (`explanation`), `audio_required` (`audioId`, khi `skill = listening`),
+`level_not_found` (`levelId`), `audio_not_ready` (`audioId`), `image_not_ready` (`imageId`).
+`audio_not_ready`/`image_not_ready` áp cho mọi trạng thái media không phải `ready` (kể cả
+`pending`/`processing`/`quarantined`/đã xoá/không tồn tại).
+Câu đã archived không sửa/publish được. Archive bị chặn khi câu nằm trong `Test` đang
+`published` (TL-84).
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `QUESTION_ARCHIVED` | `Archived Question cannot be changed.` | Mutation/review/publish câu đã archived |
+| `QUESTION_NOT_PUBLISHABLE` | `Question does not meet the publish requirements.`, `details.reasons` | Publish thiếu điều kiện TL-83 |
+| `QUESTION_IN_PUBLISHED_TEST` | `Question belongs to a published test and cannot be archived.` | Archive câu đang thuộc `Test` published (TL-84) |
+| `QUESTION_IN_PUBLISHED_TEST` | `A published test uses this question; level, skill and type cannot change.`, `details.field` ∈ `levelId \| skill \| type` | Publish bản sửa đổi levelId/skill/type của câu đang nằm trong đề đã xuất bản (Q116, TL-99) |
+| `MEDIA_NOT_USABLE` | `Question media must exist, be live and of the right type.`, `details.field`, `details.reason` ∈ `not_found \| wrong_type \| quarantined \| archived` | Lưu bản sửa với media không tồn tại/sai loại/bị cách ly/đã xoá |
+| `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` | Review/publish bản sửa không còn mới nhất (dùng chung A.8) |
+| `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved (dùng chung A.8) |
+| `QUESTION_UNIQUE_CONFLICT` | `Question content conflicts.` | Trùng unique của Question/Tag |
+| `QUESTION_CONSTRAINT_CONFLICT` | `Question violates a database integrity constraint.` | Vi phạm FK/check |
+| `QUESTION_CONCURRENT_UPDATE` | `Concurrent Question update detected; retry the request.` | Race transaction, retry được |
+| `CONTENT_REVISION_INVALID` | `Question revision snapshot is invalid.` / `Question revision snapshot integrity check failed.` / `Content revision hash is missing.` | Snapshot/hash bản sửa không hợp lệ |
+
+Lỗi `422`: `Question validation failed at <path>.` với `error.code` là mã validator và
+`details.path` là vị trí lỗi (client hiện đúng ô). Mã dùng chung với bài tập cho
+`mcq`/`fill_blank`/`arrange_sentence`; `true_false` thêm `boolean_required`. Mã riêng của
+ngân hàng câu hỏi: `invalid_question_type`, `invalid_skill`, `invalid_difficulty`,
+`invalid_tag`, `duplicate_tag`.
+
+Audit trong cùng transaction (TL-86): `question.created`, `question.revision_created`,
+`question.reviewed`, `question.published`, `question.archived`; `targetType = "question"`,
+`afterSummary = { entityType, entityId, revision, status, contentHash, decision? }`.
+
+### A.9c Admin CMS — Đề thi (admin, M4.1b)
+
+Envelope §1. Danh sách có `meta.pagination`; mọi response có `Cache-Control: no-store`.
+8 endpoint admin-only (`JwtAuthGuard` + `RolesGuard` với `role = admin`), route tĩnh `tests`
+khai báo trước `tests/:testId`, `:testId` qua `ParsePositiveIntPipe` (không phải số nguyên
+dương `1..2147483647` → `400`). Mọi `POST` trả `201`. Đề `draft` sửa trực tiếp (kèm
+`expectedUpdatedAt`) và publish thẳng khi qua bộ kiểm tra; đề `published` chỉ đọc, muốn sửa
+phải archive rồi duplicate (Q117). `Test.duration` là **số phút** cho **cả đề** (một đồng hồ,
+1–300, Q118); `TestSection.duration` để trống, không dùng. Mọi mutation khoá actor
+(`lockActiveCmsActor`) rồi khoá row `Test` bằng `FOR UPDATE` và đọc lại trong cùng
+transaction (TL-97). Thứ tự khoá của mọi mutation: actor → row `Test` (`FOR UPDATE`) →
+các row `Question` được tham chiếu (`FOR SHARE`, theo `id` tăng dần) → các row `Media` của
+nhóm (`FOR SHARE`). `PUT structure` cũng khoá câu theo thứ tự này trước khi kiểm câu dùng
+được (H3), nên archive/publish một câu không chen được giữa bước kiểm và bước ghi.
+
+| Method | Path | Query/Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/admin/cms/tests` | `levelId?`, `status?` (`draft \| published \| archived`), `q?` (1–100, ILIKE trên `title`, `%`/`_` là literal), `page`, `limit` | `TestAdmin[]` + `meta`; sort `updatedAt desc, id desc`; mặc định ẩn đề đã lưu trữ (`status <> 'archived'` và `deletedAt IS NULL`), truyền `status=archived` mới thấy đề archived |
+| `GET` | `/admin/cms/tests/:testId` | — | `TestDetail`; id không tồn tại → `404` message `Test not found.`; vẫn trả được đề đã archive |
+| `POST` | `/admin/cms/tests` | `CreateTest` | `TestDetail`; tạo đề `draft` chưa có section |
+| `PATCH` | `/admin/cms/tests/:testId` | `UpdateTest` | `TestDetail`; chỉ đề `draft` |
+| `PUT` | `/admin/cms/tests/:testId/structure` | `ReplaceTestStructure` | `TestDetail`; thay toàn bộ cây section/group/câu, chỉ đề `draft` |
+| `POST` | `/admin/cms/tests/:testId/publish` | `PublishTest` = `{ expectedUpdatedAt }` | `TestDetail`; chỉ đề `draft` |
+| `POST` | `/admin/cms/tests/:testId/archive` | — | `TestDetail`; archive được từ `draft` hoặc `published` |
+| `POST` | `/admin/cms/tests/:testId/duplicate` | — | `TestDetail`; nhân bản mọi trạng thái thành đề `draft` mới |
+
+`CreateTest` (body tạo đề nháp, TL-100): `levelId` (level phải tồn tại, không → `422`
+`level_not_found`) · `title` trim 1–200 · `instruction?` trim ≤2000 (rỗng → `null`) ·
+`duration` nguyên 1–300 phút (Q118) · `passScore?` nguyên ≥ 0 hoặc `null`. `passScore` chỉ
+được so với `maxScore` khi publish, nên tạo/sửa vẫn lưu được giá trị ngoài khoảng.
+
+`UpdateTest` (body PATCH meta): bắt buộc `expectedUpdatedAt` (ISO8601, echo `updatedAt` của
+lần đọc gần nhất) + các field optional như `CreateTest`; `passScore: null` xoá điểm đỗ;
+`instruction: null` xoá hướng dẫn. `levelId`, `title`, `duration` **không nhận `null`** —
+gửi `null` (khác với bỏ trống field) trả `400 REQUEST_VALIDATION_FAILED` và đề không đổi
+(H1). Body chỉ có `expectedUpdatedAt` vẫn hợp lệ (chỉ chạm `updatedAt`). Chỉ áp dụng khi đề
+`draft`.
+
+`ReplaceTestStructure` (body PUT, TL-96): bắt buộc `expectedUpdatedAt` + `sections[]` 0–10
+phần (đề nháp được phép rỗng để dựng dần). Mỗi phần: `skill` ∈ `listening | reading |
+writing | speaking`, `title` trim 1–100, `instruction?` ≤1000, `groups[]` 1–20 nhóm. Mỗi
+nhóm: `title?` ≤100, `instruction?` ≤1000, `audioId?`/`imageId?`, `questionIds[]` 1–50 id
+câu; tổng ≤ 200 câu/đề. Câu "không nhóm" là group không có `title`.
+
+```json
+{
+  "expectedUpdatedAt": "2026-10-25T07:30:00.000Z",
+  "sections": [
+    {
+      "skill": "listening",
+      "title": "Phần 1 — Nghe",
+      "instruction": "Chọn đáp án đúng.",
+      "groups": [
+        {
+          "title": "Hội thoại 1",
+          "instruction": "Nghe hội thoại và chọn đáp án.",
+          "audioId": 42,
+          "imageId": null,
+          "questionIds": [101, 102, 103]
+        }
+      ]
+    }
+  ]
+}
+```
+
+- **Thay toàn bộ cây trong một transaction:** xoá placement → `TestQuestion` → `QuestionGroup`
+  → `TestSection` rồi tạo lại theo đúng thứ tự mảng. **Id section và group đổi sau mọi lần
+  PUT structure** (client phải `GET /admin/cms/tests/:testId` lại, không cache id).
+- **`orderIndex`:** section `1..N` liên tục theo thứ tự mảng (không sắp theo `skill`); group
+  `1..M` liên tục trong từng section; `TestQuestion.orderIndex` = `placement.orderIndex` =
+  thứ tự liên tục `1..N` trên toàn đề, không reset theo section/group; mọi placement đều có
+  `groupId` (câu "không nhóm" là group không có title).
+- **Lưu không kiểm level/skill/published của câu** — đó là việc của publish. Chỉ chặn tham
+  chiếu không thể dùng: câu không tồn tại/đã soft-delete/`archived` → `409
+  TEST_QUESTION_NOT_USABLE` với `details.field` = vị trí
+  (`sections[i].groups[j].questionIds[k]`) và `details.reason` ∈ `not_found | archived`;
+  media nhóm kiểm ở mức lưu theo TL-81a (`audioId` phải là Media `audio`, `imageId` là Media
+  `image`, khoá `FOR SHARE`) → `409 MEDIA_NOT_USABLE` với `details.field` ∈
+  `sections[i].groups[j].audioId | sections[i].groups[j].imageId` và `details.reason` ∈
+  `not_found | wrong_type | quarantined | archived`. Media `pending`/`processing` **được phép
+  lưu**; publish mới đòi `ready`.
+- Trước khi kiểm câu dùng được, service khoá các câu bằng `FOR SHARE` theo `id` tăng dần
+  (cùng thứ tự như publish), rồi mới kiểm (H3).
+- Archive được từ `draft` hoặc `published`, sau đó mọi mutation trả `TEST_ARCHIVED`. Duplicate
+  giữ nguyên level và cấu trúc section/group/placement cùng tham chiếu câu, bỏ kết quả thi,
+  luôn tạo đề `draft` mới với title `"<title> (bản sao)"`; tiêu đề nguồn được cắt theo code
+  point để tổng ≤200 ký tự (không tách đôi cặp surrogate của emoji, H6).
+
+`TestAdmin`: `{ id, levelId, levelCode, title, instruction, duration, passScore, maxScore,
+status, version, sectionCount, questionCount, skills, createdAt, updatedAt, publishedAt }`;
+`duration` tính bằng phút; `maxScore = 100 × sectionCount` (Q118 — mỗi câu điểm như nhau, mỗi
+phần 100 điểm); `skills` = các `skill` khác nhau của section theo thứ tự phần. `TestDetail` =
+`TestAdmin` + `sections[]`: section = `{ id, skill, title, instruction, orderIndex,
+questionCount, groups[] }`; group = `{ id, title, instruction, audioId, imageId, orderIndex,
+questions[] }`; question = `{ questionId, orderIndex, type, skill, levelId, difficulty,
+status, content }`. `GET tests` trả `TestAdmin` (không `sections`), `GET tests/:testId` và
+mọi mutation trả `TestDetail`. **Id section/group chỉ sống trong một lần đọc**: mỗi `PUT
+structure` tạo id mới.
+
+Publish (TL-98) chỉ áp dụng cho đề `draft`; mọi vi phạm gom vào một `409 TEST_NOT_PUBLISHABLE`
+với `details.reasons[]` = `{ code, field }`, tối đa 20 reason. Một câu có thể sinh **nhiều**
+reason cùng `field` (ví dụ vừa chưa xuất bản, vừa khác cấp, vừa khác kỹ năng) để tác giả sửa
+hết trong một vòng (H2); chỉ câu không còn tồn tại mới dừng ở `question_not_published`:
+
+| `reason.code` | `field` | Khi nào |
+| --- | --- | --- |
+| `level_not_found` | `levelId` | Level của đề không còn tồn tại |
+| `sections_required` | `sections` | Đề chưa có section nào |
+| `section_empty` | `sections[i]` | Section không có group nào |
+| `group_empty` | `sections[i].groups[j]` | Group không có câu nào |
+| `question_not_published` | `sections[i].groups[j].questionIds[k]` | Câu không tồn tại, đã soft-delete/archived hoặc chưa `published` |
+| `question_level_mismatch` | `sections[i].groups[j].questionIds[k]` | `levelId` của câu khác `levelId` của đề |
+| `question_skill_mismatch` | `sections[i].groups[j].questionIds[k]` | `skill` của câu khác `skill` của section |
+| `pass_score_required` | `passScore` | `passScore = null` |
+| `pass_score_out_of_range` | `passScore` | Ngoài khoảng `0..maxScore` |
+| `audio_not_ready` | `sections[i].groups[j].audioId` | Media audio của group không `ready`/không dùng được |
+| `image_not_ready` | `sections[i].groups[j].imageId` | Media ảnh của group không `ready`/không dùng được |
+| `question_audio_not_ready` | `sections[i].groups[j].questionIds[k]` | Media audio của câu không `ready`/không dùng được (TL-129) |
+| `question_image_not_ready` | `sections[i].groups[j].questionIds[k]` | Media ảnh của câu không `ready`/không dùng được (TL-129) |
+
+Publish thành công: `status = published`, set `publishedAt`/`publishedById`, `version` và
+`scoringVersion` giữ nguyên (TL-98). Đề đã publish chỉ đọc: `PATCH`/`PUT structure`/publish
+lần nữa → `409 TEST_NOT_EDITABLE`; archive vẫn được.
+
+Lỗi `409` (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| `error.code` | `error.message` | Khi nào |
+| --- | --- | --- |
+| `TEST_NOT_EDITABLE` | `Only a draft Test can be changed.` / `Only a draft Test can be published.` | `PATCH`/`PUT structure`/`publish` khi đề không còn `draft` |
+| `TEST_ARCHIVED` | `Archived Test cannot be changed.` / `Archived Test cannot be published.` | Mutation/publish đề đã archive |
+| `TEST_CONCURRENT_UPDATE` | `The Test changed since it was read; reload and retry.` / `Concurrent Test update detected; retry the request.` | `expectedUpdatedAt` lệch `updatedAt` (đọc lại rồi retry) hoặc race transaction |
+| `TEST_NOT_PUBLISHABLE` | `Test does not meet the publish requirements.`, `details.reasons` | Publish thiếu điều kiện TL-98 |
+| `TEST_QUESTION_NOT_USABLE` | `Test questions must exist and must not be soft-deleted or archived.`, `details.field`, `details.reason` ∈ `not_found \| archived` | `PUT structure` chứa câu không tồn tại/đã xoá/archived |
+| `MEDIA_NOT_USABLE` | `Test group media must exist, be live and of the right type.`, `details.field`, `details.reason` ∈ `not_found \| wrong_type \| quarantined \| archived` | `PUT structure` với media nhóm không dùng được |
+| `TEST_UNIQUE_CONFLICT` | `Test content conflicts.` | Trùng unique của Test/TestSection/QuestionGroup |
+| `TEST_CONSTRAINT_CONFLICT` | `Test violates a database integrity constraint.` | Vi phạm FK/check |
+
+Timeout/connection hạ tầng → `503` message `Test operation is temporarily unavailable; retry
+the request.` (retry được).
+
+Lỗi body: DTO lồng nhau sai shape, field lạ (`whitelist` + `forbidNonWhitelisted` →
+`$.$unknown`) hoặc vượt giới hạn mảng/độ dài → `400 REQUEST_VALIDATION_FAILED` với
+`details.errors: [{ path, codes }]` (§1). Lỗi nghiệp vụ sau DTO là `422` với `details.path` =
+vị trí để client focus đúng ô: trùng `questionId` trong cùng đề → `TEST_STRUCTURE_INVALID`
+(`details.path` = vị trí lặp, vd `sections[0].groups[0].questionIds[1]`); tổng >200 câu →
+`TEST_STRUCTURE_INVALID` với `details.path = "sections"`; `levelId` không tồn tại →
+`level_not_found`, `details.path = "levelId"`, message `Test level does not exist.`.
+`:testId` hoặc query sai → `400`.
+
+Audit trong cùng transaction (TL-101): `test.created`, `test.updated`,
+`test.structure_updated`, `test.published`, `test.archived`, `test.duplicated`;
+`targetType = "test"`, `targetId` là chuỗi id; `afterSummary = { entityType: "test", entityId,
+status, sectionCount, questionCount }`, riêng `test.duplicated` thêm `sourceTestId`;
+`correlationId` = request id. Không ghi `beforeSummary`.
+
+Q116 (TL-99): publish bản sửa đổi `levelId`, `skill` hoặc `type` của câu đang nằm trong đề
+`published` → `409 QUESTION_IN_PUBLISHED_TEST` với `details.field` ∈ `levelId | skill | type`
+(message `A published test uses this question; level, skill and type cannot change.`); sửa
+`content`, `answers`, `correctAnswer`, `explanation`, `tags` hay media vẫn publish được. Lượt
+thi cũ bảo vệ bằng snapshot (M4.2a), không cần migration. Chi tiết ở A.9b.
+
+TL-129: cổng publish kiểm cả media **mức câu** (`Question.audioId`, `Question.imageId`) với
+hai mã `question_audio_not_ready`/`question_image_not_ready`; bước bắt đầu thi chạy lại đúng
+hàm `collectTestPublishBlockers` này, nên đề đã xuất bản mà media của câu hỏng thì
+`POST /exam/tests/:testId/attempts` trả `409 EXAM_TEST_UNAVAILABLE` kèm vị trí câu. Bài đang
+làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot (Q120/Q121).
+
+### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c/M4.3)
+
+Envelope §1. 10 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi
+response 2xx có `Cache-Control: no-store`; `:testId`/`:attemptId` qua pipe số nguyên dương
+`1..2147483647` (sai → `400`). Chỉ cần đăng nhập là bắt đầu được bài thi: không lọc theo cấp
+của học viên, không chặn free/premium (Q119). "Đề thi được" = tồn tại, `status = published`,
+chưa lưu trữ (`deletedAt IS NULL`), và `availableFrom ≤ now < availableTo` nếu hai trường này
+có đặt (Q119); đề nháp/đã lưu trữ/ngoài cửa sổ đều trả cùng `404 EXAM_TEST_NOT_FOUND` để
+không lộ đề nháp.
+
+| Method | Path | Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/exam/tests` | — | `ExamTestListPage` — danh sách đề được ở mọi cấp + trạng thái bài làm của chính người gọi, phân trang `page`/`limit` (B1, Q209–Q214) |
+| `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
+| `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
+| `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
+| `POST` | `/exam/attempts/:attemptId/submit` | `{ "idempotencyKey": "<uuid>" }` | `ExamSubmitView` — chốt bài đúng một lần; cùng key → `200` với `replayed: true`, key khác trên bài đã nộp → `409 EXAM_ATTEMPT_ALREADY_SUBMITTED` (TL-150/TL-151) |
+| `GET` | `/exam/attempts/:attemptId/result` | — | `ExamResultView` — điểm + breakdown của bài đã terminal; **route này có thể ghi** (timeout lười ở lần đọc đầu, rồi chấm lười) (TL-165/Q147) |
+| `GET` | `/exam/attempts/:attemptId/review` | — | `ExamReviewView` — toàn bộ câu theo thứ tự snapshot + `learnerAnswer`, `correctAnswer`, `explanation`, `isCorrect`, `isFlagged`, `sectionKey`/`groupKey` và tham chiếu media snapshot (`mediaId`/`kind`, không URL) (TL-166/Q148/Q158/Q217) |
+| `PUT` | `/exam/attempts/:attemptId/answers/:questionKey` | `SaveExamAnswer` | `ExamAnswerSaveView` — lưu một câu (TL-121) |
+| `PUT` | `/exam/attempts/:attemptId/answers` | `{ "items": [SaveExamAnswer & { questionKey }] }` 1–20 item | `{ results: [ExamAnswerBatchResult], serverNow, remainingSeconds }` (TL-124) |
+| `GET` | `/exam/attempts/:attemptId/media-grants` | — | `{ grants: [{ mediaId, kind, url, expiresAt }], unavailable: [mediaId] }` (TL-128); attempt terminal (`submitted`/`timed_out`) cũng được cấp với TTL cố định 300 s (Q158/Q218) |
+
+`GET /exam/tests` (B1, Q209–Q214): query `levelCode?` (một trong `HSK1`…`HSK6`, `HSK7_9` — tập
+`Level.code` của chương trình HSK 3.0; giá trị khác → `400`), `skill?` (`Skill`), `sort?` (`newest` |
+`oldest` | `score`, mặc định `newest`), `page?` (số nguyên ≥ 1) và `limit?` (1–100, mặc định 20).
+Giá trị sai → `400 REQUEST_VALIDATION_FAILED`. Chỉ cần đăng nhập, cùng predicate hiển thị với màn
+giới thiệu đề (Q119) và **không** lọc theo cấp của học viên — cấp chỉ là filter của query.
+
+```json
+[{ testId, title, levelCode, duration, questionCount, skills: [<Skill>], status: "not_started" | "in_progress" | "done", activeAttempt: null | { attemptId, expiresAt }, latestAttempt: null | { attemptId, status: "submitted" | "timed_out", score, maxScore, submittedAt, resultAvailable } }]
+```
+
+`meta.pagination` = `{ page, limit, total, totalPages }`. `duration` là thời gian làm bài của cả đề
+(phút, Q118); `questionCount` đếm số câu theo cấu trúc; `skills` là các kỹ năng khác nhau của các
+phần theo `TestSection.orderIndex` (Q210) — `skill=X` khớp đề có **ít nhất một** phần mang X.
+`activeAttempt` chỉ có khi học viên đang có bài `in_progress` **còn hạn** (`expiresAt > now`); bài
+quá hạn bị coi như không có và **không** bị chuyển `timed_out` ở route này (Q212). `latestAttempt`
+là lần làm **đã xong** gần nhất theo `submittedAt` rồi `id`, chỉ `submitted`/`timed_out` —
+`invalidated` bị bỏ qua (Q213). `score`/`maxScore` đọc từ row `Result` của lần đó; chưa có `Result`
+→ `score: null`, `resultAvailable: false` và route **không** chấm lười (Q214). Chỉ attempt của user
+trong token xuất hiện (owner-only).
+
+`sort=newest`/`oldest` theo `publishedAt` rồi `id` (đề thiếu `publishedAt` xếp cuối);
+`sort=score` theo điểm lần gần nhất giảm dần, đề chưa có điểm xếp cuối, hoà thì theo `newest`.
+Đường `score` sắp xếp trong bộ nhớ: tối đa 500 đề được nạp (`EXAM_LIST_SCORE_SORT_MAX`), nâng cấp
+khi catalogue vượt 500. Endpoint dùng số câu SQL cố định (không N+1).
+
+`ExamTestIntro`:
+
+```json
+{ id, title, instruction, levelCode, durationMinutes, questionCount, sectionCount, maxScore, passScore, sections:[{orderIndex,title,skill,questionCount,maxScore}], activeAttempt: null | {id,startedAt,expiresAt,answeredCount,questionCount} }
+```
+
+`answeredCount` chỉ đếm câu có `answer` khác JSON `null`: câu mới đánh dấu (lưu `answer: null` với
+`isFlagged: true`) không tính, và xoá đáp án làm giảm số đếm (F3).
+
+`ExamAttemptView` (dùng cho cả `POST` và `GET` attempt):
+
+```json
+{ id, testId, status, startedAt, expiresAt, serverNow, remainingSeconds, maxScore, questionCount, test:{title,instruction,levelCode,durationMinutes,passScore}, sections:[{key,orderIndex,title,instruction,skill,groups:[{key,orderIndex,title,instruction,content,audio,image,questions:[{key,orderIndex,type,skill,content,answers,audio,image}]}]}], answers:[{questionKey,answer,isFlagged,version,answeredAt,lastSavedAt}] }
+```
+
+`ExamSubmitView` (200 của `POST /exam/attempts/:attemptId/submit`, TL-150):
+
+```json
+{ id, status: "submitted", submittedAt, serverNow, answeredCount, unansweredCount, flaggedCount, replayed }
+```
+
+`answeredCount` dùng đúng predicate của intro (F3: `answer` khác JSON `null`); `unansweredCount =
+questionCount − answeredCount` với `questionCount` đếm từ snapshot đã đóng băng; `flaggedCount` là
+số row `isFlagged = true`. `replayed: true` nghĩa là request này trả lại kết quả của một lần nộp
+đã commit trước đó cùng `idempotencyKey` (không ghi thêm event, không đổi `submittedAt`).
+
+`ExamResultView` (200 của `GET /exam/attempts/:attemptId/result`, TL-165/Q147/Q151):
+
+```json
+{ attemptId, testId, status, testTitle, startedAt, submittedAt, score, maxScore, passScore, passed, scoringVersion, gradedAt, counts:{answeredCount,correctCount,incorrectCount,unansweredCount}, sections:[{key,title,skill,questionCount,correctCount,score,maxScore}], skills:[{skill,score,maxScore}], weakAreas:[{slug,name,answered,correct,accuracy,level}] }
+```
+
+Response đọc lại `Result` đã lưu (không chấm lại): `score`/`passed`/`scoringVersion` lấy từ row
+`Result`, `maxScore` lấy từ row `Result` và fallback `snapshot.test.maxScore` khi cột null,
+`gradedAt = Result.publishedAt`, `counts`/`sections`/`weakAreas` đọc từ
+`Result.detailJson` (`schemaVersion: 1`, validate chặt, sai shape → `500` fail closed),
+`title` của section, `testTitle` và `passScore` lấy từ **snapshot đã đóng băng**, `skills` lấy
+từ các row `ResultSkillScore` (`maxScore` = `total`); `passed: null` khi snapshot không có
+`passScore` (Q145). `weakAreas` tối đa 5 tag, chỉ tag có ≥2 câu đã trả lời và độ chính xác
+< 70% (Q154). Không phân trang (Q151 giới hạn đề ≤200 câu). Không chứa `correctAnswer`,
+`explanation`, `optionId`, `acceptedTexts`, `tokenIds` hay nội dung câu (R11). `testId`
+(TL-181) là id đề đã đóng băng trong snapshot, để màn kết quả quay lại đúng đề; trường này
+additive, các field cũ giữ nguyên. Đúng **năm** nhánh `500` nội bộ của result/review — dữ
+liệu terminal thiếu `submittedAt`, row `Result` mất, row `Result` thiếu, breakdown trỏ phần
+lạ, review thiếu câu đã chấm — trả cùng message cố định `Exam result is unavailable.` và log
+`exam.result.internal` kèm `attemptId` + mã lý do ngắn (`missing_submitted_at`,
+`missing_result_row`, `incomplete_result_row`, `unknown_section`,
+`missing_graded_question`), không kèm nội dung câu (TL-179). Hai nhánh `500` fail-closed khác
+của cùng đường đọc **không** thuộc nhóm này và không log `exam.result.internal`: snapshot
+thiếu → `Exam attempt snapshot is missing.`, payload snapshot hỏng →
+`Exam snapshot payload is invalid.` (guard dữ liệu nền, không phải breakdown đã chấm). Riêng
+`Result.detailJson` sai shape trả cùng message trên nhưng log `exam.result.detail.invalid`
+kèm `field` (không có nội dung câu) — TL-186.
+
+Chấm lười (Q147): `GET result` mở transaction, khoá `ExamAttempt FOR UPDATE` lọc `userId`
+(không thuộc người gọi → `404 EXAM_ATTEMPT_NOT_FOUND`), áp timeout lười nếu attempt
+`in_progress` đã quá `expiresAt + 5 s` (event `timed_out` reason `expired_on_read`), rồi mới
+chấm nếu chưa có `Result`. Nhánh 409 `EXAM_RESULT_UNAVAILABLE` (Q156) commit cả phần timeout
+lười vừa ghi; một `500` fail-closed vì `detailJson`/shape lưu hỏng thì rollback toàn transaction
+(timeout lười được thử lại ở lần đọc sau, không mất dữ liệu). `in_progress` còn hạn → `409
+EXAM_ATTEMPT_NOT_TERMINAL`; `invalidated` → `409 EXAM_ATTEMPT_CLOSED` (Q157, body không có nội
+dung bài); chấm lỗi (shape đáp án lạ) → không ghi `Result`, log `exam.grading.failed` chỉ gồm
+`attemptId` + tên lỗi (không nội dung), trả `409 EXAM_RESULT_UNAVAILABLE` và lần đọc sau chấm
+lại (Q156). Lần đọc thứ hai trả đúng row đã lưu (không tạo thêm `Result`, không đổi
+`publishedAt`).
+
+`ExamReviewView` (200 của `GET /exam/attempts/:attemptId/review`, TL-166/Q148/Q158/Q217):
+
+```json
+{ attemptId, status, testTitle, startedAt, submittedAt, questions:[{key,orderIndex,type,skill,sectionKey,groupKey,content,answers:{options?,tokens?},learnerAnswer,correctAnswer,explanation,isCorrect,isFlagged,groupMedia:{audio,image},audio,image}] }
+```
+
+Cùng guard/khoá/timeout lười/404/409/Q156/Q157 và chấm lười như result. `questions` đúng thứ
+tự snapshot (section → group → question), không phân trang. `learnerAnswer` là `answer` đã lưu
+(`null` khi chưa trả lời hoặc đã xoá); `correctAnswer` và `explanation` lấy từ **snapshot**,
+không phải câu live; `isCorrect` lấy từ `Result.detailJson.questions` theo `key` (một nguồn
+duy nhất). Q217: `isFlagged` là cờ đã lưu của câu (`false` khi chưa có row), `sectionKey`/
+`groupKey` là key đóng băng của snapshot (`s<orderIndex>`, `s<orderIndex>-g<orderIndex>`);
+`audio`/`image` là tham chiếu media của **câu**, `groupMedia.audio`/`groupMedia.image` là tham
+chiếu media của **nhóm** — tất cả lấy từ snapshot, chỉ gồm `mediaId`/`kind`/`mimeType`/
+`durationMs`, **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
+Với `arrange_sentence`, id trong `answers.tokens`, `learnerAnswer.order` và
+`correctAnswer.tokenIds` cùng không gian id đã che của snapshot (TL-133), không lộ id soạn câu.
+
+`ExamAnswerSaveView` = `ExamAnswerView` + `serverNow`, `remainingSeconds`; `ExamAnswerView` =
+`{ questionKey, answer, isFlagged, version, answeredAt, lastSavedAt }` (TL-127). `questionKey`
+chính là `ExamAnswer.snapshotQuestionKey` nội bộ (`q<orderIndex>`); `answer` là shape của
+learner (`{choice}`, `{value}`, `{text}`, `{order}`) hoặc `null` khi đã xoá đáp án.
+`answeredAt` là lần đầu lưu một đáp án khác `null`, giữ nguyên khi xoá đáp án.
+
+`SaveExamAnswer` (body lưu một câu, TL-121):
+
+```json
+{ "answer": { "choice": "a" } | null, "isFlagged": false, "expectedVersion": null, "idempotencyKey": "<uuid>", "clientElapsedMs": 12345 }
+```
+
+`answer: null` xoá đáp án nhưng **giữ** `isFlagged`. Shape đáp án theo `snapshot.type` (TL-122):
+`mcq` = `{ choice: <id option trong snapshot> }`; `true_false` = `{ value: boolean }`;
+`fill_blank` = `{ text: string }` chuẩn hoá NFC, trim, 1–200 code point;
+`arrange_sentence` = `{ order: [<hoán vị đủ mọi token id trong snapshot>] }`; các `id` này là
+id **đã che riêng cho attempt** (TL-133), không phải id soạn câu hỏi. Sai shape/id →
+`400 EXAM_ANSWER_INVALID` với `details.field` (`answer.choice`, `answer.value`, `answer.text`,
+`answer.order`). Server **không** chấm đúng/sai ở bước này (M4.3).
+
+`expectedVersion`: `null` nghĩa là "tạo mới" — nếu câu đã có row thì `409
+EXAM_ANSWER_VERSION_CONFLICT`; khác `null` phải bằng `version` hiện tại, lưu thành công thì
+`version` tăng 1. Conflict trả `details.current` = `ExamAnswerView` của row đang thắng hoặc
+`null` khi câu chưa có row. Mỗi lần lưu thành công ghi đúng **một** event `autosaved`
+(`idempotencyKey` = key của request, `metadata = { questionKey, version, clientElapsedMs,
+bodySha256 }`, **không** chứa nội dung đáp án); trùng key + cùng câu + cùng body →
+`200` trả lại row hiện tại (không tăng version, không thêm event), trùng key nhưng khác câu
+hoặc khác body → `409 EXAM_IDEMPOTENCY_KEY_REUSED` (TL-123). Cột
+`ExamAnswer.saveIdempotencyKey` chỉ giữ key mới nhất.
+
+Batch (TL-124): chạy trong **một** transaction, mỗi item dùng đúng logic trên; lỗi từng item
+không làm hỏng lô — **trừ** body chứa khoá `__proto__` (bị chặn ở tầng raw-body trước DTO và trả
+`400 EXAM_ANSWER_INVALID` cho cả request, vì class-transformer sẽ làm mất dấu vết của khoá này).
+`results[i].status` ∈ `saved | replayed | conflict | invalid | not_found`
+kèm `answer` (saved/replayed), `code` (invalid; `EXAM_ANSWER_INVALID` hoặc
+`EXAM_IDEMPOTENCY_KEY_REUSED`) hoặc `current` (conflict). 1–20 item, `questionKey` trùng
+trong lô → `400 REQUEST_VALIDATION_FAILED`, `questionKey` không có trong snapshot →
+`not_found` của riêng item. Attempt đã đóng/hết hạn thì **cả lô** `409` như dưới.
+
+Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
+
+| HTTP | `error.code` | Khi nào |
+| --- | --- | --- |
+| `401` | `UNAUTHORIZED` | Thiếu/sai token |
+| `404` | `EXAM_TEST_NOT_FOUND` | Đề không tồn tại, đang nháp, đã lưu trữ hoặc ngoài cửa sổ `availableFrom`/`availableTo` — không lộ đề nháp |
+| `409` | `EXAM_TEST_UNAVAILABLE` | Nội dung đề không còn hợp lệ lúc bắt đầu; `details.reasons` dùng cùng bộ mã với bước publish ở A.9c |
+| `409` | `EXAM_IDEMPOTENCY_KEY_REUSED` | Cùng `idempotencyKey` đã dùng cho đề khác (`POST` start) hoặc cho câu/body khác (`PUT` answers) |
+| `404` | `EXAM_ATTEMPT_NOT_FOUND` | Attempt không tồn tại hoặc không phải của người gọi |
+| `404` | `EXAM_QUESTION_NOT_FOUND` | `:questionKey` không khớp `^q\d+$` hoặc không có trong snapshot của attempt (TL-121) |
+| `400` | `EXAM_ANSWER_INVALID` | Sai kiểu hoặc sai shape với `snapshot.type`, hoặc sai id option/token: `details.field` theo type (`answer.choice`, `answer.value`, `answer.text`, `answer.order`); thiếu hẳn `answer` → `details.field = answer` |
+| `409` | `EXAM_ANSWER_VERSION_CONFLICT` | `expectedVersion` lệch version hiện tại, hoặc `null` khi câu đã có row; `details.current` |
+| `409` | `EXAM_ATTEMPT_EXPIRED` | `PUT` (một câu hoặc lô) **hoặc** `POST .../submit` trả mã này khi quá `expiresAt + 5 s` và chính request đó vừa chuyển attempt sang `timed_out`; `GET` cũng chuyển `timed_out` nhưng trả `200`; `media-grants` với attempt `in_progress` quá hạn trả mã này, chỉ đọc và không đổi status (không tự chuyển sang nhánh grant terminal) |
+| `409` | `EXAM_ATTEMPT_CLOSED` | Attempt không còn `in_progress`. Với `PUT` (một câu hoặc lô) và `POST .../submit`: `timed_out` hoặc `invalidated` (submit trên bài đã `submitted` → `EXAM_ATTEMPT_ALREADY_SUBMITTED`); với `GET result`/`GET review`: **chỉ** `invalidated` (Q157); với `GET media-grants`: **chỉ** `invalidated` (Q158/Q218 — `submitted`/`timed_out` được cấp grant review). `details.status` |
+| `409` | `EXAM_ATTEMPT_ALREADY_SUBMITTED` | Chỉ `POST .../submit`: attempt đã `submitted` và request mang `idempotencyKey` khác; `details.status = "submitted"` (TL-151) |
+| `409` | `EXAM_ATTEMPT_NOT_TERMINAL` | Chỉ `GET result`/`GET review`: attempt còn `in_progress` và chưa quá `expiresAt + 5 s`; body chỉ `{code, message}`, không có nội dung bài (Q147) |
+| `409` | `EXAM_RESULT_UNAVAILABLE` | Chỉ `GET result`/`GET review`: chấm lỗi (shape đáp án lạ) nên không ghi `Result`; phần timeout lười vừa ghi vẫn commit, lần đọc sau chấm lại. Log `exam.grading.failed` chỉ gồm `attemptId` + tên lỗi (Q156) |
+| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa; hoặc query của `GET /exam/tests` sai (`levelCode` ngoài 7 mã, `skill`/`sort` lạ, `page`/`limit` ngoài biên) |
+
+Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
+ở `docs/database/P0_DATA_DICTIONARY.md`); bấm "Bắt đầu" khi đang có bài dở trả lại chính bài
+đó (`200`, đồng hồ vẫn chạy tiếp). Bài đang làm còn hạn được trả lại ngay cả khi nội dung đề
+đã đổi sau khi bắt đầu (Q121); cổng publish chỉ chạy khi tạo bài mới. Bài `in_progress` đã quá
+hạn bị chuyển `timed_out` (event `timed_out`, `metadata.reason = 'expired_on_start'`) rồi tạo
+bài mới (`201`); `GET` intro coi bài quá hạn là `activeAttempt: null` và **không** đổi dữ liệu.
+
+Đồng hồ và timeout lười (TL-126/TL-127, F1/F4): thời điểm hiện tại lấy bằng `clock_timestamp()`
+của PostgreSQL **sau khi** transaction đã giữ khoá `ExamAttempt` (start: sau khoá User và khoá
+attempt ở nhánh đóng; save/GET/media-grants: sau khoá attempt), nên ân hạn được xét đúng lúc
+khoá đã nằm trong tay (một save đang chờ khoá sẽ bị xét theo đồng hồ sau khi khoá về tay nó).
+Lưu được chấp nhận khi `now < expiresAt + 5 s` (hằng `EXAM_SAVE_GRACE_SECONDS`); quá ngưỡng đó
+mà status còn `in_progress` thì `PUT`/`GET` áp dụng timeout lười: `status = timed_out`,
+`submittedAt = expiresAt`, `remainingSeconds = 0`, ghi đúng **một** event `timed_out` với
+`metadata.reason = 'expired_on_save'` (PUT) hoặc `'expired_on_read'` (GET), rồi PUT trả
+`409 EXAM_ATTEMPT_EXPIRED` (lần lưu sau thấy `timed_out` nên trả `409 EXAM_ATTEMPT_CLOSED`).
+Riêng start **không** áp ân hạn: qua `expiresAt` là đóng attempt ngay
+(`reason = 'expired_on_start'`); ân hạn 5 s chỉ dành cho save đang bay, và save đang giữ khoá
+commit trước nên start thấy attempt đã đóng và bỏ qua bước đóng. Mọi chuyển
+`in_progress → timed_out` là update có điều kiện `status = 'in_progress'` và chỉ transaction
+thắng mới ghi event, nên một attempt có **đúng một** event `timed_out`. `GET` trả `200` với
+`status = timed_out`; lần đọc thứ hai không ghi thêm event. `remainingSeconds` không bao giờ âm.
+
+Nộp bài (TL-150…TL-156, Q133/Q134): `POST /exam/attempts/:attemptId/submit` chạy trong **một**
+transaction, sau `ExamAttempt FOR UPDATE` lọc `userId` (không thuộc người gọi → `404`). Thứ tự:
+(1) replay ledger — event `(attemptId, idempotencyKey)` đã có: type `submitted` → `200` với
+`replayed: true` và các con số lấy từ `metadata` của event đó; type khác (`started`/`autosaved`)
+→ `409 EXAM_IDEMPOTENCY_KEY_REUSED`; (2) attempt đã `submitted` → `409
+EXAM_ATTEMPT_ALREADY_SUBMITTED`; (3) `timed_out`/`invalidated` → `409 EXAM_ATTEMPT_CLOSED`;
+(4) quá `expiresAt + 5 s` → timeout lười với `metadata.reason = 'expired_on_submit'`, commit rồi
+trả `409 EXAM_ATTEMPT_EXPIRED`; (5) còn lại → update có điều kiện `status = 'in_progress'` sang
+`submitted`, set `submittedAt = now`, `remainingSeconds = max(0, floor((expiresAt − now)/1000))`
+(Q133: nộp trong 5 s ân hạn vẫn là `submitted`), ghi đúng **một** event `submitted` với
+`metadata = { reason: 'user_submit', answeredCount, unansweredCount, flaggedCount }` (không có nội
+dung đáp án, điểm hay result — R11). Lần nộp thứ hai với key khác nhận
+`EXAM_ATTEMPT_ALREADY_SUBMITTED`; hai request song song tranh khoá attempt nên chỉ một request
+đổi được status và ghi event. A2/TL-164: submit **có** chấm điểm — sau event `submitted`, trong
+cùng transaction, server ghi đúng một `Result` (`detailJson` + `ResultSkillScore`) và cập nhật
+`ExamAttempt.score` (chỉ khi `ExamAttempt.maxScore` khác null); nếu chấm lỗi (shape đáp án lạ)
+thì transaction vẫn commit phần chốt bài, **không** ghi `Result`, log `exam.grading.failed` và
+để `GET result`/`GET review` chấm lười (Q147/Q156). Với
+attempt đã terminal, mọi `PUT` answer tiếp theo (một câu, lô) và `GET media-grants` trả `409
+EXAM_ATTEMPT_CLOSED`, còn start tạo attempt mới như Q120. `submittedAt` của bài nộp trong
+ân hạn có thể muộn hơn `expiresAt` tối đa 5 s (Q133).
+
+Rate limit của submit (TL-153): `POST /exam/attempts/:attemptId/submit` 10/phút/user, nâng lên
+1.000 khi `NODE_ENV=test`; các route exam khác giữ nguyên như §1.
+
+Khoá khi lưu (TL-125, F8d): `ExamAttempt FOR UPDATE` theo `id` đã lọc `userId` (không thuộc
+người gọi → `404`), rồi row `ExamAnswer`; đường lưu **không** khoá User/Test/Media. Lần insert
+đầu tiên của một câu có FK `questionId` nên PostgreSQL ngầm lấy `FOR KEY SHARE` trên row
+`Question` tương ứng, vì vậy lượt lưu đầu tiên của câu đó có thể phải chờ transaction admin
+đang sửa câu (`Question FOR UPDATE`). Không có vòng deadlock: start giữ `Question FOR SHARE`,
+tương thích với `FOR KEY SHARE`, nên save đang giữ khoá attempt không phải chờ start; còn
+admin không bao giờ chờ `ExamAttempt`. Thứ tự hiệu dụng: start = User → Test/Question/Media
+(`FOR SHARE`) → ExamAttempt (`FOR UPDATE`, chỉ ở nhánh đóng attempt hết hạn); save/GET =
+ExamAttempt (`FOR UPDATE`) → (chỉ lần insert đầu) Question `FOR KEY SHARE`.
+
+Media của bài thi (TL-128/Q158/Q218): `GET /exam/attempts/:attemptId/media-grants` cấp cho
+attempt của chính người gọi. Với attempt `in_progress` còn trong cửa sổ `expiresAt + 5 s`,
+TTL = `min(remainingSeconds + 60, 300)` giây như cũ; gọi khi đã quá hạn trả `409
+EXAM_ATTEMPT_EXPIRED` và **không** đổi status (route chỉ đọc, không áp dụng timeout lười, nên
+không tự chuyển sang nhánh terminal trong cùng request). Với attempt đã kết thúc
+(`submitted`/`timed_out`), route cấp mọi `mediaId` trong snapshot với **TTL cố định 300 s**
+(Q158/Q218), không phụ thuộc đồng hồ; `invalidated` trả `409 EXAM_ATTEMPT_CLOSED`. `grants` dùng
+`url` đúng định dạng `/api/v1/media/:id/content?expires&signature` của signer hiện có; media
+không còn dùng được thì bỏ khỏi `grants` và chỉ nêu `mediaId` ở `unavailable`. Không mở rộng
+`GET /media/:id/access` cho exam.
+
+R11: response dựng theo allowlist từng trường; khi đang thi không bao giờ trả `correctAnswer`,
+`explanation`, `acceptedTexts`, `caseSensitive`, `tokenIds`, `optionId`, `isCorrect`,
+`contentHash`, `questionId`, `questionVersion`. Sau khi terminal, `GET
+/exam/attempts/:attemptId/review` trả `correctAnswer` + `explanation` cho mọi câu (Q148) qua
+allowlist riêng của review; result/submit/attempt vẫn không chứa các key đó. Đáp án/giải thích
+chỉ có trong snapshot nội bộ (A.9c nói về snapshot của đề; payload snapshot ghi ở
+`docs/database/P0_DATA_DICTIONARY.md`).
+
+Token của `arrange_sentence` được xáo (Fisher–Yates, không trùng thứ tự câu đúng) và đánh lại
+id `t1…tn` theo vị trí hiển thị **riêng cho từng attempt** ngay khi dựng snapshot (TL-133); id
+chỉ có nghĩa trong attempt đó, `correctAnswer.tokenIds` được viết lại theo map id cũ → mới, và
+`contentHash` vì thế khác nhau giữa các attempt. Snapshot của attempt đã tạo trước đó giữ
+nguyên, không backfill.
+
+Ghi chú: `remainingSeconds = max(0, expiresAt − now)` khi `status = in_progress`; với mọi status
+khác (`submitted`, `timed_out`, `invalidated`) trường này luôn `0` (TL-152). `serverNow` theo giờ
+server (đồng hồ tính bằng giờ server, Q122); `maxScore = 100 × số phần` (Q118); key câu dạng `q<orderIndex>`
+chính là `ExamAnswer.snapshotQuestionKey` (đổi tên thành `questionKey` trong response từ
+M4.2b). Rate limit (TL-130): `PUT` một câu 240/phút (môi trường test 1 000), `PUT` lô 60/phút,
+`GET` attempt/result/review 60/phút, media-grants 30/phút.
 
 ### A.10 Admin Media Library và Ingestion (admin)
 
@@ -572,16 +1342,30 @@ Response có `Cache-Control: no-store`.
 
 | Method | Path | Input | `data` | Status |
 | --- | --- | --- | --- | --- |
-| `GET` | `/admin/cms/media` | `type?` (audio/image/pdf/video), `processingStatus?`, `lifecycle?` (active/archived), `dataSourceId?`, `page`, `limit` | `MediaAdmin[]` + `meta`; sort `updatedAt DESC, id DESC` | 200 |
+| `GET` | `/admin/cms/media` | `type?` (audio/image/pdf/video), `processingStatus?`, `lifecycle?` (active/archived), `dataSourceId?`, `page`, `limit` | `MediaAdmin[]` + `meta` (thêm `meta.ingestionEnabled: boolean` = `MEDIA_INGESTION_ENABLED`, không lộ cấu hình khác); sort `updatedAt DESC, id DESC` | 200 |
 | `GET` | `/admin/cms/media/:mediaId` | — | `MediaAdmin` + `usage: { lessonExercises: [{ id, lessonId, topicId, prompt, status }] (≤50), counts: { lessonExercises, otherContent } }` | 200 |
 | `POST` | `/admin/cms/media/:mediaId/quarantine` | — | `{ idempotent, media }`; đã archived → `409` | 201 |
 | `POST` | `/admin/cms/media/:mediaId/archive` | — | `{ idempotent, media }` | 201 |
 | `POST` | `/admin/cms/media/ingestions?dataSourceId=` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128 | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
+| `GET` | `/admin/cms/media/ingestions` | `page`, `limit` (mặc định 20, ≤100) | `MediaIngestionAdmin[]` + `meta` phân trang; sort `startedAt DESC, id DESC` | 200 |
 | `POST` | `/admin/cms/media/ingestions/:ingestionId/cleanup` | — | `{ ingestionId, cleanupCompleted: true }` hoặc `{ ingestionId, cleanupCompleted: false, settling: true }` | 201 |
 
 `MediaAdmin`: `{ id, filename, type, mimeType, size, duration, processingStatus, lifecycle,
 usageCount, dataSourceId, uploadedById, updatedById, deletedAt, createdAt, updatedAt,
 dataSource: { id, code, name, version } }` — không URL, storageKey, checksum.
+
+`MediaIngestionAdmin` (M5.2b, TL-46/TL-47): `{ id, status, failureCode, filename, size,
+dataSource: { id, code, name, version }, startedAt, processingStartedAt, cleanupRequiredAt,
+cleanupAttempts, cleanupLastAttemptAt, cleanupAvailable }`. Chỉ liệt kê lượt cần đối soát:
+`status = 'cleanup_required'`, hoặc `status = 'processing'` có `processingStartedAt` cũ hơn
+15 phút (cùng điều kiện với metric `hsk_media_stuck_processing`, hằng
+`MEDIA_INGESTION_STUCK_PROCESSING_SQL`); `failed`/`rejected`/`completed` không hiện.
+`cleanupAvailable` = `cleanup_required` và provider storage của bản ghi trùng adapter hiện tại.
+Không trả `storageKey`, `processingToken`, `idempotencyKeyHash`, `requestFingerprint`,
+`checksum`, `storageProvider`, `source*Snapshot`, `cleanupAbsentObservedAt`, `actorId`,
+`mediaId`, `declaredMimeType`, `validatedMimeType`. Không gắn cờ ingestion: danh sách và
+cleanup vẫn chạy khi `MEDIA_INGESTION_ENABLED=false` (ADR-005). Route khai báo trước
+`/admin/cms/media/:mediaId`.
 
 Ingestion: `MEDIA_INGESTION_ENABLED=false` → từ chối; giới hạn concurrency trong
 process qua `MEDIA_INGESTION_MAX_CONCURRENCY` (1–16, mặc định 4): khi đầy slot → drain
@@ -591,7 +1375,11 @@ thì trả `503`. `503` có `error.code` `MEDIA_INGESTION_BUSY`, `Retry-After: 1
 `UPLOAD_TOO_LARGE`; multipart hỏng → `400` `error.code` `MULTIPART_INVALID`; client
 ngắt trong khi upload body → client không nhận được response (kết nối đã đóng); không tạo
 bản ghi ingestion; upload timeout → `408` `MEDIA_UPLOAD_TIMEOUT`; file bị reject →
-`400/422`; đang processing hoặc cùng key khác request → `409`; scanner/storage timeout →
+`400/422` (nguồn thiếu giấy phép → `422` `MEDIA_SOURCE_NOT_APPROVED`); `409` có `error.code`:
+`IDEMPOTENCY_KEY_IN_USE` (cùng key khác request), `MEDIA_INGESTION_IN_PROGRESS` (đang xử lý),
+`IDEMPOTENCY_KEY_RENEWAL_REQUIRED` (key đã qua dọn dẹp storage, cần key mới),
+`MEDIA_STORAGE_PROVIDER_MISMATCH` (provider storage của bản ghi khác adapter); message tiếng Anh
+giữ nguyên; scanner/storage timeout →
 `503`. Sau khi đã nhận đủ body, client ngắt kết nối không huỷ công việc (việc tiếp tục
 hoàn tất trong nền và retry với cùng `Idempotency-Key` được replay `201` với
 `idempotent: true`). Pipeline: claim → sharp/music-metadata → ClamAV → reserve → put →
@@ -601,8 +1389,21 @@ finalize. Chi tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được Exercise published tham chiếu) | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
-| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 60 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300) | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`; lỗi vẫn là envelope JSON: grant sai/hết hạn → `403`; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
+
+Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate
+của route attempts (`PUBLIC_LESSON_EXERCISE_WHERE` + `buildLessonReadyWhere()`): exercise
+published, chưa soft-delete, loại public (listening_choice thì media audio ready), topic
+(nếu có) published; lesson published, Level published và chưa soft-delete, lesson có ít
+nhất một topic hoặc story published. Admin không đổi.
+
+Rate limit route content: bucket `default` khoá theo `grant:<sha256(mediaId:expires:signature)>`
+(không chứa chữ ký gốc) khi `mediaId`, `expires`, `signature` đúng dạng và
+`now ≤ expires ≤ now + max(TTL learner, TTL admin) + 60`; ngược lại khoá theo IP. Throttler
+riêng `mediaContentIp` giữ trần 600/phút/IP chỉ cho route này. Ở edge, nginx thêm
+`limit_req` 20 req/giây/địa chỉ, burst 200, trả `429` có `Cache-Control: private, no-store`; body
+429 của edge là trang lỗi HTML của nginx, không phải envelope JSON.
 
 Signature = HMAC-SHA256 trên `method`, canonical path, `expiresAt`, checksum; so sánh
 timing-safe; body được hash lại trước khi trả. Grant luôn ký bằng `MEDIA_SIGNING_SECRET`;
@@ -627,6 +1428,14 @@ thêm `meta` là object phân trang; `meta` của backend không ra browser.
 | `/api/session/recover` | `POST` | Xoá cookie khi backend trả 401/403 (fail-closed) |
 | `/api/session/me` | `GET` | Đối chiếu cookie với `/auth/me`. Chỉ xoá cookie khi backend trả 401/403; 5xx, timeout hay body sai giữ cookie và trả `503` (502/503/504) hoặc `500` (E-01). Không có UI consumer; Playwright dùng để kiểm header bảo mật |
 | `/api/admin/media/:id/quarantine`, `/archive` | `POST` | Mutation an toàn có Origin check; UI dùng |
+| `/api/admin/media/ingestions/:ingestionId/cleanup` | `POST` | Dọn dẹp lượt tải (M5.2b, TL-50): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401 rồi `POST` không body tới backend; thành công trả `201` + `no-store`; giữ status và `code` lỗi của backend (`503` `MEDIA_CLEANUP_REQUIRED`/`MEDIA_CLEANUP_OUTCOME_UNKNOWN`, `409`); lỗi khác hay phản hồi lệch shape → `503` |
+| `/api/admin/media/:id/access`, `/content` | `GET` | Xem trước media ở trang chi tiết (TL-54): cùng handler với `/api/learner/media/:id/*` nhưng đọc cookie `hsk_admin_session` và trả `src` `/api/admin/media/:id/content?expires=&signature=`; TTL grant admin = `MEDIA_ACCESS_TTL_SECONDS` |
+| `/api/admin/exercise-imports/preview` | `POST` | Preview nhập bài tập (M5.1b2): kiểm `Origin` → 403, cookie admin → 401, body > 102 400 byte → 413, JSON hỏng → 400 rồi chuyển tiếp `/admin/cms/exercise-imports/preview`; giữ `code`/`details` của backend |
+| `/api/admin/exercise-imports` | `POST` | Commit nhập bài tập: như route preview, thêm header `Idempotency-Key` bắt buộc đúng `IDEMPOTENCY_KEY_PATTERN` (sai/thiếu → 400) và body > 102 400 byte → 413; chuyển key qua `RequestOptions.idempotencyKey` |
+| `/api/admin/users/:id/role` | `PATCH` | Đổi vai trò (M5.3, TL-70): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401, JSON body 400 nếu không phải object có `role` là `user`/`admin`; chỉ chuyển tiếp đúng `{ role }`, trả `200` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/suspend` | `POST` | Khoá tài khoản (M5.3): như route role, body phải có `reason` là string (backend tự trim/kiểm 1–500 → 400); chỉ chuyển tiếp đúng `{ reason }`, trả `201` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/unsuspend` | `POST` | Mở khoá (M5.3): như route role nhưng không đọc body, chuyển tiếp `POST /admin/users/:id/unsuspend`, trả `201` + `no-store`, giữ `code` lỗi backend |
+| `/api/admin/users/:id/deletion-request` | `POST` | Xoá tài khoản dưới 16 tuổi (M1.7d, Q203–Q208): kiểm `Origin` → 403, id `^[1-9]\d{0,9}$` và ≤ 2 147 483 647 → 400, cookie admin → 401, body phải đúng object một khoá `{ reason: 'under_age' }` (body khác → 400 và **không** gọi backend); chỉ chuyển tiếp đúng `{ reason: 'under_age' }`, trả `201` + `no-store`, giữ `code` lỗi backend (`ADMIN_SELF_ACTION_FORBIDDEN`, `LAST_ADMIN_REQUIRED`, `USER_NOT_FOUND`, `USER_NOT_MODIFIABLE`, `USER_DELETION_ALREADY_DUE`); `data` trả `{ requestId, scheduledAt, initiatedBy: 'admin' }` kể cả replay/escalate |
 
 Trang admin đọc dữ liệu bằng Server Component gọi thẳng backend (`exercise-service.ts`,
 `media-service.ts`), không qua BFF route. Bốn route `GET` `/api/admin/exercises`,
@@ -635,6 +1444,139 @@ nên đã bị xoá (H.14, E-01) để thu hẹp bề mặt tấn công; thêm l
 component phải kèm redact `answer`/snapshot và `media.url` cùng test. Layout admin không
 render lại khi điều hướng client, nên mỗi trang admin tự map lỗi backend `401` → login và
 `403` → `/forbidden`.
+
+Hai route import trả lỗi theo envelope BFF (`failure(status, code, details)`), nên `422`
+giữ `error.details.errors`, `409` giữ status và `413` được UI dịch thành câu tiếng Việt
+("Tệp tối đa 90 KB." cho tệp người dùng chọn; body BFF lớn hơn 100 KB không lộ message thô).
+
+Route preview (Z1): giữ tối đa 100 lỗi ĐẦU theo thứ tự backend trong `data.errors`, thêm
+`data.errorsTotal` là tổng số lỗi thật; UI hiện "Hiện 100 lỗi đầu trong N lỗi." khi
+`errorsTotal > 100`. Thiếu/sai `Idempotency-Key` ở route commit trả `400`
+`error.code = INVALID_IDEMPOTENCY_KEY`. Kiểm `Content-Length > 102 400` chạy trước khi đọc
+body (Z12), vẫn giữ kiểm theo độ dài thật sau khi đọc cho request không có header.
+
+### A.13 Admin Users và Audit (admin)
+
+Response có `Cache-Control: no-store`. Cả 6 route yêu cầu JWT admin: thiếu/sai token
+→ `401`, role `user` → `403`.
+
+| Method | Path | Input | `data` | Status |
+| --- | --- | --- | --- | --- |
+| `GET` | `/admin/users` | `role?` (`user`/`admin`), `status?` (`active`/`suspended`/`deletion_pending`), `q?` ≤100 ký tự sau trim, `page`, `limit` | `AdminUser[]` + `meta` phân trang; sort `createdAt DESC, id DESC` | 200 |
+| `PATCH` | `/admin/users/:id/role` | `{ role: 'user' \| 'admin' }` | `AdminUser` | 200 |
+| `POST` | `/admin/users/:id/suspend` | `{ reason: string }` 1–500 ký tự sau trim | `AdminUser` | 201 |
+| `POST` | `/admin/users/:id/unsuspend` | — | `AdminUser` | 201 |
+| `POST` | `/admin/users/:id/deletion-request` | `{ reason: 'under_age' }` (enum một giá trị; không có `note`) | `AdminDeletionRequest` | 201 |
+| `GET` | `/admin/audit-logs` | `targetType?`, `targetId?` (≤64 ký tự sau trim), `page`, `limit` | `AdminAuditLog[]` + `meta` phân trang; sort `createdAt DESC, id DESC` | 200 |
+
+`AdminUser`: `{ id, email, name, role, status, lastLoginAt, createdAt }` — không bao giờ
+trả `password`, `failedLoginAttempts`, `lockUntil` hay token.
+
+`AdminDeletionRequest`: `{ requestId: number, scheduledAt: string, initiatedBy: 'admin' }` —
+response của route xoá do admin khởi tạo; `initiatedBy` luôn `'admin'`, kể cả khi hàng bắt
+đầu là request user rồi được escalate.
+
+- Mặc định `GET /admin/users` loại `status = 'anonymized'` và mọi bản ghi đã có
+  `deletedAt`. `status=deletion_pending` là cách duy nhất thấy bản ghi chờ xoá (bản ghi
+  này đã có `deletedAt` do yêu cầu xoá đặt trước đó).
+- `q` tìm ILIKE trên `email` hoặc `name`; `%`, `_`, `\` được escape để khớp literal; `q`
+  rỗng sau trim coi như không lọc. `role`, `status` ngoài danh sách trên, `q` >100 ký tự
+  hay query lạ → `400 REQUEST_VALIDATION_FAILED`.
+- `:id` qua `ParsePositiveSafeIntegerPipe`: không phải số nguyên dương
+  `1..2147483647` → `400`. Id không tồn tại hoặc user đã anonymized → `404`.
+
+`AdminAuditLog`: `{ id, createdAt, action, actor: { id, name, email } | null, targetType,
+targetId, target: { email } | null, reason, roleChange }`.
+
+- `id` là chuỗi vì `AuditLog.id` là PostgreSQL bigint.
+- `actor` null khi hành động do hệ thống thực hiện.
+- `target` chỉ có khi `targetType` là user (không phân biệt hoa/thường, vì audit cũ ghi
+  `User`) và user đó chưa anonymized; ngược lại `null`.
+- `reason` chỉ với `user.suspended` và `account.deletion_requested_by_admin`;
+  `roleChange: { from, to } | null` chỉ với
+  `user.role_changed` (TL-67a — ngoại lệ duy nhất cho quy tắc cấm trả summary, chỉ hai giá
+  trị role). Không trả `ipAddress`, `userAgent`, `beforeSummary`, `afterSummary` hay bất kỳ
+  phần nào khác của summary.
+- Lọc `targetType` so khớp chính xác chuỗi đã lưu (audit cũ có thể là `User`).
+
+Ghi audit (TL-66): action `user.role_changed`, `user.suspended`, `user.unsuspended`,
+`account.deletion_requested_by_admin` (M1.7d); `targetType = 'user'`, `targetId` là chuỗi
+id, `actorId` là admin thực hiện, `correlationId` = request id,
+`beforeSummary`/`afterSummary` chỉ chứa `{ role }` hoặc `{ status }` (+ `{ reason }` với
+`user.suspended` và `account.deletion_requested_by_admin`). Với
+`account.deletion_requested_by_admin`, `afterSummary` chỉ gồm
+`{ requestId, initiatedBy: 'admin', reason: 'under_age', scheduledAt, escalated }`;
+`beforeSummary` là `{ status }` của target trước khi đổi — khi escalate một request do user
+khởi tạo, `beforeSummary` là `{ status: 'deletion_pending', initiatedBy: 'user' }`; lý do
+free-text cũ của user **không** được đưa vào audit. Không ghi IP/UA/PII.
+
+Nghiệp vụ:
+
+- Mọi mutation chạy trong một transaction, mở đầu bằng `pg_advisory_xact_lock` trên một
+  key hằng dùng chung; phép đếm "admin active cuối cùng" chạy trong cùng transaction đó.
+  Mọi `UPDATE` đều có điều kiện trạng thái trong `WHERE` (row lock trên user mục tiêu).
+- TL-76: ngay sau `pg_advisory_xact_lock`, mutation đọc lại hàng actor bằng
+  `SELECT … FROM "User" WHERE id = <actorId> FOR UPDATE`; actor phải có `role='admin'`,
+  `status='active'`, `deletedAt IS NULL`. Không đạt → `403 FORBIDDEN`, message
+  `Insufficient role.` (giống RolesGuard), không UPDATE và không ghi audit. Nhờ vậy request
+  của admin vừa bị hạ quyền/khoá trong lúc đang xử lý sẽ fail closed thay vì commit.
+- `PATCH role`: chỉ user `active` hoặc `suspended` mới đổi được. Tự đổi role của chính
+  mình → `409 ADMIN_SELF_ACTION_FORBIDDEN` (kể cả khi gửi đúng role hiện tại). Hạ quyền
+  admin `active` cuối cùng → `409 LAST_ADMIN_REQUIRED`. Gửi đúng role hiện tại → `200`,
+  không ghi audit. Hạ quyền admin đang `suspended` không bị chặn bởi luật admin cuối.
+- `POST suspend`: chỉ `active` → `suspended`; mọi `UserSession` chưa bị thu hồi của user
+  nhận `revokedAt` trong cùng transaction nên access token cũ nhận `401` ngay lần request
+  kế tiếp. Tự khoá mình → `409 ADMIN_SELF_ACTION_FORBIDDEN`. Khoá admin `active` cuối
+  cùng → `409 LAST_ADMIN_REQUIRED`.
+- `POST unsuspend`: chỉ `suspended` → `active`; không mở khoá tài khoản
+  `deletion_pending`/`anonymized`.
+- `POST /admin/users/:id/deletion-request` (M1.7d, Q203–Q208): admin mở luồng xoá M1.7c cho
+  tài khoản dưới 16 tuổi. Body **chỉ** `{ reason: 'under_age' }` (enum một giá trị,
+  whitelist; field lạ như `note` → `400 REQUEST_VALIDATION_FAILED`). Luôn trả `201` với
+  `{ requestId, scheduledAt, initiatedBy: 'admin' }` — kể cả replay idempotent và escalate.
+  Lock order trong transaction: `pg_advisory_xact_lock` → actor `FOR UPDATE` → target `User`
+  `FOR UPDATE` → request `FOR UPDATE`.
+  - Target `active`/`suspended` chưa có request `requested`: tạo request
+    `initiatedBy = 'admin'`, `actorId` = admin gọi, `reason = 'under_age'`,
+    `scheduledAt = now + 7 ngày`; user chuyển `deletion_pending` + `deletedAt`, thu hồi mọi
+    `UserSession` chưa revoke, xoá `PasswordResetToken`/`EmailVerificationToken` chưa dùng
+    (đúng hình dạng M1.7c); enqueue `privacy.anonymize-account` (`startAfter = scheduledAt`,
+    `singletonKey = 'anonymize:<id>'`) và `mail.account-deletion-scheduled`
+    (`singletonKey = 'deletion-mail:<id>'`) trong cùng transaction.
+  - Target `deletion_pending` với request `initiatedBy = 'user'` chưa quá hạn: escalate tại
+    chỗ (conditional `UPDATE ... WHERE "initiatedBy" = 'user' AND status = 'requested'`), giữ
+    nguyên `scheduledAt`, không enqueue lại anonymize; enqueue mail đính chính
+    `singletonKey = 'deletion-mail:<id>:admin'`.
+  - Request đã `initiatedBy = 'admin'`: idempotent — trả cùng `requestId`/`scheduledAt`,
+    không thêm job/audit.
+  - Request `requested` đã quá hạn (`scheduledAt <= CURRENT_TIMESTAMP`) →
+    `409 USER_DELETION_ALREADY_DUE`.
+  - Trạng thái request/tài khoản không khớp lifecycle (ví dụ target `active`/`suspended` đã có
+    request `requested`, hoặc `deletion_pending` không có request `requested`) →
+    `409 USER_NOT_MODIFIABLE` (fail-closed; đây là state service không tạo ra).
+  - Tự xoá chính mình → `409 ADMIN_SELF_ACTION_FORBIDDEN`. Target là admin trong khi chỉ còn
+    một admin `active` (trường hợp gặp được: target admin đang `suspended`) →
+    `409 LAST_ADMIN_REQUIRED`. Không đổi `GET /admin/users` (Q208); không có endpoint admin
+    huỷ request (Q206); escalate giữ `scheduledAt` (Q207).
+  - Mail của request admin (Q204/Q205) không có link `/login`, không có câu huỷ hay câu mời
+    đăng nhập lại; chỉ nêu ngày ẩn danh và một dòng liên hệ trỏ
+    `${APP_PUBLIC_URL}/privacy` mục 11 (không thêm config). Mail của request user giữ nguyên
+    từng byte, gồm link huỷ qua đăng nhập.
+
+Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên từng chữ):
+
+| `error.code` | HTTP | Khi nào |
+| --- | --- | --- |
+| `USER_NOT_FOUND` | 404 | Id không tồn tại hoặc user đã anonymized |
+| `ADMIN_SELF_ACTION_FORBIDDEN` | 409 | Admin tự đổi role hoặc tự khoá tài khoản mình |
+| `USER_NOT_MODIFIABLE` | 409 | Đổi role user không ở trạng thái `active`/`suspended` (vd `deletion_pending`), hoặc request xoá/trạng thái tài khoản không khớp lifecycle (M1.7d, fail-closed) |
+| `LAST_ADMIN_REQUIRED` | 409 | Hạ quyền hoặc khoá admin `active` cuối cùng |
+| `USER_NOT_ACTIVE` | 409 | Khoá user không ở trạng thái `active` |
+| `USER_NOT_SUSPENDED` | 409 | Mở khoá user không ở trạng thái `suspended` |
+| `USER_DELETION_ALREADY_DUE` | 409 | Request `requested` đã quá `scheduledAt` nên không tạo/escalate được |
+| `FORBIDDEN` | 403 | Token không phải admin |
+| `UNAUTHORIZED` | 401 | Thiếu/sai token |
+| `REQUEST_VALIDATION_FAILED` | 400 | `:id`, body hoặc query sai shape/giới hạn (chi tiết như §1) |
 
 ## Part B — Dự kiến
 
@@ -650,11 +1592,10 @@ code sẽ tự vào spec đó.
 | `POST/GET` | `/privacy/consents`, `/privacy/exports`, `/privacy/deletion-requests` | Privacy lifecycle (ADR-001) | M1 |
 | `POST` | `/onboarding/placements`, `/onboarding/placements/:id/complete` | Placement (feature flag) | M2 |
 | `PATCH` | `/learning-plans/items/:id` | Trạng thái item trong plan | M2 |
-| `GET` | `/dictionary/words/:id`; `POST` `/dictionary/words/:id/save`; `PATCH` `/dictionary/words/:id/progress` | Chi tiết từ, lưu từ | M2–M3 |
+| `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |
 | `GET` | `/review/due`; `POST` `/review/sessions`, `/review/cards/:id/grade` | SRS | M3 |
-| CRUD | `/admin/cms/questions`, `/admin/cms/tests` | Exam authoring | M4 |
-| `POST` | `/exam/tests/:id/attempts`; `PUT` `/exam/attempts/:id/answers/:key`; `GET` `/exam/attempts/:id`; `POST` `/exam/attempts/:id/submit`; `GET` `/exam/results/*` | Exam attempt flow (snapshot, autosave, resume, submit) | M4 |
-| `GET/PATCH` | `/users` (phân trang), `/users/:id/role`, `/users/:id/lock` | Admin user lifecycle | M5 |
+| CRUD | `/admin/cms/tests` (đã có ở A.9c); `/admin/cms/questions` (đã có ở A.9b) | Exam authoring | M4 |
+| `PUT/POST/GET` | `PUT` `/exam/attempts/:id/answers/:key` (submit, result, review đã có ở A.9d) | Exam attempt flow (snapshot, autosave, resume, submit, result, review) | M4 |
 | CMS | Level/Story/Word/Question/Test mutation; generic import; scheduled publish | CMS completion | M5 |
 | `GET` | `/admin/dashboard`, `/analytics/*` | Analytics first-party | M5 |
 | `POST` | `/support/tickets`, `/reports` | Support / Trust & Safety | M5 |

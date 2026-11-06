@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common';
 import { LearningEventType, Prisma, ProgressStatus } from '@prisma/client';
 
+import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
 import {
   buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
+  PUBLIC_LESSON_WORD_WHERE,
 } from '../../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
@@ -19,7 +21,12 @@ import {
   PUBLIC_LESSON_EXERCISE_WHERE,
   projectPublicExerciseMedia,
 } from '../public-exercise.policy';
-import { isLessonUnlocked } from '../path/learning-path.policy';
+import {
+  isLessonUnlocked,
+  type LearningPathLesson,
+} from '../path/learning-path.policy';
+import { loadLevelPaths } from '../path/learning-path.reader';
+import { LessonActivityResponseDto } from './dto/lesson-activity-response.dto';
 import { SubmitLessonExerciseAttemptDto } from './dto/lesson-activity-write.dto';
 import {
   assertIdempotencyKeyWithinTtl,
@@ -31,6 +38,7 @@ import {
   calculateCompletionPercent,
   calculateLessonScore,
   selectNextActivity,
+  summarizeLessonSections,
 } from './lesson-activity-progress';
 import {
   LESSON_ACTIVITY_SCORING_VERSION,
@@ -555,81 +563,107 @@ export class LessonActivityService {
     };
   }
 
-  async getLessonActivity(userId: number, lessonId: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const graph = await this.requirePublicLesson(tx, lessonId);
-      const progress = await tx.progress.findUnique({
-        where: { userId_lessonId: { userId, lessonId } },
-      });
-      const facts = await this.loadFacts(tx, userId, graph, true);
-      const completedTopicIds = new Set(
-        [...facts.topicProgresses.entries()]
-          .filter(([, value]) => value.status === 'done')
-          .map(([topicId]) => topicId),
-      );
-      const pointer = selectNextActivity({
-        topics: this.orderedTopics(graph),
-        standaloneExercises: this.standaloneExercises(graph),
-        completedTopicIds,
-        attemptedExerciseIds: facts.attemptedExerciseIds,
-        lessonCompleted: progress?.status === 'done',
-      });
-      const latestAttempts = await this.latestAttempts(tx, userId, graph);
-      const publicExercises = graph.exercises.map((exercise) => ({
-        id: exercise.id,
-        topicId: exercise.topicId,
-        type: exercise.type,
-        prompt: exercise.prompt,
-        content: exercise.content,
-        version: exercise.version,
-        orderIndex: exercise.orderIndex,
-        media: projectPublicExerciseMedia(exercise.type, exercise.media),
-        latestAttempt: latestAttempts.get(exercise.id) ?? null,
-      }));
-      const currentExercise =
-        publicExercises.find(
-          (exercise) => exercise.id === pointer.currentExerciseId,
-        ) ?? null;
-      const currentTopic =
-        graph.topics.find((topic) => topic.id === pointer.currentTopicId) ??
-        null;
+  async getLessonActivity(
+    userId: number,
+    lessonId: number,
+  ): Promise<ApiSuccessResponse<LessonActivityResponseDto>> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const graph = await this.requirePublicLesson(tx, lessonId);
+        const progress = await tx.progress.findUnique({
+          where: { userId_lessonId: { userId, lessonId } },
+        });
+        const facts = await this.loadFacts(tx, userId, graph, true);
+        const [level, pathLesson, wordCount] = await Promise.all([
+          tx.level.findUniqueOrThrow({
+            where: { id: graph.levelId },
+            select: { id: true, code: true, name: true },
+          }),
+          this.findPathLesson(tx, userId, graph),
+          tx.lessonWord.count({
+            where: { lessonId: graph.id, ...PUBLIC_LESSON_WORD_WHERE },
+          }),
+        ]);
+        const completedTopicIds = new Set(
+          [...facts.topicProgresses.entries()]
+            .filter(([, value]) => value.status === 'done')
+            .map(([topicId]) => topicId),
+        );
+        const pointer = selectNextActivity({
+          topics: this.orderedTopics(graph),
+          standaloneExercises: this.standaloneExercises(graph),
+          completedTopicIds,
+          attemptedExerciseIds: facts.attemptedExerciseIds,
+          lessonCompleted: progress?.status === 'done',
+        });
+        const latestAttempts = await this.latestAttempts(tx, userId, graph);
+        const publicExercises = graph.exercises.map((exercise) => ({
+          id: exercise.id,
+          topicId: exercise.topicId,
+          type: exercise.type,
+          prompt: exercise.prompt,
+          content: exercise.content,
+          version: exercise.version,
+          orderIndex: exercise.orderIndex,
+          media: projectPublicExerciseMedia(exercise.type, exercise.media),
+          latestAttempt: latestAttempts.get(exercise.id) ?? null,
+        }));
+        const currentExercise =
+          publicExercises.find(
+            (exercise) => exercise.id === pointer.currentExerciseId,
+          ) ?? null;
+        const currentTopic =
+          graph.topics.find((topic) => topic.id === pointer.currentTopicId) ??
+          null;
 
-      return {
-        success: true as const,
-        data: {
-          lesson: {
-            id: graph.id,
-            title: graph.title,
-            description: graph.description,
-            slug: graph.slug,
-            orderIndex: graph.orderIndex,
-            levelId: graph.levelId,
-          },
-          progress: this.serializeProgress(progress),
-          topics: graph.topics.map((topic) => ({
-            ...topic,
-            progress:
-              facts.topicProgresses.get(topic.id) ??
-              this.emptyProgressSummary(),
-            exercises: publicExercises.filter(
-              (exercise) => exercise.topicId === topic.id,
+        return {
+          success: true as const,
+          data: {
+            lesson: {
+              id: graph.id,
+              title: graph.title,
+              description: graph.description,
+              slug: graph.slug,
+              orderIndex: graph.orderIndex,
+              levelId: graph.levelId,
+            },
+            level,
+            position: pathLesson.position,
+            state: pathLesson.state,
+            sections: summarizeLessonSections({
+              topics: graph.topics,
+              exerciseIds: graph.exercises.map((exercise) => exercise.id),
+              completedTopicIds,
+              attemptedExerciseIds: facts.attemptedExerciseIds,
+              wordCount,
+            }),
+            progress: this.serializeProgress(progress),
+            topics: graph.topics.map((topic) => ({
+              ...topic,
+              progress:
+                facts.topicProgresses.get(topic.id) ??
+                this.emptyProgressSummary(),
+              exercises: publicExercises.filter(
+                (exercise) => exercise.topicId === topic.id,
+              ),
+            })),
+            standaloneExercises: publicExercises.filter(
+              (exercise) => exercise.topicId === null,
             ),
-          })),
-          standaloneExercises: publicExercises.filter(
-            (exercise) => exercise.topicId === null,
-          ),
-          currentTopic: currentTopic
-            ? {
-                id: currentTopic.id,
-                title: currentTopic.title,
-                orderIndex: currentTopic.orderIndex,
-              }
-            : null,
-          currentExercise,
-          nextAction: progress === null ? 'start_lesson' : pointer.nextAction,
-        },
-      };
-    });
+            currentTopic: currentTopic
+              ? {
+                  id: currentTopic.id,
+                  title: currentTopic.title,
+                  orderIndex: currentTopic.orderIndex,
+                }
+              : null,
+            currentExercise,
+            nextAction: progress === null ? 'start_lesson' : pointer.nextAction,
+          },
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async getLessonProgressList(userId: number) {
@@ -730,6 +764,26 @@ export class LessonActivityService {
       }
       throw new InternalServerErrorException('Unable to persist activity.');
     }
+  }
+
+  /**
+   * Position and state come from the same level path as `GET /learning/path`
+   * (Q18); this only picks the lesson out of it. The lesson was read as ready
+   * in this transaction, so a miss means it stopped being ready meanwhile.
+   */
+  private async findPathLesson(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    graph: PublicLessonGraph,
+  ): Promise<LearningPathLesson> {
+    const levelPaths = await loadLevelPaths(tx, userId, {
+      levelId: graph.levelId,
+    });
+    const lesson = (levelPaths.get(graph.levelId) ?? []).find(
+      (candidate) => candidate.id === graph.id,
+    );
+    if (!lesson) throw new NotFoundException('Lesson not found or not ready.');
+    return lesson;
   }
 
   /**

@@ -2,16 +2,12 @@ import Link from 'next/link';
 
 export default function MediaNotFound() {
   return (
-    <div className="inline-error">
-      <span className="inline-error__mark" aria-hidden="true">
-        ?
-      </span>
-      <div>
-        <p className="eyebrow">NOT FOUND</p>
-        <h1>Media asset unavailable</h1>
-        <p>It may not exist or may no longer be accessible.</p>
-        <Link className="button button--primary" href="/admin/media">
-          Back to media
+    <div className="adm-state-card">
+      <h1>Không tìm thấy media</h1>
+      <p>Media không tồn tại hoặc không còn truy cập được.</p>
+      <div className="adm-state-card__actions">
+        <Link className="adm-btn adm-btn--primary" href="/admin/media">
+          Về thư viện media
         </Link>
       </div>
     </div>

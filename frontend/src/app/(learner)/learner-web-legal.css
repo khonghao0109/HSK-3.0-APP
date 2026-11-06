@@ -1,0 +1,213 @@
+/* Hán Lộ — legal group web styles (M2.10c). Owner: agent L.
+   Source: docs/ui_reference/web/css/legal.css (trang `/terms`, `/privacy`) và
+   các khối khung `.w-public` của docs/ui_reference/web/css/web.css.
+
+   Mọi rule nằm trong `@media (min-width: 1024px)` và có phạm vi
+   `.learner-app .w-public …` nên không chạm sidebar `.w-app` (K3b) và không
+   đổi gì dưới 1024px (K3a).
+
+   Khác landing: hai trang này giữ nguyên cây mobile (appbar + `main.static-page`)
+   và chỉ ẩn appbar bằng `.m-only`; cây web `.w-wrap.legal` nằm trong chính
+   `main` đó dưới dạng `.w-only`, để DOM chỉ có MỘT `<main>`. */
+
+@media (min-width: 1024px) {
+  /* `.w-pubnav.w-only` đã được learner-web-public.css hiện lại
+     (`.learner-app .w-public .w-pubnav { display: flex }`, 0,3,0 > 0,2,0). */
+
+  /* `.w-footer` không có rule `display` trong learner-web-public.css nên phải
+     tự hiện lại. Rule này lặp ở learner-web-landing.css có chủ ý: mỗi file
+     nhóm tự đứng một mình, cả ba trang dùng chung một chân trang. */
+  .learner-app .w-public .w-footer.w-only {
+    display: block;
+  }
+
+  /* ---------- Khung mobile còn lại từ 1024px ----------
+     `.app` là khung mobile (max-width 480px, flex column, min-height 100vh,
+     box-shadow desktop). Từ 1024px nó chỉ còn là khối chứa `main`, và
+     `min-height: auto` giữ "automatic minimum size" theo nội dung của flex
+     item — để `min-height: 100vh` thì `flex: 1` sẽ ép `.app` còn 100vh và
+     nội dung tràn ra ngoài chân trang. Chỉ nhắm trang pháp lý (`:has`) để
+     không đụng khung `.app` của nhóm auth/onboarding cũng nằm trong
+     `.w-public`. */
+  .learner-app .w-public .app:has(> main.static-page) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+    min-height: auto;
+    box-shadow: none;
+  }
+
+  /* `.static-page` là lưới mobile (padding 24px 20px 40px, gap 12px, h1 + p).
+     Từ 1024px h1/p bị `.m-only` ẩn, còn `.legal` bên dưới tự dàn cột. Chuỗi
+     `.app` (flex 1) → `main` (flex 1) → `.legal` (flex 1) tái lập đúng
+     `flex: 1` của `main.legal` trong mẫu: hàng lưới duy nhất được kéo cao
+     bằng viewport nên `.legal__doc` cao đúng như mẫu (không có nền/viền nên
+     phần kéo thêm là vô hình, nhưng đo ra thì khớp từng pixel). */
+  .learner-app .w-public main.static-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* ---------- Hai cột: mục lục 240px + tài liệu (legal.css dòng 2–4) ----------
+     `.legal` tự thắng `.learner-app .w-only` (0,3,0 > 0,2,0) nên cây web hiện
+     ra mà không cần rule `display` riêng. */
+  .learner-app .w-public .legal {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 720px);
+    gap: var(--sp-12);
+    padding-top: var(--sp-10);
+    padding-bottom: var(--sp-12);
+  }
+
+  .learner-app .w-public .legal__toc {
+    position: sticky;
+    top: calc(72px + var(--sp-8));
+    align-self: start;
+  }
+
+  .learner-app .w-public .legal__toc-title {
+    margin: 0 var(--sp-3) var(--sp-2);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stone-600);
+  }
+
+  .learner-app .w-public .legal__toc ul {
+    display: grid;
+    gap: var(--sp-1);
+    list-style: none;
+    padding: 0;
+  }
+
+  /* Mục lục: link cao 44px (Q42/Q69). */
+  .learner-app .w-public .legal__toc a {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-md);
+    font-weight: 500;
+    color: var(--stone-700);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .legal__toc a:hover {
+    background: var(--cream-100);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .legal__toc a[aria-current='page'] {
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--jade-700);
+  }
+
+  .learner-app .w-public .legal__doc {
+    display: grid;
+    align-content: start;
+    gap: var(--sp-5);
+  }
+
+  /* Link "Quay lại": 44px thật (Q42/Q69); jade-800 để đạt 5,09:1 trên nền kem. */
+  .learner-app .w-public .legal__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    justify-self: start;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .legal__back:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .w-public .legal__doc .w-h1 {
+    font-size: var(--fs-3xl);
+  }
+
+  /* Thẻ "Nội dung đang được cập nhật." (legal.css dòng 15–17). */
+  .learner-app .w-public .legal__empty {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-8);
+    color: var(--text-muted);
+    font-size: var(--fs-lg);
+  }
+
+  .learner-app .w-public .legal__empty-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-md);
+    background: var(--jade-50);
+    color: var(--jade-800);
+  }
+
+  .learner-app .w-public .legal__empty-icon .icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Q80: link pháp lý trong tài liệu dùng jade-800 (5,09:1 trên nền kem).
+     Q69/Q42 (Lead, review M2.10c): mẫu để link này là chữ trong dòng (ô 19px,
+     không đạt 44px). `inline-block` + đệm/margin âm như `.wa-terms a` của nhóm
+     auth cho vùng bấm 44px thật mà line box vẫn 22,5px nên chữ không xê dịch. */
+  .learner-app .w-public .legal__see a {
+    display: inline-block;
+    padding: 12.5px 0;
+    margin: -12.5px 0;
+    color: var(--jade-800);
+    font-weight: 600;
+  }
+
+  /* ---------- Chân trang (legal.css dòng 21–25) ---------- */
+  .learner-app .w-public .lp-foot__tag {
+    margin-top: var(--sp-2);
+    color: #d7ddeb;
+  }
+
+  .learner-app .w-public .w-footer ul {
+    gap: 0;
+  }
+
+  .learner-app .w-public .w-footer ul a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .w-footer ul a:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .w-public .w-footer .w-brand__mark {
+    background: var(--white);
+    color: var(--navy-900);
+  }
+}
+
+/* Forced colors bỏ vòng focus bằng box-shadow (Q12): giữ outline hệ thống. */
+@media (min-width: 1024px) and (forced-colors: active) {
+  .learner-app .w-public .w-pubnav a:focus-visible,
+  .learner-app .w-public .legal__toc a:focus-visible,
+  .learner-app .w-public .legal__back:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+}

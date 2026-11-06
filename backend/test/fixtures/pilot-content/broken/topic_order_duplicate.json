@@ -1,0 +1,11 @@
+{
+  "description": "hai topic trùng orderIndex",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "topics[0].orderIndex",
+      "to": "topics[1].orderIndex"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "hai option trùng id",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[0].content.options[0].id",
+      "to": "exercises[0].content.options[1].id"
+    }
+  ]
+}

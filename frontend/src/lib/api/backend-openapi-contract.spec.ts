@@ -15,6 +15,8 @@ import {
   backendExerciseListSchema,
 } from '@/features/exercises/exercise-contract';
 import { backendLearningHomeSchema } from '@/features/learner-home/learning-home-contract';
+import { backendLessonActivitySchema } from '@/features/learner-lesson/lesson-activity-contract';
+import { backendLessonPlayerActivitySchema } from '@/features/learner-lesson/lesson-player-contract';
 import { backendLearningPathSchema } from '@/features/learner-path/learning-path-contract';
 import {
   backendMediaDetailSchema,
@@ -171,6 +173,19 @@ describe('backend OpenAPI contract', () => {
     expectTypeOf<LearningPath>().not.toBeNever();
     expectTypeOf<LearningPath>().toExtend<
       z.input<typeof backendLearningPathSchema>
+    >();
+
+    type LessonActivity = BackendBody<
+      '/api/v1/learning/lessons/{lessonId}/activity',
+      'get',
+      200
+    >;
+    expectTypeOf<LessonActivity>().not.toBeNever();
+    expectTypeOf<LessonActivity>().toExtend<
+      z.input<typeof backendLessonActivitySchema>
+    >();
+    expectTypeOf<LessonActivity>().toExtend<
+      z.input<typeof backendLessonPlayerActivitySchema>
     >();
   });
 });

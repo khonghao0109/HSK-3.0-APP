@@ -118,6 +118,14 @@ describe('Media Asset Operations API V1 E2E', () => {
       `/admin/cms/media?type=audio&processingStatus=ready&lifecycle=active&dataSourceId=${sourceId}`,
     ).expect(200);
     expect(response.body.meta.pagination.total).toBe(1);
+    // TL-36: only the ingestion flag is added to meta, no other config.
+    expect(Object.keys(response.body.meta).sort()).toEqual([
+      'ingestionEnabled',
+      'pagination',
+      'requestId',
+      'timestamp',
+    ]);
+    expect(typeof response.body.meta.ingestionEnabled).toBe('boolean');
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body.data[0]).toMatchObject({
       id: readyAudioId,

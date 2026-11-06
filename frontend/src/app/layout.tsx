@@ -20,7 +20,7 @@ export default async function RootLayout({
   await connection();
 
   return (
-    <html lang="en">
+    <html lang="vi">
       <body>{children}</body>
     </html>
   );

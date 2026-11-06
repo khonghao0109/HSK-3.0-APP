@@ -159,6 +159,7 @@ Bằng chứng dùng để quyết định:
   (`LearningEvent`, `Progress`) cộng bảng `ProductEvent` nhỏ có `consentVersion`.
 - BI: **Metabase** self-hosted đọc replica/read-only role. Warehouse không thêm.
 - PostHog xem lại khi cần funnel/session replay và consent UX đã có (M5).
+- (PO 13/10/2026, Q75) MVP không tạo `ProductEvent`: chỉ số P0 tính từ `User`, onboarding, `LearningEvent`, `Progress`; `ProductEvent` có `consentVersion` làm khi có consent (M1.7b2) hoặc cần event không phải học tập. Activation (Q76): ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký. Định nghĩa: `docs/analytics/P0_PRODUCT_METRICS.md`.
 
 ### 11. Container và môi trường local
 

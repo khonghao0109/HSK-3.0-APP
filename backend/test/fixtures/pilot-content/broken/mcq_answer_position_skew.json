@@ -1,0 +1,11 @@
+{
+  "description": "hai mcq cùng vị trí đáp án (Q176)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "skewAnswerPosition",
+      "fromExercise": 0,
+      "toExercise": 1
+    }
+  ]
+}

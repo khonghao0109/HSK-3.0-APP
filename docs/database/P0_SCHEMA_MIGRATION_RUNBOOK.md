@@ -1,7 +1,7 @@
 # P0 Schema Migration Runbook — HSK 3.0 APP
 
-> Phiên bản runbook: `1.10.0`
-> Áp dụng cho chuỗi migration P0 đến ngày `2026-08-13`.
+> Phiên bản runbook: `1.11.1`
+> Áp dụng cho chuỗi migration P0 đến ngày `2026-11-02`.
 > Mục tiêu: deploy có kiểm chứng, bảo toàn ID và dữ liệu hiện hữu, dừng an toàn khi phát hiện dữ liệu mơ hồ.
 
 ## 1. Chuỗi migration bắt buộc
@@ -26,9 +26,14 @@
 | ONB-U  | `20260916090000_user_active_goal_plan_unique`            | Partial unique index: tối đa một `UserGoal` active và một `LearningPlan` active mỗi user (mục 20).         |
 | PGB-S  | `20260929162559_pgboss_schema`                           | Worker job queue schema `pgboss` cho pg-boss 12 (mục 21).                                                  |
 | ONB-LP | `20261005023447_user_goal_learning_purpose`             | Enum `LearningPurpose` và cột `learningPurpose` trên `UserGoal` lưu lý do học (mục 22).                   |
+| QB-1   | `20261023170000_question_objective_types`                | Enum `QuestionType` thêm `true_false`, `fill_blank`, `arrange_sentence` cho ngân hàng câu hỏi (mục 23).   |
+| EXAM-U | `20261027090000_exam_attempt_one_in_progress`            | Partial unique index: tối đa một `ExamAttempt` `in_progress` mỗi `(userId, testId)` (mục 24).             |
+| EXAM-R | `20261102103000_exam_result_score_summary`               | `Result.maxScore`/`passed` nullable + CHECK `score <= maxScore` khi có `maxScore` (mục 25).                |
+| PILOT  | `20261102150000_pilot_content_data_source`               | Data-only: nguồn `HSK30_PILOT_ORIGINAL_V1` cho nội dung pilot HSK1, `ON CONFLICT ("code") DO NOTHING` (mục 26). |
+| DEL-ADM | `20261102160000_admin_initiated_account_deletion`       | `AccountDeletionInitiator` enum, `initiatedBy`/`actorId`, partial unique index một `requested`/user (mục 27). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 23 migration (đến `20261005023447_user_goal_learning_purpose`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 28 migration (đến `20261102160000_admin_initiated_account_deletion`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -920,3 +925,182 @@ Khởi động Worker (và API) đều có hook gọi `boss.createQueue()` nhưn
 - Thêm cột nullable `learningPurpose` kiểu enum `LearningPurpose` vào bảng `UserGoal`. Không đặt default, không backfill dữ liệu cũ.
 - Forward-only, thuần `CREATE TYPE` + `ALTER TABLE ... ADD COLUMN`, an toàn cho migration zero-downtime.
 
+## 23. Ngân hàng câu hỏi — dạng câu khách quan (M4.1a)
+
+### 23.1. Migration 24 — `20261023170000_question_objective_types`
+
+- Bổ sung ba giá trị vào enum PostgreSQL `QuestionType`: `true_false` (Đúng/Sai), `fill_blank` (Điền từ), `arrange_sentence` (Sắp xếp câu). Mỗi giá trị một câu `ALTER TYPE "QuestionType" ADD VALUE`.
+- Không xoá hoặc đổi tên giá trị cũ: `mcq` tiếp tục là trắc nghiệm một đáp án; `listening`, `reading`, `writing`, `speaking` giữ cho dữ liệu lịch sử và cho M4.1b/M4.3. DTO của M4.1a từ chối bốn giá trị này.
+- Forward-only, additive thuần enum; không backfill, không đổi bảng `Question` (các cột `content`, `answers`, `correctAnswer`, `difficulty`, `objective`, `audioId`, `imageId` đã có từ P0-04) và không đổi trigger nào.
+- PostgreSQL 12+ cho phép `ALTER TYPE … ADD VALUE` trong transaction của Prisma miễn là giá trị mới không được dùng trong cùng transaction; migration này không dùng.
+- Impact API: chỉ thêm giá trị hợp lệ của `QuestionType`; không endpoint nào đang chạy bị đổi hành vi. Rollback không cần thiết — giá trị enum dư không ảnh hưởng reader cũ; muốn lùi phải xoá dữ liệu dùng giá trị mới trước (không hỗ trợ).
+- Bằng chứng fresh-migration: DB disposable mới `hsk_m41a_fresh_verify`, `npx prisma migrate deploy` áp 24/24 migration, `pg_enum` trả 8 giá trị `QuestionType` theo thứ tự thêm.
+
+## 24. Exam attempt — một bài `in_progress` mỗi người mỗi đề (M4.2a)
+
+### 24.1. Migration 25 — `20261027090000_exam_attempt_one_in_progress`
+
+Nghiệp vụ (Q120): mỗi học viên có tối đa một bài `in_progress` trên mỗi đề. `ExamService`
+serialize người bắt đầu thi bằng `"User" FOR NO KEY UPDATE`; migration thêm backstop ở
+database cho mọi writer khác (SQL vận hành, script, code tương lai):
+
+```sql
+CREATE UNIQUE INDEX "ExamAttempt_one_in_progress_per_user_test"
+  ON "ExamAttempt" ("userId", "testId")
+  WHERE "status" = 'in_progress';
+```
+
+Thứ tự trong file: `LOCK TABLE "ExamAttempt" IN SHARE MODE` (chặn insert/update giữa
+preflight và build index), preflight `P0001` đếm số cặp `(userId, testId)` có nhiều hơn một
+bài `in_progress` (chỉ in số lượng, không in ID), rồi tạo index. Không có `BEGIN/COMMIT`
+(mục 19.1). Với bảng lớn cần maintenance window và cân nhắc `MIGRATION_STATEMENT_TIMEOUT_MS`
+(mục 19.3).
+
+Nếu preflight fail (`P3018` + `P0001`): tắt luồng bắt đầu thi, lấy danh sách cặp vi phạm bằng
+query đếm tương tự, data owner duyệt chuyển các bài cũ hơn sang `timed_out` (không hard-delete;
+`ExamAttemptSnapshot`/`ExamAttemptEvent` bất biến theo trigger), rồi
+`npm run migrate:resolve:rolled-back:production -- --target-migration 20261027090000_exam_attempt_one_in_progress`
+và `npm run migrate:deploy:production`.
+
+Quy ước partial unique index (như mục 20): Prisma 5 không biểu diễn được predicate `WHERE`
+trong `schema.prisma`, nên index chỉ nằm trong migration SQL và được ghi chú cạnh model
+`ExamAttempt`; `migrate diff` hai chiều vẫn rỗng.
+
+Hành vi API (TL-112): hai lần bắt đầu đồng thời cùng người cùng đề trả cùng một attempt; nếu
+insert vẫn va index (do race ngoài service) thì bắt `P2002` rồi đọc lại attempt của bên thắng
+và trả `200`, không trả `500`. E2E `test/exam-attempt.e2e-spec.ts` và harness
+`npm run test:db:exam-start-concurrency` (6 kịch bản × 20 vòng trên
+`hsk_m42a_hardening`, 0 deadlock) là bằng chứng.
+
+## 25. Exam result score summary — `Result.maxScore`/`passed` (M4.3)
+
+### 25.1. Migration 26 — `20261102103000_exam_result_score_summary`
+
+Nghiệp vụ (Q152/Q153): kết quả bài thi cần `maxScore` của đề và trạng thái đỗ/trượt do server
+tính. Migration chỉ bổ sung hai cột nullable trên `Result` để tương thích row cũ (không
+backfill, không sửa dữ liệu):
+
+```sql
+ALTER TABLE "Result"
+  ADD COLUMN "maxScore" INTEGER,
+  ADD COLUMN "passed" BOOLEAN;
+
+ALTER TABLE "Result"
+  ADD CONSTRAINT "Result_maxScore_check"
+  CHECK ("maxScore" IS NULL OR ("maxScore" > 0 AND "score" >= 0 AND "score" <= "maxScore"));
+```
+
+- `maxScore` NULL = row legacy trước M4.3 hoặc đề chưa có `maxScore`; khi có giá trị thì
+  `score` bắt buộc nằm trong `0..maxScore`.
+- `passed` NULL = chưa xác định (ví dụ `Test.passScore` NULL); service chỉ set khi tính được.
+- Không đụng trigger `Result_attempt_integrity`/`Result_band_integrity` hay bất kỳ bảng khác.
+- Impact API: additive, không đổi endpoint nào đang chạy. Result/review endpoint của M4.3
+  (TL-165/166) đọc hai cột này; reader cũ bỏ qua cột mới nên tương thích ngược.
+- Rollback không cần thiết: cột NULL không ảnh hưởng reader cũ; muốn lùi phải drop constraint
+  rồi drop cột bằng migration mới (không hỗ trợ trong release này).
+- Bằng chứng: `npm run test:db:p0` trên DB disposable (CHECK bắt `score > maxScore`, row
+  `maxScore` NULL vẫn hợp lệ); fresh `npx prisma migrate deploy` áp 26/26 migration.
+
+## 26. Nguồn dữ liệu nội dung pilot HSK1 (M2.9a)
+
+### 26.1. Migration 27 — `20261102150000_pilot_content_data_source`
+
+Nghiệp vụ (Q178, M2.9a): 5 bài nội dung pilot HSK1 nằm trong
+`backend/content/pilot/hsk1/` cần một `DataSource` có thật trong DB trước khi script nạp gọi
+`POST /admin/cms/exercise-imports/preview`. CMS chỉ có `GET /admin/cms/data-sources`, không có
+route tạo, nên nguồn được tạo bằng migration forward idempotent theo `code` (cùng pattern 8 nguồn
+từ điển ở migration P0-02):
+
+```sql
+INSERT INTO "DataSource" (
+  "code", "name", "version", "referenceUrl", "license", "attribution",
+  "receivedAt", "importedAt", "contentHash", "notes", "createdAt", "updatedAt"
+) VALUES (
+  'HSK30_PILOT_ORIGINAL_V1',
+  'HSK 3.0 pilot content (AI-authored)',
+  '1.0.0',
+  NULL,
+  'Original content authored for HSK 3.0 APP',
+  'HSK 3.0 APP (AI-authored draft; human review required before publish)',
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Q178/M2.9a: nguồn của 5 bài pilot HSK1 … mọi bản ghi ở draft (Q172).',
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+)
+ON CONFLICT ("code") DO NOTHING;
+```
+
+- Data-only: **1 row** `DataSource`, không đổi schema/index/constraint/API, không thêm endpoint.
+  File `backend/content/pilot/hsk1/*.json` tham chiếu đúng `code = HSK30_PILOT_ORIGINAL_V1`,
+  `version = 1.0.0`.
+- Không chạm trigger `DataSource_media_provenance_guard`
+  (`20260813120000_media_provenance_provider_hardening/migration.sql:172-202`): trigger chỉ là
+  `BEFORE UPDATE OF code, version, license, "referenceUrl", attribution, "contentHash"` và chỉ
+  chặn khi row đã bị `MediaIngestion` tham chiếu; INSERT của migration không đi qua trigger này.
+  License/attribution ghi trung thực ngay từ đầu vì các field này bị đóng băng nếu sau này nguồn
+  được dùng cho media.
+- Impact API: không đổi endpoint/DTO; `GET /admin/cms/data-sources` chỉ trả thêm một row.
+  Script nạp (Q179/TL-216) resolve `dataSourceId` qua `code` + `version`.
+- Rollback/forward-fix: theo quy ước chung của runbook — không sửa migration đã áp; nếu cần đổi
+  provenance phải tạo migration mới (trigger đóng băng field khi bị media tham chiếu). Migration
+  idempotent theo `code` nên chạy lại không nhân bản; xoá row chỉ khi chắc chắn chưa có
+  `ImportJob`/`LessonExercise`/`Lesson` tham chiếu (`dataSourceId` là FK `SetNull`, không cascade).
+- Bằng chứng: `npx prisma migrate deploy` trên database disposable áp 27/27 migration; e2e
+  `test/pilot-content-import.e2e-spec.ts` test 1 đọc lại row và kiểm `name`, `version`, `license`,
+  `attribution`.
+
+## 27. Admin khởi tạo xoá tài khoản dưới 16 tuổi (M1.7d)
+
+### 27.1. Migration 28 — `20261102160000_admin_initiated_account_deletion`
+
+Nghiệp vụ (Q203–Q208): admin mở luồng xoá M1.7c cho tài khoản dưới 16 tuổi, lý do
+`under_age`, người dùng không nhập mật khẩu. Migration thêm ai khởi tạo request và một partial
+unique index bảo vệ "tối đa một request `requested` mỗi user":
+
+```sql
+CREATE TYPE "AccountDeletionInitiator" AS ENUM ('user', 'admin');
+
+ALTER TABLE "AccountDeletionRequest"
+  ADD COLUMN "initiatedBy" "AccountDeletionInitiator" NOT NULL DEFAULT 'user',
+  ADD COLUMN "actorId" INTEGER;
+
+CREATE UNIQUE INDEX "AccountDeletionRequest_one_requested_per_user"
+  ON "AccountDeletionRequest" ("userId")
+  WHERE "status" = 'requested';
+```
+
+Thứ tự trong file: tạo enum → `ALTER TABLE` → preflight `P0001` đếm số user có nhiều hơn một
+row `requested` → tạo index. Không có `BEGIN/COMMIT` (mục 19.1). Khác các migration index-only ở
+mục 20/24, file này buộc phải `ALTER TABLE` nên đã giữ `ACCESS EXCLUSIVE` tới hết transaction
+thay cho `LOCK TABLE ... IN SHARE MODE`: không writer nào chen được giữa preflight và build
+index, và bảng request hiện rất nhỏ. `initiatedBy` default `user` để mọi row cũ (M1.7c) giữ
+nguyên nghĩa; `actorId` cố ý **không** FK/relation để audit sống lâu hơn vòng đời admin (không
+có CHECK ràng buộc `actorId` với `initiatedBy`; service là nơi ghi hai cột này cùng nhau).
+Prisma 5 không biểu diễn được predicate `WHERE`, nên index chỉ nằm trong migration SQL và được
+ghi chú cạnh model `AccountDeletionRequest`; `migrate diff` hai chiều vẫn rỗng.
+
+Preflight SQL (chạy trước deploy trên DB đích; phải rỗng, migration cũng tự chạy lại đúng query
+này và fail `P0001` nếu không rỗng):
+
+```sql
+SELECT "userId", COUNT(*)
+FROM "AccountDeletionRequest"
+WHERE "status" = 'requested'
+GROUP BY "userId"
+HAVING COUNT(*) > 1;
+```
+
+Nếu preflight fail (`P3018` + `P0001`): dừng deploy, lấy danh sách user vi phạm bằng query trên,
+data owner duyệt huỷ các request cũ hơn (`status = 'cancelled'`, `cancelledAt = now`; không
+hard-delete), rồi
+`npm run migrate:resolve:rolled-back:production -- --target-migration 20261102160000_admin_initiated_account_deletion`
+và `npm run migrate:deploy:production`.
+
+- Impact API: additive, không đổi endpoint cũ. Endpoint mới
+  `POST /admin/users/:id/deletion-request` (A.13) đọc/ghi cột mới; `POST /auth/login` chỉ huỷ
+  request `initiatedBy = 'user'`; worker anonymize đổi thứ tự khoá sang `User` → request; mail
+  branch theo `initiatedBy`. Reader cũ bỏ qua cột mới nên tương thích ngược.
+- Rollback/forward-fix: không rollback DDL; muốn lùi phải migration mới drop index/columns
+  (không hỗ trợ trong release này). Sự cố dữ liệu xử lý bằng forward-fix theo mục 12.
+- Bằng chứng: `npx prisma migrate deploy` trên database disposable mới áp 28/28 migration;
+  preflight rỗng; `npm run test:db:account-deletion-concurrency` (4 kịch bản × 20 vòng trên
+  `hsk_b1_hardening`, 0 deadlock) và phá thử bỏ predicate `initiatedBy` ở login ra đỏ.

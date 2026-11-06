@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 
+import { exceedsJsonDepth } from '../../common/utils/json-depth';
+
 /**
  * Nest's ValidationPipe (class-transformer) walks the parsed body recursively
  * before any validator runs, so a deeply nested payload throws
@@ -18,30 +20,7 @@ import type { NextFunction, Request, Response } from 'express';
  */
 export const REQUEST_JSON_MAX_DEPTH = 32;
 
-export function exceedsJsonDepth(value: unknown, maxDepth: number): boolean {
-  const pending: Array<{ value: unknown; depth: number }> = [
-    { value, depth: 0 },
-  ];
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) break;
-    const children = childValues(current.value);
-    if (children === null) continue;
-    if (current.depth + 1 > maxDepth) return true;
-    for (const child of children) {
-      pending.push({ value: child, depth: current.depth + 1 });
-    }
-  }
-  return false;
-}
-
-function childValues(value: unknown): unknown[] | null {
-  if (Array.isArray(value)) return value as unknown[];
-  if (value !== null && typeof value === 'object') {
-    return Object.values(value as Record<string, unknown>);
-  }
-  return null;
-}
+export { exceedsJsonDepth } from '../../common/utils/json-depth';
 
 @Injectable()
 export class JsonBodyDepthMiddleware implements NestMiddleware {

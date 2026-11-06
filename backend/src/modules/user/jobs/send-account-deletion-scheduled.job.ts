@@ -53,6 +53,27 @@ export function buildAccountDeletionScheduledText(
   );
 }
 
+/**
+ * M1.7d / Q203 + Q204 + Q205: an admin opened the deletion because the account
+ * holder is under 16. Unlike the self-service mail, this one has no FAQ/login
+ * link and no cancel instruction — the only way out is contacting the operator
+ * through privacy policy §11 (Q204: `${APP_PUBLIC_URL}/privacy`, no extra
+ * config).
+ */
+export function buildAdminInitiatedAccountDeletionText(
+  scheduledAtFormatted: string,
+  privacyUrl: string,
+): string {
+  return (
+    `Xin chào,\n\n` +
+    `Tài khoản của bạn đã được quản trị viên lên lịch xoá vĩnh viễn vào lúc:\n` +
+    `${scheduledAtFormatted}\n\n` +
+    `Lý do: tài khoản thuộc nhóm dưới 16 tuổi.\n\n` +
+    `Sau thời điểm trên, tài khoản sẽ được ẩn danh và không thể phục hồi.\n\n` +
+    `Nếu bạn cần thêm thông tin, xem mục 11 tại ${privacyUrl}.\n`
+  );
+}
+
 @Injectable()
 export class SendAccountDeletionScheduledJob implements OnApplicationBootstrap {
   private readonly logger = new Logger(SendAccountDeletionScheduledJob.name);
@@ -94,6 +115,7 @@ export class SendAccountDeletionScheduledJob implements OnApplicationBootstrap {
       select: {
         id: true,
         status: true,
+        initiatedBy: true,
         scheduledAt: true,
         user: {
           select: {
@@ -122,13 +144,21 @@ export class SendAccountDeletionScheduledJob implements OnApplicationBootstrap {
     }
 
     const appPublicUrl = this.config.getOrThrow<string>('APP_PUBLIC_URL');
-    const loginUrl = `${appPublicUrl}/login`;
     const timezone = request.user.profile?.timezone || 'Asia/Ho_Chi_Minh';
     const formattedDate = formatDeletionScheduledDate(
       request.scheduledAt,
       timezone,
     );
-    const text = buildAccountDeletionScheduledText(formattedDate, loginUrl);
+    const text =
+      request.initiatedBy === 'admin'
+        ? buildAdminInitiatedAccountDeletionText(
+            formattedDate,
+            `${appPublicUrl}/privacy`,
+          )
+        : buildAccountDeletionScheduledText(
+            formattedDate,
+            `${appPublicUrl}/login`,
+          );
 
     try {
       await this.mailer.send({

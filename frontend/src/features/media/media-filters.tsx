@@ -1,81 +1,88 @@
 import Link from 'next/link';
 
 import {
+  lifecycleLabel,
+  mediaTypeLabel,
+  processingStatusLabel,
+} from '@/features/admin-shell/admin-labels';
+
+import {
   mediaLifecycles,
   mediaProcessingStatuses,
   mediaTypes,
 } from './media-contract';
 import type { MediaQuery } from './media-query';
 
-function label(value: string): string {
-  return value
-    .split('_')
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ');
-}
-
 export function MediaFilters({ query }: { query: MediaQuery }) {
   return (
-    <form className="filter-bar" method="get" action="/admin/media">
+    <form className="adm-filters" method="get" action="/admin/media">
       <input type="hidden" name="page" value="1" />
       <input type="hidden" name="limit" value={query.limit} />
-      <div className="field-inline">
-        <label htmlFor="media-type">Type</label>
-        <select id="media-type" name="type" defaultValue={query.type ?? ''}>
-          <option value="">All types</option>
-          {mediaTypes.map((value) => (
-            <option key={value} value={value}>
-              {label(value)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field-inline">
-        <label htmlFor="processing-status">Processing</label>
-        <select
-          id="processing-status"
-          name="processingStatus"
-          defaultValue={query.processingStatus ?? ''}
-        >
-          <option value="">All processing states</option>
-          {mediaProcessingStatuses.map((value) => (
-            <option key={value} value={value}>
-              {label(value)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field-inline">
-        <label htmlFor="media-lifecycle">Lifecycle</label>
-        <select
-          id="media-lifecycle"
-          name="lifecycle"
-          defaultValue={query.lifecycle ?? ''}
-        >
-          <option value="">All lifecycle states</option>
-          {mediaLifecycles.map((value) => (
-            <option key={value} value={value}>
-              {label(value)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field-inline field-inline--short">
-        <label htmlFor="dataSourceId">Source ID</label>
-        <input
-          id="dataSourceId"
-          name="dataSourceId"
-          type="number"
-          min="1"
-          defaultValue={query.dataSourceId}
-          placeholder="Any"
-        />
-      </div>
-      <button className="button button--primary" type="submit">
-        Apply filters
+      <label className="sr-only" htmlFor="media-type">
+        Loại
+      </label>
+      <select
+        className="adm-input"
+        id="media-type"
+        name="type"
+        defaultValue={query.type ?? ''}
+      >
+        <option value="">Tất cả loại</option>
+        {mediaTypes.map((value) => (
+          <option key={value} value={value}>
+            {mediaTypeLabel(value)}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="processing-status">
+        Xử lý
+      </label>
+      <select
+        className="adm-input"
+        id="processing-status"
+        name="processingStatus"
+        defaultValue={query.processingStatus ?? ''}
+      >
+        <option value="">Tất cả trạng thái xử lý</option>
+        {mediaProcessingStatuses.map((value) => (
+          <option key={value} value={value}>
+            {processingStatusLabel(value)}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="media-lifecycle">
+        Vòng đời
+      </label>
+      <select
+        className="adm-input"
+        id="media-lifecycle"
+        name="lifecycle"
+        defaultValue={query.lifecycle ?? ''}
+      >
+        <option value="">Tất cả vòng đời</option>
+        {mediaLifecycles.map((value) => (
+          <option key={value} value={value}>
+            {lifecycleLabel(value)}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="dataSourceId">
+        ID nguồn
+      </label>
+      <input
+        className="adm-input"
+        id="dataSourceId"
+        name="dataSourceId"
+        type="number"
+        min="1"
+        defaultValue={query.dataSourceId}
+        placeholder="ID nguồn"
+      />
+      <button className="adm-btn adm-btn--primary" type="submit">
+        Lọc
       </button>
-      <Link className="button button--ghost" href="/admin/media">
-        Clear
+      <Link className="adm-btn adm-btn--ghost" href="/admin/media">
+        Xoá lọc
       </Link>
     </form>
   );

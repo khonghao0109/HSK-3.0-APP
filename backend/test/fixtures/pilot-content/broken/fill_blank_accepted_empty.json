@@ -1,0 +1,11 @@
+{
+  "description": "fill_blank acceptedTexts rỗng",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[4].answer.acceptedTexts",
+      "value": []
+    }
+  ]
+}

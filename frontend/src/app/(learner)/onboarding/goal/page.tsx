@@ -6,12 +6,14 @@ import {
   getCurrentGoal,
   getPublicLevels,
 } from '@/features/onboarding/onboarding-service';
+import type {
+  LevelItem,
+  UserGoal,
+} from '@/features/onboarding/onboarding-contract';
 import {
   parseGoalPageSearchParams,
   type LearningPurpose,
-  type LevelItem,
-  type UserGoal,
-} from '@/features/onboarding/onboarding-contract';
+} from '@/features/onboarding/onboarding-values';
 import { OnboardingGoalForm } from '@/features/onboarding/onboarding-goal-form';
 import { BackendRequestError } from '@/lib/api/api-error';
 

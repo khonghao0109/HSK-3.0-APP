@@ -1,0 +1,11 @@
+{
+  "description": "không có topic vocabulary",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[0].type",
+      "value": "grammar"
+    }
+  ]
+}

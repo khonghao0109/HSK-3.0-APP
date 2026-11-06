@@ -1,0 +1,10 @@
+{
+  "description": "root không phải object JSON",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "replaceRoot",
+      "value": []
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "hai token trùng id",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[7].content.tokens[0].id",
+      "to": "exercises[7].content.tokens[1].id"
+    }
+  ]
+}

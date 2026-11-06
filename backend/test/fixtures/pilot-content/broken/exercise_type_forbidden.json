@@ -1,0 +1,11 @@
+{
+  "description": "listening_choice bị Q173 cấm",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].type",
+      "value": "listening_choice"
+    }
+  ]
+}

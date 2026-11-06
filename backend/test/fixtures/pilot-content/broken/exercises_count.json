@@ -1,0 +1,18 @@
+{
+  "description": "chỉ còn 7 bài",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "exercises[9]"
+    },
+    {
+      "op": "delete",
+      "path": "exercises[8]"
+    },
+    {
+      "op": "delete",
+      "path": "exercises[7]"
+    }
+  ]
+}

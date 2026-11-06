@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { MEDIA_INGESTION_STUCK_PROCESSING_SQL } from '../../modules/cms/media-ingestion/media-ingestion.policy';
 
 const INGESTION_OUTCOMES = [
   'request',
@@ -467,9 +468,7 @@ export class MediaObservabilityService {
                 AND status IN ('cleanup_required', 'processing')
             )::bigint AS "cleanupCount",
             COUNT(*) FILTER (
-              WHERE status = 'processing'
-                AND "processingStartedAt" IS NOT NULL
-                AND "processingStartedAt" < CURRENT_TIMESTAMP - INTERVAL '15 minutes'
+              WHERE ${MEDIA_INGESTION_STUCK_PROCESSING_SQL}
             )::bigint AS "stuckCount",
             COALESCE(EXTRACT(EPOCH FROM (
               CURRENT_TIMESTAMP - MIN("cleanupRequiredAt")

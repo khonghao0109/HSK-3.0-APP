@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
@@ -73,7 +74,10 @@ export type MediaMutationContext = { correlationId: string };
 
 @Injectable()
 export class MediaAdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   async listMedia(
     actor: CmsActor,
@@ -108,6 +112,11 @@ export class MediaAdminService {
         limit: query.limit,
         total,
         totalPages: Math.ceil(total / query.limit),
+      },
+      // Same source as MediaIngestionEnabledGuard; no other config leaves here.
+      extraMeta: {
+        ingestionEnabled:
+          this.config.get<boolean>('media.ingestionEnabled') ?? false,
       },
     };
   }

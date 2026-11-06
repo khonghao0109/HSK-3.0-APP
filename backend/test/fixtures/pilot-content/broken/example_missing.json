@@ -1,0 +1,10 @@
+{
+  "description": "thiếu câu ví dụ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "words[0].example"
+    }
+  ]
+}

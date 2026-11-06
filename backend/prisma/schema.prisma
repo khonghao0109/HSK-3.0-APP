@@ -55,6 +55,10 @@ enum QuestionType {
   reading
   writing
   speaking
+  // M4.1a (TL-77): additive objective formats for the question bank.
+  true_false
+  fill_blank
+  arrange_sentence
 }
 
 enum Skill {
@@ -135,6 +139,13 @@ enum PrivacyRequestStatus {
   completed
   failed
   cancelled
+}
+
+/// M1.7d / Q203: who opened the deletion request. Every row created before this
+/// enum existed is a self-service request, hence the `user` default.
+enum AccountDeletionInitiator {
+  user
+  admin
 }
 
 enum ContentEntityType {
@@ -468,9 +479,16 @@ model DataExportJob {
 }
 
 model AccountDeletionRequest {
-  id           Int                  @id @default(autoincrement())
+  id           Int                       @id @default(autoincrement())
   userId       Int
-  status       PrivacyRequestStatus @default(requested)
+  status       PrivacyRequestStatus      @default(requested)
+  /// M1.7d: `user` for the M1.7c self-service flow, `admin` when an admin
+  /// opened the request on the account owner's behalf (Q203).
+  initiatedBy  AccountDeletionInitiator  @default(user)
+  /// Admin `User.id` that initiated the request; no FK/relation on purpose —
+  /// the audit trail outlives admin lifecycle changes and this column never
+  /// owns the actor row.
+  actorId      Int?
   reason       String?
   verifiedAt   DateTime?
   scheduledAt  DateTime?
@@ -478,11 +496,16 @@ model AccountDeletionRequest {
   cancelledAt  DateTime?
   errorCode    String?
   errorMessage String?
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  // M1.7d/Q203: partial unique index
+  // "AccountDeletionRequest_one_requested_per_user" on ("userId")
+  // WHERE "status" = 'requested' is raw SQL only — Prisma cannot express the
+  // predicate, so it lives in
+  // prisma/migrations/20261102160000_admin_initiated_account_deletion.
   @@index([userId, status, createdAt])
   @@index([status, scheduledAt])
 }
@@ -1603,6 +1626,10 @@ model ExamAttempt {
   result   Result?
 
   @@unique([userId, idempotencyKey])
+  // TL-112/Q120: partial unique index "ExamAttempt_one_in_progress_per_user_test"
+  // on ("userId", "testId") WHERE "status" = 'in_progress' is raw SQL only —
+  // Prisma cannot express the predicate, so it lives in
+  // prisma/migrations/20261027090000_exam_attempt_one_in_progress.
   @@index([userId, status, expiresAt])
   @@index([testId, status])
 }
@@ -1665,6 +1692,8 @@ model Result {
   testId         Int
   attemptId      Int?      @unique
   score          Int
+  maxScore       Int?
+  passed         Boolean?
   awardedBand    Int?
   scoringVersion String?
   detailJson     Json

@@ -1,103 +1,100 @@
-# HSK Content Workbench — Admin Operations Design Brief V1.1
+# Hán Lộ Admin — Design Brief V1.2 (sau M5.0)
 
-> **Product decision (2026-10-01): target admin direction.** The Product Owner
-> adopted the admin shown in `docs/ui_image/06-admin-cms-operations/`: a
-> Vietnamese-language console branded "Hán Lộ Admin" with an overview dashboard,
-> lesson create/edit with a review workflow, and data import. This supersedes the
-> English-only vocabulary rule in "Visual direction" and the dashboard and
-> create/import items in "Explicit exclusions" as the target design. The rest of
-> this brief describes the V1 workbench as built today and stays the contract for
-> it until each target screen ships through its own roadmap task with the backend
-> endpoints, `docs/api.md` updates and tests it needs. Do not add UI for actions
-> the API does not support yet.
+> **Product decision (2026-10-01): hướng admin đích.** Product Owner chọn admin
+> trong `docs/ui_image/06-admin-cms-operations/`: console tiếng Việt tên "Hán Lộ
+> Admin" có Tổng quan (dashboard), soạn/sửa bài có duyệt, và nhập dữ liệu. Quyết
+> định này thay quy tắc "tiếng Anh only" cũ. Không vẽ UI cho tính năng API chưa
+> hỗ trợ.
+>
+> **M5.0 (15/10/2026, Q88–Q92):** khung + ngôn ngữ của bản mẫu
+> `docs/ui_reference/admin/` đã áp cho toàn bộ `/admin/**`, `/login`,
+> `/forbidden` và trang lỗi/loading/not-found của admin. Trang Bài tập và Thư
+> viện media (danh sách + chi tiết) dùng thành phần của mẫu `content.html`.
+> Dashboard (M5.5), soạn bài (M5.1a, Q89–Q91), upload media (M5.2) vẫn là task
+> riêng với backend kèm theo.
 
-Quyết định PO cho learner app: `docs/product/learner-ui-decisions.md`.
+Quyết định PO cho learner app: `docs/product/learner-ui-decisions.md` (cùng bảng
+Q với admin: Q4, Q88–Q92).
 
-## Product and audience
+## Sản phẩm và người dùng
 
-The interface is an operational workbench for HSK content administrators. Its
-single job in V1 is to let an authenticated administrator inspect
-`LessonExercise` inventory, revision details and safe Media asset operations
-quickly, without exposing storage credentials or implying that upload/import
-pipelines are available in the UI.
+Console vận hành nội dung cho quản trị viên HSK, hoàn toàn tiếng Việt. Việc
+duy nhất ở V1: xem kho `LessonExercise`, chi tiết và lịch sử bản sửa, và thao
+tác an toàn trên media (cách ly/lưu trữ có audit), không lộ credential storage,
+không gợi ý pipeline upload/import chưa mở.
 
-## Information architecture
+## Kiến trúc thông tin
 
 ```text
-Login
-└── Admin shell
-    ├── Exercises
-    │   ├── Server-filtered, paginated inventory
-    │   └── Exercise detail and revision history
-    └── Media
-        ├── URL-filtered inventory and safe metadata detail
-        └── Audited quarantine/archive operations
-
-Forbidden and session-expired states sit outside the protected admin shell.
+Đăng nhập (/login, thẻ giữa trang, TL-9)
+└── Khung admin (sidebar + thanh trên, TL-6/TL-7)
+    ├── Bài tập (/admin/exercises): danh sách lọc server + phân trang, chi tiết + lịch sử bản sửa
+    ├── Thư viện media (/admin/media): danh sách lọc theo URL, chi tiết metadata an toàn, cách ly/lưu trữ có audit
+    └── Tổng quan · Nội dung · Ngân hàng câu hỏi · Nhập dữ liệu · Người dùng ·
+        Báo cáo · AI Ops · Phản hồi · Cài đặt hệ thống — mục chưa có trang:
+        không link, aria-disabled, nhãn "Sắp có" (Q88)
 ```
 
-The URL is the source of truth for page, lesson, topic, type, and status. The
-desktop table becomes a labelled record list on narrow screens rather than a
-horizontally scrolling table.
+`/forbidden` và trạng thái hết phiên nằm ngoài khung admin được bảo vệ. URL là
+nguồn đúng duy nhất cho trang/bộ lọc; bảng desktop trở thành danh sách bản ghi
+có nhãn ở màn hẹp (không cuộn ngang cấp trang).
 
-## Visual direction
+## Hướng thị giác
 
-**Source of truth:** `docs/ui_image/06-admin-cms-operations.png`. The authenticated
-console follows its compact navy-and-jade operations shell, light workspace,
-dense toolbar/table hierarchy and low-elevation surfaces. Product vocabulary
-and data remain the real English V1 contract; sample Vietnamese records and
-unsupported actions from the reference are not copied.
+**Nguồn đúng:** `docs/ui_reference/admin/` (bản HTML mẫu, PO 01/10/2026 + Q88),
+không phải ảnh PNG. Cụ thể khung ở `admin/css/admin.css` + `m06.css`, thành
+phần danh sách ở `admin/content.html`.
 
-- **Signature:** a restrained CJK serif `汉` mark beside the HSK 3.0 wordmark,
-  paired with mono/tabular metadata for content IDs and versions.
-- **Palette:** ink navy for navigation, jade for active/focus states, rice-paper
-  neutral for the canvas, white paper for work surfaces, and amber/red only for
-  named warning/error states.
-- **Typography:** `Noto Serif SC`/`Songti SC` fallbacks for the small brand mark;
-  `Noto Sans`/system UI for operational copy; system monospace for identifiers
-  and canonical JSON.
-- **Density:** compact like the reference operations screens while preserving 44px
-  interactive targets and a 4/8px spacing rhythm.
-- **Shape:** modest 6–10px radii, hairline borders, and one low elevation level;
-  no decorative gradients or card mosaics.
-- **Motion:** 150–200ms state transitions and a quiet loading skeleton. All
-  non-essential motion is disabled by `prefers-reduced-motion`.
+- **Dấu ấn:** brand "Hán Lộ Admin" với dấu tròn jade chứa icon lá
+  (`#i-leaf`), nhãn mono/tabular cho ID nội dung và phiên bản.
+- **Palette:** navy-850 `#0a224a` cho sidebar; jade-800 `#067a60` cho mục đang
+  chọn và nút chính (Q92, chữ trắng 5,3:1); nền canvas slate-50; mặt làm việc
+  trắng; amber/red chỉ cho trạng thái cảnh báo/lỗi có tên.
+- **Typography:** Inter (400/500/600/700, subset vietnamese) cho toàn bộ chữ
+  vận hành — cùng họ/weight learner nạp (không thêm họ font); Noto Sans SC dự
+  phòng chữ Hán; mono hệ thống cho ID/hash.
+- **Mật độ:** compact như mẫu: nút admin desktop 40px, ≤900px 44px (quy ước
+  README của bộ mẫu), nhịp 4/8px.
+- **Hình khối:** bo góc 8–12px, viền hairline, một tầng đổ bóng thấp; không
+  gradient trang trí.
+- **Chuyển động:** 150–200ms; tôn trọng `prefers-reduced-motion` (rule global
+  của styles.css).
 
-## Token architecture
+## Kiến trúc token
 
-Tokens follow three layers in `src/app/styles.css`:
+- Token admin nằm ở `src/app/admin/admin.css`, scope `.admin-app`, tiền tố
+  `--adm-*` (copy từ `docs/ui_reference/shared/css/tokens.css`, chỉ biến dùng
+  đến). Component dùng semantic/token, không hex trần ngoài khối token.
+- Lệch mẫu có chủ đích vì WCAG AA (axe color-contrast): muted text
+  `--adm-slate-500: #5f6b7f` (mẫu #6b7686 chỉ 4,3:1 trên slate-50), badge ok
+  jade-800 trên jade-50 (4,97:1), badge draft #9a5b00 (4,95:1), nút danger
+  #c73429 (5,31:1), link nội dung jade-800 (5,3:1, cùng hướng Q74/Q80).
+- Font nạp một lần qua `src/features/admin-shell/admin-fonts.ts` (dùng chung
+  cho `admin/layout.tsx` và `(auth)/layout.tsx`).
 
-1. **Primitive:** raw ink, jade, rice, neutral, spacing, type, radius, shadow,
-   and duration values.
-2. **Semantic:** canvas, surface, text, border, action, status, focus, and layout
-   meanings.
-3. **Component:** button, input, navigation, table, badge, panel, and skeleton
-   aliases.
+## Hợp đồng accessibility và responsive
 
-Components consume semantic or component tokens, never raw hex values.
+- WCAG AA cho cặp chữ/nền (0 vi phạm axe trong e2e), vòng focus jade-700 đặc
+  3px cho mọi control (Q12).
+- Skip link "Đến nội dung chính", landmark header/nav/main, nhãn form tường
+  minh (sr-only trong hàng lọc), lỗi inline `role="alert"`, trạng thái có chữ
+  kèm màu.
+- Thanh trên (TL-7): không ô tìm kiếm, chuông, badge phản hồi — vẽ khi có API.
+- `>900px`: sidebar cố định 232px navy-850, nút "Thu gọn" thu về 72px
+  (aria-expanded, không nhớ trạng thái).
+- `≤900px`: sidebar thành drawer 260px (nút menu ở thanh trên navy, backdrop,
+  Esc đóng và trả focus về nút menu; drawer đóng khuất khỏi tab order bằng
+  `visibility`).
+- `≤430px`: lọc và nội dung một cột; khối chữ người dùng ẩn (giữ avatar + nút
+  Đăng xuất).
+- Viewport kiểm chứng: 390, 768, 1024, 1440 (e2e 4 project + axe).
 
-## Accessibility and responsive contract
+## Loại trừ tường minh (cập nhật sau Q88)
 
-- WCAG AA foreground/background pairs and a visible 3px focus indicator.
-- Skip link, semantic header/navigation/main landmarks, sequential headings,
-  explicit form labels, inline errors, and status text in addition to color.
-- Keyboard-only login, filters, pagination, navigation, detail, and logout.
-- No hidden content behind sticky chrome and no horizontal page overflow.
-- Verified target widths: 390px, 768px, 1024px, and 1440px.
-
-## Explicit exclusions
-
-- No Exercise create/review/publish/archive/import controls.
-- No upload/transcode/provider configuration UI; V1 only exposes safe inventory,
-  detail, references, quarantine and archive.
-- No dashboard analytics or marketing hero.
-- No dark theme in V1.
-
-## Responsive operations shell
-
-- `>900px`: persistent 208–220px sidebar, white workspace toolbar and dense
-  semantic data table.
-- `≤900px`: compact navy toolbar replaces the sidebar and the inventory becomes
-  a labelled record list; no page-level horizontal scrolling.
-- `≤430px`: filter and record metadata collapse to one column while preserving
-  status, placement and the detail action.
+- Không upload/transcode/cấu hình provider UI cho tới M5.2; V1 chỉ đọc kho,
+  chi tiết, tham chiếu, cách ly, lưu trữ.
+- Không dark theme trong V1.
+- (Đã bỏ 15/10/2026 theo Q4/Q88: loại trừ "không dashboard" và "không
+  create/review/publish/import" — dashboard thuộc M5.5, soạn bài có duyệt
+  M5.1a theo Q89–Q91, nhập dữ liệu theo lộ trình M5. Các mục sidebar tương ứng
+  hiện "Sắp có" cho tới khi task đó ship.)

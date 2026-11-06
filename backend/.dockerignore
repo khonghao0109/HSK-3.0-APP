@@ -1,0 +1,33 @@
+# Build context cho backend/Dockerfile — chặn mọi thứ không cần hoặc nhạy cảm.
+
+# Secrets/env: chặn MỌI file .env, .env.* — kể cả .env.example (được git track
+# nhưng tuyệt đối không đưa vào image/context).
+.env
+.env.*
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies — cài lại trong image bằng npm ci
+node_modules
+
+# Build output — build lại trong image
+dist
+*.tsbuildinfo
+
+# Test artifacts
+coverage
+test-results
+playwright-report
+
+# Logs
+*.log
+logs
+
+# Runtime artifacts (không phải source)
+uploads
+
+# OS/editor noise
+.DS_Store

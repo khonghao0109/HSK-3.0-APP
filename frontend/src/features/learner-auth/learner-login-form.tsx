@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, useRef, useState, type ReactNode } from 'react';
 
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
@@ -24,7 +25,16 @@ function getErrorKind(body: unknown): string | null {
 
 type InvalidField = 'email' | 'password' | null;
 
-export function LearnerLoginForm() {
+export function LearnerLoginForm({
+  nextPath,
+  switchLink,
+}: {
+  /** Only `/verify-email` (Q73): the sign-in page accepts no other `next`. */
+  nextPath?: '/verify-email';
+  /** `.wa-switch` slot of the web page (M2.10c); keep the switch in DOM order
+   *  between the social buttons and the legal links. */
+  switchLink?: ReactNode;
+} = {}) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
@@ -73,7 +83,7 @@ export function LearnerLoginForm() {
       });
 
       if (response.status === 200) {
-        router.replace('/learn');
+        router.replace(nextPath ?? '/learn');
         router.refresh();
         return;
       }
@@ -112,7 +122,12 @@ export function LearnerLoginForm() {
 
   return (
     <>
-      <form className="auth__form" onSubmit={submit} noValidate>
+      <form
+        className="auth__form"
+        onSubmit={submit}
+        noValidate
+        aria-busy={pending || undefined}
+      >
         <div className="field">
           <label className="field__label" htmlFor="email">
             Email
@@ -144,6 +159,10 @@ export function LearnerLoginForm() {
           disabled={pending}
         />
 
+        <Link className="auth__forgot" href="/forgot-password">
+          Quên mật khẩu?
+        </Link>
+
         <div
           className="alert alert--error"
           id="auth-alert"
@@ -170,7 +189,7 @@ export function LearnerLoginForm() {
         </button>
       </form>
 
-      <LearnerAuthAlternatives />
+      <LearnerAuthAlternatives switchLink={switchLink} />
     </>
   );
 }

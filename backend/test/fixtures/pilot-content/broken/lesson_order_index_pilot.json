@@ -1,0 +1,11 @@
+{
+  "description": "lesson.orderIndex lệch số file",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.orderIndex",
+      "value": 1003
+    }
+  ]
+}
