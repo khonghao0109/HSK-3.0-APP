@@ -572,6 +572,7 @@ describe('Exam review context and finished-attempt media grants E2E (M4.5 B2a)',
 
     const before = Date.now();
     const response = await getGrants(token, attemptId).expect(200);
+    const after = Date.now();
     expectNoStore(response);
     expectNoKeys(response.body, FORBIDDEN_GRANT_KEYS);
     const data = response.body.data as GrantsBody;
@@ -581,10 +582,11 @@ describe('Exam review context and finished-attempt media grants E2E (M4.5 B2a)',
     );
     expect(data.unavailable).toEqual([]);
     for (const grant of data.grants) {
-      const ttl = ttlSeconds(grant.expiresAt, before);
-      expect(ttl).toBeGreaterThan(0);
-      expect(ttl).toBeLessThanOrEqual(300);
-      expect(ttl).toBeGreaterThanOrEqual(295);
+      // Upper bound against `after`, lower against `before`: the server signs
+      // between the two, so a second boundary crossed in flight cannot add 1 s.
+      expect(ttlSeconds(grant.expiresAt, before)).toBeGreaterThan(0);
+      expect(ttlSeconds(grant.expiresAt, after)).toBeLessThanOrEqual(300);
+      expect(ttlSeconds(grant.expiresAt, before)).toBeGreaterThanOrEqual(295);
     }
   });
 
@@ -604,12 +606,12 @@ describe('Exam review context and finished-attempt media grants E2E (M4.5 B2a)',
 
     const before = Date.now();
     const response = await getGrants(learner.token, attemptId).expect(200);
+    const after = Date.now();
     const data = response.body.data as GrantsBody;
     expect(data.grants.length).toBeGreaterThan(0);
     for (const grant of data.grants) {
-      const ttl = ttlSeconds(grant.expiresAt, before);
-      expect(ttl).toBeLessThanOrEqual(300);
-      expect(ttl).toBeGreaterThanOrEqual(295);
+      expect(ttlSeconds(grant.expiresAt, after)).toBeLessThanOrEqual(300);
+      expect(ttlSeconds(grant.expiresAt, before)).toBeGreaterThanOrEqual(295);
     }
   });
 
@@ -648,15 +650,15 @@ describe('Exam review context and finished-attempt media grants E2E (M4.5 B2a)',
 
     const before = Date.now();
     const response = await getGrants(learner.token, attemptId).expect(200);
+    const after = Date.now();
     const data = response.body.data as GrantsBody;
     expect(data.grants.map((grant) => grant.mediaId).sort()).toEqual(
       [imageId, audioId].sort(),
     );
     for (const grant of data.grants) {
-      const ttl = ttlSeconds(grant.expiresAt, before);
       // 30 s of clock + the 60 s grant margin, i.e. not the fixed review TTL.
-      expect(ttl).toBeGreaterThan(0);
-      expect(ttl).toBeLessThanOrEqual(95);
+      expect(ttlSeconds(grant.expiresAt, before)).toBeGreaterThan(0);
+      expect(ttlSeconds(grant.expiresAt, after)).toBeLessThanOrEqual(95);
     }
     expect(
       (
