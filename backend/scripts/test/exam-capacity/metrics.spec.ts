@@ -826,7 +826,7 @@ void test('REQUIRED_THRESHOLD_CODES khớp bảng chốt theo scenario (P3 ở m
       'RSS',
       'P18',
     ],
-    probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+    probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P15', 'P17', 'RSS'],
   });
   for (const codes of Object.values(REQUIRED_THRESHOLD_CODES)) {
     assert.ok(codes.includes('P3'));

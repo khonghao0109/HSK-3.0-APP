@@ -9,6 +9,7 @@ import {
   planLearnerScenario,
   planStartOffsets,
   planSubmitWaveOffsets,
+  requiredThresholdCodes,
 } from './scenarios';
 
 void test('planStartOffsets rải đều trong cửa sổ ramp, bắt đầu ở 0', () => {
@@ -236,4 +237,11 @@ void test('planLearnerScenario: w8 có kế hoạch học viên giống hệt w1
     planLearnerScenario({ scenario: 'w45', ...config }),
     w1,
   );
+});
+
+void test('requiredThresholdCodes: chỉ probe429 bắt buộc P15', () => {
+  assert.ok(requiredThresholdCodes('probe429').includes('P15'));
+  for (const scenario of ['w1', 'w3', 'w4', 'w5', 'w6', 'w7', 'w45', 'w8']) {
+    assert.ok(!requiredThresholdCodes(scenario).includes('P15'), scenario);
+  }
 });

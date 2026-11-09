@@ -92,7 +92,7 @@ export const REQUIRED_THRESHOLD_CODES: Record<
   w6: FULL_LIFECYCLE_CODES,
   w45: FULL_LIFECYCLE_CODES,
   w8: [...FULL_LIFECYCLE_CODES, 'P18'],
-  probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P17', 'RSS'],
+  probe429: ['P3', 'P5', 'P6', 'P7', 'P8', 'P9', 'P14', 'P15', 'P17', 'RSS'],
 };
 
 export type CapacityArgs = {
