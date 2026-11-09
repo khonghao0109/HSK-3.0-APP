@@ -75,7 +75,11 @@ let fetchSpy: MockInstance<typeof fetch>;
 
 function renderPlayer(
   exercises: PlayerExercise[],
-  options: { startIndex?: number; needsStart?: boolean } = {},
+  options: {
+    startIndex?: number;
+    needsStart?: boolean;
+    lessonDone?: boolean;
+  } = {},
 ) {
   return render(
     <div className="app">
@@ -84,6 +88,7 @@ function renderPlayer(
         exercises={exercises}
         startIndex={options.startIndex ?? 0}
         needsStart={options.needsStart ?? false}
+        lessonDone={options.lessonDone ?? false}
       />
     </div>,
   );
@@ -643,6 +648,104 @@ describe('LessonPlayer', () => {
       expect(
         screen.getByRole('link', { name: 'Về bài học' }),
       ).toBeInTheDocument();
+    });
+
+    describe('a lesson without exercises', () => {
+      const EMPTY = 'Bài học này chưa có bài tập.';
+      const FINISH = 'Hoàn thành bài học';
+      const completeUrl = '/api/learner/lessons/5/complete';
+      const completeCalls = () =>
+        urls().filter((url) => url === completeUrl).length;
+
+      it('shows the empty card and never completes on open', async () => {
+        fetchSpy.mockResolvedValue(ok({ success: true, data: {} }));
+        renderPlayer([], { needsStart: true });
+        await waitFor(() =>
+          expect(urls()).toEqual(['/api/learner/lessons/5/start']),
+        );
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(completeCalls()).toBe(0);
+        expect(replace).not.toHaveBeenCalled();
+        expect(screen.getByRole('region', { name: EMPTY })).toBeInTheDocument();
+        expect(screen.queryByRole('progressbar')).toBeNull();
+        expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+        expect(
+          screen.getByRole('button', { name: FINISH }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole('link', { name: 'Về bài học' }),
+        ).toHaveAttribute('href', '/learn/lessons/5');
+      });
+
+      it('completes once on click, locked while sending', async () => {
+        let answer: (response: Response) => void = () => undefined;
+        fetchSpy.mockImplementation(
+          () =>
+            new Promise<Response>((resolve) => {
+              answer = resolve;
+            }),
+        );
+        renderPlayer([]);
+        expect(fetchSpy).not.toHaveBeenCalled();
+
+        const finish = screen.getByRole('button', { name: FINISH });
+        fireEvent.click(finish);
+        await waitFor(() => expect(completeCalls()).toBe(1));
+        expect(finish).toHaveAttribute('aria-disabled', 'true');
+        fireEvent.click(finish);
+        fireEvent.click(finish);
+
+        await act(async () => {
+          answer(ok({ success: true, data: { lessonId: 5 } }));
+          await Promise.resolve();
+        });
+        await waitFor(() =>
+          expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+        );
+        expect(completeCalls()).toBe(1);
+      });
+
+      it('offers a retry on the same button when completing fails', async () => {
+        fetchSpy
+          .mockResolvedValueOnce(ok({ success: false }, 503))
+          .mockResolvedValueOnce(ok({ success: true, data: { lessonId: 5 } }));
+        renderPlayer([]);
+        const button = screen.getByRole('button', { name: FINISH });
+        button.focus();
+        fireEvent.click(button);
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+          'Chưa lưu được kết quả bài học. Vui lòng thử lại.',
+        );
+        expect(replace).not.toHaveBeenCalled();
+        const retry = screen.getByRole('button', { name: 'Thử lại' });
+        expect(retry).toBe(button);
+        expect(retry).toHaveFocus();
+
+        fireEvent.click(retry);
+        await waitFor(() =>
+          expect(replace).toHaveBeenCalledWith('/learn/lessons/5/complete'),
+        );
+        expect(completeCalls()).toBe(2);
+      });
+
+      it('only links back when the lesson is already done', async () => {
+        renderPlayer([], { lessonDone: true });
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(fetchSpy).not.toHaveBeenCalled();
+        expect(replace).not.toHaveBeenCalled();
+        expect(screen.getByRole('region', { name: EMPTY })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: FINISH })).toBeNull();
+        expect(
+          screen.getByRole('link', { name: 'Về bài học' }),
+        ).toBeInTheDocument();
+      });
     });
   });
 

@@ -33,6 +33,7 @@ export const PLAYER_MESSAGES = {
   wrongTitle: 'Chưa đúng',
   soon: 'Dạng bài này sắp ra mắt.',
   done: 'Bạn đã làm xong phần luyện tập',
+  empty: 'Bài học này chưa có bài tập.',
   submitFailed: 'Không gửi được câu trả lời. Vui lòng thử lại.',
   startFailed: 'Chưa mở được bài luyện tập. Vui lòng thử lại.',
   finishing: 'Đang lưu kết quả bài học…',
@@ -91,6 +92,7 @@ function readResult(body: unknown): Result | null {
  * M2.5d (Q58): Tiếp tục after a topic's last exercise closes the topic, and
  * once every exercise has an attempt the lesson is completed and the player
  * moves to the complete page; opening it with all answered does the same.
+ * A lesson without exercises is only completed by its own button.
  */
 export function LessonPlayer({
   lessonId,
@@ -98,6 +100,7 @@ export function LessonPlayer({
   exercises,
   startIndex,
   needsStart,
+  lessonDone,
 }: {
   lessonId: number;
   /** M2.10b: web kicker "lesson · type" (mẫu practice-*.html); optional so
@@ -106,12 +109,17 @@ export function LessonPlayer({
   exercises: PlayerExercise[];
   startIndex: number;
   needsStart: boolean;
+  lessonDone: boolean;
 }) {
   const router = useRouter();
   const lessonHref = `/learn/lessons/${lessonId}`;
   const total = exercises.length;
+  const empty = total === 0;
+  // `every` is true for an empty list: opening must not complete such a lesson.
   const allAnsweredAtOpen =
-    startIndex >= total && exercises.every((exercise) => exercise.answered);
+    !empty &&
+    startIndex >= total &&
+    exercises.every((exercise) => exercise.answered);
 
   const [index, setIndex] = useState(startIndex);
   const [input, setInput] = useState<PlayerInput>(EMPTY_INPUT);
@@ -300,6 +308,13 @@ export function LessonPlayer({
   const retryFinish = () => {
     // The heading stays mounted, so focus does not drop to the body.
     headingRef.current?.focus();
+    setCompletion('busy');
+    void finish();
+  };
+
+  // The button stays mounted (aria-disabled), so focus stays on it.
+  const finishEmpty = () => {
+    if (completion === 'busy') return;
     setCompletion('busy');
     void finish();
   };
@@ -539,18 +554,53 @@ export function LessonPlayer({
                 : lessonTitle}
           </p>
         )}
-        <div
-          className="progress ex-progress m-only"
-          role="progressbar"
-          aria-label="Tiến độ luyện tập"
-          aria-valuemin={0}
-          aria-valuemax={total}
-          aria-valuenow={answeredCount}
-        >
-          <span className={progressClass(answeredCount, total)} />
-        </div>
+        {!empty && (
+          <div
+            className="progress ex-progress m-only"
+            role="progressbar"
+            aria-label="Tiến độ luyện tập"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={answeredCount}
+          >
+            <span className={progressClass(answeredCount, total)} />
+          </div>
+        )}
 
-        {done && (
+        {empty && (
+          <section className="ex-done" aria-labelledby="ex-q">
+            <h2
+              className="ex-done__title"
+              id="ex-q"
+              ref={headingRef}
+              tabIndex={-1}
+            >
+              {PLAYER_MESSAGES.empty}
+            </h2>
+            {completion === 'busy' && <p>{PLAYER_MESSAGES.finishing}</p>}
+            {completion === 'failed' && (
+              <p className="ex-error" role="alert">
+                {PLAYER_MESSAGES.finishFailed}
+              </p>
+            )}
+            {!lessonDone && (
+              <button
+                className="lesson-cta"
+                type="button"
+                aria-disabled={completion === 'busy' ? 'true' : undefined}
+                aria-busy={completion === 'busy' || undefined}
+                onClick={finishEmpty}
+              >
+                {completion === 'failed' ? 'Thử lại' : 'Hoàn thành bài học'}
+              </button>
+            )}
+            <Link className="btn btn--outline btn--block" href={lessonHref}>
+              Về bài học
+            </Link>
+          </section>
+        )}
+
+        {done && !empty && (
           <section className="ex-done" aria-labelledby="ex-q">
             <h2
               className="ex-done__title"

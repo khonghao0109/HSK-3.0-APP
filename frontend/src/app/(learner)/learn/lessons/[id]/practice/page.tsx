@@ -36,6 +36,7 @@ export default async function LessonPracticePage({
       exercises={exercises}
       startIndex={firstPendingIndex(exercises)}
       needsStart={data.progress.status === 'not_started'}
+      lessonDone={data.progress.status === 'done'}
     />
   );
 }

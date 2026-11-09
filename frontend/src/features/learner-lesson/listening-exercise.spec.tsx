@@ -99,6 +99,7 @@ function renderListening() {
         exercises={[listening]}
         startIndex={0}
         needsStart={false}
+        lessonDone={false}
       />
     </div>,
   );
