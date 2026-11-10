@@ -81,6 +81,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/exam\/tests(?:\?[^#]*)?$/,
   /^\/api\/v1\/exam\/tests\/\d+$/,
   /^\/api\/v1\/exam\/tests\/\d+\/attempts$/,
+  // M4.5 B3: the learner's read-only exam history.
+  /^\/api\/v1\/exam\/attempts(?:\?[^#]*)?$/,
   /^\/api\/v1\/exam\/attempts\/\d+$/,
   /^\/api\/v1\/exam\/attempts\/\d+\/media-grants$/,
   // M4.2c Pha B (TL-159): one-way submit; no query string.

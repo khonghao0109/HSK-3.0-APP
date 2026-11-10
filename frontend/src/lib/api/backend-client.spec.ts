@@ -940,6 +940,12 @@ describe('server-only backend client', () => {
       fetchImpl,
     });
 
+    await client.request(
+      '/api/v1/exam/attempts?page=1&limit=20&levelCode=HSK3',
+      {
+        token: 't',
+      },
+    );
     await client.request('/api/v1/exam/attempts/41', { token: 't' });
     await client.request('/api/v1/exam/attempts/41/media-grants', {
       token: 't',
@@ -984,7 +990,7 @@ describe('server-only backend client', () => {
         kind: 'invalid_request',
       });
     }
-    expect(fetchImpl).toHaveBeenCalledTimes(7);
+    expect(fetchImpl).toHaveBeenCalledTimes(8);
   });
 
   it('allowlists the learner exam list with a filtered query string (M4.5 B1)', async () => {

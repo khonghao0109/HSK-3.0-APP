@@ -3494,6 +3494,28 @@
     color: var(--text-strong);
   }
 
+  .learner-app .exr-history {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 var(--sp-1);
+    color: var(--jade-800);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .learner-app .exr-history:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .exr-history .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
   .learner-app .exr-bar__spacer {
     display: block;
     width: 48px;

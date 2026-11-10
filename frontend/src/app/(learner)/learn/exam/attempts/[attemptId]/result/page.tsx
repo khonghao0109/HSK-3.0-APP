@@ -61,7 +61,10 @@ function ResultShell({
           ariaLabel="Quay lại giới thiệu đề"
         />
         <h1 className="exr-bar__title">Kết quả bài thi</h1>
-        <span aria-hidden="true" className="exr-bar__spacer" />
+        <Link className="exr-history" href="/learn/exam/history">
+          <Icon name="history" />
+          Lịch sử thi
+        </Link>
       </header>
       <header className="exr-mbar m-only">
         <LearnerBackButton
@@ -69,7 +72,10 @@ function ResultShell({
           ariaLabel="Quay lại giới thiệu đề"
         />
         <h1 className="exr-mbar__title">Kết quả bài thi</h1>
-        <span aria-hidden="true" className="exr-mbar__spacer" />
+        <Link className="exr-mhistory" href="/learn/exam/history">
+          <Icon name="history" />
+          Lịch sử thi
+        </Link>
       </header>
       <div className="exr-body">{children}</div>
     </main>

@@ -418,10 +418,12 @@ describe('LearnerExamListPage', () => {
     ).toBeNull();
   });
 
-  it('never renders a dead "Lịch sử thi" link in B1', async () => {
+  it('links to the exam history', async () => {
     await renderPage();
-    expect(screen.queryByRole('link', { name: /Lịch sử thi/u })).toBeNull();
-    expect(document.querySelector('a[href*="history"]')).toBeNull();
+    expect(screen.getByRole('link', { name: /Lịch sử thi/u })).toHaveAttribute(
+      'href',
+      '/learn/exam/history',
+    );
   });
 
   it('shows the highest finished score in the trophy toast (Q226)', async () => {

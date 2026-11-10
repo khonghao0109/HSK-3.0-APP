@@ -1,0 +1,360 @@
+/* Hán Lộ — M4.5 B3: lịch sử thi. Web đo từ `web/css/ux-b.css` (.uxb-listcard,
+   .uxb-table, .uxb-empty, .uxb-note), mobile từ `mobile/css/ux-a.css`
+   (.uxa-histcard, .uxa-fine). Khung trang, chip, phân trang và lỗi dùng lại
+   `exam-list.css`. */
+
+.learner-app .ehs-panel {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+  margin-top: var(--sp-3);
+}
+
+.learner-app .ehs-toolbar {
+  min-width: 0;
+}
+
+.learner-app .ehs-mcount {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-strong);
+}
+
+.learner-app .ehs-chips {
+  margin-top: 0;
+}
+
+.learner-app .ehs-chips .exl-chip {
+  flex: none;
+}
+
+.learner-app .ehs-cards {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .ehs-card {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.learner-app .ehs-card:focus-visible,
+.learner-app .ehs-link:focus-visible,
+.learner-app .ehs-tablewrap:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(73 196 108 / 70%);
+}
+
+.learner-app .ehs-card__top,
+.learner-app .ehs-card__end {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.learner-app .ehs-card__end {
+  align-items: center;
+}
+
+.learner-app .ehs-card__title {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .ehs-card__date,
+.learner-app .ehs-card__score span {
+  font-size: var(--fs-xs);
+  color: #3c4757;
+}
+
+.learner-app .ehs-card__date {
+  white-space: nowrap;
+}
+
+.learner-app .ehs-card__scores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.learner-app .ehs-card__score {
+  padding: 6px 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+  text-align: center;
+}
+
+.learner-app .ehs-card__score b {
+  display: block;
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.learner-app .ehs-card__total {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+/* `base.css` .badge--* of the mockups. */
+.learner-app .ehs-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.learner-app .ehs-badge--success {
+  background: var(--jade-100);
+  color: var(--jade-800);
+}
+
+.learner-app .ehs-badge--danger {
+  background: var(--red-100);
+  color: #b3261e;
+}
+
+.learner-app .ehs-badge--neutral {
+  background: var(--slate-100);
+  color: var(--slate-700);
+}
+
+.learner-app .ehs-badge--pending {
+  background: var(--amber-100);
+  color: #7a5300;
+}
+
+.learner-app .ehs-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-3);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.learner-app .ehs-empty .icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--text-subtle);
+}
+
+.learner-app .ehs-empty strong {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.learner-app .ehs-note {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.learner-app .ehs-note .icon {
+  display: none;
+}
+
+/* This sheet loads after learner-web.css, so each frame is switched here
+   rather than through `.w-only`/`.m-only`. */
+.learner-app .ehs-tablewrap,
+.learner-app .ehs-count,
+.learner-app .ehs-title {
+  display: none;
+}
+
+/* `.uxa-dark-main`: 12px gutter on mobile, the list frame's bottom inset. */
+@media (max-width: 1023.98px) {
+  .learner-app .ehs {
+    padding-right: var(--sp-3);
+    padding-left: var(--sp-3);
+  }
+
+  .learner-app .ehs-panel {
+    margin-top: var(--sp-6);
+  }
+
+  /* `base.css` .chip, with the jade-800 selected state of the mobile mockup. */
+  .learner-app .ehs-chips {
+    gap: var(--sp-2);
+  }
+
+  .learner-app .ehs-chips .exl-chip {
+    min-height: 2.75rem;
+    padding: 0 var(--sp-4);
+    border-color: var(--border-default);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+
+  .learner-app .ehs-chips .exl-chip[aria-current='true'] {
+    min-height: 2.75rem;
+    margin: 0;
+    border-color: var(--jade-800);
+    background: var(--jade-800);
+    box-shadow: none;
+    font-weight: 600;
+  }
+
+  .learner-app .ehs-chips .exl-chip[aria-current='true']:focus-visible {
+    box-shadow: 0 0 0 3px rgb(73 196 108 / 70%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .learner-app .ehs {
+    min-height: 0;
+  }
+
+  .learner-app .ehs-panel {
+    gap: var(--sp-5);
+    margin-top: var(--sp-6);
+    padding: var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .ehs-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-3) var(--sp-4);
+  }
+
+  .learner-app .ehs-chips {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    width: auto;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .ehs-count {
+    display: block;
+    margin: 0 0 0 auto;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .learner-app .ehs-cards,
+  .learner-app .ehs-mcount {
+    display: none;
+  }
+
+  .learner-app .ehs-title {
+    display: block;
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .ehs-tablewrap {
+    display: block;
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .learner-app .ehs-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .ehs-table th,
+  .learner-app .ehs-table td {
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border-default);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .learner-app .ehs-table th {
+    background: var(--cream-100);
+    color: var(--stone-600);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .learner-app .ehs-table tbody tr:hover {
+    background: var(--jade-50);
+  }
+
+  .learner-app .ehs-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .learner-app .ehs-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--jade-800);
+    font-family: var(--font-cn);
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .learner-app .ehs-link:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .ehs-empty {
+    padding: var(--sp-12) var(--sp-6);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+  }
+
+  .learner-app .ehs-empty .icon {
+    width: 44px;
+    height: 44px;
+    color: var(--jade-700);
+  }
+
+  .learner-app .ehs-empty strong {
+    font-size: var(--fs-lg);
+  }
+
+  .learner-app .ehs-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .ehs-note .icon {
+    display: block;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 2px;
+  }
+}

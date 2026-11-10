@@ -40,11 +40,13 @@ export type ExamListQueryState = {
 
 type SearchInput = Record<string, string | string[] | undefined>;
 
-function first(value: string | string[] | undefined): string | undefined {
+export function first(
+  value: string | string[] | undefined,
+): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function positiveInteger(value: string | undefined): number | undefined {
+export function positiveInteger(value: string | undefined): number | undefined {
   if (!value || !/^[1-9]\d{0,4}$/u.test(value)) return undefined;
   return Number(value);
 }

@@ -5731,7 +5731,7 @@ html:has(.learner-app) {
 
 .learner-app .exr-mbar {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sp-2);
   min-height: 60px;
@@ -5765,6 +5765,39 @@ html:has(.learner-app) {
   text-align: center;
   color: var(--white);
   overflow-wrap: anywhere;
+}
+
+.learner-app .exr-mhistory {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  height: 1.5625rem;
+  padding: 0 0.5rem 0 0.625rem;
+  border: 1px solid #bfc5cd;
+  border-radius: 0.625rem;
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Keeps the 25px pill's touch target at 44px (m04.css .rs__history). */
+.learner-app .exr-mhistory::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 2.75rem;
+  transform: translateY(-50%);
+}
+
+.learner-app .exr-mhistory .icon {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
 }
 
 .learner-app .exr-mbar__spacer {

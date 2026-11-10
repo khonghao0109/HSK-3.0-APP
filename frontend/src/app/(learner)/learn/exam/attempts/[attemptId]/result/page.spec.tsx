@@ -222,6 +222,21 @@ describe('LearnerExamResultPage (M4.3, TL-172)', () => {
     expect(
       screen.getByRole('link', { name: 'Làm lại đề này' }).getAttribute('href'),
     ).toBe('/learn/exam/7');
+    expect(
+      within(container.querySelector('.exr-bar') as HTMLElement)
+        .getByRole('link', { name: 'Lịch sử thi' })
+        .getAttribute('href'),
+    ).toBe('/learn/exam/history');
+    expect(
+      within(container.querySelector('.exr-mbar') as HTMLElement)
+        .getByRole('link', { name: 'Lịch sử thi' })
+        .getAttribute('href'),
+    ).toBe('/learn/exam/history');
+    expect(
+      within(
+        container.querySelector('.exr-actions') as HTMLElement,
+      ).queryByRole('link', { name: 'Lịch sử thi' }),
+    ).toBeNull();
     expect(screen.getByText(EXAM_RESULT_NO_XP)).toBeDefined();
   });
 

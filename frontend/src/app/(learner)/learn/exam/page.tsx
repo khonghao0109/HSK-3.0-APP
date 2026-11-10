@@ -461,7 +461,10 @@ export default async function LearnerExamListPage({
             Làm đề theo từng kỹ năng, xem điểm và lịch sử các lần thi.
           </p>
         </div>
-        {/* B1 chưa có trang "Lịch sử thi" (B3): không render link chết. */}
+        <Link className="btn btn--outline" href="/learn/exam/history">
+          <Icon name="history" />
+          Lịch sử thi
+        </Link>
       </header>
 
       <section
