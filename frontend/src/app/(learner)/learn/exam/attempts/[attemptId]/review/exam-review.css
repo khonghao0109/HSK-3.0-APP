@@ -212,7 +212,7 @@
 }
 
 .learner-app .exv-filter[aria-current='page'] .exv-filter__count {
-  background: rgb(255 255 255 / 20%);
+  background: rgb(0 0 0 / 22%);
   color: var(--white);
 }
 
@@ -229,17 +229,27 @@
 
 .learner-app .exv-cell {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   min-height: 44px;
+  padding: 2px;
   background: var(--white);
   border: 1px solid var(--slate-300);
   border-radius: 8px;
   color: var(--ink-900);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.05;
   font-variant-numeric: tabular-nums;
   text-decoration: none;
+}
+
+.learner-app .exv-cell__mark {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .learner-app .exv-cell--correct {

@@ -84,6 +84,7 @@ function FilterLinks({
   const summary = reviewSummary(questions);
   const counts: Record<ReviewFilter, number> = {
     all: summary.total,
+    correct: summary.correct,
     wrong: summary.wrong,
     flagged: summary.flagged,
   };
@@ -118,6 +119,13 @@ function cellLabel(question: ExamReviewQuestionParsed): string {
   }`;
 }
 
+function cellGlyph(question: ExamReviewQuestionParsed): '✓' | '✕' | null {
+  const status = questionStatus(question);
+  if (status === 'correct') return '✓';
+  if (status === 'wrong') return '✕';
+  return null;
+}
+
 function QuestionGrid({
   questions,
 }: {
@@ -125,16 +133,24 @@ function QuestionGrid({
 }) {
   return (
     <nav className="exv-grid" aria-label="Danh sách câu hỏi">
-      {questions.map((question) => (
-        <a
-          className={cellClass(question)}
-          href={`#q-${String(question.orderIndex)}`}
-          aria-label={cellLabel(question)}
-          key={question.key}
-        >
-          {question.orderIndex}
-        </a>
-      ))}
+      {questions.map((question) => {
+        const glyph = cellGlyph(question);
+        return (
+          <a
+            className={cellClass(question)}
+            href={`#q-${String(question.orderIndex)}`}
+            aria-label={cellLabel(question)}
+            key={question.key}
+          >
+            <span>{question.orderIndex}</span>
+            {glyph !== null ? (
+              <span className="exv-cell__mark" aria-hidden="true">
+                {glyph}
+              </span>
+            ) : null}
+          </a>
+        );
+      })}
     </nav>
   );
 }

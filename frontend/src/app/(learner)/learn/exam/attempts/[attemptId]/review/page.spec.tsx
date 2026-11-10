@@ -206,11 +206,31 @@ describe('LearnerExamReviewPage (M4.5 B2b)', () => {
 
     // Q222: no mistake-book link on this page.
     expect(container.textContent).not.toContain('Sổ lỗi');
+
+    // Q240: grid cells show visible ✓ / ✕ marks alongside question numbers while keeping aria-label.
+    const cells = container.querySelectorAll('.exv-cell');
+    expect(cells).toHaveLength(5);
+    expect(cells[0]?.getAttribute('aria-label')).toBe('Câu 1, Đúng');
+    expect(cells[0]?.textContent).toContain('1');
+    expect(cells[0]?.textContent).toContain('✓');
+    expect(cells[1]?.getAttribute('aria-label')).toBe('Câu 2, Sai, đánh dấu');
+    expect(cells[1]?.textContent).toContain('2');
+    expect(cells[1]?.textContent).toContain('✕');
   });
 
-  it('filters by câu sai / đánh dấu / tất cả through the URL', async () => {
+  it('filters by tất cả / đúng / sai / đánh dấu through the URL (Q240)', async () => {
+    const correctOnly = await renderPage('41', 'correct');
+    let panels = correctOnly.container.querySelectorAll('.exv-q');
+    expect(panels).toHaveLength(3);
+    expect(correctOnly.container.textContent).toContain(
+      'Câu trắc nghiệm số một.',
+    );
+    expect(correctOnly.container.textContent).not.toContain(
+      'Câu trắc nghiệm số hai.',
+    );
+
     const wrongOnly = await renderPage('41', 'wrong');
-    let panels = wrongOnly.container.querySelectorAll('.exv-q');
+    panels = wrongOnly.container.querySelectorAll('.exv-q');
     expect(panels).toHaveLength(2);
     expect(wrongOnly.container.textContent).not.toContain(
       'Câu trắc nghiệm số một.',

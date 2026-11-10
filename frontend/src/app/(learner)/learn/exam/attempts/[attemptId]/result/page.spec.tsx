@@ -360,16 +360,47 @@ describe('LearnerExamResultPage (M4.3, TL-172)', () => {
     expect(container.textContent).not.toContain('Sổ lỗi');
   });
 
-  it('hides the Q219 block when no answer is wrong or the review read fails', async () => {
+  it('renders the question-type breakdown card from the single review read (Q220, Q237, Q238)', async () => {
+    const { container } = await renderPage();
+    expect(getExamReview).toHaveBeenCalledTimes(1);
+
+    const typesCard = container.querySelector('.exr-card--types');
+    expect(typesCard).not.toBeNull();
+    const card = within(typesCard as HTMLElement);
+    expect(card.getByText('Kết quả theo dạng câu')).toBeDefined();
+    expect(card.getByText('Trắc nghiệm')).toBeDefined();
+    expect(card.getByText('1/1')).toBeDefined();
+    expect(card.getByText('Đúng/Sai')).toBeDefined();
+    expect(card.getByText('0/1')).toBeDefined();
+  });
+
+  it('hides the Q219 and Q220 blocks when review has no supported items or fails', async () => {
     vi.mocked(getExamReview).mockResolvedValue(
       reviewPreview({ questions: reviewPreview().questions.slice(0, 1) }),
     );
     const noWrong = await renderPage();
     expect(noWrong.container.querySelector('.exr-explain')).toBeNull();
+    expect(noWrong.container.querySelector('.exr-card--types')).not.toBeNull();
+
+    vi.mocked(getExamReview).mockResolvedValue(
+      reviewPreview({
+        questions: [
+          {
+            ...reviewPreview().questions[0]!,
+            type: 'listening',
+          },
+        ],
+      }),
+    );
+    const noSupportedTypes = await renderPage();
+    expect(
+      noSupportedTypes.container.querySelector('.exr-card--types'),
+    ).toBeNull();
 
     vi.mocked(getExamReview).mockRejectedValue(new Error('review down'));
     const failed = await renderPage();
     expect(failed.container.querySelector('.exr-explain')).toBeNull();
+    expect(failed.container.querySelector('.exr-card--types')).toBeNull();
     expect(failed.container.querySelector('.exr-hero')).not.toBeNull();
   });
 });

@@ -280,14 +280,19 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
     if (isWebFrame(page)) {
       await page.getByRole('link', { name: 'Xem kết quả' }).isVisible();
     }
-    const grantsResponse = await page.request.get(
-      `/api/learner/exam/attempts/${String(attemptId)}/media-grants`,
-    );
-    expect(grantsResponse.status()).toBe(200);
-    const grants = (await grantsResponse.json()) as {
-      data: { grants: Array<{ mediaId: number; src: string }> };
-    };
-    expect(grants.data.grants.length).toBeGreaterThanOrEqual(2);
+    const grantsResponse = await page.evaluate(async (id) => {
+      const response = await fetch(
+        `/api/learner/exam/attempts/${String(id)}/media-grants`,
+      );
+      return {
+        status: response.status,
+        body: (await response.json()) as {
+          data: { grants: Array<{ mediaId: number; src: string }> };
+        },
+      };
+    }, attemptId);
+    expect(grantsResponse.status).toBe(200);
+    expect(grantsResponse.body.data.grants.length).toBeGreaterThanOrEqual(2);
 
     const audio = page.locator('audio').first();
     await expect(audio).toHaveAttribute(
@@ -319,8 +324,26 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
     });
     expect(typeof played).toBe('boolean');
 
+    // ---- Grid cells show visible ✓ / ✕ alongside colour while keeping aria-label (Q240) ----
+    const gridCells = page.locator('.exv-cell');
+    await expect(gridCells).toHaveCount(5);
+    await expect(gridCells.nth(0)).toHaveAttribute('aria-label', 'Câu 1, Đúng');
+    await expect(gridCells.nth(0)).toContainText('✓');
+    await expect(gridCells.nth(1)).toHaveAttribute(
+      'aria-label',
+      'Câu 2, Sai, đánh dấu',
+    );
+    await expect(gridCells.nth(1)).toContainText('✕');
+
     // ---- Filters through the URL ----
-    await page.getByRole('link', { name: /^Câu sai/u }).click();
+    await page.getByRole('link', { name: /^Đúng/u }).click();
+    await expect(page).toHaveURL(/filter=correct/u);
+    await expect(page.locator('.exv-q')).toHaveCount(1);
+    await expect(page.locator('.exv-q').first()).toContainText(
+      fixtures.mcqPrompt,
+    );
+
+    await page.getByRole('link', { name: /^Sai/u }).click();
     await expect(page).toHaveURL(/filter=wrong/u);
     await expect(page.locator('.exv-q')).toHaveCount(1);
     await expect(page.locator('.exv-q').first()).toContainText(

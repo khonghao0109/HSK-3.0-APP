@@ -10,6 +10,7 @@ import {
   passBadgeLabel,
   passHeadline,
   progressPercent,
+  questionTypeBreakdown,
   skillIcon,
   skillLabel,
   weakAreaLevelLabel,
@@ -79,5 +80,53 @@ describe('exam result model (M4.3, TL-172)', () => {
       'Chưa đủ dữ liệu để xác định điểm yếu.',
     );
     expect(EXAM_RESULT_CANCELLED).toBe('Bài thi đã bị huỷ, không có kết quả.');
+  });
+
+  it('groups review questions by supported question type in first-appearance order (Q220, Q237, Q238)', () => {
+    expect(
+      questionTypeBreakdown([
+        { type: 'true_false', isCorrect: false },
+        { type: 'listening', isCorrect: true },
+        { type: 'mcq', isCorrect: true },
+        { type: 'true_false', isCorrect: true },
+        { type: 'fill_blank', isCorrect: false },
+        { type: 'arrange_sentence', isCorrect: true },
+        { type: 'mcq', isCorrect: false },
+        { type: 'reading', isCorrect: false },
+        { type: 'writing', isCorrect: true },
+        { type: 'speaking', isCorrect: false },
+      ]),
+    ).toEqual([
+      {
+        type: 'true_false',
+        label: 'Đúng/Sai',
+        correct: 1,
+        total: 2,
+      },
+      {
+        type: 'mcq',
+        label: 'Trắc nghiệm',
+        correct: 1,
+        total: 2,
+      },
+      {
+        type: 'fill_blank',
+        label: 'Điền chỗ trống',
+        correct: 0,
+        total: 1,
+      },
+      {
+        type: 'arrange_sentence',
+        label: 'Sắp xếp câu',
+        correct: 1,
+        total: 1,
+      },
+    ]);
+    expect(
+      questionTypeBreakdown([
+        { type: 'listening', isCorrect: true },
+        { type: 'writing', isCorrect: false },
+      ]),
+    ).toEqual([]);
   });
 });

@@ -5828,8 +5828,8 @@ html:has(.learner-app) {
 }
 
 .learner-app .exr-hero:not(.is-nobadge) {
-  grid-template-columns: 76px minmax(0, 1fr);
-  column-gap: 12px;
+  grid-template-columns: 88px minmax(0, 1fr);
+  column-gap: 8px;
   align-items: start;
 }
 
@@ -6020,7 +6020,8 @@ html:has(.learner-app) {
   border-radius: 0;
 }
 
-.learner-app .exr-card--weak {
+.learner-app .exr-card--weak,
+.learner-app .exr-card--types {
   gap: 0;
   padding: 10px 11px 10px 10px;
   background: var(--surface-card);
@@ -6039,7 +6040,8 @@ html:has(.learner-app) {
   padding-left: 5px;
 }
 
-.learner-app .exr-card--weak .exr-h2 {
+.learner-app .exr-card--weak .exr-h2,
+.learner-app .exr-card--types .exr-h2 {
   font-size: 13px;
   font-weight: 600;
   line-height: 15.6px;

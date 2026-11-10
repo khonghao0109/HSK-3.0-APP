@@ -674,6 +674,8 @@ test.describe('Learner exam result (M4.3 / TL-172)', () => {
         .filter({ hasText: 'Chưa đạt' }),
     ).toBeVisible();
     await expect(page.getByText('Kết quả theo kỹ năng')).toBeVisible();
+    await expect(page.getByText('Kết quả theo dạng câu')).toBeVisible();
+    await expect(page.locator('.exr-card--types')).toContainText('Trắc nghiệm');
     for (const label of ['Nghe', 'Đọc', 'Viết']) {
       await expect(
         page.locator('.exr-skill__name', { hasText: label }),
@@ -898,6 +900,84 @@ test.describe('Learner exam result (M4.3 / TL-172)', () => {
       await shot(page, testInfo, 'b-weak');
       await captureStyles(page, testInfo, 'b-weak');
       await audit(page, 'result-weak');
+    } finally {
+      await api.dispose();
+    }
+  });
+
+  test('7. viewport 720×450: pass and fail attempts have no horizontal overflow, non-overlapping hero badge/body, and unclipped badge text (TL-191)', async ({
+    page,
+    baseURL,
+  }) => {
+    await page.setViewportSize({ width: 720, height: 450 });
+    await registerReadyLearner(page, baseURL);
+    const token = await learnerToken(page);
+    const api = await apiContext();
+    try {
+      const passAttemptId = await createAttempt(
+        api,
+        token,
+        resultFixture,
+        CORRECT_ANSWERS,
+      );
+      const failAttemptId = await createAttempt(
+        api,
+        token,
+        resultFixture,
+        WEAK_ANSWERS,
+        '28 minutes 15 seconds',
+      );
+
+      for (const [attemptId, expectedLabel] of [
+        [passAttemptId, 'Đạt'],
+        [failAttemptId, 'Chưa đạt'],
+      ] as const) {
+        await page.goto(`/learn/exam/attempts/${String(attemptId)}/result`, {
+          waitUntil: 'networkidle',
+        });
+        const hero = visibleHero(page);
+        const badge = hero.locator('.exr-hero__badge');
+        const body = hero.locator('.exr-hero__body');
+        await expect(badge).toBeVisible();
+        await expect(badge).toContainText(expectedLabel);
+        await expect(body).toBeVisible();
+
+        const metrics = await page.evaluate(() => {
+          const doc = document.documentElement;
+          const badgeEl = document.querySelector<HTMLElement>(
+            '.exr-hero--mobile .exr-hero__badge',
+          );
+          const badgeTextEl =
+            badgeEl?.querySelector<HTMLElement>('span') ?? null;
+          const bodyEl = document.querySelector<HTMLElement>(
+            '.exr-hero--mobile .exr-hero__body',
+          );
+          if (!badgeEl || !bodyEl) return null;
+          const badgeRect = badgeEl.getBoundingClientRect();
+          const bodyRect = bodyEl.getBoundingClientRect();
+          return {
+            docScrollWidth: doc.scrollWidth,
+            docClientWidth: doc.clientWidth,
+            badgeRight: badgeRect.right,
+            bodyLeft: bodyRect.left,
+            badgeScrollWidth: badgeEl.scrollWidth,
+            badgeClientWidth: badgeEl.clientWidth,
+            textScrollWidth: badgeTextEl?.scrollWidth ?? 0,
+            textClientWidth: badgeTextEl?.clientWidth ?? 0,
+          };
+        });
+        expect(metrics).not.toBeNull();
+        expect(metrics!.docScrollWidth).toBeLessThanOrEqual(
+          metrics!.docClientWidth,
+        );
+        expect(metrics!.badgeRight + 4).toBeLessThanOrEqual(metrics!.bodyLeft);
+        expect(metrics!.badgeScrollWidth).toBeLessThanOrEqual(
+          metrics!.badgeClientWidth,
+        );
+        expect(metrics!.textScrollWidth).toBeLessThanOrEqual(
+          metrics!.textClientWidth,
+        );
+      }
     } finally {
       await api.dispose();
     }

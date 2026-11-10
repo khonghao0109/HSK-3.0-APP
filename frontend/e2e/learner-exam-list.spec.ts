@@ -28,7 +28,7 @@ import {
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const TITLE = 'Thi thử HSK · Hán Lộ';
-const SHOT_DIR = '/tmp/hsk-m45b1';
+const SHOT_DIR = process.env.HSK_SHOTS_DIR;
 
 async function audit(page: Page, state: string): Promise<void> {
   await page.waitForLoadState('networkidle');
@@ -79,7 +79,8 @@ async function shot(
   page: Page,
   testInfo: TestInfo,
   state: string,
-): Promise<string> {
+): Promise<string | null> {
+  if (!SHOT_DIR) return null;
   await page.evaluate(() => window.scrollTo(0, 0));
   const path = `${SHOT_DIR}/exam-list-${testInfo.project.name}-${state}.png`;
   await page.screenshot({
@@ -111,7 +112,7 @@ test.describe('Learner exam list (M4.5 B1 / Q209–Q214)', () => {
   let todoFixtures: ExamIntroFixture;
 
   test.beforeAll(async ({}, testInfo) => {
-    mkdirSync(SHOT_DIR, { recursive: true });
+    if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
     fixtures = await seedExamIntroFixtures(
       `${testInfo.project.name}-${String(Date.now())}`,
     );
@@ -134,6 +135,15 @@ test.describe('Learner exam list (M4.5 B1 / Q209–Q214)', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: /Thi thử/u }),
     ).toBeVisible();
+    // Q243: exactly 1 "Lịch sử thi" link is visible on the screen (web or mobile),
+    // pointing to /learn/exam/history with tap target >= 44px.
+    const historyLink = page.getByRole('link', { name: 'Lịch sử thi' });
+    await expect(historyLink).toHaveCount(1);
+    await expect(historyLink).toBeVisible();
+    await expect(historyLink).toHaveAttribute('href', '/learn/exam/history');
+    const historyBox = await historyLink.boundingBox();
+    expect(historyBox).not.toBeNull();
+    expect(historyBox!.height).toBeGreaterThanOrEqual(44);
     const levels = page.getByRole('group', { name: /Cấp độ|Chọn cấp độ HSK/u });
     await expect(levels.locator('[aria-current="true"]')).toHaveText('HSK 3');
 

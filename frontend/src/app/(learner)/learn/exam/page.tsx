@@ -476,7 +476,13 @@ export default async function LearnerExamListPage({
           <h2 className="exl-panel__title" id="exam-list-title">
             Danh sách đề thi
           </h2>
-          <SortMenu state={state} />
+          <div className="exl-panel__actions">
+            <Link className="exl-mhistory m-only" href="/learn/exam/history">
+              <Icon name="history" />
+              Lịch sử thi
+            </Link>
+            <SortMenu state={state} />
+          </div>
         </div>
 
         <div className="exl-filters">

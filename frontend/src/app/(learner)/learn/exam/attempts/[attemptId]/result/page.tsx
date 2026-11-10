@@ -15,9 +15,11 @@ import {
   passBadgeLabel,
   passHeadline,
   progressPercent,
+  questionTypeBreakdown,
   skillIcon,
   skillLabel,
   weakAreaLevelLabel,
+  type QuestionTypeBreakdownItem,
 } from '@/features/learner-exam/exam-result-model';
 import { getExamResult } from '@/features/learner-exam/exam-result-service';
 import { parseAttemptId } from '@/features/learner-exam/exam-ids';
@@ -169,8 +171,9 @@ export default async function LearnerExamResultPage({
     throw error;
   }
 
-  // Q219: one review read on the result page feeds the mobile explanation
-  // preview; a failed preview must never break the result itself.
+  // Q219/Q220: one review read on the result page feeds the mobile explanation
+  // preview and the question-type breakdown; a failed review read must never
+  // break the result itself.
   let wrongPreview: {
     orderIndex: number;
     content: string;
@@ -178,8 +181,10 @@ export default async function LearnerExamResultPage({
     correct: string;
     attemptId: number;
   } | null = null;
+  let typeBreakdown: QuestionTypeBreakdownItem[] = [];
   try {
     const review = await getExamReview(attemptId, session.token);
+    typeBreakdown = questionTypeBreakdown(review.questions);
     const firstWrong = firstWrongQuestion(review.questions);
     if (firstWrong !== null) {
       wrongPreview = {
@@ -191,7 +196,7 @@ export default async function LearnerExamResultPage({
       };
     }
   } catch {
-    // The preview is optional; the result page still renders without it.
+    // The preview and breakdown are optional; the result page still renders without them.
   }
 
   const badge = passBadgeLabel(result.passed);
@@ -337,6 +342,27 @@ export default async function LearnerExamResultPage({
             100 điểm.
           </p>
         </section>
+
+        {typeBreakdown.length > 0 ? (
+          <section
+            className="exr-card exr-card--types"
+            aria-labelledby="types-title"
+          >
+            <h2 className="exr-h2" id="types-title">
+              Kết quả theo dạng câu
+            </h2>
+            <ul className="exr-weak exr-types">
+              {typeBreakdown.map((item) => (
+                <li className="exr-weak__row" key={item.type}>
+                  <span className="exr-weak__name">{item.label}</span>
+                  <span className="exr-skill__value tabular">
+                    {item.correct}/{item.total}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section
           className="exr-card exr-card--weak"

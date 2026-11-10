@@ -3631,7 +3631,8 @@
 
   .learner-app .exr-card,
   .learner-app .exr-card--skills,
-  .learner-app .exr-card--weak {
+  .learner-app .exr-card--weak,
+  .learner-app .exr-card--types {
     gap: 12px;
     padding: 24px;
     background: var(--surface-card);
@@ -3639,8 +3640,18 @@
     border-radius: var(--r-lg);
   }
 
+  .learner-app .exr-card--weak {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .learner-app .exr-card--types {
+    grid-column: 1 / -1;
+  }
+
   .learner-app .exr-h2,
-  .learner-app .exr-card--weak .exr-h2 {
+  .learner-app .exr-card--weak .exr-h2,
+  .learner-app .exr-card--types .exr-h2 {
     padding-left: 0;
     font-size: 18px;
     font-weight: 700;

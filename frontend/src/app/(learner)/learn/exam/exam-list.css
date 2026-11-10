@@ -101,6 +101,38 @@
   margin-top: 11px;
 }
 
+.learner-app .exl-panel__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.learner-app .exl-mhistory {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--sand-300);
+  border-radius: 0.5rem;
+  background: var(--white);
+  color: var(--jade-800);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.learner-app .exl-mhistory .icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.learner-app .exl-mhistory:hover {
+  border-color: var(--jade-700);
+}
+
 .learner-app .exl-panel__title {
   margin: 0;
   padding-left: 2px;
@@ -590,9 +622,11 @@
 
 /* ---------- Web ≥1024px (mẫu web/exams.html) ---------- */
 @media (min-width: 1024px) {
-  /* The page CSS is imported after learner-web.css, so the mobile bar must be
-     hidden explicitly (its own `display: grid` would beat `.m-only`). */
-  .learner-app .exl-mbar {
+  /* The page CSS is imported after learner-web.css, so the mobile bar and
+     mobile history link must be hidden explicitly (their own `display` rules
+     would otherwise beat `.m-only`). */
+  .learner-app .exl-mbar,
+  .learner-app .exl-mhistory {
     display: none;
   }
 

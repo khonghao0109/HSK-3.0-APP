@@ -101,3 +101,55 @@ export function progressPercent(score: number, maxScore: number): number {
   }
   return Math.min(100, Math.max(0, Math.round((score / maxScore) * 100)));
 }
+
+export type SupportedExamQuestionType =
+  'mcq' | 'true_false' | 'fill_blank' | 'arrange_sentence';
+
+export interface QuestionTypeBreakdownItem {
+  type: SupportedExamQuestionType;
+  label: string;
+  correct: number;
+  total: number;
+}
+
+const QUESTION_TYPE_LABELS: Record<SupportedExamQuestionType, string> = {
+  mcq: 'Trắc nghiệm',
+  true_false: 'Đúng/Sai',
+  fill_blank: 'Điền chỗ trống',
+  arrange_sentence: 'Sắp xếp câu',
+};
+
+function isSupportedQuestionType(
+  type: string,
+): type is SupportedExamQuestionType {
+  return Object.prototype.hasOwnProperty.call(QUESTION_TYPE_LABELS, type);
+}
+
+/**
+ * Q220/Q237/Q238: groups review questions by supported objective question type
+ * in first-appearance order. Unknown/skill-level types are ignored.
+ */
+export function questionTypeBreakdown(
+  questions: ReadonlyArray<{ type: string; isCorrect: boolean }>,
+): QuestionTypeBreakdownItem[] {
+  const byType = new Map<
+    SupportedExamQuestionType,
+    QuestionTypeBreakdownItem
+  >();
+  for (const question of questions) {
+    if (!isSupportedQuestionType(question.type)) continue;
+    const existing = byType.get(question.type);
+    if (existing) {
+      existing.total += 1;
+      if (question.isCorrect === true) existing.correct += 1;
+    } else {
+      byType.set(question.type, {
+        type: question.type,
+        label: QUESTION_TYPE_LABELS[question.type],
+        correct: question.isCorrect === true ? 1 : 0,
+        total: 1,
+      });
+    }
+  }
+  return Array.from(byType.values());
+}

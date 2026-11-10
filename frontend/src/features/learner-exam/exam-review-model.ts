@@ -7,19 +7,22 @@ import { EXAM_SKILL_LABELS, type ExamSkill } from './exam-labels';
  * share the same filtering/labelling instead of duplicating strings.
  */
 
-export type ReviewFilter = 'all' | 'wrong' | 'flagged';
+export type ReviewFilter = 'all' | 'correct' | 'wrong' | 'flagged';
 
 export const REVIEW_FILTERS: ReadonlyArray<{
   value: ReviewFilter;
   label: string;
 }> = [
   { value: 'all', label: 'Tất cả' },
-  { value: 'wrong', label: 'Câu sai' },
+  { value: 'correct', label: 'Đúng' },
+  { value: 'wrong', label: 'Sai' },
   { value: 'flagged', label: 'Đánh dấu' },
 ];
 
 export function parseReviewFilter(raw: string | undefined): ReviewFilter {
-  return raw === 'wrong' || raw === 'flagged' ? raw : 'all';
+  return raw === 'correct' || raw === 'wrong' || raw === 'flagged'
+    ? raw
+    : 'all';
 }
 
 export function reviewFilterHref(
@@ -57,6 +60,7 @@ export const REVIEW_SUMMARY_LABELS = {
 
 export const REVIEW_EMPTY_FILTER_TEXT: Record<ReviewFilter, string> = {
   all: 'Chưa có câu nào để xem lại.',
+  correct: 'Bạn chưa có câu đúng nào.',
   wrong: 'Bạn không có câu sai nào. Làm tốt lắm!',
   flagged: 'Bạn chưa đánh dấu câu nào.',
 };
@@ -93,6 +97,11 @@ export function filterQuestions(
   filter: ReviewFilter,
 ): ExamReviewQuestionParsed[] {
   if (filter === 'all') return [...questions];
+  if (filter === 'correct') {
+    return questions.filter(
+      (question) => questionStatus(question) === 'correct',
+    );
+  }
   if (filter === 'flagged') {
     return questions.filter((question) => question.isFlagged);
   }

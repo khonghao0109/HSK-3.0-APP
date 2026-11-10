@@ -11,6 +11,8 @@ import {
   optionLetter,
   parseReviewFilter,
   questionStatus,
+  REVIEW_FILTERS,
+  reviewFilterHref,
   reviewSummary,
   sectionTitle,
 } from './exam-review-model';
@@ -132,7 +134,7 @@ describe('exam review model (M4.5 B2b)', () => {
     expect(firstWrongQuestion([correct])).toBeNull();
   });
 
-  it('filters all / wrong / flagged and parses the URL value', () => {
+  it('filters all / correct / wrong / flagged and parses the URL value (Q240)', () => {
     const correct = question();
     const wrong = question({
       key: 'q2',
@@ -142,20 +144,33 @@ describe('exam review model (M4.5 B2b)', () => {
       isFlagged: true,
     });
     const questions = [correct, wrong];
+    expect(REVIEW_FILTERS).toEqual([
+      { value: 'all', label: 'Tất cả' },
+      { value: 'correct', label: 'Đúng' },
+      { value: 'wrong', label: 'Sai' },
+      { value: 'flagged', label: 'Đánh dấu' },
+    ]);
     expect(filterQuestions(questions, 'all').map((item) => item.key)).toEqual([
       'q1',
       'q2',
     ]);
+    expect(
+      filterQuestions(questions, 'correct').map((item) => item.key),
+    ).toEqual(['q1']);
     expect(filterQuestions(questions, 'wrong').map((item) => item.key)).toEqual(
       ['q2'],
     );
     expect(
       filterQuestions(questions, 'flagged').map((item) => item.key),
     ).toEqual(['q2']);
+    expect(parseReviewFilter('correct')).toBe('correct');
     expect(parseReviewFilter('wrong')).toBe('wrong');
     expect(parseReviewFilter('flagged')).toBe('flagged');
     expect(parseReviewFilter('nonsense')).toBe('all');
     expect(parseReviewFilter(undefined)).toBe('all');
+    expect(reviewFilterHref(41, 'correct')).toBe(
+      '/learn/exam/attempts/41/review?filter=correct',
+    );
   });
 
   it('groups by the frozen section/group keys in order', () => {

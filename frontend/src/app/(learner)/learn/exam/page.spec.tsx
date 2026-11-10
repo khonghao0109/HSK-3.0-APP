@@ -418,12 +418,23 @@ describe('LearnerExamListPage', () => {
     ).toBeNull();
   });
 
-  it('links to the exam history', async () => {
-    await renderPage();
-    expect(screen.getByRole('link', { name: /Lịch sử thi/u })).toHaveAttribute(
-      'href',
-      '/learn/exam/history',
-    );
+  it('links to the exam history on both web and mobile frames (Q243)', async () => {
+    const { container } = await renderPage();
+    const links = screen.getAllByRole('link', { name: /Lịch sử thi/u });
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link).toHaveAttribute('href', '/learn/exam/history');
+    }
+    expect(
+      container.querySelector(
+        '.w-pagehead.w-only a[href="/learn/exam/history"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        'a.exl-mhistory.m-only[href="/learn/exam/history"]',
+      ),
+    ).not.toBeNull();
   });
 
   it('shows the highest finished score in the trophy toast (Q226)', async () => {
