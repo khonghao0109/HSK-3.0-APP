@@ -448,7 +448,7 @@ describe('ExerciseForm — create (TL-19)', () => {
       'aria-describedby',
       'exercise-form-option-opt-2-error',
     );
-    expect(second).toHaveFocus();
+    await waitFor(() => expect(second).toHaveFocus());
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
