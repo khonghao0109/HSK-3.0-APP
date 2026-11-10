@@ -573,6 +573,41 @@
   color: var(--jade-800);
 }
 
+/* Điều hướng từng câu trên web (Q239): ẩn dưới 1024px */
+.learner-app .exv-nav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .exv-cell[aria-current='true'] {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    border-style: solid;
+    color: var(--white);
+  }
+
+  .learner-app .exv-q:not(.is-current),
+  .learner-app .exv-group:not(:has(.exv-q.is-current)),
+  .learner-app .exv-section:not(:has(.exv-q.is-current)) {
+    display: none;
+  }
+
+  .learner-app .exv-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .exv-nav__btn {
+    flex: 1 1 120px;
+  }
+
+  .learner-app .exv-nav__btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 /* Media (grant Q158) */
 .learner-app .exv-media {
   display: grid;

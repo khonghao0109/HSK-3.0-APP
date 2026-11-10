@@ -150,11 +150,14 @@ function backendFailure(status: number, code?: string): BackendRequestError {
   });
 }
 
-async function renderPage(id = '41', filter?: string) {
+async function renderPage(id = '41', filter?: string, q?: string) {
   return render(
     await LearnerExamReviewPage({
       params: Promise.resolve({ attemptId: id }),
-      searchParams: Promise.resolve(filter === undefined ? {} : { filter }),
+      searchParams: Promise.resolve({
+        ...(filter === undefined ? {} : { filter }),
+        ...(q === undefined ? {} : { q }),
+      }),
     }),
   );
 }
@@ -278,17 +281,89 @@ describe('LearnerExamReviewPage (M4.5 B2b)', () => {
     expect(link.getAttribute('href')).toBe('/learn/exam/7');
   });
 
-  it('shows the retry block for an unavailable review', async () => {
+  it('shows the retry block for an unavailable review and preserves filter and q (Q239)', async () => {
     vi.mocked(getExamReview).mockRejectedValue(
       backendFailure(409, 'EXAM_RESULT_UNAVAILABLE'),
     );
-    await renderPage();
+    const first = await renderPage();
     expect(screen.getByRole('alert').textContent).toContain(
       'Chưa tải được bài xem lại',
     );
     expect(
       screen.getByRole('link', { name: 'Thử lại' }).getAttribute('href'),
     ).toBe('/learn/exam/attempts/41/review');
+    first.unmount();
+
+    const filteredWithQ = await renderPage('41', 'wrong', '3');
+    expect(
+      within(filteredWithQ.container)
+        .getByRole('link', { name: 'Thử lại' })
+        .getAttribute('href'),
+    ).toBe('/learn/exam/attempts/41/review?filter=wrong&q=3');
+  });
+
+  it('highlights the selected question, renders prev/next links within the filtered list, and drops q on filter links (Q239)', async () => {
+    const firstRender = await renderPage();
+    expect(getExamReview).toHaveBeenCalledTimes(1);
+
+    const currentPanels =
+      firstRender.container.querySelectorAll('.exv-q.is-current');
+    expect(currentPanels).toHaveLength(1);
+    expect(currentPanels[0]?.id).toBe('q-1');
+
+    const cells = firstRender.container.querySelectorAll('.exv-cell');
+    expect(cells[0]?.getAttribute('aria-current')).toBe('true');
+    expect(cells[1]?.getAttribute('aria-current')).toBeNull();
+    expect(cells[4]?.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/review?q=5#q-5',
+    );
+
+    const firstPanel = within(currentPanels[0] as HTMLElement);
+    expect(firstPanel.queryByRole('link', { name: /Câu trước/u })).toBeNull();
+    const disabledPrev = firstPanel
+      .getByText('Câu trước')
+      .closest('[aria-disabled="true"]');
+    expect(disabledPrev).not.toBeNull();
+    expect(disabledPrev?.getAttribute('tabindex')).toBeNull();
+    expect(
+      firstPanel.getByRole('link', { name: /Câu sau/u }).getAttribute('href'),
+    ).toBe('/learn/exam/attempts/41/review?q=2');
+    firstRender.unmount();
+
+    const filteredEnd = await renderPage('41', 'wrong', '3');
+    const wrongCurrent =
+      filteredEnd.container.querySelectorAll('.exv-q.is-current');
+    expect(wrongCurrent).toHaveLength(1);
+    expect(wrongCurrent[0]?.id).toBe('q-3');
+
+    const wrongCells = filteredEnd.container.querySelectorAll('.exv-cell');
+    expect(wrongCells).toHaveLength(2);
+    expect(wrongCells[0]?.getAttribute('aria-current')).toBeNull();
+    expect(wrongCells[0]?.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/review?filter=wrong&q=2#q-2',
+    );
+    expect(wrongCells[1]?.getAttribute('aria-current')).toBe('true');
+    expect(wrongCells[1]?.getAttribute('href')).toBe(
+      '/learn/exam/attempts/41/review?filter=wrong&q=3#q-3',
+    );
+
+    const lastWrongPanel = within(wrongCurrent[0] as HTMLElement);
+    expect(
+      lastWrongPanel
+        .getByRole('link', { name: /Câu trước/u })
+        .getAttribute('href'),
+    ).toBe('/learn/exam/attempts/41/review?filter=wrong&q=2');
+    expect(lastWrongPanel.queryByRole('link', { name: /Câu sau/u })).toBeNull();
+    const disabledNext = lastWrongPanel
+      .getByText('Câu sau')
+      .closest('[aria-disabled="true"]');
+    expect(disabledNext).not.toBeNull();
+
+    // Changing filter drops q
+    const filterLinks = filteredEnd.container.querySelectorAll('.exv-filter');
+    for (const link of filterLinks) {
+      expect(link.getAttribute('href')).not.toContain('q=');
+    }
   });
 
   it('not-founds a bad id / 404 and redirects an expired session (Q167)', async () => {

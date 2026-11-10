@@ -33,6 +33,69 @@ export function reviewFilterHref(
   return filter === 'all' ? base : `${base}?filter=${filter}`;
 }
 
+export function parseReviewQuestionOrder(
+  raw: string | undefined,
+): number | null {
+  if (raw === undefined || !/^[1-9]\d*$/u.test(raw)) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
+export function reviewQuestionHref(
+  attemptId: number,
+  filter: ReviewFilter,
+  orderIndex: number,
+): string {
+  const base = `/learn/exam/attempts/${String(attemptId)}/review`;
+  const params = new URLSearchParams();
+  if (filter !== 'all') params.set('filter', filter);
+  params.set('q', String(orderIndex));
+  return `${base}?${params.toString()}`;
+}
+
+export function reviewCellHref(
+  attemptId: number,
+  filter: ReviewFilter,
+  orderIndex: number,
+): string {
+  return `${reviewQuestionHref(attemptId, filter, orderIndex)}#q-${String(orderIndex)}`;
+}
+
+export function reviewRetryHref(
+  attemptId: number,
+  filter: ReviewFilter,
+  q: number | null,
+): string {
+  return q === null
+    ? reviewFilterHref(attemptId, filter)
+    : reviewQuestionHref(attemptId, filter, q);
+}
+
+export type ReviewQuestionSelection = {
+  current: ExamReviewQuestionParsed;
+  prev: ExamReviewQuestionParsed | null;
+  next: ExamReviewQuestionParsed | null;
+};
+
+export function selectReviewQuestion(
+  questions: readonly ExamReviewQuestionParsed[],
+  q: number | null = null,
+): ReviewQuestionSelection | null {
+  const first = questions[0];
+  if (first === undefined) return null;
+  const matchedIndex =
+    q !== null && Number.isSafeInteger(q) && q > 0
+      ? questions.findIndex((question) => question.orderIndex === q)
+      : -1;
+  const index = matchedIndex >= 0 ? matchedIndex : 0;
+  const current = questions[index] ?? first;
+  return {
+    current,
+    prev: index > 0 ? (questions[index - 1] ?? null) : null,
+    next: index + 1 < questions.length ? (questions[index + 1] ?? null) : null,
+  };
+}
+
 export type ReviewStatus = 'correct' | 'wrong' | 'blank';
 
 /** Q148/R14: the state label always renders next to its icon (never colour only). */

@@ -10,7 +10,8 @@ import { getExamReview } from '@/features/learner-exam/exam-review-service';
 import { ExamReviewView } from '@/features/learner-exam/exam-review-view';
 import {
   parseReviewFilter,
-  reviewFilterHref,
+  parseReviewQuestionOrder,
+  reviewRetryHref,
 } from '@/features/learner-exam/exam-review-model';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
@@ -94,11 +95,13 @@ export default async function LearnerExamReviewPage({
   searchParams,
 }: {
   params: Promise<{ attemptId: string }>;
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string }>;
 }) {
   const attemptId = parseAttemptId((await params).attemptId);
   if (attemptId === null) notFound();
-  const filter = parseReviewFilter((await searchParams).filter);
+  const query = await searchParams;
+  const filter = parseReviewFilter(query.filter);
+  const q = parseReviewQuestionOrder(query.q);
 
   const session = await getServerLearnerSession();
   if (session.state !== 'learner' || !session.token) redirect('/sign-in');
@@ -130,11 +133,11 @@ export default async function LearnerExamReviewPage({
         return <ClosedReview introHref={introHref} />;
       }
       return (
-        <UnavailableReview retryHref={reviewFilterHref(attemptId, filter)} />
+        <UnavailableReview retryHref={reviewRetryHref(attemptId, filter, q)} />
       );
     }
     throw error;
   }
 
-  return <ExamReviewView review={review} filter={filter} />;
+  return <ExamReviewView review={review} filter={filter} q={q} />;
 }

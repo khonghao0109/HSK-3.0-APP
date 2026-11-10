@@ -13,7 +13,9 @@ import {
   learnerAnswerText,
   mcqOptions,
   questionStatus,
+  reviewCellHref,
   reviewFilterHref,
+  reviewQuestionHref,
   REVIEW_EMPTY_FILTER_TEXT,
   REVIEW_FILTERS,
   REVIEW_FLAG_ICON,
@@ -22,6 +24,7 @@ import {
   REVIEW_STATUS_LABELS,
   REVIEW_SUMMARY_LABELS,
   reviewSummary,
+  selectReviewQuestion,
   type ReviewFilter,
   type ReviewStatus,
 } from './exam-review-model';
@@ -127,19 +130,27 @@ function cellGlyph(question: ExamReviewQuestionParsed): '✓' | '✕' | null {
 }
 
 function QuestionGrid({
+  attemptId,
+  filter,
+  currentOrderIndex,
   questions,
 }: {
+  attemptId: number;
+  filter: ReviewFilter;
+  currentOrderIndex: number | null;
   questions: ExamReviewQuestionParsed[];
 }) {
   return (
     <nav className="exv-grid" aria-label="Danh sách câu hỏi">
       {questions.map((question) => {
         const glyph = cellGlyph(question);
+        const isCurrent = question.orderIndex === currentOrderIndex;
         return (
-          <a
+          <Link
             className={cellClass(question)}
-            href={`#q-${String(question.orderIndex)}`}
+            href={reviewCellHref(attemptId, filter, question.orderIndex)}
             aria-label={cellLabel(question)}
+            aria-current={isCurrent ? 'true' : undefined}
             key={question.key}
           >
             <span>{question.orderIndex}</span>
@@ -148,7 +159,7 @@ function QuestionGrid({
                 {glyph}
               </span>
             ) : null}
-          </a>
+          </Link>
         );
       })}
     </nav>
@@ -222,17 +233,70 @@ function QuestionAnswers({ question }: { question: ExamReviewQuestionParsed }) {
   );
 }
 
-function QuestionPanel({
+function QuestionNav({
   attemptId,
-  question,
+  filter,
+  prev,
+  next,
 }: {
   attemptId: number;
+  filter: ReviewFilter;
+  prev: ExamReviewQuestionParsed | null;
+  next: ExamReviewQuestionParsed | null;
+}) {
+  return (
+    <div className="exv-nav">
+      {prev !== null ? (
+        <Link
+          className="btn btn--outline exv-nav__btn"
+          href={reviewQuestionHref(attemptId, filter, prev.orderIndex)}
+        >
+          <Icon name="chevron-left" />
+          Câu trước
+        </Link>
+      ) : (
+        <span className="btn btn--outline exv-nav__btn" aria-disabled="true">
+          <Icon name="chevron-left" />
+          Câu trước
+        </span>
+      )}
+      {next !== null ? (
+        <Link
+          className="btn btn--outline exv-nav__btn"
+          href={reviewQuestionHref(attemptId, filter, next.orderIndex)}
+        >
+          Câu sau
+          <Icon name="chevron-right" />
+        </Link>
+      ) : (
+        <span className="btn btn--outline exv-nav__btn" aria-disabled="true">
+          Câu sau
+          <Icon name="chevron-right" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function QuestionPanel({
+  attemptId,
+  filter,
+  question,
+  isCurrent,
+  prev,
+  next,
+}: {
+  attemptId: number;
+  filter: ReviewFilter;
   question: ExamReviewQuestionParsed;
+  isCurrent: boolean;
+  prev: ExamReviewQuestionParsed | null;
+  next: ExamReviewQuestionParsed | null;
 }) {
   const status = questionStatus(question);
   return (
     <article
-      className={`exv-q exv-q--${status}`}
+      className={`exv-q exv-q--${status}${isCurrent ? ' is-current' : ''}`}
       id={`q-${String(question.orderIndex)}`}
       aria-labelledby={`q-${String(question.orderIndex)}-title`}
     >
@@ -277,6 +341,14 @@ function QuestionPanel({
           <b>Vì sao?</b> {question.explanation}
         </div>
       ) : null}
+      {isCurrent ? (
+        <QuestionNav
+          attemptId={attemptId}
+          filter={filter}
+          prev={prev}
+          next={next}
+        />
+      ) : null}
     </article>
   );
 }
@@ -317,11 +389,15 @@ function GroupMedia({
 export function ExamReviewView({
   review,
   filter,
+  q = null,
 }: {
   review: ExamReviewViewParsed;
   filter: ReviewFilter;
+  q?: number | null;
 }) {
   const visible = filterQuestions(review.questions, filter);
+  const selection = selectReviewQuestion(visible, q);
+  const currentOrderIndex = selection?.current.orderIndex ?? null;
   const sections = groupReviewQuestions(visible);
   const attemptId = review.attemptId;
   const resultHref = `/learn/exam/attempts/${String(attemptId)}/result`;
@@ -365,7 +441,12 @@ export function ExamReviewView({
               filter={filter}
               questions={review.questions}
             />
-            <QuestionGrid questions={visible} />
+            <QuestionGrid
+              attemptId={attemptId}
+              filter={filter}
+              currentOrderIndex={currentOrderIndex}
+              questions={visible}
+            />
             <p className="exv-fine">
               <Icon name="info" />
               Chạm vào số câu để xem đáp án bạn chọn, đáp án đúng và giải thích.
@@ -391,7 +472,11 @@ export function ExamReviewView({
                       {group.questions.map((question) => (
                         <QuestionPanel
                           attemptId={attemptId}
+                          filter={filter}
                           question={question}
+                          isCurrent={question.orderIndex === currentOrderIndex}
+                          prev={selection?.prev ?? null}
+                          next={selection?.next ?? null}
                           key={question.key}
                         />
                       ))}

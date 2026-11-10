@@ -237,7 +237,14 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
     await expect(page.getByText('Đánh dấu').first()).toBeVisible();
     await expect(page.locator('.exv-q')).toHaveCount(5);
     await expect(page.getByText('Đọc · Phần 1')).toBeVisible();
-    await expect(page.getByText('Nghe · Phần 2')).toBeVisible();
+    if (isWebFrame(page)) {
+      await expect(page.locator('.exv-q:visible')).toHaveCount(1);
+      await expect(page.getByText('Nghe · Phần 2')).toBeHidden();
+    } else {
+      await expect(page.locator('.exv-q:visible')).toHaveCount(5);
+      await expect(page.getByText('Nghe · Phần 2')).toBeVisible();
+      await expect(page.locator('.exv-nav')).toBeHidden();
+    }
 
     const panels = page.locator('.exv-q');
     await expect(panels.nth(0)).toContainText(fixtures.mcqPrompt);
@@ -334,29 +341,145 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
       'Câu 2, Sai, đánh dấu',
     );
     await expect(gridCells.nth(1)).toContainText('✕');
+    await expect(gridCells.nth(0)).toHaveAttribute('aria-current', 'true');
+    const activeCellColors = await gridCells.nth(0).evaluate((cell) => {
+      const app = cell.closest('.learner-app') ?? document.body;
+      const probe = document.createElement('span');
+      probe.style.background = 'var(--navy-900)';
+      app.appendChild(probe);
+      const navyBg = window.getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      const cellBg = window.getComputedStyle(cell).backgroundColor;
+      return { cellBg, navyBg };
+    });
+    if (isWebFrame(page)) {
+      expect(activeCellColors.cellBg).toBe(activeCellColors.navyBg);
+    } else {
+      expect(activeCellColors.cellBg).not.toBe(activeCellColors.navyBg);
+    }
 
-    // ---- Filters through the URL ----
+    // ---- Q239: single-question step navigation on web (>=1024) vs full list scroll (<1024) ----
+    if (isWebFrame(page)) {
+      await expect(page.getByRole('link', { name: 'Câu trước' })).toHaveCount(
+        0,
+      );
+      await expect(
+        page.locator('.exv-nav__btn[aria-disabled="true"]', {
+          hasText: 'Câu trước',
+        }),
+      ).toBeVisible();
+      const nextLink = page.getByRole('link', { name: 'Câu sau' });
+      await expect(nextLink).toBeVisible();
+      await expect(nextLink).toHaveAttribute(
+        'href',
+        `/learn/exam/attempts/${String(attemptId)}/review?q=2`,
+      );
+
+      await nextLink.click();
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/learn/exam/attempts/${String(attemptId)}/review\\?q=2$`,
+          'u',
+        ),
+      );
+      await expect(page.locator('.exv-q:visible')).toHaveCount(1);
+      await expect(panels.nth(1)).toBeVisible();
+      await expect(panels.nth(0)).toBeHidden();
+      await expect(gridCells.nth(1)).toHaveAttribute('aria-current', 'true');
+      await expect(page.getByRole('link', { name: 'Câu trước' })).toBeVisible();
+
+      // Keyboard navigation through next link
+      await page.getByRole('link', { name: 'Câu sau' }).focus();
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/learn/exam/attempts/${String(attemptId)}/review\\?q=3$`,
+          'u',
+        ),
+      );
+      await expect(page.locator('.exv-q:visible')).toHaveCount(1);
+      await expect(panels.nth(2)).toBeVisible();
+
+      // Grid cell jumps to last question; end of list disables "Câu sau" link
+      await gridCells.nth(4).click();
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/learn/exam/attempts/${String(attemptId)}/review\\?q=5#q-5$`,
+          'u',
+        ),
+      );
+      await expect(page.locator('.exv-q:visible')).toHaveCount(1);
+      await expect(panels.nth(4)).toBeVisible();
+      await expect(page.getByText('Nghe · Phần 2')).toBeVisible();
+      await expect(page.getByText('Đọc · Phần 1')).toBeHidden();
+      await expect(gridCells.nth(4)).toHaveAttribute('aria-current', 'true');
+      await expect(page.getByRole('link', { name: 'Câu sau' })).toHaveCount(0);
+      await expect(
+        page.locator('.exv-nav__btn[aria-disabled="true"]', {
+          hasText: 'Câu sau',
+        }),
+      ).toBeVisible();
+      await expectNoHorizontalScroll(page);
+    } else {
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
+      await gridCells.nth(4).click();
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/learn/exam/attempts/${String(attemptId)}/review\\?q=5#q-5$`,
+          'u',
+        ),
+      );
+      await expect(page.locator('.exv-q:visible')).toHaveCount(5);
+      await expect
+        .poll(async () => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(50);
+      const q5Top = await panels
+        .nth(4)
+        .evaluate((element) => element.getBoundingClientRect().top);
+      expect(q5Top).toBeLessThan(page.viewportSize()?.height ?? 800);
+
+      await gridCells.nth(1).focus();
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/learn/exam/attempts/${String(attemptId)}/review\\?q=2#q-2$`,
+          'u',
+        ),
+      );
+    }
+
+    // ---- Filters through the URL (changing filter drops q and resets to first question) ----
     await page.getByRole('link', { name: /^Đúng/u }).click();
-    await expect(page).toHaveURL(/filter=correct/u);
+    await expect(page).toHaveURL(/filter=correct$/u);
+    await expect(page).not.toHaveURL(/q=/u);
     await expect(page.locator('.exv-q')).toHaveCount(1);
     await expect(page.locator('.exv-q').first()).toContainText(
       fixtures.mcqPrompt,
     );
 
     await page.getByRole('link', { name: /^Sai/u }).click();
-    await expect(page).toHaveURL(/filter=wrong/u);
+    await expect(page).toHaveURL(/filter=wrong$/u);
+    await expect(page).not.toHaveURL(/q=/u);
     await expect(page.locator('.exv-q')).toHaveCount(1);
     await expect(page.locator('.exv-q').first()).toContainText(
       fixtures.wrongPrompt,
     );
 
     await page.getByRole('link', { name: /^Đánh dấu/u }).click();
-    await expect(page).toHaveURL(/filter=flagged/u);
+    await expect(page).toHaveURL(/filter=flagged$/u);
+    await expect(page).not.toHaveURL(/q=/u);
     await expect(page.locator('.exv-q')).toHaveCount(1);
 
     await page.getByRole('link', { name: /^Tất cả/u }).click();
     await expect(page).toHaveURL(/\/review$/u);
     await expect(page.locator('.exv-q')).toHaveCount(5);
+    await expect(gridCells.nth(0)).toHaveAttribute('aria-current', 'true');
+    if (isWebFrame(page)) {
+      await expect(page.locator('.exv-q:visible')).toHaveCount(1);
+      await expect(panels.nth(0)).toBeVisible();
+    }
 
     await expectNoHorizontalScroll(page);
     await audit(page, 'review');
