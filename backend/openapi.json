@@ -7086,6 +7086,102 @@
         ]
       }
     },
+    "/api/v1/exam/attempts": {
+      "get": {
+        "operationId": "ExamController_listAttempts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "levelCode",
+            "required": false,
+            "in": "query",
+            "description": "Level code frozen in the attempt; omit for every level.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HSK1",
+                "HSK2",
+                "HSK3",
+                "HSK4",
+                "HSK5",
+                "HSK6",
+                "HSK7_9"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ExamHistoryItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiPageResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "M4.5 B3: the learner's exam history. Unlike the attempt reads below it never\nwrites: an expired in-progress attempt is only reported as timed out.",
+        "tags": [
+          "Exam"
+        ]
+      }
+    },
     "/api/v1/exam/attempts/{attemptId}": {
       "get": {
         "operationId": "ExamController_getAttempt",
@@ -12774,6 +12870,95 @@
           "idempotencyKey"
         ]
       },
+      "ExamResultSkillDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "type": "string",
+            "enum": [
+              "listening",
+              "reading",
+              "writing",
+              "speaking"
+            ]
+          },
+          "score": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "skill",
+          "score",
+          "maxScore"
+        ]
+      },
+      "ExamHistoryItemDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "An in-progress attempt past its grace window is reported as `timed_out`.",
+            "enum": [
+              "submitted",
+              "timed_out"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "number"
+          },
+          "testId": {
+            "type": "number"
+          },
+          "testTitle": {
+            "type": "string"
+          },
+          "levelCode": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "passScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "passed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExamResultSkillDto"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "attemptId",
+          "testId",
+          "testTitle",
+          "levelCode",
+          "finishedAt",
+          "score",
+          "maxScore",
+          "passScore",
+          "passed",
+          "skills"
+        ]
+      },
       "ExamResultCountsDto": {
         "type": "object",
         "properties": {
@@ -12834,31 +13019,6 @@
           "skill",
           "questionCount",
           "correctCount",
-          "score",
-          "maxScore"
-        ]
-      },
-      "ExamResultSkillDto": {
-        "type": "object",
-        "properties": {
-          "skill": {
-            "type": "string",
-            "enum": [
-              "listening",
-              "reading",
-              "writing",
-              "speaking"
-            ]
-          },
-          "score": {
-            "type": "number"
-          },
-          "maxScore": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "skill",
           "score",
           "maxScore"
         ]

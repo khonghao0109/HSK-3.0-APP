@@ -88,7 +88,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   `POST /auth/email-verification/confirm` 10/phút/IP, `POST /auth/password-reset/request`
   5/15 phút/IP, `POST /auth/password-reset/confirm` 10/phút/IP,
   `POST /users/me/deletion-request` 5/15 phút, `POST /exam/tests/:testId/attempts`,
-  `GET /exam/attempts/:attemptId`, `GET /exam/attempts/:attemptId/result` và
+  `GET /exam/attempts`, `GET /exam/attempts/:attemptId`, `GET /exam/attempts/:attemptId/result` và
   `GET /exam/attempts/:attemptId/review` 60/phút/user, `PUT /exam/attempts/:attemptId/answers/:questionKey`
   240/phút/user, `PUT /exam/attempts/:attemptId/answers` 60/phút/user,
   `GET /exam/attempts/:attemptId/media-grants` 30/phút/user,
@@ -97,7 +97,7 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
   1.000 (trần IP của route media content nâng lên 10.000), **trừ** route exam: `POST
   /exam/tests/:testId/attempts`, `PUT /exam/attempts/:attemptId/answers/:questionKey` và `POST
   /exam/attempts/:attemptId/submit` được nâng lên 1.000; `PUT /exam/attempts/:attemptId/answers`
-  (60), `GET /exam/attempts/:attemptId` (60), `GET /exam/attempts/:attemptId/result` (60),
+  (60), `GET /exam/attempts` (60), `GET /exam/attempts/:attemptId` (60), `GET /exam/attempts/:attemptId/result` (60),
   `GET /exam/attempts/:attemptId/review` (60), `GET /exam/attempts/:attemptId/media-grants` (30) và
   `GET /exam/tests` (60) giữ nguyên ở mọi môi trường. Các
   route ghi số cố định (3, 5 và `email-verification/confirm` 10) giữ nguyên. `429` với
@@ -1071,6 +1071,7 @@ không lộ đề nháp.
 | `GET` | `/exam/tests` | — | `ExamTestListPage` — danh sách đề được ở mọi cấp + trạng thái bài làm của chính người gọi, phân trang `page`/`limit` (B1, Q209–Q214) |
 | `GET` | `/exam/tests/:testId` | — | `ExamTestIntro` — thông tin giới thiệu đề + bài đang làm của chính người gọi |
 | `POST` | `/exam/tests/:testId/attempts` | `{ "idempotencyKey": "<uuid>" }` | `ExamAttemptView`; tạo bài mới → `201`, trả lại chính bài đang làm hoặc replay key → `200` |
+| `GET` | `/exam/attempts` | — | `ExamHistoryItem[]` — lịch sử thi của chính người gọi, phân trang `page`/`limit` (`limit` tối đa 50), lọc `levelCode?`; **chỉ đọc** (M4.5 B3) |
 | `GET` | `/exam/attempts/:attemptId` | — | `ExamAttemptView` của chính người gọi, đã bỏ đáp án; **route này có thể ghi** đúng một lần chuyển `timed_out` (TL-127) |
 | `POST` | `/exam/attempts/:attemptId/submit` | `{ "idempotencyKey": "<uuid>" }` | `ExamSubmitView` — chốt bài đúng một lần; cùng key → `200` với `replayed: true`, key khác trên bài đã nộp → `409 EXAM_ATTEMPT_ALREADY_SUBMITTED` (TL-150/TL-151) |
 | `GET` | `/exam/attempts/:attemptId/result` | — | `ExamResultView` — điểm + breakdown của bài đã terminal; **route này có thể ghi** (timeout lười ở lần đọc đầu, rồi chấm lười) (TL-165/Q147) |
@@ -1129,6 +1130,25 @@ khi catalogue vượt 500. Endpoint dùng số câu SQL cố định (không N+1
 questionCount − answeredCount` với `questionCount` đếm từ snapshot đã đóng băng; `flaggedCount` là
 số row `isFlagged = true`. `replayed: true` nghĩa là request này trả lại kết quả của một lần nộp
 đã commit trước đó cùng `idempotencyKey` (không ghi thêm event, không đổi `submittedAt`).
+
+`GET /exam/attempts` (M4.5 B3): query `page`, `limit` (1–50, mặc định 20), `levelCode?` (một trong
+`HSK1`…`HSK6`, `HSK7_9`, so với level đã đóng băng trong snapshot); giá trị lạ trả `400
+REQUEST_VALIDATION_FAILED`. Gồm attempt `submitted`, `timed_out` và `in_progress` đã tới `expiresAt +
+5 s` (cùng ngưỡng timeout lười); không gồm `invalidated` và `in_progress` còn hạn. Sắp xếp `id` giảm
+dần, `meta.pagination` như `GET /exam/tests`, `Cache-Control: no-store`, 60/phút/user. Route **không
+ghi DB**: không chuyển trạng thái, không chấm; `in_progress` quá hạn chỉ được báo là `timed_out`
+trong response.
+
+```json
+{ attemptId, testId, testTitle, levelCode, status, finishedAt, score, maxScore, passScore, passed, skills:[{skill,score,maxScore}] }
+```
+
+`testTitle`, `levelCode`, `passScore` lấy từ **snapshot đã đóng băng**. `status` chỉ là `submitted`
+hoặc `timed_out`. `finishedAt` là `submittedAt`, nếu null thì `expiresAt`. Chưa có `Result` thì
+`score`, `maxScore`, `passed` là null và `skills` rỗng; có `Result` với `maxScore` null thì fallback
+`snapshot.test.maxScore` như `ExamResultView`. `passed: null` giữ nguyên. Không chứa `correctAnswer`,
+`explanation` hay nội dung câu. Snapshot thiếu hoặc hỏng → `500` fail closed cho cả trang, cùng
+message với `ExamResultView`.
 
 `ExamResultView` (200 của `GET /exam/attempts/:attemptId/result`, TL-165/Q147/Q151):
 
@@ -1244,7 +1264,7 @@ Lỗi (mã máy trong `error.code`; message tiếng Anh giữ nguyên):
 | `409` | `EXAM_ATTEMPT_ALREADY_SUBMITTED` | Chỉ `POST .../submit`: attempt đã `submitted` và request mang `idempotencyKey` khác; `details.status = "submitted"` (TL-151) |
 | `409` | `EXAM_ATTEMPT_NOT_TERMINAL` | Chỉ `GET result`/`GET review`: attempt còn `in_progress` và chưa quá `expiresAt + 5 s`; body chỉ `{code, message}`, không có nội dung bài (Q147) |
 | `409` | `EXAM_RESULT_UNAVAILABLE` | Chỉ `GET result`/`GET review`: chấm lỗi (shape đáp án lạ) nên không ghi `Result`; phần timeout lười vừa ghi vẫn commit, lần đọc sau chấm lại. Log `exam.grading.failed` chỉ gồm `attemptId` + tên lỗi (Q156) |
-| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa; hoặc query của `GET /exam/tests` sai (`levelCode` ngoài 7 mã, `skill`/`sort` lạ, `page`/`limit` ngoài biên) |
+| `400` | `REQUEST_VALIDATION_FAILED` | Body sai: thiếu `isFlagged`/`expectedVersion`/`idempotencyKey`, key không phải UUID, `items` ngoài 1–20 hoặc trùng `questionKey`, hoặc có field thừa; hoặc query của `GET /exam/tests` sai (`levelCode` ngoài 7 mã, `skill`/`sort` lạ, `page`/`limit` ngoài biên), hoặc query của `GET /exam/attempts` sai (`levelCode` ngoài 7 mã, `limit` ngoài 1–50) |
 
 Hành vi Q120: mỗi học viên có **tối đa 1 bài `in_progress` trên mỗi đề** (partial unique index
 ở `docs/database/P0_DATA_DICTIONARY.md`); bấm "Bắt đầu" khi đang có bài dở trả lại chính bài

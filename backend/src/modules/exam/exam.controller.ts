@@ -29,6 +29,7 @@ import {
   ExamAnswerBatchViewDto,
   ExamAnswerSaveViewDto,
   ExamAttemptViewDto,
+  ExamHistoryItemDto,
   ExamMediaGrantsDto,
   ExamResultViewDto,
   ExamReviewViewDto,
@@ -36,6 +37,7 @@ import {
   ExamTestIntroDto,
   ExamTestListItemDto,
 } from './dto/exam-response.dto';
+import { ListExamAttemptsQueryDto } from './dto/list-exam-attempts-query.dto';
 import { ListExamTestsQueryDto } from './dto/list-exam-tests-query.dto';
 import {
   SaveExamAnswerBodyDto,
@@ -165,6 +167,21 @@ export class ExamController {
     // 201 for a new attempt, 200 for a replay or the live attempt (TL-112).
     response.status(result.created ? 201 : 200);
     return { success: true, data: result.data };
+  }
+
+  /**
+   * M4.5 B3: the learner's exam history. Unlike the attempt reads below it never
+   * writes: an expired in-progress attempt is only reported as timed out.
+   */
+  @Get('attempts')
+  @Throttle({ default: { limit: examAttemptReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope([ExamHistoryItemDto], { paginated: true })
+  listAttempts(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: ListExamAttemptsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamHistoryItemDto[], PaginationMeta>> {
+    return this.examService.listAttempts(request.user.id, query);
   }
 
   @Get('attempts/:attemptId')

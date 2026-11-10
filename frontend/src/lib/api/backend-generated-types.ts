@@ -1534,6 +1534,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exam/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * M4.5 B3: the learner's exam history. Unlike the attempt reads below it never
+         *     writes: an expired in-progress attempt is only reported as timed out.
+         */
+        get: operations["ExamController_listAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exam/attempts/{attemptId}": {
         parameters: {
             query?: never;
@@ -3046,6 +3066,30 @@ export interface components {
             /** Format: uuid */
             idempotencyKey: string;
         };
+        ExamResultSkillDto: {
+            /** @enum {string} */
+            skill: "listening" | "reading" | "writing" | "speaking";
+            score: number;
+            maxScore: number;
+        };
+        ExamHistoryItemDto: {
+            /**
+             * @description An in-progress attempt past its grace window is reported as `timed_out`.
+             * @enum {string}
+             */
+            status: "submitted" | "timed_out";
+            attemptId: number;
+            testId: number;
+            testTitle: string;
+            levelCode: string;
+            /** Format: date-time */
+            finishedAt: string;
+            score: number | null;
+            maxScore: number | null;
+            passScore: number | null;
+            passed: boolean | null;
+            skills: components["schemas"]["ExamResultSkillDto"][];
+        };
         ExamResultCountsDto: {
             answeredCount: number;
             correctCount: number;
@@ -3059,12 +3103,6 @@ export interface components {
             skill: "listening" | "reading" | "writing" | "speaking";
             questionCount: number;
             correctCount: number;
-            score: number;
-            maxScore: number;
-        };
-        ExamResultSkillDto: {
-            /** @enum {string} */
-            skill: "listening" | "reading" | "writing" | "speaking";
             score: number;
             maxScore: number;
         };
@@ -6660,6 +6698,39 @@ export interface operations {
                         success: true;
                         data: components["schemas"]["ExamAttemptViewDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ExamController_listAttempts: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                /** @description Level code frozen in the attempt; omit for every level. */
+                levelCode?: "HSK1" | "HSK2" | "HSK3" | "HSK4" | "HSK5" | "HSK6" | "HSK7_9";
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ExamHistoryItemDto"][];
+                        meta: components["schemas"]["ApiPageResponseMetaDto"];
                     };
                 };
             };

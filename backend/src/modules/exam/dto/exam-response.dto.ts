@@ -380,6 +380,26 @@ export class ExamListLatestAttemptDto {
   resultAvailable!: boolean;
 }
 
+/**
+ * M4.5 B3: one row of the learner exam history. Title, level and pass score are
+ * frozen in the attempt snapshot; an attempt without a Result has null scores.
+ */
+export class ExamHistoryItemDto {
+  attemptId!: number;
+  testId!: number;
+  testTitle!: string;
+  levelCode!: string;
+  /** An in-progress attempt past its grace window is reported as `timed_out`. */
+  @ApiProperty({ enum: ['submitted', 'timed_out'] })
+  status!: 'submitted' | 'timed_out';
+  finishedAt!: Date;
+  score!: number | null;
+  maxScore!: number | null;
+  passScore!: number | null;
+  passed!: boolean | null;
+  skills!: ExamResultSkillDto[];
+}
+
 /** One card of the learner exam list. */
 export class ExamTestListItemDto {
   testId!: number;

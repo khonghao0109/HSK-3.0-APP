@@ -14,6 +14,7 @@ import {
   collectTestPublishBlockers,
   type TestPublishBlockerQuestion,
 } from '../cms/test-publish-blockers';
+import type { ListExamAttemptsQueryDto } from './dto/list-exam-attempts-query.dto';
 import type { ListExamTestsQueryDto } from './dto/list-exam-tests-query.dto';
 import {
   ExamAnswerBatchResultDto,
@@ -24,6 +25,7 @@ import {
   ExamReviewViewDto,
   ExamSubmitViewDto,
   ExamTestIntroDto,
+  ExamHistoryItemDto,
   ExamTestListItemDto,
 } from './dto/exam-response.dto';
 import {
@@ -35,6 +37,12 @@ import {
   isSameExamAnswerRequest,
 } from './exam-answer-replay';
 import { validateExamAnswerShape } from './exam-answer.validator';
+import {
+  examHistoryWhere,
+  readExamHistorySnapshot,
+  toExamHistoryItem,
+  type ExamHistorySnapshotRow,
+} from './exam-history.model';
 import { isExamTestVisible, visibleExamTestWhere } from './exam-eligibility';
 import {
   compareExamListByScore,
@@ -429,6 +437,78 @@ export class ExamService {
                 answeredCount,
               },
       }),
+    };
+  }
+
+  /**
+   * M4.5 B3: read-only history page. Frozen fields are extracted in the
+   * database so a page never transfers whole snapshot payloads.
+   */
+  async listAttempts(
+    userId: number,
+    query: ListExamAttemptsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamHistoryItemDto[], PaginationMeta>> {
+    const now = await this.databaseNow(this.prisma);
+    const where = examHistoryWhere(
+      userId,
+      now,
+      EXAM_SAVE_GRACE_SECONDS,
+      query.levelCode,
+    );
+    const [attempts, total] = await this.prisma.$transaction([
+      this.prisma.examAttempt.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        select: {
+          id: true,
+          testId: true,
+          status: true,
+          submittedAt: true,
+          expiresAt: true,
+          result: {
+            select: {
+              score: true,
+              maxScore: true,
+              passed: true,
+              skillScores: {
+                orderBy: { skill: 'asc' },
+                select: { skill: true, score: true, total: true },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.examAttempt.count({ where }),
+    ]);
+
+    const snapshots =
+      attempts.length === 0
+        ? []
+        : await this.prisma.$queryRaw<ExamHistorySnapshotRow[]>`
+            SELECT
+              "attemptId",
+              payload #> '{test,title}' AS "title",
+              payload #> '{test,levelCode}' AS "levelCode",
+              payload #> '{test,passScore}' AS "passScore",
+              payload #> '{test,maxScore}' AS "maxScore"
+            FROM "ExamAttemptSnapshot"
+            WHERE "attemptId" IN (${Prisma.join(attempts.map((row) => row.id))})
+          `;
+    const snapshotByAttempt = new Map(
+      snapshots.map((row) => [row.attemptId, row]),
+    );
+
+    return {
+      success: true,
+      data: attempts.map((attempt) =>
+        toExamHistoryItem(
+          attempt,
+          readExamHistorySnapshot(snapshotByAttempt.get(attempt.id)),
+        ),
+      ),
+      meta: this.buildPaginationMeta(query.page, query.limit, total),
     };
   }
 
