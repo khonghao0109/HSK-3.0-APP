@@ -1356,6 +1356,20 @@ chính là `ExamAnswer.snapshotQuestionKey` (đổi tên thành `questionKey` tr
 M4.2b). Rate limit (TL-130): `PUT` một câu 240/phút (môi trường test 1 000), `PUT` lô 60/phút,
 `GET` attempt/result/review 60/phút, media-grants 30/phút.
 
+BFF routes của learner exam trên Next.js (`/api/learner/exam/*`, TL-190; tất cả trả `Cache-Control: no-store`, đọc cookie `hsk_learner_session` HttpOnly và xoá cookie khi thiếu phiên hoặc backend trả `401`/`403`):
+
+| Method | Path BFF | `Origin` same-origin | Mã lỗi chính (`error.code`) |
+| --- | --- | --- | --- |
+| `POST` | `/api/learner/exam/tests/:testId/attempts` | Bắt buộc (`403 FORBIDDEN` nếu thiếu/lệch) | `400 VALIDATION_ERROR`, `401 UNAUTHORIZED`, `404 EXAM_TEST_NOT_FOUND`, `409 EXAM_TEST_UNAVAILABLE` \| `EXAM_IDEMPOTENCY_KEY_REUSED` \| `EXAM_ATTEMPT_CLOSED`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+| `GET` | `/api/learner/exam/attempts/:attemptId` | Không bắt buộc | `400 VALIDATION_ERROR`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+| `GET` | `/api/learner/exam/attempts/:attemptId/media-grants` | Không bắt buộc | `400 VALIDATION_ERROR`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND`, `409 EXAM_ATTEMPT_EXPIRED` \| `EXAM_ATTEMPT_CLOSED`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` (viết lại `grants[].url` thành `src = /api/learner/media/:id/content?expires=...&signature=...`) |
+| `PUT` | `/api/learner/exam/attempts/:attemptId/answers/:questionKey` | Bắt buộc (`403 FORBIDDEN`) | `400 VALIDATION_ERROR` \| `EXAM_ANSWER_INVALID` \| `REQUEST_VALIDATION_FAILED`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND` \| `EXAM_QUESTION_NOT_FOUND`, `409 EXAM_ANSWER_VERSION_CONFLICT` (`details.current`) \| `EXAM_IDEMPOTENCY_KEY_REUSED` \| `EXAM_ATTEMPT_EXPIRED` \| `EXAM_ATTEMPT_CLOSED`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+| `PUT` | `/api/learner/exam/attempts/:attemptId/answers` | Bắt buộc (`403 FORBIDDEN`) | `400 VALIDATION_ERROR` \| `EXAM_ANSWER_INVALID` \| `REQUEST_VALIDATION_FAILED`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND`, `409 EXAM_ATTEMPT_EXPIRED` \| `EXAM_ATTEMPT_CLOSED`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+| `POST` | `/api/learner/exam/attempts/:attemptId/submit` | Bắt buộc (`403 FORBIDDEN`) | `400 VALIDATION_ERROR`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND`, `409 EXAM_ATTEMPT_ALREADY_SUBMITTED` \| `EXAM_IDEMPOTENCY_KEY_REUSED` \| `EXAM_ATTEMPT_EXPIRED` \| `EXAM_ATTEMPT_CLOSED`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+| `GET` | `/api/learner/exam/attempts/:attemptId/result` | Không bắt buộc | `400 VALIDATION_ERROR`, `401 UNAUTHORIZED`, `404 EXAM_ATTEMPT_NOT_FOUND`, `409 EXAM_ATTEMPT_NOT_TERMINAL` \| `EXAM_ATTEMPT_CLOSED` \| `EXAM_RESULT_UNAVAILABLE`, `429 RATE_LIMITED`, `503 UPSTREAM_UNAVAILABLE` |
+
+Ghi chú BFF: danh sách đề (`/learn/exam` → `GET /exam/tests`), giới thiệu đề (`/learn/exam/:testId` → `GET /exam/tests/:testId`), lịch sử thi (`/learn/exam/history` → `GET /exam/attempts`), xem lại bài (`/learn/exam/attempts/:attemptId/review` → `GET /exam/attempts/:attemptId/review`) và trang kết quả SSR (`/learn/exam/attempts/:attemptId/result` → `GET /exam/attempts/:attemptId/result` + `GET /exam/attempts/:attemptId/review`) đọc trực tiếp từ backend ở phía server, không qua route BFF.
+
 ### A.10 Admin Media Library và Ingestion (admin)
 
 Response có `Cache-Control: no-store`.
