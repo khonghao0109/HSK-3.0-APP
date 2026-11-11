@@ -482,6 +482,59 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
     }
 
     await expectNoHorizontalScroll(page);
+
+    // Pha 3: at 1024 the page keeps >=16px to both viewport edges.
+    if (isWebFrame(page)) {
+      const gutters = await page.evaluate(() =>
+        ['.exv-body', '.exv-summary', '.exv-layout'].map((selector) => {
+          const rect = document
+            .querySelector(selector)
+            ?.getBoundingClientRect();
+          return {
+            selector,
+            left: rect?.left ?? -1,
+            right: rect ? window.innerWidth - rect.right : -1,
+          };
+        }),
+      );
+      for (const gutter of gutters) {
+        expect(
+          gutter.left,
+          `${gutter.selector} left gutter`,
+        ).toBeGreaterThanOrEqual(16);
+        expect(
+          gutter.right,
+          `${gutter.selector} right gutter`,
+        ).toBeGreaterThanOrEqual(16);
+      }
+    }
+
+    // Pha 3: each summary label wraps to at most 2 lines.
+    const labelLines = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.exv-sum__item small')).map(
+        (element) => {
+          const rect = element.getBoundingClientRect();
+          const lineHeight = parseFloat(getComputedStyle(element).lineHeight);
+          const fontSize = parseFloat(getComputedStyle(element).fontSize);
+          const unit = Number.isFinite(lineHeight)
+            ? lineHeight
+            : fontSize * 1.2;
+          return {
+            text: element.textContent ?? '',
+            height: rect.height,
+            lines: Math.round(rect.height / unit),
+          };
+        },
+      ),
+    );
+    expect(labelLines.length, 'summary labels').toBe(4);
+    for (const label of labelLines) {
+      expect(
+        label.lines,
+        `summary label "${label.text}" lines (h=${String(label.height)})`,
+      ).toBeLessThanOrEqual(2);
+    }
+
     await audit(page, 'review');
     await shot(page, testInfo, 'states');
     expect(consoleErrors, 'console errors').toEqual([]);

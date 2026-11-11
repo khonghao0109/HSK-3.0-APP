@@ -39,7 +39,7 @@
 @media (min-width: 1024px) {
   .learner-app .exv .exr-body {
     width: 1040px;
-    max-width: 100%;
+    max-width: calc(100% - 32px);
   }
 
   .learner-app .exv-body {
@@ -64,7 +64,7 @@
   list-style: none;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   .learner-app .exv-sum {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
