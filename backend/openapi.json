@@ -6571,6 +6571,69 @@
         ]
       }
     },
+    "/api/v1/review/queue": {
+      "get": {
+        "operationId": "ReviewController_getQueue",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ReviewQueueResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
     "/api/v1/onboarding/status": {
       "get": {
         "operationId": "OnboardingController_getStatus",
@@ -12188,6 +12251,113 @@
           "dailyGoal",
           "streakDays",
           "continueLesson"
+        ]
+      },
+      "ReviewGradePreviewDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "learning",
+              "review",
+              "relearning"
+            ],
+            "type": "string"
+          },
+          "dueAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "intervalDays": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "state",
+          "dueAt",
+          "intervalDays"
+        ]
+      },
+      "ReviewPreviewDto": {
+        "type": "object",
+        "properties": {
+          "again": {
+            "$ref": "#/components/schemas/ReviewGradePreviewDto"
+          },
+          "hard": {
+            "$ref": "#/components/schemas/ReviewGradePreviewDto"
+          },
+          "good": {
+            "$ref": "#/components/schemas/ReviewGradePreviewDto"
+          },
+          "easy": {
+            "$ref": "#/components/schemas/ReviewGradePreviewDto"
+          }
+        },
+        "required": [
+          "again",
+          "hard",
+          "good",
+          "easy"
+        ]
+      },
+      "ReviewQueueItemDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "new",
+              "learning",
+              "review",
+              "relearning",
+              "suspended"
+            ],
+            "type": "string"
+          },
+          "cardId": {
+            "type": "number"
+          },
+          "dueAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "word": {
+            "$ref": "#/components/schemas/DictionaryWordDetailDto"
+          },
+          "preview": {
+            "description": "What each grade would do, computed with the request's `now`.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPreviewDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "state",
+          "cardId",
+          "dueAt",
+          "word",
+          "preview"
+        ]
+      },
+      "ReviewQueueResponseDto": {
+        "type": "object",
+        "properties": {
+          "dueCount": {
+            "type": "number",
+            "description": "Every due card (Q252), not cut by `limit`."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewQueueItemDto"
+            }
+          }
+        },
+        "required": [
+          "dueCount",
+          "items"
         ]
       },
       "CreateGoalDto": {

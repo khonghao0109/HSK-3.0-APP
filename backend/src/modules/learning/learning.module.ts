@@ -13,6 +13,8 @@ import { LearningPathController } from './path/learning-path.controller';
 import { LearningPathService } from './path/learning-path.service';
 import { LearningHomeController } from './home/learning-home.controller';
 import { LearningHomeService } from './home/learning-home.service';
+import { ReviewController } from './review/review.controller';
+import { ReviewService } from './review/review.service';
 import { OnboardingModule } from '../onboarding/onboarding.module';
 
 @Module({
@@ -27,6 +29,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     ProgressController,
     LearningPathController,
     LearningHomeController,
+    ReviewController,
   ],
   providers: [
     LearningService,
@@ -34,6 +37,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     LessonActivityTransactionCoordinator,
     LearningPathService,
     LearningHomeService,
+    ReviewService,
   ],
   exports: [LessonActivityService],
 })

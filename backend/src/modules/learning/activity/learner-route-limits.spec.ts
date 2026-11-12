@@ -20,6 +20,10 @@ import {
   mediaContentGrantLimit,
 } from '../../media/media-content-throttle';
 import {
+  ReviewController,
+  reviewQueueReadLimit,
+} from '../review/review.controller';
+import {
   exerciseAttemptLimit,
   LessonActivityController,
 } from './lesson-activity.controller';
@@ -98,6 +102,14 @@ describe('learner route limits', () => {
     }
   });
 
+  it('resolves the M3.2 review queue limit in every environment', () => {
+    for (const nodeEnv of ['production', 'test']) {
+      withNodeEnv(nodeEnv, () => {
+        expect(reviewQueueReadLimit()).toBe(60);
+      });
+    }
+  });
+
   it.each([
     [
       'AuthController.getProfile',
@@ -164,6 +176,12 @@ describe('learner route limits', () => {
       ExamController.prototype,
       'submitAttempt',
       examAttemptSubmitLimit,
+    ],
+    [
+      'ReviewController.getQueue',
+      ReviewController.prototype,
+      'getQueue',
+      reviewQueueReadLimit,
     ],
     [
       'MediaController.getContent',

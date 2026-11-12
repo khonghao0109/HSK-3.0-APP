@@ -1125,3 +1125,30 @@ ALTER TABLE "ReviewEvent"
 - Impact API: không thay đổi contract API hiện hữu (chưa thêm endpoint ở pha M3.1 Pha A). `data-export.job.ts` và các reader cũ tiếp tục hoạt động bình thường nhờ default.
 - Rollback/forward-fix: forward-fix theo quy ước runbook. Không drop enum value trong PostgreSQL.
 - Bằng chứng: `npx prisma migrate deploy` trên database disposable áp 29/29 migration; suite `src/modules/learning/srs/schedule.spec.ts` 52/52 test passed; `npm run test:db:p0` PASS trên fresh disposable DB.
+
+## 29. Thẻ ôn cho từ đã lưu — default `sm2-v1` và backfill (M3.2 / Q251)
+
+### 29.1. Migration 30 — `20261112120000_review_card_sm2_v1_backfill`
+
+Nghiệp vụ (M3.2, Q251): lưu từ lần đầu tạo `ReviewCard` cùng transaction với `UserWord`.
+Migration đổi default `schedulerVersion` sang `sm2-v1` (scheduler M3.1) và tạo thẻ cho từ
+đã lưu trước M3.2.
+
+```sql
+ALTER TABLE "ReviewCard" ALTER COLUMN "schedulerVersion" SET DEFAULT 'sm2-v1';
+
+INSERT INTO "ReviewCard" ("userId", "wordId", "state", "dueAt", "schedulerVersion", "updatedAt")
+SELECT uw."userId", uw."wordId", 'new', now(), 'sm2-v1', now()
+FROM "UserWord" uw
+ON CONFLICT ("userId", "wordId") DO NOTHING;
+```
+
+- Forward-only. Đổi default chỉ ảnh hưởng hàng mới; thẻ đã có (kể cả `sm2-p0-v1`) giữ nguyên
+  nhờ `ON CONFLICT DO NOTHING`.
+- Backfill tạo thẻ `new`, `dueAt = now()` cho mọi cặp (`userId`, `wordId`) của `UserWord`
+  chưa có thẻ. Thời gian chạy tỉ lệ với số `UserWord`; một câu lệnh, trong transaction của
+  migration.
+- Impact API: thêm `GET /review/queue`; `POST /dictionary/words/:id/save` tạo thẻ (api.md A.5,
+  A.7b). Contract response của lưu từ không đổi.
+- Rollback: forward-fix. Thẻ backfill không có `ReviewEvent`, nên một migration sau có thể xoá
+  đúng các thẻ `new` chưa từng ôn nếu cần; không xoá thẻ đã có event.

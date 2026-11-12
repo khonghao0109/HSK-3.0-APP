@@ -16,6 +16,7 @@ import {
   parseIdempotencyKey,
 } from '../learning/activity/lesson-activity-idempotency';
 import { classifyLessonActivityPersistenceError } from '../learning/activity/lesson-activity-persistence';
+import { SM2_V1_POLICY } from '../learning/srs';
 import type {
   DictionaryWordDetailDto,
   DictionaryWordSavedDto,
@@ -238,6 +239,19 @@ export class DictionaryService {
 
       const now = new Date();
       await tx.userWord.create({ data: { userId, wordId, createdAt: now } });
+      // Q251: the first save creates the review card; a card kept from an
+      // earlier save keeps its schedule (ON CONFLICT DO NOTHING).
+      await tx.reviewCard.createMany({
+        data: [
+          {
+            userId,
+            wordId,
+            dueAt: now,
+            schedulerVersion: SM2_V1_POLICY.version,
+          },
+        ],
+        skipDuplicates: true,
+      });
       const event = await tx.learningEvent.create({
         data: {
           userId,

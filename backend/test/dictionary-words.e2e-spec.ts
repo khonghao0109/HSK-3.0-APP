@@ -87,6 +87,9 @@ describe('Dictionary words E2E (M2.6a)', () => {
     }),
   });
 
+  const reviewCards = (wordId: number) =>
+    prisma.reviewCard.findMany({ where: { userId, wordId } });
+
   function expectNoPrivateKeys(body: unknown) {
     const serialized = JSON.stringify(body);
     expect(serialized).not.toContain('"userId"');
@@ -219,6 +222,8 @@ describe('Dictionary words E2E (M2.6a)', () => {
     words.parallel = await createWord('parallel');
     words.unpublish = await createWord('unpublish');
     words.serviceRace = await createWord('servicerace');
+    words.card = await createWord('card');
+    words.resave = await createWord('resave');
 
     lessonId = (
       await prisma.lesson.create({
@@ -487,6 +492,7 @@ describe('Dictionary words E2E (M2.6a)', () => {
       userWords: 1,
       events: 1,
     });
+    expect(await reviewCards(words.parallel)).toHaveLength(1);
   });
 
   // Lock evidence: without HTTP overhead the transactions overlap, and only the per-user lock keeps one UserWord.
@@ -505,6 +511,54 @@ describe('Dictionary words E2E (M2.6a)', () => {
       userWords: 1,
       events: 1,
     });
+    expect(await reviewCards(words.serviceRace)).toHaveLength(1);
+  });
+
+  // M3.2 Q251: the first save creates the review card in the same transaction.
+  it('POST save creates one new sm2-v1 ReviewCard due now and a replay adds none', async () => {
+    expect(await reviewCards(words.card)).toHaveLength(0);
+    const key = randomUUID();
+    const before = Date.now();
+    await save(words.card, key).expect(201);
+    const after = Date.now();
+
+    const cards = await reviewCards(words.card);
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({
+      state: 'new',
+      intervalDays: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      lapses: 0,
+      lastReviewedAt: null,
+      schedulerVersion: 'sm2-v1',
+    });
+    expect(cards[0].dueAt.getTime()).toBeGreaterThanOrEqual(before - 1_000);
+    expect(cards[0].dueAt.getTime()).toBeLessThanOrEqual(after + 1_000);
+
+    await save(words.card, key).expect(201);
+    await save(words.card).expect(201);
+    expect(await reviewCards(words.card)).toEqual(cards);
+  });
+
+  it('unsave keeps the ReviewCard and saving again keeps its schedule', async () => {
+    await save(words.resave).expect(201);
+    const [created] = await reviewCards(words.resave);
+    const scheduled = await prisma.reviewCard.update({
+      where: { id: created.id },
+      data: {
+        state: 'review',
+        dueAt: new Date('2030-01-01T00:00:00.000Z'),
+        intervalDays: 17,
+      },
+    });
+
+    await unsave(words.resave).expect(200);
+    expect(await reviewCards(words.resave)).toEqual([scheduled]);
+
+    await save(words.resave).expect(201);
+    expect(await reviewCards(words.resave)).toEqual([scheduled]);
+    expect(await countSaves(words.resave)).toEqual({ userWords: 1, events: 2 });
   });
 
   it('a saved word that stops being public stays saved until it is unsaved', async () => {

@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 12/11/2026 (M3.2 Pha A): thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -454,14 +454,14 @@ từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` t
 Không trả trạng thái, audio, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`
 (audio từ vựng thuộc backlog M2.B12).
 
-**Lưu từ** (Q62: chỉ lưu `UserWord`, chưa tạo thẻ ôn SRS). Thiếu token → `401`; `:id` sai
+**Lưu từ** (Q62; từ M3.2 Q251 lưu lần đầu tạo thêm thẻ ôn `ReviewCard`, xem A.7b). Thiếu token → `401`; `:id` sai
 dạng → `400`. Không response nào chứa `userId` hay `Idempotency-Key`.
 
 | Route | `data` | Lỗi |
 | --- | --- | --- |
 | `GET …/save` | `{ wordId, saved }`. Đã lưu → `saved: true`, kể cả khi từ đã bị gỡ public (để còn bỏ lưu được) | chưa lưu và từ không public → `404 WORD_NOT_FOUND` |
-| `POST …/save` | `{ wordId, saved: true, eventId, occurredAt }`; trả `201` kể cả replay. Lưu lần đầu tạo `UserWord` và `LearningEvent` `word_saved` (`resourceType: "word"`, `resourceId: wordId`) trong một transaction khoá `User`; đã lưu rồi → `eventId: null`, `occurredAt: null`, không tạo event | thiếu/sai key → `400`; key đã dùng cho request khác → `409`; key quá 24 giờ → `400`; từ không public → `404 WORD_NOT_FOUND`; tài khoản không active → `401` |
-| `DELETE …/save` | `{ wordId, saved: false }`; idempotent, `200` cả khi chưa lưu hoặc từ không tồn tại. **Bỏ lưu không ghi event** (`LearningEventType` chưa có loại bỏ lưu) | tài khoản không active → `401` |
+| `POST …/save` | `{ wordId, saved: true, eventId, occurredAt }`; trả `201` kể cả replay. Lưu lần đầu tạo `UserWord`, `LearningEvent` `word_saved` (`resourceType: "word"`, `resourceId: wordId`) và `ReviewCard` (`state new`, `dueAt = now`, `schedulerVersion sm2-v1`) trong một transaction khoá `User`; thẻ đã có từ lần lưu trước (bỏ lưu rồi lưu lại) giữ nguyên lịch; đã lưu rồi → `eventId: null`, `occurredAt: null`, không tạo event | thiếu/sai key → `400`; key đã dùng cho request khác → `409`; key quá 24 giờ → `400`; từ không public → `404 WORD_NOT_FOUND`; tài khoản không active → `401` |
+| `DELETE …/save` | `{ wordId, saved: false }`; idempotent, `200` cả khi chưa lưu hoặc từ không tồn tại. **Bỏ lưu không ghi event** (`LearningEventType` chưa có loại bỏ lưu); không xoá, không sửa `ReviewCard` | tài khoản không active → `401` |
 
 Replay một `Idempotency-Key` trả lại kết quả gốc, kể cả khi từ đã bị bỏ lưu sau đó; trạng thái hiện tại đọc bằng `GET …/save`. Replay cùng key trả lại đúng kết quả cũ (cùng `eventId`). Hai request lưu song song của
 một user được tuần tự hoá bằng khoá `User`: đúng một `UserWord` và một event.
@@ -614,6 +614,38 @@ Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text 
 `arrange_sentence` `{ tokenIds: [] }`; `speaking_repeat` → `422`. Lỗi: `404` content không
 public; `409` cùng key khác request; `409 lesson_locked` start bài đang khoá; `422` shape sai;
 `503` timeout.
+
+### A.7b Ôn tập SRS — học viên (M3.2)
+
+Envelope §1, `JwtAuthGuard`; response `200` có `Cache-Control: no-store`. Không response nào
+chứa `userId`.
+
+| Method | Path | Query | `data` | Throttle |
+| --- | --- | --- | --- | --- |
+| `GET` | `/review/queue` | `limit?` số nguyên 1–50, mặc định 20 | `ReviewQueue` | 60/phút/user (`reviewQueueReadLimit`, cố định ở mọi môi trường) |
+
+Thẻ đến hạn (Q252) = `ReviewCard` của chính người gọi, `dueAt ≤ now`, `state <> suspended`,
+từ còn `published` và chưa soft-delete (`PUBLIC_CONTENT_WHERE`), và người gọi vẫn còn lưu từ
+(`UserWord`). Sắp `dueAt` tăng dần rồi `id`. Không giới hạn thẻ mới mỗi ngày. Route chỉ đọc.
+`limit` ngoài 1–50 hoặc không phải số nguyên → `400 REQUEST_VALIDATION_FAILED`.
+
+```json
+{ "dueCount": 3,
+  "items": [{ "cardId": 7, "state": "new", "dueAt": "2026-11-12T08:00:00.000Z",
+    "word": { "id": 12, "hanzi": "学习", "traditional": null, "pinyin": "xué xí", "pinyinTone": null,
+      "example": null, "meanings": [{ "order": 1, "en": "to study", "vi": null, "partOfSpeech": null, "usage": null, "note": null }],
+      "levels": [], "sources": [] },
+    "preview": {
+      "again": { "state": "learning", "dueAt": "…", "intervalDays": 0 },
+      "hard":  { "state": "learning", "dueAt": "…", "intervalDays": 0 },
+      "good":  { "state": "learning", "dueAt": "…", "intervalDays": 0 },
+      "easy":  { "state": "review",   "dueAt": "…", "intervalDays": 4 } } }] }
+```
+
+- `dueCount` đếm mọi thẻ đến hạn, không bị `limit` cắt.
+- `word` cùng shape với `GET /dictionary/words/:id`.
+- `preview.<grade>` (R4) là kết quả `schedule(card, grade, now, sm2-v1)` với cùng một `now`
+  cho cả request; client không tự tính lịch.
 
 ### A.8 Admin CMS — Lesson / Topic (admin)
 

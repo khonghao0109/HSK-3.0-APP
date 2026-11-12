@@ -1212,7 +1212,7 @@ model ReviewCard {
   repetitions      Int             @default(0)
   lapses           Int             @default(0)
   lastReviewedAt   DateTime?
-  schedulerVersion String          @default("sm2-p0-v1")
+  schedulerVersion String          @default("sm2-v1")
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
