@@ -1417,6 +1417,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** M3.3b (Q268): due today, 3/7/14-day windows, 7-day retention, calendar, recent sessions. */
+        get: operations["ReviewController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/review/sessions": {
         parameters: {
             query?: never;
@@ -3004,6 +3021,36 @@ export interface components {
             /** @description Every due card (Q252), not cut by `limit`. */
             dueCount: number;
             items: components["schemas"]["ReviewQueueItemDto"][];
+        };
+        ReviewUpcomingDto: {
+            days3: number;
+            days7: number;
+            days14: number;
+        };
+        ReviewCalendarDayDto: {
+            /** @description Local date `YYYY-MM-DD` in the learner's timezone. */
+            date: string;
+            /** @description Review events of the caller on that local day. */
+            reviewed: number;
+        };
+        ReviewRecentSessionDto: {
+            sessionId: number;
+            /** Format: date-time */
+            completedAt: string;
+            reviewedCount: number;
+            /** @description The session summary's retention; null when it had no reviews. */
+            retentionPercent: number | null;
+        };
+        ReviewOverviewResponseDto: {
+            /** @description Active cards due up to the end of today, overdue included. */
+            dueToday: number;
+            upcoming: components["schemas"]["ReviewUpcomingDto"];
+            /** @description round(non-`again` events / events × 100) over 7 × 24 h; null without events. */
+            retention7d: number | null;
+            /** @description Every day of the current local month, in order. */
+            calendar: components["schemas"]["ReviewCalendarDayDto"][];
+            /** @description Up to 5 completed sessions of the last 30 days, newest first. */
+            recentSessions: components["schemas"]["ReviewRecentSessionDto"][];
         };
         ReviewSessionDto: {
             /** @enum {string} */
@@ -6658,6 +6705,34 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ReviewQueueResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_getOverview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ReviewOverviewResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

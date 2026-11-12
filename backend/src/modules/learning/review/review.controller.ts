@@ -22,6 +22,7 @@ import type { ApiSuccessResponse } from '../../../common/interfaces/api-response
 import { ApiEnvelope } from '../../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
+import { ReviewOverviewResponseDto } from './dto/review-overview-response.dto';
 import { ReviewQueueQueryDto } from './dto/review-queue-query.dto';
 import { ReviewQueueResponseDto } from './dto/review-queue-response.dto';
 import {
@@ -90,6 +91,17 @@ export class ReviewController {
       query.limit,
       new Date(),
     );
+  }
+
+  /** M3.3b (Q268): due today, 3/7/14-day windows, 7-day retention, calendar, recent sessions. */
+  @Get('overview')
+  @Throttle({ default: { limit: reviewQueueReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ReviewOverviewResponseDto)
+  getOverview(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApiSuccessResponse<ReviewOverviewResponseDto>> {
+    return this.reviewService.getOverview(request.user.id, new Date());
   }
 
   @Post('sessions')

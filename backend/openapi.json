@@ -6634,6 +6634,59 @@
         ]
       }
     },
+    "/api/v1/review/overview": {
+      "get": {
+        "operationId": "ReviewController_getOverview",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ReviewOverviewResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "M3.3b (Q268): due today, 3/7/14-day windows, 7-day retention, calendar, recent sessions.",
+        "tags": [
+          "Review"
+        ]
+      }
+    },
     "/api/v1/review/sessions": {
       "post": {
         "operationId": "ReviewController_createSession",
@@ -12620,6 +12673,106 @@
         "required": [
           "dueCount",
           "items"
+        ]
+      },
+      "ReviewUpcomingDto": {
+        "type": "object",
+        "properties": {
+          "days3": {
+            "type": "number"
+          },
+          "days7": {
+            "type": "number"
+          },
+          "days14": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "days3",
+          "days7",
+          "days14"
+        ]
+      },
+      "ReviewCalendarDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Local date `YYYY-MM-DD` in the learner's timezone."
+          },
+          "reviewed": {
+            "type": "number",
+            "description": "Review events of the caller on that local day."
+          }
+        },
+        "required": [
+          "date",
+          "reviewed"
+        ]
+      },
+      "ReviewRecentSessionDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "number"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reviewedCount": {
+            "type": "number"
+          },
+          "retentionPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "The session summary's retention; null when it had no reviews."
+          }
+        },
+        "required": [
+          "sessionId",
+          "completedAt",
+          "reviewedCount",
+          "retentionPercent"
+        ]
+      },
+      "ReviewOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "dueToday": {
+            "type": "number",
+            "description": "Active cards due up to the end of today, overdue included."
+          },
+          "upcoming": {
+            "$ref": "#/components/schemas/ReviewUpcomingDto"
+          },
+          "retention7d": {
+            "type": "number",
+            "nullable": true,
+            "description": "round(non-`again` events / events × 100) over 7 × 24 h; null without events."
+          },
+          "calendar": {
+            "description": "Every day of the current local month, in order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewCalendarDayDto"
+            }
+          },
+          "recentSessions": {
+            "description": "Up to 5 completed sessions of the last 30 days, newest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRecentSessionDto"
+            }
+          }
+        },
+        "required": [
+          "dueToday",
+          "upcoming",
+          "retention7d",
+          "calendar",
+          "recentSessions"
         ]
       },
       "ReviewSessionDto": {

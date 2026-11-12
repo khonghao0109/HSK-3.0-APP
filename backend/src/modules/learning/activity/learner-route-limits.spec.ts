@@ -195,6 +195,12 @@ describe('learner route limits', () => {
       reviewQueueReadLimit,
     ],
     [
+      'ReviewController.getOverview',
+      ReviewController.prototype,
+      'getOverview',
+      reviewQueueReadLimit,
+    ],
+    [
       'ReviewController.getCurrentSession',
       ReviewController.prototype,
       'getCurrentSession',

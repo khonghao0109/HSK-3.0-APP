@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 12/11/2026 (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 12/11/2026 (M3.3 Pha B): thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -623,6 +623,7 @@ chứa `userId`; mỗi route chỉ đọc/ghi dữ liệu của chính người 
 | Method | Path | Header / Query / Body | `data` | Thành công | Throttle (cố định ở mọi môi trường) |
 | --- | --- | --- | --- | --- | --- |
 | `GET` | `/review/queue` | `limit?` số nguyên 1–50, mặc định 20 | `ReviewQueue` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
+| `GET` | `/review/overview` | — | `ReviewOverview` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
 | `POST` | `/review/sessions` | `Idempotency-Key` bắt buộc; body `{ limit?: 1–50, mặc định 20 }` | `{ created, session }` | `201` tạo mới; `200` replay key hoặc trả phiên đang chạy | 20/phút/user (`reviewSessionWriteLimit`) |
 | `GET` | `/review/sessions/current` | — | `{ session, items }` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
 | `POST` | `/review/sessions/:sessionId/reviews` | `Idempotency-Key` bắt buộc; body `{ cardId: int > 0, grade: again\|hard\|good\|easy, durationMs?: int 0–600000 }` | `ReviewGradeResult` | `201` (cả replay) | 120/phút/user (`reviewGradeLimit`) |
@@ -651,6 +652,29 @@ Thẻ còn hiệu lực = `ReviewCard` của chính người gọi, `state <> su
 - `word` cùng shape với `GET /dictionary/words/:id`.
 - `preview.<grade>` (R4) là kết quả `schedule(card, grade, now, sm2-v1)` với cùng một `now`
   cho cả request; client không tự tính lịch.
+
+**Tổng quan ôn tập (M3.3b, Q268).** `GET /review/overview` — chỉ đọc, một snapshot
+`REPEATABLE READ`. Ngày tính theo `UserProfile.timezone` của người gọi (cùng nguồn với Trang chủ);
+thiếu hoặc không hợp lệ thì dùng `Asia/Ho_Chi_Minh`. "Đầu ngày D" = 00:00 giờ địa phương ngày D,
+đổi sang UTC theo luật của timezone (ngày đổi giờ giữ đúng độ dài thật).
+
+- `dueToday`: thẻ còn hiệu lực có `dueAt <` đầu ngày mai (gồm cả thẻ quá hạn).
+- `upcoming.daysN` (N = 3, 7, 14, cộng dồn): thẻ còn hiệu lực có đầu ngày mai `≤ dueAt <` đầu
+  ngày (mai + N); không gồm thẻ đã tính trong `dueToday`.
+- `retention7d`: `round(lượt khác again / tổng lượt × 100)` trên `ReviewEvent` của thẻ thuộc người
+  gọi có `now − 7×24 giờ < reviewedAt ≤ now`; `null` khi không có lượt nào.
+- `calendar`: mọi ngày của tháng hiện tại (theo timezone), tăng dần, `reviewed` = số
+  `ReviewEvent` của người gọi trong ngày địa phương đó.
+- `recentSessions`: tối đa 5 phiên `completed` có `completedAt ≥ now − 30 ngày`, mới nhất trước
+  (rồi `sessionId` giảm dần); `retentionPercent` lấy từ summary lúc complete (Q254), `null` nếu
+  phiên không có lượt chấm.
+
+```json
+{ "dueToday": 12, "upcoming": { "days3": 4, "days7": 9, "days14": 15 }, "retention7d": 87,
+  "calendar": [{ "date": "2026-11-01", "reviewed": 0 }, { "date": "2026-11-02", "reviewed": 18 }],
+  "recentSessions": [{ "sessionId": 41, "completedAt": "2026-11-12T08:12:00.000Z",
+    "reviewedCount": 20, "retentionPercent": 85 }] }
+```
 
 **Phiên ôn (Q253/Q254).** Thẻ thuộc phiên = id nằm trong snapshot `summary.cardIds` lúc tạo
 (không trả ra API). Mỗi người dùng có tối đa một phiên `in_progress`. `session` =
