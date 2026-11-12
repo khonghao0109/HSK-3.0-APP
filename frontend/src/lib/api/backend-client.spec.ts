@@ -1054,4 +1054,52 @@ describe('server-only backend client', () => {
     }
     expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
+  it('allowlists the five review routes and rejects path variants (M3.3a, Q258)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/review/queue', { token: 't' });
+    await client.request('/api/v1/review/queue?limit=20', { token: 't' });
+    await client.request('/api/v1/review/sessions', {
+      token: 't',
+      method: 'POST',
+      body: {},
+      idempotencyKey: 'key-12345',
+    });
+    await client.request('/api/v1/review/sessions/current', { token: 't' });
+    await client.request('/api/v1/review/sessions/41/reviews', {
+      token: 't',
+      method: 'POST',
+      body: { cardId: 7, grade: 'good' },
+      idempotencyKey: 'key-12345',
+    });
+    await client.request('/api/v1/review/sessions/41/complete', {
+      token: 't',
+      method: 'POST',
+    });
+
+    for (const path of [
+      '/api/v1/review/queue?limit=20&x=1',
+      '/api/v1/review/queue?x=1',
+      '/api/v1/review/queue/x',
+      '/api/v1/review/sessions?x=1',
+      '/api/v1/review/sessions/current?x=1',
+      '/api/v1/review/sessions/abc/reviews',
+      '/api/v1/review/sessions/41',
+      '/api/v1/review/sessions/41/reviews?x=1',
+      '/api/v1/review/sessions/41/reviews/x',
+      '/api/v1/review/sessions/41/complete/x',
+    ]) {
+      await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
+  });
 });

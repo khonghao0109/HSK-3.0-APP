@@ -4575,3 +4575,260 @@
     font-size: 1rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   M3.3a — phiên ôn flashcard + tổng kết, web (≥ 1024px). Nguồn:
+   docs/ui_reference/web/css/ux-b.css (.uxb-flash, .uxb-fcard, .uxb-frate,
+   .uxb-timer, .uxb-dstats, .uxb-dmeta, .uxb-dnote) trong khung `.w-focus`. */
+@media (min-width: 1024px) {
+  .learner-app .ex.rv {
+    background: var(--cream-100);
+  }
+
+  .learner-app .rv-count {
+    display: inline-flex;
+    grid-column: 3;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    margin: 0;
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-pill);
+    background: var(--surface-card);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+
+  /* mẫu .uxb-flash: three grid rows (card, rating, tip) share the body
+     height, so the rating row stretches with the viewport. */
+  .learner-app .rv-body {
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-6);
+    width: 100%;
+    max-width: calc(760px + 2 * var(--w-pad));
+    margin: 0 auto;
+    padding: var(--sp-6) var(--w-pad) var(--sp-10);
+  }
+
+  .learner-app .rv-body:has(> .rv-state) {
+    align-content: start;
+  }
+
+  .learner-app .fc-scene {
+    width: min(560px, 100%);
+  }
+
+  .learner-app .fc-hold {
+    min-height: 320px;
+  }
+
+  .learner-app .fc-card,
+  .learner-app .fc-face {
+    min-height: 320px;
+  }
+
+  .learner-app .fc-face {
+    gap: var(--sp-3);
+    padding: var(--sp-8);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-xl);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-float);
+    color: var(--text-strong);
+  }
+
+  .learner-app .fc-flip {
+    border-radius: var(--r-xl);
+  }
+
+  .learner-app .fc-hz {
+    font-family: var(--font-cn-serif);
+    font-size: 5rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: normal;
+    text-indent: 0;
+    color: var(--ink-900);
+  }
+
+  .learner-app .fc-back__vi {
+    font-size: var(--fs-2xl);
+    color: var(--jade-800);
+  }
+
+  .learner-app .fc-back__py {
+    font-size: var(--fs-lg);
+    color: var(--text-body);
+  }
+
+  .learner-app .fc-back__ex {
+    width: auto;
+    margin-top: var(--sp-2);
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-cn);
+    font-size: var(--fs-lg);
+    color: var(--text-strong);
+  }
+
+  .learner-app .fc-hint {
+    margin: var(--sp-3) 0 0;
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .fc-rate {
+    position: static;
+    gap: var(--sp-3);
+    width: min(680px, 100%);
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .learner-app .fc-rate__btn {
+    grid-template-columns: none;
+    grid-template-rows: auto auto auto;
+    justify-items: center;
+    gap: 4px;
+    min-height: 84px;
+    padding: var(--sp-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    font-size: var(--fs-md);
+    color: var(--text-strong);
+    text-align: center;
+  }
+
+  .learner-app .fc-rate__btn:hover:not(:disabled) {
+    border-color: var(--jade-600);
+  }
+
+  .learner-app .fc-rate__btn .fc-face-icon {
+    display: block;
+  }
+
+  .learner-app .fc-tip .w-only {
+    display: inline;
+  }
+
+  .learner-app .fc-rate__btn .icon {
+    grid-row: auto;
+    width: 28px;
+    height: 28px;
+  }
+
+  .learner-app .fc-rate__label,
+  .learner-app .fc-rate__again .fc-rate__label {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    letter-spacing: normal;
+  }
+
+  .learner-app .fc-rate__when {
+    font-size: var(--fs-sm);
+  }
+
+  .learner-app .fc-rate__again .icon {
+    color: #b3261e;
+  }
+
+  .learner-app .fc-rate__hard .icon {
+    color: #7a5300;
+  }
+
+  .learner-app .fc-rate__good .icon {
+    color: var(--jade-700);
+  }
+
+  .learner-app .fc-rate__easy .icon {
+    color: var(--blue-600);
+  }
+
+  .learner-app .fc-tip {
+    gap: var(--sp-2);
+    margin: 0;
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .fc-tip .icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .learner-app .rv-foot {
+    align-content: start;
+  }
+
+  .learner-app .rv-end {
+    margin-top: var(--sp-2);
+  }
+
+  /* Tổng kết (ux-b .uxb-dstats/.uxb-dmeta/.uxb-dnote). */
+  .learner-app .rv-done .done-medal {
+    display: block;
+  }
+
+  .learner-app .rv-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-4);
+    margin-top: var(--sp-8);
+    padding: 0 var(--sp-8);
+  }
+
+  .learner-app .rv-stat {
+    display: block;
+    min-width: 0;
+    padding: var(--sp-4) var(--sp-6);
+    border-radius: var(--r-lg);
+    background: var(--cream-100);
+    color: var(--text-body);
+  }
+
+  .learner-app .rv-stat h2 {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .learner-app .rv-stat p {
+    display: block;
+    margin-top: var(--sp-2);
+  }
+
+  .learner-app .rv-stat b {
+    font-size: var(--fs-2xl);
+  }
+
+  .learner-app .rv-stat small {
+    font-size: var(--fs-md);
+    font-weight: 600;
+  }
+
+  .learner-app .rv-meta,
+  .learner-app .rv-note {
+    margin-top: var(--sp-6);
+    font-size: var(--fs-md);
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .learner-app .rv-actions {
+    display: flex;
+  }
+
+  .learner-app .rv-note {
+    font-size: var(--fs-sm);
+  }
+
+  .learner-app .rv-actions {
+    margin-top: var(--sp-10);
+  }
+}

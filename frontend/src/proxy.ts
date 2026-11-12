@@ -86,5 +86,6 @@ export const config = {
     '/api/learner/dictionary/:path*',
     '/api/learner/email-verification/:path*',
     '/api/learner/exam/:path*',
+    '/api/learner/review/:path*',
   ],
 };

@@ -82,6 +82,7 @@ describe('CSP nonce proxy and session refresh router', () => {
         '/api/learner/dictionary/:path*',
         '/api/learner/email-verification/:path*',
         '/api/learner/exam/:path*',
+        '/api/learner/review/:path*',
       ]),
     );
   });

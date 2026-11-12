@@ -93,6 +93,12 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/exam\/attempts\/\d+\/review$/,
   /^\/api\/v1\/exam\/attempts\/\d+\/answers$/,
   /^\/api\/v1\/exam\/attempts\/\d+\/answers\/q\d+$/,
+  // M3.3a (Q258): the review queue and session routes (docs/api/api.md A.7b);
+  // only the queue read takes a query, and only `limit`.
+  /^\/api\/v1\/review\/queue(?:\?limit=\d+)?$/,
+  /^\/api\/v1\/review\/sessions$/,
+  /^\/api\/v1\/review\/sessions\/current$/,
+  /^\/api\/v1\/review\/sessions\/\d+\/(?:reviews|complete)$/,
 ];
 
 /**
