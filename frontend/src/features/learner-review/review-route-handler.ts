@@ -19,6 +19,7 @@ import {
   reviewCurrentEnvelopeSchema,
   reviewGradeEnvelopeSchema,
   reviewGradeInputSchema,
+  reviewOverviewEnvelopeSchema,
   reviewQueueEnvelopeSchema,
 } from './review-contract';
 
@@ -141,6 +142,21 @@ export async function handleReviewQueue(
       ? '/api/v1/review/queue'
       : `/api/v1/review/queue?limit=${limit}`;
   return forward(deps, path, { token }, reviewQueueEnvelopeSchema);
+}
+
+/** `GET /api/learner/review/overview` (M3.3b, Q268). */
+export async function handleReviewOverview(
+  request: NextRequest,
+  deps: ReviewHandlerDependencies,
+): Promise<NextResponse> {
+  const token = tokenOf(request, deps);
+  if (!token) return safeResponse(401);
+  return forward(
+    deps,
+    '/api/v1/review/overview',
+    { token },
+    reviewOverviewEnvelopeSchema,
+  );
 }
 
 /** `GET /api/learner/review/sessions/current`. */

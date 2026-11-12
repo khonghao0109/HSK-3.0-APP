@@ -72,6 +72,31 @@ export const reviewCompleteEnvelopeSchema = backendEnvelope(
   }),
 );
 
+const percent = z.number().int().min(0).max(100).nullable();
+
+/** M3.3b (Q268): `GET /review/overview`. */
+export const reviewOverviewEnvelopeSchema = backendEnvelope(
+  z.object({
+    dueToday: count,
+    upcoming: z.object({ days3: count, days7: count, days14: count }),
+    retention7d: percent,
+    calendar: z.array(
+      z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        reviewed: count,
+      }),
+    ),
+    recentSessions: z.array(
+      z.object({
+        sessionId: id,
+        completedAt: z.string(),
+        reviewedCount: count,
+        retentionPercent: percent,
+      }),
+    ),
+  }),
+);
+
 export const reviewCreateInputSchema = z
   .object({ limit: z.number().int().min(1).max(50).optional() })
   .strict();

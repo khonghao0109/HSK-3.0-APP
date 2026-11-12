@@ -98,6 +98,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/review\/queue(?:\?limit=\d+)?$/,
   /^\/api\/v1\/review\/sessions$/,
   /^\/api\/v1\/review\/sessions\/current$/,
+  // M3.3b (Q268): the review overview of /learn/review.
+  /^\/api\/v1\/review\/overview$/,
   /^\/api\/v1\/review\/sessions\/\d+\/(?:reviews|complete)$/,
 ];
 

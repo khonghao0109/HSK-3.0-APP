@@ -114,6 +114,7 @@ test.describe('Learner review session (M3.3a)', () => {
 
     await expect(front(page)).toHaveText(WORDS[2].hanzi);
     await expectCounter(page, '3 / 3');
+    await flip(page).click();
     await page.keyboard.press('4');
 
     await expect(
@@ -133,10 +134,59 @@ test.describe('Learner review session (M3.3a)', () => {
     await expect(
       page.getByText('Phiên ôn không cộng XP hay huy hiệu', { exact: false }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: 'Về trang chủ' }),
-    ).toHaveAttribute('href', '/learn');
+    // Q272: back to the review page, which lists this session first.
+    await page.getByRole('link', { name: 'Về Ôn tập' }).click();
+    await expect(page).toHaveURL(/\/learn\/review$/);
+    const history = page.getByRole('table', { name: 'Lịch sử ôn tập' });
+    await expect(history.getByRole('row').nth(1)).toContainText('3 thẻ');
+    await expect(history.getByRole('row').nth(1)).toContainText('67%');
     expect(await readCspViolations(page)).toEqual(csp);
+  });
+
+  test('does not grade the front face with a key or a click (Q266)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await saveWords(page, ids);
+    await page.goto('/learn/review/session');
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await expect(gradeButton(page, 'Tốt')).toBeDisabled();
+    await page.keyboard.press('3');
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await expectCounter(page, '1 / 3');
+    await flip(page).click();
+    await expect(gradeButton(page, 'Tốt')).toBeEnabled();
+    await page.keyboard.press('3');
+    await expect(front(page)).toHaveText(WORDS[1].hanzi);
+  });
+
+  test('opens Ôn tập from the nav and starts a session from Ôn ngay (Q270, Q271)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await saveWords(page, ids);
+    await page.goto('/learn');
+    await page
+      .getByRole('navigation', { name: 'Điều hướng chính' })
+      .filter({ visible: true })
+      .getByRole('link', { name: 'Ôn tập' })
+      .click();
+    await expect(page).toHaveURL(/\/learn\/review$/);
+    const due = page.getByRole('link', {
+      name: 'Đến hạn hôm nay: 3 thẻ. Bắt đầu ôn',
+    });
+    await expect(due).toBeVisible();
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Điều hướng chính' })
+        .filter({ visible: true })
+        .getByRole('link', { name: 'Ôn tập' }),
+    ).toHaveAttribute('aria-current', 'page');
+    await due.click();
+    await expect(page).toHaveURL(/\/learn\/review\/session$/);
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
   });
 
   test('resumes after a reload without the graded card', async ({
@@ -147,6 +197,7 @@ test.describe('Learner review session (M3.3a)', () => {
     await saveWords(page, ids);
     await page.goto('/learn/review/session');
     await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await flip(page).click();
     await gradeButton(page, 'Khó').click();
     await expect(front(page)).toHaveText(WORDS[1].hanzi);
 
@@ -194,6 +245,7 @@ test.describe('Learner review session (M3.3a)', () => {
     const keys = ['3', '1', '2'] as const;
     for (const [index, word] of WORDS.entries()) {
       await expect(front(page)).toHaveText(word.hanzi);
+      await page.keyboard.press('Space');
       await page.keyboard.press(keys[index] ?? '3');
       if (index < WORDS.length - 1) await expect(flip(page)).toBeFocused();
     }

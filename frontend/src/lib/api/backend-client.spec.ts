@@ -1054,7 +1054,7 @@ describe('server-only backend client', () => {
     }
     expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
-  it('allowlists the five review routes and rejects path variants (M3.3a, Q258)', async () => {
+  it('allowlists the six review routes and rejects path variants (M3.3a Q258, M3.3b Q268)', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ success: true }));
@@ -1073,6 +1073,7 @@ describe('server-only backend client', () => {
       idempotencyKey: 'key-12345',
     });
     await client.request('/api/v1/review/sessions/current', { token: 't' });
+    await client.request('/api/v1/review/overview', { token: 't' });
     await client.request('/api/v1/review/sessions/41/reviews', {
       token: 't',
       method: 'POST',
@@ -1095,11 +1096,13 @@ describe('server-only backend client', () => {
       '/api/v1/review/sessions/41/reviews?x=1',
       '/api/v1/review/sessions/41/reviews/x',
       '/api/v1/review/sessions/41/complete/x',
+      '/api/v1/review/overview?x=1',
+      '/api/v1/review/overview/x',
     ]) {
       await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }
-    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(fetchImpl).toHaveBeenCalledTimes(7);
   });
 });

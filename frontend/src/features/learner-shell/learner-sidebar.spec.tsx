@@ -36,7 +36,7 @@ describe('LearnerSidebar', () => {
       'Trang chủ',
       'Lộ trình học',
       'Tra từ',
-      'Ôn tập Sắp có',
+      'Ôn tập',
     ]);
     const home = within(nav).getByRole('link', { name: 'Trang chủ' });
     expect(home).toHaveAttribute('href', '/learn');
@@ -50,6 +50,9 @@ describe('LearnerSidebar', () => {
     ['/learn/dictionary/42', 'Tra từ', '/learn/dictionary'],
     // M2.10b: lesson screens keep the sidebar and belong to Lộ trình học.
     ['/learn/lessons/7', 'Lộ trình học', '/learn/path'],
+    // M3.3b (Q271): the review page and its session.
+    ['/learn/review', 'Ôn tập', '/learn/review'],
+    ['/learn/review/session', 'Ôn tập', '/learn/review'],
   ])('marks the current item on %s', (pathname, name, href) => {
     renderAt(pathname);
     const nav = mainNav();
@@ -99,7 +102,6 @@ describe('LearnerSidebar', () => {
   it('toasts from every coming-soon item and from Hỗ trợ', () => {
     renderAt('/learn');
     const names = [
-      'Ôn tập Sắp có',
       'Phát âm Sắp có',
       'Đọc hiểu Sắp có',
       'Trợ lý AI Sắp có',

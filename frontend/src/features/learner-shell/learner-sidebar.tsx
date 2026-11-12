@@ -46,6 +46,9 @@ export function LearnerSidebar() {
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');
   const onProfile = pathname === '/learn/profile';
+  // M3.3b (Q271): the review page and its session.
+  const onReview =
+    pathname === '/learn/review' || pathname.startsWith('/learn/review/');
   // M4.5 B1: the exam list and every screen below it keep "Thi thử HSK" active.
   const onExam =
     pathname === '/learn/exam' || pathname.startsWith('/learn/exam/');
@@ -74,7 +77,10 @@ export function LearnerSidebar() {
           <Icon name="search" />
           Tra từ
         </Link>
-        <SoonButton icon="layers" label="Ôn tập" />
+        <Link href="/learn/review" aria-current={onReview ? 'page' : undefined}>
+          <Icon name="layers" />
+          Ôn tập
+        </Link>
       </nav>
       <p className="w-side__group" id="w-side-more">
         Luyện thêm

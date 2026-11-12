@@ -101,6 +101,10 @@ export function createReviewTransport(
     complete<T>(sessionId: number) {
       return call<T>(session(sessionId, 'complete'), { method: 'POST' });
     },
+    /** M3.3b (Q268): read once by /learn/review. */
+    overview<T>() {
+      return call<T>('/api/learner/review/overview');
+    },
   };
 }
 

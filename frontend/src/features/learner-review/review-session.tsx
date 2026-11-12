@@ -250,7 +250,14 @@ export function ReviewSession({
 
   const grade = useCallback(
     async (value: ReviewGrade) => {
-      if (inFlight.current || !item || !session || phase.kind !== 'cards') {
+      // Q266: the front face cannot be graded; flip first.
+      if (
+        inFlight.current ||
+        !flipped ||
+        !item ||
+        !session ||
+        phase.kind !== 'cards'
+      ) {
         return;
       }
       const kept = keys.current.get(item.cardId);
@@ -286,7 +293,7 @@ export function ReviewSession({
       if (action === 'unauthorized') return signIn();
       setGradeError(value);
     },
-    [item, session, phase.kind, shownAt, transport, advance, signIn],
+    [item, flipped, session, phase.kind, shownAt, transport, advance, signIn],
   );
 
   useEffect(() => {
@@ -512,7 +519,7 @@ export function ReviewSession({
                     key={entry.grade}
                     className={`fc-rate__btn fc-rate__${entry.grade}`}
                     type="button"
-                    disabled={pending}
+                    disabled={pending || !flipped}
                     aria-label={`${entry.label}, gặp lại sau ${interval}`}
                     aria-keyshortcuts={entry.key}
                     onClick={() => void grade(entry.grade)}
@@ -659,8 +666,8 @@ function ReviewComplete({
           )}
 
           <div className="done-actions rv-actions">
-            <Link className="done-btn done-btn--primary" href="/learn">
-              Về trang chủ
+            <Link className="done-btn done-btn--primary" href="/learn/review">
+              Về Ôn tập
             </Link>
           </div>
           <p className="rv-note">

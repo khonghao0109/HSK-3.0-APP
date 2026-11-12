@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usePathname } from 'next/navigation';
@@ -121,13 +121,23 @@ describe('LearnerTabBar', () => {
     },
   );
 
-  it('Ôn tập is a button that shows the coming-soon toast', () => {
+  it.each(['/learn/review', '/learn/review/session'])(
+    'links Ôn tập to /learn/review and marks it current on %s (Q271)',
+    (pathname) => {
+      const nav = renderAt(pathname);
+      const review = within(nav).getByRole('link', { name: 'Ôn tập' });
+      expect(review).toHaveAttribute('href', '/learn/review');
+      expect(review).toHaveAttribute('aria-current', 'page');
+      expect(nav.querySelectorAll('[aria-current]')).toHaveLength(1);
+      expect(within(nav).queryByRole('button')).not.toBeInTheDocument();
+    },
+  );
+
+  it('shows Ôn tập without aria-current elsewhere', () => {
     const nav = renderAt('/learn');
-    const button = within(nav).getByRole('button', { name: 'Ôn tập' });
-    expect(button.tagName).toBe('BUTTON');
-    expect(button).toHaveAttribute('type', 'button');
+    expect(
+      within(nav).getByRole('link', { name: 'Ôn tập' }),
+    ).not.toHaveAttribute('aria-current');
     expect(screen.queryByText(TOAST_COMING_SOON)).not.toBeInTheDocument();
-    fireEvent.click(button);
-    expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
   });
 });

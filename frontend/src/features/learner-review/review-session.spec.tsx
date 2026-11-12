@@ -71,6 +71,7 @@ function fake(): Fake {
     create: vi.fn(),
     grade: vi.fn(),
     complete: vi.fn(),
+    overview: vi.fn(),
   };
 }
 
@@ -138,7 +139,7 @@ describe('ReviewSession (M3.3a)', () => {
       );
     t.create.mockResolvedValue(ok({ created: true, session: session() }));
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     expect(t.create).toHaveBeenCalledWith(
       '00000000-0000-4000-8000-000000000001',
     );
@@ -179,7 +180,7 @@ describe('ReviewSession (M3.3a)', () => {
       ok({ session: session(), items: [item(1, '学习')] }),
     );
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     expect(
       screen.getByRole('button', { name: 'Chưa nhớ, gặp lại sau 1 phút' }),
     ).toBeInTheDocument();
@@ -194,6 +195,26 @@ describe('ReviewSession (M3.3a)', () => {
     ).toBeInTheDocument();
   });
 
+  it('does not grade before the card is flipped (Q266)', async () => {
+    const t = fake();
+    t.current.mockResolvedValue(
+      ok({ session: session(), items: [item(1, '学习'), item(2, '记得')] }),
+    );
+    gradeOk(t, 2);
+    renderSession(t);
+    const card = await screen.findByRole('button', { name: /Lật thẻ/ });
+    for (const name of [/^Chưa nhớ/, /^Khó/, /^Tốt/, /^Dễ/]) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+    }
+    fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
+    fireEvent.keyDown(window, { key: '3' });
+    expect(t.grade).not.toHaveBeenCalled();
+    fireEvent.click(card);
+    expect(screen.getByRole('button', { name: /^Tốt/ })).toBeEnabled();
+    fireEvent.keyDown(window, { key: '3' });
+    await waitFor(() => expect(t.grade).toHaveBeenCalledTimes(1));
+  });
+
   it('grades with one key per card, the elapsed time, then advances', async () => {
     const t = fake();
     t.current.mockResolvedValue(
@@ -201,7 +222,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     gradeOk(t, 2);
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     vi.setSystemTime(NOW + 4_200);
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     await screen.findByText('记得', { selector: '.fc-hz' });
@@ -220,7 +241,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     gradeOk(t, 2);
     const { container } = renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     const input = document.createElement('input');
     container.appendChild(input);
     fireEvent.keyDown(input, { key: '1' });
@@ -238,7 +259,7 @@ describe('ReviewSession (M3.3a)', () => {
     let resolve: (value: unknown) => void = () => undefined;
     t.grade.mockReturnValue(new Promise((r) => (resolve = r)));
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Khó/ }));
     for (const name of [/^Chưa nhớ/, /^Khó/, /^Tốt/, /^Dễ/]) {
       expect(screen.getByRole('button', { name })).toBeDisabled();
@@ -263,7 +284,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     gradeOk(t);
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
@@ -285,7 +306,7 @@ describe('ReviewSession (M3.3a)', () => {
         ok({ cardId: 1, session: { reviewedCount: 1, plannedCount: 2 } }),
       );
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Thử lại' }));
     await screen.findByText('记得', { selector: '.fc-hz' });
@@ -304,7 +325,7 @@ describe('ReviewSession (M3.3a)', () => {
         ok({ cardId: 1, session: { reviewedCount: 1, plannedCount: 2 } }),
       );
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     await screen.findByRole('button', { name: 'Thử lại' });
     fireEvent.click(screen.getByRole('button', { name: /^Dễ/ }));
@@ -319,7 +340,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     t.grade.mockResolvedValue(fail(409, 'REVIEW_CARD_ALREADY_REVIEWED'));
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     expect(
       await screen.findByText('记得', { selector: '.fc-hz' }),
@@ -339,7 +360,7 @@ describe('ReviewSession (M3.3a)', () => {
     t.grade.mockResolvedValue(fail(409, 'REVIEW_SESSION_EXPIRED'));
     t.create.mockResolvedValue(ok({ created: true, session: session() }));
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Dễ/ }));
     expect(await screen.findByText('Phiên ôn đã hết hạn')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu phiên mới' }));
@@ -360,7 +381,7 @@ describe('ReviewSession (M3.3a)', () => {
       ok({ session: { ...session(3), status: 'completed' }, summary }),
     );
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Chưa nhớ/ }));
     expect(
       await screen.findByRole('heading', { name: 'Ôn tập hôm nay' }),
@@ -378,9 +399,9 @@ describe('ReviewSession (M3.3a)', () => {
     expect(
       screen.getByText(/Phiên ôn không cộng XP hay huy hiệu/),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Về trang chủ' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Về Ôn tập' })).toHaveAttribute(
       'href',
-      '/learn',
+      '/learn/review',
     );
     expect(screen.queryByText('Ôn lại thẻ chưa nhớ')).not.toBeInTheDocument();
   });
@@ -415,7 +436,7 @@ describe('ReviewSession (M3.3a)', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true);
     renderSession(t);
-    await screen.findByRole('button', { name: /Lật thẻ/ });
+    fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Kết thúc phiên' }));
     expect(t.complete).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Kết thúc phiên' }));

@@ -3,9 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { ToastButton } from './learner-toast';
-import { TOAST_COMING_SOON } from './learner-toast-messages';
-
 function TabIcon({ name }: { name: string }) {
   return (
     <svg className="icon" aria-hidden="true">
@@ -14,7 +11,7 @@ function TabIcon({ name }: { name: string }) {
   );
 }
 
-/** Learner tab bar (Q1). Ôn tập only toasts until shipped (Q16). */
+/** Learner tab bar (Q1). Ôn tập links to /learn/review since M3.3b (Q271). */
 export function LearnerTabBar() {
   const pathname = usePathname();
   const onHome = pathname === '/learn';
@@ -24,6 +21,9 @@ export function LearnerTabBar() {
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');
   const onProfile = pathname === '/learn/profile';
+  // M3.3b (Q271): the review page and its session.
+  const onReview =
+    pathname === '/learn/review' || pathname.startsWith('/learn/review/');
 
   return (
     <nav className="tabbar" aria-label="Điều hướng chính">
@@ -42,10 +42,10 @@ export function LearnerTabBar() {
         <TabIcon name="search" />
         Tra từ
       </Link>
-      <ToastButton message={TOAST_COMING_SOON}>
+      <Link href="/learn/review" aria-current={onReview ? 'page' : undefined}>
         <TabIcon name="layers" />
         Ôn tập
-      </ToastButton>
+      </Link>
       <Link href="/learn/profile" aria-current={onProfile ? 'page' : undefined}>
         <TabIcon name="user" />
         Hồ sơ

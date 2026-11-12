@@ -9,6 +9,7 @@ import {
   handleReviewCreateSession,
   handleReviewCurrent,
   handleReviewGrade,
+  handleReviewOverview,
   handleReviewQueue,
   type ReviewHandlerDependencies,
 } from './review-route-handler';
@@ -146,6 +147,77 @@ describe('review BFF route handlers (M3.3a)', () => {
       400,
     );
     expect(bad).not.toHaveBeenCalled();
+  });
+
+  it('reads the overview and projects it (M3.3b, Q268)', async () => {
+    const overview = {
+      dueToday: 4,
+      upcoming: { days3: 1, days7: 2, days14: 3 },
+      retention7d: null,
+      calendar: [{ date: '2026-11-01', reviewed: 2, userId: 99 }],
+      recentSessions: [
+        {
+          sessionId: 41,
+          completedAt: '2026-11-12T08:12:00.000Z',
+          reviewedCount: 20,
+          retentionPercent: 85,
+          summary: 'dropped',
+        },
+      ],
+    };
+    const backend = vi
+      .fn<Backend>()
+      .mockResolvedValue({ success: true, data: overview, meta });
+    const body = await expectStatus(
+      await handleReviewOverview(
+        request('/api/learner/review/overview'),
+        deps(backend),
+      ),
+      200,
+    );
+    expect(backend).toHaveBeenCalledWith('/api/v1/review/overview', {
+      token: 'learner-token',
+    });
+    expect(body).toEqual({
+      success: true,
+      data: {
+        dueToday: 4,
+        upcoming: { days3: 1, days7: 2, days14: 3 },
+        retention7d: null,
+        calendar: [{ date: '2026-11-01', reviewed: 2 }],
+        recentSessions: [
+          {
+            sessionId: 41,
+            completedAt: '2026-11-12T08:12:00.000Z',
+            reviewedCount: 20,
+            retentionPercent: 85,
+          },
+        ],
+      },
+    });
+
+    const none = vi.fn<Backend>();
+    await expectStatus(
+      await handleReviewOverview(
+        request('/api/learner/review/overview', { cookie: false }),
+        deps(none),
+      ),
+      401,
+    );
+    expect(none).not.toHaveBeenCalled();
+    await expectStatus(
+      await handleReviewOverview(
+        request('/api/learner/review/overview'),
+        deps(
+          vi.fn<Backend>().mockResolvedValue({
+            success: true,
+            data: { ...overview, retention7d: 101 },
+            meta,
+          }),
+        ),
+      ),
+      503,
+    );
   });
 
   it('creates a session with the browser key, rebuilt body and same origin', async () => {
