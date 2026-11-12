@@ -14,6 +14,7 @@ import { LearningPathService } from './path/learning-path.service';
 import { LearningHomeController } from './home/learning-home.controller';
 import { LearningHomeService } from './home/learning-home.service';
 import { ReviewController } from './review/review.controller';
+import { ReviewSessionService } from './review/review-session.service';
 import { ReviewService } from './review/review.service';
 import { OnboardingModule } from '../onboarding/onboarding.module';
 
@@ -38,6 +39,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     LearningPathService,
     LearningHomeService,
     ReviewService,
+    ReviewSessionService,
   ],
   exports: [LessonActivityService],
 })

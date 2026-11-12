@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 12/11/2026 (M3.2 Pha A): thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 12/11/2026 (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -617,16 +617,21 @@ public; `409` cùng key khác request; `409 lesson_locked` start bài đang kho�
 
 ### A.7b Ôn tập SRS — học viên (M3.2)
 
-Envelope §1, `JwtAuthGuard`; response `200` có `Cache-Control: no-store`. Không response nào
-chứa `userId`.
+Envelope §1, `JwtAuthGuard`; mọi response có `Cache-Control: no-store`. Không response nào
+chứa `userId`; mỗi route chỉ đọc/ghi dữ liệu của chính người gọi.
 
-| Method | Path | Query | `data` | Throttle |
-| --- | --- | --- | --- | --- |
-| `GET` | `/review/queue` | `limit?` số nguyên 1–50, mặc định 20 | `ReviewQueue` | 60/phút/user (`reviewQueueReadLimit`, cố định ở mọi môi trường) |
+| Method | Path | Header / Query / Body | `data` | Thành công | Throttle (cố định ở mọi môi trường) |
+| --- | --- | --- | --- | --- | --- |
+| `GET` | `/review/queue` | `limit?` số nguyên 1–50, mặc định 20 | `ReviewQueue` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
+| `POST` | `/review/sessions` | `Idempotency-Key` bắt buộc; body `{ limit?: 1–50, mặc định 20 }` | `{ created, session }` | `201` tạo mới; `200` replay key hoặc trả phiên đang chạy | 20/phút/user (`reviewSessionWriteLimit`) |
+| `GET` | `/review/sessions/current` | — | `{ session, items }` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
+| `POST` | `/review/sessions/:sessionId/reviews` | `Idempotency-Key` bắt buộc; body `{ cardId: int > 0, grade: again\|hard\|good\|easy, durationMs?: int 0–600000 }` | `ReviewGradeResult` | `201` (cả replay) | 120/phút/user (`reviewGradeLimit`) |
+| `POST` | `/review/sessions/:sessionId/complete` | — (tự idempotent) | `{ session, summary }` | `200` | 20/phút/user (`reviewSessionWriteLimit`) |
 
-Thẻ đến hạn (Q252) = `ReviewCard` của chính người gọi, `dueAt ≤ now`, `state <> suspended`,
-từ còn `published` và chưa soft-delete (`PUBLIC_CONTENT_WHERE`), và người gọi vẫn còn lưu từ
-(`UserWord`). Sắp `dueAt` tăng dần rồi `id`. Không giới hạn thẻ mới mỗi ngày. Route chỉ đọc.
+Thẻ còn hiệu lực = `ReviewCard` của chính người gọi, `state <> suspended`, từ khớp
+`PUBLIC_WORD_WHERE` (Q255: `published`, chưa soft-delete, `isPure = true`, có ít nhất một
+`WordMeaning`; cùng điều kiện với lưu từ và trang chi tiết từ), và người gọi vẫn còn lưu từ
+(`UserWord`). Thẻ đến hạn (Q252) = thẻ còn hiệu lực có `dueAt ≤ now`. Sắp `dueAt` tăng dần rồi `id`. Không giới hạn thẻ mới mỗi ngày. Route chỉ đọc.
 `limit` ngoài 1–50 hoặc không phải số nguyên → `400 REQUEST_VALIDATION_FAILED`.
 
 ```json
@@ -646,6 +651,88 @@ từ còn `published` và chưa soft-delete (`PUBLIC_CONTENT_WHERE`), và ngư�
 - `word` cùng shape với `GET /dictionary/words/:id`.
 - `preview.<grade>` (R4) là kết quả `schedule(card, grade, now, sm2-v1)` với cùng một `now`
   cho cả request; client không tự tính lịch.
+
+**Phiên ôn (Q253/Q254).** Thẻ thuộc phiên = id nằm trong snapshot `summary.cardIds` lúc tạo
+(không trả ra API). Mỗi người dùng có tối đa một phiên `in_progress`. `session` =
+`{ sessionId, status, plannedCount, reviewedCount, startedAt, expiresAt }`; `expiresAt` là
+`null` khi phiên đã đóng.
+
+Hết hạn (Q253): phiên `in_progress` hết hạn khi `now ≥ (lúc chấm cuối của phiên, chưa chấm thì
+startedAt) + 24 giờ`. Chỉ route ghi lưu `abandoned` (lười, lúc gặp); route đọc coi phiên đã hết
+hạn là không còn, không ghi DB.
+
+`POST /review/sessions` — trong khoá `User FOR UPDATE`, theo thứ tự:
+1. Key đã tạo phiên → trả phiên đó, `created: false`, `200` (phiên đó đang `in_progress` mà đã
+   hết hạn thì lưu `abandoned` trước khi trả); cùng key mà `limit` khác → `409 CONFLICT`.
+2. Phiên `in_progress` đã hết hạn → lưu `abandoned`.
+3. Phiên `in_progress` còn hạn → trả phiên đó, `created: false`, `200`.
+4. Không còn thẻ đến hạn → `409 REVIEW_NOTHING_DUE` (phần `abandoned` ở bước 2 vẫn được lưu).
+5. Tạo phiên `mode = due` từ tối đa `limit` thẻ đến hạn đầu tiên (thứ tự của hàng đợi),
+   `plannedCount` = số thẻ đó, `201`, `created: true`.
+
+```json
+{ "created": true,
+  "session": { "sessionId": 41, "status": "in_progress", "plannedCount": 3, "reviewedCount": 0,
+    "startedAt": "2026-11-12T08:00:00.000Z", "expiresAt": "2026-11-13T08:00:00.000Z" } }
+```
+
+`GET /review/sessions/current` — chỉ đọc. Không có phiên `in_progress` còn hạn → `404
+REVIEW_SESSION_NOT_FOUND`. `items` là thẻ thuộc phiên chưa chấm, theo thứ tự trong snapshot,
+cùng shape item của `GET /review/queue` (`preview` tính bằng `now` của request). Thẻ thuộc phiên
+nhưng không còn hiệu lực (bỏ lưu, từ không còn khớp `PUBLIC_WORD_WHERE`, bị `suspended`) không
+có trong `items`; vì vậy `items` có thể ít hơn `plannedCount − reviewedCount`.
+
+`POST /review/sessions/:sessionId/reviews` — một transaction, khoá `ReviewSession FOR UPDATE`
+rồi `ReviewCard FOR UPDATE`. Phiên không có hoặc của người khác → `404
+REVIEW_SESSION_NOT_FOUND`. Trong khoá, theo thứ tự:
+1. Đã có lượt chấm của phiên với cùng key: cùng `cardId`, `grade`, `durationMs` → trả kết quả
+   cũ (`cardId`, `grade`, `next` của lượt đã ghi; `session` là số đếm hiện tại), `replayed: true`,
+   `201`, không ghi gì; khác payload → `409 CONFLICT`.
+2. Phiên không còn `in_progress` → `409 REVIEW_SESSION_NOT_ACTIVE`.
+3. Phiên hết hạn → lưu `abandoned`, `409 REVIEW_SESSION_EXPIRED`.
+4. `cardId` không thuộc phiên → `409 REVIEW_CARD_NOT_IN_SESSION`.
+5. Thẻ đã được chấm trong phiên → `409 REVIEW_CARD_ALREADY_REVIEWED`. Key đã dùng cho thẻ này ở
+   phiên khác → `409 CONFLICT`.
+6. Thẻ không còn hiệu lực → `409 REVIEW_CARD_UNAVAILABLE`.
+7. `next = schedule(card, grade, now, sm2-v1)`: cập nhật thẻ (kể cả `schedulerVersion =
+   sm2-v1`), ghi một `ReviewEvent` (`source = flashcard`, trạng thái trước/sau, key,
+   `durationMs`), tăng `reviewedCount`. Không ghi XP hay `LearningEvent`; `ReviewEvent` không
+   bao giờ bị sửa hay xoá.
+
+```json
+{ "replayed": false, "cardId": 7, "grade": "good",
+  "next": { "state": "learning", "dueAt": "2026-11-12T08:10:00.000Z", "intervalDays": 0 },
+  "session": { "reviewedCount": 1, "plannedCount": 3 } }
+```
+
+`POST /review/sessions/:sessionId/complete` — khoá phiên `FOR UPDATE`. Phiên `in_progress` (kể
+cả đã hết hạn) → `completed`, ghi kết quả vào `summary` (giữ `cardIds`). Phiên đã `completed` →
+trả lại đúng summary cũ, `200`. Phiên `abandoned` → `409 REVIEW_SESSION_NOT_ACTIVE`. Đếm từ
+`ReviewEvent` của phiên: `remembered` = số lượt khác `again`, `forgot` = số lượt `again`,
+`retentionPercent = round(remembered / reviewedCount × 100)` hoặc `null` khi chưa chấm.
+
+```json
+{ "session": { "sessionId": 41, "status": "completed", "plannedCount": 3, "reviewedCount": 3,
+    "startedAt": "2026-11-12T08:00:00.000Z", "expiresAt": null },
+  "summary": { "again": 1, "hard": 0, "good": 1, "easy": 1, "remembered": 2, "forgot": 1,
+    "retentionPercent": 67, "totalDurationMs": 6000 } }
+```
+
+Mã lỗi:
+
+| HTTP | `error.code` | Route |
+| --- | --- | --- |
+| `400` | `REQUEST_VALIDATION_FAILED` / `BAD_REQUEST` | body/query sai; `Idempotency-Key` thiếu hoặc sai dạng (8–128 ký tự `A-Za-z0-9._:-`) |
+| `401` | `UNAUTHORIZED` | thiếu/sai token |
+| `404` | `REVIEW_SESSION_NOT_FOUND` | current, reviews, complete |
+| `409` | `CONFLICT` | create, reviews: key dùng lại với yêu cầu khác (cùng mã với lưu từ) |
+| `409` | `REVIEW_NOTHING_DUE` | create |
+| `409` | `REVIEW_SESSION_NOT_ACTIVE` | reviews, complete |
+| `409` | `REVIEW_SESSION_EXPIRED` | reviews |
+| `409` | `REVIEW_CARD_NOT_IN_SESSION` | reviews |
+| `409` | `REVIEW_CARD_ALREADY_REVIEWED` | reviews |
+| `409` | `REVIEW_CARD_UNAVAILABLE` | reviews |
+| `429` | `TOO_MANY_REQUESTS` | mọi route, theo bảng throttle |
 
 ### A.8 Admin CMS — Lesson / Topic (admin)
 

@@ -21,7 +21,9 @@ import {
 } from '../../media/media-content-throttle';
 import {
   ReviewController,
+  reviewGradeLimit,
   reviewQueueReadLimit,
+  reviewSessionWriteLimit,
 } from '../review/review.controller';
 import {
   exerciseAttemptLimit,
@@ -110,6 +112,15 @@ describe('learner route limits', () => {
     }
   });
 
+  it('resolves the M3.2 review session limits in every environment', () => {
+    for (const nodeEnv of ['production', 'test']) {
+      withNodeEnv(nodeEnv, () => {
+        expect(reviewSessionWriteLimit()).toBe(20);
+        expect(reviewGradeLimit()).toBe(120);
+      });
+    }
+  });
+
   it.each([
     [
       'AuthController.getProfile',
@@ -182,6 +193,30 @@ describe('learner route limits', () => {
       ReviewController.prototype,
       'getQueue',
       reviewQueueReadLimit,
+    ],
+    [
+      'ReviewController.getCurrentSession',
+      ReviewController.prototype,
+      'getCurrentSession',
+      reviewQueueReadLimit,
+    ],
+    [
+      'ReviewController.createSession',
+      ReviewController.prototype,
+      'createSession',
+      reviewSessionWriteLimit,
+    ],
+    [
+      'ReviewController.completeSession',
+      ReviewController.prototype,
+      'completeSession',
+      reviewSessionWriteLimit,
+    ],
+    [
+      'ReviewController.gradeCard',
+      ReviewController.prototype,
+      'gradeCard',
+      reviewGradeLimit,
     ],
     [
       'MediaController.getContent',

@@ -1417,6 +1417,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReviewController_createSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/review/sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReviewController_getCurrentSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/review/sessions/{sessionId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReviewController_gradeCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/review/sessions/{sessionId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReviewController_completeSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/onboarding/status": {
         parameters: {
             query?: never;
@@ -2940,6 +3004,74 @@ export interface components {
             /** @description Every due card (Q252), not cut by `limit`. */
             dueCount: number;
             items: components["schemas"]["ReviewQueueItemDto"][];
+        };
+        ReviewSessionDto: {
+            /** @enum {string} */
+            status: "in_progress" | "completed" | "abandoned";
+            sessionId: number;
+            plannedCount: number;
+            reviewedCount: number;
+            /** Format: date-time */
+            startedAt: string;
+            /**
+             * Format: date-time
+             * @description Q253: last grade (or start) + 24 h; null once the session is closed.
+             */
+            expiresAt: string | null;
+        };
+        CreateReviewSessionResponseDto: {
+            /** @description false when the key was replayed or a live session was returned. */
+            created: boolean;
+            session: components["schemas"]["ReviewSessionDto"];
+        };
+        CreateReviewSessionDto: {
+            /** @default 20 */
+            limit: number;
+        };
+        CurrentReviewSessionResponseDto: {
+            session: components["schemas"]["ReviewSessionDto"];
+            /** @description Ungraded, still available cards of the session, in session order. */
+            items: components["schemas"]["ReviewQueueItemDto"][];
+        };
+        ReviewGradeNextDto: {
+            /** @enum {string} */
+            state: "learning" | "review" | "relearning";
+            /** Format: date-time */
+            dueAt: string;
+            intervalDays: number;
+        };
+        ReviewGradeSessionCountsDto: {
+            reviewedCount: number;
+            plannedCount: number;
+        };
+        GradeReviewCardResponseDto: {
+            /** @enum {string} */
+            grade: "again" | "hard" | "good" | "easy";
+            replayed: boolean;
+            cardId: number;
+            next: components["schemas"]["ReviewGradeNextDto"];
+            session: components["schemas"]["ReviewGradeSessionCountsDto"];
+        };
+        GradeReviewCardDto: {
+            cardId: number;
+            /** @enum {string} */
+            grade: "again" | "hard" | "good" | "easy";
+            durationMs?: number;
+        };
+        ReviewSessionSummaryDto: {
+            again: number;
+            hard: number;
+            good: number;
+            easy: number;
+            remembered: number;
+            forgot: number;
+            /** @description round(remembered / reviewedCount * 100); null without reviews. */
+            retentionPercent: number | null;
+            totalDurationMs: number;
+        };
+        CompleteReviewSessionResponseDto: {
+            session: components["schemas"]["ReviewSessionDto"];
+            summary: components["schemas"]["ReviewSessionSummaryDto"];
         };
         CreateGoalDto: {
             targetLevelId: number;
@@ -6526,6 +6658,135 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ReviewQueueResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_createSession: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+                /** @description Replaying a key with the same request returns the original result. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReviewSessionDto"];
+            };
+        };
+        responses: {
+            /** @description Replayed key or the live session (`created: false`). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CreateReviewSessionResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_getCurrentSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CurrentReviewSessionResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_gradeCard: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+                /** @description Replaying a key with the same request returns the original result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                sessionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeReviewCardDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["GradeReviewCardResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_completeSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                sessionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CompleteReviewSessionResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

@@ -6634,6 +6634,268 @@
         ]
       }
     },
+    "/api/v1/review/sessions": {
+      "post": {
+        "operationId": "ReviewController_createSession",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replayed key or the live session (`created: false`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CreateReviewSessionResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
+    "/api/v1/review/sessions/current": {
+      "get": {
+        "operationId": "ReviewController_getCurrentSession",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CurrentReviewSessionResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
+    "/api/v1/review/sessions/{sessionId}/reviews": {
+      "post": {
+        "operationId": "ReviewController_gradeCard",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Replaying a key with the same request returns the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GradeReviewCardDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GradeReviewCardResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
+    "/api/v1/review/sessions/{sessionId}/complete": {
+      "post": {
+        "operationId": "ReviewController_completeSession",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CompleteReviewSessionResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
     "/api/v1/onboarding/status": {
       "get": {
         "operationId": "OnboardingController_getStatus",
@@ -12358,6 +12620,249 @@
         "required": [
           "dueCount",
           "items"
+        ]
+      },
+      "ReviewSessionDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "in_progress",
+              "completed",
+              "abandoned"
+            ],
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "number"
+          },
+          "plannedCount": {
+            "type": "number"
+          },
+          "reviewedCount": {
+            "type": "number"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true,
+            "description": "Q253: last grade (or start) + 24 h; null once the session is closed."
+          }
+        },
+        "required": [
+          "status",
+          "sessionId",
+          "plannedCount",
+          "reviewedCount",
+          "startedAt",
+          "expiresAt"
+        ]
+      },
+      "CreateReviewSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "boolean",
+            "description": "false when the key was replayed or a live session was returned."
+          },
+          "session": {
+            "$ref": "#/components/schemas/ReviewSessionDto"
+          }
+        },
+        "required": [
+          "created",
+          "session"
+        ]
+      },
+      "CreateReviewSessionDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 50
+          }
+        }
+      },
+      "CurrentReviewSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/ReviewSessionDto"
+          },
+          "items": {
+            "description": "Ungraded, still available cards of the session, in session order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewQueueItemDto"
+            }
+          }
+        },
+        "required": [
+          "session",
+          "items"
+        ]
+      },
+      "ReviewGradeNextDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "learning",
+              "review",
+              "relearning"
+            ],
+            "type": "string"
+          },
+          "dueAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "intervalDays": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "state",
+          "dueAt",
+          "intervalDays"
+        ]
+      },
+      "ReviewGradeSessionCountsDto": {
+        "type": "object",
+        "properties": {
+          "reviewedCount": {
+            "type": "number"
+          },
+          "plannedCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "reviewedCount",
+          "plannedCount"
+        ]
+      },
+      "GradeReviewCardResponseDto": {
+        "type": "object",
+        "properties": {
+          "grade": {
+            "enum": [
+              "again",
+              "hard",
+              "good",
+              "easy"
+            ],
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "cardId": {
+            "type": "number"
+          },
+          "next": {
+            "$ref": "#/components/schemas/ReviewGradeNextDto"
+          },
+          "session": {
+            "$ref": "#/components/schemas/ReviewGradeSessionCountsDto"
+          }
+        },
+        "required": [
+          "grade",
+          "replayed",
+          "cardId",
+          "next",
+          "session"
+        ]
+      },
+      "GradeReviewCardDto": {
+        "type": "object",
+        "properties": {
+          "cardId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "grade": {
+            "enum": [
+              "again",
+              "hard",
+              "good",
+              "easy"
+            ],
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 600000
+          }
+        },
+        "required": [
+          "cardId",
+          "grade"
+        ]
+      },
+      "ReviewSessionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "again": {
+            "type": "number"
+          },
+          "hard": {
+            "type": "number"
+          },
+          "good": {
+            "type": "number"
+          },
+          "easy": {
+            "type": "number"
+          },
+          "remembered": {
+            "type": "number"
+          },
+          "forgot": {
+            "type": "number"
+          },
+          "retentionPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "round(remembered / reviewedCount * 100); null without reviews."
+          },
+          "totalDurationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "again",
+          "hard",
+          "good",
+          "easy",
+          "remembered",
+          "forgot",
+          "retentionPercent",
+          "totalDurationMs"
+        ]
+      },
+      "CompleteReviewSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/ReviewSessionDto"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ReviewSessionSummaryDto"
+          }
+        },
+        "required": [
+          "session",
+          "summary"
         ]
       },
       "CreateGoalDto": {

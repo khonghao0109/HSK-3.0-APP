@@ -165,6 +165,18 @@ describe('Review queue E2E (M3.2)', () => {
       data: { deletedAt: new Date() },
     });
     hidden.deleted = deleted.cardId;
+    // Q255: the queue uses PUBLIC_WORD_WHERE, like save and word detail.
+    const impure = await card(learner, 'impure', { dueAt: ago(DAY) });
+    await prisma.word.update({
+      where: { id: impure.wordId },
+      data: { isPure: false },
+    });
+    hidden.impure = impure.cardId;
+    const meaningless = await card(learner, 'meaningless', { dueAt: ago(DAY) });
+    await prisma.wordMeaning.deleteMany({
+      where: { wordId: meaningless.wordId },
+    });
+    hidden.meaningless = meaningless.cardId;
   });
 
   afterAll(async () => {
@@ -194,6 +206,16 @@ describe('Review queue E2E (M3.2)', () => {
     const serialized = JSON.stringify(response.body);
     expect(serialized).not.toContain('"userId"');
     expect(serialized).not.toContain('"status"');
+  });
+
+  it('leaves out cards of impure words and of words without a meaning (Q255)', async () => {
+    const response = await queue(learner, '?limit=50').expect(200);
+    const ids = response.body.data.items.map(
+      (item: { cardId: number }) => item.cardId,
+    );
+    expect(ids).not.toContain(hidden.impure);
+    expect(ids).not.toContain(hidden.meaningless);
+    expect(response.body.data.dueCount).toBe(3);
   });
 
   it('returns the public word fields of the dictionary', async () => {
