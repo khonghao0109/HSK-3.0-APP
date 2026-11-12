@@ -69,15 +69,15 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
 | GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 11 / 18 | 3–4 tuần | 🟡 |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 44 / 54 | 5–7 tuần | 🟡 |
-| GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 0 / 12 | 3–4 tuần | ⬜ |
-| GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 5 / 9 | 4–6 tuần | 🟡 |
+| GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 1 / 12 | 3–4 tuần | 🟡 |
+| GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 7 / 9 | 4–6 tuần | 🟡 |
 | GĐ8 | Admin ops, analytics, support, trust (M5) | Mutation nhạy cảm có audit; support có SLA | 12 / 17 | 4–6 tuần | 🟡 read console |
 | GĐ9 | Đồ án: Mobile, AI và nhận diện (M7) | App đủ vòng học; chat AI có trích nguồn; phát âm, viết tay, OCR chạy trên app | 0 / 16 | 4 tuần | ⬜ |
 | GĐ10 | Đồ án: Deploy demo và bảo vệ (TN) | Hội đồng mở được web, cài được app; bảo vệ 17/01/2027 | 0 / 6 | 2 tuần | ⬜ |
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **116 / 194 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **119 / 194 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -294,7 +294,7 @@ Vào: GĐ5 có M2.5, M2.6. Ra: ôn đúng hạn, lịch sử review bất biến
 
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M3.1 | Scheduler policy/version, `ReviewCard` là source of truth | ⬜ | schema ✅; cải tiến R3 (mục 5.1) |
+| M3.1 | Scheduler policy/version, `ReviewCard` là source of truth | ✅ | cải tiến R3 (mục 5.1); Q244–Q250; scheduler thuần `sm2-v1` (`backend/src/modules/learning/srs/`, 62 vector), migration `relearning` + `ReviewEvent.source` (`74c7f40`, `1d82251`, run `43154596188`); nối vào `ReviewCard` qua service ở M3.2 |
 | M3.2 | Due queue, review session/event idempotency, concurrency | ⬜ | trigger ownership ✅; cải tiến R4 (mục 5.1) |
 | M3.3 | Flashcard + lịch ôn tập UI | ⬜ | 03/03,04; cải tiến R5 (mục 5.1) |
 | M3.4a | Schema + migration `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | ⬜ | mục 5; cải tiến R6 (mục 5.1) |
@@ -318,9 +318,9 @@ Vào: GĐ5 xong. Ra: thi trọn flow, snapshot không đổi khi content sửa, 
 | M4.2a | Start → snapshot bất biến | ✅ | `ExamAttemptSnapshot` ✅; MB-10; Q119–Q122, TL-110…TL-120; ✅ `eace097`, `c3e2aca`, run `40464805107` |
 | M4.2b | Autosave, resume, timer | ✅ | cải tiến R12 (mục 5.1); Q123–Q128, TL-121…TL-149; ✅ `027f8b7`, `1a0ae86`, run `40883383479` |
 | M4.2c | Submit idempotent, chống double result | ✅ | Phương án A của PO — **không** chấm điểm, **không** tạo `Result`; Q130–Q140, TL-150…TL-159; ✅ `9c55ed0`, `ca3712e`, `3ba86d7`, `ff99294`, `a77d53f`, `3de9cd8`, run `41378377067` |
-| M4.3 | Server scoring, skill breakdown, explanation policy | 🟡 | cải tiến R11, R13 (mục 5.1); chấm cả attempt `timed_out` (rủi ro chuyển từ M4.2c); TL-160: tạo `Result` cùng transaction sau khi update status; chống trùng bằng row lock, `ON CONFLICT DO NOTHING`/SAVEPOINT, hoặc bắt lỗi ngoài transaction rồi chạy lại — **không** bắt P2002 trong transaction; Q141–Q163; 02/11: Pha A backend ✅ (`5117186`, `0fc94a6`, `1d005fc`, `d8c9ff5`, `8bb07f3`, `c2e7ddd`, run `41405668025`) — chấm điểm, `Result` trong transaction submit, `GET …/result` và `GET …/review` (Q156–Q163, TL-160…TL-178); Pha B trang kết quả 🟡 |
-| M4.4 | Concurrency/capacity test theo workload duyệt | ⬜ | |
-| M4.5 | Learner exam/review/result UI | ⬜ | 04/01–04; cải tiến R14 (mục 5.1) |
+| M4.3 | Server scoring, skill breakdown, explanation policy | ✅ | cải tiến R11, R13 (mục 5.1); Q141–Q168; Pha A backend ✅ (`5117186`, `0fc94a6`, `1d005fc`, `d8c9ff5`, `8bb07f3`, `c2e7ddd`, run `41405668025`); Pha B trang kết quả ✅ (`ff60f15`, `ebac6c8`, `3b7638e`, `c271b14`, run `42152347776`) |
+| M4.4 | Concurrency/capacity test theo workload duyệt | 🟡 | Harness + runbook [operations/EXAM_CAPACITY_RUNBOOK.md](./operations/EXAM_CAPACITY_RUNBOOK.md) (`6f824eb`…`e2dd58b`); Q227–Q236; chỉ ✅ khi PO ký phạm vi P19 (Q236) |
+| M4.5 | Learner exam/review/result UI | ✅ | 04/01–04; cải tiến R14 (mục 5.1); Q209–Q225, Q237–Q243; B1–B4 (`e9c6dfc`…`5fe2b86`, run `42963050468`); R14 miễn "thời gian theo phần" (Q221), "đang chấm" hoãn tới chấm hoãn (Q241) |
 | M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp theo cấu trúc chính thức; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | chỉ tiêu 🔵 #12; nhập qua M4.1/M5.4; HSK4–HSK7_9 sau beta, HSK7–9 chờ #1; cải tiến R10 (mục 5.1) |
 
 ### GĐ8 — Admin ops, analytics, support, trust, M5 (4–6 tuần; M5.1–M5.2 song song GĐ5)
@@ -416,8 +416,8 @@ Vào: GĐ10, GĐ4 M1.8 và quyết định #8 (hosting). Ra: promote theo digest
 | H Hardening & CI (chèn từ review 04/09) | CI xanh trên PR, e2e chạy một lệnh, P0/P1 review đóng | 🟡 | 14 / 15 |
 | M1 Content/legal + Identity/Privacy | Dữ liệu và tài khoản đủ an toàn để mở beta | ⬜ | 0 / 8 |
 | M2 Learner Web Core Loop | Đăng nhập → mục tiêu → bài học → activity → progress | 🟡 backend xong, UI chưa | 5 / 14 |
-| M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | ⬜ | 0 / 8 |
-| M4 Exam Engine | Thi trọn flow, kết quả bất biến | ⬜ (schema ✅) | 0 / 6 |
+| M3 SRS + Dictionary completion | Ôn đúng hạn, lịch sử bất biến | 🟡 | 1 / 8 |
+| M4 Exam Engine | Thi trọn flow, kết quả bất biến | 🟡 | 4 / 6 |
 | M5 Admin Ops, Analytics, Support, Trust | Vận hành nội dung/người dùng an toàn | 🟡 read console | 7 / 13 |
 | M7 Đồ án: Mobile, AI, nhận diện | App đủ vòng học, chat AI có trích nguồn, phát âm, viết tay, OCR | ⬜ | 0 / 5 |
 | TN Đồ án: Deploy demo và bảo vệ | Web và app chạy trên bản deploy, bảo vệ 17/01/2027 | ⬜ | 0 / 5 |
@@ -602,7 +602,7 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 
 | # | Bước | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ⬜ | schema ✅; invariant: archive master plan §16.4; cải tiến R3 (mục 5.1) |
+| M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ✅ | invariant: archive master plan §16.4; cải tiến R3 (mục 5.1); Q244–Q250; `74c7f40`, `1d82251`, run `43154596188` |
 | M3.2 | Due queue, review session/event idempotency và concurrency | ⬜ | trigger ownership card→session ✅; cải tiến R4 (mục 5.1) |
 | M3.3 | Flashcard và lịch ôn tập UI | ⬜ | `03-dictionary-review-reader/03,04`; cải tiến R5 (mục 5.1) |
 | M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle, bộ thủ và âm Hán Việt | ⬜ | `WordSense/WordExample` chưa có schema (mục 5); M3.4d cần nguồn có giấy phép; cải tiến R6, R7 (mục 5.1) |
@@ -617,9 +617,9 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 | --- | --- | --- | --- |
 | M4.1 | Admin question/test authoring + publish workflow | ✅ | schema 14 model + trigger ✅; `06-admin-cms-operations/05`; cải tiến R10 (mục 5.1); tách M4.1a/M4.1b; M4.1a ✅; M4.1b ✅ |
 | M4.2 | Start → snapshot → autosave → resume → timer → submit idempotency | ✅ | `ExamAttemptSnapshot`/`Event` bất biến ✅; cải tiến R11, R12 (mục 5.1); tách M4.2a/b/c; M4.2a ✅; M4.2b ✅; M4.2c ✅ |
-| M4.3 | Server scoring, result/skill breakdown, explanation policy | 🟡 | cải tiến R11, R13 (mục 5.1); Q141–Q163; 02/11: Pha A backend ✅ (`5117186`, `0fc94a6`, `1d005fc`, `d8c9ff5`, `8bb07f3`, `c2e7ddd`, run `41405668025`) — chấm điểm, `Result` trong transaction submit, `GET …/result` và `GET …/review` (Q156–Q163, TL-160…TL-178); Pha B trang kết quả 🟡 |
-| M4.4 | Concurrency/capacity test theo workload được duyệt | ⬜ | |
-| M4.5 | Learner exam/review/result UI | ⬜ | `04-exam-pronunciation-profile/01–04`; cải tiến R14 (mục 5.1) |
+| M4.3 | Server scoring, result/skill breakdown, explanation policy | ✅ | cải tiến R11, R13 (mục 5.1); Q141–Q168; Pha A backend (run `41405668025`), Pha B trang kết quả (`ff60f15`…`c271b14`, run `42152347776`) |
+| M4.4 | Concurrency/capacity test theo workload được duyệt | 🟡 | harness + runbook; chờ PO ký P19 (Q236) |
+| M4.5 | Learner exam/review/result UI | ✅ | `04-exam-pronunciation-profile/01–04`; cải tiến R14 (mục 5.1); Q209–Q225, Q237–Q243; run `42963050468` |
 | M4.6 | Ngân hàng đề HSK1–HSK3: ≥ 300 câu/cấp có tag kỹ năng và giải thích, ≥ 2 đề đầy đủ/cấp; placement M2.3a lấy ≥ 60 câu từ đây | ⬜ | Chỉ tiêu 🔵 #12; nhập qua M4.1 và M5.4; HSK7–9 chờ quyết định #1; cải tiến R10 (mục 5.1) |
 
 Đặc tả chi tiết: archive master plan §17. Exit: snapshot không đổi khi content sửa ⬜ ·
@@ -797,7 +797,7 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 | 11 | Đóng băng harness release-evidence theo ADR-008 §8 và review A-04 | Tech Lead | 🔵 |
 | 12 | Chỉ tiêu nội dung trước beta: số từ có nghĩa tiếng Việt (M1.2b), số bài học và bài tập mỗi cấp (M2.9), số câu hỏi và đề mỗi cấp (M4.6); nguồn và license cho audio từ vựng | Product Owner + Content | 🔵 đề xuất 14/09 trong mục 1.2 |
 | 13 | Placement có được tự đổi `targetLevel` không hay luôn cần người học xác nhận; có dùng nhãn "kết quả tạm" (R1, R2) | Product Owner | 🔵 đề xuất: luôn xác nhận |
-| 14 | SRS: chính sách grade bước đầu (R3); thêm cột FSRS ngay migration M3.1 hay chỉ SM-2, có chấp nhận dependency `ts-fsrs`; exercise attempt có sinh thẻ/ReviewEvent không (Q62), tra từ có tính lần ôn (đề xuất: không); nút hoàn tác lần chấm (mockup không có) | Product Owner + Tech Lead | 🔵 chặn phần tương ứng của M3.1–M3.3 |
+| 14 | SRS: chính sách grade bước đầu (R3); thêm cột FSRS ngay migration M3.1 hay chỉ SM-2, có chấp nhận dependency `ts-fsrs`; exercise attempt có sinh thẻ/ReviewEvent không (Q62), tra từ có tính lần ôn (đề xuất: không); nút hoàn tác lần chấm (mockup không có) | Product Owner + Tech Lead | ✅ PO 12/11/2026: Q244–Q248 (mục 8) |
 | 15 | Bộ Tag dạng câu HSK 3.0 do ai chốt, dựa trên đề mẫu chính thức nào (R10); có báo trong app khi câu viết/nói chấm xong không (Q15 đang chỉ toast) | Curriculum + Product Owner | 🔵 cần trước M4.6 |
 | 16 | Học và tài khoản: ngày học bắt đầu 02:00–04:00 thay 00:00 (đổi Q13); nút "Không thể nghe/nói lúc này" và topic có tính hoàn thành (Q18, Q58); câu sai xếp lại cuối bài (Q50); `daysOfWeek` cho nhắc học; mật khẩu tối thiểu 8; màn quản lý thiết bị | Product Owner | 🔵 |
 
@@ -811,6 +811,8 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 6. M2.9a: Pha 1/1b ✅ 02/11; tiếp Pha 2 (script nạp + migration + test) rồi Pha 3 (PO nạp và duyệt trên DB dev); M2.5f để người học thấy nội dung topic.
 7. M7.4a: chốt quyết định #6 (nhà cung cấp AI) và duyệt ADR-008 §6 trước tuần 12 của đồ án.
 8. M2.UXa–M2.UXd ✅ 02/11 (PO duyệt mẫu HTML); còn đưa các màn mới lên Figma theo [product/design-coverage.md](./product/design-coverage.md).
+10. GĐ7 sau M4.5: PO ký phạm vi P19 để đóng M4.4; M4.6 chờ quyết định #12 và #15.
+11. Backlog kỹ thuật (Q242): CI chưa chạy Playwright, lỗi giao diện chỉ bắt qua lượt chạy tay; `docs/api/api.md` A.12 mới ghi 7 BFF route của exam, các BFF route learner khác chưa có trong contract.
 9. Ngoài PLAN: thu hồi phiên tài khoản Hanzii đã dùng để capture; `reverse/` (local, gitignored) chứa token phiên và thông tin cá nhân thật, không đưa capture hay ảnh chụp vào docs, PR hay prompt gửi ra ngoài.
 
 ## 8. Nhật ký cập nhật
@@ -941,3 +943,5 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 | 02/11/2026 | Quyết định PO 02/11/2026 (chấp nhận đề xuất TL). M4.3 Pha B: Q164–Q168 xác nhận mặc định TL đã giao dev (nút "Xem kết quả" sau nộp, badge/điểm đạt null, weak areas rỗng, xử lý lỗi trang kết quả, thời gian làm bài), chép vào `docs/product/learner-ui-decisions.md`. M2.1f: Q195 kênh xuất/xoá dữ liệu tạm qua email liên hệ tới khi trang Hồ sơ có nút (thêm nút ở task UI sau); Q196 hiển thị ghi công CC-CEDICT đủ (dòng giấy phép CC BY-SA 4.0 + link ở chi tiết từ và trang Giới thiệu; đưa `license`/`attribution` có sẵn trong API vào contract frontend, không đổi schema) là điều kiện publish, làm trong M1.1; Q197 hash SHA-256 từng phiên bản văn bản lưu ở bảng phiên bản văn bản pháp lý (loại, version, sha256, ngày hiệu lực) làm trong M1.7b2; bản ghi consent lưu hash + kênh theo Q192; Q198 bản 1.0 chỉ ghi "có thể huỷ kết quả khi phát hiện gian lận", không mô tả quy trình (chưa có code đặt `invalidated`); Q199 phát hiện người dưới 16 tuổi thì khoá tài khoản và chuyển luồng xoá M1.7c; người giám hộ báo qua kênh liên hệ; Q200 chỉ số sản phẩm dạng tổng hợp từ dữ liệu first-party xử lý theo lợi ích hợp pháp, consent "phân tích sản phẩm" chỉ áp cho event tracking M2.8; Q201 bản 1.0 không purge dữ liệu học sau ẩn danh (ADR-001), policy ghi rõ; Q202 "Dịch vụ" bản 1.0 là web; iOS/Android bổ sung ở phiên bản sau. Còn mở: tên người duyệt nghĩa tiếng Việt (Q182, M1.2a), thông tin vận hành cho M2.1f và phần Legal (xem dòng M2.1f). Q184: agent lập bảng so sánh ToS ba provider TTS, PO chọn sau. Quy trình: giữ 3 session song song, không mở session thứ 4 hay clone thứ hai. Không đổi số task. |
 | 02/11/2026 | Quyết định PO 02/11/2026: Q203 duyệt. Khi phát hiện tài khoản người dưới 16 tuổi, admin khởi tạo luồng xoá có sẵn (7 ngày chờ rồi ẩn danh), có lý do `under_age` và audit log; người dùng không cần nhập mật khẩu. Thêm task M1.7d (GĐ4), là điều kiện publish M2.1f. Nháp `docs/legal/` qua TL review (M2.1f FIX 1 PASS). Đếm lại theo quy tắc 0.6: GĐ4 11/18, tổng 115/194. |
 | 02/11/2026 | GĐ1: H.2d ✅ (PO duyệt cách 2: TL bật bằng API). Branch protection `main`: required checks `backend`, `backend-e2e`, `frontend` (GitHub Actions, app `15368`), strict up-to-date, áp cả admin, bắt buộc PR 0 approval, cấm force-push và xoá nhánh; `images` không bắt buộc. Đọc lại bằng `gh api …/branches/main/protection` và `…/branches/main`: `protected: true`, `enforcement_level: everyone`. PR #6 `mergeStateStatus: CLEAN`. GĐ1 10/10 ✅; tổng 116/194. |
+| 11/11/2026 | GĐ7: M4.3 ✅ (Pha B trang kết quả `ff60f15`, `ebac6c8`, `3b7638e`, `c271b14`, run `42152347776`). M4.5 ✅ đã đóng (B1–B4, `e9c6dfc`…`5fe2b86`, run `42963050468`): danh sách đề `/learn/exam` và `GET /exam/tests` (Q209–Q214), xem lại sau nộp có media (Q215, Q217, Q218), xem lại trước nộp (Q216, Q225), mobile xem trước câu sai đầu tiên (Q219), lịch sử thi `/learn/exam/history` và `GET /exam/attempts` 20 dòng/trang (Q213, Q224), thẻ "Kết quả theo dạng câu" (Q220, Q237, Q238), bộ lọc xem lại Tất cả/Đúng/Sai/Đánh dấu có ✓/✕ (Q240), web xem lại từng câu `?q=` kèm Câu trước/Câu sau (Q239), link "Lịch sử thi" mobile (Q243). R14: miễn "thời gian theo phần" vì một đồng hồ chung (Q221), "đang chấm" hoãn tới chấm hoãn (Q241, gắn Q144); không có link Sổ lỗi tới M3.6 (Q222). M4.4 🟡: harness + runbook, Q227–Q236 (Q234 giữ `connection_limit` mặc định), chờ PO ký P19. Backlog Q242 Playwright trong CI (mục 7). Q237–Q243 là số đánh lại sau khi trùng Q227–Q233 của M4.4. Đếm: GĐ7 7/9, tổng 118/194. |
+| 12/11/2026 | GĐ6: M3.1 ✅ (`74c7f40` migration `relearning` + `ReviewEvent.source`, `1d82251` scheduler thuần `sm2-v1`, run `43154596188`). Quyết định PO (chấp nhận mặc định TL), đóng #14: Q244 chỉ SM-2, không thêm cột FSRS, không dùng `ts-fsrs`; Q245 grade bước đầu theo R3 (again lặp step đầu, hard khác good, good sang step kế, easy tốt nghiệp; floor `easeFactor` 1.3; ôn trễ tính theo thời gian thực); Q246 bài tập không tạo thẻ hay `ReviewEvent`; Q247 tra từ không tính lần ôn; Q248 không có nút hoàn tác lần chấm; Q249 thẻ `review` có `lastReviewedAt` tính khoảng ôn theo số ngày thực đã trôi cả khi ôn sớm: hard = max(1, round(elapsed × 1,2)), good không nhỏ hơn interval hiện tại, easy > good; Q250 thông số `sm2-v1`: `maxEaseFactor` 5, `maxIntervalDays` 3650, thẻ relearning chấm good về 1 ngày, elapsed tính bằng ngày nguyên (làm tròn xuống). Thẻ `repetitions ≤ 1` vẫn giữ luật cũ khi ôn sớm. DB default `schedulerVersion` vẫn `sm2-p0-v1`, đổi ở M3.2. Đếm: GĐ6 1/12, tổng 119/194. |
