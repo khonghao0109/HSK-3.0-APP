@@ -31,9 +31,10 @@
 | EXAM-R | `20261102103000_exam_result_score_summary`               | `Result.maxScore`/`passed` nullable + CHECK `score <= maxScore` khi có `maxScore` (mục 25).                |
 | PILOT  | `20261102150000_pilot_content_data_source`               | Data-only: nguồn `HSK30_PILOT_ORIGINAL_V1` cho nội dung pilot HSK1, `ON CONFLICT ("code") DO NOTHING` (mục 26). |
 | DEL-ADM | `20261102160000_admin_initiated_account_deletion`       | `AccountDeletionInitiator` enum, `initiatedBy`/`actorId`, partial unique index một `requested`/user (mục 27). |
+| SRS-R3  | `20261111120000_srs_relearning_and_event_source`         | Enum `ReviewCardState` thêm `relearning`, enum `ReviewEventSource` (`flashcard`), cột `ReviewEvent.source` (mục 28). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 28 migration (đến `20261102160000_admin_initiated_account_deletion`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 29 migration (đến `20261111120000_srs_relearning_and_event_source`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -1104,3 +1105,23 @@ và `npm run migrate:deploy:production`.
 - Bằng chứng: `npx prisma migrate deploy` trên database disposable mới áp 28/28 migration;
   preflight rỗng; `npm run test:db:account-deletion-concurrency` (4 kịch bản × 20 vòng trên
   `hsk_b1_hardening`, 0 deadlock) và phá thử bỏ predicate `initiatedBy` ở login ra đỏ.
+
+## 28. SRS scheduler SM-2 — state relearning và nguồn review event (M3.1 / R3)
+
+### 28.1. Migration 29 — `20261111120000_srs_relearning_and_event_source`
+
+Nghiệp vụ (M3.1, R3, Q244–Q248): Thêm trạng thái `relearning` vào enum `ReviewCardState` khi thẻ `review` bị đánh giá `again` (SM-2 lapse). Thêm enum `ReviewEventSource` với giá trị ban đầu `flashcard` và cột `ReviewEvent.source` (mặc định `flashcard` cho mọi hàng cũ để giữ nguồn gốc lịch sử bất biến).
+
+```sql
+ALTER TYPE "ReviewCardState" ADD VALUE 'relearning';
+
+CREATE TYPE "ReviewEventSource" AS ENUM ('flashcard');
+
+ALTER TABLE "ReviewEvent"
+  ADD COLUMN "source" "ReviewEventSource" NOT NULL DEFAULT 'flashcard';
+```
+
+- Additive DDL: thêm enum value `relearning` vào `ReviewCardState` (PostgreSQL 12+ hỗ trợ trong transaction Prisma khi chưa dùng ngay giá trị mới), tạo enum `ReviewEventSource` ('flashcard') và thêm cột `source` vào `ReviewEvent`.
+- Impact API: không thay đổi contract API hiện hữu (chưa thêm endpoint ở pha M3.1 Pha A). `data-export.job.ts` và các reader cũ tiếp tục hoạt động bình thường nhờ default.
+- Rollback/forward-fix: forward-fix theo quy ước runbook. Không drop enum value trong PostgreSQL.
+- Bằng chứng: `npx prisma migrate deploy` trên database disposable áp 29/29 migration; suite `src/modules/learning/srs/schedule.spec.ts` 52/52 test passed; `npm run test:db:p0` PASS trên fresh disposable DB.
