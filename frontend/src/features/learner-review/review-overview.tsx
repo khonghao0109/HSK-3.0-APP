@@ -299,7 +299,7 @@ function OverviewBody({ data }: { data: ReviewOverview }) {
                 {data.recentSessions.map((session) => (
                   <tr key={session.sessionId}>
                     <td className="tabular">
-                      {sessionDate(session.completedAt)}
+                      {sessionDate(session.completedAt, data.timezone)}
                     </td>
                     <td className="tabular">{`${String(session.reviewedCount)} thẻ`}</td>
                     <td className="tabular">

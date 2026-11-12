@@ -32,6 +32,7 @@
 | PILOT  | `20261102150000_pilot_content_data_source`               | Data-only: nguồn `HSK30_PILOT_ORIGINAL_V1` cho nội dung pilot HSK1, `ON CONFLICT ("code") DO NOTHING` (mục 26). |
 | DEL-ADM | `20261102160000_admin_initiated_account_deletion`       | `AccountDeletionInitiator` enum, `initiatedBy`/`actorId`, partial unique index một `requested`/user (mục 27). |
 | SRS-R3  | `20261111120000_srs_relearning_and_event_source`         | Enum `ReviewCardState` thêm `relearning`, enum `ReviewEventSource` (`flashcard`), cột `ReviewEvent.source` (mục 28). |
+| REV-P   | `20261112170000_review_preference`                       | Bảng `ReviewPreference` (một dòng mỗi user): `dailyCardLimit` 10/20/30, `levelCodes` (mục 30). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
 Toàn project hiện có 29 migration (đến `20261111120000_srs_relearning_and_event_source`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
@@ -1152,3 +1153,38 @@ ON CONFLICT ("userId", "wordId") DO NOTHING;
   A.7b). Contract response của lưu từ không đổi.
 - Rollback: forward-fix. Thẻ backfill không có `ReviewEvent`, nên một migration sau có thể xoá
   đúng các thẻ `new` chưa từng ôn nếu cần; không xoá thẻ đã có event.
+
+## 30. Cài đặt ôn tập — `ReviewPreference` (M3.3 Pha C / Q279–Q282)
+
+### 30.1. Migration 31 — `20261112170000_review_preference`
+
+Nghiệp vụ (M3.3c): lưu cài đặt ôn tập của học viên (panel "Cài đặt ôn tập" ở
+`web/flashcards.html`): số thẻ mỗi ngày (10/20/30) và bộ lọc cấp. Chưa có dòng nghĩa là mặc
+định (`20`, mọi cấp); `GET` không tạo dòng.
+
+```sql
+CREATE TABLE "ReviewPreference" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "dailyCardLimit" INTEGER NOT NULL DEFAULT 20,
+    "levelCodes" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "ReviewPreference_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "ReviewPreference_userId_key" ON "ReviewPreference"("userId");
+ALTER TABLE "ReviewPreference" ADD CONSTRAINT "ReviewPreference_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ReviewPreference" ADD CONSTRAINT "ReviewPreference_dailyCardLimit_check" CHECK ("dailyCardLimit" IN (10, 20, 30));
+```
+
+- Additive DDL: bảng mới, rỗng lúc deploy; không backfill, không khoá bảng sẵn có.
+- FK `ON DELETE CASCADE` như `UserProfile`/`UserGoal`: cài đặt không phải sự kiện bất biến.
+  Xoá tài khoản (ADR-001) là anonymization, không xoá `User`, nên dòng vẫn còn và được đưa vào
+  data export (`reviewPreference`).
+- `levelCodes` lưu code của Level, không FK; API chỉ nhận Level `published`, chưa soft-delete.
+  Level bị gỡ publish sau đó thì bộ lọc không khớp thẻ nào của cấp đó (không lỗi).
+- Impact API: thêm `GET`/`PUT /review/preferences`; `GET /review/queue` thêm
+  `dailyLimitReached`; `POST /review/sessions` thêm `retrySessionId` và
+  `409 REVIEW_DAILY_LIMIT_REACHED`; `GET /review/overview` thêm `timezone` (api.md A.7b).
+- Rollback: forward-fix. Nếu cần gỡ, một migration sau `DROP TABLE "ReviewPreference"`; không
+  ảnh hưởng bảng khác vì không bảng nào tham chiếu nó.

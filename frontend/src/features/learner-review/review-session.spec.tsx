@@ -72,6 +72,8 @@ function fake(): Fake {
     grade: vi.fn(),
     complete: vi.fn(),
     overview: vi.fn(),
+    preferences: vi.fn(),
+    savePreferences: vi.fn(),
   };
 }
 
@@ -100,6 +102,23 @@ function gradeOk(t: Fake, planned = 3) {
 }
 
 beforeEach(() => {
+  // jsdom has no modal dialog; the settings panel only needs it to open.
+  if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.open = true;
+      },
+    });
+  }
+  if (typeof HTMLDialogElement.prototype.close !== 'function') {
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.open = false;
+      },
+    });
+  }
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   let n = 0;
@@ -403,7 +422,95 @@ describe('ReviewSession (M3.3a)', () => {
       'href',
       '/learn/review',
     );
-    expect(screen.queryByText('Ôn lại thẻ chưa nhớ')).not.toBeInTheDocument();
+    // Q278: summary.again = 1, so the retry of the forgotten cards is offered.
+    expect(
+      screen.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides Ôn lại thẻ chưa nhớ when no card was graded again (Q278)', async () => {
+    const t = fake();
+    t.current.mockResolvedValue(ok({ session: session(0, 1), items: [] }));
+    t.complete.mockResolvedValue(
+      ok({
+        session: session(1, 1),
+        summary: { ...summary, again: 0, forgot: 0, remembered: 1 },
+      }),
+    );
+    renderSession(t);
+    expect(
+      await screen.findByRole('heading', { name: 'Ôn tập hôm nay' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('starts a retry of the finished session on the server, with a new key (Q278)', async () => {
+    const t = fake();
+    t.current
+      .mockResolvedValueOnce(ok({ session: session(0, 1), items: [] }))
+      .mockResolvedValueOnce(
+        ok({
+          session: { ...session(0, 1), sessionId: 42 },
+          items: [item(2, '工作')],
+        }),
+      );
+    t.complete.mockResolvedValue(ok({ session: session(1, 1), summary }));
+    t.create.mockResolvedValue(
+      ok({ created: true, session: { ...session(0, 1), sessionId: 42 } }),
+    );
+    renderSession(t);
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+    );
+    expect(
+      await screen.findByRole('button', { name: /Lật thẻ/ }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('工作').length).toBeGreaterThan(0);
+    expect(t.current).toHaveBeenCalledTimes(2);
+    expect(t.create).toHaveBeenCalledTimes(1);
+    expect(t.create).toHaveBeenCalledWith(
+      '00000000-0000-4000-8000-000000000001',
+      { retrySessionId: 41 },
+    );
+  });
+
+  it('says the daily limit is reached and offers the settings (Q282)', async () => {
+    const t = fake();
+    t.current.mockResolvedValue(fail(404));
+    t.create.mockResolvedValue(fail(409, 'REVIEW_DAILY_LIMIT_REACHED'));
+    renderSession(t);
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Bạn đã ôn đủ số thẻ hôm nay',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Về Ôn tập' })).toHaveAttribute(
+      'href',
+      '/learn/review',
+    );
+  });
+
+  it('opens the settings panel from the header (Q279)', async () => {
+    const t = fake();
+    t.current.mockResolvedValue(
+      ok({ session: session(), items: [item(1, '学习')] }),
+    );
+    t.preferences.mockResolvedValue(
+      ok({
+        dailyCardLimit: 20,
+        levelCodes: [],
+        levels: [{ code: 'HSK3', name: 'HSK 3' }],
+      }),
+    );
+    renderSession(t);
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Cài đặt ôn tập' }),
+    );
+    expect(
+      await screen.findByRole('dialog', { name: 'Cài đặt ôn tập' }),
+    ).toBeInTheDocument();
   });
 
   it('shows — when retention is null', async () => {

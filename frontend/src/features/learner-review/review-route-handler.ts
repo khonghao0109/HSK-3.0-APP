@@ -20,6 +20,8 @@ import {
   reviewGradeEnvelopeSchema,
   reviewGradeInputSchema,
   reviewOverviewEnvelopeSchema,
+  reviewPreferencesEnvelopeSchema,
+  reviewPreferencesInputSchema,
   reviewQueueEnvelopeSchema,
 } from './review-contract';
 
@@ -31,7 +33,7 @@ export type ReviewHandlerDependencies = {
     path: string,
     options: {
       token: string;
-      method?: 'POST';
+      method?: 'POST' | 'PUT';
       body?: unknown;
       idempotencyKey?: string;
     },
@@ -42,6 +44,7 @@ export type ReviewHandlerDependencies = {
 const REVIEW_CONFLICT_CODES = new Set([
   'CONFLICT',
   'REVIEW_NOTHING_DUE',
+  'REVIEW_DAILY_LIMIT_REACHED',
   'REVIEW_SESSION_NOT_ACTIVE',
   'REVIEW_SESSION_EXPIRED',
   'REVIEW_CARD_NOT_IN_SESSION',
@@ -197,7 +200,12 @@ export async function handleReviewCreateSession(
     {
       token,
       method: 'POST',
-      body: input.data.limit === undefined ? {} : { limit: input.data.limit },
+      body: {
+        ...(input.data.limit === undefined ? {} : { limit: input.data.limit }),
+        ...(input.data.retrySessionId === undefined
+          ? {}
+          : { retrySessionId: input.data.retrySessionId }),
+      },
       idempotencyKey: key,
     },
     reviewCreateEnvelopeSchema,
@@ -254,5 +262,45 @@ export async function handleReviewComplete(
     `/api/v1/review/sessions/${String(sessionId)}/complete`,
     { token, method: 'POST' },
     reviewCompleteEnvelopeSchema,
+  );
+}
+
+/** `GET /api/learner/review/preferences` (M3.3c, Q280). */
+export async function handleReviewPreferences(
+  request: NextRequest,
+  deps: ReviewHandlerDependencies,
+): Promise<NextResponse> {
+  const token = tokenOf(request, deps);
+  if (!token) return safeResponse(401);
+  return forward(
+    deps,
+    '/api/v1/review/preferences',
+    { token },
+    reviewPreferencesEnvelopeSchema,
+  );
+}
+
+/** `PUT /api/learner/review/preferences`; the body is rebuilt from the strict parse. */
+export async function handleReviewSavePreferences(
+  request: NextRequest,
+  deps: ReviewHandlerDependencies,
+): Promise<NextResponse> {
+  if (!isSameOrigin(request, deps.appOrigin)) return safeResponse(403);
+  const input = reviewPreferencesInputSchema.safeParse(await readBody(request));
+  if (!input.success) return safeResponse(400);
+  const token = tokenOf(request, deps);
+  if (!token) return safeResponse(401);
+  return forward(
+    deps,
+    '/api/v1/review/preferences',
+    {
+      token,
+      method: 'PUT',
+      body: {
+        dailyCardLimit: input.data.dailyCardLimit,
+        levelCodes: input.data.levelCodes,
+      },
+    },
+    reviewPreferencesEnvelopeSchema,
   );
 }

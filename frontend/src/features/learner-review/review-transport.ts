@@ -30,18 +30,18 @@ export function createReviewTransport(
 ) {
   async function call<T>(
     url: string,
-    init: { method?: 'POST'; key?: string; body?: unknown } = {},
+    init: { method?: 'POST' | 'PUT'; key?: string; body?: unknown } = {},
   ): Promise<ReviewCall<T>> {
     const headers: Record<string, string> = { accept: 'application/json' };
     if (init.key) headers['idempotency-key'] = init.key;
-    if (init.method === 'POST') headers['content-type'] = 'application/json';
+    const writes = init.method !== undefined;
+    if (writes) headers['content-type'] = 'application/json';
     let response: Response;
     try {
       response = await fetcher(url, {
         method: init.method ?? 'GET',
         headers,
-        body:
-          init.method === 'POST' ? JSON.stringify(init.body ?? {}) : undefined,
+        body: writes ? JSON.stringify(init.body ?? {}) : undefined,
         cache: 'no-store',
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
@@ -69,8 +69,13 @@ export function createReviewTransport(
     current<T>() {
       return call<T>('/api/learner/review/sessions/current');
     },
-    create<T>(key: string) {
-      return call<T>('/api/learner/review/sessions', { method: 'POST', key });
+    /** `body.retrySessionId` (Q278) asks for the `again` cards of that session. */
+    create<T>(key: string, body: { retrySessionId?: number } = {}) {
+      return call<T>('/api/learner/review/sessions', {
+        method: 'POST',
+        key,
+        body,
+      });
     },
     async grade<T>(
       sessionId: number,
@@ -104,6 +109,16 @@ export function createReviewTransport(
     /** M3.3b (Q268): read once by /learn/review. */
     overview<T>() {
       return call<T>('/api/learner/review/overview');
+    },
+    /** M3.3c (Q279): the settings panel. */
+    preferences<T>() {
+      return call<T>('/api/learner/review/preferences');
+    },
+    savePreferences<T>(body: { dailyCardLimit: number; levelCodes: string[] }) {
+      return call<T>('/api/learner/review/preferences', {
+        method: 'PUT',
+        body,
+      });
     },
   };
 }

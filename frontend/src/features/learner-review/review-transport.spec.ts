@@ -133,4 +133,33 @@ describe('review transport (M3.3a)', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+
+  it('creates a retry session with retrySessionId in the body (M3.3c, Q278)', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(json(200, { success: true, data: { created: true } }));
+    await transport(fetcher).create('key-00000002', { retrySessionId: 40 });
+    const [, init] = fetcher.mock.calls[0] ?? [];
+    expect(init?.body).toBe('{"retrySessionId":40}');
+  });
+
+  it('reads and saves the preferences, saving with PUT (Q279)', async () => {
+    const data = { dailyCardLimit: 10, levelCodes: [], levels: [] };
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(json(200, { success: true, data }));
+    const t = transport(fetcher);
+    expect(await t.preferences()).toEqual({ ok: true, data });
+    expect(fetcher.mock.calls[0]?.[0]).toBe('/api/learner/review/preferences');
+    expect(fetcher.mock.calls[0]?.[1]?.method).toBe('GET');
+    await t.savePreferences({ dailyCardLimit: 30, levelCodes: ['HSK3'] });
+    const [url, init] = fetcher.mock.calls[1] ?? [];
+    expect(url).toBe('/api/learner/review/preferences');
+    expect(init?.method).toBe('PUT');
+    expect(new Headers(init?.headers).get('content-type')).toBe(
+      'application/json',
+    );
+    expect(new Headers(init?.headers).get('idempotency-key')).toBeNull();
+    expect(init?.body).toBe('{"dailyCardLimit":30,"levelCodes":["HSK3"]}');
+  });
 });

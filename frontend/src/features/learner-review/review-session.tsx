@@ -20,6 +20,7 @@ import {
   type ReviewSession as Session,
   type ReviewSummary,
 } from './review-model';
+import { ReviewSettings } from './review-settings';
 import {
   createReviewTransport,
   type ReviewTransport,
@@ -28,10 +29,11 @@ import {
 type Phase =
   | { kind: 'loading' }
   | { kind: 'empty' }
+  | { kind: 'limit' }
   | { kind: 'error'; retry: 'load' | 'finish' }
   | { kind: 'expired' }
   | { kind: 'cards' }
-  | { kind: 'done'; summary: ReviewSummary };
+  | { kind: 'done'; summary: ReviewSummary & { again: number } };
 
 type ShownCard = { hanzi: string; pinyin: string; meaning: string };
 
@@ -160,6 +162,7 @@ export function ReviewSession({
   const [pending, setPending] = useState(false);
   const [gradeError, setGradeError] = useState<ReviewGrade | null>(null);
   const [forgotten, setForgotten] = useState<ShownCard[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // When the current card appeared; set in handlers, never during render.
   const [shownAt, setShownAt] = useState(0);
   // Q262: one key per card; a different grade after a failure gets a new
@@ -176,9 +179,9 @@ export function ReviewSession({
   const finish = useCallback(
     async (sessionId: number) => {
       setPending(true);
-      const result = await transport.complete<{ summary: ReviewSummary }>(
-        sessionId,
-      );
+      const result = await transport.complete<{
+        summary: ReviewSummary & { again: number };
+      }>(sessionId);
       setPending(false);
       if (result.ok) {
         setPhase({ kind: 'done', summary: result.data.summary });
@@ -192,40 +195,53 @@ export function ReviewSession({
     [transport, signIn],
   );
 
-  const load = useCallback(async () => {
-    setPhase({ kind: 'loading' });
-    let current = await transport.current<{
-      session: Session;
-      items: ReviewItem[];
-    }>();
-    if (!current.ok && current.status === 404) {
-      createKey.current ??= crypto.randomUUID();
-      const created = await transport.create(createKey.current);
-      if (!created.ok) {
-        if (created.code === 'REVIEW_NOTHING_DUE') {
-          return setPhase({ kind: 'empty' });
+  /** `retrySessionId` (Q278): create the retry of that session first. */
+  const load = useCallback(
+    async (retrySessionId?: number) => {
+      setPhase({ kind: 'loading' });
+      let current =
+        retrySessionId === undefined
+          ? await transport.current<{ session: Session; items: ReviewItem[] }>()
+          : ({ ok: false, status: 404, code: null } as const);
+      if (!current.ok && current.status === 404) {
+        createKey.current ??= crypto.randomUUID();
+        const created =
+          retrySessionId === undefined
+            ? await transport.create(createKey.current)
+            : await transport.create(createKey.current, { retrySessionId });
+        if (!created.ok) {
+          if (created.code === 'REVIEW_NOTHING_DUE') {
+            return setPhase({ kind: 'empty' });
+          }
+          if (created.code === 'REVIEW_DAILY_LIMIT_REACHED') {
+            return setPhase({ kind: 'limit' });
+          }
+          if (created.status === 401 || created.status === 403) return signIn();
+          return setPhase({ kind: 'error', retry: 'load' });
         }
-        if (created.status === 401 || created.status === 403) return signIn();
+        current = await transport.current<{
+          session: Session;
+          items: ReviewItem[];
+        }>();
+      }
+      if (!current.ok) {
+        if (current.status === 401 || current.status === 403) return signIn();
         return setPhase({ kind: 'error', retry: 'load' });
       }
-      current = await transport.current();
-    }
-    if (!current.ok) {
-      if (current.status === 401 || current.status === 403) return signIn();
-      return setPhase({ kind: 'error', retry: 'load' });
-    }
-    setSession(current.data.session);
-    setItems(current.data.items);
-    setIndex(0);
-    setFlipped(false);
-    setGradeError(null);
-    setShownAt(Date.now());
-    if (current.data.items.length === 0) {
-      await finish(current.data.session.sessionId);
-      return;
-    }
-    setPhase({ kind: 'cards' });
-  }, [transport, signIn, finish]);
+      setSession(current.data.session);
+      setItems(current.data.items);
+      setIndex(0);
+      setFlipped(false);
+      setGradeError(null);
+      setShownAt(Date.now());
+      if (current.data.items.length === 0) {
+        await finish(current.data.session.sessionId);
+        return;
+      }
+      setPhase({ kind: 'cards' });
+    },
+    [transport, signIn, finish],
+  );
 
   useEffect(() => {
     if (started.current) return;
@@ -310,11 +326,11 @@ export function ReviewSession({
     return () => window.removeEventListener('keydown', onKey);
   }, [phase.kind, grade]);
 
-  function startOver() {
+  function startOver(retrySessionId?: number) {
     createKey.current = crypto.randomUUID();
     keys.current.clear();
     setForgotten([]);
-    void load();
+    void load(retrySessionId);
   }
 
   function endEarly() {
@@ -330,7 +346,18 @@ export function ReviewSession({
   }
 
   if (phase.kind === 'done') {
-    return <ReviewComplete summary={phase.summary} forgotten={forgotten} />;
+    const sessionId = session?.sessionId;
+    return (
+      <ReviewComplete
+        summary={phase.summary}
+        forgotten={forgotten}
+        onRetry={
+          phase.summary.again > 0 && sessionId !== undefined
+            ? () => startOver(sessionId)
+            : null
+        }
+      />
+    );
   }
 
   const planned = session?.plannedCount ?? 0;
@@ -361,15 +388,33 @@ export function ReviewSession({
             </div>
           )}
         </div>
-        {counter && (
-          <p className="rv-count w-only">
-            <span className="tabular" aria-hidden="true">
-              {counter}
-            </span>
-            <span className="sr-only">{`Thẻ ${String(shown)} trên ${String(planned)}`}</span>
-          </p>
-        )}
+        <div className="rv-barend">
+          {counter && (
+            <p className="rv-count w-only">
+              <span className="tabular" aria-hidden="true">
+                {counter}
+              </span>
+              <span className="sr-only">{`Thẻ ${String(shown)} trên ${String(planned)}`}</span>
+            </p>
+          )}
+          <button
+            className="icon-btn"
+            type="button"
+            aria-label="Cài đặt ôn tập"
+            aria-haspopup="dialog"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Icon name="settings" />
+          </button>
+        </div>
       </header>
+      {settingsOpen && (
+        <ReviewSettings
+          open
+          transport={transport}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
 
       <main className="rv-body" aria-busy={phase.kind === 'loading' || pending}>
         {phase.kind === 'loading' && (
@@ -393,6 +438,30 @@ export function ReviewSession({
               <Link className="btn btn--primary" href="/learn/dictionary">
                 Tra từ
               </Link>
+            </div>
+          </section>
+        )}
+
+        {phase.kind === 'limit' && (
+          <section className="rv-state" aria-labelledby="rv-limit">
+            <h2 id="rv-limit" className="rv-state__title">
+              Bạn đã ôn đủ số thẻ hôm nay
+            </h2>
+            <p className="rv-state__text">
+              Thẻ còn lại sẽ chờ đến ngày mai. Đổi số thẻ mỗi ngày trong Cài đặt
+              ôn tập.
+            </p>
+            <div className="rv-state__actions">
+              <Link className="btn btn--outline" href="/learn/review">
+                Về Ôn tập
+              </Link>
+              <button
+                className="btn btn--primary"
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+              >
+                Cài đặt ôn tập
+              </button>
             </div>
           </section>
         )}
@@ -423,7 +492,7 @@ export function ReviewSession({
               <button
                 className="btn btn--primary"
                 type="button"
-                onClick={startOver}
+                onClick={() => startOver()}
               >
                 Bắt đầu phiên mới
               </button>
@@ -561,9 +630,12 @@ export function ReviewSession({
 function ReviewComplete({
   summary,
   forgotten,
+  onRetry,
 }: {
   summary: ReviewSummary;
   forgotten: ShownCard[];
+  /** Q278: null when no card of the session was graded `again`. */
+  onRetry: (() => void) | null;
 }) {
   const retention = retentionText(summary.retentionPercent);
   const total = summary.remembered + summary.forgot;
@@ -665,10 +737,33 @@ function ReviewComplete({
             </section>
           )}
 
-          <div className="done-actions rv-actions">
-            <Link className="done-btn done-btn--primary" href="/learn/review">
+          <div
+            className={
+              onRetry
+                ? 'done-actions rv-actions rv-actions--two'
+                : 'done-actions rv-actions'
+            }
+          >
+            <Link
+              className={
+                onRetry
+                  ? 'done-btn done-btn--light'
+                  : 'done-btn done-btn--primary'
+              }
+              href="/learn/review"
+            >
               Về Ôn tập
             </Link>
+            {onRetry && (
+              <button
+                className="done-btn done-btn--primary"
+                type="button"
+                onClick={onRetry}
+              >
+                Ôn lại thẻ chưa nhớ
+                <Icon name="rotate-ccw" />
+              </button>
+            )}
           </div>
           <p className="rv-note">
             Phiên ôn không cộng XP hay huy hiệu. Thẻ chưa nhớ sẽ quay lại sớm

@@ -178,6 +178,17 @@ test.describe('Learner review session (M3.3a)', () => {
       name: 'Đến hạn hôm nay: 3 thẻ. Bắt đầu ôn',
     });
     await expect(due).toBeVisible();
+    // Q277: below 1024px the page keeps the phone sizes of
+    // mobile/review-calendar.html, also at 768px (no tablet step).
+    if ((page.viewportSize()?.width ?? 0) < 1024) {
+      await expect(due.locator('.rvo-stat__val')).toHaveCSS(
+        'font-size',
+        '20px',
+      );
+      await expect(
+        page.locator('.rvo-cal__table td:not(.is-out)').first(),
+      ).toHaveCSS('height', '22px');
+    }
     await expect(
       page
         .getByRole('navigation', { name: 'Điều hướng chính' })
@@ -233,8 +244,13 @@ test.describe('Learner review session (M3.3a)', () => {
     await page.goto('/learn/review/session');
     await expect(front(page)).toHaveText(WORDS[0].hanzi);
 
-    // Tab from the close link reaches the card.
+    // Tab from the close link passes the settings button (mẫu .uxb-barend,
+    // M3.3c) and then reaches the card.
     await page.getByRole('link', { name: 'Đóng phiên ôn tập' }).focus();
+    await page.keyboard.press('Tab');
+    await expect(
+      page.getByRole('button', { name: 'Cài đặt ôn tập' }),
+    ).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(flip(page)).toBeFocused();
     await page.keyboard.press('Space');
@@ -252,5 +268,73 @@ test.describe('Learner review session (M3.3a)', () => {
     await expect(
       page.getByRole('heading', { name: 'Ôn tập hôm nay' }),
     ).toBeVisible();
+  });
+
+  test('retries only the card graded Chưa nhớ (M3.3c, Q278)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await saveWords(page, ids);
+    await page.goto('/learn/review/session');
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await flip(page).click();
+    await gradeButton(page, 'Tốt').click();
+    await expect(front(page)).toHaveText(WORDS[1].hanzi);
+    await flip(page).click();
+    await gradeButton(page, 'Chưa nhớ').click();
+    await expect(front(page)).toHaveText(WORDS[2].hanzi);
+    await flip(page).click();
+    await gradeButton(page, 'Dễ').click();
+    await expect(
+      page.getByRole('heading', { name: 'Ôn tập hôm nay' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }).click();
+    await expect(front(page)).toHaveText(WORDS[1].hanzi);
+    await expect(
+      page
+        .getByRole('progressbar', { name: 'Tiến độ phiên ôn tập' })
+        .filter({ visible: true }),
+    ).toHaveAttribute('aria-valuetext', 'Thẻ 1 trên 1');
+    await flip(page).click();
+    await gradeButton(page, 'Tốt').click();
+    await expect(
+      page.getByRole('heading', { name: 'Ôn tập hôm nay' }),
+    ).toBeVisible();
+    // Nothing graded again this time, so the retry is not offered.
+    await expect(
+      page.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+    ).toHaveCount(0);
+  });
+
+  test('keeps the daily card count after a reload (M3.3c, Q279)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await saveWords(page, ids);
+    await page.goto('/learn/review/session');
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await page.getByRole('button', { name: 'Cài đặt ôn tập' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Cài đặt ôn tập' });
+    const count = dialog.getByLabel('Số thẻ mỗi ngày');
+    await expect(count).toHaveValue('20');
+    await count.selectOption('10');
+    await dialog.getByRole('button', { name: 'Lưu cài đặt' }).click();
+    await expect(dialog.getByRole('status')).toHaveText(
+      'Đã lưu cài đặt ôn tập.',
+    );
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    await page.reload();
+    await expect(front(page)).toHaveText(WORDS[0].hanzi);
+    await page.getByRole('button', { name: 'Cài đặt ôn tập' }).click();
+    await expect(
+      page
+        .getByRole('dialog', { name: 'Cài đặt ôn tập' })
+        .getByLabel('Số thẻ mỗi ngày'),
+    ).toHaveValue('10');
   });
 });

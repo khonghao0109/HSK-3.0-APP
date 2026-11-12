@@ -28,6 +28,12 @@ import type {
   ReviewSessionSummaryDto,
 } from './dto/review-session.dto';
 import { reviewErrors } from './review-errors';
+import {
+  countGradedSince,
+  dailyRemaining,
+  dayStartOf,
+  readReviewSettings,
+} from './review-preferences';
 import { buildReviewPreview } from './review-preview';
 import { activeCardWhere, DUE_CARD_ORDER, dueCardWhere } from './review-queue';
 import {
@@ -39,11 +45,14 @@ import {
 
 /** `ReviewSession.mode` of a session built from the due queue. */
 const DUE_MODE = 'due';
+/** M3.3c (Q278): the `again` cards of one completed session. */
+const RETRY_MODE = 'retry';
 
 /** What `summary` holds: the card snapshot (Q254), then the result on complete. */
 type StoredSummary = {
   cardIds: number[];
   requestedLimit: number;
+  retrySessionId?: number;
 } & Partial<ReviewSessionSummary>;
 
 /**
@@ -75,6 +84,7 @@ export class ReviewSessionService {
     userId: number,
     limit: number,
     rawKey: unknown,
+    retrySessionId?: number,
   ): Promise<ApiSuccessResponse<CreateReviewSessionResponseDto>> {
     const idempotencyKey = parseIdempotencyKey(rawKey);
     const data = await this.run<CreateReviewSessionResponseDto>(async (tx) => {
@@ -85,7 +95,11 @@ export class ReviewSessionService {
         where: { userId_idempotencyKey: { userId, idempotencyKey } },
       });
       if (replay) {
-        if (storedSummary(replay).requestedLimit !== limit) {
+        const stored = storedSummary(replay);
+        if (
+          stored.requestedLimit !== limit ||
+          stored.retrySessionId !== retrySessionId
+        ) {
           return { fail: reviewErrors.idempotencyKeyReused() };
         }
         let session = replay;
@@ -102,6 +116,18 @@ export class ReviewSessionService {
         return {
           value: { created: false, session: await this.view(tx, session) },
         };
+      }
+
+      // Q278: the source must be a completed session of the caller.
+      if (retrySessionId !== undefined) {
+        const source = await tx.reviewSession.findFirst({
+          where: { id: retrySessionId, userId },
+          select: { status: true },
+        });
+        if (!source) return { fail: reviewErrors.sessionNotFound() };
+        if (source.status !== 'completed') {
+          return { fail: reviewErrors.sessionNotActive() };
+        }
       }
 
       const live = await tx.reviewSession.findFirst({
@@ -121,21 +147,24 @@ export class ReviewSessionService {
         }
       }
 
-      const due = await tx.reviewCard.findMany({
-        where: dueCardWhere(userId, now),
-        orderBy: [...DUE_CARD_ORDER],
-        take: limit,
-        select: { id: true },
-      });
-      if (due.length === 0) return { fail: reviewErrors.nothingDue() };
+      const cardIds =
+        retrySessionId === undefined
+          ? await this.dueCardIds(tx, userId, limit, now)
+          : await this.againCardIds(tx, userId, retrySessionId);
+      if (cardIds === 'daily_limit') {
+        return { fail: reviewErrors.dailyLimitReached() };
+      }
+      if (cardIds.length === 0) return { fail: reviewErrors.nothingDue() };
 
-      const cardIds = due.map((card) => card.id);
-      const summary: StoredSummary = { cardIds, requestedLimit: limit };
+      const summary: StoredSummary =
+        retrySessionId === undefined
+          ? { cardIds, requestedLimit: limit }
+          : { cardIds, requestedLimit: limit, retrySessionId };
       const created = await tx.reviewSession.create({
         data: {
           userId,
           status: 'in_progress',
-          mode: DUE_MODE,
+          mode: retrySessionId === undefined ? DUE_MODE : RETRY_MODE,
           plannedCount: cardIds.length,
           reviewedCount: 0,
           idempotencyKey,
@@ -352,6 +381,46 @@ export class ReviewSessionService {
       },
     );
     return { success: true, data };
+  }
+
+  /** Q281/Q282: due cards of the chosen levels, at most what today leaves. */
+  private async dueCardIds(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    limit: number,
+    now: Date,
+  ): Promise<number[] | 'daily_limit'> {
+    const settings = await readReviewSettings(tx, userId);
+    const remaining = dailyRemaining(
+      settings.dailyCardLimit,
+      await countGradedSince(tx, userId, dayStartOf(now, settings.timezone)),
+    );
+    if (remaining === 0) return 'daily_limit';
+    const due = await tx.reviewCard.findMany({
+      where: dueCardWhere(userId, now, settings.levelCodes),
+      orderBy: [...DUE_CARD_ORDER],
+      take: Math.min(limit, remaining),
+      select: { id: true },
+    });
+    return due.map((card) => card.id);
+  }
+
+  /**
+   * Q278: the cards graded `again` in `sessionId` (read from its events, in
+   * the source session's order), still available, whatever their due date.
+   */
+  private async againCardIds(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    sessionId: number,
+  ): Promise<number[]> {
+    const events = await tx.reviewEvent.findMany({
+      where: { sessionId, grade: 'again', card: activeCardWhere(userId) },
+      orderBy: { id: 'asc' },
+      distinct: ['cardId'],
+      select: { cardId: true },
+    });
+    return events.map((event) => event.cardId);
   }
 
   private publicSummary(stored: StoredSummary): ReviewSessionSummaryDto {

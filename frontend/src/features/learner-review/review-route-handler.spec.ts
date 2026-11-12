@@ -10,7 +10,9 @@ import {
   handleReviewCurrent,
   handleReviewGrade,
   handleReviewOverview,
+  handleReviewPreferences,
   handleReviewQueue,
+  handleReviewSavePreferences,
   type ReviewHandlerDependencies,
 } from './review-route-handler';
 
@@ -123,7 +125,7 @@ describe('review BFF route handlers (M3.3a)', () => {
   it('reads the queue with only a numeric limit and projects the items', async () => {
     const backend = vi.fn<Backend>().mockResolvedValue({
       success: true,
-      data: { dueCount: 3, items: [item] },
+      data: { dueCount: 3, dailyLimitReached: false, items: [item] },
       meta,
     });
     const response = await handleReviewQueue(
@@ -151,6 +153,7 @@ describe('review BFF route handlers (M3.3a)', () => {
 
   it('reads the overview and projects it (M3.3b, Q268)', async () => {
     const overview = {
+      timezone: 'America/New_York',
       dueToday: 4,
       upcoming: { days3: 1, days7: 2, days14: 3 },
       retention7d: null,
@@ -181,6 +184,7 @@ describe('review BFF route handlers (M3.3a)', () => {
     expect(body).toEqual({
       success: true,
       data: {
+        timezone: 'America/New_York',
         dueToday: 4,
         upcoming: { days3: 1, days7: 2, days14: 3 },
         retention7d: null,
@@ -498,5 +502,191 @@ describe('review BFF route handlers (M3.3a)', () => {
       ),
       503,
     );
+  });
+
+  it('forwards retrySessionId on create and keeps REVIEW_DAILY_LIMIT_REACHED (M3.3c, Q278/Q282)', async () => {
+    const backend = vi.fn<Backend>().mockResolvedValue({
+      success: true,
+      data: { created: true, session },
+      meta,
+    });
+    await expectStatus(
+      await handleReviewCreateSession(
+        request('/api/learner/review/sessions', {
+          method: 'POST',
+          body: { retrySessionId: 40 },
+        }),
+        deps(backend),
+      ),
+      200,
+    );
+    expect(backend).toHaveBeenCalledWith('/api/v1/review/sessions', {
+      token: 'learner-token',
+      method: 'POST',
+      body: { retrySessionId: 40 },
+      idempotencyKey: KEY,
+    });
+    for (const bad of [{ retrySessionId: 0 }, { retrySessionId: '40' }]) {
+      await expectStatus(
+        await handleReviewCreateSession(
+          request('/api/learner/review/sessions', {
+            method: 'POST',
+            body: bad,
+          }),
+          deps(backend),
+        ),
+        400,
+      );
+    }
+    const limited = vi
+      .fn<Backend>()
+      .mockRejectedValue(backendError(409, 'REVIEW_DAILY_LIMIT_REACHED'));
+    const body = await expectStatus(
+      await handleReviewCreateSession(
+        request('/api/learner/review/sessions', { method: 'POST', body: {} }),
+        deps(limited),
+      ),
+      409,
+    );
+    expect(body).toMatchObject({
+      error: { code: 'REVIEW_DAILY_LIMIT_REACHED' },
+    });
+  });
+
+  it('projects dailyLimitReached of the queue (Q282)', async () => {
+    const backend = vi.fn<Backend>().mockResolvedValue({
+      success: true,
+      data: { dueCount: 3, dailyLimitReached: true, items: [] },
+      meta,
+    });
+    const body = await expectStatus(
+      await handleReviewQueue(
+        request('/api/learner/review/queue'),
+        deps(backend),
+      ),
+      200,
+    );
+    expect(body.data).toEqual({
+      dueCount: 3,
+      dailyLimitReached: true,
+      items: [],
+    });
+  });
+
+  describe('preferences (M3.3c, Q279/Q280)', () => {
+    const prefs = {
+      dailyCardLimit: 20,
+      levelCodes: ['HSK3'],
+      levels: [
+        { code: 'HSK1', name: 'HSK 1', orderIndex: 1 },
+        { code: 'HSK3', name: 'HSK 3', orderIndex: 3 },
+      ],
+      userId: 9,
+    };
+    const projected = {
+      dailyCardLimit: 20,
+      levelCodes: ['HSK3'],
+      levels: [
+        { code: 'HSK1', name: 'HSK 1' },
+        { code: 'HSK3', name: 'HSK 3' },
+      ],
+    };
+
+    it('reads the preferences and projects them', async () => {
+      const backend = vi
+        .fn<Backend>()
+        .mockResolvedValue({ success: true, data: prefs, meta });
+      const body = await expectStatus(
+        await handleReviewPreferences(
+          request('/api/learner/review/preferences'),
+          deps(backend),
+        ),
+        200,
+      );
+      expect(backend).toHaveBeenCalledWith('/api/v1/review/preferences', {
+        token: 'learner-token',
+      });
+      expect(body).toEqual({ success: true, data: projected });
+      const none = vi.fn<Backend>();
+      await expectStatus(
+        await handleReviewPreferences(
+          request('/api/learner/review/preferences', { cookie: false }),
+          deps(none),
+        ),
+        401,
+      );
+      expect(none).not.toHaveBeenCalled();
+    });
+
+    it('saves with PUT, a rebuilt body and the same origin', async () => {
+      const backend = vi
+        .fn<Backend>()
+        .mockResolvedValue({ success: true, data: prefs, meta });
+      const body = await expectStatus(
+        await handleReviewSavePreferences(
+          request('/api/learner/review/preferences', {
+            method: 'PUT',
+            body: { dailyCardLimit: 30, levelCodes: ['HSK3'] },
+          }),
+          deps(backend),
+        ),
+        200,
+      );
+      expect(body).toEqual({ success: true, data: projected });
+      expect(backend).toHaveBeenCalledWith('/api/v1/review/preferences', {
+        token: 'learner-token',
+        method: 'PUT',
+        body: { dailyCardLimit: 30, levelCodes: ['HSK3'] },
+      });
+    });
+
+    it('refuses a cross-origin save and a bad body before the backend', async () => {
+      const backend = vi.fn<Backend>();
+      const path = '/api/learner/review/preferences';
+      await expectStatus(
+        await handleReviewSavePreferences(
+          request(path, {
+            method: 'PUT',
+            body: { dailyCardLimit: 20, levelCodes: [] },
+            origin: 'http://evil.test',
+          }),
+          deps(backend),
+        ),
+        403,
+      );
+      for (const bad of [
+        { dailyCardLimit: 15, levelCodes: [] },
+        { dailyCardLimit: 20 },
+        { dailyCardLimit: 20, levelCodes: ['HSK1', 'HSK1'] },
+        { dailyCardLimit: 20, levelCodes: [''] },
+        { dailyCardLimit: 20, levelCodes: [], userId: 1 },
+      ]) {
+        await expectStatus(
+          await handleReviewSavePreferences(
+            request(path, { method: 'PUT', body: bad }),
+            deps(backend),
+          ),
+          400,
+        );
+      }
+      expect(backend).not.toHaveBeenCalled();
+    });
+
+    it('passes a backend 400 through without its details', async () => {
+      const backend = vi
+        .fn<Backend>()
+        .mockRejectedValue(backendError(400, 'BAD_REQUEST'));
+      const body = await expectStatus(
+        await handleReviewSavePreferences(
+          request('/api/learner/review/preferences', {
+            method: 'PUT',
+            body: { dailyCardLimit: 20, levelCodes: ['HSK9'] },
+          }),
+          deps(backend),
+        ),
+        400,
+      );
+      expect(JSON.stringify(body)).not.toContain('secret');
+    });
   });
 });

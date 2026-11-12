@@ -6687,6 +6687,119 @@
         ]
       }
     },
+    "/api/v1/review/preferences": {
+      "get": {
+        "operationId": "ReviewController_getPreferences",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ReviewPreferencesResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "M3.3c (Q280): the learner's settings, or the defaults without a row.",
+        "tags": [
+          "Review"
+        ]
+      },
+      "put": {
+        "operationId": "ReviewController_updatePreferences",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewPreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ReviewPreferencesResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Review"
+        ]
+      }
+    },
     "/api/v1/review/sessions": {
       "post": {
         "operationId": "ReviewController_createSession",
@@ -12661,7 +12774,11 @@
         "properties": {
           "dueCount": {
             "type": "number",
-            "description": "Every due card (Q252), not cut by `limit`."
+            "description": "Every due card (Q252) of the chosen levels (Q281), not cut by `limit` or the daily limit."
+          },
+          "dailyLimitReached": {
+            "type": "boolean",
+            "description": "Q282: today's `dailyCardLimit` is used up; `items` is then empty."
           },
           "items": {
             "type": "array",
@@ -12672,6 +12789,7 @@
         },
         "required": [
           "dueCount",
+          "dailyLimitReached",
           "items"
         ]
       },
@@ -12740,6 +12858,10 @@
       "ReviewOverviewResponseDto": {
         "type": "object",
         "properties": {
+          "timezone": {
+            "type": "string",
+            "description": "M3.3c (Q276): IANA zone of every local date here; format dates in it."
+          },
           "dueToday": {
             "type": "number",
             "description": "Active cards due up to the end of today, overdue included."
@@ -12768,11 +12890,86 @@
           }
         },
         "required": [
+          "timezone",
           "dueToday",
           "upcoming",
           "retention7d",
           "calendar",
           "recentSessions"
+        ]
+      },
+      "ReviewLevelOptionDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "ReviewPreferencesResponseDto": {
+        "type": "object",
+        "properties": {
+          "dailyCardLimit": {
+            "type": "integer",
+            "enum": [
+              10,
+              20,
+              30
+            ]
+          },
+          "levelCodes": {
+            "description": "Saved filter; empty means every level.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "levels": {
+            "description": "Every published, not deleted Level, by `orderIndex`: the filter choices.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewLevelOptionDto"
+            }
+          }
+        },
+        "required": [
+          "dailyCardLimit",
+          "levelCodes",
+          "levels"
+        ]
+      },
+      "UpdateReviewPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "dailyCardLimit": {
+            "type": "integer",
+            "enum": [
+              10,
+              20,
+              30
+            ]
+          },
+          "levelCodes": {
+            "description": "Public Level codes; empty means every level.",
+            "uniqueItems": true,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 32
+            }
+          }
+        },
+        "required": [
+          "dailyCardLimit",
+          "levelCodes"
         ]
       },
       "ReviewSessionDto": {
@@ -12839,6 +13036,12 @@
             "default": 20,
             "minimum": 1,
             "maximum": 50
+          },
+          "retrySessionId": {
+            "type": "integer",
+            "description": "M3.3c (Q278): a completed session of the caller; the new session holds\nits `again` cards and skips the due queue and the daily limit.",
+            "minimum": 1,
+            "maximum": 2147483647
           }
         }
       },

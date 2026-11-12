@@ -39,7 +39,9 @@ export class ReviewQueueItemDto {
 }
 
 export class ReviewQueueResponseDto {
-  /** Every due card (Q252), not cut by `limit`. */
+  /** Every due card (Q252) of the chosen levels (Q281), not cut by `limit` or the daily limit. */
   dueCount!: number;
+  /** Q282: today's `dailyCardLimit` is used up; `items` is then empty. */
+  dailyLimitReached!: boolean;
   items!: ReviewQueueItemDto[];
 }

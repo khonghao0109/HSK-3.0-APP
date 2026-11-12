@@ -261,6 +261,7 @@ model User {
   learningEvents           LearningEvent[]
   reviewCards              ReviewCard[]
   reviewSessions           ReviewSession[]
+  reviewPreference         ReviewPreference?
   examAttempts             ExamAttempt[]
   createdLevels            Level[]                  @relation("LevelCreatedBy")
   updatedLevels            Level[]                  @relation("LevelUpdatedBy")
@@ -1223,6 +1224,18 @@ model ReviewCard {
   @@unique([userId, wordId])
   @@index([userId, state, dueAt])
   @@index([wordId])
+}
+
+/// M3.3c (Q279–Q282): review settings of one learner; absent means the defaults.
+model ReviewPreference {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  dailyCardLimit Int      @default(20)
+  levelCodes     String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ReviewSession {

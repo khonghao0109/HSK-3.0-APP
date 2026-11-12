@@ -3,6 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 /** M3.2 Q253/Q254 error codes of the review session routes. */
 export const REVIEW_ERROR_CODES = {
   nothingDue: 'REVIEW_NOTHING_DUE',
+  dailyLimitReached: 'REVIEW_DAILY_LIMIT_REACHED',
   sessionNotFound: 'REVIEW_SESSION_NOT_FOUND',
   sessionNotActive: 'REVIEW_SESSION_NOT_ACTIVE',
   sessionExpired: 'REVIEW_SESSION_EXPIRED',
@@ -17,6 +18,12 @@ const conflict = (code: string, message: string) =>
 export const reviewErrors = {
   nothingDue: () =>
     conflict(REVIEW_ERROR_CODES.nothingDue, 'No review card is due.'),
+  /** M3.3c (Q282): today's `dailyCardLimit` is used up. */
+  dailyLimitReached: () =>
+    conflict(
+      REVIEW_ERROR_CODES.dailyLimitReached,
+      'The daily review limit is reached.',
+    ),
   /** Also for a session of another learner: its existence is not revealed. */
   sessionNotFound: () =>
     new NotFoundException({

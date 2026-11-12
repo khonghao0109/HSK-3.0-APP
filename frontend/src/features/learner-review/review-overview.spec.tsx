@@ -14,6 +14,7 @@ const calendar = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const overview: ReviewOverview = {
+  timezone: 'Asia/Ho_Chi_Minh',
   dueToday: 20,
   upcoming: { days3: 4, days7: 9, days14: 15 },
   retention7d: 87,
@@ -112,6 +113,31 @@ describe('ReviewOverviewView (M3.3b, Q270)', () => {
     expect(rows[0]).toHaveTextContent('85%');
     expect(rows[1]).toHaveTextContent('—');
     expect(screen.queryByText('Xem tất cả')).not.toBeInTheDocument();
+  });
+
+  it('formats session dates in the learner timezone, not the browser one (Q276)', async () => {
+    // 03:00 UTC on 12/11 is still 11/11 in New York; the test browser runs in UTC+7.
+    view(
+      transport({
+        ok: true,
+        data: {
+          ...overview,
+          timezone: 'America/New_York',
+          recentSessions: [
+            {
+              sessionId: 9,
+              completedAt: '2026-11-12T03:00:00.000Z',
+              reviewedCount: 5,
+              retentionPercent: 80,
+            },
+          ],
+        },
+      }),
+    );
+    const table = await screen.findByRole('table', { name: 'Lịch sử ôn tập' });
+    const row = within(table).getAllByRole('row')[1];
+    expect(row).toHaveTextContent('11/11/2026');
+    expect(row).not.toHaveTextContent('12/11/2026');
   });
 
   it('disables Ôn ngay and says why when nothing is due, — without retention', async () => {

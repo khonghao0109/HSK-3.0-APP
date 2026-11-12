@@ -1074,6 +1074,12 @@ describe('server-only backend client', () => {
     });
     await client.request('/api/v1/review/sessions/current', { token: 't' });
     await client.request('/api/v1/review/overview', { token: 't' });
+    await client.request('/api/v1/review/preferences', { token: 't' });
+    await client.request('/api/v1/review/preferences', {
+      token: 't',
+      method: 'PUT',
+      body: { dailyCardLimit: 20, levelCodes: [] },
+    });
     await client.request('/api/v1/review/sessions/41/reviews', {
       token: 't',
       method: 'POST',
@@ -1098,11 +1104,13 @@ describe('server-only backend client', () => {
       '/api/v1/review/sessions/41/complete/x',
       '/api/v1/review/overview?x=1',
       '/api/v1/review/overview/x',
+      '/api/v1/review/preferences?x=1',
+      '/api/v1/review/preferences/x',
     ]) {
       await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
         kind: 'invalid_request',
       });
     }
-    expect(fetchImpl).toHaveBeenCalledTimes(7);
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
   });
 });

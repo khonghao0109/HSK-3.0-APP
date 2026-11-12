@@ -2,6 +2,8 @@
 // `reviewOverviewEnvelopeSchema` in review-contract.ts (server only).
 
 export type ReviewOverview = {
+  /** Q276: the learner's timezone; dates are formatted in it. */
+  timezone: string;
   dueToday: number;
   upcoming: { days3: number; days7: number; days14: number };
   retention7d: number | null;

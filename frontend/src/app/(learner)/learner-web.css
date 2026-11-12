@@ -4775,6 +4775,13 @@
     display: block;
   }
 
+  /* M3.3c (Q278): the card keeps the 760px of mẫu .done-w (it shrank to its
+     content), so "Về Ôn tập" and "Ôn lại thẻ chưa nhớ" sit inside it. */
+  .learner-app .rv-done .done-card {
+    width: 760px;
+    max-width: 100%;
+  }
+
   .learner-app .rv-stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -21,6 +21,8 @@ export class ReviewRecentSessionDto {
 }
 
 export class ReviewOverviewResponseDto {
+  /** M3.3c (Q276): IANA zone of every local date here; format dates in it. */
+  timezone!: string;
   /** Active cards due up to the end of today, overdue included. */
   dueToday!: number;
   upcoming!: ReviewUpcomingDto;

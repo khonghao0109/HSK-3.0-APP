@@ -19,6 +19,17 @@ export class CreateReviewSessionDto {
   @Min(1)
   @Max(50)
   limit = 20;
+
+  /**
+   * M3.3c (Q278): a completed session of the caller; the new session holds
+   * its `again` cards and skips the due queue and the daily limit.
+   */
+  @ApiPropertyOptional({ type: 'integer', minimum: 1 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(2_147_483_647)
+  retrySessionId?: number;
 }
 
 export class GradeReviewCardDto {

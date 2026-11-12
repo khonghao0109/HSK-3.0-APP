@@ -1434,6 +1434,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** M3.3c (Q280): the learner's settings, or the defaults without a row. */
+        get: operations["ReviewController_getPreferences"];
+        put: operations["ReviewController_updatePreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/review/sessions": {
         parameters: {
             query?: never;
@@ -3018,8 +3035,10 @@ export interface components {
             preview: components["schemas"]["ReviewPreviewDto"];
         };
         ReviewQueueResponseDto: {
-            /** @description Every due card (Q252), not cut by `limit`. */
+            /** @description Every due card (Q252) of the chosen levels (Q281), not cut by `limit` or the daily limit. */
             dueCount: number;
+            /** @description Q282: today's `dailyCardLimit` is used up; `items` is then empty. */
+            dailyLimitReached: boolean;
             items: components["schemas"]["ReviewQueueItemDto"][];
         };
         ReviewUpcomingDto: {
@@ -3042,6 +3061,8 @@ export interface components {
             retentionPercent: number | null;
         };
         ReviewOverviewResponseDto: {
+            /** @description M3.3c (Q276): IANA zone of every local date here; format dates in it. */
+            timezone: string;
             /** @description Active cards due up to the end of today, overdue included. */
             dueToday: number;
             upcoming: components["schemas"]["ReviewUpcomingDto"];
@@ -3051,6 +3072,24 @@ export interface components {
             calendar: components["schemas"]["ReviewCalendarDayDto"][];
             /** @description Up to 5 completed sessions of the last 30 days, newest first. */
             recentSessions: components["schemas"]["ReviewRecentSessionDto"][];
+        };
+        ReviewLevelOptionDto: {
+            code: string;
+            name: string;
+        };
+        ReviewPreferencesResponseDto: {
+            /** @enum {integer} */
+            dailyCardLimit: 10 | 20 | 30;
+            /** @description Saved filter; empty means every level. */
+            levelCodes: string[];
+            /** @description Every published, not deleted Level, by `orderIndex`: the filter choices. */
+            levels: components["schemas"]["ReviewLevelOptionDto"][];
+        };
+        UpdateReviewPreferencesDto: {
+            /** @enum {integer} */
+            dailyCardLimit: 10 | 20 | 30;
+            /** @description Public Level codes; empty means every level. */
+            levelCodes: string[];
         };
         ReviewSessionDto: {
             /** @enum {string} */
@@ -3074,6 +3113,11 @@ export interface components {
         CreateReviewSessionDto: {
             /** @default 20 */
             limit: number;
+            /**
+             * @description M3.3c (Q278): a completed session of the caller; the new session holds
+             *     its `again` cards and skips the due queue and the daily limit.
+             */
+            retrySessionId?: number;
         };
         CurrentReviewSessionResponseDto: {
             session: components["schemas"]["ReviewSessionDto"];
@@ -6733,6 +6777,66 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["ReviewOverviewResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_getPreferences: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ReviewPreferencesResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ReviewController_updatePreferences: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReviewPreferencesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["ReviewPreferencesResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

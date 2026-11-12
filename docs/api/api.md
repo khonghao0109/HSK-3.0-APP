@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 12/11/2026 (M3.3 Pha B): thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -624,7 +624,9 @@ chứa `userId`; mỗi route chỉ đọc/ghi dữ liệu của chính người 
 | --- | --- | --- | --- | --- | --- |
 | `GET` | `/review/queue` | `limit?` số nguyên 1–50, mặc định 20 | `ReviewQueue` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
 | `GET` | `/review/overview` | — | `ReviewOverview` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
-| `POST` | `/review/sessions` | `Idempotency-Key` bắt buộc; body `{ limit?: 1–50, mặc định 20 }` | `{ created, session }` | `201` tạo mới; `200` replay key hoặc trả phiên đang chạy | 20/phút/user (`reviewSessionWriteLimit`) |
+| `GET` | `/review/preferences` | — | `ReviewPreferences` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
+| `PUT` | `/review/preferences` | body `{ dailyCardLimit: 10\|20\|30, levelCodes: string[] }` | `ReviewPreferences` | `200` | 20/phút/user (`reviewSessionWriteLimit`) |
+| `POST` | `/review/sessions` | `Idempotency-Key` bắt buộc; body `{ limit?: 1–50, mặc định 20; retrySessionId?: int > 0 }` | `{ created, session }` | `201` tạo mới; `200` replay key hoặc trả phiên đang chạy | 20/phút/user (`reviewSessionWriteLimit`) |
 | `GET` | `/review/sessions/current` | — | `{ session, items }` | `200` | 60/phút/user (`reviewQueueReadLimit`) |
 | `POST` | `/review/sessions/:sessionId/reviews` | `Idempotency-Key` bắt buộc; body `{ cardId: int > 0, grade: again\|hard\|good\|easy, durationMs?: int 0–600000 }` | `ReviewGradeResult` | `201` (cả replay) | 120/phút/user (`reviewGradeLimit`) |
 | `POST` | `/review/sessions/:sessionId/complete` | — (tự idempotent) | `{ session, summary }` | `200` | 20/phút/user (`reviewSessionWriteLimit`) |
@@ -632,11 +634,14 @@ chứa `userId`; mỗi route chỉ đọc/ghi dữ liệu của chính người 
 Thẻ còn hiệu lực = `ReviewCard` của chính người gọi, `state <> suspended`, từ khớp
 `PUBLIC_WORD_WHERE` (Q255: `published`, chưa soft-delete, `isPure = true`, có ít nhất một
 `WordMeaning`; cùng điều kiện với lưu từ và trang chi tiết từ), và người gọi vẫn còn lưu từ
-(`UserWord`). Thẻ đến hạn (Q252) = thẻ còn hiệu lực có `dueAt ≤ now`. Sắp `dueAt` tăng dần rồi `id`. Không giới hạn thẻ mới mỗi ngày. Route chỉ đọc.
+(`UserWord`). Thẻ đến hạn (Q252) = thẻ còn hiệu lực có `dueAt ≤ now`. Sắp `dueAt` tăng dần rồi `id`. Route chỉ đọc.
+Từ M3.3c, hàng đợi, phiên `due` và các số đến hạn của overview chỉ gồm thẻ của cấp trong
+`levelCodes` (Q281, xem "Cài đặt ôn tập" dưới đây); `levelCodes` rỗng là mọi cấp.
+`items` bị cắt ở `min(limit, dailyCardLimit − đã chấm hôm nay)` (Q282).
 `limit` ngoài 1–50 hoặc không phải số nguyên → `400 REQUEST_VALIDATION_FAILED`.
 
 ```json
-{ "dueCount": 3,
+{ "dueCount": 3, "dailyLimitReached": false,
   "items": [{ "cardId": 7, "state": "new", "dueAt": "2026-11-12T08:00:00.000Z",
     "word": { "id": 12, "hanzi": "学习", "traditional": null, "pinyin": "xué xí", "pinyinTone": null,
       "example": null, "meanings": [{ "order": 1, "en": "to study", "vi": null, "partOfSpeech": null, "usage": null, "note": null }],
@@ -648,16 +653,41 @@ Thẻ còn hiệu lực = `ReviewCard` của chính người gọi, `state <> su
       "easy":  { "state": "review",   "dueAt": "…", "intervalDays": 4 } } }] }
 ```
 
-- `dueCount` đếm mọi thẻ đến hạn, không bị `limit` cắt.
+- `dueCount` đếm mọi thẻ đến hạn của các cấp đã chọn, không bị `limit` hay trần ngày cắt.
+- `dailyLimitReached` (Q282): `true` khi trần ngày đã hết; khi đó `items` rỗng.
 - `word` cùng shape với `GET /dictionary/words/:id`.
 - `preview.<grade>` (R4) là kết quả `schedule(card, grade, now, sm2-v1)` với cùng một `now`
   cho cả request; client không tự tính lịch.
+
+**Cài đặt ôn tập (M3.3c, Q279–Q282).** Bảng `ReviewPreference` (một dòng mỗi người dùng).
+- `GET /review/preferences` trả `{ dailyCardLimit, levelCodes, levels }`. Chưa có dòng → mặc định
+  `dailyCardLimit = 20`, `levelCodes = []`, không tạo dòng. `levels` = mọi Level `published`,
+  chưa soft-delete, theo `orderIndex` (`{ code, name }`), là các lựa chọn của bộ lọc cấp.
+- `PUT /review/preferences` upsert, trả cùng shape. `dailyCardLimit` chỉ nhận `10`, `20`, `30`;
+  `levelCodes` tối đa 20 phần tử, không trùng, mỗi code phải là Level `published` và chưa
+  soft-delete. Sai kiểu, trùng, thừa field → `400 REQUEST_VALIDATION_FAILED`; code lạ hoặc Level
+  không public → `400 BAD_REQUEST`. Không đổi dòng đã lưu khi lỗi.
+- Lọc cấp (Q281): thẻ còn hiệu lực có từ thuộc (`WordLevel`) ít nhất một Level `published`,
+  chưa soft-delete, có `code` trong `levelCodes`. Áp cho `GET /review/queue`, phiên `due` và
+  `dueToday`/`upcoming` của overview; không áp cho phiên ôn lại, lượt chấm, `calendar`,
+  `retention7d`, `recentSessions`.
+- Trần ngày (Q282): "đã chấm hôm nay" = số `cardId` khác nhau có `ReviewEvent` của người gọi với
+  `reviewedAt ≥` 00:00 hôm nay theo `UserProfile.timezone` (thiếu/không hợp lệ thì
+  `Asia/Ho_Chi_Minh`), tính mọi phiên. Còn lại = `max(0, dailyCardLimit − đã chấm)`. Trần chỉ
+  chặn hàng đợi và phiên `due`; phiên ôn lại `retrySessionId` (Q278) không bị chặn.
+
+```json
+{ "dailyCardLimit": 20, "levelCodes": ["HSK3"],
+  "levels": [{ "code": "HSK1", "name": "HSK 1" }, { "code": "HSK3", "name": "HSK 3" }] }
+```
 
 **Tổng quan ôn tập (M3.3b, Q268).** `GET /review/overview` — chỉ đọc, một snapshot
 `REPEATABLE READ`. Ngày tính theo `UserProfile.timezone` của người gọi (cùng nguồn với Trang chủ);
 thiếu hoặc không hợp lệ thì dùng `Asia/Ho_Chi_Minh`. "Đầu ngày D" = 00:00 giờ địa phương ngày D,
 đổi sang UTC theo luật của timezone (ngày đổi giờ giữ đúng độ dài thật).
 
+- `timezone` (M3.3c, Q276): IANA timezone dùng cho mọi ngày ở đây; client format ngày
+  (`calendar`, `recentSessions.completedAt`) theo timezone này, không theo trình duyệt.
 - `dueToday`: thẻ còn hiệu lực có `dueAt <` đầu ngày mai (gồm cả thẻ quá hạn).
 - `upcoming.daysN` (N = 3, 7, 14, cộng dồn): thẻ còn hiệu lực có đầu ngày mai `≤ dueAt <` đầu
   ngày (mai + N); không gồm thẻ đã tính trong `dueToday`.
@@ -670,7 +700,7 @@ thiếu hoặc không hợp lệ thì dùng `Asia/Ho_Chi_Minh`. "Đầu ngày D"
   phiên không có lượt chấm.
 
 ```json
-{ "dueToday": 12, "upcoming": { "days3": 4, "days7": 9, "days14": 15 }, "retention7d": 87,
+{ "timezone": "Asia/Ho_Chi_Minh", "dueToday": 12, "upcoming": { "days3": 4, "days7": 9, "days14": 15 }, "retention7d": 87,
   "calendar": [{ "date": "2026-11-01", "reviewed": 0 }, { "date": "2026-11-02", "reviewed": 18 }],
   "recentSessions": [{ "sessionId": 41, "completedAt": "2026-11-12T08:12:00.000Z",
     "reviewedCount": 20, "retentionPercent": 85 }] }
@@ -687,12 +717,22 @@ hạn là không còn, không ghi DB.
 
 `POST /review/sessions` — trong khoá `User FOR UPDATE`, theo thứ tự:
 1. Key đã tạo phiên → trả phiên đó, `created: false`, `200` (phiên đó đang `in_progress` mà đã
-   hết hạn thì lưu `abandoned` trước khi trả); cùng key mà `limit` khác → `409 CONFLICT`.
+   hết hạn thì lưu `abandoned` trước khi trả); cùng key mà `limit` hoặc `retrySessionId` khác
+   → `409 CONFLICT`.
+1b. Có `retrySessionId` (Q278): phiên đó không có hoặc của người khác → `404
+   REVIEW_SESSION_NOT_FOUND`; chưa `completed` → `409 REVIEW_SESSION_NOT_ACTIVE`.
 2. Phiên `in_progress` đã hết hạn → lưu `abandoned`.
 3. Phiên `in_progress` còn hạn → trả phiên đó, `created: false`, `200`.
-4. Không còn thẻ đến hạn → `409 REVIEW_NOTHING_DUE` (phần `abandoned` ở bước 2 vẫn được lưu).
-5. Tạo phiên `mode = due` từ tối đa `limit` thẻ đến hạn đầu tiên (thứ tự của hàng đợi),
-   `plannedCount` = số thẻ đó, `201`, `created: true`.
+4. Phiên `due` (không có `retrySessionId`): trần ngày đã hết (Q282) → `409
+   REVIEW_DAILY_LIMIT_REACHED`. Không còn thẻ đến hạn (sau lọc cấp) → `409 REVIEW_NOTHING_DUE`
+   (phần `abandoned` ở bước 2 vẫn được lưu).
+5. Tạo phiên `mode = due` từ tối đa `min(limit, còn lại hôm nay)` thẻ đến hạn đầu tiên (thứ tự
+   của hàng đợi), `plannedCount` = số thẻ đó, `201`, `created: true`.
+6. Phiên ôn lại (Q278, `retrySessionId`): thẻ = các `cardId` khác nhau có `ReviewEvent`
+   `grade = again` của phiên nguồn (đọc trên server, theo thứ tự lượt chấm), còn hiệu lực, bất
+   kể `dueAt`, không lọc cấp, không bị trần ngày chặn. Không có thẻ nào → `409
+   REVIEW_NOTHING_DUE`. Có thì tạo phiên `mode = retry`, `201`, `created: true`; `limit` không
+   cắt bộ thẻ này. Client chỉ hiện nút "Ôn lại thẻ chưa nhớ" khi `summary.again > 0`.
 
 ```json
 { "created": true,
@@ -750,8 +790,11 @@ Mã lỗi:
 | `401` | `UNAUTHORIZED` | thiếu/sai token |
 | `404` | `REVIEW_SESSION_NOT_FOUND` | current, reviews, complete |
 | `409` | `CONFLICT` | create, reviews: key dùng lại với yêu cầu khác (cùng mã với lưu từ) |
+| `400` | `BAD_REQUEST` | `PUT /review/preferences`: `levelCodes` có code không phải Level public |
+| `404` | `REVIEW_SESSION_NOT_FOUND` | create với `retrySessionId` không thuộc người gọi |
 | `409` | `REVIEW_NOTHING_DUE` | create |
-| `409` | `REVIEW_SESSION_NOT_ACTIVE` | reviews, complete |
+| `409` | `REVIEW_DAILY_LIMIT_REACHED` | create (phiên `due`) |
+| `409` | `REVIEW_SESSION_NOT_ACTIVE` | reviews, complete; create khi `retrySessionId` chưa `completed` |
 | `409` | `REVIEW_SESSION_EXPIRED` | reviews |
 | `409` | `REVIEW_CARD_NOT_IN_SESSION` | reviews |
 | `409` | `REVIEW_CARD_ALREADY_REVIEWED` | reviews |

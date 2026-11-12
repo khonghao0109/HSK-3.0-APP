@@ -8883,6 +8883,122 @@ html:has(.learner-app) {
   margin-top: 16px;
 }
 
+/* M3.3c (Q278): with "Ôn lại thẻ chưa nhớ" the pair keeps the m02 split. */
+.learner-app .rv-actions--two {
+  grid-template-columns: 164.8fr 187.8fr;
+}
+
+/* M3.3c (Q279): the settings button sits at the end of the bar (mẫu
+   .uxb-barend); the counter joins it from 1024px. */
+.learner-app .rv-barend {
+  display: flex;
+  grid-column: 3;
+  align-items: center;
+  justify-self: end;
+  gap: var(--sp-3);
+}
+
+/* "Cài đặt ôn tập" (mẫu shared .modal + ux-b .uxb-modal) as a native dialog. */
+.learner-app .rv-settings {
+  width: min(calc(100% - 2 * var(--sp-4)), 520px);
+  max-width: none;
+  padding: var(--sp-6);
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-float);
+  color: var(--text-body);
+}
+
+.learner-app .rv-settings::backdrop {
+  background: rgb(7 20 48 / 45%);
+}
+
+.learner-app .rv-settings__form {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.learner-app .rv-settings h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .rv-settings .muted,
+.learner-app .rv-settings .uxb-fine {
+  margin: 0;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.learner-app .rv-settings .muted {
+  font-size: var(--fs-md);
+}
+
+.learner-app .rv-settings .uxb-fine {
+  font-size: var(--fs-sm);
+}
+
+.learner-app .rv-settings .field {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.learner-app .rv-settings .uxb-fieldset {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+}
+
+.learner-app .rv-settings .uxb-fieldset legend {
+  padding: 0 var(--sp-1);
+}
+
+.learner-app .rv-settings .uxb-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 44px;
+  font-size: var(--fs-md);
+  color: var(--text-body);
+}
+
+.learner-app .rv-settings .uxb-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--jade-700);
+}
+
+.learner-app .rv-settings__ok,
+.learner-app .rv-settings__error {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.learner-app .rv-settings__ok {
+  color: var(--jade-800);
+}
+
+.learner-app .rv-settings__error {
+  color: var(--cinnabar-700);
+}
+
+.learner-app .rv-settings .modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.learner-app .rv-settings .modal__actions .btn {
+  min-height: 44px;
+}
+
 .learner-app .rv-note {
   margin: 16px 0 0;
   text-align: center;

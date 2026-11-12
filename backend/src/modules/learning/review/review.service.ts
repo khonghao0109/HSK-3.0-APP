@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
@@ -7,11 +7,11 @@ import {
   WORD_DETAIL_INCLUDE,
 } from '../../dictionary/dictionary-word.mapper';
 import { PrismaService } from '../../../prisma/prisma.service';
-import {
-  DEFAULT_USER_PROFILE,
-  validateTimezone,
-} from '../../user/validation/user-profile.validator';
 import type { ReviewOverviewResponseDto } from './dto/review-overview-response.dto';
+import type {
+  ReviewPreferencesResponseDto,
+  UpdateReviewPreferencesDto,
+} from './dto/review-preferences.dto';
 import type { ReviewQueueResponseDto } from './dto/review-queue-response.dto';
 import {
   addLocalDays,
@@ -19,6 +19,13 @@ import {
   localMidnight,
   monthDates,
 } from './review-calendar';
+import {
+  countGradedSince,
+  dailyRemaining,
+  dayStartOf,
+  readReviewSettings,
+  unknownLevelCodes,
+} from './review-preferences';
 import { buildReviewPreview } from './review-preview';
 import { activeCardWhere, DUE_CARD_ORDER, dueCardWhere } from './review-queue';
 
@@ -29,20 +36,32 @@ const RECENT_SESSION_LIMIT = 5;
 export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Read only: one `now` for the filter and every preview. */
+  /**
+   * Read only: one `now` for the filter and every preview. Q281 keeps the
+   * chosen levels; Q282 cuts `items` (not `dueCount`) at the daily limit.
+   */
   async getQueue(
     userId: number,
     limit: number,
     now: Date,
   ): Promise<ApiSuccessResponse<ReviewQueueResponseDto>> {
-    const where = dueCardWhere(userId, now);
+    const settings = await readReviewSettings(this.prisma, userId);
+    const remaining = dailyRemaining(
+      settings.dailyCardLimit,
+      await countGradedSince(
+        this.prisma,
+        userId,
+        dayStartOf(now, settings.timezone),
+      ),
+    );
+    const where = dueCardWhere(userId, now, settings.levelCodes);
     const [dueCount, cards] = await this.prisma.$transaction(
       [
         this.prisma.reviewCard.count({ where }),
         this.prisma.reviewCard.findMany({
           where,
           orderBy: [...DUE_CARD_ORDER],
-          take: limit,
+          take: Math.min(limit, remaining),
           include: { word: { include: WORD_DETAIL_INCLUDE } },
         }),
         // One snapshot, so `dueCount` agrees with `items` under concurrent saves.
@@ -53,6 +72,7 @@ export class ReviewService {
       success: true,
       data: {
         dueCount,
+        dailyLimitReached: remaining === 0,
         items: cards.map((card) => ({
           cardId: card.id,
           state: card.state,
@@ -72,12 +92,8 @@ export class ReviewService {
     userId: number,
     now: Date,
   ): Promise<ApiSuccessResponse<ReviewOverviewResponseDto>> {
-    const profile = await this.prisma.userProfile.findUnique({
-      where: { userId },
-      select: { timezone: true },
-    });
-    const zone = validateTimezone(profile?.timezone);
-    const tz = zone.valid ? zone.normalized : DEFAULT_USER_PROFILE.timezone;
+    const settings = await readReviewSettings(this.prisma, userId);
+    const tz = settings.timezone;
 
     const today = localDateOf(now, tz);
     const dayStart = (offset: number) =>
@@ -89,7 +105,7 @@ export class ReviewService {
       addLocalDays(month[month.length - 1], 1),
       tz,
     );
-    const active = activeCardWhere(userId);
+    const active = activeCardWhere(userId, settings.levelCodes);
     const upcoming = (days: number) =>
       this.prisma.reviewCard.count({
         where: { ...active, dueAt: { gte: tomorrow, lt: dayStart(1 + days) } },
@@ -157,6 +173,7 @@ export class ReviewService {
     return {
       success: true,
       data: {
+        timezone: tz,
         dueToday,
         upcoming: { days3, days7, days14 },
         retention7d:
@@ -173,6 +190,62 @@ export class ReviewService {
         })),
       },
     };
+  }
+
+  /** M3.3c (Q280): saved settings or the defaults; never writes a row. */
+  async getPreferences(
+    userId: number,
+  ): Promise<ApiSuccessResponse<ReviewPreferencesResponseDto>> {
+    const [settings, levels] = await Promise.all([
+      readReviewSettings(this.prisma, userId),
+      this.publicLevels(),
+    ]);
+    return {
+      success: true,
+      data: {
+        dailyCardLimit: settings.dailyCardLimit,
+        // Codes of a level unpublished since saving drop out of the panel.
+        levelCodes: settings.levelCodes,
+        levels,
+      },
+    };
+  }
+
+  /** Q280: upsert; every code must be a published, not deleted Level. */
+  async updatePreferences(
+    userId: number,
+    body: UpdateReviewPreferencesDto,
+  ): Promise<ApiSuccessResponse<ReviewPreferencesResponseDto>> {
+    const levels = await this.publicLevels();
+    const unknown = unknownLevelCodes(
+      body.levelCodes,
+      levels.map((level) => level.code),
+    );
+    if (unknown.length > 0) {
+      throw new BadRequestException('levelCodes contains an unknown level.');
+    }
+    const saved = await this.prisma.reviewPreference.upsert({
+      where: { userId },
+      create: {
+        userId,
+        dailyCardLimit: body.dailyCardLimit,
+        levelCodes: body.levelCodes,
+      },
+      update: {
+        dailyCardLimit: body.dailyCardLimit,
+        levelCodes: body.levelCodes,
+      },
+      select: { dailyCardLimit: true, levelCodes: true },
+    });
+    return { success: true, data: { ...saved, levels } };
+  }
+
+  private publicLevels(): Promise<{ code: string; name: string }[]> {
+    return this.prisma.level.findMany({
+      where: { status: 'published', deletedAt: null },
+      orderBy: { orderIndex: 'asc' },
+      select: { code: true, name: true },
+    });
   }
 }
 

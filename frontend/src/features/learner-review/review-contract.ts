@@ -39,7 +39,11 @@ export const reviewSessionSchema = z.object({
 });
 
 export const reviewQueueEnvelopeSchema = backendEnvelope(
-  z.object({ dueCount: count, items: z.array(reviewItemSchema) }),
+  z.object({
+    dueCount: count,
+    dailyLimitReached: z.boolean(),
+    items: z.array(reviewItemSchema),
+  }),
 );
 export const reviewCreateEnvelopeSchema = backendEnvelope(
   z.object({ created: z.boolean(), session: reviewSessionSchema }),
@@ -77,6 +81,7 @@ const percent = z.number().int().min(0).max(100).nullable();
 /** M3.3b (Q268): `GET /review/overview`. */
 export const reviewOverviewEnvelopeSchema = backendEnvelope(
   z.object({
+    timezone: z.string().min(1),
     dueToday: count,
     upcoming: z.object({ days3: count, days7: count, days14: count }),
     retention7d: percent,
@@ -98,7 +103,32 @@ export const reviewOverviewEnvelopeSchema = backendEnvelope(
 );
 
 export const reviewCreateInputSchema = z
-  .object({ limit: z.number().int().min(1).max(50).optional() })
+  .object({
+    limit: z.number().int().min(1).max(50).optional(),
+    retrySessionId: id.max(2_147_483_647).optional(),
+  })
+  .strict();
+
+/** M3.3c (Q279/Q280): `GET`/`PUT /review/preferences`. */
+export const REVIEW_DAILY_CARD_LIMITS = [10, 20, 30] as const;
+const dailyCardLimit = z.union([z.literal(10), z.literal(20), z.literal(30)]);
+const levelCode = z.string().min(1).max(32);
+
+export const reviewPreferencesEnvelopeSchema = backendEnvelope(
+  z.object({
+    dailyCardLimit,
+    levelCodes: z.array(levelCode),
+    levels: z.array(z.object({ code: levelCode, name: z.string() })),
+  }),
+);
+export const reviewPreferencesInputSchema = z
+  .object({
+    dailyCardLimit,
+    levelCodes: z
+      .array(levelCode)
+      .max(20)
+      .refine((codes) => new Set(codes).size === codes.length),
+  })
   .strict();
 export const reviewGradeInputSchema = z
   .object({

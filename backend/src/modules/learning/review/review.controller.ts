@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -23,6 +24,10 @@ import { ApiEnvelope } from '../../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
 import { ReviewOverviewResponseDto } from './dto/review-overview-response.dto';
+import {
+  ReviewPreferencesResponseDto,
+  UpdateReviewPreferencesDto,
+} from './dto/review-preferences.dto';
 import { ReviewQueueQueryDto } from './dto/review-queue-query.dto';
 import { ReviewQueueResponseDto } from './dto/review-queue-response.dto';
 import {
@@ -104,6 +109,28 @@ export class ReviewController {
     return this.reviewService.getOverview(request.user.id, new Date());
   }
 
+  /** M3.3c (Q280): the learner's settings, or the defaults without a row. */
+  @Get('preferences')
+  @Throttle({ default: { limit: reviewQueueReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ReviewPreferencesResponseDto)
+  getPreferences(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApiSuccessResponse<ReviewPreferencesResponseDto>> {
+    return this.reviewService.getPreferences(request.user.id);
+  }
+
+  @Put('preferences')
+  @Throttle({ default: { limit: reviewSessionWriteLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(ReviewPreferencesResponseDto)
+  updatePreferences(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: UpdateReviewPreferencesDto,
+  ): Promise<ApiSuccessResponse<ReviewPreferencesResponseDto>> {
+    return this.reviewService.updatePreferences(request.user.id, dto);
+  }
+
   @Post('sessions')
   @Throttle({ default: { limit: reviewSessionWriteLimit, ttl: 60_000 } })
   @Header('Cache-Control', 'no-store')
@@ -123,6 +150,7 @@ export class ReviewController {
       request.user.id,
       dto.limit,
       idempotencyKey,
+      dto.retrySessionId,
     );
     response.status(result.data.created ? 201 : 200);
     return result;

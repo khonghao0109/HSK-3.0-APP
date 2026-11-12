@@ -430,27 +430,8 @@
   }
 }
 
-/* 768px: ba ô rộng hơn, lịch và lịch sử cạnh nhau. */
-@media (min-width: 600px) and (max-width: 1023.98px) {
-  .learner-app .rvo {
-    padding-inline: 24px;
-  }
-  .learner-app .rvo-stat__label,
-  .learner-app .rvo-soon div {
-    font-size: 0.8rem;
-  }
-  .learner-app .rvo-stat__val {
-    font-size: 1.5rem;
-  }
-  .learner-app .rvo-cal__table td {
-    height: 34px;
-  }
-  .learner-app .rvo-cal__table td > span:not(.sr-only) {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8rem;
-  }
-}
+/* 768px (Q277): mobile/review-calendar.html keeps the 390px sizes inside
+   the 480px frame, so there is no tablet step between 600px and 1023px. */
 
 /* ---------- Web từ 1024px (ux-b.css) ---------- */
 @media (min-width: 1024px) {

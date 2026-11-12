@@ -100,6 +100,8 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/review\/sessions\/current$/,
   // M3.3b (Q268): the review overview of /learn/review.
   /^\/api\/v1\/review\/overview$/,
+  // M3.3c (Q279/Q280): GET and PUT of the review settings panel.
+  /^\/api\/v1\/review\/preferences$/,
   /^\/api\/v1\/review\/sessions\/\d+\/(?:reviews|complete)$/,
 ];
 
