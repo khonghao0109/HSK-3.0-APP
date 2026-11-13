@@ -664,8 +664,8 @@ Từ M3.3c, hàng đợi, phiên `due` và các số đến hạn của overview
   `dailyCardLimit = 20`, `levelCodes = []`, không tạo dòng. `levels` = mọi Level `published`,
   chưa soft-delete, theo `orderIndex` (`{ code, name }`), là các lựa chọn của bộ lọc cấp.
 - `PUT /review/preferences` upsert, trả cùng shape. `dailyCardLimit` chỉ nhận `10`, `20`, `30`;
-  `levelCodes` tối đa 20 phần tử, không trùng, mỗi code phải là Level `published` và chưa
-  soft-delete. Sai kiểu, trùng, thừa field → `400 REQUEST_VALIDATION_FAILED`; code lạ hoặc Level
+  `levelCodes` tối đa 1 phần tử (Q285), mỗi code phải là Level `published` và chưa
+  soft-delete. Sai kiểu, quá 1 phần tử, trùng, thừa field → `400 REQUEST_VALIDATION_FAILED`; code lạ hoặc Level
   không public → `400 BAD_REQUEST`. Không đổi dòng đã lưu khi lỗi.
 - Lọc cấp (Q281): thẻ còn hiệu lực có từ thuộc (`WordLevel`) ít nhất một Level `published`,
   chưa soft-delete, có `code` trong `levelCodes`. Áp cho `GET /review/queue`, phiên `due` và

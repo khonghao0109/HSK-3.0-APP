@@ -41,6 +41,16 @@ describe('review preferences (M3.3c, Q279–Q282)', () => {
       }
     });
 
+    it('accepts at most one level code (Q285)', () => {
+      expect(errorsOf({ dailyCardLimit: 20, levelCodes: [] })).toHaveLength(0);
+      expect(
+        errorsOf({ dailyCardLimit: 20, levelCodes: ['HSK1'] }),
+      ).toHaveLength(0);
+      expect(
+        errorsOf({ dailyCardLimit: 20, levelCodes: ['HSK1', 'HSK2'] }).length,
+      ).toBeGreaterThan(0);
+    });
+
     it('requires both fields and rejects extra ones', () => {
       expect(errorsOf({ dailyCardLimit: 20 }).length).toBeGreaterThan(0);
       expect(errorsOf({ levelCodes: [] }).length).toBeGreaterThan(0);

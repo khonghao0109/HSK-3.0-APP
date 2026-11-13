@@ -3088,7 +3088,7 @@ export interface components {
         UpdateReviewPreferencesDto: {
             /** @enum {integer} */
             dailyCardLimit: 10 | 20 | 30;
-            /** @description Public Level codes; empty means every level. */
+            /** @description At most one public Level code (Q285); empty means every level. */
             levelCodes: string[];
         };
         ReviewSessionDto: {

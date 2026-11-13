@@ -17,10 +17,10 @@ export class UpdateReviewPreferencesDto {
   @IsIn(DAILY_CARD_LIMITS)
   dailyCardLimit!: number;
 
-  /** Public Level codes; empty means every level. */
-  @ApiProperty({ type: [String], maxItems: 20 })
+  /** At most one public Level code (Q285); empty means every level. */
+  @ApiProperty({ type: [String], maxItems: 1 })
   @IsArray()
-  @ArrayMaxSize(20)
+  @ArrayMaxSize(1)
   @ArrayUnique()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })

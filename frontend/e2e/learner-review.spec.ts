@@ -187,7 +187,7 @@ test.describe('Learner review session (M3.3a)', () => {
       );
       await expect(
         page.locator('.rvo-cal__table td:not(.is-out)').first(),
-      ).toHaveCSS('height', '22px');
+      ).toHaveCSS('height', '18px');
     }
     await expect(
       page

@@ -252,11 +252,11 @@ describe('Review preferences E2E (M3.3c)', () => {
       });
       await putPrefs(who, {
         dailyCardLimit: 30,
-        levelCodes: [levelCodes.b, levelCodes.a],
+        levelCodes: [levelCodes.b],
       }).expect(200);
       const read = await getPrefs(who).expect(200);
       expect(read.body.data.dailyCardLimit).toBe(30);
-      expect(read.body.data.levelCodes).toEqual([levelCodes.b, levelCodes.a]);
+      expect(read.body.data.levelCodes).toEqual([levelCodes.b]);
       expect(
         await prisma.reviewPreference.count({ where: { userId: who.id } }),
       ).toBe(1);
@@ -268,6 +268,10 @@ describe('Review preferences E2E (M3.3c)', () => {
       [
         'a duplicated code',
         { dailyCardLimit: 20, levelCodes: [levelCodes.a, levelCodes.a] },
+      ],
+      [
+        'two level codes (Q285)',
+        { dailyCardLimit: 20, levelCodes: [levelCodes.a, levelCodes.b] },
       ],
       ['a limit of 15', { dailyCardLimit: 15, levelCodes: [] }],
       ['a non-numeric limit', { dailyCardLimit: 'abc', levelCodes: [] }],
