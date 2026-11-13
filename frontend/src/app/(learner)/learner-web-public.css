@@ -1,0 +1,306 @@
+/* Hán Lộ — learner public web frame `.w-public` from 1024px (M2.10c, PO Q81).
+   Source: docs/ui_reference/web/css/web.css (frame `.w-public`, "Khung chưa
+   đăng nhập") and docs/ui_reference/shared/css/base.css (`.btn--ghost`,
+   `.btn--outline`, `.btn--outline-navy`). Below 1024px `.w-public` generates
+   no box (`display: contents`), so the mobile layout of learner.css stays
+   exactly what it was; the group stylesheets (landing, legal, auth,
+   onboarding) only show their `.w-only` parts inside this media query.
+
+   Every rule here is scoped to `.learner-app .w-public …` so it cannot reach
+   the sidebar of `.w-app` (K3b).
+
+   Tokens reused from learner.css: only `--w-side/--w-top/--w-max/--w-pad`
+   are private to the web frames, so the public frame defines the two it
+   needs. */
+
+/* ---------- Below 1024px: no box of its own ---------- */
+.learner-app .w-public {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .w-public {
+    --w-max: 1200px;
+    --w-pad: 40px;
+
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* web.css `.w-public` never defines a height for `<main>`; the sample's
+     pages are tall enough. Here the frame must also hold short pages
+     (reset-password `#invalid`), so the content grows and `margin-top: auto`
+     on `.w-footer` keeps the footer at the bottom of the viewport. */
+  .learner-app .w-public > main {
+    flex: 1;
+  }
+
+  /* ---------- Kiểu chung (web.css dòng 20–33) ---------- */
+  .learner-app .w-public .w-h1 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .w-h2 {
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .w-h3 {
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .w-lead {
+    margin-top: var(--sp-1);
+    color: var(--text-muted);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .w-public .w-muted {
+    color: var(--text-muted);
+    font-size: var(--fs-md);
+  }
+
+  /* `.learner-app .cn`, unscoped by frame: the sample's `.w-cn` name. */
+  .learner-app .w-public .w-cn {
+    font-family: var(--font-cn);
+  }
+
+  .learner-app .w-public .w-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6);
+  }
+
+  .learner-app .w-public .w-card--flush {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* ---------- Buttons (web.css dòng 46–49 + base.css dòng 59–62) ---------- */
+  .learner-app .w-public .w-btn {
+    min-height: 48px;
+    padding: 0 var(--sp-6);
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .w-public .w-btn--primary {
+    background: var(--jade-800);
+    color: var(--white);
+  }
+
+  .learner-app .w-public .w-btn--primary:hover {
+    background: #05664f;
+  }
+
+  .learner-app .w-public .w-btn--lg {
+    min-height: 56px;
+    padding: 0 var(--sp-8);
+    font-size: var(--fs-lg);
+  }
+
+  .learner-app .w-public .btn--ghost {
+    background: transparent;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .btn--outline {
+    background: var(--surface-card);
+    color: var(--text-strong);
+    border-color: var(--border-default);
+  }
+
+  .learner-app .w-public .btn--outline:hover {
+    border-color: var(--border-strong);
+  }
+
+  .learner-app .w-public .btn--outline-navy {
+    background: transparent;
+    color: var(--text-strong);
+    border-color: var(--navy-900);
+  }
+
+  /* ---------- Khung chưa đăng nhập (web.css dòng 126–144) ---------- */
+  .learner-app .w-public .w-pubnav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
+    height: 72px;
+    padding: 0 max(var(--w-pad), calc((100% - var(--w-max)) / 2));
+    background: rgb(254 250 242 / 94%);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .learner-app .w-public .w-pubnav .w-brand {
+    padding-bottom: 0;
+  }
+
+  .learner-app .w-public .w-pubnav nav {
+    display: flex;
+    gap: var(--sp-6);
+  }
+
+  .learner-app .w-public .w-pubnav nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--stone-700);
+    text-decoration: none;
+  }
+
+  .learner-app .w-public .w-pubnav nav a:hover {
+    color: var(--jade-800);
+  }
+
+  .learner-app .w-public .w-pubnav__end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .learner-app .w-public .w-wrap {
+    width: 100%;
+    max-width: calc(var(--w-max) + 2 * var(--w-pad));
+    margin: 0 auto;
+    padding: 0 var(--w-pad);
+  }
+
+  .learner-app .w-public .w-footer {
+    margin-top: auto;
+    padding: var(--sp-10) 0;
+    background: var(--navy-900);
+    color: #d7ddeb;
+  }
+
+  .learner-app .w-public .w-footer a {
+    color: var(--white);
+  }
+
+  .learner-app .w-public .w-footer .w-brand__name {
+    color: var(--white);
+  }
+
+  .learner-app .w-public .w-footer__cols {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--sp-8);
+  }
+
+  .learner-app .w-public .w-footer h2 {
+    font-size: var(--fs-md);
+    color: var(--white);
+    margin-bottom: var(--sp-3);
+  }
+
+  .learner-app .w-public .w-footer ul {
+    list-style: none;
+    display: grid;
+    gap: var(--sp-2);
+    padding: 0;
+  }
+
+  .learner-app .w-public .w-footer__base {
+    margin-top: var(--sp-8);
+    padding-top: var(--sp-6);
+    border-top: 1px solid rgb(255 255 255 / 15%);
+    font-size: var(--fs-sm);
+  }
+
+  /* ---------- Grid (web.css dòng 40–44) ---------- */
+  .learner-app .w-public .w-grid {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .learner-app .w-public .w-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learner-app .w-public .w-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .learner-app .w-public .w-grid--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .learner-app .w-public .w-grid--main-aside {
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  }
+
+  /* ---------- Đoạn, thẻ nhỏ (web.css dòng 51–61) ---------- */
+  .learner-app .w-public .w-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    font-weight: 600;
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  .learner-app .w-public .w-chip img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .learner-app .w-public .w-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1). */
+  .learner-app .w-public .w-tag--soon {
+    background: var(--amber-100);
+    color: #7a5300;
+  }
+
+  /* ---------- Vòng focus nhìn thấy được (Q12) ---------- */
+  .learner-app .w-public a:focus-visible,
+  .learner-app .w-public button:focus-visible,
+  .learner-app .w-public [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+/* Forced colors drop the box-shadow ring: keep a system outline (Q12). */
+@media (min-width: 1024px) and (forced-colors: active) {
+  .learner-app .w-public a:focus-visible,
+  .learner-app .w-public button:focus-visible,
+  .learner-app .w-public [tabindex]:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+}

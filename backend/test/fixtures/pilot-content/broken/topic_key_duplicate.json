@@ -1,0 +1,11 @@
+{
+  "description": "hai topic trùng key",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "topics[0].key",
+      "to": "topics[1].key"
+    }
+  ]
+}

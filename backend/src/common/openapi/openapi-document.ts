@@ -152,7 +152,7 @@ function applyOperationConventions(operation: OperationObject): void {
               success: { type: 'boolean', enum: [true] },
               // `{}` is any JSON value: the handler has no documented model.
               data: envelope?.data ?? {},
-              meta: {
+              meta: envelope?.meta ?? {
                 $ref: getSchemaPath(
                   envelope?.paginated
                     ? ApiPageResponseMetaDto

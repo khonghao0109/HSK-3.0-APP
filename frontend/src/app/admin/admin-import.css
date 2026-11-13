@@ -1,0 +1,269 @@
+/*
+ * M5.1b2 — trang Nhập dữ liệu bài tập JSON (TL-29). Chỉ dùng biến CSS của
+ * admin (ADR-008 §3); không Tailwind, không !important.
+ */
+
+.adm-import-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--adm-sp-2, 8px);
+  margin: 0 0 var(--adm-sp-4, 16px);
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.adm-import-steps__item {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2, 8px);
+  padding: 8px 12px;
+  border: 1px solid var(--adm-slate-200);
+  border-radius: 999px;
+  background: var(--adm-paper);
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+}
+
+.adm-import-steps__item[aria-current='step'] {
+  border-color: var(--adm-jade-700);
+  background: var(--adm-jade-50);
+  color: var(--adm-jade-800);
+  font-weight: 600;
+}
+
+.adm-import-steps__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--adm-slate-100);
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-xs);
+}
+
+.adm-import-steps__item[aria-current='step'] .adm-import-steps__num {
+  background: var(--adm-jade-700);
+  color: var(--adm-paper);
+}
+
+.adm-import-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--adm-sp-4, 16px);
+}
+
+.adm-import-field__label {
+  font-size: var(--adm-fs-sm);
+  font-weight: 600;
+  color: var(--adm-slate-700);
+}
+
+.adm-import-select {
+  min-height: 44px;
+  width: 100%;
+  max-inline-size: 40rem;
+  padding: 8px 12px;
+  border: 1px solid var(--adm-slate-300);
+  border-radius: 8px;
+  background: var(--adm-paper);
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-md);
+}
+
+.adm-import-select:disabled {
+  background: var(--adm-slate-50);
+  color: var(--adm-slate-500);
+  cursor: not-allowed;
+}
+
+.adm-import-drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--adm-sp-2, 8px);
+  padding: var(--adm-sp-4, 16px);
+  border: 1px dashed var(--adm-slate-300);
+  border-radius: 12px;
+  background: var(--adm-slate-50);
+}
+
+.adm-import-drop.is-over {
+  border-color: var(--adm-jade-700);
+  background: var(--adm-jade-50);
+}
+
+.adm-import-drop[aria-disabled='true'] {
+  opacity: 0.75;
+}
+
+.adm-import-drop__label {
+  display: block;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+}
+
+.adm-import-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--adm-sp-2, 8px);
+  font-size: var(--adm-fs-sm);
+  color: var(--adm-slate-700);
+}
+
+.adm-import-file__name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* W6: số + đơn vị dung lượng là một khối không ngắt dòng. */
+.adm-import-file__size {
+  white-space: nowrap;
+}
+
+.adm-import-help {
+  margin: 0;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+}
+
+.adm-import-error {
+  margin: 0;
+  color: var(--adm-red-text);
+  font-size: var(--adm-fs-sm);
+  font-weight: 600;
+}
+
+.adm-import-hint {
+  margin: 0;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-sm);
+}
+
+.adm-import-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--adm-sp-3, 12px);
+  margin: 0;
+}
+
+.adm-import-stats__item {
+  padding: var(--adm-sp-3, 12px);
+  border: 1px solid var(--adm-slate-200);
+  border-radius: 10px;
+  background: var(--adm-paper);
+}
+
+.adm-import-stats dt {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+}
+
+.adm-import-stats dd {
+  margin: 4px 0 0;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-xl);
+  font-weight: 700;
+}
+
+.adm-import-stats__item--error dd {
+  color: var(--adm-red-text);
+}
+
+.adm-import-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.adm-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--adm-fs-sm);
+}
+
+.adm-import-table caption {
+  padding-bottom: 8px;
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  text-align: left;
+}
+
+.adm-import-table th,
+.adm-import-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--adm-slate-200);
+  text-align: left;
+  vertical-align: top;
+}
+
+.adm-import-table th {
+  color: var(--adm-slate-500);
+  font-size: var(--adm-fs-xs);
+  text-transform: uppercase;
+}
+
+.adm-import-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--adm-sp-2, 8px);
+  margin-top: var(--adm-sp-4, 16px);
+}
+
+.adm-import-success {
+  border-color: var(--adm-jade-200);
+  background: var(--adm-jade-50);
+}
+
+.adm-import-success ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.adm-import-success a {
+  color: var(--adm-jade-800);
+}
+
+/* Z6: viền focus quanh vùng thả khi nút/ô bên trong được focus (Q12). */
+.adm-import-drop:focus-within {
+  border-color: var(--adm-jade-700);
+  box-shadow: var(--adm-focus-ring);
+}
+
+/* Z8: link bài tập vừa nhập là vùng bấm ≥ 2.75rem. */
+.adm-import-success li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+/* Z13: khoảng cách tiêu đề panel / nhãn dùng biến spacing sẵn có. */
+.adm-import-page .adm-card.adm-panel > h2 {
+  margin: 0 0 var(--adm-sp-3);
+}
+
+.adm-import-page .adm-import-field {
+  margin-bottom: var(--adm-sp-3);
+}
+
+.adm-import-page #import-errors-limit {
+  margin-top: var(--adm-sp-3);
+}
+
+@media (max-width: 900px) {
+  .adm-import-select {
+    max-inline-size: 100%;
+    min-height: 44px;
+  }
+
+  .adm-import-steps {
+    flex-direction: column;
+  }
+
+  .adm-import-stats {
+    grid-template-columns: 1fr;
+  }
+}

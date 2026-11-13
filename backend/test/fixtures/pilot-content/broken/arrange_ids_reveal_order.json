@@ -1,0 +1,10 @@
+{
+  "description": "id token sắp theo thứ tự đáp án",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "sortTokenIds",
+      "exercise": 7
+    }
+  ]
+}

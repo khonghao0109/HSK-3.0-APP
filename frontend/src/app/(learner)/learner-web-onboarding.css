@@ -1,0 +1,511 @@
+/* Hán Lộ — onboarding group web styles (M2.10c). Owner: agent O.
+   Source: docs/ui_reference/web/css/onboarding.css and web/css/web.css, pages
+   web/onboarding-goal.html and web/onboarding-plan.html.
+
+   Every rule lives inside `@media (min-width: 1024px)` and is scoped to
+   `.learner-app .w-public …`, so nothing leaks into the mobile layout below
+   1024px (K3a) and nothing reaches the sidebar of `.w-app` (K3b). Below
+   1024px `.w-public` generates no box (learner-web-public.css), the web nav is
+   `.w-only` and every web-only block is `.w-only` too; the only additions to
+   the mobile flow are `div.obw-col` and `div.obw-when`, whose children carry
+   top margins only, so they add no box of their own that changes pixels. */
+
+@media (min-width: 1024px) {
+  /* ---------- Nav (mẫu .w-pubnav.obw-nav) ---------- */
+  .learner-app .w-public .obw-nav {
+    gap: var(--sp-4);
+  }
+
+  .learner-app .w-public .obw-nav .icon-btn {
+    width: 44px;
+    height: 44px;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-steps {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-left: auto;
+    font-weight: 600;
+    font-size: var(--fs-md);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-steps ol {
+    display: flex;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .learner-app .w-public .obw-steps li {
+    width: 40px;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--slate-200);
+  }
+
+  .learner-app .w-public .obw-steps li.is-done {
+    background: var(--jade-600);
+  }
+
+  /* ---------- Thân: lưới 2 cột của mẫu (.w-grid--main-aside .obw-layout) ---------- */
+  .learner-app .w-public .obw-body {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    column-gap: var(--sp-10);
+    /* Không có row-gap: hàng chỉ chứa cột trái, cột phải là một item trải hết
+       hàng (xem `.obw-summary`), nên khoảng cách dọc do margin của từng mục
+       quyết định đúng như mẫu. */
+    row-gap: 0;
+    align-items: start;
+    flex: 1;
+    /* Bỏ `min-height: 100dvh` của `.ob` mobile: khung `.w-public` đã cao 100vh
+       và `<main>` là flex item `flex: 1`. */
+    min-height: 0;
+    padding-top: var(--sp-10);
+    padding-bottom: var(--sp-12);
+  }
+
+  /* R1: `learner.css:638-640` đặt `box-shadow: var(--shadow-app-desktop)` cho
+     `.app` từ 768px (khung mobile dạng thẻ). Mẫu web không có bóng đổ trên
+     `main.w-wrap.obw-body` — bỏ ở bất biến web, giữ nguyên dưới 1024px. */
+  .learner-app .w-public main.obw-body {
+    box-shadow: none;
+  }
+
+  /* Cột trái là lưới một cột: `grid-row` bên dưới chèn `.obw-tip` vào đúng chỗ
+     của mẫu mà không cần `order` (V1). `order` không được chạm vào tiêu đề,
+     radio hay nút, vì nó đẩy tiêu đề "Bạn muốn đạt trình độ HSK nào?" xuống
+     dưới dãy cấp — đúng lỗi vòng trước. */
+  .learner-app .w-public .obw-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  /* Kế hoạch: mẫu đặt `.obw-tip` ngay dưới dãy phút (trong cùng `.obw-sec`),
+     trước tiêu đề "Bạn muốn học vào lúc nào?"; DOM mobile lại để nó ở cuối cột.
+     `.obw-tip` không có tiêu đề và không có control nên chỉ nó đổi chỗ; mọi
+     phần tử khác giữ nguyên thứ tự DOM. */
+  .learner-app .w-public .obw-col > .obw-tip {
+    grid-row: 4;
+  }
+
+  /* Mẫu `body.web { background: var(--cream-50) }`, nhưng learner.css đổi
+     `.learner-app` sang --cream-100 từ 768px và `.app` chỉ rộng tối đa 1280px
+     (`.w-wrap`), nên ở 1440 thấy hai dải --cream-100 hai bên khung (V4). Phủ
+     nền mẫu lên cả khung onboarding; các thẻ/footer vẫn có nền riêng. */
+  .learner-app .w-public:has(> main.obw-body) {
+    background: var(--surface-canvas);
+  }
+
+  /* Mẫu có mũi tên trong nút "Tiếp tục" (`.w-btn > .icon`); bản mobile không
+     có nên SVG mang `.w-only` (learner.css ẩn ở mọi khổ). Hiện lại đúng ở web
+     (V3); dưới 1024px không rule nào áp dụng. */
+  .learner-app .w-public .obw-cta__arrow {
+    display: inline-block;
+  }
+
+  /* ---------- Khoảng cách dọc cột trái (mẫu .obw-head/.obw-sec) ---------- */
+  .learner-app .w-public .obw-col > .ob__title {
+    margin-top: 0;
+  }
+
+  /* Mẫu mở đầu mỗi mục bằng khoảng `--sp-10` (.obw-sec + .obw-sec). */
+  .learner-app .w-public .obw-col > .ob__section {
+    margin-top: var(--sp-10);
+  }
+
+  /* Mẫu để câu dẫn trên một dòng; mobile ngắt bằng `<br>` thật, ở web bỏ
+     `<br>`. Khoảng trắng giữa hai vế là text node thật trong TSX (`{' '}`), không
+     phải `::before`: `innerText` (và text selection) không thấy nội dung sinh ra
+     bởi CSS, nên chữ trong DOM sẽ dính nhau dù mắt thấy cách (V2). */
+  .learner-app .w-public .w-h1 > br,
+  .learner-app .w-public .w-lead > br {
+    display: none;
+  }
+
+  .learner-app .w-public .obw-col > .w-lead {
+    margin-top: var(--sp-1);
+  }
+
+  .learner-app .w-public .obw-col > .alert {
+    margin-top: var(--sp-4);
+  }
+
+  /* ---------- Mục tiêu (mẫu .obw-sec + .obw-goals) ---------- */
+  .learner-app .w-public .obw-goals__title {
+    display: block;
+    margin-top: var(--sp-8);
+  }
+
+  .learner-app .w-public .obw-goals {
+    margin-top: var(--sp-4);
+    gap: var(--sp-4);
+  }
+
+  .learner-app .w-public .obw-goal {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: var(--sp-3);
+    min-height: 176px;
+    padding: var(--sp-5) var(--sp-3);
+    cursor: pointer;
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+    font-weight: 600;
+    font-size: var(--fs-lg);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-goal:hover {
+    border-color: var(--jade-600);
+  }
+
+  .learner-app .w-public .obw-goal img {
+    width: 88px;
+    height: 86px;
+  }
+
+  .learner-app .w-public .obw-goal .goal__check {
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    color: var(--jade-700);
+  }
+
+  /* App dùng `role="radio"` + `aria-checked` (một bản radio duy nhất trong
+     DOM), mẫu dùng `aria-pressed` trên `<button>`: cùng một trạng thái. */
+  .learner-app .w-public .obw-goal[aria-checked='true'] {
+    border: 2px solid var(--jade-700);
+    background: var(--jade-50);
+  }
+
+  /* ---------- Cấp HSK: segmented (mẫu .obw-levels) ---------- */
+  .learner-app .w-public .obw-levels {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: var(--sp-4);
+    padding: 6px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-pill);
+    background: var(--cream-100);
+  }
+
+  .learner-app .w-public .obw-levels button {
+    width: auto;
+    height: auto;
+    min-height: 48px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: none;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-strong);
+    cursor: pointer;
+  }
+
+  .learner-app .w-public .obw-levels button:hover {
+    background: var(--surface-card);
+  }
+
+  .learner-app .w-public .obw-levels button[aria-checked='true'] {
+    background: var(--jade-800);
+    color: var(--white);
+    font-weight: 700;
+    /* Bỏ quầng jade-100 của mobile; vòng focus vẫn vẽ ở rule dưới. */
+    box-shadow: none;
+  }
+
+  .learner-app .w-public .obw-levels button:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* ---------- Thẻ thông tin cấp (mẫu .w-card.obw-info) ---------- */
+  .learner-app .w-public .obw-info {
+    display: flex;
+    gap: var(--sp-4);
+    align-items: flex-start;
+    margin-top: var(--sp-4);
+  }
+
+  .learner-app .w-public .obw-info > .icon {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    margin-top: 0;
+    color: var(--amber-500);
+    fill: var(--amber-500);
+  }
+
+  .learner-app .w-public .obw-info strong {
+    display: block;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-info p {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .w-public .obw-info p > br {
+    display: none;
+  }
+
+  /* ---------- Số phút mỗi ngày (mẫu .obw-minutes) ---------- */
+  .learner-app .w-public .obw-minutes {
+    margin-top: var(--sp-8);
+    gap: var(--sp-4);
+  }
+
+  .learner-app .w-public .obw-minute {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    width: 100%;
+    padding: var(--sp-8) var(--sp-4) var(--sp-6);
+    cursor: pointer;
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .w-public .obw-minute:hover {
+    border-color: var(--jade-600);
+  }
+
+  .learner-app .w-public .obw-minute b {
+    font-size: var(--fs-display);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-minute > span {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-minute small {
+    margin-top: var(--sp-3);
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  /* Q79: số lớn giữ màu mẫu, chữ "phút" #c2410c (5,18:1). */
+  .learner-app .w-public .obw-minute--fast b {
+    color: #e2553a;
+  }
+
+  .learner-app .w-public .obw-minute--fast > span {
+    color: #c2410c;
+  }
+
+  .learner-app .w-public .obw-minute[aria-checked='true'] {
+    border: 2px solid var(--jade-700);
+    background: var(--jade-50);
+  }
+
+  .learner-app .w-public .obw-minute[aria-checked='true'] b,
+  .learner-app .w-public .obw-minute[aria-checked='true'] > span {
+    color: var(--jade-800);
+  }
+
+  .learner-app .w-public .obw-minute__check {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: none;
+    width: 24px;
+    height: 24px;
+    color: var(--jade-700);
+  }
+
+  .learner-app .w-public .obw-minute[aria-checked='true'] .obw-minute__check {
+    display: block;
+  }
+
+  /* ---------- Gợi ý (mẫu .obw-tip) ---------- */
+  .learner-app .w-public .obw-tip {
+    display: flex;
+    gap: var(--sp-4);
+    align-items: center;
+    margin-top: var(--sp-6);
+    padding: var(--sp-5) var(--sp-6);
+    border-radius: var(--r-lg);
+    background: var(--cream-100);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    color: var(--stone-700);
+  }
+
+  .learner-app .w-public .obw-tip .icon {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    color: var(--amber-500);
+    fill: var(--amber-500);
+  }
+
+  .learner-app .w-public .obw-tip__text > br {
+    display: none;
+  }
+
+  /* ---------- Giờ học + nhắc nhở (mẫu .obw-when) ---------- */
+  .learner-app .w-public .obw-when {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--sp-4);
+    margin-top: var(--sp-4);
+    align-items: stretch;
+  }
+
+  /* Mobile đặt margin-top riêng cho hai ô; ở web khoảng cách do lưới quyết định. */
+  .learner-app .w-public .obw-when > * {
+    margin-top: 0;
+  }
+
+  .learner-app .w-public .obw-time {
+    position: relative;
+    display: block;
+  }
+
+  .learner-app .w-public .obw-time > .icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    color: var(--text-strong);
+    pointer-events: none;
+  }
+
+  .learner-app .w-public .obw-time select {
+    height: 100%;
+    min-height: 72px;
+    padding-left: 56px;
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    border-radius: var(--r-lg);
+    /* Trả mũi tên về đúng base.css của mẫu (mobile phóng to 20px). */
+    background-size: auto;
+    background-position: right 0.9rem center;
+  }
+
+  .learner-app .w-public .obw-remind {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-3) var(--sp-4) var(--sp-5);
+  }
+
+  .learner-app .w-public .obw-remind > .icon {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-remind strong {
+    display: block;
+    font-size: var(--fs-base);
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-remind small {
+    display: block;
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+    text-wrap: pretty;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Panel tóm tắt bên phải (mẫu aside.w-card.obw-summary).
+     Chính là `.ob__footer` của mobile nên nút "Tiếp tục" chỉ có một bản
+     trong DOM; mobile giữ sticky đáy, web đổi thành sticky đỉnh. ---------- */
+  .learner-app .w-public .obw-summary {
+    position: sticky;
+    top: calc(72px + var(--sp-6));
+    bottom: auto;
+    margin: 0;
+    display: grid;
+    gap: var(--sp-5);
+    align-content: start;
+  }
+
+  .learner-app .w-public .obw-summary__panel {
+    display: grid;
+    gap: var(--sp-5);
+  }
+
+  .learner-app .w-public .obw-summary__list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+  }
+
+  .learner-app .w-public .obw-summary__list > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-4);
+    min-height: 48px;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .learner-app .w-public .obw-summary dt {
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .w-public .obw-summary dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+    color: var(--text-strong);
+  }
+
+  .learner-app .w-public .obw-summary .btn {
+    width: 100%;
+    min-height: 56px;
+    padding: 0 var(--sp-8);
+    border-radius: var(--r-md);
+    font-size: var(--fs-lg);
+  }
+
+  /* Lỗi gửi form (chỉ màn Kế hoạch) nằm trong panel; khoảng cách do gap. */
+  .learner-app .w-public .obw-summary .alert {
+    margin-bottom: 0;
+  }
+
+  .learner-app .w-public .obw-summary__note {
+    display: flex;
+    gap: var(--sp-2);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .w-public .obw-summary__note .icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+  }
+}

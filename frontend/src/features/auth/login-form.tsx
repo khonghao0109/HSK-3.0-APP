@@ -8,10 +8,10 @@ import { recoverSession } from './session-recovery';
 type RecoveryStatus = 'not-required' | 'checking' | 'ready' | 'failed';
 
 export const LOGIN_ERROR_MESSAGES = {
-  invalidCredentials: 'Email or password is incorrect.',
+  invalidCredentials: 'Email hoặc mật khẩu không đúng.',
   accountLocked:
-    'This account is temporarily locked after too many failed sign-ins. Try again later.',
-  rateLimited: 'Too many sign-in attempts. Wait a moment and try again.',
+    'Tài khoản tạm khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau.',
+  rateLimited: 'Quá nhiều lần thử đăng nhập. Chờ một lúc rồi thử lại.',
 } as const;
 
 function isAccountLocked(body: unknown): boolean {
@@ -33,7 +33,7 @@ export function LoginForm({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(
-    sessionEnded ? 'Your session ended. Sign in again to continue.' : null,
+    sessionEnded ? 'Phiên đã kết thúc. Đăng nhập lại để tiếp tục.' : null,
   );
   const [pending, setPending] = useState(false);
   const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>(
@@ -65,7 +65,7 @@ export function LoginForm({
         ) {
           setRecoveryStatus('failed');
           setError(
-            'The previous session could not be checked safely. Retry before signing in.',
+            'Không kiểm tra được phiên trước đó một cách an toàn. Hãy thử lại trước khi đăng nhập.',
           );
         }
         return false;
@@ -89,7 +89,7 @@ export function LoginForm({
     recoveryController.current?.abort();
     recoveryController.current = null;
     recoveryPromise.current = null;
-    setError('Your session ended. Sign in again to continue.');
+    setError('Phiên đã kết thúc. Đăng nhập lại để tiếp tục.');
     void startRecovery();
   }
 
@@ -133,11 +133,11 @@ export function LoginForm({
       } else if (response.status === 401) {
         setError(LOGIN_ERROR_MESSAGES.invalidCredentials);
       } else {
-        setError('Sign-in is unavailable right now. Try again shortly.');
+        setError('Không đăng nhập được lúc này. Hãy thử lại sau ít phút.');
       }
     } catch {
       setError(
-        'The console cannot reach the service. Check your connection and retry.',
+        'Không kết nối được máy chủ. Kiểm tra kết nối mạng rồi thử lại.',
       );
     } finally {
       submitting.current = false;
@@ -149,10 +149,13 @@ export function LoginForm({
   const recoveryFailed = recoveryStatus === 'failed';
 
   return (
-    <form className="login-form" onSubmit={submit}>
-      <div className="field-stack">
-        <label htmlFor="email">Email</label>
+    <form className="adm-page-stack" onSubmit={submit}>
+      <div className="adm-field">
+        <label className="adm-field__label" htmlFor="email">
+          Email
+        </label>
         <input
+          className="adm-input"
           id="email"
           name="email"
           type="email"
@@ -160,9 +163,12 @@ export function LoginForm({
           required
         />
       </div>
-      <div className="field-stack">
-        <label htmlFor="password">Password</label>
+      <div className="adm-field">
+        <label className="adm-field__label" htmlFor="password">
+          Mật khẩu
+        </label>
         <input
+          className="adm-input"
           id="password"
           name="password"
           type="password"
@@ -172,29 +178,29 @@ export function LoginForm({
         />
       </div>
       {error ? (
-        <p className="form-error" role="alert">
+        <p className="adm-form-error" role="alert">
           {error}
         </p>
       ) : null}
       {recoveryFailed ? (
         <button
-          className="button button--ghost button--full"
+          className="adm-btn adm-btn--ghost adm-btn--block"
           type="button"
           onClick={retryRecovery}
         >
-          Retry session check
+          Thử lại
         </button>
       ) : null}
       <button
-        className="button button--primary button--full"
+        className="adm-btn adm-btn--primary adm-btn--block"
         type="submit"
         disabled={pending || recoveryFailed}
       >
         {pending && checkingSession
-          ? 'Checking session…'
+          ? 'Đang kiểm tra phiên…'
           : pending
-            ? 'Signing in…'
-            : 'Sign in'}
+            ? 'Đang đăng nhập…'
+            : 'Đăng nhập'}
       </button>
     </form>
   );

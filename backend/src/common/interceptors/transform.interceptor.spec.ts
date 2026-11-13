@@ -77,6 +77,27 @@ describe('TransformInterceptor', () => {
       });
     });
 
+    it('copies scalar extraMeta next to the base meta fields', () => {
+      const pagination = { page: 1, limit: 1, total: 0, totalPages: 0 };
+
+      expect(
+        toSuccessEnvelope(
+          {
+            success: true,
+            data: [],
+            meta: pagination,
+            extraMeta: { ingestionEnabled: false },
+          },
+          REQUEST_ID,
+          NOW,
+        ),
+      ).toEqual({
+        success: true,
+        data: [],
+        meta: { ...META, pagination, ingestionEnabled: false },
+      });
+    });
+
     it('keeps an object that merely has a success flag as data', () => {
       const body = { success: true, database: 'connected' };
 
@@ -93,6 +114,14 @@ describe('TransformInterceptor', () => {
           data: 1,
           meta: { page: 1, limit: 1, total: 1, totalPages: 1, cursor: 'x' },
         },
+      ],
+      [
+        'extraMeta overriding requestId',
+        { success: true, data: 1, extraMeta: { requestId: 'x' } },
+      ],
+      [
+        'non-scalar extraMeta',
+        { success: true, data: 1, extraMeta: { nested: { a: 1 } } },
       ],
     ])('fails loudly on a service envelope with %s', (_, body) => {
       expect(() => toSuccessEnvelope(body, REQUEST_ID, NOW)).toThrow(

@@ -74,3 +74,35 @@ describe('LearnerAuthAlternatives', () => {
     });
   });
 });
+
+// M2.10c: dòng `.wa-switch` chỉ có ở bản web và do trang truyền vào, ở đúng vị
+// trí DOM giữa khối social và `.wa-terms` để thứ tự Tab trùng thứ tự nhìn.
+describe('LearnerAuthAlternatives — slot switchLink (M2.10c)', () => {
+  it('renders no switch line without the slot (mobile parity)', () => {
+    const { container } = render(<LearnerAuthAlternatives />);
+    expect(container.querySelector('.wa-switch')).toBeNull();
+  });
+
+  it('renders the slot between the social buttons and the legal links', () => {
+    const { container } = render(
+      <LearnerAuthAlternatives
+        switchLink={
+          <p className="wa-switch w-only">
+            Chưa có tài khoản? <a href="/sign-up">Tạo tài khoản</a>
+          </p>
+        }
+      />,
+    );
+
+    const social = container.querySelector('.auth__social')!;
+    const switchLine = container.querySelector('.wa-switch')!;
+    const terms = container.querySelector('.auth__terms')!;
+    const children = [...container.querySelectorAll('*')];
+    expect(children.indexOf(social)).toBeLessThan(children.indexOf(switchLine));
+    expect(children.indexOf(switchLine)).toBeLessThan(children.indexOf(terms));
+    expect(screen.getByRole('link', { name: 'Tạo tài khoản' })).toHaveAttribute(
+      'href',
+      '/sign-up',
+    );
+  });
+});

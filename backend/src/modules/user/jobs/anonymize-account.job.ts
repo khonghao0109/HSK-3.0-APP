@@ -56,6 +56,31 @@ export class AnonymizeAccountJob implements OnApplicationBootstrap {
     );
 
     return this.prisma.$transaction(async (tx) => {
+      // M1.7d lock order: read `userId` without a lock, then lock the `User` row
+      // before the request row — the same order the login cancellation path and
+      // the admin mutation use, so the three writers serialize instead of
+      // deadlocking. `status` and `isPastDue` are re-checked after both locks.
+      const lookup = await tx.$queryRaw<Array<{ id: number; userId: number }>>(
+        Prisma.sql`
+          SELECT id, "userId"
+          FROM "AccountDeletionRequest"
+          WHERE id = ${requestId}
+        `,
+      );
+
+      if (lookup.length === 0) {
+        this.logger.warn(
+          `Account deletion request not found (requestId: ${requestId}, jobId: ${jobId ?? 'unknown'})`,
+        );
+        return false;
+      }
+
+      const userId = lookup[0].userId;
+
+      await tx.$queryRaw(Prisma.sql`
+        SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE
+      `);
+
       const requests = await tx.$queryRaw<
         Array<{
           id: number;
@@ -76,7 +101,7 @@ export class AnonymizeAccountJob implements OnApplicationBootstrap {
 
       if (requests.length === 0) {
         this.logger.warn(
-          `Account deletion request not found (requestId: ${requestId}, jobId: ${jobId ?? 'unknown'})`,
+          `Account deletion request disappeared while locking (requestId: ${requestId}, jobId: ${jobId ?? 'unknown'})`,
         );
         return false;
       }

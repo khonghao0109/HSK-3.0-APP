@@ -1,0 +1,11 @@
+{
+  "description": "mcq answer có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].answer.extra",
+      "value": 1
+    }
+  ]
+}

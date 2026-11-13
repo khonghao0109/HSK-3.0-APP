@@ -1,0 +1,11 @@
+{
+  "description": "optionId không nằm trong options",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].answer.optionId",
+      "value": "opt-z"
+    }
+  ]
+}

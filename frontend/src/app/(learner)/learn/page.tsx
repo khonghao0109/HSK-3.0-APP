@@ -12,6 +12,7 @@ import {
 } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import {
   TOAST_COMING_SOON,
   TOAST_NOTIFICATIONS,
@@ -24,9 +25,17 @@ export const metadata: Metadata = {
   title: 'Trang chủ',
 };
 
-/** "Khám phá" shortcuts (Q1); none of the targets has shipped yet (Q16). */
-const EXPLORE = [
-  { label: 'Thi thử', icon: 'trophy', tone: 'amber' },
+/**
+ * "Khám phá" shortcuts (Q1). Q16: only "Thi thử" has shipped (M4.5 B1) and is
+ * a real link; the rest still toast "sắp ra mắt".
+ */
+const EXPLORE: ReadonlyArray<{
+  label: string;
+  icon: string;
+  tone: string;
+  href?: string;
+}> = [
+  { label: 'Thi thử', icon: 'trophy', tone: 'amber', href: '/learn/exam' },
   { label: 'Phát âm', icon: 'mic', tone: 'red' },
   { label: 'Đọc hiểu', icon: 'book-open', tone: 'jade' },
   { label: 'Tài liệu', icon: 'file-text', tone: 'blue' },
@@ -34,7 +43,7 @@ const EXPLORE = [
   { label: 'Hội thoại', icon: 'message-circle', tone: 'jade' },
   { label: 'Nhận diện chữ', icon: 'file-stack', tone: 'blue' },
   { label: 'Hỗ trợ', icon: 'help-circle', tone: 'amber' },
-] as const;
+];
 
 function Icon({ name }: { name: string }) {
   return (
@@ -82,6 +91,7 @@ export default async function LearnerHomePage() {
 
   return (
     <>
+      <LearnerWebTopbar streakDays={home.streakDays} />
       <header className="home-hero">
         <img
           className="home-hero__art"
@@ -166,7 +176,10 @@ export default async function LearnerHomePage() {
         {continueLesson && (
           <>
             <h2 className="home-section">Tiếp tục học</h2>
-            <ToastButton className="home-lesson" message={TOAST_COMING_SOON}>
+            <Link
+              className="home-lesson"
+              href={`/learn/lessons/${continueLesson.lessonId}`}
+            >
               <span className="home-lesson__art" aria-hidden="true">
                 <Icon name="book-open" />
               </span>
@@ -184,8 +197,13 @@ export default async function LearnerHomePage() {
                   {lessonPercent}%
                 </span>
               </span>
+              {/* Web card button (Q83): label by state, hidden below 1024px. */}{' '}
+              <span className="home-lesson__cta w-only">
+                {lessonPercent === 0 ? 'Bắt đầu' : 'Tiếp tục học'}
+                <Icon name="arrow-right" />
+              </span>
               <Icon name="chevron-right" />
-            </ToastButton>
+            </Link>
           </>
         )}
 
@@ -195,15 +213,27 @@ export default async function LearnerHomePage() {
         <ul className="home-explore" aria-labelledby="explore-title">
           {EXPLORE.map((item) => (
             <li key={item.label}>
-              <ToastButton message={TOAST_COMING_SOON}>
-                <span
-                  className={`home-explore__icon home-explore__icon--${item.tone}`}
-                  aria-hidden="true"
-                >
-                  <Icon name={item.icon} />
-                </span>
-                {item.label}
-              </ToastButton>
+              {item.href === undefined ? (
+                <ToastButton message={TOAST_COMING_SOON}>
+                  <span
+                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </ToastButton>
+              ) : (
+                <Link href={item.href}>
+                  <span
+                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    aria-hidden="true"
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

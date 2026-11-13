@@ -1,0 +1,11 @@
+{
+  "description": "câu ví dụ dùng chữ ngoài HSK1",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[0].example.hanzi",
+      "value": "我喜欢苹果"
+    }
+  ]
+}

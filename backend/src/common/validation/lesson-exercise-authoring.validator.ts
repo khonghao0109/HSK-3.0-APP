@@ -136,7 +136,9 @@ export function validateLessonExerciseAuthoring(
   return result;
 }
 
-function validateChoice(
+// M4.1a (TL-78) reuses these three shape validators for the question bank.
+// Behaviour stays identical for LessonExercise authoring.
+export function validateChoice(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
@@ -169,7 +171,7 @@ function validateChoice(
   };
 }
 
-function validateFillBlank(
+export function validateFillBlank(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
@@ -205,7 +207,7 @@ function validateFillBlank(
   };
 }
 
-function validateArrange(
+export function validateArrange(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {

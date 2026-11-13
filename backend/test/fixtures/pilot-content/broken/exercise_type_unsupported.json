@@ -1,0 +1,11 @@
+{
+  "description": "type quiz không thuộc phạm vi pilot",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].type",
+      "value": "quiz"
+    }
+  ]
+}

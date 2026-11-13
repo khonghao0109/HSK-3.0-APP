@@ -1,0 +1,11 @@
+{
+  "description": "schemaVersion khác 1",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "schemaVersion",
+      "value": 2
+    }
+  ]
+}

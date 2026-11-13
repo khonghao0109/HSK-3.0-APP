@@ -1,0 +1,11 @@
+{
+  "description": "block không phải object",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[0].content[0]",
+      "value": "text"
+    }
+  ]
+}

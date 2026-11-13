@@ -1,0 +1,11 @@
+{
+  "description": "lesson.slug không phải kebab-case pilot",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.slug",
+      "value": "HSK1 Pilot L01"
+    }
+  ]
+}

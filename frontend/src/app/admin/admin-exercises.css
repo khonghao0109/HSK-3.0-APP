@@ -1,0 +1,73 @@
+/**
+ * admin-exercises.css — class riêng của trang Bài tập (M5.0).
+ *
+ * Chỉ chứa những gì admin.css chưa có và chỉ trang exercises dùng:
+ * nhịp khối trong panel Nội dung, hash/review của timeline, khối đầu
+ * record-list, trạng thái rỗng dạng cột. Import từ
+ * app/admin/exercises/page.tsx và app/admin/exercises/[exerciseId]/page.tsx
+ * (CSS theo route: hai route này không chia page chung).
+ */
+
+/* Card chứa bảng/danh sách: cắt nền thead và viền li theo góc bo của card
+   (mẫu .cnt-card { overflow: hidden }); admin.css không đặt overflow cho
+   adm-card vì card khác có thể chứa popover. */
+.admin-app .adm-card--clip {
+  overflow: hidden;
+}
+
+/* Tách khối Đáp án / Giải thích khỏi JSON trong panel Nội dung
+   (tương đương .answer-block/.prose-block của V1). */
+.admin-app .adm-panel-section {
+  margin-top: var(--adm-sp-4);
+  border-top: 1px solid var(--adm-slate-100);
+  padding-top: var(--adm-sp-4);
+}
+.admin-app .adm-subhead {
+  margin-bottom: var(--adm-sp-2);
+  font-size: var(--adm-fs-md);
+  font-weight: 700;
+  color: var(--adm-navy-900);
+}
+
+/* Hash bản sửa (móc e2e .adm-hash): phải wrap trong panel hẹp (V1 .hash). */
+.admin-app .adm-hash {
+  display: block;
+  margin: var(--adm-sp-1) 0 var(--adm-sp-2);
+  color: var(--adm-slate-500);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Hàng review trong timeline: badge + ghi chú (V1 .review-record). */
+.admin-app .adm-review {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-sp-2);
+  flex-wrap: wrap;
+  color: var(--adm-slate-700);
+  font-size: var(--adm-fs-xs);
+}
+
+/* Đầu bản ghi màn hẹp: id mono xếp trên prompt (V1 .exercise-record__header). */
+.admin-app .adm-record-list__head > div {
+  min-width: 0;
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+/* Link mở bài tập trong record-list: vùng bấm ≥ 44px trên màn hẹp. */
+.admin-app .adm-record-list > li > .adm-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* Trạng thái rỗng dạng cột (trang không tìm thấy) + h1 trong empty. */
+.admin-app .adm-empty--stack {
+  flex-direction: column;
+}
+.admin-app .adm-empty h1 {
+  font-size: var(--adm-fs-xl);
+  color: var(--adm-navy-900);
+  font-weight: 700;
+}

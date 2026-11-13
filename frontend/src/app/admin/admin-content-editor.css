@@ -1,0 +1,82 @@
+/**
+ * Lớp riêng của trang soạn/sửa bài học (M5.1a, Q89–Q91) — form "Thông tin
+ * chung", card "Chủ đề của bài" và "Quy trình xuất bản". Nguồn layout: mock
+ * docs/ui_reference/admin/lesson-editor.html (le-grid/le-row), giản lược theo
+ * Q91 (chỉ phần API hỗ trợ) và map sang token/class adm- như M5.0.
+ * Biến --adm-* kế thừa từ .admin-app (admin.css); class mới bắt đầu adm-.
+ */
+
+/* Form thông tin chung: hàng 2 cột (Tiêu đề rộng hơn Cấp độ như le-row--1;
+   Thứ tự/Slug chia đều), một cột khi màn hẹp. */
+.admin-app .adm-lesson-form {
+  display: grid;
+  gap: var(--adm-sp-4);
+}
+.admin-app .adm-lesson-form__row {
+  display: grid;
+  gap: var(--adm-sp-4);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+}
+.admin-app .adm-lesson-form__row--even {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.admin-app .adm-lesson-form__actions {
+  display: flex;
+  gap: var(--adm-sp-2);
+  flex-wrap: wrap;
+}
+
+/* Giá trị chỉ đọc trong form (ví dụ Cấp độ ở trang sửa, TL-12): cùng cỡ/
+   màu chữ với input để hàng không lệch. */
+.admin-app .adm-lesson-form__static {
+  margin: 0;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--adm-navy-900);
+  font-size: var(--adm-fs-sm);
+}
+
+/* Lỗi từng field (base.css .field__error): chữ đỏ đậm đạt AA trên trắng. */
+.admin-app .adm-field__error {
+  margin: 0;
+  color: var(--adm-alert-error-text);
+  font-size: var(--adm-fs-xs);
+  line-height: 1.45;
+}
+/* Viền đỏ cho input lỗi; vòng focus giữ jade-700 theo Q12 (chỉ đổi border,
+   không đổi focus ring). */
+.admin-app .adm-input[aria-invalid='true']:not(:focus) {
+  border-color: var(--adm-red-strong);
+}
+
+/* Đầu panel có nút thao tác bên phải (card "Chủ đề của bài"). */
+.admin-app .adm-panel__head--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--adm-sp-3);
+  flex-wrap: wrap;
+}
+
+/* R7: link tiêu đề chủ đề trong thẻ màn hẹp, vùng bấm ≥ 44px. */
+.admin-app .adm-lesson-topics__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .admin-app .adm-lesson-form__row,
+  .admin-app .adm-lesson-form__row--even {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* R7: thẻ nằm trong .adm-panel đã có padding, không đệm ngang lần hai. */
+.admin-app .adm-lesson-topics__cards > li {
+  padding-inline: 0;
+}

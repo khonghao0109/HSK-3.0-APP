@@ -4,6 +4,7 @@ import {
   assertMediaIngestionEnabled,
   MediaObservabilityService,
 } from './media-observability.service';
+import { MEDIA_INGESTION_STUCK_PROCESSING_SQL } from '../../modules/cms/media-ingestion/media-ingestion.policy';
 
 describe('media operations controls and metrics', () => {
   it('fails closed when the ingestion kill switch is disabled', () => {
@@ -65,6 +66,8 @@ describe('media operations controls and metrics', () => {
     expect(query.sql).toContain('"processingStartedAt"');
     expect(query.sql).toContain("status IN ('cleanup_required', 'processing')");
     expect(query.sql).not.toContain('MIN("updatedAt")');
+    // TL-46: the stuck gauge and the admin ingestion list share one predicate.
+    expect(query.sql).toContain(MEDIA_INGESTION_STUCK_PROCESSING_SQL.sql);
     expect(output).toContain('hsk_media_cleanup_required 2');
     expect(output).toContain('hsk_media_stuck_processing 1');
   });

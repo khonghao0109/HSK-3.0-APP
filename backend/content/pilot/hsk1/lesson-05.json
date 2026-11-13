@@ -1,0 +1,590 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l05",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l05-hoc-tap-truong-hoc",
+    "title": "Học tập và trường học",
+    "description": "Bài 5 HSK1: nói về việc học tiếng Hán, chữ Hán, sách và lớp học; hỏi giờ lên lớp, tan học, hỏi bài và đọc sách ở thư viện bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1005
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "学习",
+      "pinyin": "xuéxí",
+      "meaningVi": "học tập, học",
+      "example": {
+        "hanzi": "我们在学校学习汉语。",
+        "pinyin": "Wǒmen zài xuéxiào xuéxí hànyǔ.",
+        "meaningVi": "Chúng tôi học tiếng Hán ở trường."
+      }
+    },
+    {
+      "hanzi": "学",
+      "pinyin": "xué",
+      "meaningVi": "học",
+      "example": {
+        "hanzi": "他在学校学汉语。",
+        "pinyin": "Tā zài xuéxiào xué hànyǔ.",
+        "meaningVi": "Anh ấy học tiếng Hán ở trường."
+      }
+    },
+    {
+      "hanzi": "汉语",
+      "pinyin": "hànyǔ",
+      "meaningVi": "tiếng Hán, tiếng Trung",
+      "example": {
+        "hanzi": "我很喜欢汉语。",
+        "pinyin": "Wǒ hěn xǐhuan hànyǔ.",
+        "meaningVi": "Tôi rất thích tiếng Hán."
+      }
+    },
+    {
+      "hanzi": "汉字",
+      "pinyin": "hànzì",
+      "meaningVi": "chữ Hán",
+      "example": {
+        "hanzi": "这个汉字很难。",
+        "pinyin": "Zhège hànzì hěn nán.",
+        "meaningVi": "Chữ Hán này rất khó."
+      }
+    },
+    {
+      "hanzi": "书",
+      "pinyin": "shū",
+      "meaningVi": "sách",
+      "example": {
+        "hanzi": "桌子上有一本书。",
+        "pinyin": "Zhuōzi shàng yǒu yī běn shū.",
+        "meaningVi": "Trên bàn có một quyển sách."
+      }
+    },
+    {
+      "hanzi": "读",
+      "pinyin": "dú",
+      "meaningVi": "đọc",
+      "example": {
+        "hanzi": "请读这个汉字。",
+        "pinyin": "Qǐng dú zhège hànzì.",
+        "meaningVi": "Hãy đọc chữ Hán này."
+      }
+    },
+    {
+      "hanzi": "写",
+      "pinyin": "xiě",
+      "meaningVi": "viết",
+      "example": {
+        "hanzi": "我写我的名字。",
+        "pinyin": "Wǒ xiě wǒ de míngzi.",
+        "meaningVi": "Tôi viết tên mình."
+      }
+    },
+    {
+      "hanzi": "说",
+      "pinyin": "shuō",
+      "meaningVi": "nói",
+      "example": {
+        "hanzi": "你会说汉语吗？",
+        "pinyin": "Nǐ huì shuō hànyǔ ma?",
+        "meaningVi": "Bạn biết nói tiếng Hán không?"
+      }
+    },
+    {
+      "hanzi": "见",
+      "pinyin": "jiàn",
+      "meaningVi": "thấy, gặp",
+      "example": {
+        "hanzi": "我们明天见老师。",
+        "pinyin": "Wǒmen míngtiān jiàn lǎoshī.",
+        "meaningVi": "Ngày mai chúng tôi gặp giáo viên."
+      }
+    },
+    {
+      "hanzi": "听",
+      "pinyin": "tīng",
+      "meaningVi": "nghe",
+      "example": {
+        "hanzi": "我听老师说话。",
+        "pinyin": "Wǒ tīng lǎoshī shuōhuà.",
+        "meaningVi": "Tôi nghe giáo viên nói."
+      }
+    },
+    {
+      "hanzi": "学校",
+      "pinyin": "xuéxiào",
+      "meaningVi": "trường học",
+      "example": {
+        "hanzi": "我的学校很大。",
+        "pinyin": "Wǒ de xuéxiào hěn dà.",
+        "meaningVi": "Trường của tôi rất lớn."
+      }
+    },
+    {
+      "hanzi": "课",
+      "pinyin": "kè",
+      "meaningVi": "bài học, tiết học",
+      "example": {
+        "hanzi": "今天上午有课。",
+        "pinyin": "Jīntiān shàngwǔ yǒu kè.",
+        "meaningVi": "Sáng nay có tiết học."
+      }
+    },
+    {
+      "hanzi": "课本",
+      "pinyin": "kèběn",
+      "meaningVi": "sách giáo khoa",
+      "example": {
+        "hanzi": "我的课本在桌子上。",
+        "pinyin": "Wǒ de kèběn zài zhuōzi shàng.",
+        "meaningVi": "Sách giáo khoa của tôi ở trên bàn."
+      }
+    },
+    {
+      "hanzi": "考试",
+      "pinyin": "kǎoshì",
+      "meaningVi": "kỳ thi, thi",
+      "example": {
+        "hanzi": "明天我们有考试。",
+        "pinyin": "Míngtiān wǒmen yǒu kǎoshì.",
+        "meaningVi": "Ngày mai chúng tôi có kỳ thi."
+      }
+    },
+    {
+      "hanzi": "字",
+      "pinyin": "zì",
+      "meaningVi": "chữ, chữ viết",
+      "example": {
+        "hanzi": "这个字怎么读？",
+        "pinyin": "Zhège zì zěnme dú?",
+        "meaningVi": "Chữ này đọc thế nào?"
+      }
+    },
+    {
+      "hanzi": "问",
+      "pinyin": "wèn",
+      "meaningVi": "hỏi",
+      "example": {
+        "hanzi": "我问老师这个字。",
+        "pinyin": "Wǒ wèn lǎoshī zhège zì.",
+        "meaningVi": "Tôi hỏi giáo viên chữ này."
+      }
+    },
+    {
+      "hanzi": "知道",
+      "pinyin": "zhīdào",
+      "meaningVi": "biết",
+      "example": {
+        "hanzi": "我知道他的名字。",
+        "pinyin": "Wǒ zhīdào tā de míngzi.",
+        "meaningVi": "Tôi biết tên của anh ấy."
+      }
+    },
+    {
+      "hanzi": "上课",
+      "pinyin": "shàngkè",
+      "meaningVi": "lên lớp, vào tiết",
+      "example": {
+        "hanzi": "我们明天八点上课。",
+        "pinyin": "Wǒmen míngtiān bā diǎn shàngkè.",
+        "meaningVi": "Chúng tôi lên lớp lúc 8 giờ sáng ngày mai."
+      }
+    },
+    {
+      "hanzi": "下课",
+      "pinyin": "xiàkè",
+      "meaningVi": "tan học, hết tiết",
+      "example": {
+        "hanzi": "我们四点下课。",
+        "pinyin": "Wǒmen sì diǎn xiàkè.",
+        "meaningVi": "Chúng tôi tan học lúc 4 giờ."
+      }
+    },
+    {
+      "hanzi": "图书馆",
+      "pinyin": "túshūguǎn",
+      "meaningVi": "thư viện",
+      "example": {
+        "hanzi": "图书馆在学校里边。",
+        "pinyin": "Túshūguǎn zài xuéxiào lǐbian.",
+        "meaningVi": "Thư viện ở trong trường."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: học tập và trường học",
+      "subtitle": "20 từ HSK1 về việc học, chữ Hán, sách, lớp học và thư viện",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 5 gồm 20 từ vựng HSK1 dùng khi nói về học tập và trường học. Nhóm động từ: 学习 (học tập), 学 (học), 读 (đọc), 写 (viết), 说 (nói), 听 (nghe), 问 (hỏi), 见 (thấy, gặp), 知道 (biết). Nhóm đồ vật học tập: 书 (sách), 课本 (sách giáo khoa), 字 (chữ), 汉字 (chữ Hán). Nhóm ngôn ngữ: 汉语 (tiếng Hán). Nhóm địa điểm và hoạt động ở trường: 学校 (trường học), 课 (tiết học), 上课 (lên lớp), 下课 (tan học), 考试 (kỳ thi), 图书馆 (thư viện). Đọc to từng từ, chú ý thanh điệu của 学习 (xuéxí), 汉语 (hànyǔ), 汉字 (hànzì) và 图书馆 (túshūguǎn)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 学习/学, động từ + tân ngữ, 上课/下课, 问/知道, 见",
+      "subtitle": "Năm điểm ngữ pháp cần khi nói về việc học ở trường",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 学习 và 学 đều là “học”. Cả hai đều đi được với tân ngữ (学习汉语 = 学汉语); 学习 trang trọng hơn và hay dùng một mình khi nói chung về việc học, còn 学 khẩu ngữ và gọn hơn. Ví dụ: 我学习汉语。 (Wǒ xuéxí hànyǔ.) = Tôi học tiếng Hán. / 我在学习。 (Wǒ zài xuéxí.) = Tôi đang học. / 我学汉字。 (Wǒ xué hànzì.) = Tôi học chữ Hán."
+        },
+        {
+          "type": "text",
+          "value": "2. Động từ + tân ngữ: 说 (nói), 读 (đọc), 写 (viết) đứng trước tân ngữ chỉ ngôn ngữ hoặc chữ: 说汉语, 读课本, 写汉字. 听 (nghe) nhận một cụm chủ vị làm tân ngữ: 我听老师说话 = tôi nghe thầy/cô nói, ở đó 老师说话 là cụm chủ vị (老师 không phải tân ngữ trực tiếp của 听). Ví dụ: 我说汉语。 (Wǒ shuō hànyǔ.) = Tôi nói tiếng Hán. / 我读课本。 (Wǒ dú kèběn.) = Tôi đọc sách giáo khoa. / 我写汉字。 (Wǒ xiě hànzì.) = Tôi viết chữ Hán. / 我听老师说话。 (Wǒ tīng lǎoshī shuōhuà.) = Tôi nghe giáo viên nói."
+        },
+        {
+          "type": "text",
+          "value": "3. 上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết) là động từ ghép, không cần tân ngữ. Trạng ngữ thời gian đứng trước động từ: chủ ngữ + thời gian + 上课/下课. Ví dụ: 我们上午八点上课。 (Wǒmen shàngwǔ bā diǎn shàngkè.) = Chúng tôi lên lớp lúc 8 giờ sáng. / 我们三点下课。 (Wǒmen sān diǎn xiàkè.) = Chúng tôi tan học lúc 3 giờ."
+        },
+        {
+          "type": "text",
+          "value": "4. 问 (hỏi) đứng trước người được hỏi, sau đó là việc được hỏi: 问 + người + việc. 知道 (biết) + sự việc hoặc người; trong phạm vi HSK1 không dùng 很 + 知道. Ví dụ: 我问老师这个字。 (Wǒ wèn lǎoshī zhège zì.) = Tôi hỏi giáo viên chữ này. / 我知道他的名字。 (Wǒ zhīdào tā de míngzi.) = Tôi biết tên của anh ấy."
+        },
+        {
+          "type": "text",
+          "value": "5. 见 nghĩa là “thấy, gặp”, dùng trong lời hẹn gặp: 我们明天见。 (Wǒmen míngtiān jiàn.) = Ngày mai chúng ta gặp nhau. / 明天见！ (Míngtiān jiàn!) = Mai gặp nhé! 见 không đi với 很; muốn nói “rất vui được biết bạn” ở HSK1 dùng 很高兴认识你 (认识 là từ của bài 1)."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: giờ học, hỏi bài, thư viện",
+      "subtitle": "Hội thoại ngắn ở trường; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你明天有课吗？ B: 有，我们上午八点上课。 (Nǐ míngtiān yǒu kè ma? / Yǒu, wǒmen shàngwǔ bā diǎn shàngkè.) — A: Ngày mai bạn có tiết không? B: Có, chúng ta lên lớp lúc 8 giờ sáng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你们几点下课？ B: 我们下午四点下课。 (Nǐmen jǐ diǎn xiàkè? / Wǒmen xiàwǔ sì diǎn xiàkè.) — A: Mấy giờ các bạn tan học? B: Chúng tôi tan học lúc 4 giờ chiều."
+        },
+        {
+          "type": "text",
+          "value": "A: 这个汉字怎么读？ B: 我去问老师。 (Zhège hànzì zěnme dú? / Wǒ qù wèn lǎoshī.) — A: Chữ Hán này đọc thế nào? B: Tôi đi hỏi giáo viên."
+        },
+        {
+          "type": "text",
+          "value": "A: 你知道这个字吗？ B: 不知道，我在学习汉语。 (Nǐ zhīdào zhège zì ma? / Bù zhīdào, wǒ zài xuéxí hànyǔ.) — A: Bạn biết chữ này không? B: Không biết, tôi đang học tiếng Hán."
+        },
+        {
+          "type": "text",
+          "value": "A: 我们去图书馆读书吧。 B: 好，图书馆有很多书。 (Wǒmen qù túshūguǎn dú shū ba. / Hǎo, túshūguǎn yǒu hěn duō shū.) — A: Chúng ta đến thư viện đọc sách nhé. B: Được, thư viện có rất nhiều sách."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l05:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “thư viện”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "图书馆"
+          },
+          {
+            "id": "opt-b",
+            "text": "学校"
+          },
+          {
+            "id": "opt-c",
+            "text": "课本"
+          },
+          {
+            "id": "opt-d",
+            "text": "考试"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "图书馆 (túshūguǎn) nghĩa là “thư viện”. 学校 (xuéxiào) là “trường học”, 课本 (kèběn) là “sách giáo khoa”, 考试 (kǎoshì) là “kỳ thi”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我们八点___。 (Chúng tôi lên lớp lúc 8 giờ.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "下课"
+          },
+          {
+            "id": "opt-b",
+            "text": "上课"
+          },
+          {
+            "id": "opt-c",
+            "text": "知道"
+          },
+          {
+            "id": "opt-d",
+            "text": "考试"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "上课 (shàngkè) nghĩa là “lên lớp, vào tiết”, nên 我们八点上课 = chúng tôi lên lớp lúc 8 giờ. 下课 nghĩa “tan học”, không khớp nghĩa của câu. 考试 và 知道 đặt sau 八点 vẫn đúng ngữ pháp (我们八点考试 = chúng tôi thi lúc 8 giờ) nhưng sai nghĩa theo bản dịch nên bị loại.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___老师这个字。 (Tôi hỏi giáo viên chữ này.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "说"
+          },
+          {
+            "id": "opt-b",
+            "text": "听"
+          },
+          {
+            "id": "opt-c",
+            "text": "问"
+          },
+          {
+            "id": "opt-d",
+            "text": "读"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "问 (wèn) nghĩa là “hỏi”, đúng cấu trúc 问 + người + việc: 我问老师这个字 = tôi hỏi giáo viên chữ này. 说 là “nói”, 听 là “nghe”, 读 là “đọc”; ba từ này không diễn tả việc đặt câu hỏi nên không khớp nghĩa câu.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “kỳ thi”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "汉字"
+          },
+          {
+            "id": "opt-b",
+            "text": "课本"
+          },
+          {
+            "id": "opt-c",
+            "text": "字"
+          },
+          {
+            "id": "opt-d",
+            "text": "考试"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "考试 (kǎoshì) nghĩa là “kỳ thi, thi”. 汉字 (hànzì) là “chữ Hán”, 课本 (kèběn) là “sách giáo khoa”, 字 (zì) là “chữ”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我学习___。(Tôi học tiếng Hán.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "汉语",
+          "hànyǔ",
+          "hanyu"
+        ]
+      },
+      "explanation": "汉语 (hànyǔ) nghĩa là “tiếng Hán”. Trong câu này 学习 đi với tân ngữ chỉ môn học: 我学习汉语 = tôi học tiếng Hán. (学习 cũng có thể đứng một mình: 我在学习 = tôi đang học.)",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我的___在桌子上。(Sách giáo khoa của tôi ở trên bàn.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "课本",
+          "kèběn",
+          "keben"
+        ]
+      },
+      "explanation": "课本 (kèběn) nghĩa là “sách giáo khoa”; 我的课本在桌子上 = sách giáo khoa của tôi ở trên bàn. 书 chỉ là “sách” nói chung, còn 课本 mới đúng nghĩa sách học trong câu này.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们四点___。(Chúng tôi tan học lúc 4 giờ.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "下课",
+          "xiàkè",
+          "xiake"
+        ]
+      },
+      "explanation": "下课 (xiàkè) nghĩa là “tan học, hết tiết”; 我们四点下课 = chúng tôi tan học lúc 4 giờ. Trạng ngữ thời gian 四点 đứng trước động từ 下课.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + tân ngữ: “Tôi học tiếng Hán.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k4",
+            "text": "汉语"
+          },
+          {
+            "id": "tkn-q7",
+            "text": "我"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "学习"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-q7",
+          "tkn-b2",
+          "tkn-k4"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我学习汉语. Năm hoán vị còn lại đều sai vì câu HSK1 theo trật tự chủ ngữ + động từ + tân ngữ: 学习 phải đứng sau chủ ngữ 我 và trước tân ngữ 汉语 (ví dụ sai: 我汉语学习, 学习我汉语, 汉语学习我).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + 都 + động từ + tân ngữ: “Chúng tôi đều thích tiếng Hán.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k4",
+            "text": "汉语"
+          },
+          {
+            "id": "tkn-d3",
+            "text": "都"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-x2",
+            "text": "喜欢"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-d3",
+          "tkn-x2",
+          "tkn-k4"
+        ]
+      },
+      "explanation": "Có 24 hoán vị; theo đúng trật tự chủ ngữ + 都 + động từ + tân ngữ, chỉ 1 hoán vị đúng là 我们都喜欢汉语: 都 đứng sau chủ ngữ 我们 và trước động từ 喜欢, 汉语 là tân ngữ đứng sau 喜欢. Ví dụ sai: 都我们喜欢汉语, 我们喜欢都汉语, 我们汉语喜欢都, 喜欢都我们汉语. (Câu đảo tân ngữ như 我们汉语都喜欢 là trật tự topic–comment, không thuộc yêu cầu của bài.)",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l05:e10",
+      "topicKey": "t01",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Chữ Hán này rất khó.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-n2",
+            "text": "难"
+          },
+          {
+            "id": "tkn-z3",
+            "text": "这个"
+          },
+          {
+            "id": "tkn-h5",
+            "text": "汉字"
+          },
+          {
+            "id": "tkn-b7",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z3",
+          "tkn-h5",
+          "tkn-b7",
+          "tkn-n2"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 这个汉字很难. 23 hoán vị còn lại đều sai vì 这个 phải đứng trước danh từ 汉字, 很 phải đứng ngay trước tính từ 难 và tính từ không được đứng trước chủ ngữ (ví dụ sai: 汉字这个很难, 这个很难汉字, 很这个汉字难, 难这个汉字很).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 学习 xuéxí, 汉语 hànyǔ, 汉字 hànzì, 上课 shàngkè, 下课 xiàkè, 图书馆 túshūguǎn)",
+      "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh HSK1",
+      "câu ví dụ và text block chỉ dùng chữ Hán thuộc HSK1",
+      "đáp án và explanation của cả 10 bài tập",
+      "vị trí đáp án 4 bài mcq trải đều ở bốn vị trí 1, 2, 3, 4",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy kiểm được chữ Hán HSK1 trong words[].example và option mcq (không kiểm text block), khớp pinyin với dữ liệu từ điển trong repo, nhưng không kiểm được ngữ nghĩa và độ tự nhiên. Cần kiểm kỹ 汉语 (hànyǔ — âm tiết yu thanh 3) và 汉字 (hànzì = hàn + zì). Đoạn hội thoại trong t03 không dùng tên riêng, chỉ dùng từ HSK1.",
+    "notes": []
+  }
+}

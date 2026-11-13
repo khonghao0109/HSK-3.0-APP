@@ -22,15 +22,17 @@ export function decidePublishAction(input: {
   liveContentMatchesRevision?: boolean;
 }): PublishAction {
   if (input.requestedRevisionId !== input.latestRevisionId) {
-    throw new ConflictException(
-      'Only the latest content revision can be published.',
-    );
+    throw new ConflictException({
+      code: 'REVISION_NOT_LATEST',
+      message: 'Only the latest content revision can be published.',
+    });
   }
 
   if (input.latestDecision !== 'approved') {
-    throw new ConflictException(
-      'The latest review decision must approve this revision.',
-    );
+    throw new ConflictException({
+      code: 'REVIEW_NOT_APPROVED',
+      message: 'The latest review decision must approve this revision.',
+    });
   }
 
   if (input.liveContentMatchesRevision !== undefined) {

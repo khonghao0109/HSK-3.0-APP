@@ -1,0 +1,35 @@
+/**
+ * admin-content-list.css — class riêng của trang danh sách Nội dung
+ * `/admin/content` (M5.1a, TL-11).
+ *
+ * Chỉ chứa những gì admin.css chưa có và chỉ trang này dùng. Swap
+ * bảng/record-list dùng sẵn `adm-table-wrap--swap` / `adm-record-list--swap`
+ * của admin.css. Import từ app/admin/content/page.tsx (CSS theo route).
+ */
+
+/* Card chứa bảng/danh sách: cắt nền thead và viền li theo góc bo của card
+   (mẫu .cnt-card { overflow: hidden }); admin.css không đặt overflow cho
+   adm-card vì card khác có thể chứa popover. */
+.admin-app .adm-card--clip {
+  overflow: hidden;
+}
+
+/* Cột "Cập nhật gần nhất": "dd/mm/yyyy hh:mm" (Q95) không xuống dòng giữa
+   ngày và giờ. */
+.admin-app .adm-content-date {
+  white-space: nowrap;
+}
+
+/* Đầu bản ghi màn hẹp: tiêu đề + slug xếp dọc, co được. */
+.admin-app .adm-record-list__head > div {
+  min-width: 0;
+  display: grid;
+  gap: var(--adm-sp-1);
+}
+/* Link Sửa trong record-list: vùng bấm ≥ 44px trên màn hẹp. */
+.admin-app .adm-record-list > li > .adm-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

@@ -268,6 +268,53 @@ describe('AuthService login throttling and lockout', () => {
       expect(reset).toHaveBeenCalledWith(emailKey);
     });
 
+    it('only reads user-initiated requests when deciding to cancel', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([{ id: 42, expiresAt: new Date() }]);
+      executeRaw.mockResolvedValue(1);
+      verifyPassword.mockResolvedValue(true);
+
+      await login();
+
+      const [preRead] = queryRaw.mock.calls[0] as SqlCall;
+      expect(preRead.sql).toMatch(/FROM "AccountDeletionRequest"/u);
+      expect(preRead.sql).toContain(`"initiatedBy" = 'user'`);
+    });
+
+    it('locks the user row before the request row and cancels only a user-initiated request', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      queryRaw.mockResolvedValue([{ id: 42, expiresAt: new Date() }]);
+      executeRaw.mockResolvedValue(1);
+      verifyPassword.mockResolvedValue(true);
+
+      await login();
+
+      const statements = queryRaw.mock.calls.map(
+        ([call]) => (call as { sql: string }).sql,
+      );
+      const userLock = statements.findIndex((sql) =>
+        /FROM "User"[\s\S]*FOR UPDATE/u.test(sql),
+      );
+      const requestLock = statements.findIndex((sql) =>
+        /FROM "AccountDeletionRequest"[\s\S]*FOR UPDATE/u.test(sql),
+      );
+      expect(userLock).toBeGreaterThanOrEqual(0);
+      expect(requestLock).toBeGreaterThan(userLock);
+
+      const [cancel] = executeRaw.mock.calls[0] as SqlCall;
+      expect(cancel.sql).toMatch(/UPDATE "AccountDeletionRequest"/u);
+      expect(cancel.sql).toContain(`"initiatedBy" = 'user'`);
+      expect(executeRaw.mock.calls[0][0].sql).toContain(`status = 'requested'`);
+    });
+
     it('rejects with 401 and does not cancel when password is wrong for deletion_pending account', async () => {
       findUnique.mockResolvedValue({
         ...activeUser,
@@ -292,6 +339,29 @@ describe('AuthService login throttling and lockout', () => {
       verifyPassword.mockResolvedValue(true);
 
       await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(auditLogCreate).not.toHaveBeenCalled();
+    });
+
+    it('answers an admin-initiated deletion with the decoy 401 and never cancels it', async () => {
+      findUnique.mockResolvedValue({
+        ...activeUser,
+        status: 'deletion_pending',
+        deletedAt: new Date(),
+      });
+      // The pre-read filters on `initiatedBy = 'user'`, so an admin request is
+      // invisible here and login falls into the decoy branch.
+      queryRaw.mockResolvedValue([]);
+      verifyPassword.mockResolvedValue(false);
+
+      await expect(login()).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(queryRaw).toHaveBeenCalledTimes(1);
+      const [preRead] = queryRaw.mock.calls[0] as SqlCall;
+      expect(preRead.sql).toContain(`"initiatedBy" = 'user'`);
+      expect(verifyPassword).toHaveBeenCalledTimes(1);
+      // No per-account attempt is reserved, no UPDATE runs and no audit row is
+      // written for an admin-owned request.
+      expect(executeRaw).not.toHaveBeenCalled();
       expect(auditLogCreate).not.toHaveBeenCalled();
     });
   });

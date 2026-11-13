@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   backendEnvelope,
   backendPage,
+  envelopeMetaSchema,
   paginationSchema,
 } from '@/lib/api/backend-envelope';
 
@@ -63,6 +64,7 @@ export const mediaListResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(adminMediaSchema),
   meta: paginationSchema,
+  ingestionEnabled: z.boolean(),
 });
 
 export const mediaDetailResponseSchema = z.object({
@@ -79,7 +81,22 @@ export const mediaMutationResponseSchema = z.object({
 });
 
 // Backend → BFF: the global envelope, resolved to the BFF shapes above.
-export const backendMediaListSchema = backendPage(adminMediaSchema);
+// Q104/TL-36: the media list meta also carries `ingestionEnabled`.
+export const backendMediaListSchema = z
+  .object({
+    success: z.literal(true),
+    data: z.array(adminMediaSchema),
+    meta: envelopeMetaSchema.extend({
+      pagination: paginationSchema,
+      ingestionEnabled: z.boolean(),
+    }),
+  })
+  .transform((envelope) => ({
+    success: true as const,
+    data: envelope.data,
+    meta: envelope.meta.pagination,
+    ingestionEnabled: envelope.meta.ingestionEnabled,
+  }));
 export const backendMediaDetailSchema = backendEnvelope(
   adminMediaSchema.extend({ usage: mediaUsageSchema }),
 );
@@ -87,8 +104,58 @@ export const backendMediaMutationSchema = backendEnvelope(
   z.object({ idempotent: z.boolean(), media: adminMediaSchema }),
 );
 
+// M5.2a (TL-34): 201 của ingestion chỉ có 5 field media.
+export const backendMediaIngestionSchema = backendEnvelope(
+  z.object({
+    idempotent: z.boolean(),
+    media: z.object({
+      id: z.number().int().positive(),
+      type: z.enum(mediaTypes),
+      mimeType: z.string().nullable(),
+      size: z.number().int().nonnegative().nullable(),
+      processingStatus: z.enum(mediaProcessingStatuses),
+    }),
+  }),
+);
+
 export type AdminMedia = z.infer<typeof adminMediaSchema>;
 export type AdminMediaDetail = z.infer<
   typeof mediaDetailResponseSchema
 >['data'];
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>;
+
+// M5.2b (TL-47): lượt tải cần đối soát.
+export const mediaIngestionStatuses = [
+  'cleanup_required',
+  'processing',
+] as const;
+
+export const adminMediaIngestionSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(mediaIngestionStatuses),
+  failureCode: z.string().nullable(),
+  filename: z.string().min(1).nullable(),
+  size: z.number().int().nonnegative(),
+  dataSource: dataSourceSchema,
+  startedAt: z.string().datetime(),
+  processingStartedAt: z.string().datetime().nullable(),
+  cleanupRequiredAt: z.string().datetime().nullable(),
+  cleanupAttempts: z.number().int().nonnegative(),
+  cleanupLastAttemptAt: z.string().datetime().nullable(),
+  cleanupAvailable: z.boolean(),
+});
+
+export const backendMediaIngestionListSchema = backendPage(
+  adminMediaIngestionSchema,
+);
+
+// TL-50: kết quả POST cleanup; `settling` chỉ có khi tệp vừa vắng lần đầu.
+export const backendMediaCleanupSchema = backendEnvelope(
+  z.object({
+    ingestionId: z.number().int().positive(),
+    cleanupCompleted: z.boolean(),
+    settling: z.boolean().optional(),
+  }),
+);
+
+export type AdminMediaIngestion = z.infer<typeof adminMediaIngestionSchema>;

@@ -1,0 +1,701 @@
+/* Hán Lộ — M4.5 B2b: màn xem lại bài sau khi nộp.
+   Web theo `docs/ui_reference/web/exam-review.html` (bar, thẻ tổng quan, bộ
+   lọc, lưới câu, panel đáp án/giải thích). Mobile không có mockup review sau
+   nộp nên dựng từ cấu trúc web + nhịp `mobile/exam-result.html` (bar navy, thẻ
+   kem) và `mobile/mistakes-review.html` (option rows, banner icon + chữ).
+   Màu dùng token learner.css; hex còn lại đo từ mockup. */
+
+.learner-app .exv .btn--primary,
+.learner-app .exv .btn--primary:hover {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .exv-bar__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.learner-app .exv-bar__cta .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.learner-app .exv-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .exv .exr-body {
+    width: 1040px;
+    max-width: calc(100% - 32px);
+  }
+
+  .learner-app .exv-body {
+    gap: 20px;
+  }
+}
+
+/* Tổng quan */
+.learner-app .exv-summary {
+  padding: 12px;
+  background: var(--cream-100);
+  border: 1px solid var(--sand-300);
+  border-radius: 16px;
+}
+
+.learner-app .exv-sum {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .exv-sum {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.learner-app .exv-sum__item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  background: var(--cream-50);
+  border: 1px solid var(--sand-300);
+  border-radius: 10px;
+}
+
+.learner-app .exv-sum__icon {
+  display: inline-flex;
+  grid-row: 1 / span 2;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--white);
+  border-radius: 50%;
+  color: var(--jade-800);
+}
+
+.learner-app .exv-sum__icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.learner-app .exv-sum__item--wrong .exv-sum__icon {
+  color: #b3261e;
+}
+
+.learner-app .exv-sum__item--flag .exv-sum__icon {
+  color: #7a5300;
+}
+
+.learner-app .exv-sum__item b {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink-900);
+}
+
+.learner-app .exv-sum__item small {
+  font-size: 13px;
+  color: var(--stone-700);
+}
+
+/* Bố cục 2 cột */
+.learner-app .exv-layout {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .exv-layout {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .learner-app .exv-side {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+.learner-app .exv-side {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-self: start;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--sand-300);
+  border-radius: 16px;
+}
+
+.learner-app .exv-h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink-900);
+}
+
+.learner-app .exv-h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--stone-700);
+}
+
+/* Bộ lọc */
+.learner-app .exv-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.learner-app .exv-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--white);
+  border: 1px solid var(--sand-300);
+  border-radius: 999px;
+  color: var(--stone-700);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.learner-app .exv-filter__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--slate-100);
+  border-radius: 999px;
+  color: var(--slate-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.learner-app .exv-filter[aria-current='page'] {
+  background: var(--jade-800);
+  border-color: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .exv-filter[aria-current='page'] .exv-filter__count {
+  background: rgb(0 0 0 / 22%);
+  color: var(--white);
+}
+
+.learner-app .exv-filter:hover {
+  border-color: var(--jade-700);
+}
+
+/* Lưới số câu */
+.learner-app .exv-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.learner-app .exv-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 2px;
+  background: var(--white);
+  border: 1px solid var(--slate-300);
+  border-radius: 8px;
+  color: var(--ink-900);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.learner-app .exv-cell__mark {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.learner-app .exv-cell--correct {
+  background: var(--jade-50);
+  border-color: var(--jade-200);
+  color: var(--jade-800);
+}
+
+.learner-app .exv-cell--wrong {
+  background: var(--red-100);
+  border-color: #f6c9c4;
+  color: #b3261e;
+}
+
+.learner-app .exv-cell--blank {
+  border-style: dashed;
+  color: var(--stone-600);
+}
+
+.learner-app .exv-cell.is-flagged {
+  box-shadow: inset 0 0 0 2px var(--amber-500);
+}
+
+.learner-app .exv-cell:hover {
+  border-color: var(--navy-900);
+}
+
+.learner-app .exv-fine {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--stone-700);
+}
+
+.learner-app .exv-fine .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--jade-800);
+}
+
+/* Danh sách câu */
+.learner-app .exv-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.learner-app .exv-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.learner-app .exv-section__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink-900);
+}
+
+.learner-app .exv-group {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.learner-app .exv-group__media {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-app .exv-empty {
+  margin: 0;
+  padding: 24px 16px;
+  background: var(--white);
+  border: 1px dashed var(--sand-300);
+  border-radius: 12px;
+  color: var(--stone-700);
+  text-align: center;
+}
+
+/* Thẻ câu hỏi */
+.learner-app .exv-q {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 14px 16px;
+  background: var(--white);
+  border: 1px solid var(--sand-300);
+  border-left: 4px solid var(--slate-300);
+  border-radius: 12px;
+  scroll-margin-top: 90px;
+}
+
+.learner-app .exv-q--correct {
+  border-left-color: var(--jade-700);
+}
+
+.learner-app .exv-q--wrong {
+  border-left-color: #b3261e;
+}
+
+.learner-app .exv-q--blank {
+  border-left-style: dashed;
+}
+
+.learner-app .exv-q__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.learner-app .exv-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--jade-800);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.learner-app .exv-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.learner-app .exv-status .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.learner-app .exv-status--correct {
+  background: var(--jade-50);
+  border: 1px solid var(--jade-200);
+  color: var(--jade-800);
+}
+
+.learner-app .exv-status--wrong {
+  background: var(--red-100);
+  border: 1px solid #f6c9c4;
+  color: #b3261e;
+}
+
+.learner-app .exv-status--blank {
+  background: var(--slate-100);
+  border: 1px solid var(--slate-300);
+  color: var(--slate-700);
+}
+
+.learner-app .exv-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--amber-100);
+  border: 1px solid var(--amber-500);
+  border-radius: 999px;
+  color: #7a5300;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.learner-app .exv-flag .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.learner-app .exv-q__title {
+  margin: 0;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+/* Phương án / đáp án */
+.learner-app .exv-opts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .exv-opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--white);
+  border: 1px solid var(--slate-300);
+  border-radius: 10px;
+  color: var(--ink-900);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exv-opt__letter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--slate-100);
+  border-radius: 50%;
+  color: var(--slate-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.learner-app .exv-opt.is-correct {
+  background: var(--jade-50);
+  border: 2px solid var(--jade-700);
+}
+
+.learner-app .exv-opt.is-correct .exv-opt__letter {
+  background: var(--jade-700);
+  color: var(--white);
+}
+
+.learner-app .exv-opt.is-chosen:not(.is-correct) {
+  background: var(--red-100);
+  border: 2px solid #b3261e;
+}
+
+.learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__letter {
+  background: #b3261e;
+  color: var(--white);
+}
+
+.learner-app .exv-opt__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--jade-800);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__mark {
+  color: #b3261e;
+}
+
+.learner-app .exv-opt__mark .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.learner-app .exv-ans {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--cream-100);
+  border-radius: 10px;
+}
+
+.learner-app .exv-ans dt {
+  color: var(--stone-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.learner-app .exv-ans dd {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exv-ans dd.is-correct {
+  color: var(--jade-800);
+  font-weight: 600;
+}
+
+.learner-app .exv-ans dd.is-empty {
+  color: var(--stone-600);
+  font-style: italic;
+}
+
+/* Giải thích (Q148: không paywall) */
+.learner-app .exv-ex {
+  padding: 12px 14px;
+  background: var(--jade-50);
+  border-left: 3px solid var(--jade-700);
+  border-radius: 10px;
+  color: var(--ink-900);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .exv-ex b {
+  color: var(--jade-800);
+}
+
+/* Điều hướng từng câu trên web (Q239): ẩn dưới 1024px */
+.learner-app .exv-nav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .learner-app .exv-cell[aria-current='true'] {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    border-style: solid;
+    color: var(--white);
+  }
+
+  .learner-app .exv-q:not(.is-current),
+  .learner-app .exv-group:not(:has(.exv-q.is-current)),
+  .learner-app .exv-section:not(:has(.exv-q.is-current)) {
+    display: none;
+  }
+
+  .learner-app .exv-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .exv-nav__btn {
+    flex: 1 1 120px;
+  }
+
+  .learner-app .exv-nav__btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Media (grant Q158) */
+.learner-app .exv-media {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.learner-app .exv-media__audio {
+  width: 100%;
+  max-width: 520px;
+  height: 40px;
+}
+
+.learner-app .exv-media__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--sand-300);
+  border-radius: 10px;
+}
+
+.learner-app .exv-media__loading,
+.learner-app .exv-media__unavailable {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--slate-100);
+  border-radius: 8px;
+  color: var(--slate-700);
+  font-size: 13px;
+}
+
+.learner-app .exv-media__unavailable {
+  background: var(--amber-100);
+  color: #7a5300;
+}
+
+/* Trạng thái đóng / lỗi */
+.learner-app .exv-notice {
+  display: grid;
+  gap: 10px;
+  padding: 20px 16px;
+  background: var(--white);
+  border: 1px solid var(--sand-300);
+  border-radius: 12px;
+}
+
+.learner-app .exv-notice__title {
+  margin: 0;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.learner-app .exv-notice__text {
+  margin: 0;
+  color: var(--stone-700);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.learner-app .exv-notice__cta {
+  justify-self: start;
+}
+
+/* 390: giữ nhịp thẻ, không tràn ngang */
+@media (max-width: 1023.98px) {
+  .learner-app .exv-side {
+    padding: 10px;
+  }
+
+  .learner-app .exv-q {
+    padding: 12px 12px 14px;
+  }
+
+  .learner-app .exv-ans {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px 0;
+  }
+}
+
+@media (max-width: 399px) {
+  .learner-app .exv-grid {
+    gap: 4px;
+  }
+
+  .learner-app .exv-cell {
+    min-height: 38px;
+    font-size: 13px;
+  }
+}

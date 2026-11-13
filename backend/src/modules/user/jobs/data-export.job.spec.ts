@@ -151,8 +151,8 @@ describe('DataExportJob', () => {
         },
       ]);
 
-      // User profile through Audit logs (including child tables: LearningPlanItem, ReviewEvent batch, ExamAttemptEvent, ExamAnswer batch, ResultSkillScore)
-      for (let i = 0; i < 24; i++) {
+      // User profile through Audit logs (including ReviewPreference and child tables: LearningPlanItem, ReviewEvent batch, ExamAttemptEvent, ExamAnswer batch, ResultSkillScore)
+      for (let i = 0; i < 25; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
 
@@ -197,8 +197,8 @@ describe('DataExportJob', () => {
         },
       ]);
 
-      // Profile through Audit logs (24 queries)
-      for (let i = 0; i < 24; i++) {
+      // Profile through Audit logs (25 queries)
+      for (let i = 0; i < 25; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
       // LearningEvent batch 1 empty
@@ -254,8 +254,8 @@ describe('DataExportJob', () => {
         },
       ]);
 
-      // Remaining queries before batches (21 queries: PlacementAttempt through AuditLog)
-      for (let i = 0; i < 21; i++) {
+      // Remaining queries before batches (22 queries: PlacementAttempt through AuditLog, ReviewPreference included)
+      for (let i = 0; i < 22; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
       // LearningEvent batch 1 empty

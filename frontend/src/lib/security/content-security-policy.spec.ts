@@ -25,8 +25,13 @@ describe('production content security policy', () => {
     );
     expect(policy).not.toContain("'unsafe-inline'");
     expect(policy).not.toContain("'unsafe-eval'");
-    expect(policy).toContain("media-src 'self'");
-    expect(policy).not.toContain('media-src https:');
+    // R12 (TL-149): blob URL do chính app tạo từ byte same-origin qua BFF.
+    const directives = policy.split(';').map((part) => part.trim());
+    const mediaSrc = directives.find((part) => part.startsWith('media-src '));
+    expect(mediaSrc).toBe("media-src 'self' blob:");
+    expect(mediaSrc).not.toContain('https:');
+    expect(mediaSrc).not.toContain('*');
+    expect(mediaSrc).not.toContain('data:');
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("object-src 'none'");
     expect(policy).toContain("base-uri 'self'");

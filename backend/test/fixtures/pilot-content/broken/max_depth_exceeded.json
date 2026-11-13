@@ -1,0 +1,31 @@
+{
+  "description": "object lesson lồng quá 8 tầng",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson",
+      "value": {
+        "a": {
+          "b": {
+            "c": {
+              "d": {
+                "e": {
+                  "f": {
+                    "g": {
+                      "h": {
+                        "i": {
+                          "j": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

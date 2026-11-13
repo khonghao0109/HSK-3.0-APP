@@ -7,7 +7,9 @@ import { MediaDetail } from '@/features/media/media-detail';
 import { loadMediaAsset } from '@/features/media/media-service';
 import { BackendRequestError } from '@/lib/api/api-error';
 
-export const metadata: Metadata = { title: 'Media detail' };
+import '../../admin-media.css';
+
+export const metadata: Metadata = { title: 'Chi tiết media' };
 
 export default async function MediaDetailPage({
   params,
@@ -31,9 +33,9 @@ export default async function MediaDetailPage({
     throw error;
   }
   return (
-    <div className="page-stack">
-      <nav className="breadcrumb" aria-label="Breadcrumb">
-        <Link href="/admin/media">Media</Link>
+    <div className="adm-page-stack">
+      <nav className="adm-breadcrumb" aria-label="Đường dẫn">
+        <Link href="/admin/media">Thư viện media</Link>
         <span aria-hidden="true">/</span>
         <span aria-current="page">MD-{asset.id}</span>
       </nav>

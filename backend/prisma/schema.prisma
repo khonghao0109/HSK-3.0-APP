@@ -55,6 +55,10 @@ enum QuestionType {
   reading
   writing
   speaking
+  // M4.1a (TL-77): additive objective formats for the question bank.
+  true_false
+  fill_blank
+  arrange_sentence
 }
 
 enum Skill {
@@ -137,6 +141,13 @@ enum PrivacyRequestStatus {
   cancelled
 }
 
+/// M1.7d / Q203: who opened the deletion request. Every row created before this
+/// enum existed is a self-service request, hence the `user` default.
+enum AccountDeletionInitiator {
+  user
+  admin
+}
+
 enum ContentEntityType {
   level
   lesson
@@ -179,6 +190,7 @@ enum ReviewCardState {
   new
   learning
   review
+  relearning
   suspended
 }
 
@@ -187,6 +199,10 @@ enum ReviewGrade {
   hard
   good
   easy
+}
+
+enum ReviewEventSource {
+  flashcard
 }
 
 enum ReviewSessionStatus {
@@ -245,6 +261,7 @@ model User {
   learningEvents           LearningEvent[]
   reviewCards              ReviewCard[]
   reviewSessions           ReviewSession[]
+  reviewPreference         ReviewPreference?
   examAttempts             ExamAttempt[]
   createdLevels            Level[]                  @relation("LevelCreatedBy")
   updatedLevels            Level[]                  @relation("LevelUpdatedBy")
@@ -468,9 +485,16 @@ model DataExportJob {
 }
 
 model AccountDeletionRequest {
-  id           Int                  @id @default(autoincrement())
+  id           Int                      @id @default(autoincrement())
   userId       Int
-  status       PrivacyRequestStatus @default(requested)
+  status       PrivacyRequestStatus     @default(requested)
+  /// M1.7d: `user` for the M1.7c self-service flow, `admin` when an admin
+  /// opened the request on the account owner's behalf (Q203).
+  initiatedBy  AccountDeletionInitiator @default(user)
+  /// Admin `User.id` that initiated the request; no FK/relation on purpose —
+  /// the audit trail outlives admin lifecycle changes and this column never
+  /// owns the actor row.
+  actorId      Int?
   reason       String?
   verifiedAt   DateTime?
   scheduledAt  DateTime?
@@ -478,11 +502,16 @@ model AccountDeletionRequest {
   cancelledAt  DateTime?
   errorCode    String?
   errorMessage String?
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  // M1.7d/Q203: partial unique index
+  // "AccountDeletionRequest_one_requested_per_user" on ("userId")
+  // WHERE "status" = 'requested' is raw SQL only — Prisma cannot express the
+  // predicate, so it lives in
+  // prisma/migrations/20261102160000_admin_initiated_account_deletion.
   @@index([userId, status, createdAt])
   @@index([status, scheduledAt])
 }
@@ -1184,7 +1213,7 @@ model ReviewCard {
   repetitions      Int             @default(0)
   lapses           Int             @default(0)
   lastReviewedAt   DateTime?
-  schedulerVersion String          @default("sm2-p0-v1")
+  schedulerVersion String          @default("sm2-v1")
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -1195,6 +1224,18 @@ model ReviewCard {
   @@unique([userId, wordId])
   @@index([userId, state, dueAt])
   @@index([wordId])
+}
+
+/// M3.3c (Q279–Q282): review settings of one learner; absent means the defaults.
+model ReviewPreference {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  dailyCardLimit Int      @default(20)
+  levelCodes     String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ReviewSession {
@@ -1219,7 +1260,7 @@ model ReviewSession {
 }
 
 model ReviewEvent {
-  id                   BigInt          @id @default(autoincrement())
+  id                   BigInt            @id @default(autoincrement())
   cardId               Int
   sessionId            Int?
   grade                ReviewGrade
@@ -1232,9 +1273,10 @@ model ReviewEvent {
   previousEaseFactor   Float
   nextEaseFactor       Float
   durationMs           Int?
+  source               ReviewEventSource @default(flashcard)
   idempotencyKey       String
-  reviewedAt           DateTime        @default(now())
-  createdAt            DateTime        @default(now())
+  reviewedAt           DateTime          @default(now())
+  createdAt            DateTime          @default(now())
 
   card    ReviewCard     @relation(fields: [cardId], references: [id], onDelete: Restrict)
   session ReviewSession? @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
@@ -1603,6 +1645,10 @@ model ExamAttempt {
   result   Result?
 
   @@unique([userId, idempotencyKey])
+  // TL-112/Q120: partial unique index "ExamAttempt_one_in_progress_per_user_test"
+  // on ("userId", "testId") WHERE "status" = 'in_progress' is raw SQL only —
+  // Prisma cannot express the predicate, so it lives in
+  // prisma/migrations/20261027090000_exam_attempt_one_in_progress.
   @@index([userId, status, expiresAt])
   @@index([testId, status])
 }
@@ -1665,6 +1711,8 @@ model Result {
   testId         Int
   attemptId      Int?      @unique
   score          Int
+  maxScore       Int?
+  passed         Boolean?
   awardedBand    Int?
   scoringVersion String?
   detailJson     Json

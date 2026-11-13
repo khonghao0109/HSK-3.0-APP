@@ -1,0 +1,11 @@
+{
+  "description": "arrange answer có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[7].answer.extra",
+      "value": 1
+    }
+  ]
+}

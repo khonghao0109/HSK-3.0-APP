@@ -1,0 +1,16 @@
+{
+  "description": "arrange chỉ có 1 token",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[7].content.tokens",
+      "value": [
+        {
+          "id": "tkn-a1",
+          "text": "我"
+        }
+      ]
+    }
+  ]
+}

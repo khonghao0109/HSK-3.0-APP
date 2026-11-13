@@ -1,0 +1,782 @@
+/* Hán Lộ — M3.3b: trang Ôn tập (WB-06c web + 03-04 mobile).
+   Mobile đo từ `docs/ui_reference/mobile/css/m03.css` (.rc-*), web từ
+   `docs/ui_reference/web/css/ux-b.css` (.uxb-stat/.uxb-cal/.uxb-hist/
+   .uxb-table) + web.css (.w-pagehead). Q269: ô chuỗi ngày thay bằng ô
+   "Sắp đến hạn" (3/7/14 ngày). Màu dùng token của learner.css. */
+
+.learner-app .app:has(> .rvo) {
+  --m03-navy: var(--navy-900);
+  --m03-canvas: #fefefe;
+  --m03-line-soft: #efedea;
+  --m03-ink: #101528;
+  --m03-jade: #0a8460;
+  background: var(--m03-canvas);
+  --rvo-heat-1: #e3f4eb;
+  --rvo-heat-2: #d2ebde;
+  --rvo-heat-3: #a7dcc4;
+  --rvo-heat-4: #5bc298;
+  --rvo-heat-5: #079467;
+}
+
+/* ---------- Thanh tiêu đề mobile (m03 .appbar) ---------- */
+.learner-app .app:has(> .rvo) .appbar {
+  min-height: 48px;
+  padding: 7px 2px 0;
+  grid-template-columns: 48px 1fr 48px;
+  background: var(--m03-navy);
+}
+
+.learner-app .app:has(> .rvo) .appbar__title {
+  font-family: var(--font-sans);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.learner-app .app:has(> .rvo) .appbar .icon-btn {
+  color: #fff;
+  height: 41px;
+}
+
+.learner-app .app:has(> .rvo) .appbar .icon-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 70%);
+}
+
+/* ---------- Khung (mobile trước) ---------- */
+.learner-app .rvo {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 17px 0 19px;
+  background: var(--m03-canvas);
+  color: var(--m03-ink);
+}
+
+.learner-app .rvo.m03-tabbed {
+  padding-bottom: calc(
+    var(--tabbar-height) + 24px + env(safe-area-inset-bottom)
+  );
+}
+
+.learner-app .rvo-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-4);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.learner-app .rvo-state__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.learner-app .rvo .btn--primary {
+  background: var(--jade-800);
+}
+
+/* Ba ô số liệu (m03 .rc-stats) */
+.learner-app .rvo-stats {
+  display: grid;
+  grid-template-columns: 114fr 118fr 101fr;
+  gap: 10px;
+}
+
+.learner-app .rvo-stat {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 49px;
+  padding: 5px 8px 4px 11px;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(20 24 43 / 6%);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.learner-app a.rvo-stat:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app a.rvo-stat:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .rvo-stat__ico {
+  display: none;
+}
+
+.learner-app .rvo-stat__text {
+  display: block;
+  min-width: 0;
+}
+
+.learner-app .rvo-stat__label {
+  display: block;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #3a3e4a;
+}
+
+.learner-app .rvo-stat__val {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--m03-ink);
+}
+
+.learner-app .rvo-stat__val small {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: #3a3e4a;
+}
+
+.learner-app .rvo-stat--rate .rvo-stat__val {
+  color: var(--m03-jade);
+}
+
+.learner-app .rvo-stat--due .rvo-link,
+.learner-app .rvo-stat__end .rvo-link {
+  display: none;
+}
+
+.learner-app .rvo-stat__desc {
+  display: block;
+  font-size: 0.6rem;
+  line-height: 1.3;
+  color: #3a3e4a;
+}
+
+.learner-app .rvo-ring {
+  position: absolute;
+  right: 6.5px;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 45deg,
+    var(--m03-jade) 0 calc(var(--value) * 1%),
+    #dceee6 0
+  );
+}
+
+.learner-app .rvo-ring::before {
+  content: '';
+  position: absolute;
+  inset: 4.5px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.learner-app .rvo-ring__label {
+  display: none;
+}
+
+.learner-app .rvo-soon {
+  display: grid;
+  gap: 1px;
+  margin: 2px 0 0;
+}
+
+.learner-app .rvo-soon div {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 0.6rem;
+  line-height: 1.3;
+}
+
+.learner-app .rvo-soon dt {
+  color: #3a3e4a;
+}
+
+.learner-app .rvo-soon dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--m03-ink);
+  white-space: nowrap;
+}
+
+/* Lịch tháng (m03 .rc-cal) */
+.learner-app .rvo-layout {
+  display: grid;
+  gap: 13px;
+  margin-top: 5px;
+}
+
+.learner-app .rvo-card {
+  min-width: 0;
+  border: 1px solid var(--m03-line-soft);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(20 24 43 / 5%);
+}
+
+.learner-app .rvo-cal {
+  margin: 0 3px 0 5px;
+  padding: 0 0 5px;
+}
+
+.learner-app .rvo-cal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 24px;
+  padding: 0 11px 0 7px;
+}
+
+.learner-app .rvo-h2 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+}
+
+.learner-app .rvo-cal__month {
+  font-size: 0.75rem;
+  color: #2a2e3a;
+  white-space: nowrap;
+}
+
+.learner-app .rvo-cal__table {
+  width: calc(100% - 12px);
+  margin: 0 6px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.learner-app .rvo-cal__table th {
+  height: 16px;
+  padding: 0;
+  line-height: 16px;
+  font-size: 0.66rem;
+  font-weight: 400;
+  color: #2e3240;
+}
+
+.learner-app .rvo-cal__table td {
+  height: 18px;
+  padding: 0;
+  text-align: center;
+}
+
+.learner-app .rvo-cal__table td > span:not(.sr-only) {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 0 auto;
+  border-radius: 50%;
+  font-size: 0.66rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--m03-ink);
+}
+
+.learner-app .rvo-cal__table td.is-out > span {
+  color: #8a8c94;
+  font-weight: 400;
+}
+
+.learner-app .rvo-cal__table td[data-l='1'] > span {
+  background: var(--rvo-heat-1);
+}
+
+.learner-app .rvo-cal__table td[data-l='2'] > span {
+  background: var(--rvo-heat-2);
+}
+
+.learner-app .rvo-cal__table td[data-l='3'] > span {
+  background: var(--rvo-heat-3);
+}
+
+.learner-app .rvo-cal__table td[data-l='4'] > span {
+  background: var(--rvo-heat-4);
+  color: #10301f;
+}
+
+.learner-app .rvo-cal__table td[data-l='5'] > span {
+  background: var(--rvo-heat-5);
+  color: #fff;
+}
+
+.learner-app .rvo-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 4px;
+  font-size: 0.66rem;
+  line-height: 15px;
+  color: #2e3240;
+}
+
+.learner-app .rvo-legend i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.learner-app .rvo-legend .l1 {
+  background: var(--rvo-heat-1);
+}
+.learner-app .rvo-legend .l2 {
+  background: var(--rvo-heat-2);
+}
+.learner-app .rvo-legend .l3 {
+  background: var(--rvo-heat-3);
+}
+.learner-app .rvo-legend .l4 {
+  background: var(--rvo-heat-4);
+}
+.learner-app .rvo-legend .l5 {
+  background: var(--rvo-heat-5);
+}
+
+/* Lịch sử (m03 .rc-hist, hàng là phiên ôn) */
+.learner-app .rvo-hist {
+  margin-left: -3px;
+  overflow: hidden;
+}
+
+.learner-app .rvo-hist .rvo-h2 {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 7px;
+  border-bottom: 1px solid var(--m03-line-soft);
+  font-size: 0.78rem;
+}
+
+.learner-app .rvo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.learner-app .rvo-table th {
+  padding: 4px 10px;
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: #3a3e4a;
+  text-align: left;
+}
+
+.learner-app .rvo-table td {
+  height: 40px;
+  padding: 0 10px;
+  border-top: 1px solid var(--m03-line-soft);
+  color: var(--m03-ink);
+}
+
+.learner-app .rvo-fine {
+  margin: 0;
+  padding: 6px 10px 8px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.learner-app .rvo-note {
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.learner-app .rvo-note .icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+@media (max-width: 374.98px) {
+  .learner-app .rvo {
+    padding-left: 14px;
+    padding-right: 12px;
+  }
+  .learner-app .rvo-stats {
+    gap: 6px;
+  }
+  .learner-app .rvo-stat {
+    padding-left: 8px;
+  }
+  .learner-app .rvo-ring {
+    width: 26px;
+    height: 26px;
+    margin-top: -13px;
+    right: 5px;
+  }
+  .learner-app .rvo-ring::before {
+    inset: 3.5px;
+  }
+}
+
+/* 768px (Q277): mobile/review-calendar.html keeps the 390px sizes inside
+   the 480px frame, so there is no tablet step between 600px and 1023px. */
+
+/* ---------- Web từ 1024px (ux-b.css) ---------- */
+@media (min-width: 1024px) {
+  .learner-app .app:has(> .rvo) {
+    background: none;
+  }
+
+  .learner-app .rvo-note {
+    display: flex;
+  }
+
+  .learner-app .rvo {
+    padding: var(--sp-8) var(--w-pad) 0;
+    background: none;
+    color: var(--text-body);
+  }
+
+  .learner-app .rvo.m03-tabbed {
+    padding-bottom: var(--sp-10);
+  }
+
+  .learner-app .rvo .w-btn--primary {
+    min-height: 48px;
+    padding: 0 var(--sp-6);
+    border-radius: var(--r-md);
+    background: var(--jade-800);
+    color: #fff;
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .rvo .w-btn--primary:hover {
+    background: #05664f;
+  }
+
+  .learner-app .rvo .w-btn--primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .learner-app .rvo-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-6);
+  }
+
+  .learner-app .rvo-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    min-height: 0;
+    padding: var(--sp-5);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    overflow: visible;
+  }
+
+  .learner-app a.rvo-stat:hover {
+    border-color: var(--jade-600);
+    box-shadow: var(--shadow-float);
+  }
+
+  .learner-app .rvo-stat__ico {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-md);
+    background: var(--jade-50);
+    color: var(--jade-800);
+  }
+
+  .learner-app .rvo-stat--soon .rvo-stat__ico {
+    background: var(--amber-100);
+    color: #7a5300;
+  }
+
+  .learner-app .rvo-stat__text {
+    flex: 1;
+  }
+
+  .learner-app .rvo-stat__label {
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-stat__val {
+    gap: 4px;
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-strong);
+  }
+
+  .learner-app .rvo-stat--rate .rvo-stat__val {
+    color: var(--text-strong);
+  }
+
+  .learner-app .rvo-stat__val small {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-stat__end {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+  }
+
+  .learner-app .rvo-stat--due .rvo-link,
+  .learner-app .rvo-stat__end .rvo-link {
+    display: inline-flex;
+  }
+
+  .learner-app .rvo-link {
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 var(--sp-1);
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--jade-800);
+    white-space: nowrap;
+  }
+
+  .learner-app button.rvo-link:disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .learner-app .rvo-stat__desc {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-ring {
+    position: relative;
+    right: auto;
+    top: auto;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 64px;
+    height: 64px;
+    margin: 0;
+    background: conic-gradient(
+      var(--jade-600) calc(var(--value) * 1%),
+      var(--slate-200) 0
+    );
+  }
+
+  .learner-app .rvo-ring::before {
+    inset: 8px;
+    background: var(--surface-card);
+  }
+
+  .learner-app .rvo-ring__label {
+    position: relative;
+    display: block;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-soon div {
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .rvo-soon dt {
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-soon dd {
+    color: var(--text-strong);
+  }
+
+  .learner-app .rvo-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--sp-6);
+    align-items: start;
+    margin-top: var(--sp-6);
+  }
+
+  .learner-app .rvo-card {
+    display: grid;
+    gap: var(--sp-4);
+    margin: 0;
+    padding: var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .rvo-hist {
+    gap: var(--sp-3);
+    align-content: start;
+  }
+
+  .learner-app .rvo-cal__head {
+    padding: 0;
+    justify-content: space-between;
+  }
+
+  .learner-app .rvo-h2,
+  .learner-app .rvo-hist .rvo-h2 {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+
+  .learner-app .rvo-cal__month {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+
+  .learner-app .rvo-cal__table {
+    width: 100%;
+    margin: 0;
+  }
+
+  .learner-app .rvo-cal__table th {
+    height: auto;
+    padding: var(--sp-2);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--stone-600);
+  }
+
+  .learner-app .rvo-cal__table td {
+    height: auto;
+    padding: 3px;
+  }
+
+  .learner-app .rvo-cal__table td > span:not(.sr-only) {
+    width: 100%;
+    height: auto;
+    min-height: 44px;
+    border-radius: var(--r-sm);
+    font-size: var(--fs-md);
+    color: var(--text-body);
+  }
+
+  .learner-app .rvo-cal__table td.is-out > span {
+    color: var(--stone-600);
+  }
+
+  /* Q93/AA: mức 1–2 jade-800 trên jade-50/100, mức 3 trắng trên
+     jade-800, mức 4–5 trắng trên navy-900. */
+  .learner-app .rvo-cal__table td[data-l='1'] > span {
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-weight: 600;
+  }
+  .learner-app .rvo-cal__table td[data-l='2'] > span {
+    background: var(--jade-100);
+    color: var(--jade-800);
+    font-weight: 600;
+  }
+  .learner-app .rvo-cal__table td[data-l='3'] > span {
+    background: var(--jade-800);
+    color: #fff;
+    font-weight: 700;
+  }
+  .learner-app .rvo-cal__table td[data-l='4'] > span,
+  .learner-app .rvo-cal__table td[data-l='5'] > span {
+    background: var(--navy-900);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .learner-app .rvo-legend {
+    justify-content: flex-start;
+    gap: 6px;
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .rvo-legend i {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+  }
+  .learner-app .rvo-legend .l1 {
+    background: var(--jade-50);
+  }
+  .learner-app .rvo-legend .l2 {
+    background: var(--jade-100);
+  }
+  .learner-app .rvo-legend .l3 {
+    background: var(--jade-800);
+  }
+  .learner-app .rvo-legend .l4 {
+    background: var(--navy-900);
+  }
+  .learner-app .rvo-legend .l5 {
+    display: none;
+  }
+
+  .learner-app .rvo-table {
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .rvo-table th,
+  .learner-app .rvo-table td {
+    height: auto;
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .learner-app .rvo-table th {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--stone-600);
+    background: var(--cream-100);
+    white-space: nowrap;
+  }
+
+  .learner-app .rvo-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .learner-app .rvo-fine {
+    padding: 0;
+    font-size: var(--fs-sm);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .learner-app .rvo-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .learner-app .rvo-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .learner-app .rvo-stat--due .rvo-link {
+    display: none;
+  }
+}

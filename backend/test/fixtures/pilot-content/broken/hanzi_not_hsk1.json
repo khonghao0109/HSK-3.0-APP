@@ -1,0 +1,11 @@
+{
+  "description": "hanzi ngoài HSK1",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[0].hanzi",
+      "value": "苹果"
+    }
+  ]
+}

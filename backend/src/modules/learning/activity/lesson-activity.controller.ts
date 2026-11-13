@@ -9,15 +9,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
+import { ApiEnvelope } from '../../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../../common/pipes/parse-positive-safe-integer.pipe';
 import {
   EmptyLessonActivityWriteDto,
   SubmitLessonExerciseAttemptDto,
 } from './dto/lesson-activity-write.dto';
+import { LessonActivityResponseDto } from './dto/lesson-activity-response.dto';
 import { LessonActivityService } from './lesson-activity.service';
 
 const IDEMPOTENCY_KEY_HEADER = {
@@ -26,6 +30,14 @@ const IDEMPOTENCY_KEY_HEADER = {
   description:
     'Replaying a key with the same request returns the original result.',
 };
+
+export const EXERCISE_ATTEMPT_LIMIT_PER_MINUTE = 60;
+
+export function exerciseAttemptLimit(): number {
+  return process.env.NODE_ENV === 'test'
+    ? 1_000
+    : EXERCISE_ATTEMPT_LIMIT_PER_MINUTE;
+}
 
 type AuthenticatedRequest = Request & {
   user: { id: number; email: string; role: string };
@@ -54,10 +66,11 @@ export class LessonActivityController {
   }
 
   @Get('lessons/:lessonId/activity')
+  @ApiEnvelope(LessonActivityResponseDto)
   getLessonActivity(
     @Req() request: AuthenticatedRequest,
     @Param('lessonId', ParsePositiveSafeIntegerPipe) lessonId: number,
-  ) {
+  ): Promise<ApiSuccessResponse<LessonActivityResponseDto>> {
     return this.activityService.getLessonActivity(request.user.id, lessonId);
   }
 
@@ -110,6 +123,8 @@ export class LessonActivityController {
   }
 
   @Post('exercises/:exerciseId/attempts')
+  // At most 1 attempt per second per user; writes stay bounded and idempotent.
+  @Throttle({ default: { limit: exerciseAttemptLimit, ttl: 60_000 } })
   @ApiHeader(IDEMPOTENCY_KEY_HEADER)
   submitAttempt(
     @Req() request: AuthenticatedRequest,

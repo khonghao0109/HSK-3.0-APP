@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
 import { LoginForm } from '@/features/auth/login-form';
 
-export const metadata: Metadata = { title: 'Admin sign in' };
+export const metadata: Metadata = { title: 'Đăng nhập' };
 
 export default async function LoginPage({
   searchParams,
@@ -12,43 +13,25 @@ export default async function LoginPage({
 }) {
   const sessionEnded = (await searchParams).reason === 'session';
   return (
-    <main className="login-page">
-      <section className="login-story" aria-label="HSK Content Workbench">
-        <div className="login-story__brand">
-          <span>汉</span>
-          <strong>HSK 3.0</strong>
-        </div>
-        <div className="login-story__copy">
-          <p className="eyebrow eyebrow--light">CONTENT OPERATIONS</p>
-          <h1>
-            Language content,
-            <br />
-            held to a higher standard.
-          </h1>
-          <p>
-            Inspect exercises, source lineage, media readiness and immutable
-            revision history from one calm workspace.
-          </p>
-        </div>
-        <div className="login-story__footer mono">简 · 准 · 可追溯</div>
-      </section>
-      <section className="login-panel">
-        <div className="login-card">
-          <div className="login-card__mark" aria-hidden="true">
-            审
-          </div>
-          <p className="eyebrow">SECURE ADMIN ACCESS</p>
-          <h2>Welcome back</h2>
-          <p className="muted">Sign in with an active administrator account.</p>
-          <LoginForm sessionEnded={sessionEnded} />
-          <p className="security-note">
-            <span aria-hidden="true">◆</span> Session credentials stay in a
-            protected, HttpOnly cookie.
-          </p>
-          <Link className="help-link" href="/admin/exercises">
-            Return to platform
-          </Link>
-        </div>
+    <main className="adm-state-page">
+      <section className="adm-state-card" aria-labelledby="login-title">
+        <span className="adm-state-card__brand">
+          <span className="adm-brand__mark">
+            <AdminIcon name="leaf" className="adm-icon adm-icon--sm" />
+          </span>
+          Hán Lộ Admin
+        </span>
+        <h1 id="login-title">Đăng nhập</h1>
+        <p className="adm-muted">
+          Đăng nhập bằng tài khoản quản trị đang hoạt động.
+        </p>
+        <LoginForm sessionEnded={sessionEnded} />
+        <p className="adm-muted">
+          Phiên đăng nhập được giữ trong cookie HttpOnly được bảo vệ.
+        </p>
+        <Link className="adm-link" href="/admin/exercises">
+          Về trang Bài tập
+        </Link>
       </section>
     </main>
   );
