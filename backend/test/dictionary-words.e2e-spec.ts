@@ -214,6 +214,76 @@ describe('Dictionary words E2E (M2.6a)', () => {
         select: { id: true },
       })
       .then((word) => word.id);
+    // M3.4b: examples created out of order, plus hidden ones.
+    const example = (
+      orderIndex: number,
+      hanzi: string,
+      extra: { status?: 'draft' | 'published'; deletedAt?: Date } = {},
+    ) =>
+      prisma.wordExample.create({
+        data: {
+          wordId: words.detail,
+          orderIndex,
+          hanzi,
+          pinyin: `${hanzi} py`,
+          translationVi: `${hanzi} vi`,
+          dataSourceId: primary.id,
+          status: extra.status ?? 'published',
+          publishedAt:
+            (extra.status ?? 'published') === 'published' ? new Date() : null,
+          deletedAt: extra.deletedAt,
+        },
+      });
+    await example(2, '例二');
+    await example(1, '例一');
+    await example(3, '例草', { status: 'draft' });
+    await example(4, '例删', { deletedAt: new Date() });
+
+    // M3.4b related: a rare character keeps other suites' words out.
+    const relatedWord = async (
+      name: string,
+      hanzi: string,
+      options: {
+        status?: 'draft' | 'published';
+        deletedAt?: Date;
+        level?: boolean;
+      } = {},
+    ) =>
+      (
+        await prisma.word.create({
+          data: {
+            hanzi,
+            pinyin: `${pinyinPrefix}${name}`,
+            pinyinNormalized: normalizePinyin(`${pinyinPrefix}${name}`),
+            status: options.status ?? 'published',
+            deletedAt: options.deletedAt,
+            meanings: {
+              create: [{ meaningOrder: 1, meaningEn: `${name} en` }],
+            },
+            ...(options.level === false
+              ? {}
+              : { wordLevels: { create: [{ levelId: hsk1Id }] } }),
+          },
+          select: { id: true },
+        })
+      ).id;
+    words.relTarget = await relatedWord('reltarget', '靐爨');
+    words.relTwo = await relatedWord('reltwo', '爨靐靐');
+    words.relOne = await relatedWord('relone', '靐');
+    words.relDraft = await relatedWord('reldraft', '靐一', { status: 'draft' });
+    words.relDeleted = await relatedWord('reldeleted', '靐二', {
+      deletedAt: new Date(),
+    });
+    words.relNoLevel = await relatedWord('relnolevel', '靐三', {
+      level: false,
+    });
+    for (let i = 0; i < 4; i += 1) {
+      words[`relFill${i}`] = await relatedWord(
+        `relfill${'abcd'[i]}`,
+        `爨${'四五六七'[i]}`,
+      );
+    }
+
     words.draft = await createWord('draft', { status: 'draft' });
     words.deleted = await createWord('deleted', { deletedAt: new Date() });
     words.impure = await createWord('impure', { isPure: false });
@@ -340,6 +410,10 @@ describe('Dictionary words E2E (M2.6a)', () => {
           attribution: null,
         },
       ],
+      // M3.4b: checked in the tests below.
+      audio: null,
+      examples: expect.any(Array),
+      related: expect.any(Array),
     });
     expect(Object.keys(response.body.data)).toEqual([
       'id',
@@ -351,7 +425,67 @@ describe('Dictionary words E2E (M2.6a)', () => {
       'meanings',
       'levels',
       'sources',
+      'audio',
+      'examples',
+      'related',
     ]);
+  });
+
+  it('GET /dictionary/words/:id lists published examples by orderIndex with audio null (M3.4b)', async () => {
+    const response = await api()
+      .get(`/api/v1/dictionary/words/${words.detail}`)
+      .expect(200);
+    const source = {
+      name: `M2.6a primary ${tag}`,
+      version: '2.0.0',
+      license: 'CC-BY-SA-4.0',
+      attribution: 'M2.6a attribution',
+    };
+    expect(response.body.data.audio).toBeNull();
+    expect(response.body.data.examples).toEqual([
+      {
+        hanzi: '例一',
+        pinyin: '例一 py',
+        vi: '例一 vi',
+        en: null,
+        source,
+        audio: null,
+      },
+      {
+        hanzi: '例二',
+        pinyin: '例二 py',
+        vi: '例二 vi',
+        en: null,
+        source,
+        audio: null,
+      },
+    ]);
+  });
+
+  it('GET /dictionary/words/:id lists at most 4 public related words, best first (M3.4b, Q307)', async () => {
+    const response = await api()
+      .get(`/api/v1/dictionary/words/${words.relTarget}`)
+      .expect(200);
+    const related = response.body.data.related as Array<{ id: number }>;
+    const ids = related.map((word) => word.id);
+    expect(ids).toHaveLength(4);
+    expect(ids.slice(0, 2)).toEqual([words.relTwo, words.relOne]);
+    for (const hidden of [
+      'relTarget',
+      'relDraft',
+      'relDeleted',
+      'relNoLevel',
+    ]) {
+      expect(ids).not.toContain(words[hidden]);
+    }
+    expect(related[0]).toEqual({
+      id: words.relTwo,
+      hanzi: '爨靐靐',
+      pinyin: `${pinyinPrefix}reltwo`,
+      pinyinTone: null,
+      meanings: [{ en: 'reltwo en', vi: null }],
+      level: hsk1Name,
+    });
   });
 
   it.each(['draft', 'deleted', 'impure', 'noMeaning', 'missing'])(

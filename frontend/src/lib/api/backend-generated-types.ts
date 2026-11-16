@@ -2678,6 +2678,38 @@ export interface components {
              */
             downloadable: boolean;
         };
+        DictionaryRelatedWordMeaningDto: {
+            en: string | null;
+            vi: string | null;
+        };
+        DictionaryRelatedWordDto: {
+            id: number;
+            hanzi: string;
+            pinyin: string;
+            pinyinTone: string | null;
+            meanings: components["schemas"]["DictionaryRelatedWordMeaningDto"][];
+            /** @description Name of the lowest public Level. */
+            level: string | null;
+        };
+        DictionaryWordAudioDto: {
+            mediaId: number;
+            mimeType: string | null;
+            duration: number | null;
+        };
+        DictionaryWordSourceDto: {
+            name: string;
+            version: string;
+            license: string | null;
+            attribution: string | null;
+        };
+        DictionaryWordExampleDto: {
+            hanzi: string;
+            pinyin: string | null;
+            vi: string | null;
+            en: string | null;
+            source: components["schemas"]["DictionaryWordSourceDto"];
+            audio: components["schemas"]["DictionaryWordAudioDto"] | null;
+        };
         DictionaryWordMeaningDto: {
             order: number;
             en: string | null;
@@ -2690,13 +2722,12 @@ export interface components {
             code: string;
             name: string;
         };
-        DictionaryWordSourceDto: {
-            name: string;
-            version: string;
-            license: string | null;
-            attribution: string | null;
-        };
-        DictionaryWordDetailDto: {
+        DictionaryWordFullDetailDto: {
+            audio: components["schemas"]["DictionaryWordAudioDto"] | null;
+            /** @description Published, not deleted examples ordered by `orderIndex`. */
+            examples: components["schemas"]["DictionaryWordExampleDto"][];
+            /** @description At most 4 public HSK words sharing a character (Q307). */
+            related: components["schemas"]["DictionaryRelatedWordDto"][];
             id: number;
             hanzi: string;
             traditional: string | null;
@@ -3010,6 +3041,20 @@ export interface components {
             dailyGoal: components["schemas"]["LearningHomeDailyGoalDto"] | null;
             streakDays: number;
             continueLesson: components["schemas"]["LearningHomeContinueLessonDto"] | null;
+        };
+        DictionaryWordDetailDto: {
+            id: number;
+            hanzi: string;
+            traditional: string | null;
+            pinyin: string;
+            pinyinTone: string | null;
+            example: string | null;
+            /** @description Ordered by `meaningOrder`. */
+            meanings: components["schemas"]["DictionaryWordMeaningDto"][];
+            /** @description Published, not deleted Levels ordered by `orderIndex`. */
+            levels: components["schemas"]["DictionaryWordLevelDto"][];
+            /** @description The primary source first, then by data source id. */
+            sources: components["schemas"]["DictionaryWordSourceDto"][];
         };
         ReviewGradePreviewDto: {
             /** @enum {string} */
@@ -5908,7 +5953,7 @@ export interface operations {
                     "application/json": {
                         /** @enum {boolean} */
                         success: true;
-                        data: components["schemas"]["DictionaryWordDetailDto"];
+                        data: components["schemas"]["DictionaryWordFullDetailDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

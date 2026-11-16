@@ -19,7 +19,7 @@ import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { DictionaryService } from './dictionary.service';
 import {
-  DictionaryWordDetailDto,
+  DictionaryWordFullDetailDto,
   DictionaryWordSavedDto,
   DictionaryWordSaveResultDto,
 } from './dto/dictionary-word-response.dto';
@@ -55,7 +55,7 @@ export class DictionaryController {
 
   @Get('words/:id')
   @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
-  @ApiEnvelope(DictionaryWordDetailDto)
+  @ApiEnvelope(DictionaryWordFullDetailDto)
   getWord(@Param('id', ParsePositiveSafeIntegerPipe) id: number) {
     return this.dictionaryService.getWord(id);
   }

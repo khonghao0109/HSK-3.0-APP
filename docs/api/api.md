@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 16/11/2026 (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6). Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 16/11/2026 (M3.4b, Q303–Q311): `GET /dictionary/words/:id` thêm `audio` (luôn `null`), `examples[]`, `related[]` (A.5); `word` của A.7b là tập con. Trước đó (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6). Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -454,13 +454,27 @@ từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` t
   "example": "我每天都学习中文。",
   "meanings": [{ "order": 1, "en": "to study", "vi": "học tập", "partOfSpeech": "verb", "usage": null, "note": null }],
   "levels": [{ "code": "HSK1", "name": "HSK 1" }],
-  "sources": [{ "name": "…", "version": "1.0.0", "license": null, "attribution": null }] }
+  "sources": [{ "name": "…", "version": "1.0.0", "license": null, "attribution": null }],
+  "audio": null,
+  "examples": [{ "hanzi": "我在学习中文。", "pinyin": "Wǒ zài xuéxí Zhōngwén.", "vi": "Tôi đang học tiếng Trung.",
+    "en": null, "source": { "name": "…", "version": "1.0.0", "license": null, "attribution": null }, "audio": null }],
+  "related": [{ "id": 31, "hanzi": "学生", "pinyin": "xué sheng", "pinyinTone": "xue2 sheng5",
+    "meanings": [{ "en": "student", "vi": "học sinh" }], "level": "HSK 1" }] }
 ```
 
 `meanings` theo `meaningOrder`; `levels` chỉ Level published, chưa xoá, theo `orderIndex`;
 `sources` để nguồn `isPrimary` đứng đầu rồi theo id nguồn. Trường nullable trả `null`.
-Không trả trạng thái, audio, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`
-(audio từ vựng thuộc backlog M2.B12).
+Không trả trạng thái, ảnh, stroke, người tạo/sửa, thời điểm hay `referenceUrl`.
+
+Từ M3.4b (chỉ thêm trường):
+- `audio` luôn `null` (Q303/Q304: quyền phát media của học viên chưa phủ audio từ; khi bật sẽ
+  là `{ "mediaId", "mimeType", "duration" }`, không bao giờ là URL).
+- `examples`: `WordExample` published, chưa soft-delete, có nguồn, theo `orderIndex` rồi id;
+  mỗi phần tử có `audio: null`. Khi `examples` rỗng, client hiển thị `example` (câu ví dụ cũ
+  của `Word`) làm fallback (Q311).
+- `related` (Q307): tối đa 4 từ public có ít nhất một Level public, chung ít nhất một chữ Hán
+  với từ đang xem, không gồm chính nó; xếp theo số chữ chung giảm dần, khoảng cách cấp tới
+  cấp thấp nhất của từ đang xem, độ dài chữ Hán, rồi id. Shape giống một phần tử của `GET /dictionary`.
 
 **Lưu từ** (Q62; từ M3.2 Q251 lưu lần đầu tạo thêm thẻ ôn `ReviewCard`, xem A.7b). Thiếu token → `401`; `:id` sai
 dạng → `400`. Không response nào chứa `userId` hay `Idempotency-Key`.
@@ -663,7 +677,7 @@ Từ M3.3c, hàng đợi, phiên `due` và các số đến hạn của overview
 
 - `dueCount` đếm mọi thẻ đến hạn của các cấp đã chọn, không bị `limit` hay trần ngày cắt.
 - `dailyLimitReached` (Q282): `true` khi trần ngày đã hết; khi đó `items` rỗng.
-- `word` cùng shape với `GET /dictionary/words/:id`.
+- `word` là tập con của `GET /dictionary/words/:id`: cùng các trường đến `sources`, không có `audio`, `examples`, `related` (Q306).
 - `preview.<grade>` (R4) là kết quả `schedule(card, grade, now, sm2-v1)` với cùng một `now`
   cho cả request; client không tự tính lịch.
 

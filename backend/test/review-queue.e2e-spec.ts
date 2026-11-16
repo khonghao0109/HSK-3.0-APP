@@ -240,6 +240,10 @@ describe('Review queue E2E (M3.2)', () => {
       levels: [],
       sources: [],
     });
+    // M3.4b (Q306): only the dictionary detail carries these.
+    expect(response.body.data.items[0].word).not.toHaveProperty('examples');
+    expect(response.body.data.items[0].word).not.toHaveProperty('related');
+    expect(response.body.data.items[0].word).not.toHaveProperty('audio');
   });
 
   it('cuts items by limit but keeps the full dueCount', async () => {

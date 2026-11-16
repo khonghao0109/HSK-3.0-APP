@@ -18,12 +18,18 @@ import {
 import { classifyLessonActivityPersistenceError } from '../learning/activity/lesson-activity-persistence';
 import { SM2_V1_POLICY } from '../learning/srs';
 import type {
-  DictionaryWordDetailDto,
+  DictionaryRelatedWordDto,
+  DictionaryWordFullDetailDto,
   DictionaryWordSavedDto,
   DictionaryWordSaveResultDto,
 } from './dto/dictionary-word-response.dto';
 import { classifyDictionaryQuery } from './dictionary-search-query';
-import { toWordDetail, WORD_DETAIL_INCLUDE } from './dictionary-word.mapper';
+import { toWordFullDetail, WORD_FULL_INCLUDE } from './dictionary-word.mapper';
+import {
+  rankRelatedWords,
+  relatedCandidatesSql,
+  type RelatedWordCandidate,
+} from './related-words';
 import {
   MIN_PUBLIC_LEVEL_ORDER_SQL,
   PUBLIC_WORD_LEVELS,
@@ -169,8 +175,12 @@ export class DictionaryService {
           LIMIT ${SEARCH_LIMIT}`);
       }
     }
-    if (ids.length === 0) return [];
+    return this.summaries(ids);
+  }
 
+  /** Search-shaped rows for `ids`, in the order of `ids`. */
+  private async summaries(ids: number[]): Promise<DictionaryRelatedWordDto[]> {
+    if (ids.length === 0) return [];
     const found = await this.prisma.word.findMany({
       where: { id: { in: ids } },
       include: SEARCH_WORD_INCLUDE,
@@ -200,13 +210,24 @@ export class DictionaryService {
     return rows.map((row) => row.id);
   }
 
-  async getWord(wordId: number): Promise<DictionaryWordDetailDto> {
+  async getWord(wordId: number): Promise<DictionaryWordFullDetailDto> {
     const word = await this.prisma.word.findFirst({
       where: { id: wordId, ...PUBLIC_WORD_WHERE },
-      include: WORD_DETAIL_INCLUDE,
+      include: WORD_FULL_INCLUDE,
     });
     if (!word) throw wordNotFound();
-    return toWordDetail(word);
+    const candidates = await this.prisma.$queryRaw<RelatedWordCandidate[]>(
+      relatedCandidatesSql(word.id, word.hanzi),
+    );
+    const related = rankRelatedWords(
+      {
+        id: word.id,
+        hanzi: word.hanzi,
+        levelOrder: word.wordLevels[0]?.level.orderIndex ?? null,
+      },
+      candidates,
+    );
+    return toWordFullDetail(word, await this.summaries(related));
   }
 
   /**

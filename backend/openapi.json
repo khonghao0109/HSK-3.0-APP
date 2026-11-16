@@ -4868,7 +4868,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/DictionaryWordDetailDto"
+                      "$ref": "#/components/schemas/DictionaryWordFullDetailDto"
                     },
                     "meta": {
                       "$ref": "#/components/schemas/ApiResponseMetaDto"
@@ -11317,6 +11317,146 @@
           "downloadable"
         ]
       },
+      "DictionaryRelatedWordMeaningDto": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "nullable": true
+          },
+          "vi": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "en",
+          "vi"
+        ]
+      },
+      "DictionaryRelatedWordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "pinyin": {
+            "type": "string"
+          },
+          "pinyinTone": {
+            "type": "string",
+            "nullable": true
+          },
+          "meanings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryRelatedWordMeaningDto"
+            }
+          },
+          "level": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the lowest public Level."
+          }
+        },
+        "required": [
+          "id",
+          "hanzi",
+          "pinyin",
+          "pinyinTone",
+          "meanings",
+          "level"
+        ]
+      },
+      "DictionaryWordAudioDto": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "number"
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "mediaId",
+          "mimeType",
+          "duration"
+        ]
+      },
+      "DictionaryWordSourceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "attribution": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "license",
+          "attribution"
+        ]
+      },
+      "DictionaryWordExampleDto": {
+        "type": "object",
+        "properties": {
+          "hanzi": {
+            "type": "string"
+          },
+          "pinyin": {
+            "type": "string",
+            "nullable": true
+          },
+          "vi": {
+            "type": "string",
+            "nullable": true
+          },
+          "en": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DictionaryWordSourceDto"
+          },
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DictionaryWordAudioDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "hanzi",
+          "pinyin",
+          "vi",
+          "en",
+          "source",
+          "audio"
+        ]
+      },
       "DictionaryWordMeaningDto": {
         "type": "object",
         "properties": {
@@ -11368,34 +11508,32 @@
           "name"
         ]
       },
-      "DictionaryWordSourceDto": {
+      "DictionaryWordFullDetailDto": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string"
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DictionaryWordAudioDto"
+              }
+            ]
           },
-          "version": {
-            "type": "string"
+          "examples": {
+            "description": "Published, not deleted examples ordered by `orderIndex`.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordExampleDto"
+            }
           },
-          "license": {
-            "type": "string",
-            "nullable": true
+          "related": {
+            "description": "At most 4 public HSK words sharing a character (Q307).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryRelatedWordDto"
+            }
           },
-          "attribution": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "name",
-          "version",
-          "license",
-          "attribution"
-        ]
-      },
-      "DictionaryWordDetailDto": {
-        "type": "object",
-        "properties": {
           "id": {
             "type": "number"
           },
@@ -11440,6 +11578,9 @@
           }
         },
         "required": [
+          "audio",
+          "examples",
+          "related",
           "id",
           "hanzi",
           "traditional",
@@ -12679,6 +12820,64 @@
           "dailyGoal",
           "streakDays",
           "continueLesson"
+        ]
+      },
+      "DictionaryWordDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "traditional": {
+            "type": "string",
+            "nullable": true
+          },
+          "pinyin": {
+            "type": "string"
+          },
+          "pinyinTone": {
+            "type": "string",
+            "nullable": true
+          },
+          "example": {
+            "type": "string",
+            "nullable": true
+          },
+          "meanings": {
+            "description": "Ordered by `meaningOrder`.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordMeaningDto"
+            }
+          },
+          "levels": {
+            "description": "Published, not deleted Levels ordered by `orderIndex`.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordLevelDto"
+            }
+          },
+          "sources": {
+            "description": "The primary source first, then by data source id.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryWordSourceDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "hanzi",
+          "traditional",
+          "pinyin",
+          "pinyinTone",
+          "example",
+          "meanings",
+          "levels",
+          "sources"
         ]
       },
       "ReviewGradePreviewDto": {
