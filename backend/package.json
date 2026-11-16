@@ -37,6 +37,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "test:db:jobs": "node --test -r ts-node/register scripts/test/job-queue.integration.spec.ts",
     "test:db:p0": "ts-node scripts/test/run-p0-schema-integration.ts",
+    "test:db:dictionary-search": "ts-node scripts/test/run-dictionary-search-integration.ts",
     "test:db:activity-integrity": "ts-node scripts/test/run-lesson-activity-integrity.ts",
     "test:db:activity-concurrency": "ts-node scripts/test/run-lesson-activity-concurrency.ts",
     "test:db:exercise-concurrency": "ts-node scripts/test/run-exercise-authoring-concurrency.ts",

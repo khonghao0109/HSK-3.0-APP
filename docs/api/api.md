@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 16/11/2026 (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6). Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -407,15 +407,20 @@ nào đặt header cache.
 
 Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]` với `200` (không `400`).
 "Có cấp HSK" = từ có ít nhất một Level `published`, chưa soft-delete (cùng điều kiện với
-`level` trong response). Mỗi request tối đa 3 truy vấn DB.
+`level` trong response). Mỗi request tối đa 4 truy vấn DB.
 
-- **Hanzi:** `hanzi` bắt đầu bằng query. Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; `hanzi` ngắn trước,
-  rồi `hanzi`, rồi `id`. Tối đa 20.
+- **Hanzi:** `hanzi` bắt đầu bằng query. Thứ tự: khớp trọn (`hanzi` bằng query) trước, rồi
+  cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau;
+  `hanzi` ngắn trước, rồi `hanzi`, rồi `id`. Tối đa 20. Không từ nào bắt đầu bằng query thì
+  trả các từ có `hanzi` **chứa** query, cùng thứ tự (bỏ tiêu chí khớp trọn).
 - **Latin**, tối đa 20 từ, không trùng `id`, nhóm 1 trước rồi nhóm 2 lấp chỗ còn lại:
-  1. Pinyin: `pinyinNormalized` bắt đầu bằng query đã chuẩn pinyin (bỏ số thanh, chữ
-     thường, `ü` → `u:`). Chỉ chạy khi query không có dấu tiếng Việt (gồm toàn ký tự
-     `[a-zA-Z1-5:üÜ' ]`). Thứ tự: cấp HSK thấp hơn trước (theo `orderIndex` của Level published), từ không có cấp xếp sau; khớp trọn (`pinyinNormalized` bằng
-     query) trước, pinyin ngắn trước, rồi `pinyinNormalized`, rồi `id`.
+  1. Pinyin: khoá pinyin của query (chuẩn pinyin: bỏ dấu thanh và số thanh, bỏ `'`, chữ
+     thường, `ü`/`v`/`u:` → `u:`, rồi bỏ mọi khoảng trắng) là tiền tố của `pinyinCompact`
+     (`pinyinNormalized` bỏ khoảng trắng), nên `xuéxí`, `Xué Xí`, `xue2 xi2`, `xue xi` và
+     `xuexi` cùng khớp 学习. Chỉ chạy khi query (dạng NFD) chỉ gồm `[a-zA-Z1-5:' ]` và bốn
+     dấu thanh pinyin hoặc dấu hai chấm của `ü`; query có dấu tiếng Việt khác (`học`) chỉ
+     tra theo nghĩa. Thứ tự: khớp trọn (`pinyinCompact` bằng khoá) trước, rồi cấp HSK thấp
+     hơn trước, từ không có cấp xếp sau; pinyin ngắn trước, rồi `pinyinCompact`, rồi `id`.
   2. Nghĩa: chạy khi query sau chuẩn nghĩa (bỏ dấu, `đ` → `d`, chữ thường, gộp khoảng
      trắng) dài ≥ 2 ký tự và nhóm 1 chưa đủ 20; chỉ gồm từ chưa có ở nhóm 1. Một meaning
      khớp khi `meaningViNormalized` hoặc `meaningEnNormalized` khớp **đầu từ**: cột bắt
@@ -425,6 +430,9 @@ Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]
      `"to " + query`, hoặc bằng query giữ dấu), cấp HSK thấp hơn trước (theo `orderIndex`
      của Level published), từ không có cấp xếp sau, nghĩa khớp ngắn nhất
      trước, rồi `id`.
+  3. Trigram (R6, chữa gõ sai): chỉ chạy khi nhóm 1 và 2 không có kết quả và khoá pinyin
+     dài ≥ 3. Từ có `pinyinCompact` giống khoá theo `pg_trgm` (ngưỡng mặc định 0,3); thứ tự:
+     độ giống giảm dần, rồi cấp HSK, độ dài, `pinyinCompact`, `id`.
 
 Chỉ từ public; `level` là tên Level published đầu tiên theo `orderIndex`. Dữ liệu từ điển
 thật hiện chỉ có nghĩa tiếng Anh (CC-CEDICT, 0 nghĩa Việt cho tới M1.2a), nên hôm nay

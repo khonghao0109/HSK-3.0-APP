@@ -33,9 +33,10 @@
 | DEL-ADM | `20261102160000_admin_initiated_account_deletion`       | `AccountDeletionInitiator` enum, `initiatedBy`/`actorId`, partial unique index một `requested`/user (mục 27). |
 | SRS-R3  | `20261111120000_srs_relearning_and_event_source`         | Enum `ReviewCardState` thêm `relearning`, enum `ReviewEventSource` (`flashcard`), cột `ReviewEvent.source` (mục 28). |
 | REV-P   | `20261112170000_review_preference`                       | Bảng `ReviewPreference` (một dòng mỗi user): `dailyCardLimit` 10/20/30, `levelCodes` (mục 30). |
+| DICT-X  | `20261116090000_word_example_and_trigram_search`         | `pg_trgm`, bảng `WordExample`, unique `WordMeaning(id, wordId)`, cột sinh `Word.pinyinCompact`, GIN trigram cho tra từ (mục 31). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 29 migration (đến `20261111120000_srs_relearning_and_event_source`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 32 migration (đến `20261116090000_word_example_and_trigram_search`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -1188,3 +1189,46 @@ ALTER TABLE "ReviewPreference" ADD CONSTRAINT "ReviewPreference_dailyCardLimit_c
   `409 REVIEW_DAILY_LIMIT_REACHED`; `GET /review/overview` thêm `timezone` (api.md A.7b).
 - Rollback: forward-fix. Nếu cần gỡ, một migration sau `DROP TABLE "ReviewPreference"`; không
   ảnh hưởng bảng khác vì không bảng nào tham chiếu nó.
+
+## 31. Ví dụ câu và tra từ trigram — `WordExample`, `pg_trgm` (M3.4a Pha B / Q289–Q299)
+
+### 31.1. Migration 32 — `20261116090000_word_example_and_trigram_search`
+
+Nghiệp vụ (M3.4a, R6): schema cho ví dụ câu của từ (khối Ví dụ ở `web/word-full.html`) và
+tra từ xếp hạng khớp trọn > tiền tố > trigram. Không tạo `WordSense` (Q289: `WordMeaning` là
+sense) và không tạo `WordRelation` (Q291). SQL đầy đủ nằm trong file migration; các phần ngoài
+DDL do Prisma sinh:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+ALTER TABLE "Word" ADD COLUMN "pinyinCompact" TEXT
+  GENERATED ALWAYS AS (replace("pinyinNormalized", ' ', '')) STORED;
+CREATE UNIQUE INDEX "WordMeaning_id_wordId_key" ON "WordMeaning"("id", "wordId");
+-- WordExample: FK Word/WordMeaning(meaningId, wordId)/Media/DataSource đều ON DELETE RESTRICT
+CREATE UNIQUE INDEX "WordExample_word_order_active_key" ON "WordExample" ("wordId", "orderIndex") WHERE "deletedAt" IS NULL;
+ALTER TABLE "WordExample" ADD CONSTRAINT "WordExample_orderIndex_check" CHECK ("orderIndex" >= 0);
+ALTER TABLE "WordExample" ADD CONSTRAINT "WordExample_hanzi_nonblank_check" CHECK (btrim("hanzi") <> '');
+ALTER TABLE "WordExample" ADD CONSTRAINT "WordExample_published_data_source_check" CHECK ("status" <> 'published' OR "dataSourceId" IS NOT NULL);
+-- Partial, cùng predicate với Word_public_*_prefix_idx:
+--   Word_public_pinyin_compact_prefix_idx (text_pattern_ops), Word_public_pinyin_compact_trgm_idx (GIN),
+--   Word_public_hanzi_trgm_idx (GIN); WordMeaning_meaning{Vi,En}Normalized_trgm_idx (GIN, WHERE cột IS NOT NULL).
+```
+
+- Additive DDL. Cột sinh `pinyinCompact` ghi lại toàn bảng `Word` (121,856 dòng) và index GIN
+  build trong transaction migration: khoá ghi `Word`/`WordMeaning` trong lúc chạy; dừng
+  import/CMS publish như §2, ghi thời gian vào change record.
+- `pg_trgm` là trusted extension (PostgreSQL 13+): role sở hữu database tạo được, không cần
+  superuser. Xác minh quyền của role migrate trên production trước deploy.
+- Prisma không mô hình hoá extension, cột sinh và index partial: `pinyinCompact` khai
+  `@default(dbgenerated(...)) @ignore`; index trigram `WordMeaning` là partial để không trùng
+  btree Prisma quản lý. `migrate diff` hai chiều rỗng (đã kiểm trên DB disposable).
+- `normalizePinyin` (bỏ dấu thanh, `v` → `u:`, bỏ `'`) không cần backfill dữ liệu public:
+  trên corpus seed 121,856 từ, 4 dòng có khoá khác hàm cũ (`MV`, `VCR`, `V沟`, `大V`; đều
+  `isPure = false`, không public).
+- FK `RESTRICT` (Q299): `Word` chỉ soft-delete; ví dụ đã publish phải giữ nguồn (Q296).
+- Impact API: `GET /dictionary` đổi thứ tự và nhận thêm dạng pinyin; response không đổi
+  (api.md A.5). Data export và xoá tài khoản không đổi (bảng nội dung, không phải dữ liệu
+  người dùng).
+- Kiểm: `npm run test:db:dictionary-search` (CHECK/FK/unique + thứ hạng trên DB thật).
+- Rollback: forward-fix. Gỡ bằng migration sau: `DROP TABLE "WordExample"`, drop các index
+  trigram, cột `pinyinCompact` và `WordMeaning_id_wordId_key`; không bảng khác tham chiếu.

@@ -67,4 +67,19 @@ describe('classifyDictionaryQuery', () => {
       meaning: 'nu',
     });
   });
+
+  it.each([
+    ['xuéxí', 'xuexi'],
+    ['Xué Xí', 'xuexi'],
+    ['xue2 xi2', 'xuexi'],
+    ['xue xi', 'xuexi'],
+    ['nǚ', 'nu:'],
+    ['nv3', 'nu:'],
+    ["xī'ān", 'xian'],
+  ])('reads %j as the compact pinyin key %j', (query, key) => {
+    expect(classifyDictionaryQuery(query)).toMatchObject({
+      kind: 'latin',
+      pinyinPrefix: key,
+    });
+  });
 });

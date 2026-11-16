@@ -539,6 +539,7 @@ model DataSource {
   stories         Story[]
   wordSources     WordSource[]
   wordMeanings    WordMeaning[]
+  wordExamples    WordExample[]
   wordLevels      WordLevel[]
   sentences       Sentence[]
   lessonExercises LessonExercise[]
@@ -578,6 +579,7 @@ model Media {
   updatedBy                  User?                   @relation("MediaUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   lessonCoverImage           Lesson[]                @relation("LessonCoverImage")
   wordAudio                  Word[]                  @relation("WordAudio")
+  wordExampleAudio           WordExample[]           @relation("WordExampleAudio")
   wordImage                  Word[]                  @relation("WordImage")
   wordStrokeAnimation        Word[]                  @relation("WordStrokeAnimation")
   questionAudio              Question[]              @relation("QuestionAudio")
@@ -824,7 +826,9 @@ model Story {
 }
 
 /// Public prefix indexes on hanzi/pinyinNormalized use partial text_pattern_ops
-/// and are managed by the p0_integrity_hardening SQL migration.
+/// and are managed by the p0_integrity_hardening SQL migration. `pinyinCompact`
+/// (generated, spaces removed) and the pg_trgm GIN indexes are managed by the
+/// 20261116090000_word_example_and_trigram_search SQL migration.
 model Word {
   id                Int           @id @default(autoincrement())
   hanzi             String
@@ -832,6 +836,8 @@ model Word {
   pinyin            String
   pinyinNormalized  String
   pinyinTone        String?
+  /// GENERATED ALWAYS AS (replace("pinyinNormalized", ' ', '')) STORED; read-only.
+  pinyinCompact     String?       @default(dbgenerated("replace(\"pinyinNormalized\", ' '::text, ''::text)")) @ignore
   example           String?
   isPure            Boolean       @default(true)
   audioId           Int?
@@ -853,6 +859,7 @@ model Word {
   updatedBy              User?                   @relation("WordUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   publishedBy            User?                   @relation("WordPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   meanings               WordMeaning[]
+  examples               WordExample[]
   sources                WordSource[]
   wordLevels             WordLevel[]
   lessonWords            LessonWord[]
@@ -903,13 +910,47 @@ model WordMeaning {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  word       Word        @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  dataSource DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  word       Word          @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  dataSource DataSource?   @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  examples   WordExample[]
 
+  /// Target of the composite WordExample (meaningId, wordId) foreign key.
+  @@unique([id, wordId])
   @@unique([wordId, meaningOrder])
   @@index([wordId])
   @@index([meaningEnNormalized])
   @@index([meaningViNormalized])
+  @@index([dataSourceId])
+}
+
+/// Example sentence for a Word (M3.4a). The partial unique (wordId, orderIndex)
+/// WHERE deletedAt IS NULL and the CHECK constraints are SQL-only (migration
+/// 20261116090000_word_example_and_trigram_search).
+model WordExample {
+  id            Int           @id @default(autoincrement())
+  wordId        Int
+  meaningId     Int?
+  orderIndex    Int
+  hanzi         String
+  pinyin        String?
+  translationVi String?
+  translationEn String?
+  audioId       Int?
+  dataSourceId  Int?
+  status        ContentStatus @default(draft)
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  word       Word         @relation(fields: [wordId], references: [id], onDelete: Restrict)
+  meaning    WordMeaning? @relation(fields: [meaningId, wordId], references: [id, wordId], onDelete: Restrict)
+  audio      Media?       @relation("WordExampleAudio", fields: [audioId], references: [id], onDelete: Restrict)
+  dataSource DataSource?  @relation(fields: [dataSourceId], references: [id], onDelete: Restrict)
+
+  @@index([wordId, status, deletedAt, orderIndex])
+  @@index([meaningId, wordId])
+  @@index([audioId])
   @@index([dataSourceId])
 }
 

@@ -115,23 +115,35 @@ export class DictionaryService {
 
     let ids: number[];
     if (query.kind === 'hanzi') {
+      // R6: exact > prefix; a contains match (pg_trgm GIN) only when neither hits.
       ids = await this.searchIds(Prisma.sql`
         SELECT w."id" FROM "Word" w
         WHERE ${PUBLIC_WORD_SQL}
           AND w."hanzi" LIKE ${`${escapeLike(query.prefix)}%`}
-        ORDER BY ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST, length(w."hanzi"), w."hanzi", w."id"
+        ORDER BY (w."hanzi" = ${query.prefix}) DESC,
+          ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST, length(w."hanzi"), w."hanzi", w."id"
         LIMIT ${SEARCH_LIMIT}`);
+      if (ids.length === 0) {
+        ids = await this.searchIds(Prisma.sql`
+          SELECT w."id" FROM "Word" w
+          WHERE ${PUBLIC_WORD_SQL}
+            AND w."hanzi" LIKE ${`%${escapeLike(query.prefix)}%`}
+          ORDER BY ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST, length(w."hanzi"), w."hanzi", w."id"
+          LIMIT ${SEARCH_LIMIT}`);
+      }
     } else {
-      // Group 1: pinyin prefix matches; group 2 fills the rest with words
-      // matched only by a meaning (A.5).
-      ids = query.pinyinPrefix
+      // Group 1 (R6): exact > prefix on the compact pinyin key, then Level and
+      // length; Group 2 fills the rest with words matched only by a
+      // meaning (A.5); a trigram match only when nothing else hits (typo rescue).
+      const key = query.pinyinPrefix;
+      ids = key
         ? await this.searchIds(Prisma.sql`
             SELECT w."id" FROM "Word" w
             WHERE ${PUBLIC_WORD_SQL}
-              AND w."pinyinNormalized" LIKE ${`${escapeLike(query.pinyinPrefix)}%`}
-            ORDER BY ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST,
-              (w."pinyinNormalized" = ${query.pinyinPrefix}) DESC,
-              length(w."pinyinNormalized"), w."pinyinNormalized", w."id"
+              AND w."pinyinCompact" LIKE ${`${escapeLike(key)}%`}
+            ORDER BY (w."pinyinCompact" = ${key}) DESC,
+              ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST,
+              length(w."pinyinCompact"), w."pinyinCompact", w."id"
             LIMIT ${SEARCH_LIMIT}`)
         : [];
       if (query.meaning && ids.length < SEARCH_LIMIT) {
@@ -146,6 +158,15 @@ export class DictionaryService {
             ),
           )),
         ];
+      }
+      if (key && key.length >= 3 && ids.length === 0) {
+        ids = await this.searchIds(Prisma.sql`
+          SELECT w."id" FROM "Word" w
+          WHERE ${PUBLIC_WORD_SQL} AND w."pinyinCompact" % ${key}
+          ORDER BY similarity(w."pinyinCompact", ${key}) DESC,
+            ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST,
+            length(w."pinyinCompact"), w."pinyinCompact", w."id"
+          LIMIT ${SEARCH_LIMIT}`);
       }
     }
     if (ids.length === 0) return [];

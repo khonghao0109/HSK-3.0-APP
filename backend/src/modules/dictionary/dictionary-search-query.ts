@@ -6,7 +6,7 @@ export type DictionarySearchQuery =
   | { kind: 'hanzi'; prefix: string }
   | {
       kind: 'latin';
-      /** Prefix of `pinyinNormalized`; null when the query is not pinyin. */
+      /** Prefix of `pinyinCompact` (no spaces); null when the query is not pinyin. */
       pinyinPrefix: string | null;
       /** Substring of a normalized meaning; null below 2 characters. */
       meaning: string | null;
@@ -17,7 +17,10 @@ export type DictionarySearchQuery =
 const MAX_QUERY_LENGTH = 64;
 const HANZI = /[㐀-鿿]/;
 const HANZI_QUERY = /^[a-zA-Z1-5:üÜ㐀-鿿' ]+$/;
-const PINYIN_QUERY = /^[a-zA-Z1-5:üÜ' ]+$/;
+const PINYIN_QUERY = /^[a-zA-Z1-5:' ]+$/;
+// The four pinyin tone marks and the ü diaeresis, as NFD combining marks.
+// Other marks (Vietnamese dot below, hook, circumflex…) keep a query meaning-only.
+const PINYIN_MARKS = /\u0300|\u0301|\u0304|\u030c|\u0308/g;
 const LATIN_QUERY = /^[\p{Script=Latin}1-5' :]+$/u;
 
 /** Sorts a raw `?query=` into the lookups `GET /dictionary` runs (A.5). */
@@ -40,7 +43,11 @@ export function classifyDictionaryQuery(raw: unknown): DictionarySearchQuery {
   const accented = /[^ -~]/.test(query);
   return {
     kind: 'latin',
-    pinyinPrefix: PINYIN_QUERY.test(query) ? normalizePinyin(query) : null,
+    pinyinPrefix: PINYIN_QUERY.test(
+      query.normalize('NFD').replace(PINYIN_MARKS, ''),
+    )
+      ? normalizePinyin(query).replace(/ /g, '')
+      : null,
     meaning: searchMeaning ? meaning : null,
     legacyMeaning:
       searchMeaning && accented

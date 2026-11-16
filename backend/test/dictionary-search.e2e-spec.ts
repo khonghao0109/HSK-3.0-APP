@@ -197,14 +197,14 @@ describe('Dictionary search E2E (M2.B14)', () => {
     words.levelPinyinHsk3 = await createWord({
       hanzi: '鼎鼎',
       pinyin: `${pinyinPrefix}lvl a`,
-      pinyinNormalized: `${pinyinPrefix}lvl`,
+      pinyinNormalized: normalizePinyin(`${pinyinPrefix}lvl`),
       meaningEn: 'level pinyin hsk3',
       levelId: hsk3.id,
     });
     words.levelPinyinHsk1 = await createWord({
       hanzi: '鼎鼎',
       pinyin: `${pinyinPrefix}lvl b`,
-      pinyinNormalized: `${pinyinPrefix}lvl`,
+      pinyinNormalized: normalizePinyin(`${pinyinPrefix}lvl`),
       meaningEn: 'level pinyin hsk1',
       levelId: hsk1.id,
     });
@@ -285,6 +285,11 @@ describe('Dictionary search E2E (M2.B14)', () => {
       pinyin: `xuexi ${tag}`,
       pinyinNormalized: 'xuexi',
       meaningEn: 'pinyin rank three',
+    });
+    words.hanziContains = await createWord({
+      hanzi: '鱻龖',
+      pinyin: `${pinyinPrefix}hanzicontains`,
+      meaningEn: 'hanzi rank contains',
     });
     words.hanziShort = await createWord({
       hanzi: '龘',
@@ -425,8 +430,13 @@ describe('Dictionary search E2E (M2.B14)', () => {
   });
 
   it('hides draft and impure words matched by pinyin', async () => {
-    expect(await search(`${pinyinPrefix}draft`)).toEqual([]);
-    expect(await search(`${pinyinPrefix}impure`)).toEqual([]);
+    // A query with no exact, prefix or meaning hit falls back to trigram
+    // matches (R6); hidden words must stay out of those too.
+    for (const hidden of ['draft', 'impure']) {
+      const ids = idsOf(await search(`${pinyinPrefix}${hidden}`));
+      expect(ids).not.toContain(words.draft);
+      expect(ids).not.toContain(words.impure);
+    }
     expect(idsOf(await search(`${pinyinPrefix}visible`))).toEqual([
       words.visible,
     ]);
@@ -451,15 +461,15 @@ describe('Dictionary search E2E (M2.B14)', () => {
     },
   );
 
-  it('keeps hanzi prefix search and lists words with a Level first', async () => {
+  it('keeps hanzi prefix search and lists the exact hanzi first (R6)', async () => {
     const results = await search('龘');
     expect(results.every((word) => word.hanzi.startsWith('龘'))).toBe(true);
     const ids = idsOf(results);
     expect(ids).toEqual(
       expect.arrayContaining([words.hanziHsk, words.hanziShort]),
     );
-    expect(ids.indexOf(words.hanziHsk)).toBeLessThan(
-      ids.indexOf(words.hanziShort),
+    expect(ids.indexOf(words.hanziShort)).toBeLessThan(
+      ids.indexOf(words.hanziHsk),
     );
   });
 
@@ -492,9 +502,9 @@ describe('Dictionary search E2E (M2.B14)', () => {
     );
   });
 
-  it('ranks pinyin by Level, then a whole match, then length', async () => {
+  it('ranks pinyin by a whole match, then Level, then length (R6)', async () => {
     const ids = idsOf(await search('xue'));
-    const order = [words.pinyinXuexiHsk, words.pinyinXue, words.pinyinXuexi];
+    const order = [words.pinyinXue, words.pinyinXuexiHsk, words.pinyinXuexi];
     expect(ids).toEqual(expect.arrayContaining(order));
     expect(order.map((id) => ids.indexOf(id))).toEqual(
       [...order.map((id) => ids.indexOf(id))].sort((a, b) => a - b),
@@ -553,5 +563,23 @@ describe('Dictionary search E2E (M2.B14)', () => {
 
   it('still matches an accented backfill row with an accented query', async () => {
     expect(idsOf(await search('học'))).toContain(words.legacy);
+  });
+
+  it.each(['xuéxí', 'Xué Xí', 'xue2 xi2', 'xue xi', 'xuexi'])(
+    'finds 学习 for the pinyin spelling %j (M3.4a, R6)',
+    async (query) => {
+      expect(idsOf(await search(query))).toContain(words.study);
+    },
+  );
+
+  it('falls back to a trigram match for a pinyin typo (R6)', async () => {
+    const ids = idsOf(await search(`${pinyinPrefix}visibel`));
+    expect(ids[0]).toBe(words.visible);
+    expect(ids).not.toContain(words.draft);
+    expect(ids).not.toContain(words.impure);
+  });
+
+  it('finds a word containing the hanzi when no word starts with it', async () => {
+    expect(idsOf(await search('龖'))).toEqual([words.hanziContains]);
   });
 });
