@@ -116,6 +116,14 @@ jobs:
       - name: E2E tests
         run: npm run test:e2e
 
+      # M3.4b (Q310): WordExample constraints and R6 ranking on the migrated
+      # database above; needs psql (already used by pretest:e2e) and pg_trgm.
+      - name: Dictionary search DB tests
+        run: |
+          psql --version
+          psql "$TEST_DATABASE_URL" -Atc "select extname || ' ' || extversion from pg_extension where extname = 'pg_trgm'"
+          npm run test:db:dictionary-search
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest
