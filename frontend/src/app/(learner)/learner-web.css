@@ -2408,6 +2408,30 @@
     color: var(--text-strong);
   }
 
+  /* M3.4c Q315: the tinted block holds the sentence and its translation
+     (mẫu web/word-full.html .uxb-ex). */
+  .learner-app .word-ex__item {
+    display: grid;
+    gap: 2px;
+    padding: var(--sp-4) var(--sp-5);
+    border-left: 3px solid var(--jade-700);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    background: var(--jade-50);
+  }
+
+  .learner-app .word-ex__item .word-ex__cn {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .learner-app .word-ex__vi {
+    margin: 0;
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
   .learner-app .word-ex footer {
     display: flex;
     justify-content: space-between;

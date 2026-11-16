@@ -79,13 +79,15 @@ export default async function WordPage({
         ? {
             examples: word.examples.map((example) => ({
               hanzi: example.hanzi,
+              // Q315: Vietnamese only; pinyin and English stay hidden.
+              vi: example.vi?.trim() || null,
             })),
             exampleSources: uniqueSources(
               word.examples.map((example) => example.source),
             ),
           }
         : {
-            examples: word.example ? [{ hanzi: word.example }] : [],
+            examples: word.example ? [{ hanzi: word.example, vi: null }] : [],
             exampleSources: source
               ? [{ name: source.name, version: source.version }]
               : [],

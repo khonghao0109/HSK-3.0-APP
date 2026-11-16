@@ -20,7 +20,7 @@ const xuexi: WordView = {
   pinyin: 'xuéxí',
   vietnamese: 'học tập; nghiên cứu',
   level: 'HSK 1',
-  examples: [{ hanzi: '我每天都学习中文。' }],
+  examples: [{ hanzi: '我每天都学习中文。', vi: null }],
   exampleSources: [{ name: 'Từ điển Hán Lộ', version: '1.0.0' }],
   source: { name: 'Từ điển Hán Lộ', version: '1.0.0' },
   related: [],
@@ -144,7 +144,10 @@ describe('WordDetail', () => {
   it('joins several example sources on one footer line (Q-C)', () => {
     const { container } = renderWord({
       ...xuexi,
-      examples: [{ hanzi: '我在学习中文。' }, { hanzi: '他在大学学习历史。' }],
+      examples: [
+        { hanzi: '我在学习中文。', vi: null },
+        { hanzi: '他在大学学习历史。', vi: null },
+      ],
       exampleSources: [
         { name: 'Kho câu A', version: '2.0.0' },
         { name: 'Kho câu B', version: '1.1.0' },

@@ -262,6 +262,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await expect(page.locator('.word-ex__cn')).toHaveText(
       RELATED_EXAMPLE.hanzi,
     );
+    await expect(page.locator('.word-ex__vi')).toHaveText(RELATED_EXAMPLE.vi);
     await expect(page.locator('.word-ex')).not.toContainText(
       RELATED_EXAMPLE.pinyin,
     );

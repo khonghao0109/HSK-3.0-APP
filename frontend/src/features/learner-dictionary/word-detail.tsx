@@ -28,7 +28,7 @@ export type WordView = {
   vietnamese: string | null;
   level: string | null;
   /** API `examples[]`, or the old `Word.example` when it is empty (Q311). */
-  examples: { hanzi: string }[];
+  examples: { hanzi: string; vi: string | null }[];
   /** Distinct sources of the shown examples (Q-C). */
   exampleSources: { name: string; version: string }[];
   source: { name: string; version: string } | null;
@@ -405,6 +405,9 @@ export function WordDetail({
                         {example.hanzi}
                       </span>
                     </p>
+                    {example.vi ? (
+                      <p className="word-ex__vi">{example.vi}</p>
+                    ) : null}
                   </div>
                 ))}
                 {onlySource ? (

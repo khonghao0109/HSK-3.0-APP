@@ -190,6 +190,19 @@ describe('Chi tiết từ page', () => {
     ).toEqual(['Nguồn: Kho câu A', 'Phiên bản: 2.0.0']);
   });
 
+  it('shows the Vietnamese translation under an example when the API has one (Q315)', async () => {
+    vi.mocked(getWord).mockResolvedValue({ ...word, examples });
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    const items = Array.from(container.querySelectorAll('.word-ex__item'));
+    expect(
+      items.map(
+        (item) => item.querySelector('.word-ex__vi')?.textContent ?? null,
+      ),
+    ).toEqual(['Tôi đang học tiếng Trung.', null]);
+  });
+
   it('falls back to Word.example when examples is empty (Q311)', async () => {
     const { container } = render(
       <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,

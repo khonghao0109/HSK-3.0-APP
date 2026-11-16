@@ -5051,6 +5051,14 @@ html:has(.learner-app) {
   font-size: 0.6375rem;
   color: #4a4e5a;
 }
+/* M3.4c Q315: the example's Vietnamese line (mẫu word-full .uxa-ex__vi). */
+.learner-app .word-ex__vi {
+  margin: 2px 0 0 7px;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 /* M3.4c: several examples are split by a rule (mẫu word-full .uxa-ex). */
 .learner-app .word-ex__item + .word-ex__item {
   margin-top: 8px;
