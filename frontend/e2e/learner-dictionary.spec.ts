@@ -22,6 +22,18 @@ const WORD = {
   en: 'e2e dictionary probe',
 };
 const DRAFT_HANZI = '测试词典草稿';
+// M3.4c: shares 测试词 with WORD (Q307), so each lists the other as related;
+// it carries one published WordExample (M3.4b), WORD keeps Word.example.
+const RELATED_HANZI = '页测试词';
+const RELATED_EXAMPLE = {
+  hanzi: '这是测试词的例句。',
+  pinyin: 'Zhè shì cèshì cí de lìjù.',
+  vi: 'Đây là câu ví dụ kiểm thử.',
+  en: 'An e2e example sentence.',
+  sourceCode: 'e2e-m34c-examples',
+  sourceName: 'Kho câu kiểm thử',
+  sourceVersion: '0.1.0',
+};
 
 function insertWord(options: {
   hanzi: string;
@@ -41,6 +53,34 @@ function insertWord(options: {
       SELECT id, 1, ${sqlLiteral(WORD.vi)}, ${sqlLiteral(WORD.en)}, ${sqlLiteral(WORD.viNormalized)}, ${sqlLiteral(WORD.en)}, now() FROM w),
     l AS (INSERT INTO "WordLevel" ("wordId", "levelId") SELECT w.id, lv.id FROM w, "Level" lv WHERE lv.code = 'HSK1')
     SELECT id FROM w;`;
+}
+
+function relatedFixtureId(): number {
+  const read = () =>
+    queryDisposableDb(
+      `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(RELATED_HANZI)}`,
+    );
+  if (!read()) {
+    const id = Number(
+      queryDisposableDb(
+        insertWord({
+          hanzi: RELATED_HANZI,
+          traditional: null,
+          example: null,
+          status: 'published',
+        }),
+      ),
+    );
+    queryDisposableDb(`WITH s AS (
+        INSERT INTO "DataSource" (code, name, version, "updatedAt")
+        VALUES (${sqlLiteral(RELATED_EXAMPLE.sourceCode)}, ${sqlLiteral(RELATED_EXAMPLE.sourceName)}, ${sqlLiteral(RELATED_EXAMPLE.sourceVersion)}, now())
+        RETURNING id)
+      INSERT INTO "WordExample" ("wordId", "orderIndex", hanzi, pinyin, "translationVi", "translationEn", "dataSourceId", status, "publishedAt", "updatedAt")
+      SELECT ${id}, 0, ${sqlLiteral(RELATED_EXAMPLE.hanzi)}, ${sqlLiteral(RELATED_EXAMPLE.pinyin)}, ${sqlLiteral(RELATED_EXAMPLE.vi)}, ${sqlLiteral(RELATED_EXAMPLE.en)}, s.id, 'published'::"ContentStatus", now(), now() FROM s;`);
+  }
+  const id = Number(read());
+  if (!id) throw new Error('related fixture word missing');
+  return id;
 }
 
 function fixtureIds(): { word: number; draft: number } {
@@ -92,9 +132,11 @@ function rowFor(page: Page, hanzi: string) {
 
 test.describe('Learner dictionary (M2.6b)', () => {
   let ids: { word: number; draft: number };
+  let relatedId: number;
 
   test.beforeAll(() => {
     ids = fixtureIds();
+    relatedId = relatedFixtureId();
   });
 
   test('searches by hanzi as the learner types and keeps ?q=', async ({
@@ -186,6 +228,55 @@ test.describe('Learner dictionary (M2.6b)', () => {
       `/learn/dictionary?q=${encodeURIComponent(WORD.hanzi)}`,
     );
     await expect(rowFor(page, WORD.hanzi).first()).toBeVisible();
+  });
+
+  test('shows API examples and related words that open each other (M3.4c)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    const related = page.locator('.word-rel');
+    await expect(
+      related.getByRole('heading', { name: 'Từ liên quan' }),
+    ).toBeVisible();
+    // Only one of the mobile list / web table is shown per viewport.
+    const toRelated = related.locator(
+      `a[href="/learn/dictionary/${relatedId}"]:visible`,
+    );
+    await expect(toRelated.first()).toBeVisible();
+    await expect(
+      related.locator('a:visible', { hasText: DRAFT_HANZI }),
+    ).toHaveCount(0);
+    // WORD has no WordExample: Word.example is the fallback (Q311).
+    await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
+    await expect(
+      page.getByRole('button', { name: /Nghe phát âm/ }),
+    ).toHaveCount(0);
+
+    await toRelated.first().click();
+    await expect(page).toHaveURL(`/learn/dictionary/${relatedId}`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      RELATED_HANZI,
+    );
+    await expect(page.locator('.word-ex__cn')).toHaveText(
+      RELATED_EXAMPLE.hanzi,
+    );
+    await expect(page.locator('.word-ex')).not.toContainText(
+      RELATED_EXAMPLE.pinyin,
+    );
+    await expect(page.locator('.word-ex')).not.toContainText(
+      RELATED_EXAMPLE.en,
+    );
+    await expect(page.locator('.word-ex footer')).toContainText(
+      `Nguồn: ${RELATED_EXAMPLE.sourceName}`,
+    );
+    await expect(
+      page
+        .locator('.word-rel')
+        .locator(`a[href="/learn/dictionary/${ids.word}"]:visible`)
+        .first(),
+    ).toBeVisible();
   });
 
   test('a missing, malformed or draft word is a 404 page', async ({

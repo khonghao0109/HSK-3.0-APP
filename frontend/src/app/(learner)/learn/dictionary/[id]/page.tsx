@@ -5,6 +5,7 @@ import { getServerLearnerSession } from '@/features/learner-auth/server-learner-
 import {
   allVietnamese,
   displayPinyin,
+  firstVietnamese,
 } from '@/features/learner-dictionary/dictionary-display';
 import {
   getSaved,
@@ -21,6 +22,18 @@ import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 export const metadata: Metadata = {
   title: 'Chi tiết từ vựng',
 };
+
+function uniqueSources(
+  sources: readonly { name: string; version: string }[],
+): { name: string; version: string }[] {
+  const seen = new Set<string>();
+  return sources.filter((source) => {
+    const key = JSON.stringify([source.name, source.version]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 /**
  * Chi tiết từ (M2.6b). A bad id or a backend 404 (missing or unpublished
@@ -60,8 +73,30 @@ export default async function WordPage({
       pinyin: displayPinyin(word),
       vietnamese: allVietnamese(word.meanings),
       level: word.levels[0]?.name ?? null,
-      example: word.example,
       source: source ? { name: source.name, version: source.version } : null,
+      // Q311: the old single Word.example only when the API has no examples.
+      ...(word.examples.length > 0
+        ? {
+            examples: word.examples.map((example) => ({
+              hanzi: example.hanzi,
+            })),
+            exampleSources: uniqueSources(
+              word.examples.map((example) => example.source),
+            ),
+          }
+        : {
+            examples: word.example ? [{ hanzi: word.example }] : [],
+            exampleSources: source
+              ? [{ name: source.name, version: source.version }]
+              : [],
+          }),
+      related: word.related.map((item) => ({
+        id: item.id,
+        hanzi: item.hanzi,
+        pinyin: displayPinyin(item),
+        vietnamese: firstVietnamese(item.meanings),
+        level: item.level,
+      })),
     };
     saved = isSaved;
   } catch (error) {

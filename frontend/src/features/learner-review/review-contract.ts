@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { dictionaryWordDetailSchema } from '@/features/learner-dictionary/dictionary-contract';
+import { dictionaryWordBaseSchema } from '@/features/learner-dictionary/dictionary-contract';
 import { backendEnvelope } from '@/lib/api/backend-envelope';
 
 // Server-only (Zod): docs/api/api.md A.7b. Client components import the
@@ -20,7 +20,7 @@ export const reviewItemSchema = z.object({
   cardId: id,
   state: z.string(),
   dueAt: z.string(),
-  word: dictionaryWordDetailSchema,
+  word: dictionaryWordBaseSchema,
   preview: z.object({
     again: scheduleSchema,
     hard: scheduleSchema,

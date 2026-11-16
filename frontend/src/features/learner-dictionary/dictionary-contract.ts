@@ -19,8 +19,13 @@ export const dictionarySearchItemSchema = z.object({
   level: z.string().nullable(),
 });
 
-/** `GET /dictionary/words/:id` (M2.6a); fields the screen does not read are dropped. */
-export const dictionaryWordDetailSchema = z.object({
+const sourceSchema = z.object({ name: z.string(), version: z.string() });
+
+/**
+ * The M2.6a word fields; `word` of the review routes (A.7b) is this subset
+ * and has no `audio`, `examples` or `related` (Q306).
+ */
+export const dictionaryWordBaseSchema = z.object({
   id: z.number().int().positive(),
   hanzi: z.string(),
   traditional: z.string().nullable(),
@@ -29,7 +34,29 @@ export const dictionaryWordDetailSchema = z.object({
   example: z.string().nullable(),
   meanings: z.array(meaningSchema.extend({ order: z.number().int() })),
   levels: z.array(z.object({ code: z.string(), name: z.string() })),
-  sources: z.array(z.object({ name: z.string(), version: z.string() })),
+  sources: z.array(sourceSchema),
+});
+
+/** `GET /dictionary/words/:id` (M2.6a, M3.4b); fields the screen does not read are dropped. */
+export const dictionaryWordDetailSchema = dictionaryWordBaseSchema.extend({
+  // Q304: always null for now; never a URL.
+  audio: z
+    .object({
+      mediaId: z.number().int().positive(),
+      mimeType: z.string().nullable(),
+      duration: z.number().nullable(),
+    })
+    .nullable(),
+  examples: z.array(
+    z.object({
+      hanzi: z.string(),
+      pinyin: z.string().nullable(),
+      vi: z.string().nullable(),
+      en: z.string().nullable(),
+      source: sourceSchema,
+    }),
+  ),
+  related: z.array(dictionarySearchItemSchema),
 });
 
 export const dictionarySavedSchema = z.object({

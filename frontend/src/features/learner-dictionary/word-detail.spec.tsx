@@ -20,8 +20,10 @@ const xuexi: WordView = {
   pinyin: 'xuéxí',
   vietnamese: 'học tập; nghiên cứu',
   level: 'HSK 1',
-  example: '我每天都学习中文。',
+  examples: [{ hanzi: '我每天都学习中文。' }],
+  exampleSources: [{ name: 'Từ điển Hán Lộ', version: '1.0.0' }],
   source: { name: 'Từ điển Hán Lộ', version: '1.0.0' },
+  related: [],
 };
 
 const nihao: WordView = {
@@ -31,8 +33,10 @@ const nihao: WordView = {
   pinyin: 'nǐ hǎo',
   vietnamese: null,
   level: null,
-  example: null,
+  examples: [],
+  exampleSources: [],
   source: null,
+  related: [],
 };
 
 function renderWord(word: WordView = xuexi, saved = false) {
@@ -135,6 +139,71 @@ describe('WordDetail', () => {
     const vi = container.querySelector('.word__vi');
     expect(vi).toHaveClass('word__vi--none');
     expect(vi).toHaveTextContent('Chưa có nghĩa tiếng Việt');
+  });
+
+  it('joins several example sources on one footer line (Q-C)', () => {
+    const { container } = renderWord({
+      ...xuexi,
+      examples: [{ hanzi: '我在学习中文。' }, { hanzi: '他在大学学习历史。' }],
+      exampleSources: [
+        { name: 'Kho câu A', version: '2.0.0' },
+        { name: 'Kho câu B', version: '1.1.0' },
+      ],
+    });
+    expect(
+      Array.from(container.querySelectorAll('.word-ex footer span')).map(
+        (span) => span.textContent,
+      ),
+    ).toEqual(['Nguồn: Kho câu A 2.0.0 · Kho câu B 1.1.0']);
+  });
+
+  it('related words: web table with level badge and open links, no speaker (Q-E, Q304)', () => {
+    const { container } = renderWord({
+      ...xuexi,
+      related: [
+        {
+          id: 31,
+          hanzi: '学生',
+          pinyin: 'xuésheng',
+          vietnamese: 'học sinh',
+          level: 'HSK 1',
+        },
+        {
+          id: 32,
+          hanzi: '学期',
+          pinyin: 'xuéqī',
+          vietnamese: null,
+          level: null,
+        },
+      ],
+    });
+    const block = container.querySelector('.word-rel') as HTMLElement;
+    // Q-F: before the example block.
+    expect(
+      block.compareDocumentPosition(
+        container.querySelector('.word-ex') as Node,
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const rows = Array.from(
+      block.querySelectorAll('.word-rel__table tbody tr'),
+    ).map((tr) =>
+      Array.from(tr.querySelectorAll('td')).map((td) => td.textContent),
+    );
+    expect(rows).toEqual([
+      ['学生', 'xuésheng', 'học sinh', 'HSK 1', ''],
+      ['学期', 'xuéqī', 'Chưa có nghĩa tiếng Việt', '', ''],
+    ]);
+    expect(
+      within(block)
+        .getByRole('link', { name: 'Mở chi tiết 学生' })
+        .getAttribute('href'),
+    ).toBe('/learn/dictionary/31');
+    // Q-E: the mobile list carries no level badge.
+    expect(block.querySelector('.word-rel__list .badge')).toBeNull();
+    expect(
+      container.querySelector('.word__say, .m03-say, [data-play]'),
+    ).toBeNull();
+    expect(screen.queryByRole('button', { name: /Nghe phát âm/ })).toBeNull();
   });
 
   it('Phồn thể switches only the headword and its lang (Q68)', () => {

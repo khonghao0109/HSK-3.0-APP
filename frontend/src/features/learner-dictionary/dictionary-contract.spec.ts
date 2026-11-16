@@ -39,6 +39,16 @@ const word = {
       attribution: null,
     },
   ],
+  audio: null,
+  examples: [],
+  related: [],
+};
+
+const source = {
+  name: 'Từ điển Hán Lộ',
+  version: '1.0.0',
+  license: null,
+  attribution: null,
 };
 
 describe('dictionary contract', () => {
@@ -107,7 +117,68 @@ describe('dictionary contract', () => {
     ]);
   });
 
+  it('parses examples and related words (M3.4b) and drops their audio and source licence', () => {
+    const parsed = backendDictionaryWordSchema.parse({
+      success: true,
+      data: {
+        ...word,
+        examples: [
+          {
+            hanzi: '我在学习中文。',
+            pinyin: 'Wǒ zài xuéxí Zhōngwén.',
+            vi: 'Tôi đang học tiếng Trung.',
+            en: null,
+            source,
+            audio: null,
+          },
+        ],
+        related: [
+          {
+            id: 31,
+            hanzi: '学生',
+            pinyin: 'xue2 sheng5',
+            pinyinTone: 'xuésheng',
+            meanings: [{ en: 'student', vi: 'học sinh' }],
+            level: 'HSK 1',
+          },
+        ],
+      },
+      meta,
+    });
+    expect(parsed.data.audio).toBeNull();
+    expect(parsed.data.examples).toEqual([
+      {
+        hanzi: '我在学习中文。',
+        pinyin: 'Wǒ zài xuéxí Zhōngwén.',
+        vi: 'Tôi đang học tiếng Trung.',
+        en: null,
+        source: { name: 'Từ điển Hán Lộ', version: '1.0.0' },
+      },
+    ]);
+    expect(parsed.data.related).toEqual([
+      {
+        id: 31,
+        hanzi: '学生',
+        pinyin: 'xue2 sheng5',
+        pinyinTone: 'xuésheng',
+        meanings: [{ en: 'student', vi: 'học sinh' }],
+        level: 'HSK 1',
+      },
+    ]);
+  });
+
   it.each([
+    ['examples missing', { ...word, examples: undefined }],
+    ['related missing', { ...word, related: undefined }],
+    [
+      'an example without source',
+      {
+        ...word,
+        examples: [
+          { hanzi: 'a', pinyin: null, vi: null, en: null, audio: null },
+        ],
+      },
+    ],
     ['levels missing', { ...word, levels: undefined }],
     ['traditional missing', { ...word, traditional: undefined }],
     ['source without version', { ...word, sources: [{ name: 'x' }] }],

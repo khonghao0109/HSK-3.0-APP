@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
@@ -49,7 +49,55 @@ const word: DictionaryWordDetail = {
   ],
   levels: [{ code: 'HSK1', name: 'HSK 1' }],
   sources: [{ name: 'Từ điển Hán Lộ', version: '1.0.0' }],
+  audio: null,
+  examples: [],
+  related: [],
 };
+
+const examples: DictionaryWordDetail['examples'] = [
+  {
+    hanzi: '我在学习中文。',
+    pinyin: 'Wǒ zài xuéxí Zhōngwén.',
+    vi: 'Tôi đang học tiếng Trung.',
+    en: 'I am learning Chinese.',
+    source: { name: 'Kho câu A', version: '2.0.0' },
+  },
+  {
+    hanzi: '他在大学学习历史。',
+    pinyin: null,
+    vi: null,
+    en: null,
+    source: { name: 'Kho câu A', version: '2.0.0' },
+  },
+];
+
+const related: DictionaryWordDetail['related'] = [
+  {
+    id: 31,
+    hanzi: '学生',
+    pinyin: 'xue2 sheng5',
+    pinyinTone: 'xuésheng',
+    meanings: [
+      { en: 'student', vi: null },
+      { en: 'pupil', vi: 'học sinh' },
+    ],
+    level: 'HSK 1',
+  },
+  {
+    id: 32,
+    hanzi: '学期',
+    pinyin: 'xue2 qi1',
+    pinyinTone: null,
+    meanings: [{ en: 'term', vi: null }],
+    level: null,
+  },
+];
+
+function exampleTexts(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll('.word-ex__cn')).map(
+    (el) => el.textContent ?? '',
+  );
+}
 
 function backendError(status: number) {
   return new BackendRequestError(normalizeApiFailure({ status }));
@@ -122,6 +170,78 @@ describe('Chi tiết từ page', () => {
     });
     render(<LearnerToastProvider>{await page('11')}</LearnerToastProvider>);
     expect(screen.queryByRole('group', { name: 'Kiểu chữ' })).toBeNull();
+  });
+
+  it('shows every API example sentence instead of Word.example, without pinyin or English (M3.4c)', async () => {
+    vi.mocked(getWord).mockResolvedValue({ ...word, examples });
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    expect(exampleTexts(container)).toEqual([
+      '我在学习中文。',
+      '他在大学学习历史。',
+    ]);
+    expect(screen.queryByText('Wǒ zài xuéxí Zhōngwén.')).toBeNull();
+    expect(screen.queryByText('I am learning Chinese.')).toBeNull();
+    expect(
+      Array.from(container.querySelectorAll('.word-ex footer span')).map(
+        (span) => span.textContent,
+      ),
+    ).toEqual(['Nguồn: Kho câu A', 'Phiên bản: 2.0.0']);
+  });
+
+  it('falls back to Word.example when examples is empty (Q311)', async () => {
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    expect(exampleTexts(container)).toEqual(['我每天都学习中文。']);
+    expect(
+      Array.from(container.querySelectorAll('.word-ex footer span')).map(
+        (span) => span.textContent,
+      ),
+    ).toEqual(['Nguồn: Từ điển Hán Lộ', 'Phiên bản: 1.0.0']);
+  });
+
+  it('hides the example block when there is neither examples nor Word.example', async () => {
+    vi.mocked(getWord).mockResolvedValue({ ...word, example: null });
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    expect(container.querySelector('.word-ex')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Ví dụ' })).toBeNull();
+  });
+
+  it('lists related words as links to their own page (Q307)', async () => {
+    vi.mocked(getWord).mockResolvedValue({ ...word, related });
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    const block = container.querySelector('.word-rel') as HTMLElement;
+    expect(block).not.toBeNull();
+    expect(
+      within(block).getByRole('heading', { name: 'Từ liên quan' }),
+    ).toBeInTheDocument();
+    const hrefs = Array.from(block.querySelectorAll('.word-rel__list a')).map(
+      (a) => a.getAttribute('href'),
+    );
+    expect(hrefs).toEqual(['/learn/dictionary/31', '/learn/dictionary/32']);
+    const rows = Array.from(block.querySelectorAll('.word-rel__list a')).map(
+      (a) => a.textContent,
+    );
+    // Pinyin with tone marks when present; first Vietnamese meaning (Q70) or
+    // the no-Vietnamese line (Q65).
+    expect(rows).toEqual([
+      '学生xuésheng · học sinh',
+      '学期xue2 qi1 · Chưa có nghĩa tiếng Việt',
+    ]);
+  });
+
+  it('hides the related block when related is empty', async () => {
+    const { container } = render(
+      <LearnerToastProvider>{await page('11')}</LearnerToastProvider>,
+    );
+    expect(container.querySelector('.word-rel')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Từ liên quan' })).toBeNull();
   });
 
   it('not-found page links back to Tra từ', () => {

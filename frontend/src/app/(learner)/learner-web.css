@@ -2416,6 +2416,102 @@
     color: var(--text-muted);
   }
 
+  /* M3.4c: web examples are spaced by the card's grid gap, not a rule. */
+  .learner-app .word-ex__item + .word-ex__item {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* M3.4c: Từ liên quan (mẫu web/word-full.html .uxb-section +
+     .uxb-table--related). */
+  .learner-app .word-rel {
+    display: grid;
+    gap: var(--sp-3);
+    margin: 0;
+    padding: var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .word-rel h2 {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .word-rel h2::before {
+    display: none;
+  }
+
+  .learner-app .word-rel__table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .word-rel__table th,
+  .learner-app .word-rel__table td {
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border-default);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .learner-app .word-rel__table th {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--stone-600);
+    background: var(--cream-100);
+    white-space: nowrap;
+  }
+
+  .learner-app .word-rel__table tbody tr:hover {
+    background: var(--jade-50);
+  }
+
+  .learner-app .word-rel__table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .learner-app .word-rel__word {
+    font-family: var(--font-cn);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--jade-800);
+    text-decoration: none;
+  }
+
+  .learner-app .word-rel__word:hover {
+    text-decoration: underline;
+  }
+
+  .learner-app .word-rel__end {
+    text-align: right;
+  }
+
+  .learner-app .word-rel__open {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-pill);
+    color: var(--jade-800);
+  }
+
+  .learner-app .word-rel__open:hover {
+    background: var(--jade-50);
+  }
+
+  .learner-app .word-rel .badge--neutral {
+    background: var(--slate-100);
+    color: var(--slate-700);
+  }
+
   /* The aside (mẫu .wword__aside). */
   .learner-app .word-web__aside {
     position: sticky;

@@ -5051,6 +5051,65 @@ html:has(.learner-app) {
   font-size: 0.6375rem;
   color: #4a4e5a;
 }
+/* M3.4c: several examples are split by a rule (mẫu word-full .uxa-ex). */
+.learner-app .word-ex__item + .word-ex__item {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--m03-line-soft);
+}
+/* M3.4c: Từ liên quan (mẫu mobile/word-full.html .uxa-related); the
+   heading reuses the example card's mark. */
+.learner-app .word-rel {
+  margin-top: 13px;
+}
+.learner-app .word-rel h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--m03-ink);
+  line-height: 1.3;
+}
+.learner-app .word-rel h2::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--jade-600);
+}
+.learner-app .word-rel__list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.learner-app .word-rel__list a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+  align-items: center;
+  min-height: 52px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  background: var(--surface-card);
+  color: var(--text-strong);
+  text-decoration: none;
+}
+.learner-app .word-rel__hz {
+  font-family: var(--font-cn-serif);
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  color: var(--text-strong);
+}
+.learner-app .word-rel__meta {
+  margin-left: 6px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 .learner-app .word-save {
   display: flex;
   align-items: center;

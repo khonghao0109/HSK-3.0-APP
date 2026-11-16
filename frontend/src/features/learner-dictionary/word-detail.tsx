@@ -27,8 +27,19 @@ export type WordView = {
   /** Every Vietnamese meaning joined with "; " (Q70), or null. */
   vietnamese: string | null;
   level: string | null;
-  example: string | null;
+  /** API `examples[]`, or the old `Word.example` when it is empty (Q311). */
+  examples: { hanzi: string }[];
+  /** Distinct sources of the shown examples (Q-C). */
+  exampleSources: { name: string; version: string }[];
   source: { name: string; version: string } | null;
+  /** Q307: at most 4; pinyin with tone marks, first Vietnamese meaning. */
+  related: {
+    id: number;
+    hanzi: string;
+    pinyin: string;
+    vietnamese: string | null;
+    level: string | null;
+  }[];
 };
 
 function Icon({ name }: { name: string }) {
@@ -143,6 +154,8 @@ export function WordDetail({
     }
   };
 
+  const onlySource =
+    word.exampleSources.length === 1 ? word.exampleSources[0] : undefined;
   const shown = traditional && word.traditional ? word.traditional : word.hanzi;
 
   // Shared by the mobile and the web menu copies (only one is visible per
@@ -305,18 +318,109 @@ export function WordDetail({
               </div>
             </div>
 
-            {word.example ? (
+            {/* M3.4c: mẫu word-full.html puts "Từ liên quan" before "Ví dụ". */}
+            {word.related.length > 0 ? (
+              <section className="word-rel" aria-labelledby="word-rel-title">
+                <h2 id="word-rel-title">Từ liên quan</h2>
+                {/* Mobile list (mẫu mobile/word-full.html .uxa-related). */}
+                <ul className="word-rel__list m-only">
+                  {word.related.map((item) => (
+                    <li key={item.id}>
+                      <Link href={`/learn/dictionary/${item.id}`}>
+                        <span>
+                          <span className="word-rel__hz" lang="zh-Hans">
+                            {item.hanzi}
+                          </span>
+                          <span className="word-rel__meta">
+                            <span lang="zh-Latn-pinyin">{item.pinyin}</span>
+                            {' · '}
+                            {item.vietnamese ?? NO_VIETNAMESE}
+                          </span>
+                        </span>
+                        <Icon name="chevron-right" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {/* Web table (mẫu web/word-full.html .uxb-table--related). */}
+                <table className="word-rel__table w-only">
+                  <caption className="sr-only">
+                    Các từ liên quan tới {word.hanzi}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Từ</th>
+                      <th scope="col">Pinyin</th>
+                      <th scope="col">Nghĩa</th>
+                      <th scope="col">Cấp</th>
+                      <th scope="col">
+                        <span className="sr-only">Mở chi tiết</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {word.related.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <Link
+                            className="word-rel__word"
+                            href={`/learn/dictionary/${item.id}`}
+                            lang="zh-Hans"
+                          >
+                            {item.hanzi}
+                          </Link>
+                        </td>
+                        <td lang="zh-Latn-pinyin">{item.pinyin}</td>
+                        <td>{item.vietnamese ?? NO_VIETNAMESE}</td>
+                        <td>
+                          {item.level ? (
+                            <span className="badge badge--neutral">
+                              {item.level}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="word-rel__end">
+                          <Link
+                            className="word-rel__open"
+                            href={`/learn/dictionary/${item.id}`}
+                            aria-label={`Mở chi tiết ${item.hanzi}`}
+                          >
+                            <Icon name="chevron-right" />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            ) : null}
+
+            {word.examples.length > 0 ? (
               <section className="word-ex" aria-labelledby="word-ex-title">
                 <h2 id="word-ex-title">Ví dụ</h2>
-                <p className="word-ex__cn">
-                  <span className="cn" lang="zh-Hans">
-                    {word.example}
-                  </span>
-                </p>
-                {word.source ? (
+                {word.examples.map((example, index) => (
+                  <div className="word-ex__item" key={index}>
+                    <p className="word-ex__cn">
+                      <span className="cn" lang="zh-Hans">
+                        {example.hanzi}
+                      </span>
+                    </p>
+                  </div>
+                ))}
+                {onlySource ? (
                   <footer>
-                    <span>Nguồn: {word.source.name}</span>
-                    <span>Phiên bản: {word.source.version}</span>
+                    <span>Nguồn: {onlySource.name}</span>
+                    <span>Phiên bản: {onlySource.version}</span>
+                  </footer>
+                ) : word.exampleSources.length > 1 ? (
+                  // Q-C: several sources share one line.
+                  <footer>
+                    <span>
+                      Nguồn:{' '}
+                      {word.exampleSources
+                        .map((source) => `${source.name} ${source.version}`)
+                        .join(' · ')}
+                    </span>
                   </footer>
                 ) : null}
               </section>
