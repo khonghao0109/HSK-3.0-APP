@@ -295,8 +295,8 @@ Vào: GĐ5 có M2.5, M2.6. Ra: ôn đúng hạn, lịch sử review bất biến
 | # | Task | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | M3.1 | Scheduler policy/version, `ReviewCard` là source of truth | ✅ | cải tiến R3 (mục 5.1); Q244–Q250; scheduler thuần `sm2-v1` (`backend/src/modules/learning/srs/`, 62 vector), migration `relearning` + `ReviewEvent.source` (`74c7f40`, `1d82251`, run `43154596188`); nối vào `ReviewCard` qua service ở M3.2 |
-| M3.2 | Due queue, review session/event idempotency, concurrency | ⬜ | trigger ownership ✅; cải tiến R4 (mục 5.1) |
-| M3.3 | Flashcard + lịch ôn tập UI | ⬜ | 03/03,04; cải tiến R5 (mục 5.1) |
+| M3.2 | Due queue, review session/event idempotency, concurrency | ✅ | trigger ownership ✅; `13c109b`, `dca88dd`, `c9d8e86`, CI xanh; cải tiến R4 (mục 5.1) |
+| M3.3 | Flashcard + lịch ôn tập UI | ✅ | 03/03,04; `44c1ae9`, `0d7889b`, `5d2f1c9`, `9345a94`, CI xanh; Q273–Q288; cải tiến R5 (mục 5.1) |
 | M3.4a | Schema + migration `WordSense`/`WordExample`/`WordRelation`, `pg_trgm` | ⬜ | mục 5; cải tiến R6 (mục 5.1) |
 | M3.4b | API dictionary detail đầy đủ, ví dụ/audio, saved-word lifecycle | ⬜ | cải tiến R6 (mục 5.1) |
 | M3.4c | UI chi tiết từ | ⬜ | |
@@ -603,8 +603,8 @@ token trong browser storage (BFF đã đảm bảo cho admin ✅) · a11y/perf/s
 | # | Bước | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | M3.1 | Scheduler policy/version (`ReviewCard` là source of truth) | ✅ | invariant: archive master plan §16.4; cải tiến R3 (mục 5.1); Q244–Q250; `74c7f40`, `1d82251`, run `43154596188` |
-| M3.2 | Due queue, review session/event idempotency và concurrency | ⬜ | trigger ownership card→session ✅; cải tiến R4 (mục 5.1) |
-| M3.3 | Flashcard và lịch ôn tập UI | ⬜ | `03-dictionary-review-reader/03,04`; cải tiến R5 (mục 5.1) |
+| M3.2 | Due queue, review session/event idempotency và concurrency | ✅ | trigger ownership card→session ✅; cải tiến R4 (mục 5.1) |
+| M3.3 | Flashcard và lịch ôn tập UI | ✅ | `03-dictionary-review-reader/03,04`; cải tiến R5 (mục 5.1) |
 | M3.4 | Dictionary detail, ví dụ/audio, saved-word lifecycle, bộ thủ và âm Hán Việt | ⬜ | `WordSense/WordExample` chưa có schema (mục 5); M3.4d cần nguồn có giấy phép; cải tiến R6, R7 (mục 5.1) |
 | M3.5 | Test scheduler correctness, retention, timezone | ⬜ | C-05 |
 | M3.6 | Sổ lỗi sai từ lịch sử attempt bất biến | ⬜ | Khảo sát đối thủ 10/10; cải tiến R8 (mục 5.1) |
