@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 
 /**
  * Lesson page (M2.5a, Q32–Q44). Tiếp tục học and the Luyện tập row of an
- * open lesson open the player (Q45); the other rows still toast.
+ * open lesson open the player (Q45); Từ vựng and Ngữ pháp open their topic
+ * pages (M2.5f, Q175). Locked rows toast.
  */
 export default async function LearnerLessonPage({
   params,
@@ -43,7 +44,6 @@ export default async function LearnerLessonPage({
   const locked = activity.state === 'locked';
   const percent = wholePercent(activity.progress.completionPercent);
   const description = lesson.description?.trim() || null;
-  const rowMessage = locked ? TOAST_LOCKED : TOAST_COMING_SOON;
   const practiceHref = `/learn/lessons/${lessonId}/practice`;
 
   return (
@@ -184,15 +184,18 @@ export default async function LearnerLessonPage({
               );
               return (
                 <li key={row.kind}>
-                  {row.kind === 'practice' && !row.locked ? (
-                    <Link className={className} href={practiceHref}>
+                  {!row.locked ? (
+                    <Link
+                      className={className}
+                      href={`/learn/lessons/${lessonId}/${row.kind}`}
+                    >
                       {content}
                     </Link>
                   ) : (
                     <ToastButton
                       className={className}
                       aria-disabled={row.locked ? 'true' : undefined}
-                      message={rowMessage}
+                      message={TOAST_LOCKED}
                     >
                       {content}
                     </ToastButton>

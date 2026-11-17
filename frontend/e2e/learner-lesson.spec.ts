@@ -145,7 +145,7 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(practice).toHaveCount(1);
     await expect(practice.locator('.lrow__title')).toHaveText('Luyện tập');
     await expect(practice).toHaveAttribute('href', `${lessonPath}/practice`);
-    // Seed HSK 1 lesson: Luyện tập is its only row today; any other row toasts.
+    // Seed HSK 1 lesson: Luyện tập is its only row today (Từ vựng/Ngữ pháp rows link to their pages, M2.5f).
     const rows = page.locator('.lesson-rows button.lrow');
     for (let index = 0; index < (await rows.count()); index += 1) {
       const row = rows.nth(index);
