@@ -67,7 +67,8 @@
     "test:db:review-concurrency": "ts-node scripts/test/run-review-concurrency.ts",
     "test:capacity:exam": "ts-node scripts/test/run-exam-capacity.ts",
     "test:capacity:exam:unit": "node --test -r ts-node/register scripts/test/exam-capacity/metrics.spec.ts scripts/test/exam-capacity/scenarios.spec.ts scripts/test/exam-capacity/driver.spec.ts",
-    "content:check:pilot": "ts-node scripts/content/check-pilot-content.ts"
+    "content:check:pilot": "ts-node scripts/content/check-pilot-content.ts",
+    "content:tts": "ts-node scripts/content/generate-tts.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",

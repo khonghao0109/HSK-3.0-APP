@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "hsk1-slice-01",
+  "provider": "azure",
+  "language": "zh-CN",
+  "dataSource": {
+    "code": "HSK30_TTS_AZURE_SLICE01",
+    "name": "Audio TTS lát cắt Bài 1 + đề thi thử HSK1",
+    "version": "1",
+    "license": "Azure AI Speech, giọng neural dựng sẵn; output là Customer Data (Q348)",
+    "attribution": "Âm thanh được tạo bằng giọng đọc tổng hợp (Azure AI Speech)."
+  },
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null
+  },
+  "items": [
+    {
+      "sourceKey": "hsk1:l01:w01",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "我"
+    },
+    {
+      "sourceKey": "hsk1:l01:w01:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "我是学生。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w02",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "你"
+    },
+    {
+      "sourceKey": "hsk1:l01:w02:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "你好！"
+    },
+    {
+      "sourceKey": "hsk1:l01:w03",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "您"
+    },
+    {
+      "sourceKey": "hsk1:l01:w03:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "您好，老师！"
+    },
+    {
+      "sourceKey": "hsk1:l01:w04",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "他"
+    },
+    {
+      "sourceKey": "hsk1:l01:w04:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "他是我的老师。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w05",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "她"
+    },
+    {
+      "sourceKey": "hsk1:l01:w05:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "她是我的朋友。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w06",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "我们"
+    },
+    {
+      "sourceKey": "hsk1:l01:w06:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "我们都是学生。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w07",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "叫"
+    },
+    {
+      "sourceKey": "hsk1:l01:w07:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "老师叫我的名字。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w08",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "名字"
+    },
+    {
+      "sourceKey": "hsk1:l01:w08:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "这是你的名字吗？"
+    },
+    {
+      "sourceKey": "hsk1:l01:w09",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "是"
+    },
+    {
+      "sourceKey": "hsk1:l01:w09:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "我是中国人。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w10",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "认识"
+    },
+    {
+      "sourceKey": "hsk1:l01:w10:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "很高兴认识你。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w11",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "高兴"
+    },
+    {
+      "sourceKey": "hsk1:l01:w11:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "今天我很高兴。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w12",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "老师"
+    },
+    {
+      "sourceKey": "hsk1:l01:w12:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "我的老师很好。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w13",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "学生"
+    },
+    {
+      "sourceKey": "hsk1:l01:w13:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "你是学生吗？"
+    },
+    {
+      "sourceKey": "hsk1:l01:w14",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "同学"
+    },
+    {
+      "sourceKey": "hsk1:l01:w14:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "他是我的同学。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w15",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "朋友"
+    },
+    {
+      "sourceKey": "hsk1:l01:w15:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "你是我的朋友。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w16",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "中国"
+    },
+    {
+      "sourceKey": "hsk1:l01:w16:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "我有中国朋友。"
+    },
+    {
+      "sourceKey": "hsk1:l01:w17",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "人"
+    },
+    {
+      "sourceKey": "hsk1:l01:w17:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "他是中国人吗？"
+    },
+    {
+      "sourceKey": "hsk1:l01:w18",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "什么"
+    },
+    {
+      "sourceKey": "hsk1:l01:w18:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "你叫什么名字？"
+    },
+    {
+      "sourceKey": "hsk1:l01:w19",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "谢谢"
+    },
+    {
+      "sourceKey": "hsk1:l01:w19:ex",
+      "voice": "zh-CN-YunxiNeural",
+      "text": "谢谢你！"
+    },
+    {
+      "sourceKey": "hsk1:l01:w20",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "再见"
+    },
+    {
+      "sourceKey": "hsk1:l01:w20:ex",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "text": "老师，再见！"
+    },
+    {
+      "sourceKey": "hsk1:q0001",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "我在喝茶。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0002",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "今天下雨了。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0003",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "他在开车。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0004",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "我想买一个书包。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0005",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "妈妈在睡觉。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0006",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "你叫什么名字？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0007",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "你今天去哪儿？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0008",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "你喝茶还是喝水？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0009",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "你家有几个人？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0010",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "谢谢你！"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0011",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "你在做什么？"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "我在写汉字。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0012",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "你身体怎么样？"
+        },
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "我病了，想去医院看医生。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0013",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "这些水果多少钱？"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "十块钱。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0014",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "我们几点的火车？"
+        },
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "九点，我们快走吧。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0015",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "这个饭店的菜很好吃。"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "是，我们明天再来吃吧。"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0016",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "我今天很忙，没有时间看电影。"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "问：她今天怎么样？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0017",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "我儿子今年七岁，他是小学生。"
+        },
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "问：他儿子多大了？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0018",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "明天是星期天，我想在家看书。"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "问：她明天想做什么？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0019",
+      "turns": [
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "我的手机在桌子上，电脑在书包里。"
+        },
+        {
+          "voice": "zh-CN-YunxiNeural",
+          "text": "问：他的电脑在哪儿？"
+        }
+      ],
+      "breakMs": 600
+    },
+    {
+      "sourceKey": "hsk1:q0020",
+      "turns": [
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "我坐飞机去北京，下午三点到。"
+        },
+        {
+          "voice": "zh-CN-XiaoxiaoNeural",
+          "text": "问：她怎么去北京？"
+        }
+      ],
+      "breakMs": 600
+    }
+  ]
+}
