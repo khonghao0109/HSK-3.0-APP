@@ -2670,10 +2670,10 @@ html:has(.learner-app) {
 }
 
 .learner-app .path-next__title {
-  display: -webkit-box;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -2720,11 +2720,6 @@ html:has(.learner-app) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  /* The 52px bar cannot hold a two-line label and a two-line title. */
-  .learner-app .path-next__title {
-    -webkit-line-clamp: 1;
   }
 }
 
@@ -4907,6 +4902,12 @@ html:has(.learner-app) {
     padding: 2px var(--sp-2);
   }
 }
+/* 田字格 headword of the first result: its cells stay on one row, so the
+   column takes their width instead of the fixed 112–129px. */
+.learner-app .dict-item--top {
+  grid-template-columns: auto 1fr auto;
+  column-gap: var(--sp-3);
+}
 
 /* Lead patch của mẫu: vùng bấm ≥ 44px. */
 .learner-app .app:has(> .dict, > .word) .icon-btn {
@@ -5480,7 +5481,6 @@ html:has(.learner-app) {
   --exr-weak-mid-bg: #fdf0cf;
   --exr-weak-mid-text: #8a5a00;
   --exr-meta-line: #e3ddd3;
-  --exr-meta-divider: #d9d3c8;
 }
 
 .learner-app .app:has(> .ex.exr) {
@@ -5697,18 +5697,13 @@ html:has(.learner-app) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: var(--sp-1) var(--sp-6);
   margin: 0;
   padding-top: var(--sp-2);
   border-top: 1px solid var(--exr-meta-line);
   font-size: var(--fs-xs);
   line-height: 1.2;
   color: var(--ink-900);
-}
-
-.learner-app .exr-meta > span + span {
-  margin-left: var(--sp-4);
-  padding-left: var(--sp-4);
-  border-left: 1px solid var(--exr-meta-divider);
 }
 
 .learner-app .exr-passline {
@@ -8206,23 +8201,16 @@ html:has(.learner-app) {
   padding: 0 var(--sp-5) var(--sp-6);
 }
 
-/* S3 (<1024): thẻ giãn lấp khoảng trống để hàng đánh giá dính đáy màn
-   (vẫn sticky khi nội dung dài), không treo giữa màn với nửa dưới trống. */
+/* S3 (<1024): hàng đánh giá dính đáy màn (margin-top:auto trong .rv-body
+   flex cột, vẫn sticky khi nội dung dài); thẻ giữ chiều cao theo nội dung,
+   không bị kéo giãn. */
 @media (max-width: 1023px) {
   .learner-app .ex.rv {
     min-height: 100dvh;
   }
 
-  .learner-app .fc-scene,
-  .learner-app .fc-hold,
-  .learner-app .fc-card {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-  }
-
-  .learner-app .fc-face {
-    flex: 1;
+  .learner-app .rv-body > .fc-rate {
+    margin-top: auto;
   }
 }
 
@@ -8749,7 +8737,8 @@ html:has(.learner-app) {
 }
 
 /* Unslop T2: every score, percent, count and timer uses tabular figures. */
-.learner-app :is(
+.learner-app
+  :is(
     .minute b,
     .home-gauge b,
     .home-streak b,

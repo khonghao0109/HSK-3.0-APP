@@ -377,6 +377,17 @@
   margin-top: 2px;
 }
 
+/* ≤430px: three columns wrap every label; two tiles on top, the
+   three-row "Sắp đến hạn" tile takes the full row below. */
+@media (max-width: 430px) {
+  .learner-app .rvo-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .learner-app .rvo-stats > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 374.98px) {
   .learner-app .rvo {
     padding-left: var(--sp-4);

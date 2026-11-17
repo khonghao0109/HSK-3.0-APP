@@ -96,7 +96,9 @@ export function loadReviewGrants(
 
 type MediaState =
   | { phase: 'loading' }
-  | { phase: 'ready'; src: string }
+  /** `attempt` remounts the element after a refresh: the BFF may return the
+   * same URL, and an unchanged `src` would never load (or fail) again. */
+  | { phase: 'ready'; src: string; attempt?: number }
   | { phase: 'unavailable' };
 
 export function ExamReviewMedia({
@@ -147,7 +149,7 @@ export function ExamReviewMedia({
         setState(
           grant === undefined
             ? { phase: 'unavailable' }
-            : { phase: 'ready', src: grant.src },
+            : { phase: 'ready', src: grant.src, attempt: 1 },
         );
       },
       () => setState({ phase: 'unavailable' }),
@@ -171,6 +173,7 @@ export function ExamReviewMedia({
   if (kind === 'audio') {
     return (
       <audio
+        key={state.attempt ?? 0}
         className="exv-media__audio"
         controls
         preload="none"
@@ -183,6 +186,7 @@ export function ExamReviewMedia({
   if (kind === 'image') {
     return (
       <img
+        key={state.attempt ?? 0}
         className="exv-media__image"
         alt="Hình ảnh của câu hỏi"
         src={state.src}

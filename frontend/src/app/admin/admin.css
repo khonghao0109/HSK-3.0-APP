@@ -528,6 +528,8 @@
 .admin-app .adm-table__strong {
   color: var(--adm-navy-900);
   font-weight: 500;
+  /* Một tiêu đề dài không có khoảng trắng không được đẩy các cột ra ngoài. */
+  overflow-wrap: anywhere;
 }
 /* Cột ID không xuống dòng giữa token (EX-… / MD-…). */
 .admin-app .adm-table td:first-child {
@@ -551,9 +553,11 @@
   border: 1px solid transparent;
   border-radius: 6px;
   white-space: nowrap;
+  flex: none;
 }
 .admin-app .adm-badge::before {
   content: '';
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 50%;

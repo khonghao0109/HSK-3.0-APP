@@ -403,11 +403,11 @@
   .admin-app .qn-bank {
     padding: var(--adm-sp-2);
   }
+  /* Chip xuống dòng thay vì cuộn ngang: chip cuối không bị cắt mất số. */
   .admin-app .qn-bank__list {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--adm-sp-2);
-    overflow-x: auto;
-    padding-bottom: var(--adm-sp-1);
   }
   .admin-app .qn-bank__item {
     white-space: nowrap;
