@@ -10,6 +10,7 @@ import {
   displayPinyin,
   firstVietnamese,
   normalizeSearchQuery,
+  numberedToToneMarks,
 } from './dictionary-display';
 
 const meta = { requestId: 'r', timestamp: 't' };
@@ -222,7 +223,33 @@ describe('dictionary display rules', () => {
 
   it('prefers the tone-marked pinyin', () => {
     expect(displayPinyin({ pinyin: 'xue2', pinyinTone: 'xué' })).toBe('xué');
-    expect(displayPinyin({ pinyin: 'xue2', pinyinTone: null })).toBe('xue2');
+    expect(displayPinyin({ pinyin: 'xue2', pinyinTone: null })).toBe('xué');
+    expect(displayPinyin({ pinyin: 'xie4', pinyinTone: 'xie4 xie5' })).toBe(
+      'xiè xie',
+    );
+  });
+
+  it('turns numbered pinyin into tone marks', () => {
+    const cases: [string, string][] = [
+      ['xie4 xie5', 'xiè xie'],
+      ['lv4', 'lǜ'],
+      ['nu:3', 'nǚ'],
+      ['hao3', 'hǎo'],
+      ['er2', 'ér'],
+      ['zhuang4', 'zhuàng'],
+      ['liu2', 'liú'],
+      ['gui4', 'guì'],
+      ['Ni3', 'Nǐ'],
+      ['zou3', 'zǒu'],
+      ['ma0', 'ma'],
+      ['', ''],
+      ['cèxué', 'cèxué'],
+      ['xiè xie', 'xiè xie'],
+    ];
+    for (const [input, output] of cases) {
+      expect(numberedToToneMarks(input)).toBe(output);
+      expect(numberedToToneMarks(output)).toBe(output);
+    }
   });
 
   it('trims the query and accepts 1–64 characters only', () => {

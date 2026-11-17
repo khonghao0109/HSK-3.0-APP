@@ -5,6 +5,112 @@
    hidden (learner.css). Lesson screens (`/learn/lessons/**`) render no
    sidebar or top bar, so none of the frame rules below reach them. */
 
+/* Tokens these web sheets add to learner.css (applies at every width;
+   learner.css loads first). */
+.learner-app {
+  /* Muted text on navy (footer, auth art): 12.16:1 on navy-900. */
+  --text-on-brand-muted: #d7ddeb;
+  /* Lượt 8 田字格 strokes (alpha mask: `black` marks the stroked area only). */
+  --tzg-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' fill='none' stroke='black' stroke-width='1'%3E%3Cpath vector-effect='non-scaling-stroke' d='M50 0V100M0 50H100'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-dasharray='4 4' d='M0 0L100 100M100 0L0 100'/%3E%3C/svg%3E");
+}
+
+/* Lượt 8 — 田字格 (practice grid), CSS only, at every width, in exactly
+   three large headwords: the flashcard front, the word-detail headword and
+   the first dictionary result. `HanziCells` wraps each Han character in its
+   own `.tzg-cell`, a 1:1 square (1.25em) like a copybook; neighbouring cells
+   share a border (-1px) and stay on one row (nowrap); from four characters
+   the cells shrink in steps (0.75 / 0.6 / 0.5em) so a six-character word
+   still fits the ~308px flashcard face at 390px. Hairline frame in --border-strong; the cross and
+   the dashed diagonals are a masked pseudo-element in --sand-300 at 50%, so
+   no colour is written into the SVG. */
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) {
+  letter-spacing: 0;
+  text-indent: 0;
+  white-space: nowrap;
+}
+
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cell {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-strong);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+  .tzg-cell
+  + .tzg-cell {
+  margin-inline-start: -1px;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
+    .tzg-cell:nth-child(4)
+  )
+  .tzg-cell {
+  font-size: 0.75em;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
+    .tzg-cell:nth-child(5)
+  )
+  .tzg-cell {
+  font-size: 0.6em;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
+    .tzg-cell:nth-child(6)
+  )
+  .tzg-cell {
+  font-size: 0.5em;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+  .tzg-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--sand-300) 50%, transparent);
+  -webkit-mask: var(--tzg-mask) center / 100% 100% no-repeat;
+  mask: var(--tzg-mask) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .learner-app
+    :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+    .tzg-cell::before {
+    display: none;
+  }
+}
+
+/* Lượt 9 — the single entrance effect of the completion screens (lesson
+   and review session share `.done-card`): fade + 8px rise, only when the
+   viewer has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .learner-app .done-card {
+    animation: done-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes done-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* M2.10d F4: the early "Bài tiếp theo" copy (`.path-mid`) only exists for
    the 1024–1279px layout, where the card sits above the lesson grid and the
    late copy (`.path-next`) would put its "Bắt đầu" link after every lesson
@@ -75,7 +181,7 @@
   .learner-app .w-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
     min-height: 44px;
     padding: 0 var(--sp-2) var(--sp-4);
     text-decoration: none;
@@ -96,7 +202,7 @@
 
   .learner-app .w-brand__name {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.5rem;
     line-height: 1.5;
     color: var(--navy-900);
@@ -105,10 +211,14 @@
   .learner-app .w-side__group {
     margin: var(--sp-4) var(--sp-3) var(--sp-1);
     font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--stone-600);
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  /* Rows 44px (touch target Q42/Q69) with a 2px gap; icons share one column (flex: none below). */
+  .learner-app .w-nav {
+    display: grid;
+    gap: 2px;
   }
 
   .learner-app .w-nav a,
@@ -117,7 +227,7 @@
     align-items: center;
     gap: var(--sp-3);
     width: 100%;
-    min-height: 48px;
+    min-height: 44px;
     margin: 0;
     padding: 0 var(--sp-3);
     border: 0;
@@ -141,7 +251,7 @@
   .learner-app .w-nav a[aria-current='page'] {
     background: var(--jade-50);
     color: var(--jade-800);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: inset 3px 0 0 var(--jade-700);
   }
 
@@ -156,12 +266,13 @@
   .learner-app .w-nav .icon {
     width: 22px;
     height: 22px;
+    flex: none;
   }
 
   .learner-app .w-tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);
@@ -170,10 +281,14 @@
     line-height: 1.5;
   }
 
-  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1). */
+  /* "Sắp có": chữ nhỏ trung tính, không nền/viền. --text-subtle chỉ 3.70:1 trên
+     cream-50 nên dùng --text-muted (5.72:1 cream-50, 5.34:1 cream-100). */
   .learner-app .w-tag--soon {
-    background: var(--amber-100);
-    color: #7a5300;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
   .learner-app .w-nav .w-tag {
@@ -218,7 +333,7 @@
     min-width: 0;
     color: var(--text-strong);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .w-main {
@@ -300,7 +415,7 @@
   .learner-app .w-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 36px;
     padding: 0 var(--sp-3);
     border-radius: var(--r-pill);
@@ -311,11 +426,6 @@
     line-height: 1.5;
     color: var(--text-strong);
     white-space: nowrap;
-  }
-
-  .learner-app .w-chip img {
-    width: 20px;
-    height: 20px;
   }
 
   .learner-app .w-top .icon-btn {
@@ -381,7 +491,7 @@
 
   .learner-app .home-hero__greet h1 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-2xl);
     line-height: 1.25;
     color: var(--text-strong);
@@ -430,7 +540,7 @@
     grid-column: 2;
     grid-row: 1;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -466,25 +576,23 @@
     display: contents;
   }
 
-  .learner-app .home-streak img {
-    grid-column: 1;
-    grid-row: 1 / span 2;
+  .learner-app .home-streak__icon {
     width: 48px;
-    height: 50px;
+    height: 48px;
   }
 
   .learner-app .home-streak div {
     grid-column: 2;
     grid-row: 1;
     display: flex;
-    gap: 6px;
+    gap: var(--sp-2);
     align-items: baseline;
   }
 
   .learner-app .home-streak b,
   .learner-app .home-streak span {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -505,7 +613,7 @@
     justify-self: start;
     margin: calc(var(--sp-6) + 1px) 0 0
       calc(var(--sp-6) + 220px + var(--sp-8) + 1px);
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);
@@ -577,7 +685,7 @@
     gap: var(--sp-3);
     margin: 0;
     font-size: var(--fs-base);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--jade-800);
   }
 
@@ -625,7 +733,8 @@
     border-radius: 0;
   }
 
-  .learner-app .home-explore button {
+  .learner-app .home-explore button,
+  .learner-app .home-explore a {
     justify-items: start;
     gap: var(--sp-2);
     height: 100%;
@@ -637,20 +746,23 @@
     box-shadow: var(--shadow-card);
     text-align: left;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.5;
     color: var(--text-strong);
+    text-decoration: none;
     /* Not box-shadow: the Q12 focus ring must show at once. */
     transition: border-color var(--dur-fast);
   }
 
-  .learner-app .home-explore button:hover {
+  .learner-app .home-explore button:hover,
+  .learner-app .home-explore a:hover {
     background: var(--surface-card);
     border-color: var(--jade-600);
     box-shadow: var(--shadow-float);
   }
 
-  .learner-app .home-explore button:focus-visible {
+  .learner-app .home-explore button:focus-visible,
+  .learner-app .home-explore a:focus-visible {
     box-shadow: var(--focus-ring);
   }
 
@@ -880,7 +992,7 @@
     grid-column: 1 / -1;
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     text-align: left;
     color: var(--text-strong);
@@ -890,7 +1002,7 @@
     grid-column: 1 / -1;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     font-size: var(--fs-md);
     color: var(--stone-600);
   }
@@ -992,7 +1104,7 @@
   }
 
   .learner-app .path-next__label {
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);
@@ -1006,8 +1118,9 @@
   }
 
   .learner-app .path-next p.path-next__title {
+    white-space: normal;
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1058,7 +1171,7 @@
 
   .learner-app .path-sum__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -1119,11 +1232,18 @@
   }
 
   /* ---------- Hồ sơ (web/profile.html, Q17, Q82) ----------
-     Only the current data: name, email and sign-out in the hero card. */
+     Only the current data: name, email and sign-out in the hero card.
+     Unslop L6: the card is ~720px wide (22rem text track + avatar +
+     button); the text track grows to its content so a long email stays on
+     one line when the row has room; the last track takes the rest. No column
+     gap (it would also sit before that track): the avatar and the button
+     carry the spacing. */
   .learner-app .profile {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns:
+      auto minmax(min(22rem, 100%), max-content) auto
+      minmax(0, 1fr);
     align-items: center;
-    gap: 0 var(--sp-6);
+    gap: 0;
     padding-top: var(--sp-8);
     padding-bottom: var(--sp-12);
   }
@@ -1139,7 +1259,7 @@
   /* The hero card behind avatar, name/email and the sign-out button. */
   .learner-app .profile::before {
     content: '';
-    grid-column: 1 / -1;
+    grid-column: 1 / 4;
     grid-row: 2;
     align-self: stretch;
     background: var(--surface-card);
@@ -1156,7 +1276,7 @@
     place-items: center;
     width: 96px;
     height: 96px;
-    margin: var(--sp-6) 0 var(--sp-6) var(--sp-8);
+    margin: var(--sp-6) var(--sp-6) var(--sp-6) var(--sp-8);
     border-radius: 50%;
     background: var(--jade-100);
     border: 3px solid var(--surface-card);
@@ -1202,7 +1322,7 @@
   .learner-app .profile__row:first-child dd {
     font-family: var(--font-serif);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.5;
   }
 
@@ -1216,7 +1336,7 @@
     grid-column: 3;
     grid-row: 2;
     position: relative;
-    margin-right: var(--sp-8);
+    margin: 0 var(--sp-8) 0 var(--sp-6);
   }
 
   .learner-app .profile .auth__submit {
@@ -1355,7 +1475,7 @@
   }
 
   .learner-app .path-mid__label {
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);
@@ -1366,7 +1486,7 @@
 
   .learner-app .path-mid p.path-mid__title {
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1445,7 +1565,7 @@
   .learner-app .w-crumbs {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     margin: 0 0 var(--sp-2);
     font-size: var(--fs-md);
     color: var(--text-muted);
@@ -1483,7 +1603,7 @@
 
   .learner-app .w-pagehead .w-h1 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-2xl);
     line-height: 1.25;
     color: var(--text-strong);
@@ -1550,13 +1670,13 @@
   .learner-app .lesson-hero__badge {
     order: -1;
     height: auto;
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border: 0;
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .lesson-hero__title {
@@ -1602,7 +1722,7 @@
   .learner-app .lesson-content .lesson-section {
     margin: 0 0 var(--sp-4);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1627,8 +1747,15 @@
     margin-top: var(--sp-3);
   }
 
-  .learner-app .lesson-content .lrow > img {
+  .learner-app .lesson-content .lrow__icon {
     width: 56px;
+    height: 56px;
+    border-radius: var(--r-md);
+  }
+
+  .learner-app .lesson-content .lrow__icon .icon {
+    width: 28px;
+    height: 28px;
   }
 
   .learner-app .lesson-content .lrow .grow {
@@ -1638,7 +1765,7 @@
 
   .learner-app .lesson-content .lrow__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
   }
 
@@ -1673,7 +1800,7 @@
 
   /* mẫu .learn-row__done: icon + visible "Đã học xong" in jade. */
   .learner-app .lesson-content .lrow.is-done .lrow__end {
-    gap: 6px;
+    gap: var(--sp-2);
     font-size: var(--fs-md);
     font-weight: 600;
     color: var(--jade-800);
@@ -1686,7 +1813,7 @@
   .learner-app .lesson-content .lrow__count {
     position: static;
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -1719,7 +1846,7 @@
   .learner-app .lesson-prog__title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -1733,7 +1860,7 @@
   .learner-app .lesson-prog__pct b {
     font-family: var(--font-serif);
     font-size: var(--fs-3xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--jade-800);
   }
@@ -1855,7 +1982,7 @@
     width: auto;
     min-width: 0;
     height: 56px;
-    padding: 0 178px 0 54px;
+    padding: 0 180px 0 56px;
     border: 1px solid var(--border-strong);
     border-radius: var(--r-md);
     background: var(--surface-card);
@@ -1910,7 +2037,7 @@
   }
 
   .learner-app .dict-search__submit:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .dict-search__submit:focus-visible {
@@ -1977,7 +2104,7 @@
     padding: var(--sp-5) var(--sp-6);
     border-bottom: 1px solid var(--border-default);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -1992,10 +2119,8 @@
     padding: 0 var(--sp-6);
     background: var(--cream-100);
     font-size: var(--fs-sm);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--stone-600);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .dict-results {
@@ -2055,7 +2180,6 @@
 
   .learner-app .dict-item__vi--none {
     font-weight: 400;
-    font-style: italic;
     color: var(--text-muted);
   }
 
@@ -2063,13 +2187,13 @@
   .learner-app .dict-item .badge {
     grid-area: 1 / 4;
     justify-self: start;
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--cream-100);
     box-shadow: inset 0 0 0 1px var(--border-default);
     color: var(--stone-700);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .dict-item .badge.badge--lv1 {
@@ -2153,7 +2277,7 @@
   .learner-app .dict-web__card-title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2244,7 +2368,9 @@
   .learner-app .word-web__hero {
     position: relative;
     display: grid;
-    grid-template-columns: clamp(180px, 30%, 220px) minmax(0, 1fr);
+    /* The glyph column grows with one row of 田字格 cells (auto = max-content,
+       capped by .word__head max-inline-size). */
+    grid-template-columns: minmax(clamp(180px, 30%, 220px), auto) minmax(0, 1fr);
     gap: var(--sp-8);
     align-items: center;
     padding: var(--sp-6);
@@ -2257,9 +2383,13 @@
 
   /* The glyph box (mẫu .wword-hero__glyph). */
   .learner-app .word-web__hero .word__head {
+    /* The glyph column sizes to its row of 田字格 cells; the mobile Q333
+       size container would pin this box to the column minimum. */
+    container-type: normal;
     display: grid;
     place-items: center;
     aspect-ratio: 1;
+    max-inline-size: 22rem;
     border: 1px solid var(--border-default);
     border-radius: var(--r-lg);
     background: var(--cream-100)
@@ -2269,7 +2399,7 @@
 
   .learner-app .word-web__hero .word__hz {
     margin: 0;
-    padding: 0 6px;
+    padding: 0 var(--sp-2);
     font-family: var(--font-cn-serif);
     /* Q333: one line inside the glyph box (12px padding + 4px air). */
     font-size: min(5rem, calc((100cqi - 16px) / var(--hz-n, 1)));
@@ -2278,6 +2408,32 @@
     letter-spacing: normal;
     color: var(--ink-900);
     background: var(--cream-100);
+  }
+
+  /* One row of 田字格 cells in reading order, shrinking per cell count:
+     1 → 100px, 2 → 90px, 3–4 → 80px, 5+ → 64px (the floor). The hero values
+     replace the generic 0.75/0.6/0.5em steps (same specificity, later rule).
+     From three cells the glyph box stops being square and widens with the
+     row; only 5+ cells may wrap, inside the 22rem box. */
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(2)) .tzg-cell {
+    font-size: 4.5rem;
+  }
+
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(3)) .tzg-cell {
+    font-size: 4rem;
+  }
+
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(5)) .tzg-cell {
+    font-size: 3.2rem;
+  }
+
+  .learner-app .word-web__hero .word__head:has(.tzg-cell:nth-child(3)) {
+    aspect-ratio: auto;
+    min-block-size: 180px;
+  }
+
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(5)) {
+    white-space: normal;
   }
 
   .learner-app .word-web__hero-body {
@@ -2297,7 +2453,7 @@
     background: var(--jade-50);
     box-shadow: inset 0 0 0 1px var(--jade-200);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--jade-800);
   }
 
@@ -2388,7 +2544,7 @@
 
   .learner-app .word-ex h2 {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2503,7 +2659,7 @@
 
   .learner-app .word-rel h2 {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2529,7 +2685,7 @@
 
   .learner-app .word-rel__table th {
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--stone-600);
     background: var(--cream-100);
     white-space: nowrap;
@@ -2608,7 +2764,7 @@
     display: block;
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2633,7 +2789,7 @@
   }
 
   .learner-app .word-web__act .word-save:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .word-web__act .word-save:focus-visible {
@@ -2716,7 +2872,7 @@
   .learner-app .word-web__info-title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2755,7 +2911,7 @@
   .learner-app .word-web__back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     /* M2.10d F3 (Q69/Q42): real 44×44px touch target; the negative vertical
        margins keep the link line in place. */
     min-width: 44px;
@@ -2814,7 +2970,7 @@
     justify-self: start;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
     pointer-events: auto;
   }
@@ -2837,7 +2993,7 @@
   .learner-app .ex-bar .m02-bar__count {
     grid-column: 3;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -2857,17 +3013,15 @@
     display: block;
     margin: 0;
     font-size: var(--fs-sm);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--jade-800);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .ex-body .pr-q {
     margin-top: var(--sp-2);
     font-family: var(--font-serif);
     font-size: var(--fs-2xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -2930,9 +3084,9 @@
   }
 
   .learner-app .ls-opt.is-wrong {
-    border-color: #b3261e;
+    border-color: var(--ex-wrong-text);
     background: var(--red-100);
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   .learner-app .ls-opt__mark {
@@ -2945,7 +3099,7 @@
   }
 
   .learner-app .ls-opt.is-wrong .ls-opt__mark {
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   /* Radio dot on the picked option so colour is not the only marker
@@ -2960,7 +3114,7 @@
     height: 24px;
     border-radius: 50%;
     border: 7px solid var(--jade-700);
-    background: #fff;
+    background: var(--surface-card);
   }
 
   /* Listening (mẫu .pq-audio). */
@@ -2982,7 +3136,7 @@
   }
 
   .learner-app .ls-play:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .ls-play .icon {
@@ -3091,7 +3245,7 @@
 
   .learner-app .ex-foot:has(.m02-feedback--wrong) {
     background: var(--red-100);
-    border-top-color: #f3c1bd;
+    border-top-color: var(--ex-wrong-border);
   }
 
   .learner-app .ex-foot .m02-feedback {
@@ -3107,7 +3261,7 @@
 
   .learner-app .m02-feedback__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .m02-feedback__text {
@@ -3128,13 +3282,13 @@
   }
 
   .learner-app .m02-feedback--wrong .m02-feedback__btn {
-    border: 2px solid #b3261e;
+    border: 2px solid var(--ex-wrong-text);
     background: none;
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   .learner-app .m02-feedback__btn:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .m02-feedback--wrong .m02-feedback__btn:hover {
@@ -3180,7 +3334,7 @@
   .learner-app .done-brand__link {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
     min-height: 44px;
     text-decoration: none;
   }
@@ -3204,7 +3358,7 @@
 
   .learner-app .done-brand__name {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.5rem;
     line-height: 1.5;
     color: var(--navy-900);
@@ -3236,27 +3390,17 @@
     position: relative;
     display: block;
     padding: var(--sp-10) var(--sp-8) var(--sp-8);
-    background: radial-gradient(
-      120% 90% at 50% 20%,
-      var(--navy-800) 0%,
-      var(--navy-900) 60%,
-      var(--navy-950) 100%
-    );
-    color: #fff;
+    background: var(--surface-brand);
+    color: var(--text-on-brand);
     text-align: center;
     overflow: hidden;
-  }
-
-  .learner-app .done-hero .done-confetti {
-    display: block;
-    height: 200px;
   }
 
   .learner-app .done-kicker {
     position: relative;
     color: var(--jade-200);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .done-title {
@@ -3264,76 +3408,30 @@
     margin-top: var(--sp-2);
     font-family: var(--font-serif);
     font-size: var(--fs-3xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
-    color: #fff;
+    color: var(--text-on-brand);
   }
 
   /* Medal (mẫu .done-w__medal): 240x106 window, score on the ribbon. */
   .learner-app .done-hero .done-medal {
     position: relative;
-    width: 240px;
-    height: 106px;
+    height: auto;
     margin: var(--sp-6) auto 0;
-    overflow: hidden;
   }
 
-  .learner-app .done-hero .done-medal img {
-    position: static;
-    display: block;
-    width: 240px;
-    transform: none;
-  }
-
+  /* jade-200 on navy-900: 12.54:1. */
   .learner-app .done-hero .done-medal__score {
-    top: 34px;
-    font-size: 3rem;
-    color: var(--jade-700);
+    position: static;
+    justify-content: center;
+    transform: none;
+    font-family: var(--font-serif);
+    font-size: var(--fs-display);
+    font-variant-numeric: tabular-nums;
+    color: var(--jade-200);
   }
 
   .learner-app .done-hero .done-medal__score small {
-    font-size: 0.55em;
-    font-weight: 600;
-  }
-
-  .learner-app .done-stats {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-4);
-    margin-top: var(--sp-8);
-    padding: 0 var(--sp-8);
-    background: var(--surface-card);
-  }
-
-  .learner-app .done-stat {
-    min-width: 240px;
-    height: auto;
-    padding: var(--sp-4) var(--sp-6);
-    border: 1px solid var(--border-default);
-    border-radius: var(--r-lg);
-    background: var(--cream-100);
-    color: var(--text-body);
-    text-align: center;
-  }
-
-  .learner-app .done-stat h2 {
-    font-size: var(--fs-md);
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--text-muted);
-  }
-
-  .learner-app .done-stat__score {
-    margin-top: var(--sp-1);
-    font-size: var(--fs-3xl);
-    font-weight: 700;
-    line-height: 1.1;
-    color: var(--jade-800);
-  }
-
-  .learner-app .done-stat__score small {
     font-size: 0.55em;
     font-weight: 600;
   }
@@ -3370,11 +3468,11 @@
   .learner-app .done-btn--primary {
     border: 0;
     background: var(--jade-800);
-    color: #fff;
+    color: var(--text-on-brand);
   }
 
   .learner-app .done-btn--primary:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .done-btn:focus-visible {
@@ -3470,7 +3568,7 @@
     margin: 0;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     letter-spacing: normal;
     color: var(--text-strong);
@@ -3514,11 +3612,10 @@
     color: var(--text-body);
   }
 
-  /* W4: the mobile kicker already has the size/colour; web adds the overline. */
+  /* W4: sentence-case kicker; muted so only the title carries weight. */
   .learner-app .exi-kicker {
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .exi-meta {
@@ -3562,7 +3659,7 @@
 
   .learner-app .exi-table th {
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text-muted);
     background: var(--cream-100);
     white-space: nowrap;
@@ -3573,7 +3670,7 @@
   }
 
   .learner-app .exi-table__total td {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
     background: var(--cream-100);
     border-top: 2px solid var(--border-strong);
@@ -3599,7 +3696,7 @@
 
   .learner-app .exi-resume__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -3684,7 +3781,7 @@
     margin: 0;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     letter-spacing: normal;
     color: var(--text-strong);
@@ -3693,7 +3790,7 @@
   .learner-app .exr-history {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 44px;
     padding: 0 var(--sp-1);
     color: var(--jade-800);
@@ -3745,12 +3842,10 @@
   }
 
   .learner-app .exr-kicker {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: 500;
     line-height: 19.5px;
-    letter-spacing: 1.04px;
-    text-transform: uppercase;
-    color: var(--jade-800);
+    color: var(--text-muted);
   }
 
   .learner-app .exr-title--web,
@@ -3758,7 +3853,7 @@
     margin: 0;
     font-family: var(--font-serif);
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 35px;
     letter-spacing: normal;
     color: var(--navy-900);
@@ -3777,7 +3872,7 @@
   .learner-app .exr-score--web b {
     font-size: 36px;
     line-height: 36px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: normal;
     color: var(--jade-800);
   }
@@ -3850,7 +3945,7 @@
   .learner-app .exr-card--types .exr-h2 {
     padding-left: 0;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 24.3px;
     color: var(--navy-900);
   }
@@ -3893,7 +3988,7 @@
   .learner-app .exr-skill__value {
     padding-left: 0;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 22.5px;
     color: var(--navy-900);
   }
@@ -3951,8 +4046,8 @@
     line-height: 18px;
   }
 
-  /* Web badge palette from base.css: danger #b3261e/--red-100,
-     warning #93600a/--amber-100 (mobile keeps the m04 palette). */
+  /* Web badge palette from base.css: danger ex-wrong-text/--red-100,
+     warning text-on-amber/--amber-100 (mobile keeps the m04 palette). */
   .learner-app .exr-level--weak {
     background: var(--red-100);
     color: var(--ex-wrong-text);
@@ -3960,7 +4055,7 @@
 
   .learner-app .exr-level--medium {
     background: var(--amber-100);
-    color: #93600a;
+    color: var(--text-on-amber);
   }
 
   .learner-app .exr-level .icon {
@@ -4154,7 +4249,7 @@
     display: block;
     color: var(--text-strong);
     font-size: 1.125rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .ext-count-btn {
@@ -4203,12 +4298,10 @@
     border: 1px solid var(--sand-300);
     border-radius: 12px;
     background: var(--white);
-    color: var(--jade-800);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 500;
     text-align: center;
-    text-transform: uppercase;
   }
 
   /* W3: sans prompt ~22px. */
@@ -4218,7 +4311,7 @@
     color: var(--text-strong);
     font-family: var(--font-sans);
     font-size: 1.375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .ext-content {
@@ -4235,7 +4328,7 @@
     clip-path: none;
     color: var(--jade-800);
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .ex.ext .ext-audio {
@@ -4381,7 +4474,7 @@
     background: var(--white);
     color: var(--text-body);
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .uxb-opt__key::after {
@@ -4420,7 +4513,7 @@
   }
 
   .learner-app .ex.ext .ext-qnav .btn[aria-pressed] {
-    padding: 0 14px;
+    padding: 0 var(--sp-4);
     font-size: 0.9375rem;
   }
 
@@ -4458,19 +4551,19 @@
   }
 
   .learner-app .ex.ext .uxb-countbadge {
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: 999px;
     background: var(--jade-50);
     color: var(--jade-800);
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .uxb-legend {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 16px;
-    margin: 10px 0;
+    margin: var(--sp-3) 0;
     padding-bottom: 0;
     border-bottom: 0;
     font-size: 0.8125rem;
@@ -4485,7 +4578,7 @@
 
   .learner-app .ex.ext .uxb-qgrid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .learner-app .ex.ext .uxb-qcell {
@@ -4552,7 +4645,7 @@
   .learner-app .ex.ext .ext-live {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .learner-app .ex.ext .ext-live .icon {
@@ -4630,7 +4723,7 @@
   .learner-app .ex.ext .uxb-legend li {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     margin-right: 0;
   }
 
@@ -4704,7 +4797,7 @@
   }
 
   .learner-app .extr-heading {
-    margin-top: 18px;
+    margin-top: var(--sp-5);
     font-size: 0.875rem;
   }
 
@@ -4720,7 +4813,7 @@
 
   .learner-app .extr-section__title {
     font-size: 0.875rem;
-    margin-bottom: 10px;
+    margin-bottom: var(--sp-3);
   }
 
   .learner-app .extr-grid {
@@ -4761,7 +4854,7 @@
   }
 
   .learner-app .extr-actions .extr-actions__continue {
-    font-size: 0.86rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
   }
 
@@ -4785,7 +4878,7 @@
     display: inline-flex;
     grid-column: 3;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 36px;
     margin: 0;
     padding: 0 var(--sp-3);
@@ -4793,7 +4886,7 @@
     border-radius: var(--r-pill);
     background: var(--surface-card);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -4886,7 +4979,7 @@
 
   .learner-app .fc-rate__btn {
     grid-template-columns: none;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     justify-items: center;
     gap: 4px;
     min-height: 84px;
@@ -4903,18 +4996,8 @@
     border-color: var(--jade-600);
   }
 
-  .learner-app .fc-rate__btn .fc-face-icon {
-    display: block;
-  }
-
   .learner-app .fc-tip .w-only {
     display: inline;
-  }
-
-  .learner-app .fc-rate__btn .icon {
-    grid-row: auto;
-    width: 28px;
-    height: 28px;
   }
 
   .learner-app .fc-rate__label,
@@ -4928,20 +5011,16 @@
     font-size: var(--fs-sm);
   }
 
-  .learner-app .fc-rate__again .icon {
-    color: #b3261e;
+  /* Unslop M3: neutral buttons; icons follow the text colour. Only
+     "Chưa nhớ" is red (same token as mobile; .fc-rate__btn above resets
+     the colour, so it is set again) and only "Tốt", the default choice,
+     has the strong border. */
+  .learner-app .fc-rate__again {
+    color: var(--text-danger);
   }
 
-  .learner-app .fc-rate__hard .icon {
-    color: #7a5300;
-  }
-
-  .learner-app .fc-rate__good .icon {
-    color: var(--jade-700);
-  }
-
-  .learner-app .fc-rate__easy .icon {
-    color: var(--blue-600);
+  .learner-app .fc-rate__good {
+    border-color: var(--border-brand);
   }
 
   .learner-app .fc-tip {
@@ -4972,7 +5051,7 @@
   }
 
   /* M3.3c (Q278): the card keeps the 760px of mẫu .done-w (it shrank to its
-     content), so "Về Ôn tập" and "Ôn lại thẻ chưa nhớ" sit inside it. */
+     content), so the "Ôn lại thẻ chưa nhớ" actions sit inside it. */
   .learner-app .rv-done .done-card {
     width: 760px;
     max-width: 100%;
@@ -5023,15 +5102,44 @@
     color: var(--text-muted);
   }
 
-  .learner-app .rv-actions {
-    display: flex;
-  }
-
   .learner-app .rv-note {
     font-size: var(--fs-sm);
   }
 
+  /* Unslop L6: same step as the stats block above (--sp-10 left a hole
+     between the meta line and the buttons). */
   .learner-app .rv-actions {
-    margin-top: var(--sp-10);
+    display: flex;
+    margin-top: var(--sp-8);
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .home-streak b,
+.learner-app .topic__no,
+.learner-app .topic.is-current .topic__no,
+.learner-app .lesson-content .lrow__count,
+.learner-app .lesson-prog__pct,
+.learner-app .lesson-prog__pct b,
+.learner-app .dict-web__box .dict__count,
+.learner-app .ex-bar .m02-bar__count,
+.learner-app .done-hero .done-medal__score small,
+.learner-app .exr-score--web,
+.learner-app .exr-score--web b,
+.learner-app .exr-score--web .exr-score__unit,
+.learner-app .exr-score--web.is-pass .exr-score__unit,
+.learner-app .exr-skill__value,
+.learner-app .ex.ext .ext-timer,
+.learner-app .ex.ext .ext-count,
+.learner-app .ex.ext .ext-live,
+.learner-app .ex.ext .ext-audioclock,
+.learner-app .ex.ext .uxb-countbadge,
+.learner-app .rv-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* HanziCells: a drag or triple-click selects the visible cells; the
+   .sr-only copy stays out of the selection, so the word is copied once. */
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) > .sr-only {
+  user-select: none;
 }

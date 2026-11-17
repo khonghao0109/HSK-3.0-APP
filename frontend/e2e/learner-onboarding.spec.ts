@@ -133,12 +133,12 @@ test.describe('Learner Onboarding Flow', () => {
     // Navigates to the /learn Home (registered without a name)
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
 
     // Visiting /learn again stays on /learn
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn$/);
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
 
     // The user email now lives on /learn/profile
     await page.goto('/learn/profile');
@@ -534,7 +534,7 @@ test.describe('Learner Onboarding Flow', () => {
 
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
     await page.goto('/learn/profile');
     await expect(page.locator('main.profile')).toContainText(email);
   });

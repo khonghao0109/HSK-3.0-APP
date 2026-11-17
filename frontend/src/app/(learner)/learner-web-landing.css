@@ -65,7 +65,7 @@
   .learner-app .w-public .lp-hero__title {
     max-width: 14ch;
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 3.25rem;
     line-height: 1.15;
     color: var(--text-strong);
@@ -182,7 +182,7 @@
 
   .learner-app .w-public .lp-level__no {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-xl);
     color: var(--text-strong);
   }
@@ -243,10 +243,10 @@
     color: var(--blue-600);
   }
 
-  /* #8a5a00 trên amber-100: 5,9:1 (≥ 4,5:1). */
+  /* text-on-amber trên amber-100: 6,25:1 (≥ 4,5:1). */
   .learner-app .w-public .lp-feature__icon.is-amber {
     background: var(--amber-100);
-    color: #8a5a00;
+    color: var(--text-on-amber);
   }
 
   .learner-app .w-public .lp-feature__icon.is-violet {
@@ -305,7 +305,7 @@
     border-radius: 50%;
     background: var(--navy-900);
     color: var(--white);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-lg);
   }
 
@@ -327,7 +327,7 @@
     padding: var(--sp-8) var(--sp-10);
     border-radius: 24px;
     background: var(--navy-900);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .lp-cta__title {
@@ -416,7 +416,7 @@
   /* ---------- Chân trang (index.css dòng 86–91) ---------- */
   .learner-app .w-public .lp-foot__tag {
     margin-top: var(--sp-2);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .w-footer ul {
@@ -441,15 +441,6 @@
   }
 }
 
-/* 1024–1279px: bốn ô "Sắp có" của mẫu (min-height 64px, chữ và nhãn `nowrap`)
-   cần ~232px mỗi ô, mà lưới 4 cột ở 1024px chỉ cho ~218px — chữ tràn khỏi
-   thẻ. Xuống 2 cột cho tới 1279px; từ 1280px giống mẫu. */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .learner-app .w-public .lp-soon {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Forced colors bỏ vòng focus bằng box-shadow (Q12): giữ outline hệ thống. */
 @media (min-width: 1024px) and (forced-colors: active) {
   .learner-app .w-public .w-pubnav a:focus-visible,
@@ -457,4 +448,10 @@
     outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .w-public .lp-level__no,
+.learner-app .w-public .lp-step__no {
+  font-variant-numeric: tabular-nums;
 }

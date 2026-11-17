@@ -15,16 +15,9 @@ import {
   createReviewTransport,
   type ReviewTransport,
 } from './review-transport';
+import { Icon } from '@/components/ui/icon';
 
 const SESSION_HREF = '/learn/review/session';
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 type Phase =
   | { kind: 'loading' }
@@ -139,7 +132,10 @@ function OverviewBody({ data }: { data: ReviewOverview }) {
             href={SESSION_HREF}
             aria-label={`Đến hạn hôm nay: ${String(data.dueToday)} thẻ. Bắt đầu ôn`}
           >
-            <DueContent count={data.dueToday} />
+            <DueContent
+              count={data.dueToday}
+              desc={`Thêm ${String(data.upcoming.days3)} thẻ trong 3 ngày tới`}
+            />
             <span className="rvo-link">
               Ôn ngay
               <Icon name="chevron-right" />
@@ -169,29 +165,21 @@ function OverviewBody({ data }: { data: ReviewOverview }) {
               : `Tỷ lệ ghi nhớ ${String(retention)} phần trăm`
           }
         >
-          <span className="rvo-stat__ico" aria-hidden="true">
-            <Icon name="check-circle" />
-          </span>
           <span className="rvo-stat__text" aria-hidden="true">
             <span className="rvo-stat__label">Tỷ lệ ghi nhớ</span>
             <span className="rvo-stat__val tabular">
               {retention === null ? '—' : String(retention)}
               {retention !== null && <small>%</small>}
             </span>
-          </span>
-          <span
-            className="rvo-ring"
-            style={{ '--value': retention ?? 0 } as React.CSSProperties}
-            aria-hidden="true"
-          >
-            <span className="rvo-ring__label">7 ngày</span>
+            <span className="rvo-stat__desc">
+              {retention === null
+                ? 'Chưa có lượt ôn trong 7 ngày qua'
+                : 'Lượt nhớ đúng trong 7 ngày qua'}
+            </span>
           </span>
         </section>
 
         <section className="rvo-stat rvo-stat--soon" aria-labelledby="rvo-soon">
-          <span className="rvo-stat__ico" aria-hidden="true">
-            <Icon name="clock" />
-          </span>
           <span className="rvo-stat__text">
             <h2 className="rvo-stat__label" id="rvo-soon">
               Sắp đến hạn
@@ -326,18 +314,17 @@ function OverviewBody({ data }: { data: ReviewOverview }) {
   );
 }
 
-function DueContent({ count }: { count: number }) {
+// Unslop L7 K2: no decorative icon; label, the number, then what it is against.
+function DueContent({ count, desc }: { count: number; desc?: string }) {
   return (
     <>
-      <span className="rvo-stat__ico" aria-hidden="true">
-        <Icon name="layers" />
-      </span>
       <span className="rvo-stat__text" aria-hidden="true">
         <span className="rvo-stat__label">Đến hạn hôm nay</span>
         <span className="rvo-stat__val tabular">
           {String(count)}
           <small>thẻ</small>
         </span>
+        {desc && <span className="rvo-stat__desc">{desc}</span>}
       </span>
     </>
   );

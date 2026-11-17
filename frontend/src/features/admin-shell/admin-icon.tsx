@@ -24,6 +24,7 @@ export const ADMIN_ICON_NAMES = [
   'plus',
   'search',
   'x',
+  'check',
   'filter',
   'chevron-left',
   'chevron-right',

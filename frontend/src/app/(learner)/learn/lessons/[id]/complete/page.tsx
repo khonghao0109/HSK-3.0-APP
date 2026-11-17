@@ -11,43 +11,11 @@ import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader'
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Hoàn thành bài học',
 };
-
-// Pieces of mẫu 06 in order; learner.css places each by :nth-child (CSP).
-const CONFETTI = [
-  'c-pink',
-  'c-lav',
-  'c-yellow is-curl',
-  'c-blue',
-  'c-orange',
-  'c-olive',
-  'c-orange',
-  'c-teal',
-  'c-pink',
-  'c-teal',
-  'c-blue',
-  'c-lav',
-  'c-red',
-  'c-brown',
-  'c-orange',
-  'c-green',
-  'c-cyan',
-  'c-teal',
-  'c-blue',
-  'c-red is-diamond',
-  'c-star is-star',
-];
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /**
  * Lesson complete page (M2.5d, Q58–Q61). Only a done lesson shows it; any
@@ -86,17 +54,6 @@ export default async function LessonCompletePage({
 
   return (
     <>
-      {/* Mobile confetti keeps its original DOM slot (a child of `.app`):
-          moving it into `.done-main` would repaint the pieces over the text
-          because `.done-main` is `position: relative; z-index: 1`. Hidden at
-          ≥1024px, where the hero card carries its own copy (mẫu
-          lesson-complete.html). */}
-      <div className="done-confetti m-only" aria-hidden="true">
-        {CONFETTI.map((className, index) => (
-          <i key={index} className={className} />
-        ))}
-      </div>
-
       {/* M2.10b: the web .w-focus frame carries the brand on top (mẫu
           web/lesson-complete.html); the mobile page has no brand bar. */}
       <header className="done-brand w-only">
@@ -113,36 +70,16 @@ export default async function LessonCompletePage({
             display:contents below 1024px so the mobile layout is unchanged. */}
         <section className="done-card" aria-labelledby="done-title">
           <div className="done-hero">
-            <div className="done-confetti w-only" aria-hidden="true">
-              {CONFETTI.map((className, index) => (
-                <i key={index} className={className} />
-              ))}
-            </div>
-            <p className="done-kicker">Chúc mừng! Bạn đã hoàn thành bài học</p>
+            <p className="done-kicker">Đã hoàn thành bài học</p>
             <h1 className="done-title" id="done-title">
               {data.activity.lesson.title}
             </h1>
 
             <div className="done-medal">
-              <img
-                src="/images/learner/m02-medal.png"
-                alt=""
-                width={230}
-                height={105}
-              />
               <p className="done-medal__score" aria-label={scoreLabel}>
                 {scoreText}
               </p>
             </div>
-          </div>
-
-          <div className="done-stats">
-            <section className="done-stat">
-              <h2>Điểm số của bạn</h2>
-              <p className="done-stat__score" aria-label={scoreLabel}>
-                {scoreText}
-              </p>
-            </section>
           </div>
 
           <div className="done-actions">

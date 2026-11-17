@@ -4,6 +4,7 @@
   --ink-900: #0d3152;
   --ink-800: #173f61;
   --ink-700: #2a5878;
+  --jade-800: #066b59;
   --jade-700: #087a65;
   --jade-600: #00a878;
   --jade-100: #dff5ee;
@@ -20,6 +21,7 @@
   --slate-50: #f6f8fa;
   --amber-700: #9a5d08;
   --amber-100: #fff0c8;
+  --red-800: #8f3030;
   --red-700: #a53a3a;
   --red-100: #fde7e5;
   --blue-700: #2b5f9e;
@@ -97,12 +99,23 @@ h3,
 p {
   margin-top: 0;
 }
+/* Unslop T2: UA mặc định bold (700); thứ bậc dùng cỡ chữ/màu, tối đa 600. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+th,
+strong,
+b {
+  font-weight: 600;
+}
 h1 {
   margin-bottom: 8px;
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3vw, 3rem);
   line-height: 1.08;
-  letter-spacing: -0.035em;
 }
 h2 {
   margin-bottom: 8px;
@@ -110,7 +123,7 @@ h2 {
   line-height: 1.25;
 }
 h3 {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
 }
 .mono {
   font-family: var(--font-mono);
@@ -137,10 +150,10 @@ h3 {
   z-index: 100;
   transform: translateY(-160%);
   border-radius: var(--radius-sm);
-  padding: 9px 14px;
-  color: white;
+  padding: 8px 16px;
+  color: var(--white);
   background: var(--jade-700);
-  font-weight: 750;
+  font-weight: 600;
   text-decoration: none;
 }
 .skip-link:focus {
@@ -155,10 +168,10 @@ h3 {
   gap: 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 8px 15px;
+  padding: 8px 16px;
   text-decoration: none;
-  font-size: 0.86rem;
-  font-weight: 720;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background-color 160ms ease,
@@ -173,16 +186,16 @@ h3 {
   opacity: 0.68;
 }
 .button--primary {
-  color: white;
+  color: var(--white);
   background: var(--jade-700);
   border-color: var(--jade-700);
 }
 .button--primary:hover {
-  background: #066b59;
+  background: var(--jade-800);
 }
 .button--ghost {
   color: var(--ink-800);
-  background: white;
+  background: var(--white);
   border-color: var(--border-default);
 }
 .button--ghost:hover {
@@ -190,13 +203,13 @@ h3 {
   border-color: var(--slate-300);
 }
 .button--danger {
-  color: white;
+  color: var(--white);
   background: var(--red-700);
   border-color: var(--red-700);
 }
 .button--danger:hover {
-  background: #8f3030;
-  border-color: #8f3030;
+  background: var(--red-800);
+  border-color: var(--red-800);
 }
 .button--full {
   width: 100%;
@@ -215,7 +228,7 @@ h3 {
   position: relative;
   border-top: 4px solid var(--jade-600);
   padding: 44px;
-  background: white;
+  background: var(--white);
   box-shadow: 0 30px 80px rgb(0 0 0 / 25%);
   text-align: center;
 }
@@ -243,7 +256,7 @@ h3 {
 
 @media (max-width: 760px) {
   .state-card {
-    padding: 38px 22px;
+    padding: 40px 24px;
   }
 }
 

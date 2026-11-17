@@ -30,18 +30,11 @@ import {
 } from '@/features/learner-exam/exam-review-model';
 import { getExamReview } from '@/features/learner-exam/exam-review-service';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Kết quả bài thi',
 };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /**
  * TL-172: the M4.3 result page. A server component: the result is read with the

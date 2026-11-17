@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
-import { LandingIcon } from './learner-landing-icons';
+import { Icon } from '@/components/ui/icon';
+
 import {
   LANDING_FAQ,
   LANDING_FEATURES,
@@ -42,7 +43,7 @@ export function LearnerLandingWeb() {
                 href={LANDING_SIGN_UP_HREF}
               >
                 Bắt đầu học
-                <LandingIcon name="chevron-right" />
+                <Icon name="chevron-right" />
               </Link>
               <Link
                 className="btn w-btn w-btn--lg btn--outline-navy"
@@ -110,14 +111,14 @@ export function LearnerLandingWeb() {
               triển.
             </p>
           </div>
-          <ul className="w-grid w-grid--4 lp-features">
+          <ul className="w-grid w-grid--3 lp-features">
             {LANDING_FEATURES.map((feature) => (
               <li key={feature.title} className="w-card lp-feature">
                 <span
                   className={`lp-feature__icon is-${feature.tone}`}
                   aria-hidden="true"
                 >
-                  <LandingIcon name={feature.icon} />
+                  <Icon name={feature.icon} />
                 </span>
                 <h3 className="w-h3">{feature.title}</h3>
                 <p className="w-muted">{feature.text}</p>
@@ -125,12 +126,12 @@ export function LearnerLandingWeb() {
             ))}
           </ul>
           <ul
-            className="w-grid w-grid--4 lp-soon"
+            className="w-grid w-grid--2 lp-soon"
             aria-label="Tính năng sắp có"
           >
             {LANDING_SOON.map((item) => (
               <li key={item.title} className="lp-soon__item">
-                <LandingIcon name={item.icon} />
+                <Icon name={item.icon} />
                 <b>{item.title}</b>
                 <span className="w-tag w-tag--soon">Sắp có</span>
               </li>
@@ -171,7 +172,7 @@ export function LearnerLandingWeb() {
             href={LANDING_SIGN_UP_HREF}
           >
             Bắt đầu học
-            <LandingIcon name="chevron-right" />
+            <Icon name="chevron-right" />
           </Link>
         </div>
       </section>
@@ -195,7 +196,7 @@ export function LearnerLandingWeb() {
             <details key={item.question}>
               <summary>
                 {item.question}
-                <LandingIcon name="chevron-down" />
+                <Icon name="chevron-down" />
               </summary>
               <p>{item.answer}</p>
             </details>

@@ -79,8 +79,8 @@ function wordId(): number {
 /** Axe plus the page-level checks, as soft assertions so every state runs. */
 async function audit(page: Page, state: string, title: string): Promise<void> {
   await page.waitForLoadState('networkidle');
-  // Axe reads colours mid fade-in (toast-in, ex-pop) as low contrast; wait
-  // for the finite animations (the confetti float loops forever).
+  // Axe reads colours mid fade-in (toast-in, ex-pop, done-rise) as low
+  // contrast; wait for the finite animations (an infinite one would never end).
   await page.waitForFunction(() =>
     document
       .getAnimations()
@@ -560,7 +560,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await audit(page, 'practice mcq', TITLES.practice);
     await mcq.getByRole('radio', { name: 'Hello' }).click();
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
     await audit(page, 'practice right', TITLES.practice);
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     for (let item = 1; item < total; item += 1) {
@@ -569,9 +569,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       await page.getByRole('button', { name: 'Tiếp tục' }).click();
     }
     await expect(page).toHaveURL(/\/complete$/u);
-    await expect(
-      page.getByText('Chúc mừng! Bạn đã hoàn thành bài học'),
-    ).toBeVisible();
+    await expect(page.getByText('Đã hoàn thành bài học')).toBeVisible();
     await audit(page, 'complete', TITLES.complete);
 
     await registerReadyLearner(page, baseURL);
@@ -639,17 +637,17 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: WORD.hanzi }),
     ).toBeVisible();
-    await audit(page, 'word', TITLES.word);
+    await audit(page, 'word', `${WORD.hanzi} · ${TITLES.word}`);
     await page.getByRole('button', { name: 'Tuỳ chọn khác' }).click();
     await expect(
       page.getByRole('button', { name: 'Sao chép từ' }),
     ).toBeVisible();
-    await audit(page, 'word menu', TITLES.word);
+    await audit(page, 'word menu', `${WORD.hanzi} · ${TITLES.word}`);
     await page.keyboard.press('Escape');
     await fail(page, '**/api/learner/dictionary/words/*/save');
     await page.getByRole('button', { name: 'Lưu để ôn' }).click();
     await expectAlert(page, 'Chưa lưu được. Vui lòng thử lại.');
-    await audit(page, 'word save 503', TITLES.word);
+    await audit(page, 'word save 503', `${WORD.hanzi} · ${TITLES.word}`);
 
     for (const id of ['99999999', 'abc']) {
       await page.goto(`/learn/dictionary/${id}`);
@@ -733,7 +731,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await page.getByRole('radio', { name: 'Hello' }).click();
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expectBusy(page, 'practice');
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
     await page.goto('/learn/dictionary');
     await slow(page, '**/api/learner/dictionary?q=*');
@@ -780,7 +778,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(hello).toHaveAttribute('aria-checked', 'true');
     await context.setOffline(false);
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
     await page.goto('/learn/dictionary');
     await context.setOffline(true);
@@ -857,7 +855,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       }
       await page.getByRole('radio', { name: 'Hello' }).click();
       await page.getByRole('button', { name: 'Kiểm tra' }).click();
-      await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+      await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
       expect.soft(await longest(), 'practice feedback').toEqual([]);
       await page.context().clearCookies();
       for (const path of ['/sign-in', '/forgot-password']) {
@@ -924,9 +922,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       await answerChoice(page, page.getByRole('radiogroup'), null);
     }
     await expect(page).toHaveURL(/\/complete$/u);
-    await expect(
-      page.getByText('Chúc mừng! Bạn đã hoàn thành bài học'),
-    ).toBeVisible();
+    await expect(page.getByText('Đã hoàn thành bài học')).toBeVisible();
 
     // The completion screen has no tab bar: its next step leads back.
     await pressOn(page, page.locator('.done-btn--primary'));

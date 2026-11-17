@@ -266,7 +266,7 @@ describe('Chi tiết từ page', () => {
     // the no-Vietnamese line (Q65).
     expect(rows).toEqual([
       '学生xuésheng · học sinh',
-      '学期xue2 qi1 · Chưa có nghĩa tiếng Việt',
+      '学期xué qī · Chưa có nghĩa tiếng Việt',
     ]);
   });
 

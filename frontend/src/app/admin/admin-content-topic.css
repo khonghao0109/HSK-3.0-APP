@@ -69,5 +69,5 @@
 .admin-app .adm-empty h1 {
   font-size: var(--adm-fs-xl);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
 }

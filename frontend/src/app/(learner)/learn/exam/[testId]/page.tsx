@@ -16,6 +16,7 @@ import {
 import { levelLabel } from '@/features/learner-home/level-label';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Giới thiệu đề',
@@ -49,16 +50,6 @@ export function remainingLabel(expiresAtIso: string, nowMs: number): string {
   return hours > 0
     ? `${String(hours)}:${two(minutes)}:${two(seconds)}`
     : `${two(minutes)}:${two(seconds)}`;
-}
-
-type IconName = 'list' | 'clock' | 'layers' | 'check' | 'rotate-cw';
-
-function Icon({ name }: { name: IconName }) {
-  return (
-    <svg className="icon icon--sm" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
 }
 
 /**
@@ -123,15 +114,15 @@ export default async function LearnerExamIntroPage({
           ) : null}
           <p className="exi-meta">
             <span>
-              <Icon name="list" />
+              <Icon size={16} name="list" />
               {intro.questionCount} câu
             </span>
             <span>
-              <Icon name="clock" />
+              <Icon size={16} name="clock" />
               {intro.durationMinutes} phút
             </span>
             <span>
-              <Icon name="layers" />
+              <Icon size={16} name="layers" />
               {intro.sectionCount} phần
             </span>
           </p>
@@ -215,7 +206,7 @@ export default async function LearnerExamIntroPage({
           <ul className="exi-rules" aria-labelledby="exam-rules">
             {EXAM_INTRO_RULES.map((rule) => (
               <li key={rule}>
-                <Icon name="check" />
+                <Icon size={16} name="check" />
                 <span>{rule}</span>
               </li>
             ))}
@@ -225,7 +216,7 @@ export default async function LearnerExamIntroPage({
         {activeAttempt !== null ? (
           <section className="exi-resume" aria-labelledby="exam-resume">
             <span className="exi-resume__ico" aria-hidden="true">
-              <Icon name="rotate-cw" />
+              <Icon size={16} name="rotate-cw" />
             </span>
             <div className="exi-resume__text">
               <h3 className="exi-resume__title" id="exam-resume">

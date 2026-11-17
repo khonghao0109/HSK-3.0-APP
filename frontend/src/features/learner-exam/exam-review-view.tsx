@@ -28,14 +28,7 @@ import {
   type ReviewFilter,
   type ReviewStatus,
 } from './exam-review-model';
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
+import { Icon } from '@/components/ui/icon';
 
 function Summary({ questions }: { questions: ExamReviewQuestionParsed[] }) {
   const summary = reviewSummary(questions);
@@ -122,10 +115,11 @@ function cellLabel(question: ExamReviewQuestionParsed): string {
   }`;
 }
 
-function cellGlyph(question: ExamReviewQuestionParsed): '✓' | '✕' | null {
+/** Q240: dấu nhìn thấy kèm màu; nghĩa nằm ở `aria-label` của ô. */
+function cellGlyph(question: ExamReviewQuestionParsed): 'check' | 'x' | null {
   const status = questionStatus(question);
-  if (status === 'correct') return '✓';
-  if (status === 'wrong') return '✕';
+  if (status === 'correct') return 'check';
+  if (status === 'wrong') return 'x';
   return null;
 }
 
@@ -155,9 +149,7 @@ function QuestionGrid({
           >
             <span>{question.orderIndex}</span>
             {glyph !== null ? (
-              <span className="exv-cell__mark" aria-hidden="true">
-                {glyph}
-              </span>
+              <Icon name={glyph} size={12} className="exv-cell__mark" />
             ) : null}
           </Link>
         );

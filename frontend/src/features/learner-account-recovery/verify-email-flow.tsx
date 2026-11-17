@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
+import { Icon } from '@/components/ui/icon';
 import { LEARNER_AUTH_ERROR_MESSAGES } from '@/features/learner-auth/learner-auth-messages';
 
 import { useHashToken, useView } from './use-hash-token';
@@ -13,9 +14,7 @@ type View = 'confirm' | 'done' | 'invalid' | 'sent';
 function ResultIcon({ icon = 'mail' }: { icon?: string }) {
   return (
     <div className="auth-result__icon" aria-hidden="true">
-      <svg className="icon">
-        <use href={`#i-${icon}`} />
-      </svg>
+      <Icon name={icon} />
     </div>
   );
 }

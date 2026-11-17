@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { queryDisposableDb, sqlLiteral } from './support/disposable-db';
+import { copiedHanzi } from './support/hanzi-selection';
 import {
   readCspViolations,
   registerReadyLearner,
@@ -220,14 +221,14 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await rowFor(page, WORD.hanzi).first().locator('.dict-item__link').click();
     await expect(page).toHaveURL(`/learn/dictionary/${ids.word}`);
     const h1 = page.getByRole('heading', { level: 1 });
-    await expect(h1).toHaveText(WORD.hanzi);
+    await expect(h1).toHaveAccessibleName(WORD.hanzi);
     await expect(page.locator('.word__py')).toHaveText(WORD.pinyinTone);
     await expect(page.locator('.word__vi')).toHaveText(WORD.vi);
     await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
     await expect(page.locator('.tabbar')).toBeHidden();
 
     await page.getByRole('button', { name: 'Phồn thể' }).click();
-    await expect(h1).toHaveText(WORD.traditional);
+    await expect(h1).toHaveAccessibleName(WORD.traditional);
     await expect(h1).toHaveAttribute('lang', 'zh-Hant');
     await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
 
@@ -281,7 +282,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
 
     await toRelated.first().click();
     await expect(page).toHaveURL(`/learn/dictionary/${relatedId}`);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(
       RELATED_HANZI,
     );
     await expect(page.locator('.word-ex__cn')).toHaveText(
@@ -316,7 +317,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
       page.getByRole('region', { name: WORD.hanzi }).getByRole('heading', {
         level: 1,
       }),
-    ).toHaveText(WORD.hanzi);
+    ).toHaveAccessibleName(WORD.hanzi);
     const senses = page.getByRole('region', { name: 'Nghĩa' });
     await expect(senses.locator('ol > li')).toHaveText([WORD.vi]);
 
@@ -324,6 +325,17 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await expect(page.locator('.word-ex footer')).toHaveText(
       `Nguồn: ${RELATED_EXAMPLE.sourceName} · Phiên bản ${RELATED_EXAMPLE.sourceVersion}`,
     );
+  });
+
+  test('copies the 田字格 hero word once (Q346)', async ({ page, baseURL }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    const hero = page.getByRole('heading', { level: 1 });
+    await expect(hero).toHaveAccessibleName(WORD.hanzi);
+    expect(await copiedHanzi(hero)).toEqual({
+      drag: WORD.hanzi,
+      triple: WORD.hanzi,
+    });
   });
 
   test('keeps a four-character hero on one line at 320 and 1440 (Q333)', async ({
@@ -335,7 +347,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/learn/dictionary/${ids.word}`);
       const hero = page.getByRole('heading', { level: 1 });
-      await expect(hero).toHaveText(WORD.hanzi);
+      await expect(hero).toHaveAccessibleName(WORD.hanzi);
       await expect(hero).toHaveClass(/word__hz--n4/);
       const fit = await hero.evaluate((h1) => {
         const box = h1.getBoundingClientRect();

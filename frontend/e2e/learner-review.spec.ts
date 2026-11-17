@@ -57,7 +57,8 @@ async function saveWords(page: Page, ids: number[]): Promise<void> {
   }
 }
 
-const front = (page: Page) => page.locator('.fc-face--front .fc-hz');
+// HanziCells: the word is read once from .sr-only; the 田字格 cells are aria-hidden.
+const front = (page: Page) => page.locator('.fc-face--front .fc-hz .sr-only');
 const flip = (page: Page) =>
   page.getByRole('button', { name: /^Lật (thẻ|lại)/ });
 const gradeButton = (page: Page, label: string) =>
@@ -95,6 +96,28 @@ test.describe('Learner review session (M3.3a)', () => {
 
     await expect(front(page)).toHaveText(WORDS[0].hanzi);
     await expect(page.getByText('Chạm vào thẻ để lật mặt sau')).toBeVisible();
+    // Q346: the front copies the word once, as on the word page (a drag here
+    // would flip the card): the cells are selectable, the .sr-only copy not.
+    expect(
+      await front(page).evaluate((sr) => ({
+        sr: getComputedStyle(sr).userSelect,
+        cell: getComputedStyle(sr.parentElement!.querySelector('.tzg-cell')!)
+          .userSelect,
+      })),
+    ).toEqual({ sr: 'none', cell: 'auto' });
+    const copied = await page.evaluate(() => {
+      const range = document.createRange();
+      range.selectNodeContents(
+        document.querySelector('.fc-face--front .fc-hz')!,
+      );
+      const selection = getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      const text = selection.toString();
+      selection.removeAllRanges();
+      return text;
+    });
+    expect(copied.trim()).toBe(WORDS[0].hanzi);
     await expectCounter(page, '1 / 3');
     // Q261: a new card's again/hard/good previews are minutes away.
     await expect(gradeButton(page, 'Chưa nhớ')).toHaveAccessibleName(/phút$/);

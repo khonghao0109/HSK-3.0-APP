@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { Icon } from '@/components/ui/icon';
 import { LearnerBrand } from '@/features/learner-shell/learner-brand';
 
 import { ONBOARDING_ERROR_MESSAGES } from './onboarding-messages';
@@ -18,27 +19,27 @@ import { useRadioGroup } from './use-radio-group';
 const PURPOSES: Array<{
   id: LearningPurpose;
   label: string;
-  img: string;
+  icon: string;
 }> = [
   {
     id: 'communication',
     label: 'Giao tiếp',
-    img: '/images/learner/goal-communication.png',
+    icon: 'message-circle',
   },
   {
     id: 'study_abroad',
     label: 'Du học',
-    img: '/images/learner/goal-study-abroad.png',
+    icon: 'graduation-cap',
   },
   {
     id: 'hsk_exam',
     label: 'Thi HSK',
-    img: '/images/learner/goal-hsk.png',
+    icon: 'book-open',
   },
   {
     id: 'work',
     label: 'Công việc',
-    img: '/images/learner/goal-work.png',
+    icon: 'briefcase',
   },
 ];
 
@@ -292,7 +293,7 @@ export function OnboardingGoalForm({
                   <svg className="goal__check" aria-hidden="true">
                     <use href="#i-check-circle" />
                   </svg>
-                  <img src={p.img} alt="" width={78} height={76} />
+                  <Icon name={p.icon} size={32} className="goal__icon" />
                   {p.label}
                 </button>
               );

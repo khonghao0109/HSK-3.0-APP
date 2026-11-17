@@ -99,9 +99,11 @@
   font-weight: 600;
   font-size: var(--adm-fs-xs);
   white-space: nowrap;
+  flex: none;
 }
 .admin-app .uo-status::before {
   content: '';
+  flex: none;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -246,7 +248,7 @@
   flex: 0 0 auto;
   width: 1.15rem;
   height: 1.15rem;
-  margin: 0.2rem 0 0;
+  margin: var(--adm-sp-1) 0 0;
   accent-color: var(--adm-red-strong);
 }
 

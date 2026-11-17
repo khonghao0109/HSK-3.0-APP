@@ -35,7 +35,7 @@
   padding: 0 var(--adm-sp-2);
   color: var(--adm-navy-900);
   font-size: var(--adm-fs-sm);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .admin-app .adm-exercise-form__list {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { homeDateLabel } from '@/features/learner-home/home-date';
 import type { LearningHome } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
@@ -151,15 +152,18 @@ describe('LearnerHomePage', () => {
     expect(getCurrentGoal).toHaveBeenCalledWith('learner-token');
   });
 
-  it('renders the greeting, gauge and streak when ready', async () => {
+  it('renders the heading, date line, gauge and streak when ready', async () => {
     const { container } = await renderHome(readyHome);
     expect(getServerLearnerSession).toHaveBeenCalledTimes(1);
     expect(getLearningHome).toHaveBeenCalledTimes(1);
     expect(getLearningHome).toHaveBeenCalledWith('learner-token');
     expect(redirect).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Chào, Minh' }),
+      screen.getByRole('heading', { level: 1, name: 'Hôm nay' }),
     ).toBeInTheDocument();
+    expect(container.querySelector('.home-hero__greet p')?.textContent).toBe(
+      homeDateLabel(new Date()),
+    );
 
     const goalStat = screen.getByRole('region', { name: 'Mục tiêu hôm nay' });
     expect(goalStat.querySelector('.sr-only')?.textContent).toBe(
@@ -182,14 +186,14 @@ describe('LearnerHomePage', () => {
     expect(container.querySelector('[style]')).toBeNull();
   });
 
-  it('falls back to a generic greeting and an empty gauge', async () => {
+  it('keeps the heading without a name and shows an empty gauge', async () => {
     const { container } = await renderHome({
       ...readyHome,
       greetingName: null,
       dailyGoal: null,
     });
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Chào bạn' }),
+      screen.getByRole('heading', { level: 1, name: 'Hôm nay' }),
     ).toBeInTheDocument();
     const gauge = container.querySelector('.home-gauge');
     expect(gauge).toHaveClass('pct-0');

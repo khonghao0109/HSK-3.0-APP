@@ -13,6 +13,8 @@ import {
 import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
 
 import { NO_VIETNAMESE } from './dictionary-display';
+import { Icon } from '@/components/ui/icon';
+import { HanziCells } from '@/components/ui/hanzi-cells';
 
 export const SAVE_FAILED = 'Chưa lưu được. Vui lòng thử lại.';
 export const COPY_FAILED = 'Không sao chép được.';
@@ -43,14 +45,6 @@ export type WordView = {
     level: string | null;
   }[];
 };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /** Chi tiết từ (M2.6b, mẫu word.html, Q62–Q70). */
 export function WordDetail({
@@ -263,7 +257,7 @@ export function WordDetail({
                   id="word-hz"
                   lang={traditional && word.traditional ? 'zh-Hant' : 'zh-Hans'}
                 >
-                  {shown}
+                  <HanziCells text={shown} />
                 </h1>
               </div>
               <div className="word-web__hero-body">

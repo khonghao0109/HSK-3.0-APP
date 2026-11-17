@@ -37,6 +37,7 @@
   /* Q79: small text in cinnabar (5.18:1 on white; 500 and 600 fall short). */
   --cinnabar-700: #c2410c;
   --cinnabar-100: #fde8e1;
+  --red-700: #c0392b;
   --red-600: #e0453a;
   --red-100: #fdeceb;
   --amber-500: #f5b40a;
@@ -90,13 +91,7 @@
   --logo-facebook-blue: #1877f2;
   --logo-facebook-white: #ffffff;
 
-  /* Home "Khám phá" tiles and avatar ring (m02.css, 02-01). */
-  --explore-amber-bg: #fdf0d5;
-  --explore-amber-fg: #b26a00;
-  --explore-red-bg: #fde4df;
-  --explore-red-fg: #c8283a;
-  --explore-violet-bg: #efecfb;
-  --explore-violet-fg: #6a55cf;
+  /* Home avatar ring (m02.css, 02-01). */
   --avatar-ring: rgb(255 255 255 / 85%);
 
   /* Lộ trình (m02.css, 02-02). */
@@ -152,7 +147,7 @@
   --text-on-brand: var(--white);
   --text-brand: var(--jade-700);
   --text-accent-cn: var(--cinnabar-600);
-  --text-danger: var(--red-600);
+  --text-danger: var(--red-700); /* 5,4:1 trên trắng; red-600 chỉ 4,1:1 */
 
   --border-default: var(--sand-300);
   --border-strong: var(--sand-400);
@@ -385,9 +380,24 @@ html:has(.learner-app) {
   stroke-linejoin: round;
 }
 
+.learner-app .icon--xs {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 .learner-app .icon--sm {
   width: 1rem;
   height: 1rem;
+}
+
+.learner-app .icon--md {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Chuỗi ngày học: icon nét một màu, chỉ con số mang độ đậm. */
+.learner-app .streak-icon {
+  color: var(--text-muted);
 }
 
 .learner-app .icon--lg {
@@ -591,10 +601,10 @@ html:has(.learner-app) {
 
 .learner-app .alert a {
   display: inline-block;
-  font-weight: 700;
+  font-weight: 500;
   color: inherit;
-  padding: 0.8rem 0.25rem;
-  margin: -0.8rem 0;
+  padding: var(--sp-3) var(--sp-1);
+  margin: -12px 0;
 }
 
 .learner-app .divider-text {
@@ -630,11 +640,11 @@ html:has(.learner-app) {
   background: var(--navy-900);
   color: var(--white);
   border-radius: var(--r-md);
-  padding: 0.8rem 1rem;
+  padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-md);
   box-shadow: var(--shadow-float);
   display: flex;
-  gap: 10px;
+  gap: var(--sp-3);
   align-items: center;
   animation: toast-in var(--dur) ease-out;
 }
@@ -681,7 +691,7 @@ html:has(.learner-app) {
 
 .learner-app .appbar__title {
   text-align: center;
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--fs-lg);
   line-height: 1.2;
 }
@@ -711,11 +721,10 @@ html:has(.learner-app) {
   top: 32.1cqw;
   margin: 0;
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16cqw;
   line-height: 1;
   color: var(--navy-900);
-  letter-spacing: -0.005em;
 }
 
 .learner-app .acute {
@@ -839,7 +848,7 @@ html:has(.learner-app) {
 
 /* ---------- 01-02 Auth (Sign up / Sign in) ---------- */
 .learner-app .auth {
-  padding: 64px 23px 40px;
+  padding: 64px var(--sp-6) var(--sp-10);
   display: flex;
   flex-direction: column;
 }
@@ -858,8 +867,8 @@ html:has(.learner-app) {
 .learner-app .auth__title {
   margin-top: 20px;
   font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.82rem;
+  font-weight: 600;
+  font-size: 1.8125rem;
   line-height: 2.75rem;
   color: var(--navy-900);
   overflow-wrap: anywhere;
@@ -871,7 +880,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__subtitle {
-  margin-top: 10px;
+  margin-top: var(--sp-3);
   font-size: 1.0625rem;
   line-height: 1.5rem;
   color: var(--stone-700);
@@ -879,15 +888,15 @@ html:has(.learner-app) {
 
 .learner-app .auth__form {
   display: grid;
-  margin-top: 35px;
+  margin-top: 36px;
 }
 
 .learner-app .auth__form .field {
-  gap: 13px;
+  gap: var(--sp-3);
 }
 
 .learner-app .auth__form .field + .field {
-  margin-top: 26px;
+  margin-top: 28px;
 }
 
 .learner-app .auth__form .field__label {
@@ -916,7 +925,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__form .alert {
-  margin-top: 18px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .auth__submit {
@@ -927,7 +936,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__divider {
-  margin: 29px 0 0;
+  margin: 28px 0 0;
   height: 20px;
   font-size: 0.9375rem;
   color: var(--stone-600);
@@ -936,7 +945,7 @@ html:has(.learner-app) {
 .learner-app .auth__social {
   display: grid;
   gap: 12px;
-  margin-top: 21px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .social-btn {
@@ -968,8 +977,8 @@ html:has(.learner-app) {
 @media (max-width: 299px) {
   .learner-app .social-btn {
     justify-content: flex-start;
-    gap: 0.625rem;
-    padding: 0.5rem 0.875rem;
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
     text-align: left;
   }
   .learner-app .social-btn svg {
@@ -979,7 +988,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__terms {
-  margin-top: 34px;
+  margin-top: 36px;
   text-align: center;
   font-size: 0.8125rem;
   line-height: 1.5rem;
@@ -992,8 +1001,8 @@ html:has(.learner-app) {
   text-decoration: none;
   font-weight: 500;
   display: inline-block;
-  padding: 10px 0;
-  margin: -10px 0;
+  padding: var(--sp-3) 0;
+  margin: -12px 0;
 }
 
 .learner-app .auth__terms a:hover {
@@ -1009,14 +1018,14 @@ html:has(.learner-app) {
 
 .learner-app .static-page h1 {
   font-family: var(--font-serif);
-  font-size: 1.6rem;
+  font-size: 1.625rem;
   color: var(--navy-900);
 }
 
 /* ---------- 01-03/01-04 Onboarding ---------- */
 .learner-app .ob {
   container-type: inline-size;
-  padding: 64px 21px 0;
+  padding: 64px var(--sp-5) 0;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -1043,7 +1052,7 @@ html:has(.learner-app) {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: var(--sp-5);
 }
 
 .learner-app .ob__dots i {
@@ -1069,16 +1078,16 @@ html:has(.learner-app) {
 }
 
 .learner-app .ob__title {
-  margin-top: 26px;
+  margin-top: 28px;
   font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.34rem;
+  font-weight: 600;
+  font-size: var(--fs-xl);
   line-height: 1.3;
   color: var(--navy-900);
 }
 
 .learner-app .ob__sub {
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--stone-700);
@@ -1095,18 +1104,19 @@ html:has(.learner-app) {
 }
 
 .learner-app .ob__section {
-  margin-top: 30px;
+  margin-top: var(--sp-8);
 }
 
 .learner-app .ob .alert {
-  margin-top: 18px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .ob__footer {
   position: sticky;
   bottom: 0;
-  margin: auto -21px 0;
-  padding: 24px 21px max(46px, env(safe-area-inset-bottom));
+  margin: auto -20px 0;
+  padding: var(--sp-6) var(--sp-5)
+    max(var(--sp-12), env(safe-area-inset-bottom));
   background: linear-gradient(
     to top,
     var(--surface-canvas) 78%,
@@ -1136,7 +1146,7 @@ html:has(.learner-app) {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 10px;
+  gap: var(--sp-3);
   min-height: 145px;
   padding: 12px 8px;
   border: 1px solid var(--border-default);
@@ -1147,14 +1157,18 @@ html:has(.learner-app) {
   font-size: 1.0625rem;
 }
 
-.learner-app .goal img {
-  width: 78px;
-  height: 76px;
+/* Ô trung tính chứa icon nét một màu (thay ảnh 3D nhiều màu). */
+.learner-app .goal__icon {
+  box-sizing: content-box;
+  padding: var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  color: var(--text-strong);
 }
 
 .learner-app .goal[aria-pressed='true'],
 .learner-app .goal[aria-checked='true'] {
-  border: 2px solid var(--jade-600);
+  border: 2px solid var(--border-brand);
   background: var(--jade-25);
 }
 
@@ -1197,7 +1211,7 @@ html:has(.learner-app) {
 .learner-app .levels button[aria-checked='true'] {
   background: var(--jade-600);
   color: var(--white);
-  font-weight: 700;
+  font-weight: 500;
   box-shadow: 0 0 0 3px var(--jade-100);
 }
 
@@ -1211,9 +1225,9 @@ html:has(.learner-app) {
 
 .learner-app .level-info {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-4);
   align-items: flex-start;
-  margin-top: 14px;
+  margin-top: var(--sp-4);
   padding: 16px;
   border: 1px solid var(--border-default);
   border-radius: 14px;
@@ -1249,26 +1263,25 @@ html:has(.learner-app) {
 .learner-app .minutes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 30px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-8);
 }
 
 .learner-app .minute {
   display: grid;
   justify-items: center;
   gap: 2px;
-  padding: 22px 4px 20px;
+  padding: var(--sp-6) var(--sp-1) var(--sp-5);
   border: 1px solid var(--border-default);
   border-radius: 14px;
   background: var(--surface-card);
 }
 
 .learner-app .minute b {
-  font-size: 2.85rem;
+  font-size: 2.875rem;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--navy-900);
-  letter-spacing: -0.02em;
 }
 
 .learner-app .minute span {
@@ -1317,7 +1330,7 @@ html:has(.learner-app) {
 .learner-app .time-select {
   position: relative;
   display: block;
-  margin-top: 14px;
+  margin-top: var(--sp-4);
 }
 
 .learner-app .time-select .icon {
@@ -1334,7 +1347,7 @@ html:has(.learner-app) {
 .learner-app .time-select select {
   min-height: 64px;
   padding-left: 60px;
-  font-size: 1.3rem;
+  font-size: 1.3125rem;
   background-size: 20px;
   background-position: right 1.2rem center;
   font-weight: 500;
@@ -1344,9 +1357,9 @@ html:has(.learner-app) {
 .learner-app .remind {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 22px;
-  padding: 18px 10px 18px 18px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+  padding: var(--sp-5) var(--sp-3) var(--sp-5) var(--sp-5);
   border: 1px solid var(--border-default);
   border-radius: 14px;
   background: var(--surface-card);
@@ -1372,10 +1385,10 @@ html:has(.learner-app) {
 
 .learner-app .tip {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-4);
   align-items: center;
   margin-top: 24px;
-  padding: 22px 18px;
+  padding: var(--sp-6) var(--sp-5);
   border-radius: 14px;
   background: var(--cream-100);
   font-size: 0.8125rem;
@@ -1903,14 +1916,14 @@ html:has(.learner-app) {
   background: none;
   text-decoration: none;
   color: var(--stone-600);
-  font-size: 0.6875rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.5;
 }
 
 .learner-app .tabbar > [aria-current='page'] {
   color: var(--jade-800);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Q23: label jade-800 for AA contrast, icon stays jade-700. */
@@ -1933,7 +1946,7 @@ html:has(.learner-app) {
   position: relative;
   background: var(--surface-brand);
   color: var(--white);
-  padding: 4px 18px 58px;
+  padding: var(--sp-1) var(--sp-5) 60px;
   overflow: hidden;
 }
 
@@ -1958,7 +1971,7 @@ html:has(.learner-app) {
   align-items: center;
   min-height: 44px;
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1.5rem;
   line-height: 1.2;
   color: var(--white);
@@ -1980,7 +1993,7 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   margin-top: 2px;
 }
 
@@ -2027,11 +2040,11 @@ html:has(.learner-app) {
 
 .learner-app .home-body {
   position: relative;
-  margin-top: -49px;
-  padding: 0 15px;
+  margin-top: -48px;
+  padding: 0 var(--sp-4);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 7px;
+  gap: var(--sp-2);
   padding-bottom: calc(var(--tabbar-height) + 20px);
 }
 
@@ -2070,7 +2083,7 @@ html:has(.learner-app) {
   --size: 72px;
   width: var(--size);
   height: var(--size);
-  margin: 5px auto 0;
+  margin: var(--sp-1) auto 0;
   border-radius: 50%;
   background: conic-gradient(
     from 225deg,
@@ -2100,7 +2113,7 @@ html:has(.learner-app) {
 
 .learner-app .home-gauge b {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .home-gauge b small {
@@ -2111,7 +2124,7 @@ html:has(.learner-app) {
 .learner-app .home-gauge em {
   font-style: normal;
   font-size: 0.75rem;
-  margin-top: 3px;
+  margin-top: var(--sp-1);
 }
 
 .learner-app .home-streak {
@@ -2123,9 +2136,12 @@ html:has(.learner-app) {
   line-height: 1.5;
 }
 
-.learner-app .home-streak img {
+.learner-app .home-streak__icon {
   width: 36px;
-  height: 38px;
+  height: 36px;
+  /* Bản web (`display: contents`) đặt icon vào cột đầu của lưới thẻ. */
+  grid-column: 1;
+  grid-row: 1 / span 2;
 }
 
 .learner-app .home-streak b {
@@ -2133,19 +2149,19 @@ html:has(.learner-app) {
   font-size: 2rem;
   line-height: 1;
   font-weight: 600;
-  color: var(--navy-900);
+  color: var(--text-strong);
 }
 
 .learner-app .home-streak span {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--navy-900);
+  color: var(--text-strong);
 }
 
 .learner-app .home-section {
   margin-top: 0;
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.5;
   color: var(--navy-900);
 }
@@ -2153,10 +2169,10 @@ html:has(.learner-app) {
 .learner-app .home-lesson {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   width: 100%;
   margin: 0;
-  padding: 6px 14px 6px 10px;
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-3);
   background: var(--surface-card);
   border: 1px solid var(--border-default);
   border-radius: 14px;
@@ -2193,7 +2209,7 @@ html:has(.learner-app) {
 .learner-app .home-lesson__title {
   display: block;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--navy-900);
   overflow-wrap: anywhere;
@@ -2209,7 +2225,7 @@ html:has(.learner-app) {
 .learner-app .home-lesson__bar {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   margin-top: 4px;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -2248,15 +2264,16 @@ html:has(.learner-app) {
   }
 }
 
-.learner-app .home-explore button {
+.learner-app .home-explore button,
+.learner-app .home-explore a {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 6px;
+  gap: var(--sp-2);
   width: 100%;
   min-height: 4.75rem;
   margin: 0;
-  padding: 6px 2px;
+  padding: var(--sp-2) 2px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -2268,8 +2285,22 @@ html:has(.learner-app) {
   line-height: 1.25;
 }
 
-.learner-app .home-explore button:hover {
+.learner-app .home-explore button:hover,
+.learner-app .home-explore a:hover {
   background: var(--cream-100);
+}
+
+.learner-app .home-explore button:focus-visible,
+.learner-app .home-explore a:focus-visible {
+  border-radius: 10px;
+}
+
+@media (forced-colors: active) {
+  .learner-app .home-explore button:focus-visible,
+  .learner-app .home-explore a:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }
 
 .learner-app .home-explore__icon {
@@ -2278,6 +2309,8 @@ html:has(.learner-app) {
   border-radius: 12px;
   display: grid;
   place-items: center;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
 }
 
 .learner-app .home-explore__icon .icon {
@@ -2286,29 +2319,8 @@ html:has(.learner-app) {
   stroke-width: 2;
 }
 
-.learner-app .home-explore__icon--amber {
-  background: var(--explore-amber-bg);
-  color: var(--explore-amber-fg);
-}
-
-.learner-app .home-explore__icon--red {
-  background: var(--explore-red-bg);
-  color: var(--explore-red-fg);
-}
-
-.learner-app .home-explore__icon--jade {
-  background: var(--jade-50);
-  color: var(--jade-700);
-}
-
-.learner-app .home-explore__icon--blue {
-  background: var(--blue-100);
-  color: var(--blue-600);
-}
-
-.learner-app .home-explore__icon--violet {
-  background: var(--explore-violet-bg);
-  color: var(--explore-violet-fg);
+.learner-app .home-explore__icon--live {
+  color: var(--text-brand);
 }
 
 /* ---------- Hồ sơ tối thiểu (Q17) ---------- */
@@ -2321,7 +2333,7 @@ html:has(.learner-app) {
 .learner-app .profile__title {
   font-family: var(--font-sans);
   font-size: var(--fs-xl);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
   color: var(--text-strong);
 }
@@ -2374,7 +2386,7 @@ html:has(.learner-app) {
   align-items: center;
   justify-content: space-between;
   height: 59px;
-  padding: 0 18px 12px 16px;
+  padding: 0 var(--sp-5) var(--sp-3) var(--sp-4);
 }
 
 .learner-app .path-head__logo {
@@ -2383,7 +2395,7 @@ html:has(.learner-app) {
   min-height: 44px;
   margin-block: -7.5px;
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1.5rem;
   line-height: 1.2;
   color: var(--white);
@@ -2398,7 +2410,7 @@ html:has(.learner-app) {
   display: flex;
   align-items: flex-end;
   height: 45px;
-  padding: 0 6px 0 11px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   overflow-x: auto;
   scrollbar-width: none;
   border-bottom: 1px solid var(--path-hairline);
@@ -2414,21 +2426,21 @@ html:has(.learner-app) {
   min-width: 44px;
   height: 44px;
   margin: 0;
-  padding: 8px 6px 0;
+  padding: var(--sp-2) var(--sp-2) 0;
   border: 0;
   background: none;
   color: var(--slate-700);
-  font-size: 0.625rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.5;
   white-space: nowrap;
 }
 
 .learner-app .path-tab[aria-selected='true'] {
-  padding: 8px 11px 0;
+  padding: var(--sp-2) var(--sp-3) 0;
   color: var(--jade-800);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: 500;
 }
 
 .learner-app .path-tab[aria-selected='true']::after {
@@ -2447,7 +2459,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .path-panel {
-  padding: 10px 18px 0 15px;
+  padding: var(--sp-3) var(--sp-5) 0 var(--sp-4);
 }
 
 .learner-app .path-panel:not(:has(.path-grid)) {
@@ -2460,15 +2472,15 @@ html:has(.learner-app) {
 
 .learner-app .path-title {
   font-family: var(--font-sans);
-  font-size: 0.97rem;
-  font-weight: 700;
+  font-size: var(--fs-base);
+  font-weight: 600;
   line-height: 1.3;
   color: var(--ink-900);
 }
 
 .learner-app .path-sub {
   margin-top: 2px;
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   line-height: 1.3;
   color: var(--text-body);
 }
@@ -2476,7 +2488,7 @@ html:has(.learner-app) {
 .learner-app .path-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px 11px;
+  gap: var(--sp-1) var(--sp-3);
   margin-top: 8px;
 }
 
@@ -2490,7 +2502,7 @@ html:has(.learner-app) {
   width: 100%;
   min-height: 69px;
   margin: 0;
-  padding: 46px 4px 5px;
+  padding: var(--sp-12) var(--sp-1) var(--sp-1);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -2529,7 +2541,7 @@ html:has(.learner-app) {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.2;
   text-align: center;
@@ -2544,11 +2556,11 @@ html:has(.learner-app) {
   place-items: center;
   min-width: 16px;
   height: 16px;
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   border-radius: 8px;
   background: var(--slate-100);
   color: var(--ink-900);
-  font-size: 0.625rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1;
 }
@@ -2618,10 +2630,10 @@ html:has(.learner-app) {
   z-index: 15;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: var(--sp-3);
   width: calc(min(100%, var(--learner-max)) - 33px);
   height: 52px;
-  padding: 0 8px 0 11px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   background: var(--path-bar-bg);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
@@ -2654,14 +2666,14 @@ html:has(.learner-app) {
 }
 
 .learner-app .path-next__label {
-  font-size: 0.625rem;
+  font-size: var(--fs-xs);
 }
 
 .learner-app .path-next__title {
-  display: -webkit-box;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -2681,7 +2693,7 @@ html:has(.learner-app) {
   background: var(--jade-800);
   color: var(--white);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.5;
   text-decoration: none;
 }
@@ -2708,11 +2720,6 @@ html:has(.learner-app) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  /* The 52px bar cannot hold a two-line label and a two-line title. */
-  .learner-app .path-next__title {
-    -webkit-line-clamp: 1;
   }
 }
 
@@ -2761,20 +2768,21 @@ html:has(.learner-app) {
 .learner-app .m02-bar__title {
   margin: 0;
   text-align: center;
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: 600;
   line-height: 1.2;
 }
 
 /* ---------- 02-03 Nội dung bài học (M2.5a, Q32–Q44) ---------- */
 .learner-app .lesson {
-  padding: 18px 17px calc(var(--tabbar-height) + 24px) 20px;
+  padding: var(--sp-5) var(--sp-4) calc(var(--tabbar-height) + var(--sp-6))
+    var(--sp-5);
 }
 
 .learner-app .lesson-hero {
   display: grid;
   grid-template-columns: 139px 1fr;
-  gap: 18px;
+  gap: var(--sp-5);
   align-items: start;
 }
 
@@ -2806,7 +2814,7 @@ html:has(.learner-app) {
   margin: 0;
   font-family: var(--font-sans);
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--ink-900);
 }
@@ -2814,21 +2822,21 @@ html:has(.learner-app) {
 .learner-app .lesson-hero__badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 2px 0 0;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--sp-2);
   border: 1px solid var(--border-default);
   border-radius: 6px;
   background: var(--paper);
   white-space: nowrap;
   color: var(--lesson-badge-text);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
 }
 
 .learner-app .lesson-hero__desc {
-  margin: 14px 0 0;
+  margin: var(--sp-4) 0 0;
   font-size: 0.75rem;
   line-height: 14.5px;
   color: var(--text-body);
@@ -2840,7 +2848,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .lesson-hero__pct {
-  margin: 5px 0 0;
+  margin: var(--sp-1) 0 0;
   font-size: 0.8125rem;
   color: var(--text-body);
 }
@@ -2852,17 +2860,17 @@ html:has(.learner-app) {
 }
 
 .learner-app .lesson-section {
-  margin: 3px 0 0;
-  font-size: 0.97rem;
-  font-weight: 700;
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
   line-height: 1.3;
   color: var(--ink-900);
 }
 
 .learner-app .lesson-rows {
   display: grid;
-  gap: 4.8px;
-  margin: 5px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-1) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -2871,10 +2879,10 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   width: 100%;
   height: 49px;
-  padding: 0 16.5px 0 13px;
+  padding: 0 var(--sp-4) 0 var(--sp-3);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -2894,27 +2902,37 @@ html:has(.learner-app) {
   box-shadow: var(--focus-ring);
 }
 
-.learner-app .lrow > img {
+.learner-app .lrow__icon {
+  display: grid;
+  place-items: center;
   width: 36px;
-  height: auto;
+  height: 36px;
   flex: none;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.learner-app .lrow__icon .icon {
+  width: 20px;
+  height: 20px;
 }
 
 .learner-app .lrow .grow {
   display: grid;
   gap: 1.5px;
-  padding-top: 3px;
+  padding-top: var(--sp-1);
 }
 
 .learner-app .lrow__title {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.2;
   color: var(--ink-900);
 }
 
 .learner-app .lrow__meta {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   line-height: 1.2;
   color: var(--slate-500);
 }
@@ -2939,7 +2957,7 @@ html:has(.learner-app) {
   position: absolute;
   right: 0;
   top: 15px;
-  font-size: 0.6875rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.2;
   color: var(--ink-900);
@@ -2962,7 +2980,7 @@ html:has(.learner-app) {
   background: var(--lesson-blue);
 }
 
-/* Q42, Q44: stone-500 lock (the demo's #d6d4d8 is 1.47:1). */
+/* Q42, Q44: stone-500 lock (the demo's light grey is 1.47:1). */
 .learner-app .lrow__lock {
   position: absolute;
   right: 1px;
@@ -2987,8 +3005,8 @@ html:has(.learner-app) {
   gap: 8px;
   width: calc(100% - 5px);
   height: 44px;
-  margin: 8px 3px 0 2px;
-  padding: 0 26px 0 0;
+  margin: var(--sp-2) var(--sp-1) 0 2px;
+  padding: 0 28px 0 0;
   border: 0;
   border-radius: 10px;
   background: var(--jade-800);
@@ -3024,7 +3042,7 @@ html:has(.learner-app) {
 .learner-app .lesson-nf__body {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   max-width: 340px;
   margin: 0 auto;
   text-align: center;
@@ -3035,8 +3053,8 @@ html:has(.learner-app) {
   place-items: center;
   width: 72px;
   height: 72px;
-  margin-bottom: 6px;
-  border-radius: 18px;
+  margin-bottom: var(--sp-2);
+  border-radius: var(--r-lg);
   background: var(--cream-100);
   color: var(--stone-600);
 }
@@ -3051,7 +3069,7 @@ html:has(.learner-app) {
   margin: 0;
   font-family: var(--font-sans);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
   color: var(--ink-900);
   overflow-wrap: anywhere;
@@ -3072,8 +3090,8 @@ html:has(.learner-app) {
   justify-content: center;
   width: 100%;
   min-height: 44px;
-  margin-top: 10px;
-  padding: 6px 16px;
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
   border-radius: 10px;
   background: var(--jade-800);
   color: var(--white);
@@ -3100,7 +3118,7 @@ html:has(.learner-app) {
 .learner-app .ex-bar {
   position: relative;
   height: 52px;
-  padding: 0 19px 10px 3px;
+  padding: 0 var(--sp-5) var(--sp-3) var(--sp-1);
 }
 
 .learner-app .ex-bar .icon-btn .icon {
@@ -3115,7 +3133,7 @@ html:has(.learner-app) {
   display: grid;
   place-items: center;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   pointer-events: none;
 }
 
@@ -3123,14 +3141,14 @@ html:has(.learner-app) {
   grid-column: 3;
   justify-self: end;
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .learner-app .ex-body {
   flex: 1;
-  padding: 9px 19px 16px 16px;
+  padding: var(--sp-2) var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
 .learner-app .ex-progress {
@@ -3148,7 +3166,7 @@ html:has(.learner-app) {
   z-index: 10;
   display: grid;
   gap: 8px;
-  padding: 0 9.5px calc(26px + env(safe-area-inset-bottom)) 12.5px;
+  padding: 0 var(--sp-2) calc(28px + env(safe-area-inset-bottom)) var(--sp-3);
 }
 
 .learner-app .ex-foot:empty {
@@ -3159,9 +3177,9 @@ html:has(.learner-app) {
 .learner-app .m02-feedback {
   display: flex;
   align-items: center;
-  gap: 8.5px;
+  gap: var(--sp-2);
   min-height: 49px;
-  padding: 5px 8px 5px 11px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border: 1px solid var(--ex-feedback-border);
   border-radius: 10px;
   background: var(--ex-feedback-bg);
@@ -3180,18 +3198,16 @@ html:has(.learner-app) {
   min-width: 0;
 }
 
-.learner-app .m02-feedback__art {
-  width: 36px;
-  height: auto;
-  flex: none;
-}
-
 .learner-app .m02-feedback__icon {
   width: 30px;
   height: 30px;
-  margin-left: 3px;
+  margin-left: var(--sp-1);
   flex: none;
   color: var(--red-600);
+}
+
+.learner-app .m02-feedback__icon--ok {
+  color: var(--ex-ok-text);
 }
 
 .learner-app .m02-feedback__title {
@@ -3200,20 +3216,15 @@ html:has(.learner-app) {
   gap: 8px;
   margin: 0;
   color: var(--ex-ok-text);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: 600;
   line-height: 1.2;
-}
-
-.learner-app .m02-feedback__title img {
-  width: 21px;
-  height: auto;
 }
 
 .learner-app .m02-feedback__text {
   margin: 1px 0 0;
   color: var(--ink-900);
-  font-size: 0.77rem;
+  font-size: var(--fs-xs);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -3228,14 +3239,14 @@ html:has(.learner-app) {
   flex: none;
   min-width: 93px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border: 0;
   border-radius: 10px;
   background: var(--jade-800);
   color: var(--white);
   font: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: 500;
   text-decoration: none;
 }
 
@@ -3275,7 +3286,7 @@ html:has(.learner-app) {
 
 .learner-app .ex-error {
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   border: 1px solid var(--ex-wrong-border);
   border-radius: 10px;
   background: var(--red-100);
@@ -3286,11 +3297,11 @@ html:has(.learner-app) {
 
 /* Prompt of every exercise: focus lands here when the next one opens. */
 .learner-app .pr-q {
-  margin: 14.5px 0 0;
-  padding-left: 3px;
+  margin: var(--sp-4) 0 0;
+  padding-left: var(--sp-1);
   color: var(--ink-900);
   font-family: var(--font-sans);
-  font-size: 0.77rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -3309,7 +3320,7 @@ html:has(.learner-app) {
   margin: 2px 0 0;
   padding-left: 2px;
   color: var(--stone-600);
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   line-height: 1.3;
 }
 
@@ -3317,8 +3328,8 @@ html:has(.learner-app) {
 .learner-app .pr-bank {
   display: flex;
   flex-wrap: wrap;
-  gap: 5.6px;
-  margin: 10px -3px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-3) -4px 0 0;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--path-hairline);
 }
@@ -3332,11 +3343,11 @@ html:has(.learner-app) {
   height: 44px;
   padding: 0 8px;
   border: 1px solid var(--path-hairline);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: var(--paper);
   box-shadow: 0 1px 2px var(--path-bar-shadow);
   color: var(--ex-chip-text);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   line-height: 1;
   transition:
@@ -3376,23 +3387,23 @@ html:has(.learner-app) {
 .learner-app .pr-answer {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
-  margin: 15px -3px 0 0;
+  margin: var(--sp-4) -4px 0 0;
 }
 
 .learner-app .pr-answer__row {
   display: flex;
   flex: 1;
   flex-wrap: wrap;
-  gap: 5.8px;
+  gap: var(--sp-1);
   min-width: 0;
 }
 
 .learner-app .pr-chip--answer {
   min-width: 44px;
   height: 44px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   border: 0;
   background: var(--ex-chip-ok);
   box-shadow: none;
@@ -3429,8 +3440,8 @@ html:has(.learner-app) {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: minmax(53px, auto) minmax(49.3px, auto);
   grid-auto-rows: minmax(49.3px, auto);
-  gap: 9px 10.7px;
-  margin: 13.5px 0 0 -1.6px;
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-3) 0 0 -1.6px;
 }
 
 .learner-app .ls-opt {
@@ -3439,7 +3450,7 @@ html:has(.learner-app) {
   place-items: center;
   width: 100%;
   height: 100%;
-  padding: 6px 8px;
+  padding: var(--sp-2) var(--sp-2);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -3514,8 +3525,8 @@ html:has(.learner-app) {
   align-items: center;
   gap: 12px;
   height: 52px;
-  margin: 10px 0 0 -1.6px;
-  padding: 0 10.8px 0 3.7px;
+  margin: var(--sp-3) 0 0 -1.6px;
+  padding: 0 var(--sp-3) 0 var(--sp-1);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -3572,7 +3583,7 @@ html:has(.learner-app) {
   justify-content: space-between;
   margin-top: 0;
   color: var(--stone-600);
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
@@ -3587,12 +3598,12 @@ html:has(.learner-app) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 12.5px 0 0 -1.6px;
+  margin: var(--sp-3) 0 0 -1.6px;
 }
 
 .learner-app .ls-tools .uxb-seg {
   gap: 2px;
-  padding: 3px;
+  padding: var(--sp-1);
   border-radius: 12px;
   background: var(--surface-sunken);
 }
@@ -3658,12 +3669,12 @@ html:has(.learner-app) {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-width: 44px;
   height: 44px;
-  padding: 0 16px 0 14px;
+  padding: 0 var(--sp-4) 0 var(--sp-4);
   border: 1px solid var(--path-hairline);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: var(--paper);
   box-shadow: 0 1px 2px var(--path-tile-shadow);
   color: var(--ink-900);
@@ -3694,7 +3705,7 @@ html:has(.learner-app) {
 
 /* fill_blank (Q47): the sentence with an underlined blank, one input. */
 .learner-app .fb-q {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
 }
 
@@ -3708,7 +3719,7 @@ html:has(.learner-app) {
 
 .learner-app .fb-field {
   display: grid;
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 16px;
 }
 
@@ -3742,8 +3753,8 @@ html:has(.learner-app) {
   margin: 0;
   color: var(--ink-900);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -3756,33 +3767,17 @@ html:has(.learner-app) {
 .learner-app .ex-done .lesson-cta {
   width: 100%;
   margin: 0;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
 }
 
 /* ---------- 02-06 Hoàn thành bài học (M2.5d, Q42, Q58–Q61) ---------- */
 /* m02.css 02-06 + khối M2.5d. Không có tab bar (mẫu 06); trang nằm trên nền
    navy như mẫu. Q59: không ô XP, không thẻ thành tích. */
 .learner-app .app:has(> .done-main) {
-  --m02-c-pink: #e0507e;
-  --m02-c-lav: #8a83d8;
-  --m02-c-yellow: #f2c64c;
-  --m02-c-blue: #3e5bd8;
-  --m02-c-orange: #ef7348;
-  --m02-c-olive: #c8a24c;
-  --m02-c-teal: #4db39e;
-  --m02-c-red: #ef5262;
-  --m02-c-brown: #8c5a4c;
-  --m02-c-green: #9fc07c;
-  --m02-c-cyan: #36d3d6;
   position: relative;
   overflow: hidden;
-  color: #fff;
-  background: radial-gradient(
-    120% 60% at 50% 22%,
-    #13265a 0%,
-    var(--navy-900) 55%,
-    #091842 100%
-  );
+  color: var(--text-on-brand);
+  background: var(--surface-brand);
 }
 
 .learner-app .app:has(> .done-main) > .tabbar {
@@ -3795,269 +3790,26 @@ html:has(.learner-app) {
   }
 }
 
-.learner-app .done-confetti {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 175px;
-  pointer-events: none;
-}
-
-/* Mẫu đặt vị trí bằng style="--x…"; CSP không cho thuộc tính style nên
-   vị trí theo thứ tự mảnh (README ghi chú 36). */
-.learner-app .done-confetti i {
-  position: absolute;
-  left: calc(var(--x) / 390 * 100%);
-  top: var(--y);
-  width: 6px;
-  height: 10px;
-  border-radius: 1.5px;
-  background: var(--c);
-  transform: rotate(var(--r));
-  opacity: 0.9;
-  animation:
-    done-confetti-in 900ms ease-out both,
-    done-confetti-float 3.2s ease-in-out 900ms infinite alternate;
-}
-
-.learner-app .done-confetti i:nth-child(3n) {
-  animation-delay: 80ms, 1.1s;
-}
-
-.learner-app .done-confetti i:nth-child(3n + 1) {
-  animation-delay: 160ms, 1.4s;
-}
-
-.learner-app .done-confetti i:nth-child(1) {
-  --x: 44;
-  --y: 9px;
-  --r: 20deg;
-}
-
-.learner-app .done-confetti i:nth-child(2) {
-  --x: 12;
-  --y: 31px;
-  --r: -35deg;
-}
-
-.learner-app .done-confetti i:nth-child(3) {
-  --x: 40;
-  --y: 44px;
-  --r: 30deg;
-}
-
-.learner-app .done-confetti i:nth-child(4) {
-  --x: 89;
-  --y: 55px;
-  --r: -40deg;
-}
-
-.learner-app .done-confetti i:nth-child(5) {
-  --x: 22;
-  --y: 74px;
-  --r: -30deg;
-}
-
-.learner-app .done-confetti i:nth-child(6) {
-  --x: 63;
-  --y: 71px;
-  --r: -35deg;
-}
-
-.learner-app .done-confetti i:nth-child(7) {
-  --x: 119;
-  --y: 67px;
-  --r: -40deg;
-}
-
-.learner-app .done-confetti i:nth-child(8) {
-  --x: 61;
-  --y: 100px;
-  --r: -50deg;
-}
-
-.learner-app .done-confetti i:nth-child(9) {
-  --x: 32;
-  --y: 104px;
-  --r: 20deg;
-}
-
-.learner-app .done-confetti i:nth-child(10) {
-  --x: 44;
-  --y: 147px;
-  --r: -40deg;
-}
-
-.learner-app .done-confetti i:nth-child(11) {
-  --x: 293;
-  --y: 50px;
-  --r: 30deg;
-}
-
-.learner-app .done-confetti i:nth-child(12) {
-  --x: 352;
-  --y: 12px;
-  --r: 40deg;
-}
-
-.learner-app .done-confetti i:nth-child(13) {
-  --x: 373;
-  --y: 30px;
-  --r: 50deg;
-}
-
-.learner-app .done-confetti i:nth-child(14) {
-  --x: 358;
-  --y: 56px;
-  --r: 10deg;
-}
-
-.learner-app .done-confetti i:nth-child(15) {
-  --x: 342;
-  --y: 73px;
-  --r: -40deg;
-}
-
-.learner-app .done-confetti i:nth-child(16) {
-  --x: 263;
-  --y: 66px;
-  --r: -25deg;
-}
-
-.learner-app .done-confetti i:nth-child(17) {
-  --x: 371;
-  --y: 91px;
-  --r: 50deg;
-}
-
-.learner-app .done-confetti i:nth-child(18) {
-  --x: 331;
-  --y: 107px;
-  --r: -45deg;
-}
-
-.learner-app .done-confetti i:nth-child(19) {
-  --x: 364;
-  --y: 126px;
-  --r: 40deg;
-}
-
-.learner-app .done-confetti i:nth-child(20) {
-  --x: 342;
-  --y: 150px;
-  --r: 45deg;
-}
-
-.learner-app .done-confetti i:nth-child(21) {
-  --x: 299;
-  --y: 82px;
-  --r: 0deg;
-}
-
-.learner-app .done-confetti i.is-curl {
-  width: 5px;
-  height: 11px;
-  border-radius: 4px 4px 1px 1px;
-}
-
-.learner-app .done-confetti i.is-diamond {
-  width: 8px;
-  height: 8px;
-}
-
-.learner-app .done-confetti i.is-star {
-  width: 13px;
-  height: 13px;
-  border-radius: 0;
-  clip-path: polygon(
-    50% 0,
-    62% 38%,
-    100% 50%,
-    62% 62%,
-    50% 100%,
-    38% 62%,
-    0 50%,
-    38% 38%
-  );
-}
-
-.learner-app .c-pink {
-  --c: var(--m02-c-pink);
-}
-
-.learner-app .c-lav {
-  --c: var(--m02-c-lav);
-}
-
-.learner-app .c-yellow {
-  --c: var(--m02-c-yellow);
-}
-
-.learner-app .c-blue {
-  --c: var(--m02-c-blue);
-}
-
-.learner-app .c-orange {
-  --c: var(--m02-c-orange);
-}
-
-.learner-app .c-olive {
-  --c: var(--m02-c-olive);
-}
-
-.learner-app .c-teal {
-  --c: var(--m02-c-teal);
-}
-
-.learner-app .c-red {
-  --c: var(--m02-c-red);
-}
-
-.learner-app .c-brown {
-  --c: var(--m02-c-brown);
-}
-
-.learner-app .c-green {
-  --c: var(--m02-c-green);
-}
-
-.learner-app .c-cyan {
-  --c: var(--m02-c-cyan);
-}
-
-.learner-app .c-star {
-  --c: var(--amber-500);
-}
-
-@keyframes done-confetti-in {
-  from {
-    opacity: 0;
-    transform: translateY(-40px) rotate(calc(var(--r) - 120deg));
-  }
-}
-
-@keyframes done-confetti-float {
-  to {
-    transform: translateY(4px) rotate(calc(var(--r) + 12deg));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .learner-app .done-confetti i {
-    animation: none;
-  }
-}
-
 .learner-app .done-main {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  padding: 14px 12.5px 27px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-8);
+}
+
+/* Lượt 9: below 1024px .done-card is display: contents, so the one entrance
+   effect (done-rise, learner-web.css) runs on .done-main instead; from
+   1024px learner-web.css runs it on .done-card. Off for reduced motion. */
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  .learner-app .done-main {
+    animation: done-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
 
 .learner-app .done-kicker {
   text-align: center;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -4066,86 +3818,42 @@ html:has(.learner-app) {
   margin-top: 4px;
   font-family: var(--font-sans);
   text-align: center;
-  font-size: 1.22rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   line-height: 1.2;
 }
 
 .learner-app .done-medal {
-  position: relative;
-  height: 104px;
-  margin-top: -2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--sp-6);
 }
 
-.learner-app .done-medal img {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 230px;
-  height: auto;
-  transform: translateX(calc(-50% - 1.5px));
-}
-
+/* Unslop M4: no laurel; the score is the accent. jade-200 on navy-900
+   12,5:1. */
 .learner-app .done-medal__score {
-  position: absolute;
-  left: 50%;
-  top: 36px;
-  transform: translateX(-50%);
   display: flex;
   align-items: baseline;
-  color: var(--jade-700);
+  color: var(--jade-200);
+  font-family: var(--font-serif);
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
-  letter-spacing: -0.01em;
 }
 
 .learner-app .done-medal__score small {
   margin-left: 2px;
-  font-size: 1.6rem;
+  font-size: 1.625rem;
   font-weight: 600;
-}
-
-.learner-app .done-stats {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.learner-app .done-stat {
-  height: 62.3px;
-  padding-top: 12px;
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink-900);
-  text-align: center;
-}
-
-.learner-app .done-stat h2 {
-  font-size: 0.71rem;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.learner-app .done-stat__score {
-  margin-top: 6px;
-  color: var(--jade-700);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.learner-app .done-stat__score small {
-  margin-left: 1px;
-  font-size: 1rem;
-  font-weight: 500;
 }
 
 .learner-app .done-actions {
   display: grid;
   grid-template-columns: 164.8fr 187.8fr;
-  gap: 12.4px;
-  margin-top: 15.3px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-8);
 }
 
 .learner-app .done-btn {
@@ -4153,12 +3861,12 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: var(--sp-5);
   height: 48px;
   border: 0;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -4185,11 +3893,11 @@ html:has(.learner-app) {
 
 /* Q42: nền jade-800 đặc (chữ trắng 5,3:1). */
 .learner-app .done-btn--primary {
-  gap: 30px;
-  padding-left: 14px;
+  gap: var(--sp-8);
+  padding-left: var(--sp-4);
   background: var(--jade-800);
-  color: #fff;
-  font-size: 1.06rem;
+  color: var(--white);
+  font-size: var(--fs-base);
 }
 
 .learner-app .done-btn--primary .icon {
@@ -4204,7 +3912,7 @@ html:has(.learner-app) {
 
 @media (max-width: 374px) {
   .learner-app .done-btn {
-    gap: 10px;
+    gap: var(--sp-3);
     font-size: 0.9375rem;
   }
 
@@ -4228,26 +3936,12 @@ html:has(.learner-app) {
     overflow-wrap: anywhere;
   }
 
-  .learner-app .done-medal {
-    width: min(100%, 230px);
-    height: auto;
-    margin-inline: auto;
-    aspect-ratio: 230 / 105;
-  }
-
-  .learner-app .done-medal img {
-    position: static;
-    width: 100%;
-    transform: none;
-  }
-
   .learner-app .done-medal__score {
-    top: 32%;
     font-size: 2rem;
   }
 
   .learner-app .done-medal__score small {
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
   }
 
   .learner-app .done-actions {
@@ -4314,7 +4008,7 @@ html:has(.learner-app) {
 
   .learner-app .lesson-hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--sp-3);
   }
 
   .learner-app .lesson-hero__img {
@@ -4347,10 +4041,10 @@ html:has(.learner-app) {
     height: auto;
     min-height: 49px;
     gap: 8px;
-    padding: 6px 10px;
+    padding: var(--sp-2) var(--sp-3);
   }
 
-  .learner-app .lrow > img {
+  .learner-app .lrow__icon {
     display: none;
   }
 
@@ -4386,7 +4080,7 @@ html:has(.learner-app) {
   .learner-app .lesson-cta {
     height: auto;
     min-height: 44px;
-    padding: 6px 12px;
+    padding: var(--sp-2) var(--sp-3);
   }
 
   .learner-app .lesson-cta .icon {
@@ -4612,7 +4306,7 @@ html:has(.learner-app) {
 /* Khung chung */
 .learner-app .app:has(> .dict, > .word) .appbar {
   min-height: 48px;
-  padding: 7px 2px 0;
+  padding: var(--sp-2) 2px 0;
   grid-template-columns: 48px 1fr 48px;
   background: var(--m03-navy);
 }
@@ -4624,10 +4318,10 @@ html:has(.learner-app) {
   font-family: var(--font-sans);
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 .learner-app .app:has(> .dict, > .word) .appbar .icon-btn {
-  color: #fff;
+  color: var(--white);
   height: 41px;
 }
 .learner-app .app:has(> .dict, > .word) .appbar .icon-btn:hover {
@@ -4652,7 +4346,7 @@ html:has(.learner-app) {
 
 /* 03-01 Tìm kiếm từ điển */
 .learner-app .dict {
-  padding: 14px 18px 0;
+  padding: var(--sp-4) var(--sp-5) 0;
   display: flex;
   flex-direction: column;
 }
@@ -4670,7 +4364,7 @@ html:has(.learner-app) {
   height: 36px;
   border: 1px solid var(--m03-line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--paper);
   box-shadow: 0 1px 2px rgb(20 24 43 / 4%);
 }
 .learner-app .dict-search__field {
@@ -4685,7 +4379,7 @@ html:has(.learner-app) {
   left: 11px;
   width: 19px;
   height: 19px;
-  color: #7b7e86;
+  color: var(--slate-500);
   stroke-width: 1.7;
   pointer-events: none;
 }
@@ -4693,7 +4387,7 @@ html:has(.learner-app) {
   width: 100%;
   height: 100%;
   min-width: 0;
-  padding: 0 30px 0 40px;
+  padding: 0 var(--sp-8) 0 var(--sp-10);
   border: 0;
   border-radius: 9px 0 0 9px;
   background: transparent;
@@ -4762,7 +4456,7 @@ html:has(.learner-app) {
   background: var(--jade-50);
 }
 .learner-app .dict__count {
-  margin: 17px 0 7px;
+  margin: var(--sp-4) 0 var(--sp-2);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;
@@ -4770,7 +4464,7 @@ html:has(.learner-app) {
 }
 .learner-app .dict-results {
   display: grid;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-item {
   position: relative;
@@ -4778,8 +4472,8 @@ html:has(.learner-app) {
   grid-template-columns: 129px 1fr auto;
   align-items: center;
   min-height: 43px;
-  padding: 4px 14px 4px 14px;
-  background: #fff;
+  padding: var(--sp-1) var(--sp-4) var(--sp-1) var(--sp-4);
+  background: var(--paper);
   border: 1px solid var(--m03-line);
   border-radius: 9px;
   transition:
@@ -4799,7 +4493,7 @@ html:has(.learner-app) {
 .learner-app .dict-item__hz {
   font-family: var(--font-cn-serif);
   font-weight: 400;
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   line-height: 1.2;
   letter-spacing: 0.14em;
   color: var(--m03-ink);
@@ -4813,14 +4507,14 @@ html:has(.learner-app) {
 .learner-app .dict-item__py {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.625rem;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: var(--m03-ink);
   line-height: 1.35;
 }
 .learner-app .dict-item__vi {
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--m03-jade);
   line-height: 1.35;
@@ -4828,7 +4522,7 @@ html:has(.learner-app) {
 .learner-app .dict-item .badge {
   position: relative;
   z-index: 0;
-  font-size: 0.625rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 5px;
@@ -4837,41 +4531,41 @@ html:has(.learner-app) {
 }
 .learner-app .dict-item--top {
   min-height: 81px;
-  padding: 6px 14px;
+  padding: var(--sp-2) var(--sp-4);
   border-color: var(--m03-jade-line);
 }
 .learner-app .dict-item--top .dict-item__hz {
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-3);
   font-family: var(--m03-font-kai);
   font-weight: 700;
-  font-size: 2.45rem;
+  font-size: 2.4375rem;
   letter-spacing: 0.02em;
   color: var(--m03-jade);
 }
 .learner-app .dict-item--top .dict-item__py {
   font-size: 0.8125rem;
   font-weight: 600;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-item--top .dict-item__vi {
   font-size: 0.8125rem;
   font-weight: 500;
-  margin-top: 3px;
+  margin-top: var(--sp-1);
 }
 .learner-app .dict-item--top .badge {
   justify-self: start;
-  margin-top: 5px;
-  padding: 0 5px;
-  line-height: 14px;
-  font-size: 0.5625rem;
-  font-weight: 700;
+  margin-top: var(--sp-1);
+  padding: 0 var(--sp-1);
+  line-height: 1.56;
+  font-size: var(--fs-xs);
+  font-weight: 500;
   background: var(--jade-600);
-  color: #fff;
+  color: var(--white);
 }
 .learner-app .dict-empty {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 28px 16px;
   text-align: center;
   color: var(--text-muted);
@@ -4885,7 +4579,7 @@ html:has(.learner-app) {
 .learner-app .dict-empty > [role='alert'] {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-empty strong {
   color: var(--m03-ink);
@@ -4895,10 +4589,10 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 13px;
-  margin-top: 18px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
   min-height: 32px;
-  padding: 0 10px 0 16px;
+  padding: 0 var(--sp-3) 0 var(--sp-4);
   width: 100%;
   border: 1px solid var(--m03-line-soft);
   border-radius: 9px;
@@ -4916,7 +4610,7 @@ html:has(.learner-app) {
   margin-left: auto;
   width: 15px;
   height: 15px;
-  color: #4b4f5a;
+  color: var(--slate-700);
 }
 .learner-app .dict-more:hover {
   background: var(--cream-100);
@@ -4925,7 +4619,7 @@ html:has(.learner-app) {
 /* 03-02 Chi tiết từ vựng */
 .learner-app .word {
   position: relative;
-  padding: 0 21px 24px 20px;
+  padding: 0 var(--sp-5) var(--sp-6) var(--sp-5);
   display: flex;
   flex-direction: column;
 }
@@ -4937,7 +4631,7 @@ html:has(.learner-app) {
   container-type: inline-size;
 }
 .learner-app .word__hz {
-  margin: 21px 0 0 -1px;
+  margin: var(--sp-5) 0 0 -1px;
   font-family: var(--m03-font-kai);
   font-weight: 700;
   /* Q333: one line; each character takes 1.14em with the letter spacing. */
@@ -4991,15 +4685,15 @@ html:has(.learner-app) {
 }
 .learner-app .word__py {
   justify-self: start;
-  font-size: 1.3rem;
+  font-size: 1.3125rem;
   font-weight: 400;
   line-height: 1.3;
   color: var(--m03-ink);
-  border-bottom: 1.5px dashed #8a8c94;
+  border-bottom: 1.5px dashed var(--stone-500);
   padding-bottom: 1px;
 }
 .learner-app .word__vi {
-  margin-top: -3px;
+  margin-top: -4px;
   font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
@@ -5008,13 +4702,13 @@ html:has(.learner-app) {
 .learner-app .word .badge--lv {
   align-self: flex-start;
   margin-top: 8px;
-  padding: 0 7px;
-  line-height: 18px;
+  padding: 0 var(--sp-2);
+  line-height: 1.64;
   border-radius: 6px;
   background: var(--jade-600);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
+  color: var(--white);
+  font-size: var(--fs-xs);
+  font-weight: 500;
 }
 .learner-app .seg {
   display: inline-flex;
@@ -5028,20 +4722,20 @@ html:has(.learner-app) {
   position: relative;
   min-width: 69px;
   height: 23px;
-  padding: 0 9px;
+  padding: 0 var(--sp-2);
   border: 0;
   border-radius: 6px;
   background: none;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #2a2e3a;
+  color: var(--text-body);
   white-space: nowrap;
 }
 .learner-app .seg button + button {
   min-width: 80px;
 }
 .learner-app .seg button[aria-pressed='true'] {
-  background: #fff;
+  background: var(--paper);
   color: var(--jade-700);
   font-weight: 600;
   box-shadow: 0 1px 2px rgb(20 24 43 / 10%);
@@ -5060,7 +4754,7 @@ html:has(.learner-app) {
 .learner-app .word-rel h2,
 .learner-app .word-ex h2 {
   font-size: var(--fs-lg);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
   color: var(--text-strong);
   overflow-wrap: anywhere;
@@ -5095,7 +4789,7 @@ html:has(.learner-app) {
   background: var(--jade-100);
   color: var(--jade-800);
   font-size: var(--fs-xs);
-  font-weight: 700;
+  font-weight: 600;
 }
 /* Q330 (C3): the examples share one card under the heading (mẫu
    .uxa-card); each one is ruled off (mẫu .uxa-ex). */
@@ -5129,10 +4823,10 @@ html:has(.learner-app) {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 7px;
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--m03-line-soft);
-  font-size: 0.6375rem;
-  color: #4a4e5a;
+  font-size: var(--fs-xs);
+  color: var(--slate-700);
 }
 /* M3.4c Q315: the example's Vietnamese line (mẫu word-full .uxa-ex__vi). */
 .learner-app .word-ex__vi {
@@ -5170,7 +4864,7 @@ html:has(.learner-app) {
   color: var(--text-strong);
 }
 .learner-app .word-rel__meta {
-  margin-left: 6px;
+  margin-left: var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
   overflow-wrap: anywhere;
@@ -5179,15 +4873,15 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 37px;
-  margin-top: 9px;
+  margin-top: var(--sp-2);
   border: 1.5px solid var(--jade-700);
   border-radius: 9px;
-  background: #fff;
+  background: var(--paper);
   color: var(--jade-700);
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   transition:
     background var(--dur-fast),
@@ -5204,7 +4898,7 @@ html:has(.learner-app) {
 .learner-app .word-save[aria-pressed='true'] {
   background: var(--jade-600);
   border-color: var(--jade-600);
-  color: #fff;
+  color: var(--white);
 }
 .learner-app .word-bar .icon-btn {
   width: 42px;
@@ -5222,8 +4916,8 @@ html:has(.learner-app) {
   right: 8px;
   z-index: 30;
   min-width: 196px;
-  padding: 6px;
-  background: #fff;
+  padding: var(--sp-2);
+  background: var(--paper);
   border: 1px solid var(--m03-line);
   border-radius: 12px;
   box-shadow: var(--shadow-float);
@@ -5231,7 +4925,7 @@ html:has(.learner-app) {
 .learner-app .m03-menu button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
@@ -5259,11 +4953,17 @@ html:has(.learner-app) {
 @media (max-width: 360px) {
   .learner-app .dict-item {
     grid-template-columns: 112px 1fr auto;
-    padding-right: 10px;
+    padding-right: var(--sp-3);
   }
   .learner-app .dict-item .badge {
-    padding: 2px 6px;
+    padding: 2px var(--sp-2);
   }
+}
+/* 田字格 headword of the first result: its cells stay on one row, so the
+   column takes their width instead of the fixed 112–129px. */
+.learner-app .dict-item--top {
+  grid-template-columns: auto 1fr auto;
+  column-gap: var(--sp-3);
 }
 
 /* Lead patch của mẫu: vùng bấm ≥ 44px. */
@@ -5358,16 +5058,16 @@ html:has(.learner-app) {
 }
 /* Mẫu ẩn .seg bằng [hidden]; app không render nó. */
 .learner-app .word__mid:not(:has(> .seg)) {
-  margin-bottom: 9px;
+  margin-bottom: var(--sp-2);
 }
 /* Lỗi tra từ (M2.6b, không có trong mẫu): như .word-save, ≥ 44px. */
 .learner-app .dict-retry {
   min-height: 44px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   padding: 0 20px;
   border: 1.5px solid var(--jade-700);
   border-radius: 9px;
-  background: #fff;
+  background: var(--paper);
   color: var(--jade-800);
   font-size: 0.875rem;
   font-weight: 600;
@@ -5378,7 +5078,7 @@ html:has(.learner-app) {
 
 @media (max-width: 299px) {
   .learner-app .dict {
-    padding: 14px 12px 0;
+    padding: var(--sp-4) var(--sp-3) 0;
   }
   .learner-app .dict-search {
     flex-wrap: wrap;
@@ -5398,7 +5098,7 @@ html:has(.learner-app) {
   .learner-app .dict-item {
     grid-template-columns: 1fr;
     row-gap: 2px;
-    padding: 6px 12px;
+    padding: var(--sp-2) var(--sp-3);
   }
   .learner-app .dict-item .badge {
     justify-self: start;
@@ -5424,7 +5124,7 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   padding: 0 2px;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -5437,7 +5137,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__forgot ~ .auth__submit {
-  margin-top: 14px;
+  margin-top: var(--sp-4);
 }
 
 .learner-app .auth-result__icon {
@@ -5474,7 +5174,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__actions .alert {
-  margin-bottom: 18px;
+  margin-bottom: var(--sp-5);
 }
 
 .learner-app .auth__actions .btn {
@@ -5532,7 +5232,7 @@ html:has(.learner-app) {
   gap: var(--sp-2);
   min-height: 60px;
   /* Mockup .m04-bar: 10px 6px 6px 0 (đo tại 390×844). */
-  padding: 10px 6px 6px 0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2) 0;
   background: var(--navy-900);
   color: var(--white);
 }
@@ -5560,7 +5260,7 @@ html:has(.learner-app) {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-lg);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
   letter-spacing: normal;
   text-align: center;
@@ -5599,13 +5299,13 @@ html:has(.learner-app) {
 
 .learner-app .exi-kicker {
   font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--jade-800);
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .learner-app .exi-title {
   font-size: var(--fs-xl);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
   color: var(--ink-900);
   overflow-wrap: anywhere;
@@ -5635,7 +5335,7 @@ html:has(.learner-app) {
 .learner-app .exi-h2 {
   margin: 0;
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-900);
 }
 
@@ -5667,7 +5367,7 @@ html:has(.learner-app) {
   background: var(--jade-800);
   color: var(--white);
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .learner-app .exi-part__name {
@@ -5684,7 +5384,7 @@ html:has(.learner-app) {
 
 .learner-app .exi-part__score {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--jade-800);
   white-space: nowrap;
 }
@@ -5697,7 +5397,7 @@ html:has(.learner-app) {
   padding-top: var(--sp-3);
   border-top: 1px solid var(--cream-200);
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-900);
 }
 
@@ -5745,8 +5445,8 @@ html:has(.learner-app) {
   height: 44px;
   border-radius: var(--r-md);
   background: var(--amber-100);
-  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1), như learner-web.css:173. */
-  color: #7a5300;
+  /* --text-on-amber on amber-100: 6.6:1 (≥ 4.5:1), như learner-web.css:173. */
+  color: var(--text-on-amber);
 }
 
 .learner-app .exi-resume__text {
@@ -5755,7 +5455,7 @@ html:has(.learner-app) {
 
 .learner-app .exi-resume__title {
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-900);
 }
 
@@ -5808,7 +5508,7 @@ html:has(.learner-app) {
 
 .learner-app .exi-nf__title {
   font-size: var(--fs-xl);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-900);
 }
 
@@ -5838,7 +5538,6 @@ html:has(.learner-app) {
   --exr-weak-mid-bg: #fdf0cf;
   --exr-weak-mid-text: #8a5a00;
   --exr-meta-line: #e3ddd3;
-  --exr-meta-divider: #d9d3c8;
 }
 
 .learner-app .app:has(> .ex.exr) {
@@ -5859,7 +5558,7 @@ html:has(.learner-app) {
   align-items: center;
   gap: var(--sp-2);
   min-height: 60px;
-  padding: 10px 6px 6px 0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2) 0;
   background: var(--navy-900);
   color: var(--white);
 }
@@ -5883,7 +5582,7 @@ html:has(.learner-app) {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-lg);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
   letter-spacing: normal;
   text-align: center;
@@ -5895,10 +5594,10 @@ html:has(.learner-app) {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.3125rem;
+  gap: var(--sp-1);
   height: 1.5625rem;
-  padding: 0 0.5rem 0 0.625rem;
-  border: 1px solid #bfc5cd;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 1px solid var(--slate-300);
   border-radius: 0.625rem;
   color: var(--white);
   font-size: 0.75rem;
@@ -5931,20 +5630,20 @@ html:has(.learner-app) {
 
 .learner-app .exr-body {
   display: grid;
-  gap: 7px;
+  gap: var(--sp-2);
   min-width: 0;
   /* FIX vòng 2: mockup MB-11 có 11px giữa đáy bar (53) và đỉnh hero (64);
      trước đó padding-top 0 làm hero dính sát bar. */
-  padding: 11px 9px var(--sp-6) 10px;
+  padding: var(--sp-3) var(--sp-2) var(--sp-6) var(--sp-3);
 }
 
 /* ---------- Hero mobile/tablet (MB-11) ---------- */
 .learner-app .exr-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 5px;
+  gap: var(--sp-1);
   min-width: 0;
-  padding: 11px 12px 9px 0;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2) 0;
   background: var(--surface-card);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -5964,8 +5663,8 @@ html:has(.learner-app) {
   gap: 2px;
   width: 76px;
   margin-left: 12px;
-  padding-top: 3px;
-  font-size: 11.52px;
+  padding-top: var(--sp-1);
+  font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
@@ -6007,8 +5706,7 @@ html:has(.learner-app) {
 .learner-app .exr-score b {
   font-size: 31px;
   line-height: 31px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
   color: var(--text-strong);
 }
 
@@ -6029,9 +5727,9 @@ html:has(.learner-app) {
 .learner-app .exr-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 13.44px;
+  font-size: var(--fs-sm);
   font-weight: 500;
-  line-height: 16.128px;
+  line-height: 1.2;
   letter-spacing: normal;
   color: var(--text-strong);
 }
@@ -6042,14 +5740,13 @@ html:has(.learner-app) {
 
 .learner-app .exr-kicker {
   margin: 0;
-  font-size: 11.52px;
-  font-weight: 600;
-  line-height: 13.824px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.2;
   letter-spacing: normal;
   text-transform: none;
-  /* Mockup mobile .rs-hero__exam = --m04-ink (#14182b). Web kicker keeps
-     jade via the ≥1024 override below. */
-  color: var(--ink-900);
+  /* Unslop T1: muted kicker, same as the web .exr-kicker and .exi-kicker. */
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
@@ -6057,24 +5754,19 @@ html:has(.learner-app) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: var(--sp-1) var(--sp-6);
   margin: 0;
-  padding-top: 9px;
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--exr-meta-line);
-  font-size: 9.6px;
-  line-height: 11.52px;
-  color: #1f2330;
-}
-
-.learner-app .exr-meta > span + span {
-  margin-left: 17px;
-  padding-left: 14px;
-  border-left: 1px solid var(--exr-meta-divider);
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  color: var(--ink-900);
 }
 
 .learner-app .exr-passline {
   margin: 0;
-  font-size: 9.6px;
-  line-height: 11.52px;
+  font-size: var(--fs-xs);
+  line-height: 1.2;
   color: var(--stone-600);
 }
 
@@ -6083,13 +5775,13 @@ html:has(.learner-app) {
   align-items: center;
   align-self: center;
   gap: 4px;
-  padding: 2px 6px;
+  padding: 2px var(--sp-2);
   border-radius: 6px;
   background: var(--navy-100);
   color: var(--navy-900);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  line-height: 15px;
+  line-height: 1.5;
 }
 
 .learner-app .exr-chip .icon {
@@ -6127,7 +5819,7 @@ html:has(.learner-app) {
 /* ---------- Hai khối kỹ năng / điểm yếu ---------- */
 .learner-app .exr-grid {
   display: grid;
-  gap: 7px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -6147,7 +5839,7 @@ html:has(.learner-app) {
 .learner-app .exr-card--weak,
 .learner-app .exr-card--types {
   gap: 0;
-  padding: 10px 11px 10px 10px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-3);
   background: var(--surface-card);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -6156,12 +5848,12 @@ html:has(.learner-app) {
 .learner-app .exr-h2 {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 11.04px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  line-height: 16.56px;
+  line-height: 1.5;
   letter-spacing: normal;
   color: var(--ink-900);
-  padding-left: 5px;
+  padding-left: var(--sp-1);
 }
 
 .learner-app .exr-card--weak .exr-h2,
@@ -6174,8 +5866,8 @@ html:has(.learner-app) {
 
 .learner-app .exr-skills {
   display: grid;
-  gap: 7px;
-  margin: 7px 0 0;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -6184,7 +5876,7 @@ html:has(.learner-app) {
   display: grid;
   grid-template-columns: 24px 32px minmax(0, 1fr) 45.3px;
   align-items: center;
-  gap: 0 6px;
+  gap: 0 var(--sp-2);
   min-width: 0;
   height: 24px;
   padding-left: 4px;
@@ -6221,9 +5913,9 @@ html:has(.learner-app) {
 .learner-app .exr-skill__name {
   min-width: 0;
   padding-left: 2px;
-  font-size: 11.52px;
+  font-size: var(--fs-xs);
   font-weight: 500;
-  line-height: 17.28px;
+  line-height: 1.5;
   color: var(--ink-900);
   white-space: nowrap;
 }
@@ -6234,9 +5926,9 @@ html:has(.learner-app) {
 
 .learner-app .exr-skill__value {
   padding-left: 2px;
-  font-size: 10.56px;
+  font-size: var(--fs-xs);
   font-weight: 400;
-  line-height: 15.84px;
+  line-height: 1.5;
   color: var(--ink-900);
   text-align: right;
   white-space: nowrap;
@@ -6279,13 +5971,12 @@ html:has(.learner-app) {
 .learner-app .exr-weak__row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   min-width: 0;
   height: 20px;
   font-size: 12px;
   font-weight: 500;
   line-height: 18px;
-  letter-spacing: -0.005em;
   color: var(--ink-900);
 }
 
@@ -6300,14 +5991,14 @@ html:has(.learner-app) {
 .learner-app .exr-level {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   flex: none;
   height: 20px;
   padding: 0 8px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  line-height: 16.5px;
+  line-height: 1.5;
 }
 
 .learner-app .exr-level .icon {
@@ -6342,7 +6033,7 @@ html:has(.learner-app) {
 
 .learner-app .exr-card--skills .exr-fine {
   margin-top: 12px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   color: var(--stone-600);
 }
@@ -6350,7 +6041,7 @@ html:has(.learner-app) {
 .learner-app .exr-actions {
   display: grid;
   gap: var(--sp-3);
-  margin-top: 9px;
+  margin-top: var(--sp-2);
   padding-left: 2px;
 }
 
@@ -6379,8 +6070,8 @@ html:has(.learner-app) {
   display: grid;
   gap: 8px;
   min-width: 0;
-  padding: 10px 8px 16px 13px;
-  background: #faf6f0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-4) var(--sp-3);
+  background: var(--cream-50);
   border-radius: 10px;
 }
 
@@ -6406,8 +6097,8 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 10px;
-  color: #1d4fae;
+  padding: 0 var(--sp-3);
+  color: var(--alert-info-text);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
@@ -6420,7 +6111,7 @@ html:has(.learner-app) {
 .learner-app .exr-explain__q {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
   font-family: var(--font-sans);
   font-size: 14px;
@@ -6431,15 +6122,15 @@ html:has(.learner-app) {
 .learner-app .exr-explain__badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   min-height: 21px;
-  padding: 0 9px;
-  background: #fdeceb;
-  border: 1px solid #f6c9c4;
-  border-radius: 11px;
-  color: #b3261e;
+  padding: 0 var(--sp-2);
+  background: var(--red-100);
+  border: 1px solid var(--alert-error-border);
+  border-radius: var(--r-pill);
+  color: var(--ex-wrong-text);
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -6466,7 +6157,7 @@ html:has(.learner-app) {
 
 .learner-app .exr > .exr-fine {
   padding: 0 2px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   color: var(--stone-600);
 }
@@ -6499,16 +6190,16 @@ html:has(.learner-app) {
   .learner-app .exr-grid {
     grid-template-columns: minmax(0, 1fr) 143px;
     align-items: start;
-    gap: 11px;
+    gap: var(--sp-3);
   }
 
   .learner-app .exr-card--weak {
-    padding: 10px 3px 10px 10px;
+    padding: var(--sp-3) var(--sp-1) var(--sp-3) var(--sp-3);
   }
 
   .learner-app .exr-card--weak .exr-h2 {
-    font-size: 11.04px;
-    line-height: 13.248px;
+    font-size: var(--fs-xs);
+    line-height: 1.2;
   }
 
   .learner-app .exr-weak {
@@ -6517,15 +6208,15 @@ html:has(.learner-app) {
 
   .learner-app .exr-weak__row {
     height: 16px;
-    font-size: 9px;
-    line-height: 13.5px;
+    font-size: var(--fs-xs);
+    line-height: 1.25;
   }
 
   .learner-app .exr-level {
     height: 16px;
-    padding: 0 3px;
-    font-size: 8.48px;
-    line-height: 12.72px;
+    padding: 0 var(--sp-1);
+    font-size: var(--fs-xs);
+    line-height: 1.25;
   }
 
   .learner-app .exr-level .icon {
@@ -6585,7 +6276,7 @@ html:has(.learner-app) {
   white-space: nowrap;
   font-family: var(--font-sans);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .ext-progress {
@@ -6617,7 +6308,7 @@ html:has(.learner-app) {
   padding: 4px 8px;
   border-radius: 999px;
   background: var(--cream-100);
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -6658,7 +6349,7 @@ html:has(.learner-app) {
   right: 8px;
   border: 1px solid var(--border-default);
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: var(--sp-2) var(--sp-3);
   background: var(--cream-50);
   font: inherit;
   font-size: 0.75rem;
@@ -6681,7 +6372,7 @@ html:has(.learner-app) {
 .learner-app .uxb-seg {
   display: inline-flex;
   gap: 4px;
-  padding: 3px;
+  padding: var(--sp-1);
   border: 1px solid var(--border-default);
   border-radius: 999px;
   background: var(--cream-50);
@@ -6743,14 +6434,14 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
   border: 0;
   border-radius: 12px;
   background: var(--jade-700);
   color: var(--white);
   font: inherit;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -6881,7 +6572,7 @@ html:has(.learner-app) {
 .learner-app .uxb-qgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 6px;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-2);
 }
 
@@ -6970,7 +6661,7 @@ html:has(.learner-app) {
   background: var(--cinnabar-700);
   color: var(--white);
   font: inherit;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .learner-app .ext-note {
@@ -7006,7 +6697,7 @@ html:has(.learner-app) {
   align-items: center;
   gap: 12px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   background: var(--white);
@@ -7025,7 +6716,7 @@ html:has(.learner-app) {
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .learner-app .ext .uxb-opt[aria-checked='true'],
@@ -7050,13 +6741,11 @@ html:has(.learner-app) {
 /* F16: eyebrow kicker + question line, matching the mockup's eyebrow rule. */
 .learner-app .ext .uxb-part,
 .learner-app .ext .tk-part {
-  margin: 0 0 6px;
+  margin: 0 0 var(--sp-2);
   font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-700);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .learner-app .ext .uxb-qask,
@@ -7128,7 +6817,7 @@ html:has(.learner-app) {
   /* <1024 hàng cao đúng 30px như m04 .tk__status (rule 2b-8 cuối file);
      con cao hơn (nút N/M 44px, timer 33px) tràn xuống như mockup. */
   min-height: 30px;
-  margin: 0 -6px;
+  margin: 0 -8px;
   padding: 0 12px;
   background: var(--cream-50);
   color: var(--ink-900);
@@ -7173,7 +6862,7 @@ html:has(.learner-app) {
   background: transparent;
   color: var(--navy-900);
   font-size: 1.375rem;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -7275,7 +6964,7 @@ html:has(.learner-app) {
     grid-area: panel;
     align-self: start;
     order: 0;
-    padding: 12px 7px 10px 11px;
+    padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3);
     border-radius: 12px;
   }
 
@@ -7300,7 +6989,7 @@ html:has(.learner-app) {
 
   .learner-app .ex.ext .uxb-qgrid {
     grid-template-columns: repeat(4, minmax(24px, 1fr));
-    gap: 5px;
+    gap: var(--sp-1);
   }
 
   .learner-app .ex.ext .uxb-qcell {
@@ -7320,7 +7009,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .ex.ext .ext-card {
-  padding: 14px 13px 8px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-2);
   border: 1px solid var(--exam-line-soft);
   border-radius: 14px 14px 8px 8px;
   background: var(--white);
@@ -7329,11 +7018,9 @@ html:has(.learner-app) {
 .learner-app .ex.ext .uxb-part,
 .learner-app .ex.ext .tk-part {
   margin: 0;
-  color: var(--ink-900);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
 .learner-app .ex.ext .uxb-qask,
@@ -7341,7 +7028,7 @@ html:has(.learner-app) {
   margin: 8px 0 0;
   color: var(--ink-900);
   font-family: var(--font-sans);
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -7359,10 +7046,10 @@ html:has(.learner-app) {
 .learner-app .ex.ext .ext-live {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 0;
   color: var(--exam-green-text);
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -7374,14 +7061,14 @@ html:has(.learner-app) {
 
 /* M3/F16 options: radio dot + "A." row, green when selected. */
 .learner-app .ex.ext .uxb-opts {
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 12px;
 }
 
 .learner-app .ex.ext .uxb-opt {
   gap: 8px;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 var(--sp-3);
   border: 1px solid var(--exam-line);
   border-radius: 8px;
   background: var(--exam-opt-bg);
@@ -7436,13 +7123,13 @@ html:has(.learner-app) {
 .learner-app .ex.ext .ext-qnav {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 8px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
 }
 
 .learner-app .ex.ext .ext-qnav .btn {
   min-height: 44px;
   height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -7476,9 +7163,9 @@ html:has(.learner-app) {
 
 .learner-app .ex.ext .uxb-legend {
   display: grid;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 0 0 8px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: var(--stone-600);
 }
@@ -7648,7 +7335,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .ext-saved {
-    gap: 5px;
+    gap: var(--sp-1);
   }
 
   .learner-app .ex.ext .ext-saved .icon {
@@ -7691,10 +7378,10 @@ html:has(.learner-app) {
   .learner-app .ex.ext .ext-player {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
     height: 63px;
     margin: 8px 0;
-    padding: 0 6px 0 11px;
+    padding: 0 var(--sp-2) 0 var(--sp-3);
     border: 1px solid var(--exam-line-soft);
     border-radius: 10px;
     background: var(--exam-player-bg);
@@ -7733,7 +7420,7 @@ html:has(.learner-app) {
     flex: none;
     margin: 0;
     color: var(--ink-900);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-weight: 500;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
@@ -7795,7 +7482,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-qgrid {
-    gap: 6px;
+    gap: var(--sp-2);
     grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
   }
 
@@ -7816,7 +7503,7 @@ html:has(.learner-app) {
 /* U3: nav 520-1023 — ba nút vừa cột 480, không cắt chữ, không chồng. */
 @media (min-width: 520px) and (max-width: 1023px) {
   .learner-app .ex.ext .ext-qnav {
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .learner-app .ex.ext .ext-qnav .btn {
@@ -7839,7 +7526,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-qgrid {
-    gap: 6px 5px;
+    gap: var(--sp-2) var(--sp-1);
     grid-template-columns: repeat(4, minmax(24px, 1fr));
   }
 
@@ -7851,7 +7538,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-legend {
-    gap: 5px;
+    gap: var(--sp-1);
   }
 }
 
@@ -7874,7 +7561,7 @@ html:has(.learner-app) {
   box-sizing: content-box;
   width: 28px;
   height: 28px;
-  padding: 10px;
+  padding: var(--sp-3);
   border-radius: 50%;
   background: var(--red-100);
   color: var(--alert-error-text);
@@ -7986,7 +7673,7 @@ html:has(.learner-app) {
 /* V14: hr ngăn cách legend/lưới ở <1024 (m04 .tk-panel hr). */
 @media (max-width: 1023px) {
   .learner-app .ex.ext .ext-panelrule {
-    margin: 2px 0 10px;
+    margin: 2px 0 var(--sp-3);
   }
 }
 
@@ -8028,7 +7715,7 @@ html:has(.learner-app) {
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     align-items: center;
     height: 58px;
-    padding: 0 6px;
+    padding: 0 var(--sp-2);
     background: var(--navy-900);
     color: var(--white);
   }
@@ -8047,8 +7734,8 @@ html:has(.learner-app) {
    hàng thứ hai của header (grid 'row'/'status'). */
 @media (max-width: 519px) {
   .learner-app .ex.ext .ext-status {
-    margin: 10px 0 0;
-    padding: 0 12px 0 10px;
+    margin: var(--sp-3) 0 0;
+    padding: 0 var(--sp-3) 0 var(--sp-3);
     background: transparent;
   }
 }
@@ -8072,13 +7759,13 @@ html:has(.learner-app) {
    các shorthand margin cũ (2b-4/2b-5) cùng specificity. */
 @media (min-width: 520px) and (max-width: 1023px) {
   .learner-app .ex.ext .ext-status {
-    margin: 10px 0 0;
-    padding: 0 0 0 10px;
+    margin: var(--sp-3) 0 0;
+    padding: 0 0 0 var(--sp-3);
     background: transparent;
   }
 
   .learner-app .ex.ext .ext-panel {
-    margin-top: 10px;
+    margin-top: var(--sp-3);
   }
 
   .learner-app .ex.ext .ext-offline,
@@ -8202,7 +7889,7 @@ html:has(.learner-app) {
   width: 100%;
   max-width: var(--learner-max);
   margin: 0 auto;
-  padding: 10px 10px 0;
+  padding: var(--sp-3) var(--sp-3) 0;
 }
 
 .learner-app .extr {
@@ -8214,7 +7901,7 @@ html:has(.learner-app) {
 /* Thẻ tổng quan (mockup .rv-card). */
 .learner-app .extr-card {
   margin-top: 4px;
-  padding: 14px 14px 8px;
+  padding: var(--sp-4) var(--sp-4) var(--sp-2);
   background: var(--white);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -8244,7 +7931,7 @@ html:has(.learner-app) {
   flex: none;
   width: 28px;
   height: 28px;
-  margin-top: 7px;
+  margin-top: var(--sp-2);
   border-radius: 50%;
   color: var(--white);
 }
@@ -8283,7 +7970,7 @@ html:has(.learner-app) {
   height: 31px;
   border-radius: 2px 2px 0 0;
   margin-top: 2px;
-  padding-top: 6px;
+  padding-top: var(--sp-2);
   place-items: start center;
   background: var(--amber-500);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
@@ -8299,7 +7986,7 @@ html:has(.learner-app) {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  padding-top: 5px;
+  padding-top: var(--sp-1);
 }
 
 .learner-app .extr-sum__label {
@@ -8310,15 +7997,15 @@ html:has(.learner-app) {
 
 .learner-app .extr-sum__body b {
   margin-top: 1px;
-  font-size: 1.3rem;
+  font-size: 1.3125rem;
   font-weight: 500;
   line-height: 1.2;
 }
 
 .learner-app .extr-heading {
-  margin: 14px 0 0 3px;
+  margin: var(--sp-4) 0 0 var(--sp-1);
   font-family: var(--font-sans);
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   font-weight: 400;
   color: color-mix(in srgb, var(--ink-900) 90%, var(--white));
 }
@@ -8331,7 +8018,7 @@ html:has(.learner-app) {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 10px 0 0;
+  margin: var(--sp-3) 0 0;
   padding: 0;
   list-style: none;
   font-size: 12px;
@@ -8341,7 +8028,7 @@ html:has(.learner-app) {
 .learner-app .extr-legend__item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
 }
 
 .learner-app .extr-legend__ico {
@@ -8388,7 +8075,7 @@ html:has(.learner-app) {
   margin: 0 0 8px;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-900);
 }
@@ -8484,12 +8171,12 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 15px 0 0;
-  padding: 7px 12px 7px 13px;
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-3);
   border-radius: 8px;
   background: var(--exam-tip-bg);
   border: 1px solid var(--exam-tip-border);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   line-height: 1.4;
   color: var(--ink-900);
 }
@@ -8508,7 +8195,7 @@ html:has(.learner-app) {
 .learner-app .extr-actions {
   display: grid;
   gap: 8px;
-  margin-top: 7px;
+  margin-top: var(--sp-2);
 }
 
 .learner-app .extr-actions .btn {
@@ -8519,7 +8206,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .extr-actions .extr-actions__continue {
-  font-size: 0.86rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
 }
 
@@ -8555,20 +8242,12 @@ html:has(.learner-app) {
    .uxa-again). Khung `.ex` của trình luyện tập; web ở learner-web.css.
    Không đặt `display` cho phần `.w-only` ở đây (rule `.w-only` phía trên). */
 .learner-app .ex.rv {
-  --rv-red: #e0402a;
-  --rv-red-line: #e88a7e;
-  --rv-orange: #c4600c;
-  --rv-orange-line: #f2a76a;
-  --rv-green: #37aa36;
-  --rv-green-ink: #23822a;
-  --rv-green-line: #86c98c;
-  --rv-teal: #0e8667;
-  --rv-teal-line: #6fbfa5;
   --rv-ink: #101528;
+  --rv-hz-ink: #0b0d14;
   --rv-jade: #0a8460;
   --rv-sunken: #f6f5f2;
   --rv-line-soft: #efedea;
-  background: #fefefe;
+  background: var(--surface-card);
   color: var(--rv-ink);
 }
 
@@ -8576,7 +8255,20 @@ html:has(.learner-app) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 0 20px 24px;
+  padding: 0 var(--sp-5) var(--sp-6);
+}
+
+/* S3 (<1024): hàng đánh giá dính đáy màn (margin-top:auto trong .rv-body
+   flex cột, vẫn sticky khi nội dung dài); thẻ giữ chiều cao theo nội dung,
+   không bị kéo giãn. */
+@media (max-width: 1023px) {
+  .learner-app .ex.rv {
+    min-height: 100dvh;
+  }
+
+  .learner-app .rv-body > .fc-rate {
+    margin-top: auto;
+  }
 }
 
 .learner-app .fc-top {
@@ -8595,11 +8287,11 @@ html:has(.learner-app) {
 .learner-app .fc-top .progress {
   flex: 1;
   height: 5px;
-  background: #ececec;
+  background: var(--slate-100);
 }
 
 .learner-app .fc-top .progress > span {
-  background: #13965f;
+  background: var(--jade-700);
 }
 
 .learner-app .fc-hold {
@@ -8617,11 +8309,11 @@ html:has(.learner-app) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 16px 20px;
   border: 1px solid var(--rv-line-soft);
-  border-radius: 13px;
-  background: #fff;
+  border-radius: var(--r-md);
+  background: var(--paper);
   box-shadow: 0 2px 10px rgb(20 24 43 / 9%);
   text-align: center;
 }
@@ -8635,19 +8327,19 @@ html:has(.learner-app) {
   font-family:
     var(--font-lxgw-wenkai), 'LXGW WenKai TC', 'Kaiti SC', 'STKaiti', 'KaiTi',
     var(--font-cn-serif);
-  font-size: 4.2rem;
+  font-size: 4.1875rem;
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.14em;
   text-indent: 0.12em;
-  color: #0b0d14;
+  color: var(--rv-hz-ink);
   overflow-wrap: anywhere;
 }
 
 .learner-app .fc-back__vi {
   margin: 0;
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--rv-jade);
 }
@@ -8662,8 +8354,8 @@ html:has(.learner-app) {
   display: grid;
   gap: 2px;
   width: 100%;
-  margin: 10px 0 0;
-  padding: 10px 12px;
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-3) var(--sp-3);
   border-radius: 10px;
   background: var(--rv-sunken);
   font-size: 0.9375rem;
@@ -8675,7 +8367,7 @@ html:has(.learner-app) {
   z-index: 2;
   width: 100%;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--r-md);
   background: transparent;
   cursor: pointer;
 }
@@ -8686,7 +8378,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .fc-hint {
-  margin: 10px 0 0;
+  margin: var(--sp-3) 0 0;
   text-align: center;
   font-size: 0.8125rem;
   color: var(--text-muted);
@@ -8699,39 +8391,28 @@ html:has(.learner-app) {
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  margin: 18px -20px 0;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-  background: #fefefe;
+  gap: var(--sp-2);
+  margin: var(--sp-5) calc(-1 * var(--sp-5)) 0;
+  padding: var(--sp-3) var(--sp-4)
+    calc(var(--sp-3) + env(safe-area-inset-bottom));
+  background: var(--surface-card);
 }
 
 .learner-app .fc-rate__btn {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
-  column-gap: 5px;
-  align-items: center;
+  justify-items: center;
   align-content: center;
   min-height: 54px;
-  padding: 4px 6px;
-  border: 1px solid;
-  border-radius: 11px;
-  background: #fff;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  color: var(--text-strong);
   font: inherit;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
-}
-
-.learner-app .fc-rate__btn .icon {
-  grid-row: 1 / 3;
-  width: 22px;
-  height: 22px;
-  stroke-linecap: round;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .learner-app .fc-rate__label {
@@ -8742,33 +8423,26 @@ html:has(.learner-app) {
   white-space: nowrap;
 }
 
-/* m03 `.fc-rate__again`: the longest label is set smaller and tighter. */
+/* m03 `.fc-rate__again`: the longest label is set smaller. */
 .learner-app .fc-rate__again .fc-rate__label {
-  font-size: 0.6875rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
-  letter-spacing: -0.06em;
 }
 
 @media (max-width: 400px) {
   .learner-app .fc-rate {
-    gap: 5px;
+    gap: var(--sp-1);
     padding-left: 12px;
     padding-right: 12px;
   }
 
   .learner-app .fc-rate__btn {
-    column-gap: 4px;
     padding: 4px 4px;
-  }
-
-  .learner-app .fc-rate__btn .icon {
-    width: 20px;
-    height: 20px;
   }
 }
 
 .learner-app .fc-rate__when {
-  font-size: 0.6875rem;
+  font-size: var(--fs-xs);
   line-height: 1.2;
   color: var(--text-muted);
   white-space: nowrap;
@@ -8785,44 +8459,29 @@ html:has(.learner-app) {
 }
 
 .learner-app .fc-rate__again {
-  border-color: var(--rv-red-line);
-  color: var(--rv-red);
+  color: var(--text-danger);
 }
 
-.learner-app .fc-rate__hard {
-  border-color: var(--rv-orange-line);
-  color: var(--rv-orange);
-}
-
+/* "Tốt" là lựa chọn mặc định nên dùng: chỉ nó có viền đậm. */
 .learner-app .fc-rate__good {
-  border-color: var(--rv-green-line);
-  color: var(--rv-green-ink);
-}
-
-.learner-app .fc-rate__good .icon {
-  color: var(--rv-green);
-}
-
-.learner-app .fc-rate__easy {
-  border-color: var(--rv-teal-line);
-  color: var(--rv-teal);
+  border-color: var(--border-brand);
 }
 
 .learner-app .fc-tip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  margin: 14px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-4) 0 0;
   font-size: 0.75rem;
-  color: #2e3240;
+  color: var(--text-body);
 }
 
 .learner-app .fc-tip .icon {
   width: 17px;
   height: 17px;
   fill: none;
-  stroke: #4a4e5a;
+  stroke: var(--slate-700);
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -8860,7 +8519,7 @@ html:has(.learner-app) {
   margin-top: 12px;
   text-align: center;
   font-size: 0.875rem;
-  color: #b3261e;
+  color: var(--text-danger);
 }
 
 .learner-app .rv-state {
@@ -8875,7 +8534,7 @@ html:has(.learner-app) {
 .learner-app .rv-state__title {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-strong);
 }
 
@@ -8907,7 +8566,7 @@ html:has(.learner-app) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sp-2);
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--sp-6);
 }
 
 .learner-app .rv-stat {
@@ -8935,10 +8594,12 @@ html:has(.learner-app) {
 }
 
 .learner-app .rv-stat b {
+  font-family: var(--font-serif);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1.2;
-  color: var(--jade-800);
+  color: var(--text-brand);
 }
 
 .learner-app .rv-stat small {
@@ -8947,9 +8608,9 @@ html:has(.learner-app) {
 }
 
 .learner-app .rv-meta {
-  margin: 4px 0 0;
+  margin: var(--sp-3) 0 0;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -8960,14 +8621,14 @@ html:has(.learner-app) {
 
 .learner-app .rv-again {
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--sp-6);
 }
 
 .learner-app .rv-again h2 {
   margin: 0 0 var(--sp-2);
   font-size: 0.875rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--white);
 }
 
 .learner-app .rv-again ul {
@@ -8992,7 +8653,7 @@ html:has(.learner-app) {
 
 .learner-app .rv-again__hz {
   font-family: var(--font-cn-serif);
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   letter-spacing: 0.05em;
 }
 
@@ -9004,10 +8665,11 @@ html:has(.learner-app) {
 
 .learner-app .rv-actions {
   grid-template-columns: 1fr;
-  margin-top: 16px;
+  margin-top: var(--sp-8);
 }
 
-/* M3.3c (Q278): with "Ôn lại thẻ chưa nhớ" the pair keeps the m02 split. */
+/* M3.3c (Q278): with "Ôn lại thẻ chưa nhớ" (retry of the forgotten cards) the pair keeps
+   the m02 split. */
 .learner-app .rv-actions--two {
   grid-template-columns: 164.8fr 187.8fr;
 }
@@ -9124,9 +8786,31 @@ html:has(.learner-app) {
 }
 
 .learner-app .rv-note {
-  margin: 16px 0 0;
+  margin: var(--sp-4) 0 0;
   text-align: center;
   font-size: var(--fs-sm);
   line-height: 1.45;
   color: rgb(255 255 255 / 80%);
+}
+
+/* Unslop T2: every score, percent, count and timer uses tabular figures. */
+.learner-app
+  :is(
+    .minute b,
+    .home-gauge b,
+    .home-streak b,
+    .lesson-hero__pct,
+    .lrow__count,
+    .m02-bar__count,
+    .done-medal__score,
+    .dict__count,
+    .exi-part__score,
+    .exi-total,
+    .exr-score,
+    .exr-skill__value,
+    .ext-count,
+    .ext-timer,
+    .fc-top__count
+  ) {
+  font-variant-numeric: tabular-nums;
 }

@@ -59,7 +59,7 @@ export function formatExamDuration(
 /** Q165: the pass line; `passed === null` means the test has no pass score. */
 export function passHeadline(passed: boolean | null): string {
   if (passed === null) return 'Đề này chưa đặt điểm đạt';
-  return passed ? 'Bạn đã đạt!' : 'Bạn chưa đạt';
+  return passed ? 'Đạt' : 'Bạn chưa đạt';
 }
 
 /** Q165: the badge text, always rendered with an icon next to it (R14). */

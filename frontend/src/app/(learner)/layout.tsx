@@ -17,14 +17,14 @@ import './learner-web-auth.css';
 import './learner-web-onboarding.css';
 
 const inter = Inter({
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-inter',
   display: 'swap',
 });
 
 const notoSerif = Noto_Serif({
-  weight: ['600', '700'],
+  weight: ['600'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-noto-serif',
   display: 'swap',
@@ -465,6 +465,25 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <rect x="8" y="2" width="8" height="4" rx="1" />
             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
             <path d="m9 14 2 2 4-4" />
+          </symbol>
+          {/* Lượt 3 unslop: icon nét một màu thay ảnh nhiều màu (ngọn lửa chuỗi
+              ngày, 4 mục tiêu onboarding) và bóng đèn mẹo ôn tập. */}
+          <symbol id="i-flame" viewBox="0 0 24 24">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z" />
+          </symbol>
+          <symbol id="i-graduation-cap" viewBox="0 0 24 24">
+            <path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0Z" />
+            <path d="M22 10v6" />
+            <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+          </symbol>
+          <symbol id="i-briefcase" viewBox="0 0 24 24">
+            <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            <rect x="2" y="6" width="20" height="14" rx="2" />
+          </symbol>
+          <symbol id="i-lightbulb" viewBox="0 0 24 24">
+            <path d="M9.5 18.5h5M10.5 21.5h3" />
+            <path d="M12 6.5a5 5 0 0 0-3.1 8.9c.6.5 1 1.3 1 2.1h4.2c0-.8.4-1.6 1-2.1A5 5 0 0 0 12 6.5Z" />
+            <path d="M12 1.5v2M4.6 4.6l1.4 1.4M19.4 4.6 18 6M2 11.5h2M20 11.5h2" />
           </symbol>
         </svg>
       </div>

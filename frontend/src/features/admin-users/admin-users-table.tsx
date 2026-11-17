@@ -318,7 +318,7 @@ export function AdminUsersTable({
           </button>
         )}
         <button
-          className="adm-btn adm-btn--danger adm-btn--sm"
+          className="adm-btn adm-btn--danger-outline adm-btn--sm"
           type="button"
           disabled={deletionReason !== null || pending}
           aria-describedby={deletionDescribedBy}

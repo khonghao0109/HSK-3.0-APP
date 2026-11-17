@@ -8,7 +8,8 @@
  * clipboard-check 102, image 70, file-question 82, upload 43, users 24,
  * bar-chart 84, cpu 85, message-circle 67, settings 29, menu 79, user 23,
  * log-out 88, plus 76, search 21, x 11, filter 78, chevron-left 6,
- * chevron-right 7, eye 14, pencil 32, alert-triangle 92, rotate-ccw 38.
+ * chevron-right 7, eye 14, pencil 32, alert-triangle 92, rotate-ccw 38,
+ * check 48.
  * `clipboard-list` (TL-106, mục "Đề thi") không có trong icons.js: vẽ mới
  * cùng nét 2px/round như `clipboard-check` để sidebar admin đồng bộ.
  */
@@ -98,6 +99,9 @@ export function AdminIconSprite() {
         <symbol id="i-search" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="M20 6 9 17l-5-5" />
         </symbol>
         <symbol id="i-x" viewBox="0 0 24 24">
           <path d="M18 6 6 18" />

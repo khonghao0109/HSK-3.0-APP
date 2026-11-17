@@ -158,36 +158,33 @@ describe('LessonCompletePage', () => {
     await expect(page('5')).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  it('shows the lesson title and the rounded Progress.score twice', async () => {
+  it('shows the lesson title and the rounded Progress.score once, on the medal', async () => {
     const { container } = await renderComplete();
     expect(getLessonActivity).toHaveBeenCalledWith('learner-token', 5);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Mua sắm' }),
     ).toBeInTheDocument();
     expect(container.querySelector('.done-kicker')?.textContent).toBe(
-      'Chúc mừng! Bạn đã hoàn thành bài học',
+      'Đã hoàn thành bài học',
     );
     const medal = container.querySelector('.done-medal__score');
     expect(medal?.textContent).toBe('92%');
     expect(medal).toHaveAttribute('aria-label', 'Điểm 92%');
-    const stats = container.querySelectorAll('.done-stat');
-    expect(stats).toHaveLength(1);
-    expect(stats[0]?.querySelector('h2')?.textContent).toBe('Điểm số của bạn');
-    expect(stats[0]?.querySelector('.done-stat__score')?.textContent).toBe(
-      '92%',
-    );
+    // Unslop C8: the score appears once; no repeated "Điểm số của bạn" card.
+    expect(container.querySelector('.done-stats')).toBeNull();
+    expect(screen.getAllByLabelText('Điểm 92%')).toHaveLength(1);
   });
 
-  it('has no XP or achievement (Q59) and keeps the confetti hidden from AT', async () => {
+  it('has no XP or achievement (Q59) and no decorative confetti or medal', async () => {
     const { container } = await renderComplete();
     expect(container.querySelector('.done-ach')).toBeNull();
     const text = container.textContent ?? '';
     for (const word of ['XP', 'Kinh nghiệm', 'Thành tích']) {
       expect(text).not.toContain(word);
     }
-    const confetti = container.querySelector('.done-confetti');
-    expect(confetti).toHaveAttribute('aria-hidden', 'true');
-    expect(confetti?.children.length).toBe(21);
+    // Unslop M4: the score is the only accent; no confetti or laurel image.
+    expect(container.querySelector('.done-confetti')).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('[style]')).toBeNull();
   });
 
@@ -223,10 +220,8 @@ describe('LessonCompletePage', () => {
   it('shows "—" labelled "Chưa có điểm" when the done lesson has no score', async () => {
     vi.mocked(getLessonActivity).mockResolvedValue(activity({ score: null }));
     const { container } = await renderComplete();
-    for (const selector of ['.done-medal__score', '.done-stat__score']) {
-      const node = container.querySelector(selector);
-      expect(node?.textContent).toBe('—');
-      expect(node?.getAttribute('aria-label')).toBe('Chưa có điểm');
-    }
+    const node = container.querySelector('.done-medal__score');
+    expect(node?.textContent).toBe('—');
+    expect(node?.getAttribute('aria-label')).toBe('Chưa có điểm');
   });
 });

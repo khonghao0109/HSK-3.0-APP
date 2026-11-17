@@ -10,6 +10,7 @@ import {
   wholePercent,
   type LearningHome,
 } from '@/features/learner-home/learning-home-contract';
+import { homeDateLabel } from '@/features/learner-home/home-date';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
@@ -20,6 +21,7 @@ import {
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Trang chủ',
@@ -32,26 +34,17 @@ export const metadata: Metadata = {
 const EXPLORE: ReadonlyArray<{
   label: string;
   icon: string;
-  tone: string;
   href?: string;
 }> = [
-  { label: 'Thi thử', icon: 'trophy', tone: 'amber', href: '/learn/exam' },
-  { label: 'Phát âm', icon: 'mic', tone: 'red' },
-  { label: 'Đọc hiểu', icon: 'book-open', tone: 'jade' },
-  { label: 'Tài liệu', icon: 'file-text', tone: 'blue' },
-  { label: 'Trợ lý AI', icon: 'sparkles', tone: 'violet' },
-  { label: 'Hội thoại', icon: 'message-circle', tone: 'jade' },
-  { label: 'Nhận diện chữ', icon: 'file-stack', tone: 'blue' },
-  { label: 'Hỗ trợ', icon: 'help-circle', tone: 'amber' },
+  { label: 'Thi thử', icon: 'trophy', href: '/learn/exam' },
+  { label: 'Phát âm', icon: 'mic' },
+  { label: 'Đọc hiểu', icon: 'book-open' },
+  { label: 'Tài liệu', icon: 'file-text' },
+  { label: 'Trợ lý AI', icon: 'sparkles' },
+  { label: 'Hội thoại', icon: 'message-circle' },
+  { label: 'Nhận diện chữ', icon: 'file-stack' },
+  { label: 'Hỗ trợ', icon: 'help-circle' },
 ];
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 export default async function LearnerHomePage() {
   const session = await getServerLearnerSession();
@@ -121,10 +114,8 @@ export default async function LearnerHomePage() {
             <Icon name="user" />
           </Link>
           <div>
-            <h1>
-              {home.greetingName ? `Chào, ${home.greetingName}` : 'Chào bạn'}
-            </h1>
-            <p>Hôm nay cùng tiến bộ nhé!</p>
+            <h1>Hôm nay</h1>
+            <p>{homeDateLabel(new Date())}</p>
           </div>
         </div>
       </header>
@@ -159,12 +150,7 @@ export default async function LearnerHomePage() {
             <h2 id="home-streak-title">Chuỗi ngày học</h2>
             <p className="sr-only">{`${home.streakDays} ngày`}</p>
             <div className="home-streak" aria-hidden="true">
-              <img
-                src="/images/learner/fire.png"
-                alt=""
-                width={40}
-                height={42}
-              />
+              <Icon name="flame" className="streak-icon home-streak__icon" />
               <div>
                 <b>{home.streakDays}</b>
                 <span>ngày</span>
@@ -215,10 +201,7 @@ export default async function LearnerHomePage() {
             <li key={item.label}>
               {item.href === undefined ? (
                 <ToastButton message={TOAST_COMING_SOON}>
-                  <span
-                    className={`home-explore__icon home-explore__icon--${item.tone}`}
-                    aria-hidden="true"
-                  >
+                  <span className="home-explore__icon" aria-hidden="true">
                     <Icon name={item.icon} />
                   </span>
                   {item.label}
@@ -226,7 +209,7 @@ export default async function LearnerHomePage() {
               ) : (
                 <Link href={item.href}>
                   <span
-                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    className="home-explore__icon home-explore__icon--live"
                     aria-hidden="true"
                   >
                     <Icon name={item.icon} />

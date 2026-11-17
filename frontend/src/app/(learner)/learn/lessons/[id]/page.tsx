@@ -10,7 +10,7 @@ import { levelLabel } from '@/features/learner-home/level-label';
 import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
 import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader';
 import {
-  LESSON_ROW_IMAGES,
+  LESSON_ROW_ICONS,
   lessonRows,
 } from '@/features/learner-lesson/lesson-sections';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
@@ -19,21 +19,11 @@ import {
   TOAST_COMING_SOON,
   TOAST_LOCKED,
 } from '@/features/learner-shell/learner-toast-messages';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Bài học',
 };
-
-function Icon({ name, className }: { name: string; className?: string }) {
-  return (
-    <svg
-      className={className ? `icon ${className}` : 'icon'}
-      aria-hidden="true"
-    >
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /**
  * Lesson page (M2.5a, Q32–Q44). Tiếp tục học and the Luyện tập row of an
@@ -139,7 +129,7 @@ export default async function LearnerLessonPage({
           </h2>
           <ul className="lesson-rows">
             {lessonRows(sections, locked).map((row) => {
-              const image = LESSON_ROW_IMAGES[row.kind];
+              const image = LESSON_ROW_ICONS[row.kind];
               const className = [
                 'lrow',
                 image.tone,
@@ -150,12 +140,9 @@ export default async function LearnerLessonPage({
                 .join(' ');
               const content = (
                 <>
-                  <img
-                    src={image.src}
-                    alt=""
-                    width={image.width}
-                    height={image.height}
-                  />
+                  <span className="lrow__icon" aria-hidden="true">
+                    <Icon name={image.icon} />
+                  </span>
                   <span className="grow">
                     <span className="lrow__title">{row.title}</span>
                     <span className="sr-only">, </span>

@@ -52,7 +52,7 @@ describe('exam result model (M4.3, TL-172)', () => {
     expect(passBadgeLabel(true)).toBe('Đạt');
     expect(passBadgeLabel(false)).toBe('Chưa đạt');
     expect(passBadgeLabel(null)).toBeNull();
-    expect(passHeadline(true)).toBe('Bạn đã đạt!');
+    expect(passHeadline(true)).toBe('Đạt');
     expect(passHeadline(false)).toBe('Bạn chưa đạt');
     expect(passHeadline(null)).toBe('Đề này chưa đặt điểm đạt');
   });

@@ -23,18 +23,11 @@ import { isAuthFailure } from '@/lib/api/api-error';
 
 import '../exam-list.css';
 import './exam-history.css';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Lịch sử thi',
 };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 function StatusBadge({ row }: { row: ExamHistoryRow }) {
   return (

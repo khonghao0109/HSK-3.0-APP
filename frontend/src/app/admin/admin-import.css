@@ -52,7 +52,7 @@
 .adm-import-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--adm-sp-2);
   margin-bottom: var(--adm-sp-4, 16px);
 }
 
@@ -68,7 +68,7 @@
   max-inline-size: 40rem;
   padding: 8px 12px;
   border: 1px solid var(--adm-slate-300);
-  border-radius: 8px;
+  border-radius: var(--adm-r-sm);
   background: var(--adm-paper);
   color: var(--adm-slate-700);
   font-size: var(--adm-fs-md);
@@ -86,7 +86,7 @@
   gap: var(--adm-sp-2, 8px);
   padding: var(--adm-sp-4, 16px);
   border: 1px dashed var(--adm-slate-300);
-  border-radius: 12px;
+  border-radius: var(--adm-r-md);
   background: var(--adm-slate-50);
 }
 
@@ -153,7 +153,7 @@
 .adm-import-stats__item {
   padding: var(--adm-sp-3, 12px);
   border: 1px solid var(--adm-slate-200);
-  border-radius: 10px;
+  border-radius: var(--adm-r-md);
   background: var(--adm-paper);
 }
 
@@ -166,7 +166,7 @@
   margin: 4px 0 0;
   color: var(--adm-navy-900);
   font-size: var(--adm-fs-xl);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .adm-import-stats__item--error dd {
@@ -193,7 +193,7 @@
 
 .adm-import-table th,
 .adm-import-table td {
-  padding: 8px 10px;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
   border-bottom: 1px solid var(--adm-slate-200);
   text-align: left;
   vertical-align: top;
@@ -202,7 +202,7 @@
 .adm-import-table th {
   color: var(--adm-slate-500);
   font-size: var(--adm-fs-xs);
-  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .adm-import-footer {
@@ -266,4 +266,10 @@
   .adm-import-stats {
     grid-template-columns: 1fr;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.adm-import-steps__num,
+.adm-import-stats dd {
+  font-variant-numeric: tabular-nums;
 }

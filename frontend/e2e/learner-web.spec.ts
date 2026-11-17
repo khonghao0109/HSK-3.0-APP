@@ -398,13 +398,16 @@ test.describe('Learner web frame (M2.10a) @web', () => {
     await registerReadyLearner(page, baseURL);
     await page.goto('/learn');
     const side = sidebar(page);
-    for (const name of [
-      'Ôn tập',
-      'Thi thử HSK',
-      'Phát âm',
-      'Đọc hiểu',
-      'Trợ lý AI',
-    ]) {
+    // Shipped items are links (Ôn tập M3.3b 0d7889b, Thi thử HSK M4.5 7dcb63f).
+    for (const [name, href] of [
+      ['Ôn tập', '/learn/review'],
+      ['Thi thử HSK', '/learn/exam'],
+    ] as const) {
+      const link = side.getByRole('link', { name, exact: true });
+      await expect(link).toHaveAttribute('href', href);
+      await expect(link.locator('.w-tag')).toHaveCount(0);
+    }
+    for (const name of ['Phát âm', 'Đọc hiểu', 'Trợ lý AI']) {
       const button = side.getByRole('button', { name: `${name} Sắp có` });
       await expect(button.locator('.w-tag')).toHaveText('Sắp có');
       await button.click();

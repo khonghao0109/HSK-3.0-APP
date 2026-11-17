@@ -17,7 +17,7 @@
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -101,16 +101,16 @@
 }
 
 .learner-app .exv-sum__item--wrong .exv-sum__icon {
-  color: #b3261e;
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-sum__item--flag .exv-sum__icon {
-  color: #7a5300;
+  color: var(--text-on-amber);
 }
 
 .learner-app .exv-sum__item b {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
   color: var(--ink-900);
 }
@@ -155,7 +155,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-900);
 }
@@ -164,7 +164,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
   color: var(--stone-700);
 }
@@ -179,9 +179,9 @@
 .learner-app .exv-filter {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   background: var(--white);
   border: 1px solid var(--sand-300);
   border-radius: 999px;
@@ -197,12 +197,12 @@
   justify-content: center;
   min-width: 22px;
   height: 22px;
-  padding: 0 6px;
+  padding: 0 var(--sp-2);
   background: var(--slate-100);
   border-radius: 999px;
   color: var(--slate-700);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-filter[aria-current='page'] {
@@ -224,7 +224,7 @@
 .learner-app .exv-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .learner-app .exv-cell {
@@ -246,10 +246,8 @@
   text-decoration: none;
 }
 
-.learner-app .exv-cell__mark {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+.learner-app .exv-cell__mark.icon {
+  stroke-width: 2.5;
 }
 
 .learner-app .exv-cell--correct {
@@ -260,8 +258,8 @@
 
 .learner-app .exv-cell--wrong {
   background: var(--red-100);
-  border-color: #f6c9c4;
-  color: #b3261e;
+  border-color: var(--ex-wrong-border);
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-cell--blank {
@@ -280,7 +278,7 @@
 .learner-app .exv-fine {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
@@ -304,7 +302,7 @@
 
 .learner-app .exv-section {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
 }
 
@@ -312,14 +310,14 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-900);
 }
 
 .learner-app .exv-group {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
 }
 
@@ -341,9 +339,9 @@
 /* Thẻ câu hỏi */
 .learner-app .exv-q {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
-  padding: 14px 14px 16px;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4);
   background: var(--white);
   border: 1px solid var(--sand-300);
   border-left: 4px solid var(--slate-300);
@@ -356,7 +354,7 @@
 }
 
 .learner-app .exv-q--wrong {
-  border-left-color: #b3261e;
+  border-left-color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-q--blank {
@@ -373,13 +371,11 @@
 .learner-app .exv-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
-  color: var(--jade-800);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
 .learner-app .exv-status {
@@ -389,7 +385,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -407,8 +403,8 @@
 
 .learner-app .exv-status--wrong {
   background: var(--red-100);
-  border: 1px solid #f6c9c4;
-  color: #b3261e;
+  border: 1px solid var(--ex-wrong-border);
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-status--blank {
@@ -425,7 +421,7 @@
   background: var(--amber-100);
   border: 1px solid var(--amber-500);
   border-radius: 999px;
-  color: #7a5300;
+  color: var(--text-on-amber);
   font-size: 12px;
   font-weight: 600;
 }
@@ -481,7 +477,7 @@
   border-radius: 50%;
   color: var(--slate-700);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-opt.is-correct {
@@ -496,11 +492,11 @@
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) {
   background: var(--red-100);
-  border: 2px solid #b3261e;
+  border: 2px solid var(--ex-wrong-text);
 }
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__letter {
-  background: #b3261e;
+  background: var(--ex-wrong-text);
   color: var(--white);
 }
 
@@ -511,11 +507,11 @@
   margin-left: auto;
   color: var(--jade-800);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__mark {
-  color: #b3261e;
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-opt__mark .icon {
@@ -526,9 +522,9 @@
 .learner-app .exv-ans {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
-  gap: 6px 12px;
+  gap: var(--sp-2) var(--sp-3);
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   background: var(--cream-100);
   border-radius: 10px;
 }
@@ -554,12 +550,11 @@
 
 .learner-app .exv-ans dd.is-empty {
   color: var(--stone-600);
-  font-style: italic;
 }
 
 /* Giải thích (Q148: không paywall) */
 .learner-app .exv-ex {
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-4);
   background: var(--jade-50);
   border-left: 3px solid var(--jade-700);
   border-radius: 10px;
@@ -611,7 +606,7 @@
 /* Media (grant Q158) */
 .learner-app .exv-media {
   display: grid;
-  gap: 6px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -632,7 +627,7 @@
 .learner-app .exv-media__loading,
 .learner-app .exv-media__unavailable {
   margin: 0;
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-3);
   background: var(--slate-100);
   border-radius: 8px;
   color: var(--slate-700);
@@ -641,13 +636,13 @@
 
 .learner-app .exv-media__unavailable {
   background: var(--amber-100);
-  color: #7a5300;
+  color: var(--text-on-amber);
 }
 
 /* Trạng thái đóng / lỗi */
 .learner-app .exv-notice {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   padding: 20px 16px;
   background: var(--white);
   border: 1px solid var(--sand-300);
@@ -659,7 +654,7 @@
   color: var(--ink-900);
   font-family: var(--font-sans);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-notice__text {
@@ -676,11 +671,11 @@
 /* 390: giữ nhịp thẻ, không tràn ngang */
 @media (max-width: 1023.98px) {
   .learner-app .exv-side {
-    padding: 10px;
+    padding: var(--sp-3);
   }
 
   .learner-app .exv-q {
-    padding: 12px 12px 14px;
+    padding: var(--sp-3) var(--sp-3) var(--sp-4);
   }
 
   .learner-app .exv-ans {
@@ -698,4 +693,10 @@
     min-height: 38px;
     font-size: 13px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .exv-sum__item b,
+.learner-app .exv-filter__count {
+  font-variant-numeric: tabular-nums;
 }

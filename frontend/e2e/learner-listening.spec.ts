@@ -172,7 +172,7 @@ test.describe('Listening question (M2.5c)', () => {
 
     await page.getByRole('radio', { name: '超市' }).click();
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.locator('.m02-feedback__title')).toHaveText('Chính xác!');
+    await expect(page.locator('.m02-feedback__title')).toHaveText('Chính xác');
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     await expect(page.locator('.ex audio')).toHaveCount(0);
     expect(await readCspViolations(page)).toEqual([]);

@@ -21,7 +21,7 @@
 /* ---------- Thanh tiêu đề mobile (m03 .appbar) ---------- */
 .learner-app .app:has(> .rvo) .appbar {
   min-height: 48px;
-  padding: 7px 2px 0;
+  padding: var(--sp-2) 2px 0;
   grid-template-columns: 48px 1fr 48px;
   background: var(--m03-navy);
 }
@@ -30,11 +30,11 @@
   font-family: var(--font-sans);
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .app:has(> .rvo) .appbar .icon-btn {
-  color: #fff;
+  color: var(--text-on-brand);
   height: 41px;
 }
 
@@ -46,7 +46,7 @@
 .learner-app .rvo {
   display: flex;
   flex-direction: column;
-  padding: 10px 17px 0 19px;
+  padding: var(--sp-3) var(--sp-4) 0 var(--sp-5);
   background: var(--m03-canvas);
   color: var(--m03-ink);
 }
@@ -68,7 +68,7 @@
 
 .learner-app .rvo-state__title {
   font-size: var(--fs-lg);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-strong);
 }
 
@@ -80,7 +80,7 @@
 .learner-app .rvo-stats {
   display: grid;
   grid-template-columns: 114fr 118fr 101fr;
-  gap: 10px;
+  gap: var(--sp-3);
 }
 
 .learner-app .rvo-stat {
@@ -88,10 +88,10 @@
   display: block;
   min-width: 0;
   min-height: 49px;
-  padding: 5px 8px 4px 11px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border: 1px solid var(--m03-line-soft);
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--r-sm);
+  background: var(--surface-card);
   box-shadow: 0 1px 4px rgb(20 24 43 / 6%);
   color: inherit;
   text-decoration: none;
@@ -107,10 +107,6 @@
   box-shadow: var(--focus-ring);
 }
 
-.learner-app .rvo-stat__ico {
-  display: none;
-}
-
 .learner-app .rvo-stat__text {
   display: block;
   min-width: 0;
@@ -120,16 +116,16 @@
   display: block;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 400;
   line-height: 1.3;
-  color: #3a3e4a;
+  color: var(--slate-700);
 }
 
 .learner-app .rvo-stat__val {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: var(--sp-1);
   margin-top: 2px;
   font-size: 1.25rem;
   font-weight: 600;
@@ -138,9 +134,9 @@
 }
 
 .learner-app .rvo-stat__val small {
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
-  color: #3a3e4a;
+  color: var(--slate-700);
 }
 
 .learner-app .rvo-stat--rate .rvo-stat__val {
@@ -154,36 +150,9 @@
 
 .learner-app .rvo-stat__desc {
   display: block;
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   line-height: 1.3;
-  color: #3a3e4a;
-}
-
-.learner-app .rvo-ring {
-  position: absolute;
-  right: 6.5px;
-  top: 50%;
-  width: 38px;
-  height: 38px;
-  margin-top: -19px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 45deg,
-    var(--m03-jade) 0 calc(var(--value) * 1%),
-    #dceee6 0
-  );
-}
-
-.learner-app .rvo-ring::before {
-  content: '';
-  position: absolute;
-  inset: 4.5px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.learner-app .rvo-ring__label {
-  display: none;
+  color: var(--slate-700);
 }
 
 .learner-app .rvo-soon {
@@ -196,12 +165,12 @@
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   line-height: 1.3;
 }
 
 .learner-app .rvo-soon dt {
-  color: #3a3e4a;
+  color: var(--slate-700);
 }
 
 .learner-app .rvo-soon dd {
@@ -214,21 +183,21 @@
 /* Lịch tháng (m03 .rc-cal) */
 .learner-app .rvo-layout {
   display: grid;
-  gap: 13px;
-  margin-top: 5px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
 }
 
 .learner-app .rvo-card {
   min-width: 0;
   border: 1px solid var(--m03-line-soft);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--r-md);
+  background: var(--surface-card);
   box-shadow: 0 2px 6px rgb(20 24 43 / 5%);
 }
 
 .learner-app .rvo-cal {
-  margin: 0 3px 0 5px;
-  padding: 0 0 5px;
+  margin: 0 var(--sp-1) 0 var(--sp-1);
+  padding: 0 0 var(--sp-1);
 }
 
 .learner-app .rvo-cal__head {
@@ -236,27 +205,27 @@
   align-items: center;
   gap: var(--sp-2);
   min-height: 24px;
-  padding: 0 11px 0 7px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
 }
 
 .learner-app .rvo-h2 {
   flex: 1;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--m03-ink);
 }
 
 .learner-app .rvo-cal__month {
   font-size: 0.75rem;
-  color: #2a2e3a;
+  color: var(--text-body);
   white-space: nowrap;
 }
 
 .learner-app .rvo-cal__table {
   width: calc(100% - 12px);
-  margin: 0 6px;
+  margin: 0 var(--sp-2);
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -265,9 +234,9 @@
   height: 16px;
   padding: 0;
   line-height: 16px;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 400;
-  color: #2e3240;
+  color: var(--text-body);
 }
 
 .learner-app .rvo-cal__table td {
@@ -283,14 +252,14 @@
   height: 18px;
   margin: 0 auto;
   border-radius: 50%;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1;
   color: var(--m03-ink);
 }
 
 .learner-app .rvo-cal__table td.is-out > span {
-  color: #8a8c94;
+  color: var(--stone-600);
   font-weight: 400;
 }
 
@@ -308,23 +277,23 @@
 
 .learner-app .rvo-cal__table td[data-l='4'] > span {
   background: var(--rvo-heat-4);
-  color: #10301f;
+  color: var(--m03-ink);
 }
 
 .learner-app .rvo-cal__table td[data-l='5'] > span {
   background: var(--rvo-heat-5);
-  color: #fff;
+  color: var(--text-on-brand);
 }
 
 .learner-app .rvo-legend {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: var(--sp-2);
   margin-top: 4px;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   line-height: 15px;
-  color: #2e3240;
+  color: var(--text-body);
 }
 
 .learner-app .rvo-legend i {
@@ -352,7 +321,7 @@
 
 /* Lịch sử (m03 .rc-hist, hàng là phiên ôn) */
 .learner-app .rvo-hist {
-  margin-left: -3px;
+  margin-left: -4px;
   overflow: hidden;
 }
 
@@ -360,36 +329,36 @@
   display: flex;
   align-items: center;
   min-height: 26px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   border-bottom: 1px solid var(--m03-line-soft);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .learner-app .rvo-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .learner-app .rvo-table th {
-  padding: 4px 10px;
-  font-size: 0.66rem;
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-xs);
   font-weight: 500;
-  color: #3a3e4a;
+  color: var(--slate-700);
   text-align: left;
 }
 
 .learner-app .rvo-table td {
   height: 40px;
-  padding: 0 10px;
+  padding: 0 var(--sp-3);
   border-top: 1px solid var(--m03-line-soft);
   color: var(--m03-ink);
 }
 
 .learner-app .rvo-fine {
   margin: 0;
-  padding: 6px 10px 8px;
-  font-size: 0.7rem;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2);
+  font-size: var(--fs-xs);
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -408,25 +377,27 @@
   margin-top: 2px;
 }
 
+/* ≤430px: three columns wrap every label; two tiles on top, the
+   three-row "Sắp đến hạn" tile takes the full row below. */
+@media (max-width: 430px) {
+  .learner-app .rvo-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .learner-app .rvo-stats > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 374.98px) {
   .learner-app .rvo {
-    padding-left: 14px;
+    padding-left: var(--sp-4);
     padding-right: 12px;
   }
   .learner-app .rvo-stats {
-    gap: 6px;
+    gap: var(--sp-2);
   }
   .learner-app .rvo-stat {
     padding-left: 8px;
-  }
-  .learner-app .rvo-ring {
-    width: 26px;
-    height: 26px;
-    margin-top: -13px;
-    right: 5px;
-  }
-  .learner-app .rvo-ring::before {
-    inset: 3.5px;
   }
 }
 
@@ -458,12 +429,12 @@
     padding: 0 var(--sp-6);
     border-radius: var(--r-md);
     background: var(--jade-800);
-    color: #fff;
+    color: var(--text-on-brand);
     font-size: var(--fs-base);
   }
 
   .learner-app .rvo .w-btn--primary:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .rvo .w-btn--primary:disabled {
@@ -493,22 +464,6 @@
     box-shadow: var(--shadow-float);
   }
 
-  .learner-app .rvo-stat__ico {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: var(--r-md);
-    background: var(--jade-50);
-    color: var(--jade-800);
-  }
-
-  .learner-app .rvo-stat--soon .rvo-stat__ico {
-    background: var(--amber-100);
-    color: #7a5300;
-  }
-
   .learner-app .rvo-stat__text {
     flex: 1;
   }
@@ -521,7 +476,7 @@
   .learner-app .rvo-stat__val {
     gap: 4px;
     font-size: var(--fs-2xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--text-strong);
   }
@@ -550,7 +505,7 @@
   .learner-app .rvo-link {
     flex: none;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 44px;
     padding: 0 var(--sp-1);
     border: 0;
@@ -568,34 +523,6 @@
   }
 
   .learner-app .rvo-stat__desc {
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-  }
-
-  .learner-app .rvo-ring {
-    position: relative;
-    right: auto;
-    top: auto;
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 64px;
-    height: 64px;
-    margin: 0;
-    background: conic-gradient(
-      var(--jade-600) calc(var(--value) * 1%),
-      var(--slate-200) 0
-    );
-  }
-
-  .learner-app .rvo-ring::before {
-    inset: 8px;
-    background: var(--surface-card);
-  }
-
-  .learner-app .rvo-ring__label {
-    position: relative;
-    display: block;
     font-size: var(--fs-sm);
     color: var(--text-muted);
   }
@@ -645,13 +572,13 @@
     padding: 0;
     border: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
   .learner-app .rvo-cal__month {
     font-size: var(--fs-base);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -664,13 +591,13 @@
     height: auto;
     padding: var(--sp-2);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--stone-600);
   }
 
   .learner-app .rvo-cal__table td {
     height: auto;
-    padding: 3px;
+    padding: var(--sp-1);
   }
 
   .learner-app .rvo-cal__table td > span:not(.sr-only) {
@@ -700,19 +627,19 @@
   }
   .learner-app .rvo-cal__table td[data-l='3'] > span {
     background: var(--jade-800);
-    color: #fff;
-    font-weight: 700;
+    color: var(--text-on-brand);
+    font-weight: 600;
   }
   .learner-app .rvo-cal__table td[data-l='4'] > span,
   .learner-app .rvo-cal__table td[data-l='5'] > span {
     background: var(--navy-900);
-    color: #fff;
-    font-weight: 700;
+    color: var(--text-on-brand);
+    font-weight: 600;
   }
 
   .learner-app .rvo-legend {
     justify-content: flex-start;
-    gap: 6px;
+    gap: var(--sp-2);
     margin: 0;
     font-size: var(--fs-sm);
     color: var(--text-muted);
@@ -753,7 +680,7 @@
 
   .learner-app .rvo-table th {
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--stone-600);
     background: var(--cream-100);
     white-space: nowrap;
@@ -779,4 +706,10 @@
   .learner-app .rvo-stat--due .rvo-link {
     display: none;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .rvo-stat__val,
+.learner-app .rvo-stat__val small {
+  font-variant-numeric: tabular-nums;
 }

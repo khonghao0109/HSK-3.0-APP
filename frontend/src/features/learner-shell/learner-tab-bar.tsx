@@ -2,14 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-function TabIcon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
+import { Icon } from '@/components/ui/icon';
 
 /** Learner tab bar (Q1). Ôn tập links to /learn/review since M3.3b (Q271). */
 export function LearnerTabBar() {
@@ -28,26 +21,26 @@ export function LearnerTabBar() {
   return (
     <nav className="tabbar" aria-label="Điều hướng chính">
       <Link href="/learn" aria-current={onHome ? 'page' : undefined}>
-        <TabIcon name={onHome ? 'home-fill' : 'home'} />
+        <Icon name={onHome ? 'home-fill' : 'home'} />
         Trang chủ
       </Link>
       <Link href="/learn/path" aria-current={onPath ? 'page' : undefined}>
-        <TabIcon name={onPath ? 'book-open-fill' : 'book-open'} />
+        <Icon name={onPath ? 'book-open-fill' : 'book-open'} />
         Học
       </Link>
       <Link
         href="/learn/dictionary"
         aria-current={onDictionary ? 'page' : undefined}
       >
-        <TabIcon name="search" />
+        <Icon name="search" />
         Tra từ
       </Link>
       <Link href="/learn/review" aria-current={onReview ? 'page' : undefined}>
-        <TabIcon name="layers" />
+        <Icon name="layers" />
         Ôn tập
       </Link>
       <Link href="/learn/profile" aria-current={onProfile ? 'page' : undefined}>
-        <TabIcon name="user" />
+        <Icon name="user" />
         Hồ sơ
       </Link>
     </nav>

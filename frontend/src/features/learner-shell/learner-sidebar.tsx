@@ -5,14 +5,7 @@ import { usePathname } from 'next/navigation';
 
 import { ToastButton } from './learner-toast';
 import { TOAST_COMING_SOON } from './learner-toast-messages';
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
+import { Icon } from '@/components/ui/icon';
 
 function SoonButton({ icon, label }: { icon: string; label: string }) {
   return (

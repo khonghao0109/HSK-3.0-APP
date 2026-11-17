@@ -49,7 +49,7 @@
 .admin-app .qn-bank__title {
   margin: 0 0 var(--adm-sp-2);
   font-size: var(--adm-fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-navy-900);
 }
 .admin-app .qn-bank__list {
@@ -77,7 +77,7 @@
 .admin-app .qn-bank__item[aria-current='true'] {
   background: var(--adm-jade-50);
   color: var(--adm-jade-800);
-  font-weight: 700;
+  font-weight: 600;
 }
 .admin-app .qn-bank__count {
   color: var(--adm-slate-500);
@@ -102,8 +102,8 @@
 .admin-app .qn-table th,
 .admin-app .qn-table td {
   white-space: nowrap;
-  padding-left: 0.375rem;
-  padding-right: 0.375rem;
+  padding-left: var(--adm-sp-2);
+  padding-right: var(--adm-sp-2);
 }
 /* Chỉ cột nội dung được cắt bằng ellipsis. */
 .admin-app .qn-table th:nth-child(2),
@@ -223,7 +223,7 @@
 .admin-app .qn-fieldset > legend {
   margin-bottom: var(--adm-sp-2);
   font-size: var(--adm-fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-navy-900);
 }
 .admin-app .qn-option-list,
@@ -403,11 +403,11 @@
   .admin-app .qn-bank {
     padding: var(--adm-sp-2);
   }
+  /* Chip xuống dòng thay vì cuộn ngang: chip cuối không bị cắt mất số. */
   .admin-app .qn-bank__list {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--adm-sp-2);
-    overflow-x: auto;
-    padding-bottom: var(--adm-sp-1);
   }
   .admin-app .qn-bank__item {
     white-space: nowrap;

@@ -344,7 +344,7 @@ test.describe('Ngân hàng câu hỏi (M4.1a)', () => {
       levelCode: 'HSK2',
       difficulty: 2,
       status: 'draft',
-      tags: ['tu-vung', tagName],
+      tags: ['Từ vựng', tagName],
       explanation: null,
     });
     const writing = seedQuestion({
@@ -354,7 +354,7 @@ test.describe('Ngân hàng câu hỏi (M4.1a)', () => {
       levelCode: 'HSK1',
       difficulty: 3,
       status: 'published',
-      tags: ['ngu-phap', tagName],
+      tags: ['Ngữ pháp', tagName],
       explanation: 'Điền động từ đúng.',
     });
     const archived = seedQuestion({

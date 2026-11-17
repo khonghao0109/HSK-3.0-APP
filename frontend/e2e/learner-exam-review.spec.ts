@@ -331,16 +331,22 @@ test.describe('Learner exam review (M4.5 B2b)', () => {
     });
     expect(typeof played).toBe('boolean');
 
-    // ---- Grid cells show visible ✓ / ✕ alongside colour while keeping aria-label (Q240) ----
+    // ---- Grid cells show visible check / x icons alongside colour while keeping aria-label (Q240) ----
     const gridCells = page.locator('.exv-cell');
     await expect(gridCells).toHaveCount(5);
     await expect(gridCells.nth(0)).toHaveAttribute('aria-label', 'Câu 1, Đúng');
-    await expect(gridCells.nth(0)).toContainText('✓');
+    await expect(gridCells.nth(0).locator('svg.exv-cell__mark')).toBeVisible();
+    await expect(
+      gridCells.nth(0).locator('svg.exv-cell__mark use'),
+    ).toHaveAttribute('href', '#i-check');
     await expect(gridCells.nth(1)).toHaveAttribute(
       'aria-label',
       'Câu 2, Sai, đánh dấu',
     );
-    await expect(gridCells.nth(1)).toContainText('✕');
+    await expect(gridCells.nth(1).locator('svg.exv-cell__mark')).toBeVisible();
+    await expect(
+      gridCells.nth(1).locator('svg.exv-cell__mark use'),
+    ).toHaveAttribute('href', '#i-x');
     await expect(gridCells.nth(0)).toHaveAttribute('aria-current', 'true');
     const activeCellColors = await gridCells.nth(0).evaluate((cell) => {
       const app = cell.closest('.learner-app') ?? document.body;

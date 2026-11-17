@@ -100,7 +100,10 @@ describe('ExamReviewMedia (M4.5 B2b)', () => {
 
     fireEvent.error(image);
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    const refreshed = (await screen.findByRole('img')) as HTMLImageElement;
+    // Same signed URL back from the BFF: the image must be a fresh element so
+    // the browser loads it again and a second failure reaches onError.
+    await waitFor(() => expect(screen.getByRole('img')).not.toBe(image));
+    const refreshed = screen.getByRole('img');
     fireEvent.error(refreshed);
     await waitFor(() =>
       expect(screen.getByText('Không tải được hình ảnh.')).toBeVisible(),

@@ -4,7 +4,7 @@ import type { QuestionBankItem } from './question-query';
 
 /**
  * Cột trái "Ngân hàng" (TL-89, Q113): mỗi mục là một link lọc kèm số đếm từ
- * `GET /questions/counts`. ≤900px CSS chuyển thành hàng link cuộn ngang.
+ * `GET /questions/counts`. ≤900px CSS chuyển thành hàng chip xuống dòng.
  */
 export function QuestionBankSidebar({ items }: { items: QuestionBankItem[] }) {
   return (
