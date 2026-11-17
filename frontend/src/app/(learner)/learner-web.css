@@ -2552,6 +2552,8 @@
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
+    /* Q69: a two-character word is 36px wide; the target is 44×44. */
+    min-width: 44px;
     min-height: 44px;
   }
 

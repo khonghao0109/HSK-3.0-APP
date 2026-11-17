@@ -83,6 +83,31 @@ function relatedFixtureId(): number {
   return id;
 }
 
+// M3.4d-fix (Q69): two two-character words that only relate to each other.
+const TWO_CHAR = { base: '鼋鼍', related: '鼋鳖' };
+
+function twoCharFixtureId(): number {
+  const read = () =>
+    queryDisposableDb(
+      `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(TWO_CHAR.base)}`,
+    );
+  if (!read()) {
+    for (const hanzi of [TWO_CHAR.base, TWO_CHAR.related]) {
+      queryDisposableDb(
+        insertWord({
+          hanzi,
+          traditional: null,
+          example: null,
+          status: 'published',
+        }),
+      );
+    }
+  }
+  const id = Number(read());
+  if (!id) throw new Error('two-character fixture word missing');
+  return id;
+}
+
 function fixtureIds(): { word: number; draft: number } {
   const read = () =>
     queryDisposableDb(
@@ -347,6 +372,33 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await expect(page.locator('.toast-region[role="status"]')).toHaveText(
       'Tính năng sắp ra mắt.',
     );
+  });
+
+  test('related links of two-character words have a 44×44 target (Q69)', async ({
+    page,
+    baseURL,
+  }) => {
+    const baseId = twoCharFixtureId();
+    await registerReadyLearner(page, baseURL);
+    // Mobile shows the list rows (.word-rel__list a), web the table words.
+    for (const [width, selector] of [
+      [390, '.word-rel__list a'],
+      [1440, '.word-rel__word'],
+    ] as const) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/dictionary/${baseId}`);
+      const links = page.locator(`.word-rel ${selector}`);
+      await expect(links).toHaveCount(1);
+      await expect(links.first()).toContainText(TWO_CHAR.related);
+      for (const link of await links.all()) {
+        const box = await link.boundingBox();
+        expect(box, `${width}px`).not.toBeNull();
+        expect(box?.width ?? 0, `${width}px width`).toBeGreaterThanOrEqual(44);
+        expect(box?.height ?? 0, `${width}px height`).toBeGreaterThanOrEqual(
+          44,
+        );
+      }
+    }
   });
 
   test('a missing, malformed or draft word is a 404 page', async ({
