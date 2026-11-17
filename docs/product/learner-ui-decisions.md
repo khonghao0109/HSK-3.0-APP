@@ -2,15 +2,13 @@
 
 Cập nhật: 17/11/2026 (thêm Q340 chờ PO duyệt, đợt unslop; thêm Q209–Q225 và Q237–Q243 ngày 11/11/2026, M4.5; Q226 chưa ghi, Q227–Q236 thuộc M4.4 ghi ở PLAN; Q244–Q250 thuộc M3.1 (SRS) ghi ở PLAN mục 8 ngày 12/11/2026; thêm Q164–Q168 ngày 02/11/2026; thêm Q156–Q163 và Q170–Q171 ngày 02/11/2026; thêm Q141–Q155 ngày 02/11/2026; thêm Q140 ngày 02/11/2026; thêm Q130–Q139 ngày 30/10/2026; Q129 để dành cho chính sách khoá đăng nhập, chờ PO; thêm Q123–Q128 ngày 27/10/2026; thêm Q119–Q122 ngày 27/10/2026; thêm Q115–Q118 ngày 25/10/2026; thêm Q112–Q114 ngày 23/10/2026; thêm Q108–Q111 ngày 23/10/2026; thêm Q106–Q107 ngày 21/10/2026; thêm Q102–Q105 ngày 21/10/2026; thêm Q101 ngày 21/10/2026; thêm Q100 ngày 20/10/2026; thêm Q96–Q99 ngày 19/10/2026; thêm Q95 ngày 16/10/2026; thêm Q93–Q94 ngày 16/10/2026; thêm Q88–Q92 ngày 15/10/2026; thêm Q82–Q85 ngày 13/10/2026; đồng bộ với README; thêm Q78–Q80 ngày 13/10/2026; Q81 ngày 13/10/2026; Q75–Q77 (ngoài UI) ngày 13/10/2026; PO đồng ý đưa bảng này vào repo ngày 07/10/2026; thêm Q13–Q20 cùng ngày; thêm Q21–Q31 ngày 09/10/2026; bổ sung Q28 ngày 10/10/2026; thêm Q32–Q44 ngày 11/10/2026; thêm Q45–Q53 cùng ngày; thêm Q54–Q57 ngày 12/10/2026; thêm Q58–Q61 cùng ngày).
 
-- **Nguồn:** bảng dưới chép nguyên văn từ mục "Quyết định Product Owner" của
-  `docs/ui_reference/README.md`. `docs/ui_reference/` là bộ mẫu HTML chỉ có ở máy local
-  (gitignored), dựng từ ảnh mẫu trong `docs/ui_image/`.
+- **Nguồn:** bảng dưới là nguồn duy nhất của quyết định PO cho learner UI. `docs/ui_reference/` là bộ
+  mẫu HTML chỉ có ở máy local (gitignored), dựng từ ảnh mẫu trong `docs/ui_image/`.
 - **Nguyên tắc:** quyết định PO thắng ảnh mẫu. Ở những điểm trong bảng, không làm theo ảnh
   PNG.
 - **Cách dựng UI:** dev dựng giao diện thật theo bản HTML mẫu trong `docs/ui_reference/`,
   không theo ảnh mẫu, ở những điểm dưới đây.
-- Khi bảng trong `docs/ui_reference/README.md` đổi, cập nhật file này cùng lúc. Kiểm:
-  `diff <(grep '^| Q' docs/ui_reference/README.md) <(grep '^| Q' docs/product/learner-ui-decisions.md)`.
+- Bảng này là bản duy nhất; `docs/ui_reference/README.md` (local, gitignored) chỉ trỏ sang đây (TL 17/11/2026).
 
 ## Quyết định
 
