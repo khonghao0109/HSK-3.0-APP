@@ -2383,6 +2383,9 @@
 
   /* The glyph box (mẫu .wword-hero__glyph). */
   .learner-app .word-web__hero .word__head {
+    /* The glyph column sizes to its row of 田字格 cells; the mobile Q333
+       size container would pin this box to the column minimum. */
+    container-type: normal;
     display: grid;
     place-items: center;
     aspect-ratio: 1;
