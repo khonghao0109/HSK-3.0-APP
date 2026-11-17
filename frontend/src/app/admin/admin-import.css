@@ -68,7 +68,7 @@
   max-inline-size: 40rem;
   padding: 8px 12px;
   border: 1px solid var(--adm-slate-300);
-  border-radius: 8px;
+  border-radius: var(--adm-r-sm);
   background: var(--adm-paper);
   color: var(--adm-slate-700);
   font-size: var(--adm-fs-md);
@@ -86,7 +86,7 @@
   gap: var(--adm-sp-2, 8px);
   padding: var(--adm-sp-4, 16px);
   border: 1px dashed var(--adm-slate-300);
-  border-radius: 12px;
+  border-radius: var(--adm-r-md);
   background: var(--adm-slate-50);
 }
 
@@ -153,7 +153,7 @@
 .adm-import-stats__item {
   padding: var(--adm-sp-3, 12px);
   border: 1px solid var(--adm-slate-200);
-  border-radius: 10px;
+  border-radius: var(--adm-r-md);
   background: var(--adm-paper);
 }
 

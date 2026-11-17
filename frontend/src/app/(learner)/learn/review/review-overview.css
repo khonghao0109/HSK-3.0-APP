@@ -90,7 +90,7 @@
   min-height: 49px;
   padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border: 1px solid var(--m03-line-soft);
-  border-radius: 9px;
+  border-radius: var(--r-sm);
   background: var(--surface-card);
   box-shadow: 0 1px 4px rgb(20 24 43 / 6%);
   color: inherit;
@@ -105,10 +105,6 @@
 .learner-app a.rvo-stat:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.learner-app .rvo-stat__ico {
-  display: none;
 }
 
 .learner-app .rvo-stat__text {
@@ -159,33 +155,6 @@
   color: var(--slate-700);
 }
 
-.learner-app .rvo-ring {
-  position: absolute;
-  right: 6.5px;
-  top: 50%;
-  width: 38px;
-  height: 38px;
-  margin-top: -19px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 45deg,
-    var(--m03-jade) 0 calc(var(--value) * 1%),
-    var(--jade-100) 0
-  );
-}
-
-.learner-app .rvo-ring::before {
-  content: '';
-  position: absolute;
-  inset: 4.5px;
-  border-radius: 50%;
-  background: var(--surface-card);
-}
-
-.learner-app .rvo-ring__label {
-  display: none;
-}
-
 .learner-app .rvo-soon {
   display: grid;
   gap: 1px;
@@ -221,7 +190,7 @@
 .learner-app .rvo-card {
   min-width: 0;
   border: 1px solid var(--m03-line-soft);
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: var(--surface-card);
   box-shadow: 0 2px 6px rgb(20 24 43 / 5%);
 }
@@ -419,15 +388,6 @@
   .learner-app .rvo-stat {
     padding-left: 8px;
   }
-  .learner-app .rvo-ring {
-    width: 26px;
-    height: 26px;
-    margin-top: -13px;
-    right: 5px;
-  }
-  .learner-app .rvo-ring::before {
-    inset: 3.5px;
-  }
 }
 
 /* 768px (Q277): mobile/review-calendar.html keeps the 390px sizes inside
@@ -493,22 +453,6 @@
     box-shadow: var(--shadow-float);
   }
 
-  .learner-app .rvo-stat__ico {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: var(--r-md);
-    background: var(--jade-50);
-    color: var(--jade-800);
-  }
-
-  .learner-app .rvo-stat--soon .rvo-stat__ico {
-    background: var(--amber-100);
-    color: var(--text-on-amber);
-  }
-
   .learner-app .rvo-stat__text {
     flex: 1;
   }
@@ -568,34 +512,6 @@
   }
 
   .learner-app .rvo-stat__desc {
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-  }
-
-  .learner-app .rvo-ring {
-    position: relative;
-    right: auto;
-    top: auto;
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 64px;
-    height: 64px;
-    margin: 0;
-    background: conic-gradient(
-      var(--jade-600) calc(var(--value) * 1%),
-      var(--slate-200) 0
-    );
-  }
-
-  .learner-app .rvo-ring::before {
-    inset: 8px;
-    background: var(--surface-card);
-  }
-
-  .learner-app .rvo-ring__label {
-    position: relative;
-    display: block;
     font-size: var(--fs-sm);
     color: var(--text-muted);
   }

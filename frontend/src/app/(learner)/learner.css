@@ -3059,7 +3059,7 @@ html:has(.learner-app) {
   width: 72px;
   height: 72px;
   margin-bottom: var(--sp-2);
-  border-radius: 18px;
+  border-radius: var(--r-lg);
   background: var(--cream-100);
   color: var(--stone-600);
 }
@@ -3348,7 +3348,7 @@ html:has(.learner-app) {
   height: 44px;
   padding: 0 8px;
   border: 1px solid var(--path-hairline);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: var(--paper);
   box-shadow: 0 1px 2px var(--path-bar-shadow);
   color: var(--ex-chip-text);
@@ -3679,7 +3679,7 @@ html:has(.learner-app) {
   height: 44px;
   padding: 0 var(--sp-4) 0 var(--sp-4);
   border: 1px solid var(--path-hairline);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: var(--paper);
   box-shadow: 0 1px 2px var(--path-tile-shadow);
   color: var(--ink-900);
@@ -6066,7 +6066,7 @@ html:has(.learner-app) {
   padding: 0 var(--sp-2);
   background: var(--red-100);
   border: 1px solid var(--alert-error-border);
-  border-radius: 11px;
+  border-radius: var(--r-pill);
   color: var(--ex-wrong-text);
   font-family: var(--font-sans);
   font-size: var(--fs-xs);
@@ -8258,7 +8258,7 @@ html:has(.learner-app) {
   gap: var(--sp-2);
   padding: 16px 20px;
   border: 1px solid var(--rv-line-soft);
-  border-radius: 13px;
+  border-radius: var(--r-md);
   background: var(--paper);
   box-shadow: 0 2px 10px rgb(20 24 43 / 9%);
   text-align: center;
@@ -8313,7 +8313,7 @@ html:has(.learner-app) {
   z-index: 2;
   width: 100%;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--r-md);
   background: transparent;
   cursor: pointer;
 }

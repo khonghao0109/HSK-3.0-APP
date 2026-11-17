@@ -307,7 +307,8 @@
   margin: 0;
   padding: 4px;
   border: 1px solid var(--sand-300);
-  border-radius: 0.625rem;
+  /* Bo lồng nhau: option 8px + padding 4px. */
+  border-radius: var(--r-md);
   background: var(--surface-card);
   box-shadow: var(--shadow-card);
   list-style: none;
@@ -318,7 +319,7 @@
   align-items: center;
   min-height: 44px;
   padding: 0 12px;
-  border-radius: 0.5rem;
+  border-radius: var(--r-sm);
   color: var(--ink-900);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -446,7 +447,7 @@
   min-height: 1.3125rem;
   padding: 0 8px;
   border-color: var(--jade-200);
-  border-radius: 0.6875rem;
+  border-radius: var(--r-pill);
   background: var(--jade-50);
   color: var(--jade-800);
   font-weight: 500;
