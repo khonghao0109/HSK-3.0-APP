@@ -3803,6 +3803,15 @@ html:has(.learner-app) {
   padding: var(--sp-4) var(--sp-3) var(--sp-8);
 }
 
+/* Lượt 9: below 1024px .done-card is display: contents, so the one entrance
+   effect (done-rise, learner-web.css) runs on .done-main instead; from
+   1024px learner-web.css runs it on .done-card. Off for reduced motion. */
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  .learner-app .done-main {
+    animation: done-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
 .learner-app .done-kicker {
   text-align: center;
   font-size: var(--fs-sm);

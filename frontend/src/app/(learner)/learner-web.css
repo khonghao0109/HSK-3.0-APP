@@ -67,6 +67,22 @@
   }
 }
 
+/* Lượt 9 — the single entrance effect of the completion screens (lesson
+   and review session share `.done-card`): fade + 8px rise, only when the
+   viewer has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .learner-app .done-card {
+    animation: done-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes done-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* M2.10d F4: the early "Bài tiếp theo" copy (`.path-mid`) only exists for
    the 1024–1279px layout, where the card sits above the lesson grid and the
    late copy (`.path-next`) would put its "Bắt đầu" link after every lesson

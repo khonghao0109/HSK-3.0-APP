@@ -79,8 +79,8 @@ function wordId(): number {
 /** Axe plus the page-level checks, as soft assertions so every state runs. */
 async function audit(page: Page, state: string, title: string): Promise<void> {
   await page.waitForLoadState('networkidle');
-  // Axe reads colours mid fade-in (toast-in, ex-pop) as low contrast; wait
-  // for the finite animations (the confetti float loops forever).
+  // Axe reads colours mid fade-in (toast-in, ex-pop, done-rise) as low
+  // contrast; wait for the finite animations (an infinite one would never end).
   await page.waitForFunction(() =>
     document
       .getAnimations()
@@ -569,9 +569,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       await page.getByRole('button', { name: 'Tiếp tục' }).click();
     }
     await expect(page).toHaveURL(/\/complete$/u);
-    await expect(
-      page.getByText('Đã hoàn thành bài học'),
-    ).toBeVisible();
+    await expect(page.getByText('Đã hoàn thành bài học')).toBeVisible();
     await audit(page, 'complete', TITLES.complete);
 
     await registerReadyLearner(page, baseURL);
@@ -924,9 +922,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       await answerChoice(page, page.getByRole('radiogroup'), null);
     }
     await expect(page).toHaveURL(/\/complete$/u);
-    await expect(
-      page.getByText('Đã hoàn thành bài học'),
-    ).toBeVisible();
+    await expect(page.getByText('Đã hoàn thành bài học')).toBeVisible();
 
     // The completion screen has no tab bar: its next step leads back.
     await pressOn(page, page.locator('.done-btn--primary'));

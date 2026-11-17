@@ -957,6 +957,13 @@
     background-position: -200% 0;
   }
 }
+/* Lượt 9: the shimmer is a real loading state, but it stays still when the
+   viewer asks for reduced motion (styles.css only shortens it). */
+@media (prefers-reduced-motion: reduce) {
+  .admin-app .adm-skeleton {
+    animation: none;
+  }
+}
 .admin-app .adm-skeleton--title {
   width: min(420px, 80%);
   height: 60px;

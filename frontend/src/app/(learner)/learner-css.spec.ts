@@ -49,7 +49,7 @@ const webCss = readFileSync(
   'utf8',
 );
 
-describe('lượt 8 detail rules', () => {
+describe('lượt 8–9 detail rules', () => {
   it('draws the 田字格 grid only behind the four large-Hanzi spots', () => {
     const allowed = [
       '.learner-app .fc-hz::before',
@@ -64,5 +64,18 @@ describe('lượt 8 detail rules', () => {
     for (const { selector } of uses)
       for (const part of selector.split(','))
         expect(allowed).toContain(part.trim());
+  });
+
+  it('runs done-rise only when reduced motion is not requested', () => {
+    const uses = [...declarations(css), ...declarations(webCss)].filter(
+      ({ decl }) => /^animation(-name)?:.*\bdone-rise\b/u.test(decl),
+    );
+    expect(uses.length).toBeGreaterThan(0);
+    for (const { atRules } of uses)
+      expect(
+        atRules.some((rule) =>
+          rule.includes('prefers-reduced-motion: no-preference'),
+        ),
+      ).toBe(true);
   });
 });
