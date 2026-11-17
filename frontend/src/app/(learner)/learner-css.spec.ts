@@ -68,7 +68,7 @@ describe('lượt 8–9 detail rules', () => {
     expect(cellRules.length).toBeGreaterThan(0);
     for (const { selector } of cellRules)
       expect(selector.replace(/\s+/gu, ' ')).toMatch(
-        /^\.learner-app (:is\(\.fc-hz, \.word__hz, \.dict-item--top \.dict-item__hz\)|\.word-web__hero \.word__hz)/u,
+        /^\.learner-app (:is\(\.fc-hz, \.word__hz, \.dict-item--top \.dict-item__hz\)|\.word-web__hero \.word__(hz|head))/u,
       );
     const cell = declarations(webCss)
       .filter(
@@ -84,5 +84,13 @@ describe('lượt 8–9 detail rules', () => {
         'aspect-ratio: 1',
       ]),
     );
+    // Hero cells stay one row in reading order: no 2×2 grid.
+    expect(
+      declarations(webCss).filter(
+        ({ selector, decl }) =>
+          selector.includes('.word-web__hero .word__hz') &&
+          decl.startsWith('grid-template-columns'),
+      ),
+    ).toEqual([]);
   });
 });

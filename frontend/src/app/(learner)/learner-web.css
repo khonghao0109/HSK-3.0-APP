@@ -2368,7 +2368,9 @@
   .learner-app .word-web__hero {
     position: relative;
     display: grid;
-    grid-template-columns: clamp(180px, 30%, 220px) minmax(0, 1fr);
+    /* The glyph column grows with one row of 田字格 cells (auto = max-content,
+       capped by .word__head max-inline-size). */
+    grid-template-columns: minmax(clamp(180px, 30%, 220px), auto) minmax(0, 1fr);
     gap: var(--sp-8);
     align-items: center;
     padding: var(--sp-6);
@@ -2384,6 +2386,7 @@
     display: grid;
     place-items: center;
     aspect-ratio: 1;
+    max-inline-size: 22rem;
     border: 1px solid var(--border-default);
     border-radius: var(--r-lg);
     background: var(--cream-100)
@@ -2403,44 +2406,39 @@
     background: var(--cream-100);
   }
 
-  /* Lượt 8: from two 田字格 cells (1.25em each) the 5rem headword would not
-     fit the 180–220px glyph box on one line. */
-  .learner-app .word-web__hero .word__hz:has(> .tzg-cell:nth-child(2)) {
-    font-size: 2.75rem;
-  }
-
-  /* Three or four characters: a 2×2 block of full-size cells fills the
-     glyph box better than one row of tiny cells. */
+  /* One row of 田字格 cells in reading order, shrinking per cell count:
+     1 → 100px, 2 → 90px, 3–4 → 80px, 5+ → 64px (the floor). The hero values
+     replace the generic 0.75/0.6/0.5em steps (same specificity, later rule).
+     From three cells the glyph box stops being square and widens with the
+     row; only 5+ cells may wrap, inside the 22rem box. */
   .learner-app
     .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(3)):not(
-      :has(> .tzg-cell:nth-child(5))
-    ) {
-    display: grid;
-    grid-template-columns: repeat(2, max-content);
-    justify-content: center;
-    font-size: 3.5rem;
-  }
-
-  .learner-app
-    .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(3)):not(:has(> .tzg-cell:nth-child(5)))
+    .word__hz:has(> .tzg-cell:nth-child(2))
     .tzg-cell {
-    font-size: 1em;
+    font-size: 4.5rem;
   }
 
   .learner-app
     .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(3)):not(:has(> .tzg-cell:nth-child(5)))
-    .tzg-cell:nth-child(n + 3) {
-    margin-block-start: -1px;
+    .word__hz:has(> .tzg-cell:nth-child(3))
+    .tzg-cell {
+    font-size: 4rem;
   }
 
   .learner-app
     .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(3)):not(:has(> .tzg-cell:nth-child(5)))
-    .tzg-cell:nth-child(3) {
-    margin-inline-start: 0;
+    .word__hz:has(> .tzg-cell:nth-child(5))
+    .tzg-cell {
+    font-size: 3.2rem;
+  }
+
+  .learner-app .word-web__hero .word__head:has(.tzg-cell:nth-child(3)) {
+    aspect-ratio: auto;
+    min-block-size: 180px;
+  }
+
+  .learner-app .word-web__hero .word__hz:has(> .tzg-cell:nth-child(5)) {
+    white-space: normal;
   }
 
   .learner-app .word-web__hero-body {
