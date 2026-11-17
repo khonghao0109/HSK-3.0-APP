@@ -42,9 +42,17 @@ Ghi chú:
 
 ## 3. Thời gian, điểm (Q118)
 
+Đề đầy đủ (40 câu, khi có audio):
 - Một đồng hồ cho cả đề: **40 phút** (`duration` = 40).
-- Mỗi câu điểm như nhau; **100 điểm mỗi phần**, tối đa 200.
-- **Điểm đỗ tạm: 120/200** (theo mốc HSK cấp 1 hiện hành trên chinesetest.cn/HSK/1). PO xác nhận.
+- Mỗi câu điểm như nhau; **100 điểm mỗi phần**, tối đa 200. Điểm đỗ tạm 120/200.
+
+**Đề demo buổi 23/11 (PO 18/11/2026):** buổi này không có audio, nên chỉ tạo đề
+**"Đề thi thử HSK1 – Đọc"** gồm 20 câu phần Đọc (4 phần × 5 câu), có ảnh ghép và alt tiếng Việt.
+- `duration` = **20 phút**, tối đa 100 điểm, **điểm đỗ tạm 60/100** (tạm, chờ chốt #15).
+- 20 câu Nghe vẫn nạp vào ngân hàng câu hỏi ở trạng thái **draft**, không gắn vào đề nào,
+  chưa có audio. Manifest TTS đã duyệt (`backend/content/hsk1/audio/slice-01.json`) giữ nguyên để sinh sau.
+- Nạp: `npm run content:import:exam -- --file content/hsk1/exam/mock-01.json --ledger <ledger>`
+  (đề demo khai báo ở `demoTests` trong file nguồn). Câu và đề tạo ra ở draft; duyệt và xuất bản do người duyệt làm trong CMS.
 
 ## 4. Nội dung
 

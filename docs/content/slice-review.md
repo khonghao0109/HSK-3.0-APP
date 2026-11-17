@@ -61,3 +61,49 @@ Thư mục: `~/hsk-media/hsk1-slice/images/` (ảnh ghép) và `raw/` (tranh l�
 `backend/content/hsk1/media/checksums.json`. Prompt và alt: `docs/content/slice-image-plan.md`.
 
 Checklist: ảnh khớp nghĩa, không có chữ ngoài nhãn A–F, phong cách thống nhất.
+
+## Đề demo "Đề thi thử HSK1 – Đọc" — danh sách câu để PO duyệt lần cuối
+
+Bản nháp do AI soạn, chưa duyệt. Số câu theo đề đầy đủ (q0021–q0040); trong đề demo là câu 1–20. 20 câu, 20 phút, điểm đỗ tạm 60/100. Ảnh: Figma AI, ghép và gắn nhãn bằng ImageMagick (`compose-exam-images.sh`).
+
+### Phần 1 — Đọc câu, chọn tranh phù hợp trong sáu tranh A–F. Có một tranh thừa.
+
+Ảnh chung `img-r1` (file `img-r1.png` trong `~/hsk-media/hsk1-slice/images/`). Alt: A: Em bé uống cốc sữa bên bàn bếp; B: Người đàn ông nói chuyện điện thoại; C: Gia đình ngồi trên sofa xem tivi; D: Người phụ nữ chọn quần áo trong cửa hàng; E: Cô giáo đứng trước bảng, học sinh ngồi học; F: Máy bay bay trên trời xanh
+
+| Câu | Đề | Lựa chọn | Đáp án | Ảnh/alt | Giải thích |
+|---|---|---|---|---|---|
+| 21 | 我们在看电视。 (Wǒmen zài kàn diànshì.) | A. A<br>B. B<br>C. C<br>D. D<br>E. E<br>F. F | C |  | "Chúng tôi đang xem tivi." Khớp với tranh C. |
+| 22 | 他在打电话。 (Tā zài dǎ diànhuà.) | A. A<br>B. B<br>C. C<br>D. D<br>E. E<br>F. F | B |  | "Anh ấy đang gọi điện thoại." Khớp với tranh B. |
+| 23 | 老师在上课。 (Lǎoshī zài shàngkè.) | A. A<br>B. B<br>C. C<br>D. D<br>E. E<br>F. F | E |  | "Thầy giáo đang lên lớp." Khớp với tranh E. |
+| 24 | 小朋友在喝牛奶。 (Xiǎopéngyou zài hē niúnǎi.) | A. A<br>B. B<br>C. C<br>D. D<br>E. E<br>F. F | A |  | "Em bé đang uống sữa." Khớp với tranh A. |
+| 25 | 她在商店买衣服。 (Tā zài shāngdiàn mǎi yīfu.) | A. A<br>B. B<br>C. C<br>D. D<br>E. E<br>F. F | D |  | "Cô ấy đang mua quần áo ở cửa hàng." Khớp với tranh D. |
+
+### Phần 2 — Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.
+
+| Câu | Đề | Lựa chọn | Đáp án | Ảnh/alt | Giải thích |
+|---|---|---|---|---|---|
+| 26 | 你是中国人吗？ (Nǐ shì Zhōngguórén ma?) | A. 他是我哥哥。 (Tā shì wǒ gēge.)<br>B. 在学校门口。 (Zài xuéxiào ménkǒu.)<br>C. 好的，明天见。 (Hǎo de, míngtiān jiàn.)<br>D. 我不饿。 (Wǒ bù è.)<br>E. 两个。 (Liǎng ge.)<br>F. 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) | F |  | "Bạn là người Trung Quốc à?" – Câu trả lời phù hợp: 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) – "Vâng, tôi là người Trung Quốc." (Phương án C không dùng.) |
+| 27 | 那个人是谁？ (Nà ge rén shì shéi?) | A. 他是我哥哥。 (Tā shì wǒ gēge.)<br>B. 在学校门口。 (Zài xuéxiào ménkǒu.)<br>C. 好的，明天见。 (Hǎo de, míngtiān jiàn.)<br>D. 我不饿。 (Wǒ bù è.)<br>E. 两个。 (Liǎng ge.)<br>F. 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) | A |  | "Người kia là ai?" – Câu trả lời phù hợp: 他是我哥哥。 (Tā shì wǒ gēge.) – "Anh ấy là anh trai tôi." (Phương án C không dùng.) |
+| 28 | 你想吃点儿什么？ (Nǐ xiǎng chī diǎnr shénme?) | A. 他是我哥哥。 (Tā shì wǒ gēge.)<br>B. 在学校门口。 (Zài xuéxiào ménkǒu.)<br>C. 好的，明天见。 (Hǎo de, míngtiān jiàn.)<br>D. 我不饿。 (Wǒ bù è.)<br>E. 两个。 (Liǎng ge.)<br>F. 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) | D |  | "Bạn muốn ăn chút gì?" – Câu trả lời phù hợp: 我不饿。 (Wǒ bù è.) – "Tôi không đói." (từ chối lời mời ăn) (Phương án C không dùng.) |
+| 29 | 你要几个包子？ (Nǐ yào jǐ ge bāozi?) | A. 他是我哥哥。 (Tā shì wǒ gēge.)<br>B. 在学校门口。 (Zài xuéxiào ménkǒu.)<br>C. 好的，明天见。 (Hǎo de, míngtiān jiàn.)<br>D. 我不饿。 (Wǒ bù è.)<br>E. 两个。 (Liǎng ge.)<br>F. 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) | E |  | "Bạn muốn mấy cái bánh bao?" – Câu trả lời phù hợp: 两个。 (Liǎng ge.) – "Hai cái." (Phương án C không dùng.) |
+| 30 | 我们在哪儿见面？ (Wǒmen zài nǎr jiànmiàn?) | A. 他是我哥哥。 (Tā shì wǒ gēge.)<br>B. 在学校门口。 (Zài xuéxiào ménkǒu.)<br>C. 好的，明天见。 (Hǎo de, míngtiān jiàn.)<br>D. 我不饿。 (Wǒ bù è.)<br>E. 两个。 (Liǎng ge.)<br>F. 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) | B |  | "Chúng ta gặp nhau ở đâu?" – Câu trả lời phù hợp: 在学校门口。 (Zài xuéxiào ménkǒu.) – "Ở cổng trường." (Phương án C không dùng.) |
+
+### Phần 3 — Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.
+
+| Câu | Đề | Lựa chọn | Đáp án | Ảnh/alt | Giải thích |
+|---|---|---|---|---|---|
+| 31 | 我很（ ）喝茶。 (Wǒ hěn ( ) hē chá.) | A. 冷 (lěng)<br>B. 名字 (míngzi)<br>C. 坐 (zuò)<br>D. 喜欢 (xǐhuan)<br>E. 本 (běn)<br>F. 医院 (yīyuàn) | D |  | Tôi rất thích uống trà. 很喜欢 + động từ: rất thích làm gì. (Từ 医院 không dùng.) |
+| 32 | 请（ ），我给你拿水。 (Qǐng ( ), wǒ gěi nǐ ná shuǐ.) | A. 冷 (lěng)<br>B. 名字 (míngzi)<br>C. 坐 (zuò)<br>D. 喜欢 (xǐhuan)<br>E. 本 (běn)<br>F. 医院 (yīyuàn) | C |  | Mời ngồi, tôi lấy nước cho bạn. 请坐 – mời ngồi. (Từ 医院 không dùng.) |
+| 33 | 今天很（ ），你多穿衣服。 (Jīntiān hěn ( ), nǐ duō chuān yīfu.) | A. 冷 (lěng)<br>B. 名字 (míngzi)<br>C. 坐 (zuò)<br>D. 喜欢 (xǐhuan)<br>E. 本 (běn)<br>F. 医院 (yīyuàn) | A |  | Hôm nay rất lạnh, bạn mặc thêm quần áo. 冷 – lạnh. (Từ 医院 không dùng.) |
+| 34 | 这（ ）书是我的。 (Zhè ( ) shū shì wǒ de.) | A. 冷 (lěng)<br>B. 名字 (míngzi)<br>C. 坐 (zuò)<br>D. 喜欢 (xǐhuan)<br>E. 本 (běn)<br>F. 医院 (yīyuàn) | E |  | Quyển sách này là của tôi. 本 là lượng từ của sách. (Từ 医院 không dùng.) |
+| 35 | 你叫什么（ ）？ (Nǐ jiào shénme ( )?) | A. 冷 (lěng)<br>B. 名字 (míngzi)<br>C. 坐 (zuò)<br>D. 喜欢 (xǐhuan)<br>E. 本 (běn)<br>F. 医院 (yīyuàn) | B |  | Bạn tên là gì? 叫什么名字 – tên là gì. (Từ 医院 không dùng.) |
+
+### Phần 4 — Đọc đoạn văn ngắn rồi trả lời câu hỏi có dấu ★.
+
+| Câu | Đề | Lựa chọn | Đáp án | Ảnh/alt | Giải thích |
+|---|---|---|---|---|---|
+| 36 | 小雨昨天去商店买了一些水果和面包。 (Xiǎoyǔ zuótiān qù shāngdiàn mǎi le yīxiē shuǐguǒ hé miànbāo.) ★ 小雨买了什么？ (Xiǎoyǔ mǎi le shénme?) | A. 衣服 (yīfu)<br>B. 水果 (shuǐguǒ)<br>C. 书 (shū) | B |  | Hôm qua Tiểu Vũ đi cửa hàng mua ít hoa quả và bánh mì. ★ Tiểu Vũ đã mua gì? → 水果 (hoa quả). |
+| 37 | 我爸爸是医生，他在医院工作。 (Wǒ bàba shì yīshēng, tā zài yīyuàn gōngzuò.) ★ 爸爸在哪儿工作？ (Bàba zài nǎr gōngzuò?) | A. 医院 (yīyuàn)<br>B. 学校 (xuéxiào)<br>C. 饭店 (fàndiàn) | A |  | Bố tôi là bác sĩ, ông làm việc ở bệnh viện. ★ Bố làm việc ở đâu? → 医院 (bệnh viện). |
+| 38 | 现在是上午十点，小雨十一点半去机场。 (Xiànzài shì shàngwǔ shí diǎn, Xiǎoyǔ shíyī diǎn bàn qù jīchǎng.) ★ 小雨几点去机场？ (Xiǎoyǔ jǐ diǎn qù jīchǎng?) | A. 十点 (shí diǎn)<br>B. 十点半 (shí diǎn bàn)<br>C. 十一点半 (shíyī diǎn bàn) | C |  | Bây giờ là 10 giờ sáng, Tiểu Vũ 11 rưỡi ra sân bay. ★ Mấy giờ Tiểu Vũ ra sân bay? → 十一点半; 十点 là giờ hiện tại (bẫy). |
+| 39 | 我哥哥喜欢打球，他常常和朋友一起打球。 (Wǒ gēge xǐhuan dǎqiú, tā chángcháng hé péngyou yīqǐ dǎqiú.) ★ 哥哥喜欢做什么？ (Gēge xǐhuan zuò shénme?) | A. 打球 (dǎqiú)<br>B. 唱歌 (chànggē)<br>C. 看电影 (kàn diànyǐng) | A |  | Anh trai tôi thích chơi bóng, anh ấy thường chơi bóng cùng bạn bè. ★ Anh trai thích làm gì? → 打球 (chơi bóng). |
+| 40 | 小雨家在学校后边，她常常走路去学校。 (Xiǎoyǔ jiā zài xuéxiào hòubian, tā chángcháng zǒulù qù xuéxiào.) ★ 小雨怎么去学校？ (Xiǎoyǔ zěnme qù xuéxiào?) | A. 坐汽车 (zuò qìchē)<br>B. 打车 (dǎchē)<br>C. 走路 (zǒulù) | C |  | Nhà Tiểu Vũ ở phía sau trường, cô ấy thường đi bộ đến trường. ★ Tiểu Vũ đến trường bằng cách nào? → 走路 (đi bộ). |
