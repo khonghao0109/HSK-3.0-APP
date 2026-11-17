@@ -2271,7 +2271,8 @@
     margin: 0;
     padding: 0 6px;
     font-family: var(--font-cn-serif);
-    font-size: 5rem;
+    /* Q333: one line inside the glyph box (12px padding + 4px air). */
+    font-size: min(5rem, calc((100cqi - 16px) / var(--hz-n, 1)));
     font-weight: 400;
     line-height: 1;
     letter-spacing: normal;
@@ -2405,7 +2406,14 @@
     background: var(--jade-50);
     font-family: var(--font-cn);
     font-size: var(--fs-xl);
+    line-height: 1.4;
+    letter-spacing: 0.02em;
     color: var(--text-strong);
+  }
+
+  /* Q330: the mobile example card is not a box on web. */
+  .learner-app .word-ex__list {
+    display: contents;
   }
 
   /* M3.4c Q315: the tinted block holds the sentence and its translation
@@ -2413,7 +2421,9 @@
   .learner-app .word-ex__item {
     display: grid;
     gap: 2px;
+    margin: 0;
     padding: var(--sp-4) var(--sp-5);
+    border-top: 0;
     border-left: 3px solid var(--jade-700);
     border-radius: 0 var(--r-md) var(--r-md) 0;
     background: var(--jade-50);
@@ -2432,19 +2442,50 @@
     color: var(--text-muted);
   }
 
+  /* Q326: one plain line (mẫu web/word-full.html .uxb-fine). */
   .learner-app .word-ex footer {
     display: flex;
     justify-content: space-between;
     gap: var(--sp-4);
+    padding-top: 0;
+    border-top: 0;
     font-size: var(--fs-sm);
+    line-height: 1.45;
     color: var(--text-muted);
   }
 
-  /* M3.4c: web examples are spaced by the card's grid gap, not a rule. */
-  .learner-app .word-ex__item + .word-ex__item {
+  /* Q324: Nghĩa (mẫu web/word-full.html .uxb-section + .uxb-senses). */
+  .learner-app .word-sense {
+    margin: 0;
+    padding: var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .word-sense h2 {
+    line-height: 1.35;
+  }
+
+  .learner-app .word-sense__list {
+    gap: var(--sp-3);
+  }
+
+  .learner-app .word-sense__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .word-sense__list li::before {
+    flex: none;
+    width: 26px;
+    height: 26px;
     margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
+    background: var(--jade-50);
+    font-size: var(--fs-sm);
   }
 
   /* M3.4c: Từ liên quan (mẫu web/word-full.html .uxb-section +
@@ -2560,6 +2601,16 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* B8a: mẫu web/word-full.html "Hành động" (.w-h3). */
+  .learner-app .word-web__act-title {
+    display: block;
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
   .learner-app .word-web__act .word-save {
     display: inline-flex;
     align-items: center;
@@ -2639,6 +2690,25 @@
     border-radius: var(--r-lg);
     background: var(--surface-card);
     box-shadow: var(--shadow-card);
+  }
+
+  /* Q327: mẫu .w-section__more; a toast until the Hán tự screen exists. */
+  .learner-app .word-web__hanzi {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--jade-800);
+    cursor: pointer;
+  }
+
+  .learner-app .word-web__hanzi:hover {
+    text-decoration: underline;
   }
 
   .learner-app .word-web__info-title {

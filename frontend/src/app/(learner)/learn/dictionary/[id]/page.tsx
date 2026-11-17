@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { cache } from 'react';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import {
   allVietnamese,
   displayPinyin,
   firstVietnamese,
+  vietnameseMeanings,
 } from '@/features/learner-dictionary/dictionary-display';
 import {
   getSaved,
@@ -19,9 +21,29 @@ import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
 
-export const metadata: Metadata = {
-  title: 'Chi tiết từ vựng',
-};
+const TITLE = 'Chi tiết từ vựng';
+
+// Q331: the title and the page read the session and the word once per request.
+const readSession = cache(getServerLearnerSession);
+const readWord = cache(getWord);
+
+/** C9: "学习 · Chi tiết từ vựng · Hán Lộ"; the page itself handles failures. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const id = parseLessonId((await params).id);
+  if (id === null) return { title: TITLE };
+  try {
+    const session = await readSession();
+    if (session.state !== 'learner' || !session.token) return { title: TITLE };
+    const word = await readWord(session.token, id);
+    return { title: `${word.hanzi} · ${TITLE}` };
+  } catch {
+    return { title: TITLE };
+  }
+}
 
 function uniqueSources(
   sources: readonly { name: string; version: string }[],
@@ -49,7 +71,7 @@ export default async function WordPage({
   const id = parseLessonId((await params).id);
   if (id === null) notFound();
 
-  const session = await getServerLearnerSession();
+  const session = await readSession();
   if (session.state !== 'learner' || !session.token) {
     redirect('/sign-in');
   }
@@ -59,7 +81,7 @@ export default async function WordPage({
   let authFailed = false;
   try {
     const [word, isSaved] = await Promise.all([
-      getWord(session.token, id),
+      readWord(session.token, id),
       getSaved(session.token, id),
     ]);
     const source = word.sources[0];
@@ -72,6 +94,7 @@ export default async function WordPage({
           : null,
       pinyin: displayPinyin(word),
       vietnamese: allVietnamese(word.meanings),
+      meanings: vietnameseMeanings(word.meanings),
       level: word.levels[0]?.name ?? null,
       source: source ? { name: source.name, version: source.version } : null,
       // Q311: the old single Word.example only when the API has no examples.

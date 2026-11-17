@@ -280,6 +280,75 @@ test.describe('Learner dictionary (M2.6b)', () => {
     ).toBeVisible();
   });
 
+  test('titles the page with the hanzi and lists the meanings (M3.4d)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    await expect(page).toHaveTitle(`${WORD.hanzi} · Chi tiết từ vựng · Hán Lộ`);
+    await expect(
+      page.getByRole('region', { name: WORD.hanzi }).getByRole('heading', {
+        level: 1,
+      }),
+    ).toHaveText(WORD.hanzi);
+    const senses = page.getByRole('region', { name: 'Nghĩa' });
+    await expect(senses.locator('ol > li')).toHaveText([WORD.vi]);
+
+    await page.goto(`/learn/dictionary/${relatedId}`);
+    await expect(page.locator('.word-ex footer')).toHaveText(
+      `Nguồn: ${RELATED_EXAMPLE.sourceName} · Phiên bản ${RELATED_EXAMPLE.sourceVersion}`,
+    );
+  });
+
+  test('keeps a four-character hero on one line at 320 and 1440 (Q333)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    for (const width of [1440, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/dictionary/${ids.word}`);
+      const hero = page.getByRole('heading', { level: 1 });
+      await expect(hero).toHaveText(WORD.hanzi);
+      await expect(hero).toHaveClass(/word__hz--n4/);
+      const fit = await hero.evaluate((h1) => {
+        const box = h1.getBoundingClientRect();
+        const head = (h1.parentElement as HTMLElement).getBoundingClientRect();
+        return {
+          oneLine: h1.getClientRects().length === 1,
+          height: box.height,
+          fontSize: parseFloat(getComputedStyle(h1).fontSize),
+          inside: box.left >= head.left - 1 && box.right <= head.right + 1,
+          noOverflow: h1.scrollWidth <= h1.clientWidth + 1,
+          pageScroll:
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        };
+      });
+      expect(fit.oneLine, `${width}px`).toBe(true);
+      expect(fit.height, `${width}px`).toBeLessThan(fit.fontSize * 1.5);
+      expect(fit.inside, `${width}px`).toBe(true);
+      expect(fit.noOverflow, `${width}px`).toBe(true);
+      expect(fit.pageScroll, `${width}px`).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('web cards: Hành động heading and the Hán tự toast (M3.4d) @web', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Hành động' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Xem chi tiết Hán tự' }).click();
+    await expect(page.locator('.toast-region[role="status"]')).toHaveText(
+      'Tính năng sắp ra mắt.',
+    );
+  });
+
   test('a missing, malformed or draft word is a 404 page', async ({
     page,
     baseURL,

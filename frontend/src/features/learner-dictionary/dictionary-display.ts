@@ -5,7 +5,8 @@ export const SEARCH_QUERY_MAX_LENGTH = 64;
 
 type Meaning = { vi: string | null };
 
-function viMeanings(meanings: readonly Meaning[]): string[] {
+/** Q324: the non-empty Vietnamese meanings, in the API order. */
+export function vietnameseMeanings(meanings: readonly Meaning[]): string[] {
   return meanings
     .map((meaning) => meaning.vi?.trim() ?? '')
     .filter((vi) => vi !== '');
@@ -13,12 +14,12 @@ function viMeanings(meanings: readonly Meaning[]): string[] {
 
 /** Q70: a result row shows the first Vietnamese meaning; never English (Q65). */
 export function firstVietnamese(meanings: readonly Meaning[]): string | null {
-  return viMeanings(meanings)[0] ?? null;
+  return vietnameseMeanings(meanings)[0] ?? null;
 }
 
 /** Q70: the word page joins every Vietnamese meaning with "; ". */
 export function allVietnamese(meanings: readonly Meaning[]): string | null {
-  const all = viMeanings(meanings);
+  const all = vietnameseMeanings(meanings);
   return all.length ? all.join('; ') : null;
 }
 
