@@ -3800,7 +3800,7 @@ html:has(.learner-app) {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  padding: var(--sp-4) var(--sp-3) 28px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-8);
 }
 
 .learner-app .done-kicker {
@@ -3823,8 +3823,7 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 104px;
-  margin-top: -4px;
+  margin-top: var(--sp-6);
 }
 
 /* Unslop M4: no laurel; the score is the accent. jade-200 on navy-900
@@ -3850,7 +3849,7 @@ html:has(.learner-app) {
   display: grid;
   grid-template-columns: 164.8fr 187.8fr;
   gap: var(--sp-3);
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-8);
 }
 
 .learner-app .done-btn {
@@ -3931,10 +3930,6 @@ html:has(.learner-app) {
   .learner-app .done-kicker,
   .learner-app .done-title {
     overflow-wrap: anywhere;
-  }
-
-  .learner-app .done-medal {
-    height: auto;
   }
 
   .learner-app .done-medal__score {
@@ -8517,7 +8512,7 @@ html:has(.learner-app) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sp-2);
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--sp-6);
 }
 
 .learner-app .rv-stat {
@@ -8559,7 +8554,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .rv-meta {
-  margin: 4px 0 0;
+  margin: var(--sp-3) 0 0;
   text-align: center;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -8572,7 +8567,7 @@ html:has(.learner-app) {
 
 .learner-app .rv-again {
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--sp-6);
 }
 
 .learner-app .rv-again h2 {
@@ -8616,10 +8611,11 @@ html:has(.learner-app) {
 
 .learner-app .rv-actions {
   grid-template-columns: 1fr;
-  margin-top: 16px;
+  margin-top: var(--sp-8);
 }
 
-/* M3.3c (Q278): with "Ôn lại thẻ chưa nhớ" the pair keeps the m02 split. */
+/* M3.3c (Q278): with "Ôn tiếp" (retry of the forgotten cards) the pair keeps
+   the m02 split. */
 .learner-app .rv-actions--two {
   grid-template-columns: 164.8fr 187.8fr;
 }
@@ -8736,7 +8732,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .rv-note {
-  margin: 16px 0 0;
+  margin: var(--sp-4) 0 0;
   text-align: center;
   font-size: var(--fs-sm);
   line-height: 1.45;

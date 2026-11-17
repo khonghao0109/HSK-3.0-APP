@@ -424,11 +424,11 @@ describe('ReviewSession (M3.3a)', () => {
     );
     // Q278: summary.again = 1, so the retry of the forgotten cards is offered.
     expect(
-      screen.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+      screen.getByRole('button', { name: 'Ôn tiếp' }),
     ).toBeInTheDocument();
   });
 
-  it('hides Ôn lại thẻ chưa nhớ when no card was graded again (Q278)', async () => {
+  it('hides Ôn tiếp (retry of the forgotten cards) when no card was graded again (Q278)', async () => {
     const t = fake();
     t.current.mockResolvedValue(ok({ session: session(0, 1), items: [] }));
     t.complete.mockResolvedValue(
@@ -442,7 +442,7 @@ describe('ReviewSession (M3.3a)', () => {
       await screen.findByRole('heading', { name: 'Ôn tập hôm nay' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+      screen.queryByRole('button', { name: 'Ôn tiếp' }),
     ).not.toBeInTheDocument();
   });
 
@@ -462,7 +462,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     renderSession(t);
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+      await screen.findByRole('button', { name: 'Ôn tiếp' }),
     );
     expect(
       await screen.findByRole('button', { name: /Lật thẻ/ }),

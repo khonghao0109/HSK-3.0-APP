@@ -1128,11 +1128,16 @@
   }
 
   /* ---------- Hồ sơ (web/profile.html, Q17, Q82) ----------
-     Only the current data: name, email and sign-out in the hero card. */
+     Only the current data: name, email and sign-out in the hero card.
+     Unslop L6: the card stops at 720px on the title's left edge; the last
+     track takes the rest of the row. No column gap (it would also sit before
+     that track): the avatar and the button carry the spacing. */
   .learner-app .profile {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns:
+      auto minmax(0, 1fr) auto
+      max(0px, 100% - 720px);
     align-items: center;
-    gap: 0 var(--sp-6);
+    gap: 0;
     padding-top: var(--sp-8);
     padding-bottom: var(--sp-12);
   }
@@ -1148,7 +1153,7 @@
   /* The hero card behind avatar, name/email and the sign-out button. */
   .learner-app .profile::before {
     content: '';
-    grid-column: 1 / -1;
+    grid-column: 1 / 4;
     grid-row: 2;
     align-self: stretch;
     background: var(--surface-card);
@@ -1165,7 +1170,7 @@
     place-items: center;
     width: 96px;
     height: 96px;
-    margin: var(--sp-6) 0 var(--sp-6) var(--sp-8);
+    margin: var(--sp-6) var(--sp-6) var(--sp-6) var(--sp-8);
     border-radius: 50%;
     background: var(--jade-100);
     border: 3px solid var(--surface-card);
@@ -1225,7 +1230,7 @@
     grid-column: 3;
     grid-row: 2;
     position: relative;
-    margin-right: var(--sp-8);
+    margin: 0 var(--sp-8) 0 var(--sp-6);
   }
 
   .learner-app .profile .auth__submit {
@@ -4836,7 +4841,7 @@
   }
 
   /* M3.3c (Q278): the card keeps the 760px of mẫu .done-w (it shrank to its
-     content), so "Về Ôn tập" and "Ôn lại thẻ chưa nhớ" sit inside it. */
+     content), so the "Ôn tiếp" actions sit inside it. */
   .learner-app .rv-done .done-card {
     width: 760px;
     max-width: 100%;
@@ -4887,16 +4892,15 @@
     color: var(--text-muted);
   }
 
-  .learner-app .rv-actions {
-    display: flex;
-  }
-
   .learner-app .rv-note {
     font-size: var(--fs-sm);
   }
 
+  /* Unslop L6: same step as the stats block above (--sp-10 left a hole
+     between the meta line and the buttons). */
   .learner-app .rv-actions {
-    margin-top: var(--sp-10);
+    display: flex;
+    margin-top: var(--sp-8);
   }
 }
 

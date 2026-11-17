@@ -595,9 +595,12 @@ function ReviewComplete({
           </div>
 
           <p className="rv-meta">
-            {`Tỷ lệ ghi nhớ ${retention}`}
-            <span className="rv-dot" aria-hidden="true">
-              ·
+            {/* Web shows the retention in the medal; keep it once per layout. */}
+            <span className="m-only">
+              {`Tỷ lệ ghi nhớ ${retention}`}
+              <span className="rv-dot" aria-hidden="true">
+                ·
+              </span>
             </span>
             {`Thời gian ${formatDuration(summary.totalDurationMs)}`}
           </p>
@@ -644,7 +647,7 @@ function ReviewComplete({
                 type="button"
                 onClick={onRetry}
               >
-                Ôn lại thẻ chưa nhớ
+                Ôn tiếp
                 <Icon name="rotate-ccw" />
               </button>
             )}

@@ -290,7 +290,7 @@ test.describe('Learner review session (M3.3a)', () => {
       page.getByRole('heading', { name: 'Ôn tập hôm nay' }),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }).click();
+    await page.getByRole('button', { name: 'Ôn tiếp' }).click();
     await expect(front(page)).toHaveText(WORDS[1].hanzi);
     await expect(
       page
@@ -304,7 +304,7 @@ test.describe('Learner review session (M3.3a)', () => {
     ).toBeVisible();
     // Nothing graded again this time, so the retry is not offered.
     await expect(
-      page.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
+      page.getByRole('button', { name: 'Ôn tiếp' }),
     ).toHaveCount(0);
   });
 
