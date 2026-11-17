@@ -1,0 +1,2051 @@
+{
+ "schemaVersion": 1,
+ "note": "Kế hoạch bài học HSK1 do agent soạn (Pha 2, nháp). Khung từ: GF0025-2021 qua Word/WordLevel; cách chia bài tự thiết kế. pinyinStored = Word.pinyin (bỏ dấu) để resolve (TL-218/219).",
+ "learnableWords": 498,
+ "pilot": [
+  {
+   "lesson": 1,
+   "slug": "hsk1-pilot-l01-chao-hoi-gioi-thieu",
+   "title": "Chào hỏi và giới thiệu bản thân",
+   "status": "pilot",
+   "words": [
+    "我",
+    "你",
+    "您",
+    "他",
+    "她",
+    "我们",
+    "叫",
+    "名字",
+    "是",
+    "认识",
+    "高兴",
+    "老师",
+    "学生",
+    "同学",
+    "朋友",
+    "中国",
+    "人",
+    "什么",
+    "谢谢",
+    "再见"
+   ],
+   "grammar": [
+    "是, 叫, 吗, 很, 也/都"
+   ]
+  },
+  {
+   "lesson": 2,
+   "slug": "hsk1-pilot-l02-gia-dinh-tuoi-tac",
+   "title": "Gia đình và tuổi tác",
+   "status": "pilot",
+   "words": [
+    "爸爸",
+    "妈妈",
+    "哥哥",
+    "姐姐",
+    "弟弟",
+    "妹妹",
+    "儿子",
+    "爷爷",
+    "奶奶",
+    "孩子",
+    "岁",
+    "多",
+    "大",
+    "小",
+    "有",
+    "没有",
+    "和",
+    "的",
+    "家",
+    "谁"
+   ],
+   "grammar": [
+    "有/没有, 的, 几/多大, 和, 谁/都"
+   ]
+  },
+  {
+   "lesson": 3,
+   "slug": "hsk1-pilot-l03-thoi-gian-ngay-thang",
+   "title": "Thời gian và ngày tháng",
+   "status": "pilot",
+   "words": [
+    "一",
+    "二",
+    "三",
+    "四",
+    "五",
+    "六",
+    "七",
+    "八",
+    "九",
+    "十",
+    "点",
+    "分",
+    "今天",
+    "明天",
+    "昨天",
+    "星期",
+    "月",
+    "日",
+    "年",
+    "现在"
+   ],
+   "grammar": [
+    "số đếm, giờ, ngày tháng, 星期, trật tự thời gian"
+   ]
+  },
+  {
+   "lesson": 4,
+   "slug": "hsk1-pilot-l04-an-uong-mua-sam",
+   "title": "Ăn uống và mua sắm",
+   "status": "pilot",
+   "words": [
+    "吃",
+    "喝",
+    "水",
+    "茶",
+    "米饭",
+    "菜",
+    "水果",
+    "牛奶",
+    "面包",
+    "鸡蛋",
+    "早饭",
+    "午饭",
+    "晚饭",
+    "喜欢",
+    "买",
+    "钱",
+    "块",
+    "多少",
+    "贵",
+    "商店"
+   ],
+   "grammar": [
+    "吃/喝, 喜欢, 多少钱/块, 早饭/午饭/晚饭, 没有"
+   ]
+  },
+  {
+   "lesson": 5,
+   "slug": "hsk1-pilot-l05-hoc-tap-truong-hoc",
+   "title": "Học tập và trường học",
+   "status": "pilot",
+   "words": [
+    "学习",
+    "学",
+    "汉语",
+    "汉字",
+    "书",
+    "读",
+    "写",
+    "说",
+    "见",
+    "听",
+    "学校",
+    "课",
+    "课本",
+    "考试",
+    "字",
+    "问",
+    "知道",
+    "上课",
+    "下课",
+    "图书馆"
+   ],
+   "grammar": [
+    "学习/学, động từ + tân ngữ, 上课/下课, 问/知道, 见"
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "lesson": 6,
+   "slug": "hsk1-pilot-l06-loi-chao-lich-su",
+   "title": "Lời chào lịch sự, cảm ơn, xin lỗi",
+   "priority": "P0",
+   "orderIndex": 1006,
+   "words": [
+    {
+     "hanzi": "不",
+     "pinyinStored": "bu"
+    },
+    {
+     "hanzi": "不客气",
+     "pinyinStored": "bu ke qi"
+    },
+    {
+     "hanzi": "对不起",
+     "pinyinStored": "dui bu qi"
+    },
+    {
+     "hanzi": "没关系",
+     "pinyinStored": "mei guan xi"
+    },
+    {
+     "hanzi": "没事儿",
+     "pinyinStored": "mei shi r"
+    },
+    {
+     "hanzi": "没什么",
+     "pinyinStored": "mei shen me"
+    },
+    {
+     "hanzi": "请",
+     "pinyinStored": "qing"
+    },
+    {
+     "hanzi": "请问",
+     "pinyinStored": "qing wen"
+    },
+    {
+     "hanzi": "请坐",
+     "pinyinStored": "qing zuo"
+    },
+    {
+     "hanzi": "请进",
+     "pinyinStored": "qing jin"
+    },
+    {
+     "hanzi": "好",
+     "pinyinStored": "hao"
+    },
+    {
+     "hanzi": "吗",
+     "pinyinStored": "ma"
+    },
+    {
+     "hanzi": "呢",
+     "pinyinStored": "ne"
+    },
+    {
+     "hanzi": "你们",
+     "pinyinStored": "ni men"
+    },
+    {
+     "hanzi": "他们",
+     "pinyinStored": "ta men"
+    },
+    {
+     "hanzi": "她们",
+     "pinyinStored": "ta men"
+    },
+    {
+     "hanzi": "们",
+     "pinyinStored": "men"
+    },
+    {
+     "hanzi": "也",
+     "pinyinStored": "ye"
+    },
+    {
+     "hanzi": "很",
+     "pinyinStored": "hen"
+    },
+    {
+     "hanzi": "都",
+     "pinyinStored": "dou"
+    }
+   ],
+   "grammar": [
+    "不 + động từ/tính từ (phủ định)",
+    "呢 hỏi lại: …呢？ (còn … thì sao)",
+    "请 + động từ (mời, đề nghị)",
+    "们 sau đại từ chỉ số nhiều",
+    "也/都 đứng trước động từ"
+   ]
+  },
+  {
+   "lesson": 7,
+   "slug": "hsk1-pilot-l07-quoc-gia-noi-chon",
+   "title": "Đất nước, ngôn ngữ, nơi chốn",
+   "priority": "P0",
+   "orderIndex": 1007,
+   "words": [
+    {
+     "hanzi": "国",
+     "pinyinStored": "guo"
+    },
+    {
+     "hanzi": "国家",
+     "pinyinStored": "guo jia"
+    },
+    {
+     "hanzi": "外国",
+     "pinyinStored": "wai guo"
+    },
+    {
+     "hanzi": "国外",
+     "pinyinStored": "guo wai"
+    },
+    {
+     "hanzi": "中文",
+     "pinyinStored": "zhong wen"
+    },
+    {
+     "hanzi": "外语",
+     "pinyinStored": "wai yu"
+    },
+    {
+     "hanzi": "北京",
+     "pinyinStored": "bei jing"
+    },
+    {
+     "hanzi": "这",
+     "pinyinStored": "zhe"
+    },
+    {
+     "hanzi": "那",
+     "pinyinStored": "na"
+    },
+    {
+     "hanzi": "哪",
+     "pinyinStored": "na"
+    },
+    {
+     "hanzi": "哪儿",
+     "pinyinStored": "na r"
+    },
+    {
+     "hanzi": "这儿",
+     "pinyinStored": "zhe r"
+    },
+    {
+     "hanzi": "那儿",
+     "pinyinStored": "na r"
+    },
+    {
+     "hanzi": "哪里",
+     "pinyinStored": "na li"
+    },
+    {
+     "hanzi": "这里",
+     "pinyinStored": "zhe li"
+    },
+    {
+     "hanzi": "那里",
+     "pinyinStored": "na li"
+    },
+    {
+     "hanzi": "在",
+     "pinyinStored": "zai"
+    },
+    {
+     "hanzi": "住",
+     "pinyinStored": "zhu"
+    },
+    {
+     "hanzi": "来",
+     "pinyinStored": "lai"
+    },
+    {
+     "hanzi": "去",
+     "pinyinStored": "qu"
+    }
+   ],
+   "grammar": [
+    "这/那/哪 (đây/đó/nào)",
+    "哪儿/哪里 hỏi nơi chốn",
+    "在 + nơi chốn (ở đâu)",
+    "住在 + nơi chốn",
+    "来/去 + nơi chốn"
+   ]
+  },
+  {
+   "lesson": 8,
+   "slug": "hsk1-pilot-l08-so-dem-luong-tu",
+   "title": "Số đếm và lượng từ",
+   "priority": "P0",
+   "orderIndex": 1008,
+   "words": [
+    {
+     "hanzi": "零",
+     "pinyinStored": "ling"
+    },
+    {
+     "hanzi": "百",
+     "pinyinStored": "bai"
+    },
+    {
+     "hanzi": "两",
+     "pinyinStored": "liang"
+    },
+    {
+     "hanzi": "个",
+     "pinyinStored": "ge"
+    },
+    {
+     "hanzi": "几",
+     "pinyinStored": "ji"
+    },
+    {
+     "hanzi": "元",
+     "pinyinStored": "yuan"
+    },
+    {
+     "hanzi": "毛",
+     "pinyinStored": "mao"
+    },
+    {
+     "hanzi": "本",
+     "pinyinStored": "ben"
+    },
+    {
+     "hanzi": "杯",
+     "pinyinStored": "bei"
+    },
+    {
+     "hanzi": "杯子",
+     "pinyinStored": "bei zi"
+    },
+    {
+     "hanzi": "本子",
+     "pinyinStored": "ben zi"
+    },
+    {
+     "hanzi": "第",
+     "pinyinStored": "di"
+    },
+    {
+     "hanzi": "次",
+     "pinyinStored": "ci"
+    },
+    {
+     "hanzi": "号",
+     "pinyinStored": "hao"
+    },
+    {
+     "hanzi": "页",
+     "pinyinStored": "ye"
+    },
+    {
+     "hanzi": "一些",
+     "pinyinStored": "yi xie"
+    },
+    {
+     "hanzi": "这些",
+     "pinyinStored": "zhe xie"
+    },
+    {
+     "hanzi": "那些",
+     "pinyinStored": "na xie"
+    },
+    {
+     "hanzi": "哪些",
+     "pinyinStored": "na xie"
+    },
+    {
+     "hanzi": "有些",
+     "pinyinStored": "you xie"
+    }
+   ],
+   "grammar": [
+    "Số + lượng từ + danh từ (个/本/杯)",
+    "几 và 多少",
+    "两 và 二",
+    "第 + số (số thứ tự)",
+    "Số + 次 (số lần)"
+   ]
+  },
+  {
+   "lesson": 9,
+   "slug": "hsk1-pilot-l09-thoi-gian-trong-ngay",
+   "title": "Thời gian trong ngày",
+   "priority": "P0",
+   "orderIndex": 1009,
+   "words": [
+    {
+     "hanzi": "上午",
+     "pinyinStored": "shang wu"
+    },
+    {
+     "hanzi": "中午",
+     "pinyinStored": "zhong wu"
+    },
+    {
+     "hanzi": "下午",
+     "pinyinStored": "xia wu"
+    },
+    {
+     "hanzi": "早上",
+     "pinyinStored": "zao shang"
+    },
+    {
+     "hanzi": "晚上",
+     "pinyinStored": "wan shang"
+    },
+    {
+     "hanzi": "白天",
+     "pinyinStored": "bai tian"
+    },
+    {
+     "hanzi": "早",
+     "pinyinStored": "zao"
+    },
+    {
+     "hanzi": "晚",
+     "pinyinStored": "wan"
+    },
+    {
+     "hanzi": "时候",
+     "pinyinStored": "shi hou"
+    },
+    {
+     "hanzi": "时间",
+     "pinyinStored": "shi jian"
+    },
+    {
+     "hanzi": "小时",
+     "pinyinStored": "xiao shi"
+    },
+    {
+     "hanzi": "半",
+     "pinyinStored": "ban"
+    },
+    {
+     "hanzi": "一会儿",
+     "pinyinStored": "yi hui r"
+    },
+    {
+     "hanzi": "马上",
+     "pinyinStored": "ma shang"
+    },
+    {
+     "hanzi": "前天",
+     "pinyinStored": "qian tian"
+    },
+    {
+     "hanzi": "后天",
+     "pinyinStored": "hou tian"
+    },
+    {
+     "hanzi": "今年",
+     "pinyinStored": "jin nian"
+    },
+    {
+     "hanzi": "去年",
+     "pinyinStored": "qu nian"
+    },
+    {
+     "hanzi": "明年",
+     "pinyinStored": "ming nian"
+    },
+    {
+     "hanzi": "星期天",
+     "pinyinStored": "xing qi tian"
+    }
+   ],
+   "grammar": [
+    "Từ chỉ thời gian đứng trước động từ",
+    "Cách nói giờ: 点、分、半",
+    "什么时候 hỏi thời điểm",
+    "一会儿/马上"
+   ]
+  },
+  {
+   "lesson": 10,
+   "slug": "hsk1-pilot-l10-sinh-hoat-hang-ngay",
+   "title": "Sinh hoạt hằng ngày",
+   "priority": "P0",
+   "orderIndex": 1010,
+   "words": [
+    {
+     "hanzi": "起床",
+     "pinyinStored": "qi chuang"
+    },
+    {
+     "hanzi": "起来",
+     "pinyinStored": "qi lai"
+    },
+    {
+     "hanzi": "睡",
+     "pinyinStored": "shui"
+    },
+    {
+     "hanzi": "睡觉",
+     "pinyinStored": "shui jiao"
+    },
+    {
+     "hanzi": "洗",
+     "pinyinStored": "xi"
+    },
+    {
+     "hanzi": "洗手间",
+     "pinyinStored": "xi shou jian"
+    },
+    {
+     "hanzi": "上班",
+     "pinyinStored": "shang ban"
+    },
+    {
+     "hanzi": "下班",
+     "pinyinStored": "xia ban"
+    },
+    {
+     "hanzi": "上学",
+     "pinyinStored": "shang xue"
+    },
+    {
+     "hanzi": "放学",
+     "pinyinStored": "fang xue"
+    },
+    {
+     "hanzi": "工作",
+     "pinyinStored": "gong zuo"
+    },
+    {
+     "hanzi": "休息",
+     "pinyinStored": "xiu xi"
+    },
+    {
+     "hanzi": "回家",
+     "pinyinStored": "hui jia"
+    },
+    {
+     "hanzi": "在家",
+     "pinyinStored": "zai jia"
+    },
+    {
+     "hanzi": "吃饭",
+     "pinyinStored": "chi fan"
+    },
+    {
+     "hanzi": "穿",
+     "pinyinStored": "chuan"
+    },
+    {
+     "hanzi": "衣服",
+     "pinyinStored": "yi fu"
+    },
+    {
+     "hanzi": "做",
+     "pinyinStored": "zuo"
+    },
+    {
+     "hanzi": "事",
+     "pinyinStored": "shi"
+    },
+    {
+     "hanzi": "常常",
+     "pinyinStored": "chang chang"
+    }
+   ],
+   "grammar": [
+    "Trình tự thời gian + nơi chốn + hành động",
+    "常常 + động từ",
+    "Câu liên động: 回家吃饭",
+    "在家 + động từ"
+   ]
+  },
+  {
+   "lesson": 11,
+   "slug": "hsk1-pilot-l11-phuong-huong",
+   "title": "Phương hướng và vị trí",
+   "priority": "P1",
+   "orderIndex": 1011,
+   "words": [
+    {
+     "hanzi": "上边",
+     "pinyinStored": "shang bian"
+    },
+    {
+     "hanzi": "下边",
+     "pinyinStored": "xia bian"
+    },
+    {
+     "hanzi": "前边",
+     "pinyinStored": "qian bian"
+    },
+    {
+     "hanzi": "后边",
+     "pinyinStored": "hou bian"
+    },
+    {
+     "hanzi": "左边",
+     "pinyinStored": "zuo bian"
+    },
+    {
+     "hanzi": "右边",
+     "pinyinStored": "you bian"
+    },
+    {
+     "hanzi": "里边",
+     "pinyinStored": "li bian"
+    },
+    {
+     "hanzi": "外边",
+     "pinyinStored": "wai bian"
+    },
+    {
+     "hanzi": "旁边",
+     "pinyinStored": "pang bian"
+    },
+    {
+     "hanzi": "东边",
+     "pinyinStored": "dong bian"
+    },
+    {
+     "hanzi": "西边",
+     "pinyinStored": "xi bian"
+    },
+    {
+     "hanzi": "南边",
+     "pinyinStored": "nan bian"
+    },
+    {
+     "hanzi": "北边",
+     "pinyinStored": "bei bian"
+    },
+    {
+     "hanzi": "中间",
+     "pinyinStored": "zhong jian"
+    },
+    {
+     "hanzi": "东",
+     "pinyinStored": "dong"
+    },
+    {
+     "hanzi": "西",
+     "pinyinStored": "xi"
+    },
+    {
+     "hanzi": "南",
+     "pinyinStored": "nan"
+    },
+    {
+     "hanzi": "北",
+     "pinyinStored": "bei"
+    },
+    {
+     "hanzi": "左",
+     "pinyinStored": "zuo"
+    },
+    {
+     "hanzi": "右",
+     "pinyinStored": "you"
+    }
+   ],
+   "grammar": [
+    "Từ phương vị -边 (上边, 左边…)",
+    "A 在 B 的 + phương vị",
+    "Nơi chốn + 有 + vật (tồn tại)"
+   ]
+  },
+  {
+   "lesson": 12,
+   "slug": "hsk1-pilot-l12-vi-tri-trong-nha",
+   "title": "Vị trí trong nhà và nơi làm việc",
+   "priority": "P1",
+   "orderIndex": 1012,
+   "words": [
+    {
+     "hanzi": "上",
+     "pinyinStored": "shang"
+    },
+    {
+     "hanzi": "下",
+     "pinyinStored": "xia"
+    },
+    {
+     "hanzi": "前",
+     "pinyinStored": "qian"
+    },
+    {
+     "hanzi": "后",
+     "pinyinStored": "hou"
+    },
+    {
+     "hanzi": "里",
+     "pinyinStored": "li"
+    },
+    {
+     "hanzi": "外",
+     "pinyinStored": "wai"
+    },
+    {
+     "hanzi": "中",
+     "pinyinStored": "zhong"
+    },
+    {
+     "hanzi": "地上",
+     "pinyinStored": "di shang"
+    },
+    {
+     "hanzi": "身上",
+     "pinyinStored": "shen shang"
+    },
+    {
+     "hanzi": "路上",
+     "pinyinStored": "lu shang"
+    },
+    {
+     "hanzi": "楼上",
+     "pinyinStored": "lou shang"
+    },
+    {
+     "hanzi": "楼下",
+     "pinyinStored": "lou xia"
+    },
+    {
+     "hanzi": "楼",
+     "pinyinStored": "lou"
+    },
+    {
+     "hanzi": "门",
+     "pinyinStored": "men"
+    },
+    {
+     "hanzi": "门口",
+     "pinyinStored": "men kou"
+    },
+    {
+     "hanzi": "房子",
+     "pinyinStored": "fang zi"
+    },
+    {
+     "hanzi": "房间",
+     "pinyinStored": "fang jian"
+    },
+    {
+     "hanzi": "桌子",
+     "pinyinStored": "zhuo zi"
+    },
+    {
+     "hanzi": "床",
+     "pinyinStored": "chuang"
+    },
+    {
+     "hanzi": "家里",
+     "pinyinStored": "jia li"
+    }
+   ],
+   "grammar": [
+    "Danh từ + 上/下/里 (桌子上)",
+    "是 và 有 chỉ tồn tại"
+   ]
+  },
+  {
+   "lesson": 13,
+   "slug": "hsk1-pilot-l13-di-lai-phuong-tien",
+   "title": "Đi lại và phương tiện",
+   "priority": "P1",
+   "orderIndex": 1013,
+   "words": [
+    {
+     "hanzi": "车",
+     "pinyinStored": "che"
+    },
+    {
+     "hanzi": "汽车",
+     "pinyinStored": "qi che"
+    },
+    {
+     "hanzi": "火车",
+     "pinyinStored": "huo che"
+    },
+    {
+     "hanzi": "飞机",
+     "pinyinStored": "fei ji"
+    },
+    {
+     "hanzi": "飞",
+     "pinyinStored": "fei"
+    },
+    {
+     "hanzi": "机场",
+     "pinyinStored": "ji chang"
+    },
+    {
+     "hanzi": "车站",
+     "pinyinStored": "che zhan"
+    },
+    {
+     "hanzi": "车票",
+     "pinyinStored": "che piao"
+    },
+    {
+     "hanzi": "机票",
+     "pinyinStored": "ji piao"
+    },
+    {
+     "hanzi": "票",
+     "pinyinStored": "piao"
+    },
+    {
+     "hanzi": "开车",
+     "pinyinStored": "kai che"
+    },
+    {
+     "hanzi": "打车",
+     "pinyinStored": "da che"
+    },
+    {
+     "hanzi": "上车",
+     "pinyinStored": "shang che"
+    },
+    {
+     "hanzi": "下车",
+     "pinyinStored": "xia che"
+    },
+    {
+     "hanzi": "坐",
+     "pinyinStored": "zuo"
+    },
+    {
+     "hanzi": "走",
+     "pinyinStored": "zou"
+    },
+    {
+     "hanzi": "走路",
+     "pinyinStored": "zou lu"
+    },
+    {
+     "hanzi": "路",
+     "pinyinStored": "lu"
+    },
+    {
+     "hanzi": "马路",
+     "pinyinStored": "ma lu"
+    },
+    {
+     "hanzi": "路口",
+     "pinyinStored": "lu kou"
+    }
+   ],
+   "grammar": [
+    "坐/开 + phương tiện",
+    "怎么 + động từ (hỏi cách làm)",
+    "走路 + 去 + nơi chốn"
+   ]
+  },
+  {
+   "lesson": 14,
+   "slug": "hsk1-pilot-l14-noi-chon-thanh-pho",
+   "title": "Nơi chốn trong thành phố",
+   "priority": "P1",
+   "orderIndex": 1014,
+   "words": [
+    {
+     "hanzi": "医院",
+     "pinyinStored": "yi yuan"
+    },
+    {
+     "hanzi": "饭店",
+     "pinyinStored": "fan dian"
+    },
+    {
+     "hanzi": "书店",
+     "pinyinStored": "shu dian"
+    },
+    {
+     "hanzi": "商场",
+     "pinyinStored": "shang chang"
+    },
+    {
+     "hanzi": "电影院",
+     "pinyinStored": "dian ying yuan"
+    },
+    {
+     "hanzi": "学院",
+     "pinyinStored": "xue yuan"
+    },
+    {
+     "hanzi": "大学",
+     "pinyinStored": "da xue"
+    },
+    {
+     "hanzi": "中学",
+     "pinyinStored": "zhong xue"
+    },
+    {
+     "hanzi": "小学",
+     "pinyinStored": "xiao xue"
+    },
+    {
+     "hanzi": "地方",
+     "pinyinStored": "di fang"
+    },
+    {
+     "hanzi": "地点",
+     "pinyinStored": "di dian"
+    },
+    {
+     "hanzi": "地图",
+     "pinyinStored": "di tu"
+    },
+    {
+     "hanzi": "远",
+     "pinyinStored": "yuan"
+    },
+    {
+     "hanzi": "门票",
+     "pinyinStored": "men piao"
+    },
+    {
+     "hanzi": "到",
+     "pinyinStored": "dao"
+    },
+    {
+     "hanzi": "来到",
+     "pinyinStored": "lai dao"
+    },
+    {
+     "hanzi": "回到",
+     "pinyinStored": "hui dao"
+    },
+    {
+     "hanzi": "从",
+     "pinyinStored": "cong"
+    },
+    {
+     "hanzi": "进",
+     "pinyinStored": "jin"
+    },
+    {
+     "hanzi": "出",
+     "pinyinStored": "chu"
+    }
+   ],
+   "grammar": [
+    "从…到…",
+    "去 + nơi chốn + động từ (mục đích)",
+    "到/回到/来到 + nơi chốn"
+   ]
+  },
+  {
+   "lesson": 15,
+   "slug": "hsk1-pilot-l15-thoi-tiet-cam-giac",
+   "title": "Thời tiết và cảm giác",
+   "priority": "P1",
+   "orderIndex": 1015,
+   "words": [
+    {
+     "hanzi": "天气",
+     "pinyinStored": "tian qi"
+    },
+    {
+     "hanzi": "天",
+     "pinyinStored": "tian"
+    },
+    {
+     "hanzi": "雨",
+     "pinyinStored": "yu"
+    },
+    {
+     "hanzi": "下雨",
+     "pinyinStored": "xia yu"
+    },
+    {
+     "hanzi": "风",
+     "pinyinStored": "feng"
+    },
+    {
+     "hanzi": "冷",
+     "pinyinStored": "leng"
+    },
+    {
+     "hanzi": "热",
+     "pinyinStored": "re"
+    },
+    {
+     "hanzi": "渴",
+     "pinyinStored": "ke"
+    },
+    {
+     "hanzi": "饿",
+     "pinyinStored": "e"
+    },
+    {
+     "hanzi": "累",
+     "pinyinStored": "lei"
+    },
+    {
+     "hanzi": "太",
+     "pinyinStored": "tai"
+    },
+    {
+     "hanzi": "非常",
+     "pinyinStored": "fei chang"
+    },
+    {
+     "hanzi": "真",
+     "pinyinStored": "zhen"
+    },
+    {
+     "hanzi": "真的",
+     "pinyinStored": "zhen de"
+    },
+    {
+     "hanzi": "最",
+     "pinyinStored": "zui"
+    },
+    {
+     "hanzi": "好看",
+     "pinyinStored": "hao kan"
+    },
+    {
+     "hanzi": "好吃",
+     "pinyinStored": "hao chi"
+    },
+    {
+     "hanzi": "好听",
+     "pinyinStored": "hao ting"
+    },
+    {
+     "hanzi": "好玩儿",
+     "pinyinStored": "hao wan r"
+    },
+    {
+     "hanzi": "高",
+     "pinyinStored": "gao"
+    }
+   ],
+   "grammar": [
+    "太 + tính từ + 了",
+    "非常/真/最 + tính từ",
+    "Câu vị ngữ tính từ (天气很冷)",
+    "下雨了 (了 chỉ thay đổi)"
+   ]
+  },
+  {
+   "lesson": 16,
+   "slug": "hsk1-pilot-l16-di-chuyen-giup-do",
+   "title": "Di chuyển và giúp đỡ",
+   "priority": "P1",
+   "orderIndex": 1016,
+   "words": [
+    {
+     "hanzi": "出去",
+     "pinyinStored": "chu qu"
+    },
+    {
+     "hanzi": "出来",
+     "pinyinStored": "chu lai"
+    },
+    {
+     "hanzi": "进去",
+     "pinyinStored": "jin qu"
+    },
+    {
+     "hanzi": "进来",
+     "pinyinStored": "jin lai"
+    },
+    {
+     "hanzi": "回去",
+     "pinyinStored": "hui qu"
+    },
+    {
+     "hanzi": "回来",
+     "pinyinStored": "hui lai"
+    },
+    {
+     "hanzi": "回",
+     "pinyinStored": "hui"
+    },
+    {
+     "hanzi": "过",
+     "pinyinStored": "guo"
+    },
+    {
+     "hanzi": "跑",
+     "pinyinStored": "pao"
+    },
+    {
+     "hanzi": "送",
+     "pinyinStored": "song"
+    },
+    {
+     "hanzi": "跟",
+     "pinyinStored": "gen"
+    },
+    {
+     "hanzi": "一起",
+     "pinyinStored": "yi qi"
+    },
+    {
+     "hanzi": "一块儿",
+     "pinyinStored": "yi kuai r"
+    },
+    {
+     "hanzi": "等",
+     "pinyinStored": "deng"
+    },
+    {
+     "hanzi": "找",
+     "pinyinStored": "zhao"
+    },
+    {
+     "hanzi": "找到",
+     "pinyinStored": "zhao dao"
+    },
+    {
+     "hanzi": "拿",
+     "pinyinStored": "na"
+    },
+    {
+     "hanzi": "放",
+     "pinyinStored": "fang"
+    },
+    {
+     "hanzi": "帮",
+     "pinyinStored": "bang"
+    },
+    {
+     "hanzi": "帮忙",
+     "pinyinStored": "bang mang"
+    }
+   ],
+   "grammar": [
+    "Bổ ngữ xu hướng 来/去 (出去, 进来, 回来)",
+    "跟 + người + 一起 + động từ",
+    "帮 + người + động từ",
+    "Động từ + 到 (找到)"
+   ]
+  },
+  {
+   "lesson": 17,
+   "slug": "hsk1-pilot-l17-do-vat-hang-ngay",
+   "title": "Đồ vật hằng ngày",
+   "priority": "P1",
+   "orderIndex": 1017,
+   "words": [
+    {
+     "hanzi": "东西",
+     "pinyinStored": "dong xi"
+    },
+    {
+     "hanzi": "书包",
+     "pinyinStored": "shu bao"
+    },
+    {
+     "hanzi": "钱包",
+     "pinyinStored": "qian bao"
+    },
+    {
+     "hanzi": "手机",
+     "pinyinStored": "shou ji"
+    },
+    {
+     "hanzi": "电脑",
+     "pinyinStored": "dian nao"
+    },
+    {
+     "hanzi": "电视",
+     "pinyinStored": "dian shi"
+    },
+    {
+     "hanzi": "电视机",
+     "pinyinStored": "dian shi ji"
+    },
+    {
+     "hanzi": "电话",
+     "pinyinStored": "dian hua"
+    },
+    {
+     "hanzi": "包",
+     "pinyinStored": "bao"
+    },
+    {
+     "hanzi": "包子",
+     "pinyinStored": "bao zi"
+    },
+    {
+     "hanzi": "面条儿",
+     "pinyinStored": "mian tiao r"
+    },
+    {
+     "hanzi": "肉",
+     "pinyinStored": "rou"
+    },
+    {
+     "hanzi": "饭",
+     "pinyinStored": "fan"
+    },
+    {
+     "hanzi": "花",
+     "pinyinStored": "hua"
+    },
+    {
+     "hanzi": "新",
+     "pinyinStored": "xin"
+    },
+    {
+     "hanzi": "坏",
+     "pinyinStored": "huai"
+    },
+    {
+     "hanzi": "用",
+     "pinyinStored": "yong"
+    },
+    {
+     "hanzi": "有用",
+     "pinyinStored": "you yong"
+    },
+    {
+     "hanzi": "少",
+     "pinyinStored": "shao"
+    },
+    {
+     "hanzi": "要",
+     "pinyinStored": "yao"
+    }
+   ],
+   "grammar": [
+    "要 + danh từ/động từ",
+    "的 làm định ngữ (新的手机)",
+    "多/少 làm vị ngữ"
+   ]
+  },
+  {
+   "lesson": 18,
+   "slug": "hsk1-pilot-l18-con-nguoi-nghe-nghiep",
+   "title": "Con người và nghề nghiệp",
+   "priority": "P1",
+   "orderIndex": 1018,
+   "words": [
+    {
+     "hanzi": "男",
+     "pinyinStored": "nan"
+    },
+    {
+     "hanzi": "女",
+     "pinyinStored": "nu:"
+    },
+    {
+     "hanzi": "男人",
+     "pinyinStored": "nan ren"
+    },
+    {
+     "hanzi": "女人",
+     "pinyinStored": "nu: ren"
+    },
+    {
+     "hanzi": "男孩儿",
+     "pinyinStored": "nan hai r"
+    },
+    {
+     "hanzi": "女孩儿",
+     "pinyinStored": "nu: hai r"
+    },
+    {
+     "hanzi": "男生",
+     "pinyinStored": "nan sheng"
+    },
+    {
+     "hanzi": "女生",
+     "pinyinStored": "nu: sheng"
+    },
+    {
+     "hanzi": "男朋友",
+     "pinyinStored": "nan peng you"
+    },
+    {
+     "hanzi": "女朋友",
+     "pinyinStored": "nu: peng you"
+    },
+    {
+     "hanzi": "小孩儿",
+     "pinyinStored": "xiao hai r"
+    },
+    {
+     "hanzi": "小朋友",
+     "pinyinStored": "xiao peng you"
+    },
+    {
+     "hanzi": "小姐",
+     "pinyinStored": "xiao jie"
+    },
+    {
+     "hanzi": "先生",
+     "pinyinStored": "xian sheng"
+    },
+    {
+     "hanzi": "老人",
+     "pinyinStored": "lao ren"
+    },
+    {
+     "hanzi": "工人",
+     "pinyinStored": "gong ren"
+    },
+    {
+     "hanzi": "医生",
+     "pinyinStored": "yi sheng"
+    },
+    {
+     "hanzi": "病人",
+     "pinyinStored": "bing ren"
+    },
+    {
+     "hanzi": "别人",
+     "pinyinStored": "bie ren"
+    },
+    {
+     "hanzi": "家人",
+     "pinyinStored": "jia ren"
+    }
+   ],
+   "grammar": [
+    "的 chỉ sở hữu, quan hệ",
+    "男/女 + danh từ",
+    "是 + nghề nghiệp"
+   ]
+  },
+  {
+   "lesson": 19,
+   "slug": "hsk1-pilot-l19-so-thich-giai-tri",
+   "title": "Sở thích và giải trí",
+   "priority": "P1",
+   "orderIndex": 1019,
+   "words": [
+    {
+     "hanzi": "爱",
+     "pinyinStored": "ai"
+    },
+    {
+     "hanzi": "爱好",
+     "pinyinStored": "ai hao"
+    },
+    {
+     "hanzi": "唱",
+     "pinyinStored": "chang"
+    },
+    {
+     "hanzi": "唱歌",
+     "pinyinStored": "chang ge"
+    },
+    {
+     "hanzi": "歌",
+     "pinyinStored": "ge"
+    },
+    {
+     "hanzi": "球",
+     "pinyinStored": "qiu"
+    },
+    {
+     "hanzi": "打球",
+     "pinyinStored": "da qiu"
+    },
+    {
+     "hanzi": "玩儿",
+     "pinyinStored": "wan r"
+    },
+    {
+     "hanzi": "电影",
+     "pinyinStored": "dian ying"
+    },
+    {
+     "hanzi": "看",
+     "pinyinStored": "kan"
+    },
+    {
+     "hanzi": "看到",
+     "pinyinStored": "kan dao"
+    },
+    {
+     "hanzi": "看见",
+     "pinyinStored": "kan jian"
+    },
+    {
+     "hanzi": "听到",
+     "pinyinStored": "ting dao"
+    },
+    {
+     "hanzi": "听见",
+     "pinyinStored": "ting jian"
+    },
+    {
+     "hanzi": "开玩笑",
+     "pinyinStored": "kai wan xiao"
+    },
+    {
+     "hanzi": "笑",
+     "pinyinStored": "xiao"
+    },
+    {
+     "hanzi": "会",
+     "pinyinStored": "hui"
+    },
+    {
+     "hanzi": "能",
+     "pinyinStored": "neng"
+    },
+    {
+     "hanzi": "想",
+     "pinyinStored": "xiang"
+    },
+    {
+     "hanzi": "有时候",
+     "pinyinStored": "you shi hou"
+    }
+   ],
+   "grammar": [
+    "会/能/想 + động từ",
+    "Bổ ngữ kết quả 到/见 (看到, 听见)",
+    "爱 + động từ"
+   ]
+  },
+  {
+   "lesson": 20,
+   "slug": "hsk1-pilot-l20-suc-khoe-co-the",
+   "title": "Sức khoẻ, cơ thể và cảm nhận",
+   "priority": "P1",
+   "orderIndex": 1020,
+   "words": [
+    {
+     "hanzi": "身体",
+     "pinyinStored": "shen ti"
+    },
+    {
+     "hanzi": "病",
+     "pinyinStored": "bing"
+    },
+    {
+     "hanzi": "生病",
+     "pinyinStored": "sheng bing"
+    },
+    {
+     "hanzi": "看病",
+     "pinyinStored": "kan bing"
+    },
+    {
+     "hanzi": "手",
+     "pinyinStored": "shou"
+    },
+    {
+     "hanzi": "口",
+     "pinyinStored": "kou"
+    },
+    {
+     "hanzi": "动",
+     "pinyinStored": "dong"
+    },
+    {
+     "hanzi": "动作",
+     "pinyinStored": "dong zuo"
+    },
+    {
+     "hanzi": "坐下",
+     "pinyinStored": "zuo xia"
+    },
+    {
+     "hanzi": "站",
+     "pinyinStored": "zhan"
+    },
+    {
+     "hanzi": "别",
+     "pinyinStored": "bie"
+    },
+    {
+     "hanzi": "慢",
+     "pinyinStored": "man"
+    },
+    {
+     "hanzi": "快",
+     "pinyinStored": "kuai"
+    },
+    {
+     "hanzi": "生气",
+     "pinyinStored": "sheng qi"
+    },
+    {
+     "hanzi": "觉得",
+     "pinyinStored": "jue de"
+    },
+    {
+     "hanzi": "明白",
+     "pinyinStored": "ming bai"
+    },
+    {
+     "hanzi": "记",
+     "pinyinStored": "ji"
+    },
+    {
+     "hanzi": "记住",
+     "pinyinStored": "ji zhu"
+    },
+    {
+     "hanzi": "记得",
+     "pinyinStored": "ji de"
+    },
+    {
+     "hanzi": "忘",
+     "pinyinStored": "wang"
+    }
+   ],
+   "grammar": [
+    "别 + động từ (cấm, khuyên)",
+    "觉得 + nhận xét",
+    "记住/记得/忘",
+    "快/慢 + động từ"
+   ]
+  },
+  {
+   "lesson": 21,
+   "slug": "hsk1-pilot-l21-lop-hoc-thi-cu",
+   "title": "Lớp học và thi cử",
+   "priority": "P1",
+   "orderIndex": 1021,
+   "words": [
+    {
+     "hanzi": "课文",
+     "pinyinStored": "ke wen"
+    },
+    {
+     "hanzi": "听写",
+     "pinyinStored": "ting xie"
+    },
+    {
+     "hanzi": "读书",
+     "pinyinStored": "du shu"
+    },
+    {
+     "hanzi": "教",
+     "pinyinStored": "jiao"
+    },
+    {
+     "hanzi": "教学楼",
+     "pinyinStored": "jiao xue lou"
+    },
+    {
+     "hanzi": "班",
+     "pinyinStored": "ban"
+    },
+    {
+     "hanzi": "中学生",
+     "pinyinStored": "zhong xue sheng"
+    },
+    {
+     "hanzi": "大学生",
+     "pinyinStored": "da xue sheng"
+    },
+    {
+     "hanzi": "小学生",
+     "pinyinStored": "xiao xue sheng"
+    },
+    {
+     "hanzi": "试",
+     "pinyinStored": "shi"
+    },
+    {
+     "hanzi": "考",
+     "pinyinStored": "kao"
+    },
+    {
+     "hanzi": "回答",
+     "pinyinStored": "hui da"
+    },
+    {
+     "hanzi": "错",
+     "pinyinStored": "cuo"
+    },
+    {
+     "hanzi": "对",
+     "pinyinStored": "dui"
+    },
+    {
+     "hanzi": "不对",
+     "pinyinStored": "bu dui"
+    },
+    {
+     "hanzi": "难",
+     "pinyinStored": "nan"
+    },
+    {
+     "hanzi": "知识",
+     "pinyinStored": "zhi shi"
+    },
+    {
+     "hanzi": "认真",
+     "pinyinStored": "ren zhen"
+    },
+    {
+     "hanzi": "准备",
+     "pinyinStored": "zhun bei"
+    },
+    {
+     "hanzi": "开会",
+     "pinyinStored": "kai hui"
+    }
+   ],
+   "grammar": [
+    "Câu hỏi chính phản: 对不对、难不难",
+    "准备 + động từ",
+    "对/错 làm vị ngữ"
+   ]
+  },
+  {
+   "lesson": 22,
+   "slug": "hsk1-pilot-l22-hen-gap-ngay-le",
+   "title": "Hẹn gặp, ngày lễ, liên lạc",
+   "priority": "P1",
+   "orderIndex": 1022,
+   "words": [
+    {
+     "hanzi": "见面",
+     "pinyinStored": "jian mian"
+    },
+    {
+     "hanzi": "再",
+     "pinyinStored": "zai"
+    },
+    {
+     "hanzi": "先",
+     "pinyinStored": "xian"
+    },
+    {
+     "hanzi": "说话",
+     "pinyinStored": "shuo hua"
+    },
+    {
+     "hanzi": "话",
+     "pinyinStored": "hua"
+    },
+    {
+     "hanzi": "告诉",
+     "pinyinStored": "gao su"
+    },
+    {
+     "hanzi": "介绍",
+     "pinyinStored": "jie shao"
+    },
+    {
+     "hanzi": "给",
+     "pinyinStored": "gei"
+    },
+    {
+     "hanzi": "打电话",
+     "pinyinStored": "da dian hua"
+    },
+    {
+     "hanzi": "请假",
+     "pinyinStored": "qing jia"
+    },
+    {
+     "hanzi": "放假",
+     "pinyinStored": "fang jia"
+    },
+    {
+     "hanzi": "新年",
+     "pinyinStored": "xin nian"
+    },
+    {
+     "hanzi": "生日",
+     "pinyinStored": "sheng ri"
+    },
+    {
+     "hanzi": "开",
+     "pinyinStored": "kai"
+    },
+    {
+     "hanzi": "关",
+     "pinyinStored": "guan"
+    },
+    {
+     "hanzi": "关上",
+     "pinyinStored": "guan shang"
+    },
+    {
+     "hanzi": "打开",
+     "pinyinStored": "da kai"
+    },
+    {
+     "hanzi": "有名",
+     "pinyinStored": "you ming"
+    },
+    {
+     "hanzi": "最后",
+     "pinyinStored": "zui hou"
+    },
+    {
+     "hanzi": "最好",
+     "pinyinStored": "zui hao"
+    }
+   ],
+   "grammar": [
+    "给 + người + động từ (打电话)",
+    "先…再…",
+    "最 + tính từ (最好、最后)"
+   ]
+  },
+  {
+   "lesson": 23,
+   "slug": "hsk1-pilot-l23-tro-tu-dong-thai",
+   "title": "Trợ từ, thể và so sánh",
+   "priority": "P1",
+   "orderIndex": 1023,
+   "words": [
+    {
+     "hanzi": "了",
+     "pinyinStored": "le"
+    },
+    {
+     "hanzi": "着",
+     "pinyinStored": "zhe"
+    },
+    {
+     "hanzi": "吧",
+     "pinyinStored": "ba"
+    },
+    {
+     "hanzi": "正",
+     "pinyinStored": "zheng"
+    },
+    {
+     "hanzi": "正在",
+     "pinyinStored": "zheng zai"
+    },
+    {
+     "hanzi": "没",
+     "pinyinStored": "mei"
+    },
+    {
+     "hanzi": "还",
+     "pinyinStored": "hai"
+    },
+    {
+     "hanzi": "还是",
+     "pinyinStored": "hai shi"
+    },
+    {
+     "hanzi": "还有",
+     "pinyinStored": "hai you"
+    },
+    {
+     "hanzi": "就",
+     "pinyinStored": "jiu"
+    },
+    {
+     "hanzi": "比",
+     "pinyinStored": "bi"
+    },
+    {
+     "hanzi": "一样",
+     "pinyinStored": "yi yang"
+    },
+    {
+     "hanzi": "一点儿",
+     "pinyinStored": "yi dian r"
+    },
+    {
+     "hanzi": "一下儿",
+     "pinyinStored": "yi xia r"
+    },
+    {
+     "hanzi": "是不是",
+     "pinyinStored": "shi bu shi"
+    },
+    {
+     "hanzi": "怎么",
+     "pinyinStored": "zen me"
+    },
+    {
+     "hanzi": "地",
+     "pinyinStored": "de"
+    },
+    {
+     "hanzi": "别的",
+     "pinyinStored": "bie de"
+    },
+    {
+     "hanzi": "有的",
+     "pinyinStored": "you de"
+    },
+    {
+     "hanzi": "不大",
+     "pinyinStored": "bu da"
+    }
+   ],
+   "grammar": [
+    "了 (hoàn thành)",
+    "着 (trạng thái kéo dài)",
+    "正在…呢",
+    "比 (so sánh)",
+    "A 和 B 一样",
+    "还是 (câu hỏi lựa chọn)",
+    "吧 (gợi ý, phỏng đoán)",
+    "一点儿/一下儿",
+    "是不是"
+   ]
+  },
+  {
+   "lesson": 24,
+   "slug": "hsk1-pilot-l24-hoat-dong-thoi-han",
+   "title": "Hoạt động và khoảng thời gian",
+   "priority": "P1",
+   "orderIndex": 1024,
+   "words": [
+    {
+     "hanzi": "打",
+     "pinyinStored": "da"
+    },
+    {
+     "hanzi": "干",
+     "pinyinStored": "gan"
+    },
+    {
+     "hanzi": "干什么",
+     "pinyinStored": "gan shen me"
+    },
+    {
+     "hanzi": "干净",
+     "pinyinStored": "gan jing"
+    },
+    {
+     "hanzi": "忙",
+     "pinyinStored": "mang"
+    },
+    {
+     "hanzi": "忘记",
+     "pinyinStored": "wang ji"
+    },
+    {
+     "hanzi": "得到",
+     "pinyinStored": "de dao"
+    },
+    {
+     "hanzi": "上网",
+     "pinyinStored": "shang wang"
+    },
+    {
+     "hanzi": "网上",
+     "pinyinStored": "wang shang"
+    },
+    {
+     "hanzi": "网友",
+     "pinyinStored": "wang you"
+    },
+    {
+     "hanzi": "上次",
+     "pinyinStored": "shang ci"
+    },
+    {
+     "hanzi": "下次",
+     "pinyinStored": "xia ci"
+    },
+    {
+     "hanzi": "一半",
+     "pinyinStored": "yi ban"
+    },
+    {
+     "hanzi": "一边",
+     "pinyinStored": "yi bian"
+    },
+    {
+     "hanzi": "半天",
+     "pinyinStored": "ban tian"
+    },
+    {
+     "hanzi": "半年",
+     "pinyinStored": "ban nian"
+    },
+    {
+     "hanzi": "日期",
+     "pinyinStored": "ri qi"
+    },
+    {
+     "hanzi": "星期日",
+     "pinyinStored": "xing qi ri"
+    },
+    {
+     "hanzi": "常",
+     "pinyinStored": "chang"
+    },
+    {
+     "hanzi": "不用",
+     "pinyinStored": "bu yong"
+    }
+   ],
+   "grammar": [
+    "一边…一边…",
+    "上次/下次",
+    "干什么 (làm gì)",
+    "半天/半年 (khoảng thời gian)"
+   ]
+  },
+  {
+   "lesson": 25,
+   "slug": "hsk1-pilot-l25-on-tap-bo-sung",
+   "title": "Ôn tập và từ bổ sung",
+   "priority": "P1",
+   "orderIndex": 1025,
+   "words": [
+    {
+     "hanzi": "地",
+     "pinyinStored": "di"
+    },
+    {
+     "hanzi": "女儿",
+     "pinyinStored": "nu: er"
+    },
+    {
+     "hanzi": "奶",
+     "pinyinStored": "nai"
+    },
+    {
+     "hanzi": "子",
+     "pinyinStored": "zi"
+    },
+    {
+     "hanzi": "山",
+     "pinyinStored": "shan"
+    },
+    {
+     "hanzi": "差",
+     "pinyinStored": "cha"
+    },
+    {
+     "hanzi": "树",
+     "pinyinStored": "shu"
+    },
+    {
+     "hanzi": "电",
+     "pinyinStored": "dian"
+    },
+    {
+     "hanzi": "白",
+     "pinyinStored": "bai"
+    },
+    {
+     "hanzi": "老",
+     "pinyinStored": "lao"
+    },
+    {
+     "hanzi": "行",
+     "pinyinStored": "xing"
+    },
+    {
+     "hanzi": "起",
+     "pinyinStored": "qi"
+    },
+    {
+     "hanzi": "还",
+     "pinyinStored": "huan"
+    },
+    {
+     "hanzi": "这边",
+     "pinyinStored": "zhe bian"
+    },
+    {
+     "hanzi": "那边",
+     "pinyinStored": "na bian"
+    },
+    {
+     "hanzi": "重",
+     "pinyinStored": "zhong"
+    },
+    {
+     "hanzi": "重要",
+     "pinyinStored": "zhong yao"
+    },
+    {
+     "hanzi": "间",
+     "pinyinStored": "jian"
+    }
+   ],
+   "grammar": [
+    "Không thêm điểm mới; ôn 了、在、有、的"
+   ]
+  }
+ ]
+}
