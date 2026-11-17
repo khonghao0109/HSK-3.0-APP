@@ -159,11 +159,11 @@ describe('LessonPlayer', () => {
 
     const next = await screen.findByRole('button', { name: 'Tiếp tục' });
     await waitFor(() => expect(next).toHaveFocus());
-    expect(screen.getByText('Chính xác!')).toBeInTheDocument();
+    expect(screen.getByText('Chính xác')).toBeInTheDocument();
     expect(screen.getByText('Câu của bạn hoàn toàn đúng.')).toBeInTheDocument();
     expect(next.closest('[aria-live]')).toBeNull();
     expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
-      'Chính xác! Câu của bạn hoàn toàn đúng.',
+      'Chính xác. Câu của bạn hoàn toàn đúng.',
     );
     expect(screen.getByRole('radio', { name: '超市' })).toHaveClass('is-right');
 
@@ -256,7 +256,7 @@ describe('LessonPlayer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Đang kiểm tra…' }));
     expect(attemptCalls()).toHaveLength(1);
     await act(async () => resolve(attempt(true)));
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
     expect(attemptCalls()).toHaveLength(1);
   });
 
@@ -285,7 +285,7 @@ describe('LessonPlayer', () => {
       selector: '.ex-error',
     });
     fireEvent.click(checkButton());
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
     const keys = attemptCalls().map(([, init]) =>
       new Headers(init?.headers).get('idempotency-key'),
     );
@@ -306,7 +306,7 @@ describe('LessonPlayer', () => {
     });
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
     fireEvent.click(checkButton());
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
     const keys = attemptCalls().map(([, init]) =>
       new Headers(init?.headers).get('idempotency-key'),
     );
@@ -353,7 +353,7 @@ describe('LessonPlayer', () => {
     expect(checkButton()).toHaveFocus();
     expect(checkButton()).not.toHaveAttribute('aria-disabled');
     fireEvent.click(checkButton());
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
 
     const [, init] = attemptCalls()[0] ?? [];
     expect(JSON.parse(String(init?.body))).toMatchObject({
@@ -386,7 +386,7 @@ describe('LessonPlayer', () => {
     fireEvent.change(input, { target: { value: '  好 ' } });
     expect(container.querySelector('.fb-blank')?.textContent).toBe('好');
     fireEvent.keyDown(input, { key: 'Enter' });
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
     const [, init] = attemptCalls()[0] ?? [];
     expect(JSON.parse(String(init?.body))).toMatchObject({
       answer: { text: '好' },
@@ -454,7 +454,7 @@ describe('LessonPlayer', () => {
     ).toHaveAttribute('aria-disabled', 'true');
 
     await act(async () => resolveStart(ok({ success: true })));
-    await screen.findByText('Chính xác!');
+    await screen.findByText('Chính xác');
     const urls = fetchSpy.mock.calls.map(([url]) => String(url));
     expect(urls).toEqual([
       '/api/learner/lessons/5/start',
@@ -516,7 +516,7 @@ describe('LessonPlayer', () => {
     async function answerRight() {
       fireEvent.click(screen.getByRole('radio', { name: '超市' }));
       fireEvent.click(checkButton());
-      await screen.findByText('Chính xác!');
+      await screen.findByText('Chính xác');
     }
 
     function continueButton() {

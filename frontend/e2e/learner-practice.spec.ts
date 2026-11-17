@@ -136,7 +136,7 @@ test.describe('Learner activity player (M2.5b)', () => {
     await expect(group.getByRole('radio')).toHaveCount(2);
     await group.getByRole('radio', { name: 'Hello' }).click();
     await check(page).click();
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
     await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeFocused();
     await expect(group.getByRole('radio', { name: 'Hello' })).toHaveClass(
       /is-right/u,
@@ -192,7 +192,7 @@ test.describe('Learner activity player (M2.5b)', () => {
     }
     await expect(check(page)).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
     await expect(page.locator('.pr-answer__row .pr-chip')).toHaveText([
       '我',
       '想',
@@ -209,7 +209,7 @@ test.describe('Learner activity player (M2.5b)', () => {
     await input.fill('  买 ');
     await expect(page.locator('.fb-blank')).toHaveText('买');
     await input.press('Enter');
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
 
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
 
@@ -221,7 +221,7 @@ test.describe('Learner activity player (M2.5b)', () => {
     );
     await page.getByRole('radio', { name: '超市' }).click();
     await check(page).click();
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
     // M2.5d (Q58): Tiếp tục on the last exercise completes the lesson and
     // opens its complete page.
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
@@ -272,7 +272,7 @@ test.describe('Learner activity player (M2.5b)', () => {
       await page.getByRole('button', { name: `Thêm ${word}` }).click();
     }
     await check(page).click();
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
 
     await page.getByRole('link', { name: 'Thoát bài luyện tập' }).click();
     await expect(page).toHaveURL(new RegExp(`/learn/lessons/${hsk3Lesson}$`));
@@ -357,7 +357,7 @@ test.describe('Learner activity player (M2.5b)', () => {
       await page.getByRole('button', { name: `Thêm ${word}` }).click();
     }
     await check(page).click();
-    await expect(feedback(page)).toContainText('Chính xác!');
+    await expect(feedback(page)).toContainText('Chính xác');
     expect(await readCspViolations(page)).toEqual([]);
     expect(cspConsole).toEqual([]);
   });

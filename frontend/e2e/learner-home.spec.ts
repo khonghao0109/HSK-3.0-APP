@@ -91,25 +91,27 @@ function toast(page: Page): Locator {
 }
 
 test.describe('Learner Home (M2.4a)', () => {
-  test('greets a learner registered with a name', async ({ page, baseURL }) => {
+  test('heads a named learner\'s home with "Hôm nay" and the date', async ({
+    page,
+    baseURL,
+  }) => {
     await registerReadyLearner(page, baseURL, 'Lan');
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Chào, Lan',
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hôm nay');
+    await expect(page.locator('.home-hero__greet p')).toHaveText(
+      /^(Thứ [A-ZÀ-Ỹ]\S*|Chủ Nhật), \d{2}\/\d{2}\/\d{4}$/u,
     );
   });
 
-  test('greets a learner registered without a name with "Chào bạn"', async ({
+  test('heads an unnamed learner\'s home with "Hôm nay"', async ({
     page,
     baseURL,
   }) => {
     await registerReadyLearner(page, baseURL);
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Chào bạn',
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hôm nay');
   });
 
   test('each not-yet-shipped control shows its exact toast text', async ({

@@ -3228,50 +3228,6 @@
     font-weight: 600;
   }
 
-  .learner-app .done-stats {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-4);
-    margin-top: var(--sp-8);
-    padding: 0 var(--sp-8);
-    background: var(--surface-card);
-  }
-
-  .learner-app .done-stat {
-    min-width: 240px;
-    height: auto;
-    padding: var(--sp-4) var(--sp-6);
-    border: 1px solid var(--border-default);
-    border-radius: var(--r-lg);
-    background: var(--cream-100);
-    color: var(--text-body);
-    text-align: center;
-  }
-
-  .learner-app .done-stat h2 {
-    font-size: var(--fs-md);
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--text-muted);
-  }
-
-  .learner-app .done-stat__score {
-    margin-top: var(--sp-1);
-    font-family: var(--font-serif);
-    font-size: var(--fs-3xl);
-    font-weight: 700;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-brand);
-  }
-
-  .learner-app .done-stat__score small {
-    font-size: 0.55em;
-    font-weight: 600;
-  }
-
   .learner-app .done-actions {
     position: relative;
     display: flex;

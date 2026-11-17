@@ -29,7 +29,7 @@ import { ListeningExercise, type ListeningSpeed } from './listening-exercise';
 import { Icon } from '@/components/ui/icon';
 
 export const PLAYER_MESSAGES = {
-  correctTitle: 'Chính xác!',
+  correctTitle: 'Chính xác',
   correctText: 'Câu của bạn hoàn toàn đúng.',
   wrongTitle: 'Chưa đúng',
   soon: 'Dạng bài này sắp ra mắt.',
@@ -477,7 +477,7 @@ export function LessonPlayer({
 
   const announcement = result
     ? result.correct
-      ? `${PLAYER_MESSAGES.correctTitle} ${PLAYER_MESSAGES.correctText}`
+      ? `${PLAYER_MESSAGES.correctTitle}. ${PLAYER_MESSAGES.correctText}`
       : [PLAYER_MESSAGES.wrongTitle, result.explanation]
           .filter(Boolean)
           .join('. ')
@@ -707,22 +707,13 @@ export function LessonPlayer({
               )}
             {result?.correct === true && (
               <div className="m02-feedback">
-                <img
-                  className="m02-feedback__art"
-                  src="/images/learner/practice-party.png"
-                  alt=""
-                  width={36}
-                  height={34}
+                <Icon
+                  name="check-circle"
+                  className="m02-feedback__icon m02-feedback__icon--ok"
                 />
                 <div className="grow">
                   <p className="m02-feedback__title">
                     {PLAYER_MESSAGES.correctTitle}
-                    <img
-                      src="/images/learner/practice-party-sm.png"
-                      alt=""
-                      width={21}
-                      height={19}
-                    />
                   </p>
                   <p className="m02-feedback__text">
                     {PLAYER_MESSAGES.correctText}

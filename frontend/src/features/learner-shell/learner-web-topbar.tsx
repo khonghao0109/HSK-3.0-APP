@@ -28,7 +28,7 @@ export function LearnerWebTopbar({
             type="search"
             name="q"
             aria-label="Tra từ"
-            placeholder="Tra chữ Hán, pinyin hoặc nghĩa tiếng Việt"
+            placeholder="Tra từ"
             autoComplete="off"
             maxLength={SEARCH_QUERY_MAX_LENGTH}
           />

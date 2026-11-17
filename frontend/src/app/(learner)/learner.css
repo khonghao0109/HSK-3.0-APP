@@ -3205,18 +3205,16 @@ html:has(.learner-app) {
   min-width: 0;
 }
 
-.learner-app .m02-feedback__art {
-  width: 36px;
-  height: auto;
-  flex: none;
-}
-
 .learner-app .m02-feedback__icon {
   width: 30px;
   height: 30px;
   margin-left: var(--sp-1);
   flex: none;
   color: var(--red-600);
+}
+
+.learner-app .m02-feedback__icon--ok {
+  color: var(--ex-ok-text);
 }
 
 .learner-app .m02-feedback__title {
@@ -3228,11 +3226,6 @@ html:has(.learner-app) {
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.2;
-}
-
-.learner-app .m02-feedback__title img {
-  width: 21px;
-  height: auto;
 }
 
 .learner-app .m02-feedback__text {
@@ -3854,43 +3847,6 @@ html:has(.learner-app) {
   margin-left: 2px;
   font-size: 1.6rem;
   font-weight: 600;
-}
-
-.learner-app .done-stats {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.learner-app .done-stat {
-  height: 62.3px;
-  padding-top: 12px;
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink-900);
-  text-align: center;
-}
-
-.learner-app .done-stat h2 {
-  font-size: 0.71rem;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.learner-app .done-stat__score {
-  margin-top: var(--sp-2);
-  color: var(--text-brand);
-  font-family: var(--font-serif);
-  font-variant-numeric: tabular-nums;
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.learner-app .done-stat__score small {
-  margin-left: 1px;
-  font-size: 1rem;
-  font-weight: 500;
 }
 
 .learner-app .done-actions {

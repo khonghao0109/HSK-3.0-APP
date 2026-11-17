@@ -560,7 +560,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await audit(page, 'practice mcq', TITLES.practice);
     await mcq.getByRole('radio', { name: 'Hello' }).click();
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
     await audit(page, 'practice right', TITLES.practice);
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     for (let item = 1; item < total; item += 1) {
@@ -570,7 +570,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     }
     await expect(page).toHaveURL(/\/complete$/u);
     await expect(
-      page.getByText('Chúc mừng! Bạn đã hoàn thành bài học'),
+      page.getByText('Đã hoàn thành bài học'),
     ).toBeVisible();
     await audit(page, 'complete', TITLES.complete);
 
@@ -733,7 +733,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await page.getByRole('radio', { name: 'Hello' }).click();
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expectBusy(page, 'practice');
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
     await page.goto('/learn/dictionary');
     await slow(page, '**/api/learner/dictionary?q=*');
@@ -780,7 +780,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(hello).toHaveAttribute('aria-checked', 'true');
     await context.setOffline(false);
     await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
     await page.goto('/learn/dictionary');
     await context.setOffline(true);
@@ -857,7 +857,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
       }
       await page.getByRole('radio', { name: 'Hello' }).click();
       await page.getByRole('button', { name: 'Kiểm tra' }).click();
-      await expect(page.getByText('Chính xác!', { exact: true })).toBeVisible();
+      await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
       expect.soft(await longest(), 'practice feedback').toEqual([]);
       await page.context().clearCookies();
       for (const path of ['/sign-in', '/forgot-password']) {
@@ -925,7 +925,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     }
     await expect(page).toHaveURL(/\/complete$/u);
     await expect(
-      page.getByText('Chúc mừng! Bạn đã hoàn thành bài học'),
+      page.getByText('Đã hoàn thành bài học'),
     ).toBeVisible();
 
     // The completion screen has no tab bar: its next step leads back.

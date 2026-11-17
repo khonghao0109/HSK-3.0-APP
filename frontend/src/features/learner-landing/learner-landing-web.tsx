@@ -111,7 +111,7 @@ export function LearnerLandingWeb() {
               triển.
             </p>
           </div>
-          <ul className="w-grid w-grid--4 lp-features">
+          <ul className="w-grid w-grid--3 lp-features">
             {LANDING_FEATURES.map((feature) => (
               <li key={feature.title} className="w-card lp-feature">
                 <span
@@ -126,7 +126,7 @@ export function LearnerLandingWeb() {
             ))}
           </ul>
           <ul
-            className="w-grid w-grid--4 lp-soon"
+            className="w-grid w-grid--2 lp-soon"
             aria-label="Tính năng sắp có"
           >
             {LANDING_SOON.map((item) => (

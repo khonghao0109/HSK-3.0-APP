@@ -112,19 +112,31 @@ describe('LearnerLandingWeb', () => {
     expect(wide[0]).toHaveTextContent('~ 11.092 từ vựng');
   });
 
-  it('lists the four shipped features and the four "Sắp có" items of Q84', () => {
+  it('lists the six shipped features and the two "Sắp có" items (Q84, unslop C9)', () => {
     const { container } = render(<LearnerLandingWeb />);
     expect(container.querySelectorAll('#features .lp-feature')).toHaveLength(
       LANDING_FEATURES.length,
     );
-    expect(container.querySelectorAll('#features .lp-feature')).toHaveLength(4);
+    expect(container.querySelectorAll('#features .lp-feature')).toHaveLength(6);
+    expect(
+      Array.from(container.querySelectorAll('#features .lp-feature h3')).map(
+        (title) => title.textContent,
+      ),
+    ).toEqual([
+      'Lộ trình theo mục tiêu',
+      'Bài học',
+      'Từ điển',
+      'Luyện tập',
+      'Ôn tập',
+      'Thi thử HSK',
+    ]);
     // Luyện nghe đã có (M2.5c) nên nằm trong mô tả Luyện tập, không ở "Sắp có".
     const soon = container.querySelectorAll('#features .lp-soon__item');
     expect(soon).toHaveLength(LANDING_SOON.length);
-    expect(soon).toHaveLength(4);
+    expect(soon).toHaveLength(2);
     expect(
       Array.from(soon).map((item) => item.querySelector('b')?.textContent),
-    ).toEqual(['Ôn tập', 'Thi thử HSK', 'Phát âm', 'Trợ lý AI']);
+    ).toEqual(['Phát âm', 'Trợ lý AI']);
     for (const item of Array.from(soon)) {
       expect(item.querySelector('.w-tag--soon')).toHaveTextContent('Sắp có');
     }

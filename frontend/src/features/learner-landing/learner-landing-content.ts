@@ -108,12 +108,22 @@ export const LANDING_FEATURES: readonly LandingFeature[] = [
     title: 'Luyện tập',
     text: 'Chọn đáp án, nghe và chọn, sắp xếp câu sau mỗi bài để nhớ từ và ngữ pháp vừa học.',
   },
+  {
+    icon: 'layers',
+    tone: 'jade',
+    title: 'Ôn tập',
+    text: 'Ôn từ bằng flashcard theo thuật toán SM-2, lịch ôn tự xếp theo mức bạn nhớ.',
+  },
+  {
+    icon: 'trophy',
+    tone: 'blue',
+    title: 'Thi thử HSK',
+    text: 'Làm đề thi thử theo cấp, bài làm tự lưu, chấm điểm và xem lời giải từng câu.',
+  },
 ];
 
-/** Q84: đúng bốn ô "Sắp có" của mẫu, không thêm "Luyện nghe" (đã có, M2.5c). */
+/** Q84 + unslop C9: Ôn tập và Thi thử HSK đã có nên chỉ còn hai ô "Sắp có". */
 export const LANDING_SOON: readonly LandingSoonItem[] = [
-  { icon: 'layers', title: 'Ôn tập' },
-  { icon: 'trophy', title: 'Thi thử HSK' },
   { icon: 'mic', title: 'Phát âm' },
   { icon: 'sparkles', title: 'Trợ lý AI' },
 ];
@@ -146,7 +156,7 @@ export const LANDING_FAQ: readonly LandingFaqItem[] = [
     answer: 'Bạn chọn 10, 15 hoặc 30 phút mỗi ngày khi lập kế hoạch.',
   },
   {
-    question: 'Khi nào có Ôn tập, Thi thử, Phát âm và Trợ lý AI?',
+    question: 'Khi nào có Phát âm và Trợ lý AI?',
     answer:
       'Các tính năng gắn nhãn "Sắp có" đang được phát triển và sẽ mở trong ứng dụng khi sẵn sàng.',
   },

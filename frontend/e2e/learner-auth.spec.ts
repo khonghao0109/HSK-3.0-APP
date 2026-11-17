@@ -89,7 +89,7 @@ test.describe('Learner Auth Flow', () => {
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
 
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
@@ -166,7 +166,7 @@ test.describe('Learner Auth Flow', () => {
 
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
   });
@@ -239,7 +239,7 @@ test.describe('Learner Auth Flow', () => {
 
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
   });

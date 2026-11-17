@@ -70,7 +70,7 @@ export default async function LessonCompletePage({
             display:contents below 1024px so the mobile layout is unchanged. */}
         <section className="done-card" aria-labelledby="done-title">
           <div className="done-hero">
-            <p className="done-kicker">Chúc mừng! Bạn đã hoàn thành bài học</p>
+            <p className="done-kicker">Đã hoàn thành bài học</p>
             <h1 className="done-title" id="done-title">
               {data.activity.lesson.title}
             </h1>
@@ -80,15 +80,6 @@ export default async function LessonCompletePage({
                 {scoreText}
               </p>
             </div>
-          </div>
-
-          <div className="done-stats">
-            <section className="done-stat">
-              <h2>Điểm số của bạn</h2>
-              <p className="done-stat__score" aria-label={scoreLabel}>
-                {scoreText}
-              </p>
-            </section>
           </div>
 
           <div className="done-actions">

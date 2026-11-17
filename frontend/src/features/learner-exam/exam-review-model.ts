@@ -122,10 +122,10 @@ export const REVIEW_SUMMARY_LABELS = {
 } as const;
 
 export const REVIEW_EMPTY_FILTER_TEXT: Record<ReviewFilter, string> = {
-  all: 'Chưa có câu nào để xem lại.',
-  correct: 'Bạn chưa có câu đúng nào.',
-  wrong: 'Bạn không có câu sai nào. Làm tốt lắm!',
-  flagged: 'Bạn chưa đánh dấu câu nào.',
+  all: 'Chưa có câu nào để xem lại',
+  correct: 'Chưa có câu đúng',
+  wrong: 'Không có câu sai',
+  flagged: 'Chưa đánh dấu câu nào',
 };
 
 export const REVIEW_MEDIA_AUDIO_UNAVAILABLE = 'Không tải được âm thanh.';

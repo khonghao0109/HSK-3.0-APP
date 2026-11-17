@@ -507,10 +507,10 @@ export function ReviewSession({
               <p className="fc-tip">
                 <Icon name="lightbulb" />
                 <span className="w-only">
-                  Mẹo: đánh giá đúng mức để lịch ôn sát với trí nhớ của bạn.
+                  Mẹo: đánh giá đúng mức để lịch ôn sát với trí nhớ của bạn
                 </span>
                 <span className="m-only">
-                  Mẹo: Hãy ôn tập thường xuyên để ghi nhớ lâu hơn!
+                  Mẹo: ôn đều mỗi ngày giúp nhớ lâu hơn
                 </span>
               </p>
               <button
@@ -561,9 +561,7 @@ function ReviewComplete({
       <main className="done-main rv-done">
         <section className="done-card" aria-labelledby="done-title">
           <div className="done-hero">
-            <p className="done-kicker">
-              Chúc mừng! Bạn đã hoàn thành phiên ôn tập
-            </p>
+            <p className="done-kicker">Đã hoàn thành phiên ôn tập</p>
             <h1 className="done-title" id="done-title">
               Ôn tập hôm nay
             </h1>

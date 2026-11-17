@@ -196,8 +196,8 @@ describe('LearnerExamResultPage (M4.3, TL-172)', () => {
     const mobile = within(hero(container, 'mobile'));
 
     expect(metadata.title).toBe('Kết quả bài thi');
-    expect(web.getAllByText('Bạn đã đạt!')).toHaveLength(1);
-    expect(mobile.getAllByText('Bạn đã đạt!')).toHaveLength(1);
+    expect(web.getAllByRole('heading', { name: 'Đạt' })).toHaveLength(1);
+    expect(mobile.getAllByRole('heading', { name: 'Đạt' })).toHaveLength(1);
     expect(container.querySelector('.exr-badge')?.textContent).toContain('Đạt');
     expect(container.querySelector('.exr-hero__badge')?.textContent).toContain(
       'Đạt',

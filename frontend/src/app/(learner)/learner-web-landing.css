@@ -441,15 +441,6 @@
   }
 }
 
-/* 1024–1279px: bốn ô "Sắp có" của mẫu (min-height 64px, chữ và nhãn `nowrap`)
-   cần ~232px mỗi ô, mà lưới 4 cột ở 1024px chỉ cho ~218px — chữ tràn khỏi
-   thẻ. Xuống 2 cột cho tới 1279px; từ 1280px giống mẫu. */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .learner-app .w-public .lp-soon {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Forced colors bỏ vòng focus bằng box-shadow (Q12): giữ outline hệ thống. */
 @media (min-width: 1024px) and (forced-colors: active) {
   .learner-app .w-public .w-pubnav a:focus-visible,

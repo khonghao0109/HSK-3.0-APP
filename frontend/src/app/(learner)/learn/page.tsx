@@ -10,6 +10,7 @@ import {
   wholePercent,
   type LearningHome,
 } from '@/features/learner-home/learning-home-contract';
+import { homeDateLabel } from '@/features/learner-home/home-date';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
@@ -113,10 +114,8 @@ export default async function LearnerHomePage() {
             <Icon name="user" />
           </Link>
           <div>
-            <h1>
-              {home.greetingName ? `Chào, ${home.greetingName}` : 'Chào bạn'}
-            </h1>
-            <p>Hôm nay cùng tiến bộ nhé!</p>
+            <h1>Hôm nay</h1>
+            <p>{homeDateLabel(new Date())}</p>
           </div>
         </div>
       </header>

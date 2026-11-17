@@ -262,7 +262,7 @@ describe('LearnerExamReviewPage (M4.5 B2b)', () => {
     );
     const { container } = await renderPage('41', 'wrong');
     expect(container.querySelectorAll('.exv-q')).toHaveLength(0);
-    expect(container.textContent).toContain('Bạn không có câu sai nào.');
+    expect(container.textContent).toContain('Không có câu sai');
   });
 
   it('redirects a non-terminal attempt to the taking page (Q167/TL-188)', async () => {
