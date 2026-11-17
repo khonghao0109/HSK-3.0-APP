@@ -124,3 +124,4 @@ sách archive chi tiết làm ở Pha 4 (`docs/content/hsk1-archive-list.md`); k
 | P8 | Nới dải `orderIndex` pilot 1001–1005 thành 1001–1030 cho bài 06–22? | Có |
 | P9 | #15: cấu trúc đề HSK1 và bộ tag dạng câu (đề xuất ở Pha 5) | Chờ |
 | P10 | Q184: nhà cung cấp TTS | Chờ bảng so sánh Pha 5b |
+| P11 | Bài 25 chỉ còn 18 từ (498 = 24 × 20 + 18): cho phép bài cuối < 20 từ (nới luật `wordsPerLesson` riêng cho bài ôn tập) hay ghép 18 từ vào các bài trước (một số bài 21 từ)? | Cho phép bài 25 có 18 từ |
