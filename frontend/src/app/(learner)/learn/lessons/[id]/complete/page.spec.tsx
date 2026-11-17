@@ -178,16 +178,16 @@ describe('LessonCompletePage', () => {
     );
   });
 
-  it('has no XP or achievement (Q59) and keeps the confetti hidden from AT', async () => {
+  it('has no XP or achievement (Q59) and no decorative confetti or medal', async () => {
     const { container } = await renderComplete();
     expect(container.querySelector('.done-ach')).toBeNull();
     const text = container.textContent ?? '';
     for (const word of ['XP', 'Kinh nghiệm', 'Thành tích']) {
       expect(text).not.toContain(word);
     }
-    const confetti = container.querySelector('.done-confetti');
-    expect(confetti).toHaveAttribute('aria-hidden', 'true');
-    expect(confetti?.children.length).toBe(21);
+    // Unslop M4: the score is the only accent; no confetti or laurel image.
+    expect(container.querySelector('.done-confetti')).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('[style]')).toBeNull();
   });
 

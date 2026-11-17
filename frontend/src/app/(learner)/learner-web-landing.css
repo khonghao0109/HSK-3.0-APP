@@ -243,10 +243,10 @@
     color: var(--blue-600);
   }
 
-  /* #8a5a00 trên amber-100: 5,9:1 (≥ 4,5:1). */
+  /* text-on-amber trên amber-100: 6,25:1 (≥ 4,5:1). */
   .learner-app .w-public .lp-feature__icon.is-amber {
     background: var(--amber-100);
-    color: #8a5a00;
+    color: var(--text-on-amber);
   }
 
   .learner-app .w-public .lp-feature__icon.is-violet {
@@ -327,7 +327,7 @@
     padding: var(--sp-8) var(--sp-10);
     border-radius: 24px;
     background: var(--navy-900);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .lp-cta__title {
@@ -416,7 +416,7 @@
   /* ---------- Chân trang (index.css dòng 86–91) ---------- */
   .learner-app .w-public .lp-foot__tag {
     margin-top: var(--sp-2);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .w-footer ul {

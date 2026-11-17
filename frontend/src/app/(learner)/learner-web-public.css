@@ -102,7 +102,7 @@
   }
 
   .learner-app .w-public .w-btn--primary:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .w-public .w-btn--lg {
@@ -187,7 +187,7 @@
     margin-top: auto;
     padding: var(--sp-10) 0;
     background: var(--navy-900);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .w-footer a {
@@ -280,10 +280,10 @@
     line-height: 1.5;
   }
 
-  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1). */
+  /* text-on-amber on amber-100: 6.25:1 (≥ 4.5:1). */
   .learner-app .w-public .w-tag--soon {
     background: var(--amber-100);
-    color: #7a5300;
+    color: var(--text-on-amber);
   }
 
   /* ---------- Vòng focus nhìn thấy được (Q12) ---------- */

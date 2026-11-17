@@ -261,7 +261,10 @@ describe('LearnerLessonPage', () => {
     expect(rows.map((row) => row.tagName)).toEqual(['BUTTON', 'BUTTON', 'A']);
     for (const row of rows) {
       expect(row).not.toHaveAttribute('aria-disabled');
-      expect(row.querySelector('img')).toHaveAttribute('alt', '');
+      expect(row.querySelector('.lrow__icon')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
     }
   });
 

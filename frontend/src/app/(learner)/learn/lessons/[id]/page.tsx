@@ -10,7 +10,7 @@ import { levelLabel } from '@/features/learner-home/level-label';
 import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
 import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader';
 import {
-  LESSON_ROW_IMAGES,
+  LESSON_ROW_ICONS,
   lessonRows,
 } from '@/features/learner-lesson/lesson-sections';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
@@ -139,7 +139,7 @@ export default async function LearnerLessonPage({
           </h2>
           <ul className="lesson-rows">
             {lessonRows(sections, locked).map((row) => {
-              const image = LESSON_ROW_IMAGES[row.kind];
+              const image = LESSON_ROW_ICONS[row.kind];
               const className = [
                 'lrow',
                 image.tone,
@@ -150,12 +150,9 @@ export default async function LearnerLessonPage({
                 .join(' ');
               const content = (
                 <>
-                  <img
-                    src={image.src}
-                    alt=""
-                    width={image.width}
-                    height={image.height}
-                  />
+                  <span className="lrow__icon" aria-hidden="true">
+                    <Icon name={image.icon} />
+                  </span>
                   <span className="grow">
                     <span className="lrow__title">{row.title}</span>
                     <span className="sr-only">, </span>

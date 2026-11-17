@@ -270,27 +270,38 @@ test.describe('Learner exam list (M4.5 B1 / Q209–Q214)', () => {
         name: new RegExp(`${todoFixtures.title}.*Chưa làm`, 'u'),
       });
       await expect(todo).toBeVisible();
+      // The not-started card border is the learner `--border-success` token
+      // (jade-600 since the unslop colour pass; mockup m04 had #3fa863). The
+      // learner tokens live on `.learner-app`, not `:root` (styles.css has a
+      // different slate-100), so read them from that scope.
+      const tokens = await page.evaluate(() => {
+        const host = document.querySelector('.learner-app');
+        if (host === null) return { slate100: '', jade600: '' };
+        const style = getComputedStyle(host);
+        return {
+          slate100: style.getPropertyValue('--slate-100').trim(),
+          jade600: style.getPropertyValue('--jade-600').trim(),
+        };
+      });
+      expect(tokens.jade600).toMatch(/^#[0-9a-f]{6}$/u);
+      const jadeShadow = new RegExp(
+        hexToRgb(tokens.jade600).replace(/[()]/gu, '\\$&'),
+        'u',
+      );
       if (isWebFrame(page)) {
         // U4: the web "Chưa làm" badge uses the neutral slate token from the
         // real CSS; the card itself must not carry the mobile jade border.
-        // The learner tokens live on `.learner-app`, not `:root` (styles.css
-        // has a different slate-100), so read the token from that scope.
-        const slate100 = await page.evaluate(() => {
-          const host = document.querySelector('.learner-app');
-          if (host === null) return '';
-          return getComputedStyle(host).getPropertyValue('--slate-100').trim();
-        });
-        expect(slate100).toMatch(/^#[0-9a-f]{6}$/u);
+        expect(tokens.slate100).toMatch(/^#[0-9a-f]{6}$/u);
         await expect(todo.locator('.exl-badge')).toHaveCSS(
           'background-color',
-          hexToRgb(slate100),
+          hexToRgb(tokens.slate100),
         );
-        await expect(todo).not.toHaveCSS('box-shadow', /63, 168, 99/u);
+        await expect(todo).not.toHaveCSS('box-shadow', jadeShadow);
       } else {
-        // U2 (`m04.css:113`/`:651`): the not-started card border is jade
-        // #3fa863 → rgb(63, 168, 99); the finished card has no jade shadow.
-        await expect(todo).toHaveCSS('box-shadow', /63, 168, 99/u);
-        await expect(done).not.toHaveCSS('box-shadow', /63, 168, 99/u);
+        // U2 (`m04.css:113`/`:651`): the not-started card has the jade inset
+        // border; the finished card has no jade shadow.
+        await expect(todo).toHaveCSS('box-shadow', jadeShadow);
+        await expect(done).not.toHaveCSS('box-shadow', jadeShadow);
       }
       await expectNoHorizontalScroll(page);
       await audit(page, 'states');

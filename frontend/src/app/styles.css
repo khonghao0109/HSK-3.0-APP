@@ -4,6 +4,7 @@
   --ink-900: #0d3152;
   --ink-800: #173f61;
   --ink-700: #2a5878;
+  --jade-800: #066b59;
   --jade-700: #087a65;
   --jade-600: #00a878;
   --jade-100: #dff5ee;
@@ -20,6 +21,7 @@
   --slate-50: #f6f8fa;
   --amber-700: #9a5d08;
   --amber-100: #fff0c8;
+  --red-800: #8f3030;
   --red-700: #a53a3a;
   --red-100: #fde7e5;
   --blue-700: #2b5f9e;
@@ -138,7 +140,7 @@ h3 {
   transform: translateY(-160%);
   border-radius: var(--radius-sm);
   padding: 8px 16px;
-  color: white;
+  color: var(--white);
   background: var(--jade-700);
   font-weight: 750;
   text-decoration: none;
@@ -173,16 +175,16 @@ h3 {
   opacity: 0.68;
 }
 .button--primary {
-  color: white;
+  color: var(--white);
   background: var(--jade-700);
   border-color: var(--jade-700);
 }
 .button--primary:hover {
-  background: #066b59;
+  background: var(--jade-800);
 }
 .button--ghost {
   color: var(--ink-800);
-  background: white;
+  background: var(--white);
   border-color: var(--border-default);
 }
 .button--ghost:hover {
@@ -190,13 +192,13 @@ h3 {
   border-color: var(--slate-300);
 }
 .button--danger {
-  color: white;
+  color: var(--white);
   background: var(--red-700);
   border-color: var(--red-700);
 }
 .button--danger:hover {
-  background: #8f3030;
-  border-color: #8f3030;
+  background: var(--red-800);
+  border-color: var(--red-800);
 }
 .button--full {
   width: 100%;
@@ -215,7 +217,7 @@ h3 {
   position: relative;
   border-top: 4px solid var(--jade-600);
   padding: 44px;
-  background: white;
+  background: var(--white);
   box-shadow: 0 30px 80px rgb(0 0 0 / 25%);
   text-align: center;
 }

@@ -79,7 +79,7 @@
 .learner-app .ehs-card__date,
 .learner-app .ehs-card__score span {
   font-size: var(--fs-xs);
-  color: #3c4757;
+  color: var(--slate-700);
 }
 
 .learner-app .ehs-card__date {
@@ -129,7 +129,7 @@
 
 .learner-app .ehs-badge--danger {
   background: var(--red-100);
-  color: #b3261e;
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .ehs-badge--neutral {
@@ -139,7 +139,7 @@
 
 .learner-app .ehs-badge--pending {
   background: var(--amber-100);
-  color: #7a5300;
+  color: var(--text-on-amber);
 }
 
 .learner-app .ehs-empty {
@@ -217,7 +217,7 @@
   }
 
   .learner-app .ehs-chips .exl-chip[aria-current='true']:focus-visible {
-    box-shadow: 0 0 0 3px rgb(73 196 108 / 70%);
+    box-shadow: var(--focus-ring);
   }
 }
 

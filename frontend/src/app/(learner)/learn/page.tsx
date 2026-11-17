@@ -32,17 +32,16 @@ export const metadata: Metadata = {
 const EXPLORE: ReadonlyArray<{
   label: string;
   icon: string;
-  tone: string;
   href?: string;
 }> = [
-  { label: 'Thi thử', icon: 'trophy', tone: 'amber', href: '/learn/exam' },
-  { label: 'Phát âm', icon: 'mic', tone: 'red' },
-  { label: 'Đọc hiểu', icon: 'book-open', tone: 'jade' },
-  { label: 'Tài liệu', icon: 'file-text', tone: 'blue' },
-  { label: 'Trợ lý AI', icon: 'sparkles', tone: 'violet' },
-  { label: 'Hội thoại', icon: 'message-circle', tone: 'jade' },
-  { label: 'Nhận diện chữ', icon: 'file-stack', tone: 'blue' },
-  { label: 'Hỗ trợ', icon: 'help-circle', tone: 'amber' },
+  { label: 'Thi thử', icon: 'trophy', href: '/learn/exam' },
+  { label: 'Phát âm', icon: 'mic' },
+  { label: 'Đọc hiểu', icon: 'book-open' },
+  { label: 'Tài liệu', icon: 'file-text' },
+  { label: 'Trợ lý AI', icon: 'sparkles' },
+  { label: 'Hội thoại', icon: 'message-circle' },
+  { label: 'Nhận diện chữ', icon: 'file-stack' },
+  { label: 'Hỗ trợ', icon: 'help-circle' },
 ];
 
 function Icon({ name }: { name: string }) {
@@ -215,10 +214,7 @@ export default async function LearnerHomePage() {
             <li key={item.label}>
               {item.href === undefined ? (
                 <ToastButton message={TOAST_COMING_SOON}>
-                  <span
-                    className={`home-explore__icon home-explore__icon--${item.tone}`}
-                    aria-hidden="true"
-                  >
+                  <span className="home-explore__icon" aria-hidden="true">
                     <Icon name={item.icon} />
                   </span>
                   {item.label}
@@ -226,7 +222,7 @@ export default async function LearnerHomePage() {
               ) : (
                 <Link href={item.href}>
                   <span
-                    className={`home-explore__icon home-explore__icon--${item.tone}`}
+                    className="home-explore__icon home-explore__icon--live"
                     aria-hidden="true"
                   >
                     <Icon name={item.icon} />

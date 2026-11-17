@@ -5,6 +5,13 @@
    hidden (learner.css). Lesson screens (`/learn/lessons/**`) render no
    sidebar or top bar, so none of the frame rules below reach them. */
 
+/* Tokens these web sheets add to learner.css (applies at every width;
+   learner.css loads first). */
+.learner-app {
+  /* Muted text on navy (footer, auth art): 12.16:1 on navy-900. */
+  --text-on-brand-muted: #d7ddeb;
+}
+
 /* M2.10d F4: the early "Bài tiếp theo" copy (`.path-mid`) only exists for
    the 1024–1279px layout, where the card sits above the lesson grid and the
    late copy (`.path-next`) would put its "Bắt đầu" link after every lesson
@@ -177,10 +184,10 @@
     line-height: 1.5;
   }
 
-  /* #7a5300 on amber-100: 6.6:1 (≥ 4.5:1). */
+  /* text-on-amber on amber-100: 6.25:1 (≥ 4.5:1). */
   .learner-app .w-tag--soon {
     background: var(--amber-100);
-    color: #7a5300;
+    color: var(--text-on-amber);
   }
 
   .learner-app .w-nav .w-tag {
@@ -1638,8 +1645,15 @@
     margin-top: var(--sp-3);
   }
 
-  .learner-app .lesson-content .lrow > img {
+  .learner-app .lesson-content .lrow__icon {
     width: 56px;
+    height: 56px;
+    border-radius: var(--r-md);
+  }
+
+  .learner-app .lesson-content .lrow__icon .icon {
+    width: 28px;
+    height: 28px;
   }
 
   .learner-app .lesson-content .lrow .grow {
@@ -1921,7 +1935,7 @@
   }
 
   .learner-app .dict-search__submit:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .dict-search__submit:focus-visible {
@@ -2591,7 +2605,7 @@
   }
 
   .learner-app .word-web__act .word-save:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .word-web__act .word-save:focus-visible {
@@ -2869,9 +2883,9 @@
   }
 
   .learner-app .ls-opt.is-wrong {
-    border-color: #b3261e;
+    border-color: var(--ex-wrong-text);
     background: var(--red-100);
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   .learner-app .ls-opt__mark {
@@ -2884,7 +2898,7 @@
   }
 
   .learner-app .ls-opt.is-wrong .ls-opt__mark {
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   /* Radio dot on the picked option so colour is not the only marker
@@ -2899,7 +2913,7 @@
     height: 24px;
     border-radius: 50%;
     border: 7px solid var(--jade-700);
-    background: #fff;
+    background: var(--surface-card);
   }
 
   /* Listening (mẫu .pq-audio). */
@@ -2921,7 +2935,7 @@
   }
 
   .learner-app .ls-play:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .ls-play .icon {
@@ -3030,7 +3044,7 @@
 
   .learner-app .ex-foot:has(.m02-feedback--wrong) {
     background: var(--red-100);
-    border-top-color: #f3c1bd;
+    border-top-color: var(--ex-wrong-border);
   }
 
   .learner-app .ex-foot .m02-feedback {
@@ -3067,13 +3081,13 @@
   }
 
   .learner-app .m02-feedback--wrong .m02-feedback__btn {
-    border: 2px solid #b3261e;
+    border: 2px solid var(--ex-wrong-text);
     background: none;
-    color: #b3261e;
+    color: var(--ex-wrong-text);
   }
 
   .learner-app .m02-feedback__btn:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .m02-feedback--wrong .m02-feedback__btn:hover {
@@ -3175,20 +3189,10 @@
     position: relative;
     display: block;
     padding: var(--sp-10) var(--sp-8) var(--sp-8);
-    background: radial-gradient(
-      120% 90% at 50% 20%,
-      var(--navy-800) 0%,
-      var(--navy-900) 60%,
-      var(--navy-950) 100%
-    );
-    color: #fff;
+    background: var(--surface-brand);
+    color: var(--text-on-brand);
     text-align: center;
     overflow: hidden;
-  }
-
-  .learner-app .done-hero .done-confetti {
-    display: block;
-    height: 200px;
   }
 
   .learner-app .done-kicker {
@@ -3205,29 +3209,25 @@
     font-size: var(--fs-3xl);
     font-weight: 700;
     line-height: 1.2;
-    color: #fff;
+    color: var(--text-on-brand);
   }
 
   /* Medal (mẫu .done-w__medal): 240x106 window, score on the ribbon. */
   .learner-app .done-hero .done-medal {
     position: relative;
-    width: 240px;
-    height: 106px;
+    height: auto;
     margin: var(--sp-6) auto 0;
-    overflow: hidden;
   }
 
-  .learner-app .done-hero .done-medal img {
-    position: static;
-    display: block;
-    width: 240px;
-    transform: none;
-  }
-
+  /* jade-200 on navy-900: 12.54:1. */
   .learner-app .done-hero .done-medal__score {
-    top: 34px;
-    font-size: 3rem;
-    color: var(--jade-700);
+    position: static;
+    justify-content: center;
+    transform: none;
+    font-family: var(--font-serif);
+    font-size: var(--fs-display);
+    font-variant-numeric: tabular-nums;
+    color: var(--jade-200);
   }
 
   .learner-app .done-hero .done-medal__score small {
@@ -3266,10 +3266,12 @@
 
   .learner-app .done-stat__score {
     margin-top: var(--sp-1);
+    font-family: var(--font-serif);
     font-size: var(--fs-3xl);
     font-weight: 700;
     line-height: 1.1;
-    color: var(--jade-800);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-brand);
   }
 
   .learner-app .done-stat__score small {
@@ -3309,11 +3311,11 @@
   .learner-app .done-btn--primary {
     border: 0;
     background: var(--jade-800);
-    color: #fff;
+    color: var(--text-on-brand);
   }
 
   .learner-app .done-btn--primary:hover {
-    background: #05664f;
+    background: var(--ex-btn-hover);
   }
 
   .learner-app .done-btn:focus-visible {
@@ -3890,8 +3892,8 @@
     line-height: 18px;
   }
 
-  /* Web badge palette from base.css: danger #b3261e/--red-100,
-     warning #93600a/--amber-100 (mobile keeps the m04 palette). */
+  /* Web badge palette from base.css: danger ex-wrong-text/--red-100,
+     warning text-on-amber/--amber-100 (mobile keeps the m04 palette). */
   .learner-app .exr-level--weak {
     background: var(--red-100);
     color: var(--ex-wrong-text);
@@ -3899,7 +3901,7 @@
 
   .learner-app .exr-level--medium {
     background: var(--amber-100);
-    color: #93600a;
+    color: var(--text-on-amber);
   }
 
   .learner-app .exr-level .icon {
@@ -4867,20 +4869,16 @@
     font-size: var(--fs-sm);
   }
 
-  .learner-app .fc-rate__again .icon {
-    color: #b3261e;
+  /* Unslop M3: neutral buttons; icons follow the text colour. Only
+     "Chưa nhớ" is red (same token as mobile; .fc-rate__btn above resets
+     the colour, so it is set again) and only "Tốt", the default choice,
+     has the strong border. */
+  .learner-app .fc-rate__again {
+    color: var(--text-danger);
   }
 
-  .learner-app .fc-rate__hard .icon {
-    color: #7a5300;
-  }
-
-  .learner-app .fc-rate__good .icon {
-    color: var(--jade-700);
-  }
-
-  .learner-app .fc-rate__easy .icon {
-    color: var(--blue-600);
+  .learner-app .fc-rate__good {
+    border-color: var(--border-brand);
   }
 
   .learner-app .fc-tip {

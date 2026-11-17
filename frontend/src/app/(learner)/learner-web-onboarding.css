@@ -308,13 +308,13 @@
     color: var(--text-muted);
   }
 
-  /* Q79: số lớn giữ màu mẫu, chữ "phút" #c2410c (5,18:1). */
+  /* Q79: số lớn giữ màu mẫu, chữ "phút" cinnabar-700 (5,18:1). */
   .learner-app .w-public .obw-minute--fast b {
-    color: #e2553a;
+    color: var(--cinnabar-500);
   }
 
   .learner-app .w-public .obw-minute--fast > span {
-    color: #c2410c;
+    color: var(--cinnabar-700);
   }
 
   .learner-app .w-public .obw-minute[aria-checked='true'] {

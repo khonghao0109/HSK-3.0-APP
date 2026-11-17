@@ -101,11 +101,11 @@
 }
 
 .learner-app .exv-sum__item--wrong .exv-sum__icon {
-  color: #b3261e;
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-sum__item--flag .exv-sum__icon {
-  color: #7a5300;
+  color: var(--text-on-amber);
 }
 
 .learner-app .exv-sum__item b {
@@ -260,8 +260,8 @@
 
 .learner-app .exv-cell--wrong {
   background: var(--red-100);
-  border-color: #f6c9c4;
-  color: #b3261e;
+  border-color: var(--ex-wrong-border);
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-cell--blank {
@@ -356,7 +356,7 @@
 }
 
 .learner-app .exv-q--wrong {
-  border-left-color: #b3261e;
+  border-left-color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-q--blank {
@@ -407,8 +407,8 @@
 
 .learner-app .exv-status--wrong {
   background: var(--red-100);
-  border: 1px solid #f6c9c4;
-  color: #b3261e;
+  border: 1px solid var(--ex-wrong-border);
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-status--blank {
@@ -425,7 +425,7 @@
   background: var(--amber-100);
   border: 1px solid var(--amber-500);
   border-radius: 999px;
-  color: #7a5300;
+  color: var(--text-on-amber);
   font-size: 12px;
   font-weight: 600;
 }
@@ -496,11 +496,11 @@
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) {
   background: var(--red-100);
-  border: 2px solid #b3261e;
+  border: 2px solid var(--ex-wrong-text);
 }
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__letter {
-  background: #b3261e;
+  background: var(--ex-wrong-text);
   color: var(--white);
 }
 
@@ -515,7 +515,7 @@
 }
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__mark {
-  color: #b3261e;
+  color: var(--ex-wrong-text);
 }
 
 .learner-app .exv-opt__mark .icon {
@@ -641,7 +641,7 @@
 
 .learner-app .exv-media__unavailable {
   background: var(--amber-100);
-  color: #7a5300;
+  color: var(--text-on-amber);
 }
 
 /* Trạng thái đóng / lỗi */

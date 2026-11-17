@@ -178,7 +178,7 @@
   /* ---------- Chân trang (legal.css dòng 21–25) ---------- */
   .learner-app .w-public .lp-foot__tag {
     margin-top: var(--sp-2);
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .w-footer ul {

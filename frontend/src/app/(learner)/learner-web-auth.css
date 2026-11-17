@@ -78,7 +78,7 @@
     gap: var(--sp-5);
     padding: var(--sp-10);
     background: var(--navy-900);
-    color: #fff;
+    color: var(--text-on-brand);
     text-align: center;
   }
 
@@ -244,7 +244,7 @@
     margin: var(--sp-6) 0 var(--sp-4);
     font-size: var(--fs-sm);
     /* Giữ stone-600 của bản mobile: màu `.divider-text` của mẫu
-       (text-subtle #8a8079 trên nền trắng) chỉ đạt 3,9:1, axe báo
+       (text-subtle trên nền trắng) chỉ đạt 3,9:1, axe báo
        color-contrast; stone-600 đạt 5,96:1. */
     color: var(--stone-600);
   }
@@ -402,14 +402,14 @@
     font-size: var(--fs-xl);
     font-weight: 700;
     line-height: 1.3;
-    color: #fff;
+    color: var(--text-on-brand);
   }
 
   .learner-app .w-public .wa-art p {
     max-width: 360px;
     margin-top: calc(-1 * var(--sp-3));
     text-wrap: balance;
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .wa-points {
@@ -419,7 +419,7 @@
     margin: 0;
     padding: 0;
     text-align: left;
-    color: #d7ddeb;
+    color: var(--text-on-brand-muted);
   }
 
   .learner-app .w-public .wa-points li {

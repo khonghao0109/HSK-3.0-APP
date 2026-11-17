@@ -7,7 +7,7 @@
  * styles.css (styles.css còn phục vụ learner tới khi C3 dọn rule admin cũ).
  *
  * Mọi màu hex chỉ nằm trong khối token dưới đây; component chỉ dùng biến.
- * Q92: mục sidebar đang chọn và nút chính nền jade-800 (#067a60).
+ * Q92: mục sidebar đang chọn và nút chính nền --adm-jade-800.
  * Q12: vòng focus jade-700 đặc 3px.
  */
 
@@ -222,7 +222,7 @@
   background: var(--adm-on-navy-hover);
   color: var(--adm-paper);
 }
-/* Q92: mục đang chọn nền jade-800 (#067a60), chữ trắng 5,3:1. */
+/* Q92: mục đang chọn nền --adm-jade-800, chữ trắng 5,3:1. */
 .admin-app .adm-nav__item[aria-current='page'] {
   background: var(--adm-jade-800);
   color: var(--adm-paper);
@@ -390,6 +390,16 @@
   background: var(--adm-red-strong);
   border-color: var(--adm-red-strong);
   color: var(--adm-paper);
+}
+/* Nút xoá ở mỗi dòng: chữ red-text trên trắng 6,54:1; nút đỏ đặc chỉ dùng
+   trong hộp xác nhận. */
+.admin-app .adm-btn--danger-outline {
+  background: var(--adm-paper);
+  border-color: var(--adm-alert-error-border);
+  color: var(--adm-red-text);
+}
+.admin-app .adm-btn--danger-outline:hover {
+  background: var(--adm-red-100);
 }
 .admin-app .adm-btn--sm {
   min-height: 2.25rem;

@@ -21,28 +21,14 @@ export type LessonRow = {
   locked: boolean;
 };
 
-export const LESSON_ROW_IMAGES: Record<
+/** Neutral sprite icon per row (unslop: no per-row colour tiles). */
+export const LESSON_ROW_ICONS: Record<
   LessonRowKind,
-  { src: string; width: number; height: number; tone: string }
+  { icon: string; tone: string }
 > = {
-  vocabulary: {
-    src: '/images/learner/lesson-row-vocab.png',
-    width: 36,
-    height: 32,
-    tone: '',
-  },
-  grammar: {
-    src: '/images/learner/lesson-row-grammar.png',
-    width: 36,
-    height: 33,
-    tone: 'lrow--violet',
-  },
-  practice: {
-    src: '/images/learner/lesson-row-practice.png',
-    width: 36,
-    height: 31,
-    tone: 'lrow--blue',
-  },
+  vocabulary: { icon: 'book-open-text', tone: '' },
+  grammar: { icon: 'pen-line', tone: 'lrow--violet' },
+  practice: { icon: 'clipboard-check', tone: 'lrow--blue' },
 };
 
 export function lessonRows(

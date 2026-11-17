@@ -110,31 +110,6 @@ function BulbIcon() {
   );
 }
 
-// Pieces of the completion sample; learner.css places each by :nth-child.
-const CONFETTI = [
-  'c-pink',
-  'c-lav',
-  'c-yellow is-curl',
-  'c-blue',
-  'c-orange',
-  'c-olive',
-  'c-orange',
-  'c-teal',
-  'c-pink',
-  'c-teal',
-  'c-blue',
-  'c-lav',
-  'c-red',
-  'c-brown',
-  'c-orange',
-  'c-green',
-  'c-cyan',
-  'c-teal',
-  'c-blue',
-  'c-red is-diamond',
-  'c-star is-star',
-];
-
 function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
@@ -648,11 +623,6 @@ function ReviewComplete({
   ];
   return (
     <>
-      <div className="done-confetti m-only" aria-hidden="true">
-        {CONFETTI.map((className, index) => (
-          <i key={index} className={className} />
-        ))}
-      </div>
       <header className="done-brand w-only">
         <Link className="done-brand__link" href="/learn">
           <span className="done-brand__mark" aria-hidden="true">
@@ -664,11 +634,6 @@ function ReviewComplete({
       <main className="done-main rv-done">
         <section className="done-card" aria-labelledby="done-title">
           <div className="done-hero">
-            <div className="done-confetti w-only" aria-hidden="true">
-              {CONFETTI.map((className, index) => (
-                <i key={index} className={className} />
-              ))}
-            </div>
             <p className="done-kicker">
               Chúc mừng! Bạn đã hoàn thành phiên ôn tập
             </p>
@@ -676,12 +641,6 @@ function ReviewComplete({
               Ôn tập hôm nay
             </h1>
             <div className="done-medal w-only">
-              <img
-                src="/images/learner/m02-medal.png"
-                alt=""
-                width={230}
-                height={105}
-              />
               <p
                 className="done-medal__score"
                 aria-label={`Tỷ lệ ghi nhớ ${retention}`}
