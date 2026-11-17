@@ -4640,7 +4640,6 @@ html:has(.learner-app) {
   font-size: 3.5rem;
   line-height: 1;
   letter-spacing: 0.14em;
-  text-indent: 0.14em; /* balance the trailing letter-spacing so the glyph centres in the 田字格 cell */
   color: var(--m03-jade);
 }
 .learner-app .word__mid {
@@ -8287,7 +8286,7 @@ html:has(.learner-app) {
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.14em;
-  text-indent: 0.14em; /* match letter-spacing so the glyph centres, as .word__hz */
+  text-indent: 0.12em;
   color: var(--rv-hz-ink);
   overflow-wrap: anywhere;
 }
@@ -8624,7 +8623,7 @@ html:has(.learner-app) {
   margin-top: var(--sp-8);
 }
 
-/* M3.3c (Q278): with "Ôn tiếp" (retry of the forgotten cards) the pair keeps
+/* M3.3c (Q278): with "Ôn lại thẻ chưa nhớ" (retry of the forgotten cards) the pair keeps
    the m02 split. */
 .learner-app .rv-actions--two {
   grid-template-columns: 164.8fr 187.8fr;

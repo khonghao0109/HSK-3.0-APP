@@ -22,6 +22,7 @@ import {
   SEARCH_QUERY_MAX_LENGTH,
 } from './dictionary-display';
 import { Icon } from '@/components/ui/icon';
+import { HanziCells } from '@/components/ui/hanzi-cells';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
@@ -73,7 +74,7 @@ function ResultRow({
         aria-label={rowLabel(item)}
       />
       <span className="dict-item__hz" lang="zh-Hans" aria-hidden="true">
-        {item.hanzi}
+        {top ? <HanziCells text={item.hanzi} /> : item.hanzi}
       </span>
       <span className="dict-item__body">
         <span className="dict-item__py" aria-hidden="true">

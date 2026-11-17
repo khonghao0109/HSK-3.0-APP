@@ -14,40 +14,53 @@
   --tzg-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' fill='none' stroke='black' stroke-width='1'%3E%3Cpath vector-effect='non-scaling-stroke' d='M50 0V100M0 50H100'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-dasharray='4 4' d='M0 0L100 100M100 0L0 100'/%3E%3C/svg%3E");
 }
 
-/* Lượt 8 — 田字格 (practice grid), CSS only, at every width, behind exactly
-   three large headwords: the flashcard front, the word-detail headword
-   (below 1024px; the web hero draws it on its glyph box instead, see the
-   web block) and the first dictionary result. A single character gets a
-   1:1 cell (both sides 1.5em); a longer word keeps one cell that widens to
-   fit (and wraps on narrow screens) rather than tiling per character, so
-   no layout can overflow. Hairline frame in --border-strong; the cross and
-   the dashed diagonals are drawn by a masked pseudo-element in --sand-300
-   at 50%, so no colour is written into the SVG. */
-.learner-app .fc-hz,
-.learner-app .word__hz,
-.learner-app .dict-item--top .dict-item__hz {
+/* Lượt 8 — 田字格 (practice grid), CSS only, at every width, in exactly
+   three large headwords: the flashcard front, the word-detail headword and
+   the first dictionary result. `HanziCells` wraps each Han character in its
+   own `.tzg-cell`, a 1:1 square (1.25em) like a copybook; neighbouring cells
+   share a border (-1px) and, being inline boxes, wrap onto the next line on
+   narrow screens instead of overflowing. Words of four characters or more
+   drop to 0.75em per cell. Hairline frame in --border-strong; the cross and
+   the dashed diagonals are a masked pseudo-element in --sand-300 at 50%, so
+   no colour is written into the SVG. */
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) {
+  letter-spacing: 0;
+  text-indent: 0;
+  white-space: normal;
+}
+
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cell {
   position: relative;
   isolation: isolate;
-  border: 1px solid var(--border-strong);
-  display: grid;
-  place-content: center;
+  display: inline-grid;
+  place-items: center;
   box-sizing: border-box;
-  inline-size: fit-content;
-  max-inline-size: 100%;
-  min-inline-size: 1.5em;
-  min-block-size: 1.5em;
-  padding: 0 0.12em;
-  text-align: center;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-strong);
+  line-height: 1;
+  vertical-align: middle;
 }
 
-/* The web result row spans two text rows; a stretched cell would lose 1:1. */
-.learner-app .dict-item--top .dict-item__hz {
-  align-self: center;
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+  .tzg-cell
+  + .tzg-cell {
+  margin-inline-start: -1px;
 }
 
-.learner-app .fc-hz::before,
-.learner-app .word__hz::before,
-.learner-app .dict-item--top .dict-item__hz::before {
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
+    > .tzg-cell:nth-child(4)
+  )
+  .tzg-cell {
+  font-size: 0.75em;
+}
+
+.learner-app
+  :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+  .tzg-cell::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -59,10 +72,9 @@
 }
 
 @media (forced-colors: active) {
-  .learner-app .fc-hz::before,
-  .learner-app .word__hz::before,
-  .learner-app .dict-item--top .dict-item__hz::before,
-  .learner-app .word-web__hero .word__head::before {
+  .learner-app
+    :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz)
+    .tzg-cell::before {
     display: none;
   }
 }
@@ -2350,24 +2362,17 @@
 
   /* The glyph box (mẫu .wword-hero__glyph). */
   .learner-app .word-web__hero .word__head {
-    position: relative;
-    isolation: isolate;
     display: grid;
     place-items: center;
     aspect-ratio: 1;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--border-default);
     border-radius: var(--r-lg);
-    background: var(--cream-100);
+    background: var(--cream-100)
+      linear-gradient(var(--sand-300), var(--sand-300)) center / 100% 1px
+      no-repeat;
   }
 
-  /* Lượt 8: the glyph box above carries the 田字格; the headword inside it
-     drops the mobile cell. */
   .learner-app .word-web__hero .word__hz {
-    display: block;
-    inline-size: auto;
-    min-inline-size: 0;
-    min-block-size: 0;
-    border: 0;
     margin: 0;
     padding: 0 var(--sp-2);
     font-family: var(--font-cn-serif);
@@ -2375,24 +2380,14 @@
     font-weight: 400;
     line-height: 1;
     letter-spacing: normal;
-    text-indent: 0;
     color: var(--ink-900);
+    background: var(--cream-100);
   }
 
-  .learner-app .word-web__hero .word__hz::before {
-    display: none;
-  }
-
-  .learner-app .word-web__hero .word__head::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: color-mix(in srgb, var(--sand-300) 50%, transparent);
-    -webkit-mask: var(--tzg-mask) center / 100% 100% no-repeat;
-    mask: var(--tzg-mask) center / 100% 100% no-repeat;
-    pointer-events: none;
+  /* Lượt 8: from two 田字格 cells (1.25em each) the 5rem headword would not
+     fit the 180–220px glyph box on one line. */
+  .learner-app .word-web__hero .word__hz:has(> .tzg-cell:nth-child(2)) {
+    font-size: 2.75rem;
   }
 
   .learner-app .word-web__hero-body {
@@ -4939,7 +4934,7 @@
   }
 
   /* M3.3c (Q278): the card keeps the 760px of mẫu .done-w (it shrank to its
-     content), so the "Ôn tiếp" actions sit inside it. */
+     content), so the "Ôn lại thẻ chưa nhớ" actions sit inside it. */
   .learner-app .rv-done .done-card {
     width: 760px;
     max-width: 100%;

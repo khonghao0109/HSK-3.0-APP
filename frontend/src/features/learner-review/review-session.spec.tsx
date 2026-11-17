@@ -11,6 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReviewSession } from './review-session';
 import type { ReviewCall, ReviewTransport } from './review-transport';
 
+/** The flashcard front word: read whole, since each Hanzi sits in its own 田字格 span. */
+const frontHz = (text: string) => (_: string, el: Element | null) =>
+  el?.matches('.fc-hz') === true && el.textContent === text;
+
 const router = { replace: vi.fn(), push: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
@@ -142,7 +146,7 @@ describe('ReviewSession (M3.3a)', () => {
     renderSession(t);
     const card = await screen.findByRole('button', { name: /Lật thẻ/ });
     expect(card).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByText('记得', { selector: '.fc-hz' })).toBeVisible();
+    expect(screen.getByText(frontHz('记得'))).toBeVisible();
     expect(screen.queryByText('nghĩa 记得')).not.toBeVisible();
     expect(screen.getByText('Chạm vào thẻ để lật mặt sau')).toBeInTheDocument();
     expect(screen.getAllByText('2 / 3').length).toBeGreaterThan(0);
@@ -244,7 +248,7 @@ describe('ReviewSession (M3.3a)', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     vi.setSystemTime(NOW + 4_200);
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
-    await screen.findByText('记得', { selector: '.fc-hz' });
+    await screen.findByText(frontHz('记得'));
     expect(t.grade).toHaveBeenCalledWith(
       41,
       { cardId: 1, grade: 'good', durationMs: 4_200 },
@@ -308,9 +312,7 @@ describe('ReviewSession (M3.3a)', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
     });
-    expect(
-      await screen.findByText('记得', { selector: '.fc-hz' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(frontHz('记得'))).toBeInTheDocument();
     expect(t.grade).toHaveBeenCalledTimes(1);
   });
 
@@ -328,7 +330,7 @@ describe('ReviewSession (M3.3a)', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Thử lại' }));
-    await screen.findByText('记得', { selector: '.fc-hz' });
+    await screen.findByText(frontHz('记得'));
     expect(t.grade.mock.calls[1]?.[2]).toBe(t.grade.mock.calls[0]?.[2]);
     expect(t.grade.mock.calls[1]?.[1]).toMatchObject({ grade: 'good' });
   });
@@ -348,7 +350,7 @@ describe('ReviewSession (M3.3a)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
     await screen.findByRole('button', { name: 'Thử lại' });
     fireEvent.click(screen.getByRole('button', { name: /^Dễ/ }));
-    await screen.findByText('记得', { selector: '.fc-hz' });
+    await screen.findByText(frontHz('记得'));
     expect(t.grade.mock.calls[1]?.[2]).not.toBe(t.grade.mock.calls[0]?.[2]);
   });
 
@@ -361,9 +363,7 @@ describe('ReviewSession (M3.3a)', () => {
     renderSession(t);
     fireEvent.click(await screen.findByRole('button', { name: /Lật thẻ/ }));
     fireEvent.click(screen.getByRole('button', { name: /^Tốt/ }));
-    expect(
-      await screen.findByText('记得', { selector: '.fc-hz' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(frontHz('记得'))).toBeInTheDocument();
   });
 
   it('shows the expired state and starts a new session with a new key', async () => {
@@ -383,9 +383,7 @@ describe('ReviewSession (M3.3a)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Dễ/ }));
     expect(await screen.findByText('Phiên ôn đã hết hạn')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu phiên mới' }));
-    expect(
-      await screen.findByText('早餐', { selector: '.fc-hz' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(frontHz('早餐'))).toBeInTheDocument();
     const usedKeys = t.grade.mock.calls.map((call) => call[2]);
     expect(usedKeys).not.toContain(t.create.mock.calls[0]?.[0]);
   });
@@ -424,11 +422,11 @@ describe('ReviewSession (M3.3a)', () => {
     );
     // Q278: summary.again = 1, so the retry of the forgotten cards is offered.
     expect(
-      screen.getByRole('button', { name: 'Ôn tiếp' }),
+      screen.getByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
     ).toBeInTheDocument();
   });
 
-  it('hides Ôn tiếp (retry of the forgotten cards) when no card was graded again (Q278)', async () => {
+  it('hides Ôn lại thẻ chưa nhớ (retry of the forgotten cards) when no card was graded again (Q278)', async () => {
     const t = fake();
     t.current.mockResolvedValue(ok({ session: session(0, 1), items: [] }));
     t.complete.mockResolvedValue(
@@ -442,7 +440,7 @@ describe('ReviewSession (M3.3a)', () => {
       await screen.findByRole('heading', { name: 'Ôn tập hôm nay' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Ôn tiếp' }),
+      screen.queryByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
     ).not.toBeInTheDocument();
   });
 
@@ -462,7 +460,7 @@ describe('ReviewSession (M3.3a)', () => {
     );
     renderSession(t);
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Ôn tiếp' }),
+      await screen.findByRole('button', { name: 'Ôn lại thẻ chưa nhớ' }),
     );
     expect(
       await screen.findByRole('button', { name: /Lật thẻ/ }),

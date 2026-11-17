@@ -61,7 +61,7 @@ Nền `macdev` `b90c7b5`, nhánh `feat/ui-unslop`. Audit gốc: `docs/unslop-aud
 | T3 | Đã sửa | Về `--fs-*`/`--adm-fs-*`; không letter-spacing âm |
 | T4 | Đã sửa | `numberedToToneMarks` (ü, `ou`, a/e, thanh 5, giữ hoa, idempotent) ở mọi chỗ hiển thị pinyin từ điển và thẻ ôn, kèm unit test |
 | Số | Đã sửa | `tabular-nums` cho điểm, phần trăm, đếm, đồng hồ |
-| Bố cục | Đã sửa | Hoàn thành bài: "Bài tiếp theo" + "Ôn từ mới"; phiên ôn: "Ôn tiếp" + "Về Ôn tập"; hồ sơ web một thẻ tối đa 720px |
+| Bố cục | Đã sửa | Hoàn thành bài: "Bài tiếp theo" + "Ôn từ mới"; phiên ôn: "Ôn lại thẻ chưa nhớ" + "Về Ôn tập" (giữ như mẫu); hồ sơ web một thẻ tối đa 720px |
 | K1 | Đã sửa | "Sắp có" thành chữ nhỏ không nền. Dùng `--text-muted` thay `--text-subtle` vì subtle chỉ 3,5–3,9:1 |
 | K2 | Đã sửa | Bỏ icon và vòng tỷ lệ (màn đã có lịch tháng); thêm mô tả từ dữ liệu thật |
 | Bo góc | Đã sửa | Giá trị lẻ về thang token; giữ bo lồng theo mẫu nơi công thức lệch mẫu |

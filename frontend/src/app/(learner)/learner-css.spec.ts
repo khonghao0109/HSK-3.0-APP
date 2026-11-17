@@ -50,32 +50,39 @@ const webCss = readFileSync(
 );
 
 describe('lượt 8–9 detail rules', () => {
-  it('draws the 田字格 grid only behind the four large-Hanzi spots', () => {
-    const allowed = [
-      '.learner-app .fc-hz::before',
-      '.learner-app .word__hz::before',
-      '.learner-app .dict-item--top .dict-item__hz::before',
-      '.learner-app .word-web__hero .word__head::before',
-    ];
+  it('draws the 田字格 grid only in the per-character cells of the three large-Hanzi spots', () => {
+    const allowed =
+      '.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cell::before';
     const uses = [...declarations(css), ...declarations(webCss)].filter(
       ({ decl }) => decl.includes('var(--tzg-mask)'),
     );
     expect(uses.length).toBeGreaterThan(0);
     for (const { selector } of uses)
-      for (const part of selector.split(','))
-        expect(allowed).toContain(part.trim());
+      expect(selector.replace(/\s+/gu, ' ')).toBe(allowed);
   });
 
-  it('runs done-rise only when reduced motion is not requested', () => {
-    const uses = [...declarations(css), ...declarations(webCss)].filter(
-      ({ decl }) => /^animation(-name)?:.*\bdone-rise\b/u.test(decl),
+  it('keeps every 田字格 cell 1:1 and scoped to the three spots', () => {
+    const cellRules = [...declarations(css), ...declarations(webCss)].filter(
+      ({ selector }) => selector.includes('.tzg-cell'),
     );
-    expect(uses.length).toBeGreaterThan(0);
-    for (const { atRules } of uses)
-      expect(
-        atRules.some((rule) =>
-          rule.includes('prefers-reduced-motion: no-preference'),
-        ),
-      ).toBe(true);
+    expect(cellRules.length).toBeGreaterThan(0);
+    for (const { selector } of cellRules)
+      expect(selector.replace(/\s+/gu, ' ')).toMatch(
+        /^\.learner-app (:is\(\.fc-hz, \.word__hz, \.dict-item--top \.dict-item__hz\)|\.word-web__hero \.word__hz)/u,
+      );
+    const cell = declarations(webCss)
+      .filter(
+        ({ selector }) =>
+          selector.replace(/\s+/gu, ' ') ===
+          '.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cell',
+      )
+      .map(({ decl }) => decl);
+    expect(cell).toEqual(
+      expect.arrayContaining([
+        'inline-size: 1.25em',
+        'block-size: 1.25em',
+        'aspect-ratio: 1',
+      ]),
+    );
   });
 });

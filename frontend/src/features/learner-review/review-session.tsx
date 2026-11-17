@@ -26,6 +26,7 @@ import {
   type ReviewTransport,
 } from './review-transport';
 import { Icon } from '@/components/ui/icon';
+import { HanziCells } from '@/components/ui/hanzi-cells';
 
 type Phase =
   | { kind: 'loading' }
@@ -427,7 +428,7 @@ export function ReviewSession({
                 <div className="fc-card" aria-live="polite">
                   <div className="fc-face fc-face--front" hidden={flipped}>
                     <p className="fc-hz cn" lang="zh-Hans">
-                      {view.hanzi}
+                      <HanziCells text={view.hanzi} />
                     </p>
                   </div>
                   <div className="fc-face fc-face--back" hidden={!flipped}>
@@ -647,7 +648,7 @@ function ReviewComplete({
                 type="button"
                 onClick={onRetry}
               >
-                Ôn tiếp
+                Ôn lại thẻ chưa nhớ
                 <Icon name="rotate-ccw" />
               </button>
             )}
