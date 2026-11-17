@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "draft",
-  "notice": "Bản nháp do AI soạn (Q172). Cấu trúc tạm, chờ chốt #15 (Q351). Người duyệt: PO.",
+  "notice": "Bản nháp do AI soạn (Q172). Cấu trúc tạm, chờ chốt #15 (Q351). Người duyệt: PO. Đề demo 23/11 chỉ gồm phần Đọc; 20 câu Nghe nạp vào ngân hàng câu hỏi ở draft, chưa có audio (PO 18/11/2026).",
   "test": {
     "sourceKey": "hsk1:mock-01",
     "title": "Đề thi thử HSK1 – số 1",
@@ -1991,6 +1991,18 @@
             }
           ]
         }
+      ]
+    }
+  ],
+  "demoTests": [
+    {
+      "sourceKey": "hsk1:mock-01-reading",
+      "title": "Đề thi thử HSK1 – Đọc",
+      "instruction": "Đề demo gồm 20 câu phần Đọc theo cấu trúc tạm của HSK 3.0 cấp 1 (chờ chốt #15). Mỗi câu chọn một đáp án.",
+      "durationMinutes": 20,
+      "passScore": 60,
+      "sections": [
+        "reading"
       ]
     }
   ]

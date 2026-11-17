@@ -57,6 +57,38 @@ describe('ExamReviewMedia (M4.5 B2b)', () => {
     );
   });
 
+  it('uses the Vietnamese alt text of the image when the snapshot has one (Q350)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          grants: [
+            {
+              mediaId: 9,
+              kind: 'image',
+              src: '/api/learner/media/9/content?expires=1&signature=x',
+              expiresAt: '2026-11-02T10:00:00.000Z',
+            },
+          ],
+          unavailable: [],
+        }),
+      ),
+    );
+    render(
+      <ExamReviewMedia
+        attemptId={41}
+        mediaId={9}
+        kind="image"
+        altText="A: Em bé uống sữa; B: Người đàn ông gọi điện"
+      />,
+    );
+    expect(
+      await screen.findByAltText(
+        'A: Em bé uống sữa; B: Người đàn ông gọi điện',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('shows the unavailable label when the backend lists the media', async () => {
     vi.stubGlobal(
       'fetch',

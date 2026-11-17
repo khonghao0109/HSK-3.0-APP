@@ -1692,7 +1692,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
                   <img
                     className="ext-image"
                     src={imageSrc}
-                    alt={`Hình minh hoạ câu ${String(current.number)}`}
+                    alt={
+                      image.altText ??
+                      `Hình minh hoạ câu ${String(current.number)}`
+                    }
                     onError={() => {
                       onMediaError(image.mediaId, 'image');
                     }}

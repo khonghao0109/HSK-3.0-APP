@@ -1412,7 +1412,7 @@ duy nhất). Q217: `isFlagged` là cờ đã lưu của câu (`false` khi chưa 
 `groupKey` là key đóng băng của snapshot (`s<orderIndex>`, `s<orderIndex>-g<orderIndex>`);
 `audio`/`image` là tham chiếu media của **câu**, `groupMedia.audio`/`groupMedia.image` là tham
 chiếu media của **nhóm** — tất cả lấy từ snapshot, chỉ gồm `mediaId`/`kind`/`mimeType`/
-`durationMs`, **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
+`durationMs`, `altText` (chỉ có khi media có alt, Q350), **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
 Với `arrange_sentence`, id trong `answers.tokens`, `learnerAnswer.order` và
 `correctAnswer.tokenIds` cùng không gian id đã che của snapshot (TL-133), không lộ id soạn câu.
 
@@ -1588,7 +1588,7 @@ Response có `Cache-Control: no-store`.
 | `GET` | `/admin/cms/media/:mediaId` | — | `MediaAdmin` + `usage: { lessonExercises: [{ id, lessonId, topicId, prompt, status }] (≤50), counts: { lessonExercises, otherContent } }` | 200 |
 | `POST` | `/admin/cms/media/:mediaId/quarantine` | — | `{ idempotent, media }`; đã archived → `409` | 201 |
 | `POST` | `/admin/cms/media/:mediaId/archive` | — | `{ idempotent, media }` | 201 |
-| `POST` | `/admin/cms/media/ingestions?dataSourceId=` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128 | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
+| `POST` | `/admin/cms/media/ingestions?dataSourceId=[&altText=]` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128; `altText` tuỳ chọn ≤1000 ký tự, không rỗng, lưu vào `Media.metadata.altText` (bất biến, nằm trong fingerprint idempotency; Q350) | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
 | `GET` | `/admin/cms/media/ingestions` | `page`, `limit` (mặc định 20, ≤100) | `MediaIngestionAdmin[]` + `meta` phân trang; sort `startedAt DESC, id DESC` | 200 |
 | `POST` | `/admin/cms/media/ingestions/:ingestionId/cleanup` | — | `{ ingestionId, cleanupCompleted: true }` hoặc `{ ingestionId, cleanupCompleted: false, settling: true }` | 201 |
 

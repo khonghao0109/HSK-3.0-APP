@@ -417,6 +417,7 @@ function projectMedia(media: ExamSnapshotMedia | null) {
     kind: media.kind,
     mimeType: media.mimeType,
     durationMs: media.durationMs,
+    ...(media.altText === undefined ? {} : { altText: media.altText }),
   };
 }
 

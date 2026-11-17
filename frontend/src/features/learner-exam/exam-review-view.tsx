@@ -173,6 +173,7 @@ function MediaBlock({
         attemptId={attemptId}
         mediaId={media.mediaId}
         kind={media.kind}
+        altText={media.altText}
       />
     </div>
   );

@@ -3289,6 +3289,8 @@ export interface components {
             passScore: number | null;
         };
         ExamSnapshotMediaDto: {
+            /** @description Alt tiếng Việt của ảnh (Q350); chỉ có khi media có alt. */
+            altText?: string;
             mediaId: number;
             /** @enum {string} */
             kind: "audio" | "image" | "pdf" | "video";
@@ -4216,6 +4218,8 @@ export interface operations {
     CmsController_ingestMedia: {
         parameters: {
             query: {
+                /** @description Q350: alt tiếng Việt, lưu vào `Media.metadata.altText` (bất biến sau ingest). */
+                altText?: string;
                 dataSourceId: number;
             };
             header: {

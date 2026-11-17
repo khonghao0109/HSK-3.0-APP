@@ -173,6 +173,7 @@ export class CmsController {
         correlationId: correlationId(requestId),
         observation: getMediaIngestionObservation(request),
       },
+      query.altText,
     );
   }
 

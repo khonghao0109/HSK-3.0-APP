@@ -1056,6 +1056,17 @@
             "$ref": "#/components/parameters/RequestId"
           },
           {
+            "name": "altText",
+            "required": false,
+            "in": "query",
+            "description": "Q350: alt tiếng Việt, lưu vào `Media.metadata.altText` (bất biến sau ingest).",
+            "schema": {
+              "maxLength": 1000,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          {
             "name": "dataSourceId",
             "required": true,
             "in": "query",
@@ -13752,6 +13763,10 @@
       "ExamSnapshotMediaDto": {
         "type": "object",
         "properties": {
+          "altText": {
+            "type": "string",
+            "description": "Alt tiếng Việt của ảnh (Q350); chỉ có khi media có alt."
+          },
           "mediaId": {
             "type": "number"
           },
