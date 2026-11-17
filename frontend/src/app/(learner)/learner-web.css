@@ -327,11 +327,6 @@
     white-space: nowrap;
   }
 
-  .learner-app .w-chip img {
-    width: 20px;
-    height: 20px;
-  }
-
   .learner-app .w-top .icon-btn {
     position: relative;
     width: 44px;
@@ -480,11 +475,9 @@
     display: contents;
   }
 
-  .learner-app .home-streak img {
-    grid-column: 1;
-    grid-row: 1 / span 2;
+  .learner-app .home-streak__icon {
     width: 48px;
-    height: 50px;
+    height: 48px;
   }
 
   .learner-app .home-streak div {
@@ -4827,7 +4820,7 @@
 
   .learner-app .fc-rate__btn {
     grid-template-columns: none;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     justify-items: center;
     gap: 4px;
     min-height: 84px;
@@ -4844,18 +4837,8 @@
     border-color: var(--jade-600);
   }
 
-  .learner-app .fc-rate__btn .fc-face-icon {
-    display: block;
-  }
-
   .learner-app .fc-tip .w-only {
     display: inline;
-  }
-
-  .learner-app .fc-rate__btn .icon {
-    grid-row: auto;
-    width: 28px;
-    height: 28px;
   }
 
   .learner-app .fc-rate__label,

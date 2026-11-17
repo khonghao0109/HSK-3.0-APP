@@ -19,21 +19,11 @@ import {
   TOAST_COMING_SOON,
   TOAST_LOCKED,
 } from '@/features/learner-shell/learner-toast-messages';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Bài học',
 };
-
-function Icon({ name, className }: { name: string; className?: string }) {
-  return (
-    <svg
-      className={className ? `icon ${className}` : 'icon'}
-      aria-hidden="true"
-    >
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /**
  * Lesson page (M2.5a, Q32–Q44). Tiếp tục học and the Luyện tập row of an

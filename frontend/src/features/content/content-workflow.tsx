@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
 import {
   ADMIN_ACTION,
   adminDateTime,
@@ -329,7 +330,14 @@ export function ContentWorkflow({
                   aria-current={current ? 'step' : undefined}
                 >
                   <span className="adm-flow__dot" aria-hidden="true">
-                    {done ? '✓' : stepNumber}
+                    {done ? (
+                      <AdminIcon
+                        name="check"
+                        className="adm-icon adm-flow__check"
+                      />
+                    ) : (
+                      stepNumber
+                    )}
                   </span>
                   <div>
                     <b>

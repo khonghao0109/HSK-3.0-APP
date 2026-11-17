@@ -16,6 +16,7 @@ import {
   WAVE_TRACK_WIDTH,
   type PlayerMedia,
 } from './lesson-player-model';
+import { Icon } from '@/components/ui/icon';
 
 export const LISTENING_MESSAGES = {
   play: 'Phát',
@@ -63,14 +64,6 @@ async function requestGrant(mediaId: number): Promise<Grant | null> {
   } catch {
     return null;
   }
-}
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
 }
 
 /**

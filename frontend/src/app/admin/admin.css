@@ -793,6 +793,11 @@
   font-size: 0.6875rem;
   font-weight: 700;
 }
+.admin-app .adm-flow__check {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
 .admin-app .adm-flow__step b {
   display: block;
   font-size: var(--adm-fs-xs);

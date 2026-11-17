@@ -210,15 +210,19 @@ describe('LearnerExamReviewPage (M4.5 B2b)', () => {
     // Q222: no mistake-book link on this page.
     expect(container.textContent).not.toContain('Sổ lỗi');
 
-    // Q240: grid cells show visible ✓ / ✕ marks alongside question numbers while keeping aria-label.
+    // Q240: grid cells show visible check / x icon marks alongside question numbers while keeping aria-label.
     const cells = container.querySelectorAll('.exv-cell');
     expect(cells).toHaveLength(5);
     expect(cells[0]?.getAttribute('aria-label')).toBe('Câu 1, Đúng');
     expect(cells[0]?.textContent).toContain('1');
-    expect(cells[0]?.textContent).toContain('✓');
+    expect(
+      cells[0]?.querySelector('svg.exv-cell__mark use')?.getAttribute('href'),
+    ).toBe('#i-check');
     expect(cells[1]?.getAttribute('aria-label')).toBe('Câu 2, Sai, đánh dấu');
     expect(cells[1]?.textContent).toContain('2');
-    expect(cells[1]?.textContent).toContain('✕');
+    expect(
+      cells[1]?.querySelector('svg.exv-cell__mark use')?.getAttribute('href'),
+    ).toBe('#i-x');
   });
 
   it('filters by tất cả / đúng / sai / đánh dấu through the URL (Q240)', async () => {

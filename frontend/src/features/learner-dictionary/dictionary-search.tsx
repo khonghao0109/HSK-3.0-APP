@@ -21,6 +21,7 @@ import {
   normalizeSearchQuery,
   SEARCH_QUERY_MAX_LENGTH,
 } from './dictionary-display';
+import { Icon } from '@/components/ui/icon';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
@@ -30,14 +31,6 @@ type SearchState =
   /** `q`: the query these items answer. */
   | { kind: 'results'; q: string; items: DictionarySearchItem[] }
   | { kind: 'error' };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 function syncUrl(q: string | null): void {
   window.history.replaceState(

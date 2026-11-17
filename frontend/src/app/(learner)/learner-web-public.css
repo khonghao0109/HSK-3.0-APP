@@ -263,11 +263,6 @@
     white-space: nowrap;
   }
 
-  .learner-app .w-public .w-chip img {
-    width: 20px;
-    height: 20px;
-  }
-
   .learner-app .w-public .w-tag {
     display: inline-flex;
     align-items: center;

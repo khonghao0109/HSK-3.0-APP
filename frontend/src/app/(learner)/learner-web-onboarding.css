@@ -168,9 +168,9 @@
     border-color: var(--jade-600);
   }
 
-  .learner-app .w-public .obw-goal img {
-    width: 88px;
-    height: 86px;
+  .learner-app .w-public .obw-goal .goal__icon {
+    width: 40px;
+    height: 40px;
   }
 
   .learner-app .w-public .obw-goal .goal__check {
@@ -184,7 +184,7 @@
   /* App dùng `role="radio"` + `aria-checked` (một bản radio duy nhất trong
      DOM), mẫu dùng `aria-pressed` trên `<button>`: cùng một trạng thái. */
   .learner-app .w-public .obw-goal[aria-checked='true'] {
-    border: 2px solid var(--jade-700);
+    border: 2px solid var(--border-brand);
     background: var(--jade-50);
   }
 

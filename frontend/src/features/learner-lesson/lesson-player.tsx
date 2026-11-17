@@ -26,6 +26,7 @@ import {
   type PlayerInput,
 } from './lesson-player-model';
 import { ListeningExercise, type ListeningSpeed } from './listening-exercise';
+import { Icon } from '@/components/ui/icon';
 
 export const PLAYER_MESSAGES = {
   correctTitle: 'Chính xác!',
@@ -53,17 +54,6 @@ type Pending = {
 };
 
 const EMPTY_INPUT: PlayerInput = { optionId: null, tokenIds: [], text: '' };
-
-function Icon({ name, className }: { name: string; className?: string }) {
-  return (
-    <svg
-      className={className ? `icon ${className}` : 'icon'}
-      aria-hidden="true"
-    >
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 export function ChoiceText({ text }: { text: string }) {
   return hasHan(text) ? (

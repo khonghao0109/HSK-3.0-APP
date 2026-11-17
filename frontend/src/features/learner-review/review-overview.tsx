@@ -15,16 +15,9 @@ import {
   createReviewTransport,
   type ReviewTransport,
 } from './review-transport';
+import { Icon } from '@/components/ui/icon';
 
 const SESSION_HREF = '/learn/review/session';
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 type Phase =
   | { kind: 'loading' }

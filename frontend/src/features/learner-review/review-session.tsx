@@ -25,6 +25,7 @@ import {
   createReviewTransport,
   type ReviewTransport,
 } from './review-transport';
+import { Icon } from '@/components/ui/icon';
 
 type Phase =
   | { kind: 'loading' }
@@ -36,79 +37,6 @@ type Phase =
   | { kind: 'done'; summary: ReviewSummary & { again: number } };
 
 type ShownCard = { hanzi: string; pinyin: string; meaning: string };
-
-// Face icons of the samples: stroked on web (ux-b), filled on mobile (m03).
-const FACES: Record<ReviewGrade, string> = {
-  again: 'M8 9h.01M16 9h.01M9 17c.4-1.6 1.6-2.5 3-2.5s2.6.9 3 2.5',
-  hard: 'M8 9h.01M16 9h.01M8.5 16.5s1.5-1 3.5-1 3.5 1 3.5 1',
-  good: 'M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01',
-  easy: 'M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01',
-};
-const FILLED_MOUTHS: Record<Exclude<ReviewGrade, 'easy'>, string> = {
-  again: 'M7.6 17.2c2.4-2.9 6.4-2.9 8.8 0',
-  hard: 'M8.2 16.6c2.2-2 5.4-2 7.6 0',
-  good: 'M7.4 13.8c2.3 3.4 6.9 3.4 9.2 0',
-};
-const STAR_EYES =
-  'M8 6.1l.73 1.89 2.03.11-1.57 1.29.51 1.96L8 10.25l-1.7 1.1.51-1.96-1.57-1.29 2.03-.11ZM16 6.1l.73 1.89 2.03.11-1.57 1.29.51 1.96L16 10.25l-1.7 1.1.51-1.96-1.57-1.29 2.03-.11Z';
-
-function FaceIcon({ grade }: { grade: ReviewGrade }) {
-  return (
-    <>
-      <svg
-        className="icon fc-face-icon w-only"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d={FACES[grade]} />
-        {grade === 'easy' && (
-          <path
-            d="M19 2l.7 1.8L21.5 4.5l-1.8.7L19 7l-.7-1.8L16.5 4.5l1.8-.7Z"
-            fill="currentColor"
-            stroke="none"
-          />
-        )}
-      </svg>
-      <svg
-        className="icon fc-face-fill m-only"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="11" fill="currentColor" stroke="none" />
-        {grade === 'easy' ? (
-          <>
-            <path fill="#fff" stroke="none" d={STAR_EYES} />
-            <path fill="#fff" stroke="none" d="M7 13.6h10a5 5 0 0 1-10 0Z" />
-          </>
-        ) : (
-          <>
-            <path d="M8.3 9.3v.6M15.7 9.3v.6" stroke="#fff" strokeWidth={2.6} />
-            <path d={FILLED_MOUTHS[grade]} stroke="#fff" strokeWidth={2} />
-          </>
-        )}
-      </svg>
-    </>
-  );
-}
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
-
-function BulbIcon() {
-  return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9.5 18.5h5M10.5 21.5h3" />
-      <path d="M12 6.5a5 5 0 0 0-3.1 8.9c.6.5 1 1.3 1 2.1h4.2c0-.8.4-1.6 1-2.1A5 5 0 0 0 12 6.5Z" />
-      <path d="M12 1.5v2M4.6 4.6l1.4 1.4M19.4 4.6 18 6M2 11.5h2M20 11.5h2" />
-    </svg>
-  );
-}
 
 function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -568,7 +496,6 @@ export function ReviewSession({
                     aria-keyshortcuts={entry.key}
                     onClick={() => void grade(entry.grade)}
                   >
-                    <FaceIcon grade={entry.grade} />
                     <span className="fc-rate__label">{entry.label}</span>
                     <span className="fc-rate__when">{interval}</span>
                   </button>
@@ -578,7 +505,7 @@ export function ReviewSession({
 
             <div className="rv-foot">
               <p className="fc-tip">
-                <BulbIcon />
+                <Icon name="lightbulb" />
                 <span className="w-only">
                   Mẹo: đánh giá đúng mức để lịch ôn sát với trí nhớ của bạn.
                 </span>

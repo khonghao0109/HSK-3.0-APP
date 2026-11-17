@@ -11,18 +11,11 @@ import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader'
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Hoàn thành bài học',
 };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /**
  * Lesson complete page (M2.5d, Q58–Q61). Only a done lesson shows it; any

@@ -246,10 +246,8 @@
   text-decoration: none;
 }
 
-.learner-app .exv-cell__mark {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+.learner-app .exv-cell__mark.icon {
+  stroke-width: 2.5;
 }
 
 .learner-app .exv-cell--correct {

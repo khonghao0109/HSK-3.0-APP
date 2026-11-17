@@ -43,6 +43,7 @@ import {
 import { isAuthFailure } from '@/lib/api/api-error';
 
 import './exam-list.css';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Thi thử HSK',
@@ -52,14 +53,6 @@ export const metadata: Metadata = {
 const SKILL_CHIP_ORDER: readonly ExamListSkill[] = EXAM_LIST_SKILL_VALUES;
 
 type LevelOption = { code: string };
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 /** Q209: the learner's current level, already stored server-side (goal). */
 async function readLearnerLevelCode(token: string): Promise<string | null> {

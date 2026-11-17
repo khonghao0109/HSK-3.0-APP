@@ -380,9 +380,24 @@ html:has(.learner-app) {
   stroke-linejoin: round;
 }
 
+.learner-app .icon--xs {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 .learner-app .icon--sm {
   width: 1rem;
   height: 1rem;
+}
+
+.learner-app .icon--md {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Chuỗi ngày học: icon nét một màu, chỉ con số mang độ đậm. */
+.learner-app .streak-icon {
+  color: var(--text-muted);
 }
 
 .learner-app .icon--lg {
@@ -1143,14 +1158,18 @@ html:has(.learner-app) {
   font-size: 1.0625rem;
 }
 
-.learner-app .goal img {
-  width: 78px;
-  height: 76px;
+/* Ô trung tính chứa icon nét một màu (thay ảnh 3D nhiều màu). */
+.learner-app .goal__icon {
+  box-sizing: content-box;
+  padding: var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  color: var(--text-strong);
 }
 
 .learner-app .goal[aria-pressed='true'],
 .learner-app .goal[aria-checked='true'] {
-  border: 2px solid var(--jade-600);
+  border: 2px solid var(--border-brand);
   background: var(--jade-25);
 }
 
@@ -2119,9 +2138,12 @@ html:has(.learner-app) {
   line-height: 1.5;
 }
 
-.learner-app .home-streak img {
+.learner-app .home-streak__icon {
   width: 36px;
-  height: 38px;
+  height: 36px;
+  /* Bản web (`display: contents`) đặt icon vào cột đầu của lưới thẻ. */
+  grid-column: 1;
+  grid-row: 1 / span 2;
 }
 
 .learner-app .home-streak b {
@@ -2129,13 +2151,13 @@ html:has(.learner-app) {
   font-size: 2rem;
   line-height: 1;
   font-weight: 600;
-  color: var(--navy-900);
+  color: var(--text-strong);
 }
 
 .learner-app .home-streak span {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--navy-900);
+  color: var(--text-strong);
 }
 
 .learner-app .home-section {
@@ -8383,10 +8405,9 @@ html:has(.learner-app) {
 
 .learner-app .fc-rate__btn {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
-  column-gap: var(--sp-1);
-  align-items: center;
+  justify-items: center;
   align-content: center;
   min-height: 54px;
   padding: var(--sp-1) var(--sp-2);
@@ -8395,20 +8416,8 @@ html:has(.learner-app) {
   background: var(--surface-card);
   color: var(--text-strong);
   font: inherit;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
-}
-
-.learner-app .fc-rate__btn .icon {
-  grid-row: 1 / 3;
-  width: 22px;
-  height: 22px;
-  stroke-linecap: round;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .learner-app .fc-rate__label {
@@ -8434,13 +8443,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .fc-rate__btn {
-    column-gap: 4px;
     padding: 4px 4px;
-  }
-
-  .learner-app .fc-rate__btn .icon {
-    width: 20px;
-    height: 20px;
   }
 }
 

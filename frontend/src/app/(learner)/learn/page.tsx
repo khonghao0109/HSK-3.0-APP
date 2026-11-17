@@ -20,6 +20,7 @@ import {
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Trang chủ',
@@ -43,14 +44,6 @@ const EXPLORE: ReadonlyArray<{
   { label: 'Nhận diện chữ', icon: 'file-stack' },
   { label: 'Hỗ trợ', icon: 'help-circle' },
 ];
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
 
 export default async function LearnerHomePage() {
   const session = await getServerLearnerSession();
@@ -158,12 +151,7 @@ export default async function LearnerHomePage() {
             <h2 id="home-streak-title">Chuỗi ngày học</h2>
             <p className="sr-only">{`${home.streakDays} ngày`}</p>
             <div className="home-streak" aria-hidden="true">
-              <img
-                src="/images/learner/fire.png"
-                alt=""
-                width={40}
-                height={42}
-              />
+              <Icon name="flame" className="streak-icon home-streak__icon" />
               <div>
                 <b>{home.streakDays}</b>
                 <span>ngày</span>

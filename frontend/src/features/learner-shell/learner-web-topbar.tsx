@@ -4,14 +4,7 @@ import { SEARCH_QUERY_MAX_LENGTH } from '@/features/learner-dictionary/dictionar
 
 import { ToastButton } from './learner-toast';
 import { TOAST_NOTIFICATIONS } from './learner-toast-messages';
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
+import { Icon } from '@/components/ui/icon';
 
 /**
  * Top bar of the `.w-app` frame from 1024px (Q81), first in the page so Tab
@@ -44,7 +37,7 @@ export function LearnerWebTopbar({
       <div className="w-top__end">
         {streakDays !== null && (
           <span className="w-chip">
-            <img src="/images/learner/fire.png" alt="" width={20} height={20} />
+            <Icon name="flame" className="streak-icon" />
             <span className="sr-only">Chuỗi ngày học: </span>
             {streakDays}
             <span className="sr-only"> ngày</span>
