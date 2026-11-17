@@ -4631,6 +4631,7 @@ html:has(.learner-app) {
   font-size: 3.5rem;
   line-height: 1;
   letter-spacing: 0.14em;
+  text-indent: 0.14em; /* balance the trailing letter-spacing so the glyph centres in the 田字格 cell */
   color: var(--m03-jade);
 }
 .learner-app .word__mid {
@@ -8277,7 +8278,7 @@ html:has(.learner-app) {
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.14em;
-  text-indent: 0.12em;
+  text-indent: 0.14em; /* match letter-spacing so the glyph centres, as .word__hz */
   color: var(--rv-hz-ink);
   overflow-wrap: anywhere;
 }
