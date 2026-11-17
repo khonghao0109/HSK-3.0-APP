@@ -8819,6 +8819,9 @@ html:has(.learner-app) {
 .learner-app .lesson-topics {
   display: grid;
   gap: var(--sp-4);
+  /* Same sheet padding as the lesson page (.lesson): side gutters on mobile. */
+  padding: var(--sp-5) var(--sp-4) calc(var(--tabbar-height) + var(--sp-6))
+    var(--sp-5);
 }
 
 .learner-app .lesson-topics__title {
