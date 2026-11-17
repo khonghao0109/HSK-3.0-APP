@@ -206,6 +206,7 @@ Cập nhật: 12/11/2026 (thêm Q209–Q225 và Q237–Q243 ngày 11/11/2026, M4
 | Q241 | **Trạng thái "Đang chấm" ở trang kết quả cắt khỏi B4, làm cùng mốc Q144 khi backend có chấm hoãn.** (PO chấp nhận mặc định TL, M4.5 B4) | — | — |
 | Q242 | **Chưa thêm Playwright vào CI; ghi backlog vì lỗi giao diện chỉ bắt qua lượt chạy tay.** (PO chấp nhận mặc định TL, M4.5 B4) | — | — |
 | Q243 | **Thêm link "Lịch sử thi" ở danh sách đề trên mobile, tới `/learn/exam/history`, cỡ chạm ≥ 44px, không thành hai link trên cùng màn hình.** (PO chấp nhận mặc định TL, M4.5 B4) | Danh sách đề (mobile) | `mobile/exams.html` không có link này |
+| Q340 | **Chờ PO duyệt — đợt unslop 17/11/2026 lệch bản mẫu** (`docs/reviews/unslop-2026-11/README.md`, ảnh trước/sau trong `docs/reviews/unslop-2026-11/before/` và `after/`): C1 trang chủ H1 "Hôm nay" + ngày giờ Việt Nam (thay lời chào Q15); C2/C3 bỏ "Chúc mừng!"; C4 "Đạt"; C5 "Chính xác", bỏ icon pháo hoa; C6 "Không có câu sai"; C7 câu mẹo ôn tập; C8 điểm màn hoàn thành chỉ hiện một lần (bỏ thẻ "Điểm số của bạn"); M4 màn hoàn thành bỏ confetti và vòng nguyệt quế, nền navy đặc (Q2 vẫn giữ navy); I2 icon mục tiêu onboarding thành icon nét; nút chính hoàn thành phiên ôn "Ôn lại thẻ chưa nhớ" → "Ôn tiếp" | Trang chủ, hoàn thành bài và phiên ôn, kết quả và xem lại thi, luyện tập, onboarding | Lệch `home`, `lesson-complete`, `review-complete`, `onboarding-goal` (mobile và web) |
 
 Ghi chú: **Q129** để dành cho chính sách khoá đăng nhập (login lockout), chờ PO; không dùng cho M4.2c.
 
