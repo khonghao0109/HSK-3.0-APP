@@ -221,14 +221,14 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await rowFor(page, WORD.hanzi).first().locator('.dict-item__link').click();
     await expect(page).toHaveURL(`/learn/dictionary/${ids.word}`);
     const h1 = page.getByRole('heading', { level: 1 });
-    await expect(h1).toHaveText(WORD.hanzi);
+    await expect(h1).toHaveAccessibleName(WORD.hanzi);
     await expect(page.locator('.word__py')).toHaveText(WORD.pinyinTone);
     await expect(page.locator('.word__vi')).toHaveText(WORD.vi);
     await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
     await expect(page.locator('.tabbar')).toBeHidden();
 
     await page.getByRole('button', { name: 'Phồn thể' }).click();
-    await expect(h1).toHaveText(WORD.traditional);
+    await expect(h1).toHaveAccessibleName(WORD.traditional);
     await expect(h1).toHaveAttribute('lang', 'zh-Hant');
     await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
 
@@ -282,7 +282,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
 
     await toRelated.first().click();
     await expect(page).toHaveURL(`/learn/dictionary/${relatedId}`);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(
       RELATED_HANZI,
     );
     await expect(page.locator('.word-ex__cn')).toHaveText(
@@ -317,7 +317,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
       page.getByRole('region', { name: WORD.hanzi }).getByRole('heading', {
         level: 1,
       }),
-    ).toHaveText(WORD.hanzi);
+    ).toHaveAccessibleName(WORD.hanzi);
     const senses = page.getByRole('region', { name: 'Nghĩa' });
     await expect(senses.locator('ol > li')).toHaveText([WORD.vi]);
 

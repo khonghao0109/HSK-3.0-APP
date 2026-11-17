@@ -637,17 +637,17 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: WORD.hanzi }),
     ).toBeVisible();
-    await audit(page, 'word', TITLES.word);
+    await audit(page, 'word', `${WORD.hanzi} · ${TITLES.word}`);
     await page.getByRole('button', { name: 'Tuỳ chọn khác' }).click();
     await expect(
       page.getByRole('button', { name: 'Sao chép từ' }),
     ).toBeVisible();
-    await audit(page, 'word menu', TITLES.word);
+    await audit(page, 'word menu', `${WORD.hanzi} · ${TITLES.word}`);
     await page.keyboard.press('Escape');
     await fail(page, '**/api/learner/dictionary/words/*/save');
     await page.getByRole('button', { name: 'Lưu để ôn' }).click();
     await expectAlert(page, 'Chưa lưu được. Vui lòng thử lại.');
-    await audit(page, 'word save 503', TITLES.word);
+    await audit(page, 'word save 503', `${WORD.hanzi} · ${TITLES.word}`);
 
     for (const id of ['99999999', 'abc']) {
       await page.goto(`/learn/dictionary/${id}`);
