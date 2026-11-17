@@ -96,10 +96,10 @@ export class ExamImportError extends Error {
 const defaultSleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const sha256 = (value: Buffer | string) =>
+export const sha256 = (value: Buffer | string) =>
   createHash('sha256').update(value).digest('hex');
 
 export function readLedger(path: string): ExamLedger {
@@ -134,7 +134,7 @@ export function questionPayload(
   };
 }
 
-class Api {
+export class Api {
   constructor(private readonly deps: ExamImportDeps) {}
 
   async request(

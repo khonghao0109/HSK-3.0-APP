@@ -26,6 +26,10 @@ import {
   type LearningPathLesson,
 } from '../path/learning-path.policy';
 import { loadLevelPaths } from '../path/learning-path.reader';
+import {
+  PUBLIC_LESSON_IMAGE_SELECT,
+  projectPublicLessonImage,
+} from '../public-lesson.serializer';
 import { LessonActivityResponseDto } from './dto/lesson-activity-response.dto';
 import { SubmitLessonExerciseAttemptDto } from './dto/lesson-activity-write.dto';
 import {
@@ -57,6 +61,7 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
   id: true,
   title: true,
   description: true,
+  coverImage: { select: PUBLIC_LESSON_IMAGE_SELECT },
   slug: true,
   orderIndex: true,
   levelId: true,
@@ -623,6 +628,7 @@ export class LessonActivityService {
               id: graph.id,
               title: graph.title,
               description: graph.description,
+              coverImage: projectPublicLessonImage(graph.coverImage),
               slug: graph.slug,
               orderIndex: graph.orderIndex,
               levelId: graph.levelId,

@@ -42,6 +42,7 @@ const current: LessonActivity = {
     id: 5,
     title: 'Chào hỏi',
     description: 'Lời chào trong ngày.',
+    coverImage: null,
   },
   progress: { completionPercent: 67, status: 'learning', score: null },
   level: { id: 1, code: 'HSK1', name: 'HSK 1' },
@@ -55,7 +56,7 @@ const current: LessonActivity = {
 };
 
 const locked: LessonActivity = {
-  lesson: { id: 6, title: 'Gia đình', description: null },
+  lesson: { id: 6, title: 'Gia đình', description: null, coverImage: null },
   progress: { completionPercent: 0, status: 'not_started', score: null },
   level: { id: 1, code: 'HSK1', name: 'HSK 1' },
   position: 2,

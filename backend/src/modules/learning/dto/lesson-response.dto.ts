@@ -25,6 +25,12 @@ export class LessonDetailWordMeaningDto {
   vi!: string | null;
 }
 
+/** Ảnh bài học/từ (Q350); lấy URL qua `GET /media/:id/access`. */
+export class LessonImageDto {
+  id!: number;
+  altText!: string | null;
+}
+
 export class LessonDetailWordDto {
   id!: number;
   hanzi!: string;
@@ -32,6 +38,7 @@ export class LessonDetailWordDto {
   pinyin!: string;
   pinyinTone!: string | null;
   meanings!: LessonDetailWordMeaningDto[];
+  image!: LessonImageDto | null;
 }
 
 export class LessonDetailStoryDto {
@@ -75,6 +82,7 @@ export class LessonDetailDto {
   id!: number;
   title!: string;
   level!: LessonDetailLevelDto;
+  coverImage!: LessonImageDto | null;
   topics!: LessonDetailTopicDto[];
   words!: LessonDetailWordDto[];
   stories!: LessonDetailStoryDto[];

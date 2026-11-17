@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   Injectable,
@@ -6,7 +7,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ContentEntityType, Prisma } from '@prisma/client';
+import { ContentEntityType, MediaType, Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 
@@ -37,6 +38,8 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
+import { SetLessonImagesDto } from './dto/set-lesson-images.dto';
+import { CMS_MEDIA_SELECT, unusableMediaReason } from './media-usability';
 
 const REVISION_SELECT = {
   id: true,
@@ -72,6 +75,7 @@ const LESSON_ADMIN_SELECT = {
   publishedById: true,
   publishedAt: true,
   deletedAt: true,
+  coverImageId: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.LessonSelect;
@@ -220,7 +224,7 @@ export class CmsService {
     });
     if (!lesson) throw new NotFoundException('Lesson not found.');
 
-    const [revisions, topics] = await Promise.all([
+    const [revisions, topics, lessonWords] = await Promise.all([
       // shortcut: trả mọi bản sửa không phân trang, khi lịch sử bản sửa lớn thì phân trang ở đây
       this.prisma.contentRevision.findMany({
         where: { entityType: 'lesson', entityId: lessonId },
@@ -233,6 +237,15 @@ export class CmsService {
         where: { lessonId },
         orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
         select: TOPIC_LIST_ITEM_SELECT,
+      }),
+      // Q350: từ của bài và ảnh hiện gán, để gán ảnh qua PUT .../images.
+      this.prisma.lessonWord.findMany({
+        where: { lessonId },
+        orderBy: [{ orderIndex: 'asc' }, { wordId: 'asc' }],
+        select: {
+          wordId: true,
+          word: { select: { hanzi: true, imageId: true } },
+        },
       }),
     ]);
     const latestTopicRevisions = await this.getLatestRevisionSummaryMap(
@@ -247,6 +260,11 @@ export class CmsService {
         topics: topics.map((topic) => ({
           ...topic,
           latestRevision: latestTopicRevisions.get(topic.id) ?? null,
+        })),
+        words: lessonWords.map(({ wordId, word }) => ({
+          wordId,
+          hanzi: word.hanzi,
+          imageId: word.imageId,
         })),
       },
     };
@@ -505,6 +523,113 @@ export class CmsService {
         return {
           success: true as const,
           data: { lesson: archived, idempotent: false },
+        };
+      }),
+    );
+  }
+
+  /**
+   * Q350: gán ảnh bìa và ảnh từ cho một bài học. Ảnh phải là media `image`
+   * chưa cách ly, chưa lưu trữ; từ phải thuộc bài. Ghi audit trước/sau.
+   */
+  async setLessonImages(
+    actor: CmsActor,
+    lessonId: number,
+    dto: SetLessonImagesDto,
+    context: MutationContext,
+  ) {
+    assertAdminActor(actor);
+    const wordImages = dto.wordImages ?? [];
+    const wordIds = wordImages.map((item) => item.wordId);
+    if (new Set(wordIds).size !== wordIds.length) {
+      throw new BadRequestException({
+        code: 'LESSON_IMAGE_DUPLICATE_WORD',
+        message: 'Each word may appear once.',
+      });
+    }
+    return this.executeMutation(async () =>
+      this.prisma.$transaction(async (tx) => {
+        await this.lockLessonForOperation(tx, 'lesson.images_update', lessonId);
+        const lesson = await tx.lesson.findFirst({
+          where: { id: lessonId },
+          select: LESSON_ADMIN_SELECT,
+        });
+        this.assertMutableEntity(lesson, 'Lesson');
+        const mediaIds = [
+          ...(dto.coverImageId ? [dto.coverImageId] : []),
+          ...wordImages.flatMap((item) =>
+            item.imageId === null ? [] : [item.imageId],
+          ),
+        ];
+        const media = await tx.media.findMany({
+          where: { id: { in: mediaIds } },
+          select: CMS_MEDIA_SELECT,
+        });
+        const blockers = mediaIds.flatMap((id) => {
+          const reason = unusableMediaReason(
+            media.find((item) => item.id === id) ?? null,
+            MediaType.image,
+          );
+          return reason === null ? [] : [{ mediaId: id, reason }];
+        });
+        const lessonWords = await tx.lessonWord.findMany({
+          where: { lessonId, wordId: { in: wordIds } },
+          select: { wordId: true, word: { select: { imageId: true } } },
+        });
+        const missingWords = wordIds.filter(
+          (id) => !lessonWords.some((item) => item.wordId === id),
+        );
+        if (blockers.length > 0 || missingWords.length > 0) {
+          throw new BadRequestException({
+            code: 'LESSON_IMAGE_INVALID',
+            message: 'Some images or words cannot be assigned.',
+            details: { media: blockers, wordsNotInLesson: missingWords },
+          });
+        }
+        const before = {
+          coverImageId: lesson.coverImageId,
+          wordImages: lessonWords.map((item) => ({
+            wordId: item.wordId,
+            imageId: item.word.imageId,
+          })),
+        };
+        const updated =
+          dto.coverImageId === undefined
+            ? lesson
+            : await tx.lesson.update({
+                where: { id: lessonId },
+                data: { coverImageId: dto.coverImageId, updatedById: actor.id },
+                select: LESSON_ADMIN_SELECT,
+              });
+        for (const item of wordImages) {
+          await tx.word.update({
+            where: { id: item.wordId },
+            data: { imageId: item.imageId },
+            select: { id: true },
+          });
+        }
+        const after = {
+          coverImageId: updated.coverImageId,
+          wordImages: wordImages.map(({ wordId, imageId }) => ({
+            wordId,
+            imageId,
+          })),
+        };
+        await tx.auditLog.create({
+          data: {
+            actorId: actor.id,
+            action: 'lesson.images_updated',
+            targetType: 'lesson',
+            targetId: String(lessonId),
+            correlationId: context.correlationId,
+            beforeSummary: before,
+            afterSummary: after,
+          },
+          select: { id: true },
+        });
+        return {
+          success: true as const,
+          data: { lesson: updated, wordImages: after.wordImages },
         };
       }),
     );

@@ -57,6 +57,7 @@ import {
   AdminTestDto,
 } from './dto/admin-test-response.dto';
 import { AdminTestsQueryDto } from './dto/admin-tests-query.dto';
+import { SetLessonImagesDto } from './dto/set-lesson-images.dto';
 import { AdminTagDto } from './dto/admin-tag-response.dto';
 import { AdminTagsQueryDto } from './dto/admin-tags-query.dto';
 import { CreateExerciseRevisionDto } from './dto/create-exercise-revision.dto';
@@ -455,6 +456,18 @@ export class CmsController {
     @Headers('x-request-id') requestId?: string,
   ) {
     return this.cmsService.archiveLesson(request.user, lessonId, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  @Put('lessons/:lessonId/images')
+  setLessonImages(
+    @Req() request: AuthenticatedRequest,
+    @Param('lessonId', ParsePositiveIntPipe) lessonId: number,
+    @Body() dto: SetLessonImagesDto,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.cmsService.setLessonImages(request.user, lessonId, dto, {
       correlationId: correlationId(requestId),
     });
   }

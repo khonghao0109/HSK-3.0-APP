@@ -40,6 +40,14 @@ export const lessonWordsSchema = z.object({
       meanings: z.array(
         z.object({ vi: z.string().nullable(), en: z.string().nullable() }),
       ),
+      // Q350: ảnh của từ.
+      image: z
+        .object({
+          id: z.number().int().positive(),
+          altText: z.string().nullable(),
+        })
+        .nullable()
+        .default(null),
     }),
   ),
 });

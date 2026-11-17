@@ -47,7 +47,7 @@ function activity(
   progress: Partial<LessonActivity['progress']> = {},
 ): LessonActivity {
   return {
-    lesson: { id: 5, title: 'Mua sắm', description: null },
+    lesson: { id: 5, title: 'Mua sắm', description: null, coverImage: null },
     progress: {
       completionPercent: 100,
       status: 'done',

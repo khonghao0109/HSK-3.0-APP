@@ -601,6 +601,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/cms/lessons/{lessonId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CmsController_setLessonImages"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cms/topics/{topicId}": {
         parameters: {
             query?: never;
@@ -2277,6 +2293,16 @@ export interface components {
             orderIndex: number;
             slug: string;
         };
+        LessonWordImageDto: {
+            wordId: number;
+            /** @description `null` gỡ ảnh của từ; bắt buộc có trường. */
+            imageId: number | null;
+        };
+        SetLessonImagesDto: {
+            /** @description `null` gỡ ảnh bìa. */
+            coverImageId?: number | null;
+            wordImages?: components["schemas"]["LessonWordImageDto"][];
+        };
         CreateTopicDto: {
             content: {
                 [key: string]: unknown;
@@ -2773,6 +2799,10 @@ export interface components {
             name: string;
             orderIndex: number;
         };
+        LessonImageDto: {
+            id: number;
+            altText: string | null;
+        };
         LessonDetailTopicDto: {
             content: {
                 [key: string]: unknown;
@@ -2792,6 +2822,7 @@ export interface components {
             pinyin: string;
             pinyinTone: string | null;
             meanings: components["schemas"]["LessonDetailWordMeaningDto"][];
+            image: components["schemas"]["LessonImageDto"] | null;
         };
         LessonDetailStoryDto: {
             content: {
@@ -2823,6 +2854,7 @@ export interface components {
             id: number;
             title: string;
             level: components["schemas"]["LessonDetailLevelDto"];
+            coverImage: components["schemas"]["LessonImageDto"] | null;
             topics: components["schemas"]["LessonDetailTopicDto"][];
             words: components["schemas"]["LessonDetailWordDto"][];
             stories: components["schemas"]["LessonDetailStoryDto"][];
@@ -2851,6 +2883,8 @@ export interface components {
             id: number;
             title: string;
             description: string | null;
+            /** @description Ảnh bìa (Q350); URL qua `GET /media/:id/access`. */
+            coverImage: components["schemas"]["LessonImageDto"] | null;
             slug: string;
             orderIndex: number;
             levelId: number;
@@ -4941,6 +4975,40 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_setLessonImages: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLessonImagesDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -8,6 +8,7 @@ import {
 } from '@/features/learner-home/learning-home-contract';
 import { levelLabel } from '@/features/learner-home/level-label';
 import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
+import { LessonImage } from '@/features/learner-lesson/lesson-image';
 import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader';
 import {
   LESSON_ROW_ICONS,
@@ -78,9 +79,18 @@ export default async function LearnerLessonPage({
         </nav>
 
         <section className="lesson-hero" aria-labelledby="lesson-title">
-          <span className="lesson-hero__img" aria-hidden="true">
-            <Icon name="book-open" />
-          </span>
+          {lesson.coverImage ? (
+            <span className="lesson-hero__img lesson-hero__img--cover">
+              <LessonImage
+                mediaId={lesson.coverImage.id}
+                altText={lesson.coverImage.altText}
+              />
+            </span>
+          ) : (
+            <span className="lesson-hero__img" aria-hidden="true">
+              <Icon name="book-open" />
+            </span>
+          )}
           <div className="lesson-hero__info">
             <h1 className="lesson-hero__title" id="lesson-title">
               {lesson.title}

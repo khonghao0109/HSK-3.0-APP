@@ -6,6 +6,7 @@ export type CmsTransactionOperation =
   | 'lesson.review'
   | 'lesson.publish'
   | 'lesson.archive'
+  | 'lesson.images_update'
   | 'topic.create'
   | 'topic.create_revision'
   | 'topic.review'
