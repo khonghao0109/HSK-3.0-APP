@@ -254,18 +254,14 @@ test.describe('Learner exam history (M4.5 B3)', () => {
     await shot(page, testInfo, 'result-after-link');
 
     await page.goto('/learn/exam');
-    if (isWeb(page)) {
-      await expect(page.getByRole('link', { name: 'Lịch sử thi' })).toHaveCount(
-        1,
-      );
-      await expect(
-        page.getByRole('link', { name: 'Lịch sử thi' }),
-      ).toBeVisible();
-    } else {
-      await expect(page.getByRole('link', { name: 'Lịch sử thi' })).toHaveCount(
-        0,
-      );
-    }
+    // Web: the page-head button; mobile: the panel link (`.exl-mhistory`, 55bd209).
+    await expect(page.getByRole('link', { name: 'Lịch sử thi' })).toHaveCount(
+      1,
+    );
+    await expect(page.getByRole('link', { name: 'Lịch sử thi' })).toBeVisible();
+    await expect(
+      page.locator(isWeb(page) ? '.w-pagehead a' : '.exl-mhistory'),
+    ).toHaveAttribute('href', '/learn/exam/history');
     await shot(page, testInfo, 'exam-list-after-link');
 
     // Keyboard & 200% zoom (720x450) real measurements on pagination-populated history.

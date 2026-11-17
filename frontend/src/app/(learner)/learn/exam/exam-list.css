@@ -717,6 +717,11 @@
     color: var(--text-on-brand);
   }
 
+  /* The rule above would drop the focus ring of the selected chip. */
+  .learner-app .exl-chip[aria-current='true']:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
   .learner-app .exl-chips--skills .exl-chip {
     font-size: var(--fs-md);
   }
