@@ -404,7 +404,7 @@ Ngược lại, chạy lại `seed:learning` sẽ **hồi sinh** placeholder đ�
 `status: 'published'`, `deletedAt: null` — `backend/scripts/learning/seed-learning.ts:123-134`).
 
 **`orderIndex` cho pilot:** seed dùng 1..5 (`seed-learning.ts:131`, `:140`). Pilot dùng
-**1001–1005** (ngoài dải seed, vẫn ≤ `@Max(1_000_000)` — `backend/src/modules/cms/dto/create-lesson-revision.dto.ts:25-29`).
+**1001–1030** (nới từ 1001–1005 theo P8, PO 17/11/2026) (ngoài dải seed, vẫn ≤ `@Max(1_000_000)` — `backend/src/modules/cms/dto/create-lesson-revision.dto.ts:25-29`).
 Không có kiểm tra "contiguous": path tự tính `position` từ index mảng đã lọc
 (`backend/src/modules/learning/path/learning-path.policy.ts:68-69`, `:78`), unlock so sánh
 `orderIndex` với previous ready (`backend/src/modules/learning/activity/lesson-activity.service.ts:800-814`).
@@ -428,7 +428,7 @@ Bài mẫu: `backend/content/pilot/hsk1/lesson-01.json`.
 | `lesson.slug` | string | ✔ | kebab-case, **unique toàn cục**, phải khác `${levelSlug}-lesson-N` (TL-213). Mẫu: `hsk1-pilot-l01-chao-hoi-gioi-thieu` |
 | `lesson.title` | string | ✔ | 1–200 (`LessonRevision`) |
 | `lesson.description` | string | ✖ | ≤ 2000 |
-| `lesson.orderIndex` | int | ✔ | 1..1 000 000; pilot dùng 1001–1005 (K-H) |
+| `lesson.orderIndex` | int | ✔ | 1..1 000 000; pilot dùng 1001–1030 (P8) (K-H) |
 | `dataSource` | object | ✔ | `{ code, version }` — resolve sang `dataSourceId` qua `GET /admin/cms/data-sources` (K-D) |
 | `words` | array | ✔ | Danh sách từ vựng; hiện **không có API** (K-B) — dữ liệu để review và để ghi theo phương án được chọn |
 | `words[].hanzi` | string | ✔ | Phải có trong `hsk1.json` (TL-211) và trong bảng `Word` theo `(hanzi, pinyin)` (K-C) |
@@ -641,7 +641,7 @@ sách archive ở Pha 3.
 
 ### 4.6 Ghi chú nhỏ đã chốt
 
-1. `orderIndex` pilot = **1001–1005** (TL-214); file mẫu dùng 1001.
+1. `orderIndex` pilot = **1001–1030** (TL-214, nới theo P8); file mẫu dùng 1001.
 2. `words[].pinyin` lưu có dấu thanh (dạng hiển thị). Khi resolve `Word`, chuẩn hoá đúng như
    `normalizePinyin` (`backend/src/common/utils/normalize-pinyin.ts`: bỏ số thanh, trim, lowercase,
    `ü → u:`, gộp khoảng trắng) rồi so **sau khi bỏ hết khoảng trắng** (`Word.pinyin` lưu

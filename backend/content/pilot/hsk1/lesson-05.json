@@ -19,7 +19,7 @@
       "meaningVi": "học tập, học",
       "example": {
         "hanzi": "我们在学校学习汉语。",
-        "pinyin": "Wǒmen zài xuéxiào xuéxí hànyǔ.",
+        "pinyin": "Wǒmen zài xuéxiào xuéxí Hànyǔ.",
         "meaningVi": "Chúng tôi học tiếng Hán ở trường."
       }
     },
@@ -29,17 +29,17 @@
       "meaningVi": "học",
       "example": {
         "hanzi": "他在学校学汉语。",
-        "pinyin": "Tā zài xuéxiào xué hànyǔ.",
+        "pinyin": "Tā zài xuéxiào xué Hànyǔ.",
         "meaningVi": "Anh ấy học tiếng Hán ở trường."
       }
     },
     {
       "hanzi": "汉语",
-      "pinyin": "hànyǔ",
+      "pinyin": "Hànyǔ",
       "meaningVi": "tiếng Hán, tiếng Trung",
       "example": {
         "hanzi": "我很喜欢汉语。",
-        "pinyin": "Wǒ hěn xǐhuan hànyǔ.",
+        "pinyin": "Wǒ hěn xǐhuan Hànyǔ.",
         "meaningVi": "Tôi rất thích tiếng Hán."
       }
     },
@@ -59,7 +59,7 @@
       "meaningVi": "sách",
       "example": {
         "hanzi": "桌子上有一本书。",
-        "pinyin": "Zhuōzi shàng yǒu yī běn shū.",
+        "pinyin": "Zhuōzi shang yǒu yī běn shū.",
         "meaningVi": "Trên bàn có một quyển sách."
       }
     },
@@ -89,7 +89,7 @@
       "meaningVi": "nói",
       "example": {
         "hanzi": "你会说汉语吗？",
-        "pinyin": "Nǐ huì shuō hànyǔ ma?",
+        "pinyin": "Nǐ huì shuō Hànyǔ ma?",
         "meaningVi": "Bạn biết nói tiếng Hán không?"
       }
     },
@@ -98,9 +98,9 @@
       "pinyin": "jiàn",
       "meaningVi": "thấy, gặp",
       "example": {
-        "hanzi": "我们明天见老师。",
-        "pinyin": "Wǒmen míngtiān jiàn lǎoshī.",
-        "meaningVi": "Ngày mai chúng tôi gặp giáo viên."
+        "hanzi": "明天见！",
+        "pinyin": "Míngtiān jiàn!",
+        "meaningVi": "Hẹn gặp ngày mai!"
       }
     },
     {
@@ -139,14 +139,14 @@
       "meaningVi": "sách giáo khoa",
       "example": {
         "hanzi": "我的课本在桌子上。",
-        "pinyin": "Wǒ de kèběn zài zhuōzi shàng.",
+        "pinyin": "Wǒ de kèběn zài zhuōzi shang.",
         "meaningVi": "Sách giáo khoa của tôi ở trên bàn."
       }
     },
     {
       "hanzi": "考试",
       "pinyin": "kǎoshì",
-      "meaningVi": "kỳ thi, thi",
+      "meaningVi": "kỳ thi, thi, làm bài thi",
       "example": {
         "hanzi": "明天我们有考试。",
         "pinyin": "Míngtiān wǒmen yǒu kǎoshì.",
@@ -190,7 +190,7 @@
       "example": {
         "hanzi": "我们明天八点上课。",
         "pinyin": "Wǒmen míngtiān bā diǎn shàngkè.",
-        "meaningVi": "Chúng tôi lên lớp lúc 8 giờ sáng ngày mai."
+        "meaningVi": "Ngày mai chúng tôi lên lớp lúc tám giờ."
       }
     },
     {
@@ -200,7 +200,7 @@
       "example": {
         "hanzi": "我们四点下课。",
         "pinyin": "Wǒmen sì diǎn xiàkè.",
-        "meaningVi": "Chúng tôi tan học lúc 4 giờ."
+        "meaningVi": "Chúng tôi tan học lúc bốn giờ."
       }
     },
     {
@@ -226,7 +226,7 @@
       "content": [
         {
           "type": "text",
-          "value": "Bài 5 gồm 20 từ vựng HSK1 dùng khi nói về học tập và trường học. Nhóm động từ: 学习 (học tập), 学 (học), 读 (đọc), 写 (viết), 说 (nói), 听 (nghe), 问 (hỏi), 见 (thấy, gặp), 知道 (biết). Nhóm đồ vật học tập: 书 (sách), 课本 (sách giáo khoa), 字 (chữ), 汉字 (chữ Hán). Nhóm ngôn ngữ: 汉语 (tiếng Hán). Nhóm địa điểm và hoạt động ở trường: 学校 (trường học), 课 (tiết học), 上课 (lên lớp), 下课 (tan học), 考试 (kỳ thi), 图书馆 (thư viện). Đọc to từng từ, chú ý thanh điệu của 学习 (xuéxí), 汉语 (hànyǔ), 汉字 (hànzì) và 图书馆 (túshūguǎn)."
+          "value": "Bài 5 gồm 20 từ vựng HSK1 dùng khi nói về học tập và trường học. Nhóm động từ: 学习 (học tập), 学 (học), 读 (đọc), 写 (viết), 说 (nói), 听 (nghe), 问 (hỏi), 见 (thấy, gặp), 知道 (biết). Nhóm đồ vật học tập: 书 (sách), 课本 (sách giáo khoa), 字 (chữ), 汉字 (chữ Hán). Nhóm ngôn ngữ: 汉语 (tiếng Hán). Nhóm địa điểm và hoạt động ở trường: 学校 (trường học), 课 (tiết học), 上课 (lên lớp), 下课 (tan học), 考试 (kỳ thi), 图书馆 (thư viện). Đọc to từng từ, chú ý thanh điệu của 学习 (xuéxí), 汉语 (Hànyǔ), 汉字 (hànzì) và 图书馆 (túshūguǎn)."
         },
         {
           "type": "vocabulary_list",
@@ -245,11 +245,11 @@
       "content": [
         {
           "type": "text",
-          "value": "1. 学习 và 学 đều là “học”. Cả hai đều đi được với tân ngữ (学习汉语 = 学汉语); 学习 trang trọng hơn và hay dùng một mình khi nói chung về việc học, còn 学 khẩu ngữ và gọn hơn. Ví dụ: 我学习汉语。 (Wǒ xuéxí hànyǔ.) = Tôi học tiếng Hán. / 我在学习。 (Wǒ zài xuéxí.) = Tôi đang học. / 我学汉字。 (Wǒ xué hànzì.) = Tôi học chữ Hán."
+          "value": "1. 学习 và 学 đều là “học”. Cả hai đều đi được với tân ngữ (学习汉语 = 学汉语); 学习 trang trọng hơn và hay dùng một mình khi nói chung về việc học, còn 学 khẩu ngữ và gọn hơn. Ví dụ: 我学习汉语。 (Wǒ xuéxí Hànyǔ.) = Tôi học tiếng Hán. / 我在学习。 (Wǒ zài xuéxí.) = Tôi đang học. / 我学汉字。 (Wǒ xué hànzì.) = Tôi học chữ Hán."
         },
         {
           "type": "text",
-          "value": "2. Động từ + tân ngữ: 说 (nói), 读 (đọc), 写 (viết) đứng trước tân ngữ chỉ ngôn ngữ hoặc chữ: 说汉语, 读课本, 写汉字. 听 (nghe) nhận một cụm chủ vị làm tân ngữ: 我听老师说话 = tôi nghe thầy/cô nói, ở đó 老师说话 là cụm chủ vị (老师 không phải tân ngữ trực tiếp của 听). Ví dụ: 我说汉语。 (Wǒ shuō hànyǔ.) = Tôi nói tiếng Hán. / 我读课本。 (Wǒ dú kèběn.) = Tôi đọc sách giáo khoa. / 我写汉字。 (Wǒ xiě hànzì.) = Tôi viết chữ Hán. / 我听老师说话。 (Wǒ tīng lǎoshī shuōhuà.) = Tôi nghe giáo viên nói."
+          "value": "2. Động từ + tân ngữ: 说 (nói), 读 (đọc), 写 (viết) đứng trước tân ngữ chỉ ngôn ngữ hoặc chữ: 说汉语, 读课本, 写汉字. 听 (nghe) nhận một cụm chủ vị làm tân ngữ: 我听老师说话 = tôi nghe thầy/cô nói, ở đó 老师说话 là cụm chủ vị (老师 không phải tân ngữ trực tiếp của 听). Ví dụ: 我说汉语。 (Wǒ shuō Hànyǔ.) = Tôi nói tiếng Hán. / 我读课本。 (Wǒ dú kèběn.) = Tôi đọc sách giáo khoa. / 我写汉字。 (Wǒ xiě hànzì.) = Tôi viết chữ Hán. / 我听老师说话。 (Wǒ tīng lǎoshī shuōhuà.) = Tôi nghe giáo viên nói."
         },
         {
           "type": "text",
@@ -288,7 +288,7 @@
         },
         {
           "type": "text",
-          "value": "A: 你知道这个字吗？ B: 不知道，我在学习汉语。 (Nǐ zhīdào zhège zì ma? / Bù zhīdào, wǒ zài xuéxí hànyǔ.) — A: Bạn biết chữ này không? B: Không biết, tôi đang học tiếng Hán."
+          "value": "A: 你知道这个字吗？ B: 不知道，我在学习汉语。 (Nǐ zhīdào zhège zì ma? / Bù zhīdào, wǒ zài xuéxí Hànyǔ.) — A: Bạn biết chữ này không? B: Không biết, tôi đang học tiếng Hán."
         },
         {
           "type": "text",
@@ -435,7 +435,7 @@
           "hanyu"
         ]
       },
-      "explanation": "汉语 (hànyǔ) nghĩa là “tiếng Hán”. Trong câu này 学习 đi với tân ngữ chỉ môn học: 我学习汉语 = tôi học tiếng Hán. (学习 cũng có thể đứng một mình: 我在学习 = tôi đang học.)",
+      "explanation": "汉语 (Hànyǔ) nghĩa là “tiếng Hán”. Trong câu này 学习 đi với tân ngữ chỉ môn học: 我学习汉语 = tôi học tiếng Hán. (学习 cũng có thể đứng một mình: 我在学习 = tôi đang học.)",
       "orderIndex": 5
     },
     {
@@ -577,14 +577,14 @@
   "review": {
     "status": "draft",
     "requiredChecks": [
-      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 学习 xuéxí, 汉语 hànyǔ, 汉字 hànzì, 上课 shàngkè, 下课 xiàkè, 图书馆 túshūguǎn)",
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 学习 xuéxí, 汉语 Hànyǔ, 汉字 hànzì, 上课 shàngkè, 下课 xiàkè, 图书馆 túshūguǎn)",
       "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh HSK1",
       "câu ví dụ và text block chỉ dùng chữ Hán thuộc HSK1",
       "đáp án và explanation của cả 10 bài tập",
       "vị trí đáp án 4 bài mcq trải đều ở bốn vị trí 1, 2, 3, 4",
       "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
     ],
-    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy kiểm được chữ Hán HSK1 trong words[].example và option mcq (không kiểm text block), khớp pinyin với dữ liệu từ điển trong repo, nhưng không kiểm được ngữ nghĩa và độ tự nhiên. Cần kiểm kỹ 汉语 (hànyǔ — âm tiết yu thanh 3) và 汉字 (hànzì = hàn + zì). Đoạn hội thoại trong t03 không dùng tên riêng, chỉ dùng từ HSK1.",
+    "notice": "Bản nháp do AI soạn (Q172). Pinyin và nghĩa tiếng Việt BẮT BUỘC được người kiểm lại trước khi approve; máy kiểm được chữ Hán HSK1 trong words[].example và option mcq (không kiểm text block), khớp pinyin với dữ liệu từ điển trong repo, nhưng không kiểm được ngữ nghĩa và độ tự nhiên. Cần kiểm kỹ 汉语 (Hànyǔ — âm tiết yu thanh 3) và 汉字 (hànzì = hàn + zì). Đoạn hội thoại trong t03 không dùng tên riêng, chỉ dùng từ HSK1.",
     "notes": []
   }
 }

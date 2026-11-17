@@ -1,0 +1,581 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l09",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l09-thoi-gian-trong-ngay",
+    "title": "Thời gian trong ngày",
+    "description": "Bài 9 HSK1: nói về các buổi trong ngày, giờ giấc (点、分、半), hỏi thời điểm bằng 什么时候 và diễn đạt “một lát”, “ngay” bằng 一会儿, 马上 với 20 từ vựng cơ bản.",
+    "orderIndex": 1009
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "上午",
+      "pinyin": "shàngwǔ",
+      "meaningVi": "buổi sáng (trước trưa)",
+      "example": {
+        "hanzi": "我上午有课。",
+        "pinyin": "Wǒ shàngwǔ yǒu kè.",
+        "meaningVi": "Buổi sáng tôi có tiết học."
+      }
+    },
+    {
+      "hanzi": "中午",
+      "pinyin": "zhōngwǔ",
+      "meaningVi": "buổi trưa",
+      "example": {
+        "hanzi": "中午我在家吃饭。",
+        "pinyin": "Zhōngwǔ wǒ zài jiā chīfàn.",
+        "meaningVi": "Buổi trưa tôi ăn cơm ở nhà."
+      }
+    },
+    {
+      "hanzi": "下午",
+      "pinyin": "xiàwǔ",
+      "meaningVi": "buổi chiều",
+      "example": {
+        "hanzi": "下午我们去打球。",
+        "pinyin": "Xiàwǔ wǒmen qù dǎqiú.",
+        "meaningVi": "Buổi chiều chúng tôi đi chơi bóng."
+      }
+    },
+    {
+      "hanzi": "早上",
+      "pinyin": "zǎoshang",
+      "meaningVi": "buổi sáng, sáng sớm",
+      "example": {
+        "hanzi": "早上我喝牛奶。",
+        "pinyin": "Zǎoshang wǒ hē niúnǎi.",
+        "meaningVi": "Buổi sáng tôi uống sữa."
+      }
+    },
+    {
+      "hanzi": "晚上",
+      "pinyin": "wǎnshang",
+      "meaningVi": "buổi tối",
+      "example": {
+        "hanzi": "晚上你想做什么？",
+        "pinyin": "Wǎnshang nǐ xiǎng zuò shénme?",
+        "meaningVi": "Buổi tối bạn muốn làm gì?"
+      }
+    },
+    {
+      "hanzi": "白天",
+      "pinyin": "báitiān",
+      "meaningVi": "ban ngày",
+      "example": {
+        "hanzi": "白天他不在家。",
+        "pinyin": "Báitiān tā bù zài jiā.",
+        "meaningVi": "Ban ngày anh ấy không ở nhà."
+      }
+    },
+    {
+      "hanzi": "早",
+      "pinyin": "zǎo",
+      "meaningVi": "sớm",
+      "example": {
+        "hanzi": "他起床很早。",
+        "pinyin": "Tā qǐchuáng hěn zǎo.",
+        "meaningVi": "Anh ấy dậy rất sớm."
+      }
+    },
+    {
+      "hanzi": "晚",
+      "pinyin": "wǎn",
+      "meaningVi": "muộn, trễ",
+      "example": {
+        "hanzi": "现在太晚了。",
+        "pinyin": "Xiànzài tài wǎn le.",
+        "meaningVi": "Bây giờ muộn quá rồi."
+      }
+    },
+    {
+      "hanzi": "时候",
+      "pinyin": "shíhou",
+      "meaningVi": "lúc, khi",
+      "example": {
+        "hanzi": "你什么时候回家？",
+        "pinyin": "Nǐ shénme shíhou huíjiā?",
+        "meaningVi": "Khi nào bạn về nhà?"
+      }
+    },
+    {
+      "hanzi": "时间",
+      "pinyin": "shíjiān",
+      "meaningVi": "thời gian",
+      "example": {
+        "hanzi": "你明天有时间吗？",
+        "pinyin": "Nǐ míngtiān yǒu shíjiān ma?",
+        "meaningVi": "Ngày mai bạn có thời gian không?"
+      }
+    },
+    {
+      "hanzi": "小时",
+      "pinyin": "xiǎoshí",
+      "meaningVi": "giờ, tiếng (đồng hồ)",
+      "example": {
+        "hanzi": "我睡了八个小时。",
+        "pinyin": "Wǒ shuì le bā ge xiǎoshí.",
+        "meaningVi": "Tôi đã ngủ tám tiếng."
+      }
+    },
+    {
+      "hanzi": "半",
+      "pinyin": "bàn",
+      "meaningVi": "nửa, rưỡi",
+      "example": {
+        "hanzi": "我等了半个小时。",
+        "pinyin": "Wǒ děng le bàn ge xiǎoshí.",
+        "meaningVi": "Tôi đã đợi nửa tiếng."
+      }
+    },
+    {
+      "hanzi": "一会儿",
+      "pinyin": "yīhuìr",
+      "meaningVi": "một lát, một chút",
+      "example": {
+        "hanzi": "请等一会儿。",
+        "pinyin": "Qǐng děng yīhuìr.",
+        "meaningVi": "Xin đợi một lát."
+      }
+    },
+    {
+      "hanzi": "马上",
+      "pinyin": "mǎshàng",
+      "meaningVi": "ngay, lập tức",
+      "example": {
+        "hanzi": "我马上来。",
+        "pinyin": "Wǒ mǎshàng lái.",
+        "meaningVi": "Tôi đến ngay."
+      }
+    },
+    {
+      "hanzi": "前天",
+      "pinyin": "qiántiān",
+      "meaningVi": "hôm kia",
+      "example": {
+        "hanzi": "前天我去了北京。",
+        "pinyin": "Qiántiān wǒ qù le Běijīng.",
+        "meaningVi": "Hôm kia tôi đã đi Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "后天",
+      "pinyin": "hòutiān",
+      "meaningVi": "ngày kia",
+      "example": {
+        "hanzi": "后天是我的生日。",
+        "pinyin": "Hòutiān shì wǒ de shēngrì.",
+        "meaningVi": "Ngày kia là sinh nhật của tôi."
+      }
+    },
+    {
+      "hanzi": "今年",
+      "pinyin": "jīnnián",
+      "meaningVi": "năm nay",
+      "example": {
+        "hanzi": "我今年十八岁。",
+        "pinyin": "Wǒ jīnnián shíbā suì.",
+        "meaningVi": "Năm nay tôi mười tám tuổi."
+      }
+    },
+    {
+      "hanzi": "去年",
+      "pinyin": "qùnián",
+      "meaningVi": "năm ngoái",
+      "example": {
+        "hanzi": "去年他在中国学习。",
+        "pinyin": "Qùnián tā zài Zhōngguó xuéxí.",
+        "meaningVi": "Năm ngoái anh ấy học ở Trung Quốc."
+      }
+    },
+    {
+      "hanzi": "明年",
+      "pinyin": "míngnián",
+      "meaningVi": "năm sau, sang năm",
+      "example": {
+        "hanzi": "明年我想去国外。",
+        "pinyin": "Míngnián wǒ xiǎng qù guówài.",
+        "meaningVi": "Năm sau tôi muốn ra nước ngoài."
+      }
+    },
+    {
+      "hanzi": "星期天",
+      "pinyin": "xīngqītiān",
+      "meaningVi": "chủ nhật",
+      "example": {
+        "hanzi": "星期天你在家吗？",
+        "pinyin": "Xīngqītiān nǐ zài jiā ma?",
+        "meaningVi": "Chủ nhật bạn có ở nhà không?"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: thời gian trong ngày",
+      "subtitle": "20 từ HSK1 về buổi trong ngày, giờ giấc, ngày và năm",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 9 gồm 20 từ vựng HSK1 dùng khi nói về thời gian. Nhóm buổi trong ngày: 早上 (buổi sáng sớm), 上午 (buổi sáng), 中午 (buổi trưa), 下午 (buổi chiều), 晚上 (buổi tối), 白天 (ban ngày). Nhóm giờ giấc: 时间 (thời gian), 时候 (lúc, khi), 小时 (tiếng đồng hồ), 半 (rưỡi), 早 (sớm), 晚 (muộn), 一会儿 (một lát), 马上 (ngay). Nhóm ngày và năm: 前天 (hôm kia), 后天 (ngày kia), 去年 (năm ngoái), 今年 (năm nay), 明年 (năm sau), 星期天 (chủ nhật). Đọc to từng từ, chú ý thanh nhẹ của 早上 (zǎoshang), 晚上 (wǎnshang), 时候 (shíhou) và âm cuộn lưỡi của 一会儿 (yīhuìr)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: thời gian trước động từ, 点/分/半, 什么时候, 一会儿/马上",
+      "subtitle": "Bốn điểm ngữ pháp để nói giờ giấc và thời điểm",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Từ chỉ thời gian đứng trước động từ: chủ ngữ + thời gian + động từ (cũng có thể đặt thời gian ở đầu câu), không đặt sau động từ như tiếng Việt. Ví dụ: 我下午去图书馆。 (Wǒ xiàwǔ qù túshūguǎn.) = Buổi chiều tôi đi thư viện. / 他晚上在家学习。 (Tā wǎnshang zài jiā xuéxí.) = Buổi tối anh ấy học ở nhà. / 我们明年去北京。 (Wǒmen míngnián qù Běijīng.) = Năm sau chúng tôi đi Bắc Kinh."
+        },
+        {
+          "type": "text",
+          "value": "2. Cách nói giờ: số + 点 (giờ) + số + 分 (phút); 半 = rưỡi, đứng sau 点. Buổi trong ngày đứng trước giờ: 上午八点 = 8 giờ sáng. Cấu trúc: (buổi) + số + 点 + (số + 分 / 半). Ví dụ: 现在八点半。 (Xiànzài bā diǎn bàn.) = Bây giờ là 8 giờ rưỡi. / 我们下午三点十分下课。 (Wǒmen xiàwǔ sān diǎn shí fēn xiàkè.) = Chúng tôi tan học lúc 3 giờ 10 phút chiều. Lưu ý: thời lượng (bao lâu) như 两个小时 thì đứng SAU động từ, khác với thời điểm: 我学习两个小时。 (Wǒ xuéxí liǎng gè xiǎoshí.) = Tôi học hai tiếng."
+        },
+        {
+          "type": "text",
+          "value": "3. 什么时候 (khi nào, lúc nào) hỏi thời điểm, đứng trước động từ ở vị trí của từ chỉ thời gian; trả lời bằng thời gian ở đúng vị trí đó. Cấu trúc: chủ ngữ + 什么时候 + động từ? Ví dụ: 你什么时候去北京？ (Nǐ shénme shíhou qù Běijīng?) = Khi nào bạn đi Bắc Kinh? / 你们什么时候上课？ (Nǐmen shénme shíhou shàngkè?) = Khi nào các bạn lên lớp? — 我们上午九点上课。 (Wǒmen shàngwǔ jiǔ diǎn shàngkè.) = Chúng tôi lên lớp lúc 9 giờ sáng."
+        },
+        {
+          "type": "text",
+          "value": "4. 一会儿 (một lát) và 马上 (ngay, lập tức) đứng trước động từ để nói việc sắp xảy ra: 马上 nhanh hơn, gần như ngay bây giờ; 一会儿 là sau một lát. Cấu trúc: chủ ngữ + 马上/一会儿 + động từ. Ví dụ: 我马上来。 (Wǒ mǎshàng lái.) = Tôi đến ngay. / 他一会儿去商店。 (Tā yīhuìr qù shāngdiàn.) = Lát nữa anh ấy đi cửa hàng. / 老师马上来。 (Lǎoshī mǎshàng lái.) = Giáo viên đến ngay."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: lịch học trong ngày",
+      "subtitle": "Hội thoại ngắn về giờ giấc; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你明天什么时候上课？ B: 我明天上午八点半上课。 (Nǐ míngtiān shénme shíhou shàngkè? / Wǒ míngtiān shàngwǔ bā diǎn bàn shàngkè.) — A: Ngày mai khi nào bạn lên lớp? B: Ngày mai tôi lên lớp lúc 8 giờ rưỡi sáng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你们几点下课？ B: 我们中午十二点下课。 (Nǐmen jǐ diǎn xiàkè? / Wǒmen zhōngwǔ shí'èr diǎn xiàkè.) — A: Mấy giờ các bạn tan học? B: Chúng tôi tan học lúc 12 giờ trưa."
+        },
+        {
+          "type": "text",
+          "value": "A: 你下午有时间吗？ B: 有，我下午去图书馆学习两个小时。 (Nǐ xiàwǔ yǒu shíjiān ma? / Yǒu, wǒ xiàwǔ qù túshūguǎn xuéxí liǎng gè xiǎoshí.) — A: Chiều nay bạn có thời gian không? B: Có, chiều nay tôi đến thư viện học hai tiếng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你晚上在家吗？ B: 在，我晚上在家写汉字。 (Nǐ wǎnshang zài jiā ma? / Zài, wǒ wǎnshang zài jiā xiě hànzì.) — A: Buổi tối bạn có ở nhà không? B: Có, buổi tối tôi ở nhà viết chữ Hán."
+        },
+        {
+          "type": "text",
+          "value": "A: 现在几点？ B: 现在八点十分，我马上去学校。 (Xiànzài jǐ diǎn? / Xiànzài bā diǎn shí fēn, wǒ mǎshàng qù xuéxiào.) — A: Bây giờ mấy giờ? B: Bây giờ là 8 giờ 10 phút, tôi đến trường ngay."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l09:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “buổi chiều”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "上午"
+          },
+          {
+            "id": "opt-b",
+            "text": "下午"
+          },
+          {
+            "id": "opt-c",
+            "text": "中午"
+          },
+          {
+            "id": "opt-d",
+            "text": "晚上"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "下午 (xiàwǔ) nghĩa là “buổi chiều”. 上午 (shàngwǔ) là “buổi sáng”, 中午 (zhōngwǔ) là “buổi trưa”, 晚上 (wǎnshang) là “buổi tối”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你___时候去北京？ (Khi nào bạn đi Bắc Kinh?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "哪儿"
+          },
+          {
+            "id": "opt-b",
+            "text": "谁"
+          },
+          {
+            "id": "opt-c",
+            "text": "什么"
+          },
+          {
+            "id": "opt-d",
+            "text": "多少"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "什么时候 (shénme shíhou) = khi nào, hỏi thời điểm và đứng trước động từ: 你什么时候去北京 = khi nào bạn đi Bắc Kinh. 哪儿时候, 谁时候, 多少时候 đều sai ngữ pháp: chỉ 什么 ghép với 时候 thành từ hỏi thời điểm.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 现在八点___。 (Bây giờ là 8 giờ rưỡi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "小时"
+          },
+          {
+            "id": "opt-b",
+            "text": "时间"
+          },
+          {
+            "id": "opt-c",
+            "text": "时候"
+          },
+          {
+            "id": "opt-d",
+            "text": "半"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "半 (bàn) nghĩa là “rưỡi”, đứng sau 点: 八点半 = 8 giờ rưỡi. 八点小时, 八点时间, 八点时候 đều sai ngữ pháp: 小时 là danh từ chỉ khoảng thời gian (cần lượng từ, ví dụ 两个小时), 时间 và 时候 không đứng sau giờ để chỉ “rưỡi”.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “ngay, lập tức”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "马上"
+          },
+          {
+            "id": "opt-b",
+            "text": "一会儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "时间"
+          },
+          {
+            "id": "opt-d",
+            "text": "小时"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "马上 (mǎshàng) nghĩa là “ngay, lập tức”. 一会儿 (yīhuìr) là “một lát”, 时间 (shíjiān) là “thời gian”, 小时 (xiǎoshí) là “tiếng đồng hồ”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e05",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 今天是___，我不上课。(Hôm nay là chủ nhật, tôi không lên lớp.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "星期天",
+          "xīngqītiān",
+          "xingqitian"
+        ]
+      },
+      "explanation": "星期天 (xīngqītiān) nghĩa là “chủ nhật”; 今天是星期天，我不上课 = hôm nay là chủ nhật, tôi không lên lớp.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们___三点下课。(Chúng tôi tan học lúc 3 giờ chiều.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "下午",
+          "xiàwǔ",
+          "xiawu"
+        ]
+      },
+      "explanation": "下午 (xiàwǔ) nghĩa là “buổi chiều”; buổi trong ngày đứng trước giờ và cả cụm thời gian đứng trước động từ: 我们下午三点下课. 上午 hay 晚上 không khớp với “chiều” trong bản dịch.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你什么___去北京？(Khi nào bạn đi Bắc Kinh?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "时候",
+          "shíhou",
+          "shihou"
+        ]
+      },
+      "explanation": "什么时候 (shénme shíhou) = khi nào; chỗ trống cần 时候 để ghép thành 什么时候. 什么时间 không phải cách hỏi tự nhiên ở HSK1.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + 马上 + động từ: “Tôi đến ngay.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r6",
+            "text": "来"
+          },
+          {
+            "id": "tkn-m3",
+            "text": "马上"
+          },
+          {
+            "id": "tkn-z8",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z8",
+          "tkn-m3",
+          "tkn-r6"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我马上来. Năm hoán vị còn lại đều sai vì 马上 là phó từ, phải đứng sau chủ ngữ 我 và ngay trước động từ 来; động từ không đứng đầu câu (ví dụ sai: 马上我来, 我来马上, 来我马上).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bây giờ là 9 giờ rưỡi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p5",
+            "text": "半"
+          },
+          {
+            "id": "tkn-c9",
+            "text": "点"
+          },
+          {
+            "id": "tkn-x4",
+            "text": "现在"
+          },
+          {
+            "id": "tkn-j2",
+            "text": "九"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-x4",
+          "tkn-j2",
+          "tkn-c9",
+          "tkn-p5"
+        ]
+      },
+      "explanation": "Có 24 hoán vị, chỉ 1 đúng là 现在九点半. Cách nói giờ cố định là số + 点 + 半 (九点半), không đảo được (sai: 半九点, 九半点, 点九半); 现在 là chủ ngữ chỉ thời điểm hiện tại, đứng trước giờ (九点半现在 không phải câu trả lời “bây giờ là mấy giờ”).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l09:e10",
+      "topicKey": "t01",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành cụm: “hai tiếng (đồng hồ)”.",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s7",
+            "text": "小时"
+          },
+          {
+            "id": "tkn-g1",
+            "text": "两"
+          },
+          {
+            "id": "tkn-u6",
+            "text": "个"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-g1",
+          "tkn-u6",
+          "tkn-s7"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 两个小时. Trật tự bắt buộc là số + lượng từ + danh từ: 两 đứng đầu, 个 ở giữa, 小时 cuối; năm hoán vị còn lại (ví dụ sai: 个两小时, 小时两个, 两小时个) đều sai ngữ pháp.",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-02 (Pha 3)",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-02 (PO đã duyệt 17/11/2026); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

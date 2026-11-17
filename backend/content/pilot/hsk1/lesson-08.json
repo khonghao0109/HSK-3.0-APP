@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l08",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l08-so-dem-luong-tu",
+    "title": "Số đếm và lượng từ",
+    "description": "Bài 8 HSK1: đếm số từ 零 đến 百, dùng lượng từ 个/本/杯, hỏi số lượng bằng 几 và 多少, phân biệt 两 và 二, nói số thứ tự với 第 và số lần với 次 qua 20 từ vựng cơ bản.",
+    "orderIndex": 1008
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "零",
+      "pinyin": "líng",
+      "meaningVi": "số không, linh, lẻ",
+      "example": {
+        "hanzi": "这本书一百零八块。",
+        "pinyin": "Zhè běn shū yībǎi líng bā kuài.",
+        "meaningVi": "Cuốn sách này một trăm lẻ tám đồng."
+      }
+    },
+    {
+      "hanzi": "百",
+      "pinyin": "bǎi",
+      "meaningVi": "trăm, một trăm",
+      "example": {
+        "hanzi": "我们学校有五百个学生。",
+        "pinyin": "Wǒmen xuéxiào yǒu wǔbǎi ge xuéshēng.",
+        "meaningVi": "Trường chúng tôi có năm trăm học sinh."
+      }
+    },
+    {
+      "hanzi": "两",
+      "pinyin": "liǎng",
+      "meaningVi": "hai (dùng trước lượng từ)",
+      "example": {
+        "hanzi": "桌子上有两本书。",
+        "pinyin": "Zhuōzi shang yǒu liǎng běn shū.",
+        "meaningVi": "Trên bàn có hai quyển sách."
+      }
+    },
+    {
+      "hanzi": "个",
+      "pinyin": "gè",
+      "meaningVi": "(lượng từ) cái, chiếc, người (dùng chung cho người và vật)",
+      "example": {
+        "hanzi": "那个人是我的老师。",
+        "pinyin": "Nà ge rén shì wǒ de lǎoshī.",
+        "meaningVi": "Người đó là thầy giáo của tôi."
+      }
+    },
+    {
+      "hanzi": "几",
+      "pinyin": "jǐ",
+      "meaningVi": "mấy, bao nhiêu (số nhỏ)",
+      "example": {
+        "hanzi": "你家有几个人？",
+        "pinyin": "Nǐ jiā yǒu jǐ ge rén?",
+        "meaningVi": "Nhà bạn có mấy người?"
+      }
+    },
+    {
+      "hanzi": "元",
+      "pinyin": "yuán",
+      "meaningVi": "(lượng từ) đồng, tệ (đơn vị tiền Trung Quốc)",
+      "example": {
+        "hanzi": "一个面包五元。",
+        "pinyin": "Yī ge miànbāo wǔ yuán.",
+        "meaningVi": "Một cái bánh mì năm tệ."
+      }
+    },
+    {
+      "hanzi": "毛",
+      "pinyin": "máo",
+      "meaningVi": "(lượng từ) hào (một phần mười đồng)",
+      "example": {
+        "hanzi": "一个鸡蛋五毛钱。",
+        "pinyin": "Yī ge jīdàn wǔ máo qián.",
+        "meaningVi": "Một quả trứng gà năm hào."
+      }
+    },
+    {
+      "hanzi": "本",
+      "pinyin": "běn",
+      "meaningVi": "(lượng từ) quyển, cuốn (dùng cho sách, vở)",
+      "example": {
+        "hanzi": "我买了三本书。",
+        "pinyin": "Wǒ mǎi le sān běn shū.",
+        "meaningVi": "Tôi đã mua ba quyển sách."
+      }
+    },
+    {
+      "hanzi": "杯",
+      "pinyin": "bēi",
+      "meaningVi": "(lượng từ) cốc, ly, chén",
+      "example": {
+        "hanzi": "我想喝一杯茶。",
+        "pinyin": "Wǒ xiǎng hē yī bēi chá.",
+        "meaningVi": "Tôi muốn uống một cốc trà."
+      }
+    },
+    {
+      "hanzi": "杯子",
+      "pinyin": "bēizi",
+      "meaningVi": "cốc, ly, chén",
+      "example": {
+        "hanzi": "桌子上有一个杯子。",
+        "pinyin": "Zhuōzi shang yǒu yī ge bēizi.",
+        "meaningVi": "Trên bàn có một cái cốc."
+      }
+    },
+    {
+      "hanzi": "本子",
+      "pinyin": "běnzi",
+      "meaningVi": "vở, sổ",
+      "example": {
+        "hanzi": "这是我的本子。",
+        "pinyin": "Zhè shì wǒ de běnzi.",
+        "meaningVi": "Đây là vở của tôi."
+      }
+    },
+    {
+      "hanzi": "第",
+      "pinyin": "dì",
+      "meaningVi": "thứ (đứng trước số để chỉ thứ tự)",
+      "example": {
+        "hanzi": "今天是我第一天上班。",
+        "pinyin": "Jīntiān shì wǒ dì yī tiān shàngbān.",
+        "meaningVi": "Hôm nay là ngày đầu tiên tôi đi làm."
+      }
+    },
+    {
+      "hanzi": "次",
+      "pinyin": "cì",
+      "meaningVi": "(lượng từ) lần, lượt",
+      "example": {
+        "hanzi": "我去过两次北京。",
+        "pinyin": "Wǒ qù guo liǎng cì Běijīng.",
+        "meaningVi": "Tôi đã đi Bắc Kinh hai lần."
+      }
+    },
+    {
+      "hanzi": "号",
+      "pinyin": "hào",
+      "meaningVi": "ngày (trong tháng), số",
+      "example": {
+        "hanzi": "今天几号？",
+        "pinyin": "Jīntiān jǐ hào?",
+        "meaningVi": "Hôm nay ngày mấy?"
+      }
+    },
+    {
+      "hanzi": "页",
+      "pinyin": "yè",
+      "meaningVi": "(lượng từ) trang",
+      "example": {
+        "hanzi": "请看第十页。",
+        "pinyin": "Qǐng kàn dì shí yè.",
+        "meaningVi": "Mời xem trang mười."
+      }
+    },
+    {
+      "hanzi": "一些",
+      "pinyin": "yīxiē",
+      "meaningVi": "(lượng từ) một ít, một số, vài",
+      "example": {
+        "hanzi": "我想买一些水果。",
+        "pinyin": "Wǒ xiǎng mǎi yīxiē shuǐguǒ.",
+        "meaningVi": "Tôi muốn mua một ít hoa quả."
+      }
+    },
+    {
+      "hanzi": "这些",
+      "pinyin": "zhèxiē",
+      "meaningVi": "những ... này, những cái này",
+      "example": {
+        "hanzi": "这些都是我的书。",
+        "pinyin": "Zhèxiē dōu shì wǒ de shū.",
+        "meaningVi": "Những cái này đều là sách của tôi."
+      }
+    },
+    {
+      "hanzi": "那些",
+      "pinyin": "nàxiē",
+      "meaningVi": "những ... kia, những cái đó",
+      "example": {
+        "hanzi": "那些人是谁？",
+        "pinyin": "Nàxiē rén shì shéi?",
+        "meaningVi": "Những người kia là ai?"
+      }
+    },
+    {
+      "hanzi": "哪些",
+      "pinyin": "nǎxiē",
+      "meaningVi": "những ... nào, những gì",
+      "example": {
+        "hanzi": "你喜欢哪些菜？",
+        "pinyin": "Nǐ xǐhuan nǎxiē cài?",
+        "meaningVi": "Bạn thích những món nào?"
+      }
+    },
+    {
+      "hanzi": "有些",
+      "pinyin": "yǒuxiē",
+      "meaningVi": "có một số, có những",
+      "example": {
+        "hanzi": "有些学生没来。",
+        "pinyin": "Yǒuxiē xuéshēng méi lái.",
+        "meaningVi": "Có một số học sinh không đến."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: số đếm và lượng từ",
+      "subtitle": "20 từ HSK1 về số, lượng từ, tiền, số thứ tự và số lần",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 8 gồm 20 từ vựng HSK1 dùng khi đếm và nói số lượng. Nhóm số: 零 (số không), 百 (trăm), 两 (hai, dùng trước lượng từ), 几 (mấy). Nhóm lượng từ: 个 (cái, người), 本 (quyển), 杯 (cốc, ly), 次 (lần), 页 (trang), 号 (ngày, số). Nhóm tiền: 元 (đồng tệ), 毛 (hào, một phần mười đồng tệ). Nhóm đồ vật: 杯子 (cái cốc), 本子 (quyển vở). Số thứ tự: 第 (thứ). Nhóm chỉ số lượng không xác định: 一些 (một ít, một vài), 这些 (những … này), 那些 (những … kia), 哪些 (những … nào), 有些 (có một số). Đọc to từng từ, chú ý thanh điệu của 两 (liǎng), 几 (jǐ), 杯子 (bēizi) và 本子 (běnzi)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: số + lượng từ, 几/多少, 两/二, 第, 次",
+      "subtitle": "Năm điểm ngữ pháp cần khi đếm, hỏi số lượng và nói thứ tự",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Số + lượng từ + danh từ: trong tiếng Hán, giữa số và danh từ phải có lượng từ. 个 dùng chung cho người và nhiều đồ vật, 本 dùng cho sách vở, 杯 dùng cho đồ uống đựng trong cốc. Cấu trúc: số + 个/本/杯 + danh từ. Ví dụ: 我有三个朋友。 (Wǒ yǒu sān gè péngyou.) = Tôi có ba người bạn. / 我有一本书。 (Wǒ yǒu yī běn shū.) = Tôi có một quyển sách. / 我喝一杯茶。 (Wǒ hē yī bēi chá.) = Tôi uống một cốc trà."
+        },
+        {
+          "type": "text",
+          "value": "2. 几 và 多少 đều dùng để hỏi số lượng. 几 thường hỏi số nhỏ (dưới 10) và phải có lượng từ đi sau: 几 + lượng từ + danh từ. 多少 hỏi số bất kỳ, có thể bỏ lượng từ; 多少钱 dùng hỏi giá. Ví dụ: 你有几个本子？ (Nǐ yǒu jǐ gè běnzi?) = Bạn có mấy quyển vở? / 你们学校有多少学生？ (Nǐmen xuéxiào yǒu duōshao xuéshēng?) = Trường các bạn có bao nhiêu học sinh? / 这个杯子多少钱？ (Zhège bēizi duōshao qián?) = Cái cốc này bao nhiêu tiền?"
+        },
+        {
+          "type": "text",
+          "value": "3. 两 và 二 đều là “hai”. Trước lượng từ dùng 两: 两个, 两本, 两杯. Khi đếm số, đọc số điện thoại, nói tháng ngày hoặc trong số nhiều chữ số thì dùng 二: 二月, 二号, 十二. Cấu trúc: 两 + lượng từ + danh từ. Ví dụ: 我有两个哥哥。 (Wǒ yǒu liǎng gè gēge.) = Tôi có hai anh trai. / 他喝两杯牛奶。 (Tā hē liǎng bēi niúnǎi.) = Anh ấy uống hai cốc sữa. / 今天是二月十二号。 (Jīntiān shì èr yuè shí'èr hào.) = Hôm nay là ngày 12 tháng 2."
+        },
+        {
+          "type": "text",
+          "value": "4. 第 + số tạo số thứ tự (thứ nhất, thứ hai…). Sau 第 + số thường có lượng từ hoặc danh từ chỉ đơn vị như 次, 页. Cấu trúc: 第 + số + lượng từ/danh từ. Ví dụ: 这是我第一次来北京。 (Zhè shì wǒ dì yī cì lái Běijīng.) = Đây là lần đầu tiên tôi đến Bắc Kinh. / 我们读第五页。 (Wǒmen dú dì wǔ yè.) = Chúng ta đọc trang thứ năm."
+        },
+        {
+          "type": "text",
+          "value": "5. Số + 次 diễn tả số lần làm một việc; cụm số lần đứng sau động từ. Cấu trúc: động từ + số + 次 (+ tân ngữ). Ví dụ: 我们一个星期上五次课。 (Wǒmen yī gè xīngqī shàng wǔ cì kè.) = Một tuần chúng tôi lên lớp năm lần. / 我一个月去两次图书馆。 (Wǒ yī gè yuè qù liǎng cì túshūguǎn.) = Mỗi tháng tôi đến thư viện hai lần."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: mua cốc và vở ở cửa hàng",
+      "subtitle": "Hội thoại ngắn khi hỏi giá và số lượng; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你好，这个杯子多少钱？ B: 十五元。 (Nǐ hǎo, zhège bēizi duōshao qián? / Shíwǔ yuán.) — A: Xin chào, cái cốc này bao nhiêu tiền? B: Mười lăm đồng."
+        },
+        {
+          "type": "text",
+          "value": "A: 我买两个杯子。 B: 好，两个杯子三十元。 (Wǒ mǎi liǎng gè bēizi. / Hǎo, liǎng gè bēizi sānshí yuán.) — A: Tôi mua hai cái cốc. B: Được, hai cái cốc ba mươi đồng."
+        },
+        {
+          "type": "text",
+          "value": "A: 那些本子多少钱？ B: 有些本子三元五毛，有些本子五元。 (Nàxiē běnzi duōshao qián? / Yǒuxiē běnzi sān yuán wǔ máo, yǒuxiē běnzi wǔ yuán.) — A: Những quyển vở kia bao nhiêu tiền? B: Có quyển ba đồng năm hào, có quyển năm đồng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你们有茶吗？ B: 有，一杯茶两元。 (Nǐmen yǒu chá ma? / Yǒu, yī bēi chá liǎng yuán.) — A: Ở đây có trà không? B: Có, một cốc trà hai đồng."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l08:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “trang” (trang sách)?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "号"
+          },
+          {
+            "id": "opt-b",
+            "text": "页"
+          },
+          {
+            "id": "opt-c",
+            "text": "次"
+          },
+          {
+            "id": "opt-d",
+            "text": "本"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "页 (yè) nghĩa là “trang”. 号 (hào) là “ngày, số”, 次 (cì) là “lần”, 本 (běn) là lượng từ “quyển”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我有___个哥哥。 (Tôi có hai anh trai.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "二"
+          },
+          {
+            "id": "opt-b",
+            "text": "第"
+          },
+          {
+            "id": "opt-c",
+            "text": "两"
+          },
+          {
+            "id": "opt-d",
+            "text": "几"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "Trước lượng từ 个 phải dùng 两 (liǎng): 我有两个哥哥 = tôi có hai anh trai. 二 không đứng trực tiếp trước lượng từ nên 二个 sai ngữ pháp. 第个 thiếu số nên sai. 我有几个哥哥 là câu hỏi “tôi có mấy anh trai”, sai nghĩa so với bản dịch.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我喝一___茶。 (Tôi uống một cốc trà.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "本"
+          },
+          {
+            "id": "opt-b",
+            "text": "页"
+          },
+          {
+            "id": "opt-c",
+            "text": "个"
+          },
+          {
+            "id": "opt-d",
+            "text": "杯"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "杯 (bēi) là lượng từ cho đồ uống đựng trong cốc: 一杯茶 = một cốc trà. 本 dùng cho sách vở, 页 là “trang”, nên 一本茶, 一页茶 sai nghĩa. 个 không dùng cho đồ uống như trà, nên 一个茶 không tự nhiên và không đúng nghĩa “một cốc”.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “số không”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "零"
+          },
+          {
+            "id": "opt-b",
+            "text": "百"
+          },
+          {
+            "id": "opt-c",
+            "text": "两"
+          },
+          {
+            "id": "opt-d",
+            "text": "几"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "零 (líng) nghĩa là “số không”. 百 (bǎi) là “trăm”, 两 (liǎng) là “hai”, 几 (jǐ) là “mấy”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这是我___一次来北京。(Đây là lần đầu tiên tôi đến Bắc Kinh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "第",
+          "dì",
+          "di"
+        ]
+      },
+      "explanation": "第 (dì) đứng trước số để tạo số thứ tự: 第一次 = lần thứ nhất, lần đầu tiên. Không có 第, câu 这是我一次来北京 không có nghĩa “lần đầu”.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这个杯子___钱？(Cái cốc này bao nhiêu tiền?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "多少",
+          "duōshao",
+          "duoshao"
+        ]
+      },
+      "explanation": "多少钱 (duōshao qián) là cách hỏi giá: 这个杯子多少钱 = cái cốc này bao nhiêu tiền. 几 phải có lượng từ đi sau nên không đứng trực tiếp trước 钱.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e07",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们一个星期上五___课。(Một tuần chúng tôi lên lớp năm lần.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "次",
+          "cì",
+          "ci"
+        ]
+      },
+      "explanation": "次 (cì) là lượng từ chỉ số lần; động từ + số + 次 + tân ngữ: 上五次课 = lên lớp năm lần.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + số lượng từ + danh từ: “Tôi có hai quyển sách.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-m6",
+            "text": "书"
+          },
+          {
+            "id": "tkn-r3",
+            "text": "有"
+          },
+          {
+            "id": "tkn-y8",
+            "text": "两本"
+          },
+          {
+            "id": "tkn-c1",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-c1",
+          "tkn-r3",
+          "tkn-y8",
+          "tkn-m6"
+        ]
+      },
+      "explanation": "Có 24 hoán vị; theo trật tự chủ ngữ + động từ + số lượng từ + danh từ, chỉ 1 hoán vị đúng là 我有两本书: 我 là chủ ngữ, 有 là động từ, cụm số lượng 两本 phải đứng ngay trước danh từ 书. Ví dụ sai: 我两本有书, 有我两本书, 我有书两本. (Câu đảo kiểu 书我有两本 là trật tự topic–comment, không thuộc yêu cầu của bài.)",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + 第 + số + danh từ: “Chúng ta đọc trang thứ năm.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p9",
+            "text": "页"
+          },
+          {
+            "id": "tkn-g4",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-v2",
+            "text": "第五"
+          },
+          {
+            "id": "tkn-s7",
+            "text": "读"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-g4",
+          "tkn-s7",
+          "tkn-v2",
+          "tkn-p9"
+        ]
+      },
+      "explanation": "Có 24 hoán vị; theo đúng trật tự đề bài chỉ 1 hoán vị đúng là 我们读第五页: 第五 phải đứng ngay trước 页 để thành “trang thứ năm”, cụm 第五页 là tân ngữ đứng sau động từ 读. Ví dụ sai: 我们第五读页, 读我们第五页, 我们读页第五. (Câu đảo kiểu 第五页我们读 là trật tự topic–comment, không thuộc yêu cầu của bài.)",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l08:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu hỏi: “Bạn có mấy cái cốc?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f5",
+            "text": "杯子"
+          },
+          {
+            "id": "tkn-j2",
+            "text": "几个"
+          },
+          {
+            "id": "tkn-u8",
+            "text": "你"
+          },
+          {
+            "id": "tkn-l4",
+            "text": "有"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-u8",
+          "tkn-l4",
+          "tkn-j2",
+          "tkn-f5"
+        ]
+      },
+      "explanation": "Có 24 hoán vị, chỉ 1 đúng là 你有几个杯子: 你 là chủ ngữ, 有 là động từ, 几个 phải đứng ngay trước danh từ 杯子. Ví dụ sai: 你几个有杯子, 有你几个杯子, 你有杯子几个.",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-02 (Pha 3)",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-02 (PO đã duyệt 17/11/2026); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

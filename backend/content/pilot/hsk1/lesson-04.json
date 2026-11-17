@@ -68,9 +68,9 @@
       "pinyin": "cài",
       "meaningVi": "món ăn, rau",
       "example": {
-        "hanzi": "今天的菜很贵。",
-        "pinyin": "Jīntiān de cài hěn guì.",
-        "meaningVi": "Rau hôm nay rất đắt."
+        "hanzi": "我妈妈做的菜很好吃。",
+        "pinyin": "Wǒ māma zuò de cài hěn hǎochī.",
+        "meaningVi": "Món ăn mẹ tôi nấu rất ngon."
       }
     },
     {
@@ -176,7 +176,7 @@
     {
       "hanzi": "块",
       "pinyin": "kuài",
-      "meaningVi": "tệ (đồng nhân dân tệ)",
+      "meaningVi": "(lượng từ) đồng, tệ (đơn vị tiền), miếng, cục",
       "example": {
         "hanzi": "这个面包五块。",
         "pinyin": "Zhège miànbāo wǔ kuài.",

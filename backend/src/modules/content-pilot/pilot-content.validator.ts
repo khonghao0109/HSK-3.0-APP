@@ -37,9 +37,9 @@ export const PILOT_CONTENT_LIMITS = {
   minTopics: 2,
   minExercises: 8,
   minMcqOptions: 4,
-  /** TL-214: lesson pilot dùng dải orderIndex 1001–1005. */
+  /** TL-214: lesson pilot dùng dải orderIndex 1001–1030 (P8, PO 17/11/2026). */
   pilotOrderIndexMin: 1001,
-  pilotOrderIndexMax: 1005,
+  pilotOrderIndexMax: 1030,
   /** Q173: chỉ 3 loại bài tập được publish trong pilot. */
   allowedExerciseTypes: ['mcq', 'fill_blank', 'arrange_sentence'],
   forbiddenExerciseTypes: ['listening_choice', 'speaking_repeat'],

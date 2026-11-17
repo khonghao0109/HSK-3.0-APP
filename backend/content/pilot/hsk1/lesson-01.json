@@ -36,27 +36,27 @@
     {
       "hanzi": "您",
       "pinyin": "nín",
-      "meaningVi": "ngài, ông, bà (dạng lịch sự của 你)",
+      "meaningVi": "ngài, ông, bà (cách gọi lịch sự của 你)",
       "example": {
         "hanzi": "您好，老师！",
         "pinyin": "Nín hǎo, lǎoshī!",
-        "meaningVi": "Chào thầy/cô ạ!"
+        "meaningVi": "Em chào thầy/cô ạ!"
       }
     },
     {
       "hanzi": "他",
       "pinyin": "tā",
-      "meaningVi": "anh ấy, ông ấy",
+      "meaningVi": "anh ấy, ông ấy, nó (nam)",
       "example": {
         "hanzi": "他是我的老师。",
         "pinyin": "Tā shì wǒ de lǎoshī.",
-        "meaningVi": "Thầy ấy là giáo viên của tôi."
+        "meaningVi": "Anh ấy là thầy giáo của tôi."
       }
     },
     {
       "hanzi": "她",
       "pinyin": "tā",
-      "meaningVi": "cô ấy, bà ấy",
+      "meaningVi": "cô ấy, bà ấy, chị ấy",
       "example": {
         "hanzi": "她是我的朋友。",
         "pinyin": "Tā shì wǒ de péngyou.",
@@ -76,7 +76,7 @@
     {
       "hanzi": "叫",
       "pinyin": "jiào",
-      "meaningVi": "gọi là, tên là; gọi",
+      "meaningVi": "gọi, tên là",
       "example": {
         "hanzi": "老师叫我的名字。",
         "pinyin": "Lǎoshī jiào wǒ de míngzi.",
@@ -110,7 +110,7 @@
       "example": {
         "hanzi": "很高兴认识你。",
         "pinyin": "Hěn gāoxìng rènshi nǐ.",
-        "meaningVi": "Rất vui được biết bạn."
+        "meaningVi": "Rất vui được làm quen với bạn."
       }
     },
     {
@@ -130,7 +130,7 @@
       "example": {
         "hanzi": "我的老师很好。",
         "pinyin": "Wǒ de lǎoshī hěn hǎo.",
-        "meaningVi": "Giáo viên của tôi rất tốt."
+        "meaningVi": "Thầy giáo của tôi rất tốt."
       }
     },
     {
@@ -210,7 +210,7 @@
       "example": {
         "hanzi": "老师，再见！",
         "pinyin": "Lǎoshī, zàijiàn!",
-        "meaningVi": "Thầy/cô, tạm biệt ạ!"
+        "meaningVi": "Tạm biệt thầy/cô ạ!"
       }
     }
   ],
