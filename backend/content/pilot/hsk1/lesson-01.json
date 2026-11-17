@@ -19,7 +19,7 @@
       "meaningVi": "tôi, mình",
       "example": {
         "hanzi": "我是学生。",
-        "pinyin": "Wǒ shì xuésheng.",
+        "pinyin": "Wǒ shì xuéshēng.",
         "meaningVi": "Tôi là học sinh."
       }
     },
@@ -69,7 +69,7 @@
       "meaningVi": "chúng tôi, chúng ta",
       "example": {
         "hanzi": "我们都是学生。",
-        "pinyin": "Wǒmen dōu shì xuésheng.",
+        "pinyin": "Wǒmen dōu shì xuéshēng.",
         "meaningVi": "Chúng tôi đều là học sinh."
       }
     },
@@ -135,11 +135,11 @@
     },
     {
       "hanzi": "学生",
-      "pinyin": "xuésheng",
+      "pinyin": "xuéshēng",
       "meaningVi": "học sinh, sinh viên",
       "example": {
         "hanzi": "你是学生吗？",
-        "pinyin": "Nǐ shì xuésheng ma?",
+        "pinyin": "Nǐ shì xuéshēng ma?",
         "meaningVi": "Bạn là học sinh à?"
       }
     },
@@ -284,7 +284,7 @@
         },
         {
           "type": "text",
-          "value": "A: 老师，您好！我是学生。 (Lǎoshī, nín hǎo! Wǒ shì xuésheng.) — Thầy/cô ơi, chào thầy/cô ạ! Em là học sinh."
+          "value": "A: 老师，您好！我是学生。 (Lǎoshī, nín hǎo! Wǒ shì xuéshēng.) — Thầy/cô ơi, chào thầy/cô ạ! Em là học sinh."
         },
         {
           "type": "text",
@@ -463,11 +463,11 @@
       "answer": {
         "acceptedTexts": [
           "学生",
-          "xuésheng",
+          "xuéshēng",
           "xuesheng"
         ]
       },
-      "explanation": "学生 (xuésheng) nghĩa là “học sinh”; 她是学生 = cô ấy là học sinh.",
+      "explanation": "学生 (xuéshēng) nghĩa là “học sinh”; 她是学生 = cô ấy là học sinh.",
       "orderIndex": 7
     },
     {
@@ -577,7 +577,7 @@
   "review": {
     "status": "draft",
     "requiredChecks": [
-      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 认识 rènshi, 名字 míngzi, 学生 xuésheng, 朋友 péngyou)",
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 认识 rènshi, 名字 míngzi, 学生 xuéshēng, 朋友 péngyou)",
       "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh HSK1",
       "câu ví dụ chỉ dùng từ có trong HSK1",
       "đáp án và explanation của cả 10 bài tập",
