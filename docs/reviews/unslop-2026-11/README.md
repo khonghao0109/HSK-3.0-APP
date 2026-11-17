@@ -2,7 +2,7 @@
 
 Nền `macdev` `b90c7b5`, nhánh `feat/ui-unslop`. Audit gốc: `docs/unslop-audit.md`. Chế độ đánh bóng: giữ thương hiệu Hán Lộ, tính năng, thứ tự khối theo `docs/ui_reference`.
 
-Ảnh `before/` và `after/`: 53 trang × 2 khổ (`desktop-1440`, `mobile-390`), cùng tên tệp `<trang>-<khổ>.png`, dữ liệu e2e disposable (tài khoản `*.example.test`, không có dữ liệu cá nhân). Bộ chụp ở ngoài repo (scratch của phiên), chạy lại được bằng lệnh trong mục "Cách chụp lại".
+Ảnh trong repo: `before/` và `after/` chỉ gồm 12 trang tiêu biểu × 2 khổ (`<trang>-mobile-390.webp`, `<trang>-desktop-1440.webp`, 1440 thu về 1024px rộng, mỗi ảnh < 150 KB): learn-home, lesson-detail, lesson-practice, lesson-complete, dictionary-search, dictionary-word, review, review-session-back, exam-result, onboarding-goal, admin-content, admin-users. Bộ đầy đủ 53 trang × 2 khổ (PNG), 106 contact sheet trước/sau và bộ chụp nằm ở `~/hsk-evidence/hsk-ui-unslop/` (máy dev, không commit). Dữ liệu e2e disposable (tài khoản `*.example.test`), không có ảnh nào lấy từ `reverse/`.
 
 ## Commit
 
@@ -79,6 +79,8 @@ Mọi lệnh chạy trong `frontend/`, theo khoá `/tmp/hsk-heavy.lock`.
 - `npm run test:e2e` lần cuối, DB disposable dựng lại: **1016 passed, 0 failed, 50 skipped (30,0 phút), exit 0**, gồm axe `learner-a11y.spec.ts` ở 4 khổ.
 - Ảnh SAU: 106/106 (lượt chính 84/88; 4 ảnh chờ chuỗi cũ "Chính xác!" trong bộ chụp, sửa bộ chụp rồi chụp lại 4/4).
 - Build: `next build` lần đầu dừng với `SecurityFatalError` (khuyến nghị nâng Next.js 16.4.3 vì lỗ hổng đã biết), chạy lại thì qua. Chưa nâng Next.js.
+
+Contact sheet (mục 5, 17/11): 106 sheet được xem hết bằng 2 lượt review, mỗi lỗi mức trung bình/cao được kiểm chứng lại trên PNG gốc. 12 lỗi thật, đã sửa ở `b232545` và commit badge người dùng sau đó: bảng Bài tập admin bị tiêu đề dài đẩy cột ra ngoài; 田字格 rớt dòng 4+1 ở 390 (giờ một hàng, co chữ theo số ô); thẻ flashcard 390 bị kéo cao (S3 giữ nút ở đáy bằng margin-top:auto); thẻ thống kê ôn tập 390 xuống dòng xấu (2+1); chip ngân hàng câu hỏi bị cắt; chấm badge trạng thái bị bóp; vạch lẻ ở meta kết quả thi; tiêu đề thanh lộ trình 2 dòng; email hồ sơ ngắt giữa từ; ảnh xem lại thi hỏng không hiện fallback. Chụp lại và soát lại 18 màn liên quan: không còn lỗi bố cục. Giữ: nền navy trống dưới màn hoàn thành bài ở 390 (M4, chờ PO); hero web chi tiết từ 3–4 chữ xếp ô 2×2 để ô đủ lớn; dòng "• 45 phút" ở danh sách đề là dữ liệu fixture. S3, S4 kiểm lại trên ảnh: đã sửa.
 
 Ảnh cặp đáng xem: `learn-home-*`, `lesson-complete-*`, `lesson-practice-correct-*`, `review-*`, `review-session-*`, `dictionary-*`, `onboarding-goal-*`, `learn-profile-desktop-1440`, `admin-users-*`, `admin-lesson-edit-mobile-390`, `learn-exam-*`.
 
