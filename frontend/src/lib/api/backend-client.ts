@@ -64,6 +64,7 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/learning-plans$/,
   /^\/api\/v1\/learning\/home$/,
   /^\/api\/v1\/learning\/path$/,
+  /^\/api\/v1\/learning\/lessons\/\d+$/,
   /^\/api\/v1\/learning\/lessons\/\d+\/activity$/,
   /^\/api\/v1\/learning\/lessons\/\d+\/(?:start|complete)$/,
   /^\/api\/v1\/learning\/topics\/\d+\/(?:start|complete)$/,

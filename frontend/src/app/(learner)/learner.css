@@ -8814,3 +8814,107 @@ html:has(.learner-app) {
   ) {
   font-variant-numeric: tabular-nums;
 }
+
+/* M2.5f (Q175): Từ vựng / Ngữ pháp pages render Topic.content blocks. */
+.learner-app .lesson-topics {
+  display: grid;
+  gap: var(--sp-4);
+  /* Same sheet padding as the lesson page (.lesson): side gutters on mobile. */
+  padding: var(--sp-5) var(--sp-4) calc(var(--tabbar-height) + var(--sp-6))
+    var(--sp-5);
+}
+
+.learner-app .lesson-topics__title {
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .lesson-topics__empty,
+.learner-app .topic-card__sub {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .topic-card {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--path-hairline);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.learner-app .topic-card__title {
+  font-size: var(--fs-md);
+  color: var(--text-strong);
+}
+
+.learner-app .topic-card__text {
+  color: var(--text-body);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.learner-app .topic-words {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sp-2);
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .topic-word__link {
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--path-hairline);
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.learner-app .topic-word__link:hover {
+  border-color: var(--border-strong);
+}
+
+.learner-app .topic-word__link:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .topic-word__hz {
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .topic-word__py {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.learner-app .topic-word__vi {
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+}
+
+.learner-app .topic-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.learner-app .topic-done.is-done {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .topic-done__error {
+  color: var(--text-danger);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .lesson-topics__pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}

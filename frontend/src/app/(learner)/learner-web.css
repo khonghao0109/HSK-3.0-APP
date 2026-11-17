@@ -5143,3 +5143,14 @@
 .learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) > .sr-only {
   user-select: none;
 }
+
+/* M2.5f: Từ vựng / Ngữ pháp pages sit in the web content column like the
+   lesson page (main.lesson): top padding clears the .w-top bar. */
+@media (min-width: 1024px) {
+  .learner-app main.lesson-topics {
+    margin-top: 0;
+    padding: var(--sp-8) var(--w-pad) var(--sp-12);
+    border-radius: 0;
+    background: transparent;
+  }
+}

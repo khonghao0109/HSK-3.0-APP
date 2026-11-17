@@ -506,7 +506,9 @@ describe('server-only backend client', () => {
     await client.request('/api/v1/learning/home');
     await client.request('/api/v1/learning/path');
     await client.request('/api/v1/learning/lessons/12/activity');
-    expect(fetchImpl).toHaveBeenCalledTimes(8);
+    // M2.5f: the vocabulary and grammar pages read the lesson's words.
+    await client.request('/api/v1/learning/lessons/12');
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
 
     for (const path of [
       '/api/v1/levels',
@@ -517,6 +519,7 @@ describe('server-only backend client', () => {
       '/api/v1/learning/home',
       '/api/v1/learning/path',
       '/api/v1/learning/lessons/12/activity',
+      '/api/v1/learning/lessons/12',
     ]) {
       await expect(client.request(`${path}/x`)).rejects.toMatchObject({
         kind: 'invalid_request',
@@ -528,7 +531,9 @@ describe('server-only backend client', () => {
     for (const path of [
       '/api/v1/learning/lessons/abc/activity',
       '/api/v1/learning/lessons//activity',
-      '/api/v1/learning/lessons/12',
+      '/api/v1/learning/lessons/abc',
+      '/api/v1/learning/lessons/',
+      '/api/v1/learning/lessons/-1',
     ]) {
       await expect(client.request(path)).rejects.toMatchObject({
         kind: 'invalid_request',

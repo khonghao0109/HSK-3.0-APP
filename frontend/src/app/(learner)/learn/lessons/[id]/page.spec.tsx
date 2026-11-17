@@ -258,7 +258,7 @@ describe('LearnerLessonPage', () => {
     expect(rows[0]?.querySelector('.lrow__bar')).toBeNull();
     expect(rows[1]?.querySelector('.lrow__bar > span')).toHaveClass('pct-50');
     expect(rows[2]?.querySelector('.lrow__bar > span')).toHaveClass('pct-67');
-    expect(rows.map((row) => row.tagName)).toEqual(['BUTTON', 'BUTTON', 'A']);
+    expect(rows.map((row) => row.tagName)).toEqual(['A', 'A', 'A']);
     for (const row of rows) {
       expect(row).not.toHaveAttribute('aria-disabled');
       expect(row.querySelector('.lrow__icon')).toHaveAttribute(
@@ -307,21 +307,18 @@ describe('LearnerLessonPage', () => {
     expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
-  it.each(['Từ vựng', 'Ngữ pháp'])(
-    'shows the coming-soon toast for row %s (Q38)',
-    async (title) => {
-      const { container } = await renderLesson(current);
-      const row = Array.from(container.querySelectorAll('.lrow')).find(
-        (candidate) =>
-          candidate.querySelector('.lrow__title')?.textContent === title,
-      );
-      if (!row) throw new Error(`missing row ${title}`);
-      fireEvent.click(row);
-      expect(
-        within(screen.getByRole('status')).getByText('Tính năng sắp ra mắt.'),
-      ).toBeInTheDocument();
-    },
-  );
+  it.each([
+    ['Từ vựng', 'vocabulary'],
+    ['Ngữ pháp', 'grammar'],
+  ])('links row %s to its topic page (M2.5f, Q175)', async (title, slug) => {
+    const { container } = await renderLesson(current);
+    const row = Array.from(container.querySelectorAll('.lrow')).find(
+      (candidate) =>
+        candidate.querySelector('.lrow__title')?.textContent === title,
+    );
+    expect(row?.tagName).toBe('A');
+    expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
+  });
 
   it('links the CTA to the player and toasts the heart (Q33, Q45)', async () => {
     const { container } = await renderLesson(current);
