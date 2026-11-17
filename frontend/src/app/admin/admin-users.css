@@ -99,9 +99,11 @@
   font-weight: 600;
   font-size: var(--adm-fs-xs);
   white-space: nowrap;
+  flex: none;
 }
 .admin-app .uo-status::before {
   content: '';
+  flex: none;
   width: 7px;
   height: 7px;
   border-radius: 50%;
