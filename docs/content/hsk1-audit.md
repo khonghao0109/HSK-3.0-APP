@@ -125,3 +125,17 @@ sách archive chi tiết làm ở Pha 4 (`docs/content/hsk1-archive-list.md`); k
 | P9 | #15: cấu trúc đề HSK1 và bộ tag dạng câu (đề xuất ở Pha 5) | Chờ |
 | P10 | Q184: nhà cung cấp TTS | Chờ bảng so sánh Pha 5b |
 | P11 | Bài 25 chỉ còn 18 từ (498 = 24 × 20 + 18): cho phép bài cuối < 20 từ (nới luật `wordsPerLesson` riêng cho bài ôn tập) hay ghép 18 từ vào các bài trước (một số bài 21 từ)? | Cho phép bài 25 có 18 từ |
+
+## 9. Quyết định PO 17/11/2026
+
+| # | Quyết định |
+|---|---|
+| P1 | Duyệt nghĩa tiếng Việt theo lô file, không migration. Mỗi lô một `DataSource`; `notes` ghi người duyệt, ngày duyệt, hash nội dung. Rollback theo `dataSourceId`. Người duyệt: do PO chỉ định (chưa ghi tên vào repo) |
+| P2 | Nghĩa tiếng Việt là dòng `WordMeaning` mới, giữ dòng CC-CEDICT. Kiểm tra tra từ, chi tiết từ, thẻ ôn hiện nghĩa tiếng Việt trước nghĩa tiếng Anh |
+| P3 | Script câu hỏi: tra trùng bằng `contentHash` + sổ `sourceKey → id` trong repo |
+| P4 | Migration dữ liệu sửa dấu thanh, PR riêng, soát bằng script so DB với GF0025-2021 (kết quả: 36 từ, không phải 17 như soát bằng mắt ở mục 2; 小朋友 không sai) |
+| P5 | Chỉ tiêu HSK1 = 498. Gỡ liên kết `WordLevel` HSK1 của 32 cách đọc sai, không xoá `Word`; gộp vào PR của P4 |
+| P6 | Bỏ `车上` khỏi chỉ tiêu. Lý do: là cụm từ (车 + 上), CC-CEDICT không có mục riêng nên pipeline không tạo `Word`; TL-219 cấm tự tạo `Word`. Người học vẫn gặp `车上` trong câu ví dụ vì 车 và 上 đều là từ HSK1 |
+| P7 | Làm M2.5f ở PR riêng, song song với Pha 3 |
+| P8 | Nới dải `orderIndex` pilot thành 1001–1030 |
+| P11 | Bài 25 có 18 từ |

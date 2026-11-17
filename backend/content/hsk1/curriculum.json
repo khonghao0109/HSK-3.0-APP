@@ -169,103 +169,83 @@
    "words": [
     {
      "hanzi": "不",
-     "pinyinStored": "bu",
-     "blockedByToneP4": false
+     "pinyinStored": "bu"
     },
     {
      "hanzi": "不客气",
-     "pinyinStored": "bu ke qi",
-     "blockedByToneP4": false
+     "pinyinStored": "bu ke qi"
     },
     {
      "hanzi": "对不起",
-     "pinyinStored": "dui bu qi",
-     "blockedByToneP4": false
+     "pinyinStored": "dui bu qi"
     },
     {
      "hanzi": "没关系",
-     "pinyinStored": "mei guan xi",
-     "blockedByToneP4": false
+     "pinyinStored": "mei guan xi"
     },
     {
      "hanzi": "没事儿",
-     "pinyinStored": "mei shi r",
-     "blockedByToneP4": false
+     "pinyinStored": "mei shi r"
     },
     {
      "hanzi": "没什么",
-     "pinyinStored": "mei shen me",
-     "blockedByToneP4": false
+     "pinyinStored": "mei shen me"
     },
     {
      "hanzi": "请",
-     "pinyinStored": "qing",
-     "blockedByToneP4": false
+     "pinyinStored": "qing"
     },
     {
      "hanzi": "请问",
-     "pinyinStored": "qing wen",
-     "blockedByToneP4": false
+     "pinyinStored": "qing wen"
     },
     {
      "hanzi": "请坐",
-     "pinyinStored": "qing zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "qing zuo"
     },
     {
      "hanzi": "请进",
-     "pinyinStored": "qing jin",
-     "blockedByToneP4": false
+     "pinyinStored": "qing jin"
     },
     {
      "hanzi": "好",
-     "pinyinStored": "hao",
-     "blockedByToneP4": false
+     "pinyinStored": "hao"
     },
     {
      "hanzi": "吗",
-     "pinyinStored": "ma",
-     "blockedByToneP4": true
+     "pinyinStored": "ma"
     },
     {
      "hanzi": "呢",
-     "pinyinStored": "ne",
-     "blockedByToneP4": false
+     "pinyinStored": "ne"
     },
     {
      "hanzi": "你们",
-     "pinyinStored": "ni men",
-     "blockedByToneP4": false
+     "pinyinStored": "ni men"
     },
     {
      "hanzi": "他们",
-     "pinyinStored": "ta men",
-     "blockedByToneP4": false
+     "pinyinStored": "ta men"
     },
     {
      "hanzi": "她们",
-     "pinyinStored": "ta men",
-     "blockedByToneP4": false
+     "pinyinStored": "ta men"
     },
     {
      "hanzi": "们",
-     "pinyinStored": "men",
-     "blockedByToneP4": false
+     "pinyinStored": "men"
     },
     {
      "hanzi": "也",
-     "pinyinStored": "ye",
-     "blockedByToneP4": false
+     "pinyinStored": "ye"
     },
     {
      "hanzi": "很",
-     "pinyinStored": "hen",
-     "blockedByToneP4": false
+     "pinyinStored": "hen"
     },
     {
      "hanzi": "都",
-     "pinyinStored": "dou",
-     "blockedByToneP4": false
+     "pinyinStored": "dou"
     }
    ],
    "grammar": [
@@ -285,103 +265,83 @@
    "words": [
     {
      "hanzi": "国",
-     "pinyinStored": "guo",
-     "blockedByToneP4": false
+     "pinyinStored": "guo"
     },
     {
      "hanzi": "国家",
-     "pinyinStored": "guo jia",
-     "blockedByToneP4": false
+     "pinyinStored": "guo jia"
     },
     {
      "hanzi": "外国",
-     "pinyinStored": "wai guo",
-     "blockedByToneP4": false
+     "pinyinStored": "wai guo"
     },
     {
      "hanzi": "国外",
-     "pinyinStored": "guo wai",
-     "blockedByToneP4": false
+     "pinyinStored": "guo wai"
     },
     {
      "hanzi": "中文",
-     "pinyinStored": "zhong wen",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong wen"
     },
     {
      "hanzi": "外语",
-     "pinyinStored": "wai yu",
-     "blockedByToneP4": false
+     "pinyinStored": "wai yu"
     },
     {
      "hanzi": "北京",
-     "pinyinStored": "bei jing",
-     "blockedByToneP4": false
+     "pinyinStored": "bei jing"
     },
     {
      "hanzi": "这",
-     "pinyinStored": "zhe",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe"
     },
     {
      "hanzi": "那",
-     "pinyinStored": "na",
-     "blockedByToneP4": true
+     "pinyinStored": "na"
     },
     {
      "hanzi": "哪",
-     "pinyinStored": "na",
-     "blockedByToneP4": false
+     "pinyinStored": "na"
     },
     {
      "hanzi": "哪儿",
-     "pinyinStored": "na r",
-     "blockedByToneP4": false
+     "pinyinStored": "na r"
     },
     {
      "hanzi": "这儿",
-     "pinyinStored": "zhe r",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe r"
     },
     {
      "hanzi": "那儿",
-     "pinyinStored": "na r",
-     "blockedByToneP4": false
+     "pinyinStored": "na r"
     },
     {
      "hanzi": "哪里",
-     "pinyinStored": "na li",
-     "blockedByToneP4": false
+     "pinyinStored": "na li"
     },
     {
      "hanzi": "这里",
-     "pinyinStored": "zhe li",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe li"
     },
     {
      "hanzi": "那里",
-     "pinyinStored": "na li",
-     "blockedByToneP4": false
+     "pinyinStored": "na li"
     },
     {
      "hanzi": "在",
-     "pinyinStored": "zai",
-     "blockedByToneP4": false
+     "pinyinStored": "zai"
     },
     {
      "hanzi": "住",
-     "pinyinStored": "zhu",
-     "blockedByToneP4": false
+     "pinyinStored": "zhu"
     },
     {
      "hanzi": "来",
-     "pinyinStored": "lai",
-     "blockedByToneP4": false
+     "pinyinStored": "lai"
     },
     {
      "hanzi": "去",
-     "pinyinStored": "qu",
-     "blockedByToneP4": false
+     "pinyinStored": "qu"
     }
    ],
    "grammar": [
@@ -401,103 +361,83 @@
    "words": [
     {
      "hanzi": "零",
-     "pinyinStored": "ling",
-     "blockedByToneP4": false
+     "pinyinStored": "ling"
     },
     {
      "hanzi": "百",
-     "pinyinStored": "bai",
-     "blockedByToneP4": false
+     "pinyinStored": "bai"
     },
     {
      "hanzi": "两",
-     "pinyinStored": "liang",
-     "blockedByToneP4": false
+     "pinyinStored": "liang"
     },
     {
      "hanzi": "个",
-     "pinyinStored": "ge",
-     "blockedByToneP4": true
+     "pinyinStored": "ge"
     },
     {
      "hanzi": "几",
-     "pinyinStored": "ji",
-     "blockedByToneP4": true
+     "pinyinStored": "ji"
     },
     {
      "hanzi": "元",
-     "pinyinStored": "yuan",
-     "blockedByToneP4": false
+     "pinyinStored": "yuan"
     },
     {
      "hanzi": "毛",
-     "pinyinStored": "mao",
-     "blockedByToneP4": false
+     "pinyinStored": "mao"
     },
     {
      "hanzi": "本",
-     "pinyinStored": "ben",
-     "blockedByToneP4": false
+     "pinyinStored": "ben"
     },
     {
      "hanzi": "杯",
-     "pinyinStored": "bei",
-     "blockedByToneP4": false
+     "pinyinStored": "bei"
     },
     {
      "hanzi": "杯子",
-     "pinyinStored": "bei zi",
-     "blockedByToneP4": false
+     "pinyinStored": "bei zi"
     },
     {
      "hanzi": "本子",
-     "pinyinStored": "ben zi",
-     "blockedByToneP4": false
+     "pinyinStored": "ben zi"
     },
     {
      "hanzi": "第",
-     "pinyinStored": "di",
-     "blockedByToneP4": false
+     "pinyinStored": "di"
     },
     {
      "hanzi": "次",
-     "pinyinStored": "ci",
-     "blockedByToneP4": false
+     "pinyinStored": "ci"
     },
     {
      "hanzi": "号",
-     "pinyinStored": "hao",
-     "blockedByToneP4": true
+     "pinyinStored": "hao"
     },
     {
      "hanzi": "页",
-     "pinyinStored": "ye",
-     "blockedByToneP4": false
+     "pinyinStored": "ye"
     },
     {
      "hanzi": "一些",
-     "pinyinStored": "yi xie",
-     "blockedByToneP4": false
+     "pinyinStored": "yi xie"
     },
     {
      "hanzi": "这些",
-     "pinyinStored": "zhe xie",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe xie"
     },
     {
      "hanzi": "那些",
-     "pinyinStored": "na xie",
-     "blockedByToneP4": false
+     "pinyinStored": "na xie"
     },
     {
      "hanzi": "哪些",
-     "pinyinStored": "na xie",
-     "blockedByToneP4": false
+     "pinyinStored": "na xie"
     },
     {
      "hanzi": "有些",
-     "pinyinStored": "you xie",
-     "blockedByToneP4": false
+     "pinyinStored": "you xie"
     }
    ],
    "grammar": [
@@ -517,103 +457,83 @@
    "words": [
     {
      "hanzi": "上午",
-     "pinyinStored": "shang wu",
-     "blockedByToneP4": false
+     "pinyinStored": "shang wu"
     },
     {
      "hanzi": "中午",
-     "pinyinStored": "zhong wu",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong wu"
     },
     {
      "hanzi": "下午",
-     "pinyinStored": "xia wu",
-     "blockedByToneP4": false
+     "pinyinStored": "xia wu"
     },
     {
      "hanzi": "早上",
-     "pinyinStored": "zao shang",
-     "blockedByToneP4": false
+     "pinyinStored": "zao shang"
     },
     {
      "hanzi": "晚上",
-     "pinyinStored": "wan shang",
-     "blockedByToneP4": false
+     "pinyinStored": "wan shang"
     },
     {
      "hanzi": "白天",
-     "pinyinStored": "bai tian",
-     "blockedByToneP4": false
+     "pinyinStored": "bai tian"
     },
     {
      "hanzi": "早",
-     "pinyinStored": "zao",
-     "blockedByToneP4": false
+     "pinyinStored": "zao"
     },
     {
      "hanzi": "晚",
-     "pinyinStored": "wan",
-     "blockedByToneP4": false
+     "pinyinStored": "wan"
     },
     {
      "hanzi": "时候",
-     "pinyinStored": "shi hou",
-     "blockedByToneP4": false
+     "pinyinStored": "shi hou"
     },
     {
      "hanzi": "时间",
-     "pinyinStored": "shi jian",
-     "blockedByToneP4": false
+     "pinyinStored": "shi jian"
     },
     {
      "hanzi": "小时",
-     "pinyinStored": "xiao shi",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao shi"
     },
     {
      "hanzi": "半",
-     "pinyinStored": "ban",
-     "blockedByToneP4": false
+     "pinyinStored": "ban"
     },
     {
      "hanzi": "一会儿",
-     "pinyinStored": "yi hui r",
-     "blockedByToneP4": false
+     "pinyinStored": "yi hui r"
     },
     {
      "hanzi": "马上",
-     "pinyinStored": "ma shang",
-     "blockedByToneP4": false
+     "pinyinStored": "ma shang"
     },
     {
      "hanzi": "前天",
-     "pinyinStored": "qian tian",
-     "blockedByToneP4": false
+     "pinyinStored": "qian tian"
     },
     {
      "hanzi": "后天",
-     "pinyinStored": "hou tian",
-     "blockedByToneP4": false
+     "pinyinStored": "hou tian"
     },
     {
      "hanzi": "今年",
-     "pinyinStored": "jin nian",
-     "blockedByToneP4": false
+     "pinyinStored": "jin nian"
     },
     {
      "hanzi": "去年",
-     "pinyinStored": "qu nian",
-     "blockedByToneP4": false
+     "pinyinStored": "qu nian"
     },
     {
      "hanzi": "明年",
-     "pinyinStored": "ming nian",
-     "blockedByToneP4": false
+     "pinyinStored": "ming nian"
     },
     {
      "hanzi": "星期天",
-     "pinyinStored": "xing qi tian",
-     "blockedByToneP4": false
+     "pinyinStored": "xing qi tian"
     }
    ],
    "grammar": [
@@ -632,103 +552,83 @@
    "words": [
     {
      "hanzi": "起床",
-     "pinyinStored": "qi chuang",
-     "blockedByToneP4": false
+     "pinyinStored": "qi chuang"
     },
     {
      "hanzi": "起来",
-     "pinyinStored": "qi lai",
-     "blockedByToneP4": false
+     "pinyinStored": "qi lai"
     },
     {
      "hanzi": "睡",
-     "pinyinStored": "shui",
-     "blockedByToneP4": false
+     "pinyinStored": "shui"
     },
     {
      "hanzi": "睡觉",
-     "pinyinStored": "shui jiao",
-     "blockedByToneP4": false
+     "pinyinStored": "shui jiao"
     },
     {
      "hanzi": "洗",
-     "pinyinStored": "xi",
-     "blockedByToneP4": false
+     "pinyinStored": "xi"
     },
     {
      "hanzi": "洗手间",
-     "pinyinStored": "xi shou jian",
-     "blockedByToneP4": false
+     "pinyinStored": "xi shou jian"
     },
     {
      "hanzi": "上班",
-     "pinyinStored": "shang ban",
-     "blockedByToneP4": false
+     "pinyinStored": "shang ban"
     },
     {
      "hanzi": "下班",
-     "pinyinStored": "xia ban",
-     "blockedByToneP4": false
+     "pinyinStored": "xia ban"
     },
     {
      "hanzi": "上学",
-     "pinyinStored": "shang xue",
-     "blockedByToneP4": false
+     "pinyinStored": "shang xue"
     },
     {
      "hanzi": "放学",
-     "pinyinStored": "fang xue",
-     "blockedByToneP4": false
+     "pinyinStored": "fang xue"
     },
     {
      "hanzi": "工作",
-     "pinyinStored": "gong zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "gong zuo"
     },
     {
      "hanzi": "休息",
-     "pinyinStored": "xiu xi",
-     "blockedByToneP4": false
+     "pinyinStored": "xiu xi"
     },
     {
      "hanzi": "回家",
-     "pinyinStored": "hui jia",
-     "blockedByToneP4": false
+     "pinyinStored": "hui jia"
     },
     {
      "hanzi": "在家",
-     "pinyinStored": "zai jia",
-     "blockedByToneP4": false
+     "pinyinStored": "zai jia"
     },
     {
      "hanzi": "吃饭",
-     "pinyinStored": "chi fan",
-     "blockedByToneP4": false
+     "pinyinStored": "chi fan"
     },
     {
      "hanzi": "穿",
-     "pinyinStored": "chuan",
-     "blockedByToneP4": false
+     "pinyinStored": "chuan"
     },
     {
      "hanzi": "衣服",
-     "pinyinStored": "yi fu",
-     "blockedByToneP4": false
+     "pinyinStored": "yi fu"
     },
     {
      "hanzi": "做",
-     "pinyinStored": "zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "zuo"
     },
     {
      "hanzi": "事",
-     "pinyinStored": "shi",
-     "blockedByToneP4": false
+     "pinyinStored": "shi"
     },
     {
      "hanzi": "常常",
-     "pinyinStored": "chang chang",
-     "blockedByToneP4": false
+     "pinyinStored": "chang chang"
     }
    ],
    "grammar": [
@@ -747,103 +647,83 @@
    "words": [
     {
      "hanzi": "上边",
-     "pinyinStored": "shang bian",
-     "blockedByToneP4": false
+     "pinyinStored": "shang bian"
     },
     {
      "hanzi": "下边",
-     "pinyinStored": "xia bian",
-     "blockedByToneP4": false
+     "pinyinStored": "xia bian"
     },
     {
      "hanzi": "前边",
-     "pinyinStored": "qian bian",
-     "blockedByToneP4": false
+     "pinyinStored": "qian bian"
     },
     {
      "hanzi": "后边",
-     "pinyinStored": "hou bian",
-     "blockedByToneP4": false
+     "pinyinStored": "hou bian"
     },
     {
      "hanzi": "左边",
-     "pinyinStored": "zuo bian",
-     "blockedByToneP4": false
+     "pinyinStored": "zuo bian"
     },
     {
      "hanzi": "右边",
-     "pinyinStored": "you bian",
-     "blockedByToneP4": false
+     "pinyinStored": "you bian"
     },
     {
      "hanzi": "里边",
-     "pinyinStored": "li bian",
-     "blockedByToneP4": false
+     "pinyinStored": "li bian"
     },
     {
      "hanzi": "外边",
-     "pinyinStored": "wai bian",
-     "blockedByToneP4": false
+     "pinyinStored": "wai bian"
     },
     {
      "hanzi": "旁边",
-     "pinyinStored": "pang bian",
-     "blockedByToneP4": false
+     "pinyinStored": "pang bian"
     },
     {
      "hanzi": "东边",
-     "pinyinStored": "dong bian",
-     "blockedByToneP4": false
+     "pinyinStored": "dong bian"
     },
     {
      "hanzi": "西边",
-     "pinyinStored": "xi bian",
-     "blockedByToneP4": false
+     "pinyinStored": "xi bian"
     },
     {
      "hanzi": "南边",
-     "pinyinStored": "nan bian",
-     "blockedByToneP4": false
+     "pinyinStored": "nan bian"
     },
     {
      "hanzi": "北边",
-     "pinyinStored": "bei bian",
-     "blockedByToneP4": false
+     "pinyinStored": "bei bian"
     },
     {
      "hanzi": "中间",
-     "pinyinStored": "zhong jian",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong jian"
     },
     {
      "hanzi": "东",
-     "pinyinStored": "dong",
-     "blockedByToneP4": false
+     "pinyinStored": "dong"
     },
     {
      "hanzi": "西",
-     "pinyinStored": "xi",
-     "blockedByToneP4": false
+     "pinyinStored": "xi"
     },
     {
      "hanzi": "南",
-     "pinyinStored": "nan",
-     "blockedByToneP4": false
+     "pinyinStored": "nan"
     },
     {
      "hanzi": "北",
-     "pinyinStored": "bei",
-     "blockedByToneP4": false
+     "pinyinStored": "bei"
     },
     {
      "hanzi": "左",
-     "pinyinStored": "zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "zuo"
     },
     {
      "hanzi": "右",
-     "pinyinStored": "you",
-     "blockedByToneP4": false
+     "pinyinStored": "you"
     }
    ],
    "grammar": [
@@ -861,103 +741,83 @@
    "words": [
     {
      "hanzi": "上",
-     "pinyinStored": "shang",
-     "blockedByToneP4": true
+     "pinyinStored": "shang"
     },
     {
      "hanzi": "下",
-     "pinyinStored": "xia",
-     "blockedByToneP4": false
+     "pinyinStored": "xia"
     },
     {
      "hanzi": "前",
-     "pinyinStored": "qian",
-     "blockedByToneP4": false
+     "pinyinStored": "qian"
     },
     {
      "hanzi": "后",
-     "pinyinStored": "hou",
-     "blockedByToneP4": false
+     "pinyinStored": "hou"
     },
     {
      "hanzi": "里",
-     "pinyinStored": "li",
-     "blockedByToneP4": false
+     "pinyinStored": "li"
     },
     {
      "hanzi": "外",
-     "pinyinStored": "wai",
-     "blockedByToneP4": false
+     "pinyinStored": "wai"
     },
     {
      "hanzi": "中",
-     "pinyinStored": "zhong",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong"
     },
     {
      "hanzi": "地上",
-     "pinyinStored": "di shang",
-     "blockedByToneP4": false
+     "pinyinStored": "di shang"
     },
     {
      "hanzi": "身上",
-     "pinyinStored": "shen shang",
-     "blockedByToneP4": false
+     "pinyinStored": "shen shang"
     },
     {
      "hanzi": "路上",
-     "pinyinStored": "lu shang",
-     "blockedByToneP4": false
+     "pinyinStored": "lu shang"
     },
     {
      "hanzi": "楼上",
-     "pinyinStored": "lou shang",
-     "blockedByToneP4": false
+     "pinyinStored": "lou shang"
     },
     {
      "hanzi": "楼下",
-     "pinyinStored": "lou xia",
-     "blockedByToneP4": false
+     "pinyinStored": "lou xia"
     },
     {
      "hanzi": "楼",
-     "pinyinStored": "lou",
-     "blockedByToneP4": false
+     "pinyinStored": "lou"
     },
     {
      "hanzi": "门",
-     "pinyinStored": "men",
-     "blockedByToneP4": false
+     "pinyinStored": "men"
     },
     {
      "hanzi": "门口",
-     "pinyinStored": "men kou",
-     "blockedByToneP4": false
+     "pinyinStored": "men kou"
     },
     {
      "hanzi": "房子",
-     "pinyinStored": "fang zi",
-     "blockedByToneP4": false
+     "pinyinStored": "fang zi"
     },
     {
      "hanzi": "房间",
-     "pinyinStored": "fang jian",
-     "blockedByToneP4": false
+     "pinyinStored": "fang jian"
     },
     {
      "hanzi": "桌子",
-     "pinyinStored": "zhuo zi",
-     "blockedByToneP4": false
+     "pinyinStored": "zhuo zi"
     },
     {
      "hanzi": "床",
-     "pinyinStored": "chuang",
-     "blockedByToneP4": false
+     "pinyinStored": "chuang"
     },
     {
      "hanzi": "家里",
-     "pinyinStored": "jia li",
-     "blockedByToneP4": false
+     "pinyinStored": "jia li"
     }
    ],
    "grammar": [
@@ -974,103 +834,83 @@
    "words": [
     {
      "hanzi": "车",
-     "pinyinStored": "che",
-     "blockedByToneP4": false
+     "pinyinStored": "che"
     },
     {
      "hanzi": "汽车",
-     "pinyinStored": "qi che",
-     "blockedByToneP4": false
+     "pinyinStored": "qi che"
     },
     {
      "hanzi": "火车",
-     "pinyinStored": "huo che",
-     "blockedByToneP4": false
+     "pinyinStored": "huo che"
     },
     {
      "hanzi": "飞机",
-     "pinyinStored": "fei ji",
-     "blockedByToneP4": false
+     "pinyinStored": "fei ji"
     },
     {
      "hanzi": "飞",
-     "pinyinStored": "fei",
-     "blockedByToneP4": false
+     "pinyinStored": "fei"
     },
     {
      "hanzi": "机场",
-     "pinyinStored": "ji chang",
-     "blockedByToneP4": false
+     "pinyinStored": "ji chang"
     },
     {
      "hanzi": "车站",
-     "pinyinStored": "che zhan",
-     "blockedByToneP4": false
+     "pinyinStored": "che zhan"
     },
     {
      "hanzi": "车票",
-     "pinyinStored": "che piao",
-     "blockedByToneP4": false
+     "pinyinStored": "che piao"
     },
     {
      "hanzi": "机票",
-     "pinyinStored": "ji piao",
-     "blockedByToneP4": false
+     "pinyinStored": "ji piao"
     },
     {
      "hanzi": "票",
-     "pinyinStored": "piao",
-     "blockedByToneP4": false
+     "pinyinStored": "piao"
     },
     {
      "hanzi": "开车",
-     "pinyinStored": "kai che",
-     "blockedByToneP4": false
+     "pinyinStored": "kai che"
     },
     {
      "hanzi": "打车",
-     "pinyinStored": "da che",
-     "blockedByToneP4": false
+     "pinyinStored": "da che"
     },
     {
      "hanzi": "上车",
-     "pinyinStored": "shang che",
-     "blockedByToneP4": false
+     "pinyinStored": "shang che"
     },
     {
      "hanzi": "下车",
-     "pinyinStored": "xia che",
-     "blockedByToneP4": false
+     "pinyinStored": "xia che"
     },
     {
      "hanzi": "坐",
-     "pinyinStored": "zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "zuo"
     },
     {
      "hanzi": "走",
-     "pinyinStored": "zou",
-     "blockedByToneP4": false
+     "pinyinStored": "zou"
     },
     {
      "hanzi": "走路",
-     "pinyinStored": "zou lu",
-     "blockedByToneP4": false
+     "pinyinStored": "zou lu"
     },
     {
      "hanzi": "路",
-     "pinyinStored": "lu",
-     "blockedByToneP4": false
+     "pinyinStored": "lu"
     },
     {
      "hanzi": "马路",
-     "pinyinStored": "ma lu",
-     "blockedByToneP4": false
+     "pinyinStored": "ma lu"
     },
     {
      "hanzi": "路口",
-     "pinyinStored": "lu kou",
-     "blockedByToneP4": false
+     "pinyinStored": "lu kou"
     }
    ],
    "grammar": [
@@ -1088,103 +928,83 @@
    "words": [
     {
      "hanzi": "医院",
-     "pinyinStored": "yi yuan",
-     "blockedByToneP4": false
+     "pinyinStored": "yi yuan"
     },
     {
      "hanzi": "饭店",
-     "pinyinStored": "fan dian",
-     "blockedByToneP4": false
+     "pinyinStored": "fan dian"
     },
     {
      "hanzi": "书店",
-     "pinyinStored": "shu dian",
-     "blockedByToneP4": false
+     "pinyinStored": "shu dian"
     },
     {
      "hanzi": "商场",
-     "pinyinStored": "shang chang",
-     "blockedByToneP4": false
+     "pinyinStored": "shang chang"
     },
     {
      "hanzi": "电影院",
-     "pinyinStored": "dian ying yuan",
-     "blockedByToneP4": false
+     "pinyinStored": "dian ying yuan"
     },
     {
      "hanzi": "学院",
-     "pinyinStored": "xue yuan",
-     "blockedByToneP4": false
+     "pinyinStored": "xue yuan"
     },
     {
      "hanzi": "大学",
-     "pinyinStored": "da xue",
-     "blockedByToneP4": false
+     "pinyinStored": "da xue"
     },
     {
      "hanzi": "中学",
-     "pinyinStored": "zhong xue",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong xue"
     },
     {
      "hanzi": "小学",
-     "pinyinStored": "xiao xue",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao xue"
     },
     {
      "hanzi": "地方",
-     "pinyinStored": "di fang",
-     "blockedByToneP4": false
+     "pinyinStored": "di fang"
     },
     {
      "hanzi": "地点",
-     "pinyinStored": "di dian",
-     "blockedByToneP4": false
+     "pinyinStored": "di dian"
     },
     {
      "hanzi": "地图",
-     "pinyinStored": "di tu",
-     "blockedByToneP4": false
+     "pinyinStored": "di tu"
     },
     {
      "hanzi": "远",
-     "pinyinStored": "yuan",
-     "blockedByToneP4": false
+     "pinyinStored": "yuan"
     },
     {
      "hanzi": "门票",
-     "pinyinStored": "men piao",
-     "blockedByToneP4": false
+     "pinyinStored": "men piao"
     },
     {
      "hanzi": "到",
-     "pinyinStored": "dao",
-     "blockedByToneP4": false
+     "pinyinStored": "dao"
     },
     {
      "hanzi": "来到",
-     "pinyinStored": "lai dao",
-     "blockedByToneP4": false
+     "pinyinStored": "lai dao"
     },
     {
      "hanzi": "回到",
-     "pinyinStored": "hui dao",
-     "blockedByToneP4": false
+     "pinyinStored": "hui dao"
     },
     {
      "hanzi": "从",
-     "pinyinStored": "cong",
-     "blockedByToneP4": false
+     "pinyinStored": "cong"
     },
     {
      "hanzi": "进",
-     "pinyinStored": "jin",
-     "blockedByToneP4": false
+     "pinyinStored": "jin"
     },
     {
      "hanzi": "出",
-     "pinyinStored": "chu",
-     "blockedByToneP4": false
+     "pinyinStored": "chu"
     }
    ],
    "grammar": [
@@ -1202,103 +1022,83 @@
    "words": [
     {
      "hanzi": "天气",
-     "pinyinStored": "tian qi",
-     "blockedByToneP4": false
+     "pinyinStored": "tian qi"
     },
     {
      "hanzi": "天",
-     "pinyinStored": "tian",
-     "blockedByToneP4": false
+     "pinyinStored": "tian"
     },
     {
      "hanzi": "雨",
-     "pinyinStored": "yu",
-     "blockedByToneP4": false
+     "pinyinStored": "yu"
     },
     {
      "hanzi": "下雨",
-     "pinyinStored": "xia yu",
-     "blockedByToneP4": false
+     "pinyinStored": "xia yu"
     },
     {
      "hanzi": "风",
-     "pinyinStored": "feng",
-     "blockedByToneP4": false
+     "pinyinStored": "feng"
     },
     {
      "hanzi": "冷",
-     "pinyinStored": "leng",
-     "blockedByToneP4": false
+     "pinyinStored": "leng"
     },
     {
      "hanzi": "热",
-     "pinyinStored": "re",
-     "blockedByToneP4": false
+     "pinyinStored": "re"
     },
     {
      "hanzi": "渴",
-     "pinyinStored": "ke",
-     "blockedByToneP4": false
+     "pinyinStored": "ke"
     },
     {
      "hanzi": "饿",
-     "pinyinStored": "e",
-     "blockedByToneP4": false
+     "pinyinStored": "e"
     },
     {
      "hanzi": "累",
-     "pinyinStored": "lei",
-     "blockedByToneP4": true
+     "pinyinStored": "lei"
     },
     {
      "hanzi": "太",
-     "pinyinStored": "tai",
-     "blockedByToneP4": false
+     "pinyinStored": "tai"
     },
     {
      "hanzi": "非常",
-     "pinyinStored": "fei chang",
-     "blockedByToneP4": false
+     "pinyinStored": "fei chang"
     },
     {
      "hanzi": "真",
-     "pinyinStored": "zhen",
-     "blockedByToneP4": false
+     "pinyinStored": "zhen"
     },
     {
      "hanzi": "真的",
-     "pinyinStored": "zhen de",
-     "blockedByToneP4": false
+     "pinyinStored": "zhen de"
     },
     {
      "hanzi": "最",
-     "pinyinStored": "zui",
-     "blockedByToneP4": false
+     "pinyinStored": "zui"
     },
     {
      "hanzi": "好看",
-     "pinyinStored": "hao kan",
-     "blockedByToneP4": false
+     "pinyinStored": "hao kan"
     },
     {
      "hanzi": "好吃",
-     "pinyinStored": "hao chi",
-     "blockedByToneP4": false
+     "pinyinStored": "hao chi"
     },
     {
      "hanzi": "好听",
-     "pinyinStored": "hao ting",
-     "blockedByToneP4": false
+     "pinyinStored": "hao ting"
     },
     {
      "hanzi": "好玩儿",
-     "pinyinStored": "hao wan r",
-     "blockedByToneP4": false
+     "pinyinStored": "hao wan r"
     },
     {
      "hanzi": "高",
-     "pinyinStored": "gao",
-     "blockedByToneP4": false
+     "pinyinStored": "gao"
     }
    ],
    "grammar": [
@@ -1317,103 +1117,83 @@
    "words": [
     {
      "hanzi": "出去",
-     "pinyinStored": "chu qu",
-     "blockedByToneP4": false
+     "pinyinStored": "chu qu"
     },
     {
      "hanzi": "出来",
-     "pinyinStored": "chu lai",
-     "blockedByToneP4": false
+     "pinyinStored": "chu lai"
     },
     {
      "hanzi": "进去",
-     "pinyinStored": "jin qu",
-     "blockedByToneP4": false
+     "pinyinStored": "jin qu"
     },
     {
      "hanzi": "进来",
-     "pinyinStored": "jin lai",
-     "blockedByToneP4": false
+     "pinyinStored": "jin lai"
     },
     {
      "hanzi": "回去",
-     "pinyinStored": "hui qu",
-     "blockedByToneP4": false
+     "pinyinStored": "hui qu"
     },
     {
      "hanzi": "回来",
-     "pinyinStored": "hui lai",
-     "blockedByToneP4": false
+     "pinyinStored": "hui lai"
     },
     {
      "hanzi": "回",
-     "pinyinStored": "hui",
-     "blockedByToneP4": false
+     "pinyinStored": "hui"
     },
     {
      "hanzi": "过",
-     "pinyinStored": "guo",
-     "blockedByToneP4": true
+     "pinyinStored": "guo"
     },
     {
      "hanzi": "跑",
-     "pinyinStored": "pao",
-     "blockedByToneP4": true
+     "pinyinStored": "pao"
     },
     {
      "hanzi": "送",
-     "pinyinStored": "song",
-     "blockedByToneP4": false
+     "pinyinStored": "song"
     },
     {
      "hanzi": "跟",
-     "pinyinStored": "gen",
-     "blockedByToneP4": false
+     "pinyinStored": "gen"
     },
     {
      "hanzi": "一起",
-     "pinyinStored": "yi qi",
-     "blockedByToneP4": false
+     "pinyinStored": "yi qi"
     },
     {
      "hanzi": "一块儿",
-     "pinyinStored": "yi kuai r",
-     "blockedByToneP4": false
+     "pinyinStored": "yi kuai r"
     },
     {
      "hanzi": "等",
-     "pinyinStored": "deng",
-     "blockedByToneP4": false
+     "pinyinStored": "deng"
     },
     {
      "hanzi": "找",
-     "pinyinStored": "zhao",
-     "blockedByToneP4": false
+     "pinyinStored": "zhao"
     },
     {
      "hanzi": "找到",
-     "pinyinStored": "zhao dao",
-     "blockedByToneP4": false
+     "pinyinStored": "zhao dao"
     },
     {
      "hanzi": "拿",
-     "pinyinStored": "na",
-     "blockedByToneP4": false
+     "pinyinStored": "na"
     },
     {
      "hanzi": "放",
-     "pinyinStored": "fang",
-     "blockedByToneP4": false
+     "pinyinStored": "fang"
     },
     {
      "hanzi": "帮",
-     "pinyinStored": "bang",
-     "blockedByToneP4": false
+     "pinyinStored": "bang"
     },
     {
      "hanzi": "帮忙",
-     "pinyinStored": "bang mang",
-     "blockedByToneP4": false
+     "pinyinStored": "bang mang"
     }
    ],
    "grammar": [
@@ -1432,103 +1212,83 @@
    "words": [
     {
      "hanzi": "东西",
-     "pinyinStored": "dong xi",
-     "blockedByToneP4": false
+     "pinyinStored": "dong xi"
     },
     {
      "hanzi": "书包",
-     "pinyinStored": "shu bao",
-     "blockedByToneP4": false
+     "pinyinStored": "shu bao"
     },
     {
      "hanzi": "钱包",
-     "pinyinStored": "qian bao",
-     "blockedByToneP4": false
+     "pinyinStored": "qian bao"
     },
     {
      "hanzi": "手机",
-     "pinyinStored": "shou ji",
-     "blockedByToneP4": false
+     "pinyinStored": "shou ji"
     },
     {
      "hanzi": "电脑",
-     "pinyinStored": "dian nao",
-     "blockedByToneP4": false
+     "pinyinStored": "dian nao"
     },
     {
      "hanzi": "电视",
-     "pinyinStored": "dian shi",
-     "blockedByToneP4": false
+     "pinyinStored": "dian shi"
     },
     {
      "hanzi": "电视机",
-     "pinyinStored": "dian shi ji",
-     "blockedByToneP4": false
+     "pinyinStored": "dian shi ji"
     },
     {
      "hanzi": "电话",
-     "pinyinStored": "dian hua",
-     "blockedByToneP4": false
+     "pinyinStored": "dian hua"
     },
     {
      "hanzi": "包",
-     "pinyinStored": "bao",
-     "blockedByToneP4": false
+     "pinyinStored": "bao"
     },
     {
      "hanzi": "包子",
-     "pinyinStored": "bao zi",
-     "blockedByToneP4": false
+     "pinyinStored": "bao zi"
     },
     {
      "hanzi": "面条儿",
-     "pinyinStored": "mian tiao r",
-     "blockedByToneP4": false
+     "pinyinStored": "mian tiao r"
     },
     {
      "hanzi": "肉",
-     "pinyinStored": "rou",
-     "blockedByToneP4": false
+     "pinyinStored": "rou"
     },
     {
      "hanzi": "饭",
-     "pinyinStored": "fan",
-     "blockedByToneP4": false
+     "pinyinStored": "fan"
     },
     {
      "hanzi": "花",
-     "pinyinStored": "hua",
-     "blockedByToneP4": false
+     "pinyinStored": "hua"
     },
     {
      "hanzi": "新",
-     "pinyinStored": "xin",
-     "blockedByToneP4": false
+     "pinyinStored": "xin"
     },
     {
      "hanzi": "坏",
-     "pinyinStored": "huai",
-     "blockedByToneP4": false
+     "pinyinStored": "huai"
     },
     {
      "hanzi": "用",
-     "pinyinStored": "yong",
-     "blockedByToneP4": false
+     "pinyinStored": "yong"
     },
     {
      "hanzi": "有用",
-     "pinyinStored": "you yong",
-     "blockedByToneP4": false
+     "pinyinStored": "you yong"
     },
     {
      "hanzi": "少",
-     "pinyinStored": "shao",
-     "blockedByToneP4": false
+     "pinyinStored": "shao"
     },
     {
      "hanzi": "要",
-     "pinyinStored": "yao",
-     "blockedByToneP4": true
+     "pinyinStored": "yao"
     }
    ],
    "grammar": [
@@ -1546,103 +1306,83 @@
    "words": [
     {
      "hanzi": "男",
-     "pinyinStored": "nan",
-     "blockedByToneP4": false
+     "pinyinStored": "nan"
     },
     {
      "hanzi": "女",
-     "pinyinStored": "nu:",
-     "blockedByToneP4": false
+     "pinyinStored": "nu:"
     },
     {
      "hanzi": "男人",
-     "pinyinStored": "nan ren",
-     "blockedByToneP4": false
+     "pinyinStored": "nan ren"
     },
     {
      "hanzi": "女人",
-     "pinyinStored": "nu: ren",
-     "blockedByToneP4": false
+     "pinyinStored": "nu: ren"
     },
     {
      "hanzi": "男孩儿",
-     "pinyinStored": "nan hai r",
-     "blockedByToneP4": false
+     "pinyinStored": "nan hai r"
     },
     {
      "hanzi": "女孩儿",
-     "pinyinStored": "nu: hai r",
-     "blockedByToneP4": false
+     "pinyinStored": "nu: hai r"
     },
     {
      "hanzi": "男生",
-     "pinyinStored": "nan sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "nan sheng"
     },
     {
      "hanzi": "女生",
-     "pinyinStored": "nu: sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "nu: sheng"
     },
     {
      "hanzi": "男朋友",
-     "pinyinStored": "nan peng you",
-     "blockedByToneP4": false
+     "pinyinStored": "nan peng you"
     },
     {
      "hanzi": "女朋友",
-     "pinyinStored": "nu: peng you",
-     "blockedByToneP4": false
+     "pinyinStored": "nu: peng you"
     },
     {
      "hanzi": "小孩儿",
-     "pinyinStored": "xiao hai r",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao hai r"
     },
     {
      "hanzi": "小朋友",
-     "pinyinStored": "xiao peng you",
-     "blockedByToneP4": true
+     "pinyinStored": "xiao peng you"
     },
     {
      "hanzi": "小姐",
-     "pinyinStored": "xiao jie",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao jie"
     },
     {
      "hanzi": "先生",
-     "pinyinStored": "xian sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "xian sheng"
     },
     {
      "hanzi": "老人",
-     "pinyinStored": "lao ren",
-     "blockedByToneP4": false
+     "pinyinStored": "lao ren"
     },
     {
      "hanzi": "工人",
-     "pinyinStored": "gong ren",
-     "blockedByToneP4": false
+     "pinyinStored": "gong ren"
     },
     {
      "hanzi": "医生",
-     "pinyinStored": "yi sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "yi sheng"
     },
     {
      "hanzi": "病人",
-     "pinyinStored": "bing ren",
-     "blockedByToneP4": false
+     "pinyinStored": "bing ren"
     },
     {
      "hanzi": "别人",
-     "pinyinStored": "bie ren",
-     "blockedByToneP4": false
+     "pinyinStored": "bie ren"
     },
     {
      "hanzi": "家人",
-     "pinyinStored": "jia ren",
-     "blockedByToneP4": false
+     "pinyinStored": "jia ren"
     }
    ],
    "grammar": [
@@ -1660,103 +1400,83 @@
    "words": [
     {
      "hanzi": "爱",
-     "pinyinStored": "ai",
-     "blockedByToneP4": false
+     "pinyinStored": "ai"
     },
     {
      "hanzi": "爱好",
-     "pinyinStored": "ai hao",
-     "blockedByToneP4": false
+     "pinyinStored": "ai hao"
     },
     {
      "hanzi": "唱",
-     "pinyinStored": "chang",
-     "blockedByToneP4": false
+     "pinyinStored": "chang"
     },
     {
      "hanzi": "唱歌",
-     "pinyinStored": "chang ge",
-     "blockedByToneP4": false
+     "pinyinStored": "chang ge"
     },
     {
      "hanzi": "歌",
-     "pinyinStored": "ge",
-     "blockedByToneP4": false
+     "pinyinStored": "ge"
     },
     {
      "hanzi": "球",
-     "pinyinStored": "qiu",
-     "blockedByToneP4": false
+     "pinyinStored": "qiu"
     },
     {
      "hanzi": "打球",
-     "pinyinStored": "da qiu",
-     "blockedByToneP4": false
+     "pinyinStored": "da qiu"
     },
     {
      "hanzi": "玩儿",
-     "pinyinStored": "wan r",
-     "blockedByToneP4": false
+     "pinyinStored": "wan r"
     },
     {
      "hanzi": "电影",
-     "pinyinStored": "dian ying",
-     "blockedByToneP4": false
+     "pinyinStored": "dian ying"
     },
     {
      "hanzi": "看",
-     "pinyinStored": "kan",
-     "blockedByToneP4": true
+     "pinyinStored": "kan"
     },
     {
      "hanzi": "看到",
-     "pinyinStored": "kan dao",
-     "blockedByToneP4": false
+     "pinyinStored": "kan dao"
     },
     {
      "hanzi": "看见",
-     "pinyinStored": "kan jian",
-     "blockedByToneP4": false
+     "pinyinStored": "kan jian"
     },
     {
      "hanzi": "听到",
-     "pinyinStored": "ting dao",
-     "blockedByToneP4": false
+     "pinyinStored": "ting dao"
     },
     {
      "hanzi": "听见",
-     "pinyinStored": "ting jian",
-     "blockedByToneP4": false
+     "pinyinStored": "ting jian"
     },
     {
      "hanzi": "开玩笑",
-     "pinyinStored": "kai wan xiao",
-     "blockedByToneP4": false
+     "pinyinStored": "kai wan xiao"
     },
     {
      "hanzi": "笑",
-     "pinyinStored": "xiao",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao"
     },
     {
      "hanzi": "会",
-     "pinyinStored": "hui",
-     "blockedByToneP4": false
+     "pinyinStored": "hui"
     },
     {
      "hanzi": "能",
-     "pinyinStored": "neng",
-     "blockedByToneP4": false
+     "pinyinStored": "neng"
     },
     {
      "hanzi": "想",
-     "pinyinStored": "xiang",
-     "blockedByToneP4": false
+     "pinyinStored": "xiang"
     },
     {
      "hanzi": "有时候",
-     "pinyinStored": "you shi hou",
-     "blockedByToneP4": false
+     "pinyinStored": "you shi hou"
     }
    ],
    "grammar": [
@@ -1774,103 +1494,83 @@
    "words": [
     {
      "hanzi": "身体",
-     "pinyinStored": "shen ti",
-     "blockedByToneP4": false
+     "pinyinStored": "shen ti"
     },
     {
      "hanzi": "病",
-     "pinyinStored": "bing",
-     "blockedByToneP4": false
+     "pinyinStored": "bing"
     },
     {
      "hanzi": "生病",
-     "pinyinStored": "sheng bing",
-     "blockedByToneP4": false
+     "pinyinStored": "sheng bing"
     },
     {
      "hanzi": "看病",
-     "pinyinStored": "kan bing",
-     "blockedByToneP4": false
+     "pinyinStored": "kan bing"
     },
     {
      "hanzi": "手",
-     "pinyinStored": "shou",
-     "blockedByToneP4": false
+     "pinyinStored": "shou"
     },
     {
      "hanzi": "口",
-     "pinyinStored": "kou",
-     "blockedByToneP4": false
+     "pinyinStored": "kou"
     },
     {
      "hanzi": "动",
-     "pinyinStored": "dong",
-     "blockedByToneP4": false
+     "pinyinStored": "dong"
     },
     {
      "hanzi": "动作",
-     "pinyinStored": "dong zuo",
-     "blockedByToneP4": false
+     "pinyinStored": "dong zuo"
     },
     {
      "hanzi": "坐下",
-     "pinyinStored": "zuo xia",
-     "blockedByToneP4": false
+     "pinyinStored": "zuo xia"
     },
     {
      "hanzi": "站",
-     "pinyinStored": "zhan",
-     "blockedByToneP4": false
+     "pinyinStored": "zhan"
     },
     {
      "hanzi": "别",
-     "pinyinStored": "bie",
-     "blockedByToneP4": false
+     "pinyinStored": "bie"
     },
     {
      "hanzi": "慢",
-     "pinyinStored": "man",
-     "blockedByToneP4": false
+     "pinyinStored": "man"
     },
     {
      "hanzi": "快",
-     "pinyinStored": "kuai",
-     "blockedByToneP4": false
+     "pinyinStored": "kuai"
     },
     {
      "hanzi": "生气",
-     "pinyinStored": "sheng qi",
-     "blockedByToneP4": false
+     "pinyinStored": "sheng qi"
     },
     {
      "hanzi": "觉得",
-     "pinyinStored": "jue de",
-     "blockedByToneP4": false
+     "pinyinStored": "jue de"
     },
     {
      "hanzi": "明白",
-     "pinyinStored": "ming bai",
-     "blockedByToneP4": false
+     "pinyinStored": "ming bai"
     },
     {
      "hanzi": "记",
-     "pinyinStored": "ji",
-     "blockedByToneP4": false
+     "pinyinStored": "ji"
     },
     {
      "hanzi": "记住",
-     "pinyinStored": "ji zhu",
-     "blockedByToneP4": false
+     "pinyinStored": "ji zhu"
     },
     {
      "hanzi": "记得",
-     "pinyinStored": "ji de",
-     "blockedByToneP4": false
+     "pinyinStored": "ji de"
     },
     {
      "hanzi": "忘",
-     "pinyinStored": "wang",
-     "blockedByToneP4": false
+     "pinyinStored": "wang"
     }
    ],
    "grammar": [
@@ -1889,103 +1589,83 @@
    "words": [
     {
      "hanzi": "课文",
-     "pinyinStored": "ke wen",
-     "blockedByToneP4": false
+     "pinyinStored": "ke wen"
     },
     {
      "hanzi": "听写",
-     "pinyinStored": "ting xie",
-     "blockedByToneP4": false
+     "pinyinStored": "ting xie"
     },
     {
      "hanzi": "读书",
-     "pinyinStored": "du shu",
-     "blockedByToneP4": false
+     "pinyinStored": "du shu"
     },
     {
      "hanzi": "教",
-     "pinyinStored": "jiao",
-     "blockedByToneP4": true
+     "pinyinStored": "jiao"
     },
     {
      "hanzi": "教学楼",
-     "pinyinStored": "jiao xue lou",
-     "blockedByToneP4": false
+     "pinyinStored": "jiao xue lou"
     },
     {
      "hanzi": "班",
-     "pinyinStored": "ban",
-     "blockedByToneP4": false
+     "pinyinStored": "ban"
     },
     {
      "hanzi": "中学生",
-     "pinyinStored": "zhong xue sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong xue sheng"
     },
     {
      "hanzi": "大学生",
-     "pinyinStored": "da xue sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "da xue sheng"
     },
     {
      "hanzi": "小学生",
-     "pinyinStored": "xiao xue sheng",
-     "blockedByToneP4": false
+     "pinyinStored": "xiao xue sheng"
     },
     {
      "hanzi": "试",
-     "pinyinStored": "shi",
-     "blockedByToneP4": false
+     "pinyinStored": "shi"
     },
     {
      "hanzi": "考",
-     "pinyinStored": "kao",
-     "blockedByToneP4": false
+     "pinyinStored": "kao"
     },
     {
      "hanzi": "回答",
-     "pinyinStored": "hui da",
-     "blockedByToneP4": false
+     "pinyinStored": "hui da"
     },
     {
      "hanzi": "错",
-     "pinyinStored": "cuo",
-     "blockedByToneP4": false
+     "pinyinStored": "cuo"
     },
     {
      "hanzi": "对",
-     "pinyinStored": "dui",
-     "blockedByToneP4": false
+     "pinyinStored": "dui"
     },
     {
      "hanzi": "不对",
-     "pinyinStored": "bu dui",
-     "blockedByToneP4": false
+     "pinyinStored": "bu dui"
     },
     {
      "hanzi": "难",
-     "pinyinStored": "nan",
-     "blockedByToneP4": false
+     "pinyinStored": "nan"
     },
     {
      "hanzi": "知识",
-     "pinyinStored": "zhi shi",
-     "blockedByToneP4": false
+     "pinyinStored": "zhi shi"
     },
     {
      "hanzi": "认真",
-     "pinyinStored": "ren zhen",
-     "blockedByToneP4": false
+     "pinyinStored": "ren zhen"
     },
     {
      "hanzi": "准备",
-     "pinyinStored": "zhun bei",
-     "blockedByToneP4": false
+     "pinyinStored": "zhun bei"
     },
     {
      "hanzi": "开会",
-     "pinyinStored": "kai hui",
-     "blockedByToneP4": false
+     "pinyinStored": "kai hui"
     }
    ],
    "grammar": [
@@ -2003,103 +1683,83 @@
    "words": [
     {
      "hanzi": "见面",
-     "pinyinStored": "jian mian",
-     "blockedByToneP4": false
+     "pinyinStored": "jian mian"
     },
     {
      "hanzi": "再",
-     "pinyinStored": "zai",
-     "blockedByToneP4": false
+     "pinyinStored": "zai"
     },
     {
      "hanzi": "先",
-     "pinyinStored": "xian",
-     "blockedByToneP4": false
+     "pinyinStored": "xian"
     },
     {
      "hanzi": "说话",
-     "pinyinStored": "shuo hua",
-     "blockedByToneP4": false
+     "pinyinStored": "shuo hua"
     },
     {
      "hanzi": "话",
-     "pinyinStored": "hua",
-     "blockedByToneP4": false
+     "pinyinStored": "hua"
     },
     {
      "hanzi": "告诉",
-     "pinyinStored": "gao su",
-     "blockedByToneP4": false
+     "pinyinStored": "gao su"
     },
     {
      "hanzi": "介绍",
-     "pinyinStored": "jie shao",
-     "blockedByToneP4": false
+     "pinyinStored": "jie shao"
     },
     {
      "hanzi": "给",
-     "pinyinStored": "gei",
-     "blockedByToneP4": false
+     "pinyinStored": "gei"
     },
     {
      "hanzi": "打电话",
-     "pinyinStored": "da dian hua",
-     "blockedByToneP4": false
+     "pinyinStored": "da dian hua"
     },
     {
      "hanzi": "请假",
-     "pinyinStored": "qing jia",
-     "blockedByToneP4": false
+     "pinyinStored": "qing jia"
     },
     {
      "hanzi": "放假",
-     "pinyinStored": "fang jia",
-     "blockedByToneP4": false
+     "pinyinStored": "fang jia"
     },
     {
      "hanzi": "新年",
-     "pinyinStored": "xin nian",
-     "blockedByToneP4": false
+     "pinyinStored": "xin nian"
     },
     {
      "hanzi": "生日",
-     "pinyinStored": "sheng ri",
-     "blockedByToneP4": false
+     "pinyinStored": "sheng ri"
     },
     {
      "hanzi": "开",
-     "pinyinStored": "kai",
-     "blockedByToneP4": false
+     "pinyinStored": "kai"
     },
     {
      "hanzi": "关",
-     "pinyinStored": "guan",
-     "blockedByToneP4": false
+     "pinyinStored": "guan"
     },
     {
      "hanzi": "关上",
-     "pinyinStored": "guan shang",
-     "blockedByToneP4": false
+     "pinyinStored": "guan shang"
     },
     {
      "hanzi": "打开",
-     "pinyinStored": "da kai",
-     "blockedByToneP4": false
+     "pinyinStored": "da kai"
     },
     {
      "hanzi": "有名",
-     "pinyinStored": "you ming",
-     "blockedByToneP4": false
+     "pinyinStored": "you ming"
     },
     {
      "hanzi": "最后",
-     "pinyinStored": "zui hou",
-     "blockedByToneP4": false
+     "pinyinStored": "zui hou"
     },
     {
      "hanzi": "最好",
-     "pinyinStored": "zui hao",
-     "blockedByToneP4": false
+     "pinyinStored": "zui hao"
     }
    ],
    "grammar": [
@@ -2117,103 +1777,83 @@
    "words": [
     {
      "hanzi": "了",
-     "pinyinStored": "le",
-     "blockedByToneP4": false
+     "pinyinStored": "le"
     },
     {
      "hanzi": "着",
-     "pinyinStored": "zhe",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe"
     },
     {
      "hanzi": "吧",
-     "pinyinStored": "ba",
-     "blockedByToneP4": false
+     "pinyinStored": "ba"
     },
     {
      "hanzi": "正",
-     "pinyinStored": "zheng",
-     "blockedByToneP4": true
+     "pinyinStored": "zheng"
     },
     {
      "hanzi": "正在",
-     "pinyinStored": "zheng zai",
-     "blockedByToneP4": false
+     "pinyinStored": "zheng zai"
     },
     {
      "hanzi": "没",
-     "pinyinStored": "mei",
-     "blockedByToneP4": false
+     "pinyinStored": "mei"
     },
     {
      "hanzi": "还",
-     "pinyinStored": "hai",
-     "blockedByToneP4": false
+     "pinyinStored": "hai"
     },
     {
      "hanzi": "还是",
-     "pinyinStored": "hai shi",
-     "blockedByToneP4": false
+     "pinyinStored": "hai shi"
     },
     {
      "hanzi": "还有",
-     "pinyinStored": "hai you",
-     "blockedByToneP4": false
+     "pinyinStored": "hai you"
     },
     {
      "hanzi": "就",
-     "pinyinStored": "jiu",
-     "blockedByToneP4": false
+     "pinyinStored": "jiu"
     },
     {
      "hanzi": "比",
-     "pinyinStored": "bi",
-     "blockedByToneP4": false
+     "pinyinStored": "bi"
     },
     {
      "hanzi": "一样",
-     "pinyinStored": "yi yang",
-     "blockedByToneP4": false
+     "pinyinStored": "yi yang"
     },
     {
      "hanzi": "一点儿",
-     "pinyinStored": "yi dian r",
-     "blockedByToneP4": false
+     "pinyinStored": "yi dian r"
     },
     {
      "hanzi": "一下儿",
-     "pinyinStored": "yi xia r",
-     "blockedByToneP4": false
+     "pinyinStored": "yi xia r"
     },
     {
      "hanzi": "是不是",
-     "pinyinStored": "shi bu shi",
-     "blockedByToneP4": false
+     "pinyinStored": "shi bu shi"
     },
     {
      "hanzi": "怎么",
-     "pinyinStored": "zen me",
-     "blockedByToneP4": false
+     "pinyinStored": "zen me"
     },
     {
      "hanzi": "地",
-     "pinyinStored": "de",
-     "blockedByToneP4": false
+     "pinyinStored": "de"
     },
     {
      "hanzi": "别的",
-     "pinyinStored": "bie de",
-     "blockedByToneP4": false
+     "pinyinStored": "bie de"
     },
     {
      "hanzi": "有的",
-     "pinyinStored": "you de",
-     "blockedByToneP4": false
+     "pinyinStored": "you de"
     },
     {
      "hanzi": "不大",
-     "pinyinStored": "bu da",
-     "blockedByToneP4": false
+     "pinyinStored": "bu da"
     }
    ],
    "grammar": [
@@ -2237,103 +1877,83 @@
    "words": [
     {
      "hanzi": "打",
-     "pinyinStored": "da",
-     "blockedByToneP4": true
+     "pinyinStored": "da"
     },
     {
      "hanzi": "干",
-     "pinyinStored": "gan",
-     "blockedByToneP4": true
+     "pinyinStored": "gan"
     },
     {
      "hanzi": "干什么",
-     "pinyinStored": "gan shen me",
-     "blockedByToneP4": false
+     "pinyinStored": "gan shen me"
     },
     {
      "hanzi": "干净",
-     "pinyinStored": "gan jing",
-     "blockedByToneP4": false
+     "pinyinStored": "gan jing"
     },
     {
      "hanzi": "忙",
-     "pinyinStored": "mang",
-     "blockedByToneP4": false
+     "pinyinStored": "mang"
     },
     {
      "hanzi": "忘记",
-     "pinyinStored": "wang ji",
-     "blockedByToneP4": false
+     "pinyinStored": "wang ji"
     },
     {
      "hanzi": "得到",
-     "pinyinStored": "de dao",
-     "blockedByToneP4": false
+     "pinyinStored": "de dao"
     },
     {
      "hanzi": "上网",
-     "pinyinStored": "shang wang",
-     "blockedByToneP4": false
+     "pinyinStored": "shang wang"
     },
     {
      "hanzi": "网上",
-     "pinyinStored": "wang shang",
-     "blockedByToneP4": false
+     "pinyinStored": "wang shang"
     },
     {
      "hanzi": "网友",
-     "pinyinStored": "wang you",
-     "blockedByToneP4": false
+     "pinyinStored": "wang you"
     },
     {
      "hanzi": "上次",
-     "pinyinStored": "shang ci",
-     "blockedByToneP4": false
+     "pinyinStored": "shang ci"
     },
     {
      "hanzi": "下次",
-     "pinyinStored": "xia ci",
-     "blockedByToneP4": false
+     "pinyinStored": "xia ci"
     },
     {
      "hanzi": "一半",
-     "pinyinStored": "yi ban",
-     "blockedByToneP4": false
+     "pinyinStored": "yi ban"
     },
     {
      "hanzi": "一边",
-     "pinyinStored": "yi bian",
-     "blockedByToneP4": false
+     "pinyinStored": "yi bian"
     },
     {
      "hanzi": "半天",
-     "pinyinStored": "ban tian",
-     "blockedByToneP4": false
+     "pinyinStored": "ban tian"
     },
     {
      "hanzi": "半年",
-     "pinyinStored": "ban nian",
-     "blockedByToneP4": false
+     "pinyinStored": "ban nian"
     },
     {
      "hanzi": "日期",
-     "pinyinStored": "ri qi",
-     "blockedByToneP4": false
+     "pinyinStored": "ri qi"
     },
     {
      "hanzi": "星期日",
-     "pinyinStored": "xing qi ri",
-     "blockedByToneP4": false
+     "pinyinStored": "xing qi ri"
     },
     {
      "hanzi": "常",
-     "pinyinStored": "chang",
-     "blockedByToneP4": false
+     "pinyinStored": "chang"
     },
     {
      "hanzi": "不用",
-     "pinyinStored": "bu yong",
-     "blockedByToneP4": false
+     "pinyinStored": "bu yong"
     }
    ],
    "grammar": [
@@ -2352,93 +1972,75 @@
    "words": [
     {
      "hanzi": "地",
-     "pinyinStored": "di",
-     "blockedByToneP4": false
+     "pinyinStored": "di"
     },
     {
      "hanzi": "女儿",
-     "pinyinStored": "nu: er",
-     "blockedByToneP4": false
+     "pinyinStored": "nu: er"
     },
     {
      "hanzi": "奶",
-     "pinyinStored": "nai",
-     "blockedByToneP4": false
+     "pinyinStored": "nai"
     },
     {
      "hanzi": "子",
-     "pinyinStored": "zi",
-     "blockedByToneP4": false
+     "pinyinStored": "zi"
     },
     {
      "hanzi": "山",
-     "pinyinStored": "shan",
-     "blockedByToneP4": false
+     "pinyinStored": "shan"
     },
     {
      "hanzi": "差",
-     "pinyinStored": "cha",
-     "blockedByToneP4": true
+     "pinyinStored": "cha"
     },
     {
      "hanzi": "树",
-     "pinyinStored": "shu",
-     "blockedByToneP4": false
+     "pinyinStored": "shu"
     },
     {
      "hanzi": "电",
-     "pinyinStored": "dian",
-     "blockedByToneP4": false
+     "pinyinStored": "dian"
     },
     {
      "hanzi": "白",
-     "pinyinStored": "bai",
-     "blockedByToneP4": false
+     "pinyinStored": "bai"
     },
     {
      "hanzi": "老",
-     "pinyinStored": "lao",
-     "blockedByToneP4": false
+     "pinyinStored": "lao"
     },
     {
      "hanzi": "行",
-     "pinyinStored": "xing",
-     "blockedByToneP4": false
+     "pinyinStored": "xing"
     },
     {
      "hanzi": "起",
-     "pinyinStored": "qi",
-     "blockedByToneP4": false
+     "pinyinStored": "qi"
     },
     {
      "hanzi": "还",
-     "pinyinStored": "huan",
-     "blockedByToneP4": false
+     "pinyinStored": "huan"
     },
     {
      "hanzi": "这边",
-     "pinyinStored": "zhe bian",
-     "blockedByToneP4": false
+     "pinyinStored": "zhe bian"
     },
     {
      "hanzi": "那边",
-     "pinyinStored": "na bian",
-     "blockedByToneP4": false
+     "pinyinStored": "na bian"
     },
     {
      "hanzi": "重",
-     "pinyinStored": "zhong",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong"
     },
     {
      "hanzi": "重要",
-     "pinyinStored": "zhong yao",
-     "blockedByToneP4": false
+     "pinyinStored": "zhong yao"
     },
     {
      "hanzi": "间",
-     "pinyinStored": "jian",
-     "blockedByToneP4": false
+     "pinyinStored": "jian"
     }
    ],
    "grammar": [
