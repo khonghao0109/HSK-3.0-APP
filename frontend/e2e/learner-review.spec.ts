@@ -105,6 +105,19 @@ test.describe('Learner review session (M3.3a)', () => {
           .userSelect,
       })),
     ).toEqual({ sr: 'none', cell: 'auto' });
+    const copied = await page.evaluate(() => {
+      const range = document.createRange();
+      range.selectNodeContents(
+        document.querySelector('.fc-face--front .fc-hz')!,
+      );
+      const selection = getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      const text = selection.toString();
+      selection.removeAllRanges();
+      return text;
+    });
+    expect(copied.trim()).toBe(WORDS[0].hanzi);
     await expectCounter(page, '1 / 3');
     // Q261: a new card's again/hard/good previews are minutes away.
     await expect(gradeButton(page, 'Chưa nhớ')).toHaveAccessibleName(/phút$/);
