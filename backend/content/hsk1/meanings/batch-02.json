@@ -333,7 +333,7 @@
     },
     {
       "hanzi": "中文",
-      "pinyin": "zhōngwén",
+      "pinyin": "Zhōngwén",
       "partOfSpeech": "danh từ",
       "meaningVi": "tiếng Trung, Trung văn",
       "examples": [
@@ -359,7 +359,7 @@
     },
     {
       "hanzi": "北京",
-      "pinyin": "běijīng",
+      "pinyin": "Běijīng",
       "partOfSpeech": "danh từ riêng",
       "meaningVi": "Bắc Kinh",
       "examples": [
@@ -664,7 +664,7 @@
       "examples": [
         {
           "hanzi": "桌子上有一个杯子。",
-          "pinyin": "Zhuōzi shàng yǒu yī ge bēizi.",
+          "pinyin": "Zhuōzi shang yǒu yī ge bēizi.",
           "translationVi": "Trên bàn có một cái cốc."
         }
       ]

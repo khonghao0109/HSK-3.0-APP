@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 import {
+  exampleStatusFor,
   hanOnly,
   type Hsk1Lexicon,
   loadHsk1Lexicon,
@@ -163,5 +164,33 @@ describe('meaning batch validator (P1–P2)', () => {
         }),
       ),
     ).toContain('proper_name_not_hsk1');
+  });
+
+  it('publishes examples only for an approved batch with reviewer, date and matching hash', () => {
+    const b = batch();
+    expect(exampleStatusFor(b)).toBe('draft');
+    const approved = () => ({
+      status: 'approved',
+      reviewer: 'Người duyệt',
+      reviewedAt: '2026-11-18',
+      contentSha256: meaningBatchContentSha256(b),
+      notes: [],
+    });
+    b.review = approved();
+    expect(exampleStatusFor(b)).toBe('published');
+    for (const broken of [
+      { reviewer: null },
+      { reviewer: '  ' },
+      { reviewedAt: null },
+      { reviewedAt: '18/11/2026' },
+      { contentSha256: 'x' },
+      { status: 'changes_requested' },
+    ]) {
+      b.review = { ...approved(), ...broken };
+      expect(exampleStatusFor(b)).toBe('draft');
+    }
+    b.review = approved();
+    b.entries[0].meaningVi = '(lượng từ) cái';
+    expect(exampleStatusFor(b)).toBe('draft');
   });
 });

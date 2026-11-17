@@ -128,6 +128,21 @@ export function meaningBatchContentSha256(batch: MeaningBatch): string {
     .digest('hex');
 }
 
+/**
+ * PO 17/11/2026 (PR #10): câu ví dụ của lô được `published` khi và chỉ khi lô
+ * `approved` có người duyệt, ngày duyệt hợp lệ và `contentSha256` khớp nội dung;
+ * mọi trường hợp khác là `draft`.
+ */
+export function exampleStatusFor(batch: MeaningBatch): 'published' | 'draft' {
+  const review = batch.review;
+  return review?.status === 'approved' &&
+    Boolean(review.reviewer?.trim()) &&
+    /^\d{4}-\d{2}-\d{2}$/u.test(review.reviewedAt ?? '') &&
+    review.contentSha256 === meaningBatchContentSha256(batch)
+    ? 'published'
+    : 'draft';
+}
+
 const HAN = /\p{Script=Han}/u;
 const PUNCT = /[\s\p{P}]/u;
 
@@ -308,7 +323,14 @@ export function validateMeaningBatch(
       add('word_duplicate', at, `${entry.hanzi} lặp trong lô`);
     seenWords.add(key);
 
-    if (!(PARTS_OF_SPEECH as readonly string[]).includes(entry.partOfSpeech)) {
+    // Từ đa từ loại ghi "danh từ, động từ" (PO 17/11/2026).
+    const parts = (entry.partOfSpeech ?? '').split(', ');
+    if (
+      new Set(parts).size !== parts.length ||
+      !parts.every((part) =>
+        (PARTS_OF_SPEECH as readonly string[]).includes(part),
+      )
+    ) {
       add('part_of_speech_invalid', `${at}.partOfSpeech`, entry.partOfSpeech);
     }
     const meaning = entry.meaningVi ?? '';

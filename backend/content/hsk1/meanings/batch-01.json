@@ -27,6 +27,11 @@
       "hanzi": "中国",
       "pinyin": "Zhōngguó",
       "note": "tên riêng: Trung Quốc"
+    },
+    {
+      "hanzi": "小雨",
+      "pinyin": "Xiǎoyǔ",
+      "note": "tên riêng: Tiểu Vũ (tên người, ghép từ 小 và 雨)"
     }
   ],
   "entries": [
@@ -118,6 +123,11 @@
           "hanzi": "老师叫我的名字。",
           "pinyin": "Lǎoshī jiào wǒ de míngzi.",
           "translationVi": "Giáo viên gọi tên tôi."
+        },
+        {
+          "hanzi": "我叫小雨。",
+          "pinyin": "Wǒ jiào Xiǎoyǔ.",
+          "translationVi": "Tôi tên là Tiểu Vũ."
         }
       ]
     },
@@ -286,7 +296,7 @@
         {
           "hanzi": "老师，再见！",
           "pinyin": "Lǎoshī, zàijiàn!",
-          "translationVi": "Thầy/cô, tạm biệt ạ!"
+          "translationVi": "Tạm biệt thầy/cô ạ!"
         }
       ]
     },
@@ -1098,7 +1108,7 @@
     },
     {
       "hanzi": "汉语",
-      "pinyin": "hànyǔ",
+      "pinyin": "Hànyǔ",
       "partOfSpeech": "danh từ",
       "meaningVi": "tiếng Hán, tiếng Trung",
       "examples": [
@@ -1130,7 +1140,7 @@
       "examples": [
         {
           "hanzi": "桌子上有一本书。",
-          "pinyin": "Zhuōzi shàng yǒu yī běn shū.",
+          "pinyin": "Zhuōzi shang yǒu yī běn shū.",
           "translationVi": "Trên bàn có một quyển sách."
         }
       ]
@@ -1234,7 +1244,7 @@
       "examples": [
         {
           "hanzi": "我的课本在桌子上。",
-          "pinyin": "Wǒ de kèběn zài zhuōzi shàng.",
+          "pinyin": "Wǒ de kèběn zài zhuōzi shang.",
           "translationVi": "Sách giáo khoa của tôi ở trên bàn."
         }
       ]
@@ -1242,7 +1252,7 @@
     {
       "hanzi": "考试",
       "pinyin": "kǎoshì",
-      "partOfSpeech": "động từ",
+      "partOfSpeech": "danh từ, động từ",
       "meaningVi": "kỳ thi, thi, làm bài thi",
       "examples": [
         {

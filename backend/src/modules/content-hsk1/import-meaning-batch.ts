@@ -4,6 +4,7 @@ import { normalizeMeaning } from '../../common/utils/normalize-meaning';
 import {
   comparablePinyin,
   type Hsk1Lexicon,
+  exampleStatusFor,
   type MeaningBatch,
   meaningBatchContentSha256,
   validateMeaningBatch,
@@ -14,7 +15,7 @@ import {
  * - Chỉ nạp lô `approved` có người duyệt, ngày duyệt, hash khớp nội dung.
  * - Mỗi lô một `DataSource` (`notes` ghi người duyệt, ngày, hash, file).
  * - Nghĩa tiếng Việt là dòng `WordMeaning` **mới** sau các dòng CC-CEDICT.
- * - `WordExample` ở `draft`.
+ * - `WordExample` `published` khi và chỉ khi lô approved hợp lệ (`exampleStatusFor`), ngược lại `draft`.
  * - Rollback theo `dataSourceId`: xoá ví dụ rồi nghĩa của đúng lô đó.
  * - Chạy lại không tạo trùng; lô đã nạp mà nội dung khác ⇒ fail, phải rollback trước.
  */
@@ -24,6 +25,7 @@ export class MeaningImportError extends Error {}
 export type MeaningImportPlan = {
   dataSourceCode: string;
   contentSha256: string;
+  exampleStatus: 'published' | 'draft';
   meaningsToCreate: number;
   meaningsExisting: number;
   examplesToCreate: number;
@@ -91,6 +93,7 @@ export async function importMeaningBatch(
     );
   }
   const sha = meaningBatchContentSha256(batch);
+  const exampleStatus = exampleStatusFor(batch);
 
   return prisma.$transaction(async (tx) => {
     const existingSource = await tx.dataSource.findUnique({
@@ -140,6 +143,7 @@ export async function importMeaningBatch(
     const plan: MeaningImportPlan = {
       dataSourceCode: batch.dataSource.code,
       contentSha256: sha,
+      exampleStatus,
       meaningsToCreate: 0,
       meaningsExisting: 0,
       examplesToCreate: 0,
@@ -198,7 +202,8 @@ export async function importMeaningBatch(
               pinyin: example.pinyin,
               translationVi: example.translationVi,
               dataSourceId: source.id,
-              status: 'draft',
+              status: exampleStatus,
+              publishedAt: exampleStatus === 'published' ? new Date() : null,
             },
           });
         }
