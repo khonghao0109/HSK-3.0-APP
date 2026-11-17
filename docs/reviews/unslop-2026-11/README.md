@@ -76,15 +76,19 @@ Mọi lệnh chạy trong `frontend/`, theo khoá `/tmp/hsk-heavy.lock`.
 
 - Sau mỗi lượt: `npm run lint` 0 lỗi (21–29 warning có sẵn), `npm run typecheck` exit 0, `npx vitest run` toàn bộ pass (lượt cuối: 160 file, 2013 test).
 - `npm run test:e2e` lần 1 (sau lượt 9): 985 passed, 31 failed, 50 skipped. 31 lượt fail là 8 test: 2 do unslop làm hỏng thật (dòng thanh bên còn 40px, chip đề đang chọn mất vòng focus ở web), đã sửa ở `66a5f59`; 6 test đã sai từ trước `b90c7b5` (Thi thử và Ôn tập đã là link, tag câu hỏi bị seed đổi tên), đã sửa spec, không xoá hay skip.
-- `npm run test:e2e` lần cuối, DB disposable dựng lại: **1016 passed, 0 failed, 50 skipped (30,0 phút), exit 0**, gồm axe `learner-a11y.spec.ts` ở 4 khổ.
+- `npm run test:e2e` lần 2 (sau sửa contact sheet): 1016 passed, 0 failed, 50 skipped (30,0 phút).
+- `npm run test:e2e` lần 3 (sau `a662e7a`, 17/11): 1012 passed, **4 failed**, 50 skipped (31,5 phút). 4 lượt fail là `axe: dictionary and word` ở 4 khổ: tên h1 chi tiết từ không còn khớp từ khi mỗi chữ nằm trong ô riêng. Sửa ở `a72534b` (`aria-label` trên h1).
+- Sau `909d627` + `a72534b`, build mới, DB dựng lại: `learner-dictionary.spec.ts` + `learner-a11y.spec.ts` ở 4 khổ **80 passed, 0 failed**. Các thay đổi này chỉ chạm CSS hero và h1 chi tiết từ, nên không chạy lại toàn bộ e2e.
 - Ảnh SAU: 106/106 (lượt chính 84/88; 4 ảnh chờ chuỗi cũ "Chính xác!" trong bộ chụp, sửa bộ chụp rồi chụp lại 4/4).
 - Build: `next build` lần đầu dừng với `SecurityFatalError` (khuyến nghị nâng Next.js 16.4.3 vì lỗ hổng đã biết), chạy lại thì qua. Chưa nâng Next.js.
 
-Contact sheet (mục 5, 17/11): 106 sheet được xem hết bằng 2 lượt review, mỗi lỗi mức trung bình/cao được kiểm chứng lại trên PNG gốc. 12 lỗi thật, đã sửa ở `b232545` và commit badge người dùng sau đó: bảng Bài tập admin bị tiêu đề dài đẩy cột ra ngoài; 田字格 rớt dòng 4+1 ở 390 (giờ một hàng, co chữ theo số ô); thẻ flashcard 390 bị kéo cao (S3 giữ nút ở đáy bằng margin-top:auto); thẻ thống kê ôn tập 390 xuống dòng xấu (2+1); chip ngân hàng câu hỏi bị cắt; chấm badge trạng thái bị bóp; vạch lẻ ở meta kết quả thi; tiêu đề thanh lộ trình 2 dòng; email hồ sơ ngắt giữa từ; ảnh xem lại thi hỏng không hiện fallback. Chụp lại và soát lại 18 màn liên quan: không còn lỗi bố cục. Giữ: nền navy trống dưới màn hoàn thành bài ở 390 (M4, chờ PO); hero web chi tiết từ 3–4 chữ xếp ô 2×2 để ô đủ lớn; dòng "• 45 phút" ở danh sách đề là dữ liệu fixture. S3, S4 kiểm lại trên ảnh: đã sửa.
+Contact sheet (mục 5, 17/11): 106 sheet được xem hết bằng 2 lượt review, mỗi lỗi mức trung bình/cao được kiểm chứng lại trên PNG gốc. 12 lỗi thật, đã sửa ở `b232545` và commit badge người dùng sau đó: bảng Bài tập admin bị tiêu đề dài đẩy cột ra ngoài; 田字格 rớt dòng 4+1 ở 390 (giờ một hàng, co chữ theo số ô); thẻ flashcard 390 bị kéo cao (S3 giữ nút ở đáy bằng margin-top:auto); thẻ thống kê ôn tập 390 xuống dòng xấu (2+1); chip ngân hàng câu hỏi bị cắt; chấm badge trạng thái bị bóp; vạch lẻ ở meta kết quả thi; tiêu đề thanh lộ trình 2 dòng; email hồ sơ ngắt giữa từ; ảnh xem lại thi hỏng không hiện fallback. Chụp lại và soát lại 18 màn liên quan: không còn lỗi bố cục. Giữ: nền navy trống dưới màn hoàn thành bài ở 390 (M4, chờ PO, xem Q341); hero chi tiết từ một hàng ô ở mọi khổ (`909d627`, ô co theo số chữ, chỉ từ 5+ chữ được xuống dòng; tên h1 giữ nguyên từ bằng `aria-label`, `a72534b`); dòng "• 45 phút" ở danh sách đề là dữ liệu fixture. S3, S4 kiểm lại trên ảnh: đã sửa.
 
 Ảnh cặp đáng xem: `learn-home-*`, `lesson-complete-*`, `lesson-practice-correct-*`, `review-*`, `review-session-*`, `dictionary-*`, `onboarding-goal-*`, `learn-profile-desktop-1440`, `admin-users-*`, `admin-lesson-edit-mobile-390`, `learn-exam-*`.
 
-Giới hạn đã biết: 田字格 với từ nhiều chữ là một ô giãn theo nội dung (không còn 1:1, xuống dòng khi hẹp); từ 1–2 chữ vẫn vuông.
+Giới hạn đã biết: từ 5 chữ trở lên ở hero chi tiết từ được phép xuống dòng.
+
+Phương án nền màn hoàn thành bài (Q341): `options/` có 3 ảnh 390 cùng bài, cùng điểm. (a) và (b) là minh hoạ bằng CSS chèn vào lúc chụp (Playwright `bypassCSP` chỉ trong bộ chụp, CSP của ứng dụng không đổi), chưa triển khai.
 
 ## Cách chụp lại
 
