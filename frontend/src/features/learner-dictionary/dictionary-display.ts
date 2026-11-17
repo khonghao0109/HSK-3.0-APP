@@ -26,7 +26,51 @@ export function displayPinyin(word: {
   pinyin: string;
   pinyinTone: string | null;
 }): string {
-  return word.pinyinTone ?? word.pinyin;
+  return numberedToToneMarks(word.pinyinTone ?? word.pinyin);
+}
+
+const MARKS: Record<string, string> = {
+  a: 'āáǎà',
+  e: 'ēéěè',
+  i: 'īíǐì',
+  o: 'ōóǒò',
+  u: 'ūúǔù',
+  ü: 'ǖǘǚǜ',
+  A: 'ĀÁǍÀ',
+  E: 'ĒÉĚÈ',
+  I: 'ĪÍǏÌ',
+  O: 'ŌÓǑÒ',
+  U: 'ŪÚǓÙ',
+  Ü: 'ǕǗǙǛ',
+};
+
+function markSyllable(syllable: string): string {
+  const tone = Number(syllable.slice(-1));
+  const body = syllable
+    .slice(0, -1)
+    .replace(/u:|v/gu, 'ü')
+    .replace(/U:|V/gu, 'Ü');
+  if (tone < 1 || tone > 4) return body;
+  const lower = body.toLowerCase();
+  // Standard rule: a or e takes the mark, "ou" marks the o, else the last vowel.
+  let at = lower.search(/[ae]/u);
+  if (at < 0) at = lower.indexOf('ou');
+  if (at < 0) {
+    for (let index = lower.length - 1; index >= 0; index -= 1) {
+      if ('iouü'.includes(lower.charAt(index))) {
+        at = index;
+        break;
+      }
+    }
+  }
+  const marks = at < 0 ? undefined : MARKS[body.charAt(at)];
+  if (!marks) return body;
+  return body.slice(0, at) + marks.charAt(tone - 1) + body.slice(at + 1);
+}
+
+/** "xie4 xie5" -> "xiè xie"; text without tone numbers is returned unchanged. */
+export function numberedToToneMarks(pinyin: string): string {
+  return pinyin.replace(/[A-Za-züÜ:]+[0-5]/gu, markSyllable);
 }
 
 /** Trimmed query, or null when it is empty or longer than the API accepts. */

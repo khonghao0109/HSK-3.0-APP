@@ -65,7 +65,7 @@
   .learner-app .w-public .lp-hero__title {
     max-width: 14ch;
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 3.25rem;
     line-height: 1.15;
     color: var(--text-strong);
@@ -182,7 +182,7 @@
 
   .learner-app .w-public .lp-level__no {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-xl);
     color: var(--text-strong);
   }
@@ -305,7 +305,7 @@
     border-radius: 50%;
     background: var(--navy-900);
     color: var(--white);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-lg);
   }
 
@@ -448,4 +448,10 @@
     outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .w-public .lp-level__no,
+.learner-app .w-public .lp-step__no {
+  font-variant-numeric: tabular-nums;
 }

@@ -103,7 +103,7 @@
 
   .learner-app .w-brand__name {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.5rem;
     line-height: 1.5;
     color: var(--navy-900);
@@ -112,10 +112,8 @@
   .learner-app .w-side__group {
     margin: var(--sp-4) var(--sp-3) var(--sp-1);
     font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--stone-600);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   /* Rows 40px with a 2px gap; icons share one column (flex: none below). */
@@ -154,7 +152,7 @@
   .learner-app .w-nav a[aria-current='page'] {
     background: var(--jade-50);
     color: var(--jade-800);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: inset 3px 0 0 var(--jade-700);
   }
 
@@ -232,7 +230,7 @@
     min-width: 0;
     color: var(--text-strong);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .w-main {
@@ -390,7 +388,7 @@
 
   .learner-app .home-hero__greet h1 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-2xl);
     line-height: 1.25;
     color: var(--text-strong);
@@ -439,7 +437,7 @@
     grid-column: 2;
     grid-row: 1;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -491,7 +489,7 @@
   .learner-app .home-streak b,
   .learner-app .home-streak span {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -584,7 +582,7 @@
     gap: var(--sp-3);
     margin: 0;
     font-size: var(--fs-base);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--jade-800);
   }
 
@@ -645,7 +643,7 @@
     box-shadow: var(--shadow-card);
     text-align: left;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.5;
     color: var(--text-strong);
     text-decoration: none;
@@ -891,7 +889,7 @@
     grid-column: 1 / -1;
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     text-align: left;
     color: var(--text-strong);
@@ -1018,7 +1016,7 @@
 
   .learner-app .path-next p.path-next__title {
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1069,7 +1067,7 @@
 
   .learner-app .path-sum__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -1213,7 +1211,7 @@
   .learner-app .profile__row:first-child dd {
     font-family: var(--font-serif);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.5;
   }
 
@@ -1377,7 +1375,7 @@
 
   .learner-app .path-mid p.path-mid__title {
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1494,7 +1492,7 @@
 
   .learner-app .w-pagehead .w-h1 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: var(--fs-2xl);
     line-height: 1.25;
     color: var(--text-strong);
@@ -1567,7 +1565,7 @@
     background: var(--jade-50);
     color: var(--jade-800);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .lesson-hero__title {
@@ -1613,7 +1611,7 @@
   .learner-app .lesson-content .lesson-section {
     margin: 0 0 var(--sp-4);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -1656,7 +1654,7 @@
 
   .learner-app .lesson-content .lrow__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
   }
 
@@ -1704,7 +1702,7 @@
   .learner-app .lesson-content .lrow__count {
     position: static;
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -1737,7 +1735,7 @@
   .learner-app .lesson-prog__title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -1751,7 +1749,7 @@
   .learner-app .lesson-prog__pct b {
     font-family: var(--font-serif);
     font-size: var(--fs-3xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--jade-800);
   }
@@ -1995,7 +1993,7 @@
     padding: var(--sp-5) var(--sp-6);
     border-bottom: 1px solid var(--border-default);
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -2010,10 +2008,8 @@
     padding: 0 var(--sp-6);
     background: var(--cream-100);
     font-size: var(--fs-sm);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--stone-600);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .dict-results {
@@ -2073,7 +2069,6 @@
 
   .learner-app .dict-item__vi--none {
     font-weight: 400;
-    font-style: italic;
     color: var(--text-muted);
   }
 
@@ -2087,7 +2082,7 @@
     box-shadow: inset 0 0 0 1px var(--border-default);
     color: var(--stone-700);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .dict-item .badge.badge--lv1 {
@@ -2171,7 +2166,7 @@
   .learner-app .dict-web__card-title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2314,7 +2309,7 @@
     background: var(--jade-50);
     box-shadow: inset 0 0 0 1px var(--jade-200);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--jade-800);
   }
 
@@ -2405,7 +2400,7 @@
 
   .learner-app .word-ex h2 {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2480,7 +2475,7 @@
 
   .learner-app .word-rel h2 {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2506,7 +2501,7 @@
 
   .learner-app .word-rel__table th {
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--stone-600);
     background: var(--cream-100);
     white-space: nowrap;
@@ -2662,7 +2657,7 @@
   .learner-app .word-web__info-title {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -2760,7 +2755,7 @@
     justify-self: start;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
     pointer-events: auto;
   }
@@ -2783,7 +2778,7 @@
   .learner-app .ex-bar .m02-bar__count {
     grid-column: 3;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -2803,17 +2798,15 @@
     display: block;
     margin: 0;
     font-size: var(--fs-sm);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--jade-800);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .ex-body .pr-q {
     margin-top: var(--sp-2);
     font-family: var(--font-serif);
     font-size: var(--fs-2xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--text-strong);
   }
@@ -3053,7 +3046,7 @@
 
   .learner-app .m02-feedback__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .m02-feedback__text {
@@ -3150,7 +3143,7 @@
 
   .learner-app .done-brand__name {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.5rem;
     line-height: 1.5;
     color: var(--navy-900);
@@ -3192,7 +3185,7 @@
     position: relative;
     color: var(--jade-200);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .done-title {
@@ -3200,7 +3193,7 @@
     margin-top: var(--sp-2);
     font-family: var(--font-serif);
     font-size: var(--fs-3xl);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--text-on-brand);
   }
@@ -3360,7 +3353,7 @@
     margin: 0;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     letter-spacing: normal;
     color: var(--text-strong);
@@ -3404,11 +3397,10 @@
     color: var(--text-body);
   }
 
-  /* W4: the mobile kicker already has the size/colour; web adds the overline. */
+  /* W4: sentence-case kicker; muted so only the title carries weight. */
   .learner-app .exi-kicker {
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .exi-meta {
@@ -3452,7 +3444,7 @@
 
   .learner-app .exi-table th {
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text-muted);
     background: var(--cream-100);
     white-space: nowrap;
@@ -3463,7 +3455,7 @@
   }
 
   .learner-app .exi-table__total td {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
     background: var(--cream-100);
     border-top: 2px solid var(--border-strong);
@@ -3489,7 +3481,7 @@
 
   .learner-app .exi-resume__title {
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -3574,7 +3566,7 @@
     margin: 0;
     font-family: var(--font-sans);
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.3;
     letter-spacing: normal;
     color: var(--text-strong);
@@ -3635,12 +3627,10 @@
   }
 
   .learner-app .exr-kicker {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: 500;
     line-height: 19.5px;
-    letter-spacing: 1.04px;
-    text-transform: uppercase;
-    color: var(--jade-800);
+    color: var(--text-muted);
   }
 
   .learner-app .exr-title--web,
@@ -3648,7 +3638,7 @@
     margin: 0;
     font-family: var(--font-serif);
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 35px;
     letter-spacing: normal;
     color: var(--navy-900);
@@ -3667,7 +3657,7 @@
   .learner-app .exr-score--web b {
     font-size: 36px;
     line-height: 36px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: normal;
     color: var(--jade-800);
   }
@@ -3740,7 +3730,7 @@
   .learner-app .exr-card--types .exr-h2 {
     padding-left: 0;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 24.3px;
     color: var(--navy-900);
   }
@@ -3783,7 +3773,7 @@
   .learner-app .exr-skill__value {
     padding-left: 0;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 22.5px;
     color: var(--navy-900);
   }
@@ -4044,7 +4034,7 @@
     display: block;
     color: var(--text-strong);
     font-size: 1.125rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .ext-count-btn {
@@ -4093,12 +4083,10 @@
     border: 1px solid var(--sand-300);
     border-radius: 12px;
     background: var(--white);
-    color: var(--jade-800);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 500;
     text-align: center;
-    text-transform: uppercase;
   }
 
   /* W3: sans prompt ~22px. */
@@ -4108,7 +4096,7 @@
     color: var(--text-strong);
     font-family: var(--font-sans);
     font-size: 1.375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .ext-content {
@@ -4125,7 +4113,7 @@
     clip-path: none;
     color: var(--jade-800);
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .learner-app .ex.ext .ext-audio {
@@ -4271,7 +4259,7 @@
     background: var(--white);
     color: var(--text-body);
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .uxb-opt__key::after {
@@ -4353,7 +4341,7 @@
     background: var(--jade-50);
     color: var(--jade-800);
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .learner-app .ex.ext .uxb-legend {
@@ -4651,7 +4639,7 @@
   }
 
   .learner-app .extr-actions .extr-actions__continue {
-    font-size: 0.86rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
   }
 
@@ -4683,7 +4671,7 @@
     border-radius: var(--r-pill);
     background: var(--surface-card);
     font-size: var(--fs-md);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -4910,4 +4898,28 @@
   .learner-app .rv-actions {
     margin-top: var(--sp-10);
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .home-streak b,
+.learner-app .topic__no,
+.learner-app .topic.is-current .topic__no,
+.learner-app .lesson-content .lrow__count,
+.learner-app .lesson-prog__pct,
+.learner-app .lesson-prog__pct b,
+.learner-app .dict-web__box .dict__count,
+.learner-app .ex-bar .m02-bar__count,
+.learner-app .done-hero .done-medal__score small,
+.learner-app .exr-score--web,
+.learner-app .exr-score--web b,
+.learner-app .exr-score--web .exr-score__unit,
+.learner-app .exr-score--web.is-pass .exr-score__unit,
+.learner-app .exr-skill__value,
+.learner-app .ex.ext .ext-timer,
+.learner-app .ex.ext .ext-count,
+.learner-app .ex.ext .ext-live,
+.learner-app .ex.ext .ext-audioclock,
+.learner-app .ex.ext .uxb-countbadge,
+.learner-app .rv-count {
+  font-variant-numeric: tabular-nums;
 }

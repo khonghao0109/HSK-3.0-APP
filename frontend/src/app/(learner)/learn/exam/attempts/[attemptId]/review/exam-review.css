@@ -110,7 +110,7 @@
 
 .learner-app .exv-sum__item b {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
   color: var(--ink-900);
 }
@@ -155,7 +155,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-900);
 }
@@ -164,7 +164,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
   color: var(--stone-700);
 }
@@ -202,7 +202,7 @@
   border-radius: 999px;
   color: var(--slate-700);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-filter[aria-current='page'] {
@@ -310,7 +310,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-900);
 }
@@ -373,11 +373,9 @@
   align-items: center;
   gap: var(--sp-2);
   margin: 0;
-  color: var(--jade-800);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
 .learner-app .exv-status {
@@ -387,7 +385,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -479,7 +477,7 @@
   border-radius: 50%;
   color: var(--slate-700);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-opt.is-correct {
@@ -509,7 +507,7 @@
   margin-left: auto;
   color: var(--jade-800);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .learner-app .exv-opt.is-chosen:not(.is-correct) .exv-opt__mark {
@@ -552,7 +550,6 @@
 
 .learner-app .exv-ans dd.is-empty {
   color: var(--stone-600);
-  font-style: italic;
 }
 
 /* Giải thích (Q148: không paywall) */
@@ -657,7 +654,7 @@
   color: var(--ink-900);
   font-family: var(--font-sans);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .exv-notice__text {
@@ -696,4 +693,10 @@
     min-height: 38px;
     font-size: 13px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .exv-sum__item b,
+.learner-app .exv-filter__count {
+  font-variant-numeric: tabular-nums;
 }

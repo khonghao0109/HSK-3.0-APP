@@ -18,7 +18,7 @@
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-lg);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
   color: var(--text-strong);
 }
@@ -72,7 +72,7 @@
 
 .learner-app .ehs-card__title {
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -102,12 +102,12 @@
 .learner-app .ehs-card__score b {
   display: block;
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .learner-app .ehs-card__total {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* `base.css` .badge--* of the mockups. */
@@ -159,7 +159,7 @@
 
 .learner-app .ehs-empty strong {
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-strong);
 }
 
@@ -267,7 +267,7 @@
     display: block;
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -297,7 +297,7 @@
     background: var(--cream-100);
     color: var(--stone-600);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
   }
 
@@ -357,4 +357,13 @@
     height: 1rem;
     margin-top: 2px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .ehs-mcount,
+.learner-app .ehs-card__score span,
+.learner-app .ehs-card__score b,
+.learner-app .ehs-card__total,
+.learner-app .ehs-count {
+  font-variant-numeric: tabular-nums;
 }

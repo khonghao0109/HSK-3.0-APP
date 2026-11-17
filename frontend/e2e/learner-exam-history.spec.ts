@@ -200,7 +200,7 @@ test.describe('Learner exam history (M4.5 B3)', () => {
         };
       });
       expect(metrics.titleFontSize).toBe('18px');
-      expect(metrics.titleFontWeight).toBe('700');
+      expect(metrics.titleFontWeight).toBe('600');
       expect(metrics.topHeight).toBe(64);
     }
     await expect(rows(page).nth(0)).toContainText('Đang chấm');

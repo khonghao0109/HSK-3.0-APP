@@ -17,14 +17,14 @@ import './learner-web-auth.css';
 import './learner-web-onboarding.css';
 
 const inter = Inter({
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-inter',
   display: 'swap',
 });
 
 const notoSerif = Noto_Serif({
-  weight: ['600', '700'],
+  weight: ['600'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-noto-serif',
   display: 'swap',

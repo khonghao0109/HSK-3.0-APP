@@ -212,8 +212,7 @@
 .admin-app .tst-panel__eyebrow {
   margin: 0;
   font-size: var(--adm-fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-weight: 500;
   color: var(--adm-slate-500);
 }
 

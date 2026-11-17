@@ -220,7 +220,7 @@
   .learner-app .w-public .obw-levels button[aria-checked='true'] {
     background: var(--jade-800);
     color: var(--white);
-    font-weight: 700;
+    font-weight: 600;
     /* Bỏ quầng jade-100 của mobile; vòng focus vẫn vẽ ở rule dưới. */
     box-shadow: none;
   }
@@ -249,7 +249,7 @@
   .learner-app .w-public .obw-info strong {
     display: block;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.35;
     color: var(--text-strong);
   }
@@ -291,8 +291,7 @@
   .learner-app .w-public .obw-minute b {
     font-size: var(--fs-display);
     line-height: 1;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 600;
     color: var(--text-strong);
   }
 
@@ -477,7 +476,7 @@
 
   .learner-app .w-public .obw-summary dd {
     margin: 0;
-    font-weight: 700;
+    font-weight: 600;
     text-align: right;
     color: var(--text-strong);
   }
@@ -508,4 +507,9 @@
     height: 18px;
     margin-top: 1px;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.learner-app .w-public .obw-minute b {
+  font-variant-numeric: tabular-nums;
 }

@@ -49,7 +49,7 @@
 .admin-app .qn-bank__title {
   margin: 0 0 var(--adm-sp-2);
   font-size: var(--adm-fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-navy-900);
 }
 .admin-app .qn-bank__list {
@@ -77,7 +77,7 @@
 .admin-app .qn-bank__item[aria-current='true'] {
   background: var(--adm-jade-50);
   color: var(--adm-jade-800);
-  font-weight: 700;
+  font-weight: 600;
 }
 .admin-app .qn-bank__count {
   color: var(--adm-slate-500);
@@ -223,7 +223,7 @@
 .admin-app .qn-fieldset > legend {
   margin-bottom: var(--adm-sp-2);
   font-size: var(--adm-fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-navy-900);
 }
 .admin-app .qn-option-list,

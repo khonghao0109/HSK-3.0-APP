@@ -73,10 +73,8 @@
   .learner-app .w-public .legal__toc-title {
     margin: 0 var(--sp-3) var(--sp-2);
     font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--stone-600);
+    font-weight: 500;
+    color: var(--text-muted);
   }
 
   .learner-app .w-public .legal__toc ul {
@@ -107,7 +105,7 @@
   .learner-app .w-public .legal__toc a[aria-current='page'] {
     background: var(--jade-50);
     color: var(--jade-800);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: inset 3px 0 0 var(--jade-700);
   }
 

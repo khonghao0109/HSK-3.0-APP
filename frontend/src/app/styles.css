@@ -99,12 +99,23 @@ h3,
 p {
   margin-top: 0;
 }
+/* Unslop T2: UA mặc định bold (700); thứ bậc dùng cỡ chữ/màu, tối đa 600. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+th,
+strong,
+b {
+  font-weight: 600;
+}
 h1 {
   margin-bottom: 8px;
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3vw, 3rem);
   line-height: 1.08;
-  letter-spacing: -0.035em;
 }
 h2 {
   margin-bottom: 8px;
@@ -112,7 +123,7 @@ h2 {
   line-height: 1.25;
 }
 h3 {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
 }
 .mono {
   font-family: var(--font-mono);
@@ -142,7 +153,7 @@ h3 {
   padding: 8px 16px;
   color: var(--white);
   background: var(--jade-700);
-  font-weight: 750;
+  font-weight: 600;
   text-decoration: none;
 }
 .skip-link:focus {
@@ -159,8 +170,8 @@ h3 {
   border-radius: var(--radius-sm);
   padding: 8px 16px;
   text-decoration: none;
-  font-size: 0.86rem;
-  font-weight: 720;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background-color 160ms ease,

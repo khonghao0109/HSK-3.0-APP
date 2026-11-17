@@ -157,7 +157,7 @@
 .admin-app .tst-list-record__title {
   display: block;
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: anywhere;
   text-decoration: none;
 }

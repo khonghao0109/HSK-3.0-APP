@@ -166,7 +166,7 @@
   margin: 4px 0 0;
   color: var(--adm-navy-900);
   font-size: var(--adm-fs-xl);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .adm-import-stats__item--error dd {
@@ -202,7 +202,7 @@
 .adm-import-table th {
   color: var(--adm-slate-500);
   font-size: var(--adm-fs-xs);
-  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .adm-import-footer {
@@ -266,4 +266,10 @@
   .adm-import-stats {
     grid-template-columns: 1fr;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.adm-import-steps__num,
+.adm-import-stats dd {
+  font-variant-numeric: tabular-nums;
 }

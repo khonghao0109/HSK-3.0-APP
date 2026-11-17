@@ -177,8 +177,8 @@
   gap: var(--adm-sp-2);
   padding: var(--adm-sp-1) var(--adm-sp-2) var(--adm-sp-6);
   color: var(--adm-paper);
-  font-weight: 700;
-  font-size: 1.3rem;
+  font-weight: 600;
+  font-size: var(--adm-fs-xl);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -320,7 +320,7 @@
   line-height: 1.25;
 }
 .admin-app .adm-user__name {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-navy-900);
   font-size: var(--adm-fs-sm);
 }
@@ -495,7 +495,7 @@
 .admin-app .adm-panel__title {
   font-size: var(--adm-fs-md);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Bảng (admin.css .table) */
@@ -672,7 +672,7 @@
 .admin-app .adm-page-head h1 {
   font-size: var(--adm-fs-xl);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
 }
 .admin-app .adm-page-head p {
   color: var(--adm-slate-500);
@@ -790,8 +790,8 @@
   color: var(--adm-slate-700);
   display: grid;
   place-items: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--adm-fs-xs);
+  font-weight: 600;
 }
 .admin-app .adm-flow__check {
   width: 12px;
@@ -807,7 +807,7 @@
 }
 .admin-app .adm-flow__step small {
   display: block;
-  font-size: 0.6875rem;
+  font-size: var(--adm-fs-xs);
   color: var(--adm-slate-500);
   margin-top: var(--adm-sp-1);
 }
@@ -831,14 +831,14 @@
 }
 .admin-app .adm-flow-current h3 {
   text-align: left;
-  font-size: 0.6875rem;
+  font-size: var(--adm-fs-xs);
   font-weight: 500;
   color: var(--adm-slate-700);
   margin-bottom: var(--adm-sp-3);
 }
 .admin-app .adm-flow-current__state {
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--adm-jade-800);
   margin-bottom: 4px;
 }
@@ -849,7 +849,7 @@
   color: var(--adm-blue-text);
 }
 .admin-app .adm-flow-current__meta {
-  font-size: 0.6875rem;
+  font-size: var(--adm-fs-xs);
   color: var(--adm-slate-500);
   line-height: 1.6;
 }
@@ -997,7 +997,7 @@
   align-items: center;
   gap: var(--adm-sp-2);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--adm-fs-lg);
   text-decoration: none;
 }
@@ -1017,7 +1017,7 @@
 .admin-app .adm-state-card h1 {
   font-size: var(--adm-fs-xl);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
 }
 .admin-app .adm-state-card p {
   color: var(--adm-slate-500);
@@ -1048,7 +1048,7 @@
 .admin-app .adm-hero h1 {
   font-size: var(--adm-fs-xl);
   color: var(--adm-navy-900);
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 .admin-app .adm-hero__prompt {
@@ -1360,4 +1360,10 @@
     justify-content: center;
     text-align: center;
   }
+}
+
+/* Unslop T2: mọi con số (điểm, %, đếm, giờ) dùng chữ số đều cột. */
+.admin-app .adm-flow__dot,
+.admin-app .adm-timeline__title span {
+  font-variant-numeric: tabular-nums;
 }
