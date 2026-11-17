@@ -15,13 +15,15 @@ import type {
 const root = join(__dirname, '../..');
 const FEMALE = 'zh-CN-XiaoxiaoNeural';
 const MALE = 'zh-CN-YunxiNeural';
+// Giọng dẫn đọc câu "问：…" ở Nghe 4 (PO 18/11/2026).
+const NARRATOR = 'zh-CN-YunyangNeural';
 
 interface LessonWord {
   hanzi: string;
   example: { hanzi: string };
 }
 interface Turn {
-  speaker: 'male' | 'female';
+  speaker: 'male' | 'female' | 'narrator';
   hanzi: string;
 }
 interface ExamQuestion {
@@ -61,7 +63,12 @@ for (const section of exam.sections) {
       items.push({
         sourceKey: question.sourceKey,
         turns: question.transcript.turns.map((turn) => ({
-          voice: turn.speaker === 'male' ? MALE : FEMALE,
+          voice:
+            turn.speaker === 'narrator'
+              ? NARRATOR
+              : turn.speaker === 'male'
+                ? MALE
+                : FEMALE,
           text: turn.hanzi,
         })),
         breakMs: 600,

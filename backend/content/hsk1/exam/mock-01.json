@@ -11,7 +11,8 @@
   },
   "voices": {
     "female": "zh-CN-XiaoxiaoNeural",
-    "male": "zh-CN-YunxiNeural"
+    "male": "zh-CN-YunxiNeural",
+    "narrator": "zh-CN-YunyangNeural"
   },
   "images": [
     {
@@ -533,7 +534,7 @@
                 },
                 {
                   "id": "opt-b",
-                  "text": "不客气。 (Bù kèqi.)"
+                  "text": "不客气。 (Bù kèqì.)"
                 },
                 {
                   "id": "opt-c",
@@ -611,7 +612,7 @@
                 },
                 {
                   "id": "opt-b",
-                  "text": "不客气。 (Bù kèqi.)"
+                  "text": "不客气。 (Bù kèqì.)"
                 },
                 {
                   "id": "opt-c",
@@ -970,7 +971,7 @@
                     "vi": "Hôm nay tôi rất bận, không có thời gian xem phim."
                   },
                   {
-                    "speaker": "female",
+                    "speaker": "narrator",
                     "hanzi": "问：她今天怎么样？",
                     "pinyin": "Wèn: Tā jīntiān zěnmeyàng?",
                     "vi": "Hỏi: Hôm nay cô ấy thế nào?"
@@ -1015,7 +1016,7 @@
                     "vi": "Con trai tôi năm nay bảy tuổi, cháu là học sinh tiểu học."
                   },
                   {
-                    "speaker": "male",
+                    "speaker": "narrator",
                     "hanzi": "问：他儿子多大了？",
                     "pinyin": "Wèn: Tā érzi duō dà le?",
                     "vi": "Hỏi: Con trai anh ấy bao nhiêu tuổi?"
@@ -1060,7 +1061,7 @@
                     "vi": "Ngày mai là chủ nhật, tôi muốn ở nhà đọc sách."
                   },
                   {
-                    "speaker": "female",
+                    "speaker": "narrator",
                     "hanzi": "问：她明天想做什么？",
                     "pinyin": "Wèn: Tā míngtiān xiǎng zuò shénme?",
                     "vi": "Hỏi: Ngày mai cô ấy muốn làm gì?"
@@ -1105,7 +1106,7 @@
                     "vi": "Điện thoại của tôi ở trên bàn, máy tính ở trong cặp sách."
                   },
                   {
-                    "speaker": "male",
+                    "speaker": "narrator",
                     "hanzi": "问：他的电脑在哪儿？",
                     "pinyin": "Wèn: Tā de diànnǎo zài nǎr?",
                     "vi": "Hỏi: Máy tính của anh ấy ở đâu?"
@@ -1150,7 +1151,7 @@
                     "vi": "Tôi đi máy bay đến Bắc Kinh, ba giờ chiều đến nơi."
                   },
                   {
-                    "speaker": "female",
+                    "speaker": "narrator",
                     "hanzi": "问：她怎么去北京？",
                     "pinyin": "Wèn: Tā zěnme qù Běijīng?",
                     "vi": "Hỏi: Cô ấy đi Bắc Kinh bằng gì?"

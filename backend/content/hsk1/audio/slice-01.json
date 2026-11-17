@@ -11,10 +11,10 @@
     "attribution": "Âm thanh được tạo bằng giọng đọc tổng hợp (Azure AI Speech)."
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null
+    "status": "approved",
+    "reviewer": "Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "48906ec9c196dcdb9acd53e0c583e182d83d47ce6afb569f4dba1f8c751e3dd7"
   },
   "items": [
     {
@@ -395,7 +395,7 @@
           "text": "我今天很忙，没有时间看电影。"
         },
         {
-          "voice": "zh-CN-XiaoxiaoNeural",
+          "voice": "zh-CN-YunyangNeural",
           "text": "问：她今天怎么样？"
         }
       ],
@@ -409,7 +409,7 @@
           "text": "我儿子今年七岁，他是小学生。"
         },
         {
-          "voice": "zh-CN-YunxiNeural",
+          "voice": "zh-CN-YunyangNeural",
           "text": "问：他儿子多大了？"
         }
       ],
@@ -423,7 +423,7 @@
           "text": "明天是星期天，我想在家看书。"
         },
         {
-          "voice": "zh-CN-XiaoxiaoNeural",
+          "voice": "zh-CN-YunyangNeural",
           "text": "问：她明天想做什么？"
         }
       ],
@@ -437,7 +437,7 @@
           "text": "我的手机在桌子上，电脑在书包里。"
         },
         {
-          "voice": "zh-CN-YunxiNeural",
+          "voice": "zh-CN-YunyangNeural",
           "text": "问：他的电脑在哪儿？"
         }
       ],
@@ -451,7 +451,7 @@
           "text": "我坐飞机去北京，下午三点到。"
         },
         {
-          "voice": "zh-CN-XiaoxiaoNeural",
+          "voice": "zh-CN-YunyangNeural",
           "text": "问：她怎么去北京？"
         }
       ],
