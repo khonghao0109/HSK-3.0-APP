@@ -245,15 +245,15 @@
       "content": [
         {
           "type": "text",
-          "value": "1. Số + lượng từ + danh từ: trong tiếng Hán, giữa số và danh từ phải có lượng từ. 个 dùng chung cho người và nhiều đồ vật, 本 dùng cho sách vở, 杯 dùng cho đồ uống đựng trong cốc. Cấu trúc: số + 个/本/杯 + danh từ. Ví dụ: 我有三个朋友。 (Wǒ yǒu sān gè péngyou.) = Tôi có ba người bạn. / 我有一本书。 (Wǒ yǒu yī běn shū.) = Tôi có một quyển sách. / 我喝一杯茶。 (Wǒ hē yī bēi chá.) = Tôi uống một cốc trà."
+          "value": "1. Số + lượng từ + danh từ: trong tiếng Hán, giữa số và danh từ phải có lượng từ. 个 dùng chung cho người và nhiều đồ vật, 本 dùng cho sách vở, 杯 dùng cho đồ uống đựng trong cốc. Cấu trúc: số + 个/本/杯 + danh từ. Ví dụ: 我有三个朋友。 (Wǒ yǒu sān ge péngyou.) = Tôi có ba người bạn. / 我有一本书。 (Wǒ yǒu yī běn shū.) = Tôi có một quyển sách. / 我喝一杯茶。 (Wǒ hē yī bēi chá.) = Tôi uống một cốc trà."
         },
         {
           "type": "text",
-          "value": "2. 几 và 多少 đều dùng để hỏi số lượng. 几 thường hỏi số nhỏ (dưới 10) và phải có lượng từ đi sau: 几 + lượng từ + danh từ. 多少 hỏi số bất kỳ, có thể bỏ lượng từ; 多少钱 dùng hỏi giá. Ví dụ: 你有几个本子？ (Nǐ yǒu jǐ gè běnzi?) = Bạn có mấy quyển vở? / 你们学校有多少学生？ (Nǐmen xuéxiào yǒu duōshao xuéshēng?) = Trường các bạn có bao nhiêu học sinh? / 这个杯子多少钱？ (Zhège bēizi duōshao qián?) = Cái cốc này bao nhiêu tiền?"
+          "value": "2. 几 và 多少 đều dùng để hỏi số lượng. 几 thường hỏi số nhỏ (dưới 10) và phải có lượng từ đi sau: 几 + lượng từ + danh từ. 多少 hỏi số bất kỳ, có thể bỏ lượng từ; 多少钱 dùng hỏi giá. Ví dụ: 你有几个本子？ (Nǐ yǒu jǐ ge běnzi?) = Bạn có mấy quyển vở? / 你们学校有多少学生？ (Nǐmen xuéxiào yǒu duōshao xuéshēng?) = Trường các bạn có bao nhiêu học sinh? / 这个杯子多少钱？ (Zhège bēizi duōshao qián?) = Cái cốc này bao nhiêu tiền?"
         },
         {
           "type": "text",
-          "value": "3. 两 và 二 đều là “hai”. Trước lượng từ dùng 两: 两个, 两本, 两杯. Khi đếm số, đọc số điện thoại, nói tháng ngày hoặc trong số nhiều chữ số thì dùng 二: 二月, 二号, 十二. Cấu trúc: 两 + lượng từ + danh từ. Ví dụ: 我有两个哥哥。 (Wǒ yǒu liǎng gè gēge.) = Tôi có hai anh trai. / 他喝两杯牛奶。 (Tā hē liǎng bēi niúnǎi.) = Anh ấy uống hai cốc sữa. / 今天是二月十二号。 (Jīntiān shì èr yuè shí'èr hào.) = Hôm nay là ngày 12 tháng 2."
+          "value": "3. 两 và 二 đều là “hai”. Trước lượng từ dùng 两: 两个, 两本, 两杯. Khi đếm số, đọc số điện thoại, nói tháng ngày hoặc trong số nhiều chữ số thì dùng 二: 二月, 二号, 十二. Cấu trúc: 两 + lượng từ + danh từ. Ví dụ: 我有两个哥哥。 (Wǒ yǒu liǎng ge gēge.) = Tôi có hai anh trai. / 他喝两杯牛奶。 (Tā hē liǎng bēi niúnǎi.) = Anh ấy uống hai cốc sữa. / 今天是二月十二号。 (Jīntiān shì èr yuè shí'èr hào.) = Hôm nay là ngày 12 tháng 2."
         },
         {
           "type": "text",
@@ -261,7 +261,7 @@
         },
         {
           "type": "text",
-          "value": "5. Số + 次 diễn tả số lần làm một việc; cụm số lần đứng sau động từ. Cấu trúc: động từ + số + 次 (+ tân ngữ). Ví dụ: 我们一个星期上五次课。 (Wǒmen yī gè xīngqī shàng wǔ cì kè.) = Một tuần chúng tôi lên lớp năm lần. / 我一个月去两次图书馆。 (Wǒ yī gè yuè qù liǎng cì túshūguǎn.) = Mỗi tháng tôi đến thư viện hai lần."
+          "value": "5. Số + 次 diễn tả số lần làm một việc; cụm số lần đứng sau động từ. Cấu trúc: động từ + số + 次 (+ tân ngữ). Ví dụ: 我们一个星期上五次课。 (Wǒmen yī ge xīngqī shàng wǔ cì kè.) = Một tuần chúng tôi lên lớp năm lần. / 我一个月去两次图书馆。 (Wǒ yī ge yuè qù liǎng cì túshūguǎn.) = Mỗi tháng tôi đến thư viện hai lần."
         }
       ]
     },
@@ -280,7 +280,7 @@
         },
         {
           "type": "text",
-          "value": "A: 我买两个杯子。 B: 好，两个杯子三十元。 (Wǒ mǎi liǎng gè bēizi. / Hǎo, liǎng gè bēizi sānshí yuán.) — A: Tôi mua hai cái cốc. B: Được, hai cái cốc ba mươi đồng."
+          "value": "A: 我买两个杯子。 B: 好，两个杯子三十元。 (Wǒ mǎi liǎng ge bēizi. / Hǎo, liǎng ge bēizi sānshí yuán.) — A: Tôi mua hai cái cốc. B: Được, hai cái cốc ba mươi đồng."
         },
         {
           "type": "text",

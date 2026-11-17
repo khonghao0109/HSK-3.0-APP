@@ -249,7 +249,7 @@
         },
         {
           "type": "text",
-          "value": "2. Cách nói giờ: số + 点 (giờ) + số + 分 (phút); 半 = rưỡi, đứng sau 点. Buổi trong ngày đứng trước giờ: 上午八点 = 8 giờ sáng. Cấu trúc: (buổi) + số + 点 + (số + 分 / 半). Ví dụ: 现在八点半。 (Xiànzài bā diǎn bàn.) = Bây giờ là 8 giờ rưỡi. / 我们下午三点十分下课。 (Wǒmen xiàwǔ sān diǎn shí fēn xiàkè.) = Chúng tôi tan học lúc 3 giờ 10 phút chiều. Lưu ý: thời lượng (bao lâu) như 两个小时 thì đứng SAU động từ, khác với thời điểm: 我学习两个小时。 (Wǒ xuéxí liǎng gè xiǎoshí.) = Tôi học hai tiếng."
+          "value": "2. Cách nói giờ: số + 点 (giờ) + số + 分 (phút); 半 = rưỡi, đứng sau 点. Buổi trong ngày đứng trước giờ: 上午八点 = 8 giờ sáng. Cấu trúc: (buổi) + số + 点 + (số + 分 / 半). Ví dụ: 现在八点半。 (Xiànzài bā diǎn bàn.) = Bây giờ là 8 giờ rưỡi. / 我们下午三点十分下课。 (Wǒmen xiàwǔ sān diǎn shí fēn xiàkè.) = Chúng tôi tan học lúc 3 giờ 10 phút chiều. Lưu ý: thời lượng (bao lâu) như 两个小时 thì đứng SAU động từ, khác với thời điểm: 我学习两个小时。 (Wǒ xuéxí liǎng ge xiǎoshí.) = Tôi học hai tiếng."
         },
         {
           "type": "text",
@@ -280,7 +280,7 @@
         },
         {
           "type": "text",
-          "value": "A: 你下午有时间吗？ B: 有，我下午去图书馆学习两个小时。 (Nǐ xiàwǔ yǒu shíjiān ma? / Yǒu, wǒ xiàwǔ qù túshūguǎn xuéxí liǎng gè xiǎoshí.) — A: Chiều nay bạn có thời gian không? B: Có, chiều nay tôi đến thư viện học hai tiếng."
+          "value": "A: 你下午有时间吗？ B: 有，我下午去图书馆学习两个小时。 (Nǐ xiàwǔ yǒu shíjiān ma? / Yǒu, wǒ xiàwǔ qù túshūguǎn xuéxí liǎng ge xiǎoshí.) — A: Chiều nay bạn có thời gian không? B: Có, chiều nay tôi đến thư viện học hai tiếng."
         },
         {
           "type": "text",
@@ -428,10 +428,13 @@
         "acceptedTexts": [
           "星期天",
           "xīngqītiān",
-          "xingqitian"
+          "xingqitian",
+          "星期日",
+          "xīngqīrì",
+          "xingqiri"
         ]
       },
-      "explanation": "星期天 (xīngqītiān) nghĩa là “chủ nhật”; 今天是星期天，我不上课 = hôm nay là chủ nhật, tôi không lên lớp.",
+      "explanation": "星期天 (xīngqītiān) nghĩa là “chủ nhật”; 今天是星期天，我不上课 = hôm nay là chủ nhật, tôi không lên lớp. 星期日 (xīngqīrì) cùng nghĩa nên cũng được chấp nhận.",
       "orderIndex": 5
     },
     {

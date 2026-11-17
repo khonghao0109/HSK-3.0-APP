@@ -38,7 +38,7 @@ Mỗi lô khoảng 100 từ, ứng với 5 bài trong `backend/content/hsk1/curr
 |---|---|
 | Nghĩa | Đúng nghĩa thông dụng HSK1, đúng từ loại (từ đa từ loại ghi "danh từ, động từ"); nhiều nghĩa tách bằng dấu phẩy; không viết hoa đầu (trừ danh từ riêng), không dấu chấm cuối; lượng từ bắt đầu "(lượng từ)" |
 | Câu ví dụ | Tự nhiên, đúng ngữ pháp, dùng đúng nghĩa đã ghi, ≤ 12 chữ Hán, chỉ dùng từ HSK1 và tên riêng khai báo trong `properNames` |
-| Pinyin | Đúng từng âm tiết; **thanh gốc, không ghi biến điệu** (quy ước repo: 不是 = bù shì, 一个 = yī ge; audio TTS vẫn đọc đúng biến điệu); thanh nhẹ không dấu; 上 chỉ vị trí sau danh từ viết thanh nhẹ (桌子上 = zhuōzi shang); tên riêng và tên ngôn ngữ viết hoa cả ở mục từ lẫn câu (Hànyǔ, Zhōngwén, Běijīng, Zhōngguó) |
+| Pinyin | Đúng từng âm tiết; **thanh gốc, không ghi biến điệu** (quy ước repo: 不是 = bù shì, 一个 = yī ge; audio TTS vẫn đọc đúng biến điệu); thanh nhẹ không dấu; 上 chỉ vị trí sau danh từ viết thanh nhẹ (桌子上 = zhuōzi shang); 个 trong câu (sau số/đại từ) viết thanh nhẹ `ge` (三个 = sān ge, 那个 = nà ge), mục từ 个 giữ `gè` (PO 18/11/2026); tên riêng và tên ngôn ngữ viết hoa cả ở mục từ lẫn câu (Hànyǔ, Zhōngwén, Běijīng, Zhōngguó) |
 | Bản dịch | Đúng, tự nhiên |
 | Nguồn | Không giống câu chữ của từ điển hay app bên thứ ba |
 
@@ -77,5 +77,5 @@ Ghi nhận xét vào `review.notes` của file bài (hoặc comment PR). Máy ki
 2. Người duyệt duyệt trên CMS theo thứ tự TL-221: **Topic → Exercise → Lesson**. Với mỗi bài: approve rồi publish
    3 topic, rồi 10 bài tập, cuối cùng lesson. Publish lesson trước khi topic/bài tập `published` sẽ cho người
    học thấy bài rỗng.
-3. Sau khi đủ bài 1–10 `published`, archive placeholder theo `docs/content/hsk1-archive-list.md` (khi PO chốt).
+3. Ngay sau khi bài 1–10 `published`, archive placeholder HSK1 theo `docs/content/hsk1-archive-list.md` (PO chốt 18/11/2026: archive ngay, không chờ đủ 25 bài).
 4. Rollback một bài: archive lesson (không hard delete); topic và bài tập archive theo cùng thứ tự ngược lại.

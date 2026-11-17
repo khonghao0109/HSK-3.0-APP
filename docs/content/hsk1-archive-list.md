@@ -41,5 +41,5 @@ Mỗi lesson placeholder có 2 topic do seed tạo (10 topic):
 2. Archive 10 topic placeholder, rồi 5 lesson placeholder.
 3. Kiểm lại lộ trình HSK1 phía người học: chỉ còn bài pilot.
 
-Câu hỏi PO: archive cả 5 lesson cùng lúc hay giữ đến khi đủ 25 bài? Agent đề xuất archive ngay sau bước 1,
+PO chốt 18/11/2026: archive ngay sau bước 1,
 vì `LessonWord` của placeholder là 100 từ đầu danh sách, không theo chủ đề.

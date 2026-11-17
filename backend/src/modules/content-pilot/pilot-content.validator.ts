@@ -1156,48 +1156,50 @@ function validateFillBlank(
   const hanForms = acceptedList.filter(
     (text): text is string => typeof text === 'string' && HAN.test(text),
   );
-  if (hanForms.length !== 1) {
+  // Cho phép nhiều đáp án đồng nghĩa (星期天/星期日); mỗi dạng chữ Hán phải kèm đủ 2 dạng pinyin.
+  if (hanForms.length === 0) {
     issues.push(
       createIssue(
         'fill_blank_missing_pinyin',
         `${at}.answer.acceptedTexts`,
-        `phải có đúng 1 dạng chữ Hán, có ${hanForms.length}`,
+        'phải có ít nhất 1 dạng chữ Hán',
       ),
     );
     return;
   }
-  const hanzi = hanForms[0];
-  const lessonWord = words.find((word) => word.hanzi === hanzi);
-  const lessonWordPinyin =
-    lessonWord !== undefined && typeof lessonWord.pinyin === 'string'
-      ? lessonWord.pinyin
-      : '';
-  const sourcePinyin =
-    lessonWordPinyin.length > 0
-      ? lessonWordPinyin
-      : (refs.words.get(hanzi)?.variants[0] ?? '');
-  const marked = sourcePinyin.replace(/\s+/gu, '').toLowerCase();
-  const toneless = stripToneMarks(marked);
   const normalizedAccepted = acceptedList
     .filter((text): text is string => typeof text === 'string')
     .map((text) => text.replace(/\s+/gu, '').toLowerCase());
-  if (marked.length === 0 || !normalizedAccepted.includes(marked)) {
-    issues.push(
-      createIssue(
-        'fill_blank_missing_pinyin',
-        `${at}.answer.acceptedTexts`,
-        `thiếu pinyin có dấu ${JSON.stringify(marked)} (Q194)`,
-      ),
-    );
-  }
-  if (!normalizedAccepted.includes(toneless)) {
-    issues.push(
-      createIssue(
-        'fill_blank_missing_pinyin',
-        `${at}.answer.acceptedTexts`,
-        `thiếu pinyin không dấu ${JSON.stringify(toneless)} (Q194)`,
-      ),
-    );
+  for (const hanzi of hanForms) {
+    const lessonWord = words.find((word) => word.hanzi === hanzi);
+    const lessonWordPinyin =
+      lessonWord !== undefined && typeof lessonWord.pinyin === 'string'
+        ? lessonWord.pinyin
+        : '';
+    const sourcePinyin =
+      lessonWordPinyin.length > 0
+        ? lessonWordPinyin
+        : (refs.words.get(hanzi)?.variants[0] ?? '');
+    const marked = sourcePinyin.replace(/\s+/gu, '').toLowerCase();
+    const toneless = stripToneMarks(marked);
+    if (marked.length === 0 || !normalizedAccepted.includes(marked)) {
+      issues.push(
+        createIssue(
+          'fill_blank_missing_pinyin',
+          `${at}.answer.acceptedTexts`,
+          `thiếu pinyin có dấu ${JSON.stringify(marked)} (Q194)`,
+        ),
+      );
+    }
+    if (!normalizedAccepted.includes(toneless)) {
+      issues.push(
+        createIssue(
+          'fill_blank_missing_pinyin',
+          `${at}.answer.acceptedTexts`,
+          `thiếu pinyin không dấu ${JSON.stringify(toneless)} (Q194)`,
+        ),
+      );
+    }
   }
 }
 

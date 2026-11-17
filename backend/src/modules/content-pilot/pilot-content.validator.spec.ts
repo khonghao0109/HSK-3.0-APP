@@ -428,6 +428,28 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     expect(mismatches).toEqual([]);
   });
 
+  it('fill_blank nhận nhiều đáp án chữ Hán, mỗi đáp án phải đủ 2 dạng pinyin', () => {
+    const clone = structuredClone(byLesson.get(9));
+    if (!isRecord(clone) || !Array.isArray(clone.exercises)) {
+      throw new Error('lesson-09 không phải object');
+    }
+    const exercise: unknown = clone.exercises[4];
+    if (!isRecord(exercise) || !isRecord(exercise.answer)) {
+      throw new Error('lesson-09 e05 sai dạng');
+    }
+    exercise.answer.acceptedTexts = [
+      '星期天',
+      'xīngqītiān',
+      'xingqitian',
+      '星期日',
+    ];
+    const issues = validatePilotLesson(clone, 'lesson-09.json', refs);
+    expect(codesOf(issues)).toEqual([
+      'fill_blank_missing_pinyin',
+      'fill_blank_missing_pinyin',
+    ]);
+  });
+
   it('mỗi bài đúng 20 từ, ≥2 topic có vocabulary + grammar/key_text, 10 bài tập 3 loại', () => {
     for (const source of sources) {
       const summary = summarizePilotLesson(source.raw);
@@ -482,7 +504,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     }
   });
 
-  it('fill_blank.acceptedTexts đúng 3 dạng: chữ Hán, pinyin có dấu, pinyin không dấu (Q194)', () => {
+  it('fill_blank.acceptedTexts gồm các bộ 3 dạng: chữ Hán, pinyin có dấu, pinyin không dấu (Q194)', () => {
     for (const source of sources) {
       const exercises = isRecord(source.raw) ? source.raw.exercises : [];
       for (const exercise of Array.isArray(exercises) ? exercises : []) {
@@ -492,16 +514,20 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
         const accepted = isRecord(answer) ? answer.acceptedTexts : undefined;
         expect(Array.isArray(accepted)).toBe(true);
         if (!Array.isArray(accepted)) continue;
-        expect(accepted).toHaveLength(3);
-        const [hanzi, marked, toneless] = accepted as unknown[];
-        expect(typeof hanzi).toBe('string');
-        expect(/\p{Script=Han}/u.test(String(hanzi))).toBe(true);
-        expect(typeof marked).toBe('string');
-        expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(marked))).toBe(true);
-        expect(typeof toneless).toBe('string');
-        expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(toneless))).toBe(
-          false,
-        );
+        // Bộ 3 (chữ Hán, pinyin có dấu, pinyin không dấu), lặp lại cho mỗi đáp án đồng nghĩa.
+        expect(accepted.length % 3).toBe(0);
+        expect(accepted.length).toBeGreaterThan(0);
+        for (let index = 0; index < accepted.length; index += 3) {
+          const [hanzi, marked, toneless] = accepted.slice(index, index + 3);
+          expect(typeof hanzi).toBe('string');
+          expect(/\p{Script=Han}/u.test(String(hanzi))).toBe(true);
+          expect(typeof marked).toBe('string');
+          expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(marked))).toBe(true);
+          expect(typeof toneless).toBe('string');
+          expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(toneless))).toBe(
+            false,
+          );
+        }
       }
     }
   });
