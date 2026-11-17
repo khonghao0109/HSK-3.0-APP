@@ -11,9 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReviewSession } from './review-session';
 import type { ReviewCall, ReviewTransport } from './review-transport';
 
-/** The flashcard front word: read whole, since each Hanzi sits in its own 田字格 span. */
+/** The flashcard front word: HanziCells reads it whole from its .sr-only span. */
 const frontHz = (text: string) => (_: string, el: Element | null) =>
-  el?.matches('.fc-hz') === true && el.textContent === text;
+  el?.matches('.fc-hz') === true &&
+  el.querySelector('.sr-only')?.textContent === text;
 
 const router = { replace: vi.fn(), push: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -148,6 +149,13 @@ describe('ReviewSession (M3.3a)', () => {
     expect(card).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByText(frontHz('记得'))).toBeVisible();
     expect(screen.queryByText('nghĩa 记得')).not.toBeVisible();
+    // A screen reader gets "记得" once, not "记 得" from the 田字格 cells.
+    const front = screen.getByText(frontHz('记得'));
+    expect(within(front).getByText('记得')).toHaveClass('sr-only');
+    expect(front.querySelector('.tzg-cells')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
     expect(screen.getByText('Chạm vào thẻ để lật mặt sau')).toBeInTheDocument();
     expect(screen.getAllByText('2 / 3').length).toBeGreaterThan(0);
     expect(t.create).not.toHaveBeenCalled();

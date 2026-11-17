@@ -130,6 +130,11 @@ function rows() {
   return Array.from(document.querySelectorAll('.dict-item'));
 }
 
+/** The hanzi of a row; the top row holds HanziCells (one .sr-only copy + the cells). */
+const rowHanzi = (row: Element) =>
+  (row.querySelector('.dict-item__hz .tzg-cells') ??
+    row.querySelector('.dict-item__hz'))!.textContent;
+
 describe('DictionarySearch', () => {
   let replaceState: ReturnType<typeof vi.spyOn>;
 
@@ -251,9 +256,7 @@ describe('DictionarySearch', () => {
 
     calls[1]!.resolve(ok([learner]));
     await flush();
-    expect(
-      rows().map((row) => row.querySelector('.dict-item__hz')!.textContent),
-    ).toEqual(['学习者']);
+    expect(rows().map(rowHanzi)).toEqual(['学习者']);
   });
 
   it('drops a late answer of an aborted request', async () => {
@@ -268,9 +271,7 @@ describe('DictionarySearch', () => {
     await flush();
     calls[0]!.resolve(ok([xuexi, learner, materials]));
     await flush();
-    expect(
-      rows().map((row) => row.querySelector('.dict-item__hz')!.textContent),
-    ).toEqual(['学习者']);
+    expect(rows().map(rowHanzi)).toEqual(['学习者']);
   });
 
   it("Enter does not open the previous query's result while a search is pending", async () => {

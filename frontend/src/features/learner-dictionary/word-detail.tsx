@@ -255,7 +255,6 @@ export function WordDetail({
                 <h1
                   className={`word__hz word__hz--n${hanziLength}`}
                   id="word-hz"
-                  aria-label={shown}
                   lang={traditional && word.traditional ? 'zh-Hant' : 'zh-Hans'}
                 >
                   <HanziCells text={shown} />

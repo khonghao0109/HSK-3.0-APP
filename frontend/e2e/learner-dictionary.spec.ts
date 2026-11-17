@@ -335,7 +335,7 @@ test.describe('Learner dictionary (M2.6b)', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/learn/dictionary/${ids.word}`);
       const hero = page.getByRole('heading', { level: 1 });
-      await expect(hero).toHaveText(WORD.hanzi);
+      await expect(hero).toHaveAccessibleName(WORD.hanzi);
       await expect(hero).toHaveClass(/word__hz--n4/);
       const fit = await hero.evaluate((h1) => {
         const box = h1.getBoundingClientRect();

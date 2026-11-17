@@ -52,7 +52,7 @@
 
 .learner-app
   :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
-    > .tzg-cell:nth-child(4)
+    .tzg-cell:nth-child(4)
   )
   .tzg-cell {
   font-size: 0.75em;
@@ -60,7 +60,7 @@
 
 .learner-app
   :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
-    > .tzg-cell:nth-child(5)
+    .tzg-cell:nth-child(5)
   )
   .tzg-cell {
   font-size: 0.6em;
@@ -68,7 +68,7 @@
 
 .learner-app
   :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz):has(
-    > .tzg-cell:nth-child(6)
+    .tzg-cell:nth-child(6)
   )
   .tzg-cell {
   font-size: 0.5em;
@@ -2412,24 +2412,15 @@
      replace the generic 0.75/0.6/0.5em steps (same specificity, later rule).
      From three cells the glyph box stops being square and widens with the
      row; only 5+ cells may wrap, inside the 22rem box. */
-  .learner-app
-    .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(2))
-    .tzg-cell {
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(2)) .tzg-cell {
     font-size: 4.5rem;
   }
 
-  .learner-app
-    .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(3))
-    .tzg-cell {
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(3)) .tzg-cell {
     font-size: 4rem;
   }
 
-  .learner-app
-    .word-web__hero
-    .word__hz:has(> .tzg-cell:nth-child(5))
-    .tzg-cell {
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(5)) .tzg-cell {
     font-size: 3.2rem;
   }
 
@@ -2438,7 +2429,7 @@
     min-block-size: 180px;
   }
 
-  .learner-app .word-web__hero .word__hz:has(> .tzg-cell:nth-child(5)) {
+  .learner-app .word-web__hero .word__hz:has(.tzg-cell:nth-child(5)) {
     white-space: normal;
   }
 
@@ -5142,4 +5133,9 @@
 .learner-app .ex.ext .uxb-countbadge,
 .learner-app .rv-count {
   font-variant-numeric: tabular-nums;
+}
+
+/* HanziCells: the word is copied once, from its .sr-only span, not twice. */
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cells {
+  user-select: none;
 }

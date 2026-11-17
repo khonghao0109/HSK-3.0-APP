@@ -57,7 +57,8 @@ async function saveWords(page: Page, ids: number[]): Promise<void> {
   }
 }
 
-const front = (page: Page) => page.locator('.fc-face--front .fc-hz');
+// HanziCells: the word is read once from .sr-only; the 田字格 cells are aria-hidden.
+const front = (page: Page) => page.locator('.fc-face--front .fc-hz .sr-only');
 const flip = (page: Page) =>
   page.getByRole('button', { name: /^Lật (thẻ|lại)/ });
 const gradeButton = (page: Page, label: string) =>
