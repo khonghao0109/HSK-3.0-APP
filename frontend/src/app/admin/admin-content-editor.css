@@ -80,3 +80,8 @@
 .admin-app .adm-lesson-topics__cards > li {
   padding-inline: 0;
 }
+
+/* Link tiêu đề cao 44px căn giữa: badge cũng căn giữa để cùng hàng chữ. */
+.admin-app .adm-lesson-topics__cards .adm-record-list__head {
+  align-items: center;
+}

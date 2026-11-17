@@ -102,8 +102,8 @@
 .admin-app .qn-table th,
 .admin-app .qn-table td {
   white-space: nowrap;
-  padding-left: 0.375rem;
-  padding-right: 0.375rem;
+  padding-left: var(--adm-sp-2);
+  padding-right: var(--adm-sp-2);
 }
 /* Chỉ cột nội dung được cắt bằng ellipsis. */
 .admin-app .qn-table th:nth-child(2),

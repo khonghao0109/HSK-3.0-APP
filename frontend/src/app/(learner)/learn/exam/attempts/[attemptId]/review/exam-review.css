@@ -17,7 +17,7 @@
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -179,9 +179,9 @@
 .learner-app .exv-filter {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   background: var(--white);
   border: 1px solid var(--sand-300);
   border-radius: 999px;
@@ -197,7 +197,7 @@
   justify-content: center;
   min-width: 22px;
   height: 22px;
-  padding: 0 6px;
+  padding: 0 var(--sp-2);
   background: var(--slate-100);
   border-radius: 999px;
   color: var(--slate-700);
@@ -224,7 +224,7 @@
 .learner-app .exv-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .learner-app .exv-cell {
@@ -280,7 +280,7 @@
 .learner-app .exv-fine {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
@@ -304,7 +304,7 @@
 
 .learner-app .exv-section {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
 }
 
@@ -319,7 +319,7 @@
 
 .learner-app .exv-group {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
 }
 
@@ -341,9 +341,9 @@
 /* Thẻ câu hỏi */
 .learner-app .exv-q {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
-  padding: 14px 14px 16px;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4);
   background: var(--white);
   border: 1px solid var(--sand-300);
   border-left: 4px solid var(--slate-300);
@@ -373,7 +373,7 @@
 .learner-app .exv-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
   color: var(--jade-800);
   font-size: 13px;
@@ -526,9 +526,9 @@
 .learner-app .exv-ans {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
-  gap: 6px 12px;
+  gap: var(--sp-2) var(--sp-3);
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   background: var(--cream-100);
   border-radius: 10px;
 }
@@ -559,7 +559,7 @@
 
 /* Giải thích (Q148: không paywall) */
 .learner-app .exv-ex {
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-4);
   background: var(--jade-50);
   border-left: 3px solid var(--jade-700);
   border-radius: 10px;
@@ -611,7 +611,7 @@
 /* Media (grant Q158) */
 .learner-app .exv-media {
   display: grid;
-  gap: 6px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -632,7 +632,7 @@
 .learner-app .exv-media__loading,
 .learner-app .exv-media__unavailable {
   margin: 0;
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-3);
   background: var(--slate-100);
   border-radius: 8px;
   color: var(--slate-700);
@@ -647,7 +647,7 @@
 /* Trạng thái đóng / lỗi */
 .learner-app .exv-notice {
   display: grid;
-  gap: 10px;
+  gap: var(--sp-3);
   padding: 20px 16px;
   background: var(--white);
   border: 1px solid var(--sand-300);
@@ -676,11 +676,11 @@
 /* 390: giữ nhịp thẻ, không tràn ngang */
 @media (max-width: 1023.98px) {
   .learner-app .exv-side {
-    padding: 10px;
+    padding: var(--sp-3);
   }
 
   .learner-app .exv-q {
-    padding: 12px 12px 14px;
+    padding: var(--sp-3) var(--sp-3) var(--sp-4);
   }
 
   .learner-app .exv-ans {

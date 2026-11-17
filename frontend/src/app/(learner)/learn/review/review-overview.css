@@ -21,7 +21,7 @@
 /* ---------- Thanh tiêu đề mobile (m03 .appbar) ---------- */
 .learner-app .app:has(> .rvo) .appbar {
   min-height: 48px;
-  padding: 7px 2px 0;
+  padding: var(--sp-2) 2px 0;
   grid-template-columns: 48px 1fr 48px;
   background: var(--m03-navy);
 }
@@ -46,7 +46,7 @@
 .learner-app .rvo {
   display: flex;
   flex-direction: column;
-  padding: 10px 17px 0 19px;
+  padding: var(--sp-3) var(--sp-4) 0 var(--sp-5);
   background: var(--m03-canvas);
   color: var(--m03-ink);
 }
@@ -80,7 +80,7 @@
 .learner-app .rvo-stats {
   display: grid;
   grid-template-columns: 114fr 118fr 101fr;
-  gap: 10px;
+  gap: var(--sp-3);
 }
 
 .learner-app .rvo-stat {
@@ -88,7 +88,7 @@
   display: block;
   min-width: 0;
   min-height: 49px;
-  padding: 5px 8px 4px 11px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border: 1px solid var(--m03-line-soft);
   border-radius: 9px;
   background: #fff;
@@ -129,7 +129,7 @@
 .learner-app .rvo-stat__val {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: var(--sp-1);
   margin-top: 2px;
   font-size: 1.25rem;
   font-weight: 600;
@@ -214,8 +214,8 @@
 /* Lịch tháng (m03 .rc-cal) */
 .learner-app .rvo-layout {
   display: grid;
-  gap: 13px;
-  margin-top: 5px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
 }
 
 .learner-app .rvo-card {
@@ -227,8 +227,8 @@
 }
 
 .learner-app .rvo-cal {
-  margin: 0 3px 0 5px;
-  padding: 0 0 5px;
+  margin: 0 var(--sp-1) 0 var(--sp-1);
+  padding: 0 0 var(--sp-1);
 }
 
 .learner-app .rvo-cal__head {
@@ -236,7 +236,7 @@
   align-items: center;
   gap: var(--sp-2);
   min-height: 24px;
-  padding: 0 11px 0 7px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
 }
 
 .learner-app .rvo-h2 {
@@ -256,7 +256,7 @@
 
 .learner-app .rvo-cal__table {
   width: calc(100% - 12px);
-  margin: 0 6px;
+  margin: 0 var(--sp-2);
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -320,7 +320,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: var(--sp-2);
   margin-top: 4px;
   font-size: 0.66rem;
   line-height: 15px;
@@ -352,7 +352,7 @@
 
 /* Lịch sử (m03 .rc-hist, hàng là phiên ôn) */
 .learner-app .rvo-hist {
-  margin-left: -3px;
+  margin-left: -4px;
   overflow: hidden;
 }
 
@@ -360,7 +360,7 @@
   display: flex;
   align-items: center;
   min-height: 26px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   border-bottom: 1px solid var(--m03-line-soft);
   font-size: 0.78rem;
 }
@@ -372,7 +372,7 @@
 }
 
 .learner-app .rvo-table th {
-  padding: 4px 10px;
+  padding: var(--sp-1) var(--sp-3);
   font-size: 0.66rem;
   font-weight: 500;
   color: #3a3e4a;
@@ -381,14 +381,14 @@
 
 .learner-app .rvo-table td {
   height: 40px;
-  padding: 0 10px;
+  padding: 0 var(--sp-3);
   border-top: 1px solid var(--m03-line-soft);
   color: var(--m03-ink);
 }
 
 .learner-app .rvo-fine {
   margin: 0;
-  padding: 6px 10px 8px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2);
   font-size: 0.7rem;
   line-height: 1.45;
   color: var(--text-muted);
@@ -410,11 +410,11 @@
 
 @media (max-width: 374.98px) {
   .learner-app .rvo {
-    padding-left: 14px;
+    padding-left: var(--sp-4);
     padding-right: 12px;
   }
   .learner-app .rvo-stats {
-    gap: 6px;
+    gap: var(--sp-2);
   }
   .learner-app .rvo-stat {
     padding-left: 8px;
@@ -550,7 +550,7 @@
   .learner-app .rvo-link {
     flex: none;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 44px;
     padding: 0 var(--sp-1);
     border: 0;
@@ -670,7 +670,7 @@
 
   .learner-app .rvo-cal__table td {
     height: auto;
-    padding: 3px;
+    padding: var(--sp-1);
   }
 
   .learner-app .rvo-cal__table td > span:not(.sr-only) {
@@ -712,7 +712,7 @@
 
   .learner-app .rvo-legend {
     justify-content: flex-start;
-    gap: 6px;
+    gap: var(--sp-2);
     margin: 0;
     font-size: var(--fs-sm);
     color: var(--text-muted);

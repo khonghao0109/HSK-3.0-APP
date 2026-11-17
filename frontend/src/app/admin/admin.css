@@ -165,8 +165,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 12px 14px;
+  gap: var(--adm-sp-2);
+  padding: var(--adm-sp-5) var(--adm-sp-3) var(--adm-sp-4);
   background: var(--adm-navy-850);
   color: var(--adm-on-navy);
 }
@@ -175,7 +175,7 @@
   display: flex;
   align-items: center;
   gap: var(--adm-sp-2);
-  padding: 4px 6px 22px;
+  padding: var(--adm-sp-1) var(--adm-sp-2) var(--adm-sp-6);
   color: var(--adm-paper);
   font-weight: 700;
   font-size: 1.3rem;
@@ -198,7 +198,7 @@
   /* minmax(0, 1fr): chặn track khỏi phình theo max-content của nhãn nowrap
      (mục + badge "Sắp có" dài), label co lại còn ellipsis. */
   grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  gap: var(--adm-sp-2);
 }
 .admin-app .adm-nav__item,
 .admin-app .adm-collapse {
@@ -332,7 +332,7 @@
 .admin-app .adm-main {
   min-width: 0;
   flex: 1;
-  padding: 22px 24px 28px;
+  padding: var(--adm-sp-6) var(--adm-sp-6) 28px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--adm-sp-4);
@@ -393,7 +393,7 @@
 }
 .admin-app .adm-btn--sm {
   min-height: 2.25rem;
-  padding: 0 10px;
+  padding: 0 var(--adm-sp-3);
 }
 .admin-app .adm-btn--block {
   display: flex;
@@ -454,7 +454,7 @@
 }
 .admin-app select.adm-input {
   appearance: none;
-  padding-right: 2.2rem;
+  padding-right: 36px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b7686' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
@@ -503,12 +503,12 @@
   font-weight: 600;
   color: var(--adm-slate-700);
   background: var(--adm-slate-50);
-  padding: 0.7rem var(--adm-sp-3);
+  padding: var(--adm-sp-3) var(--adm-sp-3);
   border-bottom: 1px solid var(--adm-slate-200);
   white-space: nowrap;
 }
 .admin-app .adm-table td {
-  padding: 0.65rem var(--adm-sp-3);
+  padding: var(--adm-sp-3) var(--adm-sp-3);
   border-bottom: 1px solid var(--adm-slate-100);
   color: var(--adm-slate-700);
 }
@@ -534,7 +534,7 @@
 .admin-app .adm-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--adm-sp-1);
   font-weight: 600;
   font-size: var(--adm-fs-xs);
   padding: 2px 8px;
@@ -580,7 +580,7 @@
 .admin-app .adm-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--adm-sp-3);
   align-items: center;
 }
 .admin-app .adm-filters .adm-input {
@@ -631,7 +631,7 @@
   gap: var(--adm-sp-1);
   min-width: 2.25rem;
   height: 2.25rem;
-  padding: 0 10px;
+  padding: 0 var(--adm-sp-3);
   border: 1px solid var(--adm-slate-200);
   border-radius: var(--adm-r-sm);
   background: var(--adm-paper);
@@ -687,7 +687,7 @@
 .admin-app .adm-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--adm-sp-2);
   font-size: var(--adm-fs-xs);
   color: var(--adm-slate-500);
 }
@@ -740,7 +740,7 @@
 .admin-app .adm-flow {
   list-style: none;
   margin: 0;
-  padding: 6px;
+  padding: var(--adm-sp-2);
   display: grid;
   gap: 2px;
   border: 1px solid var(--adm-slate-200);
@@ -749,10 +749,10 @@
 .admin-app .adm-flow__step {
   display: grid;
   grid-template-columns: 22px 1fr;
-  gap: 13px;
+  gap: var(--adm-sp-3);
   align-items: start;
   min-height: 64px;
-  padding: 11px 12px 8px 13px;
+  padding: var(--adm-sp-3) var(--adm-sp-3) var(--adm-sp-2) var(--adm-sp-3);
   border: 1px solid transparent;
   border-radius: var(--adm-r-sm);
   position: relative;
@@ -794,7 +794,7 @@
   display: block;
   font-size: 0.6875rem;
   color: var(--adm-slate-500);
-  margin-top: 5px;
+  margin-top: var(--adm-sp-1);
 }
 .admin-app .adm-flow__step[aria-current='step'] {
   background: var(--adm-jade-50);
@@ -809,7 +809,7 @@
   color: var(--adm-jade-800);
 }
 .admin-app .adm-flow-current {
-  padding: 14px 16px;
+  padding: var(--adm-sp-4) var(--adm-sp-4);
   text-align: center;
   border: 1px solid var(--adm-slate-200);
   border-radius: var(--adm-r-md);
@@ -819,7 +819,7 @@
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--adm-slate-700);
-  margin-bottom: 11px;
+  margin-bottom: var(--adm-sp-3);
 }
 .admin-app .adm-flow-current__state {
   font-size: 0.9375rem;
@@ -1065,7 +1065,7 @@
   grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
   gap: var(--adm-sp-3);
   border-top: 1px solid var(--adm-slate-100);
-  padding: 10px 0;
+  padding: var(--adm-sp-3) 0;
 }
 .admin-app .adm-facts > div:first-child {
   border-top: 0;
@@ -1166,6 +1166,8 @@
   border-top: 1px solid var(--adm-slate-200);
   padding: var(--adm-sp-4);
   display: grid;
+  /* minmax(0, 1fr): chặn grid blowout, thẻ không rộng hơn viewport ở 390px. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--adm-sp-3);
 }
 .admin-app .adm-record-list > li:first-child {
@@ -1176,6 +1178,9 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--adm-sp-3);
+}
+.admin-app .adm-record-list__head > * {
+  min-width: 0;
 }
 .admin-app .adm-record-list__facts {
   display: grid;
@@ -1320,7 +1325,7 @@
     flex: 1 1 auto;
   }
   .admin-app .adm-record-list__facts {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .admin-app .adm-facts > div {
     grid-template-columns: 1fr;
@@ -1334,7 +1339,7 @@
   }
   .admin-app .adm-facts--two-col > div:nth-child(2) {
     border-top: 1px solid var(--adm-slate-100);
-    padding-top: 10px;
+    padding-top: var(--adm-sp-3);
   }
   .admin-app .adm-pagination {
     justify-content: center;

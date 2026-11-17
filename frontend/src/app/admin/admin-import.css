@@ -52,7 +52,7 @@
 .adm-import-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--adm-sp-2);
   margin-bottom: var(--adm-sp-4, 16px);
 }
 
@@ -193,7 +193,7 @@
 
 .adm-import-table th,
 .adm-import-table td {
-  padding: 8px 10px;
+  padding: var(--adm-sp-2) var(--adm-sp-3);
   border-bottom: 1px solid var(--adm-slate-200);
   text-align: left;
   vertical-align: top;

@@ -250,7 +250,7 @@
   .learner-app .w-public .w-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 36px;
     padding: 0 var(--sp-3);
     border-radius: var(--r-pill);
@@ -271,7 +271,7 @@
   .learner-app .w-public .w-tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px 10px;
+    padding: 2px var(--sp-3);
     border-radius: var(--r-pill);
     background: var(--jade-50);
     color: var(--jade-800);

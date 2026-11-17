@@ -137,7 +137,7 @@ h3 {
   z-index: 100;
   transform: translateY(-160%);
   border-radius: var(--radius-sm);
-  padding: 9px 14px;
+  padding: 8px 16px;
   color: white;
   background: var(--jade-700);
   font-weight: 750;
@@ -155,7 +155,7 @@ h3 {
   gap: 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 8px 15px;
+  padding: 8px 16px;
   text-decoration: none;
   font-size: 0.86rem;
   font-weight: 720;
@@ -243,7 +243,7 @@ h3 {
 
 @media (max-width: 760px) {
   .state-card {
-    padding: 38px 22px;
+    padding: 40px 24px;
   }
 }
 

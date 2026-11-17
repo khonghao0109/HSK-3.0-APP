@@ -593,8 +593,8 @@ html:has(.learner-app) {
   display: inline-block;
   font-weight: 700;
   color: inherit;
-  padding: 0.8rem 0.25rem;
-  margin: -0.8rem 0;
+  padding: var(--sp-3) var(--sp-1);
+  margin: -12px 0;
 }
 
 .learner-app .divider-text {
@@ -630,11 +630,11 @@ html:has(.learner-app) {
   background: var(--navy-900);
   color: var(--white);
   border-radius: var(--r-md);
-  padding: 0.8rem 1rem;
+  padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-md);
   box-shadow: var(--shadow-float);
   display: flex;
-  gap: 10px;
+  gap: var(--sp-3);
   align-items: center;
   animation: toast-in var(--dur) ease-out;
 }
@@ -839,7 +839,7 @@ html:has(.learner-app) {
 
 /* ---------- 01-02 Auth (Sign up / Sign in) ---------- */
 .learner-app .auth {
-  padding: 64px 23px 40px;
+  padding: 64px var(--sp-6) var(--sp-10);
   display: flex;
   flex-direction: column;
 }
@@ -871,7 +871,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__subtitle {
-  margin-top: 10px;
+  margin-top: var(--sp-3);
   font-size: 1.0625rem;
   line-height: 1.5rem;
   color: var(--stone-700);
@@ -879,15 +879,15 @@ html:has(.learner-app) {
 
 .learner-app .auth__form {
   display: grid;
-  margin-top: 35px;
+  margin-top: 36px;
 }
 
 .learner-app .auth__form .field {
-  gap: 13px;
+  gap: var(--sp-3);
 }
 
 .learner-app .auth__form .field + .field {
-  margin-top: 26px;
+  margin-top: 28px;
 }
 
 .learner-app .auth__form .field__label {
@@ -916,7 +916,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__form .alert {
-  margin-top: 18px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .auth__submit {
@@ -927,7 +927,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__divider {
-  margin: 29px 0 0;
+  margin: 28px 0 0;
   height: 20px;
   font-size: 0.9375rem;
   color: var(--stone-600);
@@ -936,7 +936,7 @@ html:has(.learner-app) {
 .learner-app .auth__social {
   display: grid;
   gap: 12px;
-  margin-top: 21px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .social-btn {
@@ -968,8 +968,8 @@ html:has(.learner-app) {
 @media (max-width: 299px) {
   .learner-app .social-btn {
     justify-content: flex-start;
-    gap: 0.625rem;
-    padding: 0.5rem 0.875rem;
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
     text-align: left;
   }
   .learner-app .social-btn svg {
@@ -979,7 +979,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__terms {
-  margin-top: 34px;
+  margin-top: 36px;
   text-align: center;
   font-size: 0.8125rem;
   line-height: 1.5rem;
@@ -992,8 +992,8 @@ html:has(.learner-app) {
   text-decoration: none;
   font-weight: 500;
   display: inline-block;
-  padding: 10px 0;
-  margin: -10px 0;
+  padding: var(--sp-3) 0;
+  margin: -12px 0;
 }
 
 .learner-app .auth__terms a:hover {
@@ -1016,7 +1016,7 @@ html:has(.learner-app) {
 /* ---------- 01-03/01-04 Onboarding ---------- */
 .learner-app .ob {
   container-type: inline-size;
-  padding: 64px 21px 0;
+  padding: 64px var(--sp-5) 0;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -1043,7 +1043,7 @@ html:has(.learner-app) {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: var(--sp-5);
 }
 
 .learner-app .ob__dots i {
@@ -1069,7 +1069,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .ob__title {
-  margin-top: 26px;
+  margin-top: 28px;
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.34rem;
@@ -1078,7 +1078,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .ob__sub {
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--stone-700);
@@ -1095,18 +1095,18 @@ html:has(.learner-app) {
 }
 
 .learner-app .ob__section {
-  margin-top: 30px;
+  margin-top: var(--sp-8);
 }
 
 .learner-app .ob .alert {
-  margin-top: 18px;
+  margin-top: var(--sp-5);
 }
 
 .learner-app .ob__footer {
   position: sticky;
   bottom: 0;
-  margin: auto -21px 0;
-  padding: 24px 21px max(46px, env(safe-area-inset-bottom));
+  margin: auto -20px 0;
+  padding: var(--sp-6) var(--sp-5) max(var(--sp-12), env(safe-area-inset-bottom));
   background: linear-gradient(
     to top,
     var(--surface-canvas) 78%,
@@ -1136,7 +1136,7 @@ html:has(.learner-app) {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 10px;
+  gap: var(--sp-3);
   min-height: 145px;
   padding: 12px 8px;
   border: 1px solid var(--border-default);
@@ -1211,9 +1211,9 @@ html:has(.learner-app) {
 
 .learner-app .level-info {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-4);
   align-items: flex-start;
-  margin-top: 14px;
+  margin-top: var(--sp-4);
   padding: 16px;
   border: 1px solid var(--border-default);
   border-radius: 14px;
@@ -1249,15 +1249,15 @@ html:has(.learner-app) {
 .learner-app .minutes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 30px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-8);
 }
 
 .learner-app .minute {
   display: grid;
   justify-items: center;
   gap: 2px;
-  padding: 22px 4px 20px;
+  padding: var(--sp-6) var(--sp-1) var(--sp-5);
   border: 1px solid var(--border-default);
   border-radius: 14px;
   background: var(--surface-card);
@@ -1317,7 +1317,7 @@ html:has(.learner-app) {
 .learner-app .time-select {
   position: relative;
   display: block;
-  margin-top: 14px;
+  margin-top: var(--sp-4);
 }
 
 .learner-app .time-select .icon {
@@ -1344,9 +1344,9 @@ html:has(.learner-app) {
 .learner-app .remind {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 22px;
-  padding: 18px 10px 18px 18px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+  padding: var(--sp-5) var(--sp-3) var(--sp-5) var(--sp-5);
   border: 1px solid var(--border-default);
   border-radius: 14px;
   background: var(--surface-card);
@@ -1372,10 +1372,10 @@ html:has(.learner-app) {
 
 .learner-app .tip {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-4);
   align-items: center;
   margin-top: 24px;
-  padding: 22px 18px;
+  padding: var(--sp-6) var(--sp-5);
   border-radius: 14px;
   background: var(--cream-100);
   font-size: 0.8125rem;
@@ -1933,7 +1933,7 @@ html:has(.learner-app) {
   position: relative;
   background: var(--surface-brand);
   color: var(--white);
-  padding: 4px 18px 58px;
+  padding: var(--sp-1) var(--sp-5) 60px;
   overflow: hidden;
 }
 
@@ -1980,7 +1980,7 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   margin-top: 2px;
 }
 
@@ -2027,11 +2027,11 @@ html:has(.learner-app) {
 
 .learner-app .home-body {
   position: relative;
-  margin-top: -49px;
-  padding: 0 15px;
+  margin-top: -48px;
+  padding: 0 var(--sp-4);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 7px;
+  gap: var(--sp-2);
   padding-bottom: calc(var(--tabbar-height) + 20px);
 }
 
@@ -2070,7 +2070,7 @@ html:has(.learner-app) {
   --size: 72px;
   width: var(--size);
   height: var(--size);
-  margin: 5px auto 0;
+  margin: var(--sp-1) auto 0;
   border-radius: 50%;
   background: conic-gradient(
     from 225deg,
@@ -2111,7 +2111,7 @@ html:has(.learner-app) {
 .learner-app .home-gauge em {
   font-style: normal;
   font-size: 0.75rem;
-  margin-top: 3px;
+  margin-top: var(--sp-1);
 }
 
 .learner-app .home-streak {
@@ -2153,10 +2153,10 @@ html:has(.learner-app) {
 .learner-app .home-lesson {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   width: 100%;
   margin: 0;
-  padding: 6px 14px 6px 10px;
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-3);
   background: var(--surface-card);
   border: 1px solid var(--border-default);
   border-radius: 14px;
@@ -2209,7 +2209,7 @@ html:has(.learner-app) {
 .learner-app .home-lesson__bar {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   margin-top: 4px;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -2248,15 +2248,16 @@ html:has(.learner-app) {
   }
 }
 
-.learner-app .home-explore button {
+.learner-app .home-explore button,
+.learner-app .home-explore a {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 6px;
+  gap: var(--sp-2);
   width: 100%;
   min-height: 4.75rem;
   margin: 0;
-  padding: 6px 2px;
+  padding: var(--sp-2) 2px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -2268,8 +2269,22 @@ html:has(.learner-app) {
   line-height: 1.25;
 }
 
-.learner-app .home-explore button:hover {
+.learner-app .home-explore button:hover,
+.learner-app .home-explore a:hover {
   background: var(--cream-100);
+}
+
+.learner-app .home-explore button:focus-visible,
+.learner-app .home-explore a:focus-visible {
+  border-radius: 10px;
+}
+
+@media (forced-colors: active) {
+  .learner-app .home-explore button:focus-visible,
+  .learner-app .home-explore a:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }
 
 .learner-app .home-explore__icon {
@@ -2374,7 +2389,7 @@ html:has(.learner-app) {
   align-items: center;
   justify-content: space-between;
   height: 59px;
-  padding: 0 18px 12px 16px;
+  padding: 0 var(--sp-5) var(--sp-3) var(--sp-4);
 }
 
 .learner-app .path-head__logo {
@@ -2398,7 +2413,7 @@ html:has(.learner-app) {
   display: flex;
   align-items: flex-end;
   height: 45px;
-  padding: 0 6px 0 11px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   overflow-x: auto;
   scrollbar-width: none;
   border-bottom: 1px solid var(--path-hairline);
@@ -2414,7 +2429,7 @@ html:has(.learner-app) {
   min-width: 44px;
   height: 44px;
   margin: 0;
-  padding: 8px 6px 0;
+  padding: var(--sp-2) var(--sp-2) 0;
   border: 0;
   background: none;
   color: var(--slate-700);
@@ -2425,7 +2440,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .path-tab[aria-selected='true'] {
-  padding: 8px 11px 0;
+  padding: var(--sp-2) var(--sp-3) 0;
   color: var(--jade-800);
   font-size: 0.78rem;
   font-weight: 700;
@@ -2447,7 +2462,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .path-panel {
-  padding: 10px 18px 0 15px;
+  padding: var(--sp-3) var(--sp-5) 0 var(--sp-4);
 }
 
 .learner-app .path-panel:not(:has(.path-grid)) {
@@ -2476,7 +2491,7 @@ html:has(.learner-app) {
 .learner-app .path-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px 11px;
+  gap: var(--sp-1) var(--sp-3);
   margin-top: 8px;
 }
 
@@ -2490,7 +2505,7 @@ html:has(.learner-app) {
   width: 100%;
   min-height: 69px;
   margin: 0;
-  padding: 46px 4px 5px;
+  padding: var(--sp-12) var(--sp-1) var(--sp-1);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -2544,7 +2559,7 @@ html:has(.learner-app) {
   place-items: center;
   min-width: 16px;
   height: 16px;
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   border-radius: 8px;
   background: var(--slate-100);
   color: var(--ink-900);
@@ -2618,10 +2633,10 @@ html:has(.learner-app) {
   z-index: 15;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: var(--sp-3);
   width: calc(min(100%, var(--learner-max)) - 33px);
   height: 52px;
-  padding: 0 8px 0 11px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   background: var(--path-bar-bg);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
@@ -2768,13 +2783,13 @@ html:has(.learner-app) {
 
 /* ---------- 02-03 Nội dung bài học (M2.5a, Q32–Q44) ---------- */
 .learner-app .lesson {
-  padding: 18px 17px calc(var(--tabbar-height) + 24px) 20px;
+  padding: var(--sp-5) var(--sp-4) calc(var(--tabbar-height) + var(--sp-6)) var(--sp-5);
 }
 
 .learner-app .lesson-hero {
   display: grid;
   grid-template-columns: 139px 1fr;
-  gap: 18px;
+  gap: var(--sp-5);
   align-items: start;
 }
 
@@ -2814,10 +2829,10 @@ html:has(.learner-app) {
 .learner-app .lesson-hero__badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 2px 0 0;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--sp-2);
   border: 1px solid var(--border-default);
   border-radius: 6px;
   background: var(--paper);
@@ -2828,7 +2843,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .lesson-hero__desc {
-  margin: 14px 0 0;
+  margin: var(--sp-4) 0 0;
   font-size: 0.75rem;
   line-height: 14.5px;
   color: var(--text-body);
@@ -2840,7 +2855,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .lesson-hero__pct {
-  margin: 5px 0 0;
+  margin: var(--sp-1) 0 0;
   font-size: 0.8125rem;
   color: var(--text-body);
 }
@@ -2852,7 +2867,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .lesson-section {
-  margin: 3px 0 0;
+  margin: var(--sp-1) 0 0;
   font-size: 0.97rem;
   font-weight: 700;
   line-height: 1.3;
@@ -2861,8 +2876,8 @@ html:has(.learner-app) {
 
 .learner-app .lesson-rows {
   display: grid;
-  gap: 4.8px;
-  margin: 5px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-1) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -2871,10 +2886,10 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   width: 100%;
   height: 49px;
-  padding: 0 16.5px 0 13px;
+  padding: 0 var(--sp-4) 0 var(--sp-3);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -2903,7 +2918,7 @@ html:has(.learner-app) {
 .learner-app .lrow .grow {
   display: grid;
   gap: 1.5px;
-  padding-top: 3px;
+  padding-top: var(--sp-1);
 }
 
 .learner-app .lrow__title {
@@ -2987,8 +3002,8 @@ html:has(.learner-app) {
   gap: 8px;
   width: calc(100% - 5px);
   height: 44px;
-  margin: 8px 3px 0 2px;
-  padding: 0 26px 0 0;
+  margin: var(--sp-2) var(--sp-1) 0 2px;
+  padding: 0 28px 0 0;
   border: 0;
   border-radius: 10px;
   background: var(--jade-800);
@@ -3024,7 +3039,7 @@ html:has(.learner-app) {
 .learner-app .lesson-nf__body {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   max-width: 340px;
   margin: 0 auto;
   text-align: center;
@@ -3035,7 +3050,7 @@ html:has(.learner-app) {
   place-items: center;
   width: 72px;
   height: 72px;
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-2);
   border-radius: 18px;
   background: var(--cream-100);
   color: var(--stone-600);
@@ -3072,8 +3087,8 @@ html:has(.learner-app) {
   justify-content: center;
   width: 100%;
   min-height: 44px;
-  margin-top: 10px;
-  padding: 6px 16px;
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
   border-radius: 10px;
   background: var(--jade-800);
   color: var(--white);
@@ -3100,7 +3115,7 @@ html:has(.learner-app) {
 .learner-app .ex-bar {
   position: relative;
   height: 52px;
-  padding: 0 19px 10px 3px;
+  padding: 0 var(--sp-5) var(--sp-3) var(--sp-1);
 }
 
 .learner-app .ex-bar .icon-btn .icon {
@@ -3130,7 +3145,7 @@ html:has(.learner-app) {
 
 .learner-app .ex-body {
   flex: 1;
-  padding: 9px 19px 16px 16px;
+  padding: var(--sp-2) var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
 .learner-app .ex-progress {
@@ -3148,7 +3163,7 @@ html:has(.learner-app) {
   z-index: 10;
   display: grid;
   gap: 8px;
-  padding: 0 9.5px calc(26px + env(safe-area-inset-bottom)) 12.5px;
+  padding: 0 var(--sp-2) calc(28px + env(safe-area-inset-bottom)) var(--sp-3);
 }
 
 .learner-app .ex-foot:empty {
@@ -3159,9 +3174,9 @@ html:has(.learner-app) {
 .learner-app .m02-feedback {
   display: flex;
   align-items: center;
-  gap: 8.5px;
+  gap: var(--sp-2);
   min-height: 49px;
-  padding: 5px 8px 5px 11px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border: 1px solid var(--ex-feedback-border);
   border-radius: 10px;
   background: var(--ex-feedback-bg);
@@ -3189,7 +3204,7 @@ html:has(.learner-app) {
 .learner-app .m02-feedback__icon {
   width: 30px;
   height: 30px;
-  margin-left: 3px;
+  margin-left: var(--sp-1);
   flex: none;
   color: var(--red-600);
 }
@@ -3228,7 +3243,7 @@ html:has(.learner-app) {
   flex: none;
   min-width: 93px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border: 0;
   border-radius: 10px;
   background: var(--jade-800);
@@ -3275,7 +3290,7 @@ html:has(.learner-app) {
 
 .learner-app .ex-error {
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   border: 1px solid var(--ex-wrong-border);
   border-radius: 10px;
   background: var(--red-100);
@@ -3286,8 +3301,8 @@ html:has(.learner-app) {
 
 /* Prompt of every exercise: focus lands here when the next one opens. */
 .learner-app .pr-q {
-  margin: 14.5px 0 0;
-  padding-left: 3px;
+  margin: var(--sp-4) 0 0;
+  padding-left: var(--sp-1);
   color: var(--ink-900);
   font-family: var(--font-sans);
   font-size: 0.77rem;
@@ -3317,8 +3332,8 @@ html:has(.learner-app) {
 .learner-app .pr-bank {
   display: flex;
   flex-wrap: wrap;
-  gap: 5.6px;
-  margin: 10px -3px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-3) -4px 0 0;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--path-hairline);
 }
@@ -3376,23 +3391,23 @@ html:has(.learner-app) {
 .learner-app .pr-answer {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
-  margin: 15px -3px 0 0;
+  margin: var(--sp-4) -4px 0 0;
 }
 
 .learner-app .pr-answer__row {
   display: flex;
   flex: 1;
   flex-wrap: wrap;
-  gap: 5.8px;
+  gap: var(--sp-1);
   min-width: 0;
 }
 
 .learner-app .pr-chip--answer {
   min-width: 44px;
   height: 44px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   border: 0;
   background: var(--ex-chip-ok);
   box-shadow: none;
@@ -3429,8 +3444,8 @@ html:has(.learner-app) {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: minmax(53px, auto) minmax(49.3px, auto);
   grid-auto-rows: minmax(49.3px, auto);
-  gap: 9px 10.7px;
-  margin: 13.5px 0 0 -1.6px;
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-3) 0 0 -1.6px;
 }
 
 .learner-app .ls-opt {
@@ -3439,7 +3454,7 @@ html:has(.learner-app) {
   place-items: center;
   width: 100%;
   height: 100%;
-  padding: 6px 8px;
+  padding: var(--sp-2) var(--sp-2);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -3514,8 +3529,8 @@ html:has(.learner-app) {
   align-items: center;
   gap: 12px;
   height: 52px;
-  margin: 10px 0 0 -1.6px;
-  padding: 0 10.8px 0 3.7px;
+  margin: var(--sp-3) 0 0 -1.6px;
+  padding: 0 var(--sp-3) 0 var(--sp-1);
   border: 1px solid var(--path-hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -3587,12 +3602,12 @@ html:has(.learner-app) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 12.5px 0 0 -1.6px;
+  margin: var(--sp-3) 0 0 -1.6px;
 }
 
 .learner-app .ls-tools .uxb-seg {
   gap: 2px;
-  padding: 3px;
+  padding: var(--sp-1);
   border-radius: 12px;
   background: var(--surface-sunken);
 }
@@ -3658,10 +3673,10 @@ html:has(.learner-app) {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-width: 44px;
   height: 44px;
-  padding: 0 16px 0 14px;
+  padding: 0 var(--sp-4) 0 var(--sp-4);
   border: 1px solid var(--path-hairline);
   border-radius: 7px;
   background: var(--paper);
@@ -3708,7 +3723,7 @@ html:has(.learner-app) {
 
 .learner-app .fb-field {
   display: grid;
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 16px;
 }
 
@@ -3756,7 +3771,7 @@ html:has(.learner-app) {
 .learner-app .ex-done .lesson-cta {
   width: 100%;
   margin: 0;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
 }
 
 /* ---------- 02-06 Hoàn thành bài học (M2.5d, Q42, Q58–Q61) ---------- */
@@ -4052,7 +4067,7 @@ html:has(.learner-app) {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  padding: 14px 12.5px 27px;
+  padding: var(--sp-4) var(--sp-3) 28px;
 }
 
 .learner-app .done-kicker {
@@ -4074,7 +4089,7 @@ html:has(.learner-app) {
 .learner-app .done-medal {
   position: relative;
   height: 104px;
-  margin-top: -2.5px;
+  margin-top: -4px;
 }
 
 .learner-app .done-medal img {
@@ -4128,7 +4143,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .done-stat__score {
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   color: var(--jade-700);
   font-size: 1.5rem;
   font-weight: 600;
@@ -4144,8 +4159,8 @@ html:has(.learner-app) {
 .learner-app .done-actions {
   display: grid;
   grid-template-columns: 164.8fr 187.8fr;
-  gap: 12.4px;
-  margin-top: 15.3px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
 }
 
 .learner-app .done-btn {
@@ -4153,7 +4168,7 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: var(--sp-5);
   height: 48px;
   border: 0;
   border-radius: 10px;
@@ -4185,8 +4200,8 @@ html:has(.learner-app) {
 
 /* Q42: nền jade-800 đặc (chữ trắng 5,3:1). */
 .learner-app .done-btn--primary {
-  gap: 30px;
-  padding-left: 14px;
+  gap: var(--sp-8);
+  padding-left: var(--sp-4);
   background: var(--jade-800);
   color: #fff;
   font-size: 1.06rem;
@@ -4204,7 +4219,7 @@ html:has(.learner-app) {
 
 @media (max-width: 374px) {
   .learner-app .done-btn {
-    gap: 10px;
+    gap: var(--sp-3);
     font-size: 0.9375rem;
   }
 
@@ -4314,7 +4329,7 @@ html:has(.learner-app) {
 
   .learner-app .lesson-hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--sp-3);
   }
 
   .learner-app .lesson-hero__img {
@@ -4347,7 +4362,7 @@ html:has(.learner-app) {
     height: auto;
     min-height: 49px;
     gap: 8px;
-    padding: 6px 10px;
+    padding: var(--sp-2) var(--sp-3);
   }
 
   .learner-app .lrow > img {
@@ -4386,7 +4401,7 @@ html:has(.learner-app) {
   .learner-app .lesson-cta {
     height: auto;
     min-height: 44px;
-    padding: 6px 12px;
+    padding: var(--sp-2) var(--sp-3);
   }
 
   .learner-app .lesson-cta .icon {
@@ -4612,7 +4627,7 @@ html:has(.learner-app) {
 /* Khung chung */
 .learner-app .app:has(> .dict, > .word) .appbar {
   min-height: 48px;
-  padding: 7px 2px 0;
+  padding: var(--sp-2) 2px 0;
   grid-template-columns: 48px 1fr 48px;
   background: var(--m03-navy);
 }
@@ -4652,7 +4667,7 @@ html:has(.learner-app) {
 
 /* 03-01 Tìm kiếm từ điển */
 .learner-app .dict {
-  padding: 14px 18px 0;
+  padding: var(--sp-4) var(--sp-5) 0;
   display: flex;
   flex-direction: column;
 }
@@ -4693,7 +4708,7 @@ html:has(.learner-app) {
   width: 100%;
   height: 100%;
   min-width: 0;
-  padding: 0 30px 0 40px;
+  padding: 0 var(--sp-8) 0 var(--sp-10);
   border: 0;
   border-radius: 9px 0 0 9px;
   background: transparent;
@@ -4762,7 +4777,7 @@ html:has(.learner-app) {
   background: var(--jade-50);
 }
 .learner-app .dict__count {
-  margin: 17px 0 7px;
+  margin: var(--sp-4) 0 var(--sp-2);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;
@@ -4770,7 +4785,7 @@ html:has(.learner-app) {
 }
 .learner-app .dict-results {
   display: grid;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-item {
   position: relative;
@@ -4778,7 +4793,7 @@ html:has(.learner-app) {
   grid-template-columns: 129px 1fr auto;
   align-items: center;
   min-height: 43px;
-  padding: 4px 14px 4px 14px;
+  padding: var(--sp-1) var(--sp-4) var(--sp-1) var(--sp-4);
   background: #fff;
   border: 1px solid var(--m03-line);
   border-radius: 9px;
@@ -4813,7 +4828,7 @@ html:has(.learner-app) {
 .learner-app .dict-item__py {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
   font-size: 0.625rem;
   font-weight: 500;
   color: var(--m03-ink);
@@ -4837,11 +4852,11 @@ html:has(.learner-app) {
 }
 .learner-app .dict-item--top {
   min-height: 81px;
-  padding: 6px 14px;
+  padding: var(--sp-2) var(--sp-4);
   border-color: var(--m03-jade-line);
 }
 .learner-app .dict-item--top .dict-item__hz {
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-3);
   font-family: var(--m03-font-kai);
   font-weight: 700;
   font-size: 2.45rem;
@@ -4851,17 +4866,17 @@ html:has(.learner-app) {
 .learner-app .dict-item--top .dict-item__py {
   font-size: 0.8125rem;
   font-weight: 600;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-item--top .dict-item__vi {
   font-size: 0.8125rem;
   font-weight: 500;
-  margin-top: 3px;
+  margin-top: var(--sp-1);
 }
 .learner-app .dict-item--top .badge {
   justify-self: start;
-  margin-top: 5px;
-  padding: 0 5px;
+  margin-top: var(--sp-1);
+  padding: 0 var(--sp-1);
   line-height: 14px;
   font-size: 0.5625rem;
   font-weight: 700;
@@ -4871,7 +4886,7 @@ html:has(.learner-app) {
 .learner-app .dict-empty {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 28px 16px;
   text-align: center;
   color: var(--text-muted);
@@ -4885,7 +4900,7 @@ html:has(.learner-app) {
 .learner-app .dict-empty > [role='alert'] {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 .learner-app .dict-empty strong {
   color: var(--m03-ink);
@@ -4895,10 +4910,10 @@ html:has(.learner-app) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 13px;
-  margin-top: 18px;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
   min-height: 32px;
-  padding: 0 10px 0 16px;
+  padding: 0 var(--sp-3) 0 var(--sp-4);
   width: 100%;
   border: 1px solid var(--m03-line-soft);
   border-radius: 9px;
@@ -4925,7 +4940,7 @@ html:has(.learner-app) {
 /* 03-02 Chi tiết từ vựng */
 .learner-app .word {
   position: relative;
-  padding: 0 21px 24px 20px;
+  padding: 0 var(--sp-5) var(--sp-6) var(--sp-5);
   display: flex;
   flex-direction: column;
 }
@@ -4935,7 +4950,7 @@ html:has(.learner-app) {
   align-items: start;
 }
 .learner-app .word__hz {
-  margin: 21px 0 0 -1px;
+  margin: var(--sp-5) 0 0 -1px;
   font-family: var(--m03-font-kai);
   font-weight: 700;
   font-size: 3.5rem;
@@ -4959,7 +4974,7 @@ html:has(.learner-app) {
   padding-bottom: 1px;
 }
 .learner-app .word__vi {
-  margin-top: -3px;
+  margin-top: -4px;
   font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
@@ -4968,7 +4983,7 @@ html:has(.learner-app) {
 .learner-app .word .badge--lv {
   align-self: flex-start;
   margin-top: 8px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   line-height: 18px;
   border-radius: 6px;
   background: var(--jade-600);
@@ -4988,7 +5003,7 @@ html:has(.learner-app) {
   position: relative;
   min-width: 69px;
   height: 23px;
-  padding: 0 9px;
+  padding: 0 var(--sp-2);
   border: 0;
   border-radius: 6px;
   background: none;
@@ -5007,8 +5022,8 @@ html:has(.learner-app) {
   box-shadow: 0 1px 2px rgb(20 24 43 / 10%);
 }
 .learner-app .word-ex {
-  margin-top: 13px;
-  padding: 9px 12px 9px 5px;
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-1);
   border: 1px solid var(--m03-line);
   border-radius: 10px;
   background: #fff;
@@ -5016,7 +5031,7 @@ html:has(.learner-app) {
 .learner-app .word-ex h2 {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--m03-ink);
@@ -5032,8 +5047,8 @@ html:has(.learner-app) {
 .learner-app .word-ex__cn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 6px 0 0 7px;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0 var(--sp-2);
   font-family: var(--font-cn-serif);
   font-weight: 400;
   font-size: 0.875rem;
@@ -5045,15 +5060,15 @@ html:has(.learner-app) {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin: 11px 0 0 7px;
-  padding-top: 7px;
+  margin: var(--sp-3) 0 0 var(--sp-2);
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--m03-line-soft);
   font-size: 0.6375rem;
   color: #4a4e5a;
 }
 /* M3.4c Q315: the example's Vietnamese line (mẫu word-full .uxa-ex__vi). */
 .learner-app .word-ex__vi {
-  margin: 2px 0 0 7px;
+  margin: 2px 0 0 var(--sp-2);
   font-size: var(--fs-sm);
   line-height: 1.45;
   color: var(--text-muted);
@@ -5068,12 +5083,12 @@ html:has(.learner-app) {
 /* M3.4c: Từ liên quan (mẫu mobile/word-full.html .uxa-related); the
    heading reuses the example card's mark. */
 .learner-app .word-rel {
-  margin-top: 13px;
+  margin-top: var(--sp-3);
 }
 .learner-app .word-rel h2 {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--m03-ink);
@@ -5113,7 +5128,7 @@ html:has(.learner-app) {
   color: var(--text-strong);
 }
 .learner-app .word-rel__meta {
-  margin-left: 6px;
+  margin-left: var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
   overflow-wrap: anywhere;
@@ -5122,10 +5137,10 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 37px;
-  margin-top: 9px;
+  margin-top: var(--sp-2);
   border: 1.5px solid var(--jade-700);
   border-radius: 9px;
   background: #fff;
@@ -5165,7 +5180,7 @@ html:has(.learner-app) {
   right: 8px;
   z-index: 30;
   min-width: 196px;
-  padding: 6px;
+  padding: var(--sp-2);
   background: #fff;
   border: 1px solid var(--m03-line);
   border-radius: 12px;
@@ -5174,7 +5189,7 @@ html:has(.learner-app) {
 .learner-app .m03-menu button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
@@ -5202,10 +5217,10 @@ html:has(.learner-app) {
 @media (max-width: 360px) {
   .learner-app .dict-item {
     grid-template-columns: 112px 1fr auto;
-    padding-right: 10px;
+    padding-right: var(--sp-3);
   }
   .learner-app .dict-item .badge {
-    padding: 2px 6px;
+    padding: 2px var(--sp-2);
   }
 }
 
@@ -5301,12 +5316,12 @@ html:has(.learner-app) {
 }
 /* Mẫu ẩn .seg bằng [hidden]; app không render nó. */
 .learner-app .word__mid:not(:has(> .seg)) {
-  margin-bottom: 9px;
+  margin-bottom: var(--sp-2);
 }
 /* Lỗi tra từ (M2.6b, không có trong mẫu): như .word-save, ≥ 44px. */
 .learner-app .dict-retry {
   min-height: 44px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   padding: 0 20px;
   border: 1.5px solid var(--jade-700);
   border-radius: 9px;
@@ -5321,7 +5336,7 @@ html:has(.learner-app) {
 
 @media (max-width: 299px) {
   .learner-app .dict {
-    padding: 14px 12px 0;
+    padding: var(--sp-4) var(--sp-3) 0;
   }
   .learner-app .dict-search {
     flex-wrap: wrap;
@@ -5341,7 +5356,7 @@ html:has(.learner-app) {
   .learner-app .dict-item {
     grid-template-columns: 1fr;
     row-gap: 2px;
-    padding: 6px 12px;
+    padding: var(--sp-2) var(--sp-3);
   }
   .learner-app .dict-item .badge {
     justify-self: start;
@@ -5367,7 +5382,7 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
   padding: 0 2px;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -5380,7 +5395,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__forgot ~ .auth__submit {
-  margin-top: 14px;
+  margin-top: var(--sp-4);
 }
 
 .learner-app .auth-result__icon {
@@ -5417,7 +5432,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .auth__actions .alert {
-  margin-bottom: 18px;
+  margin-bottom: var(--sp-5);
 }
 
 .learner-app .auth__actions .btn {
@@ -5475,7 +5490,7 @@ html:has(.learner-app) {
   gap: var(--sp-2);
   min-height: 60px;
   /* Mockup .m04-bar: 10px 6px 6px 0 (đo tại 390×844). */
-  padding: 10px 6px 6px 0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2) 0;
   background: var(--navy-900);
   color: var(--white);
 }
@@ -5802,7 +5817,7 @@ html:has(.learner-app) {
   align-items: center;
   gap: var(--sp-2);
   min-height: 60px;
-  padding: 10px 6px 6px 0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2) 0;
   background: var(--navy-900);
   color: var(--white);
 }
@@ -5838,9 +5853,9 @@ html:has(.learner-app) {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.3125rem;
+  gap: var(--sp-1);
   height: 1.5625rem;
-  padding: 0 0.5rem 0 0.625rem;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   border: 1px solid #bfc5cd;
   border-radius: 0.625rem;
   color: var(--white);
@@ -5874,20 +5889,20 @@ html:has(.learner-app) {
 
 .learner-app .exr-body {
   display: grid;
-  gap: 7px;
+  gap: var(--sp-2);
   min-width: 0;
   /* FIX vòng 2: mockup MB-11 có 11px giữa đáy bar (53) và đỉnh hero (64);
      trước đó padding-top 0 làm hero dính sát bar. */
-  padding: 11px 9px var(--sp-6) 10px;
+  padding: var(--sp-3) var(--sp-2) var(--sp-6) var(--sp-3);
 }
 
 /* ---------- Hero mobile/tablet (MB-11) ---------- */
 .learner-app .exr-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 5px;
+  gap: var(--sp-1);
   min-width: 0;
-  padding: 11px 12px 9px 0;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2) 0;
   background: var(--surface-card);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -5907,7 +5922,7 @@ html:has(.learner-app) {
   gap: 2px;
   width: 76px;
   margin-left: 12px;
-  padding-top: 3px;
+  padding-top: var(--sp-1);
   font-size: 11.52px;
   font-weight: 600;
   line-height: 1.2;
@@ -6001,7 +6016,7 @@ html:has(.learner-app) {
   flex-wrap: wrap;
   align-items: center;
   margin: 0;
-  padding-top: 9px;
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--exr-meta-line);
   font-size: 9.6px;
   line-height: 11.52px;
@@ -6009,8 +6024,8 @@ html:has(.learner-app) {
 }
 
 .learner-app .exr-meta > span + span {
-  margin-left: 17px;
-  padding-left: 14px;
+  margin-left: var(--sp-4);
+  padding-left: var(--sp-4);
   border-left: 1px solid var(--exr-meta-divider);
 }
 
@@ -6026,7 +6041,7 @@ html:has(.learner-app) {
   align-items: center;
   align-self: center;
   gap: 4px;
-  padding: 2px 6px;
+  padding: 2px var(--sp-2);
   border-radius: 6px;
   background: var(--navy-100);
   color: var(--navy-900);
@@ -6070,7 +6085,7 @@ html:has(.learner-app) {
 /* ---------- Hai khối kỹ năng / điểm yếu ---------- */
 .learner-app .exr-grid {
   display: grid;
-  gap: 7px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -6090,7 +6105,7 @@ html:has(.learner-app) {
 .learner-app .exr-card--weak,
 .learner-app .exr-card--types {
   gap: 0;
-  padding: 10px 11px 10px 10px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-3);
   background: var(--surface-card);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -6104,7 +6119,7 @@ html:has(.learner-app) {
   line-height: 16.56px;
   letter-spacing: normal;
   color: var(--ink-900);
-  padding-left: 5px;
+  padding-left: var(--sp-1);
 }
 
 .learner-app .exr-card--weak .exr-h2,
@@ -6117,8 +6132,8 @@ html:has(.learner-app) {
 
 .learner-app .exr-skills {
   display: grid;
-  gap: 7px;
-  margin: 7px 0 0;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -6127,7 +6142,7 @@ html:has(.learner-app) {
   display: grid;
   grid-template-columns: 24px 32px minmax(0, 1fr) 45.3px;
   align-items: center;
-  gap: 0 6px;
+  gap: 0 var(--sp-2);
   min-width: 0;
   height: 24px;
   padding-left: 4px;
@@ -6222,7 +6237,7 @@ html:has(.learner-app) {
 .learner-app .exr-weak__row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   min-width: 0;
   height: 20px;
   font-size: 12px;
@@ -6243,7 +6258,7 @@ html:has(.learner-app) {
 .learner-app .exr-level {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   flex: none;
   height: 20px;
   padding: 0 8px;
@@ -6293,7 +6308,7 @@ html:has(.learner-app) {
 .learner-app .exr-actions {
   display: grid;
   gap: var(--sp-3);
-  margin-top: 9px;
+  margin-top: var(--sp-2);
   padding-left: 2px;
 }
 
@@ -6322,7 +6337,7 @@ html:has(.learner-app) {
   display: grid;
   gap: 8px;
   min-width: 0;
-  padding: 10px 8px 16px 13px;
+  padding: var(--sp-3) var(--sp-2) var(--sp-4) var(--sp-3);
   background: #faf6f0;
   border-radius: 10px;
 }
@@ -6349,7 +6364,7 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 var(--sp-3);
   color: #1d4fae;
   font-size: 12px;
   font-weight: 600;
@@ -6363,7 +6378,7 @@ html:has(.learner-app) {
 .learner-app .exr-explain__q {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   margin: 0;
   font-family: var(--font-sans);
   font-size: 14px;
@@ -6374,9 +6389,9 @@ html:has(.learner-app) {
 .learner-app .exr-explain__badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   min-height: 21px;
-  padding: 0 9px;
+  padding: 0 var(--sp-2);
   background: #fdeceb;
   border: 1px solid #f6c9c4;
   border-radius: 11px;
@@ -6442,11 +6457,11 @@ html:has(.learner-app) {
   .learner-app .exr-grid {
     grid-template-columns: minmax(0, 1fr) 143px;
     align-items: start;
-    gap: 11px;
+    gap: var(--sp-3);
   }
 
   .learner-app .exr-card--weak {
-    padding: 10px 3px 10px 10px;
+    padding: var(--sp-3) var(--sp-1) var(--sp-3) var(--sp-3);
   }
 
   .learner-app .exr-card--weak .exr-h2 {
@@ -6466,7 +6481,7 @@ html:has(.learner-app) {
 
   .learner-app .exr-level {
     height: 16px;
-    padding: 0 3px;
+    padding: 0 var(--sp-1);
     font-size: 8.48px;
     line-height: 12.72px;
   }
@@ -6601,7 +6616,7 @@ html:has(.learner-app) {
   right: 8px;
   border: 1px solid var(--border-default);
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: var(--sp-2) var(--sp-3);
   background: var(--cream-50);
   font: inherit;
   font-size: 0.75rem;
@@ -6624,7 +6639,7 @@ html:has(.learner-app) {
 .learner-app .uxb-seg {
   display: inline-flex;
   gap: 4px;
-  padding: 3px;
+  padding: var(--sp-1);
   border: 1px solid var(--border-default);
   border-radius: 999px;
   background: var(--cream-50);
@@ -6686,7 +6701,7 @@ html:has(.learner-app) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-2);
   min-height: 44px;
   border: 0;
   border-radius: 12px;
@@ -6824,7 +6839,7 @@ html:has(.learner-app) {
 .learner-app .uxb-qgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 6px;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-2);
 }
 
@@ -6949,7 +6964,7 @@ html:has(.learner-app) {
   align-items: center;
   gap: 12px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: var(--sp-3) var(--sp-3);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   background: var(--white);
@@ -6993,7 +7008,7 @@ html:has(.learner-app) {
 /* F16: eyebrow kicker + question line, matching the mockup's eyebrow rule. */
 .learner-app .ext .uxb-part,
 .learner-app .ext .tk-part {
-  margin: 0 0 6px;
+  margin: 0 0 var(--sp-2);
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -7071,7 +7086,7 @@ html:has(.learner-app) {
   /* <1024 hàng cao đúng 30px như m04 .tk__status (rule 2b-8 cuối file);
      con cao hơn (nút N/M 44px, timer 33px) tràn xuống như mockup. */
   min-height: 30px;
-  margin: 0 -6px;
+  margin: 0 -8px;
   padding: 0 12px;
   background: var(--cream-50);
   color: var(--ink-900);
@@ -7218,7 +7233,7 @@ html:has(.learner-app) {
     grid-area: panel;
     align-self: start;
     order: 0;
-    padding: 12px 7px 10px 11px;
+    padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3);
     border-radius: 12px;
   }
 
@@ -7243,7 +7258,7 @@ html:has(.learner-app) {
 
   .learner-app .ex.ext .uxb-qgrid {
     grid-template-columns: repeat(4, minmax(24px, 1fr));
-    gap: 5px;
+    gap: var(--sp-1);
   }
 
   .learner-app .ex.ext .uxb-qcell {
@@ -7263,7 +7278,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .ex.ext .ext-card {
-  padding: 14px 13px 8px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-2);
   border: 1px solid var(--exam-line-soft);
   border-radius: 14px 14px 8px 8px;
   background: var(--white);
@@ -7302,7 +7317,7 @@ html:has(.learner-app) {
 .learner-app .ex.ext .ext-live {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 0;
   color: var(--exam-green-text);
   font-size: 0.76rem;
@@ -7317,14 +7332,14 @@ html:has(.learner-app) {
 
 /* M3/F16 options: radio dot + "A." row, green when selected. */
 .learner-app .ex.ext .uxb-opts {
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 12px;
 }
 
 .learner-app .ex.ext .uxb-opt {
   gap: 8px;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 var(--sp-3);
   border: 1px solid var(--exam-line);
   border-radius: 8px;
   background: var(--exam-opt-bg);
@@ -7379,13 +7394,13 @@ html:has(.learner-app) {
 .learner-app .ex.ext .ext-qnav {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 8px;
-  margin-top: 6px;
+  margin-top: var(--sp-2);
 }
 
 .learner-app .ex.ext .ext-qnav .btn {
   min-height: 44px;
   height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--sp-4);
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -7419,7 +7434,7 @@ html:has(.learner-app) {
 
 .learner-app .ex.ext .uxb-legend {
   display: grid;
-  gap: 5px;
+  gap: var(--sp-1);
   margin: 0 0 8px;
   font-size: 0.78rem;
   font-weight: 500;
@@ -7591,7 +7606,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .ext-saved {
-    gap: 5px;
+    gap: var(--sp-1);
   }
 
   .learner-app .ex.ext .ext-saved .icon {
@@ -7634,10 +7649,10 @@ html:has(.learner-app) {
   .learner-app .ex.ext .ext-player {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
     height: 63px;
     margin: 8px 0;
-    padding: 0 6px 0 11px;
+    padding: 0 var(--sp-2) 0 var(--sp-3);
     border: 1px solid var(--exam-line-soft);
     border-radius: 10px;
     background: var(--exam-player-bg);
@@ -7738,7 +7753,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-qgrid {
-    gap: 6px;
+    gap: var(--sp-2);
     grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
   }
 
@@ -7759,7 +7774,7 @@ html:has(.learner-app) {
 /* U3: nav 520-1023 — ba nút vừa cột 480, không cắt chữ, không chồng. */
 @media (min-width: 520px) and (max-width: 1023px) {
   .learner-app .ex.ext .ext-qnav {
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .learner-app .ex.ext .ext-qnav .btn {
@@ -7782,7 +7797,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-qgrid {
-    gap: 6px 5px;
+    gap: var(--sp-2) var(--sp-1);
     grid-template-columns: repeat(4, minmax(24px, 1fr));
   }
 
@@ -7794,7 +7809,7 @@ html:has(.learner-app) {
   }
 
   .learner-app .ex.ext .uxb-legend {
-    gap: 5px;
+    gap: var(--sp-1);
   }
 }
 
@@ -7817,7 +7832,7 @@ html:has(.learner-app) {
   box-sizing: content-box;
   width: 28px;
   height: 28px;
-  padding: 10px;
+  padding: var(--sp-3);
   border-radius: 50%;
   background: var(--red-100);
   color: var(--alert-error-text);
@@ -7929,7 +7944,7 @@ html:has(.learner-app) {
 /* V14: hr ngăn cách legend/lưới ở <1024 (m04 .tk-panel hr). */
 @media (max-width: 1023px) {
   .learner-app .ex.ext .ext-panelrule {
-    margin: 2px 0 10px;
+    margin: 2px 0 var(--sp-3);
   }
 }
 
@@ -7971,7 +7986,7 @@ html:has(.learner-app) {
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     align-items: center;
     height: 58px;
-    padding: 0 6px;
+    padding: 0 var(--sp-2);
     background: var(--navy-900);
     color: var(--white);
   }
@@ -7990,8 +8005,8 @@ html:has(.learner-app) {
    hàng thứ hai của header (grid 'row'/'status'). */
 @media (max-width: 519px) {
   .learner-app .ex.ext .ext-status {
-    margin: 10px 0 0;
-    padding: 0 12px 0 10px;
+    margin: var(--sp-3) 0 0;
+    padding: 0 var(--sp-3) 0 var(--sp-3);
     background: transparent;
   }
 }
@@ -8015,13 +8030,13 @@ html:has(.learner-app) {
    các shorthand margin cũ (2b-4/2b-5) cùng specificity. */
 @media (min-width: 520px) and (max-width: 1023px) {
   .learner-app .ex.ext .ext-status {
-    margin: 10px 0 0;
-    padding: 0 0 0 10px;
+    margin: var(--sp-3) 0 0;
+    padding: 0 0 0 var(--sp-3);
     background: transparent;
   }
 
   .learner-app .ex.ext .ext-panel {
-    margin-top: 10px;
+    margin-top: var(--sp-3);
   }
 
   .learner-app .ex.ext .ext-offline,
@@ -8145,7 +8160,7 @@ html:has(.learner-app) {
   width: 100%;
   max-width: var(--learner-max);
   margin: 0 auto;
-  padding: 10px 10px 0;
+  padding: var(--sp-3) var(--sp-3) 0;
 }
 
 .learner-app .extr {
@@ -8157,7 +8172,7 @@ html:has(.learner-app) {
 /* Thẻ tổng quan (mockup .rv-card). */
 .learner-app .extr-card {
   margin-top: 4px;
-  padding: 14px 14px 8px;
+  padding: var(--sp-4) var(--sp-4) var(--sp-2);
   background: var(--white);
   border: 1px solid var(--exam-line-soft);
   border-radius: 10px;
@@ -8187,7 +8202,7 @@ html:has(.learner-app) {
   flex: none;
   width: 28px;
   height: 28px;
-  margin-top: 7px;
+  margin-top: var(--sp-2);
   border-radius: 50%;
   color: var(--white);
 }
@@ -8226,7 +8241,7 @@ html:has(.learner-app) {
   height: 31px;
   border-radius: 2px 2px 0 0;
   margin-top: 2px;
-  padding-top: 6px;
+  padding-top: var(--sp-2);
   place-items: start center;
   background: var(--amber-500);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
@@ -8242,7 +8257,7 @@ html:has(.learner-app) {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  padding-top: 5px;
+  padding-top: var(--sp-1);
 }
 
 .learner-app .extr-sum__label {
@@ -8259,7 +8274,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .extr-heading {
-  margin: 14px 0 0 3px;
+  margin: var(--sp-4) 0 0 var(--sp-1);
   font-family: var(--font-sans);
   font-size: 0.74rem;
   font-weight: 400;
@@ -8274,7 +8289,7 @@ html:has(.learner-app) {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 10px 0 0;
+  margin: var(--sp-3) 0 0;
   padding: 0;
   list-style: none;
   font-size: 12px;
@@ -8284,7 +8299,7 @@ html:has(.learner-app) {
 .learner-app .extr-legend__item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1);
 }
 
 .learner-app .extr-legend__ico {
@@ -8427,8 +8442,8 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 15px 0 0;
-  padding: 7px 12px 7px 13px;
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-3);
   border-radius: 8px;
   background: var(--exam-tip-bg);
   border: 1px solid var(--exam-tip-border);
@@ -8451,7 +8466,7 @@ html:has(.learner-app) {
 .learner-app .extr-actions {
   display: grid;
   gap: 8px;
-  margin-top: 7px;
+  margin-top: var(--sp-2);
 }
 
 .learner-app .extr-actions .btn {
@@ -8511,7 +8526,7 @@ html:has(.learner-app) {
   --rv-jade: #0a8460;
   --rv-sunken: #f6f5f2;
   --rv-line-soft: #efedea;
-  background: #fefefe;
+  background: var(--surface-card);
   color: var(--rv-ink);
 }
 
@@ -8519,7 +8534,27 @@ html:has(.learner-app) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 0 20px 24px;
+  padding: 0 var(--sp-5) var(--sp-6);
+}
+
+/* S3 (<1024): thẻ giãn lấp khoảng trống để hàng đánh giá dính đáy màn
+   (vẫn sticky khi nội dung dài), không treo giữa màn với nửa dưới trống. */
+@media (max-width: 1023px) {
+  .learner-app .ex.rv {
+    min-height: 100dvh;
+  }
+
+  .learner-app .fc-scene,
+  .learner-app .fc-hold,
+  .learner-app .fc-card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .learner-app .fc-face {
+    flex: 1;
+  }
 }
 
 .learner-app .fc-top {
@@ -8560,7 +8595,7 @@ html:has(.learner-app) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 16px 20px;
   border: 1px solid var(--rv-line-soft);
   border-radius: 13px;
@@ -8605,8 +8640,8 @@ html:has(.learner-app) {
   display: grid;
   gap: 2px;
   width: 100%;
-  margin: 10px 0 0;
-  padding: 10px 12px;
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-3) var(--sp-3);
   border-radius: 10px;
   background: var(--rv-sunken);
   font-size: 0.9375rem;
@@ -8629,7 +8664,7 @@ html:has(.learner-app) {
 }
 
 .learner-app .fc-hint {
-  margin: 10px 0 0;
+  margin: var(--sp-3) 0 0;
   text-align: center;
   font-size: 0.8125rem;
   color: var(--text-muted);
@@ -8642,24 +8677,24 @@ html:has(.learner-app) {
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  margin: 18px -20px 0;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-  background: #fefefe;
+  gap: var(--sp-2);
+  margin: var(--sp-5) calc(-1 * var(--sp-5)) 0;
+  padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  background: var(--surface-card);
 }
 
 .learner-app .fc-rate__btn {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto auto;
-  column-gap: 5px;
+  column-gap: var(--sp-1);
   align-items: center;
   align-content: center;
   min-height: 54px;
-  padding: 4px 6px;
+  padding: var(--sp-1) var(--sp-2);
   border: 1px solid;
-  border-radius: 11px;
-  background: #fff;
+  border-radius: var(--r-md);
+  background: var(--surface-card);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -8694,7 +8729,7 @@ html:has(.learner-app) {
 
 @media (max-width: 400px) {
   .learner-app .fc-rate {
-    gap: 5px;
+    gap: var(--sp-1);
     padding-left: 12px;
     padding-right: 12px;
   }
@@ -8755,8 +8790,8 @@ html:has(.learner-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  margin: 14px 0 0;
+  gap: var(--sp-1);
+  margin: var(--sp-4) 0 0;
   font-size: 0.75rem;
   color: #2e3240;
 }

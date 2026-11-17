@@ -34,7 +34,7 @@
 
   .learner-app .w-public .obw-steps ol {
     display: flex;
-    gap: 6px;
+    gap: var(--sp-2);
     list-style: none;
     padding: 0;
   }
@@ -194,7 +194,7 @@
     grid-template-columns: repeat(9, minmax(0, 1fr));
     gap: 4px;
     margin-top: var(--sp-4);
-    padding: 6px;
+    padding: var(--sp-2);
     border: 1px solid var(--border-default);
     border-radius: var(--r-pill);
     background: var(--cream-100);

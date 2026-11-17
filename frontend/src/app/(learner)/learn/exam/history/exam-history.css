@@ -93,7 +93,7 @@
 }
 
 .learner-app .ehs-card__score {
-  padding: 6px 4px;
+  padding: var(--sp-2) var(--sp-1);
   border-radius: var(--r-sm);
   background: var(--surface-sunken);
   text-align: center;

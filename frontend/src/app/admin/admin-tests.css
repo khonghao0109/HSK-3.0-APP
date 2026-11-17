@@ -493,7 +493,7 @@
 .admin-app .tst-reasons li {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: var(--adm-sp-2);
 }
 
 .admin-app .tst-reasons__where {
