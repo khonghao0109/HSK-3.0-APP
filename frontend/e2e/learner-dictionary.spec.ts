@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { queryDisposableDb, sqlLiteral } from './support/disposable-db';
+import { copiedHanzi } from './support/hanzi-selection';
 import {
   readCspViolations,
   registerReadyLearner,
@@ -324,6 +325,17 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await expect(page.locator('.word-ex footer')).toHaveText(
       `Nguồn: ${RELATED_EXAMPLE.sourceName} · Phiên bản ${RELATED_EXAMPLE.sourceVersion}`,
     );
+  });
+
+  test('copies the 田字格 hero word once (Q346)', async ({ page, baseURL }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    const hero = page.getByRole('heading', { level: 1 });
+    await expect(hero).toHaveAccessibleName(WORD.hanzi);
+    expect(await copiedHanzi(hero)).toEqual({
+      drag: WORD.hanzi,
+      triple: WORD.hanzi,
+    });
   });
 
   test('keeps a four-character hero on one line at 320 and 1440 (Q333)', async ({

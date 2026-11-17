@@ -5138,7 +5138,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* HanziCells: the word is copied once, from its .sr-only span, not twice. */
-.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) .tzg-cells {
+/* HanziCells: a drag or triple-click selects the visible cells; the
+   .sr-only copy stays out of the selection, so the word is copied once. */
+.learner-app :is(.fc-hz, .word__hz, .dict-item--top .dict-item__hz) > .sr-only {
   user-select: none;
 }

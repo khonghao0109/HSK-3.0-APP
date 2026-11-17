@@ -96,6 +96,15 @@ test.describe('Learner review session (M3.3a)', () => {
 
     await expect(front(page)).toHaveText(WORDS[0].hanzi);
     await expect(page.getByText('Chạm vào thẻ để lật mặt sau')).toBeVisible();
+    // Q346: the front copies the word once, as on the word page (a drag here
+    // would flip the card): the cells are selectable, the .sr-only copy not.
+    expect(
+      await front(page).evaluate((sr) => ({
+        sr: getComputedStyle(sr).userSelect,
+        cell: getComputedStyle(sr.parentElement!.querySelector('.tzg-cell')!)
+          .userSelect,
+      })),
+    ).toEqual({ sr: 'none', cell: 'auto' });
     await expectCounter(page, '1 / 3');
     // Q261: a new card's again/hard/good previews are minutes away.
     await expect(gradeButton(page, 'Chưa nhớ')).toHaveAccessibleName(/phút$/);
