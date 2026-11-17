@@ -11,7 +11,27 @@ import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
 import WordNotFound from './not-found';
-import WordPage from './page';
+import WordPage, { generateMetadata } from './page';
+
+// React's cache() only memoizes inside a server-component request; outside
+// one it is a passthrough. This stand-in keeps one memo per cached function,
+// cleared before each test as a new request would be.
+const memos = vi.hoisted(() => [] as Map<string, unknown>[]);
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return {
+    ...actual,
+    cache: <A extends unknown[], R>(fn: (...args: A) => R) => {
+      const memo = new Map<string, unknown>();
+      memos.push(memo);
+      return (...args: A): R => {
+        const key = JSON.stringify(args);
+        if (!memo.has(key)) memo.set(key, fn(...args));
+        return memo.get(key) as R;
+      };
+    },
+  };
+});
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url: string) => {
@@ -110,6 +130,7 @@ async function page(id: string) {
 describe('Chi tiết từ page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    for (const memo of memos) memo.clear();
     vi.mocked(getServerLearnerSession).mockResolvedValue(learner as never);
     vi.mocked(getWord).mockResolvedValue(word);
     vi.mocked(getSaved).mockResolvedValue(true);
@@ -187,7 +208,7 @@ describe('Chi tiết từ page', () => {
       Array.from(container.querySelectorAll('.word-ex footer span')).map(
         (span) => span.textContent,
       ),
-    ).toEqual(['Nguồn: Kho câu A', 'Phiên bản: 2.0.0']);
+    ).toEqual(['Nguồn: Kho câu A · Phiên bản 2.0.0']);
   });
 
   it('shows the Vietnamese translation under an example when the API has one (Q315)', async () => {
@@ -212,7 +233,7 @@ describe('Chi tiết từ page', () => {
       Array.from(container.querySelectorAll('.word-ex footer span')).map(
         (span) => span.textContent,
       ),
-    ).toEqual(['Nguồn: Từ điển Hán Lộ', 'Phiên bản: 1.0.0']);
+    ).toEqual(['Nguồn: Từ điển Hán Lộ · Phiên bản 1.0.0']);
   });
 
   it('hides the example block when there is neither examples nor Word.example', async () => {
@@ -247,6 +268,50 @@ describe('Chi tiết từ page', () => {
       '学生xuésheng · học sinh',
       '学期xué qī · Chưa có nghĩa tiếng Việt',
     ]);
+  });
+
+  it('lists the API Vietnamese meanings under "Nghĩa", skipping empty ones (Q324)', async () => {
+    vi.mocked(getWord).mockResolvedValue({
+      ...word,
+      meanings: [
+        { order: 1, en: 'to learn', vi: 'học tập' },
+        { order: 2, en: 'to imitate', vi: null },
+        { order: 3, en: 'to study', vi: ' nghiên cứu ' },
+      ],
+    });
+    render(<LearnerToastProvider>{await page('11')}</LearnerToastProvider>);
+    const block = screen.getByRole('region', { name: 'Nghĩa' });
+    expect(
+      within(block)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['học tập', 'nghiên cứu']);
+  });
+
+  it('titles the page with the hanzi (C9, Q331)', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ id: '11' }),
+    });
+    expect(metadata.title).toBe('学习 · Chi tiết từ vựng');
+  });
+
+  it('keeps the plain title when the word cannot be read (C9)', async () => {
+    vi.mocked(getWord).mockRejectedValue(backendError(404));
+    expect(
+      (await generateMetadata({ params: Promise.resolve({ id: '11' }) })).title,
+    ).toBe('Chi tiết từ vựng');
+    expect(
+      (await generateMetadata({ params: Promise.resolve({ id: 'abc' }) }))
+        .title,
+    ).toBe('Chi tiết từ vựng');
+  });
+
+  it('reads the word and the session once per request for the title and the page (Q331)', async () => {
+    await generateMetadata({ params: Promise.resolve({ id: '11' }) });
+    render(<LearnerToastProvider>{await page('11')}</LearnerToastProvider>);
+    expect(getWord).toHaveBeenCalledTimes(1);
+    expect(getServerLearnerSession).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('学习');
   });
 
   it('hides the related block when related is empty', async () => {

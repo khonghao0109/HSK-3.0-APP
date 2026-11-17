@@ -83,6 +83,31 @@ function relatedFixtureId(): number {
   return id;
 }
 
+// M3.4d-fix (Q69): two two-character words that only relate to each other.
+const TWO_CHAR = { base: '鼋鼍', related: '鼋鳖' };
+
+function twoCharFixtureId(): number {
+  const read = () =>
+    queryDisposableDb(
+      `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(TWO_CHAR.base)}`,
+    );
+  if (!read()) {
+    for (const hanzi of [TWO_CHAR.base, TWO_CHAR.related]) {
+      queryDisposableDb(
+        insertWord({
+          hanzi,
+          traditional: null,
+          example: null,
+          status: 'published',
+        }),
+      );
+    }
+  }
+  const id = Number(read());
+  if (!id) throw new Error('two-character fixture word missing');
+  return id;
+}
+
 function fixtureIds(): { word: number; draft: number } {
   const read = () =>
     queryDisposableDb(
@@ -278,6 +303,102 @@ test.describe('Learner dictionary (M2.6b)', () => {
         .locator(`a[href="/learn/dictionary/${ids.word}"]:visible`)
         .first(),
     ).toBeVisible();
+  });
+
+  test('titles the page with the hanzi and lists the meanings (M3.4d)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    await expect(page).toHaveTitle(`${WORD.hanzi} · Chi tiết từ vựng · Hán Lộ`);
+    await expect(
+      page.getByRole('region', { name: WORD.hanzi }).getByRole('heading', {
+        level: 1,
+      }),
+    ).toHaveText(WORD.hanzi);
+    const senses = page.getByRole('region', { name: 'Nghĩa' });
+    await expect(senses.locator('ol > li')).toHaveText([WORD.vi]);
+
+    await page.goto(`/learn/dictionary/${relatedId}`);
+    await expect(page.locator('.word-ex footer')).toHaveText(
+      `Nguồn: ${RELATED_EXAMPLE.sourceName} · Phiên bản ${RELATED_EXAMPLE.sourceVersion}`,
+    );
+  });
+
+  test('keeps a four-character hero on one line at 320 and 1440 (Q333)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    for (const width of [1440, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/dictionary/${ids.word}`);
+      const hero = page.getByRole('heading', { level: 1 });
+      await expect(hero).toHaveText(WORD.hanzi);
+      await expect(hero).toHaveClass(/word__hz--n4/);
+      const fit = await hero.evaluate((h1) => {
+        const box = h1.getBoundingClientRect();
+        const head = (h1.parentElement as HTMLElement).getBoundingClientRect();
+        return {
+          oneLine: h1.getClientRects().length === 1,
+          height: box.height,
+          fontSize: parseFloat(getComputedStyle(h1).fontSize),
+          inside: box.left >= head.left - 1 && box.right <= head.right + 1,
+          noOverflow: h1.scrollWidth <= h1.clientWidth + 1,
+          pageScroll:
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        };
+      });
+      expect(fit.oneLine, `${width}px`).toBe(true);
+      expect(fit.height, `${width}px`).toBeLessThan(fit.fontSize * 1.5);
+      expect(fit.inside, `${width}px`).toBe(true);
+      expect(fit.noOverflow, `${width}px`).toBe(true);
+      expect(fit.pageScroll, `${width}px`).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('web cards: Hành động heading and the Hán tự toast (M3.4d) @web', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/dictionary/${ids.word}`);
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Hành động' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Xem chi tiết Hán tự' }).click();
+    await expect(page.locator('.toast-region[role="status"]')).toHaveText(
+      'Tính năng sắp ra mắt.',
+    );
+  });
+
+  test('related links of two-character words have a 44×44 target (Q69)', async ({
+    page,
+    baseURL,
+  }) => {
+    const baseId = twoCharFixtureId();
+    await registerReadyLearner(page, baseURL);
+    // Mobile shows the list rows (.word-rel__list a), web the table words.
+    for (const [width, selector] of [
+      [390, '.word-rel__list a'],
+      [1440, '.word-rel__word'],
+    ] as const) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/learn/dictionary/${baseId}`);
+      const links = page.locator(`.word-rel ${selector}`);
+      await expect(links).toHaveCount(1);
+      await expect(links.first()).toContainText(TWO_CHAR.related);
+      for (const link of await links.all()) {
+        const box = await link.boundingBox();
+        expect(box, `${width}px`).not.toBeNull();
+        expect(box?.width ?? 0, `${width}px width`).toBeGreaterThanOrEqual(44);
+        expect(box?.height ?? 0, `${width}px height`).toBeGreaterThanOrEqual(
+          44,
+        );
+      }
+    }
   });
 
   test('a missing, malformed or draft word is a 404 page', async ({

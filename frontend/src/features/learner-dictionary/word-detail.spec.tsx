@@ -19,6 +19,7 @@ const xuexi: WordView = {
   traditional: '學習',
   pinyin: 'xuéxí',
   vietnamese: 'học tập; nghiên cứu',
+  meanings: ['học tập', 'nghiên cứu'],
   level: 'HSK 1',
   examples: [{ hanzi: '我每天都学习中文。', vi: null }],
   exampleSources: [{ name: 'Từ điển Hán Lộ', version: '1.0.0' }],
@@ -32,6 +33,7 @@ const nihao: WordView = {
   traditional: null,
   pinyin: 'nǐ hǎo',
   vietnamese: null,
+  meanings: [],
   level: null,
   examples: [],
   exampleSources: [],
@@ -116,7 +118,7 @@ describe('WordDetail', () => {
       Array.from(container.querySelectorAll('.word-ex footer span')).map(
         (span) => span.textContent,
       ),
-    ).toEqual(['Nguồn: Từ điển Hán Lộ', 'Phiên bản: 1.0.0']);
+    ).toEqual(['Nguồn: Từ điển Hán Lộ · Phiên bản 1.0.0']);
     // Q63, Q66: no aria-pressed on the heart, no speaker.
     const fav = screen.getByRole('button', { name: 'Thêm vào yêu thích' });
     expect(fav).not.toHaveAttribute('aria-pressed');
@@ -140,6 +142,71 @@ describe('WordDetail', () => {
     expect(vi).toHaveClass('word__vi--none');
     expect(vi).toHaveTextContent('Chưa có nghĩa tiếng Việt');
   });
+
+  it('lists every Vietnamese meaning in order under "Nghĩa" (Q324)', () => {
+    renderWord({ ...xuexi, meanings: ['học tập', 'nghiên cứu', 'việc học'] });
+    const block = screen.getByRole('region', { name: 'Nghĩa' });
+    const list = within(block).getByRole('list');
+    expect(list.tagName).toBe('OL');
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['học tập', 'nghiên cứu', 'việc học']);
+    // Q324: no usage, note or part of speech; the hero keeps Q70.
+    expect(document.querySelector('.word__vi')).toHaveTextContent(
+      'học tập; nghiên cứu',
+    );
+  });
+
+  it('hides "Nghĩa" when the word has no Vietnamese meaning (Q324)', () => {
+    renderWord(nihao);
+    expect(screen.queryByRole('heading', { name: 'Nghĩa' })).toBeNull();
+    expect(document.querySelector('.word-sense')).toBeNull();
+  });
+
+  it('the hero is a named region (C1)', () => {
+    renderWord();
+    const hero = screen.getByRole('region', { name: '学习' });
+    expect(hero.tagName).toBe('SECTION');
+    expect(hero).toHaveClass('word-web__hero');
+  });
+
+  it('the web action card has the heading "Hành động" (B8a)', () => {
+    renderWord();
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: 'Hành động',
+    });
+    expect(heading.closest('.word-web__act')).not.toBeNull();
+  });
+
+  it('"Xem chi tiết Hán tự" toasts "Tính năng sắp ra mắt." (Q327)', () => {
+    renderWord();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Xem chi tiết Hán tự' }),
+    );
+    expect(toasts()).toEqual(['Tính năng sắp ra mắt.']);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Tính năng sắp ra mắt.',
+    );
+  });
+
+  it.each([
+    ['学', 1],
+    ['学习', 2],
+    ['一路平安', 4],
+    ['中华人民共和', 6],
+  ])(
+    'sizes the hero %s by its %i characters on one line (Q333)',
+    (hanzi, n) => {
+      renderWord({ ...xuexi, hanzi, traditional: null });
+      expect(screen.getByRole('heading', { level: 1 })).toHaveClass(
+        'word__hz',
+        `word__hz--n${n}`,
+      );
+    },
+  );
 
   it('joins several example sources on one footer line (Q-C)', () => {
     const { container } = renderWord({

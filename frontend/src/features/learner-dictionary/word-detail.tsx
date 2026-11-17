@@ -28,6 +28,8 @@ export type WordView = {
   pinyin: string;
   /** Every Vietnamese meaning joined with "; " (Q70), or null. */
   vietnamese: string | null;
+  /** Q324: the same meanings, one per item of "Nghĩa". */
+  meanings: string[];
   level: string | null;
   /** API `examples[]`, or the old `Word.example` when it is empty (Q311). */
   examples: { hanzi: string; vi: string | null }[];
@@ -151,6 +153,9 @@ export function WordDetail({
   const onlySource =
     word.exampleSources.length === 1 ? word.exampleSources[0] : undefined;
   const shown = traditional && word.traditional ? word.traditional : word.hanzi;
+  // Q333: the hero stays on one line; CSS shrinks it by character count
+  // (rules up to 12, learner.css).
+  const hanziLength = Math.min(Array.from(shown).length, 12);
 
   // Shared by the mobile and the web menu copies (only one is visible per
   // viewport; the mobile copy keeps its `.app` anchor below 1024px).
@@ -245,10 +250,11 @@ export function WordDetail({
             are display:contents, so the mobile flow is unchanged. */}
         <div className="word-web">
           <div className="word-web__main">
-            <div className="word-web__hero">
+            <section className="word-web__hero" aria-labelledby="word-hz">
               <div className="word__head">
                 <h1
-                  className="word__hz"
+                  className={`word__hz word__hz--n${hanziLength}`}
+                  id="word-hz"
                   aria-label={shown}
                   lang={traditional && word.traditional ? 'zh-Hant' : 'zh-Hans'}
                 >
@@ -311,7 +317,22 @@ export function WordDetail({
               >
                 {menuItems}
               </div>
-            </div>
+            </section>
+
+            {/* Q324: one item per Vietnamese meaning (mẫu word-full.html). */}
+            {word.meanings.length > 0 ? (
+              <section
+                className="word-sense"
+                aria-labelledby="word-sense-title"
+              >
+                <h2 id="word-sense-title">Nghĩa</h2>
+                <ol className="word-sense__list">
+                  {word.meanings.map((meaning, index) => (
+                    <li key={index}>{meaning}</li>
+                  ))}
+                </ol>
+              </section>
+            ) : null}
 
             {/* M3.4c: mẫu word-full.html puts "Từ liên quan" before "Ví dụ". */}
             {word.related.length > 0 ? (
@@ -393,40 +414,48 @@ export function WordDetail({
             {word.examples.length > 0 ? (
               <section className="word-ex" aria-labelledby="word-ex-title">
                 <h2 id="word-ex-title">Ví dụ</h2>
-                {word.examples.map((example, index) => (
-                  <div className="word-ex__item" key={index}>
-                    <p className="word-ex__cn">
-                      <span className="cn" lang="zh-Hans">
-                        {example.hanzi}
+                {/* C3: the mobile card under the heading (mẫu
+                    mobile/word-full.html .uxa-card); contents on web. */}
+                <div className="word-ex__list">
+                  {word.examples.map((example, index) => (
+                    <div className="word-ex__item" key={index}>
+                      <p className="word-ex__cn">
+                        <span className="cn" lang="zh-Hans">
+                          {example.hanzi}
+                        </span>
+                      </p>
+                      {example.vi ? (
+                        <p className="word-ex__vi">{example.vi}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                  {onlySource ? (
+                    // Q326: one line, as mẫu web/word-full.html.
+                    <footer>
+                      <span>
+                        Nguồn: {onlySource.name} · Phiên bản{' '}
+                        {onlySource.version}
                       </span>
-                    </p>
-                    {example.vi ? (
-                      <p className="word-ex__vi">{example.vi}</p>
-                    ) : null}
-                  </div>
-                ))}
-                {onlySource ? (
-                  <footer>
-                    <span>Nguồn: {onlySource.name}</span>
-                    <span>Phiên bản: {onlySource.version}</span>
-                  </footer>
-                ) : word.exampleSources.length > 1 ? (
-                  // Q-C: several sources share one line.
-                  <footer>
-                    <span>
-                      Nguồn:{' '}
-                      {word.exampleSources
-                        .map((source) => `${source.name} ${source.version}`)
-                        .join(' · ')}
-                    </span>
-                  </footer>
-                ) : null}
+                    </footer>
+                  ) : word.exampleSources.length > 1 ? (
+                    // Q-C: several sources share one line.
+                    <footer>
+                      <span>
+                        Nguồn:{' '}
+                        {word.exampleSources
+                          .map((source) => `${source.name} ${source.version}`)
+                          .join(' · ')}
+                      </span>
+                    </footer>
+                  ) : null}
+                </div>
               </section>
             ) : null}
           </div>
 
           <div className="word-web__aside">
             <div className="word-web__act">
+              <h2 className="word-web__act-title w-only">Hành động</h2>
               <button
                 className="word-save"
                 type="button"
@@ -487,6 +516,14 @@ export function WordDetail({
                   </>
                 ) : null}
               </dl>
+              {/* Q327: no Hán tự screen yet. */}
+              <ToastButton
+                className="word-web__hanzi"
+                message={TOAST_COMING_SOON}
+              >
+                <Icon name="pen-line" />
+                Xem chi tiết Hán tự
+              </ToastButton>
               <LearnerBackButton
                 className="word-web__back w-only"
                 ariaLabel="Quay lại Tra từ"
