@@ -96,7 +96,7 @@ xuất, chờ quyết định #12.
 | Schema tính năng M7 (OAuth, Material, Entitlement, QuestionRevision) | chưa có | backlog mục 5, theo từng tính năng | GĐ9, GĐ12 |
 | Từ điển tiếng Anh | 121.856 Word, 200.156 WordMeaning (CC-CEDICT, CC BY-SA 4.0) | đã đủ | GĐ0 ✅ |
 | Mapping từ theo cấp HSK | 11.086 WordLevel; 7 DataSource HSK chưa có license | M1.1 | GĐ4 |
-| Nghĩa tiếng Việt | 0 | M1.2a workflow → M1.2b 2.263 từ HSK1–HSK3 | GĐ4, song song tới GĐ8 |
+| Nghĩa tiếng Việt | 0 | M1.2a workflow → M1.2b 2.231 từ HSK1–HSK3 | GĐ4, song song tới GĐ8 |
 | Ví dụ câu, audio, stroke cho từ | 0; `Word.audioId`/`imageId` đều null | M3.4a/b schema và API; dữ liệu theo M2.9; media cần M5.2, M6.9 | GĐ6, GĐ8, GĐ11 |
 | Bài học, topic, story thật | 0; 35 Lesson, 70 Topic, 14 Story placeholder | M1.3 xoá placeholder; M2.9a pilot 5 bài HSK1; M2.9 nội dung HSK1–HSK3 | GĐ4, GĐ5 |
 | Bài tập trong bài học | 0 LessonExercise | M2.9 (API authoring/import đã có; UI M5.1b1) | GĐ5, GĐ8 |
@@ -210,7 +210,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | --- | --- | --- | --- |
 | M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT | ⬜ | R1; quyết định #2 đã chốt (Q180, Q181); Q196 ghi công CC-CEDICT đầy đủ là điều kiện publish M2.1f. DB dev 13/09: 7 `DataSource` HSK không có license, `referenceUrl` trỏ file trong repo |
 | M1.2a | Workflow nghĩa tiếng Việt: import theo `DataSource`, reviewer duyệt, rollback theo batch | ⬜ | #2 đã chốt (Q182, Q185); còn chờ PO chỉ định người duyệt. DB dev 13/09: 200.156 `WordMeaning` đều tiếng Anh, 0 `meaningVi` |
-| M1.2b | Nhập nghĩa tiếng Việt đã duyệt cho 2.263 từ HSK1–HSK3 trước beta (HSK1 530, HSK2 765, HSK3 968) | ⬜ | chỉ tiêu 🔵 #12; chạy song song GĐ5–GĐ8, gate ở M6.7; 8.823 từ HSK4–HSK7_9 sau beta; nguồn và QA theo Q182–Q185 |
+| M1.2b | Nhập nghĩa tiếng Việt đã duyệt cho 2.231 từ HSK1–HSK3 trước beta (HSK1 498, HSK2 765, HSK3 968; HSK1 đổi 530 → 498 theo P5, PO 17/11/2026: 32 cách đọc gắn nhầm cấp HSK1 được gỡ, 车上 không có `Word`) | ⬜ | chỉ tiêu 🔵 #12; chạy song song GĐ5–GĐ8, gate ở M6.7; 8.823 từ HSK4–HSK7_9 sau beta; nguồn và QA theo Q182–Q185 |
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | DB dev 13/09: 35 Lesson, 70 Topic, 14 Story đều là seed "Temporary" từ `seed:learning` |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |
@@ -516,7 +516,7 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | # | Bước | Trạng thái | Bằng chứng / ghi chú |
 | --- | --- | --- | --- |
 | M1.1 | Xác minh license/provenance 7 HSK word list; attribution CC-CEDICT (CC BY-SA 4.0) | ⬜ | Roadmap R1; Q196 (02/11) frontend hiển thị ghi công đủ, trước publish M2.1f; `DataSource` đã có bảng và provenance snapshot. Kiểm tra DB dev 13/09: CC-CEDICT có license CC BY-SA 4.0, 7 nguồn HSK list chưa có license |
-| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback (M1.2a), rồi nhập nghĩa đã duyệt cho 2.263 từ HSK1–HSK3 trước beta (M1.2b) | ⬜ | Rubric chất lượng: archive master plan §13.4. Chỉ tiêu 🔵 #12. Kiểm tra DB dev 13/09: 0 nghĩa tiếng Việt trên 200.156 nghĩa |
+| M1.2 | Workflow nghĩa tiếng Việt có reviewer và rollback (M1.2a), rồi nhập nghĩa đã duyệt cho 2.231 từ HSK1–HSK3 trước beta (M1.2b) | ⬜ | Rubric chất lượng: archive master plan §13.4. Chỉ tiêu 🔵 #12. Kiểm tra DB dev 13/09: 0 nghĩa tiếng Việt trên 200.156 nghĩa |
 | M1.3 | Loại content Temporary/fixture khỏi release candidate | ⬜ | Kiểm tra DB dev 13/09: toàn bộ 35 Lesson, 70 Topic, 14 Story là placeholder "Temporary" |
 | M1.4a | Refresh token lưu hash trong `UserSession`; access token gắn session (`sid`) | ✅ | B-03; schema ✅. 29/09: `1b27a45`, PR #5 run `36521807782`. Xoay vòng refresh token, DB lưu hash sha256, access token gắn sid; access giữ 7d |
 | M1.4b | Logout revoke session; khoảng ân hạn refresh 10 s | ✅ | B-03; schema ✅. 29/09: `08a78ea`, PR #5 run `36533471666`. POST /auth/logout (204) thu hồi session theo sid, khoảng ân hạn 10s cho race refresh |

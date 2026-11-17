@@ -185,11 +185,11 @@
     },
     {
       "hanzi": "多少",
-      "pinyin": "duōshǎo",
+      "pinyin": "duōshao",
       "meaningVi": "bao nhiêu",
       "example": {
         "hanzi": "这个牛奶多少钱？",
-        "pinyin": "Zhège niúnǎi duōshǎo qián?",
+        "pinyin": "Zhège niúnǎi duōshao qián?",
         "meaningVi": "Sữa bò này bao nhiêu tiền?"
       }
     },
@@ -226,7 +226,7 @@
       "content": [
         {
           "type": "text",
-          "value": "Bài 4 gồm 20 từ HSK1 về ăn uống và mua sắm: đồ ăn, đồ uống, ba bữa trong ngày, giá cả và cửa hàng. Danh sách từ: 吃 (chī) ăn; 喝 (hē) uống; 水 (shuǐ) nước; 茶 (chá) trà; 米饭 (mǐfàn) cơm; 菜 (cài) món ăn, rau; 水果 (shuǐguǒ) hoa quả; 牛奶 (niúnǎi) sữa bò; 面包 (miànbāo) bánh mì; 鸡蛋 (jīdàn) trứng gà; 早饭 (zǎofàn) bữa sáng; 午饭 (wǔfàn) bữa trưa; 晚饭 (wǎnfàn) bữa tối; 喜欢 (xǐhuan) thích; 买 (mǎi) mua; 钱 (qián) tiền; 块 (kuài) tệ (đồng nhân dân tệ); 多少 (duōshǎo) bao nhiêu; 贵 (guì) đắt; 商店 (shāngdiàn) cửa hàng. Đọc to từng từ, chú ý thanh điệu rồi mới làm phần luyện tập."
+          "value": "Bài 4 gồm 20 từ HSK1 về ăn uống và mua sắm: đồ ăn, đồ uống, ba bữa trong ngày, giá cả và cửa hàng. Danh sách từ: 吃 (chī) ăn; 喝 (hē) uống; 水 (shuǐ) nước; 茶 (chá) trà; 米饭 (mǐfàn) cơm; 菜 (cài) món ăn, rau; 水果 (shuǐguǒ) hoa quả; 牛奶 (niúnǎi) sữa bò; 面包 (miànbāo) bánh mì; 鸡蛋 (jīdàn) trứng gà; 早饭 (zǎofàn) bữa sáng; 午饭 (wǔfàn) bữa trưa; 晚饭 (wǎnfàn) bữa tối; 喜欢 (xǐhuan) thích; 买 (mǎi) mua; 钱 (qián) tiền; 块 (kuài) tệ (đồng nhân dân tệ); 多少 (duōshao) bao nhiêu; 贵 (guì) đắt; 商店 (shāngdiàn) cửa hàng. Đọc to từng từ, chú ý thanh điệu rồi mới làm phần luyện tập."
         },
         {
           "type": "vocabulary_list",
@@ -253,7 +253,7 @@
         },
         {
           "type": "text",
-          "value": "3. Hỏi giá: …多少钱？ (… bao nhiêu tiền?). Trả lời: số đếm + 块 (tệ). Ví dụ: 这个面包多少钱？ (Zhège miànbāo duōshǎo qián?) = Cái bánh mì này bao nhiêu tiền? / 五块。 (Wǔ kuài.) = Năm tệ. / 牛奶三块。 (Niúnǎi sān kuài.) = Sữa bò ba tệ. Trong khẩu ngữ nhanh, 多少 trong 多少钱 có thể đọc nhẹ thành duōshao."
+          "value": "3. Hỏi giá: …多少钱？ (… bao nhiêu tiền?). Trả lời: số đếm + 块 (tệ). Ví dụ: 这个面包多少钱？ (Zhège miànbāo duōshao qián?) = Cái bánh mì này bao nhiêu tiền? / 五块。 (Wǔ kuài.) = Năm tệ. / 牛奶三块。 (Niúnǎi sān kuài.) = Sữa bò ba tệ. Trong khẩu ngữ nhanh, 多少 trong 多少钱 có thể đọc nhẹ thành duōshao."
         },
         {
           "type": "text",
@@ -388,7 +388,7 @@
       "answer": {
         "optionId": "opt-c"
       },
-      "explanation": "贵 (guì) là tính từ “đắt”, đứng sau 很 thành 很贵: 这个商店的水果很贵。 多少 (duōshǎo) là “bao nhiêu”, 钱 (qián) là “tiền”, 块 (kuài) là đơn vị tiền — không từ nào đứng sau 很 để chỉ mức độ.",
+      "explanation": "贵 (guì) là tính từ “đắt”, đứng sau 很 thành 很贵: 这个商店的水果很贵。 多少 (duōshao) là “bao nhiêu”, 钱 (qián) là “tiền”, 块 (kuài) là đơn vị tiền — không từ nào đứng sau 很 để chỉ mức độ.",
       "orderIndex": 3
     },
     {
@@ -577,7 +577,7 @@
   "review": {
     "status": "draft",
     "requiredChecks": [
-      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 喜欢 xǐhuan, 多少 duōshǎo, 米饭 mǐfàn, 鸡蛋 jīdàn, 牛奶 niúnǎi)",
+      "pinyin có dấu thanh đúng từng âm tiết (đặc biệt 喜欢 xǐhuan, 多少 duōshao, 米饭 mǐfàn, 鸡蛋 jīdàn, 牛奶 niúnǎi)",
       "nghĩa tiếng Việt tự nhiên và đúng ngữ cảnh ăn uống, mua sắm ở HSK1",
       "câu ví dụ và text block chỉ dùng chữ Hán có trong HSK1",
       "đáp án và explanation của cả 10 bài tập, gồm vị trí đáp án mcq và thứ tự token",
