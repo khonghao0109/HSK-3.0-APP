@@ -38,7 +38,7 @@ Mỗi lô khoảng 100 từ, ứng với 5 bài trong `backend/content/hsk1/curr
 |---|---|
 | Nghĩa | Đúng nghĩa thông dụng HSK1, đúng từ loại (từ đa từ loại ghi "danh từ, động từ"); nhiều nghĩa tách bằng dấu phẩy; không viết hoa đầu (trừ danh từ riêng), không dấu chấm cuối; lượng từ bắt đầu "(lượng từ)" |
 | Câu ví dụ | Tự nhiên, đúng ngữ pháp, dùng đúng nghĩa đã ghi, ≤ 12 chữ Hán, chỉ dùng từ HSK1 và tên riêng khai báo trong `properNames` |
-| Pinyin | Đúng từng âm tiết; **thanh gốc, không ghi biến điệu** (quy ước repo: 不是 = bù shì, 一个 = yī ge; audio TTS vẫn đọc đúng biến điệu); thanh nhẹ không dấu; 上 chỉ vị trí sau danh từ viết thanh nhẹ (桌子上 = zhuōzi shang); tên riêng và tên ngôn ngữ viết hoa cả ở mục từ lẫn câu (Hànyǔ, Zhōngwén, Běijīng, Zhōngguó) |
+| Pinyin | Đúng từng âm tiết; **thanh gốc, không ghi biến điệu** (quy ước repo: 不是 = bù shì, 一个 = yī ge; audio TTS vẫn đọc đúng biến điệu); thanh nhẹ không dấu; 上 chỉ vị trí sau danh từ viết thanh nhẹ (桌子上 = zhuōzi shang); 个 trong câu (sau số/đại từ) viết thanh nhẹ `ge` (三个 = sān ge, 那个 = nà ge), mục từ 个 giữ `gè` (PO 18/11/2026); tên riêng và tên ngôn ngữ viết hoa cả ở mục từ lẫn câu (Hànyǔ, Zhōngwén, Běijīng, Zhōngguó) |
 | Bản dịch | Đúng, tự nhiên |
 | Nguồn | Không giống câu chữ của từ điển hay app bên thứ ba |
 
@@ -49,4 +49,33 @@ tiếng Việt, chỉ dùng tiếng Anh khi từ chưa có nghĩa Việt (Q260).
 
 ## B. Bài học (Pha 4)
 
-Thứ tự xuất bản theo TL-221: **Topic → Exercise → Lesson**. Chi tiết bổ sung ở Pha 4.
+File: `backend/content/pilot/hsk1/lesson-01.json` … `lesson-10.json`. Từ, nghĩa và câu ví dụ trong `words`
+lấy nguyên từ lô nghĩa đã duyệt (batch-01 cho bài 1–5, batch-02 cho bài 6–10); test
+`pilot-content.validator.spec.ts` chặn mọi lệch. Phần cần duyệt mới: `description`, 3 topic và 10 bài tập.
+
+### Tiêu chí
+
+| Mục | Đạt khi |
+|---|---|
+| Topic `vocabulary` | Đoạn giới thiệu đúng chủ đề; block `vocabulary_list` = `lesson_words` |
+| Topic `grammar` | Mỗi điểm ngữ pháp của bài (xem `backend/content/hsk1/curriculum.md`) có giải thích tiếng Việt đúng, cấu trúc, 2–3 ví dụ |
+| Topic `key_text` | 4–8 lượt thoại tự nhiên, chỉ dùng từ đã học tới bài đó, pinyin và bản dịch đúng |
+| `mcq` | 4 lựa chọn, đúng một đáp án; ba lựa chọn sai đặt vào đều sai rõ ràng |
+| `fill_blank` | Chỗ trống chỉ một đáp án hợp lý; `acceptedTexts` = chữ Hán + pinyin có dấu + pinyin không dấu (Q194) |
+| `arrange_sentence` | Chỉ một thứ tự đúng (chú ý trạng ngữ thời gian trước/sau chủ ngữ) |
+| Giải thích | Mỗi bài tập có giải thích tiếng Việt đúng |
+
+Ghi nhận xét vào `review.notes` của file bài (hoặc comment PR). Máy kiểm: `npm run content:check:pilot`
+(trong `backend/`, không cần DB).
+
+### Nạp và xuất bản
+
+1. Agent/dev nạp từng bài: `npm run content:import:pilot -- --file content/pilot/hsk1/lesson-NN.json --dry-run`,
+   rồi bỏ `--dry-run`. Mọi bản ghi ở `draft`; `LessonWord` ghi theo Q179.
+   Dùng **cùng một tài khoản admin** cho mọi lần nạp lại (Idempotency-Key gắn với người gửi; tài khoản khác
+   nạp lại sẽ bị 409). Nạp liền nhiều bài có thể chạm rate limit (429): chờ rồi chạy lại, script idempotent.
+2. Người duyệt duyệt trên CMS theo thứ tự TL-221: **Topic → Exercise → Lesson**. Với mỗi bài: approve rồi publish
+   3 topic, rồi 10 bài tập, cuối cùng lesson. Publish lesson trước khi topic/bài tập `published` sẽ cho người
+   học thấy bài rỗng.
+3. Ngay sau khi bài 1–10 `published`, archive placeholder HSK1 theo `docs/content/hsk1-archive-list.md` (PO chốt 18/11/2026: archive ngay, không chờ đủ 25 bài).
+4. Rollback một bài: archive lesson (không hard delete); topic và bài tập archive theo cùng thứ tự ngược lại.

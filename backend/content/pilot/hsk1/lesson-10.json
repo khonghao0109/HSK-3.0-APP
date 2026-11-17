@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l10",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l10-sinh-hoat-hang-ngay",
+    "title": "Sinh hoạt hằng ngày",
+    "description": "Bài 10 HSK1: nói về sinh hoạt hằng ngày như thức dậy, đi làm, đi học, ăn cơm, nghỉ ngơi và đi ngủ; kể giờ giấc và thói quen bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1010
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "起床",
+      "pinyin": "qǐchuáng",
+      "meaningVi": "thức dậy, dậy",
+      "example": {
+        "hanzi": "我早上六点起床。",
+        "pinyin": "Wǒ zǎoshang liù diǎn qǐchuáng.",
+        "meaningVi": "Tôi thức dậy lúc sáu giờ sáng."
+      }
+    },
+    {
+      "hanzi": "起来",
+      "pinyin": "qǐlái",
+      "meaningVi": "dậy, đứng dậy, ngồi dậy",
+      "example": {
+        "hanzi": "你快起来吧！",
+        "pinyin": "Nǐ kuài qǐlái ba!",
+        "meaningVi": "Bạn mau dậy đi!"
+      }
+    },
+    {
+      "hanzi": "睡",
+      "pinyin": "shuì",
+      "meaningVi": "ngủ",
+      "example": {
+        "hanzi": "他还在睡呢。",
+        "pinyin": "Tā hái zài shuì ne.",
+        "meaningVi": "Anh ấy vẫn đang ngủ."
+      }
+    },
+    {
+      "hanzi": "睡觉",
+      "pinyin": "shuìjiào",
+      "meaningVi": "ngủ, đi ngủ",
+      "example": {
+        "hanzi": "孩子们九点睡觉。",
+        "pinyin": "Háizimen jiǔ diǎn shuìjiào.",
+        "meaningVi": "Bọn trẻ đi ngủ lúc chín giờ."
+      }
+    },
+    {
+      "hanzi": "洗",
+      "pinyin": "xǐ",
+      "meaningVi": "rửa, giặt, tắm",
+      "example": {
+        "hanzi": "吃饭前要洗手。",
+        "pinyin": "Chīfàn qián yào xǐ shǒu.",
+        "meaningVi": "Trước khi ăn cơm phải rửa tay."
+      }
+    },
+    {
+      "hanzi": "洗手间",
+      "pinyin": "xǐshǒujiān",
+      "meaningVi": "nhà vệ sinh",
+      "example": {
+        "hanzi": "请问，洗手间在哪儿？",
+        "pinyin": "Qǐngwèn, xǐshǒujiān zài nǎr?",
+        "meaningVi": "Xin hỏi, nhà vệ sinh ở đâu?"
+      }
+    },
+    {
+      "hanzi": "上班",
+      "pinyin": "shàngbān",
+      "meaningVi": "đi làm, vào ca làm",
+      "example": {
+        "hanzi": "爸爸八点上班。",
+        "pinyin": "Bàba bā diǎn shàngbān.",
+        "meaningVi": "Bố đi làm lúc tám giờ."
+      }
+    },
+    {
+      "hanzi": "下班",
+      "pinyin": "xiàbān",
+      "meaningVi": "tan làm, hết giờ làm",
+      "example": {
+        "hanzi": "妈妈下午五点下班。",
+        "pinyin": "Māma xiàwǔ wǔ diǎn xiàbān.",
+        "meaningVi": "Mẹ tan làm lúc năm giờ chiều."
+      }
+    },
+    {
+      "hanzi": "上学",
+      "pinyin": "shàngxué",
+      "meaningVi": "đi học",
+      "example": {
+        "hanzi": "我弟弟今年上学了。",
+        "pinyin": "Wǒ dìdi jīnnián shàngxué le.",
+        "meaningVi": "Em trai tôi năm nay đã đi học rồi."
+      }
+    },
+    {
+      "hanzi": "放学",
+      "pinyin": "fàngxué",
+      "meaningVi": "tan học",
+      "example": {
+        "hanzi": "放学了，我们回家吧。",
+        "pinyin": "Fàngxué le, wǒmen huíjiā ba.",
+        "meaningVi": "Tan học rồi, chúng ta về nhà thôi."
+      }
+    },
+    {
+      "hanzi": "工作",
+      "pinyin": "gōngzuò",
+      "meaningVi": "làm việc",
+      "example": {
+        "hanzi": "我姐姐在医院工作。",
+        "pinyin": "Wǒ jiějie zài yīyuàn gōngzuò.",
+        "meaningVi": "Chị tôi làm việc ở bệnh viện."
+      }
+    },
+    {
+      "hanzi": "休息",
+      "pinyin": "xiūxi",
+      "meaningVi": "nghỉ ngơi, nghỉ",
+      "example": {
+        "hanzi": "你累了，休息一下儿吧。",
+        "pinyin": "Nǐ lèi le, xiūxi yīxiàr ba.",
+        "meaningVi": "Bạn mệt rồi, nghỉ một chút đi."
+      }
+    },
+    {
+      "hanzi": "回家",
+      "pinyin": "huíjiā",
+      "meaningVi": "về nhà",
+      "example": {
+        "hanzi": "我晚上七点回家。",
+        "pinyin": "Wǒ wǎnshang qī diǎn huíjiā.",
+        "meaningVi": "Tôi về nhà lúc bảy giờ tối."
+      }
+    },
+    {
+      "hanzi": "在家",
+      "pinyin": "zàijiā",
+      "meaningVi": "ở nhà",
+      "example": {
+        "hanzi": "星期天我在家休息。",
+        "pinyin": "Xīngqītiān wǒ zàijiā xiūxi.",
+        "meaningVi": "Chủ nhật tôi ở nhà nghỉ ngơi."
+      }
+    },
+    {
+      "hanzi": "吃饭",
+      "pinyin": "chīfàn",
+      "meaningVi": "ăn cơm, ăn",
+      "example": {
+        "hanzi": "我们一起去吃饭吧。",
+        "pinyin": "Wǒmen yīqǐ qù chīfàn ba.",
+        "meaningVi": "Chúng ta cùng đi ăn cơm nhé."
+      }
+    },
+    {
+      "hanzi": "穿",
+      "pinyin": "chuān",
+      "meaningVi": "mặc, đi (giày)",
+      "example": {
+        "hanzi": "天气冷，多穿一点儿衣服。",
+        "pinyin": "Tiānqì lěng, duō chuān yīdiǎnr yīfu.",
+        "meaningVi": "Trời lạnh, mặc thêm chút quần áo."
+      }
+    },
+    {
+      "hanzi": "衣服",
+      "pinyin": "yīfu",
+      "meaningVi": "quần áo",
+      "example": {
+        "hanzi": "我的衣服很干净。",
+        "pinyin": "Wǒ de yīfu hěn gānjìng.",
+        "meaningVi": "Quần áo của tôi rất sạch."
+      }
+    },
+    {
+      "hanzi": "做",
+      "pinyin": "zuò",
+      "meaningVi": "làm, nấu",
+      "example": {
+        "hanzi": "你在做什么？",
+        "pinyin": "Nǐ zài zuò shénme?",
+        "meaningVi": "Bạn đang làm gì vậy?"
+      }
+    },
+    {
+      "hanzi": "事",
+      "pinyin": "shì",
+      "meaningVi": "việc, chuyện",
+      "example": {
+        "hanzi": "我今天有事，不去了。",
+        "pinyin": "Wǒ jīntiān yǒu shì, bù qù le.",
+        "meaningVi": "Hôm nay tôi có việc, không đi nữa."
+      }
+    },
+    {
+      "hanzi": "常常",
+      "pinyin": "chángcháng",
+      "meaningVi": "thường, thường xuyên",
+      "example": {
+        "hanzi": "他常常去图书馆。",
+        "pinyin": "Tā chángcháng qù túshūguǎn.",
+        "meaningVi": "Anh ấy thường đến thư viện."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: sinh hoạt hằng ngày",
+      "subtitle": "20 từ HSK1 về giờ giấc, việc làm, việc học và việc nhà",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 10 gồm 20 từ vựng HSK1 dùng khi kể một ngày sinh hoạt. Nhóm buổi sáng và buổi tối: 起床 (thức dậy), 起来 (dậy, đứng dậy), 睡 (ngủ), 睡觉 (đi ngủ), 洗 (rửa, giặt), 洗手间 (nhà vệ sinh), 穿 (mặc), 衣服 (quần áo). Nhóm đi làm, đi học: 上班 (đi làm), 下班 (tan làm), 上学 (đi học), 放学 (tan học), 工作 (làm việc), 休息 (nghỉ ngơi). Nhóm ở nhà: 回家 (về nhà), 在家 (ở nhà), 吃饭 (ăn cơm), 做 (làm), 事 (việc). Phó từ tần suất: 常常 (thường). Đọc to từng từ, chú ý thanh điệu của 起床 (qǐchuáng), 洗手间 (xǐshǒujiān), 休息 (xiūxi) và 衣服 (yīfu)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: thời gian + nơi chốn + hành động, 常常, 回家吃饭, 在家",
+      "subtitle": "Bốn điểm ngữ pháp để kể một ngày sinh hoạt",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Trình tự thời gian + nơi chốn + hành động: trong câu tiếng Hán, trạng ngữ thời gian đứng trước (sau chủ ngữ, hoặc đầu câu), rồi đến nơi chốn (在 + nơi), cuối cùng là động từ. Cấu trúc: chủ ngữ + thời gian + 在 + nơi chốn + động từ. Ví dụ: 我早上七点起床。 (Wǒ zǎoshang qī diǎn qǐchuáng.) = Tôi thức dậy lúc 7 giờ sáng. / 爸爸上午在学校工作。 (Bàba shàngwǔ zài xuéxiào gōngzuò.) = Buổi sáng bố làm việc ở trường. / 我们中午在家吃饭。 (Wǒmen zhōngwǔ zài jiā chīfàn.) = Buổi trưa chúng tôi ăn cơm ở nhà."
+        },
+        {
+          "type": "text",
+          "value": "2. 常常 + động từ: 常常 (thường, thường xuyên) là phó từ, đứng sau chủ ngữ và trước động từ, không đứng cuối câu. Cấu trúc: chủ ngữ + 常常 + động từ. Ví dụ: 我常常喝茶。 (Wǒ chángcháng hē chá.) = Tôi thường uống trà. / 他晚上常常工作。 (Tā wǎnshang chángcháng gōngzuò.) = Buổi tối anh ấy thường làm việc. / 妈妈常常洗衣服。 (Māma chángcháng xǐ yīfu.) = Mẹ thường giặt quần áo."
+        },
+        {
+          "type": "text",
+          "value": "3. Câu liên động 回家吃饭: hai động từ đi liền nhau theo thứ tự xảy ra, động từ trước chỉ việc đi đâu, động từ sau chỉ mục đích. Cấu trúc: chủ ngữ + 回家/去 + nơi + động từ. Ví dụ: 我中午回家吃饭。 (Wǒ zhōngwǔ huíjiā chīfàn.) = Buổi trưa tôi về nhà ăn cơm. / 他去图书馆学习。 (Tā qù túshūguǎn xuéxí.) = Anh ấy đến thư viện học bài. / 我们回家休息。 (Wǒmen huíjiā xiūxi.) = Chúng tôi về nhà nghỉ ngơi."
+        },
+        {
+          "type": "text",
+          "value": "4. 在家 + động từ: 在家 (ở nhà) đứng trước động từ để nói hành động diễn ra ở nhà. Cấu trúc: chủ ngữ + 在家 + động từ. Ví dụ: 今天我在家休息。 (Jīntiān wǒ zài jiā xiūxi.) = Hôm nay tôi nghỉ ở nhà. / 奶奶在家吃饭。 (Nǎinai zài jiā chīfàn.) = Bà ăn cơm ở nhà. / 星期天他在家睡觉。 (Xīngqītiān tā zài jiā shuìjiào.) = Chủ nhật anh ấy ngủ ở nhà."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: một ngày của tôi",
+      "subtitle": "Hội thoại ngắn về giờ giấc và thói quen; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你早上几点起床？ B: 我早上六点半起床。 (Nǐ zǎoshang jǐ diǎn qǐchuáng? / Wǒ zǎoshang liù diǎn bàn qǐchuáng.) — A: Buổi sáng bạn dậy lúc mấy giờ? B: Tôi dậy lúc 6 giờ rưỡi sáng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你几点上班？ B: 我八点上班，五点下班。 (Nǐ jǐ diǎn shàngbān? / Wǒ bā diǎn shàngbān, wǔ diǎn xiàbān.) — A: Mấy giờ bạn đi làm? B: Tôi đi làm lúc 8 giờ, tan làm lúc 5 giờ."
+        },
+        {
+          "type": "text",
+          "value": "A: 你中午在哪儿吃饭？ B: 我常常回家吃饭。 (Nǐ zhōngwǔ zài nǎr chīfàn? / Wǒ chángcháng huíjiā chīfàn.) — A: Buổi trưa bạn ăn cơm ở đâu? B: Tôi thường về nhà ăn cơm."
+        },
+        {
+          "type": "text",
+          "value": "A: 你晚上做什么？ B: 我在家休息，也洗衣服。 (Nǐ wǎnshang zuò shénme? / Wǒ zài jiā xiūxi, yě xǐ yīfu.) — A: Buổi tối bạn làm gì? B: Tôi nghỉ ngơi ở nhà, cũng giặt quần áo."
+        },
+        {
+          "type": "text",
+          "value": "A: 你几点睡觉？ B: 我晚上十一点睡觉。 (Nǐ jǐ diǎn shuìjiào? / Wǒ wǎnshang shíyī diǎn shuìjiào.) — A: Mấy giờ bạn đi ngủ? B: Tôi đi ngủ lúc 11 giờ tối."
+        },
+        {
+          "type": "text",
+          "value": "A: 明天是星期天，你有事吗？ B: 没有事，我在家睡觉。 (Míngtiān shì xīngqītiān, nǐ yǒu shì ma? / Méiyǒu shì, wǒ zài jiā shuìjiào.) — A: Mai là chủ nhật, bạn có việc gì không? B: Không có việc gì, tôi ngủ ở nhà."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l10:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “nhà vệ sinh”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "洗手间"
+          },
+          {
+            "id": "opt-b",
+            "text": "衣服"
+          },
+          {
+            "id": "opt-c",
+            "text": "学校"
+          },
+          {
+            "id": "opt-d",
+            "text": "商店"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "洗手间 (xǐshǒujiān) nghĩa là “nhà vệ sinh”. 衣服 (yīfu) là “quần áo”, 学校 (xuéxiào) là “trường học”, 商店 (shāngdiàn) là “cửa hàng”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我晚上十点___。 (Tôi đi ngủ lúc 10 giờ tối.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "起床"
+          },
+          {
+            "id": "opt-b",
+            "text": "睡觉"
+          },
+          {
+            "id": "opt-c",
+            "text": "上班"
+          },
+          {
+            "id": "opt-d",
+            "text": "放学"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "睡觉 (shuìjiào) nghĩa là “đi ngủ”, nên 我晚上十点睡觉 = tôi đi ngủ lúc 10 giờ tối. 起床 (thức dậy), 上班 (đi làm), 放学 (tan học) đặt vào vẫn đúng ngữ pháp nhưng sai nghĩa theo bản dịch nên bị loại.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___回家吃饭。 (Tôi thường về nhà ăn cơm.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "衣服"
+          },
+          {
+            "id": "opt-b",
+            "text": "事"
+          },
+          {
+            "id": "opt-c",
+            "text": "常常"
+          },
+          {
+            "id": "opt-d",
+            "text": "洗手间"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "常常 (chángcháng) là phó từ “thường”, đứng sau chủ ngữ và trước động từ: 我常常回家吃饭. 衣服 (quần áo), 事 (việc), 洗手间 (nhà vệ sinh) là danh từ, đặt giữa 我 và 回家 thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “tan làm, hết giờ làm”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "上班"
+          },
+          {
+            "id": "opt-b",
+            "text": "放学"
+          },
+          {
+            "id": "opt-c",
+            "text": "上学"
+          },
+          {
+            "id": "opt-d",
+            "text": "下班"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "下班 (xiàbān) nghĩa là “tan làm”. 上班 (shàngbān) là “đi làm”, 放学 (fàngxué) là “tan học”, 上学 (shàngxué) là “đi học”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e05",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你今天做什么___？(Hôm nay bạn làm việc gì?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "事",
+          "shì",
+          "shi"
+        ]
+      },
+      "explanation": "事 (shì) nghĩa là “việc”; 做什么事 = làm việc gì. Câu hỏi về việc làm trong ngày nên chỉ 事 hợp nghĩa.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 妈妈常常洗___。(Mẹ thường giặt quần áo.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "衣服",
+          "yīfu",
+          "yifu"
+        ]
+      },
+      "explanation": "衣服 (yīfu) nghĩa là “quần áo”; 洗衣服 = giặt quần áo. 常常 đứng trước động từ 洗.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们在家___一会儿。(Chúng tôi nghỉ ở nhà một lát.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "休息",
+          "xiūxi",
+          "xiuxi"
+        ]
+      },
+      "explanation": "休息 (xiūxi) nghĩa là “nghỉ ngơi”; 在家休息一会儿 = nghỉ ở nhà một lát. 在家 đứng trước động từ, 一会儿 đứng sau động từ chỉ thời lượng.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi thường về nhà.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r5",
+            "text": "回家"
+          },
+          {
+            "id": "tkn-d9",
+            "text": "我"
+          },
+          {
+            "id": "tkn-b3",
+            "text": "常常"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-d9",
+          "tkn-b3",
+          "tkn-r5"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我常常回家. Năm hoán vị còn lại sai vì phó từ 常常 phải đứng sau chủ ngữ 我 và ngay trước động từ 回家, không đứng đầu câu hay cuối câu (ví dụ sai: 常常我回家, 我回家常常, 回家我常常).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Anh ấy nghỉ ngơi ở nhà.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-w2",
+            "text": "休息"
+          },
+          {
+            "id": "tkn-h8",
+            "text": "在家"
+          },
+          {
+            "id": "tkn-p6",
+            "text": "他"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-p6",
+          "tkn-h8",
+          "tkn-w2"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 他在家休息. Năm hoán vị còn lại sai vì cụm nơi chốn 在家 phải đứng sau chủ ngữ và trước động từ 休息 (ví dụ sai: 他休息在家, 在家他休息, 休息他在家).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l10:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi thường giặt quần áo.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f4",
+            "text": "衣服"
+          },
+          {
+            "id": "tkn-z1",
+            "text": "常常"
+          },
+          {
+            "id": "tkn-c7",
+            "text": "洗"
+          },
+          {
+            "id": "tkn-n2",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-n2",
+          "tkn-z1",
+          "tkn-c7",
+          "tkn-f4"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 我常常洗衣服. Các hoán vị khác sai vì phải theo trật tự chủ ngữ 我 + phó từ 常常 + động từ 洗 + tân ngữ 衣服; 常常 không đứng đầu hay cuối câu, tân ngữ 衣服 không đứng trước động từ (ví dụ sai: 常常我洗衣服, 我洗衣服常常, 我常常衣服洗).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-02 (Pha 3)",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-02 (PO đã duyệt 17/11/2026); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

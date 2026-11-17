@@ -28,9 +28,9 @@
       "pinyin": "māma",
       "meaningVi": "mẹ",
       "example": {
-        "hanzi": "我妈妈也很好。",
-        "pinyin": "Wǒ māma yě hěn hǎo.",
-        "meaningVi": "Mẹ tôi cũng rất tốt."
+        "hanzi": "我妈妈是医生。",
+        "pinyin": "Wǒ māma shì yīshēng.",
+        "meaningVi": "Mẹ tôi là bác sĩ."
       }
     },
     {
@@ -116,7 +116,7 @@
     {
       "hanzi": "岁",
       "pinyin": "suì",
-      "meaningVi": "tuổi",
+      "meaningVi": "(lượng từ) tuổi",
       "example": {
         "hanzi": "你今年几岁了？",
         "pinyin": "Nǐ jīnnián jǐ suì le?",
@@ -136,7 +136,7 @@
     {
       "hanzi": "大",
       "pinyin": "dà",
-      "meaningVi": "to, lớn",
+      "meaningVi": "to, lớn, lớn (tuổi)",
       "example": {
         "hanzi": "你的孩子多大了？",
         "pinyin": "Nǐ de háizi duō dà le?",
@@ -170,7 +170,7 @@
       "example": {
         "hanzi": "我没有哥哥，有妹妹。",
         "pinyin": "Wǒ méiyǒu gēge, yǒu mèimei.",
-        "meaningVi": "Tôi không có anh trai, chỉ có em gái."
+        "meaningVi": "Tôi không có anh trai, có em gái."
       }
     },
     {
@@ -186,7 +186,7 @@
     {
       "hanzi": "的",
       "pinyin": "de",
-      "meaningVi": "trợ từ sở hữu (\"của\")",
+      "meaningVi": "(trợ từ) của (biểu thị sở hữu, bổ nghĩa)",
       "example": {
         "hanzi": "这是我爸爸的书。",
         "pinyin": "Zhè shì wǒ bàba de shū.",

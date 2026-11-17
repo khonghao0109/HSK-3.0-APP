@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l06",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l06-loi-chao-lich-su",
+    "title": "Lời chào lịch sự, cảm ơn, xin lỗi",
+    "description": "Bài 6 HSK1: nói lời cảm ơn, xin lỗi và đáp lại lịch sự; mời ngồi, mời vào, hỏi lại bằng 呢 và dùng 也/都 với 20 từ vựng cơ bản.",
+    "orderIndex": 1006
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "不",
+      "pinyin": "bù",
+      "meaningVi": "không (phủ định)",
+      "example": {
+        "hanzi": "我不喝茶。",
+        "pinyin": "Wǒ bù hē chá.",
+        "meaningVi": "Tôi không uống trà."
+      }
+    },
+    {
+      "hanzi": "不客气",
+      "pinyin": "bùkèqì",
+      "meaningVi": "không có gì, đừng khách sáo",
+      "example": {
+        "hanzi": "谢谢你！不客气。",
+        "pinyin": "Xièxie nǐ! Bùkèqì.",
+        "meaningVi": "Cảm ơn bạn! Không có gì."
+      }
+    },
+    {
+      "hanzi": "对不起",
+      "pinyin": "duìbuqǐ",
+      "meaningVi": "xin lỗi",
+      "example": {
+        "hanzi": "对不起，我来晚了。",
+        "pinyin": "Duìbuqǐ, wǒ lái wǎn le.",
+        "meaningVi": "Xin lỗi, tôi đến muộn."
+      }
+    },
+    {
+      "hanzi": "没关系",
+      "pinyin": "méiguānxi",
+      "meaningVi": "không sao, không có gì",
+      "example": {
+        "hanzi": "对不起！没关系。",
+        "pinyin": "Duìbuqǐ! Méiguānxi.",
+        "meaningVi": "Xin lỗi! Không sao đâu."
+      }
+    },
+    {
+      "hanzi": "没事儿",
+      "pinyin": "méishìr",
+      "meaningVi": "không sao, không có chuyện gì",
+      "example": {
+        "hanzi": "你怎么了？没事儿。",
+        "pinyin": "Nǐ zěnme le? Méishìr.",
+        "meaningVi": "Bạn sao thế? Không sao đâu."
+      }
+    },
+    {
+      "hanzi": "没什么",
+      "pinyin": "méishénme",
+      "meaningVi": "không có gì, không sao",
+      "example": {
+        "hanzi": "谢谢你帮我。没什么。",
+        "pinyin": "Xièxie nǐ bāng wǒ. Méishénme.",
+        "meaningVi": "Cảm ơn bạn đã giúp tôi. Không có gì."
+      }
+    },
+    {
+      "hanzi": "请",
+      "pinyin": "qǐng",
+      "meaningVi": "mời, xin (lời đề nghị lịch sự)",
+      "example": {
+        "hanzi": "请喝茶。",
+        "pinyin": "Qǐng hē chá.",
+        "meaningVi": "Mời uống trà."
+      }
+    },
+    {
+      "hanzi": "请问",
+      "pinyin": "qǐngwèn",
+      "meaningVi": "xin hỏi, cho hỏi",
+      "example": {
+        "hanzi": "请问，你是老师吗？",
+        "pinyin": "Qǐngwèn, nǐ shì lǎoshī ma?",
+        "meaningVi": "Xin hỏi, bạn là giáo viên phải không?"
+      }
+    },
+    {
+      "hanzi": "请坐",
+      "pinyin": "qǐngzuò",
+      "meaningVi": "mời ngồi",
+      "example": {
+        "hanzi": "老师，请坐。",
+        "pinyin": "Lǎoshī, qǐngzuò.",
+        "meaningVi": "Thầy ơi, mời thầy ngồi."
+      }
+    },
+    {
+      "hanzi": "请进",
+      "pinyin": "qǐngjìn",
+      "meaningVi": "mời vào",
+      "example": {
+        "hanzi": "请进，坐吧。",
+        "pinyin": "Qǐngjìn, zuò ba.",
+        "meaningVi": "Mời vào, ngồi đi."
+      }
+    },
+    {
+      "hanzi": "好",
+      "pinyin": "hǎo",
+      "meaningVi": "tốt, khỏe, hay, được",
+      "example": {
+        "hanzi": "你好，我是学生。",
+        "pinyin": "Nǐ hǎo, wǒ shì xuéshēng.",
+        "meaningVi": "Xin chào, tôi là học sinh."
+      }
+    },
+    {
+      "hanzi": "吗",
+      "pinyin": "ma",
+      "meaningVi": "(trợ từ cuối câu hỏi) không, à, phải không",
+      "example": {
+        "hanzi": "你是中国人吗？",
+        "pinyin": "Nǐ shì Zhōngguórén ma?",
+        "meaningVi": "Bạn là người Trung Quốc phải không?"
+      }
+    },
+    {
+      "hanzi": "呢",
+      "pinyin": "ne",
+      "meaningVi": "(trợ từ cuối câu hỏi) còn… thì sao, nhỉ",
+      "example": {
+        "hanzi": "我很好，你呢？",
+        "pinyin": "Wǒ hěn hǎo, nǐ ne?",
+        "meaningVi": "Tôi rất khỏe, còn bạn thì sao?"
+      }
+    },
+    {
+      "hanzi": "你们",
+      "pinyin": "nǐmen",
+      "meaningVi": "các bạn, các anh chị",
+      "example": {
+        "hanzi": "你们是学生吗？",
+        "pinyin": "Nǐmen shì xuéshēng ma?",
+        "meaningVi": "Các bạn là học sinh phải không?"
+      }
+    },
+    {
+      "hanzi": "他们",
+      "pinyin": "tāmen",
+      "meaningVi": "họ, bọn họ",
+      "example": {
+        "hanzi": "他们是我的朋友。",
+        "pinyin": "Tāmen shì wǒ de péngyou.",
+        "meaningVi": "Họ là bạn của tôi."
+      }
+    },
+    {
+      "hanzi": "她们",
+      "pinyin": "tāmen",
+      "meaningVi": "họ, các cô ấy (chỉ nữ)",
+      "example": {
+        "hanzi": "她们都是老师。",
+        "pinyin": "Tāmen dōu shì lǎoshī.",
+        "meaningVi": "Các cô ấy đều là giáo viên."
+      }
+    },
+    {
+      "hanzi": "们",
+      "pinyin": "men",
+      "meaningVi": "(hậu tố số nhiều) các, những",
+      "example": {
+        "hanzi": "同学们，你们好！",
+        "pinyin": "Tóngxuémen, nǐmen hǎo!",
+        "meaningVi": "Chào các bạn học sinh!"
+      }
+    },
+    {
+      "hanzi": "也",
+      "pinyin": "yě",
+      "meaningVi": "cũng",
+      "example": {
+        "hanzi": "我也是学生。",
+        "pinyin": "Wǒ yě shì xuéshēng.",
+        "meaningVi": "Tôi cũng là học sinh."
+      }
+    },
+    {
+      "hanzi": "很",
+      "pinyin": "hěn",
+      "meaningVi": "rất, lắm",
+      "example": {
+        "hanzi": "今天很冷。",
+        "pinyin": "Jīntiān hěn lěng.",
+        "meaningVi": "Hôm nay rất lạnh."
+      }
+    },
+    {
+      "hanzi": "都",
+      "pinyin": "dōu",
+      "meaningVi": "đều, tất cả",
+      "example": {
+        "hanzi": "我们都喜欢喝茶。",
+        "pinyin": "Wǒmen dōu xǐhuan hē chá.",
+        "meaningVi": "Chúng tôi đều thích uống trà."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: lời chào lịch sự, cảm ơn, xin lỗi",
+      "subtitle": "20 từ HSK1 để đáp lời cảm ơn, xin lỗi, mời và hỏi lại",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 6 gồm 20 từ vựng HSK1 dùng trong giao tiếp lịch sự. Nhóm đáp lời: 不客气 (đừng khách sáo), 对不起 (xin lỗi), 没关系 (không sao), 没事儿 (không có gì), 没什么 (không có gì). Nhóm lời mời: 请 (mời, xin), 请问 (xin hỏi), 请坐 (mời ngồi), 请进 (mời vào). Nhóm từ chức năng: 不 (không), 好 (tốt, được), 吗 (trợ từ nghi vấn), 呢 (còn … thì sao), 也 (cũng), 很 (rất), 都 (đều). Nhóm đại từ số nhiều: 们, 你们, 他们, 她们. Đọc to từng từ, chú ý 对不起 (duìbuqǐ) và 没关系 (méiguānxi) có âm tiết nhẹ ở giữa hoặc cuối."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 不, 呢, 请 + động từ, 们, 也/都",
+      "subtitle": "Năm điểm ngữ pháp cần cho lời nói lịch sự hằng ngày",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 不 + động từ/tính từ để phủ định. Cấu trúc: chủ ngữ + 不 + động từ/tính từ. Ví dụ: 我不喝茶。 (Wǒ bù hē chá.) = Tôi không uống trà. / 茶不贵。 (Chá bù guì.) = Trà không đắt. / 他不是老师。 (Tā bù shì lǎoshī.) = Anh ấy không phải giáo viên."
+        },
+        {
+          "type": "text",
+          "value": "2. 呢 hỏi lại: sau khi nói về mình, đặt danh từ/đại từ + 呢 để hỏi “còn … thì sao?”. Cấu trúc: … ，你呢？ Ví dụ: 我很好，你呢？ (Wǒ hěn hǎo, nǐ ne?) = Tôi khỏe, còn bạn? / 我是学生，你呢？ (Wǒ shì xuéshēng, nǐ ne?) = Tôi là học sinh, còn bạn?"
+        },
+        {
+          "type": "text",
+          "value": "3. 请 + động từ: mời hoặc đề nghị lịch sự. Cấu trúc: 请 + động từ (+ tân ngữ). Ví dụ: 请喝茶。 (Qǐng hē chá.) = Mời uống trà. / 请进！ (Qǐngjìn!) = Mời vào! / 请问，你叫什么名字？ (Qǐngwèn, nǐ jiào shénme míngzi?) = Xin hỏi, bạn tên là gì?"
+        },
+        {
+          "type": "text",
+          "value": "4. 们 đứng sau đại từ nhân xưng để chỉ số nhiều: 我们, 你们, 他们, 她们. Ví dụ: 你们好！ (Nǐmen hǎo!) = Chào các bạn! / 他们是学生。 (Tāmen shì xuéshēng.) = Họ là học sinh."
+        },
+        {
+          "type": "text",
+          "value": "5. 也 (cũng) và 都 (đều) đứng sau chủ ngữ, trước động từ hoặc tính từ. Khi dùng cùng nhau, 也 đứng trước 都. Ví dụ: 我也是学生。 (Wǒ yě shì xuéshēng.) = Tôi cũng là học sinh. / 我们都喜欢汉语。 (Wǒmen dōu xǐhuan Hànyǔ.) = Chúng tôi đều thích tiếng Hán. / 她们也都很好。 (Tāmen yě dōu hěn hǎo.) = Họ cũng đều khỏe."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: mời vào, cảm ơn, xin lỗi",
+      "subtitle": "Hội thoại ngắn khi đến nhà bạn; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你好！请进！ (Nǐ hǎo! Qǐngjìn!) — A: Chào bạn! Mời vào!"
+        },
+        {
+          "type": "text",
+          "value": "B: 谢谢！ (Xièxie!) — B: Cảm ơn!"
+        },
+        {
+          "type": "text",
+          "value": "A: 不客气。请坐，请喝茶。 (Bùkèqì. Qǐngzuò, qǐng hē chá.) — A: Đừng khách sáo. Mời ngồi, mời uống trà."
+        },
+        {
+          "type": "text",
+          "value": "B: 对不起，我不喝茶。 (Duìbuqǐ, wǒ bù hē chá.) — B: Xin lỗi, tôi không uống trà."
+        },
+        {
+          "type": "text",
+          "value": "A: 没关系。你喝水吗？ (Méiguānxi. Nǐ hē shuǐ ma?) — A: Không sao. Bạn uống nước không?"
+        },
+        {
+          "type": "text",
+          "value": "B: 好，谢谢。你爸爸妈妈好吗？ (Hǎo, xièxie. Nǐ bàba māma hǎo ma?) — B: Được, cảm ơn. Bố mẹ bạn khỏe không?"
+        },
+        {
+          "type": "text",
+          "value": "A: 他们都很好。你呢？ (Tāmen dōu hěn hǎo. Nǐ ne?) — A: Họ đều khỏe. Còn bạn?"
+        },
+        {
+          "type": "text",
+          "value": "B: 我也很好。 (Wǒ yě hěn hǎo.) — B: Tôi cũng khỏe."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l06:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “xin lỗi”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "没关系"
+          },
+          {
+            "id": "opt-b",
+            "text": "对不起"
+          },
+          {
+            "id": "opt-c",
+            "text": "不客气"
+          },
+          {
+            "id": "opt-d",
+            "text": "请问"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "对不起 (duìbuqǐ) nghĩa là “xin lỗi”. 没关系 (méiguānxi) là “không sao”, 不客气 (bùkèqì) là “đừng khách sáo”, 请问 (qǐngwèn) là “xin hỏi”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Người khác nói 谢谢 với bạn. Bạn đáp lại thế nào cho lịch sự?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "对不起"
+          },
+          {
+            "id": "opt-b",
+            "text": "请进"
+          },
+          {
+            "id": "opt-c",
+            "text": "不客气"
+          },
+          {
+            "id": "opt-d",
+            "text": "再见"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "Đáp lời cảm ơn dùng 不客气 (bùkèqì) = đừng khách sáo. 对不起 là xin lỗi, 请进 là mời vào, 再见 là tạm biệt; ba từ này không dùng để đáp 谢谢.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ đúng: 我是学生，你___？(Tôi là học sinh, còn bạn?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "吗"
+          },
+          {
+            "id": "opt-b",
+            "text": "很"
+          },
+          {
+            "id": "opt-c",
+            "text": "也"
+          },
+          {
+            "id": "opt-d",
+            "text": "呢"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "呢 (ne) đặt sau 你 để hỏi lại “còn bạn thì sao?”. 吗 phải đi sau cả một câu (你是学生吗), không đứng sau mỗi 你; 很 và 也 là phó từ, phải đứng trước động từ/tính từ nên đặt ở cuối câu là sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ đúng: 他们___是老师。(Họ đều là giáo viên.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "都"
+          },
+          {
+            "id": "opt-b",
+            "text": "不"
+          },
+          {
+            "id": "opt-c",
+            "text": "请"
+          },
+          {
+            "id": "opt-d",
+            "text": "们"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "都 (dōu) = đều, đứng sau chủ ngữ số nhiều 他们 và trước động từ 是. 不 cho nghĩa “không phải giáo viên”, trái với câu tiếng Việt; 请 và 们 không đứng được ở vị trí này.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我___喝茶。(Tôi không uống trà.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "不",
+          "bù",
+          "bu"
+        ]
+      },
+      "explanation": "不 (bù) đứng trước động từ 喝 để phủ định: 我不喝茶 = tôi không uống trà.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你好，我___是学生。(Chào bạn, tôi cũng là học sinh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "也",
+          "yě",
+          "ye"
+        ]
+      },
+      "explanation": "也 (yě) = cũng, đứng sau chủ ngữ 我 và trước động từ 是: 我也是学生.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: A: 对不起！ B: ___关系。(A: Xin lỗi! B: Không sao.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "没",
+          "méi",
+          "mei"
+        ]
+      },
+      "explanation": "没关系 (méiguānxi) = không sao, là cách đáp lại lời xin lỗi 对不起. Chỗ trống đứng trước 关系 nên chỉ có thể là 没.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đều rất khỏe.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-m3",
+            "text": "好"
+          },
+          {
+            "id": "tkn-z8",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-h5",
+            "text": "很"
+          },
+          {
+            "id": "tkn-c1",
+            "text": "都"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z8",
+          "tkn-c1",
+          "tkn-h5",
+          "tkn-m3"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 我们都很好. Chủ ngữ 我们 đứng đầu; 都 đứng sau chủ ngữ và trước 很; 很 đứng ngay trước tính từ 好. Các hoán vị khác sai trật tự (ví dụ sai: 都我们很好, 我们很都好).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Mời uống trà.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r6",
+            "text": "茶"
+          },
+          {
+            "id": "tkn-w2",
+            "text": "请"
+          },
+          {
+            "id": "tkn-p9",
+            "text": "喝"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w2",
+          "tkn-p9",
+          "tkn-r6"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 请喝茶. 请 đứng đầu, trước động từ 喝; tân ngữ 茶 đứng sau động từ. Các hoán vị khác sai trật tự 请 + động từ + tân ngữ (ví dụ sai: 喝请茶, 茶请喝).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l06:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Họ cũng rất khỏe.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f4",
+            "text": "好"
+          },
+          {
+            "id": "tkn-y7",
+            "text": "也"
+          },
+          {
+            "id": "tkn-d2",
+            "text": "他们"
+          },
+          {
+            "id": "tkn-s9",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-d2",
+          "tkn-y7",
+          "tkn-s9",
+          "tkn-f4"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 他们也很好. Chủ ngữ 他们 đứng đầu; 也 đứng trước 很, và 很 đứng ngay trước tính từ 好. Các hoán vị khác sai trật tự phó từ (ví dụ sai: 他们很也好, 也他们很好).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-02 (Pha 3)",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-02 (PO đã duyệt 17/11/2026); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

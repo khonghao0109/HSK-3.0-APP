@@ -51,6 +51,11 @@ const EXPECTED_LESSON_FILES = [
   'lesson-03.json',
   'lesson-04.json',
   'lesson-05.json',
+  'lesson-06.json',
+  'lesson-07.json',
+  'lesson-08.json',
+  'lesson-09.json',
+  'lesson-10.json',
 ];
 
 interface FixtureOperation {
@@ -375,7 +380,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     ]),
   );
 
-  it('đọc được đúng 5 file lesson-01..lesson-05', () => {
+  it('đọc được đúng 10 file lesson-01..lesson-10', () => {
     expect(sources.map((source) => source.fileName)).toEqual(
       EXPECTED_LESSON_FILES,
     );
@@ -384,6 +389,65 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
   it('mọi file nội dung pilot hợp lệ (0 lỗi)', () => {
     const issues = validatePilotLessonSet(sources, refs);
     expect(issues).toEqual([]);
+  });
+
+  it('từ, nghĩa và câu ví dụ của bài khớp lô nghĩa đã duyệt (Pha 3)', () => {
+    const approved = new Map<string, Record<string, unknown>>();
+    for (const batch of ['batch-01.json', 'batch-02.json']) {
+      const raw = readJson(join(BACKEND_ROOT, 'content/hsk1/meanings', batch));
+      if (!isRecord(raw) || !Array.isArray(raw.entries)) throw new Error(batch);
+      for (const entry of raw.entries) {
+        if (isRecord(entry) && typeof entry.hanzi === 'string') {
+          approved.set(entry.hanzi, entry);
+        }
+      }
+    }
+    const mismatches: string[] = [];
+    for (const source of sources) {
+      if (!isRecord(source.raw) || !Array.isArray(source.raw.words)) continue;
+      for (const word of source.raw.words) {
+        if (!isRecord(word) || !isRecord(word.example)) continue;
+        const entry = approved.get(String(word.hanzi));
+        const example = word.example;
+        const matches =
+          entry !== undefined &&
+          entry.pinyin === word.pinyin &&
+          entry.meaningVi === word.meaningVi &&
+          Array.isArray(entry.examples) &&
+          entry.examples.some(
+            (candidate) =>
+              isRecord(candidate) &&
+              candidate.hanzi === example.hanzi &&
+              candidate.pinyin === example.pinyin &&
+              candidate.translationVi === example.meaningVi,
+          );
+        if (!matches)
+          mismatches.push(`${source.fileName}:${String(word.hanzi)}`);
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+
+  it('fill_blank nhận nhiều đáp án chữ Hán, mỗi đáp án phải đủ 2 dạng pinyin', () => {
+    const clone = structuredClone(byLesson.get(9));
+    if (!isRecord(clone) || !Array.isArray(clone.exercises)) {
+      throw new Error('lesson-09 không phải object');
+    }
+    const exercise: unknown = clone.exercises[4];
+    if (!isRecord(exercise) || !isRecord(exercise.answer)) {
+      throw new Error('lesson-09 e05 sai dạng');
+    }
+    exercise.answer.acceptedTexts = [
+      '星期天',
+      'xīngqītiān',
+      'xingqitian',
+      '星期日',
+    ];
+    const issues = validatePilotLesson(clone, 'lesson-09.json', refs);
+    expect(codesOf(issues)).toEqual([
+      'fill_blank_missing_pinyin',
+      'fill_blank_missing_pinyin',
+    ]);
   });
 
   it('mỗi bài đúng 20 từ, ≥2 topic có vocabulary + grammar/key_text, 10 bài tập 3 loại', () => {
@@ -440,7 +504,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     }
   });
 
-  it('fill_blank.acceptedTexts đúng 3 dạng: chữ Hán, pinyin có dấu, pinyin không dấu (Q194)', () => {
+  it('fill_blank.acceptedTexts gồm các bộ 3 dạng: chữ Hán, pinyin có dấu, pinyin không dấu (Q194)', () => {
     for (const source of sources) {
       const exercises = isRecord(source.raw) ? source.raw.exercises : [];
       for (const exercise of Array.isArray(exercises) ? exercises : []) {
@@ -450,16 +514,20 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
         const accepted = isRecord(answer) ? answer.acceptedTexts : undefined;
         expect(Array.isArray(accepted)).toBe(true);
         if (!Array.isArray(accepted)) continue;
-        expect(accepted).toHaveLength(3);
-        const [hanzi, marked, toneless] = accepted as unknown[];
-        expect(typeof hanzi).toBe('string');
-        expect(/\p{Script=Han}/u.test(String(hanzi))).toBe(true);
-        expect(typeof marked).toBe('string');
-        expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(marked))).toBe(true);
-        expect(typeof toneless).toBe('string');
-        expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(toneless))).toBe(
-          false,
-        );
+        // Bộ 3 (chữ Hán, pinyin có dấu, pinyin không dấu), lặp lại cho mỗi đáp án đồng nghĩa.
+        expect(accepted.length % 3).toBe(0);
+        expect(accepted.length).toBeGreaterThan(0);
+        for (let index = 0; index < accepted.length; index += 3) {
+          const [hanzi, marked, toneless] = accepted.slice(index, index + 3);
+          expect(typeof hanzi).toBe('string');
+          expect(/\p{Script=Han}/u.test(String(hanzi))).toBe(true);
+          expect(typeof marked).toBe('string');
+          expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(marked))).toBe(true);
+          expect(typeof toneless).toBe('string');
+          expect(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(String(toneless))).toBe(
+            false,
+          );
+        }
       }
     }
   });
@@ -491,7 +559,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     }
   });
 
-  it('không có từ HSK1 nào lặp giữa 5 bài (100 từ unique)', () => {
+  it('không có từ HSK1 nào lặp giữa 10 bài (200 từ unique)', () => {
     const seen = new Set<string>();
     let total = 0;
     for (const raw of byLesson.values()) {
@@ -503,7 +571,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
         seen.add(word.hanzi);
       }
     }
-    expect(total).toBe(100);
+    expect(total).toBe(200);
   });
 
   it('mỗi mã lỗi của validator đều có bằng chứng (fixture/kiểm riêng)', () => {

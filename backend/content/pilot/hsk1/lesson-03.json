@@ -16,107 +16,107 @@
     {
       "hanzi": "一",
       "pinyin": "yī",
-      "meaningVi": "một (số 1)",
+      "meaningVi": "một",
       "example": {
-        "hanzi": "今天是我第一天上课。",
-        "pinyin": "Jīntiān shì wǒ dìyī tiān shàngkè.",
-        "meaningVi": "Hôm nay là ngày đầu tiên tôi đi học."
+        "hanzi": "我有一个哥哥。",
+        "pinyin": "Wǒ yǒu yī ge gēge.",
+        "meaningVi": "Tôi có một người anh trai."
       }
     },
     {
       "hanzi": "二",
       "pinyin": "èr",
-      "meaningVi": "hai (số 2)",
+      "meaningVi": "hai",
       "example": {
         "hanzi": "今天是二月二日。",
         "pinyin": "Jīntiān shì èr yuè èr rì.",
-        "meaningVi": "Hôm nay là ngày 2 tháng 2."
+        "meaningVi": "Hôm nay là ngày mùng hai tháng hai."
       }
     },
     {
       "hanzi": "三",
       "pinyin": "sān",
-      "meaningVi": "ba (số 3)",
+      "meaningVi": "ba",
       "example": {
         "hanzi": "我有三个朋友。",
-        "pinyin": "Wǒ yǒu sān gè péngyou.",
+        "pinyin": "Wǒ yǒu sān ge péngyou.",
         "meaningVi": "Tôi có ba người bạn."
       }
     },
     {
       "hanzi": "四",
       "pinyin": "sì",
-      "meaningVi": "bốn (số 4)",
+      "meaningVi": "bốn",
       "example": {
         "hanzi": "我们下午四点见。",
         "pinyin": "Wǒmen xiàwǔ sì diǎn jiàn.",
-        "meaningVi": "Chúng ta gặp nhau lúc 4 giờ chiều."
+        "meaningVi": "Chúng ta gặp nhau lúc bốn giờ chiều."
       }
     },
     {
       "hanzi": "五",
       "pinyin": "wǔ",
-      "meaningVi": "năm (số 5)",
+      "meaningVi": "năm",
       "example": {
         "hanzi": "我今天五点下课。",
         "pinyin": "Wǒ jīntiān wǔ diǎn xiàkè.",
-        "meaningVi": "Hôm nay tôi tan học lúc 5 giờ."
+        "meaningVi": "Hôm nay tôi tan học lúc năm giờ."
       }
     },
     {
       "hanzi": "六",
       "pinyin": "liù",
-      "meaningVi": "sáu (số 6)",
+      "meaningVi": "sáu",
       "example": {
-        "hanzi": "我早上六点起床。",
-        "pinyin": "Wǒ zǎoshang liù diǎn qǐchuáng.",
-        "meaningVi": "Tôi thức dậy lúc 6 giờ sáng."
+        "hanzi": "他家有六个人。",
+        "pinyin": "Tā jiā yǒu liù ge rén.",
+        "meaningVi": "Nhà anh ấy có sáu người."
       }
     },
     {
       "hanzi": "七",
       "pinyin": "qī",
-      "meaningVi": "bảy (số 7)",
+      "meaningVi": "bảy",
       "example": {
-        "hanzi": "我七点吃早饭。",
-        "pinyin": "Wǒ qī diǎn chī zǎofàn.",
-        "meaningVi": "Tôi ăn sáng lúc 7 giờ."
+        "hanzi": "我七点吃饭。",
+        "pinyin": "Wǒ qī diǎn chīfàn.",
+        "meaningVi": "Tôi ăn cơm lúc bảy giờ."
       }
     },
     {
       "hanzi": "八",
       "pinyin": "bā",
-      "meaningVi": "tám (số 8)",
+      "meaningVi": "tám",
       "example": {
         "hanzi": "我们八点上课。",
         "pinyin": "Wǒmen bā diǎn shàngkè.",
-        "meaningVi": "Chúng tôi vào học lúc 8 giờ."
+        "meaningVi": "Chúng tôi vào học lúc tám giờ."
       }
     },
     {
       "hanzi": "九",
       "pinyin": "jiǔ",
-      "meaningVi": "chín (số 9)",
+      "meaningVi": "chín",
       "example": {
         "hanzi": "现在九点十分。",
         "pinyin": "Xiànzài jiǔ diǎn shí fēn.",
-        "meaningVi": "Bây giờ là 9 giờ 10 phút."
+        "meaningVi": "Bây giờ là chín giờ mười phút."
       }
     },
     {
       "hanzi": "十",
       "pinyin": "shí",
-      "meaningVi": "mười (số 10)",
+      "meaningVi": "mười",
       "example": {
         "hanzi": "我晚上十点睡觉。",
         "pinyin": "Wǒ wǎnshang shí diǎn shuìjiào.",
-        "meaningVi": "Tôi đi ngủ lúc 10 giờ tối."
+        "meaningVi": "Tôi đi ngủ lúc mười giờ tối."
       }
     },
     {
       "hanzi": "点",
       "pinyin": "diǎn",
-      "meaningVi": "giờ (đơn vị chỉ giờ); điểm",
+      "meaningVi": "(lượng từ) giờ",
       "example": {
         "hanzi": "请问，现在几点？",
         "pinyin": "Qǐngwèn, xiànzài jǐ diǎn?",
@@ -126,11 +126,11 @@
     {
       "hanzi": "分",
       "pinyin": "fēn",
-      "meaningVi": "phút",
+      "meaningVi": "(lượng từ) phút",
       "example": {
         "hanzi": "现在八点二十分。",
         "pinyin": "Xiànzài bā diǎn èrshí fēn.",
-        "meaningVi": "Bây giờ là 8 giờ 20 phút."
+        "meaningVi": "Bây giờ là tám giờ hai mươi phút."
       }
     },
     {
@@ -166,7 +166,7 @@
     {
       "hanzi": "星期",
       "pinyin": "xīngqī",
-      "meaningVi": "tuần lễ; thứ (trong tuần)",
+      "meaningVi": "tuần, thứ (trong tuần)",
       "example": {
         "hanzi": "这个星期我很忙。",
         "pinyin": "Zhège xīngqī wǒ hěn máng.",
@@ -180,7 +180,7 @@
       "example": {
         "hanzi": "我五月去中国。",
         "pinyin": "Wǒ wǔ yuè qù Zhōngguó.",
-        "meaningVi": "Tháng 5 tôi đi Trung Quốc."
+        "meaningVi": "Tháng năm tôi đi Trung Quốc."
       }
     },
     {
@@ -198,9 +198,9 @@
       "pinyin": "nián",
       "meaningVi": "năm",
       "example": {
-        "hanzi": "今年我二十岁。",
-        "pinyin": "Jīnnián wǒ èrshí suì.",
-        "meaningVi": "Năm nay tôi 20 tuổi."
+        "hanzi": "我在中国学了一年汉语。",
+        "pinyin": "Wǒ zài Zhōngguó xué le yī nián Hànyǔ.",
+        "meaningVi": "Tôi đã học tiếng Trung một năm ở Trung Quốc."
       }
     },
     {
@@ -245,7 +245,7 @@
       "content": [
         {
           "type": "text",
-          "value": "1. Số đếm 1–10: 一 二 三 四 五 六 七 八 九 十 (yī, èr, sān, sì, wǔ, liù, qī, bā, jiǔ, shí). Khi đếm sự vật, số đứng trước lượng từ theo công thức số + lượng từ + danh từ. Ví dụ: 三个朋友 (sān gè péngyou) = ba người bạn; 五本书 (wǔ běn shū) = năm quyển sách. Lưu ý: trước lượng từ, “hai” dùng 两 (liǎng) chứ không dùng 二: 两个人 (liǎng gè rén) = hai người."
+          "value": "1. Số đếm 1–10: 一 二 三 四 五 六 七 八 九 十 (yī, èr, sān, sì, wǔ, liù, qī, bā, jiǔ, shí). Khi đếm sự vật, số đứng trước lượng từ theo công thức số + lượng từ + danh từ. Ví dụ: 三个朋友 (sān ge péngyou) = ba người bạn; 五本书 (wǔ běn shū) = năm quyển sách. Lưu ý: trước lượng từ, “hai” dùng 两 (liǎng) chứ không dùng 二: 两个人 (liǎng ge rén) = hai người."
         },
         {
           "type": "text",
@@ -292,7 +292,7 @@
         },
         {
           "type": "text",
-          "value": "我明天上午八点上课，下午四点下课。晚上我学习汉语。 (Wǒ míngtiān shàngwǔ bā diǎn shàngkè, xiàwǔ sì diǎn xiàkè. Wǎnshang wǒ xuéxí hànyǔ.) — Ngày mai tôi vào học lúc 8 giờ sáng, tan học lúc 4 giờ chiều. Buổi tối tôi học tiếng Hán."
+          "value": "我明天上午八点上课，下午四点下课。晚上我学习汉语。 (Wǒ míngtiān shàngwǔ bā diǎn shàngkè, xiàwǔ sì diǎn xiàkè. Wǎnshang wǒ xuéxí Hànyǔ.) — Ngày mai tôi vào học lúc 8 giờ sáng, tan học lúc 4 giờ chiều. Buổi tối tôi học tiếng Hán."
         }
       ]
     }
