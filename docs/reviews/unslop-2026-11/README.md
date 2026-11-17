@@ -82,6 +82,13 @@ Mọi lệnh chạy trong `frontend/`, theo khoá `/tmp/hsk-heavy.lock`.
 - Ảnh SAU: 106/106 (lượt chính 84/88; 4 ảnh chờ chuỗi cũ "Chính xác!" trong bộ chụp, sửa bộ chụp rồi chụp lại 4/4).
 - Build: `next build` lần đầu dừng với `SecurityFatalError` (khuyến nghị nâng Next.js 16.4.3 vì lỗ hổng đã biết), chạy lại thì qua. Chưa nâng Next.js.
 
+Gate cuối (17/11, sau merge `origin/macdev` ở `beda056`), chạy trên `902142f`, build mới, DB disposable dựng lại; các commit sau chỉ đổi docs:
+
+- frontend: lint 0 lỗi, 21 warning, không tăng so với macdev (`c8ab7a4`: 29 warning); typecheck pass; vitest 161 file, 2032 test pass; generated-types pass; build pass.
+- frontend `npm run test:e2e` toàn bộ, `--trace off`: **1034 passed, 0 failed, 50 skipped (28,5 phút)**.
+- backend: lint, format, build, openapi:check pass; unit 125 suite, 1700 test pass; e2e 45 suite, 657 test pass (99 giây, DB `hsk_unslop_ci_e2e_test`).
+- Lượt e2e đầy đủ ngay trước (trên `6f4b63b`) dừng giữa chừng ở 658/1084 với 8 lượt fail (4 test × 1440, 1024): 3 test đọc `toHaveText` của h1 chi tiết từ (DOM giờ có từ hai lần: `.sr-only` + ô) và `axe: dictionary and word` còn mong tiêu đề cũ trong khi M3.4d đã đổi thành "<chữ Hán> · Chi tiết từ vựng · Hán Lộ" (spec trên macdev cũng còn tiêu đề cũ). Sửa spec ở `252efa1`.
+
 Contact sheet (mục 5, 17/11): 106 sheet được xem hết bằng 2 lượt review, mỗi lỗi mức trung bình/cao được kiểm chứng lại trên PNG gốc. 12 lỗi thật, đã sửa ở `b232545` và commit badge người dùng sau đó: bảng Bài tập admin bị tiêu đề dài đẩy cột ra ngoài; 田字格 rớt dòng 4+1 ở 390 (giờ một hàng, co chữ theo số ô); thẻ flashcard 390 bị kéo cao (S3 giữ nút ở đáy bằng margin-top:auto); thẻ thống kê ôn tập 390 xuống dòng xấu (2+1); chip ngân hàng câu hỏi bị cắt; chấm badge trạng thái bị bóp; vạch lẻ ở meta kết quả thi; tiêu đề thanh lộ trình 2 dòng; email hồ sơ ngắt giữa từ; ảnh xem lại thi hỏng không hiện fallback. Chụp lại và soát lại 18 màn liên quan: không còn lỗi bố cục. Giữ: nền navy trống dưới màn hoàn thành bài ở 390 (M4, chờ PO, xem Q341); hero chi tiết từ một hàng ô ở mọi khổ (`909d627`, ô co theo số chữ, chỉ từ 5+ chữ được xuống dòng; tên h1 giữ nguyên từ bằng `aria-label`, `a72534b`); dòng "• 45 phút" ở danh sách đề là dữ liệu fixture. S3, S4 kiểm lại trên ảnh: đã sửa.
 
 Ảnh cặp đáng xem: `learn-home-*`, `lesson-complete-*`, `lesson-practice-correct-*`, `review-*`, `review-session-*`, `dictionary-*`, `onboarding-goal-*`, `learn-profile-desktop-1440`, `admin-users-*`, `admin-lesson-edit-mobile-390`, `learn-exam-*`.
