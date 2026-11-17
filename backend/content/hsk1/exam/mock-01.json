@@ -22,18 +22,22 @@
       "panels": [
         {
           "label": "A",
-          "description": "A woman sitting at a table drinking tea from a cup"
+          "description": "A woman sitting at a table drinking tea from a cup",
+          "altVi": "Người phụ nữ ngồi bên bàn uống trà"
         },
         {
           "label": "B",
-          "description": "A woman eating a bowl of noodles with chopsticks"
+          "description": "A woman eating a bowl of noodles with chopsticks",
+          "altVi": "Người phụ nữ ăn bát mì bằng đũa"
         },
         {
           "label": "C",
-          "description": "A woman reading a book on a sofa"
+          "description": "A woman reading a book on a sofa",
+          "altVi": "Người phụ nữ đọc sách trên ghế sofa"
         }
       ],
-      "descriptionVi": "Phụ nữ uống trà / ăn mì / đọc sách"
+      "descriptionVi": "Phụ nữ uống trà / ăn mì / đọc sách",
+      "altVi": "A: Người phụ nữ ngồi bên bàn uống trà; B: Người phụ nữ ăn bát mì bằng đũa; C: Người phụ nữ đọc sách trên ghế sofa"
     },
     {
       "key": "img-l1-q02",
@@ -43,18 +47,22 @@
       "panels": [
         {
           "label": "A",
-          "description": "A sunny street with a bright sun in the sky"
+          "description": "A sunny street with a bright sun in the sky",
+          "altVi": "Con phố ngày nắng, mặt trời sáng"
         },
         {
           "label": "B",
-          "description": "A person holding an umbrella in heavy rain"
+          "description": "A person holding an umbrella in heavy rain",
+          "altVi": "Một người cầm ô dưới mưa to"
         },
         {
           "label": "C",
-          "description": "Trees bending in strong wind under grey clouds, no rain"
+          "description": "Trees bending in strong wind under grey clouds, no rain",
+          "altVi": "Cây nghiêng trong gió mạnh, trời nhiều mây, không mưa"
         }
       ],
-      "descriptionVi": "Trời nắng / trời mưa / trời gió"
+      "descriptionVi": "Trời nắng / trời mưa / trời gió",
+      "altVi": "A: Con phố ngày nắng, mặt trời sáng; B: Một người cầm ô dưới mưa to; C: Cây nghiêng trong gió mạnh, trời nhiều mây, không mưa"
     },
     {
       "key": "img-l1-q03",
@@ -64,18 +72,22 @@
       "panels": [
         {
           "label": "A",
-          "description": "A man riding a bicycle on a road"
+          "description": "A man riding a bicycle on a road",
+          "altVi": "Người đàn ông đạp xe trên đường"
         },
         {
           "label": "B",
-          "description": "A man walking on a sidewalk"
+          "description": "A man walking on a sidewalk",
+          "altVi": "Người đàn ông đi bộ trên vỉa hè"
         },
         {
           "label": "C",
-          "description": "A man driving a car, seen through the side window"
+          "description": "A man driving a car, seen through the side window",
+          "altVi": "Người đàn ông lái ô tô"
         }
       ],
-      "descriptionVi": "Người đàn ông đạp xe / đi bộ / lái ô tô"
+      "descriptionVi": "Người đàn ông đạp xe / đi bộ / lái ô tô",
+      "altVi": "A: Người đàn ông đạp xe trên đường; B: Người đàn ông đi bộ trên vỉa hè; C: Người đàn ông lái ô tô"
     },
     {
       "key": "img-l1-q04",
@@ -85,18 +97,22 @@
       "panels": [
         {
           "label": "A",
-          "description": "A school backpack on a shop shelf"
+          "description": "A school backpack on a shop shelf",
+          "altVi": "Chiếc cặp sách trên kệ cửa hàng"
         },
         {
           "label": "B",
-          "description": "A pair of shoes on a shop shelf"
+          "description": "A pair of shoes on a shop shelf",
+          "altVi": "Đôi giày trên kệ cửa hàng"
         },
         {
           "label": "C",
-          "description": "A wall clock on a shop shelf"
+          "description": "A round wall clock without numbers on a shop shelf",
+          "altVi": "Đồng hồ treo tường trên kệ cửa hàng"
         }
       ],
-      "descriptionVi": "Cặp sách / đôi giày / đồng hồ treo tường"
+      "descriptionVi": "Cặp sách / đôi giày / đồng hồ treo tường",
+      "altVi": "A: Chiếc cặp sách trên kệ cửa hàng; B: Đôi giày trên kệ cửa hàng; C: Đồng hồ treo tường trên kệ cửa hàng"
     },
     {
       "key": "img-l1-q05",
@@ -106,18 +122,22 @@
       "panels": [
         {
           "label": "A",
-          "description": "A woman cooking at a stove"
+          "description": "A woman cooking at a stove",
+          "altVi": "Người phụ nữ nấu ăn bên bếp"
         },
         {
           "label": "B",
-          "description": "A woman sleeping in bed"
+          "description": "A woman sleeping in bed",
+          "altVi": "Người phụ nữ ngủ trên giường"
         },
         {
           "label": "C",
-          "description": "A woman watching television"
+          "description": "A woman watching a television with a plain blank screen",
+          "altVi": "Người phụ nữ xem tivi"
         }
       ],
-      "descriptionVi": "Người mẹ nấu ăn / ngủ / xem tivi"
+      "descriptionVi": "Người mẹ nấu ăn / ngủ / xem tivi",
+      "altVi": "A: Người phụ nữ nấu ăn bên bếp; B: Người phụ nữ ngủ trên giường; C: Người phụ nữ xem tivi"
     },
     {
       "key": "img-l3",
@@ -131,30 +151,37 @@
       "panels": [
         {
           "label": "A",
-          "description": "A doctor in a white coat examining a sick man in a hospital room"
+          "description": "A doctor in a white coat examining a sick man in a hospital room",
+          "altVi": "Bác sĩ áo trắng khám cho người đàn ông bị ốm"
         },
         {
           "label": "B",
-          "description": "Two travellers with suitcases walking to a train at a railway platform"
+          "description": "Two travellers with suitcases walking to a train at a railway platform",
+          "altVi": "Hai hành khách kéo vali ra tàu hoả ở sân ga"
         },
         {
           "label": "C",
-          "description": "A girl at a desk writing with a pen in a notebook, page shown blank from this angle"
+          "description": "A girl at a desk writing with a pen in a notebook, page shown blank from this angle",
+          "altVi": "Bé gái ngồi viết vào vở"
         },
         {
           "label": "D",
-          "description": "A man paying a shopkeeper for a bag of fruit"
+          "description": "A man paying a shopkeeper for a bag of fruit",
+          "altVi": "Người đàn ông trả tiền mua túi hoa quả"
         },
         {
           "label": "E",
-          "description": "Two friends eating dinner together at a restaurant table with dishes"
+          "description": "Two friends eating dinner together at a restaurant table with dishes",
+          "altVi": "Hai người bạn ăn tối ở nhà hàng"
         },
         {
           "label": "F",
-          "description": "A boy kicking a football on a grass field"
+          "description": "A boy kicking a football on a grass field",
+          "altVi": "Cậu bé đá bóng trên sân cỏ"
         }
       ],
-      "descriptionVi": "A bác sĩ khám bệnh; B ga tàu hỏa; C bé gái viết chữ Hán; D mua hoa quả; E ăn tối ở nhà hàng; F cậu bé đá bóng (không dùng)"
+      "descriptionVi": "A bác sĩ khám bệnh; B ga tàu hỏa; C bé gái viết chữ Hán; D mua hoa quả; E ăn tối ở nhà hàng; F cậu bé đá bóng (không dùng)",
+      "altVi": "A: Bác sĩ áo trắng khám cho người đàn ông bị ốm; B: Hai hành khách kéo vali ra tàu hoả ở sân ga; C: Bé gái ngồi viết vào vở; D: Người đàn ông trả tiền mua túi hoa quả; E: Hai người bạn ăn tối ở nhà hàng; F: Cậu bé đá bóng trên sân cỏ"
     },
     {
       "key": "img-r1",
@@ -168,30 +195,37 @@
       "panels": [
         {
           "label": "A",
-          "description": "A small child drinking a glass of milk at a kitchen table"
+          "description": "A small child drinking a glass of milk at a kitchen table",
+          "altVi": "Em bé uống cốc sữa bên bàn bếp"
         },
         {
           "label": "B",
-          "description": "A man talking on a mobile phone"
+          "description": "A man talking on a mobile phone",
+          "altVi": "Người đàn ông nói chuyện điện thoại"
         },
         {
           "label": "C",
-          "description": "A family sitting on a sofa watching television"
+          "description": "A family sitting on a sofa watching a television with a plain blank screen",
+          "altVi": "Gia đình ngồi trên sofa xem tivi"
         },
         {
           "label": "D",
-          "description": "A woman choosing clothes on a rack in a clothing shop"
+          "description": "A woman choosing clothes on a rack in a clothing shop",
+          "altVi": "Người phụ nữ chọn quần áo trong cửa hàng"
         },
         {
           "label": "E",
-          "description": "A teacher standing at a blank blackboard in front of students in a classroom"
+          "description": "A teacher standing at a blank blackboard in front of students in a classroom",
+          "altVi": "Cô giáo đứng trước bảng, học sinh ngồi học"
         },
         {
           "label": "F",
-          "description": "An airplane flying in a blue sky"
+          "description": "An airplane flying in a blue sky",
+          "altVi": "Máy bay bay trên trời xanh"
         }
       ],
-      "descriptionVi": "A em bé uống sữa; B người đàn ông gọi điện thoại; C gia đình xem tivi; D phụ nữ mua quần áo; E lớp học; F máy bay (không dùng)"
+      "descriptionVi": "A em bé uống sữa; B người đàn ông gọi điện thoại; C gia đình xem tivi; D phụ nữ mua quần áo; E lớp học; F máy bay (không dùng)",
+      "altVi": "A: Em bé uống cốc sữa bên bàn bếp; B: Người đàn ông nói chuyện điện thoại; C: Gia đình ngồi trên sofa xem tivi; D: Người phụ nữ chọn quần áo trong cửa hàng; E: Cô giáo đứng trước bảng, học sinh ngồi học; F: Máy bay bay trên trời xanh"
     }
   ],
   "sections": [

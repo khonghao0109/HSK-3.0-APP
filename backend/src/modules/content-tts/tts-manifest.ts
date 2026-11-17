@@ -228,6 +228,8 @@ export interface TtsRunResult {
   readonly generated: string[];
   readonly skipped: string[];
   readonly planned: string[];
+  /** Lý do chưa được sinh thật (dry-run vẫn chạy để PO xem trước). */
+  readonly approvalErrors: string[];
 }
 
 function sha256(buffer: Buffer): string {
@@ -253,11 +255,19 @@ export async function runTts(
   const invalid = validateManifest(manifest);
   if (invalid.length > 0) throw new TtsError(invalid.join('; '));
   const unapproved = approvalErrors(manifest);
-  if (unapproved.length > 0) throw new TtsError(unapproved.join('; '));
+  // Dry-run được chạy trước khi duyệt để PO xem kế hoạch; sinh thật thì bắt buộc đã duyệt.
+  if (unapproved.length > 0 && !options.dryRun) {
+    throw new TtsError(unapproved.join('; '));
+  }
 
   const log = options.log ?? (() => undefined);
   const checksums = readChecksums(options.checksumsPath);
-  const result: TtsRunResult = { generated: [], skipped: [], planned: [] };
+  const result: TtsRunResult = {
+    generated: [],
+    skipped: [],
+    planned: [],
+    approvalErrors: unapproved,
+  };
   if (!options.dryRun) mkdirSync(options.outputDir, { recursive: true });
 
   for (const item of manifest.items) {

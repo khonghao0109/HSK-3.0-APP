@@ -1,0 +1,310 @@
+{
+  "raw/img-l1-q01-A.png": {
+    "kind": "exam-panel",
+    "sha256": "12675a8159677fb824be9c0931de5663ca69f7512c10fcd6b4c358ddd9949416",
+    "bytes": 942783,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q01-B.png": {
+    "kind": "exam-panel",
+    "sha256": "65c3668ee34df134e8cb07cd6ef9c111463843ae4dba44b815e281e5d8121b64",
+    "bytes": 953048,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q01-C.png": {
+    "kind": "exam-panel",
+    "sha256": "2f81aa1569b120d1e3e77c65698e81c5024a838d55d7fe8a7738e8ab7a553462",
+    "bytes": 948179,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q02-A.png": {
+    "kind": "exam-panel",
+    "sha256": "643a2699642f27d9b127f5861b84124f084465194e2432655b99fce58d1aa73f",
+    "bytes": 1059617,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q02-B.png": {
+    "kind": "exam-panel",
+    "sha256": "479aeffd4003142cc70e1f0f905aa3d1bc0c5df8f4d10ba6b509ed05b48aee48",
+    "bytes": 1048789,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q02-C.png": {
+    "kind": "exam-panel",
+    "sha256": "a4d3d7a067cfa4ba7b4d0aa2be61cff07fa62b0859d2c03e04e781bc53ae5525",
+    "bytes": 1064743,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q03-A.png": {
+    "kind": "exam-panel",
+    "sha256": "705e19127606cce03e51ff64e189dd788172f6ab20dddaddab96e0297a3ab365",
+    "bytes": 1028844,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q03-B.png": {
+    "kind": "exam-panel",
+    "sha256": "d48418866448abe96e390f018a59b32ab542953525fa905971cbe0457fbfa753",
+    "bytes": 926541,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q03-C.png": {
+    "kind": "exam-panel",
+    "sha256": "6005f1705569fc54a83d4a1fe33ff097c763ca90819db9501da8ac3dc454cde9",
+    "bytes": 920252,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q04-A.png": {
+    "kind": "exam-panel",
+    "sha256": "64712dce785b9d88ade773d7c02a5584ce7a9064225d114362935292b9805f3d",
+    "bytes": 914452,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q04-B.png": {
+    "kind": "exam-panel",
+    "sha256": "bb305cc06637d1a27b32e77dd760b55155a51264235afae515bc221e04792a1d",
+    "bytes": 929969,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q04-C.png": {
+    "kind": "exam-panel",
+    "sha256": "28fb3a1ff47f740f3689855c0a29d35559651597a717568c0ba71e092a4e757a",
+    "bytes": 943413,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q05-A.png": {
+    "kind": "exam-panel",
+    "sha256": "7c0b2d43a97b743f114cbc657bcb31ace3907929731043baf6e81c4e46df0397",
+    "bytes": 995950,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q05-B.png": {
+    "kind": "exam-panel",
+    "sha256": "cac68e36b32095a0ff8f99353f3af6d2609399ebe26efe7aa22957dbf89ea217",
+    "bytes": 923875,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l1-q05-C.png": {
+    "kind": "exam-panel",
+    "sha256": "c6c5d6856e6ec14e4fe666fbc2840a00ec09db6c21483f8f92b4f7a5e18b0d33",
+    "bytes": 892688,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-A.png": {
+    "kind": "exam-panel",
+    "sha256": "081fb2b541012dccc540cb1e2cb6186f4854d88dbd79a2aaa57dcb873f310c77",
+    "bytes": 976153,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-B.png": {
+    "kind": "exam-panel",
+    "sha256": "4f9aea1743115225cf657e1bdc5eb7f1392050403c57ca3f3560505ef0490aeb",
+    "bytes": 1007377,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-C.png": {
+    "kind": "exam-panel",
+    "sha256": "642758fbc69335bc636ae1a579e6b1eb40fd53484b844df8326ab2b46953971b",
+    "bytes": 936275,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-D.png": {
+    "kind": "exam-panel",
+    "sha256": "6a7474536f1c3adfd90ee3e24c6cd70ce3624bececbe172b1d3ff144a1ffa067",
+    "bytes": 975356,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-E.png": {
+    "kind": "exam-panel",
+    "sha256": "5d3f85ebfc0dbafae099618c9c0fd0574997bd52daeb5373bc99b742c9561582",
+    "bytes": 1061830,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-l3-F.png": {
+    "kind": "exam-panel",
+    "sha256": "523c375af45bd16bf09149f4557d809b1a1229c4e1efb0b74a77e97aae37f76f",
+    "bytes": 942567,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-A.png": {
+    "kind": "exam-panel",
+    "sha256": "7c4d00572c285e1a1a77ecb7dd9d0ea35113369e795782648b2e560110d0f8ea",
+    "bytes": 967975,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-B.png": {
+    "kind": "exam-panel",
+    "sha256": "6dbab946ee8c8195e66b09bb35bb90291cd969bd12cb8abbc819d3114f2970bd",
+    "bytes": 897643,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-C.png": {
+    "kind": "exam-panel",
+    "sha256": "a7ba1f087338dcc887733c3d06148bab4b8341289c7c5630fc6fc4acd714b54c",
+    "bytes": 920472,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-D.png": {
+    "kind": "exam-panel",
+    "sha256": "fa6b99236842b91b485da25d0c79c9dd1514a6b0f896496b1dd36965d3e61627",
+    "bytes": 979966,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-E.png": {
+    "kind": "exam-panel",
+    "sha256": "87b20252857976913ae4fdc1d5a7a65806cb2acdbab6d9d789f692933ee176d5",
+    "bytes": 932885,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/img-r1-F.png": {
+    "kind": "exam-panel",
+    "sha256": "20754f8ba6b8e9095cfa1b695fe63e95603b45687069b56fa3bb21ee3ee514aa",
+    "bytes": 910491,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-cover.png": {
+    "kind": "lesson",
+    "sha256": "83f95e9853a3cbfd9fc49f671b9a6bc572eee3354a7f36c2346e4b19d290e76f",
+    "bytes": 1326928,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-gaoxing.png": {
+    "kind": "lesson",
+    "sha256": "32f8cd1c9824b723fc8aa244dbbd6380af16411fd28f343220f207797415088b",
+    "bytes": 912091,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-laoshi.png": {
+    "kind": "lesson",
+    "sha256": "abc8c7b33b5549165bfd31efdd4dc893423866024655c569b854ae1566c292fd",
+    "bytes": 887250,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-pengyou.png": {
+    "kind": "lesson",
+    "sha256": "55e229fdba0d39890cef57393a7ed174606692587de37f4e7e5612ce40dc6828",
+    "bytes": 986971,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-renshi.png": {
+    "kind": "lesson",
+    "sha256": "9dae405f85267e37fbe8bdf72b41ce249045ac9b5e811e17c8ef49b202b073f3",
+    "bytes": 888388,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-tongxue.png": {
+    "kind": "lesson",
+    "sha256": "845b718faa64c5092a829bacd4e00c54bbf6a1ebd2c71dbfcac72e9ad3dd7dd9",
+    "bytes": 964164,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-women.png": {
+    "kind": "lesson",
+    "sha256": "91248b75e341944566b7f7888f7ff9742b2a5d0a094dc49afe59b71effab4443",
+    "bytes": 983293,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-xiexie.png": {
+    "kind": "lesson",
+    "sha256": "bdd8f7cd7448735da927206cd985bf8702c4e7c887e2874ce44e98f4e74fed29",
+    "bytes": 874718,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-xuesheng.png": {
+    "kind": "lesson",
+    "sha256": "410d1a13a262626e89a908a5431fb62c5da13641031d12e246dd671782567824",
+    "bytes": 950938,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "raw/l01-zaijian.png": {
+    "kind": "lesson",
+    "sha256": "a52efb3b0faad60813dfe49d61539ae4831ae36ec7d13e27bf4696d7dd3eba8d",
+    "bytes": 944595,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare)",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l1-q01.png": {
+    "kind": "exam-composite",
+    "sha256": "d2a4c87f32eeb137a546f199ca2bf872b8260700bcc52aaa5ecc934942561ab0",
+    "bytes": 756594,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l1-q02.png": {
+    "kind": "exam-composite",
+    "sha256": "d73f116de79e7d0bb75c1f837c571672d0997c25b236fb2207ae32ff8af34a9f",
+    "bytes": 898115,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l1-q03.png": {
+    "kind": "exam-composite",
+    "sha256": "f8f27f7036942951c2d1f9f96869bd6cfdb43d9f75ab1b6a15891026654afaaa",
+    "bytes": 758010,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l1-q04.png": {
+    "kind": "exam-composite",
+    "sha256": "6fb49cfb55a712d9f113cd65f40779913e23248fa8dc4790b6ab9f2393d1bdb2",
+    "bytes": 742924,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l1-q05.png": {
+    "kind": "exam-composite",
+    "sha256": "032781a7d472a848bd8e5a193e11349ce17646eeb5835fb30db44b1e167ad449",
+    "bytes": 745002,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-l3.png": {
+    "kind": "exam-composite",
+    "sha256": "0246b317fe6c151da3608f1b3234d03a6671d0462a55b873be83b8e3bbf2ab6e",
+    "bytes": 1607877,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  },
+  "img-r1.png": {
+    "kind": "exam-composite",
+    "sha256": "b08c1f18612f808be1c9e0344b2e533ce40e8129f2b40438703631d06f7af6d9",
+    "bytes": 1473993,
+    "tool": "Figma AI generate_image (gpt-image-2.5-flare) + ImageMagick compose-exam-images.sh",
+    "label": "minh hoạ do AI tạo (Figma AI)"
+  }
+}

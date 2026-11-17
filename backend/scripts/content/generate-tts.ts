@@ -65,6 +65,8 @@ async function main() {
     now: () => new Date(),
     log: (line) => console.log(line),
   });
+  for (const reason of result.approvalErrors)
+    console.log(`chưa duyệt: ${reason}`);
   console.log(
     `generated=${result.generated.length} skipped=${result.skipped.length} planned=${result.planned.length}`,
   );

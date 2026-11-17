@@ -118,6 +118,13 @@ describe('TTS manifest (Q348)', () => {
       'không khớp',
     );
     expect(provider.calls).toHaveLength(0);
+    const preview = await runTts(manifest(), provider, {
+      ...options,
+      dryRun: true,
+    });
+    expect(preview.planned).toHaveLength(2);
+    expect(preview.approvalErrors).toContain('review.status chưa approved');
+    expect(provider.calls).toHaveLength(0);
   });
 
   it('generates once, records checksums, skips on rerun and regenerates a tampered file', async () => {

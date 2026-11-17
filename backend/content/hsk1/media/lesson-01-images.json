@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "note": "Ảnh Bài 1, minh hoạ do AI tạo (Figma AI), PO duyệt danh sách 18/11/2026 (Q350).",
+  "images": [
+    { "key": "l01-cover", "word": null, "size": "1536x1024", "prompt": "A young female teacher and a male student greeting each other with a smile and a small wave in a bright classroom, blank blackboard behind them.", "altVi": "Cô giáo và nam học sinh mỉm cười chào nhau trong lớp học." },
+    { "key": "l01-laoshi", "word": "老师", "size": "1024x1024", "prompt": "A friendly female teacher standing beside a blank blackboard holding a book.", "altVi": "Cô giáo đứng cạnh bảng, tay cầm sách." },
+    { "key": "l01-xuesheng", "word": "学生", "size": "1024x1024", "prompt": "A student with a backpack holding a notebook, walking to school.", "altVi": "Học sinh đeo cặp, cầm vở đi học." },
+    { "key": "l01-tongxue", "word": "同学", "size": "1024x1024", "prompt": "Two classmates sitting side by side at school desks, looking at the same book.", "altVi": "Hai bạn học ngồi cạnh nhau cùng xem một quyển sách." },
+    { "key": "l01-pengyou", "word": "朋友", "size": "1024x1024", "prompt": "Two friends smiling and standing shoulder to shoulder in a park.", "altVi": "Hai người bạn đứng cạnh nhau mỉm cười trong công viên." },
+    { "key": "l01-renshi", "word": "认识", "size": "1024x1024", "prompt": "Two adults meeting for the first time and shaking hands, both smiling.", "altVi": "Hai người lần đầu gặp nhau, bắt tay và mỉm cười." },
+    { "key": "l01-gaoxing", "word": "高兴", "size": "1024x1024", "prompt": "A happy young person smiling widely with arms raised in joy.", "altVi": "Một bạn trẻ cười tươi, giơ hai tay vui mừng." },
+    { "key": "l01-xiexie", "word": "谢谢", "size": "1024x1024", "prompt": "One person handing a small gift box to another person who bows slightly with a grateful smile.", "altVi": "Một người tặng hộp quà, người kia cúi nhẹ cảm ơn." },
+    { "key": "l01-zaijian", "word": "再见", "size": "1024x1024", "prompt": "A person standing at a doorway waving goodbye to a friend who is leaving.", "altVi": "Một người đứng ở cửa vẫy tay tạm biệt bạn." },
+    { "key": "l01-women", "word": "我们", "size": "1024x1024", "prompt": "A small group of three friends standing together, each gesturing toward the group, cheerful.", "altVi": "Ba người bạn đứng cùng nhau, vui vẻ." }
+  ]
+}
