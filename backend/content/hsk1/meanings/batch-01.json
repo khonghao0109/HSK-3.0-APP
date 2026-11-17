@@ -11,10 +11,10 @@
     "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
+    "status": "approved",
+    "reviewer": "Khổng Văn Hào",
+    "reviewedAt": "2026-11-17",
+    "contentSha256": "b07c0d2837f9fadc4651a51af43ead49aed212d63d5ae58c813c2fe73e532501",
     "notes": []
   },
   "properNames": [
