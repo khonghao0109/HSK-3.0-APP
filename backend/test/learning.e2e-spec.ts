@@ -16,6 +16,7 @@ type LessonDetailResponseBody = {
   data: {
     id: number;
     title: string;
+    coverImage: { id: number; altText: string | null } | null;
     level: {
       id: number;
       name: string;

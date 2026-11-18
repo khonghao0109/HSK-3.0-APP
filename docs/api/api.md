@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 16/11/2026 (M3.4b, Q303–Q311): `GET /dictionary/words/:id` thêm `audio` (luôn `null`), `examples[]`, `related[]` (A.5); `word` của A.7b là tập con. Trước đó (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6). Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 16/11/2026 (M3.4b, Q303–Q311): `GET /dictionary/words/:id` thêm `audio` (luôn `null`), `examples[]`, `related[]` (A.5); `word` của A.7b là tập con. Trước đó (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6); 18/11/2026: thêm tiêu chí đúng thanh điệu đã gõ ngay sau khớp trọn. Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -419,7 +419,10 @@ Query không hợp lệ (rỗng, `<script>`, `%`, quá 64 ký tự, …) → `[]
      (`pinyinNormalized` bỏ khoảng trắng), nên `xuéxí`, `Xué Xí`, `xue2 xi2`, `xue xi` và
      `xuexi` cùng khớp 学习. Chỉ chạy khi query (dạng NFD) chỉ gồm `[a-zA-Z1-5:' ]` và bốn
      dấu thanh pinyin hoặc dấu hai chấm của `ü`; query có dấu tiếng Việt khác (`học`) chỉ
-     tra theo nghĩa. Thứ tự: khớp trọn (`pinyinCompact` bằng khoá) trước, rồi cấp HSK thấp
+     tra theo nghĩa. Thứ tự: khớp trọn (`pinyinCompact` bằng khoá) trước; nếu query có số thanh
+     hoặc dấu thanh, từ có `pinyinTone` mang đúng các thanh đó xếp tiếp theo ("mai4" hoặc "mài"
+     đưa 卖 mai4 lên trước 买 mai3; dấu `'` hoặc khoảng trắng là ranh giới âm tiết, nên "xī'ān"
+     ưu tiên 西安 hơn 仙 xian1; query không có thanh giữ thứ tự cũ); rồi cấp HSK thấp
      hơn trước, từ không có cấp xếp sau; pinyin ngắn trước, rồi `pinyinCompact`, rồi `id`.
   2. Nghĩa: chạy khi query sau chuẩn nghĩa (bỏ dấu, `đ` → `d`, chữ thường, gộp khoảng
      trắng) dài ≥ 2 ký tự và nhóm 1 chưa đủ 20; chỉ gồm từ chưa có ở nhóm 1. Một meaning

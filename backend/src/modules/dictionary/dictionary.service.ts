@@ -95,6 +95,17 @@ function meaningSearchSql(
     LIMIT ${limit}`;
 }
 
+/**
+ * Words whose numbered `pinyinTone` carries the tones the query gives come
+ * first after a whole-key match (R6): "mai4" lists 卖 before 买. Empty when
+ * the query has no tone, so toneless queries keep their order.
+ */
+function toneOrderSql(pattern: string | null): Prisma.Sql {
+  return pattern
+    ? Prisma.sql`(lower(regexp_replace(coalesce(w."pinyinTone", ''), '[[:space:]]+', '', 'g')) ~ ${pattern}) DESC,`
+    : Prisma.empty;
+}
+
 const SAVE_EVENT_SELECT = {
   id: true,
   type: true,
@@ -148,6 +159,7 @@ export class DictionaryService {
             WHERE ${PUBLIC_WORD_SQL}
               AND w."pinyinCompact" LIKE ${`${escapeLike(key)}%`}
             ORDER BY (w."pinyinCompact" = ${key}) DESC,
+              ${toneOrderSql(query.pinyinTonePattern)}
               ${MIN_PUBLIC_LEVEL_ORDER_SQL} ASC NULLS LAST,
               length(w."pinyinCompact"), w."pinyinCompact", w."id"
             LIMIT ${SEARCH_LIMIT}`)
