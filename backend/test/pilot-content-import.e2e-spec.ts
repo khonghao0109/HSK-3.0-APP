@@ -307,6 +307,41 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
     ).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
   });
 
+  it('3b. ADR-002: prompt/content/answer lưu byte-identical với JSON (giữ dấu câu full-width)', async () => {
+    const source = lesson.exercises as readonly (Record<string, unknown> & {
+      readonly sourceKey: string;
+    })[];
+    const stored = await prisma.lessonExercise.findMany({
+      where: {
+        lesson: { slug: lesson.lesson.slug },
+        sourceKey: { in: source.map((exercise) => exercise.sourceKey) },
+      },
+      select: {
+        sourceKey: true,
+        prompt: true,
+        content: true,
+        answer: true,
+        explanation: true,
+      },
+    });
+    expect(stored).toHaveLength(source.length);
+    const bySourceKey = new Map(stored.map((row) => [row.sourceKey, row]));
+    for (const exercise of source) {
+      const row = bySourceKey.get(exercise.sourceKey);
+      expect(row?.prompt).toBe((exercise.prompt as string).trim());
+      expect(row?.content).toEqual(exercise.content);
+      expect(row?.answer).toEqual(exercise.answer);
+      expect(row?.explanation ?? undefined).toBe(
+        typeof exercise.explanation === 'string'
+          ? exercise.explanation.trim()
+          : undefined,
+      );
+    }
+    expect(bySourceKey.get('pilot-hsk1:l01:e03')?.prompt).toContain(
+      '他___什么名字？',
+    );
+  });
+
   it('4. nạp lần 2: idempotent, không nhân bản bản ghi nào', async () => {
     const before = await counters();
     const firstJob = await prisma.importJob.findFirst({

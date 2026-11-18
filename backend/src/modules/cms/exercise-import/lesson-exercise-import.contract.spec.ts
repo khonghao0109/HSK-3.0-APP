@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
   classifyExerciseImportPersistenceError,
   createExerciseImportPreviewHash,
@@ -69,6 +72,75 @@ describe('LessonExercise import validation contract', () => {
       validRows: 1,
       invalidRows: 0,
       errors: [],
+    });
+  });
+
+  it('keeps CJK full-width punctuation in imported rows', () => {
+    const result = validateExerciseImportRows([
+      {
+        ...validRow,
+        prompt: ' 他___什么名字？（Anh ấy tên là gì?） ',
+        content: {
+          options: [
+            { id: 'option-a', text: '叫！' },
+            { id: 'option-b', text: '在，' },
+          ],
+        },
+        explanation: '说明：你；我。',
+      },
+    ]);
+
+    expect(result.errors).toEqual([]);
+    expect(result.normalizedRows[0]?.value).toMatchObject({
+      prompt: '他___什么名字？（Anh ấy tên là gì?）',
+      content: {
+        options: [
+          { id: 'option-a', text: '叫！' },
+          { id: 'option-b', text: '在，' },
+        ],
+      },
+      explanation: '说明：你；我。',
+    });
+  });
+
+  it('imports approved pilot lesson-01 exercises byte-identical apart from trimming', () => {
+    const lesson = JSON.parse(
+      readFileSync(
+        join(__dirname, '../../../../content/pilot/hsk1/lesson-01.json'),
+        'utf8',
+      ),
+    ) as {
+      exercises: Array<Record<string, unknown> & { topicKey?: string }>;
+    };
+    const rows = lesson.exercises.map((exercise) => {
+      const row: Record<string, unknown> = {
+        ...exercise,
+        lessonId: 1,
+        topicId: null,
+      };
+      delete row.topicKey;
+      return row;
+    });
+
+    const result = validateExerciseImportRows(rows);
+
+    expect(result.errors).toEqual([]);
+    expect(
+      lesson.exercises.some((exercise) =>
+        /[\uFF01-\uFF60\u3000-\u303F]/u.test(JSON.stringify(exercise)),
+      ),
+    ).toBe(true);
+    result.normalizedRows.forEach((normalized, index) => {
+      const source = lesson.exercises[index];
+      expect(normalized.sourceKey).toBe(source.sourceKey);
+      expect(normalized.value.prompt).toBe((source.prompt as string).trim());
+      expect(normalized.value.content).toEqual(source.content);
+      expect(normalized.value.answer).toEqual(source.answer);
+      if (source.explanation !== undefined) {
+        expect(normalized.value.explanation).toBe(
+          (source.explanation as string).trim(),
+        );
+      }
     });
   });
 
@@ -230,16 +302,16 @@ describe('LessonExercise import preview hash', () => {
     answer: { acceptedTexts: ['ＡＢＣ'] },
   };
 
-  it('is deterministic across object key insertion order and NFKC-equivalent text', () => {
+  it('is deterministic across object key insertion order and NFC-equivalent text', () => {
     const first = createExerciseImportPreviewHash({
       dataSourceId: 9,
-      rows: [row],
+      rows: [{ ...row, prompt: 'Việt' }],
     });
     const second = createExerciseImportPreviewHash({
       rows: [
         reverseObjectKeyInsertionOrder({
           ...row,
-          answer: { acceptedTexts: ['ABC'] },
+          prompt: 'Vie\u0302\u0323t',
         }),
       ],
       dataSourceId: 9,
@@ -247,6 +319,20 @@ describe('LessonExercise import preview hash', () => {
 
     expect(first).toMatch(/^[a-f0-9]{64}$/);
     expect(second).toBe(first);
+  });
+
+  it('binds the preview token to full-width versus ASCII punctuation', () => {
+    expect(
+      createExerciseImportPreviewHash({
+        dataSourceId: 9,
+        rows: [{ ...row, prompt: '他___什么名字？' }],
+      }),
+    ).not.toBe(
+      createExerciseImportPreviewHash({
+        dataSourceId: 9,
+        rows: [{ ...row, prompt: '他___什么名字?' }],
+      }),
+    );
   });
 
   it('binds the preview token to source, ordered rows, source keys and answers', () => {

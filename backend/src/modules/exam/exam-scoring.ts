@@ -1,5 +1,6 @@
 import { QuestionType, type Prisma, type Skill } from '@prisma/client';
 
+import { lessonExerciseTextMatchKey } from '../../common/validation/lesson-exercise-authoring.validator';
 import {
   EXAM_SECTION_MAX_SCORE,
   type ExamSnapshotPayload,
@@ -253,8 +254,8 @@ function isCorrectQuestion(
       );
       return acceptedTexts.some(
         (accepted) =>
-          normalizeFillBlank(submitted, caseSensitive) ===
-          normalizeFillBlank(accepted, caseSensitive),
+          lessonExerciseTextMatchKey(submitted, caseSensitive) ===
+          lessonExerciseTextMatchKey(accepted, caseSensitive),
       );
     }
     case QuestionType.arrange_sentence: {
@@ -346,11 +347,6 @@ function asRecord(value: Prisma.JsonValue, field: string): Prisma.JsonObject {
     throw new ExamScoringError(`${field} must be an object`);
   }
   return value;
-}
-
-function normalizeFillBlank(value: string, caseSensitive: boolean): string {
-  const normalized = value.normalize('NFKC').trim().replace(/\s+/gu, ' ');
-  return caseSensitive ? normalized : normalized.toLowerCase();
 }
 
 /**

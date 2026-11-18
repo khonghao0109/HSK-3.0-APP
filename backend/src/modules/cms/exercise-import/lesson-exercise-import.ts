@@ -5,6 +5,7 @@ import {
   LESSON_EXERCISE_ORDER_INDEX_LIMITS,
   LessonExerciseAuthoringValidationError,
   LessonExerciseAuthoringValue,
+  normalizeLessonExerciseIdentifier,
   normalizeLessonExerciseText,
   validateLessonExerciseAuthoring,
 } from '../../../common/validation/lesson-exercise-authoring.validator';
@@ -231,7 +232,7 @@ function requireRow(value: unknown): Record<string, unknown> {
 function requireSourceKey(value: unknown): string {
   if (typeof value !== 'string')
     throw rowError('invalid_source_key', 'sourceKey');
-  const normalized = normalizeLessonExerciseText(value);
+  const normalized = normalizeLessonExerciseIdentifier(value);
   if (
     normalized.length === 0 ||
     normalized.length > 128 ||
