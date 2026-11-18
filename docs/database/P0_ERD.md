@@ -128,6 +128,12 @@ erDiagram
   Word ||--o{ LessonWord : taught_as
   LessonWord ||--o{ LessonWordExample : illustrates
   Sentence ||--o{ LessonWordExample : reused_by
+  Character ||--o{ CharacterLevel : listed_in
+  Level ||--o{ CharacterLevel : classifies
+  Level ||--o{ GrammarPoint : outlines
+  GrammarPoint o|--o{ WordExample : illustrated_by
+  Word ||--o{ WordMeasureWord : counted_by
+  Word ||--o{ WordRelation : relates
   Lesson ||--o{ LessonSentence : includes
   Sentence ||--o{ LessonSentence : reused_by
   Lesson ||--o{ LessonExercise : exercises
@@ -219,6 +225,36 @@ erDiagram
     string hanzi
     string pinyin
     int dataSourceId FK
+  }
+  Character {
+    int id PK
+    string hanzi UK
+    string hanViet
+    int strokeCount
+  }
+  CharacterLevel {
+    int id PK
+    int characterId FK
+    int levelId FK
+    boolean handwriting
+  }
+  GrammarPoint {
+    int id PK
+    string code UK
+    int levelId FK
+    int orderIndex
+    string pattern
+  }
+  WordMeasureWord {
+    int id PK
+    int wordId FK
+    int measureWordId FK
+  }
+  WordRelation {
+    int id PK
+    int wordId FK
+    int relatedWordId FK
+    WordRelationType type
   }
   LessonWordExample {
     int id PK
