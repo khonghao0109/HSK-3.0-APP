@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
 // Response models of the M4.1a question bank endpoints (TL-82).
 
@@ -50,6 +51,8 @@ export class AdminQuestionRevisionDto {
   reviews!: AdminQuestionRevisionReviewDto[];
 }
 
+// Q357: ghim thứ tự enum theo schema Prisma (xem PinSwaggerEnumOrder).
+@PinSwaggerEnumOrder('type', Object.values(QuestionType))
 export class AdminQuestionBaseDto {
   id!: number;
   content!: string;

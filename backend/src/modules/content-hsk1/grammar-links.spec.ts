@@ -42,6 +42,21 @@ describe('grammar points and question links (Q357)', () => {
       validateQuestionLinks(links, examQuestionTexts(exam), grammar, lexicon),
     ).toEqual([]);
     expect(Object.keys(links.questions)).toHaveLength(40);
+    const bankLinks = read<QuestionLinksFile>(
+      'content/hsk1/exam/bank-reading-01-links.json',
+    );
+    const bank = read<Parameters<typeof examQuestionTexts>[0]>(
+      'content/hsk1/exam/bank-reading-01.json',
+    );
+    expect(
+      validateQuestionLinks(
+        bankLinks,
+        examQuestionTexts(bank),
+        grammar,
+        lexicon,
+      ),
+    ).toEqual([]);
+    expect(Object.keys(bankLinks.questions)).toHaveLength(45);
     expect(grammar.review.status).toBe('pending');
     expect(links.review.status).toBe('pending');
   });

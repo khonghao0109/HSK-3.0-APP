@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
 // Response models of the M4.2a learner exam endpoints (TL-110/TL-114).
 // Every field below is the allow-listed projection of `exam.serializer.ts`;
@@ -40,6 +41,8 @@ export class ExamQuestionAnswersDto {
   tokens?: ExamQuestionOptionDto[];
 }
 
+// Q357: ghim thứ tự enum theo schema Prisma (xem PinSwaggerEnumOrder).
+@PinSwaggerEnumOrder('type', Object.values(QuestionType))
 export class ExamAttemptQuestionDto {
   /** Snapshot question key; `ExamAnswer.snapshotQuestionKey` from M4.2b. */
   key!: string;
@@ -313,6 +316,8 @@ export class ExamReviewGroupMediaDto {
  * snapshot media refs (`mediaId`/`kind`, no URL) used to match media grants;
  * Q158 keeps signed grants for review in M4.5.
  */
+// Q357: ghim thứ tự enum theo schema Prisma (xem PinSwaggerEnumOrder).
+@PinSwaggerEnumOrder('type', Object.values(QuestionType))
 export class ExamReviewQuestionDto {
   /** Snapshot question key (`q<placement order>`), same as the attempt view. */
   key!: string;

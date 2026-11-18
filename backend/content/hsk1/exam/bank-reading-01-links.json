@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "exam": "content/hsk1/exam/bank-reading-01.json",
+  "grammar": "content/hsk1/grammar/points.json",
+  "notice": "Bản nháp do AI soạn (Q172): từ đích và điểm ngữ pháp cho 45 câu bank-reading-01. Người duyệt: PO (Q357).",
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null,
+    "notes": []
+  },
+  "questions": {
+    "hsk1:b01:q001": {
+      "targetWords": [
+        "忙"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q002": {
+      "targetWords": [
+        "书包"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q003": {
+      "targetWords": [
+        "喝"
+      ],
+      "grammar": [
+        "HSK1-G036"
+      ]
+    },
+    "hsk1:b01:q004": {
+      "targetWords": [
+        "点"
+      ],
+      "grammar": [
+        "HSK1-G010"
+      ]
+    },
+    "hsk1:b01:q005": {
+      "targetWords": [
+        "学校"
+      ],
+      "grammar": [
+        "HSK1-G028"
+      ]
+    },
+    "hsk1:b01:q006": {
+      "targetWords": [
+        "家"
+      ],
+      "grammar": [
+        "HSK1-G004"
+      ]
+    },
+    "hsk1:b01:q007": {
+      "targetWords": [
+        "中午"
+      ],
+      "grammar": [
+        "HSK1-G003"
+      ]
+    },
+    "hsk1:b01:q008": {
+      "targetWords": [
+        "书"
+      ],
+      "grammar": [
+        "HSK1-G002",
+        "HSK1-G024"
+      ]
+    },
+    "hsk1:b01:q009": {
+      "targetWords": [
+        "汉语"
+      ],
+      "grammar": [
+        "HSK1-G036",
+        "HSK1-G028"
+      ]
+    },
+    "hsk1:b01:q010": {
+      "targetWords": [
+        "睡觉"
+      ],
+      "grammar": [
+        "HSK1-G010",
+        "HSK1-G005"
+      ]
+    },
+    "hsk1:b01:q011": {
+      "targetWords": [
+        "机场"
+      ],
+      "grammar": [
+        "HSK1-G006"
+      ]
+    },
+    "hsk1:b01:q012": {
+      "targetWords": [
+        "孩子"
+      ],
+      "grammar": [
+        "HSK1-G005",
+        "HSK1-G032"
+      ]
+    },
+    "hsk1:b01:q013": {
+      "targetWords": [
+        "冷"
+      ],
+      "grammar": [
+        "HSK1-G028"
+      ]
+    },
+    "hsk1:b01:q014": {
+      "targetWords": [
+        "认识"
+      ],
+      "grammar": [
+        "HSK1-G028"
+      ]
+    },
+    "hsk1:b01:q015": {
+      "targetWords": [
+        "吃饭"
+      ],
+      "grammar": [
+        "HSK1-G004"
+      ]
+    },
+    "hsk1:b01:q016": {
+      "targetWords": [
+        "认识"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q017": {
+      "targetWords": [
+        "几"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q018": {
+      "targetWords": [
+        "下雨"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q019": {
+      "targetWords": [
+        "衣服"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q020": {
+      "targetWords": [
+        "打电话"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q021": {
+      "targetWords": [
+        "飞机"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q022": {
+      "targetWords": [
+        "睡觉"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q023": {
+      "targetWords": [
+        "喝"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q024": {
+      "targetWords": [
+        "本"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q025": {
+      "targetWords": [
+        "快"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q026": {
+      "targetWords": [
+        "学习"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q027": {
+      "targetWords": [
+        "多少"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q028": {
+      "targetWords": [
+        "热"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q029": {
+      "targetWords": [
+        "商店"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q030": {
+      "targetWords": [
+        "看"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q031": {
+      "targetWords": [
+        "星期"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q032": {
+      "targetWords": [
+        "口"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q033": {
+      "targetWords": [
+        "大学"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q034": {
+      "targetWords": [
+        "杯子"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q035": {
+      "targetWords": [
+        "下雨"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q036": {
+      "targetWords": [
+        "牛奶"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q037": {
+      "targetWords": [
+        "岁"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q038": {
+      "targetWords": [
+        "起床"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q039": {
+      "targetWords": [
+        "右边"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q040": {
+      "targetWords": [
+        "累"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q041": {
+      "targetWords": [
+        "手机"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q042": {
+      "targetWords": [
+        "走路"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q043": {
+      "targetWords": [
+        "米饭"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q044": {
+      "targetWords": [
+        "老师"
+      ],
+      "grammar": []
+    },
+    "hsk1:b01:q045": {
+      "targetWords": [
+        "见面"
+      ],
+      "grammar": []
+    }
+  }
+}
