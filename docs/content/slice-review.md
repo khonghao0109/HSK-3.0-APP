@@ -64,7 +64,7 @@ Checklist: ảnh khớp nghĩa, không có chữ ngoài nhãn A–F, phong cách
 
 ## Đề demo "Đề thi thử HSK1 – Đọc" — danh sách câu để PO duyệt lần cuối
 
-Bản nháp do AI soạn, chưa duyệt. Số câu theo đề đầy đủ (q0021–q0040); trong đề demo là câu 1–20. 20 câu, 20 phút, điểm đỗ tạm 60/100. Ảnh: Figma AI, ghép và gắn nhãn bằng ImageMagick (`compose-exam-images.sh`).
+**PO (Khổng Văn Hào) duyệt 18/11/2026** cả 20 câu Đọc dưới đây và cho phép xuất bản trên DB demo (không phải prod). Giữ nguyên câu 33. Bản nháp do AI soạn. Số câu theo đề đầy đủ (q0021–q0040); trong đề demo là câu 1–20. 20 câu, 20 phút, điểm đỗ tạm 60/100. Ảnh: Figma AI, ghép và gắn nhãn bằng ImageMagick (`compose-exam-images.sh`).
 
 ### Phần 1 — Đọc câu, chọn tranh phù hợp trong sáu tranh A–F. Có một tranh thừa.
 
