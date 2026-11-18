@@ -1,0 +1,1292 @@
+{
+  "schemaVersion": 1,
+  "batchId": "hsk1-vi-05",
+  "lessons": [
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "dataSource": {
+    "code": "HSK30_VI_HSK1_B05",
+    "name": "Nghĩa tiếng Việt và câu ví dụ HSK1, lô 05 (bài 21–25)",
+    "version": "1",
+    "license": "Original content authored for HSK 3.0 APP",
+    "attribution": "Nội dung do agent AI soạn nháp cho HSK 3.0 APP, người duyệt PO chỉ định duyệt (Q182, Q183, Q185)",
+    "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
+  },
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null,
+    "notes": [
+      "干 (bài 24) chưa có: dữ liệu từ điển chỉ có 干 gān (乹, khô), thiếu 干/幹 gàn (làm) ở HSK1; cần bổ sung Word trước khi soạn nghĩa."
+    ]
+  },
+  "properNames": [],
+  "entries": [
+    {
+      "hanzi": "课文",
+      "pinyin": "kèwén",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bài khoá, bài đọc",
+      "examples": [
+        {
+          "hanzi": "请读一下课文。",
+          "pinyin": "Qǐng dú yíxià kèwén.",
+          "translationVi": "Mời đọc bài khoá một lượt."
+        }
+      ]
+    },
+    {
+      "hanzi": "听写",
+      "pinyin": "tīngxiě",
+      "partOfSpeech": "động từ",
+      "meaningVi": "nghe viết, chính tả",
+      "examples": [
+        {
+          "hanzi": "明天我们听写汉字。",
+          "pinyin": "Míngtiān wǒmen tīngxiě Hànzì.",
+          "translationVi": "Ngày mai chúng ta nghe viết chữ Hán."
+        }
+      ]
+    },
+    {
+      "hanzi": "读书",
+      "pinyin": "dúshū",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đọc sách; đi học",
+      "examples": [
+        {
+          "hanzi": "他在大学读书。",
+          "pinyin": "Tā zài dàxué dúshū.",
+          "translationVi": "Anh ấy đang học đại học."
+        }
+      ]
+    },
+    {
+      "hanzi": "教",
+      "pinyin": "jiāo",
+      "partOfSpeech": "động từ",
+      "meaningVi": "dạy",
+      "examples": [
+        {
+          "hanzi": "她教我们汉语。",
+          "pinyin": "Tā jiāo wǒmen Hànyǔ.",
+          "translationVi": "Cô ấy dạy chúng tôi tiếng Trung."
+        }
+      ]
+    },
+    {
+      "hanzi": "教学楼",
+      "pinyin": "jiàoxuélóu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "toà nhà giảng đường",
+      "examples": [
+        {
+          "hanzi": "教学楼在前边。",
+          "pinyin": "Jiàoxuélóu zài qiánbian.",
+          "translationVi": "Toà giảng đường ở phía trước."
+        }
+      ]
+    },
+    {
+      "hanzi": "班",
+      "pinyin": "bān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "lớp (học)",
+      "examples": [
+        {
+          "hanzi": "我们班有二十个学生。",
+          "pinyin": "Wǒmen bān yǒu èrshí ge xuésheng.",
+          "translationVi": "Lớp chúng tôi có hai mươi học sinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "中学生",
+      "pinyin": "zhōngxuéshēng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "học sinh trung học",
+      "examples": [
+        {
+          "hanzi": "我妹妹是中学生。",
+          "pinyin": "Wǒ mèimei shì zhōngxuéshēng.",
+          "translationVi": "Em gái tôi là học sinh trung học."
+        }
+      ]
+    },
+    {
+      "hanzi": "大学生",
+      "pinyin": "dàxuéshēng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sinh viên đại học",
+      "examples": [
+        {
+          "hanzi": "我哥哥是大学生。",
+          "pinyin": "Wǒ gēge shì dàxuéshēng.",
+          "translationVi": "Anh trai tôi là sinh viên."
+        }
+      ]
+    },
+    {
+      "hanzi": "小学生",
+      "pinyin": "xiǎoxuéshēng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "học sinh tiểu học",
+      "examples": [
+        {
+          "hanzi": "他是小学生。",
+          "pinyin": "Tā shì xiǎoxuéshēng.",
+          "translationVi": "Cậu ấy là học sinh tiểu học."
+        }
+      ]
+    },
+    {
+      "hanzi": "试",
+      "pinyin": "shì",
+      "partOfSpeech": "động từ",
+      "meaningVi": "thử",
+      "examples": [
+        {
+          "hanzi": "你试一下这个。",
+          "pinyin": "Nǐ shì yíxià zhè ge.",
+          "translationVi": "Bạn thử cái này xem."
+        }
+      ]
+    },
+    {
+      "hanzi": "考",
+      "pinyin": "kǎo",
+      "partOfSpeech": "động từ",
+      "meaningVi": "thi, kiểm tra",
+      "examples": [
+        {
+          "hanzi": "明天考汉语。",
+          "pinyin": "Míngtiān kǎo Hànyǔ.",
+          "translationVi": "Ngày mai thi tiếng Trung."
+        }
+      ]
+    },
+    {
+      "hanzi": "回答",
+      "pinyin": "huídá",
+      "partOfSpeech": "động từ",
+      "meaningVi": "trả lời",
+      "examples": [
+        {
+          "hanzi": "你回答一下。",
+          "pinyin": "Nǐ huídá yíxià.",
+          "translationVi": "Bạn trả lời thử xem."
+        }
+      ]
+    },
+    {
+      "hanzi": "错",
+      "pinyin": "cuò",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "sai",
+      "examples": [
+        {
+          "hanzi": "这个字写错了。",
+          "pinyin": "Zhè ge zì xiě cuò le.",
+          "translationVi": "Chữ này viết sai rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "对",
+      "pinyin": "duì",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "đúng",
+      "examples": [
+        {
+          "hanzi": "你说的对。",
+          "pinyin": "Nǐ shuō de duì.",
+          "translationVi": "Bạn nói đúng."
+        }
+      ]
+    },
+    {
+      "hanzi": "不对",
+      "pinyin": "bùduì",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "không đúng, sai",
+      "examples": [
+        {
+          "hanzi": "这个回答不对。",
+          "pinyin": "Zhè ge huídá bú duì.",
+          "translationVi": "Câu trả lời này không đúng."
+        }
+      ]
+    },
+    {
+      "hanzi": "难",
+      "pinyin": "nán",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "khó",
+      "examples": [
+        {
+          "hanzi": "汉字很难吗？",
+          "pinyin": "Hànzì hěn nán ma?",
+          "translationVi": "Chữ Hán có khó không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "知识",
+      "pinyin": "zhīshi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "kiến thức",
+      "examples": [
+        {
+          "hanzi": "书里有很多知识。",
+          "pinyin": "Shū lǐ yǒu hěn duō zhīshi.",
+          "translationVi": "Trong sách có rất nhiều kiến thức."
+        }
+      ]
+    },
+    {
+      "hanzi": "认真",
+      "pinyin": "rènzhēn",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "chăm chỉ, nghiêm túc",
+      "examples": [
+        {
+          "hanzi": "她学习很认真。",
+          "pinyin": "Tā xuéxí hěn rènzhēn.",
+          "translationVi": "Cô ấy học rất chăm chỉ."
+        }
+      ]
+    },
+    {
+      "hanzi": "准备",
+      "pinyin": "zhǔnbèi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "chuẩn bị",
+      "examples": [
+        {
+          "hanzi": "我在准备明天的考试。",
+          "pinyin": "Wǒ zài zhǔnbèi míngtiān de kǎoshì.",
+          "translationVi": "Tôi đang chuẩn bị cho kỳ thi ngày mai."
+        }
+      ]
+    },
+    {
+      "hanzi": "开会",
+      "pinyin": "kāihuì",
+      "partOfSpeech": "động từ",
+      "meaningVi": "họp",
+      "examples": [
+        {
+          "hanzi": "老师们在开会。",
+          "pinyin": "Lǎoshīmen zài kāihuì.",
+          "translationVi": "Các thầy cô đang họp."
+        }
+      ]
+    },
+    {
+      "hanzi": "见面",
+      "pinyin": "jiànmiàn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "gặp mặt",
+      "examples": [
+        {
+          "hanzi": "我们明天见面吧。",
+          "pinyin": "Wǒmen míngtiān jiànmiàn ba.",
+          "translationVi": "Ngày mai chúng ta gặp nhau nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "再",
+      "pinyin": "zài",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "lại, nữa (lần sau)",
+      "examples": [
+        {
+          "hanzi": "请再说一次。",
+          "pinyin": "Qǐng zài shuō yí cì.",
+          "translationVi": "Xin nói lại một lần nữa."
+        }
+      ]
+    },
+    {
+      "hanzi": "先",
+      "pinyin": "xiān",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "trước (tiên)",
+      "examples": [
+        {
+          "hanzi": "我先走了。",
+          "pinyin": "Wǒ xiān zǒu le.",
+          "translationVi": "Tôi đi trước đây."
+        }
+      ]
+    },
+    {
+      "hanzi": "说话",
+      "pinyin": "shuōhuà",
+      "partOfSpeech": "động từ",
+      "meaningVi": "nói chuyện",
+      "examples": [
+        {
+          "hanzi": "上课的时候别说话。",
+          "pinyin": "Shàngkè de shíhou bié shuōhuà.",
+          "translationVi": "Trong giờ học đừng nói chuyện."
+        }
+      ]
+    },
+    {
+      "hanzi": "话",
+      "pinyin": "huà",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "lời nói",
+      "examples": [
+        {
+          "hanzi": "我明白你的话。",
+          "pinyin": "Wǒ míngbai nǐ de huà.",
+          "translationVi": "Tôi hiểu lời bạn nói."
+        }
+      ]
+    },
+    {
+      "hanzi": "告诉",
+      "pinyin": "gàosu",
+      "partOfSpeech": "động từ",
+      "meaningVi": "nói cho biết, bảo",
+      "examples": [
+        {
+          "hanzi": "请告诉我你的名字。",
+          "pinyin": "Qǐng gàosu wǒ nǐ de míngzi.",
+          "translationVi": "Hãy cho tôi biết tên bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "介绍",
+      "pinyin": "jièshào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "giới thiệu",
+      "examples": [
+        {
+          "hanzi": "我介绍一下，这是我朋友。",
+          "pinyin": "Wǒ jièshào yíxià, zhè shì wǒ péngyou.",
+          "translationVi": "Tôi giới thiệu một chút, đây là bạn tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "给",
+      "pinyin": "gěi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "cho, đưa cho",
+      "examples": [
+        {
+          "hanzi": "妈妈给我一本书。",
+          "pinyin": "Māma gěi wǒ yì běn shū.",
+          "translationVi": "Mẹ cho tôi một quyển sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "打电话",
+      "pinyin": "dǎdiànhuà",
+      "partOfSpeech": "động từ",
+      "meaningVi": "gọi điện thoại",
+      "examples": [
+        {
+          "hanzi": "我给妈妈打电话。",
+          "pinyin": "Wǒ gěi māma dǎ diànhuà.",
+          "translationVi": "Tôi gọi điện cho mẹ."
+        }
+      ]
+    },
+    {
+      "hanzi": "请假",
+      "pinyin": "qǐngjià",
+      "partOfSpeech": "động từ",
+      "meaningVi": "xin nghỉ",
+      "examples": [
+        {
+          "hanzi": "我明天想请假。",
+          "pinyin": "Wǒ míngtiān xiǎng qǐngjià.",
+          "translationVi": "Ngày mai tôi muốn xin nghỉ."
+        }
+      ]
+    },
+    {
+      "hanzi": "放假",
+      "pinyin": "fàngjià",
+      "partOfSpeech": "động từ",
+      "meaningVi": "được nghỉ (lễ, hè)",
+      "examples": [
+        {
+          "hanzi": "我们下星期放假。",
+          "pinyin": "Wǒmen xià xīngqī fàngjià.",
+          "translationVi": "Tuần sau chúng tôi được nghỉ."
+        }
+      ]
+    },
+    {
+      "hanzi": "新年",
+      "pinyin": "xīnnián",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "năm mới",
+      "examples": [
+        {
+          "hanzi": "新年好！",
+          "pinyin": "Xīnnián hǎo!",
+          "translationVi": "Chúc mừng năm mới!"
+        }
+      ]
+    },
+    {
+      "hanzi": "生日",
+      "pinyin": "shēngrì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sinh nhật",
+      "examples": [
+        {
+          "hanzi": "今天是我的生日。",
+          "pinyin": "Jīntiān shì wǒ de shēngrì.",
+          "translationVi": "Hôm nay là sinh nhật tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "开",
+      "pinyin": "kāi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "mở; lái (xe)",
+      "examples": [
+        {
+          "hanzi": "请开一下门。",
+          "pinyin": "Qǐng kāi yíxià mén.",
+          "translationVi": "Xin mở cửa giúp."
+        }
+      ]
+    },
+    {
+      "hanzi": "关",
+      "pinyin": "guān",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đóng; tắt",
+      "examples": [
+        {
+          "hanzi": "请关门。",
+          "pinyin": "Qǐng guān mén.",
+          "translationVi": "Xin đóng cửa."
+        }
+      ]
+    },
+    {
+      "hanzi": "关上",
+      "pinyin": "guānshang",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đóng lại, tắt đi",
+      "examples": [
+        {
+          "hanzi": "请关上门。",
+          "pinyin": "Qǐng guānshang mén.",
+          "translationVi": "Xin đóng cửa lại."
+        }
+      ]
+    },
+    {
+      "hanzi": "打开",
+      "pinyin": "dǎkāi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "mở ra; bật",
+      "examples": [
+        {
+          "hanzi": "请打开书。",
+          "pinyin": "Qǐng dǎkāi shū.",
+          "translationVi": "Mời mở sách ra."
+        }
+      ]
+    },
+    {
+      "hanzi": "有名",
+      "pinyin": "yǒumíng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "nổi tiếng",
+      "examples": [
+        {
+          "hanzi": "这个饭店很有名。",
+          "pinyin": "Zhè ge fàndiàn hěn yǒumíng.",
+          "translationVi": "Nhà hàng này rất nổi tiếng."
+        }
+      ]
+    },
+    {
+      "hanzi": "最后",
+      "pinyin": "zuìhòu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cuối cùng",
+      "examples": [
+        {
+          "hanzi": "最后一个是谁？",
+          "pinyin": "Zuìhòu yí ge shì shéi?",
+          "translationVi": "Người cuối cùng là ai?"
+        }
+      ]
+    },
+    {
+      "hanzi": "最好",
+      "pinyin": "zuìhǎo",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "tốt nhất là, nên",
+      "examples": [
+        {
+          "hanzi": "你最好明天再来。",
+          "pinyin": "Nǐ zuìhǎo míngtiān zài lái.",
+          "translationVi": "Tốt nhất là ngày mai bạn hãy đến."
+        }
+      ]
+    },
+    {
+      "hanzi": "了",
+      "pinyin": "le",
+      "partOfSpeech": "trợ từ",
+      "meaningVi": "(trợ từ: đã xảy ra, thay đổi)",
+      "examples": [
+        {
+          "hanzi": "我吃饭了。",
+          "pinyin": "Wǒ chī fàn le.",
+          "translationVi": "Tôi ăn cơm rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "着",
+      "pinyin": "zhe",
+      "partOfSpeech": "trợ từ",
+      "meaningVi": "(trợ từ: trạng thái tiếp diễn)",
+      "examples": [
+        {
+          "hanzi": "门开着。",
+          "pinyin": "Mén kāizhe.",
+          "translationVi": "Cửa đang mở."
+        }
+      ]
+    },
+    {
+      "hanzi": "吧",
+      "pinyin": "ba",
+      "partOfSpeech": "trợ từ",
+      "meaningVi": "(trợ từ: đề nghị, phỏng đoán)",
+      "examples": [
+        {
+          "hanzi": "你明天来吧。",
+          "pinyin": "Nǐ míngtiān lái ba.",
+          "translationVi": "Ngày mai bạn đến nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "正",
+      "pinyin": "zhèng",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "đang, đúng lúc",
+      "examples": [
+        {
+          "hanzi": "我正要给你打电话。",
+          "pinyin": "Wǒ zhèng yào gěi nǐ dǎ diànhuà.",
+          "translationVi": "Tôi đang định gọi cho bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "正在",
+      "pinyin": "zhèngzài",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "đang (làm gì)",
+      "examples": [
+        {
+          "hanzi": "他正在吃饭。",
+          "pinyin": "Tā zhèngzài chī fàn.",
+          "translationVi": "Anh ấy đang ăn cơm."
+        }
+      ]
+    },
+    {
+      "hanzi": "没",
+      "pinyin": "méi",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "không, chưa (phủ định quá khứ)",
+      "examples": [
+        {
+          "hanzi": "我没去学校。",
+          "pinyin": "Wǒ méi qù xuéxiào.",
+          "translationVi": "Tôi không đi học."
+        }
+      ]
+    },
+    {
+      "hanzi": "还",
+      "pinyin": "hái",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "còn, vẫn",
+      "examples": [
+        {
+          "hanzi": "他还在睡觉。",
+          "pinyin": "Tā hái zài shuìjiào.",
+          "translationVi": "Anh ấy vẫn đang ngủ."
+        }
+      ]
+    },
+    {
+      "hanzi": "还是",
+      "pinyin": "háishi",
+      "partOfSpeech": "liên từ",
+      "meaningVi": "hay là (câu hỏi lựa chọn)",
+      "examples": [
+        {
+          "hanzi": "你去还是我去？",
+          "pinyin": "Nǐ qù háishi wǒ qù?",
+          "translationVi": "Bạn đi hay tôi đi?"
+        }
+      ]
+    },
+    {
+      "hanzi": "还有",
+      "pinyin": "háiyǒu",
+      "partOfSpeech": "liên từ",
+      "meaningVi": "còn có, ngoài ra",
+      "examples": [
+        {
+          "hanzi": "还有别的吗？",
+          "pinyin": "Háiyǒu biéde ma?",
+          "translationVi": "Còn gì khác không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "就",
+      "pinyin": "jiù",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "thì, liền; chính là",
+      "examples": [
+        {
+          "hanzi": "我马上就来。",
+          "pinyin": "Wǒ mǎshàng jiù lái.",
+          "translationVi": "Tôi đến ngay."
+        }
+      ]
+    },
+    {
+      "hanzi": "比",
+      "pinyin": "bǐ",
+      "partOfSpeech": "giới từ",
+      "meaningVi": "so với, hơn",
+      "examples": [
+        {
+          "hanzi": "哥哥比我高。",
+          "pinyin": "Gēge bǐ wǒ gāo.",
+          "translationVi": "Anh trai cao hơn tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "一样",
+      "pinyin": "yīyàng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "giống nhau",
+      "examples": [
+        {
+          "hanzi": "我们的书包一样。",
+          "pinyin": "Wǒmen de shūbāo yíyàng.",
+          "translationVi": "Cặp sách của chúng tôi giống nhau."
+        }
+      ]
+    },
+    {
+      "hanzi": "一点儿",
+      "pinyin": "yīdiǎnr",
+      "partOfSpeech": "số từ",
+      "meaningVi": "một chút, một ít",
+      "examples": [
+        {
+          "hanzi": "我会说一点儿汉语。",
+          "pinyin": "Wǒ huì shuō yìdiǎnr Hànyǔ.",
+          "translationVi": "Tôi biết nói một chút tiếng Trung."
+        }
+      ]
+    },
+    {
+      "hanzi": "一下儿",
+      "pinyin": "yīxiàr",
+      "partOfSpeech": "số từ",
+      "meaningVi": "một chút, một lát",
+      "examples": [
+        {
+          "hanzi": "你等一下儿。",
+          "pinyin": "Nǐ děng yíxiàr.",
+          "translationVi": "Bạn đợi một chút."
+        }
+      ]
+    },
+    {
+      "hanzi": "是不是",
+      "pinyin": "shìbushì",
+      "partOfSpeech": "cụm từ",
+      "meaningVi": "có phải là … không",
+      "examples": [
+        {
+          "hanzi": "你是不是老师？",
+          "pinyin": "Nǐ shì bu shì lǎoshī?",
+          "translationVi": "Bạn có phải là giáo viên không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "怎么",
+      "pinyin": "zěnme",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "thế nào, làm sao; sao",
+      "examples": [
+        {
+          "hanzi": "你怎么来学校？",
+          "pinyin": "Nǐ zěnme lái xuéxiào?",
+          "translationVi": "Bạn đến trường bằng gì?"
+        }
+      ]
+    },
+    {
+      "hanzi": "地",
+      "pinyin": "de",
+      "partOfSpeech": "trợ từ",
+      "meaningVi": "(trợ từ: nối trạng ngữ với động từ)",
+      "examples": [
+        {
+          "hanzi": "他高兴地笑了。",
+          "pinyin": "Tā gāoxìng de xiào le.",
+          "translationVi": "Anh ấy cười vui vẻ."
+        }
+      ]
+    },
+    {
+      "hanzi": "别的",
+      "pinyin": "biéde",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "cái khác, khác",
+      "examples": [
+        {
+          "hanzi": "你还要别的吗？",
+          "pinyin": "Nǐ hái yào biéde ma?",
+          "translationVi": "Bạn còn cần gì khác không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "有的",
+      "pinyin": "yǒude",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "có cái, có người",
+      "examples": [
+        {
+          "hanzi": "有的人喜欢喝茶。",
+          "pinyin": "Yǒude rén xǐhuan hē chá.",
+          "translationVi": "Có người thích uống trà."
+        }
+      ]
+    },
+    {
+      "hanzi": "不大",
+      "pinyin": "bùdà",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "không … lắm",
+      "examples": [
+        {
+          "hanzi": "我不大喜欢吃肉。",
+          "pinyin": "Wǒ bú dà xǐhuan chī ròu.",
+          "translationVi": "Tôi không thích ăn thịt lắm."
+        }
+      ]
+    },
+    {
+      "hanzi": "打",
+      "pinyin": "dǎ",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đánh; chơi (bóng); gọi (điện)",
+      "examples": [
+        {
+          "hanzi": "他在打电话。",
+          "pinyin": "Tā zài dǎ diànhuà.",
+          "translationVi": "Anh ấy đang gọi điện thoại."
+        }
+      ]
+    },
+    {
+      "hanzi": "干什么",
+      "pinyin": "gànshénme",
+      "partOfSpeech": "cụm từ",
+      "meaningVi": "làm gì",
+      "examples": [
+        {
+          "hanzi": "你明天干什么？",
+          "pinyin": "Nǐ míngtiān gàn shénme?",
+          "translationVi": "Ngày mai bạn làm gì?"
+        }
+      ]
+    },
+    {
+      "hanzi": "干净",
+      "pinyin": "gānjìng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "sạch sẽ",
+      "examples": [
+        {
+          "hanzi": "房间很干净。",
+          "pinyin": "Fángjiān hěn gānjìng.",
+          "translationVi": "Căn phòng rất sạch sẽ."
+        }
+      ]
+    },
+    {
+      "hanzi": "忙",
+      "pinyin": "máng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "bận",
+      "examples": [
+        {
+          "hanzi": "我今天很忙。",
+          "pinyin": "Wǒ jīntiān hěn máng.",
+          "translationVi": "Hôm nay tôi rất bận."
+        }
+      ]
+    },
+    {
+      "hanzi": "忘记",
+      "pinyin": "wàngjì",
+      "partOfSpeech": "động từ",
+      "meaningVi": "quên",
+      "examples": [
+        {
+          "hanzi": "别忘记我的名字。",
+          "pinyin": "Bié wàngjì wǒ de míngzi.",
+          "translationVi": "Đừng quên tên tôi nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "得到",
+      "pinyin": "dédào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đạt được, nhận được",
+      "examples": [
+        {
+          "hanzi": "我得到了一本新书。",
+          "pinyin": "Wǒ dédào le yì běn xīn shū.",
+          "translationVi": "Tôi nhận được một quyển sách mới."
+        }
+      ]
+    },
+    {
+      "hanzi": "上网",
+      "pinyin": "shàngwǎng",
+      "partOfSpeech": "động từ",
+      "meaningVi": "lên mạng",
+      "examples": [
+        {
+          "hanzi": "晚上我上网看电影。",
+          "pinyin": "Wǎnshang wǒ shàngwǎng kàn diànyǐng.",
+          "translationVi": "Buổi tối tôi lên mạng xem phim."
+        }
+      ]
+    },
+    {
+      "hanzi": "网上",
+      "pinyin": "wǎngshang",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trên mạng",
+      "examples": [
+        {
+          "hanzi": "我在网上买东西。",
+          "pinyin": "Wǒ zài wǎngshang mǎi dōngxi.",
+          "translationVi": "Tôi mua đồ trên mạng."
+        }
+      ]
+    },
+    {
+      "hanzi": "网友",
+      "pinyin": "wǎngyǒu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bạn trên mạng",
+      "examples": [
+        {
+          "hanzi": "他是我的网友。",
+          "pinyin": "Tā shì wǒ de wǎngyǒu.",
+          "translationVi": "Anh ấy là bạn trên mạng của tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "上次",
+      "pinyin": "shàngcì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "lần trước",
+      "examples": [
+        {
+          "hanzi": "上次我没来。",
+          "pinyin": "Shàngcì wǒ méi lái.",
+          "translationVi": "Lần trước tôi không đến."
+        }
+      ]
+    },
+    {
+      "hanzi": "下次",
+      "pinyin": "xiàcì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "lần sau",
+      "examples": [
+        {
+          "hanzi": "下次再见！",
+          "pinyin": "Xiàcì zàijiàn!",
+          "translationVi": "Hẹn gặp lần sau!"
+        }
+      ]
+    },
+    {
+      "hanzi": "一半",
+      "pinyin": "yībàn",
+      "partOfSpeech": "số từ",
+      "meaningVi": "một nửa",
+      "examples": [
+        {
+          "hanzi": "我吃了一半。",
+          "pinyin": "Wǒ chī le yíbàn.",
+          "translationVi": "Tôi đã ăn một nửa."
+        }
+      ]
+    },
+    {
+      "hanzi": "一边",
+      "pinyin": "yībiān",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "vừa … vừa …",
+      "examples": [
+        {
+          "hanzi": "他一边吃饭一边看电视。",
+          "pinyin": "Tā yìbiān chī fàn yìbiān kàn diànshì.",
+          "translationVi": "Anh ấy vừa ăn cơm vừa xem tivi."
+        }
+      ]
+    },
+    {
+      "hanzi": "半天",
+      "pinyin": "bàntiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nửa ngày; rất lâu",
+      "examples": [
+        {
+          "hanzi": "我等了你半天。",
+          "pinyin": "Wǒ děng le nǐ bàntiān.",
+          "translationVi": "Tôi đợi bạn mãi."
+        }
+      ]
+    },
+    {
+      "hanzi": "半年",
+      "pinyin": "bànnián",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nửa năm",
+      "examples": [
+        {
+          "hanzi": "我学了半年汉语。",
+          "pinyin": "Wǒ xué le bànnián Hànyǔ.",
+          "translationVi": "Tôi đã học tiếng Trung nửa năm."
+        }
+      ]
+    },
+    {
+      "hanzi": "日期",
+      "pinyin": "rìqī",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ngày tháng",
+      "examples": [
+        {
+          "hanzi": "考试的日期是几号？",
+          "pinyin": "Kǎoshì de rìqī shì jǐ hào?",
+          "translationVi": "Ngày thi là ngày mấy?"
+        }
+      ]
+    },
+    {
+      "hanzi": "星期日",
+      "pinyin": "xīngqīrì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "chủ nhật",
+      "examples": [
+        {
+          "hanzi": "星期日我在家。",
+          "pinyin": "Xīngqīrì wǒ zài jiā.",
+          "translationVi": "Chủ nhật tôi ở nhà."
+        }
+      ]
+    },
+    {
+      "hanzi": "常",
+      "pinyin": "cháng",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "thường",
+      "examples": [
+        {
+          "hanzi": "我常去那个书店。",
+          "pinyin": "Wǒ cháng qù nà ge shūdiàn.",
+          "translationVi": "Tôi thường đến hiệu sách đó."
+        }
+      ]
+    },
+    {
+      "hanzi": "不用",
+      "pinyin": "bùyòng",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "không cần",
+      "examples": [
+        {
+          "hanzi": "你不用来了。",
+          "pinyin": "Nǐ bú yòng lái le.",
+          "translationVi": "Bạn không cần đến nữa."
+        }
+      ]
+    },
+    {
+      "hanzi": "地",
+      "pinyin": "dì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "đất, mặt đất",
+      "examples": [
+        {
+          "hanzi": "地上很干净。",
+          "pinyin": "Dìshang hěn gānjìng.",
+          "translationVi": "Mặt đất rất sạch."
+        }
+      ]
+    },
+    {
+      "hanzi": "女儿",
+      "pinyin": "nǚ'ér",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "con gái",
+      "examples": [
+        {
+          "hanzi": "我女儿五岁了。",
+          "pinyin": "Wǒ nǚ'ér wǔ suì le.",
+          "translationVi": "Con gái tôi năm tuổi rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "奶",
+      "pinyin": "nǎi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sữa",
+      "examples": [
+        {
+          "hanzi": "我早上喝奶。",
+          "pinyin": "Wǒ zǎoshang hē nǎi.",
+          "translationVi": "Buổi sáng tôi uống sữa."
+        }
+      ]
+    },
+    {
+      "hanzi": "子",
+      "pinyin": "zi",
+      "partOfSpeech": "hậu tố",
+      "meaningVi": "(hậu tố danh từ)",
+      "examples": [
+        {
+          "hanzi": "这个桌子很新。",
+          "pinyin": "Zhè ge zhuōzi hěn xīn.",
+          "translationVi": "Cái bàn này rất mới."
+        }
+      ]
+    },
+    {
+      "hanzi": "山",
+      "pinyin": "shān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "núi",
+      "examples": [
+        {
+          "hanzi": "那个山很高。",
+          "pinyin": "Nà ge shān hěn gāo.",
+          "translationVi": "Ngọn núi kia rất cao."
+        }
+      ]
+    },
+    {
+      "hanzi": "差",
+      "pinyin": "chà",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "kém; thiếu",
+      "examples": [
+        {
+          "hanzi": "现在差五分八点。",
+          "pinyin": "Xiànzài chà wǔ fēn bā diǎn.",
+          "translationVi": "Bây giờ là tám giờ kém năm phút."
+        }
+      ]
+    },
+    {
+      "hanzi": "树",
+      "pinyin": "shù",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cây",
+      "examples": [
+        {
+          "hanzi": "门口有一个大树。",
+          "pinyin": "Ménkǒu yǒu yí ge dà shù.",
+          "translationVi": "Trước cửa có một cái cây to."
+        }
+      ]
+    },
+    {
+      "hanzi": "电",
+      "pinyin": "diàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "điện",
+      "examples": [
+        {
+          "hanzi": "家里没电了。",
+          "pinyin": "Jiāli méi diàn le.",
+          "translationVi": "Nhà mất điện rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "白",
+      "pinyin": "bái",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "trắng",
+      "examples": [
+        {
+          "hanzi": "我的衣服是白的。",
+          "pinyin": "Wǒ de yīfu shì bái de.",
+          "translationVi": "Quần áo của tôi màu trắng."
+        }
+      ]
+    },
+    {
+      "hanzi": "老",
+      "pinyin": "lǎo",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "già; cũ",
+      "examples": [
+        {
+          "hanzi": "我的电脑很老了。",
+          "pinyin": "Wǒ de diànnǎo hěn lǎo le.",
+          "translationVi": "Máy tính của tôi cũ lắm rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "行",
+      "pinyin": "xíng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "được, ổn",
+      "examples": [
+        {
+          "hanzi": "明天去，行吗？",
+          "pinyin": "Míngtiān qù, xíng ma?",
+          "translationVi": "Ngày mai đi, được không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "起",
+      "pinyin": "qǐ",
+      "partOfSpeech": "động từ",
+      "meaningVi": "dậy, đứng dậy",
+      "examples": [
+        {
+          "hanzi": "我七点起床。",
+          "pinyin": "Wǒ qī diǎn qǐ chuáng.",
+          "translationVi": "Tôi dậy lúc bảy giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "还",
+      "pinyin": "huán",
+      "partOfSpeech": "động từ",
+      "meaningVi": "trả, trả lại",
+      "examples": [
+        {
+          "hanzi": "我明天还你书。",
+          "pinyin": "Wǒ míngtiān huán nǐ shū.",
+          "translationVi": "Ngày mai tôi trả sách cho bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "这边",
+      "pinyin": "zhèbiān",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "bên này, phía này",
+      "examples": [
+        {
+          "hanzi": "请到这边来。",
+          "pinyin": "Qǐng dào zhèbiān lái.",
+          "translationVi": "Mời lại phía này."
+        }
+      ]
+    },
+    {
+      "hanzi": "那边",
+      "pinyin": "nàbiān",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "bên kia, phía kia",
+      "examples": [
+        {
+          "hanzi": "那边有一个商店。",
+          "pinyin": "Nàbiān yǒu yí ge shāngdiàn.",
+          "translationVi": "Bên kia có một cửa hàng."
+        }
+      ]
+    },
+    {
+      "hanzi": "重",
+      "pinyin": "zhòng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "nặng",
+      "examples": [
+        {
+          "hanzi": "这个包很重。",
+          "pinyin": "Zhè ge bāo hěn zhòng.",
+          "translationVi": "Cái túi này rất nặng."
+        }
+      ]
+    },
+    {
+      "hanzi": "重要",
+      "pinyin": "zhòngyào",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "quan trọng",
+      "examples": [
+        {
+          "hanzi": "这个考试很重要。",
+          "pinyin": "Zhè ge kǎoshì hěn zhòngyào.",
+          "translationVi": "Kỳ thi này rất quan trọng."
+        }
+      ]
+    },
+    {
+      "hanzi": "间",
+      "pinyin": "jiān",
+      "partOfSpeech": "lượng từ",
+      "meaningVi": "(lượng từ) gian, phòng",
+      "examples": [
+        {
+          "hanzi": "我家有三间房间。",
+          "pinyin": "Wǒ jiā yǒu sān jiān fángjiān.",
+          "translationVi": "Nhà tôi có ba phòng."
+        }
+      ]
+    }
+  ]
+}

@@ -219,7 +219,8 @@ function depth(
 }
 
 function markSyllable(syllable: string, tone: number): string {
-  const syl = syllable.replace(/ü/gu, 'v');
+  // CC-CEDICT viết ü là `u:` (nu:3 → nǚ).
+  const syl = syllable.replace(/u:/gu, 'v').replace(/ü/gu, 'v');
   if (tone === 5 || tone === 0) return syl.replace(/v/gu, 'ü');
   let target = -1;
   const atA = syl.indexOf('a');

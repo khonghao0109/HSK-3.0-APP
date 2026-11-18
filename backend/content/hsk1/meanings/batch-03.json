@@ -1,0 +1,1329 @@
+{
+  "schemaVersion": 1,
+  "batchId": "hsk1-vi-03",
+  "lessons": [
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "dataSource": {
+    "code": "HSK30_VI_HSK1_B03",
+    "name": "Nghĩa tiếng Việt và câu ví dụ HSK1, lô 03 (bài 11–15)",
+    "version": "1",
+    "license": "Original content authored for HSK 3.0 APP",
+    "attribution": "Nội dung do agent AI soạn nháp cho HSK 3.0 APP, người duyệt PO chỉ định duyệt (Q182, Q183, Q185)",
+    "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
+  },
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null,
+    "notes": []
+  },
+  "properNames": [],
+  "entries": [
+    {
+      "hanzi": "上边",
+      "pinyin": "shàngbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên trên, phía trên",
+      "examples": [
+        {
+          "hanzi": "书在桌子上边。",
+          "pinyin": "Shū zài zhuōzi shàngbian.",
+          "translationVi": "Sách ở trên bàn."
+        }
+      ]
+    },
+    {
+      "hanzi": "下边",
+      "pinyin": "xiàbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên dưới, phía dưới",
+      "examples": [
+        {
+          "hanzi": "我的书在床下边。",
+          "pinyin": "Wǒ de shū zài chuáng xiàbian.",
+          "translationVi": "Sách của tôi ở dưới gầm giường."
+        }
+      ]
+    },
+    {
+      "hanzi": "前边",
+      "pinyin": "qiánbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía trước",
+      "examples": [
+        {
+          "hanzi": "学校前边有一个商店。",
+          "pinyin": "Xuéxiào qiánbian yǒu yí ge shāngdiàn.",
+          "translationVi": "Phía trước trường có một cửa hàng."
+        }
+      ]
+    },
+    {
+      "hanzi": "后边",
+      "pinyin": "hòubian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía sau",
+      "examples": [
+        {
+          "hanzi": "我家后边有一个医院。",
+          "pinyin": "Wǒ jiā hòubian yǒu yí ge yīyuàn.",
+          "translationVi": "Phía sau nhà tôi có một bệnh viện."
+        }
+      ]
+    },
+    {
+      "hanzi": "左边",
+      "pinyin": "zuǒbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên trái",
+      "examples": [
+        {
+          "hanzi": "左边的那个人是我哥哥。",
+          "pinyin": "Zuǒbian de nà ge rén shì wǒ gēge.",
+          "translationVi": "Người bên trái là anh trai tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "右边",
+      "pinyin": "yòubian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên phải",
+      "examples": [
+        {
+          "hanzi": "电脑在桌子右边。",
+          "pinyin": "Diànnǎo zài zhuōzi yòubian.",
+          "translationVi": "Máy tính ở bên phải cái bàn."
+        }
+      ]
+    },
+    {
+      "hanzi": "里边",
+      "pinyin": "lǐbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên trong",
+      "examples": [
+        {
+          "hanzi": "书包里边有两本书。",
+          "pinyin": "Shūbāo lǐbian yǒu liǎng běn shū.",
+          "translationVi": "Trong cặp có hai quyển sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "外边",
+      "pinyin": "wàibian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên ngoài",
+      "examples": [
+        {
+          "hanzi": "外边下雨了。",
+          "pinyin": "Wàibian xià yǔ le.",
+          "translationVi": "Bên ngoài mưa rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "旁边",
+      "pinyin": "pángbiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bên cạnh",
+      "examples": [
+        {
+          "hanzi": "我坐在他旁边。",
+          "pinyin": "Wǒ zuò zài tā pángbiān.",
+          "translationVi": "Tôi ngồi bên cạnh anh ấy."
+        }
+      ]
+    },
+    {
+      "hanzi": "东边",
+      "pinyin": "dōngbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía đông",
+      "examples": [
+        {
+          "hanzi": "饭店在学校东边。",
+          "pinyin": "Fàndiàn zài xuéxiào dōngbian.",
+          "translationVi": "Nhà hàng ở phía đông trường học."
+        }
+      ]
+    },
+    {
+      "hanzi": "西边",
+      "pinyin": "xībian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía tây",
+      "examples": [
+        {
+          "hanzi": "医院在西边。",
+          "pinyin": "Yīyuàn zài xībian.",
+          "translationVi": "Bệnh viện ở phía tây."
+        }
+      ]
+    },
+    {
+      "hanzi": "南边",
+      "pinyin": "nánbian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía nam",
+      "examples": [
+        {
+          "hanzi": "车站在南边。",
+          "pinyin": "Chēzhàn zài nánbian.",
+          "translationVi": "Bến xe ở phía nam."
+        }
+      ]
+    },
+    {
+      "hanzi": "北边",
+      "pinyin": "běibian",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phía bắc",
+      "examples": [
+        {
+          "hanzi": "机场在北边。",
+          "pinyin": "Jīchǎng zài běibian.",
+          "translationVi": "Sân bay ở phía bắc."
+        }
+      ]
+    },
+    {
+      "hanzi": "中间",
+      "pinyin": "zhōngjiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ở giữa",
+      "examples": [
+        {
+          "hanzi": "我坐在爸爸妈妈中间。",
+          "pinyin": "Wǒ zuò zài bàba māma zhōngjiān.",
+          "translationVi": "Tôi ngồi giữa bố và mẹ."
+        }
+      ]
+    },
+    {
+      "hanzi": "东",
+      "pinyin": "dōng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "đông (phương hướng)",
+      "examples": [
+        {
+          "hanzi": "我家在东边。",
+          "pinyin": "Wǒ jiā zài dōngbian.",
+          "translationVi": "Nhà tôi ở phía đông."
+        }
+      ]
+    },
+    {
+      "hanzi": "西",
+      "pinyin": "xī",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tây (phương hướng)",
+      "examples": [
+        {
+          "hanzi": "学校在西边，不在东边。",
+          "pinyin": "Xuéxiào zài xībian, bú zài dōngbian.",
+          "translationVi": "Trường ở phía tây, không ở phía đông."
+        }
+      ]
+    },
+    {
+      "hanzi": "南",
+      "pinyin": "nán",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nam (phương hướng)",
+      "examples": [
+        {
+          "hanzi": "我们去南边吧。",
+          "pinyin": "Wǒmen qù nánbian ba.",
+          "translationVi": "Chúng ta đi về phía nam nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "北",
+      "pinyin": "běi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bắc (phương hướng)",
+      "examples": [
+        {
+          "hanzi": "北边很冷。",
+          "pinyin": "Běibian hěn lěng.",
+          "translationVi": "Phía bắc rất lạnh."
+        }
+      ]
+    },
+    {
+      "hanzi": "左",
+      "pinyin": "zuǒ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trái",
+      "examples": [
+        {
+          "hanzi": "左手",
+          "pinyin": "Zuǒ shǒu",
+          "translationVi": "Tay trái"
+        }
+      ]
+    },
+    {
+      "hanzi": "右",
+      "pinyin": "yòu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phải (bên phải)",
+      "examples": [
+        {
+          "hanzi": "右手",
+          "pinyin": "Yòu shǒu",
+          "translationVi": "Tay phải"
+        }
+      ]
+    },
+    {
+      "hanzi": "上",
+      "pinyin": "shàng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trên",
+      "examples": [
+        {
+          "hanzi": "手机在桌子上。",
+          "pinyin": "Shǒujī zài zhuōzi shang.",
+          "translationVi": "Điện thoại ở trên bàn."
+        }
+      ]
+    },
+    {
+      "hanzi": "下",
+      "pinyin": "xià",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "dưới",
+      "examples": [
+        {
+          "hanzi": "床下有一本书。",
+          "pinyin": "Chuáng xià yǒu yì běn shū.",
+          "translationVi": "Dưới gầm giường có một quyển sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "前",
+      "pinyin": "qián",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trước",
+      "examples": [
+        {
+          "hanzi": "门前有很多车。",
+          "pinyin": "Mén qián yǒu hěn duō chē.",
+          "translationVi": "Trước cửa có rất nhiều xe."
+        }
+      ]
+    },
+    {
+      "hanzi": "后",
+      "pinyin": "hòu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sau",
+      "examples": [
+        {
+          "hanzi": "房子后有一个小门。",
+          "pinyin": "Fángzi hòu yǒu yí ge xiǎo mén.",
+          "translationVi": "Sau nhà có một cái cửa nhỏ."
+        }
+      ]
+    },
+    {
+      "hanzi": "里",
+      "pinyin": "lǐ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trong",
+      "examples": [
+        {
+          "hanzi": "房间里有人吗？",
+          "pinyin": "Fángjiān lǐ yǒu rén ma?",
+          "translationVi": "Trong phòng có người không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "外",
+      "pinyin": "wài",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ngoài",
+      "examples": [
+        {
+          "hanzi": "门外有一个人。",
+          "pinyin": "Mén wài yǒu yí ge rén.",
+          "translationVi": "Ngoài cửa có một người."
+        }
+      ]
+    },
+    {
+      "hanzi": "中",
+      "pinyin": "zhōng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "giữa, trong",
+      "examples": [
+        {
+          "hanzi": "他在家中看书。",
+          "pinyin": "Tā zài jiā zhōng kàn shū.",
+          "translationVi": "Anh ấy đọc sách ở nhà."
+        }
+      ]
+    },
+    {
+      "hanzi": "地上",
+      "pinyin": "dìshang",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trên mặt đất, dưới sàn",
+      "examples": [
+        {
+          "hanzi": "地上有一个手机。",
+          "pinyin": "Dìshang yǒu yí ge shǒujī.",
+          "translationVi": "Dưới sàn có một cái điện thoại."
+        }
+      ]
+    },
+    {
+      "hanzi": "身上",
+      "pinyin": "shēnshang",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trên người",
+      "examples": [
+        {
+          "hanzi": "我身上没有钱。",
+          "pinyin": "Wǒ shēnshang méiyǒu qián.",
+          "translationVi": "Trên người tôi không có tiền."
+        }
+      ]
+    },
+    {
+      "hanzi": "路上",
+      "pinyin": "lùshang",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trên đường",
+      "examples": [
+        {
+          "hanzi": "路上车很多。",
+          "pinyin": "Lùshang chē hěn duō.",
+          "translationVi": "Trên đường rất nhiều xe."
+        }
+      ]
+    },
+    {
+      "hanzi": "楼上",
+      "pinyin": "lóushàng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tầng trên",
+      "examples": [
+        {
+          "hanzi": "我家在楼上。",
+          "pinyin": "Wǒ jiā zài lóushàng.",
+          "translationVi": "Nhà tôi ở tầng trên."
+        }
+      ]
+    },
+    {
+      "hanzi": "楼下",
+      "pinyin": "lóuxià",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tầng dưới",
+      "examples": [
+        {
+          "hanzi": "楼下有一个饭店。",
+          "pinyin": "Lóuxià yǒu yí ge fàndiàn.",
+          "translationVi": "Tầng dưới có một nhà hàng."
+        }
+      ]
+    },
+    {
+      "hanzi": "楼",
+      "pinyin": "lóu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "toà nhà; tầng",
+      "examples": [
+        {
+          "hanzi": "我住在三楼。",
+          "pinyin": "Wǒ zhù zài sān lóu.",
+          "translationVi": "Tôi sống ở tầng ba."
+        }
+      ]
+    },
+    {
+      "hanzi": "门",
+      "pinyin": "mén",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cửa",
+      "examples": [
+        {
+          "hanzi": "请开门。",
+          "pinyin": "Qǐng kāi mén.",
+          "translationVi": "Mời mở cửa."
+        }
+      ]
+    },
+    {
+      "hanzi": "门口",
+      "pinyin": "ménkǒu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cửa ra vào, trước cửa",
+      "examples": [
+        {
+          "hanzi": "我在学校门口等你。",
+          "pinyin": "Wǒ zài xuéxiào ménkǒu děng nǐ.",
+          "translationVi": "Tôi đợi bạn ở cổng trường."
+        }
+      ]
+    },
+    {
+      "hanzi": "房子",
+      "pinyin": "fángzi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nhà, căn nhà",
+      "examples": [
+        {
+          "hanzi": "这个房子很大。",
+          "pinyin": "Zhè ge fángzi hěn dà.",
+          "translationVi": "Căn nhà này rất to."
+        }
+      ]
+    },
+    {
+      "hanzi": "房间",
+      "pinyin": "fángjiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "phòng, căn phòng",
+      "examples": [
+        {
+          "hanzi": "我的房间很小。",
+          "pinyin": "Wǒ de fángjiān hěn xiǎo.",
+          "translationVi": "Phòng của tôi rất nhỏ."
+        }
+      ]
+    },
+    {
+      "hanzi": "桌子",
+      "pinyin": "zhuōzi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cái bàn",
+      "examples": [
+        {
+          "hanzi": "桌子上有很多书。",
+          "pinyin": "Zhuōzi shang yǒu hěn duō shū.",
+          "translationVi": "Trên bàn có rất nhiều sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "床",
+      "pinyin": "chuáng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cái giường",
+      "examples": [
+        {
+          "hanzi": "我的床很大。",
+          "pinyin": "Wǒ de chuáng hěn dà.",
+          "translationVi": "Giường của tôi rất to."
+        }
+      ]
+    },
+    {
+      "hanzi": "家里",
+      "pinyin": "jiāli",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trong nhà, ở nhà",
+      "examples": [
+        {
+          "hanzi": "家里没有人。",
+          "pinyin": "Jiāli méiyǒu rén.",
+          "translationVi": "Trong nhà không có ai."
+        }
+      ]
+    },
+    {
+      "hanzi": "车",
+      "pinyin": "chē",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "xe",
+      "examples": [
+        {
+          "hanzi": "你的车在哪儿？",
+          "pinyin": "Nǐ de chē zài nǎr?",
+          "translationVi": "Xe của bạn ở đâu?"
+        }
+      ]
+    },
+    {
+      "hanzi": "汽车",
+      "pinyin": "qìchē",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "xe ô tô",
+      "examples": [
+        {
+          "hanzi": "这是我爸爸的汽车。",
+          "pinyin": "Zhè shì wǒ bàba de qìchē.",
+          "translationVi": "Đây là ô tô của bố tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "火车",
+      "pinyin": "huǒchē",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tàu hoả",
+      "examples": [
+        {
+          "hanzi": "我坐火车去北京。",
+          "pinyin": "Wǒ zuò huǒchē qù Běijīng.",
+          "translationVi": "Tôi đi tàu hoả đến Bắc Kinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "飞机",
+      "pinyin": "fēijī",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "máy bay",
+      "examples": [
+        {
+          "hanzi": "飞机几点到？",
+          "pinyin": "Fēijī jǐ diǎn dào?",
+          "translationVi": "Máy bay mấy giờ đến?"
+        }
+      ]
+    },
+    {
+      "hanzi": "飞",
+      "pinyin": "fēi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "bay",
+      "examples": [
+        {
+          "hanzi": "飞机在天上飞。",
+          "pinyin": "Fēijī zài tiān shang fēi.",
+          "translationVi": "Máy bay bay trên trời."
+        }
+      ]
+    },
+    {
+      "hanzi": "机场",
+      "pinyin": "jīchǎng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sân bay",
+      "examples": [
+        {
+          "hanzi": "我去机场。",
+          "pinyin": "Wǒ qù jīchǎng.",
+          "translationVi": "Tôi đi sân bay."
+        }
+      ]
+    },
+    {
+      "hanzi": "车站",
+      "pinyin": "chēzhàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bến xe, nhà ga",
+      "examples": [
+        {
+          "hanzi": "车站在哪儿？",
+          "pinyin": "Chēzhàn zài nǎr?",
+          "translationVi": "Bến xe ở đâu?"
+        }
+      ]
+    },
+    {
+      "hanzi": "车票",
+      "pinyin": "chēpiào",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "vé xe, vé tàu",
+      "examples": [
+        {
+          "hanzi": "我买了车票。",
+          "pinyin": "Wǒ mǎi le chēpiào.",
+          "translationVi": "Tôi đã mua vé xe."
+        }
+      ]
+    },
+    {
+      "hanzi": "机票",
+      "pinyin": "jīpiào",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "vé máy bay",
+      "examples": [
+        {
+          "hanzi": "机票多少钱？",
+          "pinyin": "Jīpiào duōshao qián?",
+          "translationVi": "Vé máy bay bao nhiêu tiền?"
+        }
+      ]
+    },
+    {
+      "hanzi": "票",
+      "pinyin": "piào",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "vé",
+      "examples": [
+        {
+          "hanzi": "你有票吗？",
+          "pinyin": "Nǐ yǒu piào ma?",
+          "translationVi": "Bạn có vé không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "开车",
+      "pinyin": "kāichē",
+      "partOfSpeech": "động từ",
+      "meaningVi": "lái xe",
+      "examples": [
+        {
+          "hanzi": "爸爸开车去工作。",
+          "pinyin": "Bàba kāichē qù gōngzuò.",
+          "translationVi": "Bố lái xe đi làm."
+        }
+      ]
+    },
+    {
+      "hanzi": "打车",
+      "pinyin": "dǎchē",
+      "partOfSpeech": "động từ",
+      "meaningVi": "bắt taxi, gọi xe",
+      "examples": [
+        {
+          "hanzi": "我们打车去机场吧。",
+          "pinyin": "Wǒmen dǎchē qù jīchǎng ba.",
+          "translationVi": "Chúng ta bắt taxi đi sân bay nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "上车",
+      "pinyin": "shàngchē",
+      "partOfSpeech": "động từ",
+      "meaningVi": "lên xe",
+      "examples": [
+        {
+          "hanzi": "请上车。",
+          "pinyin": "Qǐng shàngchē.",
+          "translationVi": "Mời lên xe."
+        }
+      ]
+    },
+    {
+      "hanzi": "下车",
+      "pinyin": "xiàchē",
+      "partOfSpeech": "động từ",
+      "meaningVi": "xuống xe",
+      "examples": [
+        {
+          "hanzi": "我在前边下车。",
+          "pinyin": "Wǒ zài qiánbian xiàchē.",
+          "translationVi": "Tôi xuống xe ở phía trước."
+        }
+      ]
+    },
+    {
+      "hanzi": "坐",
+      "pinyin": "zuò",
+      "partOfSpeech": "động từ",
+      "meaningVi": "ngồi; đi (tàu, xe)",
+      "examples": [
+        {
+          "hanzi": "请坐。",
+          "pinyin": "Qǐng zuò.",
+          "translationVi": "Mời ngồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "走",
+      "pinyin": "zǒu",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đi, đi bộ; rời đi",
+      "examples": [
+        {
+          "hanzi": "我们走吧。",
+          "pinyin": "Wǒmen zǒu ba.",
+          "translationVi": "Chúng ta đi thôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "走路",
+      "pinyin": "zǒulù",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đi bộ",
+      "examples": [
+        {
+          "hanzi": "我走路去学校。",
+          "pinyin": "Wǒ zǒulù qù xuéxiào.",
+          "translationVi": "Tôi đi bộ đến trường."
+        }
+      ]
+    },
+    {
+      "hanzi": "路",
+      "pinyin": "lù",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "đường, con đường",
+      "examples": [
+        {
+          "hanzi": "我不认识路。",
+          "pinyin": "Wǒ bú rènshi lù.",
+          "translationVi": "Tôi không biết đường."
+        }
+      ]
+    },
+    {
+      "hanzi": "马路",
+      "pinyin": "mǎlù",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "đường cái, đường phố",
+      "examples": [
+        {
+          "hanzi": "过马路要看车。",
+          "pinyin": "Guò mǎlù yào kàn chē.",
+          "translationVi": "Qua đường phải nhìn xe."
+        }
+      ]
+    },
+    {
+      "hanzi": "路口",
+      "pinyin": "lùkǒu",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ngã tư, giao lộ",
+      "examples": [
+        {
+          "hanzi": "在前边的路口下车。",
+          "pinyin": "Zài qiánbian de lùkǒu xiàchē.",
+          "translationVi": "Xuống xe ở ngã tư phía trước."
+        }
+      ]
+    },
+    {
+      "hanzi": "医院",
+      "pinyin": "yīyuàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bệnh viện",
+      "examples": [
+        {
+          "hanzi": "她在医院工作。",
+          "pinyin": "Tā zài yīyuàn gōngzuò.",
+          "translationVi": "Cô ấy làm việc ở bệnh viện."
+        }
+      ]
+    },
+    {
+      "hanzi": "饭店",
+      "pinyin": "fàndiàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nhà hàng; khách sạn",
+      "examples": [
+        {
+          "hanzi": "这个饭店的菜很好吃。",
+          "pinyin": "Zhè ge fàndiàn de cài hěn hǎochī.",
+          "translationVi": "Món ăn của nhà hàng này rất ngon."
+        }
+      ]
+    },
+    {
+      "hanzi": "书店",
+      "pinyin": "shūdiàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "hiệu sách",
+      "examples": [
+        {
+          "hanzi": "我去书店买书。",
+          "pinyin": "Wǒ qù shūdiàn mǎi shū.",
+          "translationVi": "Tôi đi hiệu sách mua sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "商场",
+      "pinyin": "shāngchǎng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trung tâm thương mại",
+      "examples": [
+        {
+          "hanzi": "商场里人很多。",
+          "pinyin": "Shāngchǎng lǐ rén hěn duō.",
+          "translationVi": "Trong trung tâm thương mại rất đông người."
+        }
+      ]
+    },
+    {
+      "hanzi": "电影院",
+      "pinyin": "diànyǐngyuàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "rạp chiếu phim",
+      "examples": [
+        {
+          "hanzi": "我们去电影院看电影。",
+          "pinyin": "Wǒmen qù diànyǐngyuàn kàn diànyǐng.",
+          "translationVi": "Chúng ta đi rạp xem phim."
+        }
+      ]
+    },
+    {
+      "hanzi": "学院",
+      "pinyin": "xuéyuàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "học viện, trường (thuộc đại học)",
+      "examples": [
+        {
+          "hanzi": "他是这个学院的老师。",
+          "pinyin": "Tā shì zhè ge xuéyuàn de lǎoshī.",
+          "translationVi": "Anh ấy là giáo viên của học viện này."
+        }
+      ]
+    },
+    {
+      "hanzi": "大学",
+      "pinyin": "dàxué",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trường đại học",
+      "examples": [
+        {
+          "hanzi": "我哥哥在大学学习。",
+          "pinyin": "Wǒ gēge zài dàxué xuéxí.",
+          "translationVi": "Anh trai tôi học ở trường đại học."
+        }
+      ]
+    },
+    {
+      "hanzi": "中学",
+      "pinyin": "zhōngxué",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trường trung học",
+      "examples": [
+        {
+          "hanzi": "我在中学学习汉语。",
+          "pinyin": "Wǒ zài zhōngxué xuéxí Hànyǔ.",
+          "translationVi": "Tôi học tiếng Trung ở trường trung học."
+        }
+      ]
+    },
+    {
+      "hanzi": "小学",
+      "pinyin": "xiǎoxué",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trường tiểu học",
+      "examples": [
+        {
+          "hanzi": "我儿子在小学。",
+          "pinyin": "Wǒ érzi zài xiǎoxué.",
+          "translationVi": "Con trai tôi học tiểu học."
+        }
+      ]
+    },
+    {
+      "hanzi": "地方",
+      "pinyin": "dìfang",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nơi, chỗ",
+      "examples": [
+        {
+          "hanzi": "这是什么地方？",
+          "pinyin": "Zhè shì shénme dìfang?",
+          "translationVi": "Đây là nơi nào?"
+        }
+      ]
+    },
+    {
+      "hanzi": "地点",
+      "pinyin": "dìdiǎn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "địa điểm",
+      "examples": [
+        {
+          "hanzi": "见面的地点在哪儿？",
+          "pinyin": "Jiànmiàn de dìdiǎn zài nǎr?",
+          "translationVi": "Địa điểm gặp mặt ở đâu?"
+        }
+      ]
+    },
+    {
+      "hanzi": "地图",
+      "pinyin": "dìtú",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bản đồ",
+      "examples": [
+        {
+          "hanzi": "我们看一下地图吧。",
+          "pinyin": "Wǒmen kàn yíxià dìtú ba.",
+          "translationVi": "Chúng ta xem bản đồ một chút nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "远",
+      "pinyin": "yuǎn",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "xa",
+      "examples": [
+        {
+          "hanzi": "机场很远。",
+          "pinyin": "Jīchǎng hěn yuǎn.",
+          "translationVi": "Sân bay rất xa."
+        }
+      ]
+    },
+    {
+      "hanzi": "门票",
+      "pinyin": "ménpiào",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "vé vào cửa",
+      "examples": [
+        {
+          "hanzi": "门票多少钱？",
+          "pinyin": "Ménpiào duōshao qián?",
+          "translationVi": "Vé vào cửa bao nhiêu tiền?"
+        }
+      ]
+    },
+    {
+      "hanzi": "到",
+      "pinyin": "dào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đến, tới",
+      "examples": [
+        {
+          "hanzi": "我到学校了。",
+          "pinyin": "Wǒ dào xuéxiào le.",
+          "translationVi": "Tôi đến trường rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "来到",
+      "pinyin": "láidào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đến, đi đến (nơi nào)",
+      "examples": [
+        {
+          "hanzi": "我来到了北京。",
+          "pinyin": "Wǒ láidào le Běijīng.",
+          "translationVi": "Tôi đã đến Bắc Kinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "回到",
+      "pinyin": "huídào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "trở về (nơi nào)",
+      "examples": [
+        {
+          "hanzi": "我回到家了。",
+          "pinyin": "Wǒ huídào jiā le.",
+          "translationVi": "Tôi về đến nhà rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "从",
+      "pinyin": "cóng",
+      "partOfSpeech": "giới từ",
+      "meaningVi": "từ (nơi chốn, thời gian)",
+      "examples": [
+        {
+          "hanzi": "我从学校来。",
+          "pinyin": "Wǒ cóng xuéxiào lái.",
+          "translationVi": "Tôi đến từ trường."
+        }
+      ]
+    },
+    {
+      "hanzi": "进",
+      "pinyin": "jìn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "vào",
+      "examples": [
+        {
+          "hanzi": "请进。",
+          "pinyin": "Qǐng jìn.",
+          "translationVi": "Mời vào."
+        }
+      ]
+    },
+    {
+      "hanzi": "出",
+      "pinyin": "chū",
+      "partOfSpeech": "động từ",
+      "meaningVi": "ra",
+      "examples": [
+        {
+          "hanzi": "他出门了。",
+          "pinyin": "Tā chū mén le.",
+          "translationVi": "Anh ấy ra ngoài rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "天气",
+      "pinyin": "tiānqì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "thời tiết",
+      "examples": [
+        {
+          "hanzi": "今天天气很好。",
+          "pinyin": "Jīntiān tiānqì hěn hǎo.",
+          "translationVi": "Hôm nay thời tiết rất đẹp."
+        }
+      ]
+    },
+    {
+      "hanzi": "天",
+      "pinyin": "tiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trời; ngày",
+      "examples": [
+        {
+          "hanzi": "天上有一个飞机。",
+          "pinyin": "Tiān shang yǒu yí ge fēijī.",
+          "translationVi": "Trên trời có một chiếc máy bay."
+        }
+      ]
+    },
+    {
+      "hanzi": "雨",
+      "pinyin": "yǔ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "mưa",
+      "examples": [
+        {
+          "hanzi": "雨很大。",
+          "pinyin": "Yǔ hěn dà.",
+          "translationVi": "Mưa rất to."
+        }
+      ]
+    },
+    {
+      "hanzi": "下雨",
+      "pinyin": "xiàyǔ",
+      "partOfSpeech": "động từ",
+      "meaningVi": "mưa (trời mưa)",
+      "examples": [
+        {
+          "hanzi": "明天会下雨吗？",
+          "pinyin": "Míngtiān huì xiàyǔ ma?",
+          "translationVi": "Ngày mai có mưa không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "风",
+      "pinyin": "fēng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "gió",
+      "examples": [
+        {
+          "hanzi": "今天风很大。",
+          "pinyin": "Jīntiān fēng hěn dà.",
+          "translationVi": "Hôm nay gió rất to."
+        }
+      ]
+    },
+    {
+      "hanzi": "冷",
+      "pinyin": "lěng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "lạnh",
+      "examples": [
+        {
+          "hanzi": "外边很冷。",
+          "pinyin": "Wàibian hěn lěng.",
+          "translationVi": "Bên ngoài rất lạnh."
+        }
+      ]
+    },
+    {
+      "hanzi": "热",
+      "pinyin": "rè",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "nóng",
+      "examples": [
+        {
+          "hanzi": "今天太热了。",
+          "pinyin": "Jīntiān tài rè le.",
+          "translationVi": "Hôm nay nóng quá."
+        }
+      ]
+    },
+    {
+      "hanzi": "渴",
+      "pinyin": "kě",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "khát",
+      "examples": [
+        {
+          "hanzi": "我渴了，想喝水。",
+          "pinyin": "Wǒ kě le, xiǎng hē shuǐ.",
+          "translationVi": "Tôi khát rồi, muốn uống nước."
+        }
+      ]
+    },
+    {
+      "hanzi": "饿",
+      "pinyin": "è",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "đói",
+      "examples": [
+        {
+          "hanzi": "你饿不饿？",
+          "pinyin": "Nǐ è bu è?",
+          "translationVi": "Bạn có đói không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "累",
+      "pinyin": "lèi",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "mệt",
+      "examples": [
+        {
+          "hanzi": "我今天很累。",
+          "pinyin": "Wǒ jīntiān hěn lèi.",
+          "translationVi": "Hôm nay tôi rất mệt."
+        }
+      ]
+    },
+    {
+      "hanzi": "太",
+      "pinyin": "tài",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "quá, lắm",
+      "examples": [
+        {
+          "hanzi": "这个太贵了。",
+          "pinyin": "Zhè ge tài guì le.",
+          "translationVi": "Cái này đắt quá."
+        }
+      ]
+    },
+    {
+      "hanzi": "非常",
+      "pinyin": "fēicháng",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "vô cùng, rất",
+      "examples": [
+        {
+          "hanzi": "我非常高兴。",
+          "pinyin": "Wǒ fēicháng gāoxìng.",
+          "translationVi": "Tôi vô cùng vui."
+        }
+      ]
+    },
+    {
+      "hanzi": "真",
+      "pinyin": "zhēn",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "thật, thật là",
+      "examples": [
+        {
+          "hanzi": "你真好！",
+          "pinyin": "Nǐ zhēn hǎo!",
+          "translationVi": "Bạn thật tốt!"
+        }
+      ]
+    },
+    {
+      "hanzi": "真的",
+      "pinyin": "zhēnde",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "thật sự, thật",
+      "examples": [
+        {
+          "hanzi": "这是真的吗？",
+          "pinyin": "Zhè shì zhēnde ma?",
+          "translationVi": "Cái này là thật à?"
+        }
+      ]
+    },
+    {
+      "hanzi": "最",
+      "pinyin": "zuì",
+      "partOfSpeech": "phó từ",
+      "meaningVi": "nhất",
+      "examples": [
+        {
+          "hanzi": "我最喜欢喝茶。",
+          "pinyin": "Wǒ zuì xǐhuan hē chá.",
+          "translationVi": "Tôi thích uống trà nhất."
+        }
+      ]
+    },
+    {
+      "hanzi": "好看",
+      "pinyin": "hǎokàn",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "đẹp, dễ nhìn; hay (phim, sách)",
+      "examples": [
+        {
+          "hanzi": "这个电影很好看。",
+          "pinyin": "Zhè ge diànyǐng hěn hǎokàn.",
+          "translationVi": "Bộ phim này rất hay."
+        }
+      ]
+    },
+    {
+      "hanzi": "好吃",
+      "pinyin": "hǎochī",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "ngon",
+      "examples": [
+        {
+          "hanzi": "妈妈做的饭很好吃。",
+          "pinyin": "Māma zuò de fàn hěn hǎochī.",
+          "translationVi": "Cơm mẹ nấu rất ngon."
+        }
+      ]
+    },
+    {
+      "hanzi": "好听",
+      "pinyin": "hǎotīng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "hay, dễ nghe",
+      "examples": [
+        {
+          "hanzi": "这个歌很好听。",
+          "pinyin": "Zhè ge gē hěn hǎotīng.",
+          "translationVi": "Bài hát này rất hay."
+        }
+      ]
+    },
+    {
+      "hanzi": "好玩儿",
+      "pinyin": "hǎowánr",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "vui, thú vị",
+      "examples": [
+        {
+          "hanzi": "北京很好玩儿。",
+          "pinyin": "Běijīng hěn hǎowánr.",
+          "translationVi": "Bắc Kinh rất thú vị."
+        }
+      ]
+    },
+    {
+      "hanzi": "高",
+      "pinyin": "gāo",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "cao",
+      "examples": [
+        {
+          "hanzi": "我哥哥很高。",
+          "pinyin": "Wǒ gēge hěn gāo.",
+          "translationVi": "Anh trai tôi rất cao."
+        }
+      ]
+    }
+  ]
+}
