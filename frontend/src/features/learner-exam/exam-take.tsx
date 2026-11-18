@@ -64,6 +64,7 @@ import {
   PRE_SUBMIT_REVIEW_TITLE,
   buildPreSubmitReview,
 } from './exam-pre-submit-review-model';
+import { isLetterOnlyOption } from './option-label';
 
 const SAVE_SAVED = 'Đã lưu';
 const SAVE_SAVING = 'Đang lưu…';
@@ -1998,6 +1999,8 @@ function ChoiceGroup({
     >
       {options.map((option, position) => {
         const isSelected = selected === option.id;
+        const letter = String.fromCharCode(65 + position);
+        const letterOnly = isLetterOnlyOption(option.text, letter);
         return (
           <button
             key={option.id}
@@ -2017,12 +2020,17 @@ function ChoiceGroup({
             onKeyDown={(event) => handleKeyDown(event, position)}
           >
             <span className="uxb-opt__radio" aria-hidden="true" />
-            <span className="uxb-opt__key" aria-hidden="true">
-              {String.fromCharCode(65 + position)}
+            <span
+              className="uxb-opt__key"
+              aria-hidden={letterOnly ? undefined : 'true'}
+            >
+              {letter}
             </span>
-            <span className="uxb-opt__text">
-              <ChoiceText text={option.text} />
-            </span>
+            {letterOnly ? null : (
+              <span className="uxb-opt__text">
+                <ChoiceText text={option.text} />
+              </span>
+            )}
           </button>
         );
       })}

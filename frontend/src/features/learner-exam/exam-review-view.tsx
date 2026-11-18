@@ -29,6 +29,7 @@ import {
   type ReviewStatus,
 } from './exam-review-model';
 import { Icon } from '@/components/ui/icon';
+import { isLetterOnlyOption } from './option-label';
 
 function Summary({ questions }: { questions: ExamReviewQuestionParsed[] }) {
   const summary = reviewSummary(questions);
@@ -194,10 +195,19 @@ function QuestionAnswers({ question }: { question: ExamReviewQuestionParsed }) {
               }`}
               key={option.id}
             >
-              <span className="exv-opt__letter" aria-hidden="true">
+              <span
+                className="exv-opt__letter"
+                aria-hidden={
+                  isLetterOnlyOption(option.text, option.letter)
+                    ? undefined
+                    : 'true'
+                }
+              >
                 {option.letter}
               </span>
-              <span>{option.text}</span>
+              {isLetterOnlyOption(option.text, option.letter) ? null : (
+                <span>{option.text}</span>
+              )}
               {option.isCorrect ? (
                 <span className="exv-opt__mark">
                   <Icon name="check" />
