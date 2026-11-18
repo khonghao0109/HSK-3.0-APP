@@ -8868,7 +8868,8 @@ html:has(.learner-app) {
 
 .learner-app .topic-words {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  /* Q355: hai cột ở 390 px, nhiều cột hơn khi rộng. */
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 42%), 1fr));
   gap: var(--sp-2);
   padding: 0;
   list-style: none;

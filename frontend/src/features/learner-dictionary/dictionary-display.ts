@@ -39,20 +39,29 @@ const CAPITAL_START = /^[A-ZĀÁǍÀĒÉĚÈĪÍǏÌŌÓǑÒŪÚǓÙǕǗǙǛ]/u;
  * Q354): "wǒ men" -> "wǒmen", "Zhōng guó" -> "Zhōngguó". A syllable that
  * starts with a, o or e after another syllable takes an apostrophe
  * ("Xī ān" -> "Xī'ān"). A capitalised syllable after the first one starts a
- * new proper-name part and keeps its space ("Lǐ Bái"). Text with anything
- * other than plain syllables (punctuation, digits, spelled Latin letters such
- * as "A A zhì" for AA制) is returned unchanged.
+ * new proper-name part and keeps its space ("Lǐ Bái"). Four syllables are
+ * two words ("xuésheng yùndòng"); five or more, and text with anything other
+ * than plain syllables (punctuation, digits, spelled Latin letters such as
+ * "A A zhì" for AA制), are returned unchanged.
  */
 export function joinWordPinyin(pinyin: string): string {
   const syllables = pinyin.trim().split(/\s+/u);
   if (
     syllables.length < 2 ||
+    syllables.length > 4 ||
     !syllables.every((s) => SYLLABLE.test(s)) ||
     syllables.some((s) => /^[A-Z]+$/u.test(s))
   ) {
     return pinyin;
   }
-  let out = syllables[0] ?? pinyin;
+  if (syllables.length === 4) {
+    return `${joinSyllables(syllables.slice(0, 2))} ${joinSyllables(syllables.slice(2))}`;
+  }
+  return joinSyllables(syllables);
+}
+
+function joinSyllables(syllables: readonly string[]): string {
+  let out = syllables[0] ?? '';
   for (const syllable of syllables.slice(1)) {
     if (CAPITAL_START.test(syllable)) out += ` ${syllable}`;
     else if (VOWEL_START.test(syllable.toLowerCase())) out += `'${syllable}`;

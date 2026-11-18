@@ -243,6 +243,9 @@ describe('dictionary display rules', () => {
       ['ka3 la1 O K', 'kǎ lā O K'],
       ['A A zhi4', 'A A zhì'],
       ['yi1 , er4', 'yī , èr'],
+      ['xue2 sheng5 yun4 dong4', 'xuésheng yùndòng'],
+      ['ce4 shi4 ci2 dian3', 'cèshì cídiǎn'],
+      ['ce4 shi4 fu4 xi2 er4', 'cè shì fù xí èr'],
     ];
     for (const [input, output] of cases) {
       expect(displayPinyin({ pinyin: input, pinyinTone: null })).toBe(output);
