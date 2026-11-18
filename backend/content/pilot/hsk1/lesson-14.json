@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l14",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l14-noi-chon-thanh-pho",
+    "title": "Nơi chốn trong thành phố",
+    "description": "Bài 14 HSK1: nói về các nơi trong thành phố; dùng 从…到… để nói từ đâu đến đâu, 去 + nơi chốn + động từ để nói đi đâu làm gì, 到/回到/来到 + nơi chốn để nói đã đến nơi; 20 từ vựng về trường học, cửa hàng, bản đồ và đi lại.",
+    "orderIndex": 1014
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "医院",
+      "pinyin": "yīyuàn",
+      "meaningVi": "bệnh viện",
+      "example": {
+        "hanzi": "她在医院工作。",
+        "pinyin": "Tā zài yīyuàn gōngzuò.",
+        "meaningVi": "Cô ấy làm việc ở bệnh viện."
+      }
+    },
+    {
+      "hanzi": "饭店",
+      "pinyin": "fàndiàn",
+      "meaningVi": "nhà hàng; khách sạn",
+      "example": {
+        "hanzi": "这个饭店的菜很好吃。",
+        "pinyin": "Zhè ge fàndiàn de cài hěn hǎochī.",
+        "meaningVi": "Món ăn của nhà hàng này rất ngon."
+      }
+    },
+    {
+      "hanzi": "书店",
+      "pinyin": "shūdiàn",
+      "meaningVi": "hiệu sách",
+      "example": {
+        "hanzi": "我去书店买书。",
+        "pinyin": "Wǒ qù shūdiàn mǎi shū.",
+        "meaningVi": "Tôi đi hiệu sách mua sách."
+      }
+    },
+    {
+      "hanzi": "商场",
+      "pinyin": "shāngchǎng",
+      "meaningVi": "trung tâm thương mại",
+      "example": {
+        "hanzi": "商场里人很多。",
+        "pinyin": "Shāngchǎng lǐ rén hěn duō.",
+        "meaningVi": "Trong trung tâm thương mại rất đông người."
+      }
+    },
+    {
+      "hanzi": "电影院",
+      "pinyin": "diànyǐngyuàn",
+      "meaningVi": "rạp chiếu phim",
+      "example": {
+        "hanzi": "我们去电影院看电影。",
+        "pinyin": "Wǒmen qù diànyǐngyuàn kàn diànyǐng.",
+        "meaningVi": "Chúng ta đi rạp xem phim."
+      }
+    },
+    {
+      "hanzi": "学院",
+      "pinyin": "xuéyuàn",
+      "meaningVi": "học viện, trường (thuộc đại học)",
+      "example": {
+        "hanzi": "他是这个学院的老师。",
+        "pinyin": "Tā shì zhè ge xuéyuàn de lǎoshī.",
+        "meaningVi": "Anh ấy là giáo viên của học viện này."
+      }
+    },
+    {
+      "hanzi": "大学",
+      "pinyin": "dàxué",
+      "meaningVi": "trường đại học",
+      "example": {
+        "hanzi": "我哥哥在大学学习。",
+        "pinyin": "Wǒ gēge zài dàxué xuéxí.",
+        "meaningVi": "Anh trai tôi học ở trường đại học."
+      }
+    },
+    {
+      "hanzi": "中学",
+      "pinyin": "zhōngxué",
+      "meaningVi": "trường trung học",
+      "example": {
+        "hanzi": "我在中学学习汉语。",
+        "pinyin": "Wǒ zài zhōngxué xuéxí Hànyǔ.",
+        "meaningVi": "Tôi học tiếng Trung ở trường trung học."
+      }
+    },
+    {
+      "hanzi": "小学",
+      "pinyin": "xiǎoxué",
+      "meaningVi": "trường tiểu học",
+      "example": {
+        "hanzi": "我儿子上小学。",
+        "pinyin": "Wǒ érzi shàng xiǎoxué.",
+        "meaningVi": "Con trai tôi học tiểu học."
+      }
+    },
+    {
+      "hanzi": "地方",
+      "pinyin": "dìfang",
+      "meaningVi": "nơi, chỗ",
+      "example": {
+        "hanzi": "这是什么地方？",
+        "pinyin": "Zhè shì shénme dìfang?",
+        "meaningVi": "Đây là nơi nào?"
+      }
+    },
+    {
+      "hanzi": "地点",
+      "pinyin": "dìdiǎn",
+      "meaningVi": "địa điểm",
+      "example": {
+        "hanzi": "见面的地点在哪儿？",
+        "pinyin": "Jiànmiàn de dìdiǎn zài nǎr?",
+        "meaningVi": "Địa điểm gặp mặt ở đâu?"
+      }
+    },
+    {
+      "hanzi": "地图",
+      "pinyin": "dìtú",
+      "meaningVi": "bản đồ",
+      "example": {
+        "hanzi": "我们看一下地图吧。",
+        "pinyin": "Wǒmen kàn yíxià dìtú ba.",
+        "meaningVi": "Chúng ta xem bản đồ một chút nhé."
+      }
+    },
+    {
+      "hanzi": "远",
+      "pinyin": "yuǎn",
+      "meaningVi": "xa",
+      "example": {
+        "hanzi": "机场很远。",
+        "pinyin": "Jīchǎng hěn yuǎn.",
+        "meaningVi": "Sân bay rất xa."
+      }
+    },
+    {
+      "hanzi": "门票",
+      "pinyin": "ménpiào",
+      "meaningVi": "vé vào cửa",
+      "example": {
+        "hanzi": "门票多少钱？",
+        "pinyin": "Ménpiào duōshao qián?",
+        "meaningVi": "Vé vào cửa bao nhiêu tiền?"
+      }
+    },
+    {
+      "hanzi": "到",
+      "pinyin": "dào",
+      "meaningVi": "đến, tới",
+      "example": {
+        "hanzi": "我到学校了。",
+        "pinyin": "Wǒ dào xuéxiào le.",
+        "meaningVi": "Tôi đến trường rồi."
+      }
+    },
+    {
+      "hanzi": "来到",
+      "pinyin": "láidào",
+      "meaningVi": "đến, đi đến (nơi nào)",
+      "example": {
+        "hanzi": "我来到了北京。",
+        "pinyin": "Wǒ láidào le Běijīng.",
+        "meaningVi": "Tôi đã đến Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "回到",
+      "pinyin": "huídào",
+      "meaningVi": "trở về (nơi nào)",
+      "example": {
+        "hanzi": "我回到家了。",
+        "pinyin": "Wǒ huídào jiā le.",
+        "meaningVi": "Tôi về đến nhà rồi."
+      }
+    },
+    {
+      "hanzi": "从",
+      "pinyin": "cóng",
+      "meaningVi": "từ (nơi chốn, thời gian)",
+      "example": {
+        "hanzi": "我从学校来。",
+        "pinyin": "Wǒ cóng xuéxiào lái.",
+        "meaningVi": "Tôi từ trường đến."
+      }
+    },
+    {
+      "hanzi": "进",
+      "pinyin": "jìn",
+      "meaningVi": "vào",
+      "example": {
+        "hanzi": "请进。",
+        "pinyin": "Qǐng jìn.",
+        "meaningVi": "Mời vào."
+      }
+    },
+    {
+      "hanzi": "出",
+      "pinyin": "chū",
+      "meaningVi": "ra",
+      "example": {
+        "hanzi": "他出门了。",
+        "pinyin": "Tā chū mén le.",
+        "meaningVi": "Anh ấy ra ngoài rồi."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: nơi chốn trong thành phố",
+      "subtitle": "20 từ HSK1 về bệnh viện, cửa hàng, trường học, địa điểm và hành động đến, vào, ra",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 14 gồm 20 từ vựng HSK1 về nơi chốn trong thành phố. Nhóm nơi công cộng: 医院 (bệnh viện), 饭店 (nhà hàng; khách sạn), 书店 (hiệu sách), 商场 (trung tâm thương mại), 电影院 (rạp chiếu phim). Nhóm trường học: 学院 (học viện), 大学 (trường đại học), 中学 (trường trung học), 小学 (trường tiểu học). Nhóm địa điểm: 地方 (nơi, chỗ), 地点 (địa điểm), 地图 (bản đồ), 远 (xa), 门票 (vé vào cửa). Nhóm hành động: 到 (đến, tới), 来到 (đến), 回到 (trở về), 从 (từ), 进 (vào), 出 (ra). Lưu ý phát âm: 地方 đọc dìfang (方 đọc nhẹ); 电影院 đọc diànyǐngyuàn; 远 yuǎn và 院 yuàn khác thanh; 从 cóng có âm đầu c bật hơi."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 从…到…, 去 + nơi chốn + động từ, 到/回到/来到 + nơi chốn",
+      "subtitle": "Ba điểm ngữ pháp để nói đường đi, mục đích và nơi đã đến",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 从 A 到 B: “từ A đến B”, dùng cho nơi chốn hoặc thời gian. Cấu trúc: 从 + điểm đầu + 到 + điểm cuối + động từ/tính từ. Ví dụ: 从我家到学校很远。 (Cóng wǒ jiā dào xuéxiào hěn yuǎn.) = Từ nhà tôi đến trường rất xa. / 从这儿到医院怎么走？ (Cóng zhèr dào yīyuàn zěnme zǒu?) = Từ đây đến bệnh viện đi thế nào? / 我从早上到晚上都在工作。 (Wǒ cóng zǎoshang dào wǎnshang dōu zài gōngzuò.) = Tôi làm việc từ sáng đến tối."
+        },
+        {
+          "type": "text",
+          "value": "2. 去 + nơi chốn + động từ: đi đến đâu để làm gì (câu liên động). Nơi chốn đứng ngay sau 去, việc cần làm đứng sau cùng. Cấu trúc: chủ ngữ + 去 + nơi chốn + động từ (+ tân ngữ). Ví dụ: 我去书店买书。 (Wǒ qù shūdiàn mǎi shū.) = Tôi đến hiệu sách mua sách. / 我们去电影院看电影。 (Wǒmen qù diànyǐngyuàn kàn diànyǐng.) = Chúng tôi đến rạp xem phim. / 他去医院看病。 (Tā qù yīyuàn kànbìng.) = Anh ấy đến bệnh viện khám bệnh."
+        },
+        {
+          "type": "text",
+          "value": "3. 到/回到/来到 + nơi chốn: 到 = đến nơi; 回到 = về lại nơi mình vốn ở (nhà, trường, nước mình); 来到 = đến một nơi (thường là nơi mới). Nói việc đã xảy ra thì thêm 了. Cấu trúc: chủ ngữ + 到/回到/来到 + nơi chốn + 了. Ví dụ: 我到学校了。 (Wǒ dào xuéxiào le.) = Tôi đến trường rồi. / 我回到家了。 (Wǒ huídào jiā le.) = Tôi về đến nhà rồi. / 我们来到了一个新地方。 (Wǒmen láidào le yí ge xīn dìfang.) = Chúng tôi đã đến một nơi mới."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: đi đâu trong thành phố",
+      "subtitle": "Hội thoại ngắn hỏi đi đâu, xa hay gần, vé vào cửa, đã đến chưa; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你去哪儿？ B: 我去商场买东西。 (Nǐ qù nǎr? / Wǒ qù shāngchǎng mǎi dōngxi.) — A: Bạn đi đâu? B: Tôi đến trung tâm thương mại mua đồ."
+        },
+        {
+          "type": "text",
+          "value": "A: 从这儿到电影院远吗？ B: 不远，我们走路去吧。 (Cóng zhèr dào diànyǐngyuàn yuǎn ma? / Bù yuǎn, wǒmen zǒulù qù ba.) — A: Từ đây đến rạp chiếu phim có xa không? B: Không xa, chúng ta đi bộ đi."
+        },
+        {
+          "type": "text",
+          "value": "A: 这个地方的门票多少钱？ B: 三十块。 (Zhè ge dìfang de ménpiào duōshao qián? / Sānshí kuài.) — A: Vé vào cửa chỗ này bao nhiêu tiền? B: Ba mươi đồng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你到医院了吗？ B: 到了，我现在进去。 (Nǐ dào yīyuàn le ma? / Dào le, wǒ xiànzài jìnqù.) — A: Bạn đến bệnh viện chưa? B: Đến rồi, bây giờ tôi vào."
+        },
+        {
+          "type": "text",
+          "value": "A: 我们有地图吗？ B: 有，你看，书店在这儿。 (Wǒmen yǒu dìtú ma? / Yǒu, nǐ kàn, shūdiàn zài zhèr.) — A: Chúng ta có bản đồ không? B: Có, bạn xem, hiệu sách ở đây."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l14:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “rạp chiếu phim”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "商场"
+          },
+          {
+            "id": "opt-b",
+            "text": "饭店"
+          },
+          {
+            "id": "opt-c",
+            "text": "电影院"
+          },
+          {
+            "id": "opt-d",
+            "text": "书店"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "电影院 (diànyǐngyuàn) nghĩa là “rạp chiếu phim”. 商场 (shāngchǎng) là “trung tâm thương mại”, 饭店 (fàndiàn) là “nhà hàng; khách sạn”, 书店 (shūdiàn) là “hiệu sách”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “bản đồ”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "地点"
+          },
+          {
+            "id": "opt-b",
+            "text": "地方"
+          },
+          {
+            "id": "opt-c",
+            "text": "门票"
+          },
+          {
+            "id": "opt-d",
+            "text": "地图"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "地图 (dìtú) nghĩa là “bản đồ”. 地点 (dìdiǎn) là “địa điểm”, 地方 (dìfang) là “nơi, chỗ”, 门票 (ménpiào) là “vé vào cửa”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: ___我家到学校很远。 (Từ nhà tôi đến trường rất xa.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "从"
+          },
+          {
+            "id": "opt-b",
+            "text": "在"
+          },
+          {
+            "id": "opt-c",
+            "text": "去"
+          },
+          {
+            "id": "opt-d",
+            "text": "回"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "从 (cóng) A 到 B = từ A đến B, nên 从我家到学校很远. 在 (ở), 去 (đi), 回 (về) không đi với 到 theo cấu trúc này, đặt vào thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我去书店___书。 (Tôi đến hiệu sách mua sách.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "坐"
+          },
+          {
+            "id": "opt-b",
+            "text": "买"
+          },
+          {
+            "id": "opt-c",
+            "text": "开"
+          },
+          {
+            "id": "opt-d",
+            "text": "到"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "去 + nơi chốn + động từ: 去书店买 (mǎi) 书 = đến hiệu sách mua sách. 坐书 (ngồi sách), 开书 (lái sách), 到书 (đến sách) đều không có nghĩa, sai.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我回___家了。(Tôi về đến nhà rồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "到",
+          "dào",
+          "dao"
+        ]
+      },
+      "explanation": "到 (dào) nghĩa là “đến”; 回到家 = về đến nhà. 回到 + nơi chốn chỉ việc về lại nơi mình ở.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 机场很___，我们打车去吧。(Sân bay rất xa, chúng ta bắt taxi đi nhé.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "远",
+          "yuǎn",
+          "yuan"
+        ]
+      },
+      "explanation": "远 (yuǎn) nghĩa là “xa”; 机场很远 = sân bay rất xa, nên bắt taxi đi.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 请___，请坐。(Mời vào, mời ngồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "进",
+          "jìn",
+          "jin"
+        ]
+      },
+      "explanation": "进 (jìn) nghĩa là “vào”; 请进 = mời vào, câu mời khách quen thuộc. 出 (chū) là “ra”, ngược nghĩa.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Từ nhà tôi đến trường rất xa.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-v9",
+            "text": "我家"
+          },
+          {
+            "id": "tkn-k9",
+            "text": "从"
+          },
+          {
+            "id": "tkn-f5",
+            "text": "到学校"
+          },
+          {
+            "id": "tkn-z9",
+            "text": "很远"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-k9",
+          "tkn-v9",
+          "tkn-f5",
+          "tkn-z9"
+        ]
+      },
+      "explanation": "Câu đúng là 从我家到学校很远: 从 + điểm đầu (我家) + 到 + điểm cuối (学校) + 很远. Điểm đầu phải đứng ngay sau 从, 很远 đứng cuối (ví dụ sai: 我家从到学校很远, 从到学校我家很远, 很远从我家到学校).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đến rạp chiếu phim xem phim.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k2",
+            "text": "看电影"
+          },
+          {
+            "id": "tkn-n8",
+            "text": "去电影院"
+          },
+          {
+            "id": "tkn-z9",
+            "text": "我们"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z9",
+          "tkn-n8",
+          "tkn-k2"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我们去电影院看电影: chủ ngữ + 去 + nơi chốn + việc làm. Việc làm (看电影) phải đứng sau nơi đến (ví dụ sai: 我们看电影去电影院, 去电影院我们看电影, 看电影我们去电影院).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l14:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bạn từ đâu đến?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r7",
+            "text": "你"
+          },
+          {
+            "id": "tkn-n1",
+            "text": "来"
+          },
+          {
+            "id": "tkn-r6",
+            "text": "哪儿"
+          },
+          {
+            "id": "tkn-k7",
+            "text": "从"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-r7",
+          "tkn-k7",
+          "tkn-r6",
+          "tkn-n1"
+        ]
+      },
+      "explanation": "Câu đúng là 你从哪儿来: chủ ngữ + 从 + nơi chốn (哪儿) + 来. 从 phải đứng ngay trước 哪儿 (ví dụ sai: 你从来哪儿, 从哪儿你来, 你来从哪儿).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-03",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-03 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

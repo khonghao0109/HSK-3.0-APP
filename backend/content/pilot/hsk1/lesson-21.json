@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l21",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l21-lop-hoc-thi-cu",
+    "title": "Lớp học và thi cử",
+    "description": "Bài 21 HSK1: nói về lớp học và thi cử; dùng câu hỏi chính phản (对不对, 难不难), 准备 + động từ và 对/错 làm vị ngữ với 20 từ vựng cơ bản.",
+    "orderIndex": 1021
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "课文",
+      "pinyin": "kèwén",
+      "meaningVi": "bài khoá, bài đọc",
+      "example": {
+        "hanzi": "请读一下课文。",
+        "pinyin": "Qǐng dú yíxià kèwén.",
+        "meaningVi": "Mời đọc bài khoá một lượt."
+      }
+    },
+    {
+      "hanzi": "听写",
+      "pinyin": "tīngxiě",
+      "meaningVi": "nghe viết, chính tả",
+      "example": {
+        "hanzi": "明天我们听写汉字。",
+        "pinyin": "Míngtiān wǒmen tīngxiě Hànzì.",
+        "meaningVi": "Ngày mai chúng ta nghe viết chữ Hán."
+      }
+    },
+    {
+      "hanzi": "读书",
+      "pinyin": "dúshū",
+      "meaningVi": "đọc sách; đi học",
+      "example": {
+        "hanzi": "他在大学读书。",
+        "pinyin": "Tā zài dàxué dúshū.",
+        "meaningVi": "Anh ấy đang học đại học."
+      }
+    },
+    {
+      "hanzi": "教",
+      "pinyin": "jiāo",
+      "meaningVi": "dạy",
+      "example": {
+        "hanzi": "她教我们汉语。",
+        "pinyin": "Tā jiāo wǒmen Hànyǔ.",
+        "meaningVi": "Cô ấy dạy chúng tôi tiếng Trung."
+      }
+    },
+    {
+      "hanzi": "教学楼",
+      "pinyin": "jiàoxuélóu",
+      "meaningVi": "toà nhà giảng đường",
+      "example": {
+        "hanzi": "教学楼在前边。",
+        "pinyin": "Jiàoxuélóu zài qiánbian.",
+        "meaningVi": "Toà giảng đường ở phía trước."
+      }
+    },
+    {
+      "hanzi": "班",
+      "pinyin": "bān",
+      "meaningVi": "lớp (học)",
+      "example": {
+        "hanzi": "我们班有二十个学生。",
+        "pinyin": "Wǒmen bān yǒu èrshí ge xuésheng.",
+        "meaningVi": "Lớp chúng tôi có hai mươi học sinh."
+      }
+    },
+    {
+      "hanzi": "中学生",
+      "pinyin": "zhōngxuéshēng",
+      "meaningVi": "học sinh trung học",
+      "example": {
+        "hanzi": "我妹妹是中学生。",
+        "pinyin": "Wǒ mèimei shì zhōngxuéshēng.",
+        "meaningVi": "Em gái tôi là học sinh trung học."
+      }
+    },
+    {
+      "hanzi": "大学生",
+      "pinyin": "dàxuéshēng",
+      "meaningVi": "sinh viên đại học",
+      "example": {
+        "hanzi": "我哥哥是大学生。",
+        "pinyin": "Wǒ gēge shì dàxuéshēng.",
+        "meaningVi": "Anh trai tôi là sinh viên."
+      }
+    },
+    {
+      "hanzi": "小学生",
+      "pinyin": "xiǎoxuéshēng",
+      "meaningVi": "học sinh tiểu học",
+      "example": {
+        "hanzi": "他是小学生。",
+        "pinyin": "Tā shì xiǎoxuéshēng.",
+        "meaningVi": "Cậu ấy là học sinh tiểu học."
+      }
+    },
+    {
+      "hanzi": "试",
+      "pinyin": "shì",
+      "meaningVi": "thử",
+      "example": {
+        "hanzi": "你试一下这个。",
+        "pinyin": "Nǐ shì yíxià zhè ge.",
+        "meaningVi": "Bạn thử cái này xem."
+      }
+    },
+    {
+      "hanzi": "考",
+      "pinyin": "kǎo",
+      "meaningVi": "thi, kiểm tra",
+      "example": {
+        "hanzi": "明天考汉语。",
+        "pinyin": "Míngtiān kǎo Hànyǔ.",
+        "meaningVi": "Ngày mai thi tiếng Trung."
+      }
+    },
+    {
+      "hanzi": "回答",
+      "pinyin": "huídá",
+      "meaningVi": "trả lời",
+      "example": {
+        "hanzi": "你回答一下。",
+        "pinyin": "Nǐ huídá yíxià.",
+        "meaningVi": "Bạn trả lời thử xem."
+      }
+    },
+    {
+      "hanzi": "错",
+      "pinyin": "cuò",
+      "meaningVi": "sai",
+      "example": {
+        "hanzi": "这个字写错了。",
+        "pinyin": "Zhè ge zì xiě cuò le.",
+        "meaningVi": "Chữ này viết sai rồi."
+      }
+    },
+    {
+      "hanzi": "对",
+      "pinyin": "duì",
+      "meaningVi": "đúng",
+      "example": {
+        "hanzi": "你说的对。",
+        "pinyin": "Nǐ shuō de duì.",
+        "meaningVi": "Bạn nói đúng."
+      }
+    },
+    {
+      "hanzi": "不对",
+      "pinyin": "bùduì",
+      "meaningVi": "không đúng, sai",
+      "example": {
+        "hanzi": "这个回答不对。",
+        "pinyin": "Zhè ge huídá bú duì.",
+        "meaningVi": "Câu trả lời này không đúng."
+      }
+    },
+    {
+      "hanzi": "难",
+      "pinyin": "nán",
+      "meaningVi": "khó",
+      "example": {
+        "hanzi": "汉字很难吗？",
+        "pinyin": "Hànzì hěn nán ma?",
+        "meaningVi": "Chữ Hán có khó không?"
+      }
+    },
+    {
+      "hanzi": "知识",
+      "pinyin": "zhīshi",
+      "meaningVi": "kiến thức",
+      "example": {
+        "hanzi": "书里有很多知识。",
+        "pinyin": "Shū lǐ yǒu hěn duō zhīshi.",
+        "meaningVi": "Trong sách có rất nhiều kiến thức."
+      }
+    },
+    {
+      "hanzi": "认真",
+      "pinyin": "rènzhēn",
+      "meaningVi": "chăm chỉ, nghiêm túc",
+      "example": {
+        "hanzi": "她学习很认真。",
+        "pinyin": "Tā xuéxí hěn rènzhēn.",
+        "meaningVi": "Cô ấy học rất chăm chỉ."
+      }
+    },
+    {
+      "hanzi": "准备",
+      "pinyin": "zhǔnbèi",
+      "meaningVi": "chuẩn bị",
+      "example": {
+        "hanzi": "我在准备明天的考试。",
+        "pinyin": "Wǒ zài zhǔnbèi míngtiān de kǎoshì.",
+        "meaningVi": "Tôi đang chuẩn bị cho kỳ thi ngày mai."
+      }
+    },
+    {
+      "hanzi": "开会",
+      "pinyin": "kāihuì",
+      "meaningVi": "họp",
+      "example": {
+        "hanzi": "老师们在开会。",
+        "pinyin": "Lǎoshīmen zài kāihuì.",
+        "meaningVi": "Các thầy cô đang họp."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: lớp học và thi cử",
+      "subtitle": "20 từ HSK1 về bài học, học sinh, thi cử và đúng sai",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 21 gồm 20 từ vựng HSK1 về lớp học và thi cử. Nhóm học tập: 课文 (bài khoá, bài đọc), 听写 (nghe viết, chính tả), 读书 (đọc sách; đi học), 教 (dạy), 教学楼 (toà nhà giảng đường), 班 (lớp học), 知识 (kiến thức), 认真 (chăm chỉ, nghiêm túc), 准备 (chuẩn bị), 开会 (họp). Nhóm người học: 中学生 (học sinh trung học), 大学生 (sinh viên đại học), 小学生 (học sinh tiểu học). Nhóm thi cử và đúng sai: 试 (thử), 考 (thi, kiểm tra), 回答 (trả lời), 错 (sai), 对 (đúng), 不对 (không đúng, sai), 难 (khó). Lưu ý phát âm: 教 đọc jiāo khi là động từ “dạy”, nhưng trong 教学楼 đọc jiào (jiàoxuélóu); 不对 đọc bú duì vì 不 đứng trước thanh 4; 知识 đọc zhīshi (识 đọc nhẹ)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: câu hỏi chính phản, 准备 + động từ, 对/错 làm vị ngữ",
+      "subtitle": "Ba điểm ngữ pháp để hỏi có hay không, nói dự định và nói đúng sai",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Câu hỏi chính phản: lặp lại động từ hoặc tính từ ở dạng khẳng định + phủ định (A 不 A) để hỏi, không dùng thêm 吗. 不 ở giữa đọc nhẹ (bu). Cấu trúc: Chủ ngữ + A 不 A (+ tân ngữ)？ Ví dụ: 汉字难不难？ (Hànzì nán bu nán?) = Chữ Hán có khó không? / 这个回答对不对？ (Zhège huídá duì bu duì?) = Câu trả lời này có đúng không? / 你去不去教学楼？ (Nǐ qù bu qù jiàoxuélóu?) = Bạn có đi toà giảng đường không?"
+        },
+        {
+          "type": "text",
+          "value": "2. 准备 + động từ: chuẩn bị, dự định làm việc gì. 准备 cũng đi được với danh từ: 准备考试 (chuẩn bị cho kỳ thi). Cấu trúc: Chủ ngữ + 准备 + động từ (+ tân ngữ). Ví dụ: 我准备去中国读书。 (Wǒ zhǔnbèi qù Zhōngguó dúshū.) = Tôi chuẩn bị sang Trung Quốc học. / 我们准备开会了。 (Wǒmen zhǔnbèi kāihuì le.) = Chúng tôi chuẩn bị họp rồi. / 他在准备明天的考试。 (Tā zài zhǔnbèi míngtiān de kǎoshì.) = Anh ấy đang chuẩn bị cho kỳ thi ngày mai."
+        },
+        {
+          "type": "text",
+          "value": "3. 对/错 làm vị ngữ: 对 (đúng) và 错 (sai) đứng sau chủ ngữ như tính từ; phủ định của 对 là 不对. 错 còn đứng sau động từ để nói làm sai: 写错, 说错. Cấu trúc: Chủ ngữ + 对/不对/错 (+ 了); Động từ + 错 + 了. Ví dụ: 你的回答对了。 (Nǐ de huídá duì le.) = Câu trả lời của bạn đúng rồi. / 他说的不对。 (Tā shuō de bú duì.) = Điều anh ấy nói không đúng. / 这个字写错了。 (Zhège zì xiěcuò le.) = Chữ này viết sai rồi."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: chuyện học và thi",
+      "subtitle": "Hội thoại ngắn về bài học, kỳ thi, đúng sai và dự định học tập; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 明天听写吗？ B: 听写，我们要听写课文里的汉字。 (Míngtiān tīngxiě ma? / Tīngxiě, wǒmen yào tīngxiě kèwén lǐ de Hànzì.) — A: Ngày mai có nghe viết không? B: Có, chúng ta phải nghe viết chữ Hán trong bài khoá."
+        },
+        {
+          "type": "text",
+          "value": "A: 汉语难不难？ B: 不难，我们的老师很认真。 (Hànyǔ nán bu nán? / Bù nán, wǒmen de lǎoshī hěn rènzhēn.) — A: Tiếng Trung có khó không? B: Không khó, thầy giáo của chúng tôi rất tận tâm."
+        },
+        {
+          "type": "text",
+          "value": "A: 这个回答对不对？ B: 不对，这个字写错了。 (Zhège huídá duì bu duì? / Bú duì, zhège zì xiěcuò le.) — A: Câu trả lời này có đúng không? B: Không đúng, chữ này viết sai rồi."
+        },
+        {
+          "type": "text",
+          "value": "A: 你准备考大学吗？ B: 是，我准备明年考大学。 (Nǐ zhǔnbèi kǎo dàxué ma? / Shì, wǒ zhǔnbèi míngnián kǎo dàxué.) — A: Bạn chuẩn bị thi đại học à? B: Vâng, tôi chuẩn bị sang năm thi đại học."
+        },
+        {
+          "type": "text",
+          "value": "A: 老师在教学楼吗？ B: 在，老师们在开会。 (Lǎoshī zài jiàoxuélóu ma? / Zài, lǎoshīmen zài kāihuì.) — A: Thầy giáo có ở toà giảng đường không? B: Có, các thầy cô đang họp."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l21:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “sinh viên đại học”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "中学生"
+          },
+          {
+            "id": "opt-b",
+            "text": "大学生"
+          },
+          {
+            "id": "opt-c",
+            "text": "小学生"
+          },
+          {
+            "id": "opt-d",
+            "text": "老师"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "大学生 (dàxuéshēng) nghĩa là “sinh viên đại học”. 中学生 (zhōngxuéshēng) là “học sinh trung học”, 小学生 (xiǎoxuéshēng) là “học sinh tiểu học”, 老师 (lǎoshī) là “thầy, cô giáo”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “kiến thức”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "课文"
+          },
+          {
+            "id": "opt-b",
+            "text": "汉字"
+          },
+          {
+            "id": "opt-c",
+            "text": "知识"
+          },
+          {
+            "id": "opt-d",
+            "text": "准备"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "知识 (zhīshi) nghĩa là “kiến thức”. 课文 (kèwén) là “bài khoá”, 汉字 (Hànzì) là “chữ Hán”, 准备 (zhǔnbèi) là “chuẩn bị”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 这个回答对___对？ (Câu trả lời này có đúng không?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "没"
+          },
+          {
+            "id": "opt-b",
+            "text": "吗"
+          },
+          {
+            "id": "opt-c",
+            "text": "也"
+          },
+          {
+            "id": "opt-d",
+            "text": "不"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "Câu hỏi chính phản dùng dạng A 不 A: 对不对 (duì bu duì) = có đúng không. 对没对, 对吗对, 对也对 đều sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___明年去中国读书。 (Sang năm tôi chuẩn bị sang Trung Quốc học.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "准备"
+          },
+          {
+            "id": "opt-b",
+            "text": "回答"
+          },
+          {
+            "id": "opt-c",
+            "text": "认真"
+          },
+          {
+            "id": "opt-d",
+            "text": "开会"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "准备 (zhǔnbèi) + động từ = chuẩn bị làm gì, nên 我准备明年去中国读书. 回答 (trả lời), 认真 (chăm chỉ), 开会 (họp) đặt vào thì sai ngữ pháp và sai nghĩa.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这个字你写___了。(Chữ này bạn viết sai rồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "错",
+          "cuò",
+          "cuo"
+        ]
+      },
+      "explanation": "错 (cuò) nghĩa là “sai”; động từ + 错 + 了 (写错了) = làm sai rồi.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 老师们在___，你下午再来吧。(Các thầy cô đang họp, buổi chiều bạn lại đến nhé.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "开会",
+          "kāihuì",
+          "kaihui"
+        ]
+      },
+      "explanation": "开会 (kāihuì) nghĩa là “họp”; 老师们在开会 = các thầy cô đang họp.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e07",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 她学习很___。(Cô ấy học rất chăm chỉ.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "认真",
+          "rènzhēn",
+          "renzhen"
+        ]
+      },
+      "explanation": "认真 (rènzhēn) nghĩa là “chăm chỉ, nghiêm túc”; 学习很认真 = học rất chăm chỉ.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bài khoá hôm nay có khó không?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-x1",
+            "text": "今天的"
+          },
+          {
+            "id": "tkn-w7",
+            "text": "难不难"
+          },
+          {
+            "id": "tkn-k9",
+            "text": "课文"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-x1",
+          "tkn-k9",
+          "tkn-w7"
+        ]
+      },
+      "explanation": "Câu đúng là 今天的课文难不难: định ngữ (今天的) + danh từ (课文) + câu hỏi chính phản (难不难). 今天的 phải đứng ngay trước 课文, 难不难 đứng cuối làm vị ngữ (ví dụ sai: 课文今天的难不难, 难不难今天的课文, 今天的难不难课文).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi chuẩn bị đi họp.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-x1",
+            "text": "开会"
+          },
+          {
+            "id": "tkn-z9",
+            "text": "我"
+          },
+          {
+            "id": "tkn-d4",
+            "text": "去"
+          },
+          {
+            "id": "tkn-d3",
+            "text": "准备"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z9",
+          "tkn-d3",
+          "tkn-d4",
+          "tkn-x1"
+        ]
+      },
+      "explanation": "Câu đúng là 我准备去开会: Chủ ngữ + 准备 + 去 + 开会. 我去准备开会 đúng ngữ pháp nhưng nghĩa là “tôi đi chuẩn bị cuộc họp”, sai theo đề; 准备 phải đứng sau chủ ngữ (ví dụ sai: 准备我去开会, 我开会准备去).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l21:e10",
+      "topicKey": "t01",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Thầy giáo dạy chúng tôi tiếng Trung.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r5",
+            "text": "教"
+          },
+          {
+            "id": "tkn-b9",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-z6",
+            "text": "老师"
+          },
+          {
+            "id": "tkn-v6",
+            "text": "汉语"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z6",
+          "tkn-r5",
+          "tkn-b9",
+          "tkn-v6"
+        ]
+      },
+      "explanation": "Câu đúng là 老师教我们汉语: người dạy (老师) + 教 + người học (我们) + môn học (汉语). 我们教老师汉语 đúng ngữ pháp nhưng nghĩa là “chúng tôi dạy thầy tiếng Trung”, sai theo đề; người học đứng trước môn học (ví dụ sai: 老师教汉语我们, 教老师我们汉语).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-05",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-05 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

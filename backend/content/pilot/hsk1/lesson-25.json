@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l25",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l25-on-tap-bo-sung",
+    "title": "Ôn tập và từ bổ sung",
+    "description": "Bài 25 HSK1: bài ôn tập, học thêm 18 từ bổ sung (núi, cây, đất, điện, màu trắng, nặng, quan trọng…) và ôn lại cách dùng 了, 在, 有, 的.",
+    "orderIndex": 1025
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "地",
+      "pinyin": "dì",
+      "meaningVi": "đất, mặt đất",
+      "example": {
+        "hanzi": "地上很干净。",
+        "pinyin": "Dìshang hěn gānjìng.",
+        "meaningVi": "Mặt đất rất sạch."
+      }
+    },
+    {
+      "hanzi": "女儿",
+      "pinyin": "nǚ'ér",
+      "meaningVi": "con gái",
+      "example": {
+        "hanzi": "我女儿五岁了。",
+        "pinyin": "Wǒ nǚ'ér wǔ suì le.",
+        "meaningVi": "Con gái tôi năm tuổi rồi."
+      }
+    },
+    {
+      "hanzi": "奶",
+      "pinyin": "nǎi",
+      "meaningVi": "sữa",
+      "example": {
+        "hanzi": "我早上喝奶。",
+        "pinyin": "Wǒ zǎoshang hē nǎi.",
+        "meaningVi": "Buổi sáng tôi uống sữa."
+      }
+    },
+    {
+      "hanzi": "子",
+      "pinyin": "zi",
+      "meaningVi": "(hậu tố danh từ)",
+      "example": {
+        "hanzi": "这个桌子很新。",
+        "pinyin": "Zhè ge zhuōzi hěn xīn.",
+        "meaningVi": "Cái bàn này rất mới."
+      }
+    },
+    {
+      "hanzi": "山",
+      "pinyin": "shān",
+      "meaningVi": "núi",
+      "example": {
+        "hanzi": "那个山很高。",
+        "pinyin": "Nà ge shān hěn gāo.",
+        "meaningVi": "Ngọn núi kia rất cao."
+      }
+    },
+    {
+      "hanzi": "差",
+      "pinyin": "chà",
+      "meaningVi": "kém; thiếu",
+      "example": {
+        "hanzi": "现在差五分八点。",
+        "pinyin": "Xiànzài chà wǔ fēn bā diǎn.",
+        "meaningVi": "Bây giờ là tám giờ kém năm phút."
+      }
+    },
+    {
+      "hanzi": "树",
+      "pinyin": "shù",
+      "meaningVi": "cây",
+      "example": {
+        "hanzi": "门口有一个大树。",
+        "pinyin": "Ménkǒu yǒu yí ge dà shù.",
+        "meaningVi": "Trước cửa có một cái cây to."
+      }
+    },
+    {
+      "hanzi": "电",
+      "pinyin": "diàn",
+      "meaningVi": "điện",
+      "example": {
+        "hanzi": "家里没电了。",
+        "pinyin": "Jiāli méi diàn le.",
+        "meaningVi": "Nhà mất điện rồi."
+      }
+    },
+    {
+      "hanzi": "白",
+      "pinyin": "bái",
+      "meaningVi": "trắng",
+      "example": {
+        "hanzi": "我的衣服是白的。",
+        "pinyin": "Wǒ de yīfu shì bái de.",
+        "meaningVi": "Quần áo của tôi màu trắng."
+      }
+    },
+    {
+      "hanzi": "老",
+      "pinyin": "lǎo",
+      "meaningVi": "già; cũ",
+      "example": {
+        "hanzi": "我的电脑很老了。",
+        "pinyin": "Wǒ de diànnǎo hěn lǎo le.",
+        "meaningVi": "Máy tính của tôi cũ lắm rồi."
+      }
+    },
+    {
+      "hanzi": "行",
+      "pinyin": "xíng",
+      "meaningVi": "được, ổn",
+      "example": {
+        "hanzi": "明天去，行吗？",
+        "pinyin": "Míngtiān qù, xíng ma?",
+        "meaningVi": "Ngày mai đi, được không?"
+      }
+    },
+    {
+      "hanzi": "起",
+      "pinyin": "qǐ",
+      "meaningVi": "dậy, đứng dậy",
+      "example": {
+        "hanzi": "我七点起床。",
+        "pinyin": "Wǒ qī diǎn qǐ chuáng.",
+        "meaningVi": "Tôi dậy lúc bảy giờ."
+      }
+    },
+    {
+      "hanzi": "还",
+      "pinyin": "huán",
+      "meaningVi": "trả, trả lại",
+      "example": {
+        "hanzi": "我明天还你书。",
+        "pinyin": "Wǒ míngtiān huán nǐ shū.",
+        "meaningVi": "Ngày mai tôi trả sách cho bạn."
+      }
+    },
+    {
+      "hanzi": "这边",
+      "pinyin": "zhèbiān",
+      "meaningVi": "bên này, phía này",
+      "example": {
+        "hanzi": "请到这边来。",
+        "pinyin": "Qǐng dào zhèbiān lái.",
+        "meaningVi": "Mời lại phía này."
+      }
+    },
+    {
+      "hanzi": "那边",
+      "pinyin": "nàbiān",
+      "meaningVi": "bên kia, phía kia",
+      "example": {
+        "hanzi": "那边有一个商店。",
+        "pinyin": "Nàbiān yǒu yí ge shāngdiàn.",
+        "meaningVi": "Bên kia có một cửa hàng."
+      }
+    },
+    {
+      "hanzi": "重",
+      "pinyin": "zhòng",
+      "meaningVi": "nặng",
+      "example": {
+        "hanzi": "这个包很重。",
+        "pinyin": "Zhè ge bāo hěn zhòng.",
+        "meaningVi": "Cái túi này rất nặng."
+      }
+    },
+    {
+      "hanzi": "重要",
+      "pinyin": "zhòngyào",
+      "meaningVi": "quan trọng",
+      "example": {
+        "hanzi": "这个考试很重要。",
+        "pinyin": "Zhè ge kǎoshì hěn zhòngyào.",
+        "meaningVi": "Kỳ thi này rất quan trọng."
+      }
+    },
+    {
+      "hanzi": "间",
+      "pinyin": "jiān",
+      "meaningVi": "(lượng từ) gian, phòng",
+      "example": {
+        "hanzi": "我家有三间房间。",
+        "pinyin": "Wǒ jiā yǒu sān jiān fángjiān.",
+        "meaningVi": "Nhà tôi có ba phòng."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: ôn tập và từ bổ sung",
+      "subtitle": "18 từ HSK1 bổ sung về gia đình, thiên nhiên, tính chất và vị trí",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 25 gồm 18 từ vựng HSK1 bổ sung. Nhóm gia đình và đồ uống: 女儿 (con gái), 奶 (sữa). Nhóm thiên nhiên và đồ vật: 地 (đất, mặt đất), 山 (núi), 树 (cây), 电 (điện), 间 (lượng từ: gian, phòng), 子 (hậu tố danh từ, như trong 桌子). Nhóm tính chất: 白 (trắng), 老 (già; cũ), 重 (nặng), 重要 (quan trọng), 差 (kém; thiếu), 行 (được, ổn). Nhóm động tác: 起 (dậy, đứng dậy), 还 (trả, trả lại). Nhóm vị trí: 这边 (bên này), 那边 (bên kia). Lưu ý chữ đa âm: 地 ở bài này đọc dì (đất), khác 地 de (trợ từ) ở bài 23; 还 ở bài này đọc huán (trả lại), khác 还 hái (còn, vẫn) ở bài 23. 女儿 đọc nǚ'ér; 子 làm hậu tố đọc nhẹ zi; 差 trong cách nói giờ đọc chà (差五分八点 = tám giờ kém năm phút)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: ôn tập 了, 在, 有, 的",
+      "subtitle": "Không thêm điểm mới; ôn lại bốn từ dùng nhiều nhất trong HSK1",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Ôn 了: đặt cuối câu hoặc sau động từ để nói việc đã xảy ra hoặc tình hình đã thay đổi. Phủ định việc đã xảy ra dùng 没 + động từ (bỏ 了). Cấu trúc: … + 了 / 没 + động từ. Ví dụ: 我女儿五岁了。 (Wǒ nǚ'ér wǔ suì le.) = Con gái tôi năm tuổi rồi. / 家里没电了。 (Jiā lǐ méi diàn le.) = Nhà mất điện rồi. / 我的电脑很老了。 (Wǒ de diànnǎo hěn lǎo le.) = Máy tính của tôi cũ lắm rồi."
+        },
+        {
+          "type": "text",
+          "value": "2. Ôn 在: 在 + nơi chốn = ở đâu (động từ); 在 + nơi chốn + động từ = làm gì ở đâu; 在 + động từ = đang làm gì. Cấu trúc: A + 在 + nơi chốn / Chủ ngữ + 在 + nơi chốn + động từ / Chủ ngữ + 在 + động từ. Ví dụ: 我女儿在那边。 (Wǒ nǚ'ér zài nàbiān.) = Con gái tôi ở bên kia. / 书在地上。 (Shū zài dìshang.) = Sách ở dưới đất. / 他在家里看书。 (Tā zài jiā lǐ kàn shū.) = Anh ấy đọc sách ở nhà."
+        },
+        {
+          "type": "text",
+          "value": "3. Ôn 有: nói sở hữu (ai có cái gì) hoặc tồn tại (ở đâu có cái gì); phủ định là 没有. Cấu trúc: Người + 有 + vật / Nơi chốn + 有 + (số lượng) + vật. Ví dụ: 山上有很多树。 (Shān shang yǒu hěn duō shù.) = Trên núi có nhiều cây. / 我家有三间房间。 (Wǒ jiā yǒu sān jiān fángjiān.) = Nhà tôi có ba phòng. / 我没有女儿。 (Wǒ méiyǒu nǚ'ér.) = Tôi không có con gái."
+        },
+        {
+          "type": "text",
+          "value": "4. Ôn 的: nối định ngữ với danh từ (của ai, như thế nào); cụm “… + 的” còn đứng một mình thay cho danh từ đã biết. Cấu trúc: Định ngữ + 的 + danh từ / … + 的. Ví dụ: 这是我女儿的书包。 (Zhè shì wǒ nǚ'ér de shūbāo.) = Đây là cặp sách của con gái tôi. / 我的衣服是白的。 (Wǒ de yīfu shì bái de.) = Quần áo của tôi màu trắng. / 这个包很重，是谁的？ (Zhège bāo hěn zhòng, shì shéi de?) = Cái túi này rất nặng, là của ai?"
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: ôn tập trong đời sống",
+      "subtitle": "Hội thoại ngắn hỏi đồ của ai, ở đâu, mấy giờ và mượn trả; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 这个包很重，是谁的？ B: 是我女儿的。 (Zhège bāo hěn zhòng, shì shéi de? / Shì wǒ nǚ'ér de.) — A: Cái túi này rất nặng, là của ai? B: Là của con gái tôi."
+        },
+        {
+          "type": "text",
+          "value": "A: 洗手间在哪儿？ B: 不在这边，在那边。 (Xǐshǒujiān zài nǎr? / Bú zài zhèbiān, zài nàbiān.) — A: Nhà vệ sinh ở đâu? B: Không ở bên này, ở bên kia."
+        },
+        {
+          "type": "text",
+          "value": "A: 现在几点了？ B: 差五分八点。 (Xiànzài jǐ diǎn le? / Chà wǔ fēn bā diǎn.) — A: Bây giờ mấy giờ rồi? B: Tám giờ kém năm phút."
+        },
+        {
+          "type": "text",
+          "value": "A: 明天我还你书，行吗？ B: 行，你什么时候还都行。 (Míngtiān wǒ huán nǐ shū, xíng ma? / Xíng, nǐ shénme shíhou huán dōu xíng.) — A: Ngày mai tôi trả sách cho bạn, được không? B: Được, lúc nào bạn trả cũng được."
+        },
+        {
+          "type": "text",
+          "value": "A: 那个山上有什么？ B: 山上有很多树。 (Nàge shān shang yǒu shénme? / Shān shang yǒu hěn duō shù.) — A: Trên ngọn núi kia có gì? B: Trên núi có rất nhiều cây."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l25:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “núi”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "树"
+          },
+          {
+            "id": "opt-b",
+            "text": "山"
+          },
+          {
+            "id": "opt-c",
+            "text": "地"
+          },
+          {
+            "id": "opt-d",
+            "text": "电"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "山 (shān) nghĩa là “núi”. 树 (shù) là “cây”, 地 (dì) là “đất, mặt đất”, 电 (diàn) là “điện”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “quan trọng”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "重"
+          },
+          {
+            "id": "opt-b",
+            "text": "老"
+          },
+          {
+            "id": "opt-c",
+            "text": "重要"
+          },
+          {
+            "id": "opt-d",
+            "text": "白"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "重要 (zhòngyào) nghĩa là “quan trọng”. 重 (zhòng) là “nặng”, 老 (lǎo) là “già; cũ”, 白 (bái) là “trắng”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 山上___很多树。 (Trên núi có rất nhiều cây.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "在"
+          },
+          {
+            "id": "opt-b",
+            "text": "是"
+          },
+          {
+            "id": "opt-c",
+            "text": "的"
+          },
+          {
+            "id": "opt-d",
+            "text": "有"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "Câu tồn tại: nơi chốn + 有 + vật, nên 山上有很多树. 在 dùng khi vật đứng đầu câu (树在山上); 是 nghĩa là “là”, sai nghĩa theo bản dịch; 的 đặt vào thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 这个包是我女儿___。 (Cái túi này là của con gái tôi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "的"
+          },
+          {
+            "id": "opt-b",
+            "text": "了"
+          },
+          {
+            "id": "opt-c",
+            "text": "在"
+          },
+          {
+            "id": "opt-d",
+            "text": "有"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "Cụm “… + 的” thay cho danh từ đã biết: 是我女儿的 = là của con gái tôi. 了, 在, 有 đặt cuối câu này thì sai ngữ pháp hoặc sai nghĩa.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e05",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 明天我___你书，行吗？(Ngày mai tôi trả sách cho bạn, được không?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "还",
+          "huán",
+          "huan"
+        ]
+      },
+      "explanation": "还 ở đây đọc huán, nghĩa là “trả, trả lại”; 还你书 = trả sách cho bạn. Khác 还 hái (còn, vẫn).",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你的书___地上，你看一下儿。(Sách của bạn ở dưới đất, bạn nhìn xem.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "在",
+          "zài",
+          "zai"
+        ]
+      },
+      "explanation": "在 (zài) + nơi chốn = ở đâu; 书在地上 = sách ở dưới đất.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 现在___五分八点。(Bây giờ là tám giờ kém năm phút.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "差",
+          "chà",
+          "cha"
+        ]
+      },
+      "explanation": "差 (chà) nghĩa là “kém; thiếu”; 差五分八点 = tám giờ kém năm phút.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Con gái tôi năm tuổi rồi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-c9",
+            "text": "了"
+          },
+          {
+            "id": "tkn-h6",
+            "text": "我女儿"
+          },
+          {
+            "id": "tkn-d9",
+            "text": "五岁"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-h6",
+          "tkn-d9",
+          "tkn-c9"
+        ]
+      },
+      "explanation": "Câu đúng là 我女儿五岁了: Chủ ngữ (我女儿) + tuổi (五岁) + 了 (đã thay đổi). 了 đứng cuối câu (ví dụ sai: 五岁我女儿了, 我女儿了五岁, 了我女儿五岁).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Nhà tôi có ba phòng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-h6",
+            "text": "我家"
+          },
+          {
+            "id": "tkn-r7",
+            "text": "有"
+          },
+          {
+            "id": "tkn-t7",
+            "text": "房间"
+          },
+          {
+            "id": "tkn-x9",
+            "text": "三间"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-h6",
+          "tkn-r7",
+          "tkn-x9",
+          "tkn-t7"
+        ]
+      },
+      "explanation": "Câu đúng là 我家有三间房间: Nơi chốn (我家) + 有 + số lượng (三间) + vật (房间). Số lượng phải đứng ngay trước danh từ (ví dụ sai: 我家有房间三间, 三间房间有我家, 有我家三间房间).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l25:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Quần áo của tôi màu trắng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s8",
+            "text": "衣服"
+          },
+          {
+            "id": "tkn-k2",
+            "text": "我的"
+          },
+          {
+            "id": "tkn-z8",
+            "text": "是"
+          },
+          {
+            "id": "tkn-w3",
+            "text": "白的"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-k2",
+          "tkn-s8",
+          "tkn-z8",
+          "tkn-w3"
+        ]
+      },
+      "explanation": "Câu đúng là 我的衣服是白的: định ngữ (我的) + danh từ (衣服) + 是 + cụm 的 (白的). 白的衣服是我的 đúng ngữ pháp nhưng nghĩa là “quần áo trắng là của tôi”, sai theo đề (ví dụ sai khác: 衣服我的是白的, 是我的衣服白的).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-05",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (18 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-05 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

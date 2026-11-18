@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l13",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l13-di-lai-phuong-tien",
+    "title": "Đi lại và phương tiện",
+    "description": "Bài 13 HSK1: nói về đi lại và phương tiện: 坐/开 + phương tiện, hỏi cách đi bằng 怎么 + động từ, nói đi bộ đến đâu bằng 走路去; 20 từ vựng về xe, tàu, máy bay, vé và đường phố.",
+    "orderIndex": 1013
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "车",
+      "pinyin": "chē",
+      "meaningVi": "xe",
+      "example": {
+        "hanzi": "你的车在哪儿？",
+        "pinyin": "Nǐ de chē zài nǎr?",
+        "meaningVi": "Xe của bạn ở đâu?"
+      }
+    },
+    {
+      "hanzi": "汽车",
+      "pinyin": "qìchē",
+      "meaningVi": "xe ô tô",
+      "example": {
+        "hanzi": "这是我爸爸的汽车。",
+        "pinyin": "Zhè shì wǒ bàba de qìchē.",
+        "meaningVi": "Đây là ô tô của bố tôi."
+      }
+    },
+    {
+      "hanzi": "火车",
+      "pinyin": "huǒchē",
+      "meaningVi": "tàu hoả",
+      "example": {
+        "hanzi": "我坐火车去北京。",
+        "pinyin": "Wǒ zuò huǒchē qù Běijīng.",
+        "meaningVi": "Tôi đi tàu hoả đến Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "飞机",
+      "pinyin": "fēijī",
+      "meaningVi": "máy bay",
+      "example": {
+        "hanzi": "飞机几点到？",
+        "pinyin": "Fēijī jǐ diǎn dào?",
+        "meaningVi": "Máy bay mấy giờ đến?"
+      }
+    },
+    {
+      "hanzi": "飞",
+      "pinyin": "fēi",
+      "meaningVi": "bay",
+      "example": {
+        "hanzi": "飞机在天上飞。",
+        "pinyin": "Fēijī zài tiān shang fēi.",
+        "meaningVi": "Máy bay bay trên trời."
+      }
+    },
+    {
+      "hanzi": "机场",
+      "pinyin": "jīchǎng",
+      "meaningVi": "sân bay",
+      "example": {
+        "hanzi": "我去机场。",
+        "pinyin": "Wǒ qù jīchǎng.",
+        "meaningVi": "Tôi đi sân bay."
+      }
+    },
+    {
+      "hanzi": "车站",
+      "pinyin": "chēzhàn",
+      "meaningVi": "bến xe, nhà ga",
+      "example": {
+        "hanzi": "车站在哪儿？",
+        "pinyin": "Chēzhàn zài nǎr?",
+        "meaningVi": "Bến xe ở đâu?"
+      }
+    },
+    {
+      "hanzi": "车票",
+      "pinyin": "chēpiào",
+      "meaningVi": "vé xe, vé tàu",
+      "example": {
+        "hanzi": "我买了车票。",
+        "pinyin": "Wǒ mǎi le chēpiào.",
+        "meaningVi": "Tôi đã mua vé xe."
+      }
+    },
+    {
+      "hanzi": "机票",
+      "pinyin": "jīpiào",
+      "meaningVi": "vé máy bay",
+      "example": {
+        "hanzi": "机票多少钱？",
+        "pinyin": "Jīpiào duōshao qián?",
+        "meaningVi": "Vé máy bay bao nhiêu tiền?"
+      }
+    },
+    {
+      "hanzi": "票",
+      "pinyin": "piào",
+      "meaningVi": "vé",
+      "example": {
+        "hanzi": "你有票吗？",
+        "pinyin": "Nǐ yǒu piào ma?",
+        "meaningVi": "Bạn có vé không?"
+      }
+    },
+    {
+      "hanzi": "开车",
+      "pinyin": "kāichē",
+      "meaningVi": "lái xe",
+      "example": {
+        "hanzi": "爸爸开车去工作。",
+        "pinyin": "Bàba kāichē qù gōngzuò.",
+        "meaningVi": "Bố lái xe đi làm."
+      }
+    },
+    {
+      "hanzi": "打车",
+      "pinyin": "dǎchē",
+      "meaningVi": "bắt taxi, gọi xe",
+      "example": {
+        "hanzi": "我们打车去机场吧。",
+        "pinyin": "Wǒmen dǎchē qù jīchǎng ba.",
+        "meaningVi": "Chúng ta bắt taxi đi sân bay nhé."
+      }
+    },
+    {
+      "hanzi": "上车",
+      "pinyin": "shàngchē",
+      "meaningVi": "lên xe",
+      "example": {
+        "hanzi": "请上车。",
+        "pinyin": "Qǐng shàngchē.",
+        "meaningVi": "Mời lên xe."
+      }
+    },
+    {
+      "hanzi": "下车",
+      "pinyin": "xiàchē",
+      "meaningVi": "xuống xe",
+      "example": {
+        "hanzi": "我在前边下车。",
+        "pinyin": "Wǒ zài qiánbian xiàchē.",
+        "meaningVi": "Tôi xuống xe ở phía trước."
+      }
+    },
+    {
+      "hanzi": "坐",
+      "pinyin": "zuò",
+      "meaningVi": "ngồi; đi (tàu, xe)",
+      "example": {
+        "hanzi": "请坐。",
+        "pinyin": "Qǐng zuò.",
+        "meaningVi": "Mời ngồi."
+      }
+    },
+    {
+      "hanzi": "走",
+      "pinyin": "zǒu",
+      "meaningVi": "đi, đi bộ; rời đi",
+      "example": {
+        "hanzi": "我们走吧。",
+        "pinyin": "Wǒmen zǒu ba.",
+        "meaningVi": "Chúng ta đi thôi."
+      }
+    },
+    {
+      "hanzi": "走路",
+      "pinyin": "zǒulù",
+      "meaningVi": "đi bộ",
+      "example": {
+        "hanzi": "我走路去学校。",
+        "pinyin": "Wǒ zǒulù qù xuéxiào.",
+        "meaningVi": "Tôi đi bộ đến trường."
+      }
+    },
+    {
+      "hanzi": "路",
+      "pinyin": "lù",
+      "meaningVi": "đường, con đường",
+      "example": {
+        "hanzi": "我不认识路。",
+        "pinyin": "Wǒ bú rènshi lù.",
+        "meaningVi": "Tôi không biết đường."
+      }
+    },
+    {
+      "hanzi": "马路",
+      "pinyin": "mǎlù",
+      "meaningVi": "đường cái, đường phố",
+      "example": {
+        "hanzi": "过马路要看车。",
+        "pinyin": "Guò mǎlù yào kàn chē.",
+        "meaningVi": "Qua đường phải nhìn xe."
+      }
+    },
+    {
+      "hanzi": "路口",
+      "pinyin": "lùkǒu",
+      "meaningVi": "ngã tư, giao lộ",
+      "example": {
+        "hanzi": "在前边的路口下车。",
+        "pinyin": "Zài qiánbian de lùkǒu xiàchē.",
+        "meaningVi": "Xuống xe ở ngã tư phía trước."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: đi lại và phương tiện",
+      "subtitle": "20 từ HSK1 về xe cộ, sân bay, nhà ga, vé và đường đi",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 13 gồm 20 từ vựng HSK1 về đi lại. Nhóm phương tiện: 车 (xe), 汽车 (xe ô tô), 火车 (tàu hoả), 飞机 (máy bay), 飞 (bay). Nhóm nơi đi và vé: 机场 (sân bay), 车站 (bến xe, nhà ga), 票 (vé), 车票 (vé xe, vé tàu), 机票 (vé máy bay). Nhóm hành động: 开车 (lái xe), 打车 (bắt taxi, gọi xe), 上车 (lên xe), 下车 (xuống xe), 坐 (ngồi; đi tàu, xe), 走 (đi, đi bộ; rời đi), 走路 (đi bộ). Nhóm đường: 路 (đường), 马路 (đường cái, đường phố), 路口 (ngã tư, giao lộ). Lưu ý phát âm: 车 chē và 站 zhàn có âm đầu uốn lưỡi ch, zh; 走 zǒu khác 坐 zuò; 机场 đọc jīchǎng, 马路 đọc mǎlù."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 坐/开 + phương tiện, 怎么 + động từ, 走路去 + nơi chốn",
+      "subtitle": "Ba điểm ngữ pháp để nói đi bằng gì và hỏi đường",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 坐/开 + phương tiện: 坐 (zuò) dùng khi đi tàu, xe, máy bay với tư cách hành khách; 开 (kāi) nghĩa là lái, người nói tự điều khiển xe. Phương tiện đứng trước 去 + nơi chốn: cách đi nói trước, nơi đến nói sau. Cấu trúc: chủ ngữ + 坐/开 + phương tiện + 去 + nơi chốn. Ví dụ: 我坐火车去北京。 (Wǒ zuò huǒchē qù Běijīng.) = Tôi đi tàu hoả đến Bắc Kinh. / 爸爸开车去工作。 (Bàba kāichē qù gōngzuò.) = Bố lái xe đi làm. / 我们坐飞机去。 (Wǒmen zuò fēijī qù.) = Chúng tôi đi máy bay."
+        },
+        {
+          "type": "text",
+          "value": "2. 怎么 + động từ: hỏi cách làm một việc (bằng cách nào, thế nào). 怎么 đứng ngay trước động từ. Cấu trúc: chủ ngữ + 怎么 + động từ (+ tân ngữ)? Trả lời bằng cách đi cụ thể: 坐…, 开车, 打车, 走路… Ví dụ: 你怎么去机场？ (Nǐ zěnme qù jīchǎng?) = Bạn đi sân bay bằng gì? / 车站怎么走？ (Chēzhàn zěnme zǒu?) = Đến bến xe đi thế nào? / 这个字怎么读？ (Zhè ge zì zěnme dú?) = Chữ này đọc thế nào?"
+        },
+        {
+          "type": "text",
+          "value": "3. 走路 + 去 + nơi chốn: đi bộ đến một nơi. Giống điểm 1, 走路 (cách đi) đứng trước 去. Phủ định đặt 不 trước 走路. Cấu trúc: chủ ngữ + 走路 + 去 + nơi chốn. Ví dụ: 我走路去学校。 (Wǒ zǒulù qù xuéxiào.) = Tôi đi bộ đến trường. / 我们走路去车站吧。 (Wǒmen zǒulù qù chēzhàn ba.) = Chúng ta đi bộ đến bến xe nhé. / 他不走路去，他打车去。 (Tā bù zǒulù qù, tā dǎchē qù.) = Anh ấy không đi bộ, anh ấy bắt taxi đi."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: đi bằng gì, đường đi thế nào",
+      "subtitle": "Hội thoại ngắn hỏi cách đi, hỏi đường, mua vé; không dùng tên riêng người, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你怎么去机场？ B: 我打车去。 (Nǐ zěnme qù jīchǎng? / Wǒ dǎchē qù.) — A: Bạn đi sân bay bằng gì? B: Tôi bắt taxi đi."
+        },
+        {
+          "type": "text",
+          "value": "A: 请问，车站怎么走？ B: 在前边的路口过马路，就到了。 (Qǐngwèn, chēzhàn zěnme zǒu? / Zài qiánbian de lùkǒu guò mǎlù, jiù dào le.) — A: Xin hỏi, đến bến xe đi thế nào? B: Qua đường ở ngã tư phía trước là tới."
+        },
+        {
+          "type": "text",
+          "value": "A: 你买车票了吗？ B: 买了，我们坐火车去北京。 (Nǐ mǎi chēpiào le ma? / Mǎi le, wǒmen zuò huǒchē qù Běijīng.) — A: Bạn mua vé tàu chưa? B: Mua rồi, chúng ta đi tàu hoả đến Bắc Kinh."
+        },
+        {
+          "type": "text",
+          "value": "A: 你爸爸开车去工作吗？ B: 不，他走路去。 (Nǐ bàba kāichē qù gōngzuò ma? / Bù, tā zǒulù qù.) — A: Bố bạn lái xe đi làm à? B: Không, bố tôi đi bộ."
+        },
+        {
+          "type": "text",
+          "value": "A: 我们在哪儿下车？ B: 在机场下车。 (Wǒmen zài nǎr xiàchē? / Zài jīchǎng xiàchē.) — A: Chúng ta xuống xe ở đâu? B: Xuống xe ở sân bay."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l13:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “sân bay”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "车站"
+          },
+          {
+            "id": "opt-b",
+            "text": "机场"
+          },
+          {
+            "id": "opt-c",
+            "text": "机票"
+          },
+          {
+            "id": "opt-d",
+            "text": "路口"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "机场 (jīchǎng) nghĩa là “sân bay”. 车站 (chēzhàn) là “bến xe, nhà ga”, 机票 (jīpiào) là “vé máy bay”, 路口 (lùkǒu) là “ngã tư, giao lộ”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “vé máy bay”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "车票"
+          },
+          {
+            "id": "opt-b",
+            "text": "票"
+          },
+          {
+            "id": "opt-c",
+            "text": "机票"
+          },
+          {
+            "id": "opt-d",
+            "text": "飞机"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "机票 (jīpiào) nghĩa là “vé máy bay”. 车票 (chēpiào) là “vé xe, vé tàu”, 票 (piào) là “vé” nói chung, 飞机 (fēijī) là “máy bay”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 爸爸___车去工作。 (Bố lái xe đi làm.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "坐"
+          },
+          {
+            "id": "opt-b",
+            "text": "打"
+          },
+          {
+            "id": "opt-c",
+            "text": "走"
+          },
+          {
+            "id": "opt-d",
+            "text": "开"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "开 (kāi) nghĩa là “lái”: 开车 = lái xe. 坐车 (đi xe, làm hành khách) và 打车 (bắt taxi) đúng ngữ pháp nhưng sai nghĩa theo bản dịch; 走车 không có trong tiếng Hán.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你___去机场？ (Bạn đi sân bay bằng cách nào?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "怎么"
+          },
+          {
+            "id": "opt-b",
+            "text": "什么"
+          },
+          {
+            "id": "opt-c",
+            "text": "哪儿"
+          },
+          {
+            "id": "opt-d",
+            "text": "几"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "怎么 (zěnme) + động từ hỏi cách làm: 你怎么去机场 = bạn đi sân bay bằng cách nào. 什么 (cái gì), 哪儿 (ở đâu), 几 (mấy) không đứng trước động từ để hỏi cách làm, đặt vào thì sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们坐___去北京。(Chúng tôi đi tàu hoả đến Bắc Kinh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "火车",
+          "huǒchē",
+          "huoche"
+        ]
+      },
+      "explanation": "火车 (huǒchē) nghĩa là “tàu hoả”; 坐火车去北京 = đi tàu hoả đến Bắc Kinh. Phương tiện đứng sau 坐 và trước 去.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们在前边的路口___。(Chúng ta xuống xe ở ngã tư phía trước.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "下车",
+          "xiàchē",
+          "xiache"
+        ]
+      },
+      "explanation": "下车 (xiàchē) nghĩa là “xuống xe”. 上车 (shàngchē) là “lên xe”, ngược nghĩa.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 请问，车站怎么___？(Xin hỏi, đến bến xe đi thế nào?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "走",
+          "zǒu",
+          "zou",
+          "去",
+          "qù",
+          "qu"
+        ]
+      },
+      "explanation": "走 (zǒu) nghĩa là “đi”; 怎么走 = đi thế nào, câu hỏi đường quen thuộc. 车站怎么去 (Chēzhàn zěnme qù?) cũng đúng và cùng nghĩa nên 去 (qù) cũng được chấp nhận.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bố lái xe đi làm.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f6",
+            "text": "爸爸"
+          },
+          {
+            "id": "tkn-h1",
+            "text": "去"
+          },
+          {
+            "id": "tkn-t3",
+            "text": "开车"
+          },
+          {
+            "id": "tkn-k2",
+            "text": "工作"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-f6",
+          "tkn-t3",
+          "tkn-h1",
+          "tkn-k2"
+        ]
+      },
+      "explanation": "Câu đúng là 爸爸开车去工作: chủ ngữ + cách đi (开车) + 去 + việc hoặc nơi đến (工作). Cách đi phải đứng trước 去 (ví dụ sai: 爸爸去工作开车, 开车爸爸去工作, 爸爸工作去开车).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bạn đi sân bay bằng cách nào?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g6",
+            "text": "去机场"
+          },
+          {
+            "id": "tkn-d9",
+            "text": "怎么"
+          },
+          {
+            "id": "tkn-v9",
+            "text": "你"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-v9",
+          "tkn-d9",
+          "tkn-g6"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 你怎么去机场: chủ ngữ + 怎么 + động từ (去机场). 怎么 phải đứng ngay trước động từ (ví dụ sai: 你去机场怎么, 怎么你去机场, 去机场你怎么).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l13:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Chúng ta đi bộ đến bến xe nhé.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p1",
+            "text": "我们"
+          },
+          {
+            "id": "tkn-s3",
+            "text": "去车站"
+          },
+          {
+            "id": "tkn-x7",
+            "text": "吧"
+          },
+          {
+            "id": "tkn-f6",
+            "text": "走路"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-p1",
+          "tkn-f6",
+          "tkn-s3",
+          "tkn-x7"
+        ]
+      },
+      "explanation": "Câu đúng là 我们走路去车站吧: chủ ngữ + 走路 + 去 + nơi chốn, 吧 ở cuối câu. 我们去车站走路吧 nghĩa là “chúng ta đến bến xe để đi bộ”, sai theo đề; 吧 không đứng giữa câu (ví dụ sai: 走路我们去车站吧, 我们吧走路去车站).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-03",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-03 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

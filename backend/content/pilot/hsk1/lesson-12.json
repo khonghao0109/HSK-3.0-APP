@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l12",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l12-vi-tri-trong-nha",
+    "title": "Vị trí trong nhà và nơi làm việc",
+    "description": "Bài 12 HSK1: nói vị trí đồ vật trong nhà và nơi làm việc bằng danh từ + 上/下/里 (桌子上, 房间里); phân biệt câu tồn tại dùng 有 và 是 với 20 từ vựng về nhà cửa, đồ đạc và vị trí.",
+    "orderIndex": 1012
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "上",
+      "pinyin": "shàng",
+      "meaningVi": "trên",
+      "example": {
+        "hanzi": "手机在桌子上。",
+        "pinyin": "Shǒujī zài zhuōzi shang.",
+        "meaningVi": "Điện thoại ở trên bàn."
+      }
+    },
+    {
+      "hanzi": "下",
+      "pinyin": "xià",
+      "meaningVi": "dưới",
+      "example": {
+        "hanzi": "床下有一本书。",
+        "pinyin": "Chuáng xià yǒu yì běn shū.",
+        "meaningVi": "Dưới gầm giường có một quyển sách."
+      }
+    },
+    {
+      "hanzi": "前",
+      "pinyin": "qián",
+      "meaningVi": "trước",
+      "example": {
+        "hanzi": "门前有很多车。",
+        "pinyin": "Mén qián yǒu hěn duō chē.",
+        "meaningVi": "Trước cửa có rất nhiều xe."
+      }
+    },
+    {
+      "hanzi": "后",
+      "pinyin": "hòu",
+      "meaningVi": "sau",
+      "example": {
+        "hanzi": "房子后有一个小门。",
+        "pinyin": "Fángzi hòu yǒu yí ge xiǎo mén.",
+        "meaningVi": "Sau nhà có một cái cửa nhỏ."
+      }
+    },
+    {
+      "hanzi": "里",
+      "pinyin": "lǐ",
+      "meaningVi": "trong",
+      "example": {
+        "hanzi": "房间里有人吗？",
+        "pinyin": "Fángjiān lǐ yǒu rén ma?",
+        "meaningVi": "Trong phòng có người không?"
+      }
+    },
+    {
+      "hanzi": "外",
+      "pinyin": "wài",
+      "meaningVi": "ngoài",
+      "example": {
+        "hanzi": "门外有一个人。",
+        "pinyin": "Mén wài yǒu yí ge rén.",
+        "meaningVi": "Ngoài cửa có một người."
+      }
+    },
+    {
+      "hanzi": "中",
+      "pinyin": "zhōng",
+      "meaningVi": "giữa, trong",
+      "example": {
+        "hanzi": "他在家中看书。",
+        "pinyin": "Tā zài jiā zhōng kàn shū.",
+        "meaningVi": "Anh ấy đọc sách ở nhà."
+      }
+    },
+    {
+      "hanzi": "地上",
+      "pinyin": "dìshang",
+      "meaningVi": "trên mặt đất, dưới sàn",
+      "example": {
+        "hanzi": "地上有一个手机。",
+        "pinyin": "Dìshang yǒu yí ge shǒujī.",
+        "meaningVi": "Dưới sàn có một cái điện thoại."
+      }
+    },
+    {
+      "hanzi": "身上",
+      "pinyin": "shēnshang",
+      "meaningVi": "trên người",
+      "example": {
+        "hanzi": "我身上没有钱。",
+        "pinyin": "Wǒ shēnshang méiyǒu qián.",
+        "meaningVi": "Trên người tôi không có tiền."
+      }
+    },
+    {
+      "hanzi": "路上",
+      "pinyin": "lùshang",
+      "meaningVi": "trên đường",
+      "example": {
+        "hanzi": "路上车很多。",
+        "pinyin": "Lùshang chē hěn duō.",
+        "meaningVi": "Trên đường rất nhiều xe."
+      }
+    },
+    {
+      "hanzi": "楼上",
+      "pinyin": "lóushàng",
+      "meaningVi": "tầng trên",
+      "example": {
+        "hanzi": "我家在楼上。",
+        "pinyin": "Wǒ jiā zài lóushàng.",
+        "meaningVi": "Nhà tôi ở tầng trên."
+      }
+    },
+    {
+      "hanzi": "楼下",
+      "pinyin": "lóuxià",
+      "meaningVi": "tầng dưới",
+      "example": {
+        "hanzi": "楼下有一个饭店。",
+        "pinyin": "Lóuxià yǒu yí ge fàndiàn.",
+        "meaningVi": "Tầng dưới có một nhà hàng."
+      }
+    },
+    {
+      "hanzi": "楼",
+      "pinyin": "lóu",
+      "meaningVi": "toà nhà; tầng",
+      "example": {
+        "hanzi": "我住在三楼。",
+        "pinyin": "Wǒ zhù zài sān lóu.",
+        "meaningVi": "Tôi sống ở tầng ba."
+      }
+    },
+    {
+      "hanzi": "门",
+      "pinyin": "mén",
+      "meaningVi": "cửa",
+      "example": {
+        "hanzi": "请开门。",
+        "pinyin": "Qǐng kāi mén.",
+        "meaningVi": "Làm ơn mở cửa."
+      }
+    },
+    {
+      "hanzi": "门口",
+      "pinyin": "ménkǒu",
+      "meaningVi": "cửa ra vào, trước cửa",
+      "example": {
+        "hanzi": "我在学校门口等你。",
+        "pinyin": "Wǒ zài xuéxiào ménkǒu děng nǐ.",
+        "meaningVi": "Tôi đợi bạn ở cổng trường."
+      }
+    },
+    {
+      "hanzi": "房子",
+      "pinyin": "fángzi",
+      "meaningVi": "nhà, căn nhà",
+      "example": {
+        "hanzi": "这个房子很大。",
+        "pinyin": "Zhè ge fángzi hěn dà.",
+        "meaningVi": "Căn nhà này rất to."
+      }
+    },
+    {
+      "hanzi": "房间",
+      "pinyin": "fángjiān",
+      "meaningVi": "phòng, căn phòng",
+      "example": {
+        "hanzi": "我的房间很小。",
+        "pinyin": "Wǒ de fángjiān hěn xiǎo.",
+        "meaningVi": "Phòng của tôi rất nhỏ."
+      }
+    },
+    {
+      "hanzi": "桌子",
+      "pinyin": "zhuōzi",
+      "meaningVi": "cái bàn",
+      "example": {
+        "hanzi": "桌子上有很多书。",
+        "pinyin": "Zhuōzi shang yǒu hěn duō shū.",
+        "meaningVi": "Trên bàn có rất nhiều sách."
+      }
+    },
+    {
+      "hanzi": "床",
+      "pinyin": "chuáng",
+      "meaningVi": "cái giường",
+      "example": {
+        "hanzi": "我的床很大。",
+        "pinyin": "Wǒ de chuáng hěn dà.",
+        "meaningVi": "Giường của tôi rất to."
+      }
+    },
+    {
+      "hanzi": "家里",
+      "pinyin": "jiāli",
+      "meaningVi": "trong nhà, ở nhà",
+      "example": {
+        "hanzi": "家里没有人。",
+        "pinyin": "Jiāli méiyǒu rén.",
+        "meaningVi": "Trong nhà không có ai."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: vị trí trong nhà",
+      "subtitle": "20 từ HSK1 về từ phương vị một chữ, nhà cửa và đồ đạc",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 12 gồm 20 từ vựng HSK1 về vị trí trong nhà và quanh nhà. Nhóm từ phương vị một chữ: 上 (trên), 下 (dưới), 前 (trước), 后 (sau), 里 (trong), 外 (ngoài), 中 (giữa, trong). Nhóm vị trí quen thuộc: 地上 (trên mặt đất, dưới sàn), 身上 (trên người), 路上 (trên đường), 楼上 (tầng trên), 楼下 (tầng dưới), 家里 (trong nhà, ở nhà). Nhóm nhà cửa, đồ đạc: 楼 (toà nhà; tầng), 门 (cửa), 门口 (cửa ra vào, trước cửa), 房子 (nhà, căn nhà), 房间 (phòng), 桌子 (cái bàn), 床 (cái giường). Lưu ý phát âm: 上 đứng sau danh từ thường đọc nhẹ (桌子上 zhuōzi shang, 地上 dìshang, 身上 shēnshang), còn 楼上 đọc lóushàng; 家里 đọc jiāli; chữ 子 trong 房子, 桌子 đọc nhẹ zi."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: danh từ + 上/下/里, câu tồn tại với 有 và 是",
+      "subtitle": "Ba điểm ngữ pháp để nói trong nhà có gì, ở đâu là cái gì",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Danh từ + 上/下/里/前/后/外: một chữ phương vị có thể ghép thẳng sau danh từ, không cần 边. 桌子上 = 桌子上边 (trên bàn), 房间里 = 房间里边 (trong phòng). Hay dùng nhất là 上 và 里. Giống bài 11, từ phương vị đứng sau danh từ, ngược với tiếng Việt. Lưu ý: sau tên thành phố, tên nước không thêm 里 (nói 我在北京, không nói 我在北京里). Ví dụ: 手机在桌子上。 (Shǒujī zài zhuōzi shang.) = Điện thoại ở trên bàn. / 床下有一本书。 (Chuáng xià yǒu yì běn shū.) = Dưới giường có một quyển sách. / 他在房间里。 (Tā zài fángjiān lǐ.) = Anh ấy ở trong phòng."
+        },
+        {
+          "type": "text",
+          "value": "2. Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai, khi người nghe chưa biết ở đó có gì. Cấu trúc: nơi chốn + 有 + (số lượng) + danh từ; phủ định dùng 没有. Ví dụ: 桌子上有很多书。 (Zhuōzi shang yǒu hěn duō shū.) = Trên bàn có rất nhiều sách. / 门口有一个人。 (Ménkǒu yǒu yí ge rén.) = Trước cửa có một người. / 家里没有人。 (Jiāli méiyǒu rén.) = Trong nhà không có ai."
+        },
+        {
+          "type": "text",
+          "value": "3. Nơi chốn + 是 + người/vật: nói rõ thứ ở chỗ đó là cái gì, thường khi đã biết ở đó có một thứ và muốn xác định đó là gì. Cấu trúc: nơi chốn + 是 + danh từ; phủ định dùng 不是 (bú shì). So sánh: 桌子上有书 = trên bàn có sách; 桌子上是我的书 = thứ ở trên bàn là sách của tôi. Ví dụ: 楼上是我的房间。 (Lóushàng shì wǒ de fángjiān.) = Tầng trên là phòng của tôi. / 我家前边是学校。 (Wǒ jiā qiánbian shì xuéxiào.) = Phía trước nhà tôi là trường học. / 楼下不是饭店，是商店。 (Lóuxià bú shì fàndiàn, shì shāngdiàn.) = Tầng dưới không phải nhà hàng, là cửa hàng."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: trong nhà có gì",
+      "subtitle": "Hội thoại ngắn hỏi tầng, phòng, đồ đạc và người đang ở đâu; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你家在几楼？ B: 我家在三楼。 (Nǐ jiā zài jǐ lóu? / Wǒ jiā zài sān lóu.) — A: Nhà bạn ở tầng mấy? B: Nhà tôi ở tầng ba."
+        },
+        {
+          "type": "text",
+          "value": "A: 楼下是什么？ B: 楼下是一个饭店。 (Lóuxià shì shénme? / Lóuxià shì yí ge fàndiàn.) — A: Tầng dưới là gì? B: Tầng dưới là một nhà hàng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你的房间里有什么？ B: 有床，有桌子，还有很多书。 (Nǐ de fángjiān lǐ yǒu shénme? / Yǒu chuáng, yǒu zhuōzi, hái yǒu hěn duō shū.) — A: Trong phòng bạn có gì? B: Có giường, có bàn, còn có rất nhiều sách."
+        },
+        {
+          "type": "text",
+          "value": "A: 你现在在家里吗？ B: 不在，我在路上。 (Nǐ xiànzài zài jiāli ma? / Bú zài, wǒ zài lùshang.) — A: Bây giờ bạn có ở nhà không? B: Không, tôi đang trên đường."
+        },
+        {
+          "type": "text",
+          "value": "A: 门口有人吗？ B: 有，是你的朋友。 (Ménkǒu yǒu rén ma? / Yǒu, shì nǐ de péngyou.) — A: Trước cửa có ai không? B: Có, là bạn của bạn."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l12:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “cái giường”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "床"
+          },
+          {
+            "id": "opt-b",
+            "text": "门"
+          },
+          {
+            "id": "opt-c",
+            "text": "楼"
+          },
+          {
+            "id": "opt-d",
+            "text": "桌子"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "床 (chuáng) nghĩa là “cái giường”. 门 (mén) là “cửa”, 楼 (lóu) là “toà nhà; tầng”, 桌子 (zhuōzi) là “cái bàn”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “tầng dưới”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "楼上"
+          },
+          {
+            "id": "opt-b",
+            "text": "楼下"
+          },
+          {
+            "id": "opt-c",
+            "text": "地上"
+          },
+          {
+            "id": "opt-d",
+            "text": "门口"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "楼下 (lóuxià) nghĩa là “tầng dưới”. 楼上 (lóushàng) là “tầng trên”, 地上 (dìshang) là “trên mặt đất, dưới sàn”, 门口 (ménkǒu) là “cửa ra vào, trước cửa”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 桌子上___很多书。 (Trên bàn có rất nhiều sách.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "在"
+          },
+          {
+            "id": "opt-b",
+            "text": "叫"
+          },
+          {
+            "id": "opt-c",
+            "text": "有"
+          },
+          {
+            "id": "opt-d",
+            "text": "去"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "Câu tồn tại: nơi chốn (桌子上) + 有 (yǒu) + vật, nên 桌子上有很多书 = trên bàn có rất nhiều sách. 在 dùng khi vật đứng đầu câu (书在桌子上); 叫 (gọi là) và 去 (đi) đặt vào thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 楼上___我的房间。 (Tầng trên là phòng của tôi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "在"
+          },
+          {
+            "id": "opt-b",
+            "text": "叫"
+          },
+          {
+            "id": "opt-c",
+            "text": "做"
+          },
+          {
+            "id": "opt-d",
+            "text": "是"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "Nơi chốn + 是 (shì) + vật nói rõ chỗ đó là cái gì: 楼上是我的房间 = tầng trên là phòng của tôi. 在 cần vật đứng đầu câu (我的房间在楼上); 叫 (gọi là) và 做 (làm) đặt vào thì sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 地___有一个手机。(Dưới sàn có một cái điện thoại.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "上",
+          "shàng",
+          "shang"
+        ]
+      },
+      "explanation": "上 (shàng) nghĩa là “trên”; 地上 (dìshang) = trên mặt đất, dưới sàn. Câu tồn tại: 地上 + 有 + 一个手机.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 请开___。(Làm ơn mở cửa.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "门",
+          "mén",
+          "men"
+        ]
+      },
+      "explanation": "门 (mén) nghĩa là “cửa”; 开门 (kāi mén) = mở cửa.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我在___上，马上到。(Tôi đang trên đường, đến ngay.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "路",
+          "lù",
+          "lu"
+        ]
+      },
+      "explanation": "路 (lù) nghĩa là “đường”; 路上 (lùshang) = trên đường. 马上到 (mǎshàng dào) = đến ngay.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Dưới giường có một quyển sách.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-m4",
+            "text": "有"
+          },
+          {
+            "id": "tkn-h2",
+            "text": "床"
+          },
+          {
+            "id": "tkn-t1",
+            "text": "下"
+          },
+          {
+            "id": "tkn-n9",
+            "text": "一本书"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-h2",
+          "tkn-t1",
+          "tkn-m4",
+          "tkn-n9"
+        ]
+      },
+      "explanation": "Câu tồn tại: nơi chốn (床下, phương vị 下 đứng sau 床) + 有 + vật (一本书), nên câu đúng là 床下有一本书. 下 không đứng trước 床, vật có số lượng không đứng đầu câu có 有 (ví dụ sai: 下床有一本书, 一本书有床下, 有一本书床下).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Phía trước nhà tôi là trường học.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g6",
+            "text": "前边"
+          },
+          {
+            "id": "tkn-s7",
+            "text": "我家"
+          },
+          {
+            "id": "tkn-p3",
+            "text": "学校"
+          },
+          {
+            "id": "tkn-h7",
+            "text": "是"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-s7",
+          "tkn-g6",
+          "tkn-h7",
+          "tkn-p3"
+        ]
+      },
+      "explanation": "Câu đúng là 我家前边是学校: nơi chốn (我家前边) + 是 + vật (学校). 学校前边是我家 đúng ngữ pháp nhưng nghĩa là “phía trước trường là nhà tôi”, sai theo đề; 前边 phải đứng ngay sau 我家 (ví dụ sai: 前边我家是学校, 我家是前边学校).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l12:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi đang trên đường.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-t8",
+            "text": "路上"
+          },
+          {
+            "id": "tkn-h9",
+            "text": "在"
+          },
+          {
+            "id": "tkn-v8",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-v8",
+          "tkn-h9",
+          "tkn-t8"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我在路上: người (我) + 在 + nơi chốn (路上). Các hoán vị khác sai trật tự (ví dụ sai: 路上在我, 在路上我, 我路上在).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-03",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-03 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

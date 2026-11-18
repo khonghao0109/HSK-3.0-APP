@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l23",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l23-tro-tu-dong-thai",
+    "title": "Trợ từ, thể và so sánh",
+    "description": "Bài 23 HSK1: các trợ từ và từ chức năng quan trọng: 了, 着, 正在…呢, 比, 一样, 还是, 吧, 一点儿/一下儿, 是不是; nói việc đã xảy ra, đang diễn ra, so sánh và hỏi lựa chọn với 20 từ vựng cơ bản.",
+    "orderIndex": 1023
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "了",
+      "pinyin": "le",
+      "meaningVi": "(trợ từ: đã xảy ra, thay đổi)",
+      "example": {
+        "hanzi": "我吃饭了。",
+        "pinyin": "Wǒ chī fàn le.",
+        "meaningVi": "Tôi ăn cơm rồi."
+      }
+    },
+    {
+      "hanzi": "着",
+      "pinyin": "zhe",
+      "meaningVi": "(trợ từ: trạng thái tiếp diễn)",
+      "example": {
+        "hanzi": "门开着。",
+        "pinyin": "Mén kāizhe.",
+        "meaningVi": "Cửa đang mở."
+      }
+    },
+    {
+      "hanzi": "吧",
+      "pinyin": "ba",
+      "meaningVi": "(trợ từ: đề nghị, phỏng đoán)",
+      "example": {
+        "hanzi": "你明天来吧。",
+        "pinyin": "Nǐ míngtiān lái ba.",
+        "meaningVi": "Ngày mai bạn đến nhé."
+      }
+    },
+    {
+      "hanzi": "正",
+      "pinyin": "zhèng",
+      "meaningVi": "đang, đúng lúc",
+      "example": {
+        "hanzi": "我正要给你打电话。",
+        "pinyin": "Wǒ zhèng yào gěi nǐ dǎ diànhuà.",
+        "meaningVi": "Tôi đang định gọi cho bạn."
+      }
+    },
+    {
+      "hanzi": "正在",
+      "pinyin": "zhèngzài",
+      "meaningVi": "đang (làm gì)",
+      "example": {
+        "hanzi": "他正在吃饭。",
+        "pinyin": "Tā zhèngzài chī fàn.",
+        "meaningVi": "Anh ấy đang ăn cơm."
+      }
+    },
+    {
+      "hanzi": "没",
+      "pinyin": "méi",
+      "meaningVi": "không, chưa (phủ định quá khứ)",
+      "example": {
+        "hanzi": "我没去学校。",
+        "pinyin": "Wǒ méi qù xuéxiào.",
+        "meaningVi": "Tôi (đã) không đến trường."
+      }
+    },
+    {
+      "hanzi": "还",
+      "pinyin": "hái",
+      "meaningVi": "còn, vẫn",
+      "example": {
+        "hanzi": "他还在睡觉。",
+        "pinyin": "Tā hái zài shuìjiào.",
+        "meaningVi": "Anh ấy vẫn đang ngủ."
+      }
+    },
+    {
+      "hanzi": "还是",
+      "pinyin": "háishi",
+      "meaningVi": "hay là (câu hỏi lựa chọn)",
+      "example": {
+        "hanzi": "你去还是我去？",
+        "pinyin": "Nǐ qù háishi wǒ qù?",
+        "meaningVi": "Bạn đi hay tôi đi?"
+      }
+    },
+    {
+      "hanzi": "还有",
+      "pinyin": "háiyǒu",
+      "meaningVi": "còn có, ngoài ra",
+      "example": {
+        "hanzi": "还有别的吗？",
+        "pinyin": "Háiyǒu biéde ma?",
+        "meaningVi": "Còn gì khác không?"
+      }
+    },
+    {
+      "hanzi": "就",
+      "pinyin": "jiù",
+      "meaningVi": "thì, liền; chính là",
+      "example": {
+        "hanzi": "我马上就来。",
+        "pinyin": "Wǒ mǎshàng jiù lái.",
+        "meaningVi": "Tôi đến ngay."
+      }
+    },
+    {
+      "hanzi": "比",
+      "pinyin": "bǐ",
+      "meaningVi": "so với, hơn",
+      "example": {
+        "hanzi": "哥哥比我高。",
+        "pinyin": "Gēge bǐ wǒ gāo.",
+        "meaningVi": "Anh trai cao hơn tôi."
+      }
+    },
+    {
+      "hanzi": "一样",
+      "pinyin": "yīyàng",
+      "meaningVi": "giống nhau",
+      "example": {
+        "hanzi": "我们的书包一样。",
+        "pinyin": "Wǒmen de shūbāo yíyàng.",
+        "meaningVi": "Cặp sách của chúng tôi giống nhau."
+      }
+    },
+    {
+      "hanzi": "一点儿",
+      "pinyin": "yīdiǎnr",
+      "meaningVi": "một chút, một ít",
+      "example": {
+        "hanzi": "我会说一点儿汉语。",
+        "pinyin": "Wǒ huì shuō yìdiǎnr Hànyǔ.",
+        "meaningVi": "Tôi biết nói một chút tiếng Trung."
+      }
+    },
+    {
+      "hanzi": "一下儿",
+      "pinyin": "yīxiàr",
+      "meaningVi": "một chút, một lát",
+      "example": {
+        "hanzi": "你等一下儿。",
+        "pinyin": "Nǐ děng yíxiàr.",
+        "meaningVi": "Bạn đợi một chút."
+      }
+    },
+    {
+      "hanzi": "是不是",
+      "pinyin": "shìbushì",
+      "meaningVi": "có phải là … không",
+      "example": {
+        "hanzi": "你是不是老师？",
+        "pinyin": "Nǐ shì bu shì lǎoshī?",
+        "meaningVi": "Bạn có phải là giáo viên không?"
+      }
+    },
+    {
+      "hanzi": "怎么",
+      "pinyin": "zěnme",
+      "meaningVi": "thế nào, làm sao; sao",
+      "example": {
+        "hanzi": "你怎么来学校？",
+        "pinyin": "Nǐ zěnme lái xuéxiào?",
+        "meaningVi": "Bạn đến trường bằng gì?"
+      }
+    },
+    {
+      "hanzi": "地",
+      "pinyin": "de",
+      "meaningVi": "(trợ từ: nối trạng ngữ với động từ)",
+      "example": {
+        "hanzi": "他高兴地笑了。",
+        "pinyin": "Tā gāoxìng de xiào le.",
+        "meaningVi": "Anh ấy cười vui vẻ."
+      }
+    },
+    {
+      "hanzi": "别的",
+      "pinyin": "biéde",
+      "meaningVi": "cái khác, khác",
+      "example": {
+        "hanzi": "你还要别的吗？",
+        "pinyin": "Nǐ hái yào biéde ma?",
+        "meaningVi": "Bạn còn cần gì khác không?"
+      }
+    },
+    {
+      "hanzi": "有的",
+      "pinyin": "yǒude",
+      "meaningVi": "có cái, có người",
+      "example": {
+        "hanzi": "有的人喜欢喝茶。",
+        "pinyin": "Yǒude rén xǐhuan hē chá.",
+        "meaningVi": "Có người thích uống trà."
+      }
+    },
+    {
+      "hanzi": "不大",
+      "pinyin": "bùdà",
+      "meaningVi": "không … lắm",
+      "example": {
+        "hanzi": "我不大喜欢吃肉。",
+        "pinyin": "Wǒ bú dà xǐhuan chī ròu.",
+        "meaningVi": "Tôi không thích ăn thịt lắm."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: trợ từ, thể và so sánh",
+      "subtitle": "20 từ HSK1 chức năng: trợ từ, phó từ, so sánh và câu hỏi",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 23 gồm 20 từ vựng HSK1 có chức năng ngữ pháp. Nhóm trợ từ: 了 (đã xảy ra, thay đổi), 着 (trạng thái kéo dài), 吧 (đề nghị, phỏng đoán), 地 (nối trạng ngữ với động từ: 高兴地笑). Nhóm phó từ: 正 (đang, đúng lúc), 正在 (đang làm gì), 没 (không, chưa – phủ định quá khứ), 还 (còn, vẫn), 就 (thì, liền; chính là; chỉ), 不大 (không… lắm). Nhóm so sánh và số lượng: 比 (so với, hơn), 一样 (giống nhau), 一点儿 (một chút, một ít), 一下儿 (một chút, một lát). Nhóm câu hỏi và chỉ định: 还是 (hay là), 还有 (còn có, ngoài ra), 是不是 (có phải… không), 怎么 (thế nào, làm sao; sao), 别的 (cái khác), 有的 (có cái, có người). Lưu ý phát âm: 了, 着, 吧, 地 đều đọc nhẹ (le, zhe, ba, de); 还 ở bài này đọc hái; 一 biến điệu: 一样 yíyàng, 一下儿 yíxiàr, 一点儿 yìdiǎnr; 不大 đọc búdà."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 了, 着, 正在…呢, 比, 一样, 还是, 吧, 一点儿/一下儿, 是不是",
+      "subtitle": "Chín điểm ngữ pháp gộp thành năm nhóm: thể của động từ, so sánh, câu hỏi, ngữ khí và số lượng ít",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 了 (hoàn thành) và 着 (trạng thái kéo dài): 了 đặt sau động từ hoặc cuối câu để nói việc đã xảy ra; phủ định dùng 没 + động từ và bỏ 了. 着 đặt sau động từ để nói trạng thái đang kéo dài. Cấu trúc: Động từ + 了 / 没 + động từ / Động từ + 着. Ví dụ: 我吃饭了。 (Wǒ chīfàn le.) = Tôi ăn cơm rồi. / 我没去学校。 (Wǒ méi qù xuéxiào.) = Tôi không đi học. / 门开着。 (Mén kāi zhe.) = Cửa đang mở. / 他坐着看书。 (Tā zuò zhe kàn shū.) = Anh ấy ngồi đọc sách."
+        },
+        {
+          "type": "text",
+          "value": "2. 正在…呢: hành động đang diễn ra ngay lúc nói. Có thể dùng 正在, 正 hoặc 在, thường thêm 呢 ở cuối. Cấu trúc: Chủ ngữ + 正在 + động từ (+ tân ngữ) + 呢. Ví dụ: 他正在吃饭呢。 (Tā zhèngzài chīfàn ne.) = Anh ấy đang ăn cơm. / 妈妈正在睡觉呢。 (Māma zhèngzài shuìjiào ne.) = Mẹ đang ngủ. / 他正在看书呢。 (Tā zhèngzài kàn shū ne.) = Anh ấy đang đọc sách."
+        },
+        {
+          "type": "text",
+          "value": "3. 比 và 一样 (so sánh): A 比 B + tính từ = A hơn B; A 和 B 一样 (+ tính từ) = A giống B, A bằng B. Trước tính từ trong câu 比 không dùng 很: nói 哥哥比我高, không nói 哥哥比我很高. Cấu trúc: A + 比 + B + tính từ / A + 和 + B + 一样 (+ tính từ). Ví dụ: 哥哥比我高。 (Gēge bǐ wǒ gāo.) = Anh trai cao hơn tôi. / 今天比昨天冷。 (Jīntiān bǐ zuótiān lěng.) = Hôm nay lạnh hơn hôm qua. / 我的书包和你的一样。 (Wǒ de shūbāo hé nǐ de yíyàng.) = Cặp sách của tôi giống của bạn."
+        },
+        {
+          "type": "text",
+          "value": "4. 还是 và 是不是 (câu hỏi): A 还是 B = hỏi chọn A hay B, không thêm 吗. 是不是 = hỏi xác nhận “có phải… không”, đặt trước phần cần hỏi. Cấu trúc: A + 还是 + B？ / Chủ ngữ + 是不是 + …？ Ví dụ: 你喝茶还是喝水？ (Nǐ hē chá háishi hē shuǐ?) = Bạn uống trà hay uống nước? / 你是不是老师？ (Nǐ shì bu shì lǎoshī?) = Bạn có phải là giáo viên không? / 他是不是生病了？ (Tā shì bu shì shēngbìng le?) = Có phải anh ấy bị ốm rồi không?"
+        },
+        {
+          "type": "text",
+          "value": "5. 吧, 一点儿, 一下儿: 吧 cuối câu để đề nghị (cùng làm nhé) hoặc phỏng đoán (chắc là… nhỉ). 一点儿 = một chút, một ít, đứng sau động từ trước danh từ. 一下儿 đứng sau động từ để nói làm nhanh, làm thử một chút. Ví dụ: 我们一起去吧。 (Wǒmen yìqǐ qù ba.) = Chúng ta cùng đi nhé. / 他是你哥哥吧？ (Tā shì nǐ gēge ba?) = Anh ấy là anh trai bạn nhỉ? / 我会说一点儿汉语。 (Wǒ huì shuō yìdiǎnr Hànyǔ.) = Tôi biết nói một chút tiếng Trung. / 请等一下儿。 (Qǐng děng yíxiàr.) = Xin đợi một chút."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hỏi han hằng ngày",
+      "subtitle": "Hội thoại ngắn hỏi đã làm chưa, đang làm gì, chọn món và so sánh; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你吃饭了吗？ B: 还没吃，我正在做饭呢。 (Nǐ chīfàn le ma? / Hái méi chī, wǒ zhèngzài zuò fàn ne.) — A: Bạn ăn cơm chưa? B: Vẫn chưa ăn, tôi đang nấu cơm."
+        },
+        {
+          "type": "text",
+          "value": "A: 你喝茶还是喝水？ B: 我喝一点儿水吧。 (Nǐ hē chá háishi hē shuǐ? / Wǒ hē yìdiǎnr shuǐ ba.) — A: Bạn uống trà hay uống nước? B: Tôi uống một chút nước vậy."
+        },
+        {
+          "type": "text",
+          "value": "A: 你哥哥比你高吗？ B: 不，他和我一样高。 (Nǐ gēge bǐ nǐ gāo ma? / Bù, tā hé wǒ yíyàng gāo.) — A: Anh trai bạn cao hơn bạn à? B: Không, anh ấy cao bằng tôi."
+        },
+        {
+          "type": "text",
+          "value": "A: 门怎么开着？ B: 是不是你妈妈回来了？ (Mén zěnme kāi zhe? / Shì bu shì nǐ māma huílái le?) — A: Sao cửa lại đang mở? B: Có phải mẹ bạn về rồi không?"
+        },
+        {
+          "type": "text",
+          "value": "A: 还有别的吗？ B: 没有了，就这些。 (Háiyǒu biéde ma? / Méiyǒu le, jiù zhèxiē.) — A: Còn cái khác không? B: Không còn nữa, chỉ có những cái này thôi."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l23:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “giống nhau”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "一点儿"
+          },
+          {
+            "id": "opt-b",
+            "text": "一下儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "别的"
+          },
+          {
+            "id": "opt-d",
+            "text": "一样"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "一样 (yíyàng) nghĩa là “giống nhau”. 一点儿 (yìdiǎnr) là “một chút, một ít”, 一下儿 (yíxiàr) là “một lát”, 别的 (biéde) là “cái khác”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 哥哥___我高。 (Anh trai cao hơn tôi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "比"
+          },
+          {
+            "id": "opt-b",
+            "text": "和"
+          },
+          {
+            "id": "opt-c",
+            "text": "跟"
+          },
+          {
+            "id": "opt-d",
+            "text": "很"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "A 比 B + tính từ = A hơn B, nên 哥哥比我高 = anh trai cao hơn tôi. 和我高, 跟我高 thiếu 一样 nên sai ngữ pháp; 很我高 sai trật tự.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你喝茶___喝水？ (Bạn uống trà hay uống nước?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "还有"
+          },
+          {
+            "id": "opt-b",
+            "text": "还是"
+          },
+          {
+            "id": "opt-c",
+            "text": "是不是"
+          },
+          {
+            "id": "opt-d",
+            "text": "就"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "还是 (háishi) dùng trong câu hỏi lựa chọn “A hay B”, nên 你喝茶还是喝水. 还有 (còn có), 是不是 (có phải không), 就 (thì, liền) đặt vào giữa hai lựa chọn thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 他正在睡觉___。 (Anh ấy đang ngủ.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "吗"
+          },
+          {
+            "id": "opt-b",
+            "text": "着"
+          },
+          {
+            "id": "opt-c",
+            "text": "呢"
+          },
+          {
+            "id": "opt-d",
+            "text": "一下儿"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "正在…呢 nói hành động đang diễn ra, nên 他正在睡觉呢 = anh ấy đang ngủ. Thêm 吗 thì thành câu hỏi “anh ấy đang ngủ à?”, sai theo bản dịch; 着 và 一下儿 đặt cuối câu này thì sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我会说___汉语。(Tôi biết nói một chút tiếng Trung.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "一点儿",
+          "yīdiǎnr",
+          "yidianr",
+          "一点儿",
+          "yìdiǎnr",
+          "yidianr"
+        ]
+      },
+      "explanation": "一点儿 (yìdiǎnr) nghĩa là “một chút, một ít”, đứng sau động từ và trước danh từ: 说一点儿汉语 = nói một chút tiếng Trung.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这个___那个好。(Cái này tốt hơn cái kia.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "比",
+          "bǐ",
+          "bi"
+        ]
+      },
+      "explanation": "比 (bǐ) dùng để so sánh: A + 比 + B + tính từ. 这个比那个好 = cái này tốt hơn cái kia.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 还有___吗？(Còn cái khác không?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "别的",
+          "biéde",
+          "biede"
+        ]
+      },
+      "explanation": "别的 (biéde) nghĩa là “cái khác”; 还有别的吗 = còn cái khác không.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Anh ấy đang ăn cơm.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f1",
+            "text": "他"
+          },
+          {
+            "id": "tkn-g5",
+            "text": "呢"
+          },
+          {
+            "id": "tkn-t3",
+            "text": "正在"
+          },
+          {
+            "id": "tkn-z6",
+            "text": "吃饭"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-f1",
+          "tkn-t3",
+          "tkn-z6",
+          "tkn-g5"
+        ]
+      },
+      "explanation": "Câu đúng là 他正在吃饭呢: Chủ ngữ + 正在 + động từ + 呢. 正在 phải đứng sau chủ ngữ và trước động từ, 呢 đứng cuối câu (ví dụ sai: 正在他吃饭呢, 他吃饭正在呢, 他正在呢吃饭).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Hôm nay lạnh hơn hôm qua.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-z7",
+            "text": "今天"
+          },
+          {
+            "id": "tkn-p2",
+            "text": "昨天"
+          },
+          {
+            "id": "tkn-z4",
+            "text": "冷"
+          },
+          {
+            "id": "tkn-g5",
+            "text": "比"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z7",
+          "tkn-g5",
+          "tkn-p2",
+          "tkn-z4"
+        ]
+      },
+      "explanation": "Câu đúng là 今天比昨天冷: A (今天) + 比 + B (昨天) + tính từ (冷). 昨天比今天冷 đúng ngữ pháp nhưng nghĩa là “hôm qua lạnh hơn hôm nay”, sai theo đề; tính từ phải đứng cuối (ví dụ sai: 今天冷比昨天, 比今天昨天冷).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l23:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Anh ấy cao bằng tôi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g8",
+            "text": "高"
+          },
+          {
+            "id": "tkn-v5",
+            "text": "一样"
+          },
+          {
+            "id": "tkn-d2",
+            "text": "他"
+          },
+          {
+            "id": "tkn-d5",
+            "text": "和我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-d2",
+          "tkn-d5",
+          "tkn-v5",
+          "tkn-g8"
+        ]
+      },
+      "explanation": "Câu đúng là 他和我一样高: A (他) + 和 B (和我) + 一样 + tính từ (高). 一样 đứng trước tính từ, 和我 đứng ngay sau chủ ngữ (ví dụ sai: 他一样和我高, 和我他一样高, 他和我高一样).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-05",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-05 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l17",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l17-do-vat-hang-ngay",
+    "title": "Đồ vật hằng ngày",
+    "description": "Bài 17 HSK1: nói về đồ vật hằng ngày và đồ ăn; dùng 要 + danh từ/động từ để nói muốn gì, 的 làm định ngữ (新的手机, 谁的钱包) và 多/少 làm vị ngữ; 20 từ vựng về túi, điện thoại, máy tính, món ăn và tính chất đồ vật.",
+    "orderIndex": 1017
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "东西",
+      "pinyin": "dōngxi",
+      "meaningVi": "đồ, đồ vật, thứ",
+      "example": {
+        "hanzi": "你买什么东西？",
+        "pinyin": "Nǐ mǎi shénme dōngxi?",
+        "meaningVi": "Bạn mua đồ gì?"
+      }
+    },
+    {
+      "hanzi": "书包",
+      "pinyin": "shūbāo",
+      "meaningVi": "cặp sách",
+      "example": {
+        "hanzi": "我的书包很新。",
+        "pinyin": "Wǒ de shūbāo hěn xīn.",
+        "meaningVi": "Cặp sách của tôi rất mới."
+      }
+    },
+    {
+      "hanzi": "钱包",
+      "pinyin": "qiánbāo",
+      "meaningVi": "ví tiền",
+      "example": {
+        "hanzi": "我的钱包不见了。",
+        "pinyin": "Wǒ de qiánbāo bú jiàn le.",
+        "meaningVi": "Ví tiền của tôi không thấy đâu rồi."
+      }
+    },
+    {
+      "hanzi": "手机",
+      "pinyin": "shǒujī",
+      "meaningVi": "điện thoại di động",
+      "example": {
+        "hanzi": "这是我的新手机。",
+        "pinyin": "Zhè shì wǒ de xīn shǒujī.",
+        "meaningVi": "Đây là điện thoại mới của tôi."
+      }
+    },
+    {
+      "hanzi": "电脑",
+      "pinyin": "diànnǎo",
+      "meaningVi": "máy tính",
+      "example": {
+        "hanzi": "我用电脑学习。",
+        "pinyin": "Wǒ yòng diànnǎo xuéxí.",
+        "meaningVi": "Tôi học bằng máy tính."
+      }
+    },
+    {
+      "hanzi": "电视",
+      "pinyin": "diànshì",
+      "meaningVi": "tivi; chương trình truyền hình",
+      "example": {
+        "hanzi": "晚上我看电视。",
+        "pinyin": "Wǎnshang wǒ kàn diànshì.",
+        "meaningVi": "Buổi tối tôi xem tivi."
+      }
+    },
+    {
+      "hanzi": "电视机",
+      "pinyin": "diànshìjī",
+      "meaningVi": "máy thu hình, cái tivi",
+      "example": {
+        "hanzi": "家里有两个电视机。",
+        "pinyin": "Jiāli yǒu liǎng ge diànshìjī.",
+        "meaningVi": "Trong nhà có hai cái tivi."
+      }
+    },
+    {
+      "hanzi": "电话",
+      "pinyin": "diànhuà",
+      "meaningVi": "điện thoại; cuộc gọi",
+      "example": {
+        "hanzi": "你的电话是多少？",
+        "pinyin": "Nǐ de diànhuà shì duōshao?",
+        "meaningVi": "Số điện thoại của bạn là bao nhiêu?"
+      }
+    },
+    {
+      "hanzi": "包",
+      "pinyin": "bāo",
+      "meaningVi": "túi, bao",
+      "example": {
+        "hanzi": "这个包是谁的？",
+        "pinyin": "Zhè ge bāo shì shéi de?",
+        "meaningVi": "Cái túi này là của ai?"
+      }
+    },
+    {
+      "hanzi": "包子",
+      "pinyin": "bāozi",
+      "meaningVi": "bánh bao",
+      "example": {
+        "hanzi": "我想吃两个包子。",
+        "pinyin": "Wǒ xiǎng chī liǎng ge bāozi.",
+        "meaningVi": "Tôi muốn ăn hai cái bánh bao."
+      }
+    },
+    {
+      "hanzi": "面条儿",
+      "pinyin": "miàntiáor",
+      "meaningVi": "mì sợi",
+      "example": {
+        "hanzi": "我中午吃面条儿。",
+        "pinyin": "Wǒ zhōngwǔ chī miàntiáor.",
+        "meaningVi": "Buổi trưa tôi ăn mì."
+      }
+    },
+    {
+      "hanzi": "肉",
+      "pinyin": "ròu",
+      "meaningVi": "thịt",
+      "example": {
+        "hanzi": "我不吃肉。",
+        "pinyin": "Wǒ bù chī ròu.",
+        "meaningVi": "Tôi không ăn thịt."
+      }
+    },
+    {
+      "hanzi": "饭",
+      "pinyin": "fàn",
+      "meaningVi": "cơm; bữa ăn",
+      "example": {
+        "hanzi": "我们去吃饭吧。",
+        "pinyin": "Wǒmen qù chī fàn ba.",
+        "meaningVi": "Chúng ta đi ăn cơm nhé."
+      }
+    },
+    {
+      "hanzi": "花",
+      "pinyin": "huā",
+      "meaningVi": "hoa",
+      "example": {
+        "hanzi": "这些花很好看。",
+        "pinyin": "Zhèxiē huā hěn hǎokàn.",
+        "meaningVi": "Những bông hoa này rất đẹp."
+      }
+    },
+    {
+      "hanzi": "新",
+      "pinyin": "xīn",
+      "meaningVi": "mới",
+      "example": {
+        "hanzi": "我有一个新朋友。",
+        "pinyin": "Wǒ yǒu yí ge xīn péngyou.",
+        "meaningVi": "Tôi có một người bạn mới."
+      }
+    },
+    {
+      "hanzi": "坏",
+      "pinyin": "huài",
+      "meaningVi": "hỏng; xấu",
+      "example": {
+        "hanzi": "我的手机坏了。",
+        "pinyin": "Wǒ de shǒujī huài le.",
+        "meaningVi": "Điện thoại của tôi hỏng rồi."
+      }
+    },
+    {
+      "hanzi": "用",
+      "pinyin": "yòng",
+      "meaningVi": "dùng, sử dụng",
+      "example": {
+        "hanzi": "我能用一下你的电脑吗？",
+        "pinyin": "Wǒ néng yòng yíxià nǐ de diànnǎo ma?",
+        "meaningVi": "Tôi dùng máy tính của bạn một chút được không?"
+      }
+    },
+    {
+      "hanzi": "有用",
+      "pinyin": "yǒuyòng",
+      "meaningVi": "có ích, hữu ích",
+      "example": {
+        "hanzi": "这本书很有用。",
+        "pinyin": "Zhè běn shū hěn yǒuyòng.",
+        "meaningVi": "Quyển sách này rất có ích."
+      }
+    },
+    {
+      "hanzi": "少",
+      "pinyin": "shǎo",
+      "meaningVi": "ít",
+      "example": {
+        "hanzi": "今天人很少。",
+        "pinyin": "Jīntiān rén hěn shǎo.",
+        "meaningVi": "Hôm nay rất ít người."
+      }
+    },
+    {
+      "hanzi": "要",
+      "pinyin": "yào",
+      "meaningVi": "muốn; cần; sắp",
+      "example": {
+        "hanzi": "我要一杯水。",
+        "pinyin": "Wǒ yào yì bēi shuǐ.",
+        "meaningVi": "Tôi muốn một cốc nước."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: đồ vật hằng ngày",
+      "subtitle": "20 từ HSK1 về túi, đồ điện tử, món ăn và tính chất đồ vật",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 17 gồm 20 từ vựng HSK1 về đồ vật hằng ngày. Nhóm túi và đồ dùng: 东西 (đồ, đồ vật), 包 (túi, bao), 书包 (cặp sách), 钱包 (ví tiền), 花 (hoa). Nhóm đồ điện tử: 手机 (điện thoại di động), 电脑 (máy tính), 电视 (tivi; chương trình truyền hình), 电视机 (cái tivi), 电话 (điện thoại; cuộc gọi). Nhóm đồ ăn: 饭 (cơm; bữa ăn), 肉 (thịt), 包子 (bánh bao), 面条儿 (mì sợi). Nhóm tính chất và hành động: 新 (mới), 坏 (hỏng; xấu), 少 (ít), 用 (dùng), 有用 (có ích), 要 (muốn; cần). Lưu ý phát âm: 东西 đọc dōngxi (西 đọc nhẹ) khi nghĩa là “đồ vật”, khác 东西 dōng xī (đông và tây); 肉 ròu có âm đầu r; 面条儿 đọc miàntiáor."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 要 + danh từ/động từ, 的 làm định ngữ, 多/少 làm vị ngữ",
+      "subtitle": "Ba điểm ngữ pháp để nói muốn gì, đồ của ai, đồ thế nào và nhiều hay ít",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 要 + danh từ / 要 + động từ: 要 + danh từ = muốn có, cần cái gì (hay dùng khi mua hàng, gọi món); 要 + động từ = muốn làm việc gì. Câu hỏi chính phản: 要不要 + …? Cấu trúc: chủ ngữ + 要 + danh từ / động từ. Ví dụ: 我要一杯水。 (Wǒ yào yì bēi shuǐ.) = Tôi muốn một cốc nước. / 我要买一个新手机。 (Wǒ yào mǎi yí ge xīn shǒujī.) = Tôi muốn mua một chiếc điện thoại mới. / 你要不要吃包子？ (Nǐ yào bu yào chī bāozi?) = Bạn có muốn ăn bánh bao không?"
+        },
+        {
+          "type": "text",
+          "value": "2. 的 làm định ngữ: từ bổ nghĩa + 的 + danh từ, từ bổ nghĩa đứng trước, ngược với tiếng Việt. Từ bổ nghĩa có thể là đại từ, danh từ, tính từ hoặc cụm động từ. Tính từ một chữ thường bỏ 的: 新手机 = 新的手机. Danh từ đã rõ thì có thể lược, chỉ để 的: 这个包是新的. Ví dụ: 这是谁的钱包？ (Zhè shì shéi de qiánbāo?) = Đây là ví của ai? / 这是我的新手机。 (Zhè shì wǒ de xīn shǒujī.) = Đây là điện thoại mới của tôi. / 妈妈做的饭很好吃。 (Māma zuò de fàn hěn hǎochī.) = Cơm mẹ nấu rất ngon."
+        },
+        {
+          "type": "text",
+          "value": "3. 多/少 làm vị ngữ: 多 (nhiều), 少 (ít) đứng sau chủ ngữ làm vị ngữ, thường có 很, 太, 非常 phía trước. 少 không đứng một mình trước danh từ: không nói 少人, mà nói 人很少; còn 很多 + danh từ thì dùng được (很多书). Cấu trúc: chủ ngữ + 很/太 + 多/少. Ví dụ: 今天人很少。 (Jīntiān rén hěn shǎo.) = Hôm nay rất ít người. / 他的东西很多。 (Tā de dōngxi hěn duō.) = Đồ của anh ấy rất nhiều. / 我的钱太少了。 (Wǒ de qián tài shǎo le.) = Tiền của tôi ít quá."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: gọi món và nói về đồ dùng",
+      "subtitle": "Hội thoại ngắn gọi đồ ăn, hỏi đồ mới, mượn máy tính; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你要什么？ B: 我要两个包子。 (Nǐ yào shénme? / Wǒ yào liǎng ge bāozi.) — A: Bạn muốn gì? B: Tôi muốn hai cái bánh bao."
+        },
+        {
+          "type": "text",
+          "value": "A: 你要不要吃肉？ B: 不要，我不吃肉，我要面条儿。 (Nǐ yào bu yào chī ròu? / Bú yào, wǒ bù chī ròu, wǒ yào miàntiáor.) — A: Bạn có muốn ăn thịt không? B: Không, tôi không ăn thịt, tôi muốn mì."
+        },
+        {
+          "type": "text",
+          "value": "A: 这是你的新手机吗？ B: 是，我的手机坏了。 (Zhè shì nǐ de xīn shǒujī ma? / Shì, wǒ de shǒujī huài le.) — A: Đây là điện thoại mới của bạn à? B: Ừ, điện thoại của tôi hỏng rồi."
+        },
+        {
+          "type": "text",
+          "value": "A: 我能用你的电脑吗？ B: 能，你用吧。 (Wǒ néng yòng nǐ de diànnǎo ma? / Néng, nǐ yòng ba.) — A: Tôi dùng máy tính của bạn được không? B: Được, bạn dùng đi."
+        },
+        {
+          "type": "text",
+          "value": "A: 商场里人多吗？ B: 不多，今天人很少。 (Shāngchǎng lǐ rén duō ma? / Bù duō, jīntiān rén hěn shǎo.) — A: Trong trung tâm thương mại có đông người không? B: Không đông, hôm nay rất ít người."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l17:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “ví tiền”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "书包"
+          },
+          {
+            "id": "opt-b",
+            "text": "钱包"
+          },
+          {
+            "id": "opt-c",
+            "text": "包子"
+          },
+          {
+            "id": "opt-d",
+            "text": "东西"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "钱包 (qiánbāo) nghĩa là “ví tiền”. 书包 (shūbāo) là “cặp sách”, 包子 (bāozi) là “bánh bao”, 东西 (dōngxi) là “đồ, đồ vật”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “hỏng”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "新"
+          },
+          {
+            "id": "opt-b",
+            "text": "少"
+          },
+          {
+            "id": "opt-c",
+            "text": "坏"
+          },
+          {
+            "id": "opt-d",
+            "text": "有用"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "坏 (huài) nghĩa là “hỏng; xấu”. 新 (xīn) là “mới”, 少 (shǎo) là “ít”, 有用 (yǒuyòng) là “có ích”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 这是___的钱包？ (Đây là ví của ai?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "什么"
+          },
+          {
+            "id": "opt-b",
+            "text": "怎么"
+          },
+          {
+            "id": "opt-c",
+            "text": "几"
+          },
+          {
+            "id": "opt-d",
+            "text": "谁"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "谁 (shéi) nghĩa là “ai”; 谁 + 的 + danh từ hỏi chủ sở hữu: 谁的钱包 = ví của ai. 什么 (cái gì), 怎么 (thế nào), 几 (mấy) không đứng trước 的 để hỏi chủ sở hữu, sai.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 今天人很___。 (Hôm nay rất ít người.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "少"
+          },
+          {
+            "id": "opt-b",
+            "text": "多"
+          },
+          {
+            "id": "opt-c",
+            "text": "新"
+          },
+          {
+            "id": "opt-d",
+            "text": "坏"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "少 (shǎo) nghĩa là “ít”: 人很少 = rất ít người. 多 (nhiều) đúng ngữ pháp nhưng ngược nghĩa theo bản dịch; 新 (mới), 坏 (hỏng) không dùng để nói người đông hay vắng.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我___一杯水。(Tôi muốn một cốc nước.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "要",
+          "yào",
+          "yao"
+        ]
+      },
+      "explanation": "要 (yào) + danh từ = muốn có cái gì; 我要一杯水 = tôi muốn một cốc nước. 想 cần đi với động từ (我想喝水), không đứng thẳng trước 一杯水.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我___电脑学习。(Tôi dùng máy tính để học.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "用",
+          "yòng",
+          "yong"
+        ]
+      },
+      "explanation": "用 (yòng) nghĩa là “dùng”; 用电脑学习 = dùng máy tính để học.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我的手机___了，我要买一个新的。(Điện thoại của tôi hỏng rồi, tôi muốn mua một cái mới.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "坏",
+          "huài",
+          "huai"
+        ]
+      },
+      "explanation": "坏 (huài) nghĩa là “hỏng”; 手机坏了 = điện thoại hỏng rồi, nên muốn mua cái mới (新的).",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Đây là điện thoại mới của tôi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-x8",
+            "text": "这是"
+          },
+          {
+            "id": "tkn-t2",
+            "text": "新手机"
+          },
+          {
+            "id": "tkn-n7",
+            "text": "我的"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-x8",
+          "tkn-n7",
+          "tkn-t2"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 这是我的新手机: 这是 + định ngữ (我的) + danh từ (新手机). Định ngữ 我的 phải đứng trước danh từ, ngược với tiếng Việt (ví dụ sai: 这是新手机我的, 我的新手机这是, 新手机这是我的).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Đồ của anh ấy rất nhiều.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-k4",
+            "text": "东西"
+          },
+          {
+            "id": "tkn-k7",
+            "text": "很多"
+          },
+          {
+            "id": "tkn-r2",
+            "text": "他的"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-r2",
+          "tkn-k4",
+          "tkn-k7"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 他的东西很多: chủ ngữ (他的东西) + vị ngữ (很多). 他的 đứng trước 东西, 很多 làm vị ngữ đứng cuối (ví dụ sai: 东西他的很多, 很多他的东西, 他的很多东西 là một cụm danh từ, chưa thành câu).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l17:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bạn có muốn ăn thịt không?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-z1",
+            "text": "你"
+          },
+          {
+            "id": "tkn-x4",
+            "text": "吗"
+          },
+          {
+            "id": "tkn-n5",
+            "text": "吃肉"
+          },
+          {
+            "id": "tkn-c1",
+            "text": "要"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z1",
+          "tkn-c1",
+          "tkn-n5",
+          "tkn-x4"
+        ]
+      },
+      "explanation": "Câu đúng là 你要吃肉吗: chủ ngữ + 要 + động từ (吃肉) + 吗. 要 đứng trước động từ, 吗 đứng cuối câu (ví dụ sai: 你吃肉要吗, 要你吃肉吗, 你吗要吃肉).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-04",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-04 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}
