@@ -246,6 +246,8 @@ describe('dictionary display rules', () => {
       ['xue2 sheng5 yun4 dong4', 'xuésheng yùndòng'],
       ['ce4 shi4 ci2 dian3', 'cèshì cídiǎn'],
       ['ce4 shi4 fu4 xi2 er4', 'cè shì fù xí èr'],
+      ['cèshì cídiǎn', 'cèshì cídiǎn'],
+      ['cèshì fùxí yī', 'cèshì fùxí yī'],
     ];
     for (const [input, output] of cases) {
       expect(displayPinyin({ pinyin: input, pinyinTone: null })).toBe(output);
