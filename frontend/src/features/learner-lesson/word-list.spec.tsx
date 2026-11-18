@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 vi.mock('./lesson-image', () => ({
   LessonImage: ({ altText }: { altText: string | null }) => (
-    <img alt={altText ?? ''} className="topic-word__img" />
+    <span role="img" aria-label={altText ?? ''} className="topic-word__img" />
   ),
 }));
 
@@ -53,7 +53,9 @@ describe('WordList (Q354, Q355)', () => {
         ]}
       />,
     );
-    expect(screen.getByAltText('Cô giáo đứng cạnh bảng')).toBeDefined();
+    expect(
+      screen.getByRole('img', { name: 'Cô giáo đứng cạnh bảng' }),
+    ).toBeDefined();
     expect(container.querySelector('.topic-word__tile')).toBeNull();
     expect(container.querySelector('.topic-word__hz')?.textContent).toBe(
       '老师',
