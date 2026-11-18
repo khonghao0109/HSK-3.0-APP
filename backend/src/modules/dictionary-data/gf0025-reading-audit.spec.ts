@@ -114,6 +114,24 @@ describe('gf0025 reading audit', () => {
     expect(sql).not.toMatch(/DELETE FROM "Word"\b/);
   });
 
+  it('Q358: reports a missing heteronym reading once one reading is stored', () => {
+    const gf = [
+      { id: 'L1-3', hanzi: '干', pinyin: 'gān' },
+      { id: 'L1-4', hanzi: '干', pinyin: 'gàn' },
+    ];
+    const one = auditReadings(gf, [
+      { hanzi: '干', pinyin: 'gan', pinyinTone: 'gan1' },
+    ]);
+    expect(one.missing.map((m) => m.id)).toEqual(['L1-4']);
+    expect(one.ok).toBe(1);
+    const both = auditReadings(gf, [
+      { hanzi: '干', pinyin: 'gan', pinyinTone: 'gan1' },
+      { hanzi: '干', pinyin: 'gan', pinyinTone: 'gan4' },
+    ]);
+    expect(both.missing).toEqual([]);
+    expect(both.ok).toBe(2);
+  });
+
   describe('committed data', () => {
     const gf = readingsFromGfCsv(
       readFileSync(join(dictionaryDir, 'raw/gf0025-hsk1.csv'), 'utf-8'),
@@ -125,7 +143,7 @@ describe('gf0025 reading audit', () => {
       finalWords.map((w) => [`${w.hanzi}\u0000${w.pinyin}`, w]),
     );
 
-    it('HSK1 in final_words.json matches GF0025-2021: 498 readings, no correction left', () => {
+    it('HSK1 in final_words.json matches GF0025-2021: 499 readings (incl. 干 gàn, Q358), no correction left', () => {
       const hsk1 = finalWords
         .filter((w) => w.level === 'HSK1')
         .map((w) => ({
@@ -134,11 +152,12 @@ describe('gf0025 reading audit', () => {
           pinyinTone: w.pinyin_tone ?? null,
         }));
       const audit = auditReadings(gf, hsk1);
-      expect(hsk1).toHaveLength(498);
+      expect(hsk1).toHaveLength(499);
       expect(audit.corrections).toEqual([]);
       expect(audit.spurious).toEqual([]);
       expect(audit.ambiguous).toEqual([]);
-      expect(audit.ok).toBe(498);
+      expect(audit.ok).toBe(499);
+      expect(audit.missing.map((m) => m.hanzi)).not.toContain('干');
     });
 
     it('migration agrees with final_words.json: 36 tone fixes, 32 HSK1 links removed', () => {

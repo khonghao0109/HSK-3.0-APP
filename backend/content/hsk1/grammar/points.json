@@ -7,11 +7,14 @@
     "attribution": "Tự soạn theo khung GF0025-2021"
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
-    "notes": []
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "52ddfa2b5109e5f1d1cf2019208cd15d8c95a0e6536f36c97f674098f8c5a371",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
   },
   "points": [
     {
@@ -173,7 +176,7 @@
       "category": "Số từ, lượng từ",
       "title": "Ngày, tháng, thứ",
       "pattern": "…月…日 / 号；星期 + số / 天",
-      "descriptionVi": "Ngày tháng theo thứ tự tháng → ngày; thứ bằng 星期 + số, Chủ nhật là 星期天.",
+      "descriptionVi": "Ngày tháng theo thứ tự tháng → ngày; thứ bằng 星期 + số, Chủ nhật là 星期天 (hoặc 星期日).",
       "examples": [
         {
           "hanzi": "明天是星期天。",

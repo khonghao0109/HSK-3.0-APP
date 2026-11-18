@@ -80,7 +80,7 @@ export type MeaningBatchIssue = { code: string; path: string; message: string };
 
 export type Hsk1Lexicon = {
   /** hanzi → các cách đọc HSK1 (pinyin bỏ dấu như `Word.pinyin`, pinyin có dấu). */
-  readings: Map<string, { pinyin: string; marked: string }[]>;
+  readings: Map<string, { pinyin: string; marked: string; tone: string }[]>;
   /** Mọi âm tiết pinyin bỏ dấu có trong `final_words.json` (để đếm âm tiết). */
   syllables: Set<string>;
 };
@@ -97,7 +97,10 @@ export function loadHsk1Lexicon(backendRoot: string): Hsk1Lexicon {
     pinyin_tone?: string | null;
     level: string | null;
   }[];
-  const readings = new Map<string, { pinyin: string; marked: string }[]>();
+  const readings = new Map<
+    string,
+    { pinyin: string; marked: string; tone: string }[]
+  >();
   const syllables = new Set<string>();
   for (const row of rows) {
     // Chỉ âm tiết Hán có số thanh: loại chữ Latin trong mục CC-CEDICT (`T恤` → `T`).
@@ -112,6 +115,7 @@ export function loadHsk1Lexicon(backendRoot: string): Hsk1Lexicon {
     bucket.push({
       pinyin: row.pinyin,
       marked: toneMarkedPinyin(row.pinyin_tone),
+      tone: row.pinyin_tone,
     });
     readings.set(row.hanzi, bucket);
   }

@@ -125,10 +125,8 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
     createdWordIds = [];
     for (const word of lesson.words) {
       const toneless = normalizePinyinForCompare(stripToneMarks(word.pinyin));
-      const where = {
-        hanzi_pinyin: { hanzi: word.hanzi, pinyin: toneless },
-      } as const;
-      const existing = await prisma.word.findUnique({
+      const where = { hanzi: word.hanzi, pinyin: toneless };
+      const existing = await prisma.word.findFirst({
         where,
         select: { id: true },
       });

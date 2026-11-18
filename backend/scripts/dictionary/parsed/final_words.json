@@ -51060,7 +51060,7 @@
   },
   {
     "hanzi": "干",
-    "traditional": "乹",
+    "traditional": "乾",
     "pinyin": "gan",
     "pinyin_tone": "gan1",
     "meaning_en": [
@@ -51076,18 +51076,24 @@
       "variant of 乾|干[gan1]",
       "(bound form) to have to do with; to concern oneself with",
       "one of the ten heavenly stems 天干[tian1 gan1]",
-      "(archaic) shield",
+      "(archaic) shield"
+    ],
+    "is_pure": true,
+    "level": "HSK1"
+  },
+  {
+    "hanzi": "干",
+    "traditional": "幹",
+    "pinyin": "gan",
+    "pinyin_tone": "gan4",
+    "meaning_en": [
+      "to do",
+      "to work",
+      "to manage",
+      "capable",
       "tree trunk",
       "main part of sth",
-      "to manage",
-      "to work",
-      "to do",
-      "capable",
-      "cadre",
-      "to kill (slang)",
-      "to fuck (vulgar)",
-      "(coll.) pissed off",
-      "annoyed"
+      "cadre"
     ],
     "is_pure": true,
     "level": "HSK1"

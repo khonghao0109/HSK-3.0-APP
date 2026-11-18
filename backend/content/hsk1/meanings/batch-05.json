@@ -17,12 +17,13 @@
     "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "2d9ae1172f158f3e03b63f7162011531c179476d99e93dbfa864da2d70199562",
     "notes": [
-      "干 (bài 24) chưa có: dữ liệu từ điển chỉ có 干 gān (乹, khô), thiếu 干/幹 gàn (làm) ở HSK1; cần bổ sung Word trước khi soạn nghĩa."
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
     ]
   },
   "properNames": [],
@@ -621,7 +622,7 @@
         {
           "hanzi": "我没去学校。",
           "pinyin": "Wǒ méi qù xuéxiào.",
-          "translationVi": "Tôi không đi học."
+          "translationVi": "Tôi (đã) không đến trường."
         }
       ]
     },
@@ -821,6 +822,19 @@
       ]
     },
     {
+      "hanzi": "干",
+      "pinyin": "gàn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "làm (việc gì)",
+      "examples": [
+        {
+          "hanzi": "这个工作我能干。",
+          "pinyin": "Zhè ge gōngzuò wǒ néng gàn.",
+          "translationVi": "Công việc này tôi làm được."
+        }
+      ]
+    },
+    {
       "hanzi": "干什么",
       "pinyin": "gànshénme",
       "partOfSpeech": "cụm từ",
@@ -944,8 +958,8 @@
       "meaningVi": "lần sau",
       "examples": [
         {
-          "hanzi": "下次再见！",
-          "pinyin": "Xiàcì zàijiàn!",
+          "hanzi": "下次见！",
+          "pinyin": "Xiàcì jiàn!",
           "translationVi": "Hẹn gặp lần sau!"
         }
       ]

@@ -4,11 +4,14 @@
   "grammar": "content/hsk1/grammar/points.json",
   "notice": "Bản nháp do AI soạn (Q172): từ đích (target_words) và điểm ngữ pháp (grammar_ids) cho 40 câu mock-01; tách file riêng để không đổi nội dung đề đã duyệt. Người duyệt: PO (Q357).",
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
-    "notes": []
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "b713284cd6fb77f06f968c80e0aaac5579cd04a334bea4ac15c88b6951987b85",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
   },
   "questions": {
     "hsk1:q0001": {

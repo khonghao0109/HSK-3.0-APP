@@ -17,11 +17,14 @@
     "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
-    "notes": []
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "5792fedaa05e56436286e50952272787572e82e1f4576449afe137545cd4f34a",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
   },
   "properNames": [],
   "entries": [
@@ -565,9 +568,9 @@
       "meaningVi": "nữ, (giới) nữ",
       "examples": [
         {
-          "hanzi": "她是我的女老师。",
-          "pinyin": "Tā shì wǒ de nǚ lǎoshī.",
-          "translationVi": "Cô ấy là cô giáo của tôi."
+          "hanzi": "我们的老师是女的。",
+          "pinyin": "Wǒmen de lǎoshī shì nǚ de.",
+          "translationVi": "Giáo viên của chúng tôi là nữ."
         }
       ]
     },
@@ -697,7 +700,7 @@
         {
           "hanzi": "小朋友，你几岁了？",
           "pinyin": "Xiǎopéngyǒu, nǐ jǐ suì le?",
-          "translationVi": "Bạn nhỏ, cháu mấy tuổi rồi?"
+          "translationVi": "Cháu ơi, cháu mấy tuổi rồi?"
         }
       ]
     },
@@ -1134,12 +1137,12 @@
       "hanzi": "口",
       "pinyin": "kǒu",
       "partOfSpeech": "danh từ",
-      "meaningVi": "miệng",
+      "meaningVi": "miệng; (lượng từ) người trong gia đình",
       "examples": [
         {
-          "hanzi": "请开口说话。",
-          "pinyin": "Qǐng kāi kǒu shuōhuà.",
-          "translationVi": "Xin hãy mở miệng nói."
+          "hanzi": "我家有四口人。",
+          "pinyin": "Wǒ jiā yǒu sì kǒu rén.",
+          "translationVi": "Nhà tôi có bốn người."
         }
       ]
     },

@@ -132,9 +132,10 @@ async function main() {
 
   const word = await prisma.word.upsert({
     where: {
-      hanzi_pinyin: {
+      hanzi_pinyin_pinyinTone: {
         hanzi: '你好',
         pinyin: 'ni hao',
+        pinyinTone: 'ni3 hao3',
       },
     },
     update: {

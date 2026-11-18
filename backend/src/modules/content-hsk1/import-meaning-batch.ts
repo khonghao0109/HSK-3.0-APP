@@ -59,6 +59,8 @@ async function resolveWords(db: Db, batch: MeaningBatch, lexicon: Hsk1Lexicon) {
           where: {
             hanzi: entry.hanzi,
             pinyin: reading.pinyin,
+            // Q358: cùng pinyin bỏ dấu có thể nhiều dòng (干 gān / gàn).
+            pinyinTone: reading.tone,
             deletedAt: null,
             wordLevels: { some: { level: { code: 'HSK1' } } },
           },

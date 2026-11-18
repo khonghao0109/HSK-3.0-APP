@@ -104,13 +104,13 @@ async function main() {
   //         → mất các từ đồng âm dị nghĩa (同音字) như 行 (háng / xíng)
   // FIX:    select thêm pinyin, dùng composite key "hanzi-pinyin"
   const dbWords = await prisma.word.findMany({
-    select: { id: true, hanzi: true, pinyin: true }, // ← thêm pinyin
+    select: { id: true, hanzi: true, pinyin: true, pinyinTone: true }, // Q358: + thanh
   });
 
   const wordMap = new Map<string, number>(); // key: "hanzi-pinyin"
 
   for (const w of dbWords) {
-    const key = `${w.hanzi}-${w.pinyin}`;
+    const key = `${w.hanzi}-${w.pinyin}-${w.pinyinTone ?? ''}`;
     wordMap.set(key, w.id); // không cần check has() vì key là unique
   }
 
@@ -141,7 +141,7 @@ async function main() {
 
   for (const w of words) {
     // FIX: dùng composite key để lookup đúng word
-    const key = `${w.hanzi}-${w.pinyin}`;
+    const key = `${w.hanzi}-${w.pinyin}-${w.pinyin_tone ?? ''}`;
     const wordId = wordMap.get(key);
 
     if (!wordId) continue;
@@ -192,7 +192,7 @@ async function main() {
         data: dbWords.slice(i, i + BATCH_SIZE).map((word) => ({
           wordId: word.id,
           dataSourceId: cedictSource.id,
-          sourceKey: `${word.hanzi}:${word.pinyin}`,
+          sourceKey: `${word.hanzi}:${word.pinyin}`, // khoá cũ giữ nguyên; 干 gàn dùng '干:gan:gan4' (migration Q358)
           isPrimary: true,
         })),
         skipDuplicates: true,

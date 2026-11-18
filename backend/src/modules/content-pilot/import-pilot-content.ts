@@ -10,6 +10,7 @@ import {
   loadPilotReferenceData,
   normalizePinyinForCompare,
   stripToneMarks,
+  toneMarkedPinyin,
   validatePilotLesson,
   type PilotContentIssue,
   type PilotReferenceData,
@@ -738,21 +739,36 @@ async function resolveWordIds(
 ): Promise<{ wordId: number; hanzi: string }[]> {
   const rows = await prisma.word.findMany({
     where: { hanzi: { in: words.map((word) => word.hanzi) } },
-    select: { id: true, hanzi: true, pinyin: true },
+    select: { id: true, hanzi: true, pinyin: true, pinyinTone: true },
   });
-  const byHanzi = new Map<string, { id: number; pinyin: string }[]>();
+  const byHanzi = new Map<
+    string,
+    { id: number; pinyin: string; pinyinTone: string | null }[]
+  >();
   for (const row of rows) {
     const bucket = byHanzi.get(row.hanzi) ?? [];
-    bucket.push({ id: row.id, pinyin: row.pinyin });
+    bucket.push({ id: row.id, pinyin: row.pinyin, pinyinTone: row.pinyinTone });
     byHanzi.set(row.hanzi, bucket);
   }
   const resolved: { wordId: number; hanzi: string }[] = [];
   for (const word of words) {
     const candidates = byHanzi.get(word.hanzi) ?? [];
     const expected = normalizePinyinForCompare(stripToneMarks(word.pinyin));
-    const match = candidates.find(
+    const toneless = candidates.filter(
       (candidate) => normalizePinyinForCompare(candidate.pinyin) === expected,
     );
+    // Q358: nhiều dòng cùng pinyin bỏ dấu (干 gān / gàn) → chọn theo dấu thanh.
+    const marked = normalizePinyinForCompare(word.pinyin.normalize('NFC'));
+    const match =
+      toneless.length > 1
+        ? toneless.find(
+            (candidate) =>
+              candidate.pinyinTone !== null &&
+              normalizePinyinForCompare(
+                toneMarkedPinyin(candidate.pinyinTone),
+              ) === marked,
+          )
+        : toneless[0];
     if (match === undefined) {
       throw new PilotImportError(
         'word_not_found',

@@ -4,24 +4,33 @@
   "grammar": "content/hsk1/grammar/points.json",
   "notice": "Bản nháp do AI soạn (Q172): từ đích và điểm ngữ pháp cho 45 câu bank-reading-01. Người duyệt: PO (Q357).",
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
-    "notes": []
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "c77095235c4064303df8a3eb92c6e16df2e28f23013752f7f7992589bacdc408",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
   },
   "questions": {
     "hsk1:b01:q001": {
       "targetWords": [
         "忙"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G028",
+        "HSK1-G015"
+      ]
     },
     "hsk1:b01:q002": {
       "targetWords": [
         "书包"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G004",
+        "HSK1-G013"
+      ]
     },
     "hsk1:b01:q003": {
       "targetWords": [
@@ -141,13 +150,18 @@
       "targetWords": [
         "几"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G005",
+        "HSK1-G008"
+      ]
     },
     "hsk1:b01:q018": {
       "targetWords": [
         "下雨"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G025"
+      ]
     },
     "hsk1:b01:q019": {
       "targetWords": [
@@ -165,13 +179,18 @@
       "targetWords": [
         "飞机"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G035"
+      ]
     },
     "hsk1:b01:q022": {
       "targetWords": [
         "睡觉"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G017",
+        "HSK1-G036"
+      ]
     },
     "hsk1:b01:q023": {
       "targetWords": [
@@ -183,7 +202,9 @@
       "targetWords": [
         "本"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G008"
+      ]
     },
     "hsk1:b01:q025": {
       "targetWords": [
@@ -195,43 +216,58 @@
       "targetWords": [
         "学习"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G021"
+      ]
     },
     "hsk1:b01:q027": {
       "targetWords": [
         "多少"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G011"
+      ]
     },
     "hsk1:b01:q028": {
       "targetWords": [
         "热"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G017"
+      ]
     },
     "hsk1:b01:q029": {
       "targetWords": [
         "商店"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G034"
+      ]
     },
     "hsk1:b01:q030": {
       "targetWords": [
         "看"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G022",
+        "HSK1-G027"
+      ]
     },
     "hsk1:b01:q031": {
       "targetWords": [
         "星期"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G012"
+      ]
     },
     "hsk1:b01:q032": {
       "targetWords": [
         "口"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G032"
+      ]
     },
     "hsk1:b01:q033": {
       "targetWords": [
@@ -241,15 +277,21 @@
     },
     "hsk1:b01:q034": {
       "targetWords": [
-        "杯子"
+        "块",
+        "多少",
+        "钱"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G011"
+      ]
     },
     "hsk1:b01:q035": {
       "targetWords": [
-        "下雨"
+        "家里"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G016"
+      ]
     },
     "hsk1:b01:q036": {
       "targetWords": [
@@ -261,25 +303,34 @@
       "targetWords": [
         "岁"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G009"
+      ]
     },
     "hsk1:b01:q038": {
       "targetWords": [
-        "起床"
+        "点",
+        "学校"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G010"
+      ]
     },
     "hsk1:b01:q039": {
       "targetWords": [
         "右边"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G013"
+      ]
     },
     "hsk1:b01:q040": {
       "targetWords": [
         "累"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G017"
+      ]
     },
     "hsk1:b01:q041": {
       "targetWords": [
@@ -291,7 +342,10 @@
       "targetWords": [
         "走路"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G035",
+        "HSK1-G006"
+      ]
     },
     "hsk1:b01:q043": {
       "targetWords": [
@@ -309,7 +363,9 @@
       "targetWords": [
         "见面"
       ],
-      "grammar": []
+      "grammar": [
+        "HSK1-G021"
+      ]
     }
   }
 }
