@@ -53,6 +53,27 @@ describe('Lesson Activity scorer V1', () => {
     ).toMatchObject({ score: 100, isCorrect: true });
   });
 
+  it.each([
+    ['叫？', '叫?'],
+    ['叫?', '叫？'],
+    ['（你好）！', '(你好)!'],
+    ['你好，老师！', '你好,老师!'],
+  ])(
+    'accepts fill_blank %j for submitted %j across full-width and ASCII punctuation',
+    (accepted, submitted) => {
+      for (const caseSensitive of [false, true]) {
+        expect(
+          scoreLessonExercise({
+            type: 'fill_blank',
+            content: {},
+            authoritativeAnswer: { acceptedTexts: [accepted], caseSensitive },
+            submittedAnswer: { text: submitted },
+          }),
+        ).toMatchObject({ score: 100, isCorrect: true });
+      }
+    },
+  );
+
   it('supports explicit case-sensitive fill_blank authoring', () => {
     expect(
       scoreLessonExercise({
