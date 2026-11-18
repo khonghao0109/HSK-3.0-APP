@@ -104,3 +104,6 @@ report.*.*.*.*.json
 
 # Reverse-engineering outputs (local only)
 /reverse/
+
+# Playwright MCP screenshots and snapshots
+.playwright-mcp/
