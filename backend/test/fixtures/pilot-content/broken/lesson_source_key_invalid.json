@@ -1,0 +1,11 @@
+{
+  "description": "lesson.sourceKey không khớp số file",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.sourceKey",
+      "value": "pilot-hsk1:l09"
+    }
+  ]
+}

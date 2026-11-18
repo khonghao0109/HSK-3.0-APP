@@ -1,0 +1,11 @@
+{
+  "description": "fill_blank answer có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[4].answer.extra",
+      "value": 1
+    }
+  ]
+}

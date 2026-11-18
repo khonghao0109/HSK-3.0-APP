@@ -263,4 +263,65 @@ describe('LearnerLoginForm', () => {
       screen.getByRole('button', { name: 'Hiện mật khẩu' }),
     ).toBeInTheDocument();
   });
+
+  it('links "Quên mật khẩu?" to /forgot-password between the password field and the submit button (Q71)', () => {
+    render(<LearnerLoginForm />);
+    const link = screen.getByRole('link', { name: 'Quên mật khẩu?' });
+    expect(link).toHaveAttribute('href', '/forgot-password');
+    expect(link).toHaveClass('auth__forgot');
+    const form = link.closest('form')!;
+    const children = [...form.children];
+    const passwordField = screen.getByLabelText('Mật khẩu').closest('.field')!;
+    const submit = screen.getByRole('button', { name: 'Đăng nhập' });
+    expect(children.indexOf(passwordField)).toBeLessThan(
+      children.indexOf(link),
+    );
+    expect(children.indexOf(link)).toBeLessThan(
+      children.indexOf(screen.getByRole('alert', { hidden: true })),
+    );
+    expect(children.indexOf(link)).toBeLessThan(children.indexOf(submit));
+  });
+
+  it('goes to the given next path after signing in (Q73)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({
+        success: true,
+        user: { id: 2, email: 'learner@example.test', role: 'user' },
+      }),
+    );
+
+    render(<LearnerLoginForm nextPath="/verify-email" />);
+    await fillAndSubmit();
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith('/verify-email');
+    });
+  });
+});
+
+// M2.10c (PO Q81): the web layout of sign-in dàn lại chính khối này bằng CSS,
+// nên số control trong DOM phải bằng bản mobile — không sinh bản thứ hai.
+describe('LearnerLoginForm — một bản control cho bản web (M2.10c)', () => {
+  it('renders exactly one email input, one password input and one submit button', () => {
+    const { container } = render(<LearnerLoginForm />);
+    expect(container.querySelectorAll('input')).toHaveLength(2);
+    expect(container.querySelectorAll('input[name="email"]')).toHaveLength(1);
+    expect(container.querySelectorAll('input[name="password"]')).toHaveLength(
+      1,
+    );
+    expect(container.querySelectorAll('button[type="submit"]')).toHaveLength(1);
+    expect(
+      container.querySelectorAll('button[aria-label="Hiện mật khẩu"]'),
+    ).toHaveLength(1);
+  });
+
+  it('links the legal pages to /terms and /privacy (Q80)', () => {
+    render(<LearnerLoginForm />);
+    const terms = screen.getByRole('link', { name: 'Điều khoản sử dụng' });
+    const privacy = screen.getByRole('link', { name: 'Chính sách bảo mật' });
+    expect(terms).toHaveAttribute('href', '/terms');
+    expect(privacy).toHaveAttribute('href', '/privacy');
+    expect(terms.closest('p')).toHaveClass('auth__terms');
+    expect(privacy.closest('p')).toHaveClass('auth__terms');
+  });
 });

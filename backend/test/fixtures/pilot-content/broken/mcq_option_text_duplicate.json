@@ -1,0 +1,11 @@
+{
+  "description": "hai option trùng text",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[0].content.options[0].text",
+      "to": "exercises[0].content.options[1].text"
+    }
+  ]
+}

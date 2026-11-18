@@ -96,4 +96,51 @@ describe('public lesson serializer', () => {
     expect(JSON.stringify(serialized)).not.toContain('checksum');
     expect(JSON.stringify(serialized)).not.toContain('private');
   });
+
+  it('projects only ready, unarchived lesson and word images with their alt text (Q350)', () => {
+    const image = (id: number, extra: Record<string, unknown> = {}) => ({
+      id,
+      type: 'image',
+      processingStatus: 'ready',
+      deletedAt: null,
+      metadata: { altText: `Ảnh ${id}`, storageKey: 'secret/key.png' },
+      ...extra,
+    });
+    const word = (id: number, img: ReturnType<typeof image> | null) => ({
+      word: {
+        id,
+        hanzi: '我',
+        traditional: null,
+        pinyin: 'wo',
+        pinyinTone: 'wǒ',
+        meanings: [],
+        image: img,
+      },
+    });
+    const serialized = serializePublicLessonDetail({
+      id: 1,
+      title: 'Images',
+      level: { id: 1, name: 'HSK1', orderIndex: 1 },
+      coverImage: image(5),
+      topics: [],
+      lessonWords: [
+        word(1, image(6)),
+        word(2, image(7, { processingStatus: 'quarantined' })),
+        word(3, image(8, { deletedAt: new Date() })),
+        word(4, image(9, { type: 'audio' })),
+        word(5, null),
+      ],
+      stories: [],
+      exercises: [],
+    });
+    expect(serialized.coverImage).toEqual({ id: 5, altText: 'Ảnh 5' });
+    expect(serialized.words.map((w) => w.image)).toEqual([
+      { id: 6, altText: 'Ảnh 6' },
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(JSON.stringify(serialized)).not.toContain('storageKey');
+  });
 });

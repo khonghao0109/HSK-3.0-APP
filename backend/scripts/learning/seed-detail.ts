@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { normalizeMeaning } from '../../src/common/utils/normalize-meaning';
 import { normalizePinyin } from '../../src/common/utils/normalize-pinyin';
 
 function loadLocalEnv() {
@@ -171,9 +172,9 @@ async function main() {
         wordId: word.id,
         meaningOrder: 1,
         meaningEn: 'hello',
-        meaningEnNormalized: 'hello',
+        meaningEnNormalized: normalizeMeaning('hello'),
         meaningVi: 'xin chao',
-        meaningViNormalized: 'xin chao',
+        meaningViNormalized: normalizeMeaning('xin chao'),
       },
     });
   }

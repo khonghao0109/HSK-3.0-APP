@@ -1,0 +1,11 @@
+{
+  "description": "lesson.slug trùng mẫu placeholder",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.slug",
+      "value": "hsk1-lesson-1"
+    }
+  ]
+}

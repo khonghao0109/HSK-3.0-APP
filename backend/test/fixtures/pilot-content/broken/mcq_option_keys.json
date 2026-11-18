@@ -1,0 +1,11 @@
+{
+  "description": "option có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].content.options[0].extra",
+      "value": 1
+    }
+  ]
+}

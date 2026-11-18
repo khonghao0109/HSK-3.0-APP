@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { normalizeMeaning } from '../../src/common/utils/normalize-meaning';
 import { normalizePinyin } from '../../src/common/utils/normalize-pinyin';
 
 const prisma = new PrismaClient();
@@ -154,7 +155,7 @@ async function main() {
           wordId,
           meaningOrder: meaningIndex + 1,
           meaningEn: m,
-          meaningEnNormalized: m.trim().toLowerCase(),
+          meaningEnNormalized: normalizeMeaning(m),
           ...(cedictSource ? { dataSourceId: cedictSource.id } : {}),
         });
       }

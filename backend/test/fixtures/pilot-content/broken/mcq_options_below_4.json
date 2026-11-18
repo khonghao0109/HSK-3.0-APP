@@ -1,0 +1,10 @@
+{
+  "description": "mcq chỉ còn 3 option (Q176)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "exercises[0].content.options[3]"
+    }
+  ]
+}

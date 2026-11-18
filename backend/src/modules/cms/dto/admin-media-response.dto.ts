@@ -4,6 +4,8 @@ import {
   MediaType,
 } from '@prisma/client';
 
+import { ApiPageResponseMetaDto } from '../../../common/openapi/api-envelope.dto';
+
 import { AdminDataSourceDto } from './admin-exercise-response.dto';
 
 // Response models of the admin media library, matching projectAdminMedia.
@@ -55,4 +57,9 @@ export class AdminMediaDetailDto extends AdminMediaDto {
 export class AdminMediaLifecycleResultDto {
   idempotent!: boolean;
   media!: AdminMediaDto;
+}
+
+/** Q104/TL-36: media list meta also says whether ingestion is switched on. */
+export class AdminMediaListMetaDto extends ApiPageResponseMetaDto {
+  ingestionEnabled!: boolean;
 }

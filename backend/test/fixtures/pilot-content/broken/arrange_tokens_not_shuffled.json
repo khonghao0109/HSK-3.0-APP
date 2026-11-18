@@ -1,0 +1,10 @@
+{
+  "description": "content.tokens xếp đúng thứ tự đáp án",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "reorderTokensToAnswer",
+      "exercise": 7
+    }
+  ]
+}

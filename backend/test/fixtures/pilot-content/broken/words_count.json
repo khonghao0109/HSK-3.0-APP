@@ -1,0 +1,10 @@
+{
+  "description": "chỉ còn 19 từ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "words[19]"
+    }
+  ]
+}

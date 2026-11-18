@@ -1,5 +1,6 @@
+import type { TopicType } from '@prisma/client';
+
 export type NextActivityAction =
-  | 'start_topic'
   | 'submit_exercise'
   | 'complete_topic'
   | 'complete_lesson'
@@ -99,6 +100,45 @@ export function selectNextActivity(input: {
     currentTopicId: null,
     currentExerciseId: null,
     nextAction: 'complete_lesson',
+  };
+}
+
+export type LessonSections = {
+  vocabulary: { wordCount: number; topicCount: number; topicsDone: number };
+  grammar: { topicCount: number; topicsDone: number };
+  practice: { exerciseCount: number; attempted: number };
+};
+
+/**
+ * Q43 section summary from already public-filtered content: only
+ * `vocabulary` and `grammar` topics count, a topic is done by its topic
+ * progress, and an exercise counts as attempted after one submitted attempt.
+ */
+export function summarizeLessonSections(input: {
+  topics: ReadonlyArray<{ id: number; type: TopicType }>;
+  exerciseIds: readonly number[];
+  completedTopicIds: ReadonlySet<number>;
+  attemptedExerciseIds: ReadonlySet<number>;
+  wordCount: number;
+}): LessonSections {
+  const countTopics = (type: TopicType) => {
+    const topics = input.topics.filter((topic) => topic.type === type);
+    return {
+      topicCount: topics.length,
+      topicsDone: topics.filter((topic) =>
+        input.completedTopicIds.has(topic.id),
+      ).length,
+    };
+  };
+  return {
+    vocabulary: { wordCount: input.wordCount, ...countTopics('vocabulary') },
+    grammar: countTopics('grammar'),
+    practice: {
+      exerciseCount: input.exerciseIds.length,
+      attempted: input.exerciseIds.filter((id) =>
+        input.attemptedExerciseIds.has(id),
+      ).length,
+    },
   };
 }
 

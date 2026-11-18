@@ -1,0 +1,16 @@
+{
+  "description": "không có grammar/key_text",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[1].type",
+      "value": "vocabulary"
+    },
+    {
+      "op": "set",
+      "path": "topics[2].type",
+      "value": "vocabulary"
+    }
+  ]
+}

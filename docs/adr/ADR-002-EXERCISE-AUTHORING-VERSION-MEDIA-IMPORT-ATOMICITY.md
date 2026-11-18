@@ -1,6 +1,6 @@
 # ADR-002: Exercise authoring version, media và import atomicity
 
-- Status: Accepted
+- Status: Accepted (amended 2026-11-18: Unicode normalization, §1)
 - Date: 2026-08-11
 - Scope: Web MVP P0 — Exercise Authoring & Import Validation V1
 - Related migration: `20260811120000_exercise_authoring_import_validation_v1`
@@ -20,7 +20,12 @@ V1 cần một contract đủ hẹp để author, review, publish và import Exe
 
 Create, revision, import preview/commit và activity scorer dùng chung `lesson-exercise-authoring.validator.ts`.
 
-- Human text và stable ID được chuẩn hóa Unicode NFKC.
+- Chuẩn hóa Unicode tách theo mục đích (sửa đổi 2026-11-18):
+  - **Human text** (`prompt`, `explanation`, `options[].text`, `tokens[].text`, `acceptedTexts[]`, `referenceText`, tên tag của question bank, `fileName` của import): chỉ **NFC** rồi trim (`normalizeLessonExerciseText`). Dấu câu full-width của tiếng Trung (U+FF00–U+FFEF như `？！，：；（）`) và CJK Symbols & Punctuation (U+3000–U+303F như `、。《》「」`) được giữ nguyên.
+  - **Stable ID** (`options[].id`, `tokens[].id`, `optionId`, `tokenIds[]`, `sourceKey`) và slug tag: **NFKC** (`normalizeLessonExerciseIdentifier`), để `ｏｐｔ-a` và `opt-a` là cùng một ID và duplicate sau NFKC vẫn bị reject.
+  - **Khóa so sánh khi chấm** `fill_blank` (Lesson Activity và Exam): NFKC + trim + gộp khoảng trắng, chữ thường trừ khi `caseSensitive` (`lessonExerciseTextMatchKey`). Khóa này chỉ dùng để so sánh, không bao giờ được lưu.
+  - Lý do: NFKC đổi `？`→`?`, `！`→`!`, `，`→`,`, `：`→`:`, `；`→`;`, `（）`→`()`. Nội dung pilot đã được PO duyệt (`backend/content/pilot/hsk1/lesson-*.json`) vì vậy bị lưu khác với bản đã duyệt, và learner thấy dấu câu Latin trong câu tiếng Trung (ghi nhận 2026-11-18: `lesson-01` e03 `他___什么名字？` lưu thành `他___什么名字?`). NFC vẫn gộp dạng tổ hợp (ví dụ `ệ` tổ hợp và dựng sẵn) mà không đổi ký tự compatibility. Learner gõ `?` ASCII vẫn được chấm đúng vì cả hai phía đều qua NFKC lúc so sánh.
+  - Tương thích: output NFKC cũ đã ở dạng NFC, nên revalidate content cũ là idempotent và hash snapshot cũ không đổi. Content đã import bằng quy tắc cũ vẫn mang dấu câu ASCII; không có backfill tự động, muốn sửa phải tạo revision mới hoặc import lại vào database mới. Replay import đã commit trước sửa đổi mà payload có ký tự compatibility sẽ có preview hash khác và trả `409` thay vì `idempotent: true`.
 - Top-level chỉ có `type`, `prompt`, `content`, `answer`, `explanation`, `mediaId`; từng subtype cũng dùng exact-key validation.
 - Field lạ trong authoring/import/DTO dùng generic path `$.$unknown`; không phản chiếu property do client kiểm soát.
 - Canonical payload tối đa 65.536 byte, depth 8, string 4.096 ký tự, array 100 phần tử. Stable ID tối đa 128 ký tự, không whitespace và chỉ dùng alphabet được chỉ định.
@@ -82,7 +87,7 @@ Interactive transaction dùng `maxWait=5.000 ms` (5 giây) và `timeout=30.000 m
 
 Retry cùng key chỉ idempotent khi actor, DataSource, file name, preview hash và entity type đều khớp, current rows revalidate hợp lệ, đồng thời job `completed` có started/completed timestamps, zero errors, exact counts, canonical sourceKey array khớp chính xác cả giá trị/thứ tự, đủ Exercise + revision 1 và đúng một completion audit. Khi coherent, service trả lại đúng job/exercises đã commit. Matching job `pending`/`failed`/incomplete hoặc provenance không coherent trả safe `409` yêu cầu manual review; service không tự resume, mutate hay tạo job khác. Dùng cùng key cho request khác cũng trả `409`.
 
-`sourceKey` được NFKC-normalize, bounded và không whitespace. Duplicate trong batch hoặc đã tồn tại trong cùng `(dataSourceId, sourceKey)` bị reject; cùng key ở DataSource/version khác được phép. V1 không upsert/merge ngầm và không persist partial error rows.
+`sourceKey` là stable ID: được NFKC-normalize (§1), bounded và không whitespace. Duplicate trong batch hoặc đã tồn tại trong cùng `(dataSourceId, sourceKey)` bị reject; cùng key ở DataSource/version khác được phép. V1 không upsert/merge ngầm và không persist partial error rows.
 
 ### 5. Lock order và transaction boundary
 

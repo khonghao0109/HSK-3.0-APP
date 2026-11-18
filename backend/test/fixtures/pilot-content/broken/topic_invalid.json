@@ -1,0 +1,11 @@
+{
+  "description": "phần tử topics không phải object",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[0]",
+      "value": null
+    }
+  ]
+}

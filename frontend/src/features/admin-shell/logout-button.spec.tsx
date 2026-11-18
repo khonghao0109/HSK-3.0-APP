@@ -30,7 +30,7 @@ describe('LogoutButton', () => {
     const user = userEvent.setup();
     render(<LogoutButton />);
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    await user.click(screen.getByRole('button', { name: 'Đăng xuất' }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));
     expect(refresh).toHaveBeenCalledTimes(1);
@@ -49,14 +49,14 @@ describe('LogoutButton', () => {
     const user = userEvent.setup();
     render(<LogoutButton />);
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    await user.click(screen.getByRole('button', { name: 'Đăng xuất' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      /session is still active/i,
+      /Phiên của bạn vẫn đang mở/,
     );
     expect(replace).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
-    const retry = screen.getByRole('button', { name: 'Retry log out' });
+    const retry = screen.getByRole('button', { name: 'Thử đăng xuất lại' });
     expect(retry).toBeEnabled();
     expect(retry).toHaveFocus();
   });
@@ -66,7 +66,7 @@ describe('LogoutButton', () => {
     const user = userEvent.setup();
     render(<LogoutButton />);
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    await user.click(screen.getByRole('button', { name: 'Đăng xuất' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
@@ -81,9 +81,9 @@ describe('LogoutButton', () => {
     const user = userEvent.setup();
     render(<LogoutButton />);
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    await user.click(screen.getByRole('button', { name: 'Đăng xuất' }));
     await user.click(
-      await screen.findByRole('button', { name: 'Retry log out' }),
+      await screen.findByRole('button', { name: 'Thử đăng xuất lại' }),
     );
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));

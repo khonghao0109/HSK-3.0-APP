@@ -1,0 +1,11 @@
+{
+  "description": "hai từ trùng hanzi",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "words[0].hanzi",
+      "to": "words[1].hanzi"
+    }
+  ]
+}

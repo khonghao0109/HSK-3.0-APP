@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -443,6 +449,114 @@ describe('OnboardingPlanForm', () => {
     await user.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(screen.getByRole('alert')).toHaveTextContent(
       ONBOARDING_ERROR_MESSAGES.network,
+    );
+  });
+
+  it('web nav (Q81): step 2/4 with a single readable label and two done ticks', () => {
+    render(
+      <OnboardingPlanForm
+        purpose="communication"
+        band={3}
+        initialDailyMinutes={15}
+        initialReminderEnabled={true}
+        initialReminderTime="19:00"
+      />,
+    );
+
+    const nav = document.querySelector<HTMLElement>('.obw-nav')!;
+    expect(nav).toHaveClass('w-only');
+    const count = within(nav).getByText('2/4');
+    expect(count).toHaveAttribute('aria-label', 'Bước 2 trên 4');
+    // One readable label only: the ticks are decorative and no `sr-only`
+    // sentence repeats it.
+    expect(nav.querySelectorAll('.sr-only')).toHaveLength(0);
+    expect(within(nav).queryByText('Bước 2 trên 4')).toBeNull();
+
+    const ticks = nav.querySelectorAll('.obw-steps ol li');
+    expect(ticks).toHaveLength(4);
+    expect(ticks[0]).toHaveClass('is-done');
+    expect(ticks[1]).toHaveClass('is-done');
+    expect(ticks[2]).not.toHaveClass('is-done');
+    expect(nav.querySelector('.obw-steps ol')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+
+    // Back goes to the goal page with the same selection (Q8/Q9 behaviour).
+    expect(within(nav).getByRole('link', { name: 'Quay lại' })).toHaveAttribute(
+      'href',
+      '/onboarding/goal?purpose=communication&band=3',
+    );
+    expect(within(nav).getByRole('link', { name: 'Hán Lộ' })).toHaveAttribute(
+      'href',
+      '/learn',
+    );
+  });
+
+  it('keeps one copy of the three minute radios and the reminder switch', () => {
+    render(
+      <OnboardingPlanForm
+        purpose="communication"
+        band={3}
+        initialDailyMinutes={15}
+        initialReminderEnabled={true}
+        initialReminderTime="19:00"
+      />,
+    );
+
+    expect(
+      within(
+        screen.getByRole('radiogroup', { name: 'Số phút mỗi ngày' }),
+      ).getAllByRole('radio'),
+    ).toHaveLength(3);
+    // The web layout restyles the same buttons; it never adds a native input.
+    expect(document.querySelectorAll('input[type="radio"]')).toHaveLength(0);
+    expect(document.querySelectorAll('[role="radio"]')).toHaveLength(3);
+    expect(document.querySelectorAll('[role="switch"]')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Tiếp tục' })).toHaveLength(1);
+    expect(screen.getAllByRole('combobox')).toHaveLength(1);
+  });
+
+  it('web summary panel mirrors the live plan selection (Q8/Q11)', async () => {
+    const user = userEvent.setup();
+    render(
+      <OnboardingPlanForm
+        purpose="communication"
+        band={3}
+        initialDailyMinutes={15}
+        initialReminderEnabled={true}
+        initialReminderTime="19:00"
+      />,
+    );
+
+    const panel = document.querySelector<HTMLElement>('.obw-summary__panel')!;
+    expect(panel).toHaveClass('w-only');
+    expect(document.getElementById('sum-goal')).toHaveTextContent('Giao tiếp');
+    expect(document.getElementById('sum-level')).toHaveTextContent('HSK 3');
+    expect(document.getElementById('sum-min')).toHaveTextContent('15 phút');
+    expect(document.getElementById('sum-time')).toHaveTextContent('19:00');
+    expect(document.getElementById('sum-remind')).toHaveTextContent('Bật');
+
+    await user.click(screen.getByRole('radio', { name: /30/ }));
+    expect(document.getElementById('sum-min')).toHaveTextContent('30 phút');
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Giờ học mỗi ngày' }),
+      '07:00',
+    );
+    expect(document.getElementById('sum-time')).toHaveTextContent('07:00');
+
+    // Q11: turning the reminder off keeps the time visible in the panel but
+    // the payload sends `reminderTime: null` (covered above).
+    await user.click(
+      screen.getByRole('switch', { name: /Nhận nhắc nhở học tập/i }),
+    );
+    expect(document.getElementById('sum-remind')).toHaveTextContent('Tắt');
+    expect(document.getElementById('sum-time')).toHaveTextContent('07:00');
+
+    // The tip of the web layout follows the selected minutes the same way.
+    expect(document.getElementById('tip')).toHaveTextContent(
+      'Học 30 phút mỗi ngày giúp bạn tăng tốc',
     );
   });
 });

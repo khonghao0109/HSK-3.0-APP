@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l07",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l07-quoc-gia-noi-chon",
+    "title": "Đất nước, ngôn ngữ, nơi chốn",
+    "description": "Bài 7 HSK1: hỏi và trả lời về đất nước, ngôn ngữ và nơi chốn; dùng 这/那/哪, 哪儿, 在, 住在, 来/去 với 20 từ vựng cơ bản.",
+    "orderIndex": 1007
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "国",
+      "pinyin": "guó",
+      "meaningVi": "nước, quốc gia",
+      "example": {
+        "hanzi": "中国是一个大国。",
+        "pinyin": "Zhōngguó shì yī ge dà guó.",
+        "meaningVi": "Trung Quốc là một nước lớn."
+      }
+    },
+    {
+      "hanzi": "国家",
+      "pinyin": "guójiā",
+      "meaningVi": "quốc gia, đất nước",
+      "example": {
+        "hanzi": "你喜欢哪个国家？",
+        "pinyin": "Nǐ xǐhuan nǎ ge guójiā?",
+        "meaningVi": "Bạn thích đất nước nào?"
+      }
+    },
+    {
+      "hanzi": "外国",
+      "pinyin": "wàiguó",
+      "meaningVi": "nước ngoài, ngoại quốc",
+      "example": {
+        "hanzi": "他是外国人。",
+        "pinyin": "Tā shì wàiguórén.",
+        "meaningVi": "Anh ấy là người nước ngoài."
+      }
+    },
+    {
+      "hanzi": "国外",
+      "pinyin": "guówài",
+      "meaningVi": "ở nước ngoài, hải ngoại",
+      "example": {
+        "hanzi": "我哥哥在国外工作。",
+        "pinyin": "Wǒ gēge zài guówài gōngzuò.",
+        "meaningVi": "Anh trai tôi làm việc ở nước ngoài."
+      }
+    },
+    {
+      "hanzi": "中文",
+      "pinyin": "Zhōngwén",
+      "meaningVi": "tiếng Trung, Trung văn",
+      "example": {
+        "hanzi": "我会说中文。",
+        "pinyin": "Wǒ huì shuō Zhōngwén.",
+        "meaningVi": "Tôi biết nói tiếng Trung."
+      }
+    },
+    {
+      "hanzi": "外语",
+      "pinyin": "wàiyǔ",
+      "meaningVi": "ngoại ngữ, tiếng nước ngoài",
+      "example": {
+        "hanzi": "你学什么外语？",
+        "pinyin": "Nǐ xué shénme wàiyǔ?",
+        "meaningVi": "Bạn học ngoại ngữ gì?"
+      }
+    },
+    {
+      "hanzi": "北京",
+      "pinyin": "Běijīng",
+      "meaningVi": "Bắc Kinh",
+      "example": {
+        "hanzi": "我很想去北京。",
+        "pinyin": "Wǒ hěn xiǎng qù Běijīng.",
+        "meaningVi": "Tôi rất muốn đi Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "这",
+      "pinyin": "zhè",
+      "meaningVi": "này, đây",
+      "example": {
+        "hanzi": "这是我的书。",
+        "pinyin": "Zhè shì wǒ de shū.",
+        "meaningVi": "Đây là sách của tôi."
+      }
+    },
+    {
+      "hanzi": "那",
+      "pinyin": "nà",
+      "meaningVi": "kia, đó",
+      "example": {
+        "hanzi": "那是谁的手机？",
+        "pinyin": "Nà shì shéi de shǒujī?",
+        "meaningVi": "Kia là điện thoại của ai?"
+      }
+    },
+    {
+      "hanzi": "哪",
+      "pinyin": "nǎ",
+      "meaningVi": "nào",
+      "example": {
+        "hanzi": "你是哪国人？",
+        "pinyin": "Nǐ shì nǎ guó rén?",
+        "meaningVi": "Bạn là người nước nào?"
+      }
+    },
+    {
+      "hanzi": "哪儿",
+      "pinyin": "nǎr",
+      "meaningVi": "đâu, chỗ nào",
+      "example": {
+        "hanzi": "你家在哪儿？",
+        "pinyin": "Nǐ jiā zài nǎr?",
+        "meaningVi": "Nhà bạn ở đâu?"
+      }
+    },
+    {
+      "hanzi": "这儿",
+      "pinyin": "zhèr",
+      "meaningVi": "ở đây, chỗ này",
+      "example": {
+        "hanzi": "我的书在这儿。",
+        "pinyin": "Wǒ de shū zài zhèr.",
+        "meaningVi": "Sách của tôi ở đây."
+      }
+    },
+    {
+      "hanzi": "那儿",
+      "pinyin": "nàr",
+      "meaningVi": "ở đó, chỗ kia",
+      "example": {
+        "hanzi": "老师在那儿等你。",
+        "pinyin": "Lǎoshī zài nàr děng nǐ.",
+        "meaningVi": "Thầy giáo đang đợi bạn ở đằng kia."
+      }
+    },
+    {
+      "hanzi": "哪里",
+      "pinyin": "nǎlǐ",
+      "meaningVi": "đâu, chỗ nào",
+      "example": {
+        "hanzi": "洗手间在哪里？",
+        "pinyin": "Xǐshǒujiān zài nǎlǐ?",
+        "meaningVi": "Nhà vệ sinh ở đâu?"
+      }
+    },
+    {
+      "hanzi": "这里",
+      "pinyin": "zhèlǐ",
+      "meaningVi": "ở đây, nơi này",
+      "example": {
+        "hanzi": "这里的水果很好吃。",
+        "pinyin": "Zhèlǐ de shuǐguǒ hěn hǎochī.",
+        "meaningVi": "Hoa quả ở đây rất ngon."
+      }
+    },
+    {
+      "hanzi": "那里",
+      "pinyin": "nàlǐ",
+      "meaningVi": "ở đó, nơi kia",
+      "example": {
+        "hanzi": "那里有一个书店。",
+        "pinyin": "Nàlǐ yǒu yī ge shūdiàn.",
+        "meaningVi": "Ở đó có một hiệu sách."
+      }
+    },
+    {
+      "hanzi": "在",
+      "pinyin": "zài",
+      "meaningVi": "ở, có mặt (tại)",
+      "example": {
+        "hanzi": "妈妈在家。",
+        "pinyin": "Māma zài jiā.",
+        "meaningVi": "Mẹ ở nhà."
+      }
+    },
+    {
+      "hanzi": "住",
+      "pinyin": "zhù",
+      "meaningVi": "ở, sống, cư trú",
+      "example": {
+        "hanzi": "我住在北京。",
+        "pinyin": "Wǒ zhù zài Běijīng.",
+        "meaningVi": "Tôi sống ở Bắc Kinh."
+      }
+    },
+    {
+      "hanzi": "来",
+      "pinyin": "lái",
+      "meaningVi": "đến, tới",
+      "example": {
+        "hanzi": "我朋友明天来。",
+        "pinyin": "Wǒ péngyou míngtiān lái.",
+        "meaningVi": "Ngày mai bạn tôi đến."
+      }
+    },
+    {
+      "hanzi": "去",
+      "pinyin": "qù",
+      "meaningVi": "đi, đi đến",
+      "example": {
+        "hanzi": "我们去商店吧。",
+        "pinyin": "Wǒmen qù shāngdiàn ba.",
+        "meaningVi": "Chúng ta đi cửa hàng đi."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: đất nước, ngôn ngữ, nơi chốn",
+      "subtitle": "20 từ HSK1 về quốc gia, ngoại ngữ, đại từ chỉ định và nơi chốn",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 7 gồm 20 từ vựng HSK1 về đất nước, ngôn ngữ và nơi chốn. Nhóm quốc gia: 国 (nước), 国家 (quốc gia), 外国 (nước ngoài), 国外 (ở nước ngoài), 北京 (Bắc Kinh). Nhóm ngôn ngữ: 中文 (tiếng Trung), 外语 (ngoại ngữ). Nhóm chỉ định và hỏi: 这 (này), 那 (kia), 哪 (nào). Nhóm nơi chốn: 这儿/这里 (đây), 那儿/那里 (đó, kia), 哪儿/哪里 (đâu). Nhóm động từ: 在 (ở), 住 (sống, ở), 来 (đến), 去 (đi). Chú ý phân biệt thanh điệu 那 (nà) và 哪 (nǎ), và thứ tự chữ trong 外国 (nước ngoài) với 国外 (ở nước ngoài)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 这/那/哪, 哪儿/哪里, 在, 住在, 来/去",
+      "subtitle": "Năm điểm ngữ pháp để hỏi và nói về nơi chốn",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 这 (này, đây), 那 (kia, đó), 哪 (nào) đứng trước danh từ hoặc làm chủ ngữ. Cấu trúc: 这/那 + 是 + danh từ; 哪 + 国 + 人 để hỏi quốc tịch. Ví dụ: 这是我的书。 (Zhè shì wǒ de shū.) = Đây là sách của tôi. / 那是中文书。 (Nà shì Zhōngwén shū.) = Kia là sách tiếng Trung. / 你是哪国人？ (Nǐ shì nǎ guó rén?) = Bạn là người nước nào?"
+        },
+        {
+          "type": "text",
+          "value": "2. 哪儿 và 哪里 đều nghĩa là “ở đâu, chỗ nào”; 哪儿 khẩu ngữ hơn. Từ để hỏi đứng đúng vị trí của thông tin cần hỏi, không đảo lên đầu câu. Trả lời bằng 这儿/这里 (đây) hoặc 那儿/那里 (đó). Ví dụ: 你去哪儿？ (Nǐ qù nǎr?) = Bạn đi đâu? / 图书馆在哪里？ (Túshūguǎn zài nǎlǐ?) = Thư viện ở đâu? / 我在这儿。 (Wǒ zài zhèr.) = Tôi ở đây."
+        },
+        {
+          "type": "text",
+          "value": "3. 在 + nơi chốn làm vị ngữ, nghĩa là “ở”. Cấu trúc: người/vật + 在 + nơi chốn. Ví dụ: 我在学校。 (Wǒ zài xuéxiào.) = Tôi ở trường. / 我哥哥在国外。 (Wǒ gēge zài guówài.) = Anh trai tôi ở nước ngoài. / 你在哪儿？ (Nǐ zài nǎr?) = Bạn ở đâu?"
+        },
+        {
+          "type": "text",
+          "value": "4. 住在 + nơi chốn: “sống ở, ở tại”. Cấu trúc: chủ ngữ + 住在 + nơi chốn. Ví dụ: 我住在北京。 (Wǒ zhù zài Běijīng.) = Tôi sống ở Bắc Kinh. / 你住在哪儿？ (Nǐ zhù zài nǎr?) = Bạn sống ở đâu? / 他们也住在北京。 (Tāmen yě zhù zài Běijīng.) = Họ cũng sống ở Bắc Kinh."
+        },
+        {
+          "type": "text",
+          "value": "5. 来 (đến, lại đây) và 去 (đi, đến chỗ khác) đứng ngay trước nơi chốn: chủ ngữ + 来/去 + nơi chốn (+ động từ chỉ mục đích). 来 hướng về phía người nói, 去 hướng ra xa người nói. Ví dụ: 我去图书馆。 (Wǒ qù túshūguǎn.) = Tôi đi thư viện. / 他来中国学习中文。 (Tā lái Zhōngguó xuéxí Zhōngwén.) = Anh ấy đến Trung Quốc học tiếng Trung. / 你明天来我家吗？ (Nǐ míngtiān lái wǒ jiā ma?) = Ngày mai bạn đến nhà tôi không?"
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: quê ở đâu, sống ở đâu",
+      "subtitle": "Hội thoại ngắn giữa hai bạn học; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你是哪国人？ (Nǐ shì nǎ guó rén?) — A: Bạn là người nước nào?"
+        },
+        {
+          "type": "text",
+          "value": "B: 我是中国人。你呢？ (Wǒ shì Zhōngguó rén. Nǐ ne?) — B: Tôi là người Trung Quốc. Còn bạn?"
+        },
+        {
+          "type": "text",
+          "value": "A: 我是外国人，我来中国学习中文。 (Wǒ shì wàiguó rén, wǒ lái Zhōngguó xuéxí Zhōngwén.) — A: Tôi là người nước ngoài, tôi đến Trung Quốc học tiếng Trung."
+        },
+        {
+          "type": "text",
+          "value": "B: 你住在哪儿？ (Nǐ zhù zài nǎr?) — B: Bạn sống ở đâu?"
+        },
+        {
+          "type": "text",
+          "value": "A: 我住在北京。你现在去哪儿？ (Wǒ zhù zài Běijīng. Nǐ xiànzài qù nǎr?) — A: Tôi sống ở Bắc Kinh. Bây giờ bạn đi đâu?"
+        },
+        {
+          "type": "text",
+          "value": "B: 我去图书馆。图书馆在那儿。 (Wǒ qù túshūguǎn. Túshūguǎn zài nàr.) — B: Tôi đi thư viện. Thư viện ở đằng kia."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l07:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “ngoại ngữ”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "外语"
+          },
+          {
+            "id": "opt-b",
+            "text": "外国"
+          },
+          {
+            "id": "opt-c",
+            "text": "国外"
+          },
+          {
+            "id": "opt-d",
+            "text": "中文"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "外语 (wàiyǔ) nghĩa là “ngoại ngữ”. 外国 (wàiguó) là “nước ngoài”, 国外 (guówài) là “ở nước ngoài”, 中文 (Zhōngwén) là “tiếng Trung”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e02",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你家在___？ (Nhà bạn ở đâu?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "这儿"
+          },
+          {
+            "id": "opt-b",
+            "text": "哪儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "那儿"
+          },
+          {
+            "id": "opt-d",
+            "text": "这里"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "哪儿 (nǎr) nghĩa là “ở đâu”, đứng đúng vị trí nơi chốn sau 在: 你家在哪儿？ = nhà bạn ở đâu? 这儿, 这里 (đây) và 那儿 (đó) chỉ một nơi cụ thể, đặt vào câu chỉ thành câu hỏi xác nhận “nhà bạn ở đây/đó à?”, sai nghĩa theo bản dịch nên bị loại.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___在北京。 (Tôi sống ở Bắc Kinh.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "来"
+          },
+          {
+            "id": "opt-b",
+            "text": "去"
+          },
+          {
+            "id": "opt-c",
+            "text": "住"
+          },
+          {
+            "id": "opt-d",
+            "text": "叫"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "住 (zhù) nghĩa là “sống, ở”; cấu trúc 住在 + nơi chốn: 我住在北京 = tôi sống ở Bắc Kinh. 来在 và 去在 sai ngữ pháp vì 来/去 đi thẳng với nơi chốn (来北京, 去北京). 叫 (tên là) không đi với 在 + nơi chốn nên sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e04",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “Bắc Kinh”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "中国"
+          },
+          {
+            "id": "opt-b",
+            "text": "中文"
+          },
+          {
+            "id": "opt-c",
+            "text": "国家"
+          },
+          {
+            "id": "opt-d",
+            "text": "北京"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "北京 (Běijīng) nghĩa là “Bắc Kinh”. 中国 (Zhōngguó) là “Trung Quốc”, 中文 (Zhōngwén) là “tiếng Trung”, 国家 (guójiā) là “quốc gia”.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你是___国人？(Bạn là người nước nào?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "哪",
+          "nǎ",
+          "na"
+        ]
+      },
+      "explanation": "哪 (nǎ) nghĩa là “nào”, đứng trước 国 để hỏi quốc tịch: 你是哪国人？ = bạn là người nước nào? Không nhầm với 那 (nà, kia) — khác thanh điệu và nghĩa.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 他是___人。(Anh ấy là người nước ngoài.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "外国",
+          "wàiguó",
+          "waiguo"
+        ]
+      },
+      "explanation": "外国 (wàiguó) nghĩa là “nước ngoài”; 外国人 = người nước ngoài. 国外 (ở nước ngoài) chỉ nơi chốn, không đứng trước 人 với nghĩa này.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们明天___图书馆。(Ngày mai chúng tôi đi thư viện.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "去",
+          "qù",
+          "qu"
+        ]
+      },
+      "explanation": "去 (qù) nghĩa là “đi”, đứng ngay trước nơi chốn: 我们明天去图书馆 = ngày mai chúng tôi đi thư viện. 去 chỉ hướng rời xa người nói, khớp với nghĩa “đi”.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + 住在 + nơi chốn: “Tôi sống ở Bắc Kinh.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r8",
+            "text": "北京"
+          },
+          {
+            "id": "tkn-m3",
+            "text": "我"
+          },
+          {
+            "id": "tkn-g6",
+            "text": "住在"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-m3",
+          "tkn-g6",
+          "tkn-r8"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 我住在北京. Năm hoán vị còn lại đều sai vì 住在 phải đứng sau chủ ngữ 我 và ngay trước nơi chốn 北京 (ví dụ sai: 北京住在我, 住在我北京, 我北京住在).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu hỏi: “Bạn đi đâu?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p5",
+            "text": "哪儿"
+          },
+          {
+            "id": "tkn-j2",
+            "text": "去"
+          },
+          {
+            "id": "tkn-u9",
+            "text": "你"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-u9",
+          "tkn-j2",
+          "tkn-p5"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 你去哪儿. Từ để hỏi 哪儿 đứng đúng vị trí nơi chốn sau 去, không đảo lên đầu câu; 你 là chủ ngữ đứng trước động từ (ví dụ sai: 哪儿你去, 去你哪儿; 你哪儿去 chỉ gặp trong khẩu ngữ địa phương, không phải trật tự chuẩn).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l07:e10",
+      "topicKey": "t01",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Đây là sách tiếng Trung.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s4",
+            "text": "书"
+          },
+          {
+            "id": "tkn-v1",
+            "text": "是"
+          },
+          {
+            "id": "tkn-e7",
+            "text": "中文"
+          },
+          {
+            "id": "tkn-y3",
+            "text": "这"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-y3",
+          "tkn-v1",
+          "tkn-e7",
+          "tkn-s4"
+        ]
+      },
+      "explanation": "Tổng 24 hoán vị, chỉ 1 đúng là 这是中文书. 这 làm chủ ngữ đứng đầu, 是 đứng sau chủ ngữ, 中文 bổ nghĩa đứng trước danh từ 书 (ví dụ sai: 这是书中文, 是这中文书, 中文书是这, 书是这中文).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-02 (Pha 3)",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-02 (PO đã duyệt 17/11/2026); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": []
+  }
+}

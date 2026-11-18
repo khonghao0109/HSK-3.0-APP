@@ -151,6 +151,67 @@ describe('SendAccountDeletionScheduledJob', () => {
         }),
       );
     });
+
+    it('keeps the user-initiated body byte-identical', async () => {
+      const fixedDate = new Date('2026-10-07T08:30:00.000Z');
+      mockPrisma.accountDeletionRequest.findUnique.mockResolvedValueOnce({
+        id: 203,
+        status: 'requested',
+        initiatedBy: 'user',
+        scheduledAt: fixedDate,
+        user: {
+          id: 9,
+          email: 'user3@example.com',
+          profile: { timezone: 'Asia/Ho_Chi_Minh', locale: 'vi-VN' },
+        },
+      });
+
+      const result = await job.process({ requestId: 203 });
+
+      expect(result).toBe(true);
+      const call = mockMailer.send.mock.calls[0][0];
+      expect(call.text).toBe(
+        `Xin chào,\n\n` +
+          `Yêu cầu xoá tài khoản của bạn đã được tiếp nhận. Tài khoản của bạn được lên lịch xoá vĩnh viễn vào lúc:\n` +
+          `15:30:00 07/10/2026\n\n` +
+          `Để huỷ, hãy đăng nhập lại tại https://app.example.com/login trước thời điểm này.\n\n` +
+          `Nếu bạn không yêu cầu xoá tài khoản, hãy đăng nhập lại ngay lập tức để bảo vệ tài khoản của mình.\n`,
+      );
+    });
+
+    it('sends the admin body without a login link or a cancel instruction', async () => {
+      const fixedDate = new Date('2026-10-07T08:30:00.000Z');
+      mockPrisma.accountDeletionRequest.findUnique.mockResolvedValueOnce({
+        id: 204,
+        status: 'requested',
+        initiatedBy: 'admin',
+        scheduledAt: fixedDate,
+        user: {
+          id: 10,
+          email: 'minor@example.com',
+          profile: { timezone: 'Asia/Ho_Chi_Minh', locale: 'vi-VN' },
+        },
+      });
+
+      const result = await job.process({ requestId: 204 });
+
+      expect(result).toBe(true);
+      const call = mockMailer.send.mock.calls[0][0];
+      expect(call.to).toBe('minor@example.com');
+      expect(call.subject).toBe(ACCOUNT_DELETION_SCHEDULED_SUBJECT);
+      // Q205: the admin mail has no way to cancel — no login link, no
+      // "log in again" instruction and no cancel wording (diacritics or not).
+      expect(call.text).not.toContain('/login');
+      expect(call.text).not.toContain('đăng nhập');
+      expect(call.text).not.toContain('huỷ');
+      expect(call.text).not.toContain('hủy');
+      // It names the anonymization date and one contact line to /privacy §11.
+      expect(call.text).toContain('15:30:00 07/10/2026');
+      expect(call.text).toContain('dưới 16 tuổi');
+      expect(call.text).toContain('https://app.example.com/privacy');
+      expect(call.text).toContain('mục 11');
+      expect(call.text).toContain('ẩn danh');
+    });
   });
 
   describe('error handling', () => {

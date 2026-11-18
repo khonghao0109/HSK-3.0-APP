@@ -113,10 +113,24 @@ or claim Media Operations support.
   not contain `unsafe-inline` or `unsafe-eval`. Development may use
   `unsafe-eval` for React diagnostics and `unsafe-inline` for development
   styles only.
-- `media-src` is restricted to `'self'` because Media Operations do not exist
-  yet. A future Media slice may add only the exact configured storage/CDN
-  origin after its threat and retention model is approved; broad `https:` or
-  wildcard sources remain prohibited.
+- `media-src` allows only `'self'` and `blob:` (the latter since M4.2b R12,
+  29/10/2026). Anything else — `https:`, wildcard sources, or a storage/CDN
+  origin — remains prohibited: a future Media slice may add only the exact
+  configured storage/CDN origin after its threat and retention model is
+  approved.
+- Learner audio (M2.5c, 12/10/2026) stays same-origin: the BFF route
+  `GET /api/learner/media/:id/access` rebuilds the backend grant into
+  `/api/learner/media/:id/content?expires=&signature=`, and that route streams
+  the backend bytes and forwards a single `Range`. The browser never talks to
+  the backend or a storage origin.
+- Since M4.2b R12 the exam island preloads the whole attempt's audio into
+  in-memory `Blob`s (fetched same-origin through that BFF route) and plays them
+  through `blob:` URLs (TL-149). A `blob:` URL is bound to an origin and can
+  only be created by script running on this origin; that script is already
+  constrained by the nonce-based `script-src` with `strict-dynamic`, and the app
+  only creates blobs from same-origin bytes fetched through the BFF. Allowing
+  `blob:` therefore does not open a third-party media source; `https:`,
+  wildcard sources and any storage/CDN origin remain prohibited.
 - The root layout waits for a request so every page is dynamically rendered.
   This disables static optimization, ISR, PPR, and default CDN page caching,
   increasing request-time rendering cost. This trade-off is accepted for the

@@ -1,0 +1,11 @@
+{
+  "description": "hai bài trùng sourceKey",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "copy",
+      "from": "exercises[0].sourceKey",
+      "to": "exercises[1].sourceKey"
+    }
+  ]
+}

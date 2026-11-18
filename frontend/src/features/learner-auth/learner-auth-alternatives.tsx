@@ -1,9 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-export function LearnerAuthAlternatives() {
+/**
+ * `switchLink` is a slot for the page's `.wa-switch` line: the web sample has
+ * "Chưa có tài khoản? Tạo tài khoản" (and the sign-up mirror), the mobile
+ * screen deliberately has no such link, so the page owns it and passes it in
+ * (M2.10c). Rendering without the slot keeps the mobile content unchanged.
+ */
+export function LearnerAuthAlternatives({
+  switchLink,
+}: {
+  switchLink?: ReactNode;
+} = {}) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -62,9 +72,12 @@ export function LearnerAuthAlternatives() {
         </button>
       </div>
 
+      {switchLink}
+
       <p className="auth__terms">
-        Bằng việc tiếp tục, bạn đồng ý với
-        <br />
+        {/* `{' '}` giữ đúng khoảng cách của mẫu khi bản web ẩn `<br>`; trên
+            mobile khoảng trắng cuối dòng bị CSS bỏ nên không xê dịch pixel. */}
+        Bằng việc tiếp tục, bạn đồng ý với <br />
         <Link href="/terms">Điều khoản sử dụng</Link> và{' '}
         <Link href="/privacy">Chính sách bảo mật</Link>
       </p>

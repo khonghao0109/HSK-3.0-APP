@@ -1,0 +1,10 @@
+{
+  "description": "thiếu object dataSource",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "dataSource"
+    }
+  ]
+}

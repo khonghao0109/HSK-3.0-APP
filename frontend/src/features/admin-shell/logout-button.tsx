@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { AdminIcon } from './admin-icon';
+import { ADMIN_ACTION } from './admin-labels';
+
 export function LogoutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -39,23 +42,26 @@ export function LogoutButton() {
     setPending(false);
   }
 
-  const label = pending ? 'Leaving…' : failed ? 'Retry log out' : 'Log out';
+  const label = pending
+    ? 'Đang đăng xuất…'
+    : failed
+      ? 'Thử đăng xuất lại'
+      : ADMIN_ACTION.signOut;
   return (
     <>
       <button
         ref={buttonRef}
-        className="profile-button"
+        className="adm-btn adm-btn--outline adm-topbar__logout"
         type="button"
         disabled={pending}
-        aria-label={failed && !pending ? 'Retry log out' : 'Log out'}
         onClick={() => void logOut()}
       >
-        <span aria-hidden="true">↪</span>
+        <AdminIcon name="log-out" className="adm-icon adm-icon--sm" />
         <span>{label}</span>
       </button>
       {failed ? (
         <span className="sr-only" role="alert">
-          Log out failed. Your session is still active. Try again.
+          Đăng xuất không thành công. Phiên của bạn vẫn đang mở. Hãy thử lại.
         </span>
       ) : null}
     </>

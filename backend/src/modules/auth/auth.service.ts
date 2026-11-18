@@ -134,6 +134,7 @@ export class AuthService implements OnModuleInit {
         FROM "AccountDeletionRequest"
         WHERE "userId" = ${user.id}
           AND status = 'requested'
+          AND "initiatedBy" = 'user'
           AND "scheduledAt" > CURRENT_TIMESTAMP
         ORDER BY id DESC
         LIMIT 1
@@ -177,6 +178,16 @@ export class AuthService implements OnModuleInit {
 
     if (isPendingDeletion && pendingDeletionRequestId !== null) {
       await this.prisma.$transaction(async (tx) => {
+        // M1.7d: lock the user row first, matching the anonymize worker and the
+        // admin mutation so the three writers serialize instead of deadlocking.
+        // The pre-read above runs outside this transaction (TOCTOU), so the
+        // conditional UPDATE below re-checks the request it read.
+        await tx.$queryRaw(Prisma.sql`
+          SELECT id FROM "User"
+          WHERE id = ${user.id}
+          FOR UPDATE
+        `);
+
         await tx.$queryRaw(Prisma.sql`
           SELECT id FROM "AccountDeletionRequest"
           WHERE id = ${pendingDeletionRequestId}
@@ -190,6 +201,7 @@ export class AuthService implements OnModuleInit {
               "updatedAt" = CURRENT_TIMESTAMP
           WHERE id = ${pendingDeletionRequestId}
             AND status = 'requested'
+            AND "initiatedBy" = 'user'
             AND "scheduledAt" > CURRENT_TIMESTAMP
         `);
 

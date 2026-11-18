@@ -6,11 +6,15 @@ import { StorageModule } from '../../infrastructure/storage/storage.module';
 import { CmsController } from './cms.controller';
 import { CmsService } from './cms.service';
 import { CmsTransactionCoordinator } from './cms-transaction-coordinator';
+import { DataSourcesService } from './data-sources.service';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
 import { ExerciseImportService } from './exercise-import/exercise-import.service';
 import { MediaAdminService } from './media-admin.service';
 import { MediaFileProcessor } from './media-ingestion/media-file.processor';
 import { MediaIngestionConcurrencyLimiter } from './media-ingestion/media-ingestion-concurrency.limiter';
+import { MediaIngestionReconciliationService } from './media-ingestion/media-ingestion-reconciliation.service';
+import { QuestionAuthoringService } from './question-authoring.service';
+import { TestAuthoringService } from './test-authoring.service';
 import { MediaIngestionService } from './media-ingestion/media-ingestion.service';
 import { MediaIngestionBoundaryInterceptor } from './media-ingestion/media-ingestion-boundary.interceptor';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
@@ -23,12 +27,16 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
   providers: [
     CmsService,
     CmsTransactionCoordinator,
+    DataSourcesService,
     ExerciseAuthoringService,
     ExerciseImportService,
+    QuestionAuthoringService,
+    TestAuthoringService,
     MediaAdminService,
     MediaFileProcessor,
     MediaIngestionConcurrencyLimiter,
     MediaIngestionService,
+    MediaIngestionReconciliationService,
     MediaIngestionBoundaryInterceptor,
     MediaIngestionEnabledGuard,
     MediaUploadRateLimitGuard,
@@ -38,6 +46,8 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
     CmsService,
     ExerciseAuthoringService,
     ExerciseImportService,
+    QuestionAuthoringService,
+    TestAuthoringService,
     MediaAdminService,
     MediaIngestionConcurrencyLimiter,
     MediaIngestionService,

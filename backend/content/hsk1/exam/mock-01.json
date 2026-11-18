@@ -1,0 +1,2009 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "notice": "Bản nháp do AI soạn (Q172). Cấu trúc tạm, chờ chốt #15 (Q351). Người duyệt: PO. Đề demo 23/11 chỉ gồm phần Đọc; 20 câu Nghe nạp vào ngân hàng câu hỏi ở draft, chưa có audio (PO 18/11/2026).",
+  "test": {
+    "sourceKey": "hsk1:mock-01",
+    "title": "Đề thi thử HSK1 – số 1",
+    "instruction": "Đề gồm 40 câu: Nghe 20 câu và Đọc 20 câu. Mỗi câu chọn một đáp án đúng.",
+    "durationMinutes": 40,
+    "passScore": 120
+  },
+  "voices": {
+    "female": "zh-CN-XiaoxiaoNeural",
+    "male": "zh-CN-YunxiNeural",
+    "narrator": "zh-CN-YunyangNeural"
+  },
+  "images": [
+    {
+      "key": "img-l1-q01",
+      "usedBy": [
+        "hsk1:q0001"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A woman sitting at a table drinking tea from a cup",
+          "altVi": "Người phụ nữ ngồi bên bàn uống trà"
+        },
+        {
+          "label": "B",
+          "description": "A woman eating a bowl of noodles with chopsticks",
+          "altVi": "Người phụ nữ ăn bát mì bằng đũa"
+        },
+        {
+          "label": "C",
+          "description": "A woman reading a book on a sofa",
+          "altVi": "Người phụ nữ đọc sách trên ghế sofa"
+        }
+      ],
+      "descriptionVi": "Phụ nữ uống trà / ăn mì / đọc sách",
+      "altVi": "A: Người phụ nữ ngồi bên bàn uống trà; B: Người phụ nữ ăn bát mì bằng đũa; C: Người phụ nữ đọc sách trên ghế sofa"
+    },
+    {
+      "key": "img-l1-q02",
+      "usedBy": [
+        "hsk1:q0002"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A sunny street with a bright sun in the sky",
+          "altVi": "Con phố ngày nắng, mặt trời sáng"
+        },
+        {
+          "label": "B",
+          "description": "A person holding an umbrella in heavy rain",
+          "altVi": "Một người cầm ô dưới mưa to"
+        },
+        {
+          "label": "C",
+          "description": "Trees bending in strong wind under grey clouds, no rain",
+          "altVi": "Cây nghiêng trong gió mạnh, trời nhiều mây, không mưa"
+        }
+      ],
+      "descriptionVi": "Trời nắng / trời mưa / trời gió",
+      "altVi": "A: Con phố ngày nắng, mặt trời sáng; B: Một người cầm ô dưới mưa to; C: Cây nghiêng trong gió mạnh, trời nhiều mây, không mưa"
+    },
+    {
+      "key": "img-l1-q03",
+      "usedBy": [
+        "hsk1:q0003"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A man riding a bicycle on a road",
+          "altVi": "Người đàn ông đạp xe trên đường"
+        },
+        {
+          "label": "B",
+          "description": "A man walking on a sidewalk",
+          "altVi": "Người đàn ông đi bộ trên vỉa hè"
+        },
+        {
+          "label": "C",
+          "description": "A man driving a car, seen through the side window",
+          "altVi": "Người đàn ông lái ô tô"
+        }
+      ],
+      "descriptionVi": "Người đàn ông đạp xe / đi bộ / lái ô tô",
+      "altVi": "A: Người đàn ông đạp xe trên đường; B: Người đàn ông đi bộ trên vỉa hè; C: Người đàn ông lái ô tô"
+    },
+    {
+      "key": "img-l1-q04",
+      "usedBy": [
+        "hsk1:q0004"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A school backpack on a shop shelf",
+          "altVi": "Chiếc cặp sách trên kệ cửa hàng"
+        },
+        {
+          "label": "B",
+          "description": "A pair of shoes on a shop shelf",
+          "altVi": "Đôi giày trên kệ cửa hàng"
+        },
+        {
+          "label": "C",
+          "description": "A round wall clock without numbers on a shop shelf",
+          "altVi": "Đồng hồ treo tường trên kệ cửa hàng"
+        }
+      ],
+      "descriptionVi": "Cặp sách / đôi giày / đồng hồ treo tường",
+      "altVi": "A: Chiếc cặp sách trên kệ cửa hàng; B: Đôi giày trên kệ cửa hàng; C: Đồng hồ treo tường trên kệ cửa hàng"
+    },
+    {
+      "key": "img-l1-q05",
+      "usedBy": [
+        "hsk1:q0005"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A woman cooking at a stove",
+          "altVi": "Người phụ nữ nấu ăn bên bếp"
+        },
+        {
+          "label": "B",
+          "description": "A woman sleeping in bed",
+          "altVi": "Người phụ nữ ngủ trên giường"
+        },
+        {
+          "label": "C",
+          "description": "A woman watching a television with a plain blank screen",
+          "altVi": "Người phụ nữ xem tivi"
+        }
+      ],
+      "descriptionVi": "Người mẹ nấu ăn / ngủ / xem tivi",
+      "altVi": "A: Người phụ nữ nấu ăn bên bếp; B: Người phụ nữ ngủ trên giường; C: Người phụ nữ xem tivi"
+    },
+    {
+      "key": "img-l3",
+      "usedBy": [
+        "hsk1:q0011",
+        "hsk1:q0012",
+        "hsk1:q0013",
+        "hsk1:q0014",
+        "hsk1:q0015"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A doctor in a white coat examining a sick man in a hospital room",
+          "altVi": "Bác sĩ áo trắng khám cho người đàn ông bị ốm"
+        },
+        {
+          "label": "B",
+          "description": "Two travellers with suitcases walking to a train at a railway platform",
+          "altVi": "Hai hành khách kéo vali ra tàu hoả ở sân ga"
+        },
+        {
+          "label": "C",
+          "description": "A girl at a desk writing with a pen in a notebook, page shown blank from this angle",
+          "altVi": "Bé gái ngồi viết vào vở"
+        },
+        {
+          "label": "D",
+          "description": "A man paying a shopkeeper for a bag of fruit",
+          "altVi": "Người đàn ông trả tiền mua túi hoa quả"
+        },
+        {
+          "label": "E",
+          "description": "Two friends eating dinner together at a restaurant table with dishes",
+          "altVi": "Hai người bạn ăn tối ở nhà hàng"
+        },
+        {
+          "label": "F",
+          "description": "A boy kicking a football on a grass field",
+          "altVi": "Cậu bé đá bóng trên sân cỏ"
+        }
+      ],
+      "descriptionVi": "A bác sĩ khám bệnh; B ga tàu hỏa; C bé gái viết chữ Hán; D mua hoa quả; E ăn tối ở nhà hàng; F cậu bé đá bóng (không dùng)",
+      "altVi": "A: Bác sĩ áo trắng khám cho người đàn ông bị ốm; B: Hai hành khách kéo vali ra tàu hoả ở sân ga; C: Bé gái ngồi viết vào vở; D: Người đàn ông trả tiền mua túi hoa quả; E: Hai người bạn ăn tối ở nhà hàng; F: Cậu bé đá bóng trên sân cỏ"
+    },
+    {
+      "key": "img-r1",
+      "usedBy": [
+        "hsk1:q0021",
+        "hsk1:q0022",
+        "hsk1:q0023",
+        "hsk1:q0024",
+        "hsk1:q0025"
+      ],
+      "panels": [
+        {
+          "label": "A",
+          "description": "A small child drinking a glass of milk at a kitchen table",
+          "altVi": "Em bé uống cốc sữa bên bàn bếp"
+        },
+        {
+          "label": "B",
+          "description": "A man talking on a mobile phone",
+          "altVi": "Người đàn ông nói chuyện điện thoại"
+        },
+        {
+          "label": "C",
+          "description": "A family sitting on a sofa watching a television with a plain blank screen",
+          "altVi": "Gia đình ngồi trên sofa xem tivi"
+        },
+        {
+          "label": "D",
+          "description": "A woman choosing clothes on a rack in a clothing shop",
+          "altVi": "Người phụ nữ chọn quần áo trong cửa hàng"
+        },
+        {
+          "label": "E",
+          "description": "A teacher standing at a blank blackboard in front of students in a classroom",
+          "altVi": "Cô giáo đứng trước bảng, học sinh ngồi học"
+        },
+        {
+          "label": "F",
+          "description": "An airplane flying in a blue sky",
+          "altVi": "Máy bay bay trên trời xanh"
+        }
+      ],
+      "descriptionVi": "A em bé uống sữa; B người đàn ông gọi điện thoại; C gia đình xem tivi; D phụ nữ mua quần áo; E lớp học; F máy bay (không dùng)",
+      "altVi": "A: Em bé uống cốc sữa bên bàn bếp; B: Người đàn ông nói chuyện điện thoại; C: Gia đình ngồi trên sofa xem tivi; D: Người phụ nữ chọn quần áo trong cửa hàng; E: Cô giáo đứng trước bảng, học sinh ngồi học; F: Máy bay bay trên trời xanh"
+    }
+  ],
+  "sections": [
+    {
+      "skill": "listening",
+      "title": "Nghe",
+      "instruction": "Phần nghe gồm 4 phần, 20 câu. Mỗi đoạn được đọc hai lần.",
+      "parts": [
+        {
+          "key": "l1",
+          "title": "Phần 1",
+          "instruction": "Nghe một câu, chọn tranh đúng trong ba tranh A, B, C.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0001",
+              "type": "mcq",
+              "prompt": "Nghe câu và chọn tranh đúng (A, B hoặc C).",
+              "imageKey": "img-l1-q01",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "我在喝茶。",
+                    "pinyin": "Wǒ zài hē chá.",
+                    "vi": "Tôi đang uống trà."
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 我在喝茶。 (Wǒ zài hē chá.) – \"Tôi đang uống trà.\". Tranh A khớp với nội dung câu.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0002",
+              "type": "mcq",
+              "prompt": "Nghe câu và chọn tranh đúng (A, B hoặc C).",
+              "imageKey": "img-l1-q02",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "今天下雨了。",
+                    "pinyin": "Jīntiān xià yǔ le.",
+                    "vi": "Hôm nay trời mưa rồi."
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 今天下雨了。 (Jīntiān xià yǔ le.) – \"Hôm nay trời mưa rồi.\". Tranh B khớp với nội dung câu.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0003",
+              "type": "mcq",
+              "prompt": "Nghe câu và chọn tranh đúng (A, B hoặc C).",
+              "imageKey": "img-l1-q03",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "他在开车。",
+                    "pinyin": "Tā zài kāichē.",
+                    "vi": "Anh ấy đang lái xe."
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 他在开车。 (Tā zài kāichē.) – \"Anh ấy đang lái xe.\". Tranh C khớp với nội dung câu.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0004",
+              "type": "mcq",
+              "prompt": "Nghe câu và chọn tranh đúng (A, B hoặc C).",
+              "imageKey": "img-l1-q04",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "我想买一个书包。",
+                    "pinyin": "Wǒ xiǎng mǎi yī ge shūbāo.",
+                    "vi": "Tôi muốn mua một cái cặp sách."
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 我想买一个书包。 (Wǒ xiǎng mǎi yī ge shūbāo.) – \"Tôi muốn mua một cái cặp sách.\". Tranh A khớp với nội dung câu.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0005",
+              "type": "mcq",
+              "prompt": "Nghe câu và chọn tranh đúng (A, B hoặc C).",
+              "imageKey": "img-l1-q05",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "妈妈在睡觉。",
+                    "pinyin": "Māma zài shuìjiào.",
+                    "vi": "Mẹ đang ngủ."
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 妈妈在睡觉。 (Māma zài shuìjiào.) – \"Mẹ đang ngủ.\". Tranh B khớp với nội dung câu.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-tranh",
+                "tu-vung"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "l2",
+          "title": "Phần 2",
+          "instruction": "Nghe một câu hỏi, chọn câu trả lời phù hợp.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0006",
+              "type": "mcq",
+              "prompt": "Nghe câu hỏi và chọn câu trả lời phù hợp.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我二十岁。 (Wǒ èrshí suì.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我叫小雨。 (Wǒ jiào Xiǎoyǔ.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "我去学校。 (Wǒ qù xuéxiào.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "你叫什么名字？",
+                    "pinyin": "Nǐ jiào shénme míngzi?",
+                    "vi": "Bạn tên là gì?"
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 你叫什么名字？ (Nǐ jiào shénme míngzi?) – \"Bạn tên là gì?\". Hỏi tên thì trả lời \"我叫小雨\" – Tôi tên là Tiểu Vũ.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-cau-tra-loi",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0007",
+              "type": "mcq",
+              "prompt": "Nghe câu hỏi và chọn câu trả lời phù hợp.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "去医院。 (Qù yīyuàn.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "三点。 (Sān diǎn.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "很好吃。 (Hěn hǎochī.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "你今天去哪儿？",
+                    "pinyin": "Nǐ jīntiān qù nǎr?",
+                    "vi": "Hôm nay bạn đi đâu?"
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 你今天去哪儿？ (Nǐ jīntiān qù nǎr?) – \"Hôm nay bạn đi đâu?\". Hỏi \"đi đâu\" (哪儿) nên trả lời địa điểm: \"去医院\" – Đi bệnh viện.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-cau-tra-loi",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0008",
+              "type": "mcq",
+              "prompt": "Nghe câu hỏi và chọn câu trả lời phù hợp.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我是老师。 (Wǒ shì lǎoshī.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "不客气。 (Bù kèqì.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "我喝水。 (Wǒ hē shuǐ.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "你喝茶还是喝水？",
+                    "pinyin": "Nǐ hē chá háishi hē shuǐ?",
+                    "vi": "Bạn uống trà hay uống nước?"
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 你喝茶还是喝水？ (Nǐ hē chá háishi hē shuǐ?) – \"Bạn uống trà hay uống nước?\". Câu hỏi lựa chọn với 还是, trả lời chọn một: \"我喝水\" – Tôi uống nước.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-cau-tra-loi",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0009",
+              "type": "mcq",
+              "prompt": "Nghe câu hỏi và chọn câu trả lời phù hợp.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "五个人。 (Wǔ ge rén.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在北京。 (Zài Běijīng.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期六。 (Xīngqīliù.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "你家有几个人？",
+                    "pinyin": "Nǐ jiā yǒu jǐ ge rén?",
+                    "vi": "Nhà bạn có mấy người?"
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 你家有几个人？ (Nǐ jiā yǒu jǐ ge rén?) – \"Nhà bạn có mấy người?\". Hỏi số lượng với 几 nên trả lời số người: \"五个人\" – Năm người.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-cau-tra-loi",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0010",
+              "type": "mcq",
+              "prompt": "Nghe câu hỏi và chọn câu trả lời phù hợp.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "没有。 (Méiyǒu.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "不客气。 (Bù kèqì.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "八点。 (Bā diǎn.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "谢谢你！",
+                    "pinyin": "Xièxie nǐ!",
+                    "vi": "Cảm ơn bạn!"
+                  }
+                ]
+              },
+              "explanation": "Câu nghe: 谢谢你！ (Xièxie nǐ!) – \"Cảm ơn bạn!\". Đáp lại lời cảm ơn: \"不客气\" – Không có gì.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-chon-cau-tra-loi",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "l3",
+          "title": "Phần 3",
+          "instruction": "Nghe đoạn hội thoại ngắn, chọn tranh phù hợp trong sáu tranh A–F. Mỗi tranh dùng tối đa một lần, có một tranh thừa.",
+          "imageKey": "img-l3",
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0011",
+              "type": "mcq",
+              "prompt": "Nghe đoạn hội thoại và chọn tranh phù hợp (A–F).",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "你在做什么？",
+                    "pinyin": "Nǐ zài zuò shénme?",
+                    "vi": "Bạn đang làm gì thế?"
+                  },
+                  {
+                    "speaker": "female",
+                    "hanzi": "我在写汉字。",
+                    "pinyin": "Wǒ zài xiě Hànzì.",
+                    "vi": "Tôi đang viết chữ Hán."
+                  }
+                ]
+              },
+              "explanation": "Nam: 你在做什么？ (Nǐ zài zuò shénme?) – \"Bạn đang làm gì thế?\" Nữ: 我在写汉字。 (Wǒ zài xiě Hànzì.) – \"Tôi đang viết chữ Hán.\" Cô gái đang viết chữ Hán nên chọn tranh C.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-hoi-thoai-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0012",
+              "type": "mcq",
+              "prompt": "Nghe đoạn hội thoại và chọn tranh phù hợp (A–F).",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "你身体怎么样？",
+                    "pinyin": "Nǐ shēntǐ zěnmeyàng?",
+                    "vi": "Sức khỏe bạn thế nào?"
+                  },
+                  {
+                    "speaker": "male",
+                    "hanzi": "我病了，想去医院看医生。",
+                    "pinyin": "Wǒ bìng le, xiǎng qù yīyuàn kàn yīshēng.",
+                    "vi": "Tôi ốm rồi, muốn đi bệnh viện khám bác sĩ."
+                  }
+                ]
+              },
+              "explanation": "Nữ: 你身体怎么样？ (Nǐ shēntǐ zěnmeyàng?) – \"Sức khỏe bạn thế nào?\" Nam: 我病了，想去医院看医生。 (Wǒ bìng le, xiǎng qù yīyuàn kàn yīshēng.) – \"Tôi ốm rồi, muốn đi bệnh viện khám bác sĩ.\" Người đàn ông ốm, đi bệnh viện gặp bác sĩ nên chọn tranh A.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-hoi-thoai-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0013",
+              "type": "mcq",
+              "prompt": "Nghe đoạn hội thoại và chọn tranh phù hợp (A–F).",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "这些水果多少钱？",
+                    "pinyin": "Zhèxiē shuǐguǒ duōshao qián?",
+                    "vi": "Chỗ hoa quả này bao nhiêu tiền?"
+                  },
+                  {
+                    "speaker": "female",
+                    "hanzi": "十块钱。",
+                    "pinyin": "Shí kuài qián.",
+                    "vi": "Mười đồng."
+                  }
+                ]
+              },
+              "explanation": "Nam: 这些水果多少钱？ (Zhèxiē shuǐguǒ duōshao qián?) – \"Chỗ hoa quả này bao nhiêu tiền?\" Nữ: 十块钱。 (Shí kuài qián.) – \"Mười đồng.\" Hội thoại mua hoa quả nên chọn tranh D.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-hoi-thoai-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0014",
+              "type": "mcq",
+              "prompt": "Nghe đoạn hội thoại và chọn tranh phù hợp (A–F).",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "我们几点的火车？",
+                    "pinyin": "Wǒmen jǐ diǎn de huǒchē?",
+                    "vi": "Chúng ta đi chuyến tàu hỏa mấy giờ?"
+                  },
+                  {
+                    "speaker": "male",
+                    "hanzi": "九点，我们快走吧。",
+                    "pinyin": "Jiǔ diǎn, wǒmen kuài zǒu ba.",
+                    "vi": "Chín giờ, chúng ta đi nhanh lên."
+                  }
+                ]
+              },
+              "explanation": "Nữ: 我们几点的火车？ (Wǒmen jǐ diǎn de huǒchē?) – \"Chúng ta đi chuyến tàu hỏa mấy giờ?\" Nam: 九点，我们快走吧。 (Jiǔ diǎn, wǒmen kuài zǒu ba.) – \"Chín giờ, chúng ta đi nhanh lên.\" Nói về chuyến tàu hỏa nên chọn tranh B (ga tàu).",
+              "difficulty": 1,
+              "tags": [
+                "nghe-hoi-thoai-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0015",
+              "type": "mcq",
+              "prompt": "Nghe đoạn hội thoại và chọn tranh phù hợp (A–F).",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "这个饭店的菜很好吃。",
+                    "pinyin": "Zhège fàndiàn de cài hěn hǎochī.",
+                    "vi": "Món ăn của nhà hàng này rất ngon."
+                  },
+                  {
+                    "speaker": "female",
+                    "hanzi": "是，我们明天再来吃吧。",
+                    "pinyin": "Shì, wǒmen míngtiān zài lái chī ba.",
+                    "vi": "Đúng vậy, ngày mai chúng ta lại đến ăn nhé."
+                  }
+                ]
+              },
+              "explanation": "Nam: 这个饭店的菜很好吃。 (Zhège fàndiàn de cài hěn hǎochī.) – \"Món ăn của nhà hàng này rất ngon.\" Nữ: 是，我们明天再来吃吧。 (Shì, wǒmen míngtiān zài lái chī ba.) – \"Đúng vậy, ngày mai chúng ta lại đến ăn nhé.\" Hai người ăn ở nhà hàng nên chọn tranh E.",
+              "difficulty": 1,
+              "tags": [
+                "nghe-hoi-thoai-chon-tranh",
+                "tu-vung"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "l4",
+          "title": "Phần 4",
+          "instruction": "Nghe một đoạn nói và câu hỏi, chọn đáp án đúng.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0016",
+              "type": "mcq",
+              "prompt": "Nghe đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "很忙 (hěn máng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "很累 (hěn lèi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "很高兴 (hěn gāoxìng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "我今天很忙，没有时间看电影。",
+                    "pinyin": "Wǒ jīntiān hěn máng, méiyǒu shíjiān kàn diànyǐng.",
+                    "vi": "Hôm nay tôi rất bận, không có thời gian xem phim."
+                  },
+                  {
+                    "speaker": "narrator",
+                    "hanzi": "问：她今天怎么样？",
+                    "pinyin": "Wèn: Tā jīntiān zěnmeyàng?",
+                    "vi": "Hỏi: Hôm nay cô ấy thế nào?"
+                  }
+                ]
+              },
+              "explanation": "Đoạn nghe: 我今天很忙，没有时间看电影。 (Wǒ jīntiān hěn máng, méiyǒu shíjiān kàn diànyǐng.) – \"Hôm nay tôi rất bận, không có thời gian xem phim.\" Câu hỏi: 她今天怎么样？ – \"Hôm nay cô ấy thế nào?\" Cô ấy nói \"我今天很忙\" nên đáp án là 很忙 – rất bận.",
+              "difficulty": 2,
+              "tags": [
+                "nghe-doan-chon-dap-an",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0017",
+              "type": "mcq",
+              "prompt": "Nghe đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "十七岁 (shíqī suì)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "七岁 (qī suì)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "四岁 (sì suì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "我儿子今年七岁，他是小学生。",
+                    "pinyin": "Wǒ érzi jīnnián qī suì, tā shì xiǎoxuéshēng.",
+                    "vi": "Con trai tôi năm nay bảy tuổi, cháu là học sinh tiểu học."
+                  },
+                  {
+                    "speaker": "narrator",
+                    "hanzi": "问：他儿子多大了？",
+                    "pinyin": "Wèn: Tā érzi duō dà le?",
+                    "vi": "Hỏi: Con trai anh ấy bao nhiêu tuổi?"
+                  }
+                ]
+              },
+              "explanation": "Đoạn nghe: 我儿子今年七岁，他是小学生。 (Wǒ érzi jīnnián qī suì, tā shì xiǎoxuéshēng.) – \"Con trai tôi năm nay bảy tuổi, cháu là học sinh tiểu học.\" Câu hỏi: 他儿子多大了？ – \"Con trai anh ấy bao nhiêu tuổi?\" \"今年七岁\" – năm nay bảy tuổi, nên chọn 七岁.",
+              "difficulty": 2,
+              "tags": [
+                "nghe-doan-chon-dap-an",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0018",
+              "type": "mcq",
+              "prompt": "Nghe đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "上班 (shàngbān)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去商店 (qù shāngdiàn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "看书 (kàn shū)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "明天是星期天，我想在家看书。",
+                    "pinyin": "Míngtiān shì xīngqītiān, wǒ xiǎng zài jiā kàn shū.",
+                    "vi": "Ngày mai là chủ nhật, tôi muốn ở nhà đọc sách."
+                  },
+                  {
+                    "speaker": "narrator",
+                    "hanzi": "问：她明天想做什么？",
+                    "pinyin": "Wèn: Tā míngtiān xiǎng zuò shénme?",
+                    "vi": "Hỏi: Ngày mai cô ấy muốn làm gì?"
+                  }
+                ]
+              },
+              "explanation": "Đoạn nghe: 明天是星期天，我想在家看书。 (Míngtiān shì xīngqītiān, wǒ xiǎng zài jiā kàn shū.) – \"Ngày mai là chủ nhật, tôi muốn ở nhà đọc sách.\" Câu hỏi: 她明天想做什么？ – \"Ngày mai cô ấy muốn làm gì?\" Cô ấy muốn \"在家看书\" – ở nhà đọc sách.",
+              "difficulty": 2,
+              "tags": [
+                "nghe-doan-chon-dap-an",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0019",
+              "type": "mcq",
+              "prompt": "Nghe đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "书包里 (shūbāo li)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "桌子上 (zhuōzi shang)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "床上 (chuáng shang)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "male",
+                    "hanzi": "我的手机在桌子上，电脑在书包里。",
+                    "pinyin": "Wǒ de shǒujī zài zhuōzi shang, diànnǎo zài shūbāo li.",
+                    "vi": "Điện thoại của tôi ở trên bàn, máy tính ở trong cặp sách."
+                  },
+                  {
+                    "speaker": "narrator",
+                    "hanzi": "问：他的电脑在哪儿？",
+                    "pinyin": "Wèn: Tā de diànnǎo zài nǎr?",
+                    "vi": "Hỏi: Máy tính của anh ấy ở đâu?"
+                  }
+                ]
+              },
+              "explanation": "Đoạn nghe: 我的手机在桌子上，电脑在书包里。 (Wǒ de shǒujī zài zhuōzi shang, diànnǎo zài shūbāo li.) – \"Điện thoại của tôi ở trên bàn, máy tính ở trong cặp sách.\" Câu hỏi: 他的电脑在哪儿？ – \"Máy tính của anh ấy ở đâu?\" \"电脑在书包里\" – máy tính ở trong cặp; trên bàn là điện thoại.",
+              "difficulty": 2,
+              "tags": [
+                "nghe-doan-chon-dap-an",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0020",
+              "type": "mcq",
+              "prompt": "Nghe đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "坐火车 (zuò huǒchē)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "坐飞机 (zuò fēijī)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "开车 (kāichē)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": {
+                "turns": [
+                  {
+                    "speaker": "female",
+                    "hanzi": "我坐飞机去北京，下午三点到。",
+                    "pinyin": "Wǒ zuò fēijī qù Běijīng, xiàwǔ sān diǎn dào.",
+                    "vi": "Tôi đi máy bay đến Bắc Kinh, ba giờ chiều đến nơi."
+                  },
+                  {
+                    "speaker": "narrator",
+                    "hanzi": "问：她怎么去北京？",
+                    "pinyin": "Wèn: Tā zěnme qù Běijīng?",
+                    "vi": "Hỏi: Cô ấy đi Bắc Kinh bằng gì?"
+                  }
+                ]
+              },
+              "explanation": "Đoạn nghe: 我坐飞机去北京，下午三点到。 (Wǒ zuò fēijī qù Běijīng, xiàwǔ sān diǎn dào.) – \"Tôi đi máy bay đến Bắc Kinh, ba giờ chiều đến nơi.\" Câu hỏi: 她怎么去北京？ – \"Cô ấy đi Bắc Kinh bằng gì?\" \"坐飞机去北京\" – đi máy bay đến Bắc Kinh.",
+              "difficulty": 2,
+              "tags": [
+                "nghe-doan-chon-dap-an",
+                "tu-vung"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "skill": "reading",
+      "title": "Đọc",
+      "instruction": "Phần đọc gồm 4 phần, 20 câu.",
+      "parts": [
+        {
+          "key": "r1",
+          "title": "Phần 1",
+          "instruction": "Đọc câu, chọn tranh phù hợp trong sáu tranh A–F. Có một tranh thừa.",
+          "imageKey": "img-r1",
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0021",
+              "type": "mcq",
+              "prompt": "我们在看电视。 (Wǒmen zài kàn diànshì.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "\"Chúng tôi đang xem tivi.\" Khớp với tranh C.",
+              "difficulty": 1,
+              "tags": [
+                "doc-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0022",
+              "type": "mcq",
+              "prompt": "他在打电话。 (Tā zài dǎ diànhuà.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "\"Anh ấy đang gọi điện thoại.\" Khớp với tranh B.",
+              "difficulty": 1,
+              "tags": [
+                "doc-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0023",
+              "type": "mcq",
+              "prompt": "老师在上课。 (Lǎoshī zài shàngkè.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "\"Thầy giáo đang lên lớp.\" Khớp với tranh E.",
+              "difficulty": 1,
+              "tags": [
+                "doc-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0024",
+              "type": "mcq",
+              "prompt": "小朋友在喝牛奶。 (Xiǎopéngyou zài hē niúnǎi.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "\"Em bé đang uống sữa.\" Khớp với tranh A.",
+              "difficulty": 1,
+              "tags": [
+                "doc-chon-tranh",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0025",
+              "type": "mcq",
+              "prompt": "她在商店买衣服。 (Tā zài shāngdiàn mǎi yīfu.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "B"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "C"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "D"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "E"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "F"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "\"Cô ấy đang mua quần áo ở cửa hàng.\" Khớp với tranh D.",
+              "difficulty": 1,
+              "tags": [
+                "doc-chon-tranh",
+                "tu-vung"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r2",
+          "title": "Phần 2",
+          "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0026",
+              "type": "mcq",
+              "prompt": "你是中国人吗？ (Nǐ shì Zhōngguórén ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "他是我哥哥。 (Tā shì wǒ gēge.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在学校门口。 (Zài xuéxiào ménkǒu.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "好的，明天见。 (Hǎo de, míngtiān jiàn.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我不饿。 (Wǒ bù è.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "两个。 (Liǎng ge.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-f"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn là người Trung Quốc à?\" – Câu trả lời phù hợp: 是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.) – \"Vâng, tôi là người Trung Quốc.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0027",
+              "type": "mcq",
+              "prompt": "那个人是谁？ (Nà ge rén shì shéi?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "他是我哥哥。 (Tā shì wǒ gēge.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在学校门口。 (Zài xuéxiào ménkǒu.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "好的，明天见。 (Hǎo de, míngtiān jiàn.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我不饿。 (Wǒ bù è.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "两个。 (Liǎng ge.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "\"Người kia là ai?\" – Câu trả lời phù hợp: 他是我哥哥。 (Tā shì wǒ gēge.) – \"Anh ấy là anh trai tôi.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0028",
+              "type": "mcq",
+              "prompt": "你想吃点儿什么？ (Nǐ xiǎng chī diǎnr shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "他是我哥哥。 (Tā shì wǒ gēge.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在学校门口。 (Zài xuéxiào ménkǒu.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "好的，明天见。 (Hǎo de, míngtiān jiàn.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我不饿。 (Wǒ bù è.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "两个。 (Liǎng ge.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn muốn ăn chút gì?\" – Câu trả lời phù hợp: 我不饿。 (Wǒ bù è.) – \"Tôi không đói.\" (từ chối lời mời ăn) (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0029",
+              "type": "mcq",
+              "prompt": "你要几个包子？ (Nǐ yào jǐ ge bāozi?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "他是我哥哥。 (Tā shì wǒ gēge.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在学校门口。 (Zài xuéxiào ménkǒu.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "好的，明天见。 (Hǎo de, míngtiān jiàn.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我不饿。 (Wǒ bù è.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "两个。 (Liǎng ge.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn muốn mấy cái bánh bao?\" – Câu trả lời phù hợp: 两个。 (Liǎng ge.) – \"Hai cái.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0030",
+              "type": "mcq",
+              "prompt": "我们在哪儿见面？ (Wǒmen zài nǎr jiànmiàn?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "他是我哥哥。 (Tā shì wǒ gēge.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "在学校门口。 (Zài xuéxiào ménkǒu.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "好的，明天见。 (Hǎo de, míngtiān jiàn.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我不饿。 (Wǒ bù è.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "两个。 (Liǎng ge.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是的，我是中国人。 (Shì de, wǒ shì Zhōngguórén.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "\"Chúng ta gặp nhau ở đâu?\" – Câu trả lời phù hợp: 在学校门口。 (Zài xuéxiào ménkǒu.) – \"Ở cổng trường.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r3",
+          "title": "Phần 3",
+          "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0031",
+              "type": "mcq",
+              "prompt": "我很（ ）喝茶。 (Wǒ hěn ( ) hē chá.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "冷 (lěng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "名字 (míngzi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "坐 (zuò)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "喜欢 (xǐhuan)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医院 (yīyuàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "Tôi rất thích uống trà. 很喜欢 + động từ: rất thích làm gì. (Từ 医院 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0032",
+              "type": "mcq",
+              "prompt": "请（ ），我给你拿水。 (Qǐng ( ), wǒ gěi nǐ ná shuǐ.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "冷 (lěng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "名字 (míngzi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "坐 (zuò)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "喜欢 (xǐhuan)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医院 (yīyuàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Mời ngồi, tôi lấy nước cho bạn. 请坐 – mời ngồi. (Từ 医院 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0033",
+              "type": "mcq",
+              "prompt": "今天很（ ），你多穿衣服。 (Jīntiān hěn ( ), nǐ duō chuān yīfu.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "冷 (lěng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "名字 (míngzi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "坐 (zuò)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "喜欢 (xǐhuan)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医院 (yīyuàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Hôm nay rất lạnh, bạn mặc thêm quần áo. 冷 – lạnh. (Từ 医院 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0034",
+              "type": "mcq",
+              "prompt": "这（ ）书是我的。 (Zhè ( ) shū shì wǒ de.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "冷 (lěng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "名字 (míngzi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "坐 (zuò)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "喜欢 (xǐhuan)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医院 (yīyuàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "Quyển sách này là của tôi. 本 là lượng từ của sách. (Từ 医院 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0035",
+              "type": "mcq",
+              "prompt": "你叫什么（ ）？ (Nǐ jiào shénme ( )?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "冷 (lěng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "名字 (míngzi)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "坐 (zuò)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "喜欢 (xǐhuan)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医院 (yīyuàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Bạn tên là gì? 叫什么名字 – tên là gì. (Từ 医院 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r4",
+          "title": "Phần 4",
+          "instruction": "Đọc đoạn văn ngắn rồi trả lời câu hỏi có dấu ★.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:q0036",
+              "type": "mcq",
+              "prompt": "小雨昨天去商店买了一些水果和面包。 (Xiǎoyǔ zuótiān qù shāngdiàn mǎi le yīxiē shuǐguǒ hé miànbāo.) ★ 小雨买了什么？ (Xiǎoyǔ mǎi le shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "水果 (shuǐguǒ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "书 (shū)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Hôm qua Tiểu Vũ đi cửa hàng mua ít hoa quả và bánh mì. ★ Tiểu Vũ đã mua gì? → 水果 (hoa quả).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0037",
+              "type": "mcq",
+              "prompt": "我爸爸是医生，他在医院工作。 (Wǒ bàba shì yīshēng, tā zài yīyuàn gōngzuò.) ★ 爸爸在哪儿工作？ (Bàba zài nǎr gōngzuò?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "医院 (yīyuàn)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "学校 (xuéxiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "饭店 (fàndiàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Bố tôi là bác sĩ, ông làm việc ở bệnh viện. ★ Bố làm việc ở đâu? → 医院 (bệnh viện).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0038",
+              "type": "mcq",
+              "prompt": "现在是上午十点，小雨十一点半去机场。 (Xiànzài shì shàngwǔ shí diǎn, Xiǎoyǔ shíyī diǎn bàn qù jīchǎng.) ★ 小雨几点去机场？ (Xiǎoyǔ jǐ diǎn qù jīchǎng?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "十点 (shí diǎn)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "十点半 (shí diǎn bàn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "十一点半 (shíyī diǎn bàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Bây giờ là 10 giờ sáng, Tiểu Vũ 11 rưỡi ra sân bay. ★ Mấy giờ Tiểu Vũ ra sân bay? → 十一点半; 十点 là giờ hiện tại (bẫy).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0039",
+              "type": "mcq",
+              "prompt": "我哥哥喜欢打球，他常常和朋友一起打球。 (Wǒ gēge xǐhuan dǎqiú, tā chángcháng hé péngyou yīqǐ dǎqiú.) ★ 哥哥喜欢做什么？ (Gēge xǐhuan zuò shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "打球 (dǎqiú)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "唱歌 (chànggē)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "看电影 (kàn diànyǐng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Anh trai tôi thích chơi bóng, anh ấy thường chơi bóng cùng bạn bè. ★ Anh trai thích làm gì? → 打球 (chơi bóng).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:q0040",
+              "type": "mcq",
+              "prompt": "小雨家在学校后边，她常常走路去学校。 (Xiǎoyǔ jiā zài xuéxiào hòubian, tā chángcháng zǒulù qù xuéxiào.) ★ 小雨怎么去学校？ (Xiǎoyǔ zěnme qù xuéxiào?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "坐汽车 (zuò qìchē)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "打车 (dǎchē)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "走路 (zǒulù)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Nhà Tiểu Vũ ở phía sau trường, cô ấy thường đi bộ đến trường. ★ Tiểu Vũ đến trường bằng cách nào? → 走路 (đi bộ).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "demoTests": [
+    {
+      "sourceKey": "hsk1:mock-01-reading",
+      "title": "Đề thi thử HSK1 – Đọc",
+      "instruction": "Đề demo gồm 20 câu phần Đọc theo cấu trúc tạm của HSK 3.0 cấp 1 (chờ chốt #15). Mỗi câu chọn một đáp án.",
+      "durationMinutes": 20,
+      "passScore": 60,
+      "sections": [
+        "reading"
+      ]
+    }
+  ]
+}

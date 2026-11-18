@@ -1,17 +1,16 @@
 import Link from 'next/link';
 
+import { AdminIcon } from '@/features/admin-shell/admin-icon';
+
 export default function ExerciseNotFound() {
   return (
-    <div className="inline-error">
-      <span className="inline-error__mark" aria-hidden="true">
-        ?
-      </span>
-      <div>
-        <p className="eyebrow">NOT FOUND</p>
-        <h1>Exercise unavailable</h1>
-        <p>It may not exist or may no longer be accessible.</p>
-        <Link className="button button--primary" href="/admin/exercises">
-          Back to exercises
+    <div className="adm-card">
+      <div className="adm-empty adm-empty--stack">
+        <AdminIcon name="file-question" />
+        <h1>Không tìm thấy bài tập</h1>
+        <p>Bài tập không tồn tại hoặc không còn truy cập được.</p>
+        <Link className="adm-btn adm-btn--primary" href="/admin/exercises">
+          Về danh sách bài tập
         </Link>
       </div>
     </div>

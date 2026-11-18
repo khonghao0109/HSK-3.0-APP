@@ -160,7 +160,11 @@ describe('PostgreSQL rate limit storage (e2e)', () => {
         (${live}, 3, CURRENT_TIMESTAMP + INTERVAL '60 seconds')
     `;
 
-    await expect(storage.purgeExpired()).resolves.toBeGreaterThanOrEqual(1);
+    // Do not assert how many rows this call deleted: another purge path (the
+    // app instance's interval cleanup, or SKIP LOCKED on a parallel purger) may
+    // remove the expired row first (CI run 41396952364). Only the end state is
+    // deterministic: the expired counter is gone and the live one survives.
+    await storage.purgeExpired();
 
     await expect(
       prisma.rateLimitCounter.findMany({

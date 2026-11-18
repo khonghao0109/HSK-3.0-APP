@@ -1,0 +1,11 @@
+{
+  "description": "option.id có khoảng trắng",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].content.options[0].id",
+      "value": "opt a"
+    }
+  ]
+}

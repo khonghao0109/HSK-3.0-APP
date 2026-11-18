@@ -1,0 +1,11 @@
+{
+  "description": "sai thanh so với repo",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[0].pinyin",
+      "value": "wō"
+    }
+  ]
+}

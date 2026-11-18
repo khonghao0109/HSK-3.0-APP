@@ -1,0 +1,106 @@
+# Unslop 11/2026: kết quả
+
+Nền `macdev` `b90c7b5`, nhánh `feat/ui-unslop`. Audit gốc: `docs/unslop-audit.md`. Chế độ đánh bóng: giữ thương hiệu Hán Lộ, tính năng, thứ tự khối theo `docs/ui_reference`.
+
+Ảnh trong repo: `before/` và `after/` chỉ gồm 12 trang tiêu biểu × 2 khổ (`<trang>-mobile-390.webp`, `<trang>-desktop-1440.webp`, 1440 thu về 1024px rộng, mỗi ảnh < 150 KB): learn-home, lesson-detail, lesson-practice, lesson-complete, dictionary-search, dictionary-word, review, review-session-back, exam-result, onboarding-goal, admin-content, admin-users. Bộ đầy đủ 53 trang × 2 khổ (PNG), 106 contact sheet trước/sau và bộ chụp nằm ở `~/hsk-evidence/hsk-ui-unslop/` (máy dev, không commit). Dữ liệu e2e disposable (tài khoản `*.example.test`), không có ảnh nào lấy từ `reverse/`.
+
+## Commit
+
+| Lượt | Commit |
+| --- | --- |
+| 1 Khoảng cách | `4d9641f` |
+| 2 Màu | `e80ef2e` |
+| 3 Icon | `c76d07e` |
+| 4 Câu chữ | `b5781c5` |
+| 5 Kiểu chữ | `c9e1a2d` |
+| 6 Bố cục | `1e8c367` |
+| 7 Chi tiết | `3b8bcf0` |
+| 8 Hình ảnh và 田字格 | `4b651d2` |
+| 9 Chuyển động | `a7746f2` |
+| Sửa sau e2e | `66a5f59` |
+
+## Số đo CSS (`scan.mjs`, mọi `src/**/*.css`)
+
+| Chỉ số | Trước | Sau | Phần còn lại |
+| --- | --- | --- | --- |
+| padding/margin/gap lệch lưới 4px (bỏ qua ≤2px) | 386 | 8 | Cố ý: bù vùng chạm 44px (`-11px`, `-7.5px`, `-5px`, `12.5px` ở trang pháp lý) |
+| Hex trần ngoài khối token | 152 | 5 | Chỉ là comment trong khối token `admin.css` |
+| `font-weight` ≥ 700 | 177 | 5 | Chỉ ở chữ Hán lớn (`.word__hz`, `.fc-hz`, `.dict-item--top .dict-item__hz`, hero landing) |
+| `text-transform: uppercase` | 11 | 0 | |
+| Cỡ chữ lẻ hoặc < 12px | 104 | 0 | |
+| `transition: all` | 0 | 0 | |
+
+## Bảng dấu hiệu
+
+| Mã | Kết quả | Ghi chú |
+| --- | --- | --- |
+| S1 | Đã sửa | Về `--sp-*`/`--adm-sp-*` hoặc bội 4; `th`/`td` admin cùng padding |
+| S2 | Đã sửa | `.home-explore a` có kiểu thẻ, hover, focus-visible, forced-colors (mobile và web) |
+| S3 | Đã sửa | Dưới 1024px thẻ ôn giãn lấp màn, hàng nút `.fc-rate` sticky đáy kèm `safe-area-inset-bottom` |
+| S4 | Đã sửa | `.adm-record-list` dùng `minmax(0, 1fr)` và `min-width: 0` |
+| Thanh bên | Một phần | Khoảng cách 2px, icon cùng cột. Dòng giữ cao **44px** (không xuống 32–40px) vì Q42/Q69 và e2e vùng chạm |
+| M1 | Đã sửa | Một kiểu trung tính; chỉ ô Thi thử dùng `--text-brand` |
+| M2 | Đã sửa | Ảnh PNG tím/xanh thành icon sprite trong ô trung tính |
+| M3 | Đã sửa | Nút trung tính; "Chưa nhớ" `--text-danger` (thêm `--red-700`, 5,44:1), "Tốt" viền `--border-brand` |
+| M4 | Đã sửa | Bỏ confetti và vòng nguyệt quế, nền navy đặc, số điểm Noto Serif, tabular-nums, jade-200 (12,5:1) |
+| M5 | Đã sửa | Nút xoá ở mỗi dòng là nút viền; hộp xác nhận vẫn đỏ đặc |
+| M6 | Đã sửa | Gồm `review-overview.css` ô ngày ngoài tháng → `--stone-600` |
+| Gradient | Đã sửa | Bỏ ở `.exl-chip[aria-current]`, `.exl-item__icon`, `.done-hero`; giữ gradient cùng sắc |
+| I1 | Đã sửa | `#i-flame` nét, `--text-muted`; số ngày `--text-strong` |
+| I2 | Đã sửa | 4 icon nét trong ô trung tính; ô chọn viền `--border-brand`, nền `--jade-25` |
+| I3 | Đã sửa | Bỏ mặt cười ở 4 nút |
+| I4 | Đã sửa | `src/components/ui/icon.tsx` thay hàm Icon cục bộ ở 17 tệp; admin giữ `AdminIcon`; ✓/✕ thành `#i-check`/`#i-x` có `aria-hidden` |
+| C1 | Đã sửa | H1 "Hôm nay", dòng phụ "Thứ Ba, 17/11/2026" (`home-date.ts`, có test). Timezone: Asia/Ho_Chi_Minh vì `/learning/home` chưa trả timezone hồ sơ |
+| C2–C7 | Đã sửa | Đúng chuỗi trong prompt |
+| C8 | Đã sửa | Bỏ thẻ "Điểm số của bạn", điểm chỉ ở huy chương |
+| C9 | Đã sửa | Ôn tập và Thi thử HSK vào nhóm đã có; FAQ chỉ còn Phát âm và Trợ lý AI |
+| C10 | Giữ | Nội dung pháp lý thuộc M2.1f |
+| Dấu câu | Đã sửa | Không còn dấu chấm than trong chuỗi UI; nhãn/nút không có dấu chấm cuối; placeholder thanh trên "Tra từ" |
+| T1 | Đã sửa | 11 rule thành viết hoa đầu câu, 12–13px, muted, 500 |
+| T2 | Đã sửa | 700 → 600/500; bỏ 700 khỏi Inter và Noto Serif (learner, admin); thêm rule `h1–h6, th, strong, b { 600 }` |
+| T3 | Đã sửa | Về `--fs-*`/`--adm-fs-*`; không letter-spacing âm |
+| T4 | Đã sửa | `numberedToToneMarks` (ü, `ou`, a/e, thanh 5, giữ hoa, idempotent) ở mọi chỗ hiển thị pinyin từ điển và thẻ ôn, kèm unit test |
+| Số | Đã sửa | `tabular-nums` cho điểm, phần trăm, đếm, đồng hồ |
+| Bố cục | Đã sửa | Hoàn thành bài: "Bài tiếp theo" + "Ôn từ mới"; phiên ôn: "Ôn lại thẻ chưa nhớ" + "Về Ôn tập" (giữ như mẫu); hồ sơ web một thẻ tối đa 720px |
+| K1 | Đã sửa | "Sắp có" thành chữ nhỏ không nền. Dùng `--text-muted` thay `--text-subtle` vì subtle chỉ 3,5–3,9:1 |
+| K2 | Đã sửa | Bỏ icon và vòng tỷ lệ (màn đã có lịch tháng); thêm mô tả từ dữ liệu thật |
+| Bo góc | Đã sửa | Giá trị lẻ về thang token; giữ bo lồng theo mẫu nơi công thức lệch mẫu |
+| 田字格 | Đã thêm | CSS mask, không ảnh, chỉ 3 vị trí (thêm ô glyph của chi tiết từ web); ẩn ở forced-colors; `learner-css.spec.ts` chốt selector |
+| A1 | Đã sửa | Bỏ confetti lặp |
+| A2 | Giữ | Shimmer skeleton admin, thêm tắt khi `prefers-reduced-motion: reduce` |
+| Hiệu ứng | Đã sửa | Một `done-rise` (fade + 8px, 360ms, `cubic-bezier(0.22, 1, 0.36, 1)`), tắt khi reduced motion |
+
+## Kiểm tra
+
+Mọi lệnh chạy trong `frontend/`, theo khoá `/tmp/hsk-heavy.lock`.
+
+- Sau mỗi lượt: `npm run lint` 0 lỗi (21–29 warning có sẵn), `npm run typecheck` exit 0, `npx vitest run` toàn bộ pass (lượt cuối: 160 file, 2013 test).
+- `npm run test:e2e` lần 1 (sau lượt 9): 985 passed, 31 failed, 50 skipped. 31 lượt fail là 8 test: 2 do unslop làm hỏng thật (dòng thanh bên còn 40px, chip đề đang chọn mất vòng focus ở web), đã sửa ở `66a5f59`; 6 test đã sai từ trước `b90c7b5` (Thi thử và Ôn tập đã là link, tag câu hỏi bị seed đổi tên), đã sửa spec, không xoá hay skip.
+- `npm run test:e2e` lần 2 (sau sửa contact sheet): 1016 passed, 0 failed, 50 skipped (30,0 phút).
+- `npm run test:e2e` lần 3 (sau `a662e7a`, 17/11): 1012 passed, **4 failed**, 50 skipped (31,5 phút). 4 lượt fail là `axe: dictionary and word` ở 4 khổ: tên h1 chi tiết từ không còn khớp từ khi mỗi chữ nằm trong ô riêng. Sửa ở `a72534b` (`aria-label` trên h1).
+- Sau `909d627` + `a72534b`, build mới, DB dựng lại: `learner-dictionary.spec.ts` + `learner-a11y.spec.ts` ở 4 khổ **80 passed, 0 failed**. Các thay đổi này chỉ chạm CSS hero và h1 chi tiết từ, nên không chạy lại toàn bộ e2e.
+- Ảnh SAU: 106/106 (lượt chính 84/88; 4 ảnh chờ chuỗi cũ "Chính xác!" trong bộ chụp, sửa bộ chụp rồi chụp lại 4/4).
+- Build: `next build` lần đầu dừng với `SecurityFatalError` (khuyến nghị nâng Next.js 16.4.3 vì lỗ hổng đã biết), chạy lại thì qua. Chưa nâng Next.js.
+
+Gate cuối (17/11, sau merge `origin/macdev` ở `beda056`), chạy trên `902142f`, build mới, DB disposable dựng lại; các commit sau chỉ đổi docs:
+
+- frontend: lint 0 lỗi, 21 warning, không tăng so với macdev (`c8ab7a4`: 29 warning); typecheck pass; vitest 161 file, 2032 test pass; generated-types pass; build pass.
+- frontend `npm run test:e2e` toàn bộ, `--trace off`: **1034 passed, 0 failed, 50 skipped (28,5 phút)**.
+- backend: lint, format, build, openapi:check pass; unit 125 suite, 1700 test pass; e2e 45 suite, 657 test pass (99 giây, DB `hsk_unslop_ci_e2e_test`).
+- Lượt e2e đầy đủ ngay trước (trên `6f4b63b`) dừng giữa chừng ở 658/1084 với 8 lượt fail (4 test × 1440, 1024): 3 test đọc `toHaveText` của h1 chi tiết từ (DOM giờ có từ hai lần: `.sr-only` + ô) và `axe: dictionary and word` còn mong tiêu đề cũ trong khi M3.4d đã đổi thành "<chữ Hán> · Chi tiết từ vựng · Hán Lộ" (spec trên macdev cũng còn tiêu đề cũ). Sửa spec ở `252efa1`.
+
+Contact sheet (mục 5, 17/11): 106 sheet được xem hết bằng 2 lượt review, mỗi lỗi mức trung bình/cao được kiểm chứng lại trên PNG gốc. 12 lỗi thật, đã sửa ở `b232545` và commit badge người dùng sau đó: bảng Bài tập admin bị tiêu đề dài đẩy cột ra ngoài; 田字格 rớt dòng 4+1 ở 390 (giờ một hàng, co chữ theo số ô); thẻ flashcard 390 bị kéo cao (S3 giữ nút ở đáy bằng margin-top:auto); thẻ thống kê ôn tập 390 xuống dòng xấu (2+1); chip ngân hàng câu hỏi bị cắt; chấm badge trạng thái bị bóp; vạch lẻ ở meta kết quả thi; tiêu đề thanh lộ trình 2 dòng; email hồ sơ ngắt giữa từ; ảnh xem lại thi hỏng không hiện fallback. Chụp lại và soát lại 18 màn liên quan: không còn lỗi bố cục. Giữ: nền navy trống dưới màn hoàn thành bài ở 390 (M4, chờ PO, xem Q341); hero chi tiết từ một hàng ô ở mọi khổ (`909d627`, ô co theo số chữ, chỉ từ 5+ chữ được xuống dòng; tên h1 giữ nguyên từ bằng `aria-label`, `a72534b`); dòng "• 45 phút" ở danh sách đề là dữ liệu fixture. S3, S4 kiểm lại trên ảnh: đã sửa.
+
+Ảnh cặp đáng xem: `learn-home-*`, `lesson-complete-*`, `lesson-practice-correct-*`, `review-*`, `review-session-*`, `dictionary-*`, `onboarding-goal-*`, `learn-profile-desktop-1440`, `admin-users-*`, `admin-lesson-edit-mobile-390`, `learn-exam-*`.
+
+Giới hạn đã biết: từ 5 chữ trở lên ở hero chi tiết từ được phép xuống dòng.
+
+Phương án nền màn hoàn thành bài (Q341): `options/` có 3 ảnh 390 cùng bài, cùng điểm. (a) và (b) là minh hoạ bằng CSS chèn vào lúc chụp (Playwright `bypassCSP` chỉ trong bộ chụp, CSP của ứng dụng không đổi), chưa triển khai.
+
+## Cách chụp lại
+
+Bộ chụp Playwright riêng (không commit): cấu hình `pw.config.ts` + `unslop.spec.ts`, chọn thư mục bằng `SHOTS_DIR`, chạy với backend test trên DB disposable.
+
+## Cần PO quyết
+
+Xem Q340 trong `docs/product/learner-ui-decisions.md`.

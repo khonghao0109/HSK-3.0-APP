@@ -1,0 +1,11 @@
+{
+  "description": "token có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[7].content.tokens[0].extra",
+      "value": 1
+    }
+  ]
+}

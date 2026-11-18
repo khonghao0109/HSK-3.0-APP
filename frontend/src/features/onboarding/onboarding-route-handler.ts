@@ -13,10 +13,10 @@ import {
   levelsResponseSchema,
   onboardingCompleteInputSchema,
   onboardingStatusResponseSchema,
-  resolveLevelForBand,
   userGoalSchema,
   type LevelItem,
 } from './onboarding-contract';
+import { resolveLevelForBand } from './onboarding-values';
 
 const goalCreatedResponseSchema = z.object({
   success: z.literal(true),

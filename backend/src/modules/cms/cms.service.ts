@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   Injectable,
@@ -6,7 +7,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ContentEntityType, Prisma } from '@prisma/client';
+import { ContentEntityType, MediaType, Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 
@@ -37,6 +38,8 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateTopicRevisionDto } from './dto/create-topic-revision.dto';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { ReviewRevisionDto } from './dto/review-revision.dto';
+import { SetLessonImagesDto } from './dto/set-lesson-images.dto';
+import { CMS_MEDIA_SELECT, unusableMediaReason } from './media-usability';
 
 const REVISION_SELECT = {
   id: true,
@@ -72,6 +75,7 @@ const LESSON_ADMIN_SELECT = {
   publishedById: true,
   publishedAt: true,
   deletedAt: true,
+  coverImageId: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.LessonSelect;
@@ -95,6 +99,46 @@ const TOPIC_ADMIN_SELECT = {
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.TopicSelect;
+
+// B1: danh sách chủ đề trong trang chi tiết bài học — mọi Topic (kể cả
+// archived) nhưng KHÔNG kèm `content` (payload lớn chỉ đọc ở GET topic/:id).
+const TOPIC_LIST_ITEM_SELECT = {
+  id: true,
+  lessonId: true,
+  title: true,
+  subtitle: true,
+  type: true,
+  orderIndex: true,
+  isPremium: true,
+  isLocked: true,
+  status: true,
+  createdById: true,
+  updatedById: true,
+  publishedById: true,
+  publishedAt: true,
+  deletedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.TopicSelect;
+
+// B1: latestRevision dạng tóm tắt — không snapshot/contentHash, chỉ tối đa 1
+// review mới nhất (đủ để suy ra "Trạng thái duyệt" theo TL-11).
+const REVISION_SUMMARY_SELECT = {
+  id: true,
+  entityId: true,
+  revision: true,
+  authorId: true,
+  createdAt: true,
+  reviews: {
+    orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
+    take: 1,
+    select: {
+      decision: true,
+      reviewerId: true,
+      createdAt: true,
+    },
+  },
+} satisfies Prisma.ContentRevisionSelect;
 
 type LessonSnapshot = {
   title: string;
@@ -180,12 +224,50 @@ export class CmsService {
     });
     if (!lesson) throw new NotFoundException('Lesson not found.');
 
-    const revisions = await this.prisma.contentRevision.findMany({
-      where: { entityType: 'lesson', entityId: lessonId },
-      orderBy: [{ revision: 'desc' }, { id: 'desc' }],
-      select: REVISION_SELECT,
-    });
-    return { success: true as const, data: { lesson, revisions } };
+    const [revisions, topics, lessonWords] = await Promise.all([
+      // shortcut: trả mọi bản sửa không phân trang, khi lịch sử bản sửa lớn thì phân trang ở đây
+      this.prisma.contentRevision.findMany({
+        where: { entityType: 'lesson', entityId: lessonId },
+        orderBy: [{ revision: 'desc' }, { id: 'desc' }],
+        select: REVISION_SELECT,
+      }),
+      // Shortcut: một bài học có ít chủ đề (hàng chục), nên trả hết không
+      // phân trang; khi vượt ~200 chủ đề/bài thì thêm phân trang ở đây.
+      this.prisma.topic.findMany({
+        where: { lessonId },
+        orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+        select: TOPIC_LIST_ITEM_SELECT,
+      }),
+      // Q350: từ của bài và ảnh hiện gán, để gán ảnh qua PUT .../images.
+      this.prisma.lessonWord.findMany({
+        where: { lessonId },
+        orderBy: [{ orderIndex: 'asc' }, { wordId: 'asc' }],
+        select: {
+          wordId: true,
+          word: { select: { hanzi: true, imageId: true } },
+        },
+      }),
+    ]);
+    const latestTopicRevisions = await this.getLatestRevisionSummaryMap(
+      'topic',
+      topics.map((topic) => topic.id),
+    );
+    return {
+      success: true as const,
+      data: {
+        lesson,
+        revisions,
+        topics: topics.map((topic) => ({
+          ...topic,
+          latestRevision: latestTopicRevisions.get(topic.id) ?? null,
+        })),
+        words: lessonWords.map(({ wordId, word }) => ({
+          wordId,
+          hanzi: word.hanzi,
+          imageId: word.imageId,
+        })),
+      },
+    };
   }
 
   async createLesson(
@@ -446,6 +528,113 @@ export class CmsService {
     );
   }
 
+  /**
+   * Q350: gán ảnh bìa và ảnh từ cho một bài học. Ảnh phải là media `image`
+   * chưa cách ly, chưa lưu trữ; từ phải thuộc bài. Ghi audit trước/sau.
+   */
+  async setLessonImages(
+    actor: CmsActor,
+    lessonId: number,
+    dto: SetLessonImagesDto,
+    context: MutationContext,
+  ) {
+    assertAdminActor(actor);
+    const wordImages = dto.wordImages ?? [];
+    const wordIds = wordImages.map((item) => item.wordId);
+    if (new Set(wordIds).size !== wordIds.length) {
+      throw new BadRequestException({
+        code: 'LESSON_IMAGE_DUPLICATE_WORD',
+        message: 'Each word may appear once.',
+      });
+    }
+    return this.executeMutation(async () =>
+      this.prisma.$transaction(async (tx) => {
+        await this.lockLessonForOperation(tx, 'lesson.images_update', lessonId);
+        const lesson = await tx.lesson.findFirst({
+          where: { id: lessonId },
+          select: LESSON_ADMIN_SELECT,
+        });
+        this.assertMutableEntity(lesson, 'Lesson');
+        const mediaIds = [
+          ...(dto.coverImageId ? [dto.coverImageId] : []),
+          ...wordImages.flatMap((item) =>
+            item.imageId === null ? [] : [item.imageId],
+          ),
+        ];
+        const media = await tx.media.findMany({
+          where: { id: { in: mediaIds } },
+          select: CMS_MEDIA_SELECT,
+        });
+        const blockers = mediaIds.flatMap((id) => {
+          const reason = unusableMediaReason(
+            media.find((item) => item.id === id) ?? null,
+            MediaType.image,
+          );
+          return reason === null ? [] : [{ mediaId: id, reason }];
+        });
+        const lessonWords = await tx.lessonWord.findMany({
+          where: { lessonId, wordId: { in: wordIds } },
+          select: { wordId: true, word: { select: { imageId: true } } },
+        });
+        const missingWords = wordIds.filter(
+          (id) => !lessonWords.some((item) => item.wordId === id),
+        );
+        if (blockers.length > 0 || missingWords.length > 0) {
+          throw new BadRequestException({
+            code: 'LESSON_IMAGE_INVALID',
+            message: 'Some images or words cannot be assigned.',
+            details: { media: blockers, wordsNotInLesson: missingWords },
+          });
+        }
+        const before = {
+          coverImageId: lesson.coverImageId,
+          wordImages: lessonWords.map((item) => ({
+            wordId: item.wordId,
+            imageId: item.word.imageId,
+          })),
+        };
+        const updated =
+          dto.coverImageId === undefined
+            ? lesson
+            : await tx.lesson.update({
+                where: { id: lessonId },
+                data: { coverImageId: dto.coverImageId, updatedById: actor.id },
+                select: LESSON_ADMIN_SELECT,
+              });
+        for (const item of wordImages) {
+          await tx.word.update({
+            where: { id: item.wordId },
+            data: { imageId: item.imageId },
+            select: { id: true },
+          });
+        }
+        const after = {
+          coverImageId: updated.coverImageId,
+          wordImages: wordImages.map(({ wordId, imageId }) => ({
+            wordId,
+            imageId,
+          })),
+        };
+        await tx.auditLog.create({
+          data: {
+            actorId: actor.id,
+            action: 'lesson.images_updated',
+            targetType: 'lesson',
+            targetId: String(lessonId),
+            correlationId: context.correlationId,
+            beforeSummary: before,
+            afterSummary: after,
+          },
+          select: { id: true },
+        });
+        return {
+          success: true as const,
+          data: { lesson: updated, wordImages: after.wordImages },
+        };
+      }),
+    );
+  }
+
   async getTopic(actor: CmsActor, topicId: number) {
     assertAdminActor(actor);
     const topic = await this.prisma.topic.findFirst({
@@ -453,6 +642,7 @@ export class CmsService {
       select: TOPIC_ADMIN_SELECT,
     });
     if (!topic) throw new NotFoundException('Topic not found.');
+    // shortcut: trả mọi bản sửa không phân trang, khi lịch sử bản sửa lớn thì phân trang ở đây
     const revisions = await this.prisma.contentRevision.findMany({
       where: { entityType: 'topic', entityId: topicId },
       orderBy: [{ revision: 'desc' }, { id: 'desc' }],
@@ -802,9 +992,11 @@ export class CmsService {
     ]);
     if (!requested) throw new NotFoundException('Content revision not found.');
     if (!latest || requested.id !== latest.id) {
-      throw new ConflictException(
-        'Only the latest content revision can be used for this action.',
-      );
+      throw new ConflictException({
+        code: 'REVISION_NOT_LATEST',
+        message:
+          'Only the latest content revision can be used for this action.',
+      });
     }
     return requested;
   }
@@ -826,6 +1018,7 @@ export class CmsService {
     entityIds: number[],
   ) {
     if (entityIds.length === 0) return new Map<number, unknown>();
+    // shortcut: tải mọi bản sửa rồi lọc trong JS, khi lịch sử bản sửa lớn thì chuyển DISTINCT ON qua $queryRaw + Prisma.sql
     const revisions = await this.prisma.contentRevision.findMany({
       where: { entityType, entityId: { in: entityIds } },
       orderBy: [{ entityId: 'asc' }, { revision: 'desc' }, { id: 'desc' }],
@@ -835,6 +1028,34 @@ export class CmsService {
     for (const revision of revisions) {
       if (!result.has(revision.entityId))
         result.set(revision.entityId, revision);
+    }
+    return result;
+  }
+
+  private async getLatestRevisionSummaryMap(
+    entityType: ContentEntityType,
+    entityIds: number[],
+  ) {
+    if (entityIds.length === 0) return new Map<number, unknown>();
+    // shortcut: tải mọi bản sửa rồi lọc trong JS, khi lịch sử bản sửa lớn thì chuyển DISTINCT ON qua $queryRaw + Prisma.sql
+    const revisions = await this.prisma.contentRevision.findMany({
+      where: { entityType, entityId: { in: entityIds } },
+      orderBy: [{ entityId: 'asc' }, { revision: 'desc' }, { id: 'desc' }],
+      select: REVISION_SUMMARY_SELECT,
+    });
+    // entityId chỉ dùng để gom nhóm, không trả ra ngoài (shape tóm tắt B1).
+    const result = new Map<
+      number,
+      Omit<(typeof revisions)[number], 'entityId'>
+    >();
+    for (const revision of revisions) {
+      if (result.has(revision.entityId)) continue;
+      const summary: Record<string, unknown> = { ...revision };
+      delete summary.entityId;
+      result.set(
+        revision.entityId,
+        summary as Omit<(typeof revisions)[number], 'entityId'>,
+      );
     }
     return result;
   }
@@ -937,7 +1158,10 @@ export class CmsService {
             select: { id: true },
           });
     if (!entity) {
-      throw new ConflictException('Archived content cannot be changed.');
+      throw new ConflictException({
+        code: 'CONTENT_ARCHIVED',
+        message: 'Archived content cannot be changed.',
+      });
     }
   }
 
@@ -947,7 +1171,10 @@ export class CmsService {
   ): asserts entity is T {
     if (!entity) throw new NotFoundException(`${label} not found.`);
     if (entity.deletedAt !== null) {
-      throw new ConflictException(`Archived ${label} cannot be changed.`);
+      throw new ConflictException({
+        code: 'CONTENT_ARCHIVED',
+        message: `Archived ${label} cannot be changed.`,
+      });
     }
   }
 
@@ -991,14 +1218,16 @@ export class CmsService {
       }),
     ]);
     if (!level) {
-      throw new ConflictException(
-        'Lesson requires a published, non-deleted parent level.',
-      );
+      throw new ConflictException({
+        code: 'LESSON_LEVEL_NOT_PUBLISHED',
+        message: 'Lesson requires a published, non-deleted parent level.',
+      });
     }
     if (topicCount + storyCount === 0) {
-      throw new ConflictException(
-        'Lesson requires at least one published Topic or Story.',
-      );
+      throw new ConflictException({
+        code: 'LESSON_NO_PUBLISHED_CHILD',
+        message: 'Lesson requires at least one published Topic or Story.',
+      });
     }
   }
 
@@ -1041,19 +1270,22 @@ export class CmsService {
       if (error instanceof HttpException) throw error;
       const classification = classifyCmsPersistenceError(error);
       if (classification === 'unique_conflict') {
-        throw new ConflictException(
-          'Content conflicts with an existing slug or order.',
-        );
+        throw new ConflictException({
+          code: 'CONTENT_UNIQUE_CONFLICT',
+          message: 'Content conflicts with an existing slug or order.',
+        });
       }
       if (classification === 'constraint_conflict') {
-        throw new ConflictException(
-          'Content violates a database integrity constraint.',
-        );
+        throw new ConflictException({
+          code: 'CONTENT_CONSTRAINT_CONFLICT',
+          message: 'Content violates a database integrity constraint.',
+        });
       }
       if (classification === 'concurrent_retry') {
-        throw new ConflictException(
-          'Concurrent content update detected; retry the request.',
-        );
+        throw new ConflictException({
+          code: 'CONTENT_CONCURRENT_UPDATE',
+          message: 'Concurrent content update detected; retry the request.',
+        });
       }
       if (classification === 'timeout' || classification === 'connection') {
         throw new ServiceUnavailableException(
@@ -1106,7 +1338,10 @@ function parseLessonSnapshot(snapshot: Prisma.JsonValue): LessonSnapshot {
     forbidNonWhitelisted: true,
   });
   if (errors.length > 0) {
-    throw new ConflictException('Lesson revision snapshot is invalid.');
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'Lesson revision snapshot is invalid.',
+    });
   }
   return lessonSnapshot(dto);
 }
@@ -1118,12 +1353,20 @@ function parseTopicSnapshot(snapshot: Prisma.JsonValue): TopicSnapshot {
     forbidNonWhitelisted: true,
   });
   if (errors.length > 0) {
-    throw new ConflictException('Topic revision snapshot is invalid.');
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'Topic revision snapshot is invalid.',
+    });
   }
   return topicSnapshot(dto);
 }
 
 function requireContentHash(value: string | null): string {
-  if (!value) throw new ConflictException('Content revision hash is missing.');
+  if (!value) {
+    throw new ConflictException({
+      code: 'CONTENT_REVISION_INVALID',
+      message: 'Content revision hash is missing.',
+    });
+  }
   return value;
 }

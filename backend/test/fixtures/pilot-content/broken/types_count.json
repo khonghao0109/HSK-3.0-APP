@@ -1,0 +1,11 @@
+{
+  "description": "chỉ còn 2 loại bài tập",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "setTypeAll",
+      "type": "mcq",
+      "to": "fill_blank"
+    }
+  ]
+}

@@ -7,9 +7,9 @@ export default function LearnerError({
   reset: () => void;
 }) {
   return (
-    <div className="app auth">
+    <main className="app auth">
       <h1 className="auth__title">Đã có lỗi xảy ra</h1>
-      <p className="auth__subtitle">
+      <p className="auth__subtitle" role="alert">
         Không thể kết nối hoặc máy chủ đang gặp sự cố. Vui lòng thử lại sau.
       </p>
 
@@ -20,6 +20,6 @@ export default function LearnerError({
       >
         Thử lại
       </button>
-    </div>
+    </main>
   );
 }

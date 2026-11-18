@@ -10,8 +10,10 @@ import {
   wholePercent,
   type LearningHome,
 } from '@/features/learner-home/learning-home-contract';
+import { homeDateLabel } from '@/features/learner-home/home-date';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
+import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import {
   TOAST_COMING_SOON,
   TOAST_NOTIFICATIONS,
@@ -19,30 +21,30 @@ import {
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
   title: 'Trang chủ',
 };
 
-/** "Khám phá" shortcuts (Q1); none of the targets has shipped yet (Q16). */
-const EXPLORE = [
-  { label: 'Thi thử', icon: 'trophy', tone: 'amber' },
-  { label: 'Phát âm', icon: 'mic', tone: 'red' },
-  { label: 'Đọc hiểu', icon: 'book-open', tone: 'jade' },
-  { label: 'Tài liệu', icon: 'file-text', tone: 'blue' },
-  { label: 'Trợ lý AI', icon: 'sparkles', tone: 'violet' },
-  { label: 'Hội thoại', icon: 'message-circle', tone: 'jade' },
-  { label: 'Nhận diện chữ', icon: 'file-stack', tone: 'blue' },
-  { label: 'Hỗ trợ', icon: 'help-circle', tone: 'amber' },
-] as const;
-
-function Icon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
+/**
+ * "Khám phá" shortcuts (Q1). Q16: only "Thi thử" has shipped (M4.5 B1) and is
+ * a real link; the rest still toast "sắp ra mắt".
+ */
+const EXPLORE: ReadonlyArray<{
+  label: string;
+  icon: string;
+  href?: string;
+}> = [
+  { label: 'Thi thử', icon: 'trophy', href: '/learn/exam' },
+  { label: 'Phát âm', icon: 'mic' },
+  { label: 'Đọc hiểu', icon: 'book-open' },
+  { label: 'Tài liệu', icon: 'file-text' },
+  { label: 'Trợ lý AI', icon: 'sparkles' },
+  { label: 'Hội thoại', icon: 'message-circle' },
+  { label: 'Nhận diện chữ', icon: 'file-stack' },
+  { label: 'Hỗ trợ', icon: 'help-circle' },
+];
 
 export default async function LearnerHomePage() {
   const session = await getServerLearnerSession();
@@ -82,6 +84,7 @@ export default async function LearnerHomePage() {
 
   return (
     <>
+      <LearnerWebTopbar streakDays={home.streakDays} />
       <header className="home-hero">
         <img
           className="home-hero__art"
@@ -111,10 +114,8 @@ export default async function LearnerHomePage() {
             <Icon name="user" />
           </Link>
           <div>
-            <h1>
-              {home.greetingName ? `Chào, ${home.greetingName}` : 'Chào bạn'}
-            </h1>
-            <p>Hôm nay cùng tiến bộ nhé!</p>
+            <h1>Hôm nay</h1>
+            <p>{homeDateLabel(new Date())}</p>
           </div>
         </div>
       </header>
@@ -149,12 +150,7 @@ export default async function LearnerHomePage() {
             <h2 id="home-streak-title">Chuỗi ngày học</h2>
             <p className="sr-only">{`${home.streakDays} ngày`}</p>
             <div className="home-streak" aria-hidden="true">
-              <img
-                src="/images/learner/fire.png"
-                alt=""
-                width={40}
-                height={42}
-              />
+              <Icon name="flame" className="streak-icon home-streak__icon" />
               <div>
                 <b>{home.streakDays}</b>
                 <span>ngày</span>
@@ -166,7 +162,10 @@ export default async function LearnerHomePage() {
         {continueLesson && (
           <>
             <h2 className="home-section">Tiếp tục học</h2>
-            <ToastButton className="home-lesson" message={TOAST_COMING_SOON}>
+            <Link
+              className="home-lesson"
+              href={`/learn/lessons/${continueLesson.lessonId}`}
+            >
               <span className="home-lesson__art" aria-hidden="true">
                 <Icon name="book-open" />
               </span>
@@ -184,8 +183,13 @@ export default async function LearnerHomePage() {
                   {lessonPercent}%
                 </span>
               </span>
+              {/* Web card button (Q83): label by state, hidden below 1024px. */}{' '}
+              <span className="home-lesson__cta w-only">
+                {lessonPercent === 0 ? 'Bắt đầu' : 'Tiếp tục học'}
+                <Icon name="arrow-right" />
+              </span>
               <Icon name="chevron-right" />
-            </ToastButton>
+            </Link>
           </>
         )}
 
@@ -195,15 +199,24 @@ export default async function LearnerHomePage() {
         <ul className="home-explore" aria-labelledby="explore-title">
           {EXPLORE.map((item) => (
             <li key={item.label}>
-              <ToastButton message={TOAST_COMING_SOON}>
-                <span
-                  className={`home-explore__icon home-explore__icon--${item.tone}`}
-                  aria-hidden="true"
-                >
-                  <Icon name={item.icon} />
-                </span>
-                {item.label}
-              </ToastButton>
+              {item.href === undefined ? (
+                <ToastButton message={TOAST_COMING_SOON}>
+                  <span className="home-explore__icon" aria-hidden="true">
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </ToastButton>
+              ) : (
+                <Link href={item.href}>
+                  <span
+                    className="home-explore__icon home-explore__icon--live"
+                    aria-hidden="true"
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

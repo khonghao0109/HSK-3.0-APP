@@ -34,6 +34,7 @@ DECLARE
   attempt_id INTEGER;
   attempt_2_id INTEGER;
   attempt_7_9_id INTEGER;
+  attempt_score_id INTEGER;
   content_revision_id INTEGER;
   content_review_id INTEGER;
   audit_log_id BIGINT;
@@ -515,6 +516,23 @@ BEGIN
     RAISE EXCEPTION 'ExamAttemptSnapshot mutation was accepted';
   END IF;
 
+  -- TL-112/Q120: the partial unique index rejects a second in-progress attempt
+  -- for the same (userId, testId), even with a different idempotency key.
+  rejected := false;
+  BEGIN
+    INSERT INTO "ExamAttempt" (
+      "userId", "testId", "expiresAt", "remainingSeconds", "scoringVersion", "idempotencyKey", "updatedAt"
+    ) VALUES (
+      user_id, test_1_id, CURRENT_TIMESTAMP + interval '10 minutes', 600, 'hsk-p0-v1',
+      'attempt-duplicate-in-progress', CURRENT_TIMESTAMP
+    );
+  EXCEPTION WHEN unique_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'a second in_progress ExamAttempt for the same user/test was accepted';
+  END IF;
+
   UPDATE "ExamAttempt"
   SET "status" = 'submitted', "submittedAt" = CURRENT_TIMESTAMP, "remainingSeconds" = 300, "score" = 1, "maxScore" = 1
   WHERE "id" = attempt_id;
@@ -534,6 +552,31 @@ BEGIN
   INSERT INTO "Result" (
     "userId", "testId", "attemptId", "score", "awardedBand", "scoringVersion", "detailJson"
   ) VALUES (user_id, test_1_id, attempt_id, 1, 1, 'hsk-p0-v1', '{}'::jsonb);
+
+  -- TL-161: Result.maxScore bounds score when present; legacy rows may keep it NULL.
+  INSERT INTO "ExamAttempt" (
+    "userId", "testId", "status", "startedAt", "expiresAt", "submittedAt", "remainingSeconds",
+    "score", "maxScore", "scoringVersion", "idempotencyKey", "updatedAt"
+  ) VALUES (
+    user_id, test_1_id, 'submitted', CURRENT_TIMESTAMP - interval '20 minutes', CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP, 0, 5, 10, 'hsk-p0-v1', 'attempt-result-score-check', CURRENT_TIMESTAMP
+  ) RETURNING "id" INTO attempt_score_id;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "Result" (
+      "userId", "testId", "attemptId", "score", "maxScore", "scoringVersion", "detailJson"
+    ) VALUES (user_id, test_1_id, attempt_score_id, 5, 3, 'hsk-p0-v1', '{}'::jsonb);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Result accepted score greater than maxScore';
+  END IF;
+
+  INSERT INTO "Result" (
+    "userId", "testId", "attemptId", "score", "maxScore", "scoringVersion", "detailJson"
+  ) VALUES (user_id, test_1_id, attempt_score_id, 5, NULL, 'hsk-p0-v1', '{}'::jsonb);
 
   rejected := false;
   BEGIN
@@ -565,6 +608,15 @@ BEGIN
   ) VALUES (
     user_id, test_1_id, CURRENT_TIMESTAMP + interval '10 minutes', 600, 'hsk-p0-v1', 'attempt-2', CURRENT_TIMESTAMP
   ) RETURNING "id" INTO attempt_2_id;
+
+  -- The finished attempt above no longer occupies the partial index, so the
+  -- same (userId, testId) may start again (Q120: unlimited retakes).
+  IF (
+    SELECT COUNT(*) FROM "ExamAttempt"
+    WHERE "userId" = user_id AND "testId" = test_1_id AND "status" = 'in_progress'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'submitted ExamAttempt still blocked a new in_progress attempt';
+  END IF;
   rejected := false;
   BEGIN
     INSERT INTO "Result" ("userId", "testId", "attemptId", "score", "scoringVersion", "detailJson")

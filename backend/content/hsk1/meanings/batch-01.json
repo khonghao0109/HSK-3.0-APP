@@ -1,0 +1,1344 @@
+{
+  "schemaVersion": 1,
+  "batchId": "hsk1-vi-01",
+  "lessons": [1, 2, 3, 4, 5],
+  "dataSource": {
+    "code": "HSK30_VI_HSK1_B01",
+    "name": "Nghĩa tiếng Việt và câu ví dụ HSK1, lô 01 (bài 1–5)",
+    "version": "1",
+    "license": "Original content authored for HSK 3.0 APP",
+    "attribution": "Nội dung do agent AI soạn nháp cho HSK 3.0 APP, người duyệt PO chỉ định duyệt (Q182, Q183, Q185)",
+    "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
+  },
+  "review": {
+    "status": "approved",
+    "reviewer": "Khổng Văn Hào",
+    "reviewedAt": "2026-11-17",
+    "contentSha256": "b07c0d2837f9fadc4651a51af43ead49aed212d63d5ae58c813c2fe73e532501",
+    "notes": []
+  },
+  "properNames": [
+    {
+      "hanzi": "北京",
+      "pinyin": "Běijīng",
+      "note": "tên riêng: Bắc Kinh"
+    },
+    {
+      "hanzi": "中国",
+      "pinyin": "Zhōngguó",
+      "note": "tên riêng: Trung Quốc"
+    },
+    {
+      "hanzi": "小雨",
+      "pinyin": "Xiǎoyǔ",
+      "note": "tên riêng: Tiểu Vũ (tên người, ghép từ 小 và 雨)"
+    }
+  ],
+  "entries": [
+    {
+      "hanzi": "我",
+      "pinyin": "wǒ",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "tôi, mình",
+      "examples": [
+        {
+          "hanzi": "我是学生。",
+          "pinyin": "Wǒ shì xuéshēng.",
+          "translationVi": "Tôi là học sinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "你",
+      "pinyin": "nǐ",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "bạn",
+      "examples": [
+        {
+          "hanzi": "你好！",
+          "pinyin": "Nǐ hǎo!",
+          "translationVi": "Xin chào bạn!"
+        }
+      ]
+    },
+    {
+      "hanzi": "您",
+      "pinyin": "nín",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "ngài, ông, bà (cách gọi lịch sự của 你)",
+      "examples": [
+        {
+          "hanzi": "您好，老师！",
+          "pinyin": "Nín hǎo, lǎoshī!",
+          "translationVi": "Em chào thầy/cô ạ!"
+        }
+      ]
+    },
+    {
+      "hanzi": "他",
+      "pinyin": "tā",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "anh ấy, ông ấy, nó (nam)",
+      "examples": [
+        {
+          "hanzi": "他是我的老师。",
+          "pinyin": "Tā shì wǒ de lǎoshī.",
+          "translationVi": "Anh ấy là thầy giáo của tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "她",
+      "pinyin": "tā",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "cô ấy, bà ấy, chị ấy",
+      "examples": [
+        {
+          "hanzi": "她是我的朋友。",
+          "pinyin": "Tā shì wǒ de péngyou.",
+          "translationVi": "Cô ấy là bạn của tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "我们",
+      "pinyin": "wǒmen",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "chúng tôi, chúng ta",
+      "examples": [
+        {
+          "hanzi": "我们都是学生。",
+          "pinyin": "Wǒmen dōu shì xuéshēng.",
+          "translationVi": "Chúng tôi đều là học sinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "叫",
+      "pinyin": "jiào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "gọi, tên là",
+      "examples": [
+        {
+          "hanzi": "老师叫我的名字。",
+          "pinyin": "Lǎoshī jiào wǒ de míngzi.",
+          "translationVi": "Giáo viên gọi tên tôi."
+        },
+        {
+          "hanzi": "我叫小雨。",
+          "pinyin": "Wǒ jiào Xiǎoyǔ.",
+          "translationVi": "Tôi tên là Tiểu Vũ."
+        }
+      ]
+    },
+    {
+      "hanzi": "名字",
+      "pinyin": "míngzi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tên",
+      "examples": [
+        {
+          "hanzi": "这是你的名字吗？",
+          "pinyin": "Zhè shì nǐ de míngzi ma?",
+          "translationVi": "Đây là tên của bạn à?"
+        }
+      ]
+    },
+    {
+      "hanzi": "是",
+      "pinyin": "shì",
+      "partOfSpeech": "động từ",
+      "meaningVi": "là",
+      "examples": [
+        {
+          "hanzi": "我是中国人。",
+          "pinyin": "Wǒ shì Zhōngguórén.",
+          "translationVi": "Tôi là người Trung Quốc."
+        }
+      ]
+    },
+    {
+      "hanzi": "认识",
+      "pinyin": "rènshi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "quen biết, nhận biết",
+      "examples": [
+        {
+          "hanzi": "很高兴认识你。",
+          "pinyin": "Hěn gāoxìng rènshi nǐ.",
+          "translationVi": "Rất vui được làm quen với bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "高兴",
+      "pinyin": "gāoxìng",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "vui, vui mừng",
+      "examples": [
+        {
+          "hanzi": "今天我很高兴。",
+          "pinyin": "Jīntiān wǒ hěn gāoxìng.",
+          "translationVi": "Hôm nay tôi rất vui."
+        }
+      ]
+    },
+    {
+      "hanzi": "老师",
+      "pinyin": "lǎoshī",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "giáo viên, thầy cô",
+      "examples": [
+        {
+          "hanzi": "我的老师很好。",
+          "pinyin": "Wǒ de lǎoshī hěn hǎo.",
+          "translationVi": "Thầy giáo của tôi rất tốt."
+        }
+      ]
+    },
+    {
+      "hanzi": "学生",
+      "pinyin": "xuéshēng",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "học sinh, sinh viên",
+      "examples": [
+        {
+          "hanzi": "你是学生吗？",
+          "pinyin": "Nǐ shì xuéshēng ma?",
+          "translationVi": "Bạn là học sinh à?"
+        }
+      ]
+    },
+    {
+      "hanzi": "同学",
+      "pinyin": "tóngxué",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bạn học, bạn cùng trường",
+      "examples": [
+        {
+          "hanzi": "他是我的同学。",
+          "pinyin": "Tā shì wǒ de tóngxué.",
+          "translationVi": "Anh ấy là bạn học của tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "朋友",
+      "pinyin": "péngyou",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bạn bè",
+      "examples": [
+        {
+          "hanzi": "你是我的朋友。",
+          "pinyin": "Nǐ shì wǒ de péngyou.",
+          "translationVi": "Cậu là bạn của tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "中国",
+      "pinyin": "Zhōngguó",
+      "partOfSpeech": "danh từ riêng",
+      "meaningVi": "Trung Quốc",
+      "examples": [
+        {
+          "hanzi": "我有中国朋友。",
+          "pinyin": "Wǒ yǒu Zhōngguó péngyou.",
+          "translationVi": "Tôi có bạn Trung Quốc."
+        }
+      ]
+    },
+    {
+      "hanzi": "人",
+      "pinyin": "rén",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "người",
+      "examples": [
+        {
+          "hanzi": "他是中国人吗？",
+          "pinyin": "Tā shì Zhōngguórén ma?",
+          "translationVi": "Anh ấy là người Trung Quốc à?"
+        }
+      ]
+    },
+    {
+      "hanzi": "什么",
+      "pinyin": "shénme",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "cái gì, gì",
+      "examples": [
+        {
+          "hanzi": "你叫什么名字？",
+          "pinyin": "Nǐ jiào shénme míngzi?",
+          "translationVi": "Bạn tên là gì?"
+        }
+      ]
+    },
+    {
+      "hanzi": "谢谢",
+      "pinyin": "xièxie",
+      "partOfSpeech": "động từ",
+      "meaningVi": "cảm ơn",
+      "examples": [
+        {
+          "hanzi": "谢谢你！",
+          "pinyin": "Xièxie nǐ!",
+          "translationVi": "Cảm ơn bạn!"
+        }
+      ]
+    },
+    {
+      "hanzi": "再见",
+      "pinyin": "zàijiàn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "tạm biệt, hẹn gặp lại",
+      "examples": [
+        {
+          "hanzi": "老师，再见！",
+          "pinyin": "Lǎoshī, zàijiàn!",
+          "translationVi": "Tạm biệt thầy/cô ạ!"
+        }
+      ]
+    },
+    {
+      "hanzi": "爸爸",
+      "pinyin": "bàba",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bố, ba",
+      "examples": [
+        {
+          "hanzi": "我爸爸是老师。",
+          "pinyin": "Wǒ bàba shì lǎoshī.",
+          "translationVi": "Bố tôi là giáo viên."
+        }
+      ]
+    },
+    {
+      "hanzi": "妈妈",
+      "pinyin": "māma",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "mẹ",
+      "examples": [
+        {
+          "hanzi": "我妈妈是医生。",
+          "pinyin": "Wǒ māma shì yīshēng.",
+          "translationVi": "Mẹ tôi là bác sĩ."
+        }
+      ]
+    },
+    {
+      "hanzi": "哥哥",
+      "pinyin": "gēge",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "anh trai",
+      "examples": [
+        {
+          "hanzi": "哥哥有很多书。",
+          "pinyin": "Gēge yǒu hěn duō shū.",
+          "translationVi": "Anh trai tôi có rất nhiều sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "姐姐",
+      "pinyin": "jiějie",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "chị gái",
+      "examples": [
+        {
+          "hanzi": "我姐姐是大学生。",
+          "pinyin": "Wǒ jiějie shì dàxuéshēng.",
+          "translationVi": "Chị gái tôi là sinh viên."
+        }
+      ]
+    },
+    {
+      "hanzi": "弟弟",
+      "pinyin": "dìdi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "em trai",
+      "examples": [
+        {
+          "hanzi": "弟弟今年八岁。",
+          "pinyin": "Dìdi jīnnián bā suì.",
+          "translationVi": "Em trai tôi năm nay tám tuổi."
+        }
+      ]
+    },
+    {
+      "hanzi": "妹妹",
+      "pinyin": "mèimei",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "em gái",
+      "examples": [
+        {
+          "hanzi": "我妹妹今年五岁。",
+          "pinyin": "Wǒ mèimei jīnnián wǔ suì.",
+          "translationVi": "Em gái tôi năm nay năm tuổi."
+        }
+      ]
+    },
+    {
+      "hanzi": "儿子",
+      "pinyin": "érzi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "con trai",
+      "examples": [
+        {
+          "hanzi": "这是我的儿子。",
+          "pinyin": "Zhè shì wǒ de érzi.",
+          "translationVi": "Đây là con trai tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "爷爷",
+      "pinyin": "yéye",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ông nội",
+      "examples": [
+        {
+          "hanzi": "爷爷和奶奶在家。",
+          "pinyin": "Yéye hé nǎinai zài jiā.",
+          "translationVi": "Ông nội và bà nội ở nhà."
+        }
+      ]
+    },
+    {
+      "hanzi": "奶奶",
+      "pinyin": "nǎinai",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bà nội",
+      "examples": [
+        {
+          "hanzi": "我奶奶今年六十岁了。",
+          "pinyin": "Wǒ nǎinai jīnnián liùshí suì le.",
+          "translationVi": "Bà nội tôi năm nay sáu mươi tuổi rồi."
+        }
+      ]
+    },
+    {
+      "hanzi": "孩子",
+      "pinyin": "háizi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "đứa trẻ, con",
+      "examples": [
+        {
+          "hanzi": "这个孩子是我儿子。",
+          "pinyin": "Zhège háizi shì wǒ érzi.",
+          "translationVi": "Đứa trẻ này là con trai tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "岁",
+      "pinyin": "suì",
+      "partOfSpeech": "lượng từ",
+      "meaningVi": "(lượng từ) tuổi",
+      "examples": [
+        {
+          "hanzi": "你今年几岁了？",
+          "pinyin": "Nǐ jīnnián jǐ suì le?",
+          "translationVi": "Năm nay bạn mấy tuổi rồi?"
+        }
+      ]
+    },
+    {
+      "hanzi": "多",
+      "pinyin": "duō",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "nhiều",
+      "examples": [
+        {
+          "hanzi": "他有很多朋友。",
+          "pinyin": "Tā yǒu hěn duō péngyou.",
+          "translationVi": "Anh ấy có rất nhiều bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "大",
+      "pinyin": "dà",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "to, lớn, lớn (tuổi)",
+      "examples": [
+        {
+          "hanzi": "你的孩子多大了？",
+          "pinyin": "Nǐ de háizi duō dà le?",
+          "translationVi": "Con bạn bao nhiêu tuổi rồi?"
+        }
+      ]
+    },
+    {
+      "hanzi": "小",
+      "pinyin": "xiǎo",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "nhỏ, bé",
+      "examples": [
+        {
+          "hanzi": "我妹妹很小，四岁。",
+          "pinyin": "Wǒ mèimei hěn xiǎo, sì suì.",
+          "translationVi": "Em gái tôi còn nhỏ, bốn tuổi."
+        }
+      ]
+    },
+    {
+      "hanzi": "有",
+      "pinyin": "yǒu",
+      "partOfSpeech": "động từ",
+      "meaningVi": "có",
+      "examples": [
+        {
+          "hanzi": "我有两个姐姐。",
+          "pinyin": "Wǒ yǒu liǎng ge jiějie.",
+          "translationVi": "Tôi có hai chị gái."
+        }
+      ]
+    },
+    {
+      "hanzi": "没有",
+      "pinyin": "méiyǒu",
+      "partOfSpeech": "động từ",
+      "meaningVi": "không có",
+      "examples": [
+        {
+          "hanzi": "我没有哥哥，有妹妹。",
+          "pinyin": "Wǒ méiyǒu gēge, yǒu mèimei.",
+          "translationVi": "Tôi không có anh trai, có em gái."
+        }
+      ]
+    },
+    {
+      "hanzi": "和",
+      "pinyin": "hé",
+      "partOfSpeech": "liên từ",
+      "meaningVi": "và",
+      "examples": [
+        {
+          "hanzi": "爸爸和妈妈在家。",
+          "pinyin": "Bàba hé māma zài jiā.",
+          "translationVi": "Bố và mẹ ở nhà."
+        }
+      ]
+    },
+    {
+      "hanzi": "的",
+      "pinyin": "de",
+      "partOfSpeech": "trợ từ",
+      "meaningVi": "(trợ từ) của (biểu thị sở hữu, bổ nghĩa)",
+      "examples": [
+        {
+          "hanzi": "这是我爸爸的书。",
+          "pinyin": "Zhè shì wǒ bàba de shū.",
+          "translationVi": "Đây là sách của bố tôi."
+        }
+      ]
+    },
+    {
+      "hanzi": "家",
+      "pinyin": "jiā",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nhà, gia đình",
+      "examples": [
+        {
+          "hanzi": "我家有四个人。",
+          "pinyin": "Wǒ jiā yǒu sì ge rén.",
+          "translationVi": "Nhà tôi có bốn người."
+        }
+      ]
+    },
+    {
+      "hanzi": "谁",
+      "pinyin": "shéi",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "ai",
+      "examples": [
+        {
+          "hanzi": "这是谁的孩子？",
+          "pinyin": "Zhè shì shéi de háizi?",
+          "translationVi": "Đây là con của ai?"
+        }
+      ]
+    },
+    {
+      "hanzi": "一",
+      "pinyin": "yī",
+      "partOfSpeech": "số từ",
+      "meaningVi": "một",
+      "examples": [
+        {
+          "hanzi": "我有一个哥哥。",
+          "pinyin": "Wǒ yǒu yī ge gēge.",
+          "translationVi": "Tôi có một người anh trai."
+        }
+      ]
+    },
+    {
+      "hanzi": "二",
+      "pinyin": "èr",
+      "partOfSpeech": "số từ",
+      "meaningVi": "hai",
+      "examples": [
+        {
+          "hanzi": "今天是二月二日。",
+          "pinyin": "Jīntiān shì èr yuè èr rì.",
+          "translationVi": "Hôm nay là ngày mùng hai tháng hai."
+        }
+      ]
+    },
+    {
+      "hanzi": "三",
+      "pinyin": "sān",
+      "partOfSpeech": "số từ",
+      "meaningVi": "ba",
+      "examples": [
+        {
+          "hanzi": "我有三个朋友。",
+          "pinyin": "Wǒ yǒu sān ge péngyou.",
+          "translationVi": "Tôi có ba người bạn."
+        }
+      ]
+    },
+    {
+      "hanzi": "四",
+      "pinyin": "sì",
+      "partOfSpeech": "số từ",
+      "meaningVi": "bốn",
+      "examples": [
+        {
+          "hanzi": "我们下午四点见。",
+          "pinyin": "Wǒmen xiàwǔ sì diǎn jiàn.",
+          "translationVi": "Chúng ta gặp nhau lúc bốn giờ chiều."
+        }
+      ]
+    },
+    {
+      "hanzi": "五",
+      "pinyin": "wǔ",
+      "partOfSpeech": "số từ",
+      "meaningVi": "năm",
+      "examples": [
+        {
+          "hanzi": "我今天五点下课。",
+          "pinyin": "Wǒ jīntiān wǔ diǎn xiàkè.",
+          "translationVi": "Hôm nay tôi tan học lúc năm giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "六",
+      "pinyin": "liù",
+      "partOfSpeech": "số từ",
+      "meaningVi": "sáu",
+      "examples": [
+        {
+          "hanzi": "他家有六个人。",
+          "pinyin": "Tā jiā yǒu liù ge rén.",
+          "translationVi": "Nhà anh ấy có sáu người."
+        }
+      ]
+    },
+    {
+      "hanzi": "七",
+      "pinyin": "qī",
+      "partOfSpeech": "số từ",
+      "meaningVi": "bảy",
+      "examples": [
+        {
+          "hanzi": "我七点吃饭。",
+          "pinyin": "Wǒ qī diǎn chīfàn.",
+          "translationVi": "Tôi ăn cơm lúc bảy giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "八",
+      "pinyin": "bā",
+      "partOfSpeech": "số từ",
+      "meaningVi": "tám",
+      "examples": [
+        {
+          "hanzi": "我们八点上课。",
+          "pinyin": "Wǒmen bā diǎn shàngkè.",
+          "translationVi": "Chúng tôi vào học lúc tám giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "九",
+      "pinyin": "jiǔ",
+      "partOfSpeech": "số từ",
+      "meaningVi": "chín",
+      "examples": [
+        {
+          "hanzi": "现在九点十分。",
+          "pinyin": "Xiànzài jiǔ diǎn shí fēn.",
+          "translationVi": "Bây giờ là chín giờ mười phút."
+        }
+      ]
+    },
+    {
+      "hanzi": "十",
+      "pinyin": "shí",
+      "partOfSpeech": "số từ",
+      "meaningVi": "mười",
+      "examples": [
+        {
+          "hanzi": "我晚上十点睡觉。",
+          "pinyin": "Wǒ wǎnshang shí diǎn shuìjiào.",
+          "translationVi": "Tôi đi ngủ lúc mười giờ tối."
+        }
+      ]
+    },
+    {
+      "hanzi": "点",
+      "pinyin": "diǎn",
+      "partOfSpeech": "lượng từ",
+      "meaningVi": "(lượng từ) giờ",
+      "examples": [
+        {
+          "hanzi": "请问，现在几点？",
+          "pinyin": "Qǐngwèn, xiànzài jǐ diǎn?",
+          "translationVi": "Xin hỏi, bây giờ là mấy giờ?"
+        }
+      ]
+    },
+    {
+      "hanzi": "分",
+      "pinyin": "fēn",
+      "partOfSpeech": "lượng từ",
+      "meaningVi": "(lượng từ) phút",
+      "examples": [
+        {
+          "hanzi": "现在八点二十分。",
+          "pinyin": "Xiànzài bā diǎn èrshí fēn.",
+          "translationVi": "Bây giờ là tám giờ hai mươi phút."
+        }
+      ]
+    },
+    {
+      "hanzi": "今天",
+      "pinyin": "jīntiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "hôm nay",
+      "examples": [
+        {
+          "hanzi": "今天是星期几？",
+          "pinyin": "Jīntiān shì xīngqī jǐ?",
+          "translationVi": "Hôm nay là thứ mấy?"
+        }
+      ]
+    },
+    {
+      "hanzi": "明天",
+      "pinyin": "míngtiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ngày mai",
+      "examples": [
+        {
+          "hanzi": "明天我去北京。",
+          "pinyin": "Míngtiān wǒ qù Běijīng.",
+          "translationVi": "Ngày mai tôi đi Bắc Kinh."
+        }
+      ]
+    },
+    {
+      "hanzi": "昨天",
+      "pinyin": "zuótiān",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "hôm qua",
+      "examples": [
+        {
+          "hanzi": "昨天是星期日。",
+          "pinyin": "Zuótiān shì xīngqīrì.",
+          "translationVi": "Hôm qua là Chủ nhật."
+        }
+      ]
+    },
+    {
+      "hanzi": "星期",
+      "pinyin": "xīngqī",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tuần, thứ (trong tuần)",
+      "examples": [
+        {
+          "hanzi": "这个星期我很忙。",
+          "pinyin": "Zhège xīngqī wǒ hěn máng.",
+          "translationVi": "Tuần này tôi rất bận."
+        }
+      ]
+    },
+    {
+      "hanzi": "月",
+      "pinyin": "yuè",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tháng",
+      "examples": [
+        {
+          "hanzi": "我五月去中国。",
+          "pinyin": "Wǒ wǔ yuè qù Zhōngguó.",
+          "translationVi": "Tháng năm tôi đi Trung Quốc."
+        }
+      ]
+    },
+    {
+      "hanzi": "日",
+      "pinyin": "rì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "ngày (trong ngày tháng)",
+      "examples": [
+        {
+          "hanzi": "今天是几月几日？",
+          "pinyin": "Jīntiān shì jǐ yuè jǐ rì?",
+          "translationVi": "Hôm nay là ngày mấy tháng mấy?"
+        }
+      ]
+    },
+    {
+      "hanzi": "年",
+      "pinyin": "nián",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "năm",
+      "examples": [
+        {
+          "hanzi": "我在中国学了一年汉语。",
+          "pinyin": "Wǒ zài Zhōngguó xué le yī nián Hànyǔ.",
+          "translationVi": "Tôi đã học tiếng Trung một năm ở Trung Quốc."
+        }
+      ]
+    },
+    {
+      "hanzi": "现在",
+      "pinyin": "xiànzài",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bây giờ, hiện nay",
+      "examples": [
+        {
+          "hanzi": "现在我想睡觉。",
+          "pinyin": "Xiànzài wǒ xiǎng shuìjiào.",
+          "translationVi": "Bây giờ tôi muốn đi ngủ."
+        }
+      ]
+    },
+    {
+      "hanzi": "吃",
+      "pinyin": "chī",
+      "partOfSpeech": "động từ",
+      "meaningVi": "ăn",
+      "examples": [
+        {
+          "hanzi": "我喜欢吃米饭。",
+          "pinyin": "Wǒ xǐhuan chī mǐfàn.",
+          "translationVi": "Tôi thích ăn cơm."
+        }
+      ]
+    },
+    {
+      "hanzi": "喝",
+      "pinyin": "hē",
+      "partOfSpeech": "động từ",
+      "meaningVi": "uống",
+      "examples": [
+        {
+          "hanzi": "你早上喝牛奶吗？",
+          "pinyin": "Nǐ zǎoshang hē niúnǎi ma?",
+          "translationVi": "Buổi sáng bạn có uống sữa bò không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "水",
+      "pinyin": "shuǐ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "nước",
+      "examples": [
+        {
+          "hanzi": "我喝水，不喝茶。",
+          "pinyin": "Wǒ hē shuǐ, bù hē chá.",
+          "translationVi": "Tôi uống nước, không uống trà."
+        }
+      ]
+    },
+    {
+      "hanzi": "茶",
+      "pinyin": "chá",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trà",
+      "examples": [
+        {
+          "hanzi": "妈妈喜欢喝茶。",
+          "pinyin": "Māma xǐhuan hē chá.",
+          "translationVi": "Mẹ thích uống trà."
+        }
+      ]
+    },
+    {
+      "hanzi": "米饭",
+      "pinyin": "mǐfàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cơm",
+      "examples": [
+        {
+          "hanzi": "我吃米饭，也吃面包。",
+          "pinyin": "Wǒ chī mǐfàn, yě chī miànbāo.",
+          "translationVi": "Tôi ăn cơm, cũng ăn bánh mì."
+        }
+      ]
+    },
+    {
+      "hanzi": "菜",
+      "pinyin": "cài",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "món ăn, rau",
+      "examples": [
+        {
+          "hanzi": "我妈妈做的菜很好吃。",
+          "pinyin": "Wǒ māma zuò de cài hěn hǎochī.",
+          "translationVi": "Món ăn mẹ tôi nấu rất ngon."
+        }
+      ]
+    },
+    {
+      "hanzi": "水果",
+      "pinyin": "shuǐguǒ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "hoa quả",
+      "examples": [
+        {
+          "hanzi": "我很喜欢水果。",
+          "pinyin": "Wǒ hěn xǐhuan shuǐguǒ.",
+          "translationVi": "Tôi rất thích hoa quả."
+        }
+      ]
+    },
+    {
+      "hanzi": "牛奶",
+      "pinyin": "niúnǎi",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sữa bò",
+      "examples": [
+        {
+          "hanzi": "我的孩子喝牛奶。",
+          "pinyin": "Wǒ de háizi hē niúnǎi.",
+          "translationVi": "Con tôi uống sữa bò."
+        }
+      ]
+    },
+    {
+      "hanzi": "面包",
+      "pinyin": "miànbāo",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bánh mì",
+      "examples": [
+        {
+          "hanzi": "我买面包和牛奶。",
+          "pinyin": "Wǒ mǎi miànbāo hé niúnǎi.",
+          "translationVi": "Tôi mua bánh mì và sữa bò."
+        }
+      ]
+    },
+    {
+      "hanzi": "鸡蛋",
+      "pinyin": "jīdàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trứng gà",
+      "examples": [
+        {
+          "hanzi": "早饭我吃鸡蛋。",
+          "pinyin": "Zǎofàn wǒ chī jīdàn.",
+          "translationVi": "Bữa sáng tôi ăn trứng gà."
+        }
+      ]
+    },
+    {
+      "hanzi": "早饭",
+      "pinyin": "zǎofàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bữa sáng",
+      "examples": [
+        {
+          "hanzi": "早饭你吃什么？",
+          "pinyin": "Zǎofàn nǐ chī shénme?",
+          "translationVi": "Bữa sáng bạn ăn gì?"
+        }
+      ]
+    },
+    {
+      "hanzi": "午饭",
+      "pinyin": "wǔfàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bữa trưa",
+      "examples": [
+        {
+          "hanzi": "我们吃午饭吧。",
+          "pinyin": "Wǒmen chī wǔfàn ba.",
+          "translationVi": "Chúng ta ăn trưa nhé."
+        }
+      ]
+    },
+    {
+      "hanzi": "晚饭",
+      "pinyin": "wǎnfàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bữa tối",
+      "examples": [
+        {
+          "hanzi": "晚饭我们在家吃。",
+          "pinyin": "Wǎnfàn wǒmen zài jiā chī.",
+          "translationVi": "Bữa tối chúng tôi ăn ở nhà."
+        }
+      ]
+    },
+    {
+      "hanzi": "喜欢",
+      "pinyin": "xǐhuan",
+      "partOfSpeech": "động từ",
+      "meaningVi": "thích",
+      "examples": [
+        {
+          "hanzi": "你喜欢中国茶吗？",
+          "pinyin": "Nǐ xǐhuan Zhōngguó chá ma?",
+          "translationVi": "Bạn thích trà Trung Quốc không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "买",
+      "pinyin": "mǎi",
+      "partOfSpeech": "động từ",
+      "meaningVi": "mua",
+      "examples": [
+        {
+          "hanzi": "我想买水果和茶。",
+          "pinyin": "Wǒ xiǎng mǎi shuǐguǒ hé chá.",
+          "translationVi": "Tôi muốn mua hoa quả và trà."
+        }
+      ]
+    },
+    {
+      "hanzi": "钱",
+      "pinyin": "qián",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tiền",
+      "examples": [
+        {
+          "hanzi": "今天我没有钱。",
+          "pinyin": "Jīntiān wǒ méiyǒu qián.",
+          "translationVi": "Hôm nay tôi không có tiền."
+        }
+      ]
+    },
+    {
+      "hanzi": "块",
+      "pinyin": "kuài",
+      "partOfSpeech": "lượng từ",
+      "meaningVi": "(lượng từ) đồng, tệ (đơn vị tiền), miếng, cục",
+      "examples": [
+        {
+          "hanzi": "这个面包五块。",
+          "pinyin": "Zhège miànbāo wǔ kuài.",
+          "translationVi": "Cái bánh mì này năm tệ."
+        }
+      ]
+    },
+    {
+      "hanzi": "多少",
+      "pinyin": "duōshao",
+      "partOfSpeech": "đại từ",
+      "meaningVi": "bao nhiêu",
+      "examples": [
+        {
+          "hanzi": "这个牛奶多少钱？",
+          "pinyin": "Zhège niúnǎi duōshao qián?",
+          "translationVi": "Sữa bò này bao nhiêu tiền?"
+        }
+      ]
+    },
+    {
+      "hanzi": "贵",
+      "pinyin": "guì",
+      "partOfSpeech": "tính từ",
+      "meaningVi": "đắt",
+      "examples": [
+        {
+          "hanzi": "这里的菜很贵。",
+          "pinyin": "Zhèlǐ de cài hěn guì.",
+          "translationVi": "Món ăn ở đây rất đắt."
+        }
+      ]
+    },
+    {
+      "hanzi": "商店",
+      "pinyin": "shāngdiàn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "cửa hàng",
+      "examples": [
+        {
+          "hanzi": "那个商店很大。",
+          "pinyin": "Nàge shāngdiàn hěn dà.",
+          "translationVi": "Cửa hàng kia rất lớn."
+        }
+      ]
+    },
+    {
+      "hanzi": "学习",
+      "pinyin": "xuéxí",
+      "partOfSpeech": "động từ",
+      "meaningVi": "học tập, học",
+      "examples": [
+        {
+          "hanzi": "我们在学校学习汉语。",
+          "pinyin": "Wǒmen zài xuéxiào xuéxí Hànyǔ.",
+          "translationVi": "Chúng tôi học tiếng Hán ở trường."
+        }
+      ]
+    },
+    {
+      "hanzi": "学",
+      "pinyin": "xué",
+      "partOfSpeech": "động từ",
+      "meaningVi": "học",
+      "examples": [
+        {
+          "hanzi": "他在学校学汉语。",
+          "pinyin": "Tā zài xuéxiào xué Hànyǔ.",
+          "translationVi": "Anh ấy học tiếng Hán ở trường."
+        }
+      ]
+    },
+    {
+      "hanzi": "汉语",
+      "pinyin": "Hànyǔ",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "tiếng Hán, tiếng Trung",
+      "examples": [
+        {
+          "hanzi": "我很喜欢汉语。",
+          "pinyin": "Wǒ hěn xǐhuan Hànyǔ.",
+          "translationVi": "Tôi rất thích tiếng Hán."
+        }
+      ]
+    },
+    {
+      "hanzi": "汉字",
+      "pinyin": "hànzì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "chữ Hán",
+      "examples": [
+        {
+          "hanzi": "这个汉字很难。",
+          "pinyin": "Zhège hànzì hěn nán.",
+          "translationVi": "Chữ Hán này rất khó."
+        }
+      ]
+    },
+    {
+      "hanzi": "书",
+      "pinyin": "shū",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sách",
+      "examples": [
+        {
+          "hanzi": "桌子上有一本书。",
+          "pinyin": "Zhuōzi shang yǒu yī běn shū.",
+          "translationVi": "Trên bàn có một quyển sách."
+        }
+      ]
+    },
+    {
+      "hanzi": "读",
+      "pinyin": "dú",
+      "partOfSpeech": "động từ",
+      "meaningVi": "đọc",
+      "examples": [
+        {
+          "hanzi": "请读这个汉字。",
+          "pinyin": "Qǐng dú zhège hànzì.",
+          "translationVi": "Hãy đọc chữ Hán này."
+        }
+      ]
+    },
+    {
+      "hanzi": "写",
+      "pinyin": "xiě",
+      "partOfSpeech": "động từ",
+      "meaningVi": "viết",
+      "examples": [
+        {
+          "hanzi": "我写我的名字。",
+          "pinyin": "Wǒ xiě wǒ de míngzi.",
+          "translationVi": "Tôi viết tên mình."
+        }
+      ]
+    },
+    {
+      "hanzi": "说",
+      "pinyin": "shuō",
+      "partOfSpeech": "động từ",
+      "meaningVi": "nói",
+      "examples": [
+        {
+          "hanzi": "你会说汉语吗？",
+          "pinyin": "Nǐ huì shuō Hànyǔ ma?",
+          "translationVi": "Bạn biết nói tiếng Hán không?"
+        }
+      ]
+    },
+    {
+      "hanzi": "见",
+      "pinyin": "jiàn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "thấy, gặp",
+      "examples": [
+        {
+          "hanzi": "明天见！",
+          "pinyin": "Míngtiān jiàn!",
+          "translationVi": "Hẹn gặp ngày mai!"
+        }
+      ]
+    },
+    {
+      "hanzi": "听",
+      "pinyin": "tīng",
+      "partOfSpeech": "động từ",
+      "meaningVi": "nghe",
+      "examples": [
+        {
+          "hanzi": "我听老师说话。",
+          "pinyin": "Wǒ tīng lǎoshī shuōhuà.",
+          "translationVi": "Tôi nghe giáo viên nói."
+        }
+      ]
+    },
+    {
+      "hanzi": "学校",
+      "pinyin": "xuéxiào",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "trường học",
+      "examples": [
+        {
+          "hanzi": "我的学校很大。",
+          "pinyin": "Wǒ de xuéxiào hěn dà.",
+          "translationVi": "Trường của tôi rất lớn."
+        }
+      ]
+    },
+    {
+      "hanzi": "课",
+      "pinyin": "kè",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "bài học, tiết học",
+      "examples": [
+        {
+          "hanzi": "今天上午有课。",
+          "pinyin": "Jīntiān shàngwǔ yǒu kè.",
+          "translationVi": "Sáng nay có tiết học."
+        }
+      ]
+    },
+    {
+      "hanzi": "课本",
+      "pinyin": "kèběn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "sách giáo khoa",
+      "examples": [
+        {
+          "hanzi": "我的课本在桌子上。",
+          "pinyin": "Wǒ de kèběn zài zhuōzi shang.",
+          "translationVi": "Sách giáo khoa của tôi ở trên bàn."
+        }
+      ]
+    },
+    {
+      "hanzi": "考试",
+      "pinyin": "kǎoshì",
+      "partOfSpeech": "danh từ, động từ",
+      "meaningVi": "kỳ thi, thi, làm bài thi",
+      "examples": [
+        {
+          "hanzi": "明天我们有考试。",
+          "pinyin": "Míngtiān wǒmen yǒu kǎoshì.",
+          "translationVi": "Ngày mai chúng tôi có kỳ thi."
+        }
+      ]
+    },
+    {
+      "hanzi": "字",
+      "pinyin": "zì",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "chữ, chữ viết",
+      "examples": [
+        {
+          "hanzi": "这个字怎么读？",
+          "pinyin": "Zhège zì zěnme dú?",
+          "translationVi": "Chữ này đọc thế nào?"
+        }
+      ]
+    },
+    {
+      "hanzi": "问",
+      "pinyin": "wèn",
+      "partOfSpeech": "động từ",
+      "meaningVi": "hỏi",
+      "examples": [
+        {
+          "hanzi": "我问老师这个字。",
+          "pinyin": "Wǒ wèn lǎoshī zhège zì.",
+          "translationVi": "Tôi hỏi giáo viên chữ này."
+        }
+      ]
+    },
+    {
+      "hanzi": "知道",
+      "pinyin": "zhīdào",
+      "partOfSpeech": "động từ",
+      "meaningVi": "biết",
+      "examples": [
+        {
+          "hanzi": "我知道他的名字。",
+          "pinyin": "Wǒ zhīdào tā de míngzi.",
+          "translationVi": "Tôi biết tên của anh ấy."
+        }
+      ]
+    },
+    {
+      "hanzi": "上课",
+      "pinyin": "shàngkè",
+      "partOfSpeech": "động từ",
+      "meaningVi": "lên lớp, vào tiết",
+      "examples": [
+        {
+          "hanzi": "我们明天八点上课。",
+          "pinyin": "Wǒmen míngtiān bā diǎn shàngkè.",
+          "translationVi": "Ngày mai chúng tôi lên lớp lúc tám giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "下课",
+      "pinyin": "xiàkè",
+      "partOfSpeech": "động từ",
+      "meaningVi": "tan học, hết tiết",
+      "examples": [
+        {
+          "hanzi": "我们四点下课。",
+          "pinyin": "Wǒmen sì diǎn xiàkè.",
+          "translationVi": "Chúng tôi tan học lúc bốn giờ."
+        }
+      ]
+    },
+    {
+      "hanzi": "图书馆",
+      "pinyin": "túshūguǎn",
+      "partOfSpeech": "danh từ",
+      "meaningVi": "thư viện",
+      "examples": [
+        {
+          "hanzi": "图书馆在学校里边。",
+          "pinyin": "Túshūguǎn zài xuéxiào lǐbian.",
+          "translationVi": "Thư viện ở trong trường."
+        }
+      ]
+    }
+  ]
+}

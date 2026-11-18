@@ -1,0 +1,2404 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ExamAttemptStatus, Prisma } from '@prisma/client';
+
+import type { ApiSuccessResponse } from '../../common/interfaces/api-response.interface';
+import type { PaginationMeta } from '../../common/interfaces/api-response.interface';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CMS_MEDIA_SELECT, type CmsMediaRecord } from '../cms/media-usability';
+import {
+  collectTestPublishBlockers,
+  type TestPublishBlockerQuestion,
+} from '../cms/test-publish-blockers';
+import type { ListExamAttemptsQueryDto } from './dto/list-exam-attempts-query.dto';
+import type { ListExamTestsQueryDto } from './dto/list-exam-tests-query.dto';
+import {
+  ExamAnswerBatchResultDto,
+  ExamAnswerBatchViewDto,
+  ExamAnswerSaveViewDto,
+  ExamAttemptViewDto,
+  ExamResultViewDto,
+  ExamReviewViewDto,
+  ExamSubmitViewDto,
+  ExamTestIntroDto,
+  ExamHistoryItemDto,
+  ExamTestListItemDto,
+} from './dto/exam-response.dto';
+import {
+  toExamAnswerHashBody,
+  tryExamAnswerBodySha256,
+} from './exam-answer-hash';
+import {
+  decideRecoveredAnswerConflict,
+  isSameExamAnswerRequest,
+} from './exam-answer-replay';
+import { validateExamAnswerShape } from './exam-answer.validator';
+import {
+  examHistoryWhere,
+  readExamHistorySnapshot,
+  toExamHistoryItem,
+  type ExamHistorySnapshotRow,
+} from './exam-history.model';
+import { isExamTestVisible, visibleExamTestWhere } from './exam-eligibility';
+import {
+  compareExamListByScore,
+  EXAM_LIST_FINISHED_STATUSES,
+  EXAM_LIST_SCORE_SORT_MAX,
+  isExamListFinishedStatus,
+} from './exam-list.model';
+import {
+  EXAM_ERROR_CODES,
+  examAnswerInvalid,
+  examAnswerVersionConflict,
+  examAttemptAlreadySubmitted,
+  examAttemptClosed,
+  examAttemptExpired,
+  examAttemptNotFound,
+  examAttemptNotTerminal,
+  examBatchValidationFailed,
+  examIdempotencyKeyReused,
+  examQuestionNotFound,
+  examResultUnavailable,
+  examTestNotFound,
+  examTestUnavailable,
+  ExamResultDetailError,
+  ExamResultInternalError,
+} from './exam-errors';
+import {
+  EXAM_MEDIA_GRANT_EXTRA_SECONDS,
+  EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
+} from './exam-media-grants.service';
+import { classifyExamPersistenceError } from './exam-persistence';
+import { markAttemptTimedOut } from './exam-attempt-timeout';
+import {
+  ensureAttemptResult,
+  type ExamResultAttempt,
+} from './exam-result.persistence';
+import { readExamResultDetail } from './exam-result.reader';
+import {
+  buildExamSnapshot,
+  EXAM_SECTION_MAX_SCORE,
+  projectExamSnapshotMedia,
+  type ExamSnapshotPayload,
+  type ExamSnapshotQuestion,
+  type ExamSnapshotSource,
+} from './exam-snapshot.builder';
+import { readExamSnapshotPayload } from './exam-snapshot.reader';
+import {
+  remainingSeconds,
+  toExamAnswerSaveView,
+  toExamAnswerView,
+  toExamAttemptView,
+  toExamResultView,
+  toExamReviewView,
+  toExamTestIntro,
+  toExamTestListItem,
+  type ExamResultViewRecord,
+  type ExamTestListLatestAttemptSource,
+  type ExamStoredAnswer,
+  type ExamTerminalAttemptRecord,
+} from './exam.serializer';
+import {
+  ExamTransactionCoordinator,
+  type ExamAttemptLockOperation,
+} from './exam-transaction-coordinator';
+
+/**
+ * Learner exam engine. M4.2a: the intro, the "start attempt" transaction that
+ * freezes a snapshot, and the attempt read. M4.2b (TL-121…TL-127): per-question
+ * autosave with idempotent replay and optimistic versioning, the batch save
+ * used after a reconnect, and the lazy timeout applied by GET/save. Submit and
+ * scoring stay in M4.2c/M4.3.
+ */
+
+/** TL-126: a save that lands just after `expiresAt` is still accepted. */
+export const EXAM_SAVE_GRACE_SECONDS = 5;
+
+const EXAM_INTRO_SELECT = {
+  id: true,
+  title: true,
+  instruction: true,
+  duration: true,
+  passScore: true,
+  status: true,
+  deletedAt: true,
+  availableFrom: true,
+  availableTo: true,
+  level: { select: { code: true } },
+  sections: {
+    orderBy: [{ orderIndex: 'asc' as const }],
+    select: {
+      orderIndex: true,
+      title: true,
+      skill: true,
+      groups: { select: { _count: { select: { placements: true } } } },
+    },
+  },
+} satisfies Prisma.TestSelect;
+
+const EXAM_TEST_TREE_SELECT = {
+  id: true,
+  levelId: true,
+  title: true,
+  instruction: true,
+  duration: true,
+  passScore: true,
+  scoringVersion: true,
+  version: true,
+  status: true,
+  deletedAt: true,
+  availableFrom: true,
+  availableTo: true,
+  level: { select: { code: true } },
+  sections: {
+    orderBy: [{ orderIndex: 'asc' as const }],
+    select: {
+      orderIndex: true,
+      skill: true,
+      title: true,
+      instruction: true,
+      groups: {
+        orderBy: [{ orderIndex: 'asc' as const }],
+        select: {
+          orderIndex: true,
+          title: true,
+          instruction: true,
+          content: true,
+          audioId: true,
+          imageId: true,
+          placements: {
+            orderBy: [{ orderIndex: 'asc' as const }],
+            select: {
+              orderIndex: true,
+              testQuestion: { select: { questionId: true } },
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.TestSelect;
+
+type ExamTestTree = Prisma.TestGetPayload<{
+  select: typeof EXAM_TEST_TREE_SELECT;
+}>;
+
+const EXAM_QUESTION_SELECT = {
+  id: true,
+  version: true,
+  type: true,
+  skill: true,
+  content: true,
+  answers: true,
+  correctAnswer: true,
+  explanation: true,
+  status: true,
+  deletedAt: true,
+  levelId: true,
+  audio: { select: CMS_MEDIA_SELECT },
+  image: { select: CMS_MEDIA_SELECT },
+} satisfies Prisma.QuestionSelect;
+
+type ExamQuestionRow = Prisma.QuestionGetPayload<{
+  select: typeof EXAM_QUESTION_SELECT;
+}>;
+
+const EXAM_ATTEMPT_SELECT = {
+  id: true,
+  userId: true,
+  testId: true,
+  status: true,
+  startedAt: true,
+  expiresAt: true,
+  submittedAt: true,
+  maxScore: true,
+  // TL-163: the Result writer needs the owner and the frozen authoring version.
+  scoringVersion: true,
+} satisfies Prisma.ExamAttemptSelect;
+
+const EXAM_ANSWER_SELECT = {
+  id: true,
+  snapshotQuestionKey: true,
+  answer: true,
+  isFlagged: true,
+  version: true,
+  answeredAt: true,
+  lastSavedAt: true,
+} satisfies Prisma.ExamAnswerSelect;
+
+type ExamAnswerRow = Prisma.ExamAnswerGetPayload<{
+  select: typeof EXAM_ANSWER_SELECT;
+}>;
+
+type ExamAnswerBody = {
+  answer: unknown;
+  isFlagged: boolean;
+  expectedVersion: number | null;
+  idempotencyKey: string;
+  clientElapsedMs?: number;
+};
+
+type LockedAttempt = Prisma.ExamAttemptGetPayload<{
+  select: typeof EXAM_ATTEMPT_SELECT;
+}>;
+
+type SaveOutcome =
+  | { status: 'saved'; record: ExamAnswerRow }
+  | { status: 'replayed'; record: ExamAnswerRow }
+  | { status: 'conflict'; current: ExamAnswerRow | null }
+  | { status: 'invalid'; field: string }
+  | { status: 'key_reused' }
+  | { status: 'not_found' };
+
+type AttemptWriteResult =
+  | { kind: 'not_found' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | { kind: 'expired' }
+  | {
+      kind: 'open';
+      attempt: LockedAttempt;
+      now: Date;
+      outcome: SaveOutcome;
+    };
+
+type OpenBatchResult = {
+  kind: 'open';
+  attempt: LockedAttempt;
+  now: Date;
+  results: Array<{ questionKey: string; outcome: SaveOutcome }>;
+};
+
+type AttemptBatchResult =
+  | { kind: 'not_found' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | { kind: 'expired' }
+  | OpenBatchResult;
+
+type AttemptLockResult =
+  | { kind: 'not_found' }
+  | { kind: 'open'; attempt: LockedAttempt; now: Date };
+
+type AttemptReadResult =
+  | { kind: 'not_found' }
+  | { kind: 'open'; view: ExamAttemptViewDto };
+
+/**
+ * TL-165/TL-166: a result/review read only serves a terminal attempt. The
+ * lazy timeout and the grading failure are values because the transaction has
+ * to commit the timeout (if any) and only then answer 409.
+ */
+type TerminalAttemptOpenResult =
+  | { kind: 'not_found' }
+  | { kind: 'not_terminal' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | {
+      kind: 'terminal';
+      attempt: ExamTerminalAttemptRecord;
+      gradeAttempt: ExamResultAttempt;
+      now: Date;
+    };
+
+type AttemptResultReadResult =
+  | Exclude<TerminalAttemptOpenResult, { kind: 'terminal' }>
+  | { kind: 'scoring_failed' }
+  | { kind: 'ok'; view: ExamResultViewDto };
+
+type AttemptReviewReadResult =
+  | Exclude<TerminalAttemptOpenResult, { kind: 'terminal' }>
+  | { kind: 'scoring_failed' }
+  | { kind: 'ok'; view: ExamReviewViewDto };
+
+type AttemptGrantResult =
+  | { kind: 'not_found' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | { kind: 'expired' }
+  | { kind: 'ok'; mediaIds: number[]; ttlSeconds: number };
+
+type StartAttemptResult = {
+  created: boolean;
+  data: ExamAttemptViewDto;
+};
+
+type SubmitCounts = {
+  answeredCount: number;
+  unansweredCount: number;
+  flaggedCount: number;
+};
+
+/**
+ * TL-151: every branch of the submit transaction is a value, not an exception.
+ * The lazy-timeout branch must commit, so the service maps these to HTTP errors
+ * only after the transaction resolves.
+ */
+type AttemptSubmitResult =
+  | { kind: 'not_found' }
+  | { kind: 'key_reused' }
+  | { kind: 'already_submitted' }
+  | { kind: 'closed'; status: ExamAttemptStatus }
+  | { kind: 'expired' }
+  | {
+      kind: 'submitted';
+      attempt: LockedAttempt;
+      now: Date;
+      counts: SubmitCounts;
+    }
+  | {
+      kind: 'replayed';
+      attempt: LockedAttempt;
+      now: Date;
+      counts: SubmitCounts;
+    };
+
+@Injectable()
+export class ExamService {
+  private readonly logger = new Logger(ExamService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly coordinator: ExamTransactionCoordinator,
+  ) {}
+
+  async getTestIntro(
+    userId: number,
+    testId: number,
+  ): Promise<ApiSuccessResponse<ExamTestIntroDto>> {
+    const now = await this.databaseNow(this.prisma);
+    const test = await this.prisma.test.findFirst({
+      where: { id: testId },
+      select: EXAM_INTRO_SELECT,
+    });
+    if (test === null || !isExamTestVisible(test, now)) {
+      throw examTestNotFound();
+    }
+
+    const sections = test.sections.map((section) => ({
+      orderIndex: section.orderIndex,
+      title: section.title,
+      skill: section.skill,
+      questionCount: section.groups.reduce(
+        (total, group) => total + group._count.placements,
+        0,
+      ),
+    }));
+    const questionCount = sections.reduce(
+      (total, section) => total + section.questionCount,
+      0,
+    );
+
+    // TL-112: an in-progress attempt whose clock already ran out is not
+    // "active" any more, and the intro must not change any row.
+    const active = await this.prisma.examAttempt.findFirst({
+      where: {
+        userId,
+        testId,
+        status: ExamAttemptStatus.in_progress,
+        expiresAt: { gt: now },
+      },
+      orderBy: { id: 'desc' },
+      select: { id: true, startedAt: true, expiresAt: true },
+    });
+    const answeredCount =
+      active === null
+        ? 0
+        : await this.prisma.examAnswer.count({
+            where: {
+              attemptId: active.id,
+              // F3: a flagged row whose answer was cleared is not an answered
+              // question; only a non-null JSON payload counts.
+              NOT: { answer: { equals: Prisma.JsonNull } },
+            },
+          });
+
+    return {
+      success: true,
+      data: toExamTestIntro({
+        test: {
+          id: test.id,
+          title: test.title,
+          instruction: test.instruction,
+          levelCode: test.level.code,
+          duration: test.duration,
+          passScore: test.passScore,
+          maxScore: EXAM_SECTION_MAX_SCORE * sections.length,
+          questionCount,
+          sections,
+        },
+        activeAttempt:
+          active === null
+            ? null
+            : {
+                id: active.id,
+                startedAt: active.startedAt,
+                expiresAt: active.expiresAt,
+                answeredCount,
+              },
+      }),
+    };
+  }
+
+  /**
+   * M4.5 B3: read-only history page. Frozen fields are extracted in the
+   * database so a page never transfers whole snapshot payloads.
+   */
+  async listAttempts(
+    userId: number,
+    query: ListExamAttemptsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamHistoryItemDto[], PaginationMeta>> {
+    const now = await this.databaseNow(this.prisma);
+    const where = examHistoryWhere(
+      userId,
+      now,
+      EXAM_SAVE_GRACE_SECONDS,
+      query.levelCode,
+    );
+    const [attempts, total] = await this.prisma.$transaction([
+      this.prisma.examAttempt.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        select: {
+          id: true,
+          testId: true,
+          status: true,
+          submittedAt: true,
+          expiresAt: true,
+          result: {
+            select: {
+              score: true,
+              maxScore: true,
+              passed: true,
+              skillScores: {
+                orderBy: { skill: 'asc' },
+                select: { skill: true, score: true, total: true },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.examAttempt.count({ where }),
+    ]);
+
+    const snapshots =
+      attempts.length === 0
+        ? []
+        : await this.prisma.$queryRaw<ExamHistorySnapshotRow[]>`
+            SELECT
+              "attemptId",
+              payload #> '{test,title}' AS "title",
+              payload #> '{test,levelCode}' AS "levelCode",
+              payload #> '{test,passScore}' AS "passScore",
+              payload #> '{test,maxScore}' AS "maxScore"
+            FROM "ExamAttemptSnapshot"
+            WHERE "attemptId" IN (${Prisma.join(attempts.map((row) => row.id))})
+          `;
+    const snapshotByAttempt = new Map(
+      snapshots.map((row) => [row.attemptId, row]),
+    );
+
+    return {
+      success: true,
+      data: attempts.map((attempt) =>
+        toExamHistoryItem(
+          attempt,
+          readExamHistorySnapshot(snapshotByAttempt.get(attempt.id)),
+        ),
+      ),
+      meta: this.buildPaginationMeta(query.page, query.limit, total),
+    };
+  }
+
+  /**
+   * M4.5 B1 (Q209–Q214): the learner exam list. Read-only — it never grades a
+   * finished-but-ungraded attempt, never times out a stale one and never
+   * creates a `Result`. Fixed number of statements: the database clock, one
+   * transaction with the paginated tests + total count, and one transaction
+   * with the placement counts + the caller's live + finished attempts.
+   */
+  async listTests(
+    userId: number,
+    query: ListExamTestsQueryDto,
+  ): Promise<ApiSuccessResponse<ExamTestListItemDto[], PaginationMeta>> {
+    const now = await this.databaseNow(this.prisma);
+    const page = query.page;
+    const limit = query.limit;
+    const sort = query.sort ?? 'newest';
+    const offset = (page - 1) * limit;
+
+    const where: Prisma.TestWhereInput = {
+      ...visibleExamTestWhere(now),
+      ...(query.levelCode === undefined
+        ? {}
+        : { level: { code: query.levelCode } }),
+      ...(query.skill === undefined
+        ? {}
+        : { sections: { some: { skill: query.skill } } }),
+    };
+    // Q211: `newest`/`oldest` order by `publishedAt` then `id`. A test that is
+    // published without `publishedAt` (a legacy import) sorts last in both
+    // directions instead of Postgres' "NULLS FIRST on DESC" default; the id
+    // keeps the order total.
+    const orderBy: Prisma.TestOrderByWithRelationInput[] =
+      sort === 'oldest'
+        ? [{ publishedAt: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }]
+        : [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { id: 'desc' }];
+
+    // shortcut: sort=score sorts in memory because the score belongs to the
+    // latest attempt, not to `Test`; at most EXAM_LIST_SCORE_SORT_MAX (500)
+    // visible tests are loaded, then sliced. Upgrade when the published
+    // catalogue can exceed 500 (denormalise the last score onto `Test`, or
+    // page with a raw `DISTINCT ON` + subquery).
+    const pageable = sort !== 'score';
+
+    const [tests, total] = await this.prisma.$transaction([
+      this.prisma.test.findMany({
+        where,
+        orderBy,
+        skip: pageable ? offset : undefined,
+        take: pageable ? limit : EXAM_LIST_SCORE_SORT_MAX,
+        select: {
+          id: true,
+          title: true,
+          duration: true,
+          publishedAt: true,
+          level: { select: { code: true } },
+          sections: {
+            orderBy: [{ orderIndex: 'asc' as const }],
+            select: { orderIndex: true, skill: true },
+          },
+        },
+      }),
+      this.prisma.test.count({ where }),
+    ]);
+
+    const testIds = tests.map((test) => test.id);
+    const [placementCounts, activeAttempts, finishedAttempts] =
+      await this.prisma.$transaction([
+        this.prisma.testQuestionPlacement.groupBy({
+          by: ['testId'],
+          where: { testId: { in: testIds } },
+          _count: { _all: true },
+        }),
+        // Q212: only an in-progress attempt whose clock still runs is
+        // "active"; an expired one is ignored here (the list writes nothing,
+        // unlike GET attempt).
+        this.prisma.examAttempt.findMany({
+          where: {
+            userId,
+            testId: { in: testIds },
+            status: ExamAttemptStatus.in_progress,
+            expiresAt: { gt: now },
+          },
+          orderBy: { id: 'desc' },
+          select: { id: true, testId: true, expiresAt: true },
+        }),
+        // Q211/Q213: finished attempts only, newest first; the first row of
+        // each test wins below.
+        this.prisma.examAttempt.findMany({
+          where: {
+            userId,
+            testId: { in: testIds },
+            status: { in: [...EXAM_LIST_FINISHED_STATUSES] },
+          },
+          orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
+          select: {
+            id: true,
+            testId: true,
+            status: true,
+            submittedAt: true,
+            maxScore: true,
+            result: { select: { score: true, maxScore: true } },
+          },
+        }),
+      ]);
+
+    const questionCounts = new Map<number, number>();
+    for (const row of placementCounts) {
+      questionCounts.set(row.testId, row._count._all);
+    }
+    const activeByTest = new Map<number, { id: number; expiresAt: Date }>();
+    for (const row of activeAttempts) {
+      // The partial unique index allows one live attempt per test; `id desc`
+      // makes the pick total even if that index is ever relaxed.
+      if (!activeByTest.has(row.testId)) {
+        activeByTest.set(row.testId, { id: row.id, expiresAt: row.expiresAt });
+      }
+    }
+    const finishedByTest = new Map<number, ExamTestListLatestAttemptSource>();
+    for (const row of finishedAttempts) {
+      if (finishedByTest.has(row.testId)) continue;
+      // Terminal transitions always write `submittedAt`; a null here is a data
+      // bug outside this endpoint, so the row is treated as "no attempt"
+      // instead of failing the whole list.
+      if (row.submittedAt === null) continue;
+      // Q213: `invalidated` never reaches the list, even if a row predates the
+      // status filter above.
+      if (!isExamListFinishedStatus(row.status)) continue;
+      finishedByTest.set(row.testId, {
+        id: row.id,
+        status: row.status,
+        submittedAt: row.submittedAt,
+        score: row.result === null ? null : row.result.score,
+        maxScore: row.result === null ? row.maxScore : row.result.maxScore,
+        resultAvailable: row.result !== null,
+      });
+    }
+
+    const rows = tests.map((test) => ({
+      test,
+      item: toExamTestListItem({
+        test: {
+          id: test.id,
+          title: test.title,
+          levelCode: test.level.code,
+          duration: test.duration,
+          questionCount: questionCounts.get(test.id) ?? 0,
+          sections: test.sections,
+        },
+        activeAttempt: activeByTest.get(test.id) ?? null,
+        latestAttempt: finishedByTest.get(test.id) ?? null,
+      }),
+    }));
+
+    // Q211: items without a score sort last, ties fall back to newest.
+    const ordered = pageable
+      ? rows
+      : [...rows].sort((left, right) =>
+          compareExamListByScore(
+            {
+              score: left.item.latestAttempt?.score ?? null,
+              publishedAt: left.test.publishedAt,
+              testId: left.test.id,
+            },
+            {
+              score: right.item.latestAttempt?.score ?? null,
+              publishedAt: right.test.publishedAt,
+              testId: right.test.id,
+            },
+          ),
+        );
+    const pageRows = pageable ? ordered : ordered.slice(offset, offset + limit);
+
+    return {
+      success: true,
+      data: pageRows.map((row) => row.item),
+      meta: this.buildPaginationMeta(page, limit, total),
+    };
+  }
+
+  /**
+   * TL-127: unlike M4.2a, this route may write — exactly once, when an
+   * in-progress attempt whose clock ran out is moved to `timed_out` with the
+   * `expired_on_read` event. A second read writes nothing.
+   */
+  async getAttemptView(
+    userId: number,
+    attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamAttemptViewDto>> {
+    const result = await this.prisma.$transaction(
+      async (tx): Promise<AttemptReadResult> => {
+        const locked = await this.lockAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.attempt.read',
+        );
+        if (locked.kind === 'not_found') return { kind: 'not_found' };
+        const { attempt, now } = locked;
+        if (
+          attempt.status === ExamAttemptStatus.in_progress &&
+          this.isPastSaveGrace(attempt.expiresAt, now)
+        ) {
+          await this.applyLazyTimeout(tx, attempt, now, 'expired_on_read');
+        }
+        return {
+          kind: 'open',
+          view: await this.loadAttemptView(tx, userId, attemptId, now),
+        };
+      },
+    );
+    if (result.kind === 'not_found') throw examAttemptNotFound();
+    return { success: true, data: result.view };
+  }
+
+  /**
+   * TL-179: every internal 500 of the result/review read answers the shared
+   * fixed message and logs one short reason code with the attempt id. The
+   * internal detail never reaches the client and no answer content is logged.
+   */
+  private async readResultTransaction<T>(
+    attemptId: number,
+    run: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await run();
+    } catch (error: unknown) {
+      if (error instanceof ExamResultInternalError) {
+        this.logger.error('exam.result.internal', {
+          attemptId,
+          reason: error.reason,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * TL-165/Q147: the result of a terminal attempt. The read may write exactly
+   * once per attempt: the lazy timeout of an in-progress attempt past the save
+   * grace, and the lazy grading of a terminal attempt that has no `Result` yet
+   * (the submit committed without grading, Q156). The response is always built
+   * from the stored `Result`, never by grading again.
+   */
+  async getAttemptResult(
+    userId: number,
+    attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamResultViewDto>> {
+    const result = await this.readResultTransaction(attemptId, () =>
+      this.prisma.$transaction(async (tx): Promise<AttemptResultReadResult> => {
+        const opened = await this.openTerminalAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.result.read',
+        );
+        if (opened.kind !== 'terminal') return opened;
+
+        const grading = await ensureAttemptResult(
+          tx,
+          opened.gradeAttempt,
+          opened.now,
+        );
+        if (grading.kind === 'scoring_failed') {
+          // Q156: fixed ids + error name only, never the error text or an
+          // answer (R11). The lazy timeout above still commits with this
+          // transaction, so the next read sees the same terminal status.
+          this.logger.warn('exam.grading.failed', {
+            attemptId,
+            error: grading.error.name,
+          });
+          return { kind: 'scoring_failed' };
+        }
+
+        const [payload, stored] = await Promise.all([
+          this.loadSnapshotPayload(tx, attemptId),
+          this.loadStoredResult(tx, attemptId),
+        ]);
+        return {
+          kind: 'ok',
+          view: toExamResultView({
+            attempt: opened.attempt,
+            snapshot: { payload },
+            result: stored,
+          }),
+        };
+      }),
+    );
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'not_terminal':
+        throw examAttemptNotTerminal();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'scoring_failed':
+        throw examResultUnavailable();
+      case 'ok':
+        return { success: true, data: result.view };
+    }
+  }
+
+  /**
+   * TL-166/Q148: every question of the frozen snapshot plus the answer key and
+   * explanation, only after the attempt is terminal. The read shares the
+   * result path's lock, lazy timeout and lazy grading (Q147/Q156/Q157).
+   */
+  async getAttemptReview(
+    userId: number,
+    attemptId: number,
+  ): Promise<ApiSuccessResponse<ExamReviewViewDto>> {
+    const result = await this.readResultTransaction(attemptId, () =>
+      this.prisma.$transaction(async (tx): Promise<AttemptReviewReadResult> => {
+        const opened = await this.openTerminalAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.review.read',
+        );
+        if (opened.kind !== 'terminal') return opened;
+
+        const grading = await ensureAttemptResult(
+          tx,
+          opened.gradeAttempt,
+          opened.now,
+        );
+        if (grading.kind === 'scoring_failed') {
+          this.logger.warn('exam.grading.failed', {
+            attemptId,
+            error: grading.error.name,
+          });
+          return { kind: 'scoring_failed' };
+        }
+
+        const [payload, stored, answers] = await Promise.all([
+          this.loadSnapshotPayload(tx, attemptId),
+          this.loadStoredResult(tx, attemptId),
+          tx.examAnswer.findMany({
+            where: { attemptId },
+            orderBy: [{ lastSavedAt: 'asc' }, { id: 'asc' }],
+            select: {
+              snapshotQuestionKey: true,
+              answer: true,
+              isFlagged: true,
+            },
+          }),
+        ]);
+        return {
+          kind: 'ok',
+          view: toExamReviewView({
+            attempt: opened.attempt,
+            snapshot: { payload },
+            result: { detail: stored.detail },
+            answers,
+          }),
+        };
+      }),
+    );
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'not_terminal':
+        throw examAttemptNotTerminal();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'scoring_failed':
+        throw examResultUnavailable();
+      case 'ok':
+        return { success: true, data: result.view };
+    }
+  }
+
+  /**
+   * TL-150/TL-151: close the attempt exactly once. The idempotency key is the
+   * same kind of replay ledger as autosave: the `(attemptId, idempotencyKey)`
+   * unique row on `ExamAttemptEvent` is claimed inside the transaction that
+   * flips the status, so two concurrent submits cannot both win.
+   */
+  async submitAttempt(
+    userId: number,
+    attemptId: number,
+    idempotencyKey: string,
+  ): Promise<ApiSuccessResponse<ExamSubmitViewDto>> {
+    let result: AttemptSubmitResult;
+    try {
+      result = await this.prisma.$transaction((tx) =>
+        this.submitAttemptInTransaction(tx, userId, attemptId, idempotencyKey),
+      );
+    } catch (error: unknown) {
+      // TL-151: a unique conflict can only come from a writer that bypassed the
+      // attempt lock. The whole transaction rolled back, so re-running it once
+      // reads the committed winner (replay or status) instead of a 500.
+      if (classifyExamPersistenceError(error) !== 'unique_conflict') {
+        throw error;
+      }
+      result = await this.prisma.$transaction((tx) =>
+        this.submitAttemptInTransaction(tx, userId, attemptId, idempotencyKey),
+      );
+    }
+
+    switch (result.kind) {
+      case 'not_found':
+        throw examAttemptNotFound();
+      case 'key_reused':
+        throw examIdempotencyKeyReused();
+      case 'already_submitted':
+        throw examAttemptAlreadySubmitted();
+      case 'closed':
+        throw examAttemptClosed(result.status);
+      case 'expired':
+        throw examAttemptExpired();
+      case 'submitted':
+      case 'replayed':
+        return {
+          success: true,
+          data: {
+            id: result.attempt.id,
+            status: ExamAttemptStatus.submitted,
+            submittedAt: result.attempt.submittedAt ?? result.now,
+            serverNow: result.now,
+            answeredCount: result.counts.answeredCount,
+            unansweredCount: result.counts.unansweredCount,
+            flaggedCount: result.counts.flaggedCount,
+            replayed: result.kind === 'replayed',
+          },
+        };
+    }
+  }
+
+  /** TL-121: save one answer (create, update or idempotent replay). */
+  async saveAnswer(
+    userId: number,
+    attemptId: number,
+    questionKey: string,
+    body: ExamAnswerBody,
+  ): Promise<ApiSuccessResponse<ExamAnswerSaveViewDto>> {
+    let result: AttemptWriteResult;
+    try {
+      result = await this.prisma.$transaction(
+        async (tx): Promise<AttemptWriteResult> => {
+          const locked = await this.lockAttempt(
+            tx,
+            userId,
+            attemptId,
+            'exam.answer.save',
+          );
+          if (locked.kind === 'not_found') return { kind: 'not_found' };
+          const { attempt, now } = locked;
+          if (attempt.status !== ExamAttemptStatus.in_progress) {
+            return { kind: 'closed', status: attempt.status };
+          }
+          if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+            // The timeout is committed even though the request answers 409, so
+            // a later GET/save observes the same terminal state (TL-126).
+            await this.applyLazyTimeout(tx, attempt, now, 'expired_on_save');
+            return { kind: 'expired' };
+          }
+          const payload = await this.loadSnapshotPayload(tx, attemptId);
+          const outcome = await this.saveAnswerItem({
+            tx,
+            attemptId,
+            now,
+            questions: this.indexSnapshotQuestions(payload),
+            questionKey,
+            body,
+          });
+          return { kind: 'open', attempt, now, outcome };
+        },
+      );
+    } catch (error: unknown) {
+      // TL-125: a P2002/23505 on the answer unique key can only come from a
+      // writer that bypassed the attempt lock. Re-read the winner instead of
+      // surfacing a 500; the replay ledger decides replay vs conflict.
+      if (classifyExamPersistenceError(error) === 'unique_conflict') {
+        return this.recoverAnswerUniqueConflict(
+          userId,
+          attemptId,
+          questionKey,
+          body,
+        );
+      }
+      throw error;
+    }
+
+    this.assertSingleSaveWritable(result);
+    const { outcome, now, attempt } = result;
+    switch (outcome.status) {
+      case 'saved':
+      case 'replayed':
+        return {
+          success: true,
+          data: toExamAnswerSaveView({
+            answer: this.toStoredAnswer(outcome.record),
+            now,
+            expiresAt: attempt.expiresAt,
+          }),
+        };
+      case 'conflict':
+        throw examAnswerVersionConflict(
+          outcome.current === null
+            ? null
+            : toExamAnswerView(this.toStoredAnswer(outcome.current)),
+        );
+      case 'invalid':
+        throw examAnswerInvalid(outcome.field);
+      case 'key_reused':
+        throw examIdempotencyKeyReused();
+      case 'not_found':
+        throw examQuestionNotFound();
+    }
+  }
+
+  /** TL-124: save up to 20 answers in one transaction, per-item results. */
+  async saveAnswers(
+    userId: number,
+    attemptId: number,
+    items: Array<ExamAnswerBody & { questionKey: string }>,
+  ): Promise<ApiSuccessResponse<ExamAnswerBatchViewDto>> {
+    this.assertUniqueQuestionKeys(items);
+    let result: AttemptBatchResult;
+    try {
+      result = await this.prisma.$transaction((tx) =>
+        this.saveAnswersInTransaction(tx, userId, attemptId, items),
+      );
+    } catch (error: unknown) {
+      if (classifyExamPersistenceError(error) !== 'unique_conflict')
+        throw error;
+      // TL-125: a writer that bypassed the attempt lock can win a unique key
+      // mid-batch. The transaction rolled back as a whole, so re-running it
+      // once makes every item read the committed winner and report `conflict`
+      // instead of surfacing a 500.
+      result = await this.prisma.$transaction((tx) =>
+        this.saveAnswersInTransaction(tx, userId, attemptId, items),
+      );
+    }
+
+    this.assertBatchWritable(result);
+    const { results, now, attempt } = result;
+    return {
+      success: true,
+      data: {
+        results: results.map(({ questionKey, outcome }) =>
+          this.toBatchResult(questionKey, outcome),
+        ),
+        serverNow: now,
+        remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+      },
+    };
+  }
+
+  /**
+   * Q158/Q218/TL-128: signed media grants for the caller's own attempt.
+   * - `in_progress` inside the clock (+ save grace): TTL follows the remaining
+   *   clock plus the one-minute grant margin (unchanged TL-128 behaviour).
+   * - `submitted`/`timed_out` (Q218): every snapshot media id, shared fixed
+   *   `EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS` (300 s), independent of the clock.
+   * - any other status (`invalidated`): `409 EXAM_ATTEMPT_CLOSED`.
+   *
+   * An `in_progress` attempt past the deadline keeps the existing read-only
+   * answer: this call does not time the row out and answers `409
+   * EXAM_ATTEMPT_EXPIRED`; the same request never reclassifies it as a terminal
+   * review grant.
+   */
+  async getMediaGrantTarget(
+    userId: number,
+    attemptId: number,
+  ): Promise<{ mediaIds: number[]; ttlSeconds: number }> {
+    // F4: the clock and the deadline check are read after the attempt lock,
+    // like save/GET. The transaction is read-only: it never changes the status.
+    const result = await this.prisma.$transaction(
+      async (tx): Promise<AttemptGrantResult> => {
+        const locked = await this.lockAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.attempt.read',
+        );
+        if (locked.kind === 'not_found') return { kind: 'not_found' };
+        const { attempt, now } = locked;
+        const finished =
+          attempt.status === ExamAttemptStatus.submitted ||
+          attempt.status === ExamAttemptStatus.timed_out;
+        if (finished) {
+          const payload = await this.loadSnapshotPayload(tx, attemptId);
+          return {
+            kind: 'ok',
+            mediaIds: this.collectSnapshotMediaIds(payload),
+            ttlSeconds: EXAM_REVIEW_MEDIA_GRANT_TTL_SECONDS,
+          };
+        }
+        if (attempt.status !== ExamAttemptStatus.in_progress) {
+          return { kind: 'closed', status: attempt.status };
+        }
+        if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+          return { kind: 'expired' };
+        }
+        const payload = await this.loadSnapshotPayload(tx, attemptId);
+        return {
+          kind: 'ok',
+          mediaIds: this.collectSnapshotMediaIds(payload),
+          // B2b cleanup: the signer cap (`LEARNER_MEDIA_ACCESS_TTL_SECONDS`)
+          // already limits the TTL; keep the live formula uncapped here.
+          ttlSeconds:
+            remainingSeconds(attempt.expiresAt, now) +
+            EXAM_MEDIA_GRANT_EXTRA_SECONDS,
+        };
+      },
+    );
+    if (result.kind === 'not_found') throw examAttemptNotFound();
+    if (result.kind === 'closed') throw examAttemptClosed(result.status);
+    if (result.kind === 'expired') throw examAttemptExpired();
+    return {
+      mediaIds: result.mediaIds,
+      ttlSeconds: result.ttlSeconds,
+    };
+  }
+
+  /**
+   * TL-112: (a) replay the same key, (b) return the live attempt, (c) time out
+   * an expired one and start a new attempt, (d) create the first attempt.
+   */
+  async startAttempt(
+    userId: number,
+    testId: number,
+    idempotencyKey: string,
+  ): Promise<StartAttemptResult> {
+    try {
+      return await this.prisma.$transaction((tx) =>
+        this.startAttemptInTransaction(tx, userId, testId, idempotencyKey),
+      );
+    } catch (error: unknown) {
+      const kind = classifyExamPersistenceError(error);
+      if (kind === 'unique_conflict') {
+        // TL-112: the partial unique index is the backstop when two writers
+        // bypass the user lock. Re-read the winner instead of surfacing a 500.
+        const winner = await this.findWinnerAttempt(userId, testId);
+        if (winner !== null) {
+          const now = await this.databaseNow(this.prisma);
+          return {
+            created: false,
+            data: await this.loadAttemptView(
+              this.prisma,
+              userId,
+              winner.id,
+              now,
+            ),
+          };
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async startAttemptInTransaction(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    testId: number,
+    idempotencyKey: string,
+  ): Promise<StartAttemptResult> {
+    // TL-115 lock order when a new attempt is created: User -> Test FOR SHARE
+    // -> Question FOR SHARE (id asc) -> Media FOR SHARE (id asc). TL-97 uses
+    // Test FOR UPDATE and Question FOR UPDATE on the authoring side, so this
+    // order cannot deadlock. TL-112b: a live attempt returns before the
+    // Question/Media locks and before the publish gate, so those two locks are
+    // only taken on the create path.
+    await this.coordinator.checkpoint({
+      operation: 'exam.start',
+      phase: 'before_user_lock',
+      userId,
+      testId,
+      transaction: tx,
+    });
+    const users = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT "id" FROM "User" WHERE "id" = ${userId} FOR NO KEY UPDATE
+    `;
+    if (users.length !== 1) {
+      throw new UnauthorizedException('Session is no longer valid.');
+    }
+    await this.coordinator.checkpoint({
+      operation: 'exam.start',
+      phase: 'after_user_lock',
+      userId,
+      testId,
+      transaction: tx,
+    });
+
+    const lockedTests = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT "id" FROM "Test" WHERE "id" = ${testId} FOR SHARE
+    `;
+    if (lockedTests.length !== 1) throw examTestNotFound();
+    const test = await tx.test.findUniqueOrThrow({
+      where: { id: testId },
+      select: EXAM_TEST_TREE_SELECT,
+    });
+    const now = await this.databaseNow(tx);
+    if (!isExamTestVisible(test, now)) throw examTestNotFound();
+    await this.coordinator.checkpoint({
+      operation: 'exam.start',
+      phase: 'after_test_lock',
+      userId,
+      testId,
+      transaction: tx,
+    });
+
+    // (a) TL-112(a): the same key on the same test replays the stored attempt.
+    const replay = await tx.examAttempt.findUnique({
+      where: { userId_idempotencyKey: { userId, idempotencyKey } },
+      select: EXAM_ATTEMPT_SELECT,
+    });
+    if (replay !== null) {
+      if (replay.testId !== testId) throw examIdempotencyKeyReused();
+      return {
+        created: false,
+        data: await this.loadAttemptView(tx, userId, replay.id, now),
+      };
+    }
+
+    // (b) TL-112(b)/TL-112b: one live attempt per (user, test). It is returned
+    // before any content lock or publish gate: the attempt owns a frozen
+    // snapshot (Q121), so archiving a question or revoking media after the
+    // start must not block resuming it (Q120).
+    const active = await tx.examAttempt.findFirst({
+      where: {
+        userId,
+        testId,
+        status: ExamAttemptStatus.in_progress,
+      },
+      orderBy: { id: 'desc' },
+      select: EXAM_ATTEMPT_SELECT,
+    });
+    if (active !== null && active.expiresAt.getTime() > now.getTime()) {
+      return {
+        created: false,
+        data: await this.loadAttemptView(tx, userId, active.id, now),
+      };
+    }
+
+    const questionIds = this.collectQuestionIds(test);
+    if (questionIds.length > 0) {
+      await tx.$queryRaw(
+        Prisma.sql`SELECT "id" FROM "Question" WHERE "id" IN (${Prisma.join(
+          questionIds,
+        )}) ORDER BY "id" FOR SHARE`,
+      );
+    }
+    const questions = await this.loadQuestions(tx, questionIds);
+    await this.coordinator.checkpoint({
+      operation: 'exam.start',
+      phase: 'after_question_locks',
+      userId,
+      testId,
+      transaction: tx,
+    });
+
+    const mediaIds = this.collectMediaIds(test, questions);
+    if (mediaIds.length > 0) {
+      await tx.$queryRaw(
+        Prisma.sql`SELECT "id" FROM "Media" WHERE "id" IN (${Prisma.join(
+          mediaIds,
+        )}) ORDER BY "id" FOR SHARE`,
+      );
+    }
+    const media =
+      mediaIds.length === 0
+        ? []
+        : await tx.media.findMany({
+            where: { id: { in: mediaIds } },
+            select: CMS_MEDIA_SELECT,
+          });
+    await this.coordinator.checkpoint({
+      operation: 'exam.start',
+      phase: 'after_media_locks',
+      userId,
+      testId,
+      transaction: tx,
+    });
+
+    // TL-111: starting re-runs the publish gate. Anything that changed since
+    // publish (question archived, media revoked, …) blocks the start.
+    const reasons = collectTestPublishBlockers({
+      test,
+      questions: questions.map(
+        (question): TestPublishBlockerQuestion => ({
+          id: question.id,
+          status: question.status,
+          deletedAt: question.deletedAt,
+          levelId: question.levelId,
+          skill: question.skill,
+          audioId: question.audio?.id ?? null,
+          imageId: question.image?.id ?? null,
+        }),
+      ),
+      media,
+      levelExists: await this.levelExists(tx, test.levelId),
+    });
+    if (reasons.length > 0) throw examTestUnavailable(reasons);
+
+    // (c) TL-112(c)/F1: an expired attempt is closed only when a new attempt is
+    // actually created; a publish-gate 409 above rolls this branch back.
+    //
+    // The row is locked before it is read again. Lock order is User (held) ->
+    // ExamAttempt; the Test/Question/Media locks held above are FOR SHARE. A
+    // save takes ExamAttempt FOR UPDATE and, on its first insert, an implicit
+    // Question FOR KEY SHARE (compatible with this transaction's FOR SHARE), so
+    // no cycle can form. Re-reading under the lock is the F1 defence: if another
+    // transaction already closed the attempt this branch does nothing, and the
+    // conditional update inside markAttemptTimedOut is the final guard so no
+    // second `timed_out` event can be appended.
+    if (active !== null) {
+      const lockedRows = await tx.$queryRaw<
+        Array<{
+          id: number;
+          status: ExamAttemptStatus;
+          expiresAt: Date;
+        }>
+      >`
+        SELECT "id", "status", "expiresAt" FROM "ExamAttempt"
+        WHERE "id" = ${active.id}
+        FOR UPDATE
+      `;
+      const locked = lockedRows[0];
+      // F4: the clock is read after the lock is held.
+      const lockedNow = await this.databaseNow(tx);
+      if (
+        locked !== undefined &&
+        locked.status === ExamAttemptStatus.in_progress
+      ) {
+        await markAttemptTimedOut(tx, {
+          attemptId: locked.id,
+          expiresAt: locked.expiresAt,
+          occurredAt: lockedNow,
+          reason: 'expired_on_start',
+        });
+      }
+    }
+
+    // (d) Freeze the snapshot and create the attempt in one transaction.
+    const snapshot = buildExamSnapshot(
+      this.toSnapshotSource(test, questions, media),
+    );
+    const expiresAt = new Date(now.getTime() + test.duration * 60_000);
+    const attempt = await tx.examAttempt.create({
+      data: {
+        userId,
+        testId,
+        status: ExamAttemptStatus.in_progress,
+        startedAt: now,
+        expiresAt,
+        remainingSeconds: test.duration * 60,
+        maxScore: snapshot.payload.test.maxScore,
+        scoringVersion: test.scoringVersion,
+        snapshotVersion: snapshot.snapshotVersion,
+        idempotencyKey,
+      },
+      select: EXAM_ATTEMPT_SELECT,
+    });
+    await tx.examAttemptSnapshot.create({
+      data: {
+        attemptId: attempt.id,
+        testVersion: snapshot.testVersion,
+        snapshotVersion: snapshot.snapshotVersion,
+        contentHash: snapshot.contentHash,
+        payload: snapshot.payload,
+      },
+    });
+    await tx.examAttemptEvent.create({
+      data: {
+        attemptId: attempt.id,
+        type: 'started',
+        idempotencyKey,
+        occurredAt: now,
+      },
+    });
+
+    return {
+      created: true,
+      data: toExamAttemptView({
+        attempt,
+        snapshot: { payload: snapshot.payload },
+        now,
+        answers: [],
+      }),
+    };
+  }
+
+  /**
+   * TL-151: the submit state machine. Order matters: replay first (so a retry
+   * of the winning request is always 200), then the status branches, then the
+   * lazy timeout, then the conditional update.
+   */
+  private async submitAttemptInTransaction(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    idempotencyKey: string,
+  ): Promise<AttemptSubmitResult> {
+    const locked = await this.lockAttempt(tx, userId, attemptId, 'exam.submit');
+    if (locked.kind === 'not_found') return { kind: 'not_found' };
+    const { attempt, now } = locked;
+
+    // The append-only event log is the replay ledger (TL-123 pattern). A key
+    // that belongs to another event type was never a submit for this attempt.
+    const replay = await tx.examAttemptEvent.findUnique({
+      where: { attemptId_idempotencyKey: { attemptId, idempotencyKey } },
+      select: { type: true, metadata: true },
+    });
+    if (replay !== null) {
+      if (replay.type !== 'submitted') return { kind: 'key_reused' };
+      return {
+        kind: 'replayed',
+        attempt,
+        now,
+        counts: await this.replaySubmitCounts(tx, attemptId, replay.metadata),
+      };
+    }
+
+    if (attempt.status === ExamAttemptStatus.submitted) {
+      return { kind: 'already_submitted' };
+    }
+    if (attempt.status !== ExamAttemptStatus.in_progress) {
+      // timed_out and invalidated are both "closed" for a submit, matching the
+      // save-path convention (TL-126).
+      return { kind: 'closed', status: attempt.status };
+    }
+
+    // A submit that lands past the save grace window is another timeout writer:
+    // it closes the attempt and answers 409, but the transition must commit, so
+    // this branch returns a value instead of throwing (TL-151 step 5).
+    if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+      await markAttemptTimedOut(tx, {
+        attemptId,
+        expiresAt: attempt.expiresAt,
+        occurredAt: now,
+        reason: 'expired_on_submit',
+      });
+      return { kind: 'expired' };
+    }
+
+    const payload = await this.loadSnapshotPayload(tx, attemptId);
+    const counts = await this.countSubmitAnswers(
+      tx,
+      attemptId,
+      this.indexSnapshotQuestions(payload).size,
+    );
+
+    const updated = await tx.examAttempt.updateMany({
+      where: { id: attemptId, status: ExamAttemptStatus.in_progress },
+      data: {
+        status: ExamAttemptStatus.submitted,
+        submittedAt: now,
+        remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+      },
+    });
+    if (updated.count !== 1) {
+      // Defensive: a writer that did not take the row lock changed the status
+      // between our read and our update. Report the committed state.
+      const current = await tx.examAttempt.findUnique({
+        where: { id: attemptId },
+        select: { status: true },
+      });
+      if (current === null) return { kind: 'not_found' };
+      if (current.status === ExamAttemptStatus.submitted) {
+        return { kind: 'already_submitted' };
+      }
+      return { kind: 'closed', status: current.status };
+    }
+
+    await tx.examAttemptEvent.create({
+      data: {
+        attemptId,
+        type: 'submitted',
+        idempotencyKey,
+        // Counts only: no answer content, score or result (R11/TL-150).
+        metadata: {
+          reason: 'user_submit',
+          answeredCount: counts.answeredCount,
+          unansweredCount: counts.unansweredCount,
+          flaggedCount: counts.flaggedCount,
+        },
+        occurredAt: now,
+      },
+    });
+
+    // TL-164: grading runs in the same transaction as the terminal transition.
+    // It must come after the `submitted` event (the append-only ledger is the
+    // replay guard) and before the commit, so a Result can never outlive a
+    // rolled-back submit. `scoring_failed` is not a submit failure: the attempt
+    // stays submitted and A3 grades lazily on the result endpoint (Q147).
+    // The committed shape of the locked row: the conditional update above made
+    // the status terminal inside this transaction, which is what the Result
+    // integrity trigger requires. The `timed_out` branch is reserved for the
+    // lazy A3 grading path, hence `ensureAttemptResult` keeps its own guard.
+    const submittedAttempt: LockedAttempt = {
+      ...attempt,
+      status: ExamAttemptStatus.submitted,
+      submittedAt: now,
+    };
+    const grading = await ensureAttemptResult(tx, submittedAttempt, now);
+    if (grading.kind === 'scoring_failed') {
+      // Fixed message + ids only: never the error text, never an answer (R11).
+      this.logger.warn('exam.grading.failed', {
+        attemptId,
+        error: grading.error.name,
+      });
+    }
+
+    return {
+      kind: 'submitted',
+      attempt: submittedAttempt,
+      now,
+      counts,
+    };
+  }
+
+  /**
+   * TL-125: the only row this path locks is the attempt itself, and only after
+   * filtering by `userId` — another learner's attempt is indistinguishable from
+   * a missing one (404). No User/Test/Question/Media lock is taken, so the
+   * start chain (User → Test → Question → Media) cannot form a cycle with it.
+   */
+  private async lockAttempt(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    operation: ExamAttemptLockOperation,
+  ): Promise<AttemptLockResult> {
+    await this.coordinator.checkpoint({
+      operation,
+      phase: 'before_attempt_lock',
+      userId,
+      attemptId,
+      transaction: tx,
+    });
+    const locked = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT "id" FROM "ExamAttempt"
+      WHERE "id" = ${attemptId} AND "userId" = ${userId}
+      FOR UPDATE
+    `;
+    if (locked.length !== 1) return { kind: 'not_found' };
+    // F4: the current time is read with `clock_timestamp()` *after* the lock is
+    // held (and before the observation checkpoint), so the grace window is
+    // judged at the moment this transaction actually owns the row (TL-126).
+    const now = await this.databaseNow(tx);
+    await this.coordinator.checkpoint({
+      operation,
+      phase: 'after_attempt_lock',
+      userId,
+      attemptId,
+      transaction: tx,
+    });
+    const attempt = await tx.examAttempt.findUniqueOrThrow({
+      where: { id: attemptId },
+      select: EXAM_ATTEMPT_SELECT,
+    });
+    return { kind: 'open', attempt, now };
+  }
+
+  /**
+   * TL-165/TL-166: the shared prologue of GET result/review. The row lock makes
+   * the lazy timeout safe; a caller that timed out the attempt observes the
+   * same `timed_out` value it just committed instead of re-reading a stale row.
+   * `invalidated` is closed (Q157) and an open attempt is "not terminal" (Q147).
+   */
+  private async openTerminalAttempt(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    operation: ExamAttemptLockOperation,
+  ): Promise<TerminalAttemptOpenResult> {
+    const locked = await this.lockAttempt(tx, userId, attemptId, operation);
+    if (locked.kind === 'not_found') return { kind: 'not_found' };
+    const { attempt, now } = locked;
+
+    let status = attempt.status;
+    let submittedAt = attempt.submittedAt;
+    if (
+      status === ExamAttemptStatus.in_progress &&
+      this.isPastSaveGrace(attempt.expiresAt, now)
+    ) {
+      await this.applyLazyTimeout(tx, attempt, now, 'expired_on_read');
+      status = ExamAttemptStatus.timed_out;
+      submittedAt = attempt.expiresAt;
+    }
+    if (status === ExamAttemptStatus.in_progress) {
+      return { kind: 'not_terminal' };
+    }
+    if (status === ExamAttemptStatus.invalidated) {
+      return { kind: 'closed', status };
+    }
+    if (submittedAt === null) {
+      // submitted/timed_out always carry a submission instant (the timeout
+      // sets it to `expiresAt`), so a null here is a data bug (TL-179).
+      throw new ExamResultInternalError('missing_submitted_at');
+    }
+
+    return {
+      kind: 'terminal',
+      attempt: {
+        id: attempt.id,
+        testId: attempt.testId,
+        status,
+        startedAt: attempt.startedAt,
+        submittedAt,
+      },
+      gradeAttempt: {
+        id: attempt.id,
+        userId: attempt.userId,
+        testId: attempt.testId,
+        status,
+        scoringVersion: attempt.scoringVersion,
+        maxScore: attempt.maxScore,
+      },
+      now,
+    };
+  }
+
+  /**
+   * TL-165: the stored grading output. `publishedAt` and `scoringVersion` are
+   * written by `ensureAttemptResult`, so a null means the row is a data bug;
+   * `detailJson` is parsed with the versioned reader and fails closed.
+   */
+  private async loadStoredResult(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+  ): Promise<ExamResultViewRecord> {
+    const result = await tx.result.findUnique({
+      where: { attemptId },
+      select: {
+        id: true,
+        score: true,
+        maxScore: true,
+        passed: true,
+        scoringVersion: true,
+        publishedAt: true,
+        detailJson: true,
+      },
+    });
+    if (result === null) {
+      throw new ExamResultInternalError('missing_result_row');
+    }
+    if (result.publishedAt === null || result.scoringVersion === null) {
+      throw new ExamResultInternalError('incomplete_result_row');
+    }
+    const skillScores = await tx.resultSkillScore.findMany({
+      where: { resultId: result.id },
+      select: { skill: true, score: true, total: true },
+      orderBy: { skill: 'asc' },
+    });
+    let detail: ReturnType<typeof readExamResultDetail>;
+    try {
+      detail = readExamResultDetail(result.detailJson);
+    } catch (error: unknown) {
+      // Fixed client message + ids only: the stored breakdown may contain
+      // answer-derived data, so the field path is logged on the server without
+      // any stored content (R11).
+      const field =
+        error instanceof ExamResultDetailError ? error.field : undefined;
+      this.logger.error(
+        'exam.result.detail.invalid',
+        field === undefined ? { attemptId } : { attemptId, field },
+      );
+      throw error;
+    }
+    return {
+      score: result.score,
+      maxScore: result.maxScore,
+      passed: result.passed,
+      scoringVersion: result.scoringVersion,
+      publishedAt: result.publishedAt,
+      detail,
+      skillScores,
+    };
+  }
+
+  private isPastSaveGrace(expiresAt: Date, now: Date): boolean {
+    return (
+      now.getTime() >= expiresAt.getTime() + EXAM_SAVE_GRACE_SECONDS * 1_000
+    );
+  }
+
+  /**
+   * TL-126/TL-127 + F1: the one-way transition to `timed_out`. The conditional
+   * update is the guard; only the winner writes the event, so a start racing
+   * this transaction cannot double-write it.
+   */
+  private async applyLazyTimeout(
+    tx: Prisma.TransactionClient,
+    attempt: LockedAttempt,
+    now: Date,
+    reason: 'expired_on_save' | 'expired_on_read',
+  ): Promise<void> {
+    await markAttemptTimedOut(tx, {
+      attemptId: attempt.id,
+      expiresAt: attempt.expiresAt,
+      occurredAt: now,
+      reason,
+    });
+  }
+
+  private async loadSnapshotPayload(
+    client: Prisma.TransactionClient | PrismaService,
+    attemptId: number,
+  ): Promise<ExamSnapshotPayload> {
+    const snapshot = await client.examAttemptSnapshot.findUnique({
+      where: { attemptId },
+      select: { payload: true },
+    });
+    if (snapshot === null) {
+      throw new InternalServerErrorException(
+        'Exam attempt snapshot is missing.',
+      );
+    }
+    return readExamSnapshotPayload(snapshot.payload);
+  }
+
+  private indexSnapshotQuestions(
+    payload: ExamSnapshotPayload,
+  ): Map<string, ExamSnapshotQuestion> {
+    const questions = new Map<string, ExamSnapshotQuestion>();
+    for (const section of payload.sections) {
+      for (const group of section.groups) {
+        for (const question of group.questions) {
+          questions.set(question.key, question);
+        }
+      }
+    }
+    return questions;
+  }
+
+  private collectSnapshotMediaIds(payload: ExamSnapshotPayload): number[] {
+    const ids = new Set<number>();
+    for (const section of payload.sections) {
+      for (const group of section.groups) {
+        if (group.audio !== null) ids.add(group.audio.mediaId);
+        if (group.image !== null) ids.add(group.image.mediaId);
+        for (const question of group.questions) {
+          if (question.audio !== null) ids.add(question.audio.mediaId);
+          if (question.image !== null) ids.add(question.image.mediaId);
+        }
+      }
+    }
+    return [...ids].sort((left, right) => left - right);
+  }
+
+  /**
+  /** TL-124: one transaction, per-item outcomes, shared by both batch attempts. */
+  private async saveAnswersInTransaction(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    attemptId: number,
+    items: Array<ExamAnswerBody & { questionKey: string }>,
+  ): Promise<AttemptBatchResult> {
+    const locked = await this.lockAttempt(
+      tx,
+      userId,
+      attemptId,
+      'exam.answer.save',
+    );
+    if (locked.kind === 'not_found') return { kind: 'not_found' };
+    const { attempt, now } = locked;
+    if (attempt.status !== ExamAttemptStatus.in_progress) {
+      return { kind: 'closed', status: attempt.status };
+    }
+    if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+      await this.applyLazyTimeout(tx, attempt, now, 'expired_on_save');
+      return { kind: 'expired' };
+    }
+    const questions = this.indexSnapshotQuestions(
+      await this.loadSnapshotPayload(tx, attemptId),
+    );
+    const results: OpenBatchResult['results'] = [];
+    for (const item of items) {
+      results.push({
+        questionKey: item.questionKey,
+        outcome: await this.saveAnswerItem({
+          tx,
+          attemptId,
+          now,
+          questions,
+          questionKey: item.questionKey,
+          body: item,
+        }),
+      });
+    }
+    return { kind: 'open', attempt, now, results };
+  }
+
+  /**
+   * TL-121…TL-124 per-item logic, shared by the single and batch routes. It
+   * never throws a domain error: the caller decides whether an outcome becomes
+   * a 4xx (single) or one row of `results` (batch).
+   */
+  private async saveAnswerItem(input: {
+    tx: Prisma.TransactionClient;
+    attemptId: number;
+    now: Date;
+    questions: Map<string, ExamSnapshotQuestion>;
+    questionKey: string;
+    body: ExamAnswerBody;
+  }): Promise<SaveOutcome> {
+    const { tx, attemptId, now, questionKey, body } = input;
+    const question = input.questions.get(questionKey);
+    if (!/^q\d+$/u.test(questionKey) || question === undefined) {
+      return { status: 'not_found' };
+    }
+    if (body.answer === undefined) {
+      // `answer` is a required body field (TL-121); a missing one is a shape
+      // error of the answer, not of the batch envelope.
+      return { status: 'invalid', field: 'answer' };
+    }
+
+    // TL-123: the append-only event log is the replay ledger. The answer row
+    // only remembers the newest key, so an older retry is recognised here.
+    const replay = await tx.examAttemptEvent.findUnique({
+      where: {
+        attemptId_idempotencyKey: {
+          attemptId,
+          idempotencyKey: body.idempotencyKey,
+        },
+      },
+      select: { type: true, metadata: true },
+    });
+    if (replay !== null) {
+      // F2: hashing an arbitrary retry body may throw (deep/typed input); that
+      // is a bad request, not a server fault.
+      const replayHash = tryExamAnswerBodySha256(
+        toExamAnswerHashBody(questionKey, body),
+      );
+      // F2: an unhashable retry is a bad answer body, not a key conflict.
+      if (replayHash === null) return { status: 'invalid', field: 'answer' };
+      if (!isSameExamAnswerRequest(replay, questionKey, replayHash)) {
+        return { status: 'key_reused' };
+      }
+      const replayed = await this.findAnswerRow(tx, attemptId, questionKey);
+      if (replayed === null) return { status: 'conflict', current: null };
+      return { status: 'replayed', record: replayed };
+    }
+
+    // F2: validate the shape *before* hashing the body on the new-save path, so
+    // a deeply nested answer is a 400 answer-shape error instead of a 500.
+    let answerValue: Prisma.InputJsonValue | null = null;
+    if (body.answer !== null) {
+      const validated = validateExamAnswerShape(question, body.answer);
+      if (!validated.ok) return { status: 'invalid', field: validated.field };
+      answerValue = validated.value;
+    }
+    const bodySha256 = tryExamAnswerBodySha256(
+      toExamAnswerHashBody(questionKey, body),
+    );
+    if (bodySha256 === null) return { status: 'invalid', field: 'answer' };
+
+    const current = await this.findAnswerRow(tx, attemptId, questionKey);
+    const expectedVersion = body.expectedVersion;
+    if (expectedVersion === null) {
+      // `null` means "this question has no answer yet"; an existing row must be
+      // updated through its version instead (TL-123).
+      if (current !== null) return { status: 'conflict', current };
+    } else if (current === null || current.version !== expectedVersion) {
+      return { status: 'conflict', current };
+    }
+
+    const answerJson: Prisma.InputJsonValue | typeof Prisma.JsonNull =
+      answerValue === null ? Prisma.JsonNull : answerValue;
+    const record =
+      current === null
+        ? await tx.examAnswer.create({
+            data: {
+              attemptId,
+              snapshotQuestionKey: questionKey,
+              questionId: question.questionId,
+              answer: answerJson,
+              isFlagged: body.isFlagged,
+              answeredAt: body.answer === null ? null : now,
+              lastSavedAt: now,
+              version: 1,
+              saveIdempotencyKey: body.idempotencyKey,
+            },
+            select: EXAM_ANSWER_SELECT,
+          })
+        : await tx.examAnswer.update({
+            where: { id: current.id },
+            data: {
+              answer: answerJson,
+              isFlagged: body.isFlagged,
+              // Clearing keeps the first answer time: the row remembers that
+              // the learner did answer this question at some point.
+              answeredAt:
+                body.answer === null
+                  ? current.answeredAt
+                  : (current.answeredAt ?? now),
+              lastSavedAt: now,
+              version: current.version + 1,
+              saveIdempotencyKey: body.idempotencyKey,
+            },
+            select: EXAM_ANSWER_SELECT,
+          });
+
+    await tx.examAttemptEvent.create({
+      data: {
+        attemptId,
+        type: 'autosaved',
+        idempotencyKey: body.idempotencyKey,
+        // No answer content here: the event is metadata-only (TL-123/R11).
+        metadata: {
+          questionKey,
+          version: record.version,
+          clientElapsedMs: body.clientElapsedMs ?? null,
+          bodySha256,
+        },
+        occurredAt: now,
+      },
+    });
+    return { status: 'saved', record };
+  }
+
+  /**
+   * TL-150: `answeredCount` uses exactly the intro predicate (F3): a flagged
+   * row with no answer is not an answered question. `unansweredCount` is
+   * derived from the frozen snapshot so it cannot disagree with `questionCount`.
+   */
+  private async countSubmitAnswers(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+    questionCount: number,
+  ): Promise<SubmitCounts> {
+    const [answeredRows, flaggedCount] = await Promise.all([
+      tx.examAnswer.count({
+        where: {
+          attemptId,
+          NOT: { answer: { equals: Prisma.JsonNull } },
+        },
+      }),
+      tx.examAnswer.count({ where: { attemptId, isFlagged: true } }),
+    ]);
+    const answeredCount = Math.min(answeredRows, questionCount);
+    return {
+      answeredCount,
+      unansweredCount: Math.max(0, questionCount - answeredCount),
+      flaggedCount,
+    };
+  }
+
+  /**
+   * TL-151 step 2: replay returns the counts frozen on the first submit's
+   * event. If that metadata is unreadable (corruption), recompute from the
+   * committed rows instead of failing the replay.
+   */
+  private async replaySubmitCounts(
+    tx: Prisma.TransactionClient,
+    attemptId: number,
+    metadata: Prisma.JsonValue,
+  ): Promise<SubmitCounts> {
+    const stored = submitCountsFromMetadata(metadata);
+    if (stored !== null) return stored;
+    const payload = await this.loadSnapshotPayload(tx, attemptId);
+    return this.countSubmitAnswers(
+      tx,
+      attemptId,
+      this.indexSnapshotQuestions(payload).size,
+    );
+  }
+
+  private findAnswerRow(
+    client: Prisma.TransactionClient | PrismaService,
+    attemptId: number,
+    questionKey: string,
+  ): Promise<ExamAnswerRow | null> {
+    return client.examAnswer.findUnique({
+      where: {
+        attemptId_snapshotQuestionKey: {
+          attemptId,
+          snapshotQuestionKey: questionKey,
+        },
+      },
+      select: EXAM_ANSWER_SELECT,
+    });
+  }
+
+  private toStoredAnswer(row: ExamAnswerRow): ExamStoredAnswer {
+    return {
+      snapshotQuestionKey: row.snapshotQuestionKey,
+      answer: row.answer,
+      isFlagged: row.isFlagged,
+      version: row.version,
+      answeredAt: row.answeredAt,
+      lastSavedAt: row.lastSavedAt,
+    };
+  }
+
+  private toBatchResult(
+    questionKey: string,
+    outcome: SaveOutcome,
+  ): ExamAnswerBatchResultDto {
+    switch (outcome.status) {
+      case 'saved':
+        return {
+          questionKey,
+          status: 'saved',
+          answer: toExamAnswerView(this.toStoredAnswer(outcome.record)),
+        };
+      case 'replayed':
+        return {
+          questionKey,
+          status: 'replayed',
+          answer: toExamAnswerView(this.toStoredAnswer(outcome.record)),
+        };
+      case 'conflict':
+        return {
+          questionKey,
+          status: 'conflict',
+          current:
+            outcome.current === null
+              ? null
+              : toExamAnswerView(this.toStoredAnswer(outcome.current)),
+        };
+      case 'invalid':
+        return {
+          questionKey,
+          status: 'invalid',
+          code: EXAM_ERROR_CODES.answerInvalid,
+        };
+      case 'key_reused':
+        return {
+          questionKey,
+          status: 'invalid',
+          code: EXAM_ERROR_CODES.idempotencyKeyReused,
+        };
+      case 'not_found':
+        return { questionKey, status: 'not_found' };
+    }
+  }
+
+  /**
+   * TL-124: `questionKey` must not repeat inside one batch (not even for two
+   * different idempotency keys), because one transaction would then write two
+   * versions of the same row and the result order would be ambiguous.
+   */
+  private assertUniqueQuestionKeys(
+    items: Array<{ questionKey: string }>,
+  ): void {
+    const seen = new Set<string>();
+    for (const item of items) {
+      if (seen.has(item.questionKey)) {
+        throw examBatchValidationFailed(['arrayUnique']);
+      }
+      seen.add(item.questionKey);
+    }
+  }
+
+  private assertSingleSaveWritable(
+    result: AttemptWriteResult,
+  ): asserts result is Extract<AttemptWriteResult, { kind: 'open' }> {
+    if (result.kind === 'not_found') throw examAttemptNotFound();
+    if (result.kind === 'closed') throw examAttemptClosed(result.status);
+    if (result.kind === 'expired') throw examAttemptExpired();
+  }
+
+  private assertBatchWritable(
+    result: AttemptBatchResult,
+  ): asserts result is OpenBatchResult {
+    if (result.kind === 'not_found') throw examAttemptNotFound();
+    if (result.kind === 'closed') throw examAttemptClosed(result.status);
+    if (result.kind === 'expired') throw examAttemptExpired();
+  }
+
+  /**
+   * TL-125 fallback: another writer won the `(attemptId, snapshotQuestionKey)`
+   * unique key without holding the attempt lock. The committed state decides
+   * whether this request is the same one (replay) or a stale version.
+   */
+  private async recoverAnswerUniqueConflict(
+    userId: number,
+    attemptId: number,
+    questionKey: string,
+    body: ExamAnswerBody,
+  ): Promise<ApiSuccessResponse<ExamAnswerSaveViewDto>> {
+    // F4/F6: read the committed winner under the same attempt lock, so the
+    // deadline check uses the clock after the lock and the replay ledger is
+    // classified consistently with saveAnswer.
+    const result = await this.prisma.$transaction(
+      async (
+        tx,
+      ): Promise<
+        | { kind: 'not_found' }
+        | { kind: 'closed'; status: ExamAttemptStatus }
+        | { kind: 'expired' }
+        | { kind: 'invalid' }
+        | { kind: 'key_reused' }
+        | { kind: 'replay'; row: ExamAnswerRow; now: Date; expiresAt: Date }
+        | {
+            kind: 'conflict';
+            row: ExamAnswerRow | null;
+          }
+      > => {
+        const locked = await this.lockAttempt(
+          tx,
+          userId,
+          attemptId,
+          'exam.answer.save',
+        );
+        if (locked.kind === 'not_found') return { kind: 'not_found' };
+        const { attempt, now } = locked;
+        if (attempt.status !== ExamAttemptStatus.in_progress) {
+          return { kind: 'closed', status: attempt.status };
+        }
+        if (this.isPastSaveGrace(attempt.expiresAt, now)) {
+          return { kind: 'expired' };
+        }
+        const row = await this.findAnswerRow(tx, attemptId, questionKey);
+        const bodySha256 = tryExamAnswerBodySha256(
+          toExamAnswerHashBody(questionKey, body),
+        );
+        if (bodySha256 === null) return { kind: 'invalid' };
+        const event = await tx.examAttemptEvent.findUnique({
+          where: {
+            attemptId_idempotencyKey: {
+              attemptId,
+              idempotencyKey: body.idempotencyKey,
+            },
+          },
+          select: { type: true, metadata: true },
+        });
+        const decision = decideRecoveredAnswerConflict({
+          event,
+          questionKey,
+          bodySha256,
+          rowExists: row !== null,
+        });
+        if (decision === 'key_reused') return { kind: 'key_reused' };
+        if (decision === 'replay' && row !== null) {
+          return { kind: 'replay', row, now, expiresAt: attempt.expiresAt };
+        }
+        return { kind: 'conflict', row };
+      },
+    );
+
+    if (result.kind === 'not_found') throw examAttemptNotFound();
+    if (result.kind === 'closed') throw examAttemptClosed(result.status);
+    if (result.kind === 'expired') throw examAttemptExpired();
+    if (result.kind === 'invalid') throw examAnswerInvalid('answer');
+    if (result.kind === 'key_reused') throw examIdempotencyKeyReused();
+    if (result.kind === 'replay') {
+      return {
+        success: true,
+        data: toExamAnswerSaveView({
+          answer: this.toStoredAnswer(result.row),
+          now: result.now,
+          expiresAt: result.expiresAt,
+        }),
+      };
+    }
+    throw examAnswerVersionConflict(
+      result.row === null
+        ? null
+        : toExamAnswerView(this.toStoredAnswer(result.row)),
+    );
+  }
+
+  private async findWinnerAttempt(
+    userId: number,
+    testId: number,
+  ): Promise<{ id: number } | null> {
+    const inProgress = await this.prisma.examAttempt.findFirst({
+      where: { userId, testId, status: ExamAttemptStatus.in_progress },
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    return inProgress;
+  }
+
+  private async loadAttemptView(
+    client: Prisma.TransactionClient | PrismaService,
+    userId: number,
+    attemptId: number,
+    now: Date,
+  ): Promise<ExamAttemptViewDto> {
+    const attempt = await client.examAttempt.findFirst({
+      where: { id: attemptId, userId },
+      select: EXAM_ATTEMPT_SELECT,
+    });
+    if (attempt === null) throw examAttemptNotFound();
+
+    const payload = await this.loadSnapshotPayload(client, attemptId);
+    const answers = await client.examAnswer.findMany({
+      where: { attemptId },
+      orderBy: [{ lastSavedAt: 'asc' }, { id: 'asc' }],
+      select: EXAM_ANSWER_SELECT,
+    });
+
+    return toExamAttemptView({
+      attempt,
+      snapshot: { payload },
+      now,
+      answers: answers.map(
+        (answer): ExamStoredAnswer => ({
+          snapshotQuestionKey: answer.snapshotQuestionKey,
+          answer: answer.answer,
+          isFlagged: answer.isFlagged,
+          version: answer.version,
+          answeredAt: answer.answeredAt,
+          lastSavedAt: answer.lastSavedAt,
+        }),
+      ),
+    });
+  }
+
+  private toSnapshotSource(
+    test: ExamTestTree,
+    questions: ExamQuestionRow[],
+    media: CmsMediaRecord[],
+  ): ExamSnapshotSource {
+    const questionsById = new Map(
+      questions.map((question) => [question.id, question]),
+    );
+    const mediaById = new Map(media.map((item) => [item.id, item]));
+    const mediaOf = (mediaId: number | null) =>
+      projectExamSnapshotMedia(
+        mediaId === null ? null : (mediaById.get(mediaId) ?? null),
+      );
+
+    return {
+      test: {
+        id: test.id,
+        title: test.title,
+        instruction: test.instruction,
+        levelCode: test.level.code,
+        duration: test.duration,
+        passScore: test.passScore,
+        // Recomputed by the builder from the frozen structure (Q118).
+        maxScore: EXAM_SECTION_MAX_SCORE * test.sections.length,
+        scoringVersion: test.scoringVersion,
+        version: test.version,
+      },
+      sections: test.sections.map((section) => ({
+        orderIndex: section.orderIndex,
+        skill: section.skill,
+        title: section.title,
+        instruction: section.instruction,
+        groups: section.groups.map((group) => ({
+          orderIndex: group.orderIndex,
+          title: group.title,
+          instruction: group.instruction,
+          content: group.content,
+          audio: mediaOf(group.audioId),
+          image: mediaOf(group.imageId),
+          questions: group.placements.map((placement) => {
+            const question = questionsById.get(
+              placement.testQuestion.questionId,
+            );
+            if (question === undefined) {
+              // The publish gate already rejected this case above.
+              throw new InternalServerErrorException(
+                'Exam test question is missing from the locked tree.',
+              );
+            }
+            return {
+              placementOrderIndex: placement.orderIndex,
+              question: {
+                id: question.id,
+                version: question.version,
+                type: question.type,
+                skill: question.skill,
+                content: question.content,
+                answers: question.answers,
+                correctAnswer: question.correctAnswer,
+                explanation: question.explanation,
+                audio: projectExamSnapshotMedia(question.audio),
+                image: projectExamSnapshotMedia(question.image),
+              },
+            };
+          }),
+        })),
+      })),
+    };
+  }
+
+  private collectQuestionIds(test: ExamTestTree): number[] {
+    const ids = new Set<number>();
+    for (const section of test.sections) {
+      for (const group of section.groups) {
+        for (const placement of group.placements) {
+          ids.add(placement.testQuestion.questionId);
+        }
+      }
+    }
+    return [...ids].sort((left, right) => left - right);
+  }
+
+  private collectMediaIds(
+    test: ExamTestTree,
+    questions: ExamQuestionRow[],
+  ): number[] {
+    const ids = new Set<number>();
+    for (const section of test.sections) {
+      for (const group of section.groups) {
+        if (group.audioId !== null) ids.add(group.audioId);
+        if (group.imageId !== null) ids.add(group.imageId);
+      }
+    }
+    for (const question of questions) {
+      if (question.audio !== null) ids.add(question.audio.id);
+      if (question.image !== null) ids.add(question.image.id);
+    }
+    return [...ids].sort((left, right) => left - right);
+  }
+
+  private async loadQuestions(
+    tx: Prisma.TransactionClient,
+    questionIds: number[],
+  ): Promise<ExamQuestionRow[]> {
+    if (questionIds.length === 0) return [];
+    return tx.question.findMany({
+      where: { id: { in: questionIds } },
+      select: EXAM_QUESTION_SELECT,
+    });
+  }
+
+  private async levelExists(
+    tx: Prisma.TransactionClient,
+    levelId: number,
+  ): Promise<boolean> {
+    const level = await tx.level.findUnique({
+      where: { id: levelId },
+      select: { id: true },
+    });
+    return level !== null;
+  }
+
+  /**
+   * The pagination meta every learner list shares (`LearningService` has the
+   * same shape); `total` is the filtered count, not the page size.
+   */
+  private buildPaginationMeta(
+    page: number,
+    limit: number,
+    total: number,
+  ): PaginationMeta {
+    return {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  private async databaseNow(
+    client: Prisma.TransactionClient | PrismaService,
+  ): Promise<Date> {
+    // F4: statement/clock time, not the transaction start time. Every caller
+    // that checks a deadline reads it after acquiring the lock it uses (start:
+    // User lock then attempt lock; save/GET/media-grants: attempt lock), so the
+    // grace window is judged when the row is actually held.
+    const rows = await client.$queryRaw<Array<{ now: Date }>>`
+      SELECT clock_timestamp() AS "now"
+    `;
+    const row = rows[0];
+    if (row === undefined) {
+      throw new InternalServerErrorException('Database clock is unavailable.');
+    }
+    return row.now;
+  }
+}
+
+/**
+ * TL-151: the submit event metadata is the replay source of truth. Only a
+ * fully numeric triple is accepted; anything else falls back to a recount.
+ */
+function submitCountsFromMetadata(
+  metadata: Prisma.JsonValue,
+): SubmitCounts | null {
+  if (
+    metadata === null ||
+    typeof metadata !== 'object' ||
+    Array.isArray(metadata)
+  ) {
+    return null;
+  }
+  const record = metadata as Record<string, Prisma.JsonValue>;
+  const answeredCount = record['answeredCount'];
+  const unansweredCount = record['unansweredCount'];
+  const flaggedCount = record['flaggedCount'];
+  if (
+    typeof answeredCount !== 'number' ||
+    typeof unansweredCount !== 'number' ||
+    typeof flaggedCount !== 'number'
+  ) {
+    return null;
+  }
+  return { answeredCount, unansweredCount, flaggedCount };
+}

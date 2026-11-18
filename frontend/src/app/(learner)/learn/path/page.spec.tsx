@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { redirect } from 'next/navigation';
@@ -169,23 +169,47 @@ describe('LearnerPathPage', () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it('renders the next lesson card with a coming-soon start button', async () => {
+  it('renders the next lesson card with a start link to the lesson', async () => {
     const { container } = await renderPath(readyPath);
-    const aside = screen.getByRole('complementary', { name: 'Bài tiếp theo' });
-    expect(aside.tagName).toBe('ASIDE');
-    expect(aside.querySelector('p.path-next__title')?.textContent).toBe(
-      'Gia đình',
-    );
-    const button = aside.querySelector('button.path-next__btn');
-    if (!(button instanceof HTMLButtonElement)) {
-      throw new Error('missing start button');
+    // M2.10d F4: two copies share the card — the early `.path-mid` (shown at
+    // 1024–1279px, where the card sits above the grid) and the late
+    // `.path-next` (mobile bar and ≥ 1280px aside); CSS shows exactly one per
+    // viewport, so the Tab order matches the visual order everywhere.
+    const asides = screen.getAllByRole('complementary', {
+      name: 'Bài tiếp theo',
+    });
+    expect(asides.map((aside) => aside.className)).toEqual([
+      'path-mid',
+      'path-next',
+    ]);
+    for (const aside of asides) {
+      expect(aside.tagName).toBe('ASIDE');
+      const cls = aside.className;
+      expect(aside.querySelector(`p.${cls}__title`)?.textContent).toBe(
+        'Gia đình',
+      );
+      const button = aside.querySelector(`a.${cls}__btn`);
+      if (!(button instanceof HTMLAnchorElement)) {
+        throw new Error('missing start link');
+      }
+      expect(button.textContent?.startsWith('Bắt đầu')).toBe(true);
+      expect(button.querySelector('.sr-only')?.textContent).toBe(
+        ' bài Gia đình',
+      );
+      expect(button).toHaveAttribute(
+        'href',
+        `/learn/lessons/${readyPath.nextLesson?.lessonId}`,
+      );
     }
-    expect(button.textContent?.startsWith('Bắt đầu')).toBe(true);
-    expect(button.querySelector('.sr-only')?.textContent).toBe(' bài Gia đình');
-    fireEvent.click(button);
-    expect(
-      within(screen.getByRole('status')).getByText('Tính năng sắp ra mắt.'),
-    ).toBeInTheDocument();
+    // The early copy sits after the tabs, right above the lesson panel where
+    // the eye sees it at 1024–1279px; the late copy follows `main`, so the
+    // DOM order equals the visual order at every viewport.
+    const main = container.querySelector('main.path-body');
+    expect(main?.children[1]).toBe(asides[0]);
+    expect(main?.querySelector('.path-panel')?.previousElementSibling).toBe(
+      asides[0],
+    );
+    expect(main?.nextElementSibling).toBe(asides[1]);
     expect(container.querySelector('[style]')).toBeNull();
   });
 

@@ -12,6 +12,8 @@ export const API_ENVELOPE_EXTENSION = 'x-api-envelope';
 export type ApiEnvelopeExtension = {
   data: SchemaObject | ReferenceObject;
   paginated: boolean;
+  /** Replaces the default meta schema when the handler adds `extraMeta`. */
+  meta?: ReferenceObject;
 };
 
 /**
@@ -23,11 +25,11 @@ export type ApiEnvelopeExtension = {
 export function ApiEnvelope(model: Type<unknown>): MethodDecorator;
 export function ApiEnvelope(
   model: [Type<unknown>],
-  options?: { paginated?: boolean },
+  options?: { paginated?: boolean; meta?: Type<unknown> },
 ): MethodDecorator;
 export function ApiEnvelope(
   model: Type<unknown> | [Type<unknown>],
-  options: { paginated?: boolean } = {},
+  options: { paginated?: boolean; meta?: Type<unknown> } = {},
 ): MethodDecorator {
   const type = Array.isArray(model) ? model[0] : model;
   const reference = { $ref: getSchemaPath(type) };
@@ -36,9 +38,10 @@ export function ApiEnvelope(
       ? { type: 'array', items: reference }
       : reference,
     paginated: options.paginated === true,
+    ...(options.meta ? { meta: { $ref: getSchemaPath(options.meta) } } : {}),
   };
   return applyDecorators(
-    ApiExtraModels(type),
+    ApiExtraModels(type, ...(options.meta ? [options.meta] : [])),
     ApiExtension(API_ENVELOPE_EXTENSION, extension),
   );
 }

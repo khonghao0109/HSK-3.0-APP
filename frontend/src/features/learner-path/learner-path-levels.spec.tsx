@@ -78,7 +78,7 @@ function selectedTab() {
 
 function tile(title: string) {
   const name = screen.getByText(title, { selector: '.topic__name' });
-  const button = name.closest('button');
+  const button = name.closest<HTMLElement>('a, button');
   if (!button) throw new Error(`no tile for ${title}`);
   return button;
 }
@@ -148,9 +148,7 @@ describe('LearnerPathLevels', () => {
       screen.getByText('Hoàn thành 12 bài để nắm vững HSK 3'),
     ).toBeInTheDocument();
     expect(screen.queryByText('HSK 3 chưa mở.')).toBeNull();
-    const buttons = container.querySelectorAll(
-      'ol.path-grid > li > button.topic',
-    );
+    const buttons = container.querySelectorAll('ol.path-grid > li > .topic');
     expect(
       Array.from(buttons).map(
         (button) => button.querySelector('.topic__name')?.textContent,
@@ -215,6 +213,9 @@ describe('LearnerPathLevels', () => {
       'topic__art',
       'topic__name',
       'sr-only',
+      // Web state line and, for the current lesson, its bar (M2.10a).
+      'topic__label w-only',
+      ...(state === 'current' ? ['topic__bar w-only'] : []),
     ];
     expect(children.map((child) => child.getAttribute('class'))).toEqual(
       expectedClasses,
@@ -259,6 +260,11 @@ describe('LearnerPathLevels', () => {
     expect(screen.getByRole('tabpanel')).toHaveAttribute('tabindex', '0');
   });
 
+  it('makes a loaded level with no lessons focusable', () => {
+    renderLevels('HSK2', [hsk2Empty, hsk3]);
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('tabindex', '0');
+  });
+
   it('marks the current lesson as the step', () => {
     renderLevels('HSK3');
     expect(tile('Gia đình')).toHaveAttribute('aria-current', 'step');
@@ -279,21 +285,71 @@ describe('LearnerPathLevels', () => {
     expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
-  it.each(['Chào hỏi', 'Gia đình', 'Mua sắm'])(
-    'toasts coming soon for open tile %s',
-    (title) => {
-      renderLevels('HSK3');
-      expect(tile(title)).not.toHaveAttribute('aria-disabled');
-      fireEvent.click(tile(title));
-      expect(
-        within(screen.getByRole('status')).getByText('Tính năng sắp ra mắt.'),
-      ).toBeInTheDocument();
-      expect(screen.queryByText('Hoàn thành bài trước để mở khoá.')).toBeNull();
-    },
-  );
+  it.each([
+    ['Chào hỏi', 10],
+    ['Gia đình', 20],
+    ['Mua sắm', 30],
+  ])('links open tile %s to its lesson page', (title, id) => {
+    renderLevels('HSK3');
+    const link = tile(title);
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', `/learn/lessons/${id}`);
+    expect(link).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(link);
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
+  });
+
+  it('keeps the locked tile a button, not a link', () => {
+    renderLevels('HSK3');
+    const locked = tile('Du lịch');
+    expect(locked.tagName).toBe('BUTTON');
+    expect(locked).not.toHaveAttribute('href');
+  });
 
   it('uses no inline style', () => {
     const { container } = renderLevels('HSK3');
     expect(container.querySelector('[style]')).toBeNull();
+  });
+
+  it('shows the web state line of each tile (M2.10a)', () => {
+    renderLevels('HSK3', [
+      {
+        ...hsk3,
+        lessons: hsk3.lessons.map((item) =>
+          item.state === 'current'
+            ? { ...item, completionPercent: 37.6 }
+            : item,
+        ),
+      },
+    ]);
+    const label = (title: string) => tile(title).querySelector('.topic__label');
+    expect(label('Chào hỏi')).toHaveTextContent(/^Đã xong$/u);
+    expect(label('Gia đình')).toHaveTextContent(/^Đang học · 38%$/u);
+    expect(label('Mua sắm')).toHaveTextContent(/^Có thể học$/u);
+    expect(label('Du lịch')).toHaveTextContent(/^Chưa mở$/u);
+    expect(label('Chào hỏi')).toHaveAttribute('aria-hidden', 'true');
+    expect(tile('Gia đình').querySelector('.topic__bar > span')).toHaveClass(
+      'pct-38',
+    );
+    expect(tile('Chào hỏi').querySelector('.topic__bar')).toBeNull();
+  });
+
+  it('summarises the selected level in the web progress card', () => {
+    renderLevels('HSK3', [hsk3, hsk2Empty]);
+    const card = screen.getByRole('region', { name: 'Tiến độ HSK 3' });
+    expect(card).toHaveClass('path-sum', 'w-only');
+    expect(card.querySelector('.path-sum__big')).toHaveTextContent(
+      /^1\/12 bài đã xong$/u,
+    );
+    // 1 of 12 lessons done → 8%.
+    expect(card.querySelector('.path-sum__bar > span')).toHaveClass('pct-8');
+    expect(
+      within(card)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Đã xong: 1', 'Đang học: 1', 'Có thể học: 1', 'Chưa mở: 1']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'HSK 2' }));
+    expect(screen.queryByRole('region', { name: /Tiến độ/u })).toBeNull();
   });
 });

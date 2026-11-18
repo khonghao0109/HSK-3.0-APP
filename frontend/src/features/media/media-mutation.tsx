@@ -75,8 +75,8 @@ export function MediaLifecycleActions({
           operation === 'archive' ? 'archive-confirm' : 'quarantine';
         setError(
           response.status === 409
-            ? 'This asset changed before the operation completed. Refresh and review its current state.'
-            : 'The media operation is temporarily unavailable. Try again.',
+            ? 'Nội dung đã thay đổi trước khi thao tác hoàn tất. Hãy tải lại và kiểm tra trạng thái hiện tại.'
+            : 'Thao tác media tạm thời không khả dụng. Hãy thử lại.',
         );
         return;
       }
@@ -88,7 +88,7 @@ export function MediaLifecycleActions({
     } catch {
       focusTarget.current =
         operation === 'archive' ? 'archive-confirm' : 'quarantine';
-      setError('The media operation is temporarily unavailable. Try again.');
+      setError('Thao tác media tạm thời không khả dụng. Hãy thử lại.');
     } finally {
       setPending(null);
     }
@@ -96,66 +96,66 @@ export function MediaLifecycleActions({
 
   if (lifecycle === 'archived') {
     return (
-      <p className="muted" ref={archivedNoticeRef} tabIndex={-1}>
-        Archived assets are retained for history and cannot be modified.
+      <p className="adm-muted" ref={archivedNoticeRef} tabIndex={-1}>
+        Media đã lưu trữ được giữ lại cho lịch sử, không thể thao tác thêm.
       </p>
     );
   }
   return (
-    <div className="media-actions">
+    <div className="adm-media-actions">
       <p>
-        Quarantine immediately hides unsafe content. Archive retires the asset
-        while retaining references and history.
+        Cách ly ẩn ngay nội dung không an toàn. Lưu trữ rút media khỏi sử dụng
+        nhưng giữ lại tham chiếu và lịch sử.
       </p>
-      <div className="media-actions__buttons">
+      <div className="adm-media-actions__buttons">
         <button
           ref={quarantineRef}
-          className="button button--ghost"
+          className="adm-btn adm-btn--outline"
           type="button"
           disabled={pending !== null || processingStatus === 'quarantined'}
           onClick={() => void mutate('quarantine')}
         >
-          {pending === 'quarantine' ? 'Quarantining…' : 'Quarantine asset'}
+          {pending === 'quarantine' ? 'Đang cách ly…' : 'Cách ly'}
         </button>
         {confirmArchive ? (
           <div
-            className="media-actions__confirmation"
+            className="adm-media-actions__confirmation"
             role="group"
-            aria-label="Confirm archive asset"
+            aria-label="Xác nhận lưu trữ media"
           >
             <button
               ref={archiveConfirmRef}
-              className="button button--danger"
+              className="adm-btn adm-btn--danger"
               type="button"
               disabled={pending !== null}
               onClick={() => void mutate('archive')}
             >
-              {pending === 'archive' ? 'Archiving…' : 'Confirm archive'}
+              {pending === 'archive' ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ'}
             </button>
             <button
               ref={archiveCancelRef}
-              className="button button--ghost"
+              className="adm-btn adm-btn--ghost"
               type="button"
               disabled={pending !== null}
               onClick={cancelArchive}
             >
-              Cancel
+              Huỷ
             </button>
           </div>
         ) : (
           <button
             ref={archiveTriggerRef}
-            className="button button--danger"
+            className="adm-btn adm-btn--danger"
             type="button"
             disabled={pending !== null}
             onClick={openArchiveConfirmation}
           >
-            Archive asset
+            Lưu trữ
           </button>
         )}
       </div>
       {error ? (
-        <p className="form-error" role="alert">
+        <p className="adm-form-error" role="alert">
           {error}
         </p>
       ) : null}

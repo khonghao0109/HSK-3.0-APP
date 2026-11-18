@@ -43,6 +43,7 @@ export function LearnerLogoutButton() {
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending || undefined}
         onClick={handleLogout}
         className="btn btn--outline-navy btn--block auth__submit"
       >

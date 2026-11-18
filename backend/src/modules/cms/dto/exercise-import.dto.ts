@@ -15,6 +15,7 @@ import {
 
 import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
+import { normalizeLessonExerciseText } from '../../../common/validation/lesson-exercise-authoring.validator';
 import { EXERCISE_IMPORT_V1_MAX_ROWS } from '../exercise-import/exercise-import.constants';
 
 export class PreviewExerciseImportDto {
@@ -25,7 +26,9 @@ export class PreviewExerciseImportDto {
   dataSourceId!: number;
 
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.normalize('NFKC').trim() : value,
+    typeof value === 'string'
+      ? normalizeLessonExerciseText(value).trim()
+      : value,
   )
   @IsString()
   @Length(1, 255)

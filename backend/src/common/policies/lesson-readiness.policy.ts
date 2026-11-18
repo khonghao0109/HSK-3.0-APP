@@ -5,6 +5,11 @@ export const PUBLIC_CONTENT_WHERE = {
   deletedAt: null,
 };
 
+/** Lesson words a learner sees: the word is published and not soft-deleted. */
+export const PUBLIC_LESSON_WORD_WHERE = {
+  word: { is: PUBLIC_CONTENT_WHERE },
+} satisfies Prisma.LessonWordWhereInput;
+
 export const LESSON_INSTRUCTIONAL_BLOCK_WHERE = {
   OR: [
     { topics: { some: PUBLIC_CONTENT_WHERE } },

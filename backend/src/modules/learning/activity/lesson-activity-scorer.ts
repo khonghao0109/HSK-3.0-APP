@@ -6,7 +6,8 @@ import { ExerciseType } from '@prisma/client';
 
 import {
   LessonExerciseAuthoringValidationError,
-  normalizeLessonExerciseText,
+  lessonExerciseTextMatchKey,
+  normalizeLessonExerciseIdentifier,
   validateLessonExerciseAuthoring,
 } from '../../../common/validation/lesson-exercise-authoring.validator';
 
@@ -101,11 +102,11 @@ function scoreFillBlank(
   const caseSensitive = authoritativeAnswer.caseSensitive === true;
   const acceptedTexts = authoritativeAnswer.acceptedTexts as string[];
   const normalizedAccepted = acceptedTexts.map((value) =>
-    normalizeFillBlank(value, caseSensitive),
+    lessonExerciseTextMatchKey(value, caseSensitive),
   );
   const submitted = requireClientRecord(submittedAnswer);
   if (!hasExactKeys(submitted, ['text'])) throw invalidClientAnswer();
-  const normalizedSubmitted = normalizeFillBlank(
+  const normalizedSubmitted = lessonExerciseTextMatchKey(
     requireClientText(submitted.text),
     caseSensitive,
   );
@@ -133,13 +134,6 @@ function scoreArrangeSentence(
   return submittedTokenIds.every(
     (tokenId, index) => tokenId === correctTokenIds[index],
   );
-}
-
-function normalizeFillBlank(value: string, caseSensitive: boolean): string {
-  const normalized = normalizeLessonExerciseText(value)
-    .trim()
-    .replace(/\s+/gu, ' ');
-  return caseSensitive ? normalized : normalized.toLowerCase();
 }
 
 function isExactTokenSet(candidate: string[], expected: string[]): boolean {
@@ -171,7 +165,7 @@ function requireClientText(value: unknown): string {
 
 function requireClientStableId(value: unknown): string {
   if (typeof value !== 'string') throw invalidClientAnswer();
-  const normalized = normalizeLessonExerciseText(value);
+  const normalized = normalizeLessonExerciseIdentifier(value);
   if (
     normalized.length === 0 ||
     normalized.length > 128 ||

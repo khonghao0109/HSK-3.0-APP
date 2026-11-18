@@ -1,0 +1,11 @@
+{
+  "description": "block có field lạ",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[0].content[0].extra",
+      "value": 1
+    }
+  ]
+}

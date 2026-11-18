@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { homeDateLabel } from '@/features/learner-home/home-date';
 import type { LearningHome } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
@@ -151,15 +152,18 @@ describe('LearnerHomePage', () => {
     expect(getCurrentGoal).toHaveBeenCalledWith('learner-token');
   });
 
-  it('renders the greeting, gauge and streak when ready', async () => {
+  it('renders the heading, date line, gauge and streak when ready', async () => {
     const { container } = await renderHome(readyHome);
     expect(getServerLearnerSession).toHaveBeenCalledTimes(1);
     expect(getLearningHome).toHaveBeenCalledTimes(1);
     expect(getLearningHome).toHaveBeenCalledWith('learner-token');
     expect(redirect).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Chào, Minh' }),
+      screen.getByRole('heading', { level: 1, name: 'Hôm nay' }),
     ).toBeInTheDocument();
+    expect(container.querySelector('.home-hero__greet p')?.textContent).toBe(
+      homeDateLabel(new Date()),
+    );
 
     const goalStat = screen.getByRole('region', { name: 'Mục tiêu hôm nay' });
     expect(goalStat.querySelector('.sr-only')?.textContent).toBe(
@@ -182,14 +186,14 @@ describe('LearnerHomePage', () => {
     expect(container.querySelector('[style]')).toBeNull();
   });
 
-  it('falls back to a generic greeting and an empty gauge', async () => {
+  it('keeps the heading without a name and shows an empty gauge', async () => {
     const { container } = await renderHome({
       ...readyHome,
       greetingName: null,
       dailyGoal: null,
     });
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Chào bạn' }),
+      screen.getByRole('heading', { level: 1, name: 'Hôm nay' }),
     ).toBeInTheDocument();
     const gauge = container.querySelector('.home-gauge');
     expect(gauge).toHaveClass('pct-0');
@@ -221,7 +225,20 @@ describe('LearnerHomePage', () => {
     expect(container.textContent).not.toContain('XP');
   });
 
-  it('renders the continue lesson card and toasts on click', async () => {
+  it('labels the web card button "Bắt đầu" for a lesson not started', async () => {
+    const { container } = await renderHome({
+      ...readyHome,
+      continueLesson: { ...lesson, completionPercent: 0 },
+    });
+    expect(container.querySelector('.home-lesson__cta')).toHaveTextContent(
+      /^Bắt đầu$/u,
+    );
+    expect(container.querySelector('.w-top .w-chip')).toHaveTextContent(
+      `Chuỗi ngày học: ${readyHome.streakDays} ngày`,
+    );
+  });
+
+  it('renders the continue lesson card as a link to the lesson', async () => {
     const { container } = await renderHome({
       ...readyHome,
       continueLesson: lesson,
@@ -243,19 +260,32 @@ describe('LearnerHomePage', () => {
     expect(card.querySelector('.progress > span')).toHaveClass('pct-40');
     expect(container.querySelector('[style]')).toBeNull();
 
+    // Web card button (Q83): a lesson under way reads "Tiếp tục học".
+    expect(card.querySelector('.home-lesson__cta')).toHaveTextContent(
+      /^Tiếp tục học$/u,
+    );
+    expect(card.querySelector('.home-lesson__cta')).toHaveClass('w-only');
+
+    expect(card.tagName).toBe('A');
+    expect(card).toHaveAttribute('href', `/learn/lessons/${lesson.lessonId}`);
     fireEvent.click(card);
-    expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
+    expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
   it('lists the eight explore shortcuts in order', async () => {
     await renderHome(readyHome);
     const list = screen.getByRole('list', { name: 'Khám phá' });
+    // M4.5 B1: "Thi thử" is a real link now, the other seven still toast.
+    expect(
+      within(list)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Thi thử']);
     expect(
       within(list)
         .getAllByRole('button')
         .map((button) => button.textContent),
     ).toEqual([
-      'Thi thử',
       'Phát âm',
       'Đọc hiểu',
       'Tài liệu',
@@ -264,6 +294,10 @@ describe('LearnerHomePage', () => {
       'Nhận diện chữ',
       'Hỗ trợ',
     ]);
+    expect(within(list).getByRole('link', { name: 'Thi thử' })).toHaveAttribute(
+      'href',
+      '/learn/exam',
+    );
 
     fireEvent.click(within(list).getByRole('button', { name: 'Đọc hiểu' }));
     expect(screen.getByText('Tính năng sắp ra mắt.')).toHaveClass('toast');
@@ -271,11 +305,13 @@ describe('LearnerHomePage', () => {
 
   it('toasts from the bell and links the avatar to the profile', async () => {
     await renderHome(readyHome);
-    fireEvent.click(screen.getByRole('button', { name: 'Thông báo' }));
+    // The hero of the mobile layout; the web top bar has its own (M2.10a).
+    const hero = within(screen.getByRole('banner'));
+    fireEvent.click(hero.getByRole('button', { name: 'Thông báo' }));
     expect(
       screen.getByText('Thông báo sẽ có khi tính năng ra mắt.'),
     ).toHaveClass('toast');
-    expect(screen.getByRole('link', { name: 'Hồ sơ' })).toHaveAttribute(
+    expect(hero.getByRole('link', { name: 'Hồ sơ' })).toHaveAttribute(
       'href',
       '/learn/profile',
     );

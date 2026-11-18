@@ -1,4 +1,36 @@
+import { Prisma } from '@prisma/client';
+
+import { mediaAltText } from '../exam/exam-snapshot.builder';
 import { projectPublicExerciseMedia } from './public-exercise.policy';
+
+/** Ảnh bìa bài học và ảnh từ (Q350): chỉ lộ ảnh `ready`, chưa lưu trữ. */
+export const PUBLIC_LESSON_IMAGE_SELECT = {
+  id: true,
+  type: true,
+  processingStatus: true,
+  deletedAt: true,
+  metadata: true,
+} satisfies Prisma.MediaSelect;
+
+type PublicImageRecord = {
+  id: number;
+  type: string;
+  processingStatus: string;
+  deletedAt: Date | null;
+  metadata: Prisma.JsonValue;
+} | null;
+
+export function projectPublicLessonImage(media: PublicImageRecord | undefined) {
+  if (
+    !media ||
+    media.type !== 'image' ||
+    media.processingStatus !== 'ready' ||
+    media.deletedAt !== null
+  ) {
+    return null;
+  }
+  return { id: media.id, altText: mediaAltText(media.metadata) };
+}
 
 type PublicLessonRecord = {
   id: number;
@@ -18,6 +50,7 @@ type PublicLessonRecord = {
       pinyin: string;
       pinyinTone: string | null;
       meanings: Array<{ meaningEn: string | null; meaningVi: string | null }>;
+      image?: PublicImageRecord;
     };
   }>;
   stories: Array<{
@@ -38,6 +71,7 @@ type PublicLessonRecord = {
     explanation?: string | null;
     [key: string]: unknown;
   }>;
+  coverImage?: PublicImageRecord;
   [key: string]: unknown;
 };
 
@@ -46,6 +80,7 @@ export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
     id: lesson.id,
     title: lesson.title,
     level: lesson.level,
+    coverImage: projectPublicLessonImage(lesson.coverImage),
     topics: lesson.topics,
     words: lesson.lessonWords.map(({ word }) => ({
       id: word.id,
@@ -57,6 +92,7 @@ export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
         en: meaning.meaningEn,
         vi: meaning.meaningVi,
       })),
+      image: projectPublicLessonImage(word.image),
     })),
     stories: lesson.stories,
     exercises: lesson.exercises.map((exercise) => {

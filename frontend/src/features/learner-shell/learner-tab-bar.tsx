@@ -2,45 +2,45 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Icon } from '@/components/ui/icon';
 
-import { ToastButton } from './learner-toast';
-import { TOAST_COMING_SOON } from './learner-toast-messages';
-
-function TabIcon({ name }: { name: string }) {
-  return (
-    <svg className="icon" aria-hidden="true">
-      <use href={`#i-${name}`} />
-    </svg>
-  );
-}
-
-/** Learner tab bar (Q1). Tra từ and Ôn tập only toast until shipped (Q16). */
+/** Learner tab bar (Q1). Ôn tập links to /learn/review since M3.3b (Q271). */
 export function LearnerTabBar() {
   const pathname = usePathname();
   const onHome = pathname === '/learn';
-  const onPath = pathname === '/learn/path';
+  const onPath =
+    pathname === '/learn/path' || pathname.startsWith('/learn/lessons/');
+  const onDictionary =
+    pathname === '/learn/dictionary' ||
+    pathname.startsWith('/learn/dictionary/');
   const onProfile = pathname === '/learn/profile';
+  // M3.3b (Q271): the review page and its session.
+  const onReview =
+    pathname === '/learn/review' || pathname.startsWith('/learn/review/');
 
   return (
     <nav className="tabbar" aria-label="Điều hướng chính">
       <Link href="/learn" aria-current={onHome ? 'page' : undefined}>
-        <TabIcon name={onHome ? 'home-fill' : 'home'} />
+        <Icon name={onHome ? 'home-fill' : 'home'} />
         Trang chủ
       </Link>
       <Link href="/learn/path" aria-current={onPath ? 'page' : undefined}>
-        <TabIcon name={onPath ? 'book-open-fill' : 'book-open'} />
+        <Icon name={onPath ? 'book-open-fill' : 'book-open'} />
         Học
       </Link>
-      <ToastButton message={TOAST_COMING_SOON}>
-        <TabIcon name="search" />
+      <Link
+        href="/learn/dictionary"
+        aria-current={onDictionary ? 'page' : undefined}
+      >
+        <Icon name="search" />
         Tra từ
-      </ToastButton>
-      <ToastButton message={TOAST_COMING_SOON}>
-        <TabIcon name="layers" />
+      </Link>
+      <Link href="/learn/review" aria-current={onReview ? 'page' : undefined}>
+        <Icon name="layers" />
         Ôn tập
-      </ToastButton>
+      </Link>
       <Link href="/learn/profile" aria-current={onProfile ? 'page' : undefined}>
-        <TabIcon name="user" />
+        <Icon name="user" />
         Hồ sơ
       </Link>
     </nav>

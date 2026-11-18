@@ -1,0 +1,14 @@
+{
+  "description": "chỉ còn 1 topic",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "topics[1]"
+    },
+    {
+      "op": "delete",
+      "path": "topics[1]"
+    }
+  ]
+}

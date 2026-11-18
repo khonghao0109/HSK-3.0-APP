@@ -66,30 +66,52 @@ function tabBar(page: Page): Locator {
   return page.getByRole('navigation', { name: 'Điều hướng chính' });
 }
 
+/** M2.10a: from 1024px the sidebar (`.w-side`) replaces the tab bar. */
+function isWeb(page: Page): boolean {
+  return (page.viewportSize()?.width ?? 0) >= 1024;
+}
+
+/** Link to Lộ trình: tab "Học" on mobile, sidebar "Lộ trình học" on web. */
+function pathLink(page: Page): Locator {
+  return tabBar(page).getByRole('link', {
+    name: isWeb(page) ? 'Lộ trình học' : 'Học',
+    exact: true,
+  });
+}
+
+/** Hồ sơ: last tab on mobile, the sidebar profile cell on web. */
+function profileLink(page: Page): Locator {
+  return isWeb(page)
+    ? page.locator('.w-side').getByRole('link', { name: 'Hồ sơ' })
+    : tabBar(page).getByRole('link', { name: 'Hồ sơ' });
+}
+
 function toast(page: Page): Locator {
   return page.locator('.toast-region[role="status"]');
 }
 
 test.describe('Learner Home (M2.4a)', () => {
-  test('greets a learner registered with a name', async ({ page, baseURL }) => {
+  test('heads a named learner\'s home with "Hôm nay" and the date', async ({
+    page,
+    baseURL,
+  }) => {
     await registerReadyLearner(page, baseURL, 'Lan');
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Chào, Lan',
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hôm nay');
+    await expect(page.locator('.home-hero__greet p')).toHaveText(
+      /^(Thứ [A-ZÀ-Ỹ]\S*|Chủ Nhật), \d{2}\/\d{2}\/\d{4}$/u,
     );
   });
 
-  test('greets a learner registered without a name with "Chào bạn"', async ({
+  test('heads an unnamed learner\'s home with "Hôm nay"', async ({
     page,
     baseURL,
   }) => {
     await registerReadyLearner(page, baseURL);
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Chào bạn',
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hôm nay');
   });
 
   test('each not-yet-shipped control shows its exact toast text', async ({
@@ -108,25 +130,10 @@ test.describe('Learner Home (M2.4a)', () => {
         text: TOAST_NOTIFICATIONS,
       },
       {
-        label: 'Thi thử',
+        label: 'Phát âm',
         control: page
           .locator('.home-explore')
-          .getByRole('button', { name: 'Thi thử' }),
-        text: TOAST_COMING_SOON,
-      },
-      {
-        label: 'tab Tra từ',
-        control: nav.getByRole('button', { name: 'Tra từ' }),
-        text: TOAST_COMING_SOON,
-      },
-      {
-        label: 'tab Ôn tập',
-        control: nav.getByRole('button', { name: 'Ôn tập' }),
-        text: TOAST_COMING_SOON,
-      },
-      {
-        label: 'Tiếp tục học card',
-        control: page.locator('.home-lesson'),
+          .getByRole('button', { name: 'Phát âm' }),
         text: TOAST_COMING_SOON,
       },
     ];
@@ -146,9 +153,20 @@ test.describe('Learner Home (M2.4a)', () => {
     }
 
     // M2.4b links tab Học to the path (Q22): it navigates instead of toasting.
+    await expect(pathLink(page)).toHaveAttribute('href', '/learn/path');
+    // M3.3b (Q271) links Ôn tập, M4.5 B1 (7dcb63f) links Thi thử.
+    await expect(nav.getByRole('link', { name: 'Ôn tập' })).toHaveAttribute(
+      'href',
+      '/learn/review',
+    );
     await expect(
-      nav.getByRole('link', { name: 'Học', exact: true }),
-    ).toHaveAttribute('href', '/learn/path');
+      page.locator('.home-explore').getByRole('link', { name: 'Thi thử' }),
+    ).toHaveAttribute('href', '/learn/exam');
+    // M2.5a: the Tiếp tục học card links to its lesson page instead of toasting.
+    await expect(page.locator('a.home-lesson')).toHaveAttribute(
+      'href',
+      /^\/learn\/lessons\/\d+$/u,
+    );
   });
 
   test('marks the active tab with aria-current="page"', async ({
@@ -158,14 +176,18 @@ test.describe('Learner Home (M2.4a)', () => {
     await registerReadyLearner(page, baseURL);
     const nav = tabBar(page);
     const home = nav.getByRole('link', { name: 'Trang chủ' });
-    const profile = nav.getByRole('link', { name: 'Hồ sơ' });
+    const profile = profileLink(page);
 
     await page.goto('/learn');
     await expect(home).toHaveAttribute('aria-current', 'page');
     await expect(profile).not.toHaveAttribute('aria-current', /.*/);
-    // Q23: label jade-800, icon jade-700.
+    // Q23: label jade-800, icon jade-700 (tab bar). The web sidebar item
+    // (mẫu web.css) keeps the icon in the jade-800 of its label.
     await expect(home).toHaveCSS('color', 'rgb(6, 122, 96)');
-    await expect(home.locator('.icon')).toHaveCSS('color', 'rgb(2, 142, 106)');
+    await expect(home.locator('.icon')).toHaveCSS(
+      'color',
+      isWeb(page) ? 'rgb(6, 122, 96)' : 'rgb(2, 142, 106)',
+    );
 
     await page.goto('/learn/profile');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hồ sơ');
@@ -250,7 +272,10 @@ test.describe('Learner Home (M2.4a)', () => {
 
     const nav = tabBar(page);
     const items = nav.locator(':scope > a, :scope > button');
-    await expect(items).toHaveCount(5);
+    const web = isWeb(page);
+    // Web: the four items of the sidebar "Điều hướng chính" (Hồ sơ is the
+    // profile cell); its ring is not inset (not at the screen edge).
+    await expect(items).toHaveCount(web ? 4 : 5);
     const firstItem = items.first();
 
     // Tab through the page until the first tab bar item gets focus.
@@ -263,7 +288,9 @@ test.describe('Learner Home (M2.4a)', () => {
     }
     expect(reached).toBe(true);
 
-    const expectedLabels = ['Trang chủ', 'Học', 'Tra từ', 'Ôn tập', 'Hồ sơ'];
+    const expectedLabels = web
+      ? ['Trang chủ', 'Lộ trình học', 'Tra từ', 'Ôn tập']
+      : ['Trang chủ', 'Học', 'Tra từ', 'Ôn tập', 'Hồ sơ'];
     for (const [index, label] of expectedLabels.entries()) {
       const item = items.nth(index);
       await expect(item).toBeFocused();
@@ -275,7 +302,11 @@ test.describe('Learner Home (M2.4a)', () => {
         (node) => window.getComputedStyle(node).boxShadow,
       );
       expect(boxShadow).toContain(JADE_700_RING);
-      expect(boxShadow, `${label} ring is inset`).toContain('inset');
+      if (web) {
+        expect(boxShadow, `${label} ring`).not.toContain('inset');
+      } else {
+        expect(boxShadow, `${label} ring is inset`).toContain('inset');
+      }
       if (index < expectedLabels.length - 1) {
         await page.keyboard.press('Tab');
       }
@@ -290,16 +321,25 @@ test.describe('Learner Home (M2.4a)', () => {
     await page.goto('/learn');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    const targets: Array<{ label: string; control: Locator }> = [
-      { label: 'logo', control: page.locator('.home-hero__logo') },
-      { label: 'bell', control: page.locator('.home-hero__bell') },
-      { label: 'avatar', control: page.locator('.home-hero__avatar') },
-    ];
+    // Web: logo, bell and avatar of the hero are hidden; their copies are
+    // the sidebar brand and the top bar bell and avatar (M2.10a).
+    const targets: Array<{ label: string; control: Locator }> = isWeb(page)
+      ? [
+          { label: 'logo', control: page.locator('.w-brand') },
+          { label: 'bell', control: page.locator('.w-top .icon-btn') },
+          { label: 'avatar', control: page.locator('.w-top__me') },
+        ]
+      : [
+          { label: 'logo', control: page.locator('.home-hero__logo') },
+          { label: 'bell', control: page.locator('.home-hero__bell') },
+          { label: 'avatar', control: page.locator('.home-hero__avatar') },
+        ];
     await expect(page.locator('.home-lesson')).toHaveCount(1);
     targets.push({ label: 'lesson', control: page.locator('.home-lesson') });
     targets.push({
       label: 'first explore',
-      control: page.locator('.home-explore > li:first-child > button'),
+      // Thi thử is a link since 7dcb63f.
+      control: page.locator('.home-explore > li:first-child > a'),
     });
 
     for (const { label, control } of targets) {
@@ -378,7 +418,7 @@ test.describe('Learner Home (M2.4a)', () => {
           document.querySelector('.home-lesson')?.getBoundingClientRect()
             .right ?? Number.POSITIVE_INFINITY,
         exploreWidths: [
-          ...document.querySelectorAll('.home-explore button'),
+          ...document.querySelectorAll('.home-explore :is(a, button)'),
         ].map((node) => node.getBoundingClientRect().width),
       }));
       expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth);

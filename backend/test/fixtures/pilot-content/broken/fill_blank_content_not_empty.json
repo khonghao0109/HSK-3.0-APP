@@ -1,0 +1,13 @@
+{
+  "description": "fill_blank content phải {}",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[4].content",
+      "value": {
+        "extra": 1
+      }
+    }
+  ]
+}

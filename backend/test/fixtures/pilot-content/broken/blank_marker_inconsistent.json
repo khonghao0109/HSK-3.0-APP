@@ -1,0 +1,11 @@
+{
+  "description": "ô trống không phải ___",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[4].prompt",
+      "value": "Điền từ còn thiếu: 她很__。(Cô ấy rất vui.) (gõ chữ Hán hoặc pinyin)"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "mcq thiếu options",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "exercises[0].content.options"
+    }
+  ]
+}

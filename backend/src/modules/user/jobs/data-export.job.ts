@@ -52,6 +52,7 @@ export const EXPORT_COVERAGE: ExportCoverage = {
     'UserWordProgress',
     'ReviewCard',
     'ReviewSession',
+    'ReviewPreference',
     'PronunciationAttempt',
     'ExamAttempt',
     'Result',
@@ -724,6 +725,20 @@ export class DataExportJob implements OnApplicationBootstrap {
             ORDER BY "createdAt" DESC
           `);
 
+          // Read review preferences (M3.3c)
+          const reviewPreferenceRows = await tx.$queryRaw<
+            Array<{
+              dailyCardLimit: number;
+              levelCodes: string[];
+              createdAt: Date;
+              updatedAt: Date;
+            }>
+          >(Prisma.sql`
+            SELECT "dailyCardLimit", "levelCodes", "createdAt", "updatedAt"
+            FROM "ReviewPreference"
+            WHERE "userId" = ${userId}
+          `);
+
           // Read pronunciation attempts
           const pronunciationRows = await tx.$queryRaw<
             Array<{
@@ -962,6 +977,7 @@ export class DataExportJob implements OnApplicationBootstrap {
             wordProgresses: wordProgressRows,
             reviewCards: enrichedReviewCards,
             reviewSessions: reviewSessionRows,
+            reviewPreference: reviewPreferenceRows[0] ?? null,
             pronunciationAttempts: pronunciationRows,
             examAttempts: enrichedExamAttempts,
             results: enrichedResults,

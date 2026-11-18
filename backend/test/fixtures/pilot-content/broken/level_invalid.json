@@ -1,0 +1,11 @@
+{
+  "description": "không phải HSK1",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "lesson.levelCode",
+      "value": "HSK2"
+    }
+  ]
+}

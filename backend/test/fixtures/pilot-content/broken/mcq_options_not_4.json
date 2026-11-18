@@ -1,0 +1,11 @@
+{
+  "description": "mcq có 5 option (Q176 yêu cầu đúng 4)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "arrayOptions",
+      "path": "exercises[0].content.options",
+      "count": 5
+    }
+  ]
+}

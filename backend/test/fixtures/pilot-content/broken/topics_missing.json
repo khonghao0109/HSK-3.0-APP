@@ -1,0 +1,10 @@
+{
+  "description": "thiếu mảng topics",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "topics"
+    }
+  ]
+}

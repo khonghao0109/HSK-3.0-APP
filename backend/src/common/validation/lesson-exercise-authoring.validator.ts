@@ -49,8 +49,34 @@ export class LessonExerciseAuthoringValidationError extends Error {
   }
 }
 
+/**
+ * Human-readable text (prompt, option/token text, explanation, accepted
+ * answers): Unicode NFC only. NFKC would fold CJK full-width punctuation
+ * (`？！，：；（）` → ASCII) and change PO-approved content (ADR-002 §1).
+ */
 export function normalizeLessonExerciseText(value: string): string {
+  return value.normalize('NFC');
+}
+
+/**
+ * Stable identifiers (option/token ids, `sourceKey`): Unicode NFKC, so
+ * compatibility variants such as `ｏｐｔ-a` and `opt-a` are the same id.
+ */
+export function normalizeLessonExerciseIdentifier(value: string): string {
   return value.normalize('NFKC');
+}
+
+/**
+ * Comparison key for free-text answers (fill_blank). NFKC + trim + collapsed
+ * whitespace, so a learner typing `?` matches an accepted text stored with
+ * `？`. Never persisted.
+ */
+export function lessonExerciseTextMatchKey(
+  value: string,
+  caseSensitive: boolean,
+): string {
+  const normalized = value.normalize('NFKC').trim().replace(/\s+/gu, ' ');
+  return caseSensitive ? normalized : normalized.toLowerCase();
 }
 
 export function isLessonExerciseTypePublishable(type: ExerciseType): boolean {
@@ -136,7 +162,9 @@ export function validateLessonExerciseAuthoring(
   return result;
 }
 
-function validateChoice(
+// M4.1a (TL-78) reuses these three shape validators for the question bank.
+// Behaviour stays identical for LessonExercise authoring.
+export function validateChoice(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
@@ -169,7 +197,7 @@ function validateChoice(
   };
 }
 
-function validateFillBlank(
+export function validateFillBlank(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
@@ -205,7 +233,7 @@ function validateFillBlank(
   };
 }
 
-function validateArrange(
+export function validateArrange(
   rawContent: unknown,
   rawAnswer: unknown,
 ): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
@@ -379,7 +407,7 @@ function requireFillBlankText(value: unknown, path: string): string {
 
 function requireStableId(value: unknown, path: string): string {
   if (typeof value !== 'string') fail('invalid_stable_id', path);
-  const normalized = normalizeLessonExerciseText(value);
+  const normalized = normalizeLessonExerciseIdentifier(value);
   if (
     normalized.length === 0 ||
     normalized.length > 128 ||

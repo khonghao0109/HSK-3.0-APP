@@ -1,0 +1,11 @@
+{
+  "description": "không còn bài mcq",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "setTypeAll",
+      "type": "mcq",
+      "to": "fill_blank"
+    }
+  ]
+}

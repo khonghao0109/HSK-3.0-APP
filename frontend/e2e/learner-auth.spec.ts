@@ -89,7 +89,7 @@ test.describe('Learner Auth Flow', () => {
     await page.goto('/learn');
     await expect(page).toHaveURL(/\/learn/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
 
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
@@ -166,7 +166,7 @@ test.describe('Learner Auth Flow', () => {
 
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
   });
@@ -227,15 +227,19 @@ test.describe('Learner Auth Flow', () => {
     await expect(page.getByLabel('Mật khẩu', { exact: true })).toBeFocused();
     await page.keyboard.type(password);
 
-    // Tab past toggle to submit button
+    // Tab past toggle and "Quên mật khẩu?" (Q71) to submit button
     await page.keyboard.press('Tab'); // focus toggle
+    await page.keyboard.press('Tab'); // focus "Quên mật khẩu?"
+    await expect(
+      page.getByRole('link', { name: 'Quên mật khẩu?' }),
+    ).toBeFocused();
     await page.keyboard.press('Tab'); // focus submit
     await expect(page.getByRole('button', { name: 'Đăng nhập' })).toBeFocused();
     await page.keyboard.press('Enter');
 
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page).toHaveTitle('Trang chủ · Hán Lộ');
-    await expect(page.locator('h1')).toHaveText('Chào bạn');
+    await expect(page.locator('h1')).toHaveText('Hôm nay');
     await openProfile(page);
     await expect(page.locator('main.profile')).toContainText(randomEmail);
   });
@@ -331,8 +335,11 @@ test.describe('Learner Auth Flow', () => {
     page,
   }) => {
     // 1. Heading on /
+    // M2.10c: `/` giữ cây mobile (`.m-only`, h1 "Hán Lộ") cạnh cây web
+    // (`.w-only`, h1 hero) trong cùng một `<main>`, nên phải chỉ định h1 đang
+    // hiển thị — cùng cách M2.10b đã dùng cho các khung có hai cây.
     await page.goto('/');
-    await expect(page.locator('h1')).toMatchAriaSnapshot(
+    await expect(page.locator('h1:visible')).toMatchAriaSnapshot(
       '- heading "Hán Lộ" [level=1]',
     );
 
@@ -369,14 +376,15 @@ test.describe('Learner Auth Flow', () => {
     await expect(termsLink).toBeVisible();
     await termsLink.click();
     await expect(page).toHaveURL(/\/terms/);
-    await expect(page.locator('h1')).toHaveText('Điều khoản sử dụng');
+    // M2.10c: như mục 1 — `/terms` có cây mobile và cây web trong cùng `<main>`.
+    await expect(page.locator('h1:visible')).toHaveText('Điều khoản sử dụng');
 
     await page.goto('/sign-up');
     const privacyLink = page.getByRole('link', { name: 'Chính sách bảo mật' });
     await expect(privacyLink).toBeVisible();
     await privacyLink.click();
     await expect(page).toHaveURL(/\/privacy/);
-    await expect(page.locator('h1')).toHaveText('Chính sách bảo mật');
+    await expect(page.locator('h1:visible')).toHaveText('Chính sách bảo mật');
   });
 
   test('preserves Next.js route announcer on client navigation', async ({

@@ -1,0 +1,16 @@
+{
+  "description": "hanzi không có row trong final_words.json",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[0].hanzi",
+      "value": "车上"
+    },
+    {
+      "op": "set",
+      "path": "words[0].pinyin",
+      "value": "chēshàng"
+    }
+  ]
+}

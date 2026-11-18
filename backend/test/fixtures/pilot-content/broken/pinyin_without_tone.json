@@ -1,0 +1,11 @@
+{
+  "description": "pinyin không có dấu thanh (không phải thanh nhẹ)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[1].pinyin",
+      "value": "ni"
+    }
+  ]
+}

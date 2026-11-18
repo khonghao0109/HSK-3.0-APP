@@ -34,13 +34,13 @@ describe('MediaTable', () => {
 
     const row = screen.getByRole('row', { name: /media 41/i });
     expect(within(row).getByText('lesson.mp3')).toBeInTheDocument();
-    expect(within(row).getByText('Ready')).toBeInTheDocument();
+    expect(within(row).getByText('Sẵn sàng')).toBeInTheDocument();
     expect(
-      within(row).getByRole('link', { name: /open media 41/i }),
+      within(row).getByRole('link', { name: /mở media 41/i }),
     ).toHaveAttribute('href', '/admin/media/41');
 
     const compact = screen.getByRole('list', {
-      name: 'Media for narrow screens',
+      name: 'Danh sách media cho màn hẹp',
     });
     expect(
       within(compact).getByRole('listitem', { name: /media 41/i }),
@@ -50,10 +50,14 @@ describe('MediaTable', () => {
   it('renders directed empty-state guidance without a fake upload action', () => {
     render(<MediaTable media={[]} />);
     expect(screen.getByRole('status')).toHaveTextContent(
-      'No media assets match',
+      'Không có media nào khớp bộ lọc.',
     );
+    // TL-43: the only upload entry is the flag-gated link in the page header.
     expect(
-      screen.queryByRole('button', { name: /upload/i }),
+      screen.queryByRole('button', { name: /upload|tải lên/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /upload|tải lên/i }),
     ).not.toBeInTheDocument();
   });
 });

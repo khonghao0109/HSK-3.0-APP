@@ -1,0 +1,12 @@
+{
+  "description": "payload bài > 65 536 byte",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "fillerObject",
+      "path": "exercises[0].content",
+      "keys": 70,
+      "valueLength": 1000
+    }
+  ]
+}

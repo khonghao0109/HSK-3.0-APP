@@ -1,0 +1,13 @@
+{
+  "description": "acceptedTexts thiếu pinyin (Q194)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[4].answer.acceptedTexts",
+      "value": [
+        "高兴"
+      ]
+    }
+  ]
+}

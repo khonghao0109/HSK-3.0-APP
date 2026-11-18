@@ -1,0 +1,10 @@
+{
+  "description": "thiếu topic.key",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "topics[1].key"
+    }
+  ]
+}

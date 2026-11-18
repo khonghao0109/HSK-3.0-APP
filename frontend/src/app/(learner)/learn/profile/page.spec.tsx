@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import type { LearningHome } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
+import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
 import LearnerProfilePage, { metadata } from './page';
@@ -76,19 +77,26 @@ describe('LearnerProfilePage', () => {
       vi.mocked(getLearningHome).mockRejectedValue(
         new BackendRequestError(normalizeApiFailure({ status })),
       );
-      const { container } = render(await LearnerProfilePage());
+      const { container } = render(
+        <LearnerToastProvider>
+          {await LearnerProfilePage()}
+        </LearnerToastProvider>,
+      );
       expect(rowValue('Tên')).toBe('Không tải được tên hiển thị.');
       expect(rowValue('Email')).toBe('learner@example.com');
       expect(
         screen.getByRole('button', { name: 'Đăng xuất' }),
       ).toBeInTheDocument();
       expect(container.querySelector('[style]')).toBeNull();
+      expect(container.querySelector('.w-chip')).toBeNull();
     },
   );
 
   it('still renders email and sign-out on a network or parse error', async () => {
     vi.mocked(getLearningHome).mockRejectedValue(new TypeError('fetch failed'));
-    render(await LearnerProfilePage());
+    render(
+      <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
+    );
     expect(rowValue('Tên')).toBe('Không tải được tên hiển thị.');
     expect(rowValue('Email')).toBe('learner@example.com');
     expect(
@@ -98,7 +106,9 @@ describe('LearnerProfilePage', () => {
 
   it('shows the name, email and sign-out button', async () => {
     vi.mocked(getLearningHome).mockResolvedValue(home);
-    render(await LearnerProfilePage());
+    render(
+      <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
+    );
     expect(
       screen.getByRole('heading', { level: 1, name: 'Hồ sơ' }),
     ).toBeInTheDocument();
@@ -109,6 +119,10 @@ describe('LearnerProfilePage', () => {
       screen.getByRole('button', { name: 'Đăng xuất' }),
     ).toBeInTheDocument();
     expect(getLearningHome).toHaveBeenCalledWith('learner-token');
+    // Streak chip of the web top bar from the same /learning/home (Q83).
+    expect(document.querySelector('.w-top .w-chip')).toHaveTextContent(
+      'Chuỗi ngày học: 0 ngày',
+    );
   });
 
   it('shows a placeholder when there is no display name', async () => {
@@ -116,7 +130,9 @@ describe('LearnerProfilePage', () => {
       ...home,
       greetingName: null,
     });
-    render(await LearnerProfilePage());
+    render(
+      <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
+    );
     expect(rowValue('Tên')).toBe('Chưa có tên hiển thị');
   });
 });

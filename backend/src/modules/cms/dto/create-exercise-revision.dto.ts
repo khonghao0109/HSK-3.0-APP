@@ -15,10 +15,12 @@ import {
 
 import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
 import { JSON_OBJECT_SCHEMA } from '../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 import { LESSON_EXERCISE_ORDER_INDEX_LIMITS } from '../../../common/validation/lesson-exercise-authoring.validator';
 
 import { BoundedJsonPayload } from './bounded-json-payload.validator';
 
+@PinSwaggerEnumOrder('type', Object.values(ExerciseType))
 export class CreateExerciseRevisionDto {
   @IsEnum(ExerciseType)
   type!: ExerciseType;
