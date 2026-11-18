@@ -1303,7 +1303,9 @@ như `test.created`).
 
 Nạp blueprint và bộ câu: `npm run content:import:blueprint -- --file content/hsk1/exam/blueprint-hsk1.json
 [--exam content/hsk1/exam/mock-01.json --ledger <ledger.json>]` (ghi trực tiếp qua Prisma, idempotent; blueprint
-`published` không bị ghi đè; bộ câu `published` khi mọi câu đã published).
+`published` không bị ghi đè; bộ câu `published` khi mọi câu đã published). Một file có thể chứa nhiều bộ cùng dạng: phần
+khai `blueprintPart` (vd. `r2-s02` → `r2`). Kiểm file câu hỏi trước khi nạp: `npm run content:check:exam` (bộ dùng chung
+phương án, đúng một phương án thừa, tag dạng câu, số âm tiết pinyin, không trùng sourceKey/đề bài giữa các file).
 
 ### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c/M4.3)
 

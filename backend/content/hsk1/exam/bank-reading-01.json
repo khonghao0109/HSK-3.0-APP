@@ -1,0 +1,1807 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "notice": "Ngân hàng câu Đọc HSK1 số 01 do AI soạn (Q172), chờ PO duyệt (Q185). 3 bộ r2, 3 bộ r3, 15 câu r4, chỉ chữ (không tranh, không audio); dùng với blueprint hsk1-reading/hsk1-standard để sinh đề khác mock-01 (Q357).",
+  "test": {
+    "sourceKey": "hsk1:bank-reading-01"
+  },
+  "demoTests": [],
+  "images": [],
+  "sections": [
+    {
+      "skill": "reading",
+      "title": "Đọc",
+      "instruction": "Ngân hàng câu phần Đọc.",
+      "parts": [
+        {
+          "key": "r2-s01",
+          "blueprintPart": "r2",
+          "title": "Phần 2",
+          "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q001",
+              "type": "mcq",
+              "prompt": "你今天忙吗？ (Nǐ jīntiān máng ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "不忙，我在家。 (Bù máng, wǒ zài jiā.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去，我九点去。 (Qù, wǒ jiǔ diǎn qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "在桌子上。 (Zài zhuōzi shang.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "八点半。 (Bā diǎn bàn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "他是我朋友。 (Tā shì wǒ péngyou.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "我想喝茶。 (Wǒ xiǎng hē chá.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "\"Hôm nay bạn có bận không?\" – Câu trả lời phù hợp: 不忙，我在家。 (Bù máng, wǒ zài jiā.) – \"Không bận, tôi ở nhà.\" (Phương án E không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q002",
+              "type": "mcq",
+              "prompt": "你的书包在哪儿？ (Nǐ de shūbāo zài nǎr?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "不忙，我在家。 (Bù máng, wǒ zài jiā.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去，我九点去。 (Qù, wǒ jiǔ diǎn qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "在桌子上。 (Zài zhuōzi shang.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "八点半。 (Bā diǎn bàn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "他是我朋友。 (Tā shì wǒ péngyou.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "我想喝茶。 (Wǒ xiǎng hē chá.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "\"Cặp sách của bạn ở đâu?\" – Câu trả lời phù hợp: 在桌子上。 (Zài zhuōzi shang.) – \"Ở trên bàn.\" (Phương án E không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q003",
+              "type": "mcq",
+              "prompt": "你想喝什么？ (Nǐ xiǎng hē shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "不忙，我在家。 (Bù máng, wǒ zài jiā.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去，我九点去。 (Qù, wǒ jiǔ diǎn qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "在桌子上。 (Zài zhuōzi shang.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "八点半。 (Bā diǎn bàn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "他是我朋友。 (Tā shì wǒ péngyou.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "我想喝茶。 (Wǒ xiǎng hē chá.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-f"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn muốn uống gì?\" – Câu trả lời phù hợp: 我想喝茶。 (Wǒ xiǎng hē chá.) – \"Tôi muốn uống trà.\" (Phương án E không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q004",
+              "type": "mcq",
+              "prompt": "现在几点？ (Xiànzài jǐ diǎn?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "不忙，我在家。 (Bù máng, wǒ zài jiā.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去，我九点去。 (Qù, wǒ jiǔ diǎn qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "在桌子上。 (Zài zhuōzi shang.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "八点半。 (Bā diǎn bàn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "他是我朋友。 (Tā shì wǒ péngyou.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "我想喝茶。 (Wǒ xiǎng hē chá.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "\"Bây giờ là mấy giờ?\" – Câu trả lời phù hợp: 八点半。 (Bā diǎn bàn.) – \"Tám giờ rưỡi.\" (Phương án E không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q005",
+              "type": "mcq",
+              "prompt": "你明天去学校吗？ (Nǐ míngtiān qù xuéxiào ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "不忙，我在家。 (Bù máng, wǒ zài jiā.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "去，我九点去。 (Qù, wǒ jiǔ diǎn qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "在桌子上。 (Zài zhuōzi shang.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "八点半。 (Bā diǎn bàn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "他是我朋友。 (Tā shì wǒ péngyou.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "我想喝茶。 (Wǒ xiǎng hē chá.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "\"Ngày mai bạn có đi học không?\" – Câu trả lời phù hợp: 去，我九点去。 (Qù, wǒ jiǔ diǎn qù.) – \"Có, chín giờ tôi đi.\" (Phương án E không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r2-s02",
+          "blueprintPart": "r2",
+          "title": "Phần 2",
+          "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q006",
+              "type": "mcq",
+              "prompt": "你家在哪儿？ (Nǐ jiā zài nǎr?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我吃面条儿。 (Wǒ chī miàntiáor.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我坐飞机去。 (Wǒ zuò fēijī qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "会一点儿。 (Huì yìdiǎnr.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "晚上十点。 (Wǎnshang shí diǎn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "在医院后边。 (Zài yīyuàn hòubian.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是我同学的。 (Shì wǒ tóngxué de.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "\"Nhà bạn ở đâu?\" – Câu trả lời phù hợp: 在医院后边。 (Zài yīyuàn hòubian.) – \"Ở phía sau bệnh viện.\" (Phương án B không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q007",
+              "type": "mcq",
+              "prompt": "你中午吃什么？ (Nǐ zhōngwǔ chī shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我吃面条儿。 (Wǒ chī miàntiáor.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我坐飞机去。 (Wǒ zuò fēijī qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "会一点儿。 (Huì yìdiǎnr.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "晚上十点。 (Wǎnshang shí diǎn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "在医院后边。 (Zài yīyuàn hòubian.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是我同学的。 (Shì wǒ tóngxué de.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "\"Buổi trưa bạn ăn gì?\" – Câu trả lời phù hợp: 我吃面条儿。 (Wǒ chī miàntiáor.) – \"Tôi ăn mì.\" (Phương án B không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q008",
+              "type": "mcq",
+              "prompt": "这本书是谁的？ (Zhè běn shū shì shéi de?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我吃面条儿。 (Wǒ chī miàntiáor.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我坐飞机去。 (Wǒ zuò fēijī qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "会一点儿。 (Huì yìdiǎnr.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "晚上十点。 (Wǎnshang shí diǎn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "在医院后边。 (Zài yīyuàn hòubian.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是我同学的。 (Shì wǒ tóngxué de.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-f"
+              },
+              "transcript": null,
+              "explanation": "\"Quyển sách này là của ai?\" – Câu trả lời phù hợp: 是我同学的。 (Shì wǒ tóngxué de.) – \"Là của bạn cùng lớp tôi.\" (Phương án B không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q009",
+              "type": "mcq",
+              "prompt": "你会说汉语吗？ (Nǐ huì shuō Hànyǔ ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我吃面条儿。 (Wǒ chī miàntiáor.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我坐飞机去。 (Wǒ zuò fēijī qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "会一点儿。 (Huì yìdiǎnr.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "晚上十点。 (Wǎnshang shí diǎn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "在医院后边。 (Zài yīyuàn hòubian.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是我同学的。 (Shì wǒ tóngxué de.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn biết nói tiếng Trung không?\" – Câu trả lời phù hợp: 会一点儿。 (Huì yìdiǎnr.) – \"Biết một chút.\" (Phương án B không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q010",
+              "type": "mcq",
+              "prompt": "你几点睡觉？ (Nǐ jǐ diǎn shuìjiào?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "我吃面条儿。 (Wǒ chī miàntiáor.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "我坐飞机去。 (Wǒ zuò fēijī qù.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "会一点儿。 (Huì yìdiǎnr.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "晚上十点。 (Wǎnshang shí diǎn.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "在医院后边。 (Zài yīyuàn hòubian.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "是我同学的。 (Shì wǒ tóngxué de.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "\"Mấy giờ bạn đi ngủ?\" – Câu trả lời phù hợp: 晚上十点。 (Wǎnshang shí diǎn.) – \"Mười giờ tối.\" (Phương án B không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r2-s03",
+          "blueprintPart": "r2",
+          "title": "Phần 2",
+          "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q011",
+              "type": "mcq",
+              "prompt": "你怎么去机场？ (Nǐ zěnme qù jīchǎng?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期三。 (Xīngqīsān.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我打车去。 (Wǒ dǎchē qù.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "不冷，很热。 (Bù lěng, hěn rè.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn đi sân bay bằng gì?\" – Câu trả lời phù hợp: 我打车去。 (Wǒ dǎchē qù.) – \"Tôi bắt taxi đi.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q012",
+              "type": "mcq",
+              "prompt": "你有几个孩子？ (Nǐ yǒu jǐ ge háizi?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期三。 (Xīngqīsān.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我打车去。 (Wǒ dǎchē qù.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "不冷，很热。 (Bù lěng, hěn rè.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn có mấy đứa con?\" – Câu trả lời phù hợp: 两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.) – \"Hai đứa, một trai một gái.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q013",
+              "type": "mcq",
+              "prompt": "今天冷吗？ (Jīntiān lěng ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期三。 (Xīngqīsān.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我打车去。 (Wǒ dǎchē qù.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "不冷，很热。 (Bù lěng, hěn rè.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "\"Hôm nay có lạnh không?\" – Câu trả lời phù hợp: 不冷，很热。 (Bù lěng, hěn rè.) – \"Không lạnh, rất nóng.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q014",
+              "type": "mcq",
+              "prompt": "你认识那个人吗？ (Nǐ rènshi nà ge rén ma?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期三。 (Xīngqīsān.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我打车去。 (Wǒ dǎchē qù.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "不冷，很热。 (Bù lěng, hěn rè.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "\"Bạn có quen người kia không?\" – Câu trả lời phù hợp: 认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.) – \"Có quen, cô ấy là giáo viên của chúng tôi.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q015",
+              "type": "mcq",
+              "prompt": "我们在哪儿吃饭？ (Wǒmen zài nǎr chī fàn?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "两个，一个儿子一个女儿。 (Liǎng ge, yí ge érzi yí ge nǚ'ér.)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "认识，她是我们的老师。 (Rènshi, tā shì wǒmen de lǎoshī.)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期三。 (Xīngqīsān.)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "我打车去。 (Wǒ dǎchē qù.)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "不冷，很热。 (Bù lěng, hěn rè.)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-f"
+              },
+              "transcript": null,
+              "explanation": "\"Chúng ta ăn cơm ở đâu?\" – Câu trả lời phù hợp: 去前边的饭店吧。 (Qù qiánbian de fàndiàn ba.) – \"Đi nhà hàng phía trước nhé.\" (Phương án C không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "doc-ghep-cau",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r3-s01",
+          "blueprintPart": "r3",
+          "title": "Phần 3",
+          "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q016",
+              "type": "mcq",
+              "prompt": "我（ ）他，他是我的同学。 (Wǒ ( ) tā, tā shì wǒ de tóngxué.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "认识 (rènshi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "几 (jǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下雨 (xiàyǔ)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "打电话 (dǎ diànhuà)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医生 (yīshēng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Tôi quen anh ấy, anh ấy là bạn cùng lớp của tôi. Chỗ trống cần 认识 (rènshi) – quen biết. (Từ 医生 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q017",
+              "type": "mcq",
+              "prompt": "你家有（ ）口人？ (Nǐ jiā yǒu ( ) kǒu rén?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "认识 (rènshi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "几 (jǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下雨 (xiàyǔ)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "打电话 (dǎ diànhuà)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医生 (yīshēng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Nhà bạn có mấy người? Chỗ trống cần 几 (jǐ) – mấy. (Từ 医生 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q018",
+              "type": "mcq",
+              "prompt": "外边（ ）了，你别出去。 (Wàibian ( ) le, nǐ bié chūqù.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "认识 (rènshi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "几 (jǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下雨 (xiàyǔ)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "打电话 (dǎ diànhuà)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医生 (yīshēng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Bên ngoài mưa rồi, bạn đừng ra ngoài. Chỗ trống cần 下雨 (xiàyǔ) – mưa. (Từ 医生 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q019",
+              "type": "mcq",
+              "prompt": "我想买新（ ）。 (Wǒ xiǎng mǎi xīn ( ).)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "认识 (rènshi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "几 (jǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下雨 (xiàyǔ)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "打电话 (dǎ diànhuà)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医生 (yīshēng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "Tôi muốn mua quần áo mới. Chỗ trống cần 衣服 (yīfu) – quần áo. (Từ 医生 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q020",
+              "type": "mcq",
+              "prompt": "晚上我给妈妈（ ）。 (Wǎnshang wǒ gěi māma ( ).)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "认识 (rènshi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "几 (jǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下雨 (xiàyǔ)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "衣服 (yīfu)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "打电话 (dǎ diànhuà)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "医生 (yīshēng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "Buổi tối tôi gọi điện cho mẹ. Chỗ trống cần 打电话 (dǎ diànhuà) – gọi điện thoại. (Từ 医生 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r3-s02",
+          "blueprintPart": "r3",
+          "title": "Phần 3",
+          "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q021",
+              "type": "mcq",
+              "prompt": "我坐（ ）去北京。 (Wǒ zuò ( ) qù Běijīng.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "飞机 (fēijī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "睡觉 (shuìjiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "喝 (hē)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "快 (kuài)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "电视 (diànshì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Tôi đi máy bay đến Bắc Kinh. Chỗ trống cần 飞机 (fēijī) – máy bay. (Từ 电视 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q022",
+              "type": "mcq",
+              "prompt": "太晚了，我想（ ）了。 (Tài wǎn le, wǒ xiǎng ( ) le.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "飞机 (fēijī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "睡觉 (shuìjiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "喝 (hē)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "快 (kuài)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "电视 (diànshì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Muộn quá rồi, tôi muốn đi ngủ. Chỗ trống cần 睡觉 (shuìjiào) – ngủ. (Từ 电视 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q023",
+              "type": "mcq",
+              "prompt": "你想（ ）点儿什么？ (Nǐ xiǎng ( ) diǎnr shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "飞机 (fēijī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "睡觉 (shuìjiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "喝 (hē)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "快 (kuài)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "电视 (diànshì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Bạn muốn uống chút gì? Chỗ trống cần 喝 (hē) – uống. (Từ 电视 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q024",
+              "type": "mcq",
+              "prompt": "我有三（ ）汉语书。 (Wǒ yǒu sān ( ) Hànyǔ shū.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "飞机 (fēijī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "睡觉 (shuìjiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "喝 (hē)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "快 (kuài)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "电视 (diànshì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "Tôi có ba quyển sách tiếng Trung. Chỗ trống cần 本 (běn) – quyển. (Từ 电视 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q025",
+              "type": "mcq",
+              "prompt": "我们（ ）走吧，火车要开了。 (Wǒmen ( ) zǒu ba, huǒchē yào kāi le.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "飞机 (fēijī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "睡觉 (shuìjiào)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "喝 (hē)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "本 (běn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "快 (kuài)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "电视 (diànshì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "Chúng ta đi nhanh lên, tàu sắp chạy rồi. Chỗ trống cần 快 (kuài) – nhanh. (Từ 电视 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r3-s03",
+          "blueprintPart": "r3",
+          "title": "Phần 3",
+          "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q026",
+              "type": "mcq",
+              "prompt": "我在中国（ ）汉语。 (Wǒ zài Zhōngguó ( ) Hànyǔ.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学习 (xuéxí)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "多少 (duōshao)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "热 (rè)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "商店 (shāngdiàn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "看 (kàn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "朋友 (péngyou)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Tôi học tiếng Trung ở Trung Quốc. Chỗ trống cần 学习 (xuéxí) – học. (Từ 朋友 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q027",
+              "type": "mcq",
+              "prompt": "这个杯子（ ）钱？ (Zhè ge bēizi ( ) qián?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学习 (xuéxí)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "多少 (duōshao)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "热 (rè)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "商店 (shāngdiàn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "看 (kàn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "朋友 (péngyou)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Cái cốc này bao nhiêu tiền? Chỗ trống cần 多少 (duōshao) – bao nhiêu. (Từ 朋友 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q028",
+              "type": "mcq",
+              "prompt": "今天太（ ）了，我想喝水。 (Jīntiān tài ( ) le, wǒ xiǎng hē shuǐ.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学习 (xuéxí)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "多少 (duōshao)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "热 (rè)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "商店 (shāngdiàn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "看 (kàn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "朋友 (péngyou)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Hôm nay nóng quá, tôi muốn uống nước. Chỗ trống cần 热 (rè) – nóng. (Từ 朋友 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q029",
+              "type": "mcq",
+              "prompt": "我去（ ）买东西。 (Wǒ qù ( ) mǎi dōngxi.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学习 (xuéxí)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "多少 (duōshao)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "热 (rè)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "商店 (shāngdiàn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "看 (kàn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "朋友 (péngyou)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-d"
+              },
+              "transcript": null,
+              "explanation": "Tôi đi cửa hàng mua đồ. Chỗ trống cần 商店 (shāngdiàn) – cửa hàng. (Từ 朋友 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q030",
+              "type": "mcq",
+              "prompt": "晚上我们一起（ ）电影吧。 (Wǎnshang wǒmen yìqǐ ( ) diànyǐng ba.)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学习 (xuéxí)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "多少 (duōshao)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "热 (rè)"
+                },
+                {
+                  "id": "opt-d",
+                  "text": "商店 (shāngdiàn)"
+                },
+                {
+                  "id": "opt-e",
+                  "text": "看 (kàn)"
+                },
+                {
+                  "id": "opt-f",
+                  "text": "朋友 (péngyou)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-e"
+              },
+              "transcript": null,
+              "explanation": "Tối nay chúng ta cùng xem phim nhé. Chỗ trống cần 看 (kàn) – xem. (Từ 朋友 không dùng.)",
+              "difficulty": 2,
+              "tags": [
+                "chon-tu-dien",
+                "tu-vung",
+                "ngu-phap"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r4-b01",
+          "blueprintPart": "r4",
+          "title": "Phần 4",
+          "instruction": "Đọc đoạn văn ngắn rồi trả lời câu hỏi có dấu ★.",
+          "imageKey": null,
+          "questions": [
+            {
+              "sourceKey": "hsk1:b01:q031",
+              "type": "mcq",
+              "prompt": "今天是星期六，我不上班，我想和朋友去看电影。 (Jīntiān shì xīngqīliù, wǒ bú shàngbān, wǒ xiǎng hé péngyou qù kàn diànyǐng.) ★ 今天星期几？ (Jīntiān xīngqī jǐ?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "星期一 (xīngqīyī)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "星期六 (xīngqīliù)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "星期天 (xīngqītiān)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Hôm nay là thứ bảy, tôi không đi làm, tôi muốn đi xem phim với bạn. ★ Hôm nay thứ mấy? → 星期六 (thứ bảy).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q032",
+              "type": "mcq",
+              "prompt": "我家有四口人：爸爸、妈妈、哥哥和我。 (Wǒ jiā yǒu sì kǒu rén: bàba, māma, gēge hé wǒ.) ★ 他家有几口人？ (Tā jiā yǒu jǐ kǒu rén?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "三口 (sān kǒu)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "四口 (sì kǒu)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "五口 (wǔ kǒu)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Nhà tôi có bốn người: bố, mẹ, anh trai và tôi. ★ Nhà anh ấy có mấy người? → 四口 (bốn người).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q033",
+              "type": "mcq",
+              "prompt": "我是学生，我在北京大学学习汉语。 (Wǒ shì xuésheng, wǒ zài Běijīng Dàxué xuéxí Hànyǔ.) ★ 他在哪儿学习？ (Tā zài nǎr xuéxí?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "北京大学 (Běijīng Dàxué)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "医院 (yīyuàn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "商店 (shāngdiàn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Tôi là sinh viên, tôi học tiếng Trung ở Đại học Bắc Kinh. ★ Anh ấy học ở đâu? → 北京大学 (Đại học Bắc Kinh).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q034",
+              "type": "mcq",
+              "prompt": "这个杯子十块钱，那个杯子二十块钱。 (Zhè ge bēizi shí kuài qián, nà ge bēizi èrshí kuài qián.) ★ 那个杯子多少钱？ (Nà ge bēizi duōshao qián?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "十块 (shí kuài)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "二十块 (èrshí kuài)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "三十块 (sānshí kuài)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Cái cốc này mười đồng, cái cốc kia hai mươi đồng. ★ Cái cốc kia bao nhiêu tiền? → 二十块 (hai mươi đồng).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q035",
+              "type": "mcq",
+              "prompt": "昨天下雨了，我没去学校，在家看书。 (Zuótiān xià yǔ le, wǒ méi qù xuéxiào, zài jiā kàn shū.) ★ 他昨天在哪儿？ (Tā zuótiān zài nǎr?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "学校 (xuéxiào)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "饭店 (fàndiàn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "家里 (jiāli)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Hôm qua trời mưa, tôi không đi học, ở nhà đọc sách. ★ Hôm qua anh ấy ở đâu? → 家里 (ở nhà).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q036",
+              "type": "mcq",
+              "prompt": "我妈妈喜欢喝茶，我爸爸喜欢喝牛奶。 (Wǒ māma xǐhuan hē chá, wǒ bàba xǐhuan hē niúnǎi.) ★ 爸爸喜欢喝什么？ (Bàba xǐhuan hē shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "茶 (chá)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "水 (shuǐ)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "牛奶 (niúnǎi)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Mẹ tôi thích uống trà, bố tôi thích uống sữa. ★ Bố thích uống gì? → 牛奶 (sữa).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q037",
+              "type": "mcq",
+              "prompt": "她的朋友是中国人，今年二十岁。 (Tā de péngyou shì Zhōngguó rén, jīnnián èrshí suì.) ★ 她的朋友多大了？ (Tā de péngyou duō dà le?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "二十岁 (èrshí suì)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "十岁 (shí suì)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "三十岁 (sānshí suì)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Bạn của cô ấy là người Trung Quốc, năm nay hai mươi tuổi. ★ Bạn của cô ấy bao nhiêu tuổi? → 二十岁 (hai mươi tuổi).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q038",
+              "type": "mcq",
+              "prompt": "我早上七点起床，八点去学校。 (Wǒ zǎoshang qī diǎn qǐchuáng, bā diǎn qù xuéxiào.) ★ 他几点去学校？ (Tā jǐ diǎn qù xuéxiào?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "七点 (qī diǎn)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "九点 (jiǔ diǎn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "八点 (bā diǎn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Buổi sáng tôi dậy lúc bảy giờ, tám giờ đi học. ★ Mấy giờ anh ấy đi học? → 八点 (tám giờ).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q039",
+              "type": "mcq",
+              "prompt": "商店在医院的左边，饭店在医院的右边。 (Shāngdiàn zài yīyuàn de zuǒbian, fàndiàn zài yīyuàn de yòubian.) ★ 饭店在哪儿？ (Fàndiàn zài nǎr?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "医院左边 (yīyuàn zuǒbian)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "医院右边 (yīyuàn yòubian)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "医院后边 (yīyuàn hòubian)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Cửa hàng ở bên trái bệnh viện, nhà hàng ở bên phải bệnh viện. ★ Nhà hàng ở đâu? → 医院右边 (bên phải bệnh viện).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q040",
+              "type": "mcq",
+              "prompt": "我今天很累，晚上九点就睡觉了。 (Wǒ jīntiān hěn lèi, wǎnshang jiǔ diǎn jiù shuìjiào le.) ★ 他今天怎么了？ (Tā jīntiān zěnme le?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "很累 (hěn lèi)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "很忙 (hěn máng)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "很饿 (hěn è)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Hôm nay tôi rất mệt, chín giờ tối đã đi ngủ rồi. ★ Hôm nay anh ấy làm sao? → 很累 (rất mệt).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q041",
+              "type": "mcq",
+              "prompt": "明天是我的生日，妈妈给我买了一个新手机。 (Míngtiān shì wǒ de shēngrì, māma gěi wǒ mǎi le yí ge xīn shǒujī.) ★ 妈妈给他买了什么？ (Māma gěi tā mǎi le shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "电脑 (diànnǎo)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "手机 (shǒujī)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "衣服 (yīfu)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Ngày mai là sinh nhật tôi, mẹ mua cho tôi một chiếc điện thoại mới. ★ Mẹ đã mua gì cho anh ấy? → 手机 (điện thoại).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q042",
+              "type": "mcq",
+              "prompt": "爸爸开车去工作，妈妈走路去工作。 (Bàba kāichē qù gōngzuò, māma zǒulù qù gōngzuò.) ★ 妈妈怎么去工作？ (Māma zěnme qù gōngzuò?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "开车 (kāichē)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "坐飞机 (zuò fēijī)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "走路 (zǒulù)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Bố lái xe đi làm, mẹ đi bộ đi làm. ★ Mẹ đi làm bằng cách nào? → 走路 (đi bộ).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q043",
+              "type": "mcq",
+              "prompt": "我中午在饭店吃了米饭和菜。 (Wǒ zhōngwǔ zài fàndiàn chī le mǐfàn hé cài.) ★ 他中午吃了什么？ (Tā zhōngwǔ chī le shénme?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "米饭和菜 (mǐfàn hé cài)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "面条儿 (miàntiáor)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "包子 (bāozi)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-a"
+              },
+              "transcript": null,
+              "explanation": "Buổi trưa tôi ăn cơm và thức ăn ở nhà hàng. ★ Buổi trưa anh ấy đã ăn gì? → 米饭和菜 (cơm và thức ăn).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q044",
+              "type": "mcq",
+              "prompt": "我有一个哥哥，他是老师，在中学工作。 (Wǒ yǒu yí ge gēge, tā shì lǎoshī, zài zhōngxué gōngzuò.) ★ 哥哥做什么工作？ (Gēge zuò shénme gōngzuò?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "医生 (yīshēng)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "老师 (lǎoshī)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "学生 (xuésheng)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-b"
+              },
+              "transcript": null,
+              "explanation": "Tôi có một anh trai, anh ấy là giáo viên, làm việc ở trường trung học. ★ Anh trai làm nghề gì? → 老师 (giáo viên).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            },
+            {
+              "sourceKey": "hsk1:b01:q045",
+              "type": "mcq",
+              "prompt": "下午三点我们在学校门口见面，你别来晚了。 (Xiàwǔ sān diǎn wǒmen zài xuéxiào ménkǒu jiànmiàn, nǐ bié lái wǎn le.) ★ 他们几点见面？ (Tāmen jǐ diǎn jiànmiàn?)",
+              "imageKey": null,
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "下午两点 (xiàwǔ liǎng diǎn)"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "下午四点 (xiàwǔ sì diǎn)"
+                },
+                {
+                  "id": "opt-c",
+                  "text": "下午三点 (xiàwǔ sān diǎn)"
+                }
+              ],
+              "answer": {
+                "optionId": "opt-c"
+              },
+              "transcript": null,
+              "explanation": "Ba giờ chiều chúng ta gặp nhau ở cổng trường, bạn đừng đến muộn nhé. ★ Mấy giờ họ gặp nhau? → 下午三点 (ba giờ chiều).",
+              "difficulty": 3,
+              "tags": [
+                "doc-hieu-doan",
+                "tu-vung"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

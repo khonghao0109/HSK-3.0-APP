@@ -1,7 +1,11 @@
 import { ContentStatus, QuestionType, Skill } from '@prisma/client';
 
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
+
 // Response models of the M4.1b test builder endpoints (TL-94/TL-95).
 
+// Q357: ghim thứ tự enum theo schema Prisma (xem PinSwaggerEnumOrder).
+@PinSwaggerEnumOrder('type', Object.values(QuestionType))
 export class AdminTestQuestionDto {
   questionId!: number;
   /** Global 1..N order across the whole test (equals the placement order). */

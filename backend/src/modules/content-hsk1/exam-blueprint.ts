@@ -265,6 +265,8 @@ export interface ExamSetSource {
     readonly skill: string;
     readonly parts: readonly {
       readonly key: string;
+      /** Phần blueprint (mặc định = key) khi một file có nhiều bộ cùng dạng. */
+      readonly blueprintPart?: string;
       readonly title: string;
       readonly instruction: string;
       readonly imageKey: string | null;
@@ -301,7 +303,7 @@ export async function importQuestionSets(
   const lid = await levelId(prisma, input.level);
   for (const section of input.exam.sections) {
     for (const part of section.parts) {
-      const format = setFormats.get(part.key);
+      const format = setFormats.get(part.blueprintPart ?? part.key);
       if (!format) continue;
       const sourceKey = `${input.exam.test.sourceKey}:${part.key}`;
       const questionIds = part.questions.map((question) => {

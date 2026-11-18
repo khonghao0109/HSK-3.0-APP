@@ -2382,7 +2382,7 @@ export interface components {
             id: number;
             content: string;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            type: "mcq" | "listening" | "reading" | "writing" | "speaking" | "true_false" | "fill_blank" | "arrange_sentence";
             /** @enum {string} */
             skill: "listening" | "reading" | "writing" | "speaking";
             audioId: number | null;
@@ -2445,7 +2445,7 @@ export interface components {
             id: number;
             content: string;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            type: "mcq" | "listening" | "reading" | "writing" | "speaking" | "true_false" | "fill_blank" | "arrange_sentence";
             /** @enum {string} */
             skill: "listening" | "reading" | "writing" | "speaking";
             audioId: number | null;
@@ -2523,7 +2523,7 @@ export interface components {
             /** @description Global 1..N order across the whole test (equals the placement order). */
             orderIndex: number;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            type: "mcq" | "listening" | "reading" | "writing" | "speaking" | "true_false" | "fill_blank" | "arrange_sentence";
             /** @enum {string} */
             skill: "listening" | "reading" | "writing" | "speaking";
             levelId: number;
@@ -3385,7 +3385,7 @@ export interface components {
             key: string;
             orderIndex: number;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            type: "mcq" | "listening" | "reading" | "writing" | "speaking" | "true_false" | "fill_blank" | "arrange_sentence";
             /** @enum {string} */
             skill: "listening" | "reading" | "writing" | "speaking";
             content: string;
@@ -3551,7 +3551,7 @@ export interface components {
             key: string;
             orderIndex: number;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "arrange_sentence" | "listening" | "reading" | "writing" | "speaking" | "true_false";
+            type: "mcq" | "listening" | "reading" | "writing" | "speaking" | "true_false" | "fill_blank" | "arrange_sentence";
             /** @enum {string} */
             skill: "listening" | "reading" | "writing" | "speaking";
             content: string;
