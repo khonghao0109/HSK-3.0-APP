@@ -532,22 +532,27 @@ model DataSource {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  createdBy       User?            @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  levels          Level[]
-  lessons         Lesson[]
-  topics          Topic[]
-  stories         Story[]
-  wordSources     WordSource[]
-  wordMeanings    WordMeaning[]
-  wordExamples    WordExample[]
-  wordLevels      WordLevel[]
-  sentences       Sentence[]
-  lessonExercises LessonExercise[]
-  questions       Question[]
-  tests           Test[]
-  media           Media[]
-  mediaIngestions MediaIngestion[]
-  importJobs      ImportJob[]
+  createdBy        User?             @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  levels           Level[]
+  lessons          Lesson[]
+  topics           Topic[]
+  stories          Story[]
+  wordSources      WordSource[]
+  wordMeanings     WordMeaning[]
+  wordExamples     WordExample[]
+  wordLevels       WordLevel[]
+  sentences        Sentence[]
+  lessonExercises  LessonExercise[]
+  questions        Question[]
+  tests            Test[]
+  media            Media[]
+  mediaIngestions  MediaIngestion[]
+  importJobs       ImportJob[]
+  characters       Character[]
+  characterLevels  CharacterLevel[]
+  grammarPoints    GrammarPoint[]
+  wordRelations    WordRelation[]
+  wordMeasureWords WordMeasureWord[]
 
   @@unique([name, version])
   @@index([createdById])
@@ -701,6 +706,8 @@ model Level {
   userGoals            UserGoal[]
   placementSuggestions PlacementAttempt[]
   learningPlans        LearningPlan[]
+  characterLevels      CharacterLevel[]
+  grammarPoints        GrammarPoint[]
 
   @@index([status, deletedAt, orderIndex])
   @@index([dataSourceId])
@@ -838,6 +845,8 @@ model Word {
   pinyinTone        String?
   /// GENERATED ALWAYS AS (replace("pinyinNormalized", ' ', '')) STORED; read-only.
   pinyinCompact     String?       @default(dbgenerated("replace(\"pinyinNormalized\", ' '::text, ''::text)")) @ignore
+  /// Âm Hán Việt của cả từ, chữ thường, cách nhau bằng dấu cách ("học sinh"); null khi chưa soạn.
+  hanViet           String?
   example           String?
   isPure            Boolean       @default(true)
   audioId           Int?
@@ -867,6 +876,11 @@ model Word {
   userWords              UserWord[]
   progresses             UserWordProgress[]
   reviewCards            ReviewCard[]
+  measureWords           WordMeasureWord[]       @relation("WordMeasureWordWord")
+  measuredWords          WordMeasureWord[]       @relation("WordMeasureWordMeasure")
+  relations              WordRelation[]          @relation("WordRelationFrom")
+  relatedFrom            WordRelation[]          @relation("WordRelationTo")
+  questionWords          QuestionWord[]
 
   @@unique([hanzi, pinyin])
   @@index([hanzi])
@@ -927,28 +941,32 @@ model WordMeaning {
 /// WHERE deletedAt IS NULL and the CHECK constraints are SQL-only (migration
 /// 20261116090000_word_example_and_trigram_search).
 model WordExample {
-  id            Int           @id @default(autoincrement())
-  wordId        Int
-  meaningId     Int?
-  orderIndex    Int
-  hanzi         String
-  pinyin        String?
-  translationVi String?
-  translationEn String?
-  audioId       Int?
-  dataSourceId  Int?
-  status        ContentStatus @default(draft)
-  publishedAt   DateTime?
-  deletedAt     DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id             Int           @id @default(autoincrement())
+  wordId         Int
+  meaningId      Int?
+  /// Điểm ngữ pháp câu ví dụ minh hoạ (GF0025-2021), nếu có.
+  grammarPointId Int?
+  orderIndex     Int
+  hanzi          String
+  pinyin         String?
+  translationVi  String?
+  translationEn  String?
+  audioId        Int?
+  dataSourceId   Int?
+  status         ContentStatus @default(draft)
+  publishedAt    DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  word       Word         @relation(fields: [wordId], references: [id], onDelete: Restrict)
-  meaning    WordMeaning? @relation(fields: [meaningId, wordId], references: [id, wordId], onDelete: Restrict)
-  audio      Media?       @relation("WordExampleAudio", fields: [audioId], references: [id], onDelete: Restrict)
-  dataSource DataSource?  @relation(fields: [dataSourceId], references: [id], onDelete: Restrict)
+  word         Word          @relation(fields: [wordId], references: [id], onDelete: Restrict)
+  meaning      WordMeaning?  @relation(fields: [meaningId, wordId], references: [id, wordId], onDelete: Restrict)
+  audio        Media?        @relation("WordExampleAudio", fields: [audioId], references: [id], onDelete: Restrict)
+  dataSource   DataSource?   @relation(fields: [dataSourceId], references: [id], onDelete: Restrict)
+  grammarPoint GrammarPoint? @relation(fields: [grammarPointId], references: [id], onDelete: SetNull)
 
   @@index([wordId, status, deletedAt, orderIndex])
+  @@index([grammarPointId])
   @@index([meaningId, wordId])
   @@index([audioId])
   @@index([dataSourceId])
@@ -1498,16 +1516,18 @@ model Question {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  level         Level          @relation(fields: [levelId], references: [id])
-  audio         Media?         @relation("QuestionAudio", fields: [audioId], references: [id])
-  image         Media?         @relation("QuestionImage", fields: [imageId], references: [id])
-  dataSource    DataSource?    @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
-  createdBy     User?          @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedBy     User?          @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  publishedBy   User?          @relation("QuestionPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
+  level         Level                  @relation(fields: [levelId], references: [id])
+  audio         Media?                 @relation("QuestionAudio", fields: [audioId], references: [id])
+  image         Media?                 @relation("QuestionImage", fields: [imageId], references: [id])
+  dataSource    DataSource?            @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  createdBy     User?                  @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy     User?                  @relation("QuestionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  publishedBy   User?                  @relation("QuestionPublishedBy", fields: [publishedById], references: [id], onDelete: SetNull)
   testQuestions TestQuestion[]
   tags          QuestionTag[]
   examAnswers   ExamAnswer[]
+  targetWords   QuestionWord[]
+  grammarPoints QuestionGrammarPoint[]
 
   @@index([levelId, skill, status, deletedAt])
   @@index([type])
@@ -1780,4 +1800,136 @@ model ResultSkillScore {
 
   @@unique([resultId, skill])
   @@index([skill])
+}
+
+/// Khung chuẩn HSK 3.0 (GF0025-2021 《国际中文教育中文水平等级标准》), Q356.
+/// Một chữ Hán của 汉字表; cấp của chữ nằm ở `CharacterLevel`.
+model Character {
+  id           Int      @id @default(autoincrement())
+  hanzi        String   @unique
+  traditional  String?
+  /// Cách đọc phổ biến, pinyin số thanh cách nhau bằng dấu cách ("xue2"); chữ đa âm ghi cách đọc chính.
+  pinyin       String?
+  /// Âm Hán Việt, chữ thường ("học"); null khi chưa soạn.
+  hanViet      String?
+  strokeCount  Int?
+  /// Dữ liệu nét (Make Me a Hanzi: strokes, medians); ghi nguồn và giấy phép ở `dataSource`.
+  strokeData   Json?
+  dataSourceId Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dataSource DataSource?      @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  levels     CharacterLevel[]
+
+  @@index([dataSourceId])
+}
+
+/// Chữ thuộc 汉字表 của cấp nào; `handwriting` = có trong 手写汉字表 (phải viết tay được), còn lại chỉ cần nhận diện.
+model CharacterLevel {
+  id           Int     @id @default(autoincrement())
+  characterId  Int
+  levelId      Int
+  handwriting  Boolean @default(false)
+  dataSourceId Int?
+
+  character  Character   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  level      Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  dataSource DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+
+  @@unique([characterId, levelId])
+  @@index([levelId, handwriting])
+  @@index([dataSourceId])
+}
+
+/// Một điểm ngữ pháp của 语法等级大纲 theo cấp; `code` ổn định để nội dung tham chiếu ("HSK1-G001").
+model GrammarPoint {
+  id            Int           @id @default(autoincrement())
+  code          String        @unique
+  levelId       Int
+  orderIndex    Int
+  /// Nhóm theo chuẩn (词类, 短语, 句子成分, 句型, 句类, 固定格式…).
+  category      String?
+  /// Tên điểm ngữ pháp như trong chuẩn ("是字句").
+  title         String
+  /// Cấu trúc, ví dụ "主语 + 是 + 名词" hoặc "把 + O + V".
+  pattern       String
+  descriptionVi String?
+  status        ContentStatus @default(draft)
+  dataSourceId  Int?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  level      Level                  @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  dataSource DataSource?            @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  examples   WordExample[]
+  questions  QuestionGrammarPoint[]
+
+  @@unique([levelId, orderIndex])
+  @@index([dataSourceId])
+}
+
+/// Lượng từ dùng với một danh từ (书 → 本).
+model WordMeasureWord {
+  id            Int  @id @default(autoincrement())
+  wordId        Int
+  measureWordId Int
+  orderIndex    Int  @default(0)
+  dataSourceId  Int?
+
+  word        Word        @relation("WordMeasureWordWord", fields: [wordId], references: [id], onDelete: Cascade)
+  measureWord Word        @relation("WordMeasureWordMeasure", fields: [measureWordId], references: [id], onDelete: Cascade)
+  dataSource  DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+
+  @@unique([wordId, measureWordId])
+  @@index([measureWordId])
+  @@index([dataSourceId])
+}
+
+enum WordRelationType {
+  synonym
+  antonym
+}
+
+/// Đồng nghĩa hoặc trái nghĩa, có hướng (wordId → relatedWordId); ghi cả hai chiều khi quan hệ đối xứng.
+model WordRelation {
+  id            Int              @id @default(autoincrement())
+  wordId        Int
+  relatedWordId Int
+  type          WordRelationType
+  dataSourceId  Int?
+
+  word        Word        @relation("WordRelationFrom", fields: [wordId], references: [id], onDelete: Cascade)
+  relatedWord Word        @relation("WordRelationTo", fields: [relatedWordId], references: [id], onDelete: Cascade)
+  dataSource  DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+
+  @@unique([wordId, relatedWordId, type])
+  @@index([relatedWordId])
+  @@index([dataSourceId])
+}
+
+/// Từ trọng tâm một câu hỏi kiểm tra (target_words). Metadata ngoài revision, như `LessonWord` (Q179).
+model QuestionWord {
+  id         Int @id @default(autoincrement())
+  questionId Int
+  wordId     Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  word     Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, wordId])
+  @@index([wordId])
+}
+
+/// Điểm ngữ pháp một câu hỏi kiểm tra (grammar_ids). Metadata ngoài revision, như `LessonWord` (Q179).
+model QuestionGrammarPoint {
+  id             Int @id @default(autoincrement())
+  questionId     Int
+  grammarPointId Int
+
+  question     Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  grammarPoint GrammarPoint @relation(fields: [grammarPointId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, grammarPointId])
+  @@index([grammarPointId])
 }

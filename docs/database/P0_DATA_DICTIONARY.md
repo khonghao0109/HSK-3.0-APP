@@ -54,7 +54,7 @@
 | `DataSource` | Registry nguồn, phiên bản, license và checksum. | `code`, `name`, `version`, URL, `license`, `attribution`, `receivedAt`, `importedAt`, `contentHash`, `notes`. | `code` unique; `(name, version)` unique; nguồn HSK thiếu license phải được xác minh trước production. |
 | `Media` | Asset metadata độc lập storage provider. | `url`, `type`, MIME, size/duration, provider/key, filename, checksum, `processingStatus`, `metadata`, provenance, soft-delete. | `url` unique; `(storageProvider, storageKey)` unique; size/duration không âm; chỉ media `ready` nên được publish. |
 
-## 5. Curriculum, dictionary và lesson content — 14 bảng
+## 5. Curriculum, dictionary và lesson content — 14 bảng + 7 bảng khung HSK 3.0
 
 | Bảng | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
 | --- | --- | --- | --- |
@@ -72,6 +72,27 @@
 | `LessonSentence` | Câu xuất hiện độc lập trong lesson. | `lessonId`, `sentenceId`, `orderIndex`. | Unique `(lessonId, sentenceId)`. |
 | `LessonExercise` | Bài tập tương tác thuộc lesson/topic. | `type`, `prompt`, `content`, `answer`, `explanation`, `version`, order, publish. | Trigger deferred bảo đảm topic cùng lesson; JSON được validate theo `ExerciseType`; version dương. |
 | `PronunciationPractice` | Mục luyện phát âm theo word hoặc sentence. | `lessonId`, `topicId`, `wordId`/`sentenceId`, `targetType`, text/pinyin/audio, order, publish. | CHECK yêu cầu đúng một target tương ứng type; trigger bảo đảm topic cùng lesson. |
+
+### 5.1 Khung chuẩn HSK 3.0 (Q356, migration `20261119090000_hsk_framework_characters_grammar`)
+
+Theo GF0025-2021 《国际中文教育中文水平等级标准》. Chỉ thêm bảng/cột, chưa nạp dữ liệu: chữ Hán, ngữ pháp, Hán Việt,
+lượng từ và đồng/trái nghĩa chờ file nguồn có giấy phép (không lấy từ Hanzii hay app bên thứ ba).
+
+| Bảng / cột | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
+| --- | --- | --- | --- |
+| `Character` | Chữ Hán đơn trong 汉字表. | `hanzi`, `traditional`, `pinyin`, `hanViet`, `strokeCount`, `strokeData`, `dataSourceId`. | `hanzi` unique; CHECK đúng 1 ký tự (`hanzi`, `traditional`); `strokeCount > 0`. |
+| `CharacterLevel` | Chữ thuộc cấp nào; `handwriting` = thuộc 手写汉字表 (chữ phải viết tay). | `characterId`, `levelId`, `handwriting`, `dataSourceId`. | Unique `(characterId, levelId)`; index `(levelId, handwriting)`; cascade theo chữ và cấp. |
+| `GrammarPoint` | Điểm ngữ pháp trong 语法等级大纲. | `code` (`HSK1-G001`), `levelId`, `orderIndex`, `category`, `title`, `pattern`, `descriptionVi`, `status`. | `code` unique, CHECK `^HSK[1-9](_9)?-G[0-9]{3}$`; unique `(levelId, orderIndex)`; FK cấp `RESTRICT`. |
+| `Word.hanViet` | Âm Hán Việt của từ. | Chuỗi tuỳ chọn. | CHECK không rỗng khi có. |
+| `WordMeasureWord` | Lượng từ đi với danh từ (`本` cho `书`). | `wordId`, `measureWordId`, `orderIndex`, `dataSourceId`. | Unique `(wordId, measureWordId)`; CHECK không tự trỏ. |
+| `WordRelation` | Đồng nghĩa / trái nghĩa (`WordRelationType`). | `wordId`, `relatedWordId`, `type`, `dataSourceId`. | Unique `(wordId, relatedWordId, type)`; CHECK không tự trỏ; quan hệ một chiều, nạp cả hai chiều nếu cần. |
+| `WordExample.grammarPointId` | Câu ví dụ minh hoạ điểm ngữ pháp nào. | FK tuỳ chọn. | `SET NULL` khi xoá điểm ngữ pháp; index. |
+| `QuestionWord` | `target_words` của câu hỏi thi. | `questionId`, `wordId`. | Unique cặp; metadata ngoài revision như `LessonWord` (Q179). |
+| `QuestionGrammarPoint` | `grammar_ids` của câu hỏi thi. | `questionId`, `grammarPointId`. | Unique cặp; metadata ngoài revision. |
+
+Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json>...` (module
+`backend/src/modules/content-levels/level-vocabulary.ts`) bảo đảm nội dung cấp N chỉ dùng từ cấp ≤ N theo
+`scripts/dictionary/raw/hsk*.json`; tên riêng khai trong `properNames[]` hoặc `--allow`.
 
 ## 6. Learning, progress và SRS — 10 bảng
 
