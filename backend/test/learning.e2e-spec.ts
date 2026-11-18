@@ -754,6 +754,7 @@ describe('Learning Lesson Detail E2E', () => {
 
     expect(body.success).toBe(true);
     expect(Object.keys(body.data).sort()).toEqual([
+      'coverImage',
       'exercises',
       'id',
       'level',
@@ -762,6 +763,7 @@ describe('Learning Lesson Detail E2E', () => {
       'topics',
       'words',
     ]);
+    expect(body.data.coverImage).toBeNull();
     expect(body.data.id).toBe(lessonId);
     expect(body.data.title).toBe('E2E Lesson Detail');
     expect(body.data.level).toEqual({
@@ -823,6 +825,54 @@ describe('Learning Lesson Detail E2E', () => {
     expect(JSON.stringify(body.data)).not.toContain(
       'Hidden exercise under draft topic',
     );
+  });
+
+  it('GET /lessons/:id exposes a ready cover image with alt text and hides one that is not ready', async () => {
+    const cover = await prisma.media.create({
+      data: {
+        url: `https://cdn.example.test/learning-cover-${suffix}.png`,
+        type: 'image',
+        mimeType: 'image/png',
+        processingStatus: 'ready',
+        storageProvider: 's3',
+        storageKey: `private/learning-cover-${suffix}.png`,
+        checksum: `cover-${suffix}`,
+        metadata: { altText: 'Hai người chào nhau' },
+      },
+    });
+
+    try {
+      await prisma.lesson.update({
+        where: { id: lessonId },
+        data: { coverImageId: cover.id },
+      });
+
+      const ready = await request(app.getHttpServer())
+        .get(`/api/v1/lessons/${lessonId}`)
+        .expect(200);
+      expect(ready.body.data.coverImage).toEqual({
+        id: cover.id,
+        altText: 'Hai người chào nhau',
+      });
+      expect(JSON.stringify(ready.body.data.coverImage)).not.toContain(
+        'storageKey',
+      );
+
+      await prisma.media.update({
+        where: { id: cover.id },
+        data: { processingStatus: 'quarantined' },
+      });
+      const quarantined = await request(app.getHttpServer())
+        .get(`/api/v1/lessons/${lessonId}`)
+        .expect(200);
+      expect(quarantined.body.data.coverImage).toBeNull();
+    } finally {
+      await prisma.lesson.update({
+        where: { id: lessonId },
+        data: { coverImageId: null },
+      });
+      await prisma.media.delete({ where: { id: cover.id } });
+    }
   });
 
   it('GET /learning/lessons/:id returns lesson title, level, topics, words and stories', async () => {

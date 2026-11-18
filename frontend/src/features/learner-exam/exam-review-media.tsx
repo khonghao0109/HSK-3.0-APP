@@ -105,10 +105,13 @@ export function ExamReviewMedia({
   attemptId,
   mediaId,
   kind,
+  altText,
 }: {
   attemptId: number;
   mediaId: number;
   kind: GrantKind;
+  /** Q350: alt tiếng Việt của ảnh, nếu media có. */
+  altText?: string;
 }): React.ReactElement {
   const [state, setState] = useState<MediaState>({ phase: 'loading' });
   const retried = useRef(false);
@@ -188,7 +191,7 @@ export function ExamReviewMedia({
       <img
         key={state.attempt ?? 0}
         className="exv-media__image"
-        alt="Hình ảnh của câu hỏi"
+        alt={altText ?? 'Hình ảnh của câu hỏi'}
         src={state.src}
         onError={refreshOnce}
       />

@@ -14,6 +14,14 @@ export const lessonActivitySchema = z.object({
     id: z.number().int(),
     title: z.string(),
     description: z.string().nullable(),
+    // Q350: ảnh bìa; vắng (bản cũ) coi như không có ảnh.
+    coverImage: z
+      .object({
+        id: z.number().int().positive(),
+        altText: z.string().nullable(),
+      })
+      .nullable()
+      .default(null),
   }),
   progress: z.object({
     completionPercent: z.number(),

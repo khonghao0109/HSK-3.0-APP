@@ -13,6 +13,8 @@ export type CmsMediaRecord = {
   duration: number | null;
   processingStatus: MediaProcessingStatus;
   deletedAt: Date | null;
+  /** `metadata.altText` (Q350); không phải mọi select đều nạp. */
+  metadata?: Prisma.JsonValue;
 };
 
 export const CMS_MEDIA_SELECT = {
@@ -23,6 +25,7 @@ export const CMS_MEDIA_SELECT = {
   duration: true,
   processingStatus: true,
   deletedAt: true,
+  metadata: true,
 } satisfies Prisma.MediaSelect;
 
 export function unusableMediaReason(

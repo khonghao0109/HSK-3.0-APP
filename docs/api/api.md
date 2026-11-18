@@ -361,7 +361,7 @@ một Topic hoặc Story published.
 | --- | --- | --- | --- |
 | `GET` | `/levels`, `/learning/levels` | — | `[{ id, name, orderIndex, code, minBand, maxBand }]` |
 | `GET` | `/lessons`, `/learning/lessons` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, title, description, orderIndex, slug }]` + `meta` |
-| `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready |
+| `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready. Có `coverImage` và `words[].image`: `{ id, altText }` hoặc `null` (chỉ ảnh `ready`, chưa lưu trữ; Q350); URL lấy qua `GET /media/:id/access` |
 | `GET` | `/topics`, `/learning/topics` | `lessonId` **bắt buộc**, `page`, `limit` | `[{ id, lessonId, title, content, orderIndex }]` + `meta` |
 | `GET` | `/stories`, `/learning/stories` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, levelId, title, content, slug }]` + `meta` |
 | `GET` | `/learning/test` | — | `"Learning module working"` (smoke, sẽ xoá — B-10) |
@@ -554,6 +554,7 @@ PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
 Trường thêm cho màn bài học (M2.B13, Q43):
+- `lesson.coverImage`: `{ id, altText }` hoặc `null` (Q350; cùng quy tắc với `GET /learning/lessons/:id`).
 - `level`: `{ id, code, name }` của Level chứa bài.
 - `position`, `state`: cùng định nghĩa và cùng code với `GET /learning/path` (đọc từ
   `loadLevelPaths`, chỉ thu hẹp về level của bài); `state ∈ done | current | available | locked`.
@@ -838,6 +839,7 @@ revision đã approved mới nhất → archive. Revision/review/audit append-on
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/publish` | — | `{ lesson, revision, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/archive` | — | `{ lesson, idempotent }` |
+| `PUT` | `/admin/cms/lessons/:lessonId/images` | `SetLessonImages` | `{ lesson, wordImages }` |
 | `GET` | `/admin/cms/topics/:topicId` | — | `{ topic, revisions }` |
 | `POST` | `/admin/cms/topics` | `CreateTopic` | `{ topic, revision, idempotent: false }` |
 | `POST` | `/admin/cms/topics/:topicId/revisions` | `TopicRevision` | `{ topic, revision, idempotent }` |
@@ -855,6 +857,14 @@ Không có `GET /admin/cms/topics` (list).
 
 `LessonAdmin`: `{ id, levelId, title, description, orderIndex, slug, status, createdById,
 updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt }`.
+
+`PUT /admin/cms/lessons/:lessonId/images` (Q350): `{ coverImageId?: int|null, wordImages?: [{ wordId, imageId: int|null }] ≤200 }`;
+trường bỏ trống thì giữ nguyên, `null` gỡ ảnh. Media phải `type: image`, chưa cách ly, chưa lưu trữ;
+`wordId` phải thuộc bài (LessonWord), không lặp. Sai → `400` `LESSON_IMAGE_INVALID`
+(`details: { media: [{ mediaId, reason }], wordsNotInLesson }`) hoặc `LESSON_IMAGE_DUPLICATE_WORD`;
+bài đã lưu trữ → `409 CONTENT_ARCHIVED`. Ghi AuditLog `lesson.images_updated` kèm trước/sau.
+Không qua revision: ảnh là gán tài sản, không phải nội dung có duyệt. `LessonAdmin` có thêm
+`coverImageId`; `GET /admin/cms/lessons/:lessonId` có thêm `words: [{ wordId, hanzi, imageId }]`.
 
 `GET /admin/cms/lessons/:lessonId` (M5.1a, B1): `topics` là mọi Topic của bài học (kể cả
 archived), sắp xếp `orderIndex` asc rồi `id` asc, KHÔNG có trường `content`; mỗi phần tử kèm
@@ -1412,7 +1422,7 @@ duy nhất). Q217: `isFlagged` là cờ đã lưu của câu (`false` khi chưa 
 `groupKey` là key đóng băng của snapshot (`s<orderIndex>`, `s<orderIndex>-g<orderIndex>`);
 `audio`/`image` là tham chiếu media của **câu**, `groupMedia.audio`/`groupMedia.image` là tham
 chiếu media của **nhóm** — tất cả lấy từ snapshot, chỉ gồm `mediaId`/`kind`/`mimeType`/
-`durationMs`, **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
+`durationMs`, `altText` (chỉ có khi media có alt, Q350), **không** có URL ký (client khớp `mediaId` với `GET .../media-grants`, Q158).
 Với `arrange_sentence`, id trong `answers.tokens`, `learnerAnswer.order` và
 `correctAnswer.tokenIds` cùng không gian id đã che của snapshot (TL-133), không lộ id soạn câu.
 
@@ -1588,7 +1598,7 @@ Response có `Cache-Control: no-store`.
 | `GET` | `/admin/cms/media/:mediaId` | — | `MediaAdmin` + `usage: { lessonExercises: [{ id, lessonId, topicId, prompt, status }] (≤50), counts: { lessonExercises, otherContent } }` | 200 |
 | `POST` | `/admin/cms/media/:mediaId/quarantine` | — | `{ idempotent, media }`; đã archived → `409` | 201 |
 | `POST` | `/admin/cms/media/:mediaId/archive` | — | `{ idempotent, media }` | 201 |
-| `POST` | `/admin/cms/media/ingestions?dataSourceId=` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128 | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
+| `POST` | `/admin/cms/media/ingestions?dataSourceId=[&altText=]` | `multipart/form-data`, đúng một field `file` ≤10 MiB (JPEG/PNG/MP3/WAV); header `Idempotency-Key` 32–128; `altText` tuỳ chọn ≤1000 ký tự, không rỗng, lưu vào `Media.metadata.altText` (bất biến, nằm trong fingerprint idempotency; Q350) | `{ idempotent, media: { id, type, mimeType, size, processingStatus } }` | 201 |
 | `GET` | `/admin/cms/media/ingestions` | `page`, `limit` (mặc định 20, ≤100) | `MediaIngestionAdmin[]` + `meta` phân trang; sort `startedAt DESC, id DESC` | 200 |
 | `POST` | `/admin/cms/media/ingestions/:ingestionId/cleanup` | — | `{ ingestionId, cleanupCompleted: true }` hoặc `{ ingestionId, cleanupCompleted: false, settling: true }` | 201 |
 
@@ -1631,7 +1641,7 @@ finalize. Chi tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng; hoặc media `image` là ảnh bìa của bài ready, hay ảnh của Word published thuộc một bài ready, Q350); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
 | `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
 
 Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate

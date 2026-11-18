@@ -20,7 +20,10 @@ import {
   PUBLIC_EXERCISE_MEDIA_SELECT,
   PUBLIC_LESSON_EXERCISE_WHERE,
 } from './public-exercise.policy';
-import { serializePublicLessonDetail } from './public-lesson.serializer';
+import {
+  PUBLIC_LESSON_IMAGE_SELECT,
+  serializePublicLessonDetail,
+} from './public-lesson.serializer';
 
 @Injectable()
 export class LearningService {
@@ -113,6 +116,7 @@ export class LearningService {
       select: {
         id: true,
         title: true,
+        coverImage: { select: PUBLIC_LESSON_IMAGE_SELECT },
         level: {
           select: {
             id: true,
@@ -151,6 +155,7 @@ export class LearningService {
                     meaningVi: true,
                   },
                 },
+                image: { select: PUBLIC_LESSON_IMAGE_SELECT },
               },
             },
           },

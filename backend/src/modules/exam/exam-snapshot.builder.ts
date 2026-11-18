@@ -26,6 +26,8 @@ export type ExamSnapshotMedia = {
   kind: MediaType;
   mimeType: string | null;
   durationMs: number | null;
+  /** Q350: alt tiếng Việt lấy từ `Media.metadata.altText`, chỉ có khi media có alt. */
+  altText?: string;
 };
 
 export type ExamSnapshotQuestion = {
@@ -144,15 +146,32 @@ export type BuiltExamSnapshot = {
  * The snapshot keeps only the media fields a learner player needs; storage
  * keys, checksums and provenance stay out of the payload.
  */
+export function mediaAltText(
+  metadata: Prisma.JsonValue | undefined,
+): string | null {
+  if (
+    metadata === null ||
+    metadata === undefined ||
+    typeof metadata !== 'object' ||
+    Array.isArray(metadata)
+  ) {
+    return null;
+  }
+  const altText = metadata.altText;
+  return typeof altText === 'string' && altText.trim() !== '' ? altText : null;
+}
+
 export function projectExamSnapshotMedia(
   media: CmsMediaRecord | null,
 ): ExamSnapshotMedia | null {
   if (media === null) return null;
+  const altText = mediaAltText(media.metadata);
   return {
     mediaId: media.id,
     kind: media.type,
     mimeType: media.mimeType,
     durationMs: media.duration,
+    ...(altText === null ? {} : { altText }),
   };
 }
 

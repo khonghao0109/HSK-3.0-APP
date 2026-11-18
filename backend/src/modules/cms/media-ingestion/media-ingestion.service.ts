@@ -90,6 +90,7 @@ export class MediaIngestionService {
     dataSourceId: number,
     idempotencyHeader: string | undefined,
     context: MediaIngestionContext,
+    altText?: string,
   ) {
     const startedAt = Date.now();
     const observation =
@@ -112,6 +113,7 @@ export class MediaIngestionService {
         dataSourceId,
         idempotencyHeader,
         context,
+        altText,
       );
       metricOutcome = 'success';
       // A completed replay validates persisted state but performs no media
@@ -137,6 +139,7 @@ export class MediaIngestionService {
     dataSourceId: number,
     idempotencyHeader: string | undefined,
     context: MediaIngestionContext,
+    altText?: string,
   ) {
     if (!file) {
       throw new UnprocessableEntityException({
@@ -168,6 +171,8 @@ export class MediaIngestionService {
           declaredMimeType: file.mimetype,
           size: file.size,
           rawChecksum,
+          // Q350: chỉ thêm khi có alt để fingerprint cũ không đổi.
+          ...(altText === undefined ? {} : { altText }),
         }),
       ),
     );
@@ -341,6 +346,7 @@ export class MediaIngestionService {
         filename,
         processed,
         context,
+        altText,
       );
     } catch (error: unknown) {
       const authoritativeState = await this.readIngestionState(claim.id);
@@ -1144,6 +1150,7 @@ export class MediaIngestionService {
     filename: string,
     processed: ProcessedMediaFile,
     context: MediaIngestionContext,
+    altText?: string,
   ) {
     return this.prisma.$transaction(async (tx) => {
       await lockActiveCmsActor(tx, actor.id);
@@ -1212,6 +1219,7 @@ export class MediaIngestionService {
             ingestionVersion: 'secure-media-ingestion-v1',
             provenance: sources[0],
             ...processed.metadata,
+            ...(altText === undefined ? {} : { altText }),
           },
           uploadedById: actor.id,
           updatedById: actor.id,

@@ -134,6 +134,45 @@ describe('MediaAccessService storage-provider affinity', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('grants learners the cover image of a ready lesson and images of its public words (Q350)', async () => {
+    for (const overrides of [
+      { lessonCoverImage: [{ id: 3 }] },
+      { wordImage: [{ id: 9 }] },
+    ]) {
+      const { prisma, service } = createFixture('s3', 's3', overrides);
+      await expect(
+        service.createAccess({ id: 8, role: 'learner' }, 41),
+      ).resolves.toMatchObject({ success: true });
+      const [args] = prisma.media.findUnique.mock.calls[0] as [
+        {
+          select: {
+            lessonCoverImage: { where: unknown };
+            wordImage: { where: unknown };
+          };
+        },
+      ];
+      expect(args.select.lessonCoverImage.where).toEqual(
+        buildLessonReadyWhere(),
+      );
+      expect(args.select.wordImage.where).toEqual({
+        status: 'published',
+        deletedAt: null,
+        lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+      });
+    }
+  });
+
+  it('does not let a lesson cover link grant non-image media to learners', async () => {
+    const { service } = createFixture('s3', 's3', {
+      type: 'audio',
+      mimeType: 'audio/mpeg',
+      lessonCoverImage: [{ id: 3 }],
+    });
+    await expect(
+      service.createAccess({ id: 8, role: 'learner' }, 41),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
   it('signs new grants with the current secret even when a previous secret is configured', async () => {
     const previousSecret = 'p'.repeat(48);
     const { service } = createFixture('s3', 's3', {}, previousSecret);
@@ -496,6 +535,9 @@ describe('MediaAccessService storage-provider affinity', () => {
       mimeType: string;
       size: number;
       lessonExercises: { id: number }[];
+      lessonCoverImage: { id: number }[];
+      wordImage: { id: number }[];
+      type: string;
     }> = {},
     previousSigningSecret?: string,
   ) {
@@ -510,6 +552,8 @@ describe('MediaAccessService storage-provider affinity', () => {
       processingStatus: 'ready',
       deletedAt: null,
       lessonExercises: [],
+      lessonCoverImage: [],
+      wordImage: [],
       ...rowOverrides,
     });
     const prisma = {

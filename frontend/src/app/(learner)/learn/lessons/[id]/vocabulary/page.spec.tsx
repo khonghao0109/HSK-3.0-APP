@@ -87,6 +87,7 @@ const words: LessonWords = {
         { vi: null, en: 'you' },
         { vi: 'bạn', en: null },
       ],
+      image: null,
     },
     {
       id: 2,
@@ -94,6 +95,7 @@ const words: LessonWords = {
       pinyin: 'hao',
       pinyinTone: 'hao3',
       meanings: [{ vi: null, en: 'good' }],
+      image: null,
     },
   ],
 };

@@ -9,6 +9,7 @@ import {
   NO_VIETNAMESE,
 } from '@/features/learner-dictionary/dictionary-display';
 import { levelLabel } from '@/features/learner-home/level-label';
+import { LessonImage } from '@/features/learner-lesson/lesson-image';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 
 import {
@@ -133,6 +134,13 @@ function WordList({ words }: { words: LessonWords['words'] }) {
             className="topic-word__link"
             href={`/learn/dictionary/${word.id}`}
           >
+            {word.image && (
+              <LessonImage
+                className="topic-word__img"
+                mediaId={word.image.id}
+                altText={word.image.altText}
+              />
+            )}
             <span className="topic-word__hz" lang="zh-Hans">
               {word.hanzi}
             </span>

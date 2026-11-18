@@ -90,6 +90,8 @@ const mediaSchema = z.object({
   kind: z.enum(['audio', 'image', 'pdf', 'video']),
   mimeType: z.string().nullable(),
   durationMs: z.number().int().nonnegative().nullable(),
+  /** Q350: alt tiếng Việt; snapshot cũ không có. */
+  altText: z.string().min(1).max(1000).optional(),
 });
 
 const optionSchema = z.object({ id: z.string(), text: z.string() });

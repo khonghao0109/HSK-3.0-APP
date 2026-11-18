@@ -3,7 +3,10 @@ import { ExerciseType, ProgressStatus, TopicType } from '@prisma/client';
 
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../../common/openapi/json-schemas';
 import { PinSwaggerEnumOrder } from '../../../../common/openapi/pin-swagger-enum-order';
-import { LessonDetailExerciseMediaDto } from '../../dto/lesson-response.dto';
+import {
+  LessonDetailExerciseMediaDto,
+  LessonImageDto,
+} from '../../dto/lesson-response.dto';
 import { PUBLIC_LESSON_EXERCISE_TYPES } from '../../public-exercise.policy';
 import {
   LEARNING_PATH_LESSON_STATES,
@@ -27,6 +30,8 @@ export class LessonActivityLessonDto {
   id!: number;
   title!: string;
   description!: string | null;
+  /** Ảnh bìa (Q350); URL qua `GET /media/:id/access`. */
+  coverImage!: LessonImageDto | null;
   slug!: string;
   orderIndex!: number;
   levelId!: number;

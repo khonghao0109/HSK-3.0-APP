@@ -24,7 +24,12 @@ describe('lessonActivitySchema', () => {
   it('keeps only the fields the lesson page reads', () => {
     const parsed = lessonActivitySchema.parse(activity);
     expect(parsed).toEqual({
-      lesson: { id: 5, title: 'Chào hỏi', description: null },
+      lesson: {
+        id: 5,
+        title: 'Chào hỏi',
+        description: null,
+        coverImage: null,
+      },
       progress: { completionPercent: 67, status: 'learning', score: 80.4 },
       level: { id: 1, code: 'HSK1', name: 'HSK 1' },
       position: 1,

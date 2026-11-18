@@ -19,6 +19,11 @@ export class ExamSnapshotMediaDto {
   kind!: MediaType;
   mimeType!: string | null;
   durationMs!: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Alt tiếng Việt của ảnh (Q350); chỉ có khi media có alt.',
+  })
+  altText?: string;
 }
 
 export class ExamQuestionOptionDto {

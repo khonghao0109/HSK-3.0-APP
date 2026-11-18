@@ -142,6 +142,9 @@ function readMedia(
       record.durationMs === null || record.durationMs === undefined
         ? null
         : requiredNumber(record.durationMs, `${path}.durationMs`),
+    ...(typeof record.altText === 'string' && record.altText.trim() !== ''
+      ? { altText: record.altText }
+      : {}),
   };
 }
 

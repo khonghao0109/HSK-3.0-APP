@@ -1056,6 +1056,17 @@
             "$ref": "#/components/parameters/RequestId"
           },
           {
+            "name": "altText",
+            "required": false,
+            "in": "query",
+            "description": "Q350: alt tiếng Việt, lưu vào `Media.metadata.altText` (bất biến sau ingest).",
+            "schema": {
+              "maxLength": 1000,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          {
             "name": "dataSourceId",
             "required": true,
             "in": "query",
@@ -2735,6 +2746,74 @@
         ],
         "responses": {
           "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/lessons/{lessonId}/images": {
+      "put": {
+        "operationId": "CmsController_setLessonImages",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLessonImagesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -9921,6 +10000,46 @@
           "slug"
         ]
       },
+      "LessonWordImageDto": {
+        "type": "object",
+        "properties": {
+          "wordId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "imageId": {
+            "type": "number",
+            "nullable": true,
+            "description": "`null` gỡ ảnh của từ; bắt buộc có trường.",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "wordId",
+          "imageId"
+        ]
+      },
+      "SetLessonImagesDto": {
+        "type": "object",
+        "properties": {
+          "coverImageId": {
+            "type": "number",
+            "nullable": true,
+            "description": "`null` gỡ ảnh bìa.",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "wordImages": {
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonWordImageDto"
+            }
+          }
+        }
+      },
       "CreateTopicDto": {
         "type": "object",
         "properties": {
@@ -11712,6 +11831,22 @@
           "orderIndex"
         ]
       },
+      "LessonImageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "altText"
+        ]
+      },
       "LessonDetailTopicDto": {
         "type": "object",
         "properties": {
@@ -11786,6 +11921,15 @@
             "items": {
               "$ref": "#/components/schemas/LessonDetailWordMeaningDto"
             }
+          },
+          "image": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonImageDto"
+              }
+            ]
           }
         },
         "required": [
@@ -11794,7 +11938,8 @@
           "traditional",
           "pinyin",
           "pinyinTone",
-          "meanings"
+          "meanings",
+          "image"
         ]
       },
       "LessonDetailStoryDto": {
@@ -11920,6 +12065,15 @@
           "level": {
             "$ref": "#/components/schemas/LessonDetailLevelDto"
           },
+          "coverImage": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonImageDto"
+              }
+            ]
+          },
           "topics": {
             "type": "array",
             "items": {
@@ -11949,6 +12103,7 @@
           "id",
           "title",
           "level",
+          "coverImage",
           "topics",
           "words",
           "stories",
@@ -12034,6 +12189,16 @@
             "type": "string",
             "nullable": true
           },
+          "coverImage": {
+            "nullable": true,
+            "description": "Ảnh bìa (Q350); URL qua `GET /media/:id/access`.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonImageDto"
+              }
+            ]
+          },
           "slug": {
             "type": "string"
           },
@@ -12048,6 +12213,7 @@
           "id",
           "title",
           "description",
+          "coverImage",
           "slug",
           "orderIndex",
           "levelId"
@@ -13752,6 +13918,10 @@
       "ExamSnapshotMediaDto": {
         "type": "object",
         "properties": {
+          "altText": {
+            "type": "string",
+            "description": "Alt tiếng Việt của ảnh (Q350); chỉ có khi media có alt."
+          },
           "mediaId": {
             "type": "number"
           },

@@ -19,7 +19,10 @@ import {
   ObjectStorageError,
   ObjectStorageErrorKind,
 } from '../../infrastructure/storage/object-storage.port';
-import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
+import {
+  buildLessonReadyWhere,
+  PUBLIC_CONTENT_WHERE,
+} from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PUBLIC_LESSON_EXERCISE_WHERE } from '../learning/public-exercise.policy';
 import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
@@ -90,6 +93,20 @@ export class MediaAccessService {
           select: { id: true },
           take: 1,
         },
+        // Q350: ảnh bìa của bài đã sẵn sàng; ảnh của từ công khai thuộc bài đó.
+        lessonCoverImage: {
+          where: buildLessonReadyWhere(),
+          select: { id: true },
+          take: 1,
+        },
+        wordImage: {
+          where: {
+            ...PUBLIC_CONTENT_WHERE,
+            lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+          },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
     if (!isUsableMediaContent(media, this.storage.provider)) {
@@ -103,7 +120,11 @@ export class MediaAccessService {
       }
       throw new NotFoundException('Media asset is not available.');
     }
-    if (actor.role !== 'admin' && media.lessonExercises.length === 0) {
+    const learnerVisible =
+      media.lessonExercises.length > 0 ||
+      (media.type === 'image' &&
+        (media.lessonCoverImage.length > 0 || media.wordImage.length > 0));
+    if (actor.role !== 'admin' && !learnerVisible) {
       throw new ForbiddenException('Media asset access is not allowed.');
     }
     const ttlSeconds =
