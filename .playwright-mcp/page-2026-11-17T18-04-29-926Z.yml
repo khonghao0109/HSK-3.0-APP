@@ -1,0 +1,16 @@
+- main [ref=e3]:
+  - region "Đăng nhập" [ref=e4]:
+    - generic [ref=e5]: Hán Lộ Admin
+    - heading "Đăng nhập" [level=1] [ref=e9]
+    - paragraph [ref=e10]: Đăng nhập bằng tài khoản quản trị đang hoạt động.
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Email
+        - textbox "Email" [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]: Mật khẩu
+        - textbox "Mật khẩu" [ref=e17]
+      - button "Đăng nhập" [ref=e18] [cursor=pointer]
+    - paragraph [ref=e19]: Phiên đăng nhập được giữ trong cookie HttpOnly được bảo vệ.
+    - link "Về trang Bài tập" [ref=e20] [cursor=pointer]:
+      - /url: /admin/exercises

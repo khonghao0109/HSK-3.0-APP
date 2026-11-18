@@ -1,0 +1,52 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e70]:
+    - banner [ref=f1e71]:
+      - link "Hán Lộ" [ref=f1e72] [cursor=pointer]:
+        - /url: /learn
+        - generic [aria-hidden] [ref=f1e73]: 汉
+      - generic [ref=f1e75]:
+        - list [aria-hidden] [ref=f1e76]:
+          - listitem [ref=f1e77]
+          - listitem [ref=f1e78]
+          - listitem [ref=f1e79]
+          - listitem [ref=f1e80]
+        - generic "Bước 1 trên 4" [ref=f1e81]: 1/4
+    - main [ref=f1e82]:
+      - generic [ref=f1e83]:
+        - heading "Mục tiêu học tập của bạn là gì?" [level=1] [ref=f1e84]
+        - paragraph [ref=f1e85]: Chọn mục tiêu phù hợp để chúng tôi đề xuất lộ trình tốt nhất
+        - heading "Mục tiêu" [level=2] [ref=f1e86]
+        - radiogroup "Mục tiêu học tập" [ref=f1e87]:
+          - radio "Giao tiếp" [checked] [ref=f1e88] [cursor=pointer]
+          - radio "Du học" [ref=f1e93] [cursor=pointer]
+          - radio "Thi HSK" [ref=f1e96] [cursor=pointer]
+          - radio "Công việc" [ref=f1e99] [cursor=pointer]
+        - heading "Bạn muốn đạt trình độ HSK nào?" [level=2] [ref=f1e102]
+        - paragraph [ref=f1e103]: Chọn cấp độ mục tiêu
+        - radiogroup "Cấp độ HSK mục tiêu" [ref=f1e104]:
+          - radio "1" [ref=f1e105] [cursor=pointer]
+          - radio "2" [ref=f1e106] [cursor=pointer]
+          - radio "3" [checked] [ref=f1e107] [cursor=pointer]
+          - radio "4" [ref=f1e108] [cursor=pointer]
+          - radio "5" [ref=f1e109] [cursor=pointer]
+          - radio "6" [ref=f1e110] [cursor=pointer]
+          - radio "7" [ref=f1e111] [cursor=pointer]
+          - radio "8" [ref=f1e112] [cursor=pointer]
+          - radio "9" [ref=f1e113] [cursor=pointer]
+        - generic [ref=f1e117]:
+          - strong [ref=f1e118]: HSK 3 ~ 2.245 từ vựng
+          - paragraph [ref=f1e119]: Có thể giao tiếp trong các tình huống hàng ngày đơn giản.
+      - generic [ref=f1e120]:
+        - generic [ref=f1e121]:
+          - heading "Lựa chọn của bạn" [level=2] [ref=f1e122]
+          - generic [ref=f1e123]:
+            - generic [ref=f1e124]:
+              - term [ref=f1e125]: Mục tiêu
+              - definition [ref=f1e126]: Giao tiếp
+            - generic [ref=f1e127]:
+              - term [ref=f1e128]: Trình độ mục tiêu
+              - definition [ref=f1e129]: HSK 3
+        - button "Tiếp tục" [ref=f1e130] [cursor=pointer]
+        - paragraph [ref=f1e133]: "Tiếp theo: chọn thời gian học mỗi ngày."
+  - button "Open Next.js Dev Tools" [ref=f1e65]
+  - alert [ref=f1e69]: Mục tiêu học tập · Hán Lộ

@@ -1,0 +1,90 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - complementary "Thanh bên" [ref=f2e4]:
+        - link "Hán Lộ" [ref=f2e5] [cursor=pointer]:
+          - /url: /learn
+          - generic [aria-hidden] [ref=f2e6]: 汉
+        - navigation "Điều hướng chính" [ref=f2e8]:
+          - link "Trang chủ" [ref=f2e9] [cursor=pointer]:
+            - /url: /learn
+          - link "Lộ trình học" [ref=f2e12] [cursor=pointer]:
+            - /url: /learn/path
+          - link "Tra từ" [ref=f2e15] [cursor=pointer]:
+            - /url: /learn/dictionary
+          - link "Ôn tập" [ref=f2e18] [cursor=pointer]:
+            - /url: /learn/review
+        - paragraph [ref=f2e21]: Luyện thêm
+        - navigation "Luyện thêm" [ref=f2e22]:
+          - link "Thi thử HSK" [ref=f2e23] [cursor=pointer]:
+            - /url: /learn/exam
+          - button "Phát âm Sắp có" [ref=f2e26] [cursor=pointer]:
+            - text: Phát âm
+            - generic [ref=f2e29]: Sắp có
+          - button "Đọc hiểu Sắp có" [ref=f2e30] [cursor=pointer]:
+            - text: Đọc hiểu
+            - generic [ref=f2e33]: Sắp có
+          - button "Trợ lý AI Sắp có" [ref=f2e34] [cursor=pointer]:
+            - text: Trợ lý AI
+            - generic [ref=f2e37]: Sắp có
+        - navigation "Khác" [ref=f2e39]:
+          - button "Hỗ trợ" [ref=f2e40] [cursor=pointer]
+        - link "Hồ sơ" [ref=f2e43] [cursor=pointer]:
+          - /url: /learn/profile
+      - generic [ref=f2e49]:
+        - generic [ref=f2e50]:
+          - search [ref=f2e51]:
+            - searchbox "Tra từ" [ref=f2e52]
+          - generic [ref=f2e53]:
+            - button "Thông báo" [ref=f2e54] [cursor=pointer]
+            - link "Hồ sơ" [ref=f2e57] [cursor=pointer]:
+              - /url: /learn/profile
+        - main [ref=f2e60]:
+          - generic [ref=f2e61]:
+            - generic [ref=f2e62]:
+              - heading "Thi thử HSK" [level=1] [ref=f2e63]
+              - paragraph [ref=f2e64]: Làm đề theo từng kỹ năng, xem điểm và lịch sử các lần thi.
+            - link "Lịch sử thi" [ref=f2e65] [cursor=pointer]:
+              - /url: /learn/exam/history
+          - region "Danh sách đề thi" [ref=f2e68]:
+            - generic [ref=f2e69]:
+              - heading "Danh sách đề thi" [level=2] [ref=f2e70]
+              - group [ref=f2e72]:
+                - generic "Sắp xếp theo Mới nhất" [ref=f2e73] [cursor=pointer]:
+                  - generic [ref=f2e74]: "Sắp xếp:"
+                  - generic [ref=f2e75]: Mới nhất
+            - generic [ref=f2e78]:
+              - generic [ref=f2e79]:
+                - paragraph [ref=f2e80]: Cấp độ
+                - group "Cấp độ" [ref=f2e81]:
+                  - link "HSK 1" [ref=f2e82] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK1
+                  - link "HSK 2" [ref=f2e83] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK2
+                  - link "HSK 3" [ref=f2e84] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK3
+                  - link "HSK 7–9" [ref=f2e85] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK7_9
+              - generic [ref=f2e86]:
+                - paragraph [ref=f2e87]: Kỹ năng
+                - group "Kỹ năng" [ref=f2e88]:
+                  - link "Tất cả" [ref=f2e89] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK1
+                  - link "Đọc" [ref=f2e90] [cursor=pointer]:
+                    - /url: /learn/exam?levelCode=HSK1&skill=reading
+                - paragraph [ref=f2e93]: 1 đề phù hợp
+            - list "Danh sách đề thi" [ref=f2e94]:
+              - listitem [ref=f2e95]:
+                - link "Đề thi thử HSK1 – Đọc, Đọc, 20 câu, 20 phút, Chưa làm" [ref=f2e96] [cursor=pointer]:
+                  - /url: /learn/exam/1
+                  - generic [ref=f2e100]:
+                    - generic [ref=f2e101]: Đề thi thử HSK1 – Đọc
+                    - generic [ref=f2e102]:
+                      - generic [ref=f2e103]: Đọc
+                      - generic [ref=f2e104]: •20 câu
+                      - generic [ref=f2e105]: •20 phút
+                  - generic [ref=f2e106]:
+                    - generic [ref=f2e107]: Chưa làm
+                    - generic [ref=f2e110]: Bắt đầu thi
+    - status
+  - button "Open Next.js Dev Tools" [ref=f2e120]
