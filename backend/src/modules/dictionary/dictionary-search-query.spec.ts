@@ -1,4 +1,7 @@
-import { classifyDictionaryQuery } from './dictionary-search-query';
+import {
+  classifyDictionaryQuery,
+  pinyinTonePattern,
+} from './dictionary-search-query';
 
 describe('classifyDictionaryQuery', () => {
   it.each([
@@ -28,6 +31,7 @@ describe('classifyDictionaryQuery', () => {
     expect(classifyDictionaryQuery(' Xue2 ')).toEqual({
       kind: 'latin',
       pinyinPrefix: 'xue',
+      pinyinTonePattern: '^x[1-5]?u[1-5]?e2',
       meaning: 'xue2',
       legacyMeaning: null,
     });
@@ -41,6 +45,7 @@ describe('classifyDictionaryQuery', () => {
     expect(classifyDictionaryQuery('Học  Tập')).toEqual({
       kind: 'latin',
       pinyinPrefix: null,
+      pinyinTonePattern: null,
       meaning: 'hoc tap',
       legacyMeaning: 'học tập',
     });
@@ -56,6 +61,7 @@ describe('classifyDictionaryQuery', () => {
     expect(classifyDictionaryQuery('h')).toEqual({
       kind: 'latin',
       pinyinPrefix: 'h',
+      pinyinTonePattern: null,
       meaning: null,
       legacyMeaning: null,
     });
@@ -80,6 +86,47 @@ describe('classifyDictionaryQuery', () => {
     expect(classifyDictionaryQuery(query)).toMatchObject({
       kind: 'latin',
       pinyinPrefix: key,
+    });
+  });
+
+  describe('pinyinTonePattern (R6: typed tones rank first)', () => {
+    const matches = (query: string, compactTone: string) =>
+      new RegExp(pinyinTonePattern(query) ?? '^$').test(compactTone);
+
+    it('is null when the query gives no tone', () => {
+      expect(pinyinTonePattern('mai')).toBeNull();
+      expect(pinyinTonePattern('xue sheng')).toBeNull();
+      expect(classifyDictionaryQuery('mai')).toMatchObject({
+        pinyinTonePattern: null,
+      });
+    });
+
+    it.each([
+      ['mai4', 'mai4', true],
+      ['mai4', 'mai3', false],
+      ['mài', 'mai4', true],
+      ['mǎi', 'mai4', false],
+      ['mai4', 'mai4tou2', true],
+      ['xuéshēng', 'xue2sheng1', true],
+      ['xuéshēng', 'xue2sheng5', false],
+      ['xue2sheng', 'xue2sheng5', true],
+      ['xuesheng5', 'xue2sheng1', false],
+      ['xué xí', 'xue2xi2', true],
+      ['nǚ', 'nu:3', true],
+      ['nv3', 'nu:3', true],
+      ['lü4', 'lu4', false],
+      ["xī'ān", 'xi1an1', true],
+      ["xī'ān", 'xian1', false],
+    ])('%j against %j → %j', (query, compactTone, expected) => {
+      expect(matches(query, compactTone)).toBe(expected);
+    });
+
+    it('only emits pinyin letters, tone digits and fixed regex syntax', () => {
+      for (const query of ["xī'ān", 'nǚ', 'Mài', 'xue2 xi2', 'lu:4']) {
+        expect(pinyinTonePattern(query)).toMatch(
+          /^\^(?:[a-z:]|[1-5]|\[1-5\]\??|\(\?=\[a-z:\]\*[1-4]\))+$/,
+        );
+      }
     });
   });
 });

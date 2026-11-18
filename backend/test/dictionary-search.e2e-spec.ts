@@ -40,6 +40,7 @@ describe('Dictionary search E2E (M2.B14)', () => {
   async function createWord(options: {
     pinyin: string;
     pinyinNormalized?: string;
+    pinyinTone?: string;
     hanzi?: string;
     meaningEn: string;
     meaningVi?: string;
@@ -54,6 +55,7 @@ describe('Dictionary search E2E (M2.B14)', () => {
         pinyin: options.pinyin,
         pinyinNormalized:
           options.pinyinNormalized ?? normalizePinyin(options.pinyin),
+        pinyinTone: options.pinyinTone,
         status: options.status ?? 'published',
         isPure: options.isPure ?? true,
         meanings: {
@@ -228,6 +230,23 @@ describe('Dictionary search E2E (M2.B14)', () => {
       pinyin: `${pinyinPrefix}nullsb`,
       meaningEn: `${meaningToken}nul word`,
       levelId: hsk79.id,
+    });
+
+    // Same compact key, different tones; the third-tone word has the lower
+    // Level, so a toneless query lists it first and a toned one must not.
+    words.toneThird = await createWord({
+      hanzi: '麤',
+      pinyin: `${pinyinPrefix}tone mai`,
+      pinyinTone: `${pinyinPrefix}tone5 mai3`,
+      meaningEn: 'tone third',
+      levelId: hsk1.id,
+    });
+    words.toneFourth = await createWord({
+      hanzi: '灥',
+      pinyin: `${pinyinPrefix}tone mai`,
+      pinyinTone: `${pinyinPrefix}tone5 mai4`,
+      meaningEn: 'tone fourth',
+      levelId: hsk3.id,
     });
 
     words.shocking = await createWord({
@@ -509,6 +528,29 @@ describe('Dictionary search E2E (M2.B14)', () => {
     expect(order.map((id) => ids.indexOf(id))).toEqual(
       [...order.map((id) => ids.indexOf(id))].sort((a, b) => a - b),
     );
+  });
+
+  it('lists the word with the typed tone first, by number or mark (R6)', async () => {
+    const order = async (query: string) =>
+      idsOf(await search(query)).filter((id) =>
+        [words.toneThird, words.toneFourth].includes(id),
+      );
+    expect(await order(`${pinyinPrefix}tonemai`)).toEqual([
+      words.toneThird,
+      words.toneFourth,
+    ]);
+    expect(await order(`${pinyinPrefix}tonemai4`)).toEqual([
+      words.toneFourth,
+      words.toneThird,
+    ]);
+    expect(await order(`${pinyinPrefix}tone mài`)).toEqual([
+      words.toneFourth,
+      words.toneThird,
+    ]);
+    expect(await order(`${pinyinPrefix}tone mǎi`)).toEqual([
+      words.toneThird,
+      words.toneFourth,
+    ]);
   });
 
   it('returns the same order on repeated calls', async () => {
