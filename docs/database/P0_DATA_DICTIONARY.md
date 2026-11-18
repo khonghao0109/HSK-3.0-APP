@@ -90,6 +90,12 @@ lượng từ và đồng/trái nghĩa chờ file nguồn có giấy phép (khô
 | `QuestionWord` | `target_words` của câu hỏi thi. | `questionId`, `wordId`. | Unique cặp; metadata ngoài revision như `LessonWord` (Q179). |
 | `QuestionGrammarPoint` | `grammar_ids` của câu hỏi thi. | `questionId`, `grammarPointId`. | Unique cặp; metadata ngoài revision. |
 
+Nét chữ (Q357): `Character.strokeData = { strokes[], medians[] }` và `strokeCount` nạp từ Make Me a Hanzi
+`graphics.txt` (Arphic Public License, DataSource `MAKEMEAHANZI_GRAPHICS`, migration
+`20261119130000_makemeahanzi_data_source`) bằng `npm run dictionary:import:strokes -- --file
+content/hanzi/makemeahanzi/graphics-hsk1.jsonl` — 300 chữ của từ vựng HSK1; không ghi đè chữ của nguồn khác,
+không lấy pinyin/Hán Việt (`dictionary.txt` là LGPL, không dùng). `CharacterLevel` vẫn trống tới khi có 汉字表 chính thức.
+
 Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json>...` (module
 `backend/src/modules/content-levels/level-vocabulary.ts`) bảo đảm nội dung cấp N chỉ dùng từ cấp ≤ N theo
 `scripts/dictionary/raw/hsk*.json`; tên riêng khai trong `properNames[]` hoặc `--allow`.
