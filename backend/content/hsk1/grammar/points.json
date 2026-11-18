@@ -1,0 +1,550 @@
+{
+  "schemaVersion": 1,
+  "level": "HSK1",
+  "notice": "Bản nháp do AI soạn (Q172) theo khung điểm ngữ pháp cấp 1 của GF0025-2021, diễn đạt và ví dụ tự viết, không chép văn bản chuẩn. Người duyệt: PO (Q357).",
+  "dataSource": {
+    "code": "HSK30_GRAMMAR_CLAUDE_DRAFT",
+    "attribution": "Tự soạn theo khung GF0025-2021"
+  },
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null,
+    "notes": []
+  },
+  "points": [
+    {
+      "code": "HSK1-G001",
+      "category": "Đại từ",
+      "title": "Đại từ nhân xưng",
+      "pattern": "我 / 你 / 他 / 她 + 们",
+      "descriptionVi": "Đại từ chỉ người; thêm 们 để chỉ số nhiều.",
+      "examples": [
+        {
+          "hanzi": "我们是学生。",
+          "pinyin": "Wǒmen shì xuésheng.",
+          "vi": "Chúng tôi là học sinh."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G002",
+      "category": "Đại từ",
+      "title": "Đại từ chỉ thị 这 / 那",
+      "pattern": "这 / 那 (+ lượng từ) + danh từ",
+      "descriptionVi": "这 chỉ gần, 那 chỉ xa; trước danh từ thường có lượng từ.",
+      "examples": [
+        {
+          "hanzi": "这本书是我的。",
+          "pinyin": "Zhè běn shū shì wǒ de.",
+          "vi": "Quyển sách này là của tôi."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G003",
+      "category": "Đại từ",
+      "title": "Hỏi người, vật: 谁 / 什么",
+      "pattern": "谁 / 什么 đứng ở vị trí cần hỏi",
+      "descriptionVi": "Câu hỏi giữ trật tự câu trần thuật, thay phần cần hỏi bằng 谁 (ai) hoặc 什么 (gì).",
+      "examples": [
+        {
+          "hanzi": "你叫什么名字？",
+          "pinyin": "Nǐ jiào shénme míngzi?",
+          "vi": "Bạn tên là gì?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G004",
+      "category": "Đại từ",
+      "title": "Hỏi nơi chốn: 哪儿",
+      "pattern": "在 / 去 + 哪儿",
+      "descriptionVi": "Hỏi ở đâu, đi đâu.",
+      "examples": [
+        {
+          "hanzi": "你去哪儿？",
+          "pinyin": "Nǐ qù nǎr?",
+          "vi": "Bạn đi đâu?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G005",
+      "category": "Đại từ",
+      "title": "Hỏi số lượng: 几 / 多少",
+      "pattern": "几 + lượng từ + danh từ; 多少 (+ danh từ)",
+      "descriptionVi": "几 hỏi số nhỏ (thường dưới 10) và cần lượng từ; 多少 hỏi số bất kỳ.",
+      "examples": [
+        {
+          "hanzi": "你家有几个人？",
+          "pinyin": "Nǐ jiā yǒu jǐ ge rén?",
+          "vi": "Nhà bạn có mấy người?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G006",
+      "category": "Đại từ",
+      "title": "Hỏi cách thức: 怎么 + động từ",
+      "pattern": "怎么 + V",
+      "descriptionVi": "Hỏi làm việc gì bằng cách nào.",
+      "examples": [
+        {
+          "hanzi": "你怎么去学校？",
+          "pinyin": "Nǐ zěnme qù xuéxiào?",
+          "vi": "Bạn đi học bằng gì?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G007",
+      "category": "Số từ, lượng từ",
+      "title": "Số đếm 0–100 và 二 / 两",
+      "pattern": "số + lượng từ + danh từ",
+      "descriptionVi": "Đọc số theo hàng chục; trước lượng từ dùng 两, không dùng 二.",
+      "examples": [
+        {
+          "hanzi": "我有两个朋友。",
+          "pinyin": "Wǒ yǒu liǎng ge péngyou.",
+          "vi": "Tôi có hai người bạn."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G008",
+      "category": "Số từ, lượng từ",
+      "title": "Lượng từ 个 / 本 / 口 / 块",
+      "pattern": "số / 这 / 那 + lượng từ + danh từ",
+      "descriptionVi": "Giữa số từ (hoặc 这, 那) và danh từ phải có lượng từ.",
+      "examples": [
+        {
+          "hanzi": "我想买一个书包。",
+          "pinyin": "Wǒ xiǎng mǎi yí ge shūbāo.",
+          "vi": "Tôi muốn mua một cái cặp sách."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G009",
+      "category": "Số từ, lượng từ",
+      "title": "Tuổi: 岁 và 多大",
+      "pattern": "S + số + 岁；… 多大了？",
+      "descriptionVi": "Nói tuổi bằng 岁 (thường bỏ 是); hỏi tuổi bằng 多大.",
+      "examples": [
+        {
+          "hanzi": "我儿子今年七岁。",
+          "pinyin": "Wǒ érzi jīnnián qī suì.",
+          "vi": "Con trai tôi năm nay bảy tuổi."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G010",
+      "category": "Số từ, lượng từ",
+      "title": "Giờ: 点 / 半 / 分",
+      "pattern": "số + 点 (+ 半 / số + 分)",
+      "descriptionVi": "Nói giờ: 三点 (3 giờ), 十一点半 (11 rưỡi).",
+      "examples": [
+        {
+          "hanzi": "现在是上午十点。",
+          "pinyin": "Xiànzài shì shàngwǔ shí diǎn.",
+          "vi": "Bây giờ là 10 giờ sáng."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G011",
+      "category": "Số từ, lượng từ",
+      "title": "Tiền: 块 và 多少钱",
+      "pattern": "số + 块 (钱)；… 多少钱？",
+      "descriptionVi": "Hỏi giá bằng 多少钱, trả lời bằng 块.",
+      "examples": [
+        {
+          "hanzi": "这些水果多少钱？",
+          "pinyin": "Zhèxiē shuǐguǒ duōshao qián?",
+          "vi": "Chỗ hoa quả này bao nhiêu tiền?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G012",
+      "category": "Số từ, lượng từ",
+      "title": "Ngày, tháng, thứ",
+      "pattern": "…月…日 / 号；星期 + số / 天",
+      "descriptionVi": "Ngày tháng theo thứ tự tháng → ngày; thứ bằng 星期 + số, Chủ nhật là 星期天.",
+      "examples": [
+        {
+          "hanzi": "明天是星期天。",
+          "pinyin": "Míngtiān shì xīngqītiān.",
+          "vi": "Ngày mai là Chủ nhật."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G013",
+      "category": "Danh từ",
+      "title": "Từ phương vị 上 / 里 / 前 / 后 (+ -边)",
+      "pattern": "danh từ + 上 / 里 / 前边 / 后边",
+      "descriptionVi": "Đặt sau danh từ để chỉ vị trí.",
+      "examples": [
+        {
+          "hanzi": "我的手机在桌子上。",
+          "pinyin": "Wǒ de shǒujī zài zhuōzi shang.",
+          "vi": "Điện thoại của tôi ở trên bàn."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G014",
+      "category": "Danh từ",
+      "title": "Từ chỉ thời gian đứng trước động từ",
+      "pattern": "S + thời gian + V / thời gian + S + V",
+      "descriptionVi": "Từ chỉ thời gian (今天, 明天, 上午…) đứng trước động từ, có thể đứng đầu câu.",
+      "examples": [
+        {
+          "hanzi": "我今天很忙。",
+          "pinyin": "Wǒ jīntiān hěn máng.",
+          "vi": "Hôm nay tôi rất bận."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G015",
+      "category": "Phó từ",
+      "title": "Phủ định 不",
+      "pattern": "不 + V / Adj",
+      "descriptionVi": "Phủ định ý muốn, thói quen, hiện tại, tương lai và tính từ.",
+      "examples": [
+        {
+          "hanzi": "我不饿。",
+          "pinyin": "Wǒ bú è.",
+          "vi": "Tôi không đói."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G016",
+      "category": "Phó từ",
+      "title": "Phủ định 没 (有)",
+      "pattern": "没 (有) + V；没有 + danh từ",
+      "descriptionVi": "Phủ định việc đã xảy ra, hoặc phủ định 有.",
+      "examples": [
+        {
+          "hanzi": "我没有时间看电影。",
+          "pinyin": "Wǒ méiyǒu shíjiān kàn diànyǐng.",
+          "vi": "Tôi không có thời gian xem phim."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G017",
+      "category": "Phó từ",
+      "title": "Phó từ mức độ 很 / 太…了",
+      "pattern": "很 + Adj；太 + Adj + 了",
+      "descriptionVi": "Câu vị ngữ tính từ thường cần 很; 太…了 nhấn mạnh mức độ.",
+      "examples": [
+        {
+          "hanzi": "今天很冷。",
+          "pinyin": "Jīntiān hěn lěng.",
+          "vi": "Hôm nay rất lạnh."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G018",
+      "category": "Phó từ",
+      "title": "都 và 也",
+      "pattern": "S + 也 / 都 + V",
+      "descriptionVi": "也: cũng; 都: đều. Cả hai đứng sau chủ ngữ, trước động từ.",
+      "examples": [
+        {
+          "hanzi": "我们都是学生。",
+          "pinyin": "Wǒmen dōu shì xuésheng.",
+          "vi": "Chúng tôi đều là học sinh."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G019",
+      "category": "Phó từ",
+      "title": "Tần suất 常常 và lặp lại 再",
+      "pattern": "S + 常常 / 再 + V",
+      "descriptionVi": "常常: thường xuyên; 再: lại (lần nữa, trong tương lai).",
+      "examples": [
+        {
+          "hanzi": "我们明天再来吃吧。",
+          "pinyin": "Wǒmen míngtiān zài lái chī ba.",
+          "vi": "Ngày mai chúng ta lại đến ăn nhé."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G020",
+      "category": "Phó từ",
+      "title": "Đang làm: 在 + động từ",
+      "pattern": "S + 在 + V (+ 呢)",
+      "descriptionVi": "Diễn tả hành động đang diễn ra.",
+      "examples": [
+        {
+          "hanzi": "妈妈在睡觉。",
+          "pinyin": "Māma zài shuìjiào.",
+          "vi": "Mẹ đang ngủ."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G021",
+      "category": "Giới từ",
+      "title": "在 + nơi chốn + động từ",
+      "pattern": "S + 在 + nơi chốn + V",
+      "descriptionVi": "Nói hành động xảy ra ở đâu.",
+      "examples": [
+        {
+          "hanzi": "他在医院工作。",
+          "pinyin": "Tā zài yīyuàn gōngzuò.",
+          "vi": "Anh ấy làm việc ở bệnh viện."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G022",
+      "category": "Giới từ",
+      "title": "和 … 一起",
+      "pattern": "S + 和 + người + 一起 + V",
+      "descriptionVi": "Làm việc gì cùng ai.",
+      "examples": [
+        {
+          "hanzi": "他常常和朋友一起打球。",
+          "pinyin": "Tā chángcháng hé péngyou yìqǐ dǎ qiú.",
+          "vi": "Anh ấy thường chơi bóng cùng bạn."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G023",
+      "category": "Liên từ",
+      "title": "Liên từ 和 nối danh từ",
+      "pattern": "danh từ + 和 + danh từ",
+      "descriptionVi": "Nối hai danh từ hoặc cụm danh từ (không nối hai câu).",
+      "examples": [
+        {
+          "hanzi": "我买了水果和面包。",
+          "pinyin": "Wǒ mǎi le shuǐguǒ hé miànbāo.",
+          "vi": "Tôi đã mua hoa quả và bánh mì."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G024",
+      "category": "Trợ từ",
+      "title": "Trợ từ kết cấu 的",
+      "pattern": "định ngữ + 的 + danh từ",
+      "descriptionVi": "Chỉ sở hữu hoặc nối định ngữ với danh từ; với người thân thường bỏ 的.",
+      "examples": [
+        {
+          "hanzi": "这是我的书。",
+          "pinyin": "Zhè shì wǒ de shū.",
+          "vi": "Đây là sách của tôi."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G025",
+      "category": "Trợ từ",
+      "title": "了 cuối câu: thay đổi, đã xảy ra",
+      "pattern": "… + 了",
+      "descriptionVi": "Báo một tình huống mới hoặc việc đã xảy ra.",
+      "examples": [
+        {
+          "hanzi": "今天下雨了。",
+          "pinyin": "Jīntiān xià yǔ le.",
+          "vi": "Hôm nay trời mưa rồi."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G026",
+      "category": "Trợ từ",
+      "title": "了 sau động từ: hoàn thành",
+      "pattern": "V + 了 + (số lượng) + tân ngữ",
+      "descriptionVi": "Hành động đã hoàn thành, thường kèm số lượng.",
+      "examples": [
+        {
+          "hanzi": "她买了一些水果。",
+          "pinyin": "Tā mǎi le yìxiē shuǐguǒ.",
+          "vi": "Cô ấy đã mua ít hoa quả."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G027",
+      "category": "Trợ từ",
+      "title": "吧 đề nghị",
+      "pattern": "… + 吧",
+      "descriptionVi": "Đưa ra đề nghị, rủ rê nhẹ nhàng.",
+      "examples": [
+        {
+          "hanzi": "我们快走吧。",
+          "pinyin": "Wǒmen kuài zǒu ba.",
+          "vi": "Chúng ta đi nhanh lên nào."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G028",
+      "category": "Câu",
+      "title": "Câu hỏi với 吗",
+      "pattern": "câu trần thuật + 吗？",
+      "descriptionVi": "Câu hỏi có/không: thêm 吗 cuối câu trần thuật.",
+      "examples": [
+        {
+          "hanzi": "你是中国人吗？",
+          "pinyin": "Nǐ shì Zhōngguó rén ma?",
+          "vi": "Bạn là người Trung Quốc à?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G029",
+      "category": "Câu",
+      "title": "Câu hỏi tỉnh lược với 呢",
+      "pattern": "danh từ / đại từ + 呢？",
+      "descriptionVi": "Hỏi lại cùng nội dung với đối tượng khác.",
+      "examples": [
+        {
+          "hanzi": "我很好，你呢？",
+          "pinyin": "Wǒ hěn hǎo, nǐ ne?",
+          "vi": "Tôi khỏe, còn bạn?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G030",
+      "category": "Câu",
+      "title": "Câu hỏi lựa chọn 还是",
+      "pattern": "A 还是 B？",
+      "descriptionVi": "Hỏi chọn một trong hai khả năng.",
+      "examples": [
+        {
+          "hanzi": "你喝茶还是喝水？",
+          "pinyin": "Nǐ hē chá háishi hē shuǐ?",
+          "vi": "Bạn uống trà hay uống nước?"
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G031",
+      "category": "Câu",
+      "title": "Câu chữ 是",
+      "pattern": "A + 是 + B；A + 不是 + B",
+      "descriptionVi": "Nối chủ ngữ với danh từ để giới thiệu, xác định.",
+      "examples": [
+        {
+          "hanzi": "我爸爸是医生。",
+          "pinyin": "Wǒ bàba shì yīshēng.",
+          "vi": "Bố tôi là bác sĩ."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G032",
+      "category": "Câu",
+      "title": "Câu chữ 有 (sở hữu, tồn tại)",
+      "pattern": "A + 有 + B；nơi chốn + 有 + B",
+      "descriptionVi": "Diễn tả có (sở hữu) hoặc ở đâu có gì; phủ định là 没有.",
+      "examples": [
+        {
+          "hanzi": "我家有五个人。",
+          "pinyin": "Wǒ jiā yǒu wǔ ge rén.",
+          "vi": "Nhà tôi có năm người."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G033",
+      "category": "Câu",
+      "title": "Câu vị ngữ tính từ",
+      "pattern": "S + 很 + Adj",
+      "descriptionVi": "Tính từ làm vị ngữ trực tiếp, không dùng 是.",
+      "examples": [
+        {
+          "hanzi": "这个饭店的菜很好吃。",
+          "pinyin": "Zhège fàndiàn de cài hěn hǎochī.",
+          "vi": "Món ăn của nhà hàng này rất ngon."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G034",
+      "category": "Câu",
+      "title": "Câu liên động 去 / 来 + nơi chốn + động từ",
+      "pattern": "S + 去 / 来 + nơi chốn + V",
+      "descriptionVi": "Hai động từ liên tiếp: đi đâu để làm gì.",
+      "examples": [
+        {
+          "hanzi": "她去商店买衣服。",
+          "pinyin": "Tā qù shāngdiàn mǎi yīfu.",
+          "vi": "Cô ấy đi cửa hàng mua quần áo."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G035",
+      "category": "Câu",
+      "title": "Phương tiện: 坐 + xe / 开车 / 走路",
+      "pattern": "S + 坐 + phương tiện + 去 + nơi chốn",
+      "descriptionVi": "Nói đi bằng phương tiện gì.",
+      "examples": [
+        {
+          "hanzi": "我坐飞机去北京。",
+          "pinyin": "Wǒ zuò fēijī qù Běijīng.",
+          "vi": "Tôi đi máy bay đến Bắc Kinh."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G036",
+      "category": "Câu",
+      "title": "Động từ năng nguyện 想 / 会 / 能",
+      "pattern": "S + 想 / 会 / 能 + V",
+      "descriptionVi": "想: muốn; 会: biết (do học); 能: có thể.",
+      "examples": [
+        {
+          "hanzi": "我想去医院看医生。",
+          "pinyin": "Wǒ xiǎng qù yīyuàn kàn yīshēng.",
+          "vi": "Tôi muốn đến bệnh viện khám bác sĩ."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G037",
+      "category": "Câu",
+      "title": "Câu cầu khiến với 请",
+      "pattern": "请 + V (…)",
+      "descriptionVi": "Mời, đề nghị lịch sự.",
+      "examples": [
+        {
+          "hanzi": "请坐。",
+          "pinyin": "Qǐng zuò.",
+          "vi": "Mời ngồi."
+        }
+      ]
+    },
+    {
+      "code": "HSK1-G038",
+      "category": "Câu",
+      "title": "喜欢 + động từ / danh từ",
+      "pattern": "S + (很) 喜欢 + V / N",
+      "descriptionVi": "Thích làm gì hoặc thích cái gì.",
+      "examples": [
+        {
+          "hanzi": "我很喜欢喝茶。",
+          "pinyin": "Wǒ hěn xǐhuan hē chá.",
+          "vi": "Tôi rất thích uống trà."
+        }
+      ]
+    }
+  ]
+}

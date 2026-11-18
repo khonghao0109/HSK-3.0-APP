@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "exam": "content/hsk1/exam/mock-01.json",
+  "grammar": "content/hsk1/grammar/points.json",
+  "notice": "Bản nháp do AI soạn (Q172): từ đích (target_words) và điểm ngữ pháp (grammar_ids) cho 40 câu mock-01; tách file riêng để không đổi nội dung đề đã duyệt. Người duyệt: PO (Q357).",
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewedAt": null,
+    "contentSha256": null,
+    "notes": []
+  },
+  "questions": {
+    "hsk1:q0001": {
+      "targetWords": [
+        "喝",
+        "茶"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0002": {
+      "targetWords": [
+        "下雨"
+      ],
+      "grammar": [
+        "HSK1-G025",
+        "HSK1-G014"
+      ]
+    },
+    "hsk1:q0003": {
+      "targetWords": [
+        "开车"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0004": {
+      "targetWords": [
+        "买",
+        "书包"
+      ],
+      "grammar": [
+        "HSK1-G036",
+        "HSK1-G008"
+      ]
+    },
+    "hsk1:q0005": {
+      "targetWords": [
+        "睡觉"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0006": {
+      "targetWords": [
+        "叫",
+        "名字"
+      ],
+      "grammar": [
+        "HSK1-G003"
+      ]
+    },
+    "hsk1:q0007": {
+      "targetWords": [
+        "哪儿",
+        "医院"
+      ],
+      "grammar": [
+        "HSK1-G004"
+      ]
+    },
+    "hsk1:q0008": {
+      "targetWords": [
+        "还是",
+        "水"
+      ],
+      "grammar": [
+        "HSK1-G030"
+      ]
+    },
+    "hsk1:q0009": {
+      "targetWords": [
+        "几",
+        "家"
+      ],
+      "grammar": [
+        "HSK1-G005",
+        "HSK1-G032",
+        "HSK1-G008"
+      ]
+    },
+    "hsk1:q0010": {
+      "targetWords": [
+        "谢谢",
+        "不客气"
+      ],
+      "grammar": []
+    },
+    "hsk1:q0011": {
+      "targetWords": [
+        "写",
+        "汉字"
+      ],
+      "grammar": [
+        "HSK1-G020",
+        "HSK1-G003"
+      ]
+    },
+    "hsk1:q0012": {
+      "targetWords": [
+        "身体",
+        "病",
+        "医生"
+      ],
+      "grammar": [
+        "HSK1-G025",
+        "HSK1-G036",
+        "HSK1-G034"
+      ]
+    },
+    "hsk1:q0013": {
+      "targetWords": [
+        "水果",
+        "多少",
+        "钱"
+      ],
+      "grammar": [
+        "HSK1-G011",
+        "HSK1-G005"
+      ]
+    },
+    "hsk1:q0014": {
+      "targetWords": [
+        "火车",
+        "点"
+      ],
+      "grammar": [
+        "HSK1-G010",
+        "HSK1-G027"
+      ]
+    },
+    "hsk1:q0015": {
+      "targetWords": [
+        "饭店",
+        "菜",
+        "好吃"
+      ],
+      "grammar": [
+        "HSK1-G033",
+        "HSK1-G019",
+        "HSK1-G027",
+        "HSK1-G024"
+      ]
+    },
+    "hsk1:q0016": {
+      "targetWords": [
+        "忙",
+        "时间",
+        "电影"
+      ],
+      "grammar": [
+        "HSK1-G016",
+        "HSK1-G017"
+      ]
+    },
+    "hsk1:q0017": {
+      "targetWords": [
+        "儿子",
+        "岁"
+      ],
+      "grammar": [
+        "HSK1-G009"
+      ]
+    },
+    "hsk1:q0018": {
+      "targetWords": [
+        "星期天",
+        "书"
+      ],
+      "grammar": [
+        "HSK1-G012",
+        "HSK1-G036",
+        "HSK1-G021"
+      ]
+    },
+    "hsk1:q0019": {
+      "targetWords": [
+        "电脑",
+        "桌子",
+        "书包"
+      ],
+      "grammar": [
+        "HSK1-G013"
+      ]
+    },
+    "hsk1:q0020": {
+      "targetWords": [
+        "坐",
+        "飞机"
+      ],
+      "grammar": [
+        "HSK1-G035",
+        "HSK1-G010"
+      ]
+    },
+    "hsk1:q0021": {
+      "targetWords": [
+        "电视"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0022": {
+      "targetWords": [
+        "打电话"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0023": {
+      "targetWords": [
+        "老师",
+        "上课"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0024": {
+      "targetWords": [
+        "小朋友",
+        "牛奶"
+      ],
+      "grammar": [
+        "HSK1-G020"
+      ]
+    },
+    "hsk1:q0025": {
+      "targetWords": [
+        "商店",
+        "衣服"
+      ],
+      "grammar": [
+        "HSK1-G021"
+      ]
+    },
+    "hsk1:q0026": {
+      "targetWords": [
+        "中国"
+      ],
+      "grammar": [
+        "HSK1-G028",
+        "HSK1-G031"
+      ]
+    },
+    "hsk1:q0027": {
+      "targetWords": [
+        "谁",
+        "哥哥"
+      ],
+      "grammar": [
+        "HSK1-G003",
+        "HSK1-G002"
+      ]
+    },
+    "hsk1:q0028": {
+      "targetWords": [
+        "饿",
+        "吃"
+      ],
+      "grammar": [
+        "HSK1-G015",
+        "HSK1-G036"
+      ]
+    },
+    "hsk1:q0029": {
+      "targetWords": [
+        "要",
+        "两"
+      ],
+      "grammar": [
+        "HSK1-G005",
+        "HSK1-G007"
+      ]
+    },
+    "hsk1:q0030": {
+      "targetWords": [
+        "见面",
+        "门口"
+      ],
+      "grammar": [
+        "HSK1-G004",
+        "HSK1-G021"
+      ]
+    },
+    "hsk1:q0031": {
+      "targetWords": [
+        "喜欢"
+      ],
+      "grammar": [
+        "HSK1-G038",
+        "HSK1-G017"
+      ]
+    },
+    "hsk1:q0032": {
+      "targetWords": [
+        "请",
+        "坐"
+      ],
+      "grammar": [
+        "HSK1-G037"
+      ]
+    },
+    "hsk1:q0033": {
+      "targetWords": [
+        "冷",
+        "穿"
+      ],
+      "grammar": [
+        "HSK1-G033"
+      ]
+    },
+    "hsk1:q0034": {
+      "targetWords": [
+        "本"
+      ],
+      "grammar": [
+        "HSK1-G008",
+        "HSK1-G002",
+        "HSK1-G024"
+      ]
+    },
+    "hsk1:q0035": {
+      "targetWords": [
+        "名字"
+      ],
+      "grammar": [
+        "HSK1-G003"
+      ]
+    },
+    "hsk1:q0036": {
+      "targetWords": [
+        "水果",
+        "面包"
+      ],
+      "grammar": [
+        "HSK1-G026",
+        "HSK1-G023"
+      ]
+    },
+    "hsk1:q0037": {
+      "targetWords": [
+        "医院",
+        "工作"
+      ],
+      "grammar": [
+        "HSK1-G031",
+        "HSK1-G021"
+      ]
+    },
+    "hsk1:q0038": {
+      "targetWords": [
+        "机场",
+        "半"
+      ],
+      "grammar": [
+        "HSK1-G010"
+      ]
+    },
+    "hsk1:q0039": {
+      "targetWords": [
+        "喜欢",
+        "打球"
+      ],
+      "grammar": [
+        "HSK1-G038",
+        "HSK1-G022",
+        "HSK1-G019"
+      ]
+    },
+    "hsk1:q0040": {
+      "targetWords": [
+        "走路",
+        "后边"
+      ],
+      "grammar": [
+        "HSK1-G013",
+        "HSK1-G035"
+      ]
+    }
+  }
+}
