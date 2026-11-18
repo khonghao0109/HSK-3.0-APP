@@ -155,10 +155,25 @@ export function auditReadings(
   const seenMissing = new Set<string>();
   for (const reading of gf) {
     const k = key(reading.hanzi, reading.pinyin);
-    if (!dbKeys.has(k) && !seenMissing.has(k)) {
-      seenMissing.add(k);
-      audit.missing.push(reading);
+    if (!dbKeys.has(k)) {
+      if (!seenMissing.has(k)) {
+        seenMissing.add(k);
+        audit.missing.push(reading);
+      }
+      continue;
     }
+    // Q358: GF0025 có nhiều cách đọc cùng pinyin bỏ dấu (干 gān / gàn) → mỗi cách đọc
+    // có thanh cần một dòng Word riêng.
+    if ((gfByKey.get(k)?.length ?? 0) < 2) continue;
+    const rows = db.filter((row) => key(row.hanzi, row.pinyin) === k);
+    const tones = (gfByKey.get(k) ?? []).map((c) =>
+      toNumberedTones(c.pinyin, rows[0]?.pinyin ?? ''),
+    );
+    // Chưa dòng nào khớp thanh nào → đã báo ở `ambiguous`, không báo trùng.
+    if (!rows.some((row) => tones.includes(row.pinyinTone))) continue;
+    const tone = toNumberedTones(reading.pinyin, rows[0]?.pinyin ?? '');
+    if (tone !== null && !rows.some((row) => row.pinyinTone === tone))
+      audit.missing.push(reading);
   }
   return audit;
 }

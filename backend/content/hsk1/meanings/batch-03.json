@@ -17,11 +17,14 @@
     "notes": "Nghĩa tiếng Việt và câu ví dụ tự soạn, không dịch CC-CEDICT, không chép từ điển hay app bên thứ ba. Danh sách từ theo GF0025-2021."
   },
   "review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewedAt": null,
-    "contentSha256": null,
-    "notes": []
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "contentSha256": "4a007eb315498db446fe7db57b8678b91d1718468935662ddda26705d2d48f99",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
   },
   "properNames": [],
   "entries": [
@@ -463,7 +466,7 @@
         {
           "hanzi": "请开门。",
           "pinyin": "Qǐng kāi mén.",
-          "translationVi": "Mời mở cửa."
+          "translationVi": "Làm ơn mở cửa."
         }
       ]
     },
@@ -916,8 +919,8 @@
       "meaningVi": "trường tiểu học",
       "examples": [
         {
-          "hanzi": "我儿子在小学。",
-          "pinyin": "Wǒ érzi zài xiǎoxué.",
+          "hanzi": "我儿子上小学。",
+          "pinyin": "Wǒ érzi shàng xiǎoxué.",
           "translationVi": "Con trai tôi học tiểu học."
         }
       ]
@@ -1035,7 +1038,7 @@
         {
           "hanzi": "我从学校来。",
           "pinyin": "Wǒ cóng xuéxiào lái.",
-          "translationVi": "Tôi đến từ trường."
+          "translationVi": "Tôi từ trường đến."
         }
       ]
     },

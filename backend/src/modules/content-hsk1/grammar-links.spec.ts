@@ -10,6 +10,7 @@ import {
   grammarContentSha256,
   type GrammarPointFile,
   isApproved,
+  linksContentSha256,
   type QuestionLinksFile,
   validateGrammarPoints,
   validateQuestionLinks,
@@ -28,7 +29,7 @@ const pending = {
 };
 
 describe('grammar points and question links (Q357)', () => {
-  it('repository drafts are valid and still pending PO review', () => {
+  it('repository files are valid and approved with matching hashes', () => {
     const lexicon = loadLevelLexicon(root);
     const grammar = read<GrammarPointFile>('content/hsk1/grammar/points.json');
     const links = read<QuestionLinksFile>(
@@ -57,8 +58,14 @@ describe('grammar points and question links (Q357)', () => {
       ),
     ).toEqual([]);
     expect(Object.keys(bankLinks.questions)).toHaveLength(45);
-    expect(grammar.review.status).toBe('pending');
-    expect(links.review.status).toBe('pending');
+    // Q358: PO uỷ quyền cho Claude duyệt 18/11/2026; hash khớp nội dung.
+    expect(isApproved(grammar.review, grammarContentSha256(grammar))).toBe(
+      true,
+    );
+    expect(isApproved(links.review, linksContentSha256(links))).toBe(true);
+    expect(isApproved(bankLinks.review, linksContentSha256(bankLinks))).toBe(
+      true,
+    );
   });
 
   const lexicon = buildLevelLexicon({

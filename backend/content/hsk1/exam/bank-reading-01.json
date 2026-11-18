@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "draft",
+  "status": "approved",
   "notice": "Ngân hàng câu Đọc HSK1 số 01 do AI soạn (Q172), chờ PO duyệt (Q185). 3 bộ r2, 3 bộ r3, 15 câu r4, chỉ chữ (không tranh, không audio); dùng với blueprint hsk1-reading/hsk1-standard để sinh đề khác mock-01 (Q357).",
   "test": {
     "sourceKey": "hsk1:bank-reading-01"
@@ -1803,5 +1803,14 @@
         }
       ]
     }
-  ]
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "Claude (AI), theo uỷ quyền của PO Khổng Văn Hào",
+    "reviewedAt": "2026-11-18",
+    "notes": [
+      "PO uỷ quyền cho Claude duyệt trong phiên chat ngày 18/11/2026 (\"bạn duyệt luôn cho tôi\").",
+      "Đã rà soát độc lập bằng một agent riêng; các lỗi cần sửa và phần lớn đề xuất đã áp dụng; giữ nguyên chỗ đề xuất trái chuẩn GF0025 hoặc vượt cấp HSK1."
+    ]
+  }
 }

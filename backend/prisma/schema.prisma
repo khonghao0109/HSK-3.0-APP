@@ -888,7 +888,8 @@ model Word {
   relatedFrom            WordRelation[]          @relation("WordRelationTo")
   questionWords          QuestionWord[]
 
-  @@unique([hanzi, pinyin])
+  /// Q358: một dòng cho mỗi cách đọc có thanh (干 gān ≠ 干 gàn); index thật là NULLS NOT DISTINCT (migration).
+  @@unique([hanzi, pinyin, pinyinTone])
   @@index([hanzi])
   @@index([pinyinNormalized])
   @@index([isPure, status, deletedAt])
