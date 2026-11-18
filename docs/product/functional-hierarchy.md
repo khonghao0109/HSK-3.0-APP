@@ -103,7 +103,7 @@ HSK System
 │   │   ├── Lesson/Topic immutable revision, review, publish, archive (đã có)
 │   │   ├── Exercise draft/revision/review/publish/archive (đã có V1)
 │   │   ├── 4 dạng publishable; speaking_repeat chỉ author draft
-│   │   ├── Shared NFKC/exact-key/bounded JSON validation cho authoring, import và scoring
+│   │   ├── Shared NFC text/NFKC ID/exact-key/bounded JSON validation cho authoring, import và scoring
 │   │   ├── Listening publish với ready audio, URL không whitespace và media projection an toàn
 │   │   ├── Preview no-write → hash → atomic/idempotent Exercise import (đã có V1)
 │   │   ├── Strict JSON boolean; canonical snapshot/hash không phụ thuộc locale

@@ -225,8 +225,33 @@ describe('dictionary display rules', () => {
     expect(displayPinyin({ pinyin: 'xue2', pinyinTone: 'xué' })).toBe('xué');
     expect(displayPinyin({ pinyin: 'xue2', pinyinTone: null })).toBe('xué');
     expect(displayPinyin({ pinyin: 'xie4', pinyinTone: 'xie4 xie5' })).toBe(
-      'xiè xie',
+      'xièxie',
     );
+  });
+
+  it('writes the syllables of one word together (GB/T 16159-2012)', () => {
+    const cases: [string, string][] = [
+      ['wo3 men5', 'wǒmen'],
+      ['Zhong1 guo2', 'Zhōngguó'],
+      ['ming2 zi5', 'míngzi'],
+      ['Xi1 an1', "Xī'ān"],
+      ['tian1 an1 men2', "tiān'ānmén"],
+      ['yi1 hui4 r5', 'yīhuìr'],
+      ['Li3 Bai2', 'Lǐ Bái'],
+      ['wǒ men', 'wǒmen'],
+      ['xue2', 'xué'],
+      ['ka3 la1 O K', 'kǎ lā O K'],
+      ['A A zhi4', 'A A zhì'],
+      ['yi1 , er4', 'yī , èr'],
+      ['xue2 sheng5 yun4 dong4', 'xuésheng yùndòng'],
+      ['ce4 shi4 ci2 dian3', 'cèshì cídiǎn'],
+      ['ce4 shi4 fu4 xi2 er4', 'cè shì fù xí èr'],
+      ['cèshì cídiǎn', 'cèshì cídiǎn'],
+      ['cèshì fùxí yī', 'cèshì fùxí yī'],
+    ];
+    for (const [input, output] of cases) {
+      expect(displayPinyin({ pinyin: input, pinyinTone: null })).toBe(output);
+    }
   });
 
   it('turns numbered pinyin into tone marks', () => {

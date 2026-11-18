@@ -218,6 +218,8 @@ Cập nhật: 17/11/2026 (thêm Q340–Q347 chờ PO duyệt, đợt unslop; th�
 | Q351 | **Cấu trúc đề HSK1 tạm, chỉ cho đề demo, chờ chốt #15**: theo Nghe 20 + Đọc 20 câu của mẫu đề HSK（一级）chính thức (CTI, 2025-11); chọn tranh dùng một ảnh ghép có nhãn A/B/C (hoặc A–F), lựa chọn là chữ cái; không đổi schema. Chi tiết: `docs/content/hsk1-exam-spec.md` (PO 17/11/2026) | Đề thi thử HSK1 | — |
 | Q352 | **Cho phép `listening_choice` ở Bài 1 pilot vì đã có audio thật** (nới Q173 riêng cho Bài 1; các bài khác giữ Q173) (PO 17/11/2026) | Bài 1 | — |
 | Q353 | **Người duyệt nội dung HSK1 và lát cắt Bài 1 + đề thi thử là PO (Khổng Văn Hào)**; agent không approve hay publish (PO 17–18/11/2026) | Nội dung HSK1 | — |
+| Q354 | **Pinyin của một từ viết liền các âm tiết theo GB/T 16159-2012 (汉语拼音正词法基本规则)**: "wǒ men" → "wǒmen", "Zhōng guó" → "Zhōngguó"; âm tiết bắt đầu bằng a/o/e sau âm tiết khác có dấu cách âm (Xī'ān); âm tiết viết hoa sau âm tiết đầu giữ khoảng cách (tên riêng: Lǐ Bái); chuỗi có dấu câu, số hoặc chữ Latin đánh vần (A A zhì) giữ nguyên. API không đổi, frontend đổi trong `displayPinyin` (PO 18/11/2026) | Tra từ, chi tiết từ, trang Từ vựng của bài, thẻ ôn tập | Dữ liệu CC-CEDICT tách âm tiết bằng dấu cách |
+| Q355 | **Thẻ trong trang Từ vựng của bài cao bằng nhau**: mọi thẻ có một ô vuông cùng cỡ ở trên; từ có ảnh hiện ảnh rồi chữ Hán, từ không có ảnh hiện chữ Hán cỡ lớn trong ô (cỡ chữ theo số chữ), rồi pinyin và nghĩa (PO 18/11/2026) | Trang Từ vựng của bài (M2.5f) | Trước đó thẻ có ảnh cao gấp ba thẻ không ảnh |
 
 Ghi chú: **Q129** để dành cho chính sách khoá đăng nhập (login lockout), chờ PO; không dùng cho M4.2c.
 

@@ -109,7 +109,7 @@ listener riêng, cardinality cố định), `jobs` (port `JobQueuePort`, adapter
   không trả `LessonExercise.answer`, không trả `speaking_repeat`, listening chỉ khi
   audio `ready` và URL không rỗng.
 - CMS: `ContentRevision`, `ContentReview`, `AuditLog` append-only (trigger DB). Hash
-  revision dùng canonical JSON (khoá sắp xếp, NFKC) không phụ thuộc locale. Lock order
+  revision dùng canonical JSON (khoá sắp xếp; human text NFC, stable ID NFKC — ADR-002 §1) không phụ thuộc locale. Lock order
   publish: `User` admin `FOR SHARE` → `Lesson`/`Topic`/`LessonExercise` `FOR UPDATE` →
   `Media` `FOR SHARE` khi listening. Import: lock actor → `DataSource` → parent theo id
   tăng dần; interactive transaction `maxWait 5s`, `timeout 30s`; tối đa 100 dòng.

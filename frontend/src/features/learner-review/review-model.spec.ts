@@ -114,7 +114,7 @@ describe('reviewCardView (Q260)', () => {
     });
     expect(view).toEqual({
       hanzi: '学习',
-      pinyin: 'xué xí',
+      pinyin: 'xuéxí', // Q354,
       meaning: 'to study',
       example: null,
     });

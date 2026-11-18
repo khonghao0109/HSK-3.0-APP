@@ -6,6 +6,7 @@ import { canonicalJson } from '../utils/canonical-json';
 import {
   LESSON_EXERCISE_AUTHORING_LIMITS,
   LessonExerciseAuthoringValidationError,
+  normalizeLessonExerciseIdentifier,
   normalizeLessonExerciseText,
   validateArrange,
   validateChoice,
@@ -102,7 +103,7 @@ export function isQuestionAuthoringType(
  * words joined with `-`.
  */
 export function slugifyQuestionTag(name: string): string {
-  return normalizeLessonExerciseText(name)
+  return normalizeLessonExerciseIdentifier(name)
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .replace(/[đĐ]/gu, 'd')

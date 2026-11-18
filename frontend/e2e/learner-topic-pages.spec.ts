@@ -6,6 +6,7 @@ import {
   call,
   readyLessonId,
   registerReadyLearner,
+  sharedExamMedia,
 } from './support/learner-fixtures';
 
 // M2.5f (Q175): the Từ vựng / Ngữ pháp pages of a real lesson, through the BFF
@@ -132,7 +133,8 @@ test.describe('Lesson topic pages (M2.5f)', () => {
     ).toBeVisible();
     const word = card.getByRole('listitem').filter({ hasText: WORD.hanzi });
     await expect(word).toContainText('phê bình văn học');
-    await expect(word).toContainText('wén xué píng lùn');
+    // Q354: four syllables are two words (GB/T 16159-2012).
+    await expect(word).toContainText('wénxué pínglùn');
     await expect(card).not.toContainText('literary criticism');
     await expect(page.getByText(GRAMMAR_TITLE)).toHaveCount(0);
 
@@ -176,5 +178,61 @@ test.describe('Lesson topic pages (M2.5f)', () => {
       path: testInfo.outputPath('grammar.png'),
       fullPage: true,
     });
+  });
+
+  // Q350/Q355: cover image on the lesson page, word image on the vocabulary
+  // page; a word without an image gets the same square tile with its hanzi.
+  test('shows the lesson cover and word images, and a tile without an image', async ({
+    page,
+    baseURL,
+  }) => {
+    const api = await playwrightRequest.newContext();
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const wordId = Number(
+      queryDisposableDb(
+        `SELECT id FROM "Word" WHERE hanzi = ${sqlLiteral(WORD.hanzi)} AND pinyin = ${sqlLiteral(WORD.pinyin)}`,
+      ),
+    );
+    const setImages = (imageId: number | null) =>
+      call(api, 'PUT', `/admin/cms/lessons/${lessonId}/images`, admin, {
+        coverImageId: imageId,
+        wordImages: [{ wordId, imageId }],
+      });
+    try {
+      const { imageId } = await sharedExamMedia(api, admin);
+      await setImages(imageId);
+      await registerReadyLearner(page, baseURL);
+
+      await page.goto(`/learn/lessons/${lessonId}`);
+      const cover = page.locator('.lesson-hero__img--cover img');
+      await expect(cover).toBeVisible();
+      await expect
+        .poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalWidth))
+        .toBeGreaterThan(0);
+
+      await page.goto(`/learn/lessons/${lessonId}/vocabulary`);
+      const card = page.getByRole('region', { name: VOCAB_TITLE });
+      const word = card.getByRole('listitem').filter({ hasText: WORD.hanzi });
+      const wordImg = word.locator('img.topic-word__img');
+      await expect(wordImg).toBeVisible();
+      await expect
+        .poll(() =>
+          wordImg.evaluate((img: HTMLImageElement) => img.naturalWidth),
+        )
+        .toBeGreaterThan(0);
+      await expect(word.locator('.topic-word__tile')).toHaveCount(0);
+
+      await setImages(null);
+      await page.reload();
+      await expect(word.locator('img')).toHaveCount(0);
+      const tile = word.locator('.topic-word__tile');
+      await expect(tile).toHaveText(WORD.hanzi);
+      const box = await tile.boundingBox();
+      if (!box) throw new Error('tile has no box');
+      expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
+    } finally {
+      await setImages(null);
+      await api.dispose();
+    }
   });
 });

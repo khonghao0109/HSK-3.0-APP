@@ -1,6 +1,8 @@
 import {
   LESSON_EXERCISE_AUTHORING_LIMITS,
   LessonExerciseAuthoringValidationError,
+  lessonExerciseTextMatchKey,
+  normalizeLessonExerciseIdentifier,
   normalizeLessonExerciseText,
   validateLessonExerciseAuthoring,
 } from './lesson-exercise-authoring.validator';
@@ -86,8 +88,10 @@ describe('LessonExercise authoring validator', () => {
     });
   });
 
-  it('normalizes persisted text and identifier comparisons with Unicode NFKC', () => {
-    expect(normalizeLessonExerciseText('ＡＢＣ')).toBe('ABC');
+  it('normalizes persisted human text with NFC and identifiers with NFKC', () => {
+    expect(normalizeLessonExerciseText('ＡＢＣ？')).toBe('ＡＢＣ？');
+    expect(normalizeLessonExerciseText('Vie\u0302\u0323t')).toBe('Việt');
+    expect(normalizeLessonExerciseIdentifier('ｏｐｔ-a')).toBe('opt-a');
 
     const canonical = validateLessonExerciseAuthoring(
       {
@@ -105,15 +109,125 @@ describe('LessonExercise authoring validator', () => {
     );
 
     expect(canonical).toMatchObject({
-      prompt: 'Choose',
+      prompt: 'Ｃｈｏｏｓｅ',
       content: {
         options: [
-          { id: 'opt-a', text: 'ABC' },
+          { id: 'opt-a', text: 'ＡＢＣ' },
           { id: 'opt-b', text: '你好' },
         ],
       },
       answer: { optionId: 'opt-a' },
     });
+  });
+
+  describe('CJK full-width punctuation (ADR-002 §1)', () => {
+    // U+FF1F ？ U+FF01 ！ U+FF0C ， U+FF1A ： U+FF1B ； U+FF08/U+FF09 （） and
+    // U+3001 、 U+3002 。 U+300A/U+300B 《》 U+300C/U+300D 「」.
+    const punctuated =
+      '他___什么名字？ 好！ 你，我：他；（她）、。《书》「对」';
+
+    it.each(['draft', 'publish'] as const)(
+      'keeps prompt, option, explanation text byte-identical in %s mode',
+      (mode) => {
+        const canonical = validateLessonExerciseAuthoring(
+          {
+            type: 'mcq',
+            prompt: `  ${punctuated}  `,
+            content: {
+              options: [
+                { id: 'opt-a', text: '叫？' },
+                { id: 'opt-b', text: '在！' },
+              ],
+            },
+            answer: { optionId: 'opt-a' },
+            explanation: `说明：${punctuated}`,
+          },
+          mode,
+        );
+
+        expect(canonical.prompt).toBe(punctuated);
+        expect(canonical.content).toEqual({
+          options: [
+            { id: 'opt-a', text: '叫？' },
+            { id: 'opt-b', text: '在！' },
+          ],
+        });
+        expect(canonical.explanation).toBe(`说明：${punctuated}`);
+      },
+    );
+
+    it('keeps fill_blank accepted texts, arrange tokens and speaking text', () => {
+      expect(
+        validateLessonExerciseAuthoring(
+          {
+            type: 'fill_blank',
+            prompt: '你___什么名字？（gõ chữ Hán hoặc pinyin）',
+            content: {},
+            answer: { acceptedTexts: ['叫？', 'jiào'] },
+          },
+          'publish',
+        ),
+      ).toMatchObject({
+        prompt: '你___什么名字？（gõ chữ Hán hoặc pinyin）',
+        answer: { acceptedTexts: ['叫？', 'jiào'] },
+      });
+
+      expect(
+        validateLessonExerciseAuthoring(
+          {
+            type: 'arrange_sentence',
+            prompt: '排列：',
+            content: {
+              tokens: [
+                { id: 'tok-1', text: '你好' },
+                { id: 'tok-2', text: '！' },
+              ],
+            },
+            answer: { tokenIds: ['tok-1', 'tok-2'] },
+          },
+          'publish',
+        ).content,
+      ).toEqual({
+        tokens: [
+          { id: 'tok-1', text: '你好' },
+          { id: 'tok-2', text: '！' },
+        ],
+      });
+
+      expect(
+        validateLessonExerciseAuthoring(
+          {
+            type: 'speaking_repeat',
+            prompt: '跟读：',
+            content: { referenceText: '你好！' },
+            answer: {},
+          },
+          'draft',
+        ).content,
+      ).toEqual({ referenceText: '你好！' });
+    });
+
+    it('is idempotent on content already stored with the old NFKC rule', () => {
+      const legacy = validateLessonExerciseAuthoring(
+        { ...mcq, prompt: '他___什么名字?' },
+        'publish',
+      );
+      expect(validateLessonExerciseAuthoring(legacy, 'publish')).toEqual(
+        legacy,
+      );
+      expect(legacy.prompt).toBe('他___什么名字?');
+    });
+  });
+
+  it('builds fill_blank match keys with NFKC so ASCII and full-width forms compare equal', () => {
+    expect(lessonExerciseTextMatchKey('  叫？ ', false)).toBe(
+      lessonExerciseTextMatchKey('叫?', false),
+    );
+    expect(lessonExerciseTextMatchKey('（你好）！', false)).toBe('(你好)!');
+    expect(lessonExerciseTextMatchKey('ＡＢＣ\u3000你好', false)).toBe(
+      'abc 你好',
+    );
+    expect(lessonExerciseTextMatchKey('ＡＢＣ', true)).toBe('ABC');
   });
 
   it.each([

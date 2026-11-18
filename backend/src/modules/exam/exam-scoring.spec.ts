@@ -233,6 +233,38 @@ describe('scoreExamAttempt', () => {
       ]);
     });
 
+    it('accepts fill_blank answers typed with ASCII or full-width punctuation', () => {
+      const payload = makePayload([
+        {
+          skill: Skill.reading,
+          questions: [
+            {
+              key: 'q1',
+              type: QuestionType.fill_blank,
+              correctAnswer: { acceptedTexts: ['叫？'] },
+            },
+            {
+              key: 'q2',
+              type: QuestionType.fill_blank,
+              correctAnswer: { acceptedTexts: ['你好,老师!'] },
+            },
+          ],
+        },
+      ]);
+
+      const result = scoreExamAttempt(
+        makeInput(payload, [
+          ['q1', { text: '叫?' }],
+          ['q2', { text: '你好，老师！' }],
+        ]),
+      );
+
+      expect(result.questions.map((question) => question.isCorrect)).toEqual([
+        true,
+        true,
+      ]);
+    });
+
     it('honours caseSensitive true for fill_blank', () => {
       const payload = makePayload([
         {

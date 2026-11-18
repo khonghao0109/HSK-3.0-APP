@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -124,7 +125,7 @@ export async function LessonTopicsView({
   );
 }
 
-function WordList({ words }: { words: LessonWords['words'] }) {
+export function WordList({ words }: { words: LessonWords['words'] }) {
   if (words.length === 0) return null;
   return (
     <ul className="topic-words" aria-label={`${words.length} từ trong bài`}>
@@ -134,16 +135,28 @@ function WordList({ words }: { words: LessonWords['words'] }) {
             className="topic-word__link"
             href={`/learn/dictionary/${word.id}`}
           >
-            {word.image && (
-              <LessonImage
-                className="topic-word__img"
-                mediaId={word.image.id}
-                altText={word.image.altText}
-              />
+            {/* Q355: every card has the same square tile, so rows line up:
+                the word's image, or the word itself in large type. */}
+            {word.image ? (
+              <>
+                <LessonImage
+                  className="topic-word__img"
+                  mediaId={word.image.id}
+                  altText={word.image.altText}
+                />
+                <span className="topic-word__hz" lang="zh-Hans">
+                  {word.hanzi}
+                </span>
+              </>
+            ) : (
+              <span
+                className="topic-word__tile"
+                lang="zh-Hans"
+                style={{ '--hz-len': [...word.hanzi].length } as CSSProperties}
+              >
+                {word.hanzi}
+              </span>
             )}
-            <span className="topic-word__hz" lang="zh-Hans">
-              {word.hanzi}
-            </span>
             <span className="topic-word__py">{displayPinyin(word)}</span>
             <span className="topic-word__vi">
               {firstVietnamese(word.meanings) ?? NO_VIETNAMESE}

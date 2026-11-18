@@ -715,6 +715,87 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     expect(JSON.stringify(audits)).not.toContain('authoritative');
   });
 
+  it('10. keeps CJK full-width punctuation byte-identical on create and revision', async () => {
+    const createdPrompt = '他___什么名字？（Anh ấy tên là gì?）';
+    const created = await adminPost('/admin/cms/exercises')
+      .send({
+        lessonId,
+        topicId,
+        type: 'mcq',
+        prompt: `  ${createdPrompt}  `,
+        content: {
+          options: [
+            { id: 'opt-a', text: '叫！' },
+            { id: 'opt-b', text: '在，' },
+          ],
+        },
+        answer: { optionId: 'opt-a' },
+        explanation: '说明：你；我。',
+        orderIndex: 60,
+      })
+      .expect(201);
+    const createdBody = created.body as ExerciseMutationBody;
+    const punctuatedExerciseId = createdBody.data.exercise.id;
+
+    await expect(
+      prisma.lessonExercise.findUniqueOrThrow({
+        where: { id: punctuatedExerciseId },
+        select: { prompt: true, content: true, explanation: true },
+      }),
+    ).resolves.toEqual({
+      prompt: createdPrompt,
+      content: {
+        options: [
+          { id: 'opt-a', text: '叫！' },
+          { id: 'opt-b', text: '在，' },
+        ],
+      },
+      explanation: '说明：你；我。',
+    });
+
+    const revisedPrompt = '你好，老师！ 《书》「对」、。';
+    const revision = await adminPost(
+      `/admin/cms/exercises/${punctuatedExerciseId}/revisions`,
+    )
+      .send({
+        type: 'mcq',
+        prompt: revisedPrompt,
+        content: {
+          options: [
+            { id: 'opt-a', text: '对：' },
+            { id: 'opt-b', text: '不对；' },
+          ],
+        },
+        answer: { optionId: 'opt-b' },
+        explanation: '（注意）',
+        orderIndex: 60,
+      })
+      .expect(201);
+    expect(revision.body.data.revision.revision).toBe(2);
+
+    await expect(
+      prisma.lessonExercise.findUniqueOrThrow({
+        where: { id: punctuatedExerciseId },
+        select: { prompt: true, content: true, explanation: true },
+      }),
+    ).resolves.toEqual({
+      prompt: revisedPrompt,
+      content: {
+        options: [
+          { id: 'opt-a', text: '对：' },
+          { id: 'opt-b', text: '不对；' },
+        ],
+      },
+      explanation: '（注意）',
+    });
+    const storedRevision = await prisma.contentRevision.findUniqueOrThrow({
+      where: { id: revision.body.data.revision.id as number },
+      select: { snapshot: true },
+    });
+    expect(JSON.stringify(storedRevision.snapshot)).toContain(revisedPrompt);
+    expect(JSON.stringify(storedRevision.snapshot)).toContain('（注意）');
+  });
+
   async function createListeningExercise(
     mediaId: number,
     orderIndex: number,
