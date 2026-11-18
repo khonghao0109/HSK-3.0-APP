@@ -96,6 +96,13 @@ Nét chữ (Q357): `Character.strokeData = { strokes[], medians[] }` và `stroke
 content/hanzi/makemeahanzi/graphics-hsk1.jsonl` — 300 chữ của từ vựng HSK1; không ghi đè chữ của nguồn khác,
 không lấy pinyin/Hán Việt (`dictionary.txt` là LGPL, không dùng). `CharacterLevel` vẫn trống tới khi có 汉字表 chính thức.
 
+Điểm ngữ pháp và liên kết câu hỏi (Q357): bản nháp `content/hsk1/grammar/points.json` (38 điểm `HSK1-G001…G038`,
+DataSource `HSK30_GRAMMAR_CLAUDE_DRAFT`, migration `20261119140000_hsk1_grammar_data_source`) và
+`content/hsk1/exam/mock-01-links.json` (từ đích + mã ngữ pháp cho 40 câu mock-01). `npm run content:check:grammar`
+kiểm (mã liên tục, ví dụ ≤ cấp, từ đích là từ ≤ cấp và có trong câu, mã ngữ pháp tồn tại) và in `contentSha256`;
+`npm run content:import:grammar -- [--ledger <exam-ledger.json>]` chỉ nạp phần có `review.status = approved`,
+người duyệt, ngày và hash khớp (Q185) → `GrammarPoint` (`published`), `QuestionWord`, `QuestionGrammarPoint`.
+
 Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json>...` (module
 `backend/src/modules/content-levels/level-vocabulary.ts`) bảo đảm nội dung cấp N chỉ dùng từ cấp ≤ N theo
 `scripts/dictionary/raw/hsk*.json`; tên riêng khai trong `properNames[]` hoặc `--allow`.

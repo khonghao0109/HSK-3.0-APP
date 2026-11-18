@@ -71,6 +71,8 @@
     "content:check:pilot": "ts-node scripts/content/check-pilot-content.ts",
     "content:check:level": "ts-node scripts/content/check-content-level.ts",
     "content:import:blueprint": "ts-node scripts/content/import-exam-blueprint.ts",
+    "content:check:grammar": "ts-node scripts/content/grammar-links.ts check",
+    "content:import:grammar": "ts-node scripts/content/grammar-links.ts import",
     "content:tts": "ts-node scripts/content/generate-tts.ts",
     "content:import:exam": "ts-node scripts/content/import-hsk1-exam.ts",
     "content:import:lesson-images": "ts-node scripts/content/import-hsk1-lesson-images.ts"
