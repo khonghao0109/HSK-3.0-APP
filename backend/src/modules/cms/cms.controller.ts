@@ -66,6 +66,8 @@ import { CreateQuestionRevisionDto } from './dto/create-question-revision.dto';
 import { CreateTestDto } from './dto/create-test.dto';
 import { PublishTestDto } from './dto/publish-test.dto';
 import { ReplaceTestStructureDto } from './dto/replace-test-structure.dto';
+import { GenerateTestDto, GeneratedTestDto } from './dto/generate-test.dto';
+import { ExamGenerationService } from './exam-generation/exam-generation.service';
 import { UpdateTestDto } from './dto/update-test.dto';
 import {
   CommitExerciseImportDto,
@@ -124,6 +126,7 @@ export class CmsController {
     private readonly mediaIngestionService: MediaIngestionService,
     private readonly dataSourcesService: DataSourcesService,
     private readonly mediaIngestionReconciliationService: MediaIngestionReconciliationService,
+    private readonly examGenerationService: ExamGenerationService,
   ) {}
 
   // TL-93: static `tags` is declared before every parametrised route so an
@@ -673,6 +676,20 @@ export class CmsController {
     @Headers('x-request-id') requestId?: string,
   ) {
     return this.testAuthoringService.createTest(request.user, dto, {
+      correlationId: correlationId(requestId),
+    });
+  }
+
+  /** Q357: sinh đề draft từ blueprint (route tĩnh, khai báo trước `tests/:testId`). */
+  @Post('tests/generate')
+  @Header('Cache-Control', 'no-store')
+  @ApiEnvelope(GeneratedTestDto)
+  generateTest(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: GenerateTestDto,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<ApiSuccessResponse<GeneratedTestDto>> {
+    return this.examGenerationService.generate(request.user, dto, {
       correlationId: correlationId(requestId),
     });
   }

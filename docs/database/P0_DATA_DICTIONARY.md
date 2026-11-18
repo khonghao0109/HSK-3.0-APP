@@ -119,7 +119,7 @@ Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json
 | `ImportJob` | Job validate/import file có thể retry. | provenance, entity type, status, `idempotencyKey`, filename/checksum, row counters, summary/timestamps. | Idempotency unique; counters không âm và không vượt total. |
 | `ImportRowError` | Lỗi có địa chỉ theo dòng import. | `rowNumber`, `errorCode`, `message`, `normalizedPayload`. | Unique `(importJobId, rowNumber, errorCode)`; payload phải được loại secret/PII không cần thiết. |
 
-## 8. Exam engine và result — 14 bảng
+## 8. Exam engine và result — 14 bảng + 5 bảng blueprint/bộ câu
 
 | Bảng | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
 | --- | --- | --- | --- |
@@ -137,6 +137,17 @@ Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json
 | `ExamAttemptEvent` | Timeline attempt append-only. | event type, `idempotencyKey`, payload, occurred time. | Unique `(attemptId, idempotencyKey)`; trigger chặn UPDATE/DELETE. Event `submitted` (M4.2c) có `metadata = { reason: 'user_submit', answeredCount, unansweredCount, flaggedCount }`, không chứa nội dung đáp án/điểm/result; event `timed_out` dùng `metadata.reason` ∈ `expired_on_start|expired_on_save|expired_on_read|expired_on_submit`. |
 | `Result` | Kết quả công bố, tương thích dữ liệu cũ và liên kết attempt mới. | user/test/attempt, `score`/`maxScore`, `passed`, `awardedBand`, `scoringVersion`, `detailJson`, `publishedAt`. | `attemptId` unique; `awardedBand` phải thuộc Level của Test; trigger buộc cùng user/test và attempt đã final; CHECK `maxScore` NULL hoặc (`maxScore` > 0 và `score` nằm trong 0..`maxScore`). |
 | `ResultSkillScore` | Điểm thành phần theo skill. | `skill`, `score`, `total`. | Unique `(resultId, skill)`; `score` 0..`total`. |
+
+### 8.1 Blueprint và bộ câu (Q357, migration `20261119120000_exam_blueprints_question_sets`)
+
+| Bảng / cột | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
+| --- | --- | --- | --- |
+| `ExamBlueprint` | Cấu trúc đề chuẩn theo cấp, lưu thành dữ liệu. | `code`, `levelId`, title/instruction, `durationMinutes`, `passScore`, `version`, `status`. | `code` unique (slug); duration/version dương; passScore ≥ 0; blueprint published không bị script ghi đè. |
+| `ExamBlueprintSection` | Phần thi theo kỹ năng. | `skill`, title/instruction, `orderIndex`. | Unique `(blueprintId, orderIndex)`; cascade theo blueprint. |
+| `ExamBlueprintPart` | Một dạng câu trong phần thi. | `key`, title/instruction, `questionType`, `format` (slug tag), `questionCount`, `fromSet`. | Unique `(sectionId, orderIndex)` và `(sectionId, key)`; `questionCount` 1..50. |
+| `QuestionSet` | Bộ câu dùng chung một tranh ghép / bảng đáp án. | `sourceKey`, `levelId`, `skill`, `format`, title/instruction, `audioId`/`imageId`, `status`. | `sourceKey` unique; media `SET NULL`. |
+| `QuestionSetItem` | Câu thuộc bộ nào. | `setId`, `questionId`, `orderIndex`. | Mỗi câu tối đa một bộ (`questionId` unique); unique `(setId, orderIndex)`; metadata ngoài revision. |
+| `Test.blueprintId`, `Test.generationSeed` | Đề sinh từ blueprint nào, seed nào. | FK tuỳ chọn `SET NULL`, seed chuỗi. | CHECK có seed thì phải có blueprint. |
 
 ## 9. Hợp đồng JSON P0
 

@@ -439,6 +439,11 @@ erDiagram
 
 ```mermaid
 erDiagram
+  ExamBlueprint ||--o{ ExamBlueprintSection : has
+  ExamBlueprintSection ||--o{ ExamBlueprintPart : has
+  ExamBlueprint o|--o{ Test : generates
+  QuestionSet ||--o{ QuestionSetItem : groups
+  Question ||--o| QuestionSetItem : member_of
   Level ||--o{ Question : classifies
   Level ||--o{ Test : classifies
   Question ||--o{ QuestionTag : tagged

@@ -283,47 +283,7 @@ export class TestAuthoringService {
         this.assertDraftOnly(test);
         this.assertExpectedUpdatedAt(test, dto.expectedUpdatedAt);
 
-        const placements = flattenPlacements(dto.sections);
-        if (placements.length > TEST_STRUCTURE_LIMITS.maxQuestionsPerTest) {
-          throw structureException(
-            'sections',
-            `A test cannot contain more than ${String(
-              TEST_STRUCTURE_LIMITS.maxQuestionsPerTest,
-            )} questions.`,
-          );
-        }
-        this.assertNoDuplicateQuestions(placements);
-        // H3: take the same Question FOR SHARE locks as publish (ascending id)
-        // before reading usability, so an archive cannot interleave between the
-        // check and the TestQuestion insert.
-        await this.lockQuestions(
-          tx,
-          uniqueSorted(placements.map((placement) => placement.questionId)),
-        );
-        await this.assertQuestionsUsable(tx, placements);
-        for (let i = 0; i < dto.sections.length; i += 1) {
-          const section = dto.sections[i];
-          if (!section) continue;
-          for (let j = 0; j < section.groups.length; j += 1) {
-            const group = section.groups[j];
-            if (!group) continue;
-            const field = `sections[${String(i)}].groups[${String(j)}]`;
-            await this.assertGroupMedia(
-              tx,
-              group.audioId ?? null,
-              MediaType.audio,
-              `${field}.audioId`,
-            );
-            await this.assertGroupMedia(
-              tx,
-              group.imageId ?? null,
-              MediaType.image,
-              `${field}.imageId`,
-            );
-          }
-        }
-        await this.deleteStructure(tx, testId);
-        await this.createStructure(tx, testId, dto);
+        await this.applyStructure(tx, testId, dto.sections);
         await tx.test.update({
           where: { id: testId },
           data: { updatedById: actor.id },
@@ -587,6 +547,105 @@ export class TestAuthoringService {
           success: true as const,
           data: this.toTestDetail(duplicate),
         };
+      }),
+    );
+  }
+
+  /** Kiểm (giới hạn, trùng câu, câu dùng được, media nhóm) rồi ghi lại toàn bộ cấu trúc. */
+  private async applyStructure(
+    tx: Prisma.TransactionClient,
+    testId: number,
+    sections: ReplaceTestStructureDto['sections'],
+  ): Promise<void> {
+    const placements = flattenPlacements(sections);
+    if (placements.length > TEST_STRUCTURE_LIMITS.maxQuestionsPerTest) {
+      throw structureException(
+        'sections',
+        `A test cannot contain more than ${String(
+          TEST_STRUCTURE_LIMITS.maxQuestionsPerTest,
+        )} questions.`,
+      );
+    }
+    this.assertNoDuplicateQuestions(placements);
+    // H3: take the same Question FOR SHARE locks as publish (ascending id)
+    // before reading usability, so an archive cannot interleave between the
+    // check and the TestQuestion insert.
+    await this.lockQuestions(
+      tx,
+      uniqueSorted(placements.map((placement) => placement.questionId)),
+    );
+    await this.assertQuestionsUsable(tx, placements);
+    for (let i = 0; i < sections.length; i += 1) {
+      const section = sections[i];
+      if (!section) continue;
+      for (let j = 0; j < section.groups.length; j += 1) {
+        const group = section.groups[j];
+        if (!group) continue;
+        const field = `sections[${String(i)}].groups[${String(j)}]`;
+        await this.assertGroupMedia(
+          tx,
+          group.audioId ?? null,
+          MediaType.audio,
+          `${field}.audioId`,
+        );
+        await this.assertGroupMedia(
+          tx,
+          group.imageId ?? null,
+          MediaType.image,
+          `${field}.imageId`,
+        );
+      }
+    }
+    await this.deleteStructure(tx, testId);
+    await this.createStructure(tx, testId, { sections });
+  }
+
+  /**
+   * Q357: tạo đề draft kèm cấu trúc trong một transaction (đề sinh từ blueprint),
+   * cùng kiểm tra như `createTest` + `replaceTestStructure`.
+   */
+  async createGeneratedTest(
+    actor: CmsActor,
+    input: {
+      levelId: number;
+      title: string;
+      instruction: string | null;
+      duration: number;
+      passScore: number | null;
+      blueprintId: number;
+      generationSeed: string;
+      sections: ReplaceTestStructureDto['sections'];
+    },
+    context: TestMutationContext,
+  ) {
+    assertAdminActor(actor);
+    return this.executeMutation(async () =>
+      this.prisma.$transaction(async (tx) => {
+        await lockActiveCmsActor(tx, actor.id);
+        await this.assertLevelExists(tx, input.levelId);
+        const created = await tx.test.create({
+          data: {
+            levelId: input.levelId,
+            title: input.title,
+            instruction: normalizeOptionalText(input.instruction),
+            duration: input.duration,
+            passScore: input.passScore,
+            status: ContentStatus.draft,
+            blueprintId: input.blueprintId,
+            generationSeed: input.generationSeed,
+            createdById: actor.id,
+            updatedById: actor.id,
+          },
+          select: { id: true },
+        });
+        await this.applyStructure(tx, created.id, input.sections);
+        const test = await this.loadTestDetail(tx, created.id);
+        await this.writeAudit(tx, actor.id, context, {
+          action: 'test.generated',
+          testId: test.id,
+          test,
+        });
+        return this.toTestDetail(test);
       }),
     );
   }
@@ -870,7 +929,7 @@ export class TestAuthoringService {
   private async createStructure(
     tx: Prisma.TransactionClient,
     testId: number,
-    dto: ReplaceTestStructureDto,
+    dto: Pick<ReplaceTestStructureDto, 'sections'>,
   ): Promise<void> {
     let orderIndex = 0;
     for (let i = 0; i < dto.sections.length; i += 1) {

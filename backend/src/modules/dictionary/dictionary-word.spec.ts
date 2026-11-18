@@ -69,6 +69,7 @@ function wordRecord(): WordDetailRecord {
     pinyin: 'xué xí',
     pinyinNormalized: 'xuexi',
     pinyinTone: 'xue2 xi2',
+    hanViet: null,
     example: null,
     isPure: true,
     audioId: 3,

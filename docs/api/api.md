@@ -1277,6 +1277,34 @@ hàm `collectTestPublishBlockers` này, nên đề đã xuất bản mà media c
 `POST /exam/tests/:testId/attempts` trả `409 EXAM_TEST_UNAVAILABLE` kèm vị trí câu. Bài đang
 làm **không** bị ảnh hưởng: nội dung đã đóng băng trong snapshot (Q120/Q121).
 
+#### A.9c-1 Sinh đề từ blueprint (Q357)
+
+`POST /api/v1/admin/cms/tests/generate` (admin, `Cache-Control: no-store`) tạo một đề `draft` từ
+`ExamBlueprint` và ngân hàng câu hỏi, trong **một transaction** với cùng kiểm tra như `POST tests` +
+`PUT tests/:testId/structure` (khoá câu `FOR SHARE`, câu không archive, media nhóm dùng được).
+
+Body `GenerateTestDto`: `blueprintCode` (slug, bắt buộc), `seed?` (`[A-Za-z0-9._:-]{1,64}`, bỏ trống thì
+server tự tạo), `title?` (mặc định `<blueprint.title> · <seed>`), `includeDraft?` (mặc định `false`: chỉ
+câu và bộ câu `published`), `excludeTestIds?` (≤ 50, không dùng lại câu của các đề này).
+
+Quy tắc chọn (hàm thuần `planExam`, cùng seed + cùng ngân hàng → cùng đề):
+- Phần thường: câu cùng cấp blueprint, đúng `skill`, `type`, có tag slug = `part.format`, không thuộc bộ
+  câu nào; ưu tiên câu ít được đề chưa archive dùng, tránh trùng từ đích (`QuestionWord`) trong cùng đề,
+  rồi xếp theo `difficulty` tăng dần.
+- Phần `fromSet`: trọn một `QuestionSet` đúng `format` có đúng `questionCount` câu dùng được, giữ thứ
+  tự trong bộ; `imageId`/`audioId` của bộ thành media của nhóm.
+- Mỗi phần thành một group (title/instruction của phần), mỗi section của blueprint thành một section.
+
+`201` → `GeneratedTestDto { blueprintCode, seed, parts[{ key, setId, questionIds }], test: AdminTestDetailDto }`;
+`Test.blueprintId`/`generationSeed` lưu lại để tái lập. Lỗi: blueprint không có → `404 BLUEPRINT_NOT_FOUND`;
+blueprint archived → `409 BLUEPRINT_ARCHIVED`; thiếu câu/bộ câu → `422 BLUEPRINT_POOL_INSUFFICIENT`
+`{ part, needed, available, fromSet }`; DTO sai → `400`. Audit `test.generated` (cùng `afterSummary`
+như `test.created`).
+
+Nạp blueprint và bộ câu: `npm run content:import:blueprint -- --file content/hsk1/exam/blueprint-hsk1.json
+[--exam content/hsk1/exam/mock-01.json --ledger <ledger.json>]` (ghi trực tiếp qua Prisma, idempotent; blueprint
+`published` không bị ghi đè; bộ câu `published` khi mọi câu đã published).
+
 ### A.9d Thi thử — học viên (M4.2a/M4.2b/M4.2c/M4.3)
 
 Envelope §1. 10 endpoint learner (`JwtAuthGuard`, account `active` và chưa soft-delete); mọi

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "notice": "Blueprint HSK1 theo cấu trúc tạm của đề thử mock-01 (chờ chốt #15, Q351). Bản nháp do AI soạn (Q172), người duyệt: PO. hsk1-reading = chỉ phần Đọc, như đề demo.",
+  "blueprints": [
+    {
+      "code": "hsk1-standard",
+      "level": "HSK1",
+      "title": "Đề thi thử HSK1",
+      "instruction": "Đề gồm 40 câu: Nghe 20 câu và Đọc 20 câu. Mỗi câu chọn một đáp án đúng.",
+      "durationMinutes": 40,
+      "passScore": 120,
+      "version": 1,
+      "status": "draft",
+      "sections": [
+        {
+          "skill": "listening",
+          "title": "Nghe",
+          "instruction": "Phần nghe gồm 4 phần, 20 câu. Mỗi đoạn được đọc hai lần.",
+          "parts": [
+            {
+              "key": "l1",
+              "title": "Phần 1",
+              "instruction": "Nghe một câu, chọn tranh đúng trong ba tranh A, B, C.",
+              "questionType": "mcq",
+              "format": "nghe-chon-tranh",
+              "questionCount": 5,
+              "fromSet": false
+            },
+            {
+              "key": "l2",
+              "title": "Phần 2",
+              "instruction": "Nghe một câu hỏi, chọn câu trả lời phù hợp.",
+              "questionType": "mcq",
+              "format": "nghe-chon-cau-tra-loi",
+              "questionCount": 5,
+              "fromSet": false
+            },
+            {
+              "key": "l3",
+              "title": "Phần 3",
+              "instruction": "Nghe đoạn hội thoại ngắn, chọn tranh phù hợp trong sáu tranh A–F. Mỗi tranh dùng tối đa một lần, có một tranh thừa.",
+              "questionType": "mcq",
+              "format": "nghe-hoi-thoai-chon-tranh",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "l4",
+              "title": "Phần 4",
+              "instruction": "Nghe một đoạn nói và câu hỏi, chọn đáp án đúng.",
+              "questionType": "mcq",
+              "format": "nghe-doan-chon-dap-an",
+              "questionCount": 5,
+              "fromSet": false
+            }
+          ]
+        },
+        {
+          "skill": "reading",
+          "title": "Đọc",
+          "instruction": "Phần đọc gồm 4 phần, 20 câu.",
+          "parts": [
+            {
+              "key": "r1",
+              "title": "Phần 1",
+              "instruction": "Đọc câu, chọn tranh phù hợp trong sáu tranh A–F. Có một tranh thừa.",
+              "questionType": "mcq",
+              "format": "doc-chon-tranh",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r2",
+              "title": "Phần 2",
+              "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+              "questionType": "mcq",
+              "format": "doc-ghep-cau",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r3",
+              "title": "Phần 3",
+              "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+              "questionType": "mcq",
+              "format": "chon-tu-dien",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r4",
+              "title": "Phần 4",
+              "instruction": "Đọc đoạn văn ngắn rồi trả lời câu hỏi có dấu ★.",
+              "questionType": "mcq",
+              "format": "doc-hieu-doan",
+              "questionCount": 5,
+              "fromSet": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "hsk1-reading",
+      "level": "HSK1",
+      "title": "Đề thi thử HSK1 – Đọc",
+      "instruction": "Đề demo gồm 20 câu phần Đọc theo cấu trúc tạm của HSK 3.0 cấp 1 (chờ chốt #15). Mỗi câu chọn một đáp án.",
+      "durationMinutes": 20,
+      "passScore": 60,
+      "version": 1,
+      "status": "draft",
+      "sections": [
+        {
+          "skill": "reading",
+          "title": "Đọc",
+          "instruction": "Phần đọc gồm 4 phần, 20 câu.",
+          "parts": [
+            {
+              "key": "r1",
+              "title": "Phần 1",
+              "instruction": "Đọc câu, chọn tranh phù hợp trong sáu tranh A–F. Có một tranh thừa.",
+              "questionType": "mcq",
+              "format": "doc-chon-tranh",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r2",
+              "title": "Phần 2",
+              "instruction": "Đọc câu hỏi, chọn câu trả lời phù hợp trong A–F. Mỗi đáp án dùng một lần, có một đáp án thừa.",
+              "questionType": "mcq",
+              "format": "doc-ghep-cau",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r3",
+              "title": "Phần 3",
+              "instruction": "Chọn từ thích hợp trong A–F điền vào chỗ trống. Mỗi từ dùng một lần, có một từ thừa.",
+              "questionType": "mcq",
+              "format": "chon-tu-dien",
+              "questionCount": 5,
+              "fromSet": true
+            },
+            {
+              "key": "r4",
+              "title": "Phần 4",
+              "instruction": "Đọc đoạn văn ngắn rồi trả lời câu hỏi có dấu ★.",
+              "questionType": "mcq",
+              "format": "doc-hieu-doan",
+              "questionCount": 5,
+              "fromSet": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
