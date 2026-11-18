@@ -11,9 +11,24 @@ import {
 // published words are inserted once per DB with psql; each test registers a
 // fresh learner and saves them, which creates three due cards (A.5, Q251).
 const WORDS = [
-  { hanzi: '测试复习一', pinyinTone: 'cèshì fùxí yī', vi: 'ôn tập thử một' },
-  { hanzi: '测试复习二', pinyinTone: 'cèshì fùxí èr', vi: 'ôn tập thử hai' },
-  { hanzi: '测试复习三', pinyinTone: 'cèshì fùxí sān', vi: 'ôn tập thử ba' },
+  {
+    hanzi: '测试复习一',
+    pinyinTone: 'cèshì fùxí yī',
+    py: 'cèshìfùxíyī',
+    vi: 'ôn tập thử một',
+  },
+  {
+    hanzi: '测试复习二',
+    pinyinTone: 'cèshì fùxí èr',
+    py: "cèshìfùxí'èr",
+    vi: 'ôn tập thử hai',
+  },
+  {
+    hanzi: '测试复习三',
+    pinyinTone: 'cèshì fùxí sān',
+    py: 'cèshìfùxísān',
+    vi: 'ôn tập thử ba',
+  },
 ] as const;
 
 function insertWord(word: (typeof WORDS)[number]): string {
@@ -126,7 +141,8 @@ test.describe('Learner review session (M3.3a)', () => {
     await expect(flip(page)).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.fc-back__vi')).toHaveText(WORDS[0].vi);
     await expect(page.locator('.fc-back__py')).toContainText(
-      WORDS[0].pinyinTone,
+      // Q354: a word's syllables are written together.
+      WORDS[0].py,
     );
     await gradeButton(page, 'Chưa nhớ').click();
 

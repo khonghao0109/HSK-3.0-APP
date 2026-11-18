@@ -222,7 +222,8 @@ test.describe('Learner dictionary (M2.6b)', () => {
     await expect(page).toHaveURL(`/learn/dictionary/${ids.word}`);
     const h1 = page.getByRole('heading', { level: 1 });
     await expect(h1).toHaveAccessibleName(WORD.hanzi);
-    await expect(page.locator('.word__py')).toHaveText(WORD.pinyinTone);
+    // Q354: a word's syllables are written together.
+    await expect(page.locator('.word__py')).toHaveText('cèshìcídiǎn');
     await expect(page.locator('.word__vi')).toHaveText(WORD.vi);
     await expect(page.locator('.word-ex__cn')).toHaveText(WORD.example);
     await expect(page.locator('.tabbar')).toBeHidden();

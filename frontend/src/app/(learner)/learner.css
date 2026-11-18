@@ -8876,6 +8876,8 @@ html:has(.learner-app) {
 
 .learner-app .topic-word__link {
   display: grid;
+  align-content: start;
+  height: 100%;
   gap: var(--sp-1);
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--path-hairline);
@@ -8890,6 +8892,28 @@ html:has(.learner-app) {
 
 .learner-app .topic-word__link:focus-visible {
   box-shadow: var(--focus-ring);
+}
+
+/* Q355: từ không có ảnh dùng ô vuông cùng cỡ với ảnh, chữ Hán cỡ lớn ở giữa,
+   để các thẻ trong một hàng cao bằng nhau. */
+.learner-app .topic-word__tile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin-bottom: var(--sp-1);
+  border-radius: 6px;
+  background: var(--jade-50);
+  color: var(--text-strong);
+  container-type: inline-size;
+  font-size: var(--fs-lg);
+  line-height: 1;
+}
+
+@supports (font-size: 1cqi) {
+  .learner-app .topic-word__tile {
+    font-size: min(3rem, calc(78cqi / var(--hz-len, 1)));
+  }
 }
 
 /* Q350: ảnh minh hoạ của từ, vuông, trên chữ Hán. */
