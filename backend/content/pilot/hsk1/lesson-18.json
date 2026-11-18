@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l18",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l18-con-nguoi-nghe-nghiep",
+    "title": "Con người và nghề nghiệp",
+    "description": "Bài 18 HSK1: nói về con người và nghề nghiệp; dùng 的 chỉ sở hữu và quan hệ, 男/女 + danh từ để nói giới tính, 是 + nghề nghiệp để giới thiệu công việc; 20 từ vựng về nam nữ, trẻ em, người lớn, cách xưng hô và nghề nghiệp.",
+    "orderIndex": 1018
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "男",
+      "pinyin": "nán",
+      "meaningVi": "nam, (giới) nam",
+      "example": {
+        "hanzi": "我们班有十个男学生。",
+        "pinyin": "Wǒmen bān yǒu shí ge nán xuésheng.",
+        "meaningVi": "Lớp chúng tôi có mười học sinh nam."
+      }
+    },
+    {
+      "hanzi": "女",
+      "pinyin": "nǚ",
+      "meaningVi": "nữ, (giới) nữ",
+      "example": {
+        "hanzi": "我们的老师是女的。",
+        "pinyin": "Wǒmen de lǎoshī shì nǚ de.",
+        "meaningVi": "Giáo viên của chúng tôi là nữ."
+      }
+    },
+    {
+      "hanzi": "男人",
+      "pinyin": "nánrén",
+      "meaningVi": "đàn ông",
+      "example": {
+        "hanzi": "那个男人是医生。",
+        "pinyin": "Nà ge nánrén shì yīshēng.",
+        "meaningVi": "Người đàn ông kia là bác sĩ."
+      }
+    },
+    {
+      "hanzi": "女人",
+      "pinyin": "nǚrén",
+      "meaningVi": "phụ nữ, đàn bà",
+      "example": {
+        "hanzi": "那个女人是谁？",
+        "pinyin": "Nà ge nǚrén shì shéi?",
+        "meaningVi": "Người phụ nữ kia là ai?"
+      }
+    },
+    {
+      "hanzi": "男孩儿",
+      "pinyin": "nánháir",
+      "meaningVi": "bé trai, cậu bé",
+      "example": {
+        "hanzi": "那个男孩儿七岁。",
+        "pinyin": "Nà ge nánháir qī suì.",
+        "meaningVi": "Cậu bé kia bảy tuổi."
+      }
+    },
+    {
+      "hanzi": "女孩儿",
+      "pinyin": "nǚháir",
+      "meaningVi": "bé gái, cô bé",
+      "example": {
+        "hanzi": "这个女孩儿很高。",
+        "pinyin": "Zhè ge nǚháir hěn gāo.",
+        "meaningVi": "Cô bé này rất cao."
+      }
+    },
+    {
+      "hanzi": "男生",
+      "pinyin": "nánshēng",
+      "meaningVi": "nam sinh, bạn nam",
+      "example": {
+        "hanzi": "男生喜欢打球。",
+        "pinyin": "Nánshēng xǐhuan dǎ qiú.",
+        "meaningVi": "Các bạn nam thích chơi bóng."
+      }
+    },
+    {
+      "hanzi": "女生",
+      "pinyin": "nǚshēng",
+      "meaningVi": "nữ sinh, bạn nữ",
+      "example": {
+        "hanzi": "我们班女生很多。",
+        "pinyin": "Wǒmen bān nǚshēng hěn duō.",
+        "meaningVi": "Lớp chúng tôi có nhiều bạn nữ."
+      }
+    },
+    {
+      "hanzi": "男朋友",
+      "pinyin": "nánpéngyou",
+      "meaningVi": "bạn trai (người yêu)",
+      "example": {
+        "hanzi": "她有男朋友吗？",
+        "pinyin": "Tā yǒu nánpéngyou ma?",
+        "meaningVi": "Cô ấy có bạn trai không?"
+      }
+    },
+    {
+      "hanzi": "女朋友",
+      "pinyin": "nǚpéngyou",
+      "meaningVi": "bạn gái (người yêu)",
+      "example": {
+        "hanzi": "这是我女朋友。",
+        "pinyin": "Zhè shì wǒ nǚpéngyou.",
+        "meaningVi": "Đây là bạn gái tôi."
+      }
+    },
+    {
+      "hanzi": "小孩儿",
+      "pinyin": "xiǎoháir",
+      "meaningVi": "trẻ con, đứa bé",
+      "example": {
+        "hanzi": "小孩儿在睡觉。",
+        "pinyin": "Xiǎoháir zài shuìjiào.",
+        "meaningVi": "Đứa bé đang ngủ."
+      }
+    },
+    {
+      "hanzi": "小朋友",
+      "pinyin": "xiǎopéngyǒu",
+      "meaningVi": "các em nhỏ, bạn nhỏ",
+      "example": {
+        "hanzi": "小朋友，你几岁了？",
+        "pinyin": "Xiǎopéngyǒu, nǐ jǐ suì le?",
+        "meaningVi": "Cháu ơi, cháu mấy tuổi rồi?"
+      }
+    },
+    {
+      "hanzi": "小姐",
+      "pinyin": "xiǎojiě",
+      "meaningVi": "cô (cách gọi phụ nữ trẻ)",
+      "example": {
+        "hanzi": "小姐，你好！",
+        "pinyin": "Xiǎojiě, nǐ hǎo!",
+        "meaningVi": "Chào cô!"
+      }
+    },
+    {
+      "hanzi": "先生",
+      "pinyin": "xiānsheng",
+      "meaningVi": "ông, ngài; chồng",
+      "example": {
+        "hanzi": "先生，请坐。",
+        "pinyin": "Xiānsheng, qǐng zuò.",
+        "meaningVi": "Mời ông ngồi."
+      }
+    },
+    {
+      "hanzi": "老人",
+      "pinyin": "lǎorén",
+      "meaningVi": "người già",
+      "example": {
+        "hanzi": "那个老人是我爷爷。",
+        "pinyin": "Nà ge lǎorén shì wǒ yéye.",
+        "meaningVi": "Cụ già kia là ông nội tôi."
+      }
+    },
+    {
+      "hanzi": "工人",
+      "pinyin": "gōngrén",
+      "meaningVi": "công nhân",
+      "example": {
+        "hanzi": "我爸爸是工人。",
+        "pinyin": "Wǒ bàba shì gōngrén.",
+        "meaningVi": "Bố tôi là công nhân."
+      }
+    },
+    {
+      "hanzi": "医生",
+      "pinyin": "yīshēng",
+      "meaningVi": "bác sĩ",
+      "example": {
+        "hanzi": "医生说我没病。",
+        "pinyin": "Yīshēng shuō wǒ méi bìng.",
+        "meaningVi": "Bác sĩ nói tôi không có bệnh."
+      }
+    },
+    {
+      "hanzi": "病人",
+      "pinyin": "bìngrén",
+      "meaningVi": "người bệnh, bệnh nhân",
+      "example": {
+        "hanzi": "医院里有很多病人。",
+        "pinyin": "Yīyuàn lǐ yǒu hěn duō bìngrén.",
+        "meaningVi": "Trong bệnh viện có rất nhiều bệnh nhân."
+      }
+    },
+    {
+      "hanzi": "别人",
+      "pinyin": "biérén",
+      "meaningVi": "người khác",
+      "example": {
+        "hanzi": "这是别人的书。",
+        "pinyin": "Zhè shì biérén de shū.",
+        "meaningVi": "Đây là sách của người khác."
+      }
+    },
+    {
+      "hanzi": "家人",
+      "pinyin": "jiārén",
+      "meaningVi": "người nhà, gia đình",
+      "example": {
+        "hanzi": "我很想我的家人。",
+        "pinyin": "Wǒ hěn xiǎng wǒ de jiārén.",
+        "meaningVi": "Tôi rất nhớ gia đình."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: con người và nghề nghiệp",
+      "subtitle": "20 từ HSK1 về nam nữ, trẻ em, cách xưng hô, nghề nghiệp và người thân",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 18 gồm 20 từ vựng HSK1 về con người. Nhóm nam và nữ: 男 (nam), 女 (nữ), 男人 (đàn ông), 女人 (phụ nữ), 男孩儿 (bé trai), 女孩儿 (bé gái), 男生 (nam sinh, bạn nam), 女生 (nữ sinh, bạn nữ), 男朋友 (bạn trai), 女朋友 (bạn gái). Nhóm trẻ em và xưng hô: 小孩儿 (trẻ con), 小朋友 (các em nhỏ, bạn nhỏ), 小姐 (cô, cách gọi phụ nữ trẻ), 先生 (ông, ngài; chồng). Nhóm người và nghề: 老人 (người già), 工人 (công nhân), 医生 (bác sĩ), 病人 (người bệnh), 别人 (người khác), 家人 (người nhà). Lưu ý phát âm: 女 đọc nǚ (môi tròn như “uy”), khác 男 nán; 男孩儿, 女孩儿 đọc nánháir, nǚháir (儿 hoá); 先生 đọc xiānsheng (生 đọc nhẹ) khi là cách xưng hô."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 的 chỉ sở hữu, 男/女 + danh từ, 是 + nghề nghiệp",
+      "subtitle": "Ba điểm ngữ pháp để nói ai là ai, của ai và làm nghề gì",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 的 chỉ sở hữu, quan hệ: người + 的 + danh từ = cái gì đó của ai. Với người thân, bạn bè, nơi mình thuộc về thì thường bỏ 的: 我妈妈, 我女朋友, 我们班. Cấu trúc: người + 的 + danh từ. Ví dụ: 这是别人的书。 (Zhè shì biérén de shū.) = Đây là sách của người khác. / 这是我女朋友。 (Zhè shì wǒ nǚpéngyou.) = Đây là bạn gái tôi. / 她是病人的家人。 (Tā shì bìngrén de jiārén.) = Cô ấy là người nhà của bệnh nhân."
+        },
+        {
+          "type": "text",
+          "value": "2. 男/女 + danh từ: đặt 男 hoặc 女 trước danh từ chỉ người để nói giới tính: 男人, 女人, 男生, 女生, 女医生, 男老师. Cũng có thể nói 男的 (người nam), 女的 (người nữ). Ví dụ: 我们班有十个男学生。 (Wǒmen bān yǒu shí ge nán xuésheng.) = Lớp chúng tôi có mười nam sinh. / 她是一个女医生。 (Tā shì yí ge nǚ yīshēng.) = Cô ấy là một nữ bác sĩ. / 我们的老师是女的。 (Wǒmen de lǎoshī shì nǚ de.) = Cô giáo của chúng tôi là nữ."
+        },
+        {
+          "type": "text",
+          "value": "3. 是 + nghề nghiệp: giới thiệu nghề nghiệp bằng 是, có thể thêm 一个 trước nghề. Phủ định dùng 不是 (bú shì). Hỏi nghề: …是做什么的？ Cấu trúc: chủ ngữ + 是 + (一个) + nghề nghiệp. Ví dụ: 我爸爸是工人。 (Wǒ bàba shì gōngrén.) = Bố tôi là công nhân. / 她是医生，不是老师。 (Tā shì yīshēng, bú shì lǎoshī.) = Cô ấy là bác sĩ, không phải giáo viên. / A: 你妈妈是做什么的？ B: 她是老师。 (Nǐ māma shì zuò shénme de? / Tā shì lǎoshī.) = A: Mẹ bạn làm nghề gì? B: Mẹ tôi là giáo viên."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: người này là ai",
+      "subtitle": "Hội thoại ngắn hỏi ai là ai, làm nghề gì, hỏi tuổi trẻ em; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 那个男人是谁？ B: 他是我爸爸，他是医生。 (Nà ge nánrén shì shéi? / Tā shì wǒ bàba, tā shì yīshēng.) — A: Người đàn ông kia là ai? B: Đó là bố tôi, bố tôi là bác sĩ."
+        },
+        {
+          "type": "text",
+          "value": "A: 你们班男生多还是女生多？ B: 女生多。 (Nǐmen bān nánshēng duō háishi nǚshēng duō? / Nǚshēng duō.) — A: Lớp các bạn nam sinh nhiều hay nữ sinh nhiều? B: Nữ sinh nhiều."
+        },
+        {
+          "type": "text",
+          "value": "A: 小朋友，你几岁了？ B: 我七岁。 (Xiǎopéngyǒu, nǐ jǐ suì le? / Wǒ qī suì.) — A: Bạn nhỏ ơi, cháu mấy tuổi rồi? B: Cháu bảy tuổi."
+        },
+        {
+          "type": "text",
+          "value": "A: 她是你女朋友吗？ B: 不是，她是我妹妹。 (Tā shì nǐ nǚpéngyou ma? / Bú shì, tā shì wǒ mèimei.) — A: Cô ấy là bạn gái bạn à? B: Không phải, cô ấy là em gái tôi."
+        },
+        {
+          "type": "text",
+          "value": "A: 先生，您是病人的家人吗？ B: 是，我是他儿子。 (Xiānsheng, nín shì bìngrén de jiārén ma? / Shì, wǒ shì tā érzi.) — A: Thưa ông, ông là người nhà của bệnh nhân phải không? B: Vâng, tôi là con trai ông ấy."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l18:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “người già”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "工人"
+          },
+          {
+            "id": "opt-b",
+            "text": "病人"
+          },
+          {
+            "id": "opt-c",
+            "text": "老人"
+          },
+          {
+            "id": "opt-d",
+            "text": "别人"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "老人 (lǎorén) nghĩa là “người già”. 工人 (gōngrén) là “công nhân”, 病人 (bìngrén) là “người bệnh”, 别人 (biérén) là “người khác”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “bé gái, cô bé”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "女生"
+          },
+          {
+            "id": "opt-b",
+            "text": "女人"
+          },
+          {
+            "id": "opt-c",
+            "text": "小姐"
+          },
+          {
+            "id": "opt-d",
+            "text": "女孩儿"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "女孩儿 (nǚháir) nghĩa là “bé gái, cô bé”. 女生 (nǚshēng) là “nữ sinh, bạn nữ”, 女人 (nǚrén) là “phụ nữ”, 小姐 (xiǎojiě) là cách gọi phụ nữ trẻ.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我爸爸___工人。 (Bố tôi là công nhân.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "是"
+          },
+          {
+            "id": "opt-b",
+            "text": "在"
+          },
+          {
+            "id": "opt-c",
+            "text": "的"
+          },
+          {
+            "id": "opt-d",
+            "text": "去"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "Giới thiệu nghề nghiệp dùng 是 (shì): 我爸爸是工人 = bố tôi là công nhân. 在 (ở), 去 (đi) đặt vào thì sai ngữ pháp; 我爸爸的工人 chỉ là cụm danh từ “công nhân của bố tôi”, không thành câu.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 这是___的书。 (Đây là sách của người khác.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "家人"
+          },
+          {
+            "id": "opt-b",
+            "text": "别人"
+          },
+          {
+            "id": "opt-c",
+            "text": "病人"
+          },
+          {
+            "id": "opt-d",
+            "text": "老人"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "别人 (biérén) nghĩa là “người khác”; 别人的书 = sách của người khác. 家人 (người nhà), 病人 (người bệnh), 老人 (người già) đặt vào vẫn đúng ngữ pháp nhưng sai nghĩa theo bản dịch.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 她是一个___医生。(Cô ấy là một nữ bác sĩ.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "女",
+          "nǚ",
+          "nv",
+          "女",
+          "nǚ",
+          "nu"
+        ]
+      },
+      "explanation": "女 (nǚ) nghĩa là “nữ”; 女 + danh từ chỉ người nói giới tính: 女医生 = nữ bác sĩ. 男 (nán) là “nam”, ngược nghĩa.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 医院里有很多___。(Trong bệnh viện có rất nhiều bệnh nhân.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "病人",
+          "bìngrén",
+          "bingren"
+        ]
+      },
+      "explanation": "病人 (bìngrén) nghĩa là “người bệnh, bệnh nhân”. 医生 (yīshēng) là “bác sĩ”, không khớp bản dịch.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: ___，请坐。(Thưa ông, mời ngồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "先生",
+          "xiānsheng",
+          "xiansheng"
+        ]
+      },
+      "explanation": "先生 (xiānsheng) là cách gọi lịch sự với đàn ông, nghĩa là “ông, ngài”. 小姐 (xiǎojiě) dùng để gọi phụ nữ trẻ.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Mẹ tôi là bác sĩ.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-h1",
+            "text": "医生"
+          },
+          {
+            "id": "tkn-n2",
+            "text": "我妈妈"
+          },
+          {
+            "id": "tkn-d6",
+            "text": "是"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-n2",
+          "tkn-d6",
+          "tkn-h1"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng theo đề là 我妈妈是医生: chủ ngữ + 是 + nghề nghiệp. 医生是我妈妈 đúng ngữ pháp nhưng là câu trả lời cho “bác sĩ là ai”, nhấn vào người chứ không giới thiệu nghề, nên không khớp đề; các hoán vị khác sai trật tự (ví dụ sai: 是我妈妈医生, 我妈妈医生是).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Lớp chúng tôi có rất nhiều nữ sinh.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s2",
+            "text": "女生"
+          },
+          {
+            "id": "tkn-t6",
+            "text": "很多"
+          },
+          {
+            "id": "tkn-f3",
+            "text": "有"
+          },
+          {
+            "id": "tkn-m8",
+            "text": "我们班"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-m8",
+          "tkn-f3",
+          "tkn-t6",
+          "tkn-s2"
+        ]
+      },
+      "explanation": "Câu đúng là 我们班有很多女生: nơi chốn, tập thể (我们班) + 有 + 很多 + danh từ (女生). 很多 phải đứng ngay trước 女生 (ví dụ sai: 很多女生有我们班, 我们班很多女生有, 我们班有女生很多).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l18:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Cháu mấy tuổi rồi?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-r2",
+            "text": "几岁"
+          },
+          {
+            "id": "tkn-w3",
+            "text": "你"
+          },
+          {
+            "id": "tkn-n8",
+            "text": "了"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w3",
+          "tkn-r2",
+          "tkn-n8"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 你几岁了: chủ ngữ + 几岁 + 了. 了 đứng cuối câu, 几岁 đứng ngay sau 你 (ví dụ sai: 你了几岁, 几岁你了, 了你几岁).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-04",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-04 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

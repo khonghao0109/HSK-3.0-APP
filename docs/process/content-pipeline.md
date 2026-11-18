@@ -665,6 +665,10 @@ sách archive ở Pha 3.
 `explanation` tiếng Việt; khối `review` ghi rõ **pinyin và nghĩa tiếng Việt phải được người kiểm
 lại** trước khi approve.
 
+Bài 01–25 theo `content/hsk1/curriculum.json`: mỗi bài 20 từ, riêng bài ôn 25 có 18 từ
+(`PILOT_CONTENT_LIMITS.wordsPerLessonOverride`). Một từ không được dùng ở hai bài; chữ đa âm
+khác pinyin là hai từ khác nhau (地 de ở bài 23, 地 dì ở bài 25).
+
 **Tự kiểm (từ Pha 2 — TL-223):** luật của `/tmp/hsk-m29a/check.mjs` (Pha 1/1b) đã được chuyển
 thành test **trong repo**, không còn phụ thuộc `/tmp`:
 

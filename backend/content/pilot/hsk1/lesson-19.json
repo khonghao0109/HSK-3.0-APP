@@ -1,0 +1,584 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l19",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l19-so-thich-giai-tri",
+    "title": "Sở thích và giải trí",
+    "description": "Bài 19 HSK1: nói về sở thích và giải trí như hát, chơi bóng, xem phim; dùng 会/能/想 + động từ, bổ ngữ kết quả 到/见 và 爱 + động từ với 20 từ vựng cơ bản.",
+    "orderIndex": 1019
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "爱",
+      "pinyin": "ài",
+      "meaningVi": "yêu; thích",
+      "example": {
+        "hanzi": "我爱我的妈妈。",
+        "pinyin": "Wǒ ài wǒ de māma.",
+        "meaningVi": "Tôi yêu mẹ tôi."
+      }
+    },
+    {
+      "hanzi": "爱好",
+      "pinyin": "àihào",
+      "meaningVi": "sở thích",
+      "example": {
+        "hanzi": "你的爱好是什么？",
+        "pinyin": "Nǐ de àihào shì shénme?",
+        "meaningVi": "Sở thích của bạn là gì?"
+      }
+    },
+    {
+      "hanzi": "唱",
+      "pinyin": "chàng",
+      "meaningVi": "hát",
+      "example": {
+        "hanzi": "你唱一个吧。",
+        "pinyin": "Nǐ chàng yí ge ba.",
+        "meaningVi": "Bạn hát một bài đi."
+      }
+    },
+    {
+      "hanzi": "唱歌",
+      "pinyin": "chànggē",
+      "meaningVi": "hát, ca hát",
+      "example": {
+        "hanzi": "我喜欢唱歌。",
+        "pinyin": "Wǒ xǐhuan chànggē.",
+        "meaningVi": "Tôi thích hát."
+      }
+    },
+    {
+      "hanzi": "歌",
+      "pinyin": "gē",
+      "meaningVi": "bài hát",
+      "example": {
+        "hanzi": "这个歌我会唱。",
+        "pinyin": "Zhè ge gē wǒ huì chàng.",
+        "meaningVi": "Bài hát này tôi biết hát."
+      }
+    },
+    {
+      "hanzi": "球",
+      "pinyin": "qiú",
+      "meaningVi": "quả bóng; môn bóng",
+      "example": {
+        "hanzi": "这是谁的球？",
+        "pinyin": "Zhè shì shéi de qiú?",
+        "meaningVi": "Quả bóng này của ai?"
+      }
+    },
+    {
+      "hanzi": "打球",
+      "pinyin": "dǎqiú",
+      "meaningVi": "chơi bóng",
+      "example": {
+        "hanzi": "我们一起去打球吧。",
+        "pinyin": "Wǒmen yìqǐ qù dǎqiú ba.",
+        "meaningVi": "Chúng ta cùng đi chơi bóng nhé."
+      }
+    },
+    {
+      "hanzi": "玩儿",
+      "pinyin": "wánr",
+      "meaningVi": "chơi",
+      "example": {
+        "hanzi": "孩子们在外边玩儿。",
+        "pinyin": "Háizimen zài wàibian wánr.",
+        "meaningVi": "Bọn trẻ đang chơi bên ngoài."
+      }
+    },
+    {
+      "hanzi": "电影",
+      "pinyin": "diànyǐng",
+      "meaningVi": "phim, điện ảnh",
+      "example": {
+        "hanzi": "我们去看电影吧。",
+        "pinyin": "Wǒmen qù kàn diànyǐng ba.",
+        "meaningVi": "Chúng ta đi xem phim nhé."
+      }
+    },
+    {
+      "hanzi": "看",
+      "pinyin": "kàn",
+      "meaningVi": "nhìn, xem; đọc",
+      "example": {
+        "hanzi": "我在看书。",
+        "pinyin": "Wǒ zài kàn shū.",
+        "meaningVi": "Tôi đang đọc sách."
+      }
+    },
+    {
+      "hanzi": "看到",
+      "pinyin": "kàndào",
+      "meaningVi": "nhìn thấy",
+      "example": {
+        "hanzi": "我看到他了。",
+        "pinyin": "Wǒ kàndào tā le.",
+        "meaningVi": "Tôi nhìn thấy anh ấy rồi."
+      }
+    },
+    {
+      "hanzi": "看见",
+      "pinyin": "kànjiàn",
+      "meaningVi": "nhìn thấy, trông thấy",
+      "example": {
+        "hanzi": "你看见我的书包了吗？",
+        "pinyin": "Nǐ kànjiàn wǒ de shūbāo le ma?",
+        "meaningVi": "Bạn có thấy cặp sách của tôi không?"
+      }
+    },
+    {
+      "hanzi": "听到",
+      "pinyin": "tīngdào",
+      "meaningVi": "nghe thấy",
+      "example": {
+        "hanzi": "你听到了吗？",
+        "pinyin": "Nǐ tīngdào le ma?",
+        "meaningVi": "Bạn nghe thấy chưa?"
+      }
+    },
+    {
+      "hanzi": "听见",
+      "pinyin": "tīngjiàn",
+      "meaningVi": "nghe thấy",
+      "example": {
+        "hanzi": "我没听见。",
+        "pinyin": "Wǒ méi tīngjiàn.",
+        "meaningVi": "Tôi không nghe thấy."
+      }
+    },
+    {
+      "hanzi": "开玩笑",
+      "pinyin": "kāiwánxiào",
+      "meaningVi": "nói đùa",
+      "example": {
+        "hanzi": "别开玩笑了。",
+        "pinyin": "Bié kāiwánxiào le.",
+        "meaningVi": "Đừng đùa nữa."
+      }
+    },
+    {
+      "hanzi": "笑",
+      "pinyin": "xiào",
+      "meaningVi": "cười",
+      "example": {
+        "hanzi": "她笑了。",
+        "pinyin": "Tā xiào le.",
+        "meaningVi": "Cô ấy cười rồi."
+      }
+    },
+    {
+      "hanzi": "会",
+      "pinyin": "huì",
+      "meaningVi": "biết (làm gì); sẽ",
+      "example": {
+        "hanzi": "我会说汉语。",
+        "pinyin": "Wǒ huì shuō Hànyǔ.",
+        "meaningVi": "Tôi biết nói tiếng Trung."
+      }
+    },
+    {
+      "hanzi": "能",
+      "pinyin": "néng",
+      "meaningVi": "có thể",
+      "example": {
+        "hanzi": "明天你能来吗？",
+        "pinyin": "Míngtiān nǐ néng lái ma?",
+        "meaningVi": "Ngày mai bạn đến được không?"
+      }
+    },
+    {
+      "hanzi": "想",
+      "pinyin": "xiǎng",
+      "meaningVi": "muốn; nghĩ; nhớ",
+      "example": {
+        "hanzi": "我想喝茶。",
+        "pinyin": "Wǒ xiǎng hē chá.",
+        "meaningVi": "Tôi muốn uống trà."
+      }
+    },
+    {
+      "hanzi": "有时候",
+      "pinyin": "yǒushíhou",
+      "meaningVi": "có lúc, đôi khi",
+      "example": {
+        "hanzi": "我有时候走路去学校。",
+        "pinyin": "Wǒ yǒushíhou zǒulù qù xuéxiào.",
+        "meaningVi": "Có lúc tôi đi bộ đến trường."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: sở thích và giải trí",
+      "subtitle": "20 từ HSK1 về hát, chơi, xem, nghe và các động từ năng nguyện",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 19 gồm 20 từ vựng HSK1 về sở thích và giải trí. Nhóm sở thích: 爱 (yêu; thích), 爱好 (sở thích), 唱 (hát), 唱歌 (hát, ca hát), 歌 (bài hát), 球 (quả bóng; môn bóng), 打球 (chơi bóng), 玩儿 (chơi), 电影 (phim, điện ảnh). Nhóm nhìn và nghe: 看 (nhìn, xem; đọc), 看到 (nhìn thấy), 看见 (nhìn thấy, trông thấy), 听到 (nghe thấy), 听见 (nghe thấy). Nhóm cười đùa: 开玩笑 (nói đùa), 笑 (cười). Nhóm động từ năng nguyện: 会 (biết làm gì; sẽ), 能 (có thể), 想 (muốn; nghĩ; nhớ). Ngoài ra: 有时候 (có lúc, đôi khi). Lưu ý phát âm: 玩儿 đọc wánr (âm cuộn lưỡi), 有时候 đọc yǒushíhou (候 đọc nhẹ), 开玩笑 đọc kāiwánxiào."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 会/能/想 + động từ, bổ ngữ kết quả 到/见, 爱 + động từ",
+      "subtitle": "Ba điểm ngữ pháp để nói biết, có thể, muốn làm gì và đã nhìn thấy, nghe thấy chưa",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 会/能/想 + động từ: ba động từ năng nguyện đứng trước động từ chính. 会 = biết làm (kỹ năng học được), 能 = có thể (có điều kiện, có khả năng), 想 = muốn. Cấu trúc: Chủ ngữ + 会/能/想 + động từ (+ tân ngữ); phủ định thêm 不: 不会, 不能, 不想. Ví dụ: 我会唱歌。 (Wǒ huì chànggē.) = Tôi biết hát. / 明天我能去打球。 (Míngtiān wǒ néng qù dǎqiú.) = Ngày mai tôi có thể đi chơi bóng. / 我不想看电影。 (Wǒ bù xiǎng kàn diànyǐng.) = Tôi không muốn xem phim."
+        },
+        {
+          "type": "text",
+          "value": "2. Bổ ngữ kết quả 到/见: 看 (nhìn) và 听 (nghe) chỉ nói hành động; thêm 到 hoặc 见 phía sau để nói đã có kết quả: 看到/看见 = nhìn thấy, 听到/听见 = nghe thấy. Cấu trúc: Động từ + 到/见 (+ tân ngữ) + 了; phủ định dùng 没 và bỏ 了: 没看见, 没听到. Ví dụ: 我看见他了。 (Wǒ kànjiàn tā le.) = Tôi nhìn thấy anh ấy rồi. / 你听到了吗？ (Nǐ tīngdào le ma?) = Bạn nghe thấy chưa? / 我没听见。 (Wǒ méi tīngjiàn.) = Tôi không nghe thấy."
+        },
+        {
+          "type": "text",
+          "value": "3. 爱 + động từ: nói ai đó rất thích, hay làm việc gì (nghĩa mạnh hơn 喜欢). Cấu trúc: Chủ ngữ + 爱 + động từ (+ tân ngữ); phủ định 不爱. 爱 + người/vật thì nghĩa là yêu: 我爱我的妈妈. Ví dụ: 他很爱笑。 (Tā hěn ài xiào.) = Anh ấy rất hay cười. / 我妹妹爱唱歌。 (Wǒ mèimei ài chànggē.) = Em gái tôi thích hát. / 我不爱看电视。 (Wǒ bú ài kàn diànshì.) = Tôi không thích xem tivi."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hỏi về sở thích",
+      "subtitle": "Hội thoại ngắn về sở thích, rủ đi chơi, nhìn thấy đồ vật; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你的爱好是什么？ B: 我的爱好是唱歌。 (Nǐ de àihào shì shénme? / Wǒ de àihào shì chànggē.) — A: Sở thích của bạn là gì? B: Sở thích của tôi là hát."
+        },
+        {
+          "type": "text",
+          "value": "A: 你会唱中文歌吗？ B: 会，我很爱唱中文歌。 (Nǐ huì chàng Zhōngwén gē ma? / Huì, wǒ hěn ài chàng Zhōngwén gē.) — A: Bạn biết hát bài hát tiếng Trung không? B: Biết, tôi rất thích hát bài hát tiếng Trung."
+        },
+        {
+          "type": "text",
+          "value": "A: 你常常看电影吗？ B: 有时候看，有时候去打球。 (Nǐ chángcháng kàn diànyǐng ma? / Yǒushíhou kàn, yǒushíhou qù dǎqiú.) — A: Bạn có hay xem phim không? B: Có lúc xem, có lúc đi chơi bóng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你看见我的球了吗？ B: 看见了，在外边。 (Nǐ kànjiàn wǒ de qiú le ma? / Kànjiàn le, zài wàibian.) — A: Bạn có nhìn thấy quả bóng của tôi không? B: Thấy rồi, ở bên ngoài."
+        },
+        {
+          "type": "text",
+          "value": "A: 他说的是真的吗？ B: 不是，他在开玩笑。 (Tā shuō de shì zhēn de ma? / Bú shì, tā zài kāiwánxiào.) — A: Điều anh ấy nói là thật à? B: Không phải, anh ấy đang nói đùa."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l19:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “hát, ca hát”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "打球"
+          },
+          {
+            "id": "opt-b",
+            "text": "玩儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "笑"
+          },
+          {
+            "id": "opt-d",
+            "text": "唱歌"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "唱歌 (chànggē) nghĩa là “hát, ca hát”. 打球 (dǎqiú) là “chơi bóng”, 玩儿 (wánr) là “chơi”, 笑 (xiào) là “cười”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “nói đùa”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "开玩笑"
+          },
+          {
+            "id": "opt-b",
+            "text": "玩儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "笑"
+          },
+          {
+            "id": "opt-d",
+            "text": "爱好"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "开玩笑 (kāiwánxiào) nghĩa là “nói đùa”. 玩儿 (wánr) là “chơi”, 笑 (xiào) là “cười”, 爱好 (àihào) là “sở thích”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我不___写汉字。 (Tôi không biết viết chữ Hán.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "能"
+          },
+          {
+            "id": "opt-b",
+            "text": "会"
+          },
+          {
+            "id": "opt-c",
+            "text": "想"
+          },
+          {
+            "id": "opt-d",
+            "text": "爱"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "会 (huì) = biết làm một kỹ năng phải học mới có (viết chữ Hán), nên 我不会写汉字 = tôi không biết viết chữ Hán. 不能 (không thể, không được phép), 不想 (không muốn), 不爱 (không thích) đặt vào vẫn đúng ngữ pháp nhưng sai nghĩa theo bản dịch “không biết viết” nên bị loại.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我没___你的书包。 (Tôi không nhìn thấy cặp sách của bạn.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "看"
+          },
+          {
+            "id": "opt-b",
+            "text": "听见"
+          },
+          {
+            "id": "opt-c",
+            "text": "看见"
+          },
+          {
+            "id": "opt-d",
+            "text": "找"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "看见 (kànjiàn) = nhìn thấy (có kết quả), nên 我没看见你的书包 = tôi không nhìn thấy cặp sách của bạn. 没看 là “không xem”, 没听见 là “không nghe thấy”, 没找 là “không tìm”: đúng ngữ pháp nhưng sai nghĩa theo bản dịch.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e05",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我们一起去看___吧。(Chúng ta cùng đi xem phim nhé.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "电影",
+          "diànyǐng",
+          "dianying"
+        ]
+      },
+      "explanation": "电影 (diànyǐng) nghĩa là “phim, điện ảnh”; 看电影 = xem phim.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 他说的不是真的，他在___。(Điều anh ấy nói không phải thật, anh ấy đang nói đùa.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "开玩笑",
+          "kāiwánxiào",
+          "kaiwanxiao"
+        ]
+      },
+      "explanation": "开玩笑 (kāiwánxiào) nghĩa là “nói đùa”; 他在开玩笑 = anh ấy đang nói đùa.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e07",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 明天我有事，不___去打球。(Ngày mai tôi có việc, không thể đi chơi bóng.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "能",
+          "néng",
+          "neng"
+        ]
+      },
+      "explanation": "能 (néng) = có thể; vì có việc (thiếu điều kiện) nên dùng 不能去 = không thể đi. 不会 là “không biết/sẽ không”, 不想 là “không muốn”, sai nghĩa theo bản dịch.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e08",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi biết hát bài hát tiếng Trung.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-w8",
+            "text": "中文歌"
+          },
+          {
+            "id": "tkn-z6",
+            "text": "我"
+          },
+          {
+            "id": "tkn-g8",
+            "text": "唱"
+          },
+          {
+            "id": "tkn-s5",
+            "text": "会"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z6",
+          "tkn-s5",
+          "tkn-g8",
+          "tkn-w8"
+        ]
+      },
+      "explanation": "Câu đúng là 我会唱中文歌: Chủ ngữ (我) + 会 + động từ (唱) + tân ngữ (中文歌). 会 phải đứng ngay trước động từ, tân ngữ đứng sau động từ (ví dụ sai: 我唱会中文歌, 会我唱中文歌, 我会中文歌唱).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi không nhìn thấy anh ấy.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-v1",
+            "text": "他"
+          },
+          {
+            "id": "tkn-g4",
+            "text": "没"
+          },
+          {
+            "id": "tkn-c5",
+            "text": "我"
+          },
+          {
+            "id": "tkn-w1",
+            "text": "看见"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-c5",
+          "tkn-g4",
+          "tkn-w1",
+          "tkn-v1"
+        ]
+      },
+      "explanation": "Câu đúng là 我没看见他: Chủ ngữ + 没 + 看见 + tân ngữ. 他没看见我 đúng ngữ pháp nhưng nghĩa là “anh ấy không nhìn thấy tôi”, sai theo đề; 没 phải đứng trước động từ (ví dụ sai: 我看见没他, 没我看见他).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l19:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Em trai tôi thích chơi bóng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-z9",
+            "text": "打球"
+          },
+          {
+            "id": "tkn-v5",
+            "text": "我弟弟"
+          },
+          {
+            "id": "tkn-t9",
+            "text": "爱"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-v5",
+          "tkn-t9",
+          "tkn-z9"
+        ]
+      },
+      "explanation": "Câu đúng là 我弟弟爱打球: Chủ ngữ (我弟弟) + 爱 + động từ (打球). 爱 phải đứng sau chủ ngữ và trước động từ (ví dụ sai: 爱我弟弟打球, 我弟弟打球爱, 打球爱我弟弟).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-04",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-04 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

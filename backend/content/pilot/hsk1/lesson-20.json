@@ -1,0 +1,586 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l20",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l20-suc-khoe-co-the",
+    "title": "Sức khoẻ, cơ thể và cảm nhận",
+    "description": "Bài 20 HSK1: nói về sức khoẻ, cơ thể và cảm nhận; dùng 别 + động từ, 觉得 + nhận xét, 记住/记得/忘 và 快/慢 + động từ với 20 từ vựng cơ bản.",
+    "orderIndex": 1020
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "身体",
+      "pinyin": "shēntǐ",
+      "meaningVi": "cơ thể; sức khoẻ",
+      "example": {
+        "hanzi": "你身体好吗？",
+        "pinyin": "Nǐ shēntǐ hǎo ma?",
+        "meaningVi": "Bạn có khoẻ không?"
+      }
+    },
+    {
+      "hanzi": "病",
+      "pinyin": "bìng",
+      "meaningVi": "bệnh",
+      "example": {
+        "hanzi": "他的病好了。",
+        "pinyin": "Tā de bìng hǎo le.",
+        "meaningVi": "Bệnh của anh ấy khỏi rồi."
+      }
+    },
+    {
+      "hanzi": "生病",
+      "pinyin": "shēngbìng",
+      "meaningVi": "bị ốm, mắc bệnh",
+      "example": {
+        "hanzi": "我生病了。",
+        "pinyin": "Wǒ shēngbìng le.",
+        "meaningVi": "Tôi bị ốm rồi."
+      }
+    },
+    {
+      "hanzi": "看病",
+      "pinyin": "kànbìng",
+      "meaningVi": "khám bệnh; chữa bệnh",
+      "example": {
+        "hanzi": "我去医院看病。",
+        "pinyin": "Wǒ qù yīyuàn kànbìng.",
+        "meaningVi": "Tôi đi bệnh viện khám bệnh."
+      }
+    },
+    {
+      "hanzi": "手",
+      "pinyin": "shǒu",
+      "meaningVi": "tay",
+      "example": {
+        "hanzi": "你的手很冷。",
+        "pinyin": "Nǐ de shǒu hěn lěng.",
+        "meaningVi": "Tay bạn rất lạnh."
+      }
+    },
+    {
+      "hanzi": "口",
+      "pinyin": "kǒu",
+      "meaningVi": "miệng; (lượng từ) người trong gia đình",
+      "example": {
+        "hanzi": "我家有四口人。",
+        "pinyin": "Wǒ jiā yǒu sì kǒu rén.",
+        "meaningVi": "Nhà tôi có bốn người."
+      }
+    },
+    {
+      "hanzi": "动",
+      "pinyin": "dòng",
+      "meaningVi": "động, cử động",
+      "example": {
+        "hanzi": "别动！",
+        "pinyin": "Bié dòng!",
+        "meaningVi": "Đừng cử động!"
+      }
+    },
+    {
+      "hanzi": "动作",
+      "pinyin": "dòngzuò",
+      "meaningVi": "động tác",
+      "example": {
+        "hanzi": "这个动作很难。",
+        "pinyin": "Zhè ge dòngzuò hěn nán.",
+        "meaningVi": "Động tác này rất khó."
+      }
+    },
+    {
+      "hanzi": "坐下",
+      "pinyin": "zuòxia",
+      "meaningVi": "ngồi xuống",
+      "example": {
+        "hanzi": "请坐下。",
+        "pinyin": "Qǐng zuòxia.",
+        "meaningVi": "Mời ngồi xuống."
+      }
+    },
+    {
+      "hanzi": "站",
+      "pinyin": "zhàn",
+      "meaningVi": "đứng",
+      "example": {
+        "hanzi": "他站在门口。",
+        "pinyin": "Tā zhàn zài ménkǒu.",
+        "meaningVi": "Anh ấy đứng ở cửa."
+      }
+    },
+    {
+      "hanzi": "别",
+      "pinyin": "bié",
+      "meaningVi": "đừng",
+      "example": {
+        "hanzi": "别说话。",
+        "pinyin": "Bié shuōhuà.",
+        "meaningVi": "Đừng nói chuyện."
+      }
+    },
+    {
+      "hanzi": "慢",
+      "pinyin": "màn",
+      "meaningVi": "chậm",
+      "example": {
+        "hanzi": "请说慢一点儿。",
+        "pinyin": "Qǐng shuō màn yìdiǎnr.",
+        "meaningVi": "Xin nói chậm một chút."
+      }
+    },
+    {
+      "hanzi": "快",
+      "pinyin": "kuài",
+      "meaningVi": "nhanh",
+      "example": {
+        "hanzi": "我们快走吧。",
+        "pinyin": "Wǒmen kuài zǒu ba.",
+        "meaningVi": "Chúng ta đi nhanh lên nào."
+      }
+    },
+    {
+      "hanzi": "生气",
+      "pinyin": "shēngqì",
+      "meaningVi": "tức giận",
+      "example": {
+        "hanzi": "妈妈生气了。",
+        "pinyin": "Māma shēngqì le.",
+        "meaningVi": "Mẹ giận rồi."
+      }
+    },
+    {
+      "hanzi": "觉得",
+      "pinyin": "juéde",
+      "meaningVi": "cảm thấy, thấy",
+      "example": {
+        "hanzi": "我觉得很好。",
+        "pinyin": "Wǒ juéde hěn hǎo.",
+        "meaningVi": "Tôi thấy rất tốt."
+      }
+    },
+    {
+      "hanzi": "明白",
+      "pinyin": "míngbai",
+      "meaningVi": "hiểu, hiểu rõ",
+      "example": {
+        "hanzi": "你明白了吗？",
+        "pinyin": "Nǐ míngbai le ma?",
+        "meaningVi": "Bạn hiểu chưa?"
+      }
+    },
+    {
+      "hanzi": "记",
+      "pinyin": "jì",
+      "meaningVi": "ghi nhớ; ghi chép",
+      "example": {
+        "hanzi": "我记一下你的电话。",
+        "pinyin": "Wǒ jì yíxià nǐ de diànhuà.",
+        "meaningVi": "Tôi ghi lại số điện thoại của bạn."
+      }
+    },
+    {
+      "hanzi": "记住",
+      "pinyin": "jìzhù",
+      "meaningVi": "nhớ kỹ, ghi nhớ",
+      "example": {
+        "hanzi": "请记住我的名字。",
+        "pinyin": "Qǐng jìzhù wǒ de míngzi.",
+        "meaningVi": "Xin hãy nhớ tên tôi."
+      }
+    },
+    {
+      "hanzi": "记得",
+      "pinyin": "jìde",
+      "meaningVi": "nhớ, còn nhớ",
+      "example": {
+        "hanzi": "你还记得我吗？",
+        "pinyin": "Nǐ hái jìde wǒ ma?",
+        "meaningVi": "Bạn còn nhớ tôi không?"
+      }
+    },
+    {
+      "hanzi": "忘",
+      "pinyin": "wàng",
+      "meaningVi": "quên",
+      "example": {
+        "hanzi": "我忘了他的名字。",
+        "pinyin": "Wǒ wàng le tā de míngzi.",
+        "meaningVi": "Tôi quên tên anh ấy rồi."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: sức khoẻ, cơ thể và cảm nhận",
+      "subtitle": "20 từ HSK1 về cơ thể, bệnh, động tác, cảm xúc và trí nhớ",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 20 gồm 20 từ vựng HSK1 về sức khoẻ và cảm nhận. Nhóm cơ thể và bệnh: 身体 (cơ thể; sức khoẻ), 病 (bệnh), 生病 (bị ốm, mắc bệnh), 看病 (khám bệnh; chữa bệnh), 手 (tay), 口 (miệng; lượng từ đếm người trong gia đình). Nhóm động tác: 动 (động, cử động), 动作 (động tác), 坐下 (ngồi xuống), 站 (đứng), 别 (đừng), 慢 (chậm), 快 (nhanh). Nhóm cảm nhận: 生气 (tức giận), 觉得 (cảm thấy, thấy), 明白 (hiểu, hiểu rõ). Nhóm trí nhớ: 记 (ghi nhớ; ghi chép), 记住 (nhớ kỹ), 记得 (nhớ, còn nhớ), 忘 (quên). Lưu ý phát âm: 觉得 đọc juéde, 明白 đọc míngbai, 记得 đọc jìde (chữ sau đọc nhẹ); 坐下 đọc zuòxia."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 别 + động từ, 觉得 + nhận xét, 记住/记得/忘, 快/慢 + động từ",
+      "subtitle": "Bốn điểm ngữ pháp để khuyên can, nói cảm nhận, nói nhớ và quên, giục hoặc dặn làm chậm",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 别 + động từ: đừng làm gì, dùng để khuyên hoặc cấm. Cấu trúc: (Chủ ngữ) + 别 + động từ; thêm 了 ở cuối khi muốn ai thôi làm việc đang làm. Ví dụ: 别动！ (Bié dòng!) = Đừng cử động! / 别说话。 (Bié shuōhuà.) = Đừng nói chuyện. / 别生气了。 (Bié shēngqì le.) = Đừng giận nữa."
+        },
+        {
+          "type": "text",
+          "value": "2. 觉得 + nhận xét: nói cảm nhận hoặc ý kiến của mình. Cấu trúc: Chủ ngữ + 觉得 + nhận xét (tính từ hoặc cả một câu). Hỏi ý kiến: 你觉得…吗？ Ví dụ: 我觉得这个饭店很好。 (Wǒ juéde zhège fàndiàn hěn hǎo.) = Tôi thấy nhà hàng này rất tốt. / 你觉得冷吗？ (Nǐ juéde lěng ma?) = Bạn có thấy lạnh không? / 我觉得身体不太好。 (Wǒ juéde shēntǐ bú tài hǎo.) = Tôi thấy sức khoẻ không tốt lắm."
+        },
+        {
+          "type": "text",
+          "value": "3. 记住/记得/忘: 记住 = nhớ kỹ, ghi vào trí nhớ (thường dùng khi dặn); 记得 = còn nhớ điều đã biết; 忘 = quên, thường đi với 了. Cấu trúc: 记住 + điều cần nhớ; 还记得 + người/việc; 忘了 + người/việc. Ví dụ: 请记住我的名字。 (Qǐng jìzhù wǒ de míngzi.) = Xin hãy nhớ kỹ tên tôi. / 你还记得我吗？ (Nǐ hái jìde wǒ ma?) = Bạn còn nhớ tôi không? / 我忘了他的电话。 (Wǒ wàng le tā de diànhuà.) = Tôi quên số điện thoại của anh ấy rồi."
+        },
+        {
+          "type": "text",
+          "value": "4. 快/慢 + động từ: 快 đứng trước động từ để giục làm nhanh lên; 慢 đứng trước động từ để dặn làm từ từ. 慢走 còn là câu chào khi tiễn khách. Cấu trúc: 快/慢 + động từ (+ 吧). Ví dụ: 我们快走吧。 (Wǒmen kuài zǒu ba.) = Chúng ta đi nhanh lên thôi. / 快坐下吧。 (Kuài zuòxia ba.) = Mau ngồi xuống đi. / 你慢走。 (Nǐ màn zǒu.) = Bạn đi cẩn thận nhé (câu tiễn khách)."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hỏi thăm sức khoẻ",
+      "subtitle": "Hội thoại ngắn hỏi thăm khi bị ốm, nói cảm nhận và dặn nhớ; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你身体好吗？ B: 不太好，我生病了。 (Nǐ shēntǐ hǎo ma? / Bú tài hǎo, wǒ shēngbìng le.) — A: Bạn có khoẻ không? B: Không khoẻ lắm, tôi bị ốm rồi."
+        },
+        {
+          "type": "text",
+          "value": "A: 你去医院看病了吗？ B: 去了，医生说我要多休息。 (Nǐ qù yīyuàn kànbìng le ma? / Qù le, yīshēng shuō wǒ yào duō xiūxi.) — A: Bạn đã đi bệnh viện khám bệnh chưa? B: Đi rồi, bác sĩ nói tôi cần nghỉ ngơi nhiều."
+        },
+        {
+          "type": "text",
+          "value": "A: 你觉得冷吗？ B: 不冷，我觉得很热。 (Nǐ juéde lěng ma? / Bù lěng, wǒ juéde hěn rè.) — A: Bạn có thấy lạnh không? B: Không lạnh, tôi thấy rất nóng."
+        },
+        {
+          "type": "text",
+          "value": "A: 别站在门口，快坐下吧。 B: 好，谢谢。 (Bié zhàn zài ménkǒu, kuài zuòxia ba. / Hǎo, xièxie.) — A: Đừng đứng ở cửa, mau ngồi xuống đi. B: Vâng, cảm ơn."
+        },
+        {
+          "type": "text",
+          "value": "A: 我的名字你记住了吗？ B: 记住了，我不会忘。 (Wǒ de míngzi nǐ jìzhù le ma? / Jìzhù le, wǒ bú huì wàng.) — A: Tên của tôi bạn đã nhớ chưa? B: Nhớ rồi, tôi sẽ không quên."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l20:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “đứng”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "站"
+          },
+          {
+            "id": "opt-b",
+            "text": "坐下"
+          },
+          {
+            "id": "opt-c",
+            "text": "动"
+          },
+          {
+            "id": "opt-d",
+            "text": "走"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "站 (zhàn) nghĩa là “đứng”. 坐下 (zuòxia) là “ngồi xuống”, 动 (dòng) là “cử động”, 走 (zǒu) là “đi”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “tức giận”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "生病"
+          },
+          {
+            "id": "opt-b",
+            "text": "生气"
+          },
+          {
+            "id": "opt-c",
+            "text": "明白"
+          },
+          {
+            "id": "opt-d",
+            "text": "觉得"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "生气 (shēngqì) nghĩa là “tức giận”. 生病 (shēngbìng) là “bị ốm”, 明白 (míngbai) là “hiểu”, 觉得 (juéde) là “cảm thấy”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: ___说话，老师在上课。 (Đừng nói chuyện, thầy giáo đang lên lớp.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "不"
+          },
+          {
+            "id": "opt-b",
+            "text": "没"
+          },
+          {
+            "id": "opt-c",
+            "text": "别"
+          },
+          {
+            "id": "opt-d",
+            "text": "快"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "别 (bié) = đừng, dùng để khuyên hoặc cấm, nên 别说话 = đừng nói chuyện. 不 và 没 chỉ phủ định, không dùng để khuyên người khác; 快说话 là “nói nhanh lên”, sai nghĩa theo bản dịch.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你还___我吗？ (Bạn còn nhớ tôi không?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "记住"
+          },
+          {
+            "id": "opt-b",
+            "text": "忘"
+          },
+          {
+            "id": "opt-c",
+            "text": "明白"
+          },
+          {
+            "id": "opt-d",
+            "text": "记得"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "记得 (jìde) = còn nhớ điều đã biết, nên 你还记得我吗 = bạn còn nhớ tôi không. 记住 (nhớ kỹ) dùng khi dặn ghi nhớ, không đi với 还 trong câu hỏi này; 忘 (quên) và 明白 (hiểu) sai nghĩa theo bản dịch.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我___这个电影很好看。(Tôi thấy bộ phim này rất hay.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "觉得",
+          "juéde",
+          "juede"
+        ]
+      },
+      "explanation": "觉得 (juéde) nghĩa là “cảm thấy, thấy”; 觉得 + nhận xét (这个电影很好看) để nói ý kiến của mình.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我生病了，下午去医院___。(Tôi bị ốm rồi, buổi chiều đi bệnh viện khám bệnh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "看病",
+          "kànbìng",
+          "kanbing"
+        ]
+      },
+      "explanation": "看病 (kànbìng) nghĩa là “khám bệnh”; 去医院看病 = đi bệnh viện khám bệnh.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e07",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 请___我的名字。(Xin hãy nhớ kỹ tên tôi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "记住",
+          "jìzhù",
+          "jizhu",
+          "记得",
+          "jìde",
+          "jide"
+        ]
+      },
+      "explanation": "记住 (jìzhù) nghĩa là “nhớ kỹ, ghi nhớ”, dùng khi dặn người khác nhớ một điều; 请记住我的名字 = xin hãy nhớ kỹ tên tôi. 请记得我的名字 (Qǐng jìde wǒ de míngzi.) cũng gần nghĩa nên 记得 (jìde) cũng được chấp nhận.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Đừng giận nữa.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-n8",
+            "text": "生气"
+          },
+          {
+            "id": "tkn-f9",
+            "text": "了"
+          },
+          {
+            "id": "tkn-d1",
+            "text": "别"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-d1",
+          "tkn-n8",
+          "tkn-f9"
+        ]
+      },
+      "explanation": "Câu đúng là 别生气了: 别 + động từ (生气) + 了 (thôi đừng làm nữa). 别 phải đứng trước động từ, 了 đứng cuối câu (ví dụ sai: 生气别了, 了别生气, 别了生气).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Mau ngồi xuống đi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-t4",
+            "text": "快"
+          },
+          {
+            "id": "tkn-p9",
+            "text": "吧"
+          },
+          {
+            "id": "tkn-v5",
+            "text": "坐下"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-t4",
+          "tkn-v5",
+          "tkn-p9"
+        ]
+      },
+      "explanation": "Câu đúng là 快坐下吧: 快 + động từ (坐下) + 吧 (giục, đề nghị). 快 đứng trước động từ, 吧 đứng cuối câu (ví dụ sai: 坐下快吧, 吧快坐下, 快吧坐下).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l20:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Sức khoẻ của tôi rất tốt.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-c3",
+            "text": "很"
+          },
+          {
+            "id": "tkn-g4",
+            "text": "身体"
+          },
+          {
+            "id": "tkn-t9",
+            "text": "好"
+          },
+          {
+            "id": "tkn-b8",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-b8",
+          "tkn-g4",
+          "tkn-c3",
+          "tkn-t9"
+        ]
+      },
+      "explanation": "Câu đúng là 我身体很好: người (我) + 身体 + 很 + 好. 很 phải đứng ngay trước tính từ 好, còn 我 đứng trước 身体 (ví dụ sai: 我很身体好, 身体我好很, 很好我身体).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-04",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-04 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

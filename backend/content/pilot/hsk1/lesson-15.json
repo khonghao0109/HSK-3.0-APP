@@ -1,0 +1,588 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l15",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l15-thoi-tiet-cam-giac",
+    "title": "Thời tiết và cảm giác",
+    "description": "Bài 15 HSK1: nói về thời tiết và cảm giác (lạnh, nóng, đói, khát, mệt); câu vị ngữ tính từ, 太…了, 非常/真/最 + tính từ và 了 chỉ thay đổi (下雨了); 20 từ vựng về trời, mưa, gió và lời khen.",
+    "orderIndex": 1015
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "天气",
+      "pinyin": "tiānqì",
+      "meaningVi": "thời tiết",
+      "example": {
+        "hanzi": "今天天气很好。",
+        "pinyin": "Jīntiān tiānqì hěn hǎo.",
+        "meaningVi": "Hôm nay thời tiết rất đẹp."
+      }
+    },
+    {
+      "hanzi": "天",
+      "pinyin": "tiān",
+      "meaningVi": "trời; ngày",
+      "example": {
+        "hanzi": "天上有一个飞机。",
+        "pinyin": "Tiān shang yǒu yí ge fēijī.",
+        "meaningVi": "Trên trời có một chiếc máy bay."
+      }
+    },
+    {
+      "hanzi": "雨",
+      "pinyin": "yǔ",
+      "meaningVi": "mưa",
+      "example": {
+        "hanzi": "雨很大。",
+        "pinyin": "Yǔ hěn dà.",
+        "meaningVi": "Mưa rất to."
+      }
+    },
+    {
+      "hanzi": "下雨",
+      "pinyin": "xiàyǔ",
+      "meaningVi": "mưa (trời mưa)",
+      "example": {
+        "hanzi": "明天会下雨吗？",
+        "pinyin": "Míngtiān huì xiàyǔ ma?",
+        "meaningVi": "Ngày mai có mưa không?"
+      }
+    },
+    {
+      "hanzi": "风",
+      "pinyin": "fēng",
+      "meaningVi": "gió",
+      "example": {
+        "hanzi": "今天风很大。",
+        "pinyin": "Jīntiān fēng hěn dà.",
+        "meaningVi": "Hôm nay gió rất to."
+      }
+    },
+    {
+      "hanzi": "冷",
+      "pinyin": "lěng",
+      "meaningVi": "lạnh",
+      "example": {
+        "hanzi": "外边很冷。",
+        "pinyin": "Wàibian hěn lěng.",
+        "meaningVi": "Bên ngoài rất lạnh."
+      }
+    },
+    {
+      "hanzi": "热",
+      "pinyin": "rè",
+      "meaningVi": "nóng",
+      "example": {
+        "hanzi": "今天太热了。",
+        "pinyin": "Jīntiān tài rè le.",
+        "meaningVi": "Hôm nay nóng quá."
+      }
+    },
+    {
+      "hanzi": "渴",
+      "pinyin": "kě",
+      "meaningVi": "khát",
+      "example": {
+        "hanzi": "我渴了，想喝水。",
+        "pinyin": "Wǒ kě le, xiǎng hē shuǐ.",
+        "meaningVi": "Tôi khát rồi, muốn uống nước."
+      }
+    },
+    {
+      "hanzi": "饿",
+      "pinyin": "è",
+      "meaningVi": "đói",
+      "example": {
+        "hanzi": "你饿不饿？",
+        "pinyin": "Nǐ è bu è?",
+        "meaningVi": "Bạn có đói không?"
+      }
+    },
+    {
+      "hanzi": "累",
+      "pinyin": "lèi",
+      "meaningVi": "mệt",
+      "example": {
+        "hanzi": "我今天很累。",
+        "pinyin": "Wǒ jīntiān hěn lèi.",
+        "meaningVi": "Hôm nay tôi rất mệt."
+      }
+    },
+    {
+      "hanzi": "太",
+      "pinyin": "tài",
+      "meaningVi": "quá, lắm",
+      "example": {
+        "hanzi": "这个太贵了。",
+        "pinyin": "Zhè ge tài guì le.",
+        "meaningVi": "Cái này đắt quá."
+      }
+    },
+    {
+      "hanzi": "非常",
+      "pinyin": "fēicháng",
+      "meaningVi": "vô cùng, rất",
+      "example": {
+        "hanzi": "我非常高兴。",
+        "pinyin": "Wǒ fēicháng gāoxìng.",
+        "meaningVi": "Tôi vô cùng vui."
+      }
+    },
+    {
+      "hanzi": "真",
+      "pinyin": "zhēn",
+      "meaningVi": "thật, thật là",
+      "example": {
+        "hanzi": "你真好！",
+        "pinyin": "Nǐ zhēn hǎo!",
+        "meaningVi": "Bạn thật tốt!"
+      }
+    },
+    {
+      "hanzi": "真的",
+      "pinyin": "zhēnde",
+      "meaningVi": "thật sự, thật",
+      "example": {
+        "hanzi": "这是真的吗？",
+        "pinyin": "Zhè shì zhēnde ma?",
+        "meaningVi": "Cái này là thật à?"
+      }
+    },
+    {
+      "hanzi": "最",
+      "pinyin": "zuì",
+      "meaningVi": "nhất",
+      "example": {
+        "hanzi": "我最喜欢喝茶。",
+        "pinyin": "Wǒ zuì xǐhuan hē chá.",
+        "meaningVi": "Tôi thích uống trà nhất."
+      }
+    },
+    {
+      "hanzi": "好看",
+      "pinyin": "hǎokàn",
+      "meaningVi": "đẹp, dễ nhìn; hay (phim, sách)",
+      "example": {
+        "hanzi": "这个电影很好看。",
+        "pinyin": "Zhè ge diànyǐng hěn hǎokàn.",
+        "meaningVi": "Bộ phim này rất hay."
+      }
+    },
+    {
+      "hanzi": "好吃",
+      "pinyin": "hǎochī",
+      "meaningVi": "ngon",
+      "example": {
+        "hanzi": "妈妈做的饭很好吃。",
+        "pinyin": "Māma zuò de fàn hěn hǎochī.",
+        "meaningVi": "Cơm mẹ nấu rất ngon."
+      }
+    },
+    {
+      "hanzi": "好听",
+      "pinyin": "hǎotīng",
+      "meaningVi": "hay, dễ nghe",
+      "example": {
+        "hanzi": "这个歌很好听。",
+        "pinyin": "Zhè ge gē hěn hǎotīng.",
+        "meaningVi": "Bài hát này rất hay."
+      }
+    },
+    {
+      "hanzi": "好玩儿",
+      "pinyin": "hǎowánr",
+      "meaningVi": "vui, thú vị",
+      "example": {
+        "hanzi": "北京很好玩儿。",
+        "pinyin": "Běijīng hěn hǎowánr.",
+        "meaningVi": "Bắc Kinh rất thú vị."
+      }
+    },
+    {
+      "hanzi": "高",
+      "pinyin": "gāo",
+      "meaningVi": "cao",
+      "example": {
+        "hanzi": "我哥哥很高。",
+        "pinyin": "Wǒ gēge hěn gāo.",
+        "meaningVi": "Anh trai tôi rất cao."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: thời tiết và cảm giác",
+      "subtitle": "20 từ HSK1 về trời, mưa, gió, cảm giác cơ thể, mức độ và lời khen",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 15 gồm 20 từ vựng HSK1 về thời tiết và cảm giác. Nhóm thời tiết: 天气 (thời tiết), 天 (trời; ngày), 雨 (mưa), 下雨 (trời mưa), 风 (gió), 冷 (lạnh), 热 (nóng). Nhóm cảm giác: 渴 (khát), 饿 (đói), 累 (mệt). Nhóm mức độ: 太 (quá, lắm), 非常 (vô cùng, rất), 真 (thật, thật là), 真的 (thật sự), 最 (nhất). Nhóm lời khen: 好看 (đẹp; hay), 好吃 (ngon), 好听 (hay, dễ nghe), 好玩儿 (vui, thú vị), 高 (cao). Lưu ý phát âm: 热 rè có âm đầu r; 渴 kě và 饿 è dễ lẫn; 累 lèi khác 冷 lěng; 好玩儿 đọc hǎowánr (儿 hoá, cuộn lưỡi ở cuối)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: câu vị ngữ tính từ, 太…了, 非常/真/最, 下雨了",
+      "subtitle": "Bốn điểm ngữ pháp để tả thời tiết, cảm giác và mức độ",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Câu vị ngữ tính từ: tính từ làm vị ngữ trực tiếp, không cần 是. Trong câu kể thường thêm 很 trước tính từ; 很 ở đây không mang nghĩa “rất” mạnh. Cấu trúc: chủ ngữ + 很 + tính từ; phủ định 不 + tính từ. Không nói 天气是冷. Ví dụ: 天气很冷。 (Tiānqì hěn lěng.) = Thời tiết lạnh. / 今天风很大。 (Jīntiān fēng hěn dà.) = Hôm nay gió to. / 我不饿。 (Wǒ bú è.) = Tôi không đói."
+        },
+        {
+          "type": "text",
+          "value": "2. 太 + tính từ + 了: “quá…”, nói mức độ cao hoặc cảm thán, 了 đứng cuối câu. Phủ định 不太 + tính từ = không… lắm (không cần 了). Cấu trúc: chủ ngữ + 太 + tính từ + 了. Ví dụ: 今天太热了。 (Jīntiān tài rè le.) = Hôm nay nóng quá. / 这个太贵了。 (Zhè ge tài guì le.) = Cái này đắt quá. / 外边不太冷。 (Wàibian bú tài lěng.) = Bên ngoài không lạnh lắm."
+        },
+        {
+          "type": "text",
+          "value": "3. 非常/真/最 + tính từ: 非常 = vô cùng, rất; 真 = thật là (thường dùng để cảm thán); 最 = nhất (so với tất cả). Ba phó từ này đứng ngay trước tính từ. Ví dụ: 我非常累。 (Wǒ fēicháng lèi.) = Tôi vô cùng mệt. / 这个歌真好听！ (Zhè ge gē zhēn hǎotīng!) = Bài hát này hay thật! / 我哥哥最高。 (Wǒ gēge zuì gāo.) = Anh trai tôi cao nhất."
+        },
+        {
+          "type": "text",
+          "value": "4. 了 chỉ thay đổi: 了 ở cuối câu cho biết đã xuất hiện tình hình mới, trước đó chưa như vậy. Cấu trúc: câu + 了. Ví dụ: 下雨了。 (Xiàyǔ le.) = Trời mưa rồi. / 我饿了。 (Wǒ è le.) = Tôi đói rồi. / 天冷了。 (Tiān lěng le.) = Trời lạnh rồi."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hôm nay trời thế nào",
+      "subtitle": "Hội thoại ngắn hỏi thời tiết, cảm giác và khen món ăn; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 今天天气好吗？ B: 不太好，外边风很大。 (Jīntiān tiānqì hǎo ma? / Bú tài hǎo, wàibian fēng hěn dà.) — A: Hôm nay thời tiết có đẹp không? B: Không đẹp lắm, bên ngoài gió to."
+        },
+        {
+          "type": "text",
+          "value": "A: 你看，下雨了！ B: 雨真大，我们不出去了。 (Nǐ kàn, xiàyǔ le! / Yǔ zhēn dà, wǒmen bù chūqù le.) — A: Bạn xem, mưa rồi! B: Mưa to thật, chúng ta không ra ngoài nữa."
+        },
+        {
+          "type": "text",
+          "value": "A: 你饿不饿？ B: 我不饿，我渴了，想喝水。 (Nǐ è bu è? / Wǒ bú è, wǒ kě le, xiǎng hē shuǐ.) — A: Bạn có đói không? B: Tôi không đói, tôi khát rồi, muốn uống nước."
+        },
+        {
+          "type": "text",
+          "value": "A: 这个包子好吃吗？ B: 非常好吃！ (Zhè ge bāozi hǎochī ma? / Fēicháng hǎochī!) — A: Cái bánh bao này có ngon không? B: Rất ngon!"
+        },
+        {
+          "type": "text",
+          "value": "A: 你今天累吗？ B: 太累了，我想睡觉。 (Nǐ jīntiān lèi ma? / Tài lèi le, wǒ xiǎng shuìjiào.) — A: Hôm nay bạn có mệt không? B: Mệt quá, tôi muốn đi ngủ."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l15:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “khát”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "饿"
+          },
+          {
+            "id": "opt-b",
+            "text": "累"
+          },
+          {
+            "id": "opt-c",
+            "text": "冷"
+          },
+          {
+            "id": "opt-d",
+            "text": "渴"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "渴 (kě) nghĩa là “khát”. 饿 (è) là “đói”, 累 (lèi) là “mệt”, 冷 (lěng) là “lạnh”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào dùng để khen một bài hát “hay, dễ nghe”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "好听"
+          },
+          {
+            "id": "opt-b",
+            "text": "好看"
+          },
+          {
+            "id": "opt-c",
+            "text": "好吃"
+          },
+          {
+            "id": "opt-d",
+            "text": "好玩儿"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "好听 (hǎotīng) nghĩa là “hay, dễ nghe”, dùng cho bài hát, giọng nói. 好看 (hǎokàn) là “đẹp; hay (phim, sách)”, 好吃 (hǎochī) là “ngon”, 好玩儿 (hǎowánr) là “vui, thú vị”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 今天太热___。 (Hôm nay nóng quá.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "吗"
+          },
+          {
+            "id": "opt-b",
+            "text": "了"
+          },
+          {
+            "id": "opt-c",
+            "text": "的"
+          },
+          {
+            "id": "opt-d",
+            "text": "是"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "Cấu trúc 太 + tính từ + 了 (le): 今天太热了 = hôm nay nóng quá. 吗 biến câu thành câu hỏi, sai với dấu chấm và bản dịch; 的 và 是 đặt cuối câu này thì sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我哥哥___高。 (Anh trai tôi cao nhất.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "很"
+          },
+          {
+            "id": "opt-b",
+            "text": "太"
+          },
+          {
+            "id": "opt-c",
+            "text": "最"
+          },
+          {
+            "id": "opt-d",
+            "text": "真"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "最 (zuì) nghĩa là “nhất”: 我哥哥最高 = anh trai tôi cao nhất. 很 (rất), 太 (quá), 真 (thật là) đặt vào vẫn đúng ngữ pháp nhưng không có nghĩa “nhất”, sai theo bản dịch.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 外边___了。(Bên ngoài trời mưa rồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "下雨",
+          "xiàyǔ",
+          "xiayu"
+        ]
+      },
+      "explanation": "下雨 (xiàyǔ) nghĩa là “trời mưa”; 下雨了 = trời mưa rồi, 了 chỉ tình hình mới xuất hiện.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e06",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 今天___很大，很冷。(Hôm nay gió rất to, rất lạnh.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "风",
+          "fēng",
+          "feng"
+        ]
+      },
+      "explanation": "风 (fēng) nghĩa là “gió”; 风很大 = gió to. 雨 (yǔ) là “mưa”, không khớp bản dịch.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我___了，想喝水。(Tôi khát rồi, muốn uống nước.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "渴",
+          "kě",
+          "ke"
+        ]
+      },
+      "explanation": "渴 (kě) nghĩa là “khát”; 我渴了 = tôi khát rồi, nên muốn uống nước (喝水).",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bài hát này hay quá.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-w5",
+            "text": "了"
+          },
+          {
+            "id": "tkn-s1",
+            "text": "太"
+          },
+          {
+            "id": "tkn-p7",
+            "text": "好听"
+          },
+          {
+            "id": "tkn-d4",
+            "text": "这个歌"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-d4",
+          "tkn-s1",
+          "tkn-p7",
+          "tkn-w5"
+        ]
+      },
+      "explanation": "Câu đúng là 这个歌太好听了: chủ ngữ + 太 + tính từ + 了. 太 đứng ngay trước tính từ, 了 đứng cuối câu (ví dụ sai: 这个歌好听太了, 太好听这个歌了, 这个歌太了好听).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Cơm mẹ nấu rất ngon.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-z7",
+            "text": "好吃"
+          },
+          {
+            "id": "tkn-h2",
+            "text": "很"
+          },
+          {
+            "id": "tkn-w4",
+            "text": "做的饭"
+          },
+          {
+            "id": "tkn-w1",
+            "text": "妈妈"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w1",
+          "tkn-w4",
+          "tkn-h2",
+          "tkn-z7"
+        ]
+      },
+      "explanation": "Câu đúng là 妈妈做的饭很好吃: chủ ngữ (妈妈做的饭) + 很 + tính từ (好吃). 妈妈 phải đứng trước 做的饭 để làm thành “cơm mẹ nấu”, 很 đứng ngay trước 好吃 (ví dụ sai: 做的饭妈妈很好吃, 妈妈很做的饭好吃, 很好吃妈妈做的饭).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l15:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Cái bánh bao này rất ngon.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s8",
+            "text": "非常"
+          },
+          {
+            "id": "tkn-r4",
+            "text": "好吃"
+          },
+          {
+            "id": "tkn-x2",
+            "text": "这个包子"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-x2",
+          "tkn-s8",
+          "tkn-r4"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 这个包子非常好吃: chủ ngữ + 非常 + tính từ. 非常 phải đứng ngay trước 好吃 (ví dụ sai: 这个包子好吃非常, 非常这个包子好吃, 好吃这个包子非常).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-03",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-03 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

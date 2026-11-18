@@ -1,0 +1,584 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l11",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l11-phuong-huong",
+    "title": "Phương hướng và vị trí",
+    "description": "Bài 11 HSK1: nói vị trí và phương hướng bằng các từ phương vị như 上边, 前边, 旁边, 东边, 中间; hỏi và chỉ đường trong nhà, ở trường, trong thành phố bằng 20 từ vựng cơ bản.",
+    "orderIndex": 1011
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "上边",
+      "pinyin": "shàngbian",
+      "meaningVi": "bên trên, phía trên",
+      "example": {
+        "hanzi": "书在桌子上边。",
+        "pinyin": "Shū zài zhuōzi shàngbian.",
+        "meaningVi": "Sách ở trên bàn."
+      }
+    },
+    {
+      "hanzi": "下边",
+      "pinyin": "xiàbian",
+      "meaningVi": "bên dưới, phía dưới",
+      "example": {
+        "hanzi": "我的书在床下边。",
+        "pinyin": "Wǒ de shū zài chuáng xiàbian.",
+        "meaningVi": "Sách của tôi ở dưới gầm giường."
+      }
+    },
+    {
+      "hanzi": "前边",
+      "pinyin": "qiánbian",
+      "meaningVi": "phía trước",
+      "example": {
+        "hanzi": "学校前边有一个商店。",
+        "pinyin": "Xuéxiào qiánbian yǒu yí ge shāngdiàn.",
+        "meaningVi": "Phía trước trường có một cửa hàng."
+      }
+    },
+    {
+      "hanzi": "后边",
+      "pinyin": "hòubian",
+      "meaningVi": "phía sau",
+      "example": {
+        "hanzi": "我家后边有一个医院。",
+        "pinyin": "Wǒ jiā hòubian yǒu yí ge yīyuàn.",
+        "meaningVi": "Phía sau nhà tôi có một bệnh viện."
+      }
+    },
+    {
+      "hanzi": "左边",
+      "pinyin": "zuǒbian",
+      "meaningVi": "bên trái",
+      "example": {
+        "hanzi": "左边的那个人是我哥哥。",
+        "pinyin": "Zuǒbian de nà ge rén shì wǒ gēge.",
+        "meaningVi": "Người bên trái là anh trai tôi."
+      }
+    },
+    {
+      "hanzi": "右边",
+      "pinyin": "yòubian",
+      "meaningVi": "bên phải",
+      "example": {
+        "hanzi": "电脑在桌子右边。",
+        "pinyin": "Diànnǎo zài zhuōzi yòubian.",
+        "meaningVi": "Máy tính ở bên phải cái bàn."
+      }
+    },
+    {
+      "hanzi": "里边",
+      "pinyin": "lǐbian",
+      "meaningVi": "bên trong",
+      "example": {
+        "hanzi": "书包里边有两本书。",
+        "pinyin": "Shūbāo lǐbian yǒu liǎng běn shū.",
+        "meaningVi": "Trong cặp có hai quyển sách."
+      }
+    },
+    {
+      "hanzi": "外边",
+      "pinyin": "wàibian",
+      "meaningVi": "bên ngoài",
+      "example": {
+        "hanzi": "外边下雨了。",
+        "pinyin": "Wàibian xià yǔ le.",
+        "meaningVi": "Bên ngoài mưa rồi."
+      }
+    },
+    {
+      "hanzi": "旁边",
+      "pinyin": "pángbiān",
+      "meaningVi": "bên cạnh",
+      "example": {
+        "hanzi": "我坐在他旁边。",
+        "pinyin": "Wǒ zuò zài tā pángbiān.",
+        "meaningVi": "Tôi ngồi bên cạnh anh ấy."
+      }
+    },
+    {
+      "hanzi": "东边",
+      "pinyin": "dōngbian",
+      "meaningVi": "phía đông",
+      "example": {
+        "hanzi": "饭店在学校东边。",
+        "pinyin": "Fàndiàn zài xuéxiào dōngbian.",
+        "meaningVi": "Nhà hàng ở phía đông trường học."
+      }
+    },
+    {
+      "hanzi": "西边",
+      "pinyin": "xībian",
+      "meaningVi": "phía tây",
+      "example": {
+        "hanzi": "医院在西边。",
+        "pinyin": "Yīyuàn zài xībian.",
+        "meaningVi": "Bệnh viện ở phía tây."
+      }
+    },
+    {
+      "hanzi": "南边",
+      "pinyin": "nánbian",
+      "meaningVi": "phía nam",
+      "example": {
+        "hanzi": "车站在南边。",
+        "pinyin": "Chēzhàn zài nánbian.",
+        "meaningVi": "Bến xe ở phía nam."
+      }
+    },
+    {
+      "hanzi": "北边",
+      "pinyin": "běibian",
+      "meaningVi": "phía bắc",
+      "example": {
+        "hanzi": "机场在北边。",
+        "pinyin": "Jīchǎng zài běibian.",
+        "meaningVi": "Sân bay ở phía bắc."
+      }
+    },
+    {
+      "hanzi": "中间",
+      "pinyin": "zhōngjiān",
+      "meaningVi": "ở giữa",
+      "example": {
+        "hanzi": "我坐在爸爸妈妈中间。",
+        "pinyin": "Wǒ zuò zài bàba māma zhōngjiān.",
+        "meaningVi": "Tôi ngồi giữa bố và mẹ."
+      }
+    },
+    {
+      "hanzi": "东",
+      "pinyin": "dōng",
+      "meaningVi": "đông (phương hướng)",
+      "example": {
+        "hanzi": "我家在东边。",
+        "pinyin": "Wǒ jiā zài dōngbian.",
+        "meaningVi": "Nhà tôi ở phía đông."
+      }
+    },
+    {
+      "hanzi": "西",
+      "pinyin": "xī",
+      "meaningVi": "tây (phương hướng)",
+      "example": {
+        "hanzi": "学校在西边，不在东边。",
+        "pinyin": "Xuéxiào zài xībian, bú zài dōngbian.",
+        "meaningVi": "Trường ở phía tây, không ở phía đông."
+      }
+    },
+    {
+      "hanzi": "南",
+      "pinyin": "nán",
+      "meaningVi": "nam (phương hướng)",
+      "example": {
+        "hanzi": "我们去南边吧。",
+        "pinyin": "Wǒmen qù nánbian ba.",
+        "meaningVi": "Chúng ta đi về phía nam nhé."
+      }
+    },
+    {
+      "hanzi": "北",
+      "pinyin": "běi",
+      "meaningVi": "bắc (phương hướng)",
+      "example": {
+        "hanzi": "北边很冷。",
+        "pinyin": "Běibian hěn lěng.",
+        "meaningVi": "Phía bắc rất lạnh."
+      }
+    },
+    {
+      "hanzi": "左",
+      "pinyin": "zuǒ",
+      "meaningVi": "trái",
+      "example": {
+        "hanzi": "左手",
+        "pinyin": "Zuǒ shǒu",
+        "meaningVi": "Tay trái"
+      }
+    },
+    {
+      "hanzi": "右",
+      "pinyin": "yòu",
+      "meaningVi": "phải (bên phải)",
+      "example": {
+        "hanzi": "右手",
+        "pinyin": "Yòu shǒu",
+        "meaningVi": "Tay phải"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: phương hướng và vị trí",
+      "subtitle": "20 từ HSK1 chỉ trên dưới, trước sau, trái phải, trong ngoài và bốn phương",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 11 gồm 20 từ vựng HSK1 chỉ vị trí và phương hướng. Nhóm trên dưới, trước sau, trong ngoài: 上边 (bên trên), 下边 (bên dưới), 前边 (phía trước), 后边 (phía sau), 里边 (bên trong), 外边 (bên ngoài), 旁边 (bên cạnh), 中间 (ở giữa). Nhóm trái phải: 左 (trái), 右 (phải), 左边 (bên trái), 右边 (bên phải). Nhóm bốn phương: 东 (đông), 西 (tây), 南 (nam), 北 (bắc), 东边 (phía đông), 西边 (phía tây), 南边 (phía nam), 北边 (phía bắc). Đọc to từng từ; chữ 边 trong các từ này thường đọc nhẹ (shàngbian, qiánbian), riêng 旁边 đọc pángbiān."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: từ phương vị -边, A 在 B 的 + phương vị, nơi chốn + 有",
+      "subtitle": "Ba điểm ngữ pháp để nói đồ vật, người, nơi chốn ở đâu",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Từ phương vị + 边: ghép 上, 下, 前, 后, 左, 右, 里, 外, 东, 西, 南, 北 với 边 để chỉ vị trí (上边, 左边, 东边…). 中间 (ở giữa) và 旁边 (bên cạnh) cũng là từ phương vị. Từ phương vị đứng sau danh từ, khác tiếng Việt: 桌子上边 = trên bàn, 学校前边 = phía trước trường. Ví dụ: 书在桌子上边。 (Shū zài zhuōzi shàngbian.) = Sách ở trên bàn. / 商店在学校旁边。 (Shāngdiàn zài xuéxiào pángbiān.) = Cửa hàng ở bên cạnh trường. / 我家在东边。 (Wǒ jiā zài dōngbian.) = Nhà tôi ở phía đông."
+        },
+        {
+          "type": "text",
+          "value": "2. A 在 B (的) + phương vị: nói người hoặc vật A ở vị trí nào so với B. Cấu trúc: A + 在 + B + (的) + từ phương vị. 的 có thể có hoặc không. Hỏi vị trí dùng 在哪儿. Ví dụ: 医院在商店的后边。 (Yīyuàn zài shāngdiàn de hòubian.) = Bệnh viện ở phía sau cửa hàng. / 我坐在他左边。 (Wǒ zuò zài tā zuǒbian.) = Tôi ngồi bên trái anh ấy. / A: 书店在哪儿？ B: 书店在学校北边。 (Shūdiàn zài nǎr? / Shūdiàn zài xuéxiào běibian.) = A: Hiệu sách ở đâu? B: Hiệu sách ở phía bắc trường."
+        },
+        {
+          "type": "text",
+          "value": "3. Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai (câu tồn tại). Cấu trúc: nơi chốn (+ từ phương vị) + 有 + (số lượng) + danh từ; phủ định dùng 没有. Chú ý trật tự: nơi chốn đứng đầu câu, khác với câu 在 (vật đứng đầu). Ví dụ: 学校前边有一个商店。 (Xuéxiào qiánbian yǒu yí ge shāngdiàn.) = Phía trước trường có một cửa hàng. / 书包里边有两本书。 (Shūbāo lǐbian yǒu liǎng běn shū.) = Trong cặp sách có hai quyển sách. / 外边没有人。 (Wàibian méiyǒu rén.) = Bên ngoài không có ai."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hỏi đường và hỏi vị trí",
+      "subtitle": "Hội thoại ngắn hỏi nơi chốn, đồ vật ở đâu; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 请问，洗手间在哪儿？ B: 在前边，商店的左边。 (Qǐngwèn, xǐshǒujiān zài nǎr? / Zài qiánbian, shāngdiàn de zuǒbian.) — A: Xin hỏi, nhà vệ sinh ở đâu? B: Ở phía trước, bên trái cửa hàng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你家在哪儿？ B: 我家在学校的东边。 (Nǐ jiā zài nǎr? / Wǒ jiā zài xuéxiào de dōngbian.) — A: Nhà bạn ở đâu? B: Nhà tôi ở phía đông trường."
+        },
+        {
+          "type": "text",
+          "value": "A: 你家旁边有商店吗？ B: 有，我家旁边有一个大商店。 (Nǐ jiā pángbiān yǒu shāngdiàn ma? / Yǒu, wǒ jiā pángbiān yǒu yí ge dà shāngdiàn.) — A: Bên cạnh nhà bạn có cửa hàng không? B: Có, bên cạnh nhà tôi có một cửa hàng lớn."
+        },
+        {
+          "type": "text",
+          "value": "A: 我的手机在哪儿？ B: 在你的书包里边。 (Wǒ de shǒujī zài nǎr? / Zài nǐ de shūbāo lǐbian.) — A: Điện thoại của tôi ở đâu? B: Ở trong cặp sách của bạn."
+        },
+        {
+          "type": "text",
+          "value": "A: 外边有人吗？ B: 没有，外边没有人。 (Wàibian yǒu rén ma? / Méiyǒu, wàibian méiyǒu rén.) — A: Bên ngoài có ai không? B: Không, bên ngoài không có ai."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l11:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “bên cạnh”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "中间"
+          },
+          {
+            "id": "opt-b",
+            "text": "后边"
+          },
+          {
+            "id": "opt-c",
+            "text": "外边"
+          },
+          {
+            "id": "opt-d",
+            "text": "旁边"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "旁边 (pángbiān) nghĩa là “bên cạnh”. 中间 (zhōngjiān) là “ở giữa”, 后边 (hòubian) là “phía sau”, 外边 (wàibian) là “bên ngoài”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “phía bắc”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "北边"
+          },
+          {
+            "id": "opt-b",
+            "text": "南边"
+          },
+          {
+            "id": "opt-c",
+            "text": "东边"
+          },
+          {
+            "id": "opt-d",
+            "text": "西边"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "北边 (běibian) nghĩa là “phía bắc”. 南边 (nánbian) là “phía nam”, 东边 (dōngbian) là “phía đông”, 西边 (xībian) là “phía tây”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 书在桌子___。 (Sách ở trên bàn.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "下边"
+          },
+          {
+            "id": "opt-b",
+            "text": "上边"
+          },
+          {
+            "id": "opt-c",
+            "text": "里边"
+          },
+          {
+            "id": "opt-d",
+            "text": "前边"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "上边 (shàngbian) nghĩa là “bên trên”, nên 书在桌子上边 = sách ở trên bàn. 下边 (bên dưới), 里边 (bên trong), 前边 (phía trước) đặt vào vẫn đúng ngữ pháp nhưng sai nghĩa theo bản dịch nên bị loại.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 学校前边___一个商店。 (Phía trước trường có một cửa hàng.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "在"
+          },
+          {
+            "id": "opt-b",
+            "text": "叫"
+          },
+          {
+            "id": "opt-c",
+            "text": "有"
+          },
+          {
+            "id": "opt-d",
+            "text": "去"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "Câu tồn tại: nơi chốn + 有 + vật, nên 学校前边有一个商店. 在 dùng khi vật đứng đầu câu (商店在学校前边); 叫 (gọi là) và 去 (đi) đặt vào thì sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e05",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 你坐在我___吧。(Bạn ngồi bên cạnh tôi đi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "旁边",
+          "pángbiān",
+          "pangbian"
+        ]
+      },
+      "explanation": "旁边 (pángbiān) nghĩa là “bên cạnh”; 坐在我旁边 = ngồi bên cạnh tôi. Từ phương vị đứng sau 我.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 医院在商店的___。(Bệnh viện ở phía sau cửa hàng.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "后边",
+          "hòubian",
+          "houbian"
+        ]
+      },
+      "explanation": "后边 (hòubian) nghĩa là “phía sau”; A 在 B 的后边 = A ở phía sau B.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我家在学校的___边。(Nhà tôi ở phía tây trường.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "西",
+          "xī",
+          "xi"
+        ]
+      },
+      "explanation": "西 (xī) nghĩa là “tây”; 西 + 边 = 西边 (phía tây). 东 là đông, 南 là nam, 北 là bắc.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Sách ở trên bàn.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-h4",
+            "text": "在"
+          },
+          {
+            "id": "tkn-v8",
+            "text": "上边"
+          },
+          {
+            "id": "tkn-t2",
+            "text": "桌子"
+          },
+          {
+            "id": "tkn-v7",
+            "text": "书"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-v7",
+          "tkn-h4",
+          "tkn-t2",
+          "tkn-v8"
+        ]
+      },
+      "explanation": "Câu đúng là 书在桌子上边: A (书) + 在 + B (桌子) + từ phương vị (上边). 桌子在书上边 đúng ngữ pháp nhưng nghĩa là “bàn ở trên sách”, sai theo đề; từ phương vị 上边 phải đứng sau 桌子, không đứng trước (ví dụ sai: 书在上边桌子, 上边书在桌子).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bên cạnh nhà tôi có một cửa hàng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s9",
+            "text": "有"
+          },
+          {
+            "id": "tkn-c6",
+            "text": "旁边"
+          },
+          {
+            "id": "tkn-r8",
+            "text": "我家"
+          },
+          {
+            "id": "tkn-d4",
+            "text": "一个商店"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-r8",
+          "tkn-c6",
+          "tkn-s9",
+          "tkn-d4"
+        ]
+      },
+      "explanation": "Câu tồn tại: nơi chốn (我家旁边) + 有 + vật (一个商店), nên câu đúng là 我家旁边有一个商店. 旁边 phải đứng ngay sau 我家; vật có số lượng 一个 không đứng đầu câu có 有 (ví dụ sai: 一个商店有我家旁边, 旁边我家有一个商店, 我家有旁边一个商店).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l11:e10",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bệnh viện ở phía đông.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p1",
+            "text": "医院"
+          },
+          {
+            "id": "tkn-f1",
+            "text": "东边"
+          },
+          {
+            "id": "tkn-v5",
+            "text": "在"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-p1",
+          "tkn-v5",
+          "tkn-f1"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 医院在东边: vật hoặc nơi được hỏi (医院) + 在 + vị trí (东边). Các hoán vị khác sai trật tự hoặc sai nghĩa (ví dụ sai: 东边在医院, 在医院东边, 医院东边在).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-03",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-03 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

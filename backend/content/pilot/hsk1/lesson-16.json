@@ -1,0 +1,588 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l16",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l16-di-chuyen-giup-do",
+    "title": "Di chuyển và giúp đỡ",
+    "description": "Bài 16 HSK1: nói về di chuyển và giúp đỡ: bổ ngữ xu hướng 来/去 (出去, 进来, 回来), 跟 + người + 一起 + động từ, 帮 + người + động từ và động từ + 到 (找到); 20 từ vựng về ra vào, đi về, chờ, tìm, cầm, đặt và giúp.",
+    "orderIndex": 1016
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "出去",
+      "pinyin": "chūqù",
+      "meaningVi": "đi ra, ra ngoài",
+      "example": {
+        "hanzi": "我们出去吃饭吧。",
+        "pinyin": "Wǒmen chūqù chī fàn ba.",
+        "meaningVi": "Chúng ta ra ngoài ăn cơm nhé."
+      }
+    },
+    {
+      "hanzi": "出来",
+      "pinyin": "chūlái",
+      "meaningVi": "đi ra (về phía người nói)",
+      "example": {
+        "hanzi": "你出来一下。",
+        "pinyin": "Nǐ chūlái yíxià.",
+        "meaningVi": "Bạn ra đây một chút."
+      }
+    },
+    {
+      "hanzi": "进去",
+      "pinyin": "jìnqù",
+      "meaningVi": "đi vào (rời xa người nói)",
+      "example": {
+        "hanzi": "你先进去吧。",
+        "pinyin": "Nǐ xiān jìnqù ba.",
+        "meaningVi": "Bạn vào trước đi."
+      }
+    },
+    {
+      "hanzi": "进来",
+      "pinyin": "jìnlái",
+      "meaningVi": "đi vào (về phía người nói)",
+      "example": {
+        "hanzi": "请进来。",
+        "pinyin": "Qǐng jìnlái.",
+        "meaningVi": "Mời vào đây."
+      }
+    },
+    {
+      "hanzi": "回去",
+      "pinyin": "huíqù",
+      "meaningVi": "trở về, quay về",
+      "example": {
+        "hanzi": "我明天回去。",
+        "pinyin": "Wǒ míngtiān huíqù.",
+        "meaningVi": "Ngày mai tôi về."
+      }
+    },
+    {
+      "hanzi": "回来",
+      "pinyin": "huílái",
+      "meaningVi": "trở lại, quay lại (về đây)",
+      "example": {
+        "hanzi": "妈妈什么时候回来？",
+        "pinyin": "Māma shénme shíhou huílái?",
+        "meaningVi": "Khi nào mẹ về?"
+      }
+    },
+    {
+      "hanzi": "回",
+      "pinyin": "huí",
+      "meaningVi": "về, trở về",
+      "example": {
+        "hanzi": "我回家了。",
+        "pinyin": "Wǒ huí jiā le.",
+        "meaningVi": "Tôi về nhà rồi."
+      }
+    },
+    {
+      "hanzi": "过",
+      "pinyin": "guò",
+      "meaningVi": "qua, đi qua; trải qua",
+      "example": {
+        "hanzi": "我们过马路吧。",
+        "pinyin": "Wǒmen guò mǎlù ba.",
+        "meaningVi": "Chúng ta qua đường nhé."
+      }
+    },
+    {
+      "hanzi": "跑",
+      "pinyin": "pǎo",
+      "meaningVi": "chạy",
+      "example": {
+        "hanzi": "他在外边跑。",
+        "pinyin": "Tā zài wàibian pǎo.",
+        "meaningVi": "Anh ấy đang chạy ở bên ngoài."
+      }
+    },
+    {
+      "hanzi": "送",
+      "pinyin": "sòng",
+      "meaningVi": "tặng; tiễn, đưa",
+      "example": {
+        "hanzi": "我送你一本书。",
+        "pinyin": "Wǒ sòng nǐ yì běn shū.",
+        "meaningVi": "Tôi tặng bạn một quyển sách."
+      }
+    },
+    {
+      "hanzi": "跟",
+      "pinyin": "gēn",
+      "meaningVi": "với, cùng với",
+      "example": {
+        "hanzi": "我跟朋友去看电影。",
+        "pinyin": "Wǒ gēn péngyou qù kàn diànyǐng.",
+        "meaningVi": "Tôi đi xem phim với bạn."
+      }
+    },
+    {
+      "hanzi": "一起",
+      "pinyin": "yīqǐ",
+      "meaningVi": "cùng nhau",
+      "example": {
+        "hanzi": "我们一起去吧。",
+        "pinyin": "Wǒmen yìqǐ qù ba.",
+        "meaningVi": "Chúng ta cùng đi nhé."
+      }
+    },
+    {
+      "hanzi": "一块儿",
+      "pinyin": "yīkuàir",
+      "meaningVi": "cùng nhau (khẩu ngữ)",
+      "example": {
+        "hanzi": "我们一块儿吃饭吧。",
+        "pinyin": "Wǒmen yíkuàir chī fàn ba.",
+        "meaningVi": "Chúng ta cùng ăn cơm nhé."
+      }
+    },
+    {
+      "hanzi": "等",
+      "pinyin": "děng",
+      "meaningVi": "đợi, chờ",
+      "example": {
+        "hanzi": "请等一下。",
+        "pinyin": "Qǐng děng yíxià.",
+        "meaningVi": "Xin đợi một chút."
+      }
+    },
+    {
+      "hanzi": "找",
+      "pinyin": "zhǎo",
+      "meaningVi": "tìm",
+      "example": {
+        "hanzi": "你找谁？",
+        "pinyin": "Nǐ zhǎo shéi?",
+        "meaningVi": "Bạn tìm ai?"
+      }
+    },
+    {
+      "hanzi": "找到",
+      "pinyin": "zhǎodào",
+      "meaningVi": "tìm thấy",
+      "example": {
+        "hanzi": "我找到我的手机了。",
+        "pinyin": "Wǒ zhǎodào wǒ de shǒujī le.",
+        "meaningVi": "Tôi tìm thấy điện thoại của tôi rồi."
+      }
+    },
+    {
+      "hanzi": "拿",
+      "pinyin": "ná",
+      "meaningVi": "cầm, lấy",
+      "example": {
+        "hanzi": "我给你拿水。",
+        "pinyin": "Wǒ gěi nǐ ná shuǐ.",
+        "meaningVi": "Tôi lấy nước cho bạn."
+      }
+    },
+    {
+      "hanzi": "放",
+      "pinyin": "fàng",
+      "meaningVi": "đặt, để",
+      "example": {
+        "hanzi": "书放在桌子上吧。",
+        "pinyin": "Shū fàng zài zhuōzi shang ba.",
+        "meaningVi": "Để sách lên bàn đi."
+      }
+    },
+    {
+      "hanzi": "帮",
+      "pinyin": "bāng",
+      "meaningVi": "giúp",
+      "example": {
+        "hanzi": "你能帮我吗？",
+        "pinyin": "Nǐ néng bāng wǒ ma?",
+        "meaningVi": "Bạn giúp tôi được không?"
+      }
+    },
+    {
+      "hanzi": "帮忙",
+      "pinyin": "bāngmáng",
+      "meaningVi": "giúp đỡ, giúp một tay",
+      "example": {
+        "hanzi": "谢谢你帮忙。",
+        "pinyin": "Xièxie nǐ bāngmáng.",
+        "meaningVi": "Cảm ơn bạn đã giúp."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: di chuyển và giúp đỡ",
+      "subtitle": "20 từ HSK1 về ra vào, đi về, đi cùng, chờ, tìm, cầm, đặt và giúp",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 16 gồm 20 từ vựng HSK1 về di chuyển và giúp đỡ. Nhóm ra vào, đi về: 出去 (đi ra, ra ngoài), 出来 (đi ra, về phía người nói), 进去 (đi vào, rời xa người nói), 进来 (đi vào, về phía người nói), 回去 (trở về), 回来 (quay lại đây), 回 (về), 过 (qua, đi qua), 跑 (chạy). Nhóm đi cùng: 跟 (với, cùng với), 一起 (cùng nhau), 一块儿 (cùng nhau, khẩu ngữ), 送 (tặng; tiễn, đưa). Nhóm hành động: 等 (đợi, chờ), 找 (tìm), 找到 (tìm thấy), 拿 (cầm, lấy), 放 (đặt, để), 帮 (giúp), 帮忙 (giúp đỡ). Lưu ý phát âm: 来, 去 sau động từ trong lời nói thường đọc nhẹ; 一起 đọc yìqǐ, 一块儿 đọc yíkuàir (一 biến điệu); 找 zhǎo khác 跑 pǎo."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 来/去 chỉ hướng, 跟…一起, 帮 + người, động từ + 到",
+      "subtitle": "Bốn điểm ngữ pháp để nói đi ra, đi vào, đi cùng ai và giúp ai",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. Bổ ngữ xu hướng 来/去: 来 chỉ hướng về phía người nói, 去 chỉ hướng rời xa người nói. Ghép sau 出, 进, 回: 出来/出去, 进来/进去, 回来/回去. Người nói ở trong phòng mời người ngoài vào thì nói 进来; người nói ở ngoài bảo người khác vào thì nói 进去. Ví dụ: 请进来。 (Qǐng jìnlái.) = Mời vào. / 我们出去吃饭吧。 (Wǒmen chūqù chī fàn ba.) = Chúng ta ra ngoài ăn cơm nhé. / 妈妈什么时候回来？ (Māma shénme shíhou huílái?) = Mẹ khi nào về?"
+        },
+        {
+          "type": "text",
+          "value": "2. 跟 + người + 一起 + động từ: làm việc gì cùng với ai. 一块儿 dùng như 一起 trong khẩu ngữ. Cấu trúc: chủ ngữ + 跟 + người + 一起/一块儿 + động từ. Ví dụ: 我跟朋友一起去看电影。 (Wǒ gēn péngyou yìqǐ qù kàn diànyǐng.) = Tôi cùng bạn đi xem phim. / 你跟我一起走吧。 (Nǐ gēn wǒ yìqǐ zǒu ba.) = Bạn đi cùng tôi nhé. / 我们一块儿吃饭吧。 (Wǒmen yíkuàir chī fàn ba.) = Chúng ta cùng ăn cơm nhé."
+        },
+        {
+          "type": "text",
+          "value": "3. 帮 + người + động từ: giúp ai làm việc gì. 帮忙 không mang tân ngữ chỉ người phía sau: nói 谢谢你帮忙, không nói 帮忙我. Cấu trúc: chủ ngữ + 帮 + người + động từ. Ví dụ: 你能帮我拿水吗？ (Nǐ néng bāng wǒ ná shuǐ ma?) = Bạn giúp tôi lấy nước được không? / 我帮妈妈做饭。 (Wǒ bāng māma zuò fàn.) = Tôi giúp mẹ nấu cơm. / 谢谢你帮忙。 (Xièxie nǐ bāngmáng.) = Cảm ơn bạn đã giúp."
+        },
+        {
+          "type": "text",
+          "value": "4. Động từ + 到: chỉ kết quả đạt được. 找 = tìm (đang tìm), 找到 = tìm thấy (đã có kết quả). Phủ định dùng 没 + động từ + 到. Ví dụ: 我找到我的手机了。 (Wǒ zhǎodào wǒ de shǒujī le.) = Tôi tìm thấy điện thoại của tôi rồi. / 你找到钱包了吗？ (Nǐ zhǎodào qiánbāo le ma?) = Bạn tìm thấy ví chưa? / 我没找到他。 (Wǒ méi zhǎodào tā.) = Tôi không tìm thấy anh ấy."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: tìm đồ và đi cùng nhau",
+      "subtitle": "Hội thoại ngắn về tìm đồ, rủ đi cùng, chờ và mời vào; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 你在找什么？ B: 我找我的手机。 (Nǐ zài zhǎo shénme? / Wǒ zhǎo wǒ de shǒujī.) — A: Bạn đang tìm gì? B: Tôi tìm điện thoại của tôi."
+        },
+        {
+          "type": "text",
+          "value": "A: 你看，手机在桌子上。 B: 我找到了，谢谢你帮忙！ (Nǐ kàn, shǒujī zài zhuōzi shang. / Wǒ zhǎodào le, xièxie nǐ bāngmáng!) — A: Bạn xem, điện thoại ở trên bàn. B: Tôi tìm thấy rồi, cảm ơn bạn đã giúp!"
+        },
+        {
+          "type": "text",
+          "value": "A: 我们一起出去吃饭吧。 B: 好，我跟你一起去。 (Wǒmen yìqǐ chūqù chī fàn ba. / Hǎo, wǒ gēn nǐ yìqǐ qù.) — A: Chúng ta cùng ra ngoài ăn cơm nhé. B: Được, tôi đi cùng bạn."
+        },
+        {
+          "type": "text",
+          "value": "A: 妈妈什么时候回来？ B: 她晚上回来。 (Māma shénme shíhou huílái? / Tā wǎnshang huílái.) — A: Mẹ khi nào về? B: Buổi tối mẹ về."
+        },
+        {
+          "type": "text",
+          "value": "A: 外边下雨了，你进来吧。 B: 好，谢谢你。 (Wàibian xiàyǔ le, nǐ jìnlái ba. / Hǎo, xièxie nǐ.) — A: Bên ngoài mưa rồi, bạn vào đi. B: Vâng, cảm ơn bạn."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l16:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “tìm thấy”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "找到"
+          },
+          {
+            "id": "opt-b",
+            "text": "找"
+          },
+          {
+            "id": "opt-c",
+            "text": "等"
+          },
+          {
+            "id": "opt-d",
+            "text": "拿"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "找到 (zhǎodào) nghĩa là “tìm thấy”. 找 (zhǎo) chỉ là “tìm”, chưa có kết quả; 等 (děng) là “đợi”, 拿 (ná) là “cầm, lấy”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “đặt, để”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "拿"
+          },
+          {
+            "id": "opt-b",
+            "text": "放"
+          },
+          {
+            "id": "opt-c",
+            "text": "送"
+          },
+          {
+            "id": "opt-d",
+            "text": "跑"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "放 (fàng) nghĩa là “đặt, để”. 拿 (ná) là “cầm, lấy”, 送 (sòng) là “tặng; tiễn”, 跑 (pǎo) là “chạy”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Người nói đang ở trong nhà. Chọn từ điền vào chỗ trống: 外边很冷，你___吧。 (Bên ngoài lạnh lắm, bạn vào đi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "进去"
+          },
+          {
+            "id": "opt-b",
+            "text": "出去"
+          },
+          {
+            "id": "opt-c",
+            "text": "进来"
+          },
+          {
+            "id": "opt-d",
+            "text": "出来"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "进来 (jìnlái) = đi vào, về phía người nói; người nói ở trong nhà nên dùng 进来. 进去 (vào, rời xa người nói) sai hướng; 出去, 出来 là “đi ra”, sai nghĩa theo bản dịch.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___朋友一起去看电影。 (Tôi cùng bạn đi xem phim.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "送"
+          },
+          {
+            "id": "opt-b",
+            "text": "放"
+          },
+          {
+            "id": "opt-c",
+            "text": "帮"
+          },
+          {
+            "id": "opt-d",
+            "text": "跟"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "跟 (gēn) + người + 一起 + động từ = cùng ai làm gì: 我跟朋友一起去看电影. 送 (tặng), 放 (đặt) đặt vào thì sai ngữ pháp; 帮 (giúp) không đi với 一起 theo nghĩa “cùng với”, sai nghĩa theo bản dịch.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 你能___我拿水吗？(Bạn có thể giúp tôi lấy nước không?) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "帮",
+          "bāng",
+          "bang"
+        ]
+      },
+      "explanation": "帮 (bāng) nghĩa là “giúp”; 帮 + người (我) + động từ (拿水) = giúp tôi lấy nước. Không dùng 帮忙 ở đây vì 帮忙 không mang tân ngữ chỉ người.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e06",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 我___到我的钱包了。(Tôi tìm thấy ví của tôi rồi.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "找",
+          "zhǎo",
+          "zhao"
+        ]
+      },
+      "explanation": "找 (zhǎo) nghĩa là “tìm”; 找 + 到 = 找到 (tìm thấy), 到 chỉ kết quả đạt được.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e07",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền chữ còn thiếu: 你在外边___我，我马上出来。(Bạn đợi tôi ở ngoài, tôi ra ngay.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "等",
+          "děng",
+          "deng"
+        ]
+      },
+      "explanation": "等 (děng) nghĩa là “đợi, chờ”; 等我 = đợi tôi. 我马上出来 = tôi ra ngay (về phía người đang đợi).",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi giúp mẹ nấu cơm.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p4",
+            "text": "帮"
+          },
+          {
+            "id": "tkn-d8",
+            "text": "做饭"
+          },
+          {
+            "id": "tkn-b1",
+            "text": "我"
+          },
+          {
+            "id": "tkn-c8",
+            "text": "妈妈"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-b1",
+          "tkn-p4",
+          "tkn-c8",
+          "tkn-d8"
+        ]
+      },
+      "explanation": "Câu đúng là 我帮妈妈做饭: chủ ngữ + 帮 + người được giúp (妈妈) + việc (做饭). 妈妈帮我做饭 đúng ngữ pháp nhưng nghĩa là “mẹ giúp tôi nấu cơm”, sai theo đề; 帮 phải đứng trước người được giúp (ví dụ sai: 我妈妈帮做饭, 我帮做饭妈妈).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e09",
+      "topicKey": "t01",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Sách để trên bàn nhé.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-z8",
+            "text": "桌子上"
+          },
+          {
+            "id": "tkn-b1",
+            "text": "书"
+          },
+          {
+            "id": "tkn-x8",
+            "text": "吧"
+          },
+          {
+            "id": "tkn-m6",
+            "text": "放在"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-b1",
+          "tkn-m6",
+          "tkn-z8",
+          "tkn-x8"
+        ]
+      },
+      "explanation": "Câu đúng là 书放在桌子上吧: vật (书) + 放在 + nơi chốn (桌子上) + 吧. 桌子上 đứng sau 放在, 吧 đứng cuối câu (ví dụ sai: 桌子上放在书吧, 书吧放在桌子上, 放在书桌子上吧).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l16:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bạn đợi tôi ở ngoài.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-f3",
+            "text": "在外边"
+          },
+          {
+            "id": "tkn-v1",
+            "text": "你"
+          },
+          {
+            "id": "tkn-m9",
+            "text": "等我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-v1",
+          "tkn-f3",
+          "tkn-m9"
+        ]
+      },
+      "explanation": "Tổng 6 hoán vị, chỉ 1 đúng là 你在外边等我: chủ ngữ + 在 + nơi chốn + động từ. Nơi chốn (在外边) phải đứng trước động từ (ví dụ sai: 你等我在外边, 等我你在外边).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-04",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-04 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

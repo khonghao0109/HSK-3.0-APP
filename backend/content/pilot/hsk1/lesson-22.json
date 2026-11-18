@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l22",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l22-hen-gap-ngay-le",
+    "title": "Hẹn gặp, ngày lễ, liên lạc",
+    "description": "Bài 22 HSK1: hẹn gặp, nói về ngày lễ, sinh nhật và liên lạc; dùng 给 + người + động từ, 先…再… và 最 + tính từ với 20 từ vựng cơ bản.",
+    "orderIndex": 1022
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "见面",
+      "pinyin": "jiànmiàn",
+      "meaningVi": "gặp mặt",
+      "example": {
+        "hanzi": "我们明天见面吧。",
+        "pinyin": "Wǒmen míngtiān jiànmiàn ba.",
+        "meaningVi": "Ngày mai chúng ta gặp nhau nhé."
+      }
+    },
+    {
+      "hanzi": "再",
+      "pinyin": "zài",
+      "meaningVi": "lại, nữa (lần sau)",
+      "example": {
+        "hanzi": "请再说一次。",
+        "pinyin": "Qǐng zài shuō yí cì.",
+        "meaningVi": "Xin nói lại một lần nữa."
+      }
+    },
+    {
+      "hanzi": "先",
+      "pinyin": "xiān",
+      "meaningVi": "trước (tiên)",
+      "example": {
+        "hanzi": "我先走了。",
+        "pinyin": "Wǒ xiān zǒu le.",
+        "meaningVi": "Tôi đi trước đây."
+      }
+    },
+    {
+      "hanzi": "说话",
+      "pinyin": "shuōhuà",
+      "meaningVi": "nói chuyện",
+      "example": {
+        "hanzi": "上课的时候别说话。",
+        "pinyin": "Shàngkè de shíhou bié shuōhuà.",
+        "meaningVi": "Trong giờ học đừng nói chuyện."
+      }
+    },
+    {
+      "hanzi": "话",
+      "pinyin": "huà",
+      "meaningVi": "lời nói",
+      "example": {
+        "hanzi": "我明白你的话。",
+        "pinyin": "Wǒ míngbai nǐ de huà.",
+        "meaningVi": "Tôi hiểu lời bạn nói."
+      }
+    },
+    {
+      "hanzi": "告诉",
+      "pinyin": "gàosu",
+      "meaningVi": "nói cho biết, bảo",
+      "example": {
+        "hanzi": "请告诉我你的名字。",
+        "pinyin": "Qǐng gàosu wǒ nǐ de míngzi.",
+        "meaningVi": "Hãy cho tôi biết tên bạn."
+      }
+    },
+    {
+      "hanzi": "介绍",
+      "pinyin": "jièshào",
+      "meaningVi": "giới thiệu",
+      "example": {
+        "hanzi": "我介绍一下，这是我朋友。",
+        "pinyin": "Wǒ jièshào yíxià, zhè shì wǒ péngyou.",
+        "meaningVi": "Tôi giới thiệu một chút, đây là bạn tôi."
+      }
+    },
+    {
+      "hanzi": "给",
+      "pinyin": "gěi",
+      "meaningVi": "cho, đưa cho",
+      "example": {
+        "hanzi": "妈妈给我一本书。",
+        "pinyin": "Māma gěi wǒ yì běn shū.",
+        "meaningVi": "Mẹ cho tôi một quyển sách."
+      }
+    },
+    {
+      "hanzi": "打电话",
+      "pinyin": "dǎdiànhuà",
+      "meaningVi": "gọi điện thoại",
+      "example": {
+        "hanzi": "我给妈妈打电话。",
+        "pinyin": "Wǒ gěi māma dǎ diànhuà.",
+        "meaningVi": "Tôi gọi điện cho mẹ."
+      }
+    },
+    {
+      "hanzi": "请假",
+      "pinyin": "qǐngjià",
+      "meaningVi": "xin nghỉ",
+      "example": {
+        "hanzi": "我明天想请假。",
+        "pinyin": "Wǒ míngtiān xiǎng qǐngjià.",
+        "meaningVi": "Ngày mai tôi muốn xin nghỉ."
+      }
+    },
+    {
+      "hanzi": "放假",
+      "pinyin": "fàngjià",
+      "meaningVi": "được nghỉ (lễ, hè)",
+      "example": {
+        "hanzi": "我们下星期放假。",
+        "pinyin": "Wǒmen xià xīngqī fàngjià.",
+        "meaningVi": "Tuần sau chúng tôi được nghỉ."
+      }
+    },
+    {
+      "hanzi": "新年",
+      "pinyin": "xīnnián",
+      "meaningVi": "năm mới",
+      "example": {
+        "hanzi": "新年好！",
+        "pinyin": "Xīnnián hǎo!",
+        "meaningVi": "Chúc mừng năm mới!"
+      }
+    },
+    {
+      "hanzi": "生日",
+      "pinyin": "shēngrì",
+      "meaningVi": "sinh nhật",
+      "example": {
+        "hanzi": "今天是我的生日。",
+        "pinyin": "Jīntiān shì wǒ de shēngrì.",
+        "meaningVi": "Hôm nay là sinh nhật tôi."
+      }
+    },
+    {
+      "hanzi": "开",
+      "pinyin": "kāi",
+      "meaningVi": "mở; lái (xe)",
+      "example": {
+        "hanzi": "请开一下门。",
+        "pinyin": "Qǐng kāi yíxià mén.",
+        "meaningVi": "Xin mở cửa giúp."
+      }
+    },
+    {
+      "hanzi": "关",
+      "pinyin": "guān",
+      "meaningVi": "đóng; tắt",
+      "example": {
+        "hanzi": "请关门。",
+        "pinyin": "Qǐng guān mén.",
+        "meaningVi": "Xin đóng cửa."
+      }
+    },
+    {
+      "hanzi": "关上",
+      "pinyin": "guānshang",
+      "meaningVi": "đóng lại, tắt đi",
+      "example": {
+        "hanzi": "请关上门。",
+        "pinyin": "Qǐng guānshang mén.",
+        "meaningVi": "Xin đóng cửa lại."
+      }
+    },
+    {
+      "hanzi": "打开",
+      "pinyin": "dǎkāi",
+      "meaningVi": "mở ra; bật",
+      "example": {
+        "hanzi": "请打开书。",
+        "pinyin": "Qǐng dǎkāi shū.",
+        "meaningVi": "Mời mở sách ra."
+      }
+    },
+    {
+      "hanzi": "有名",
+      "pinyin": "yǒumíng",
+      "meaningVi": "nổi tiếng",
+      "example": {
+        "hanzi": "这个饭店很有名。",
+        "pinyin": "Zhè ge fàndiàn hěn yǒumíng.",
+        "meaningVi": "Nhà hàng này rất nổi tiếng."
+      }
+    },
+    {
+      "hanzi": "最后",
+      "pinyin": "zuìhòu",
+      "meaningVi": "cuối cùng",
+      "example": {
+        "hanzi": "最后一个是谁？",
+        "pinyin": "Zuìhòu yí ge shì shéi?",
+        "meaningVi": "Người cuối cùng là ai?"
+      }
+    },
+    {
+      "hanzi": "最好",
+      "pinyin": "zuìhǎo",
+      "meaningVi": "tốt nhất là, nên",
+      "example": {
+        "hanzi": "你最好明天再来。",
+        "pinyin": "Nǐ zuìhǎo míngtiān zài lái.",
+        "meaningVi": "Tốt nhất là ngày mai bạn hãy đến."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: hẹn gặp, ngày lễ, liên lạc",
+      "subtitle": "20 từ HSK1 về gặp mặt, nói chuyện, gọi điện, nghỉ lễ và đóng mở",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 22 gồm 20 từ vựng HSK1 về hẹn gặp, ngày lễ và liên lạc. Nhóm gặp gỡ và nói chuyện: 见面 (gặp mặt), 说话 (nói chuyện), 话 (lời nói), 告诉 (nói cho biết, bảo), 介绍 (giới thiệu), 给 (cho, đưa cho), 打电话 (gọi điện thoại). Nhóm thứ tự: 先 (trước), 再 (lại, nữa; rồi mới), 最后 (cuối cùng), 最好 (tốt nhất là, nên). Nhóm nghỉ và ngày lễ: 请假 (xin nghỉ), 放假 (được nghỉ lễ, nghỉ hè), 新年 (năm mới), 生日 (sinh nhật). Nhóm đóng mở: 开 (mở; lái xe), 关 (đóng; tắt), 关上 (đóng lại, tắt đi), 打开 (mở ra; bật). Ngoài ra: 有名 (nổi tiếng). Lưu ý phát âm: 告诉 đọc gàosu, 关上 đọc guānshang (chữ sau đọc nhẹ); 给 đọc gěi (thanh 3)."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 给 + người + động từ, 先…再…, 最 + tính từ",
+      "subtitle": "Ba điểm ngữ pháp để nói làm gì cho ai, làm gì trước làm gì sau, và cái gì nhất",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 给 + người + động từ: làm việc gì cho ai, hướng tới ai (gọi điện cho, giới thiệu cho, mua cho). Khác tiếng Việt: 给 + người đứng TRƯỚC động từ. Cấu trúc: Chủ ngữ + 给 + người + động từ (+ tân ngữ). 给 cũng là động từ “đưa cho”: 妈妈给我一本书. Ví dụ: 我给妈妈打电话。 (Wǒ gěi māma dǎ diànhuà.) = Tôi gọi điện cho mẹ. / 我给你介绍一个朋友。 (Wǒ gěi nǐ jièshào yí ge péngyou.) = Tôi giới thiệu cho bạn một người bạn. / 爸爸给我买了一个手机。 (Bàba gěi wǒ mǎi le yí ge shǒujī.) = Bố mua cho tôi một chiếc điện thoại."
+        },
+        {
+          "type": "text",
+          "value": "2. 先…再…: làm việc này trước, rồi mới làm việc kia. Cấu trúc: (Chủ ngữ) + 先 + việc thứ nhất, (chủ ngữ) + 再 + việc thứ hai. Ví dụ: 我们先吃饭，再去看电影。 (Wǒmen xiān chīfàn, zài qù kàn diànyǐng.) = Chúng ta ăn cơm trước, rồi đi xem phim. / 你先休息，明天再说。 (Nǐ xiān xiūxi, míngtiān zài shuō.) = Bạn nghỉ trước đi, mai hãy nói. / 先关上门，再打开电视。 (Xiān guānshang mén, zài dǎkāi diànshì.) = Đóng cửa trước, rồi mới bật tivi."
+        },
+        {
+          "type": "text",
+          "value": "3. 最 + tính từ: chỉ mức cao nhất, “nhất”. Cấu trúc: Chủ ngữ + 最 + tính từ. 最好 + động từ còn có nghĩa “tốt nhất là, nên”; 最后 = cuối cùng. Ví dụ: 这个饭店最有名。 (Zhège fàndiàn zuì yǒumíng.) = Nhà hàng này nổi tiếng nhất. / 你最好明天再来。 (Nǐ zuìhǎo míngtiān zài lái.) = Tốt nhất là ngày mai bạn hãy đến. / 这是最后一个包子。 (Zhè shì zuìhòu yí ge bāozi.) = Đây là cái bánh bao cuối cùng."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: hẹn gặp và sinh nhật",
+      "subtitle": "Hội thoại ngắn hẹn gặp, mời sinh nhật, gọi điện và nghỉ lễ; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 我们什么时候见面？ B: 明天下午见面吧。 (Wǒmen shénme shíhou jiànmiàn? / Míngtiān xiàwǔ jiànmiàn ba.) — A: Khi nào chúng ta gặp mặt? B: Chiều mai gặp nhé."
+        },
+        {
+          "type": "text",
+          "value": "A: 明天是我的生日，你能来吗？ B: 能，我明天去你家。 (Míngtiān shì wǒ de shēngrì, nǐ néng lái ma? / Néng, wǒ míngtiān qù nǐ jiā.) — A: Ngày mai là sinh nhật tôi, bạn đến được không? B: Được, ngày mai tôi đến nhà bạn."
+        },
+        {
+          "type": "text",
+          "value": "A: 你给他打电话了吗？ B: 打了，我告诉他了。 (Nǐ gěi tā dǎ diànhuà le ma? / Dǎ le, wǒ gàosu tā le.) — A: Bạn đã gọi điện cho anh ấy chưa? B: Gọi rồi, tôi đã nói cho anh ấy biết rồi."
+        },
+        {
+          "type": "text",
+          "value": "A: 你明天要请假吗？ B: 不，明天我们放假。 (Nǐ míngtiān yào qǐngjià ma? / Bù, míngtiān wǒmen fàngjià.) — A: Ngày mai bạn định xin nghỉ à? B: Không, ngày mai chúng tôi được nghỉ."
+        },
+        {
+          "type": "text",
+          "value": "A: 我们先吃饭，再去看电影，好吗？ B: 好，我们去那个最有名的饭店吧。 (Wǒmen xiān chīfàn, zài qù kàn diànyǐng, hǎo ma? / Hǎo, wǒmen qù nàge zuì yǒumíng de fàndiàn ba.) — A: Chúng ta ăn cơm trước, rồi đi xem phim, được không? B: Được, chúng ta đến nhà hàng nổi tiếng nhất ấy nhé."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l22:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “giới thiệu”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "告诉"
+          },
+          {
+            "id": "opt-b",
+            "text": "说话"
+          },
+          {
+            "id": "opt-c",
+            "text": "介绍"
+          },
+          {
+            "id": "opt-d",
+            "text": "见面"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "介绍 (jièshào) nghĩa là “giới thiệu”. 告诉 (gàosu) là “nói cho biết”, 说话 (shuōhuà) là “nói chuyện”, 见面 (jiànmiàn) là “gặp mặt”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “đóng lại, tắt đi”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "打开"
+          },
+          {
+            "id": "opt-b",
+            "text": "放假"
+          },
+          {
+            "id": "opt-c",
+            "text": "开"
+          },
+          {
+            "id": "opt-d",
+            "text": "关上"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "关上 (guānshang) nghĩa là “đóng lại, tắt đi”. 打开 (dǎkāi) là “mở ra; bật”, 放假 (fàngjià) là “được nghỉ”, 开 (kāi) là “mở”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我___妈妈打电话。 (Tôi gọi điện cho mẹ.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "给"
+          },
+          {
+            "id": "opt-b",
+            "text": "在"
+          },
+          {
+            "id": "opt-c",
+            "text": "先"
+          },
+          {
+            "id": "opt-d",
+            "text": "最"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "给 (gěi) + người + động từ = làm gì cho ai, nên 我给妈妈打电话 = tôi gọi điện cho mẹ. 在妈妈打电话, 先妈妈打电话, 最妈妈打电话 đều sai ngữ pháp.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 我们先吃饭，___去看电影。 (Chúng ta ăn cơm trước, rồi đi xem phim.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "先"
+          },
+          {
+            "id": "opt-b",
+            "text": "再"
+          },
+          {
+            "id": "opt-c",
+            "text": "最"
+          },
+          {
+            "id": "opt-d",
+            "text": "给"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "Cấu trúc 先…再… = làm việc này trước, rồi mới làm việc kia; 再 (zài) đứng trước việc thứ hai. Dùng lại 先 thì mâu thuẫn nghĩa; 最去, 给去 sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 这个饭店___有名。(Nhà hàng này nổi tiếng nhất.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "最",
+          "zuì",
+          "zui"
+        ]
+      },
+      "explanation": "最 (zuì) nghĩa là “nhất”; 最 + tính từ (最有名) = nổi tiếng nhất.",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 明天是我的___，你来我家吧。(Ngày mai là sinh nhật tôi, bạn đến nhà tôi nhé.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "生日",
+          "shēngrì",
+          "shengri"
+        ]
+      },
+      "explanation": "生日 (shēngrì) nghĩa là “sinh nhật”; 我的生日 = sinh nhật của tôi.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e07",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 请___我你的名字。(Xin hãy cho tôi biết tên của bạn.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "告诉",
+          "gàosu",
+          "gaosu"
+        ]
+      },
+      "explanation": "告诉 (gàosu) nghĩa là “nói cho biết”; 告诉 + người + việc: 告诉我你的名字 = cho tôi biết tên của bạn.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Ăn cơm trước, rồi mới xem phim.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g4",
+            "text": "吃饭"
+          },
+          {
+            "id": "tkn-r5",
+            "text": "看电影"
+          },
+          {
+            "id": "tkn-g1",
+            "text": "再"
+          },
+          {
+            "id": "tkn-w5",
+            "text": "先"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-w5",
+          "tkn-g4",
+          "tkn-g1",
+          "tkn-r5"
+        ]
+      },
+      "explanation": "Câu đúng là 先吃饭再看电影: 先 + việc thứ nhất (吃饭) + 再 + việc thứ hai (看电影). 先看电影再吃饭 đúng ngữ pháp nhưng đảo thứ tự việc làm, sai theo đề; 先 và 再 phải đứng trước động từ (ví dụ sai: 吃饭先再看电影, 再吃饭先看电影).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Đây là cái bánh bao cuối cùng.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g2",
+            "text": "最后一个"
+          },
+          {
+            "id": "tkn-t5",
+            "text": "包子"
+          },
+          {
+            "id": "tkn-v2",
+            "text": "是"
+          },
+          {
+            "id": "tkn-m6",
+            "text": "这"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-m6",
+          "tkn-v2",
+          "tkn-g2",
+          "tkn-t5"
+        ]
+      },
+      "explanation": "Câu đúng là 这是最后一个包子: 这 + 是 + định ngữ (最后一个) + danh từ (包子). 最后一个 phải đứng ngay trước 包子 (ví dụ sai: 这是包子最后一个, 是这最后一个包子, 最后一个是这包子).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l22:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi đã nói cho anh ấy biết rồi.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-p8",
+            "text": "我"
+          },
+          {
+            "id": "tkn-p9",
+            "text": "告诉"
+          },
+          {
+            "id": "tkn-s6",
+            "text": "了"
+          },
+          {
+            "id": "tkn-w6",
+            "text": "他"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-p8",
+          "tkn-p9",
+          "tkn-w6",
+          "tkn-s6"
+        ]
+      },
+      "explanation": "Câu đúng là 我告诉他了: Chủ ngữ + 告诉 + người + 了. 他告诉我了 đúng ngữ pháp nhưng nghĩa là “anh ấy đã nói cho tôi biết”, sai theo đề; 了 đứng cuối câu (ví dụ sai: 我了告诉他, 告诉我他了).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-05",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-05 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

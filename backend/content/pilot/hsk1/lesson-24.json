@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "lesson": {
+    "sourceKey": "pilot-hsk1:l24",
+    "levelCode": "HSK1",
+    "slug": "hsk1-pilot-l24-hoat-dong-thoi-han",
+    "title": "Hoạt động và khoảng thời gian",
+    "description": "Bài 24 HSK1: nói về hoạt động hằng ngày và khoảng thời gian; dùng 一边…一边…, 上次/下次, 干什么 và 半天/半年 với 20 từ vựng cơ bản.",
+    "orderIndex": 1024
+  },
+  "dataSource": {
+    "code": "HSK30_PILOT_ORIGINAL_V1",
+    "version": "1.0.0"
+  },
+  "words": [
+    {
+      "hanzi": "打",
+      "pinyin": "dǎ",
+      "meaningVi": "đánh; chơi (bóng); gọi (điện)",
+      "example": {
+        "hanzi": "他在打电话。",
+        "pinyin": "Tā zài dǎ diànhuà.",
+        "meaningVi": "Anh ấy đang gọi điện thoại."
+      }
+    },
+    {
+      "hanzi": "干",
+      "pinyin": "gàn",
+      "meaningVi": "làm (việc gì)",
+      "example": {
+        "hanzi": "这个工作我能干。",
+        "pinyin": "Zhè ge gōngzuò wǒ néng gàn.",
+        "meaningVi": "Công việc này tôi làm được."
+      }
+    },
+    {
+      "hanzi": "干什么",
+      "pinyin": "gànshénme",
+      "meaningVi": "làm gì",
+      "example": {
+        "hanzi": "你明天干什么？",
+        "pinyin": "Nǐ míngtiān gàn shénme?",
+        "meaningVi": "Ngày mai bạn làm gì?"
+      }
+    },
+    {
+      "hanzi": "干净",
+      "pinyin": "gānjìng",
+      "meaningVi": "sạch sẽ",
+      "example": {
+        "hanzi": "房间很干净。",
+        "pinyin": "Fángjiān hěn gānjìng.",
+        "meaningVi": "Căn phòng rất sạch sẽ."
+      }
+    },
+    {
+      "hanzi": "忙",
+      "pinyin": "máng",
+      "meaningVi": "bận",
+      "example": {
+        "hanzi": "我今天很忙。",
+        "pinyin": "Wǒ jīntiān hěn máng.",
+        "meaningVi": "Hôm nay tôi rất bận."
+      }
+    },
+    {
+      "hanzi": "忘记",
+      "pinyin": "wàngjì",
+      "meaningVi": "quên",
+      "example": {
+        "hanzi": "别忘记我的名字。",
+        "pinyin": "Bié wàngjì wǒ de míngzi.",
+        "meaningVi": "Đừng quên tên tôi nhé."
+      }
+    },
+    {
+      "hanzi": "得到",
+      "pinyin": "dédào",
+      "meaningVi": "đạt được, nhận được",
+      "example": {
+        "hanzi": "我得到了一本新书。",
+        "pinyin": "Wǒ dédào le yì běn xīn shū.",
+        "meaningVi": "Tôi nhận được một quyển sách mới."
+      }
+    },
+    {
+      "hanzi": "上网",
+      "pinyin": "shàngwǎng",
+      "meaningVi": "lên mạng",
+      "example": {
+        "hanzi": "晚上我上网看电影。",
+        "pinyin": "Wǎnshang wǒ shàngwǎng kàn diànyǐng.",
+        "meaningVi": "Buổi tối tôi lên mạng xem phim."
+      }
+    },
+    {
+      "hanzi": "网上",
+      "pinyin": "wǎngshang",
+      "meaningVi": "trên mạng",
+      "example": {
+        "hanzi": "我在网上买东西。",
+        "pinyin": "Wǒ zài wǎngshang mǎi dōngxi.",
+        "meaningVi": "Tôi mua đồ trên mạng."
+      }
+    },
+    {
+      "hanzi": "网友",
+      "pinyin": "wǎngyǒu",
+      "meaningVi": "bạn trên mạng",
+      "example": {
+        "hanzi": "他是我的网友。",
+        "pinyin": "Tā shì wǒ de wǎngyǒu.",
+        "meaningVi": "Anh ấy là bạn trên mạng của tôi."
+      }
+    },
+    {
+      "hanzi": "上次",
+      "pinyin": "shàngcì",
+      "meaningVi": "lần trước",
+      "example": {
+        "hanzi": "上次我没来。",
+        "pinyin": "Shàngcì wǒ méi lái.",
+        "meaningVi": "Lần trước tôi không đến."
+      }
+    },
+    {
+      "hanzi": "下次",
+      "pinyin": "xiàcì",
+      "meaningVi": "lần sau",
+      "example": {
+        "hanzi": "下次见！",
+        "pinyin": "Xiàcì jiàn!",
+        "meaningVi": "Hẹn gặp lần sau!"
+      }
+    },
+    {
+      "hanzi": "一半",
+      "pinyin": "yībàn",
+      "meaningVi": "một nửa",
+      "example": {
+        "hanzi": "我吃了一半。",
+        "pinyin": "Wǒ chī le yíbàn.",
+        "meaningVi": "Tôi đã ăn một nửa."
+      }
+    },
+    {
+      "hanzi": "一边",
+      "pinyin": "yībiān",
+      "meaningVi": "vừa … vừa …",
+      "example": {
+        "hanzi": "他一边吃饭一边看电视。",
+        "pinyin": "Tā yìbiān chī fàn yìbiān kàn diànshì.",
+        "meaningVi": "Anh ấy vừa ăn cơm vừa xem tivi."
+      }
+    },
+    {
+      "hanzi": "半天",
+      "pinyin": "bàntiān",
+      "meaningVi": "nửa ngày; rất lâu",
+      "example": {
+        "hanzi": "我等了你半天。",
+        "pinyin": "Wǒ děng le nǐ bàntiān.",
+        "meaningVi": "Tôi đợi bạn mãi."
+      }
+    },
+    {
+      "hanzi": "半年",
+      "pinyin": "bànnián",
+      "meaningVi": "nửa năm",
+      "example": {
+        "hanzi": "我学了半年汉语。",
+        "pinyin": "Wǒ xué le bànnián Hànyǔ.",
+        "meaningVi": "Tôi đã học tiếng Trung nửa năm."
+      }
+    },
+    {
+      "hanzi": "日期",
+      "pinyin": "rìqī",
+      "meaningVi": "ngày tháng",
+      "example": {
+        "hanzi": "考试的日期是几号？",
+        "pinyin": "Kǎoshì de rìqī shì jǐ hào?",
+        "meaningVi": "Ngày thi là ngày mấy?"
+      }
+    },
+    {
+      "hanzi": "星期日",
+      "pinyin": "xīngqīrì",
+      "meaningVi": "chủ nhật",
+      "example": {
+        "hanzi": "星期日我在家。",
+        "pinyin": "Xīngqīrì wǒ zài jiā.",
+        "meaningVi": "Chủ nhật tôi ở nhà."
+      }
+    },
+    {
+      "hanzi": "常",
+      "pinyin": "cháng",
+      "meaningVi": "thường",
+      "example": {
+        "hanzi": "我常去那个书店。",
+        "pinyin": "Wǒ cháng qù nà ge shūdiàn.",
+        "meaningVi": "Tôi thường đến hiệu sách đó."
+      }
+    },
+    {
+      "hanzi": "不用",
+      "pinyin": "bùyòng",
+      "meaningVi": "không cần",
+      "example": {
+        "hanzi": "你不用来了。",
+        "pinyin": "Nǐ bú yòng lái le.",
+        "meaningVi": "Bạn không cần đến nữa."
+      }
+    }
+  ],
+  "topics": [
+    {
+      "key": "t01",
+      "type": "vocabulary",
+      "title": "Từ vựng: hoạt động và khoảng thời gian",
+      "subtitle": "20 từ HSK1 về làm việc, lên mạng, số lần và khoảng thời gian",
+      "orderIndex": 1,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "Bài 24 gồm 20 từ vựng HSK1 về hoạt động và thời gian. Nhóm hoạt động: 打 (đánh; chơi bóng; gọi điện), 干 (làm việc gì), 干什么 (làm gì), 干净 (sạch sẽ), 忙 (bận), 忘记 (quên), 得到 (đạt được, nhận được), 常 (thường), 不用 (không cần). Nhóm mạng: 上网 (lên mạng), 网上 (trên mạng), 网友 (bạn trên mạng). Nhóm số lần và một nửa: 上次 (lần trước), 下次 (lần sau), 一半 (một nửa), 一边 (vừa… vừa…). Nhóm thời gian: 半天 (nửa ngày; rất lâu), 半年 (nửa năm), 日期 (ngày tháng), 星期日 (chủ nhật). Lưu ý phát âm: 干 trong 干, 干什么 đọc gàn (thanh 4, nghĩa “làm”), còn trong 干净 đọc gān (thanh 1, nghĩa “khô, sạch”): gānjìng; 网上 đọc wǎngshang; 一 biến điệu: 一半 yíbàn, 一边 yìbiān; 不用 đọc búyòng."
+        },
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
+      "key": "t02",
+      "type": "grammar",
+      "title": "Ngữ pháp: 一边…一边…, 上次/下次, 干什么, 半天/半年",
+      "subtitle": "Bốn điểm ngữ pháp để nói làm hai việc cùng lúc, lần trước lần sau, hỏi làm gì và nói làm trong bao lâu",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "1. 一边…一边…: vừa làm việc này vừa làm việc kia (hai hành động cùng lúc). Cấu trúc: Chủ ngữ + 一边 + động từ 1 + 一边 + động từ 2. Ví dụ: 他一边吃饭一边看电视。 (Tā yìbiān chīfàn yìbiān kàn diànshì.) = Anh ấy vừa ăn cơm vừa xem tivi. / 我常一边听歌一边学习。 (Wǒ cháng yìbiān tīng gē yìbiān xuéxí.) = Tôi thường vừa nghe nhạc vừa học. / 她一边唱歌一边笑。 (Tā yìbiān chànggē yìbiān xiào.) = Cô ấy vừa hát vừa cười."
+        },
+        {
+          "type": "text",
+          "value": "2. 上次/下次: lần trước / lần sau, đứng ở đầu câu hoặc ngay sau chủ ngữ, trước động từ. 下次见 là câu chào hẹn gặp lại. Cấu trúc: 上次/下次 + chủ ngữ + động từ, hoặc Chủ ngữ + 上次/下次 + động từ. Ví dụ: 上次我没来。 (Shàngcì wǒ méi lái.) = Lần trước tôi không đến. / 下次我们一起去吧。 (Xiàcì wǒmen yìqǐ qù ba.) = Lần sau chúng ta cùng đi nhé. / 下次见！ (Xiàcì jiàn!) = Hẹn gặp lại lần sau!"
+        },
+        {
+          "type": "text",
+          "value": "3. 干什么: hỏi “làm gì” (khẩu ngữ, nghĩa như 做什么). Cấu trúc: Chủ ngữ + (thời gian) + 干什么？; Chủ ngữ + 去 + nơi chốn + 干什么？ = đến đó để làm gì? Ví dụ: 你明天干什么？ (Nǐ míngtiān gàn shénme?) = Ngày mai bạn làm gì? / 你在干什么？ (Nǐ zài gàn shénme?) = Bạn đang làm gì? / 你去商店干什么？ (Nǐ qù shāngdiàn gàn shénme?) = Bạn đến cửa hàng làm gì?"
+        },
+        {
+          "type": "text",
+          "value": "4. 半天/半年 (khoảng thời gian): từ chỉ khoảng thời gian đứng SAU động từ, trước tân ngữ, khác tiếng Việt. 半天 còn có nghĩa “rất lâu”. Cấu trúc: Chủ ngữ + động từ + 了 + khoảng thời gian (+ tân ngữ). Ví dụ: 我学了半年汉语。 (Wǒ xué le bànnián Hànyǔ.) = Tôi đã học tiếng Trung nửa năm. / 我等了半天。 (Wǒ děng le bàntiān.) = Tôi đã đợi rất lâu. Nếu tân ngữ là đại từ (你, 他…) thì khoảng thời gian đứng sau tân ngữ: 我等了你半天。 (Wǒ děng le nǐ bàntiān.) = Tôi đã đợi bạn rất lâu. / 他在中国住了半年。 (Tā zài Zhōngguó zhù le bànnián.) = Anh ấy đã sống ở Trung Quốc nửa năm."
+        }
+      ]
+    },
+    {
+      "key": "t03",
+      "type": "key_text",
+      "title": "Đoạn hội thoại mẫu: cuối tuần làm gì",
+      "subtitle": "Hội thoại ngắn hỏi làm gì, lên mạng, bận rộn và lần trước lần sau; không dùng tên riêng, chỉ dùng từ HSK1",
+      "orderIndex": 3,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "text",
+          "value": "A: 星期日你干什么？ B: 我在家上网。 (Xīngqīrì nǐ gàn shénme? / Wǒ zài jiā shàngwǎng.) — A: Chủ nhật bạn làm gì? B: Tôi ở nhà lên mạng."
+        },
+        {
+          "type": "text",
+          "value": "A: 你在网上干什么？ B: 我和网友说话，有时候也看电影。 (Nǐ zài wǎngshang gàn shénme? / Wǒ hé wǎngyǒu shuōhuà, yǒushíhou yě kàn diànyǐng.) — A: Bạn làm gì trên mạng? B: Tôi nói chuyện với bạn trên mạng, có lúc cũng xem phim."
+        },
+        {
+          "type": "text",
+          "value": "A: 你今天忙吗？ B: 很忙，我一边工作一边学习。 (Nǐ jīntiān máng ma? / Hěn máng, wǒ yìbiān gōngzuò yìbiān xuéxí.) — A: Hôm nay bạn có bận không? B: Rất bận, tôi vừa làm việc vừa học."
+        },
+        {
+          "type": "text",
+          "value": "A: 上次你怎么没来？ B: 对不起，我忘记了，下次我早一点儿来。 (Shàngcì nǐ zěnme méi lái? / Duìbuqǐ, wǒ wàngjì le, xiàcì wǒ zǎo yìdiǎnr lái.) — A: Lần trước sao bạn không đến? B: Xin lỗi, tôi quên mất, lần sau tôi sẽ đến sớm một chút."
+        },
+        {
+          "type": "text",
+          "value": "A: 要我帮你吗？ B: 不用，房间很干净。 (Yào wǒ bāng nǐ ma? / Bú yòng, fángjiān hěn gānjìng.) — A: Có cần tôi giúp không? B: Không cần, phòng rất sạch rồi."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "sourceKey": "pilot-hsk1:l24:e01",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “sạch sẽ”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "干净"
+          },
+          {
+            "id": "opt-b",
+            "text": "忙"
+          },
+          {
+            "id": "opt-c",
+            "text": "一半"
+          },
+          {
+            "id": "opt-d",
+            "text": "不用"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-a"
+      },
+      "explanation": "干净 (gānjìng) nghĩa là “sạch sẽ”. 忙 (máng) là “bận”, 一半 (yíbàn) là “một nửa”, 不用 (búyòng) là “không cần”.",
+      "orderIndex": 1
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e02",
+      "topicKey": "t01",
+      "type": "mcq",
+      "prompt": "Từ nào có nghĩa là “lần sau”?",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "上次"
+          },
+          {
+            "id": "opt-b",
+            "text": "下次"
+          },
+          {
+            "id": "opt-c",
+            "text": "半天"
+          },
+          {
+            "id": "opt-d",
+            "text": "日期"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-b"
+      },
+      "explanation": "下次 (xiàcì) nghĩa là “lần sau”. 上次 (shàngcì) là “lần trước”, 半天 (bàntiān) là “nửa ngày; rất lâu”, 日期 (rìqī) là “ngày tháng”.",
+      "orderIndex": 2
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e03",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 你明天___什么？ (Ngày mai bạn làm gì?)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "打"
+          },
+          {
+            "id": "opt-b",
+            "text": "是"
+          },
+          {
+            "id": "opt-c",
+            "text": "干"
+          },
+          {
+            "id": "opt-d",
+            "text": "看"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-c"
+      },
+      "explanation": "干 (gàn) = làm; 你明天干什么 = ngày mai bạn làm gì. 看什么 (xem gì) và 打什么 (đánh gì, chơi gì) đúng ngữ pháp nhưng sai nghĩa theo bản dịch; 是什么 (là gì) sai nghĩa.",
+      "orderIndex": 3
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e04",
+      "topicKey": "t02",
+      "type": "mcq",
+      "prompt": "Chọn từ điền vào chỗ trống: 他一边吃饭___看电视。 (Anh ấy vừa ăn cơm vừa xem tivi.)",
+      "content": {
+        "options": [
+          {
+            "id": "opt-a",
+            "text": "一半"
+          },
+          {
+            "id": "opt-b",
+            "text": "一下儿"
+          },
+          {
+            "id": "opt-c",
+            "text": "一样"
+          },
+          {
+            "id": "opt-d",
+            "text": "一边"
+          }
+        ]
+      },
+      "answer": {
+        "optionId": "opt-d"
+      },
+      "explanation": "Cấu trúc 一边…一边… = vừa… vừa…, nên 他一边吃饭一边看电视. 一半 (một nửa), 一下儿 (một lát), 一样 (giống nhau) đặt vào thì sai ngữ pháp.",
+      "orderIndex": 4
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e05",
+      "topicKey": "t02",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 我学了___汉语。(Tôi đã học tiếng Trung nửa năm.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "半年",
+          "bànnián",
+          "bannian"
+        ]
+      },
+      "explanation": "半年 (bànnián) nghĩa là “nửa năm”; khoảng thời gian đứng sau động từ (学了) và trước tân ngữ (汉语).",
+      "orderIndex": 5
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e06",
+      "topicKey": "t03",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: A: 要我帮你吗？ B: ___，谢谢。(A: Có cần tôi giúp không? B: Không cần đâu, cảm ơn.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "不用",
+          "bùyòng",
+          "buyong",
+          "不用",
+          "búyòng",
+          "buyong"
+        ]
+      },
+      "explanation": "不用 (búyòng) nghĩa là “không cần”; dùng để từ chối lịch sự khi người khác muốn giúp.",
+      "orderIndex": 6
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e07",
+      "topicKey": "t01",
+      "type": "fill_blank",
+      "prompt": "Điền từ còn thiếu: 他是我的___，我们是在网上认识的。(Anh ấy là bạn trên mạng của tôi, chúng tôi quen nhau trên mạng.) (gõ chữ Hán hoặc pinyin)",
+      "content": {},
+      "answer": {
+        "acceptedTexts": [
+          "网友",
+          "wǎngyǒu",
+          "wangyou"
+        ]
+      },
+      "explanation": "网友 (wǎngyǒu) nghĩa là “bạn trên mạng”, tức người quen qua mạng.",
+      "orderIndex": 7
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e08",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Bạn đang làm gì?”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-g4",
+            "text": "什么"
+          },
+          {
+            "id": "tkn-k6",
+            "text": "你"
+          },
+          {
+            "id": "tkn-g3",
+            "text": "在"
+          },
+          {
+            "id": "tkn-w3",
+            "text": "干"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-k6",
+          "tkn-g3",
+          "tkn-w3",
+          "tkn-g4"
+        ]
+      },
+      "explanation": "Câu đúng là 你在干什么: Chủ ngữ + 在 (đang) + 干 + 什么. 在 đứng trước động từ, 什么 đứng sau 干 làm tân ngữ (ví dụ sai: 你干在什么, 在你干什么, 你在什么干).",
+      "orderIndex": 8
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e09",
+      "topicKey": "t02",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Tôi đã học tiếng Trung nửa năm.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-s5",
+            "text": "半年"
+          },
+          {
+            "id": "tkn-s2",
+            "text": "学了"
+          },
+          {
+            "id": "tkn-v4",
+            "text": "汉语"
+          },
+          {
+            "id": "tkn-s7",
+            "text": "我"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-s7",
+          "tkn-s2",
+          "tkn-s5",
+          "tkn-v4"
+        ]
+      },
+      "explanation": "Câu đúng là 我学了半年汉语: Chủ ngữ + động từ (学了) + khoảng thời gian (半年) + tân ngữ (汉语). Khoảng thời gian đứng giữa động từ và tân ngữ, không đứng đầu hay cuối như tiếng Việt (ví dụ sai: 我半年学了汉语, 我学了汉语半年, 半年我汉语学了).",
+      "orderIndex": 9
+    },
+    {
+      "sourceKey": "pilot-hsk1:l24:e10",
+      "topicKey": "t03",
+      "type": "arrange_sentence",
+      "prompt": "Sắp xếp các từ thành câu: “Phòng rất sạch.”",
+      "content": {
+        "tokens": [
+          {
+            "id": "tkn-h3",
+            "text": "很"
+          },
+          {
+            "id": "tkn-z5",
+            "text": "房间"
+          },
+          {
+            "id": "tkn-b2",
+            "text": "干净"
+          }
+        ]
+      },
+      "answer": {
+        "tokenIds": [
+          "tkn-z5",
+          "tkn-h3",
+          "tkn-b2"
+        ]
+      },
+      "explanation": "Câu đúng là 房间很干净: Chủ ngữ (房间) + 很 + tính từ (干净). 很 phải đứng ngay trước tính từ (ví dụ sai: 很房间干净, 房间干净很, 干净很房间).",
+      "orderIndex": 10
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "requiredChecks": [
+      "pinyin có dấu thanh đúng từng âm tiết",
+      "nghĩa tiếng Việt và câu ví dụ khớp lô nghĩa đã duyệt batch-05",
+      "giải thích ngữ pháp đúng và dễ hiểu cho người mới học",
+      "đoạn hội thoại t03 tự nhiên, chỉ dùng từ HSK1",
+      "đáp án và explanation của cả 10 bài tập; mcq không có hai đáp án cùng đúng; arrange_sentence chỉ một thứ tự đúng",
+      "danh sách từ của bài (20 từ) khớp với LessonWord sau khi nạp (Q179)"
+    ],
+    "notice": "Bản nháp do AI soạn (Q172). Từ, nghĩa và câu ví dụ lấy nguyên từ lô nghĩa batch-05 (duyệt 18/11/2026 theo uỷ quyền của PO); topic ngữ pháp, hội thoại và bài tập là nội dung mới, BẮT BUỘC người duyệt kiểm trước khi approve. Máy kiểm được chữ Hán HSK1 trong ví dụ và option mcq, khớp pinyin với dữ liệu từ điển trong repo, không kiểm được ngữ nghĩa và độ tự nhiên.",
+    "notes": [
+      "Duyệt nội dung: Claude (AI), theo uỷ quyền của PO Khổng Văn Hào, ngày 2026-11-18 (PO nhắn trong phiên chat: \"bạn duyệt luôn cho tôi rồi merge\"; Q359). Đã rà soát độc lập bằng hai agent riêng; mọi lỗi phải sửa và phần lớn đề xuất đã áp dụng, giữ nguyên chỗ trái chuẩn GF0025 hoặc vượt cấp HSK1. status giữ draft theo quy trình: nạp lên CMS ở trạng thái draft rồi approve, publish trên CMS."
+    ]
+  }
+}

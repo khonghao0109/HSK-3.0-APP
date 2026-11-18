@@ -34,6 +34,10 @@ export const PILOT_CONTENT_LIMITS = {
   /** §2.1: `orderIndex` 1–1 000 000 cho lesson/topic/exercise. */
   maxOrderIndex: 1_000_000,
   wordsPerLesson: 20,
+  /** `content/hsk1/curriculum.json`: 498 từ HSK1 = 24 bài × 20 + bài ôn 25 có 18 từ. */
+  wordsPerLessonOverride: { 'pilot-hsk1:l25': 18 } as Readonly<
+    Record<string, number>
+  >,
   minTopics: 2,
   minExercises: 8,
   minMcqOptions: 4,
@@ -266,13 +270,17 @@ export function toneMarkedPinyin(numbered: string): string {
  * `"xue2 sheng5"`. TL-218.
  */
 export function normalizePinyinForCompare(value: string): string {
-  return value
-    .replace(/[1-5]/gu, '')
-    .trim()
-    .toLowerCase()
-    .replace(/ü/gu, 'u:')
-    .replace(/\s+/gu, '')
-    .replace(/u:/gu, 'v');
+  return (
+    value
+      .replace(/[1-5]/gu, '')
+      .trim()
+      .toLowerCase()
+      .replace(/ü/gu, 'u:')
+      .replace(/\s+/gu, '')
+      // Dấu cách âm tiết (女儿 nǚ'ér) không tham gia so khớp.
+      .replace(/['’]/gu, '')
+      .replace(/u:/gu, 'v')
+  );
 }
 
 /** Q194: dạng pinyin không dấu, viết liền, chữ thường. */
@@ -422,12 +430,17 @@ function validateWords(
     }
   }
   const words = parsedWords;
-  if (words.length !== PILOT_CONTENT_LIMITS.wordsPerLesson) {
+  const lessonKey = isRecord(lesson.lesson) ? lesson.lesson.sourceKey : null;
+  const expectedCount =
+    (typeof lessonKey === 'string'
+      ? PILOT_CONTENT_LIMITS.wordsPerLessonOverride[lessonKey]
+      : undefined) ?? PILOT_CONTENT_LIMITS.wordsPerLesson;
+  if (words.length !== expectedCount) {
     issues.push(
       createIssue(
         'words_count',
         'words',
-        `cần đúng ${PILOT_CONTENT_LIMITS.wordsPerLesson} từ, đếm được ${words.length}`,
+        `cần đúng ${expectedCount} từ, đếm được ${words.length}`,
       ),
     );
   }
@@ -1557,7 +1570,9 @@ export function validatePilotLessonSet(
     if (Array.isArray(source.raw.words)) {
       for (const word of source.raw.words) {
         if (!isRecord(word) || typeof word.hanzi !== 'string') continue;
-        const owner = hanziOwner.get(word.hanzi);
+        // Chữ đa âm là hai từ khác nhau (地 de / dì, 还 hái / huán): khoá theo (hanzi, pinyin).
+        const wordKey = `${word.hanzi}|${typeof word.pinyin === 'string' ? normalizePinyinForCompare(word.pinyin.normalize('NFC')) : ''}`;
+        const owner = hanziOwner.get(wordKey);
         if (owner !== undefined) {
           issues.push(
             crossIssue(
@@ -1568,7 +1583,7 @@ export function validatePilotLessonSet(
             ),
           );
         } else {
-          hanziOwner.set(word.hanzi, source.fileName);
+          hanziOwner.set(wordKey, source.fileName);
         }
       }
     }
