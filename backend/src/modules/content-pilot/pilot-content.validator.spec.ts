@@ -14,6 +14,7 @@ import {
   type PilotContentIssue,
   type PilotLessonSource,
   type PilotReferenceData,
+  toneMarkedPinyin,
 } from './pilot-content.validator';
 
 /**
@@ -689,5 +690,14 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     expect(PILOT_CONTENT_LIMITS.maxDepth).toBe(8);
     expect(PILOT_CONTENT_LIMITS.maxStringLength).toBe(4096);
     expect(PILOT_CONTENT_LIMITS.minMcqOptions).toBe(4);
+  });
+});
+
+describe('toneMarkedPinyin', () => {
+  it('marks ü written as u: (CC-CEDICT) or ü', () => {
+    expect(toneMarkedPinyin('nu:3 er2')).toBe('nǚér');
+    expect(toneMarkedPinyin('lu:4')).toBe('lǜ');
+    expect(toneMarkedPinyin('nü3')).toBe('nǚ');
+    expect(toneMarkedPinyin('xue2 sheng5')).toBe('xuésheng');
   });
 });
