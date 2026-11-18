@@ -69,6 +69,7 @@
     "test:capacity:exam:unit": "node --test -r ts-node/register scripts/test/exam-capacity/metrics.spec.ts scripts/test/exam-capacity/scenarios.spec.ts scripts/test/exam-capacity/driver.spec.ts",
     "content:check:pilot": "ts-node scripts/content/check-pilot-content.ts",
     "content:check:level": "ts-node scripts/content/check-content-level.ts",
+    "content:import:blueprint": "ts-node scripts/content/import-exam-blueprint.ts",
     "content:tts": "ts-node scripts/content/generate-tts.ts",
     "content:import:exam": "ts-node scripts/content/import-hsk1-exam.ts",
     "content:import:lesson-images": "ts-node scripts/content/import-hsk1-lesson-images.ts"

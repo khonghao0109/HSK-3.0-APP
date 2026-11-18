@@ -841,6 +841,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/cms/tests/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Q357: sinh đề draft từ blueprint (route tĩnh, khai báo trước `tests/:testId`). */
+        post: operations["CmsController_generateTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cms/tests/{testId}": {
         parameters: {
             query?: never;
@@ -2571,6 +2588,30 @@ export interface components {
             /** @description Whole-test duration in minutes (Q118). */
             duration: number;
             passScore?: number | null;
+        };
+        GeneratedTestPartDto: {
+            key: string;
+            /** @description Bộ câu đã dùng (phần `fromSet`), hoặc `null`. */
+            setId: number | null;
+            questionIds: number[];
+        };
+        GeneratedTestDto: {
+            blueprintCode: string;
+            seed: string;
+            parts: components["schemas"]["GeneratedTestPartDto"][];
+            test: components["schemas"]["AdminTestDetailDto"];
+        };
+        GenerateTestDto: {
+            /** @description `ExamBlueprint.code`, vd. `hsk1-standard`. */
+            blueprintCode: string;
+            /** @description Cùng seed + cùng ngân hàng câu → cùng đề. Bỏ trống thì server tự tạo. */
+            seed?: string;
+            /** @description Mặc định: tiêu đề blueprint kèm seed. */
+            title?: string;
+            /** @description `true`: dùng cả câu và bộ câu `draft` (xem trước khi duyệt). Mặc định chỉ `published`. */
+            includeDraft?: boolean;
+            /** @description Không dùng lại câu của các đề này (sinh đề khác hẳn). */
+            excludeTestIds?: number[];
         };
         UpdateTestDto: {
             levelId?: number;
@@ -5533,6 +5574,38 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["AdminTestDetailDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    CmsController_generateTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateTestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["GeneratedTestDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

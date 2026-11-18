@@ -15,6 +15,7 @@ import { MediaIngestionConcurrencyLimiter } from './media-ingestion/media-ingest
 import { MediaIngestionReconciliationService } from './media-ingestion/media-ingestion-reconciliation.service';
 import { QuestionAuthoringService } from './question-authoring.service';
 import { TestAuthoringService } from './test-authoring.service';
+import { ExamGenerationService } from './exam-generation/exam-generation.service';
 import { MediaIngestionService } from './media-ingestion/media-ingestion.service';
 import { MediaIngestionBoundaryInterceptor } from './media-ingestion/media-ingestion-boundary.interceptor';
 import { MediaIngestionEnabledGuard } from './media-ingestion/media-ingestion-enabled.guard';
@@ -32,6 +33,7 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
     ExerciseImportService,
     QuestionAuthoringService,
     TestAuthoringService,
+    ExamGenerationService,
     MediaAdminService,
     MediaFileProcessor,
     MediaIngestionConcurrencyLimiter,

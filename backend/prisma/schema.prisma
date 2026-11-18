@@ -553,6 +553,8 @@ model DataSource {
   grammarPoints    GrammarPoint[]
   wordRelations    WordRelation[]
   wordMeasureWords WordMeasureWord[]
+  examBlueprints   ExamBlueprint[]
+  questionSets     QuestionSet[]
 
   @@unique([name, version])
   @@index([createdById])
@@ -594,6 +596,8 @@ model Media {
   pronunciationAttemptAudio  PronunciationAttempt[]  @relation("PronunciationAttemptAudio")
   questionGroupAudio         QuestionGroup[]         @relation("QuestionGroupAudio")
   questionGroupImage         QuestionGroup[]         @relation("QuestionGroupImage")
+  questionSetAudio           QuestionSet[]           @relation("QuestionSetAudio")
+  questionSetImage           QuestionSet[]           @relation("QuestionSetImage")
   lessonExercises            LessonExercise[]        @relation("LessonExerciseMedia")
   ingestion                  MediaIngestion?
 
@@ -708,6 +712,8 @@ model Level {
   learningPlans        LearningPlan[]
   characterLevels      CharacterLevel[]
   grammarPoints        GrammarPoint[]
+  examBlueprints       ExamBlueprint[]
+  questionSets         QuestionSet[]
 
   @@index([status, deletedAt, orderIndex])
   @@index([dataSourceId])
@@ -1528,6 +1534,7 @@ model Question {
   examAnswers   ExamAnswer[]
   targetWords   QuestionWord[]
   grammarPoints QuestionGrammarPoint[]
+  setItem       QuestionSetItem?
 
   @@index([levelId, skill, status, deletedAt])
   @@index([type])
@@ -1569,6 +1576,8 @@ model Test {
   duration       Int
   version        Int           @default(1)
   scoringVersion String        @default("hsk-p0-v1")
+  blueprintId    Int?
+  generationSeed String?
   attemptLimit   Int?
   passScore      Int?
   availableFrom  DateTime?
@@ -1592,6 +1601,7 @@ model Test {
   questions   TestQuestion[]
   sections    TestSection[]
   attempts    ExamAttempt[]
+  blueprint   ExamBlueprint? @relation(fields: [blueprintId], references: [id], onDelete: SetNull)
 
   @@index([levelId, status, deletedAt])
   @@index([availableFrom, availableTo])
@@ -1599,6 +1609,7 @@ model Test {
   @@index([createdById])
   @@index([updatedById])
   @@index([publishedById])
+  @@index([blueprintId])
 }
 
 model TestSection {
@@ -1932,4 +1943,108 @@ model QuestionGrammarPoint {
 
   @@unique([questionId, grammarPointId])
   @@index([grammarPointId])
+}
+
+/// Q357: cấu trúc đề chuẩn theo cấp (blueprint) lưu thành dữ liệu; bộ sinh đề
+/// (`POST /admin/cms/tests/generate`) chọn câu từ ngân hàng theo từng phần.
+model ExamBlueprint {
+  id              Int           @id @default(autoincrement())
+  code            String        @unique
+  levelId         Int
+  title           String
+  instruction     String?
+  durationMinutes Int
+  passScore       Int?
+  version         Int           @default(1)
+  status          ContentStatus @default(draft)
+  dataSourceId    Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  level      Level                  @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  dataSource DataSource?            @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  sections   ExamBlueprintSection[]
+  tests      Test[]
+
+  @@index([levelId, status])
+  @@index([dataSourceId])
+}
+
+model ExamBlueprintSection {
+  id          Int      @id @default(autoincrement())
+  blueprintId Int
+  skill       Skill
+  title       String
+  instruction String?
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blueprint ExamBlueprint       @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
+  parts     ExamBlueprintPart[]
+
+  @@unique([blueprintId, orderIndex])
+}
+
+/// Một phần của đề: `format` là slug tag của câu hỏi (vd. `nghe-chon-tranh`);
+/// `fromSet` = cả phần lấy từ một `QuestionSet` (dùng chung tranh/đáp án).
+model ExamBlueprintPart {
+  id            Int          @id @default(autoincrement())
+  sectionId     Int
+  key           String
+  title         String
+  instruction   String?
+  orderIndex    Int
+  questionType  QuestionType
+  format        String
+  questionCount Int
+  fromSet       Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  section ExamBlueprintSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, orderIndex])
+  @@unique([sectionId, key])
+}
+
+/// Bộ câu dùng chung một tranh ghép / một bảng đáp án (mỗi đáp án dùng một lần).
+model QuestionSet {
+  id           Int           @id @default(autoincrement())
+  sourceKey    String        @unique
+  levelId      Int
+  skill        Skill
+  format       String
+  title        String?
+  instruction  String?
+  audioId      Int?
+  imageId      Int?
+  status       ContentStatus @default(draft)
+  dataSourceId Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  level      Level             @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  audio      Media?            @relation("QuestionSetAudio", fields: [audioId], references: [id], onDelete: SetNull)
+  image      Media?            @relation("QuestionSetImage", fields: [imageId], references: [id], onDelete: SetNull)
+  dataSource DataSource?       @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  items      QuestionSetItem[]
+
+  @@index([levelId, skill, format, status])
+  @@index([audioId])
+  @@index([imageId])
+  @@index([dataSourceId])
+}
+
+/// Câu thuộc bộ nào (mỗi câu tối đa một bộ); metadata ngoài revision như `QuestionWord`.
+model QuestionSetItem {
+  id         Int @id @default(autoincrement())
+  setId      Int
+  questionId Int @unique
+  orderIndex Int
+
+  set      QuestionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, orderIndex])
 }

@@ -4011,6 +4011,69 @@
         ]
       }
     },
+    "/api/v1/admin/cms/tests/generate": {
+      "post": {
+        "operationId": "CmsController_generateTest",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GeneratedTestDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Q357: sinh đề draft từ blueprint (route tĩnh, khai báo trước `tests/:testId`).",
+        "tags": [
+          "Cms"
+        ]
+      }
+    },
     "/api/v1/admin/cms/tests/{testId}": {
       "get": {
         "operationId": "CmsController_getTest",
@@ -11143,6 +11206,98 @@
           "levelId",
           "title",
           "duration"
+        ]
+      },
+      "GeneratedTestPartDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "setId": {
+            "type": "number",
+            "nullable": true,
+            "description": "Bộ câu đã dùng (phần `fromSet`), hoặc `null`."
+          },
+          "questionIds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "setId",
+          "questionIds"
+        ]
+      },
+      "GeneratedTestDto": {
+        "type": "object",
+        "properties": {
+          "blueprintCode": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedTestPartDto"
+            }
+          },
+          "test": {
+            "$ref": "#/components/schemas/AdminTestDetailDto"
+          }
+        },
+        "required": [
+          "blueprintCode",
+          "seed",
+          "parts",
+          "test"
+        ]
+      },
+      "GenerateTestDto": {
+        "type": "object",
+        "properties": {
+          "blueprintCode": {
+            "type": "string",
+            "description": "`ExamBlueprint.code`, vd. `hsk1-standard`.",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "seed": {
+            "type": "string",
+            "description": "Cùng seed + cùng ngân hàng câu → cùng đề. Bỏ trống thì server tự tạo.",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "title": {
+            "type": "string",
+            "description": "Mặc định: tiêu đề blueprint kèm seed.",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "includeDraft": {
+            "type": "boolean",
+            "description": "`true`: dùng cả câu và bộ câu `draft` (xem trước khi duyệt). Mặc định chỉ `published`."
+          },
+          "excludeTestIds": {
+            "description": "Không dùng lại câu của các đề này (sinh đề khác hẳn).",
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "number",
+              "maximum": 2147483647,
+              "minimum": 1
+            }
+          }
+        },
+        "required": [
+          "blueprintCode"
         ]
       },
       "UpdateTestDto": {
