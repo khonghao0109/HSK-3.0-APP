@@ -107,3 +107,6 @@ report.*.*.*.*.json
 
 # Playwright MCP screenshots and snapshots
 .playwright-mcp/
+
+# Bộ demo local (ảnh AI, khoá bí mật trong state/), không commit
+/demo/
