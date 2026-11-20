@@ -8,6 +8,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/modules/auth/auth.service';
+import { hashPasswordWithPepper } from '../src/modules/auth/utils/password-hasher';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
@@ -183,6 +184,40 @@ describe('Auth E2E', () => {
     } finally {
       verifyPassword.mockRestore();
     }
+  });
+
+  it('Q360: new passwords need 8 characters; existing 6–7 character passwords still log in', async () => {
+    const email = `e2e_q360_${Date.now()}@example.com`;
+    const short = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'Ab1234!' })
+      .expect(400);
+    expect(JSON.stringify(short.body)).not.toContain('Ab1234!');
+    expect(await prisma.user.count({ where: { email } })).toBe(0);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/password-reset/confirm')
+      .send({ token: 'A'.repeat(43), newPassword: 'Ab1234!' })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'Ab1234!x' })
+      .expect(201);
+
+    // Tài khoản tạo trước Q360 với mật khẩu 7 ký tự vẫn đăng nhập được.
+    const legacyEmail = `e2e_q360_legacy_${Date.now()}@example.com`;
+    const pepper = app.get(ConfigService).get<string>('AUTH_PASSWORD_PEPPER');
+    await prisma.user.create({
+      data: {
+        email: legacyEmail,
+        password: await hashPasswordWithPepper('Old1234', pepper ?? ''),
+      },
+    });
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: legacyEmail, password: 'Old1234' })
+      .expect(201);
   });
 
   it('rejects stored passwords that are not Argon2id and leaves them untouched', async () => {

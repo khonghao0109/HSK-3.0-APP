@@ -85,9 +85,9 @@ describe('ResetPasswordFlow (M2.1d)', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     open(`/reset-password#token=${TOKEN}`);
     await screen.findByLabelText('Mật khẩu mới');
-    await submit('12345');
+    await submit('1234567');
     expect(screen.getByRole('alert')).toHaveTextContent(
-      LEARNER_AUTH_ERROR_MESSAGES.shortPassword,
+      LEARNER_AUTH_ERROR_MESSAGES.shortNewPassword,
     );
     expect(screen.getByLabelText('Mật khẩu mới')).toHaveAttribute(
       'aria-invalid',
@@ -123,7 +123,7 @@ describe('ResetPasswordFlow (M2.1d)', () => {
     respond(400, { success: false, error: { code: 'WEAK_PASSWORD' } });
     open(`/reset-password#token=${TOKEN}`);
     await screen.findByLabelText('Mật khẩu mới');
-    await submit('123456');
+    await submit('12345678');
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
         LEARNER_AUTH_ERROR_MESSAGES.weakPassword,

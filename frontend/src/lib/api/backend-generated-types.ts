@@ -1921,7 +1921,7 @@ export interface components {
              */
             token: string;
             /**
-             * @description New password for the account (minimum 6 characters)
+             * @description New password for the account (minimum 8 characters)
              * @example NewSecret123!
              */
             newPassword: string;

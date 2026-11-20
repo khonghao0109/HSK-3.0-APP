@@ -2,6 +2,11 @@
 
 import { type Ref, useState } from 'react';
 
+import {
+  LOGIN_PASSWORD_MIN_LENGTH,
+  NEW_PASSWORD_MIN_LENGTH,
+} from './password-policy';
+
 export interface LearnerPasswordFieldProps {
   autoComplete: 'new-password' | 'current-password';
   invalid?: boolean;
@@ -37,7 +42,11 @@ export function LearnerPasswordField({
           name="password"
           type={showPassword ? 'text' : 'password'}
           autoComplete={autoComplete}
-          minLength={6}
+          minLength={
+            autoComplete === 'new-password'
+              ? NEW_PASSWORD_MIN_LENGTH
+              : LOGIN_PASSWORD_MIN_LENGTH
+          }
           placeholder={placeholder}
           aria-describedby="auth-alert"
           aria-invalid={invalid ? 'true' : undefined}

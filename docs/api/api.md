@@ -144,7 +144,7 @@ liveness/readiness.)
 | `POST` | `/auth/password-reset/request` | public | 5/15 phút/IP; 3 lần/giờ/email |
 | `POST` | `/auth/password-reset/confirm` | public | 10/phút/IP |
 
-Body register: `{ "email": string(email), "password": string(≥6), "name"?: string }`.
+Body register: `{ "email": string(email), "password": string(≥8), "name"?: string }` (Q360; trước 20/11/2026 là ≥6).
 Email canonicalize `trim().toLowerCase()`; DB unique theo `lower(email)`. Password trong
 blacklist → `400 "Password is too weak."`; email đã tồn tại → `409 "Email already exists"`,
 kể cả khi hai request đăng ký cùng email chạy song song (unique index `P2002` cũng map về
@@ -152,7 +152,7 @@ kể cả khi hai request đăng ký cùng email chạy song song (unique index 
 được thực thi trong cùng một `prisma.$transaction`; nếu enqueue thất bại, transaction rollback
 hoàn toàn (không tạo user mồ côi). Session chỉ được tạo sau khi transaction commit thành công.
 
-Body login: `{ "email", "password" }`. Email không tồn tại, account không `active` hoặc
+Body login: `{ "email", "password": string(≥6) }` – giữ ngưỡng 6 cho tài khoản tạo trước Q360. Email không tồn tại, account không `active` hoặc
 đã soft-delete, sai mật khẩu → cùng `401 "Invalid credentials"`. Chỉ account đang khoá
 (5 lần sai → khoá 15 phút) → `403`.
 
@@ -237,7 +237,7 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 - Khi user tồn tại, `deletedAt IS NULL`, `status = 'active'`, enqueue job `mail.password-reset` với payload `{ userId }` và `singletonKey: 'password-reset:' + userId`.
 
 `POST /auth/password-reset/confirm` (public, rate limit 10 lần / phút / IP):
-- Body: `{ "token": string, "newPassword": string(≥6) }`.
+- Body: `{ "token": string, "newPassword": string(≥8) }` (Q360).
 - `newPassword` kiểm tra blacklist mật khẩu yếu (`assertPasswordNotBlacklisted`); mật khẩu mới được băm bằng Argon2id TRƯỚC khi mở database transaction.
 - Thực thi trong một database transaction:
   1. Claim token: `UPDATE "PasswordResetToken" SET "usedAt" = CURRENT_TIMESTAMP WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP RETURNING "userId"`.

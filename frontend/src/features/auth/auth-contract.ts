@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
 import { backendEnvelope } from '@/lib/api/backend-envelope';
+import {
+  LOGIN_PASSWORD_MIN_LENGTH,
+  NEW_PASSWORD_MIN_LENGTH,
+} from '@/features/learner-auth/password-policy';
 
 export const authUserSchema = z.object({
   id: z.number().int().positive(),
@@ -11,7 +15,7 @@ export const authUserSchema = z.object({
 
 export const loginInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(6),
+  password: z.string().min(LOGIN_PASSWORD_MIN_LENGTH),
 });
 
 export const loginResponseSchema = z.object({
@@ -42,7 +46,7 @@ export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
 
 export const registerInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(6),
+  password: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   name: z.string().trim().min(1).optional(),
 });
 

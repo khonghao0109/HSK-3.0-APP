@@ -5,6 +5,7 @@ import { FormEvent, useRef, useState } from 'react';
 
 import { LEARNER_AUTH_ERROR_MESSAGES } from '@/features/learner-auth/learner-auth-messages';
 import { LearnerPasswordField } from '@/features/learner-auth/learner-password-field';
+import { NEW_PASSWORD_MIN_LENGTH } from '@/features/learner-auth/password-policy';
 
 import { useHashToken, useView } from './use-hash-token';
 
@@ -48,8 +49,8 @@ function ResetPasswordView({ token }: { token: string | null }) {
 
     const raw = new FormData(event.currentTarget).get('password');
     const newPassword = typeof raw === 'string' ? raw : '';
-    if (newPassword.length < 6) {
-      fail(LEARNER_AUTH_ERROR_MESSAGES.shortPassword, true);
+    if (newPassword.length < NEW_PASSWORD_MIN_LENGTH) {
+      fail(LEARNER_AUTH_ERROR_MESSAGES.shortNewPassword, true);
       return;
     }
 
@@ -89,7 +90,7 @@ function ResetPasswordView({ token }: { token: string | null }) {
           Đặt mật khẩu mới
         </h1>
         <p className="auth__subtitle">
-          Mật khẩu mới cần ít nhất 6 ký tự. Sau khi đổi, bạn sẽ được đăng xuất
+          Mật khẩu mới cần ít nhất 8 ký tự. Sau khi đổi, bạn sẽ được đăng xuất
           khỏi mọi thiết bị.
         </p>
         <form

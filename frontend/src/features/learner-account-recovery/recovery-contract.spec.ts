@@ -47,17 +47,17 @@ describe('account recovery contract', () => {
     }
   });
 
-  it('requires a new password of at least 6 characters, like the backend DTO', () => {
+  it('requires a new password of at least 8 characters, like the backend DTO (Q360)', () => {
     expect(
       passwordResetConfirmSchema.safeParse({
         token: TOKEN,
-        newPassword: '123456',
+        newPassword: '12345678',
       }).success,
     ).toBe(true);
     expect(
       passwordResetConfirmSchema.safeParse({
         token: TOKEN,
-        newPassword: '12345',
+        newPassword: '1234567',
       }).success,
     ).toBe(false);
   });

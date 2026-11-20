@@ -45,10 +45,15 @@ describe('LearnerPasswordField', () => {
     expect(ref.current).toBe(passwordInput);
   });
 
-  it('enforces minLength 6 and required attribute', () => {
+  it('enforces minLength 8 for a new password and required attribute (Q360)', () => {
     render(<LearnerPasswordField autoComplete="new-password" />);
     const passwordInput = screen.getByLabelText('Mật khẩu');
-    expect(passwordInput).toHaveAttribute('minLength', '6');
+    expect(passwordInput).toHaveAttribute('minLength', '8');
     expect(passwordInput).toHaveAttribute('required');
+  });
+
+  it('keeps minLength 6 when logging in, for accounts created before Q360', () => {
+    render(<LearnerPasswordField autoComplete="current-password" />);
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('minLength', '6');
   });
 });

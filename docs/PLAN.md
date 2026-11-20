@@ -766,7 +766,7 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 - Kẹp `durationSeconds` của attempt theo khoảng start → submit server đo; phút học hôm nay (Q13) không lấy giá trị client vượt khoảng đó.
 - Liệt kê phiên đăng nhập và đăng xuất thiết bị khác (`UserSession` đã có `deviceId/userAgent/lastSeenAt`), mã lỗi `session_revoked`; chưa giới hạn số thiết bị (#16).
 - Header `Retry-After` cho 429 của `CustomThrottlerGuard` (hiện chỉ media ingestion có).
-- Mật khẩu mới tối thiểu 8 ký tự (đang `@MinLength(6)`), login giữ 6 (#16).
+- ✅ 20/11/2026 (Q360): mật khẩu mới (đăng ký, đặt lại) tối thiểu 8 ký tự; đăng nhập giữ 6 cho tài khoản cũ (#16).
 - Test integrity đếm số từ theo Level so với chuẩn chính thức; không seed từ danh sách bên thứ ba.
 - Sau M3.3: phiên ôn thích ứng, chọn dạng câu theo độ quá hạn.
 - `streakMax` tính từ ngày học sẵn có; freeze chỉ khi có ADR.
