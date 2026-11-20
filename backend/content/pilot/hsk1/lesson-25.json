@@ -224,20 +224,167 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Ôn 了: đặt cuối câu hoặc sau động từ để nói việc đã xảy ra hoặc tình hình đã thay đổi. Phủ định việc đã xảy ra dùng 没 + động từ (bỏ 了). Cấu trúc: … + 了 / 没 + động từ. Ví dụ: 我女儿五岁了。 (Wǒ nǚ'ér wǔ suì le.) = Con gái tôi năm tuổi rồi. / 家里没电了。 (Jiā lǐ méi diàn le.) = Nhà mất điện rồi. / 我的电脑很老了。 (Wǒ de diànnǎo hěn lǎo le.) = Máy tính của tôi cũ lắm rồi."
+          "type": "grammar_point",
+          "title": "Ôn 了",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "句子",
+              "vi": "Câu"
+            },
+            {
+              "role": "key",
+              "zh": "了",
+              "vi": "Trợ từ"
+            }
+          ],
+          "explanation": "đặt cuối câu hoặc sau động từ để nói việc đã xảy ra hoặc tình hình đã thay đổi. Phủ định việc đã xảy ra dùng 没 + động từ (bỏ 了). Cấu trúc: … + 了 / 没 + động từ.",
+          "examples": [
+            {
+              "hanzi": "我女儿五岁了。",
+              "pinyin": "Wǒ nǚ'ér wǔ suì le.",
+              "vi": "Con gái tôi năm tuổi rồi.",
+              "highlight": "了"
+            },
+            {
+              "hanzi": "家里没电了。",
+              "pinyin": "Jiā lǐ méi diàn le.",
+              "vi": "Nhà mất điện rồi.",
+              "highlight": "了"
+            },
+            {
+              "hanzi": "我的电脑很老了。",
+              "pinyin": "Wǒ de diànnǎo hěn lǎo le.",
+              "vi": "Máy tính của tôi cũ lắm rồi.",
+              "highlight": "了"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Ôn 在: 在 + nơi chốn = ở đâu (động từ); 在 + nơi chốn + động từ = làm gì ở đâu; 在 + động từ = đang làm gì. Cấu trúc: A + 在 + nơi chốn / Chủ ngữ + 在 + nơi chốn + động từ / Chủ ngữ + 在 + động từ. Ví dụ: 我女儿在那边。 (Wǒ nǚ'ér zài nàbiān.) = Con gái tôi ở bên kia. / 书在地上。 (Shū zài dìshang.) = Sách ở dưới đất. / 他在家里看书。 (Tā zài jiā lǐ kàn shū.) = Anh ấy đọc sách ở nhà."
+          "type": "grammar_point",
+          "title": "Ôn 在",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "在",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            }
+          ],
+          "explanation": "在 + nơi chốn = ở đâu (động từ); 在 + nơi chốn + động từ = làm gì ở đâu; 在 + động từ = đang làm gì. Cấu trúc: A + 在 + nơi chốn / Chủ ngữ + 在 + nơi chốn + động từ / Chủ ngữ + 在 + động từ.",
+          "examples": [
+            {
+              "hanzi": "我女儿在那边。",
+              "pinyin": "Wǒ nǚ'ér zài nàbiān.",
+              "vi": "Con gái tôi ở bên kia.",
+              "highlight": "在"
+            },
+            {
+              "hanzi": "书在地上。",
+              "pinyin": "Shū zài dìshang.",
+              "vi": "Sách ở dưới đất.",
+              "highlight": "在"
+            },
+            {
+              "hanzi": "他在家里看书。",
+              "pinyin": "Tā zài jiā lǐ kàn shū.",
+              "vi": "Anh ấy đọc sách ở nhà.",
+              "highlight": "在"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Ôn 有: nói sở hữu (ai có cái gì) hoặc tồn tại (ở đâu có cái gì); phủ định là 没有. Cấu trúc: Người + 有 + vật / Nơi chốn + 有 + (số lượng) + vật. Ví dụ: 山上有很多树。 (Shān shang yǒu hěn duō shù.) = Trên núi có nhiều cây. / 我家有三间房间。 (Wǒ jiā yǒu sān jiān fángjiān.) = Nhà tôi có ba phòng. / 我没有女儿。 (Wǒ méiyǒu nǚ'ér.) = Tôi không có con gái."
+          "type": "grammar_point",
+          "title": "Ôn 有",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "有",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "nói sở hữu (ai có cái gì) hoặc tồn tại (ở đâu có cái gì); phủ định là 没有. Cấu trúc: Người + 有 + vật / Nơi chốn + 有 + (số lượng) + vật.",
+          "examples": [
+            {
+              "hanzi": "山上有很多树。",
+              "pinyin": "Shān shang yǒu hěn duō shù.",
+              "vi": "Trên núi có nhiều cây.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "我家有三间房间。",
+              "pinyin": "Wǒ jiā yǒu sān jiān fángjiān.",
+              "vi": "Nhà tôi có ba phòng.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "我没有女儿。",
+              "pinyin": "Wǒ méiyǒu nǚ'ér.",
+              "vi": "Tôi không có con gái.",
+              "highlight": "没有"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. Ôn 的: nối định ngữ với danh từ (của ai, như thế nào); cụm “… + 的” còn đứng một mình thay cho danh từ đã biết. Cấu trúc: Định ngữ + 的 + danh từ / … + 的. Ví dụ: 这是我女儿的书包。 (Zhè shì wǒ nǚ'ér de shūbāo.) = Đây là cặp sách của con gái tôi. / 我的衣服是白的。 (Wǒ de yīfu shì bái de.) = Quần áo của tôi màu trắng. / 这个包很重，是谁的？ (Zhège bāo hěn zhòng, shì shéi de?) = Cái túi này rất nặng, là của ai?"
+          "type": "grammar_point",
+          "title": "Ôn 的",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "定语",
+              "vi": "Định ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "的",
+              "vi": "Trợ từ kết cấu"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "nối định ngữ với danh từ (của ai, như thế nào); cụm “… + 的” còn đứng một mình thay cho danh từ đã biết. Cấu trúc: Định ngữ + 的 + danh từ / … + 的.",
+          "examples": [
+            {
+              "hanzi": "这是我女儿的书包。",
+              "pinyin": "Zhè shì wǒ nǚ'ér de shūbāo.",
+              "vi": "Đây là cặp sách của con gái tôi.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "我的衣服是白的。",
+              "pinyin": "Wǒ de yīfu shì bái de.",
+              "vi": "Quần áo của tôi màu trắng.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "这个包很重，是谁的？",
+              "pinyin": "Zhège bāo hěn zhòng, shì shéi de?",
+              "vi": "Cái túi này rất nặng, là của ai?",
+              "highlight": "的"
+            }
+          ]
         }
       ]
     },
@@ -251,24 +398,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 这个包很重，是谁的？ B: 是我女儿的。 (Zhège bāo hěn zhòng, shì shéi de? / Shì wǒ nǚ'ér de.) — A: Cái túi này rất nặng, là của ai? B: Là của con gái tôi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这个包很重，是谁的？",
+              "pinyin": "Zhège bāo hěn zhòng, shì shéi de?",
+              "vi": "Cái túi này rất nặng, là của ai?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "是我女儿的。",
+              "pinyin": "Shì wǒ nǚ'ér de.",
+              "vi": "Là của con gái tôi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 洗手间在哪儿？ B: 不在这边，在那边。 (Xǐshǒujiān zài nǎr? / Bú zài zhèbiān, zài nàbiān.) — A: Nhà vệ sinh ở đâu? B: Không ở bên này, ở bên kia."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "洗手间在哪儿？",
+              "pinyin": "Xǐshǒujiān zài nǎr?",
+              "vi": "Nhà vệ sinh ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不在这边，在那边。",
+              "pinyin": "Bú zài zhèbiān, zài nàbiān.",
+              "vi": "Không ở bên này, ở bên kia."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 现在几点了？ B: 差五分八点。 (Xiànzài jǐ diǎn le? / Chà wǔ fēn bā diǎn.) — A: Bây giờ mấy giờ rồi? B: Tám giờ kém năm phút."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "现在几点了？",
+              "pinyin": "Xiànzài jǐ diǎn le?",
+              "vi": "Bây giờ mấy giờ rồi?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "差五分八点。",
+              "pinyin": "Chà wǔ fēn bā diǎn.",
+              "vi": "Tám giờ kém năm phút."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 明天我还你书，行吗？ B: 行，你什么时候还都行。 (Míngtiān wǒ huán nǐ shū, xíng ma? / Xíng, nǐ shénme shíhou huán dōu xíng.) — A: Ngày mai tôi trả sách cho bạn, được không? B: Được, lúc nào bạn trả cũng được."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "明天我还你书，行吗？",
+              "pinyin": "Míngtiān wǒ huán nǐ shū, xíng ma?",
+              "vi": "Ngày mai tôi trả sách cho bạn, được không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "行，你什么时候还都行。",
+              "pinyin": "Xíng, nǐ shénme shíhou huán dōu xíng.",
+              "vi": "Được, lúc nào bạn trả cũng được."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 那个山上有什么？ B: 山上有很多树。 (Nàge shān shang yǒu shénme? / Shān shang yǒu hěn duō shù.) — A: Trên ngọn núi kia có gì? B: Trên núi có rất nhiều cây."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "那个山上有什么？",
+              "pinyin": "Nàge shān shang yǒu shénme?",
+              "vi": "Trên ngọn núi kia có gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "山上有很多树。",
+              "pinyin": "Shān shang yǒu hěn duō shù.",
+              "vi": "Trên núi có rất nhiều cây."
+            }
+          ]
         }
       ]
     }

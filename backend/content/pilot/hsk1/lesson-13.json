@@ -244,16 +244,150 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 坐/开 + phương tiện: 坐 (zuò) dùng khi đi tàu, xe, máy bay với tư cách hành khách; 开 (kāi) nghĩa là lái, người nói tự điều khiển xe. Phương tiện đứng trước 去 + nơi chốn: cách đi nói trước, nơi đến nói sau. Cấu trúc: chủ ngữ + 坐/开 + phương tiện + 去 + nơi chốn. Ví dụ: 我坐火车去北京。 (Wǒ zuò huǒchē qù Běijīng.) = Tôi đi tàu hoả đến Bắc Kinh. / 爸爸开车去工作。 (Bàba kāichē qù gōngzuò.) = Bố lái xe đi làm. / 我们坐飞机去。 (Wǒmen zuò fēijī qù.) = Chúng tôi đi máy bay."
+          "type": "grammar_point",
+          "title": "坐/开 + phương tiện",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "坐",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "verb",
+              "zh": "去",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            }
+          ],
+          "explanation": "坐 (zuò) dùng khi đi tàu, xe, máy bay với tư cách hành khách; 开 (kāi) nghĩa là lái, người nói tự điều khiển xe. Phương tiện đứng trước 去 + nơi chốn: cách đi nói trước, nơi đến nói sau. Cấu trúc: chủ ngữ + 坐/开 + phương tiện + 去 + nơi chốn.",
+          "examples": [
+            {
+              "hanzi": "我坐火车去北京。",
+              "pinyin": "Wǒ zuò huǒchē qù Běijīng.",
+              "vi": "Tôi đi tàu hoả đến Bắc Kinh.",
+              "highlight": "坐"
+            },
+            {
+              "hanzi": "爸爸开车去工作。",
+              "pinyin": "Bàba kāichē qù gōngzuò.",
+              "vi": "Bố lái xe đi làm.",
+              "highlight": "开"
+            },
+            {
+              "hanzi": "我们坐飞机去。",
+              "pinyin": "Wǒmen zuò fēijī qù.",
+              "vi": "Chúng tôi đi máy bay.",
+              "highlight": "坐"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 怎么 + động từ: hỏi cách làm một việc (bằng cách nào, thế nào). 怎么 đứng ngay trước động từ. Cấu trúc: chủ ngữ + 怎么 + động từ (+ tân ngữ)? Trả lời bằng cách đi cụ thể: 坐…, 开车, 打车, 走路… Ví dụ: 你怎么去机场？ (Nǐ zěnme qù jīchǎng?) = Bạn đi sân bay bằng gì? / 车站怎么走？ (Chēzhàn zěnme zǒu?) = Đến bến xe đi thế nào? / 这个字怎么读？ (Zhè ge zì zěnme dú?) = Chữ này đọc thế nào?"
+          "type": "grammar_point",
+          "title": "怎么 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "怎么",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "hỏi cách làm một việc (bằng cách nào, thế nào). 怎么 đứng ngay trước động từ. Cấu trúc: chủ ngữ + 怎么 + động từ (+ tân ngữ)? Trả lời bằng cách đi cụ thể: 坐…, 开车, 打车, 走路…",
+          "examples": [
+            {
+              "hanzi": "你怎么去机场？",
+              "pinyin": "Nǐ zěnme qù jīchǎng?",
+              "vi": "Bạn đi sân bay bằng gì?",
+              "highlight": "怎么"
+            },
+            {
+              "hanzi": "车站怎么走？",
+              "pinyin": "Chēzhàn zěnme zǒu?",
+              "vi": "Đến bến xe đi thế nào?",
+              "highlight": "怎么"
+            },
+            {
+              "hanzi": "这个字怎么读？",
+              "pinyin": "Zhè ge zì zěnme dú?",
+              "vi": "Chữ này đọc thế nào?",
+              "highlight": "怎么"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 走路 + 去 + nơi chốn: đi bộ đến một nơi. Giống điểm 1, 走路 (cách đi) đứng trước 去. Phủ định đặt 不 trước 走路. Cấu trúc: chủ ngữ + 走路 + 去 + nơi chốn. Ví dụ: 我走路去学校。 (Wǒ zǒulù qù xuéxiào.) = Tôi đi bộ đến trường. / 我们走路去车站吧。 (Wǒmen zǒulù qù chēzhàn ba.) = Chúng ta đi bộ đến bến xe nhé. / 他不走路去，他打车去。 (Tā bù zǒulù qù, tā dǎchē qù.) = Anh ấy không đi bộ, anh ấy bắt taxi đi."
+          "type": "grammar_point",
+          "title": "走路 + 去 + nơi chốn",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "走路",
+              "vi": "Động từ"
+            },
+            {
+              "role": "verb",
+              "zh": "去",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            }
+          ],
+          "explanation": "đi bộ đến một nơi. Giống điểm 1, 走路 (cách đi) đứng trước 去. Phủ định đặt 不 trước 走路. Cấu trúc: chủ ngữ + 走路 + 去 + nơi chốn.",
+          "examples": [
+            {
+              "hanzi": "我走路去学校。",
+              "pinyin": "Wǒ zǒulù qù xuéxiào.",
+              "vi": "Tôi đi bộ đến trường.",
+              "highlight": "走路"
+            },
+            {
+              "hanzi": "我们走路去车站吧。",
+              "pinyin": "Wǒmen zǒulù qù chēzhàn ba.",
+              "vi": "Chúng ta đi bộ đến bến xe nhé.",
+              "highlight": "走路"
+            },
+            {
+              "hanzi": "他不走路去，他打车去。",
+              "pinyin": "Tā bù zǒulù qù, tā dǎchē qù.",
+              "vi": "Anh ấy không đi bộ, anh ấy bắt taxi đi.",
+              "highlight": "走路"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +401,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你怎么去机场？ B: 我打车去。 (Nǐ zěnme qù jīchǎng? / Wǒ dǎchē qù.) — A: Bạn đi sân bay bằng gì? B: Tôi bắt taxi đi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你怎么去机场？",
+              "pinyin": "Nǐ zěnme qù jīchǎng?",
+              "vi": "Bạn đi sân bay bằng gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我打车去。",
+              "pinyin": "Wǒ dǎchē qù.",
+              "vi": "Tôi bắt taxi đi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 请问，车站怎么走？ B: 在前边的路口过马路，就到了。 (Qǐngwèn, chēzhàn zěnme zǒu? / Zài qiánbian de lùkǒu guò mǎlù, jiù dào le.) — A: Xin hỏi, đến bến xe đi thế nào? B: Qua đường ở ngã tư phía trước là tới."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "请问，车站怎么走？",
+              "pinyin": "Qǐngwèn, chēzhàn zěnme zǒu?",
+              "vi": "Xin hỏi, đến bến xe đi thế nào?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在前边的路口过马路，就到了。",
+              "pinyin": "Zài qiánbian de lùkǒu guò mǎlù, jiù dào le.",
+              "vi": "Qua đường ở ngã tư phía trước là tới."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你买车票了吗？ B: 买了，我们坐火车去北京。 (Nǐ mǎi chēpiào le ma? / Mǎi le, wǒmen zuò huǒchē qù Běijīng.) — A: Bạn mua vé tàu chưa? B: Mua rồi, chúng ta đi tàu hoả đến Bắc Kinh."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你买车票了吗？",
+              "pinyin": "Nǐ mǎi chēpiào le ma?",
+              "vi": "Bạn mua vé tàu chưa?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "买了，我们坐火车去北京。",
+              "pinyin": "Mǎi le, wǒmen zuò huǒchē qù Běijīng.",
+              "vi": "Mua rồi, chúng ta đi tàu hoả đến Bắc Kinh."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你爸爸开车去工作吗？ B: 不，他走路去。 (Nǐ bàba kāichē qù gōngzuò ma? / Bù, tā zǒulù qù.) — A: Bố bạn lái xe đi làm à? B: Không, bố tôi đi bộ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你爸爸开车去工作吗？",
+              "pinyin": "Nǐ bàba kāichē qù gōngzuò ma?",
+              "vi": "Bố bạn lái xe đi làm à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不，他走路去。",
+              "pinyin": "Bù, tā zǒulù qù.",
+              "vi": "Không, bố tôi đi bộ."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我们在哪儿下车？ B: 在机场下车。 (Wǒmen zài nǎr xiàchē? / Zài jīchǎng xiàchē.) — A: Chúng ta xuống xe ở đâu? B: Xuống xe ở sân bay."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们在哪儿下车？",
+              "pinyin": "Wǒmen zài nǎr xiàchē?",
+              "vi": "Chúng ta xuống xe ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在机场下车。",
+              "pinyin": "Zài jīchǎng xiàchē.",
+              "vi": "Xuống xe ở sân bay."
+            }
+          ]
         }
       ]
     }

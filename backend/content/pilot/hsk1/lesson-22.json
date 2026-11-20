@@ -244,16 +244,155 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 给 + người + động từ: làm việc gì cho ai, hướng tới ai (gọi điện cho, giới thiệu cho, mua cho). Khác tiếng Việt: 给 + người đứng TRƯỚC động từ. Cấu trúc: Chủ ngữ + 给 + người + động từ (+ tân ngữ). 给 cũng là động từ “đưa cho”: 妈妈给我一本书. Ví dụ: 我给妈妈打电话。 (Wǒ gěi māma dǎ diànhuà.) = Tôi gọi điện cho mẹ. / 我给你介绍一个朋友。 (Wǒ gěi nǐ jièshào yí ge péngyou.) = Tôi giới thiệu cho bạn một người bạn. / 爸爸给我买了一个手机。 (Bàba gěi wǒ mǎi le yí ge shǒujī.) = Bố mua cho tôi một chiếc điện thoại."
+          "type": "grammar_point",
+          "title": "给 + người + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "给",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "làm việc gì cho ai, hướng tới ai (gọi điện cho, giới thiệu cho, mua cho). Khác tiếng Việt: 给 + người đứng TRƯỚC động từ. Cấu trúc: Chủ ngữ + 给 + người + động từ (+ tân ngữ). 给 cũng là động từ “đưa cho”: 妈妈给我一本书.",
+          "examples": [
+            {
+              "hanzi": "我给妈妈打电话。",
+              "pinyin": "Wǒ gěi māma dǎ diànhuà.",
+              "vi": "Tôi gọi điện cho mẹ.",
+              "highlight": "给"
+            },
+            {
+              "hanzi": "我给你介绍一个朋友。",
+              "pinyin": "Wǒ gěi nǐ jièshào yí ge péngyou.",
+              "vi": "Tôi giới thiệu cho bạn một người bạn.",
+              "highlight": "给"
+            },
+            {
+              "hanzi": "爸爸给我买了一个手机。",
+              "pinyin": "Bàba gěi wǒ mǎi le yí ge shǒujī.",
+              "vi": "Bố mua cho tôi một chiếc điện thoại.",
+              "highlight": "给"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 先…再…: làm việc này trước, rồi mới làm việc kia. Cấu trúc: (Chủ ngữ) + 先 + việc thứ nhất, (chủ ngữ) + 再 + việc thứ hai. Ví dụ: 我们先吃饭，再去看电影。 (Wǒmen xiān chīfàn, zài qù kàn diànyǐng.) = Chúng ta ăn cơm trước, rồi đi xem phim. / 你先休息，明天再说。 (Nǐ xiān xiūxi, míngtiān zài shuō.) = Bạn nghỉ trước đi, mai hãy nói. / 先关上门，再打开电视。 (Xiān guānshang mén, zài dǎkāi diànshì.) = Đóng cửa trước, rồi mới bật tivi."
+          "type": "grammar_point",
+          "title": "先…再…",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "(主语)",
+              "vi": "(Chủ ngữ)"
+            },
+            {
+              "role": "key",
+              "zh": "先",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "subj",
+              "zh": "(主语)",
+              "vi": "(Chủ ngữ)"
+            },
+            {
+              "role": "key",
+              "zh": "再",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "làm việc này trước, rồi mới làm việc kia. Cấu trúc: (Chủ ngữ) + 先 + việc thứ nhất, (chủ ngữ) + 再 + việc thứ hai.",
+          "examples": [
+            {
+              "hanzi": "我们先吃饭，再去看电影。",
+              "pinyin": "Wǒmen xiān chīfàn, zài qù kàn diànyǐng.",
+              "vi": "Chúng ta ăn cơm trước, rồi đi xem phim.",
+              "highlight": "先"
+            },
+            {
+              "hanzi": "你先休息，明天再说。",
+              "pinyin": "Nǐ xiān xiūxi, míngtiān zài shuō.",
+              "vi": "Bạn nghỉ trước đi, mai hãy nói.",
+              "highlight": "先"
+            },
+            {
+              "hanzi": "先关上门，再打开电视。",
+              "pinyin": "Xiān guānshang mén, zài dǎkāi diànshì.",
+              "vi": "Đóng cửa trước, rồi mới bật tivi.",
+              "highlight": "先"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 最 + tính từ: chỉ mức cao nhất, “nhất”. Cấu trúc: Chủ ngữ + 最 + tính từ. 最好 + động từ còn có nghĩa “tốt nhất là, nên”; 最后 = cuối cùng. Ví dụ: 这个饭店最有名。 (Zhège fàndiàn zuì yǒumíng.) = Nhà hàng này nổi tiếng nhất. / 你最好明天再来。 (Nǐ zuìhǎo míngtiān zài lái.) = Tốt nhất là ngày mai bạn hãy đến. / 这是最后一个包子。 (Zhè shì zuìhòu yí ge bāozi.) = Đây là cái bánh bao cuối cùng."
+          "type": "grammar_point",
+          "title": "最 + tính từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "最",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "other",
+              "zh": "形容词",
+              "vi": "Tính từ"
+            }
+          ],
+          "explanation": "chỉ mức cao nhất, “nhất”. Cấu trúc: Chủ ngữ + 最 + tính từ. 最好 + động từ còn có nghĩa “tốt nhất là, nên”; 最后 = cuối cùng.",
+          "examples": [
+            {
+              "hanzi": "这个饭店最有名。",
+              "pinyin": "Zhège fàndiàn zuì yǒumíng.",
+              "vi": "Nhà hàng này nổi tiếng nhất.",
+              "highlight": "最"
+            },
+            {
+              "hanzi": "你最好明天再来。",
+              "pinyin": "Nǐ zuìhǎo míngtiān zài lái.",
+              "vi": "Tốt nhất là ngày mai bạn hãy đến.",
+              "highlight": "最"
+            },
+            {
+              "hanzi": "这是最后一个包子。",
+              "pinyin": "Zhè shì zuìhòu yí ge bāozi.",
+              "vi": "Đây là cái bánh bao cuối cùng.",
+              "highlight": "最"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +406,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 我们什么时候见面？ B: 明天下午见面吧。 (Wǒmen shénme shíhou jiànmiàn? / Míngtiān xiàwǔ jiànmiàn ba.) — A: Khi nào chúng ta gặp mặt? B: Chiều mai gặp nhé."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们什么时候见面？",
+              "pinyin": "Wǒmen shénme shíhou jiànmiàn?",
+              "vi": "Khi nào chúng ta gặp mặt?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "明天下午见面吧。",
+              "pinyin": "Míngtiān xiàwǔ jiànmiàn ba.",
+              "vi": "Chiều mai gặp nhé."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 明天是我的生日，你能来吗？ B: 能，我明天去你家。 (Míngtiān shì wǒ de shēngrì, nǐ néng lái ma? / Néng, wǒ míngtiān qù nǐ jiā.) — A: Ngày mai là sinh nhật tôi, bạn đến được không? B: Được, ngày mai tôi đến nhà bạn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "明天是我的生日，你能来吗？",
+              "pinyin": "Míngtiān shì wǒ de shēngrì, nǐ néng lái ma?",
+              "vi": "Ngày mai là sinh nhật tôi, bạn đến được không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "能，我明天去你家。",
+              "pinyin": "Néng, wǒ míngtiān qù nǐ jiā.",
+              "vi": "Được, ngày mai tôi đến nhà bạn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你给他打电话了吗？ B: 打了，我告诉他了。 (Nǐ gěi tā dǎ diànhuà le ma? / Dǎ le, wǒ gàosu tā le.) — A: Bạn đã gọi điện cho anh ấy chưa? B: Gọi rồi, tôi đã nói cho anh ấy biết rồi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你给他打电话了吗？",
+              "pinyin": "Nǐ gěi tā dǎ diànhuà le ma?",
+              "vi": "Bạn đã gọi điện cho anh ấy chưa?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "打了，我告诉他了。",
+              "pinyin": "Dǎ le, wǒ gàosu tā le.",
+              "vi": "Gọi rồi, tôi đã nói cho anh ấy biết rồi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你明天要请假吗？ B: 不，明天我们放假。 (Nǐ míngtiān yào qǐngjià ma? / Bù, míngtiān wǒmen fàngjià.) — A: Ngày mai bạn định xin nghỉ à? B: Không, ngày mai chúng tôi được nghỉ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你明天要请假吗？",
+              "pinyin": "Nǐ míngtiān yào qǐngjià ma?",
+              "vi": "Ngày mai bạn định xin nghỉ à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不，明天我们放假。",
+              "pinyin": "Bù, míngtiān wǒmen fàngjià.",
+              "vi": "Không, ngày mai chúng tôi được nghỉ."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我们先吃饭，再去看电影，好吗？ B: 好，我们去那个最有名的饭店吧。 (Wǒmen xiān chīfàn, zài qù kàn diànyǐng, hǎo ma? / Hǎo, wǒmen qù nàge zuì yǒumíng de fàndiàn ba.) — A: Chúng ta ăn cơm trước, rồi đi xem phim, được không? B: Được, chúng ta đến nhà hàng nổi tiếng nhất ấy nhé."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们先吃饭，再去看电影，好吗？",
+              "pinyin": "Wǒmen xiān chīfàn, zài qù kàn diànyǐng, hǎo ma?",
+              "vi": "Chúng ta ăn cơm trước, rồi đi xem phim, được không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，我们去那个最有名的饭店吧。",
+              "pinyin": "Hǎo, wǒmen qù nàge zuì yǒumíng de fàndiàn ba.",
+              "vi": "Được, chúng ta đến nhà hàng nổi tiếng nhất ấy nhé."
+            }
+          ]
         }
       ]
     }

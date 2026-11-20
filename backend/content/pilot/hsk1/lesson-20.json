@@ -244,20 +244,167 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 别 + động từ: đừng làm gì, dùng để khuyên hoặc cấm. Cấu trúc: (Chủ ngữ) + 别 + động từ; thêm 了 ở cuối khi muốn ai thôi làm việc đang làm. Ví dụ: 别动！ (Bié dòng!) = Đừng cử động! / 别说话。 (Bié shuōhuà.) = Đừng nói chuyện. / 别生气了。 (Bié shēngqì le.) = Đừng giận nữa."
+          "type": "grammar_point",
+          "title": "别 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "(主语)",
+              "vi": "(Chủ ngữ)"
+            },
+            {
+              "role": "key",
+              "zh": "别",
+              "vi": "Phó từ phủ định"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "đừng làm gì, dùng để khuyên hoặc cấm. Cấu trúc: (Chủ ngữ) + 别 + động từ; thêm 了 ở cuối khi muốn ai thôi làm việc đang làm.",
+          "examples": [
+            {
+              "hanzi": "别动！",
+              "pinyin": "Bié dòng!",
+              "vi": "Đừng cử động!",
+              "highlight": "别"
+            },
+            {
+              "hanzi": "别说话。",
+              "pinyin": "Bié shuōhuà.",
+              "vi": "Đừng nói chuyện.",
+              "highlight": "别"
+            },
+            {
+              "hanzi": "别生气了。",
+              "pinyin": "Bié shēngqì le.",
+              "vi": "Đừng giận nữa.",
+              "highlight": "别"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 觉得 + nhận xét: nói cảm nhận hoặc ý kiến của mình. Cấu trúc: Chủ ngữ + 觉得 + nhận xét (tính từ hoặc cả một câu). Hỏi ý kiến: 你觉得…吗？ Ví dụ: 我觉得这个饭店很好。 (Wǒ juéde zhège fàndiàn hěn hǎo.) = Tôi thấy nhà hàng này rất tốt. / 你觉得冷吗？ (Nǐ juéde lěng ma?) = Bạn có thấy lạnh không? / 我觉得身体不太好。 (Wǒ juéde shēntǐ bú tài hǎo.) = Tôi thấy sức khoẻ không tốt lắm."
+          "type": "grammar_point",
+          "title": "觉得 + nhận xét",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "觉得",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "句子",
+              "vi": "Câu"
+            }
+          ],
+          "explanation": "nói cảm nhận hoặc ý kiến của mình. Cấu trúc: Chủ ngữ + 觉得 + nhận xét (tính từ hoặc cả một câu). Hỏi ý kiến: 你觉得…吗？",
+          "examples": [
+            {
+              "hanzi": "我觉得这个饭店很好。",
+              "pinyin": "Wǒ juéde zhège fàndiàn hěn hǎo.",
+              "vi": "Tôi thấy nhà hàng này rất tốt.",
+              "highlight": "觉得"
+            },
+            {
+              "hanzi": "你觉得冷吗？",
+              "pinyin": "Nǐ juéde lěng ma?",
+              "vi": "Bạn có thấy lạnh không?",
+              "highlight": "觉得"
+            },
+            {
+              "hanzi": "我觉得身体不太好。",
+              "pinyin": "Wǒ juéde shēntǐ bú tài hǎo.",
+              "vi": "Tôi thấy sức khoẻ không tốt lắm.",
+              "highlight": "觉得"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 记住/记得/忘: 记住 = nhớ kỹ, ghi vào trí nhớ (thường dùng khi dặn); 记得 = còn nhớ điều đã biết; 忘 = quên, thường đi với 了. Cấu trúc: 记住 + điều cần nhớ; 还记得 + người/việc; 忘了 + người/việc. Ví dụ: 请记住我的名字。 (Qǐng jìzhù wǒ de míngzi.) = Xin hãy nhớ kỹ tên tôi. / 你还记得我吗？ (Nǐ hái jìde wǒ ma?) = Bạn còn nhớ tôi không? / 我忘了他的电话。 (Wǒ wàng le tā de diànhuà.) = Tôi quên số điện thoại của anh ấy rồi."
+          "type": "grammar_point",
+          "title": "记住/记得/忘",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "记住",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "宾语",
+              "vi": "Tân ngữ"
+            }
+          ],
+          "explanation": "记住 = nhớ kỹ, ghi vào trí nhớ (thường dùng khi dặn); 记得 = còn nhớ điều đã biết; 忘 = quên, thường đi với 了. Cấu trúc: 记住 + điều cần nhớ; 还记得 + người/việc; 忘了 + người/việc.",
+          "examples": [
+            {
+              "hanzi": "请记住我的名字。",
+              "pinyin": "Qǐng jìzhù wǒ de míngzi.",
+              "vi": "Xin hãy nhớ kỹ tên tôi.",
+              "highlight": "记住"
+            },
+            {
+              "hanzi": "你还记得我吗？",
+              "pinyin": "Nǐ hái jìde wǒ ma?",
+              "vi": "Bạn còn nhớ tôi không?",
+              "highlight": "记得"
+            },
+            {
+              "hanzi": "我忘了他的电话。",
+              "pinyin": "Wǒ wàng le tā de diànhuà.",
+              "vi": "Tôi quên số điện thoại của anh ấy rồi.",
+              "highlight": "忘"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 快/慢 + động từ: 快 đứng trước động từ để giục làm nhanh lên; 慢 đứng trước động từ để dặn làm từ từ. 慢走 còn là câu chào khi tiễn khách. Cấu trúc: 快/慢 + động từ (+ 吧). Ví dụ: 我们快走吧。 (Wǒmen kuài zǒu ba.) = Chúng ta đi nhanh lên thôi. / 快坐下吧。 (Kuài zuòxia ba.) = Mau ngồi xuống đi. / 你慢走。 (Nǐ màn zǒu.) = Bạn đi cẩn thận nhé (câu tiễn khách)."
+          "type": "grammar_point",
+          "title": "快/慢 + động từ",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "快",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(吧)",
+              "vi": "(Trợ từ ngữ khí)"
+            }
+          ],
+          "explanation": "快 đứng trước động từ để giục làm nhanh lên; 慢 đứng trước động từ để dặn làm từ từ. 慢走 còn là câu chào khi tiễn khách. Cấu trúc: 快/慢 + động từ (+ 吧).",
+          "examples": [
+            {
+              "hanzi": "我们快走吧。",
+              "pinyin": "Wǒmen kuài zǒu ba.",
+              "vi": "Chúng ta đi nhanh lên thôi.",
+              "highlight": "快"
+            },
+            {
+              "hanzi": "快坐下吧。",
+              "pinyin": "Kuài zuòxia ba.",
+              "vi": "Mau ngồi xuống đi.",
+              "highlight": "快"
+            },
+            {
+              "hanzi": "你慢走。",
+              "pinyin": "Nǐ màn zǒu.",
+              "vi": "Bạn đi cẩn thận nhé (câu tiễn khách).",
+              "highlight": "慢"
+            }
+          ]
         }
       ]
     },
@@ -271,24 +418,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你身体好吗？ B: 不太好，我生病了。 (Nǐ shēntǐ hǎo ma? / Bú tài hǎo, wǒ shēngbìng le.) — A: Bạn có khoẻ không? B: Không khoẻ lắm, tôi bị ốm rồi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你身体好吗？",
+              "pinyin": "Nǐ shēntǐ hǎo ma?",
+              "vi": "Bạn có khoẻ không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不太好，我生病了。",
+              "pinyin": "Bú tài hǎo, wǒ shēngbìng le.",
+              "vi": "Không khoẻ lắm, tôi bị ốm rồi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你去医院看病了吗？ B: 去了，医生说我要多休息。 (Nǐ qù yīyuàn kànbìng le ma? / Qù le, yīshēng shuō wǒ yào duō xiūxi.) — A: Bạn đã đi bệnh viện khám bệnh chưa? B: Đi rồi, bác sĩ nói tôi cần nghỉ ngơi nhiều."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你去医院看病了吗？",
+              "pinyin": "Nǐ qù yīyuàn kànbìng le ma?",
+              "vi": "Bạn đã đi bệnh viện khám bệnh chưa?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "去了，医生说我要多休息。",
+              "pinyin": "Qù le, yīshēng shuō wǒ yào duō xiūxi.",
+              "vi": "Đi rồi, bác sĩ nói tôi cần nghỉ ngơi nhiều."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你觉得冷吗？ B: 不冷，我觉得很热。 (Nǐ juéde lěng ma? / Bù lěng, wǒ juéde hěn rè.) — A: Bạn có thấy lạnh không? B: Không lạnh, tôi thấy rất nóng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你觉得冷吗？",
+              "pinyin": "Nǐ juéde lěng ma?",
+              "vi": "Bạn có thấy lạnh không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不冷，我觉得很热。",
+              "pinyin": "Bù lěng, wǒ juéde hěn rè.",
+              "vi": "Không lạnh, tôi thấy rất nóng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 别站在门口，快坐下吧。 B: 好，谢谢。 (Bié zhàn zài ménkǒu, kuài zuòxia ba. / Hǎo, xièxie.) — A: Đừng đứng ở cửa, mau ngồi xuống đi. B: Vâng, cảm ơn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "别站在门口，快坐下吧。",
+              "pinyin": "Bié zhàn zài ménkǒu, kuài zuòxia ba.",
+              "vi": "Đừng đứng ở cửa, mau ngồi xuống đi."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，谢谢。",
+              "pinyin": "Hǎo, xièxie.",
+              "vi": "Vâng, cảm ơn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我的名字你记住了吗？ B: 记住了，我不会忘。 (Wǒ de míngzi nǐ jìzhù le ma? / Jìzhù le, wǒ bú huì wàng.) — A: Tên của tôi bạn đã nhớ chưa? B: Nhớ rồi, tôi sẽ không quên."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我的名字你记住了吗？",
+              "pinyin": "Wǒ de míngzi nǐ jìzhù le ma?",
+              "vi": "Tên của tôi bạn đã nhớ chưa?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "记住了，我不会忘。",
+              "pinyin": "Jìzhù le, wǒ bú huì wàng.",
+              "vi": "Nhớ rồi, tôi sẽ không quên."
+            }
+          ]
         }
       ]
     }

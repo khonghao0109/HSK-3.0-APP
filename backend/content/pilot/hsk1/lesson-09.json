@@ -244,20 +244,187 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Từ chỉ thời gian đứng trước động từ: chủ ngữ + thời gian + động từ (cũng có thể đặt thời gian ở đầu câu), không đặt sau động từ như tiếng Việt. Ví dụ: 我下午去图书馆。 (Wǒ xiàwǔ qù túshūguǎn.) = Buổi chiều tôi đi thư viện. / 他晚上在家学习。 (Tā wǎnshang zài jiā xuéxí.) = Buổi tối anh ấy học ở nhà. / 我们明年去北京。 (Wǒmen míngnián qù Běijīng.) = Năm sau chúng tôi đi Bắc Kinh."
+          "type": "grammar_point",
+          "title": "Từ chỉ thời gian đứng trước động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "Từ chỉ thời gian đứng trước động từ: chủ ngữ + thời gian + động từ (cũng có thể đặt thời gian ở đầu câu), không đặt sau động từ như tiếng Việt.",
+          "examples": [
+            {
+              "hanzi": "我下午去图书馆。",
+              "pinyin": "Wǒ xiàwǔ qù túshūguǎn.",
+              "vi": "Buổi chiều tôi đi thư viện.",
+              "highlight": "下午"
+            },
+            {
+              "hanzi": "他晚上在家学习。",
+              "pinyin": "Tā wǎnshang zài jiā xuéxí.",
+              "vi": "Buổi tối anh ấy học ở nhà.",
+              "highlight": "晚上"
+            },
+            {
+              "hanzi": "我们明年去北京。",
+              "pinyin": "Wǒmen míngnián qù Běijīng.",
+              "vi": "Năm sau chúng tôi đi Bắc Kinh.",
+              "highlight": "明年"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Cách nói giờ: số + 点 (giờ) + số + 分 (phút); 半 = rưỡi, đứng sau 点. Buổi trong ngày đứng trước giờ: 上午八点 = 8 giờ sáng. Cấu trúc: (buổi) + số + 点 + (số + 分 / 半). Ví dụ: 现在八点半。 (Xiànzài bā diǎn bàn.) = Bây giờ là 8 giờ rưỡi. / 我们下午三点十分下课。 (Wǒmen xiàwǔ sān diǎn shí fēn xiàkè.) = Chúng tôi tan học lúc 3 giờ 10 phút chiều. Lưu ý: thời lượng (bao lâu) như 两个小时 thì đứng SAU động từ, khác với thời điểm: 我学习两个小时。 (Wǒ xuéxí liǎng ge xiǎoshí.) = Tôi học hai tiếng."
+          "type": "grammar_point",
+          "title": "Cách nói giờ",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "(时间词)",
+              "vi": "(Thời gian)"
+            },
+            {
+              "role": "other",
+              "zh": "数词",
+              "vi": "Số"
+            },
+            {
+              "role": "key",
+              "zh": "点",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "other",
+              "zh": "(数词)",
+              "vi": "(Số)"
+            },
+            {
+              "role": "other",
+              "zh": "(分)",
+              "vi": "(Danh từ)"
+            },
+            {
+              "role": "other",
+              "zh": "(半)",
+              "vi": "(Số từ)"
+            }
+          ],
+          "explanation": "Cách nói giờ: số + 点 (giờ) + số + 分 (phút); 半 = rưỡi, đứng sau 点. Buổi trong ngày đứng trước giờ: 上午八点 = 8 giờ sáng. Cấu trúc: (buổi) + số + 点 + (số + 分 / 半). Lưu ý: thời lượng (bao lâu) như 两个小时 thì đứng SAU động từ, khác với thời điểm (xem ví dụ).",
+          "examples": [
+            {
+              "hanzi": "现在八点半。",
+              "pinyin": "Xiànzài bā diǎn bàn.",
+              "vi": "Bây giờ là 8 giờ rưỡi.",
+              "highlight": "八点半"
+            },
+            {
+              "hanzi": "我们下午三点十分下课。",
+              "pinyin": "Wǒmen xiàwǔ sān diǎn shí fēn xiàkè.",
+              "vi": "Chúng tôi tan học lúc 3 giờ 10 phút chiều.",
+              "highlight": "下午三点十分"
+            },
+            {
+              "hanzi": "我学习两个小时。",
+              "pinyin": "Wǒ xuéxí liǎng ge xiǎoshí.",
+              "vi": "Tôi học hai tiếng.",
+              "highlight": "两个小时"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 什么时候 (khi nào, lúc nào) hỏi thời điểm, đứng trước động từ ở vị trí của từ chỉ thời gian; trả lời bằng thời gian ở đúng vị trí đó. Cấu trúc: chủ ngữ + 什么时候 + động từ? Ví dụ: 你什么时候去北京？ (Nǐ shénme shíhou qù Běijīng?) = Khi nào bạn đi Bắc Kinh? / 你们什么时候上课？ (Nǐmen shénme shíhou shàngkè?) = Khi nào các bạn lên lớp? — 我们上午九点上课。 (Wǒmen shàngwǔ jiǔ diǎn shàngkè.) = Chúng tôi lên lớp lúc 9 giờ sáng."
+          "type": "grammar_point",
+          "title": "什么时候 (khi nào, lúc nào)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "什么时候",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "什么时候 (khi nào, lúc nào) hỏi thời điểm, đứng trước động từ ở vị trí của từ chỉ thời gian; trả lời bằng thời gian ở đúng vị trí đó. Cấu trúc: chủ ngữ + 什么时候 + động từ?",
+          "examples": [
+            {
+              "hanzi": "你什么时候去北京？",
+              "pinyin": "Nǐ shénme shíhou qù Běijīng?",
+              "vi": "Khi nào bạn đi Bắc Kinh?",
+              "highlight": "什么时候"
+            },
+            {
+              "hanzi": "你们什么时候上课？",
+              "pinyin": "Nǐmen shénme shíhou shàngkè?",
+              "vi": "Khi nào các bạn lên lớp?",
+              "highlight": "什么时候"
+            },
+            {
+              "hanzi": "我们上午九点上课。",
+              "pinyin": "Wǒmen shàngwǔ jiǔ diǎn shàngkè.",
+              "vi": "Chúng tôi lên lớp lúc 9 giờ sáng.",
+              "highlight": "上午九点"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 一会儿 (một lát) và 马上 (ngay, lập tức) đứng trước động từ để nói việc sắp xảy ra: 马上 nhanh hơn, gần như ngay bây giờ; 一会儿 là sau một lát. Cấu trúc: chủ ngữ + 马上/一会儿 + động từ. Ví dụ: 我马上来。 (Wǒ mǎshàng lái.) = Tôi đến ngay. / 他一会儿去商店。 (Tā yīhuìr qù shāngdiàn.) = Lát nữa anh ấy đi cửa hàng. / 老师马上来。 (Lǎoshī mǎshàng lái.) = Giáo viên đến ngay."
+          "type": "grammar_point",
+          "title": "一会儿 (một lát) và 马上 (ngay, lập tức)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "马上",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "一会儿 (một lát) và 马上 (ngay, lập tức) đứng trước động từ để nói việc sắp xảy ra: 马上 nhanh hơn, gần như ngay bây giờ; 一会儿 là sau một lát. Cấu trúc: chủ ngữ + 马上/一会儿 + động từ.",
+          "examples": [
+            {
+              "hanzi": "我马上来。",
+              "pinyin": "Wǒ mǎshàng lái.",
+              "vi": "Tôi đến ngay.",
+              "highlight": "马上"
+            },
+            {
+              "hanzi": "他一会儿去商店。",
+              "pinyin": "Tā yīhuìr qù shāngdiàn.",
+              "vi": "Lát nữa anh ấy đi cửa hàng.",
+              "highlight": "一会儿"
+            },
+            {
+              "hanzi": "老师马上来。",
+              "pinyin": "Lǎoshī mǎshàng lái.",
+              "vi": "Giáo viên đến ngay.",
+              "highlight": "马上"
+            }
+          ]
         }
       ]
     },
@@ -271,24 +438,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你明天什么时候上课？ B: 我明天上午八点半上课。 (Nǐ míngtiān shénme shíhou shàngkè? / Wǒ míngtiān shàngwǔ bā diǎn bàn shàngkè.) — A: Ngày mai khi nào bạn lên lớp? B: Ngày mai tôi lên lớp lúc 8 giờ rưỡi sáng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你明天什么时候上课？",
+              "pinyin": "Nǐ míngtiān shénme shíhou shàngkè?",
+              "vi": "Ngày mai khi nào bạn lên lớp?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我明天上午八点半上课。",
+              "pinyin": "Wǒ míngtiān shàngwǔ bā diǎn bàn shàngkè.",
+              "vi": "Ngày mai tôi lên lớp lúc 8 giờ rưỡi sáng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你们几点下课？ B: 我们中午十二点下课。 (Nǐmen jǐ diǎn xiàkè? / Wǒmen zhōngwǔ shí'èr diǎn xiàkè.) — A: Mấy giờ các bạn tan học? B: Chúng tôi tan học lúc 12 giờ trưa."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你们几点下课？",
+              "pinyin": "Nǐmen jǐ diǎn xiàkè?",
+              "vi": "Mấy giờ các bạn tan học?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我们中午十二点下课。",
+              "pinyin": "Wǒmen zhōngwǔ shí'èr diǎn xiàkè.",
+              "vi": "Chúng tôi tan học lúc 12 giờ trưa."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你下午有时间吗？ B: 有，我下午去图书馆学习两个小时。 (Nǐ xiàwǔ yǒu shíjiān ma? / Yǒu, wǒ xiàwǔ qù túshūguǎn xuéxí liǎng ge xiǎoshí.) — A: Chiều nay bạn có thời gian không? B: Có, chiều nay tôi đến thư viện học hai tiếng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你下午有时间吗？",
+              "pinyin": "Nǐ xiàwǔ yǒu shíjiān ma?",
+              "vi": "Chiều nay bạn có thời gian không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，我下午去图书馆学习两个小时。",
+              "pinyin": "Yǒu, wǒ xiàwǔ qù túshūguǎn xuéxí liǎng ge xiǎoshí.",
+              "vi": "Có, chiều nay tôi đến thư viện học hai tiếng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你晚上在家吗？ B: 在，我晚上在家写汉字。 (Nǐ wǎnshang zài jiā ma? / Zài, wǒ wǎnshang zài jiā xiě hànzì.) — A: Buổi tối bạn có ở nhà không? B: Có, buổi tối tôi ở nhà viết chữ Hán."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你晚上在家吗？",
+              "pinyin": "Nǐ wǎnshang zài jiā ma?",
+              "vi": "Buổi tối bạn có ở nhà không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在，我晚上在家写汉字。",
+              "pinyin": "Zài, wǒ wǎnshang zài jiā xiě hànzì.",
+              "vi": "Có, buổi tối tôi ở nhà viết chữ Hán."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 现在几点？ B: 现在八点十分，我马上去学校。 (Xiànzài jǐ diǎn? / Xiànzài bā diǎn shí fēn, wǒ mǎshàng qù xuéxiào.) — A: Bây giờ mấy giờ? B: Bây giờ là 8 giờ 10 phút, tôi đến trường ngay."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "现在几点？",
+              "pinyin": "Xiànzài jǐ diǎn?",
+              "vi": "Bây giờ mấy giờ?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "现在八点十分，我马上去学校。",
+              "pinyin": "Xiànzài bā diǎn shí fēn, wǒ mǎshàng qù xuéxiào.",
+              "vi": "Bây giờ là 8 giờ 10 phút, tôi đến trường ngay."
+            }
+          ]
         }
       ]
     }

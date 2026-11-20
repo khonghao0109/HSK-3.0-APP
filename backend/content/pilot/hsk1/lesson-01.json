@@ -244,24 +244,165 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Câu khẳng định với 是 (là): chủ ngữ + 是 + danh từ. Ví dụ: 我是学生。 = Tôi là học sinh."
+          "type": "grammar_point",
+          "title": "Câu khẳng định với 是 (là)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "是",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Câu khẳng định với 是 (là): chủ ngữ + 是 + danh từ.",
+          "examples": [
+            {
+              "hanzi": "我是学生。",
+              "pinyin": "Wǒ shì xuéshēng.",
+              "vi": "Tôi là học sinh.",
+              "highlight": "是"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Hỏi tên: 你 + 叫 + 什么 + 名字？ Ví dụ: 你叫什么名字？ = Bạn tên là gì? Trả lời bằng 叫: 我叫…。"
+          "type": "grammar_point",
+          "title": "Hỏi tên",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "你",
+              "vi": "Đại từ"
+            },
+            {
+              "role": "verb",
+              "zh": "叫",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "什么",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "other",
+              "zh": "名字",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Hỏi tên: 你 + 叫 + 什么 + 名字？ Trả lời bằng 叫: 我叫…。",
+          "examples": [
+            {
+              "hanzi": "你叫什么名字？",
+              "pinyin": "Nǐ jiào shénme míngzi?",
+              "vi": "Bạn tên là gì?",
+              "highlight": "叫什么名字"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Câu hỏi có/không: thêm 吗 ở cuối câu kể. Ví dụ: 你是学生吗？ = Bạn là học sinh à? Trả lời ngắn: 是。 hoặc 不是。"
+          "type": "grammar_point",
+          "title": "Câu hỏi có/không",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "句子",
+              "vi": "Câu"
+            },
+            {
+              "role": "key",
+              "zh": "吗",
+              "vi": "Trợ từ nghi vấn"
+            }
+          ],
+          "explanation": "Câu hỏi có/không: thêm 吗 ở cuối câu kể. Trả lời ngắn: 是。 hoặc 不是。",
+          "examples": [
+            {
+              "hanzi": "你是学生吗？",
+              "pinyin": "Nǐ shì xuéshēng ma?",
+              "vi": "Bạn là học sinh à?",
+              "highlight": "吗"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 很 đứng trước tính từ trong câu khẳng định thường không được nhấn mạnh (vẫn đọc hěn, thanh 3); khi dịch có thể dùng “rất” hoặc bỏ tuỳ ngữ cảnh. Ví dụ: 我很高兴。 = Tôi vui. / Tôi rất vui."
+          "type": "grammar_point",
+          "title": "很 đứng trước tính từ trong câu khẳng định",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "很",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "形容词",
+              "vi": "Tính từ"
+            }
+          ],
+          "explanation": "很 đứng trước tính từ trong câu khẳng định thường không được nhấn mạnh (vẫn đọc hěn, thanh 3); khi dịch có thể dùng “rất” hoặc bỏ tuỳ ngữ cảnh.",
+          "examples": [
+            {
+              "hanzi": "我很高兴。",
+              "pinyin": "Wǒ hěn gāoxìng.",
+              "vi": "Tôi vui. / Tôi rất vui.",
+              "highlight": "很"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 也 (cũng) và 都 (đều) đứng trước động từ hoặc tính từ: 我也是学生。 = Tôi cũng là học sinh. / 我们都是学生。 = Chúng tôi đều là học sinh."
+          "type": "grammar_point",
+          "title": "也 (cũng) và 都 (đều)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "(也)",
+              "vi": "(Phó từ)"
+            },
+            {
+              "role": "key",
+              "zh": "(都)",
+              "vi": "(Phó từ)"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            }
+          ],
+          "explanation": "也 (cũng) và 都 (đều) đứng trước động từ hoặc tính từ (xem ví dụ).",
+          "examples": [
+            {
+              "hanzi": "我也是学生。",
+              "pinyin": "Wǒ yě shì xuéshēng.",
+              "vi": "Tôi cũng là học sinh.",
+              "highlight": "也"
+            },
+            {
+              "hanzi": "我们都是学生。",
+              "pinyin": "Wǒmen dōu shì xuéshēng.",
+              "vi": "Chúng tôi đều là học sinh.",
+              "highlight": "都"
+            }
+          ]
         }
       ]
     },
@@ -275,24 +416,39 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你好！你叫什么名字？ (Nǐ hǎo! Nǐ jiào shénme míngzi?) — Xin chào! Bạn tên là gì?"
-        },
-        {
-          "type": "text",
-          "value": "B: 我叫小雨。我是老师。 (Wǒ jiào Xiǎoyǔ. Wǒ shì lǎoshī.) — Tôi tên là Tiểu Vũ. Tôi là giáo viên."
-        },
-        {
-          "type": "text",
-          "value": "A: 老师，您好！我是学生。 (Lǎoshī, nín hǎo! Wǒ shì xuéshēng.) — Thầy/cô ơi, chào thầy/cô ạ! Em là học sinh."
-        },
-        {
-          "type": "text",
-          "value": "B: 很高兴认识你！ (Hěn gāoxìng rènshi nǐ!) — Rất vui được biết bạn!"
-        },
-        {
-          "type": "text",
-          "value": "A: 我也很高兴。谢谢，再见！ (Wǒ yě hěn gāoxìng. Xièxie, zàijiàn!) — Em cũng rất vui. Cảm ơn, tạm biệt!"
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你好！你叫什么名字？",
+              "pinyin": "Nǐ hǎo! Nǐ jiào shénme míngzi?",
+              "vi": "Xin chào! Bạn tên là gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我叫小雨。我是老师。",
+              "pinyin": "Wǒ jiào Xiǎoyǔ. Wǒ shì lǎoshī.",
+              "vi": "Tôi tên là Tiểu Vũ. Tôi là giáo viên."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "老师，您好！我是学生。",
+              "pinyin": "Lǎoshī, nín hǎo! Wǒ shì xuéshēng.",
+              "vi": "Thầy/cô ơi, chào thầy/cô ạ! Em là học sinh."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "很高兴认识你！",
+              "pinyin": "Hěn gāoxìng rènshi nǐ!",
+              "vi": "Rất vui được biết bạn!"
+            },
+            {
+              "speaker": "A",
+              "hanzi": "我也很高兴。谢谢，再见！",
+              "pinyin": "Wǒ yě hěn gāoxìng. Xièxie, zàijiàn!",
+              "vi": "Em cũng rất vui. Cảm ơn, tạm biệt!"
+            }
+          ]
         }
       ]
     }

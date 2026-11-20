@@ -244,24 +244,207 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Số + lượng từ + danh từ: trong tiếng Hán, giữa số và danh từ phải có lượng từ. 个 dùng chung cho người và nhiều đồ vật, 本 dùng cho sách vở, 杯 dùng cho đồ uống đựng trong cốc. Cấu trúc: số + 个/本/杯 + danh từ. Ví dụ: 我有三个朋友。 (Wǒ yǒu sān ge péngyou.) = Tôi có ba người bạn. / 我有一本书。 (Wǒ yǒu yī běn shū.) = Tôi có một quyển sách. / 我喝一杯茶。 (Wǒ hē yī bēi chá.) = Tôi uống một cốc trà."
+          "type": "grammar_point",
+          "title": "Số + lượng từ + danh từ",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "数词",
+              "vi": "Số"
+            },
+            {
+              "role": "mw",
+              "zh": "量词",
+              "vi": "Lượng từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Số + lượng từ + danh từ: trong tiếng Hán, giữa số và danh từ phải có lượng từ. 个 dùng chung cho người và nhiều đồ vật, 本 dùng cho sách vở, 杯 dùng cho đồ uống đựng trong cốc. Cấu trúc: số + 个/本/杯 + danh từ.",
+          "examples": [
+            {
+              "hanzi": "我有三个朋友。",
+              "pinyin": "Wǒ yǒu sān ge péngyou.",
+              "vi": "Tôi có ba người bạn.",
+              "highlight": "三个"
+            },
+            {
+              "hanzi": "我有一本书。",
+              "pinyin": "Wǒ yǒu yī běn shū.",
+              "vi": "Tôi có một quyển sách.",
+              "highlight": "一本"
+            },
+            {
+              "hanzi": "我喝一杯茶。",
+              "pinyin": "Wǒ hē yī bēi chá.",
+              "vi": "Tôi uống một cốc trà.",
+              "highlight": "一杯"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 几 và 多少 đều dùng để hỏi số lượng. 几 thường hỏi số nhỏ (dưới 10) và phải có lượng từ đi sau: 几 + lượng từ + danh từ. 多少 hỏi số bất kỳ, có thể bỏ lượng từ; 多少钱 dùng hỏi giá. Ví dụ: 你有几个本子？ (Nǐ yǒu jǐ ge běnzi?) = Bạn có mấy quyển vở? / 你们学校有多少学生？ (Nǐmen xuéxiào yǒu duōshao xuéshēng?) = Trường các bạn có bao nhiêu học sinh? / 这个杯子多少钱？ (Zhège bēizi duōshao qián?) = Cái cốc này bao nhiêu tiền?"
+          "type": "grammar_point",
+          "title": "几 và 多少",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "几",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "mw",
+              "zh": "量词",
+              "vi": "Lượng từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "几 và 多少 đều dùng để hỏi số lượng. 几 thường hỏi số nhỏ (dưới 10) và phải có lượng từ đi sau: 几 + lượng từ + danh từ. 多少 hỏi số bất kỳ, có thể bỏ lượng từ; 多少钱 dùng hỏi giá.",
+          "examples": [
+            {
+              "hanzi": "你有几个本子？",
+              "pinyin": "Nǐ yǒu jǐ ge běnzi?",
+              "vi": "Bạn có mấy quyển vở?",
+              "highlight": "几个"
+            },
+            {
+              "hanzi": "你们学校有多少学生？",
+              "pinyin": "Nǐmen xuéxiào yǒu duōshao xuéshēng?",
+              "vi": "Trường các bạn có bao nhiêu học sinh?",
+              "highlight": "多少"
+            },
+            {
+              "hanzi": "这个杯子多少钱？",
+              "pinyin": "Zhège bēizi duōshao qián?",
+              "vi": "Cái cốc này bao nhiêu tiền?",
+              "highlight": "多少钱"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 两 và 二 đều là “hai”. Trước lượng từ dùng 两: 两个, 两本, 两杯. Khi đếm số, đọc số điện thoại, nói tháng ngày hoặc trong số nhiều chữ số thì dùng 二: 二月, 二号, 十二. Cấu trúc: 两 + lượng từ + danh từ. Ví dụ: 我有两个哥哥。 (Wǒ yǒu liǎng ge gēge.) = Tôi có hai anh trai. / 他喝两杯牛奶。 (Tā hē liǎng bēi niúnǎi.) = Anh ấy uống hai cốc sữa. / 今天是二月十二号。 (Jīntiān shì èr yuè shí'èr hào.) = Hôm nay là ngày 12 tháng 2."
+          "type": "grammar_point",
+          "title": "两 và 二",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "两",
+              "vi": "Số từ"
+            },
+            {
+              "role": "mw",
+              "zh": "量词",
+              "vi": "Lượng từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "两 và 二 đều là “hai”. Trước lượng từ dùng 两: 两个, 两本, 两杯. Khi đếm số, đọc số điện thoại, nói tháng ngày hoặc trong số nhiều chữ số thì dùng 二: 二月, 二号, 十二. Cấu trúc: 两 + lượng từ + danh từ.",
+          "examples": [
+            {
+              "hanzi": "我有两个哥哥。",
+              "pinyin": "Wǒ yǒu liǎng ge gēge.",
+              "vi": "Tôi có hai anh trai.",
+              "highlight": "两个"
+            },
+            {
+              "hanzi": "他喝两杯牛奶。",
+              "pinyin": "Tā hē liǎng bēi niúnǎi.",
+              "vi": "Anh ấy uống hai cốc sữa.",
+              "highlight": "两杯"
+            },
+            {
+              "hanzi": "今天是二月十二号。",
+              "pinyin": "Jīntiān shì èr yuè shí'èr hào.",
+              "vi": "Hôm nay là ngày 12 tháng 2.",
+              "highlight": "二月十二号"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 第 + số tạo số thứ tự (thứ nhất, thứ hai…). Sau 第 + số thường có lượng từ hoặc danh từ chỉ đơn vị như 次, 页. Cấu trúc: 第 + số + lượng từ/danh từ. Ví dụ: 这是我第一次来北京。 (Zhè shì wǒ dì yī cì lái Běijīng.) = Đây là lần đầu tiên tôi đến Bắc Kinh. / 我们读第五页。 (Wǒmen dú dì wǔ yè.) = Chúng ta đọc trang thứ năm."
+          "type": "grammar_point",
+          "title": "第 + số",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "第",
+              "vi": "Số từ"
+            },
+            {
+              "role": "other",
+              "zh": "数词",
+              "vi": "Số"
+            },
+            {
+              "role": "mw",
+              "zh": "量词",
+              "vi": "Lượng từ"
+            }
+          ],
+          "explanation": "第 + số tạo số thứ tự (thứ nhất, thứ hai…). Sau 第 + số thường có lượng từ hoặc danh từ chỉ đơn vị như 次, 页. Cấu trúc: 第 + số + lượng từ/danh từ.",
+          "examples": [
+            {
+              "hanzi": "这是我第一次来北京。",
+              "pinyin": "Zhè shì wǒ dì yī cì lái Běijīng.",
+              "vi": "Đây là lần đầu tiên tôi đến Bắc Kinh.",
+              "highlight": "第一次"
+            },
+            {
+              "hanzi": "我们读第五页。",
+              "pinyin": "Wǒmen dú dì wǔ yè.",
+              "vi": "Chúng ta đọc trang thứ năm.",
+              "highlight": "第五页"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. Số + 次 diễn tả số lần làm một việc; cụm số lần đứng sau động từ. Cấu trúc: động từ + số + 次 (+ tân ngữ). Ví dụ: 我们一个星期上五次课。 (Wǒmen yī ge xīngqī shàng wǔ cì kè.) = Một tuần chúng tôi lên lớp năm lần. / 我一个月去两次图书馆。 (Wǒ yī ge yuè qù liǎng cì túshūguǎn.) = Mỗi tháng tôi đến thư viện hai lần."
+          "type": "grammar_point",
+          "title": "Số + 次",
+          "formula": [
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "数词",
+              "vi": "Số"
+            },
+            {
+              "role": "key",
+              "zh": "次",
+              "vi": "Lượng từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "Số + 次 diễn tả số lần làm một việc; cụm số lần đứng sau động từ. Cấu trúc: động từ + số + 次 (+ tân ngữ).",
+          "examples": [
+            {
+              "hanzi": "我们一个星期上五次课。",
+              "pinyin": "Wǒmen yī ge xīngqī shàng wǔ cì kè.",
+              "vi": "Một tuần chúng tôi lên lớp năm lần.",
+              "highlight": "五次"
+            },
+            {
+              "hanzi": "我一个月去两次图书馆。",
+              "pinyin": "Wǒ yī ge yuè qù liǎng cì túshūguǎn.",
+              "vi": "Mỗi tháng tôi đến thư viện hai lần.",
+              "highlight": "两次"
+            }
+          ]
         }
       ]
     },
@@ -275,20 +458,72 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你好，这个杯子多少钱？ B: 十五元。 (Nǐ hǎo, zhège bēizi duōshao qián? / Shíwǔ yuán.) — A: Xin chào, cái cốc này bao nhiêu tiền? B: Mười lăm đồng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你好，这个杯子多少钱？",
+              "pinyin": "Nǐ hǎo, zhège bēizi duōshao qián?",
+              "vi": "Xin chào, cái cốc này bao nhiêu tiền?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "十五元。",
+              "pinyin": "Shíwǔ yuán.",
+              "vi": "Mười lăm đồng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我买两个杯子。 B: 好，两个杯子三十元。 (Wǒ mǎi liǎng ge bēizi. / Hǎo, liǎng ge bēizi sānshí yuán.) — A: Tôi mua hai cái cốc. B: Được, hai cái cốc ba mươi đồng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我买两个杯子。",
+              "pinyin": "Wǒ mǎi liǎng ge bēizi.",
+              "vi": "Tôi mua hai cái cốc."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，两个杯子三十元。",
+              "pinyin": "Hǎo, liǎng ge bēizi sānshí yuán.",
+              "vi": "Được, hai cái cốc ba mươi đồng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 那些本子多少钱？ B: 有些本子三元五毛，有些本子五元。 (Nàxiē běnzi duōshao qián? / Yǒuxiē běnzi sān yuán wǔ máo, yǒuxiē běnzi wǔ yuán.) — A: Những quyển vở kia bao nhiêu tiền? B: Có quyển ba đồng năm hào, có quyển năm đồng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "那些本子多少钱？",
+              "pinyin": "Nàxiē běnzi duōshao qián?",
+              "vi": "Những quyển vở kia bao nhiêu tiền?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有些本子三元五毛，有些本子五元。",
+              "pinyin": "Yǒuxiē běnzi sān yuán wǔ máo, yǒuxiē běnzi wǔ yuán.",
+              "vi": "Có quyển ba đồng năm hào, có quyển năm đồng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你们有茶吗？ B: 有，一杯茶两元。 (Nǐmen yǒu chá ma? / Yǒu, yī bēi chá liǎng yuán.) — A: Ở đây có trà không? B: Có, một cốc trà hai đồng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你们有茶吗？",
+              "pinyin": "Nǐmen yǒu chá ma?",
+              "vi": "Ở đây có trà không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，一杯茶两元。",
+              "pinyin": "Yǒu, yī bēi chá liǎng yuán.",
+              "vi": "Có, một cốc trà hai đồng."
+            }
+          ]
         }
       ]
     }

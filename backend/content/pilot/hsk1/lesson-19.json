@@ -244,16 +244,145 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 会/能/想 + động từ: ba động từ năng nguyện đứng trước động từ chính. 会 = biết làm (kỹ năng học được), 能 = có thể (có điều kiện, có khả năng), 想 = muốn. Cấu trúc: Chủ ngữ + 会/能/想 + động từ (+ tân ngữ); phủ định thêm 不: 不会, 不能, 不想. Ví dụ: 我会唱歌。 (Wǒ huì chànggē.) = Tôi biết hát. / 明天我能去打球。 (Míngtiān wǒ néng qù dǎqiú.) = Ngày mai tôi có thể đi chơi bóng. / 我不想看电影。 (Wǒ bù xiǎng kàn diànyǐng.) = Tôi không muốn xem phim."
+          "type": "grammar_point",
+          "title": "会/能/想 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "会",
+              "vi": "Trợ động từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "ba động từ năng nguyện đứng trước động từ chính. 会 = biết làm (kỹ năng học được), 能 = có thể (có điều kiện, có khả năng), 想 = muốn. Cấu trúc: Chủ ngữ + 会/能/想 + động từ (+ tân ngữ); phủ định thêm 不: 不会, 不能, 不想.",
+          "examples": [
+            {
+              "hanzi": "我会唱歌。",
+              "pinyin": "Wǒ huì chànggē.",
+              "vi": "Tôi biết hát.",
+              "highlight": "会"
+            },
+            {
+              "hanzi": "明天我能去打球。",
+              "pinyin": "Míngtiān wǒ néng qù dǎqiú.",
+              "vi": "Ngày mai tôi có thể đi chơi bóng.",
+              "highlight": "能"
+            },
+            {
+              "hanzi": "我不想看电影。",
+              "pinyin": "Wǒ bù xiǎng kàn diànyǐng.",
+              "vi": "Tôi không muốn xem phim.",
+              "highlight": "想"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Bổ ngữ kết quả 到/见: 看 (nhìn) và 听 (nghe) chỉ nói hành động; thêm 到 hoặc 见 phía sau để nói đã có kết quả: 看到/看见 = nhìn thấy, 听到/听见 = nghe thấy. Cấu trúc: Động từ + 到/见 (+ tân ngữ) + 了; phủ định dùng 没 và bỏ 了: 没看见, 没听到. Ví dụ: 我看见他了。 (Wǒ kànjiàn tā le.) = Tôi nhìn thấy anh ấy rồi. / 你听到了吗？ (Nǐ tīngdào le ma?) = Bạn nghe thấy chưa? / 我没听见。 (Wǒ méi tīngjiàn.) = Tôi không nghe thấy."
+          "type": "grammar_point",
+          "title": "Bổ ngữ kết quả 到/见",
+          "formula": [
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "到",
+              "vi": "Bổ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            },
+            {
+              "role": "other",
+              "zh": "了",
+              "vi": "Trợ từ"
+            }
+          ],
+          "explanation": "看 (nhìn) và 听 (nghe) chỉ nói hành động; thêm 到 hoặc 见 phía sau để nói đã có kết quả: 看到/看见 = nhìn thấy, 听到/听见 = nghe thấy. Cấu trúc: Động từ + 到/见 (+ tân ngữ) + 了; phủ định dùng 没 và bỏ 了: 没看见, 没听到.",
+          "examples": [
+            {
+              "hanzi": "我看见他了。",
+              "pinyin": "Wǒ kànjiàn tā le.",
+              "vi": "Tôi nhìn thấy anh ấy rồi.",
+              "highlight": "看见"
+            },
+            {
+              "hanzi": "你听到了吗？",
+              "pinyin": "Nǐ tīngdào le ma?",
+              "vi": "Bạn nghe thấy chưa?",
+              "highlight": "听到"
+            },
+            {
+              "hanzi": "我没听见。",
+              "pinyin": "Wǒ méi tīngjiàn.",
+              "vi": "Tôi không nghe thấy.",
+              "highlight": "听见"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 爱 + động từ: nói ai đó rất thích, hay làm việc gì (nghĩa mạnh hơn 喜欢). Cấu trúc: Chủ ngữ + 爱 + động từ (+ tân ngữ); phủ định 不爱. 爱 + người/vật thì nghĩa là yêu: 我爱我的妈妈. Ví dụ: 他很爱笑。 (Tā hěn ài xiào.) = Anh ấy rất hay cười. / 我妹妹爱唱歌。 (Wǒ mèimei ài chànggē.) = Em gái tôi thích hát. / 我不爱看电视。 (Wǒ bú ài kàn diànshì.) = Tôi không thích xem tivi."
+          "type": "grammar_point",
+          "title": "爱 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "爱",
+              "vi": "Động từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "nói ai đó rất thích, hay làm việc gì (nghĩa mạnh hơn 喜欢). Cấu trúc: Chủ ngữ + 爱 + động từ (+ tân ngữ); phủ định 不爱. 爱 + người/vật thì nghĩa là yêu: 我爱我的妈妈.",
+          "examples": [
+            {
+              "hanzi": "他很爱笑。",
+              "pinyin": "Tā hěn ài xiào.",
+              "vi": "Anh ấy rất hay cười.",
+              "highlight": "爱"
+            },
+            {
+              "hanzi": "我妹妹爱唱歌。",
+              "pinyin": "Wǒ mèimei ài chànggē.",
+              "vi": "Em gái tôi thích hát.",
+              "highlight": "爱"
+            },
+            {
+              "hanzi": "我不爱看电视。",
+              "pinyin": "Wǒ bú ài kàn diànshì.",
+              "vi": "Tôi không thích xem tivi.",
+              "highlight": "爱"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +396,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你的爱好是什么？ B: 我的爱好是唱歌。 (Nǐ de àihào shì shénme? / Wǒ de àihào shì chànggē.) — A: Sở thích của bạn là gì? B: Sở thích của tôi là hát."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你的爱好是什么？",
+              "pinyin": "Nǐ de àihào shì shénme?",
+              "vi": "Sở thích của bạn là gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我的爱好是唱歌。",
+              "pinyin": "Wǒ de àihào shì chànggē.",
+              "vi": "Sở thích của tôi là hát."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你会唱中文歌吗？ B: 会，我很爱唱中文歌。 (Nǐ huì chàng Zhōngwén gē ma? / Huì, wǒ hěn ài chàng Zhōngwén gē.) — A: Bạn biết hát bài hát tiếng Trung không? B: Biết, tôi rất thích hát bài hát tiếng Trung."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你会唱中文歌吗？",
+              "pinyin": "Nǐ huì chàng Zhōngwén gē ma?",
+              "vi": "Bạn biết hát bài hát tiếng Trung không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "会，我很爱唱中文歌。",
+              "pinyin": "Huì, wǒ hěn ài chàng Zhōngwén gē.",
+              "vi": "Biết, tôi rất thích hát bài hát tiếng Trung."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你常常看电影吗？ B: 有时候看，有时候去打球。 (Nǐ chángcháng kàn diànyǐng ma? / Yǒushíhou kàn, yǒushíhou qù dǎqiú.) — A: Bạn có hay xem phim không? B: Có lúc xem, có lúc đi chơi bóng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你常常看电影吗？",
+              "pinyin": "Nǐ chángcháng kàn diànyǐng ma?",
+              "vi": "Bạn có hay xem phim không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有时候看，有时候去打球。",
+              "pinyin": "Yǒushíhou kàn, yǒushíhou qù dǎqiú.",
+              "vi": "Có lúc xem, có lúc đi chơi bóng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你看见我的球了吗？ B: 看见了，在外边。 (Nǐ kànjiàn wǒ de qiú le ma? / Kànjiàn le, zài wàibian.) — A: Bạn có nhìn thấy quả bóng của tôi không? B: Thấy rồi, ở bên ngoài."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你看见我的球了吗？",
+              "pinyin": "Nǐ kànjiàn wǒ de qiú le ma?",
+              "vi": "Bạn có nhìn thấy quả bóng của tôi không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "看见了，在外边。",
+              "pinyin": "Kànjiàn le, zài wàibian.",
+              "vi": "Thấy rồi, ở bên ngoài."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 他说的是真的吗？ B: 不是，他在开玩笑。 (Tā shuō de shì zhēn de ma? / Bú shì, tā zài kāiwánxiào.) — A: Điều anh ấy nói là thật à? B: Không phải, anh ấy đang nói đùa."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "他说的是真的吗？",
+              "pinyin": "Tā shuō de shì zhēn de ma?",
+              "vi": "Điều anh ấy nói là thật à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不是，他在开玩笑。",
+              "pinyin": "Bú shì, tā zài kāiwánxiào.",
+              "vi": "Không phải, anh ấy đang nói đùa."
+            }
+          ]
         }
       ]
     }

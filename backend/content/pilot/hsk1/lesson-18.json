@@ -244,16 +244,130 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 的 chỉ sở hữu, quan hệ: người + 的 + danh từ = cái gì đó của ai. Với người thân, bạn bè, nơi mình thuộc về thì thường bỏ 的: 我妈妈, 我女朋友, 我们班. Cấu trúc: người + 的 + danh từ. Ví dụ: 这是别人的书。 (Zhè shì biérén de shū.) = Đây là sách của người khác. / 这是我女朋友。 (Zhè shì wǒ nǚpéngyou.) = Đây là bạn gái tôi. / 她是病人的家人。 (Tā shì bìngrén de jiārén.) = Cô ấy là người nhà của bệnh nhân."
+          "type": "grammar_point",
+          "title": "的 chỉ sở hữu, quan hệ",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "key",
+              "zh": "的",
+              "vi": "Trợ từ kết cấu"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "người + 的 + danh từ = cái gì đó của ai. Với người thân, bạn bè, nơi mình thuộc về thì thường bỏ 的: 我妈妈, 我女朋友, 我们班. Cấu trúc: người + 的 + danh từ.",
+          "examples": [
+            {
+              "hanzi": "这是别人的书。",
+              "pinyin": "Zhè shì biérén de shū.",
+              "vi": "Đây là sách của người khác.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "这是我女朋友。",
+              "pinyin": "Zhè shì wǒ nǚpéngyou.",
+              "vi": "Đây là bạn gái tôi.",
+              "highlight": "我女朋友"
+            },
+            {
+              "hanzi": "她是病人的家人。",
+              "pinyin": "Tā shì bìngrén de jiārén.",
+              "vi": "Cô ấy là người nhà của bệnh nhân.",
+              "highlight": "的"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 男/女 + danh từ: đặt 男 hoặc 女 trước danh từ chỉ người để nói giới tính: 男人, 女人, 男生, 女生, 女医生, 男老师. Cũng có thể nói 男的 (người nam), 女的 (người nữ). Ví dụ: 我们班有十个男学生。 (Wǒmen bān yǒu shí ge nán xuésheng.) = Lớp chúng tôi có mười nam sinh. / 她是一个女医生。 (Tā shì yí ge nǚ yīshēng.) = Cô ấy là một nữ bác sĩ. / 我们的老师是女的。 (Wǒmen de lǎoshī shì nǚ de.) = Cô giáo của chúng tôi là nữ."
+          "type": "grammar_point",
+          "title": "男/女 + danh từ",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "男",
+              "vi": "Tính từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "đặt 男 hoặc 女 trước danh từ chỉ người để nói giới tính: 男人, 女人, 男生, 女生, 女医生, 男老师. Cũng có thể nói 男的 (người nam), 女的 (người nữ).",
+          "examples": [
+            {
+              "hanzi": "我们班有十个男学生。",
+              "pinyin": "Wǒmen bān yǒu shí ge nán xuésheng.",
+              "vi": "Lớp chúng tôi có mười nam sinh.",
+              "highlight": "男"
+            },
+            {
+              "hanzi": "她是一个女医生。",
+              "pinyin": "Tā shì yí ge nǚ yīshēng.",
+              "vi": "Cô ấy là một nữ bác sĩ.",
+              "highlight": "女"
+            },
+            {
+              "hanzi": "我们的老师是女的。",
+              "pinyin": "Wǒmen de lǎoshī shì nǚ de.",
+              "vi": "Cô giáo của chúng tôi là nữ.",
+              "highlight": "女"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 是 + nghề nghiệp: giới thiệu nghề nghiệp bằng 是, có thể thêm 一个 trước nghề. Phủ định dùng 不是 (bú shì). Hỏi nghề: …是做什么的？ Cấu trúc: chủ ngữ + 是 + (一个) + nghề nghiệp. Ví dụ: 我爸爸是工人。 (Wǒ bàba shì gōngrén.) = Bố tôi là công nhân. / 她是医生，不是老师。 (Tā shì yīshēng, bú shì lǎoshī.) = Cô ấy là bác sĩ, không phải giáo viên. / A: 你妈妈是做什么的？ B: 她是老师。 (Nǐ māma shì zuò shénme de? / Tā shì lǎoshī.) = A: Mẹ bạn làm nghề gì? B: Mẹ tôi là giáo viên."
+          "type": "grammar_point",
+          "title": "是 + nghề nghiệp",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "是",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(数量词)",
+              "vi": "(Số lượng)"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "giới thiệu nghề nghiệp bằng 是, có thể thêm 一个 trước nghề. Phủ định dùng 不是 (bú shì). Hỏi nghề: …是做什么的？ Cấu trúc: chủ ngữ + 是 + (一个) + nghề nghiệp.",
+          "examples": [
+            {
+              "hanzi": "我爸爸是工人。",
+              "pinyin": "Wǒ bàba shì gōngrén.",
+              "vi": "Bố tôi là công nhân.",
+              "highlight": "是"
+            },
+            {
+              "hanzi": "她是医生，不是老师。",
+              "pinyin": "Tā shì yīshēng, bú shì lǎoshī.",
+              "vi": "Cô ấy là bác sĩ, không phải giáo viên.",
+              "highlight": "是"
+            },
+            {
+              "hanzi": "A: 你妈妈是做什么的？ B: 她是老师。",
+              "pinyin": "Nǐ māma shì zuò shénme de? / Tā shì lǎoshī.",
+              "vi": "A: Mẹ bạn làm nghề gì? B: Mẹ tôi là giáo viên.",
+              "highlight": "是"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +381,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 那个男人是谁？ B: 他是我爸爸，他是医生。 (Nà ge nánrén shì shéi? / Tā shì wǒ bàba, tā shì yīshēng.) — A: Người đàn ông kia là ai? B: Đó là bố tôi, bố tôi là bác sĩ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "那个男人是谁？",
+              "pinyin": "Nà ge nánrén shì shéi?",
+              "vi": "Người đàn ông kia là ai?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "他是我爸爸，他是医生。",
+              "pinyin": "Tā shì wǒ bàba, tā shì yīshēng.",
+              "vi": "Đó là bố tôi, bố tôi là bác sĩ."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你们班男生多还是女生多？ B: 女生多。 (Nǐmen bān nánshēng duō háishi nǚshēng duō? / Nǚshēng duō.) — A: Lớp các bạn nam sinh nhiều hay nữ sinh nhiều? B: Nữ sinh nhiều."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你们班男生多还是女生多？",
+              "pinyin": "Nǐmen bān nánshēng duō háishi nǚshēng duō?",
+              "vi": "Lớp các bạn nam sinh nhiều hay nữ sinh nhiều?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "女生多。",
+              "pinyin": "Nǚshēng duō.",
+              "vi": "Nữ sinh nhiều."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 小朋友，你几岁了？ B: 我七岁。 (Xiǎopéngyǒu, nǐ jǐ suì le? / Wǒ qī suì.) — A: Bạn nhỏ ơi, cháu mấy tuổi rồi? B: Cháu bảy tuổi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "小朋友，你几岁了？",
+              "pinyin": "Xiǎopéngyǒu, nǐ jǐ suì le?",
+              "vi": "Bạn nhỏ ơi, cháu mấy tuổi rồi?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我七岁。",
+              "pinyin": "Wǒ qī suì.",
+              "vi": "Cháu bảy tuổi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 她是你女朋友吗？ B: 不是，她是我妹妹。 (Tā shì nǐ nǚpéngyou ma? / Bú shì, tā shì wǒ mèimei.) — A: Cô ấy là bạn gái bạn à? B: Không phải, cô ấy là em gái tôi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "她是你女朋友吗？",
+              "pinyin": "Tā shì nǐ nǚpéngyou ma?",
+              "vi": "Cô ấy là bạn gái bạn à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不是，她是我妹妹。",
+              "pinyin": "Bú shì, tā shì wǒ mèimei.",
+              "vi": "Không phải, cô ấy là em gái tôi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 先生，您是病人的家人吗？ B: 是，我是他儿子。 (Xiānsheng, nín shì bìngrén de jiārén ma? / Shì, wǒ shì tā érzi.) — A: Thưa ông, ông là người nhà của bệnh nhân phải không? B: Vâng, tôi là con trai ông ấy."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "先生，您是病人的家人吗？",
+              "pinyin": "Xiānsheng, nín shì bìngrén de jiārén ma?",
+              "vi": "Thưa ông, ông là người nhà của bệnh nhân phải không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "是，我是他儿子。",
+              "pinyin": "Shì, wǒ shì tā érzi.",
+              "vi": "Vâng, tôi là con trai ông ấy."
+            }
+          ]
         }
       ]
     }

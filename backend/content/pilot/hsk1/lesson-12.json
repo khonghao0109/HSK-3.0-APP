@@ -244,16 +244,130 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Danh từ + 上/下/里/前/后/外: một chữ phương vị có thể ghép thẳng sau danh từ, không cần 边. 桌子上 = 桌子上边 (trên bàn), 房间里 = 房间里边 (trong phòng). Hay dùng nhất là 上 và 里. Giống bài 11, từ phương vị đứng sau danh từ, ngược với tiếng Việt. Lưu ý: sau tên thành phố, tên nước không thêm 里 (nói 我在北京, không nói 我在北京里). Ví dụ: 手机在桌子上。 (Shǒujī zài zhuōzi shang.) = Điện thoại ở trên bàn. / 床下有一本书。 (Chuáng xià yǒu yì běn shū.) = Dưới giường có một quyển sách. / 他在房间里。 (Tā zài fángjiān lǐ.) = Anh ấy ở trong phòng."
+          "type": "grammar_point",
+          "title": "Danh từ + 上/下/里/前/后/外",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "key",
+              "zh": "方位词",
+              "vi": "Từ phương vị"
+            }
+          ],
+          "explanation": "Danh từ + 上/下/里/前/后/外: một chữ phương vị có thể ghép thẳng sau danh từ, không cần 边. 桌子上 = 桌子上边 (trên bàn), 房间里 = 房间里边 (trong phòng). Hay dùng nhất là 上 và 里. Giống bài 11, từ phương vị đứng sau danh từ, ngược với tiếng Việt. Lưu ý: sau tên thành phố, tên nước không thêm 里 (nói 我在北京, không nói 我在北京里).",
+          "examples": [
+            {
+              "hanzi": "手机在桌子上。",
+              "pinyin": "Shǒujī zài zhuōzi shang.",
+              "vi": "Điện thoại ở trên bàn.",
+              "highlight": "桌子上"
+            },
+            {
+              "hanzi": "床下有一本书。",
+              "pinyin": "Chuáng xià yǒu yì běn shū.",
+              "vi": "Dưới giường có một quyển sách.",
+              "highlight": "床下"
+            },
+            {
+              "hanzi": "他在房间里。",
+              "pinyin": "Tā zài fángjiān lǐ.",
+              "vi": "Anh ấy ở trong phòng.",
+              "highlight": "房间里"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai, khi người nghe chưa biết ở đó có gì. Cấu trúc: nơi chốn + 有 + (số lượng) + danh từ; phủ định dùng 没有. Ví dụ: 桌子上有很多书。 (Zhuōzi shang yǒu hěn duō shū.) = Trên bàn có rất nhiều sách. / 门口有一个人。 (Ménkǒu yǒu yí ge rén.) = Trước cửa có một người. / 家里没有人。 (Jiāli méiyǒu rén.) = Trong nhà không có ai."
+          "type": "grammar_point",
+          "title": "Nơi chốn + 有 + người/vật",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "key",
+              "zh": "有",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(数量词)",
+              "vi": "(Số lượng)"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai, khi người nghe chưa biết ở đó có gì. Cấu trúc: nơi chốn + 有 + (số lượng) + danh từ; phủ định dùng 没有.",
+          "examples": [
+            {
+              "hanzi": "桌子上有很多书。",
+              "pinyin": "Zhuōzi shang yǒu hěn duō shū.",
+              "vi": "Trên bàn có rất nhiều sách.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "门口有一个人。",
+              "pinyin": "Ménkǒu yǒu yí ge rén.",
+              "vi": "Trước cửa có một người.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "家里没有人。",
+              "pinyin": "Jiāli méiyǒu rén.",
+              "vi": "Trong nhà không có ai.",
+              "highlight": "没有"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Nơi chốn + 是 + người/vật: nói rõ thứ ở chỗ đó là cái gì, thường khi đã biết ở đó có một thứ và muốn xác định đó là gì. Cấu trúc: nơi chốn + 是 + danh từ; phủ định dùng 不是 (bú shì). So sánh: 桌子上有书 = trên bàn có sách; 桌子上是我的书 = thứ ở trên bàn là sách của tôi. Ví dụ: 楼上是我的房间。 (Lóushàng shì wǒ de fángjiān.) = Tầng trên là phòng của tôi. / 我家前边是学校。 (Wǒ jiā qiánbian shì xuéxiào.) = Phía trước nhà tôi là trường học. / 楼下不是饭店，是商店。 (Lóuxià bú shì fàndiàn, shì shāngdiàn.) = Tầng dưới không phải nhà hàng, là cửa hàng."
+          "type": "grammar_point",
+          "title": "Nơi chốn + 是 + người/vật",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "key",
+              "zh": "是",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Nơi chốn + 是 + người/vật: nói rõ thứ ở chỗ đó là cái gì, thường khi đã biết ở đó có một thứ và muốn xác định đó là gì. Cấu trúc: nơi chốn + 是 + danh từ; phủ định dùng 不是 (bú shì). So sánh: 桌子上有书 = trên bàn có sách; 桌子上是我的书 = thứ ở trên bàn là sách của tôi.",
+          "examples": [
+            {
+              "hanzi": "楼上是我的房间。",
+              "pinyin": "Lóushàng shì wǒ de fángjiān.",
+              "vi": "Tầng trên là phòng của tôi.",
+              "highlight": "是"
+            },
+            {
+              "hanzi": "我家前边是学校。",
+              "pinyin": "Wǒ jiā qiánbian shì xuéxiào.",
+              "vi": "Phía trước nhà tôi là trường học.",
+              "highlight": "是"
+            },
+            {
+              "hanzi": "楼下不是饭店，是商店。",
+              "pinyin": "Lóuxià bú shì fàndiàn, shì shāngdiàn.",
+              "vi": "Tầng dưới không phải nhà hàng, là cửa hàng.",
+              "highlight": "不是"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +381,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你家在几楼？ B: 我家在三楼。 (Nǐ jiā zài jǐ lóu? / Wǒ jiā zài sān lóu.) — A: Nhà bạn ở tầng mấy? B: Nhà tôi ở tầng ba."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你家在几楼？",
+              "pinyin": "Nǐ jiā zài jǐ lóu?",
+              "vi": "Nhà bạn ở tầng mấy?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我家在三楼。",
+              "pinyin": "Wǒ jiā zài sān lóu.",
+              "vi": "Nhà tôi ở tầng ba."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 楼下是什么？ B: 楼下是一个饭店。 (Lóuxià shì shénme? / Lóuxià shì yí ge fàndiàn.) — A: Tầng dưới là gì? B: Tầng dưới là một nhà hàng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "楼下是什么？",
+              "pinyin": "Lóuxià shì shénme?",
+              "vi": "Tầng dưới là gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "楼下是一个饭店。",
+              "pinyin": "Lóuxià shì yí ge fàndiàn.",
+              "vi": "Tầng dưới là một nhà hàng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你的房间里有什么？ B: 有床，有桌子，还有很多书。 (Nǐ de fángjiān lǐ yǒu shénme? / Yǒu chuáng, yǒu zhuōzi, hái yǒu hěn duō shū.) — A: Trong phòng bạn có gì? B: Có giường, có bàn, còn có rất nhiều sách."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你的房间里有什么？",
+              "pinyin": "Nǐ de fángjiān lǐ yǒu shénme?",
+              "vi": "Trong phòng bạn có gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有床，有桌子，还有很多书。",
+              "pinyin": "Yǒu chuáng, yǒu zhuōzi, hái yǒu hěn duō shū.",
+              "vi": "Có giường, có bàn, còn có rất nhiều sách."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你现在在家里吗？ B: 不在，我在路上。 (Nǐ xiànzài zài jiāli ma? / Bú zài, wǒ zài lùshang.) — A: Bây giờ bạn có ở nhà không? B: Không, tôi đang trên đường."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你现在在家里吗？",
+              "pinyin": "Nǐ xiànzài zài jiāli ma?",
+              "vi": "Bây giờ bạn có ở nhà không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不在，我在路上。",
+              "pinyin": "Bú zài, wǒ zài lùshang.",
+              "vi": "Không, tôi đang trên đường."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 门口有人吗？ B: 有，是你的朋友。 (Ménkǒu yǒu rén ma? / Yǒu, shì nǐ de péngyou.) — A: Trước cửa có ai không? B: Có, là bạn của bạn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "门口有人吗？",
+              "pinyin": "Ménkǒu yǒu rén ma?",
+              "vi": "Trước cửa có ai không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，是你的朋友。",
+              "pinyin": "Yǒu, shì nǐ de péngyou.",
+              "vi": "Có, là bạn của bạn."
+            }
+          ]
         }
       ]
     }
