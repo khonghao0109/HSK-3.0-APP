@@ -107,6 +107,7 @@ describe('public lesson serializer', () => {
       ...extra,
     });
     const word = (id: number, img: ReturnType<typeof image> | null) => ({
+      topicId: null,
       word: {
         id,
         hanzi: '我',
@@ -142,5 +143,30 @@ describe('public lesson serializer', () => {
       null,
     ]);
     expect(JSON.stringify(serialized)).not.toContain('storageKey');
+  });
+
+  it('exposes a word topicId only when that topic is public (lesson units)', () => {
+    const word = (id: number, topicId: number | null) => ({
+      topicId,
+      word: {
+        id,
+        hanzi: '我',
+        traditional: null,
+        pinyin: 'wo',
+        pinyinTone: 'wǒ',
+        meanings: [],
+        image: null,
+      },
+    });
+    const serialized = serializePublicLessonDetail({
+      id: 1,
+      title: 'Units',
+      level: { id: 1, name: 'HSK1', orderIndex: 1 },
+      topics: [{ id: 10, title: 'Từ vựng 1', content: [], orderIndex: 1 }],
+      lessonWords: [word(1, 10), word(2, 99), word(3, null)],
+      stories: [],
+      exercises: [],
+    });
+    expect(serialized.words.map((w) => w.topicId)).toEqual([10, null, null]);
   });
 });

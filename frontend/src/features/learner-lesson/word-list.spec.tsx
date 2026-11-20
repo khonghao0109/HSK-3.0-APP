@@ -18,6 +18,7 @@ const word = (
   image: { id: number; altText: string | null } | null = null,
 ) => ({
   id,
+  topicId: null,
   hanzi,
   pinyin: pinyinTone,
   pinyinTone,

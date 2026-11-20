@@ -92,7 +92,7 @@ async function seedTopicLesson(): Promise<number> {
       INSERT INTO "Word" (hanzi, pinyin, "pinyinNormalized", "pinyinTone", status, "isPure", "publishedAt", "updatedAt")
       VALUES (${sqlLiteral(WORD.hanzi)}, ${sqlLiteral(WORD.pinyin)}, ${sqlLiteral(WORD.pinyin)}, ${sqlLiteral(WORD.tone)},
         'published'::"ContentStatus", true, now(), now())
-      ON CONFLICT (hanzi, pinyin) DO UPDATE SET "updatedAt" = now()
+      ON CONFLICT (hanzi, pinyin, "pinyinTone") DO UPDATE SET "updatedAt" = now()
       RETURNING id),
     m AS (INSERT INTO "WordMeaning" ("wordId", "meaningOrder", "meaningEn", "meaningVi", "updatedAt")
       SELECT id, 1, 'literary criticism', NULL, now() FROM w
@@ -117,7 +117,7 @@ test.describe('Lesson topic pages (M2.5f)', () => {
   }, testInfo) => {
     await registerReadyLearner(page, baseURL);
     await page.goto(`/learn/lessons/${lessonId}`);
-    const row = page.locator('.lesson-rows a.lrow', { hasText: 'Từ vựng' });
+    const row = page.locator('.lu-rows a.lu-row', { hasText: VOCAB_TITLE });
     await expect(row).toHaveAttribute(
       'href',
       `/learn/lessons/${lessonId}/vocabulary`,

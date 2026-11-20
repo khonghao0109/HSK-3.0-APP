@@ -1,0 +1,146 @@
+/* Đơn vị học (PO 20/11/2026, L1–L13): `.lu-*` rows of the lesson page,
+   from mẫu mobile|web/lesson-units.html + css/lesson-units.css, with the
+   Q69 contrast fixes of that sample (jade-800, #5a43b8). */
+
+.learner-app .lu-rows {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .lu-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  color: var(--text-body);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.learner-app .lu-row:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .lu-row .grow {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.learner-app .lu-row__title {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.learner-app .lu-row__meta {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-row__end {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.learner-app .lu-row__end .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.learner-app .lu-row.is-done .lu-row__end {
+  color: var(--jade-800);
+}
+
+.learner-app .lu-row.is-locked {
+  background: var(--surface-sunken);
+  cursor: not-allowed;
+}
+
+.learner-app .lu-row.is-locked .lu-row__title {
+  color: var(--text-muted);
+}
+
+.learner-app .lu-badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  font-family: var(--font-cn);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.learner-app .lu-badge.is-jade {
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .lu-badge.is-violet {
+  background: var(--violet-100);
+  color: #5a43b8;
+}
+
+.learner-app .lu-badge.is-amber {
+  background: var(--amber-100);
+  color: var(--ink-900);
+}
+
+.learner-app .lu-badge.is-blue {
+  background: var(--blue-100);
+  color: var(--blue-600);
+}
+
+.learner-app .lu-badge.is-mute {
+  background: var(--slate-100);
+  color: var(--slate-700);
+}
+
+@media (min-width: 1024px) {
+  /* mẫu web: `.w-progress.lu-bar` (8px, 100px). */
+  .learner-app .lu-bar {
+    width: 100px;
+    height: 8px;
+  }
+
+  /* `.w-only` stays hidden until a component shows it (learner.css). */
+  .learner-app .lu-row__state.w-only {
+    display: inline;
+  }
+
+  .learner-app .lu-bar.w-only {
+    display: block;
+  }
+
+  /* L13 (Q69): vùng chạm ≥ 44px cho top bar web (breadcrumb đã có, F3). */
+  .learner-app .w-top__end > a {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .learner-app .w-top .icon-btn {
+    min-width: 44px;
+  }
+}

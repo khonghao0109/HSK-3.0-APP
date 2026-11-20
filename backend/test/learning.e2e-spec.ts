@@ -898,6 +898,82 @@ describe('Learning Lesson Detail E2E', () => {
     expect(body.data.stories).toHaveLength(1);
   });
 
+  it('GET /learning/lessons/:id gives each word the id of its public topic, null for a draft or missing one (lesson units)', async () => {
+    const [firstTopic, draftTopic] = await Promise.all([
+      prisma.topic.findFirstOrThrow({
+        where: { lessonId, title: 'First Topic' },
+        select: { id: true },
+      }),
+      prisma.topic.findFirstOrThrow({
+        where: { lessonId, title: 'Hidden Draft Topic' },
+        select: { id: true },
+      }),
+    ]);
+    const makeWord = (tag: string) =>
+      prisma.word.create({
+        data: {
+          hanzi: `${hanzi}${tag}`,
+          pinyin: `${pinyin} ${tag}`,
+          pinyinNormalized: normalizePinyin(`${pinyin} ${tag}`),
+          isPure: true,
+          status: 'published',
+          publishedAt: new Date(),
+        },
+        select: { id: true },
+      });
+    const inFirst = await makeWord('a');
+    const inDraft = await makeWord('b');
+    try {
+      await prisma.lessonWord.createMany({
+        data: [
+          {
+            lessonId,
+            wordId: inFirst.id,
+            topicId: firstTopic.id,
+            orderIndex: 2,
+          },
+          {
+            lessonId,
+            wordId: inDraft.id,
+            topicId: draftTopic.id,
+            orderIndex: 3,
+          },
+        ],
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/api/v1/learning/lessons/${lessonId}`)
+        .expect(200);
+      const words = (
+        response.body as {
+          data: { words: Array<{ id: number; topicId: number | null }> };
+        }
+      ).data.words;
+
+      expect(
+        words.map((word) => [
+          word.id === inFirst.id
+            ? 'first'
+            : word.id === inDraft.id
+              ? 'draft'
+              : 'base',
+          word.topicId,
+        ]),
+      ).toEqual([
+        ['base', null],
+        ['first', firstTopic.id],
+        ['draft', null],
+      ]);
+    } finally {
+      await prisma.lessonWord.deleteMany({
+        where: { wordId: { in: [inFirst.id, inDraft.id] } },
+      });
+      await prisma.word.deleteMany({
+        where: { id: { in: [inFirst.id, inDraft.id] } },
+      });
+    }
+  });
+
   it('GET /lessons/:id returns 404 when lesson does not exist', async () => {
     await request(app.getHttpServer())
       .get('/api/v1/lessons/999999999')

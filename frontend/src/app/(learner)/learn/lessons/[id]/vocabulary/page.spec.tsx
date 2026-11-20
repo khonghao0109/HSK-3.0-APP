@@ -80,6 +80,7 @@ const words: LessonWords = {
   words: [
     {
       id: 1,
+      topicId: null,
       hanzi: '你',
       pinyin: 'ni',
       pinyinTone: 'ni3',
@@ -91,6 +92,7 @@ const words: LessonWords = {
     },
     {
       id: 2,
+      topicId: null,
       hanzi: '好',
       pinyin: 'hao',
       pinyinTone: 'hao3',

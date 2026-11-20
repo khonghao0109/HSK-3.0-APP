@@ -12057,6 +12057,11 @@
           "id": {
             "type": "number"
           },
+          "topicId": {
+            "type": "number",
+            "nullable": true,
+            "description": "Topic (đơn vị) chứa từ; `null` khi chưa gán hoặc topic không public."
+          },
           "hanzi": {
             "type": "string"
           },
@@ -12089,6 +12094,7 @@
         },
         "required": [
           "id",
+          "topicId",
           "hanzi",
           "traditional",
           "pinyin",

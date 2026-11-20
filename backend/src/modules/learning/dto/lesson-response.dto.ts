@@ -33,6 +33,8 @@ export class LessonImageDto {
 
 export class LessonDetailWordDto {
   id!: number;
+  /** Topic (đơn vị) chứa từ; `null` khi chưa gán hoặc topic không public. */
+  topicId!: number | null;
   hanzi!: string;
   traditional!: string | null;
   pinyin!: string;

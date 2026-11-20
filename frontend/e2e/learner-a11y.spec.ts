@@ -530,7 +530,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
   test('axe: lesson, locked lesson, not found', async ({ page, baseURL }) => {
     await registerReadyLearner(page, baseURL);
     await page.goto(`/learn/lessons/${hsk1Lesson}`);
-    await expect(page.getByText('Nội dung bài học')).toBeVisible();
+    await expect(page.getByText('Đơn vị học')).toBeVisible();
     await audit(page, 'lesson', TITLES.lesson);
     await page.goto(`/learn/lessons/${lockedLesson}`);
     await expect(

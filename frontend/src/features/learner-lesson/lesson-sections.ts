@@ -1,81 +1,153 @@
 /**
- * "Nội dung bài học" rows of the lesson page (Q35–Q37, Q44). Pure and
- * Zod-free so client components may import it.
+ * Units ("Đơn vị học") of the lesson page, one per public Topic (PO
+ * 20/11/2026, L1–L13, N1–N9). Pure and Zod-free so client components may
+ * import it.
  */
 
-export type LessonSectionCounts = {
-  vocabulary: { wordCount: number; topicCount: number; topicsDone: number };
-  grammar: { topicCount: number; topicsDone: number };
-  practice: { exerciseCount: number; attempted: number };
+import { wholePercent } from '@/features/learner-home/percent';
+
+type ProgressStatus = 'not_started' | 'learning' | 'done';
+type Exercise = { latestAttempt: unknown };
+
+export type LessonUnitsInput = {
+  topics: ReadonlyArray<{
+    id: number;
+    title: string;
+    subtitle: string | null;
+    type: string;
+    orderIndex: number;
+    progress: { status: ProgressStatus; completionPercent: number };
+    exercises: readonly Exercise[];
+  }>;
+  /** Exercises without a topic; they count into Kiểm tra (N1). */
+  standaloneExercises: readonly Exercise[];
+  words: ReadonlyArray<{ hanzi: string; topicId: number | null }>;
 };
 
-export type LessonRowKind = 'vocabulary' | 'grammar' | 'practice';
+export type LessonUnitKind = 'vocabulary' | 'grammar' | 'key_text' | 'quiz';
 
-export type LessonRow = {
-  kind: LessonRowKind;
+export type LessonUnit = {
+  key: string;
+  kind: LessonUnitKind;
   title: string;
   meta: string;
-  /** `x/N` with its spoken tail; `null` for Từ vựng (Q36) and locked rows. */
-  count: { label: string; tail: string; percent: number } | null;
+  /** `zh-Hans` when `meta` is the word preview of a vocabulary unit. */
+  metaLang: 'zh-Hans' | null;
+  /** Existing page the row opens; the step-by-step flow is Pha C. */
+  slug: 'vocabulary' | 'grammar' | 'practice';
+  percent: number;
   done: boolean;
   locked: boolean;
 };
 
-/** Neutral sprite icon per row (unslop: no per-row colour tiles). */
-export const LESSON_ROW_ICONS: Record<
-  LessonRowKind,
-  { icon: string; tone: string }
+/** Letter badge per unit (mẫu lesson-units.html `.lu-badge`). */
+export const LESSON_UNIT_BADGES: Record<
+  LessonUnitKind,
+  { char: string; tone: string }
 > = {
-  vocabulary: { icon: 'book-open-text', tone: '' },
-  grammar: { icon: 'pen-line', tone: 'lrow--violet' },
-  practice: { icon: 'clipboard-check', tone: 'lrow--blue' },
+  vocabulary: { char: '词', tone: 'is-jade' },
+  grammar: { char: '语', tone: 'is-violet' },
+  key_text: { char: '文', tone: 'is-amber' },
+  quiz: { char: '测', tone: 'is-blue' },
 };
 
-export function lessonRows(
-  sections: LessonSectionCounts,
-  locked: boolean,
-): LessonRow[] {
-  const rows: LessonRow[] = [];
-  const counted = (done: number, total: number, tail: string) =>
-    locked
-      ? null
-      : { label: `${done}/${total}`, tail, percent: (done / total) * 100 };
+const PREVIEW_WORDS = 4;
 
-  const { vocabulary, grammar, practice } = sections;
-  if (vocabulary.wordCount > 0) {
-    rows.push({
-      kind: 'vocabulary',
-      title: 'Từ vựng',
-      meta: `${vocabulary.wordCount} từ mới`,
-      count: null,
-      done:
-        !locked &&
-        vocabulary.topicCount > 0 &&
-        vocabulary.topicsDone === vocabulary.topicCount,
+/** 0..99: only a done unit reads 100% (it shows Xong instead). */
+function unfinishedPercent(value: number): number {
+  return Math.min(99, wholePercent(value));
+}
+const QUIZ_LOCKED_META = 'Mở khi xong các đơn vị trên';
+
+export function lessonUnits(
+  input: LessonUnitsInput,
+  lessonLocked: boolean,
+): LessonUnit[] {
+  const topics = [...input.topics].sort(
+    (left, right) => left.orderIndex - right.orderIndex || left.id - right.id,
+  );
+  const units: LessonUnit[] = [];
+  let vocabularyCount = 0;
+  let quizIndex: number | null = null;
+  const quizTopics: LessonUnitsInput['topics'][number][] = [];
+
+  for (const topic of topics) {
+    if (topic.type === 'quiz') {
+      quizIndex ??= units.length;
+      quizTopics.push(topic);
+      continue;
+    }
+    const done = !lessonLocked && topic.progress.status === 'done';
+    const base = {
+      key: `topic-${topic.id}`,
+      percent: done ? 100 : unfinishedPercent(topic.progress.completionPercent),
+      done,
+      locked: lessonLocked,
+      metaLang: null,
+    };
+    if (topic.type === 'vocabulary') {
+      vocabularyCount += 1;
+      const preview = input.words
+        .filter((word) => word.topicId === topic.id)
+        .slice(0, PREVIEW_WORDS)
+        .map((word) => word.hanzi);
+      units.push({
+        ...base,
+        kind: 'vocabulary',
+        title: `Từ vựng ${vocabularyCount}`,
+        ...(preview.length > 0
+          ? { meta: preview.join(' · '), metaLang: 'zh-Hans' as const }
+          : { meta: topic.subtitle?.trim() || topic.title }),
+        slug: 'vocabulary',
+      });
+    } else if (topic.type === 'grammar' || topic.type === 'key_text') {
+      units.push({
+        ...base,
+        kind: topic.type,
+        title: topic.type === 'grammar' ? 'Ngữ pháp' : 'Bài khoá',
+        meta: topic.title,
+        slug: 'grammar',
+      });
+    }
+    // ai_speaking and unknown types stay hidden.
+  }
+
+  const exercises = [
+    ...quizTopics.flatMap((topic) => topic.exercises),
+    ...input.standaloneExercises,
+  ];
+  if (quizTopics.length > 0 || exercises.length > 0) {
+    const attempted = exercises.filter(
+      (exercise) => exercise.latestAttempt !== null,
+    ).length;
+    const done =
+      !lessonLocked &&
+      attempted === exercises.length &&
+      quizTopics.every((topic) => topic.progress.status === 'done');
+    const position = quizIndex ?? units.length;
+    // N2: only the units before Kiểm tra gate it.
+    const waiting = units.slice(0, position).some((unit) => !unit.done);
+    const locked = lessonLocked || waiting;
+    units.splice(position, 0, {
+      key: 'quiz',
+      kind: 'quiz',
+      title: 'Kiểm tra',
+      meta:
+        !lessonLocked && waiting
+          ? QUIZ_LOCKED_META
+          : `${exercises.length} bài tập`,
+      metaLang: null,
+      slug: 'practice',
+      percent: done
+        ? 100
+        : exercises.length > 0
+          ? unfinishedPercent((attempted / exercises.length) * 100)
+          : 0,
+      done,
       locked,
     });
   }
-  if (grammar.topicCount > 0) {
-    rows.push({
-      kind: 'grammar',
-      title: 'Ngữ pháp',
-      meta: `${grammar.topicCount} điểm ngữ pháp`,
-      count: counted(grammar.topicsDone, grammar.topicCount, 'đã học'),
-      done: false,
-      locked,
-    });
-  }
-  if (practice.exerciseCount > 0) {
-    rows.push({
-      kind: 'practice',
-      title: 'Luyện tập',
-      meta: `${practice.exerciseCount} bài luyện tập`,
-      count: counted(practice.attempted, practice.exerciseCount, 'đã làm'),
-      done: false,
-      locked,
-    });
-  }
-  return rows;
+  return units;
 }
 
 /** Route id must be a positive int32 before any backend call (Q41). */

@@ -43,6 +43,7 @@ type PublicLessonRecord = {
     orderIndex: number;
   }>;
   lessonWords: Array<{
+    topicId: number | null;
     word: {
       id: number;
       hanzi: string;
@@ -76,14 +77,17 @@ type PublicLessonRecord = {
 };
 
 export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
+  const publicTopicIds = new Set(lesson.topics.map((topic) => topic.id));
   return {
     id: lesson.id,
     title: lesson.title,
     level: lesson.level,
     coverImage: projectPublicLessonImage(lesson.coverImage),
     topics: lesson.topics,
-    words: lesson.lessonWords.map(({ word }) => ({
+    words: lesson.lessonWords.map(({ topicId, word }) => ({
       id: word.id,
+      // Topic draft hoặc đã xoá thì không lộ id (chỉ topic trong `topics`).
+      topicId: topicId !== null && publicTopicIds.has(topicId) ? topicId : null,
       hanzi: word.hanzi,
       traditional: word.traditional,
       pinyin: word.pinyin,

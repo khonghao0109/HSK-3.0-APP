@@ -16,7 +16,19 @@ const activity = {
     grammar: { topicCount: 2, topicsDone: 1 },
     practice: { exerciseCount: 3, attempted: 2 },
   },
-  topics: [],
+  topics: [
+    {
+      id: 7,
+      title: 'Từ vựng',
+      subtitle: null,
+      type: 'vocabulary',
+      content: [],
+      orderIndex: 1,
+      progress: { status: 'done', completionPercent: 100 },
+      exercises: [{ id: 3, type: 'mcq', latestAttempt: { attemptId: 9 } }],
+    },
+  ],
+  standaloneExercises: [{ id: 4, type: 'mcq', latestAttempt: null }],
   nextAction: 'submit_exercise',
 };
 
@@ -35,6 +47,18 @@ describe('lessonActivitySchema', () => {
       position: 1,
       state: 'current',
       sections: activity.sections,
+      topics: [
+        {
+          id: 7,
+          title: 'Từ vựng',
+          subtitle: null,
+          type: 'vocabulary',
+          orderIndex: 1,
+          progress: { status: 'done', completionPercent: 100 },
+          exercises: [{ latestAttempt: { attemptId: 9 } }],
+        },
+      ],
+      standaloneExercises: [{ latestAttempt: null }],
     });
   });
 
