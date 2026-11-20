@@ -8467,7 +8467,7 @@
           },
           "password": {
             "type": "string",
-            "minLength": 6
+            "minLength": 8
           },
           "name": {
             "type": "string"
@@ -8582,8 +8582,8 @@
           },
           "newPassword": {
             "type": "string",
-            "minLength": 6,
-            "description": "New password for the account (minimum 6 characters)",
+            "minLength": 8,
+            "description": "New password for the account (minimum 8 characters)",
             "example": "NewSecret123!"
           }
         },

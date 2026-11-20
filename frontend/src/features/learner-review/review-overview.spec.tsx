@@ -85,7 +85,9 @@ describe('ReviewOverviewView (M3.3b, Q270)', () => {
     // Unslop L7 K2: each stat says what it counts against; the month calendar
     // is the screen's chart, so no retention ring and no decorative icons.
     expect(screen.getByText('Thêm 4 thẻ trong 3 ngày tới')).toBeInTheDocument();
-    expect(screen.getByText('Lượt nhớ đúng trong 7 ngày qua')).toBeInTheDocument();
+    expect(
+      screen.getByText('Lượt nhớ đúng trong 7 ngày qua'),
+    ).toBeInTheDocument();
     expect(document.querySelector('.rvo-ring, .rvo-stat__ico')).toBeNull();
   });
 

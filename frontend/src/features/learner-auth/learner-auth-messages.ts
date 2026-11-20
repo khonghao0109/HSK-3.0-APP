@@ -11,6 +11,7 @@ export const LEARNER_AUTH_ERROR_MESSAGES = {
   network: 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.',
   invalidEmail: 'Vui lòng nhập email hợp lệ.',
   shortPassword: 'Mật khẩu cần ít nhất 6 ký tự.',
+  shortNewPassword: 'Mật khẩu cần ít nhất 8 ký tự.',
   email: 'Vui lòng nhập email hợp lệ.',
-  password: 'Mật khẩu cần ít nhất 6 ký tự.',
+  password: 'Mật khẩu cần ít nhất 8 ký tự.',
 } as const;

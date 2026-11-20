@@ -7,6 +7,7 @@ import { FormEvent, useRef, useState, type ReactNode } from 'react';
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
 import { LearnerPasswordField } from './learner-password-field';
+import { LOGIN_PASSWORD_MIN_LENGTH } from './password-policy';
 
 function getErrorKind(body: unknown): string | null {
   if (
@@ -65,7 +66,7 @@ export function LearnerLoginForm({
       return;
     }
 
-    if (passwordStr.length < 6) {
+    if (passwordStr.length < LOGIN_PASSWORD_MIN_LENGTH) {
       setInvalidField('password');
       setErrorMessage(LEARNER_AUTH_ERROR_MESSAGES.shortPassword);
       passwordInputRef.current?.focus();

@@ -6,12 +6,14 @@ import {
   MinLength,
 } from 'class-validator';
 
+import { NEW_PASSWORD_MIN_LENGTH } from '../constants/password-policy';
+
 export class RegisterDto {
   @IsEmail()
   email!: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(NEW_PASSWORD_MIN_LENGTH)
   password!: string;
 
   @IsOptional()

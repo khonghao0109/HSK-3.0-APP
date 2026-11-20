@@ -64,11 +64,13 @@ describe('LearnerRegisterForm', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText('Email'), 'valid@example.test');
-    await user.type(screen.getByLabelText('Mật khẩu'), '12345');
+    await user.type(screen.getByLabelText('Mật khẩu'), '1234567');
     await user.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     const alert = screen.getByRole('alert');
-    expect(alert).toHaveTextContent(LEARNER_AUTH_ERROR_MESSAGES.shortPassword);
+    expect(alert).toHaveTextContent(
+      LEARNER_AUTH_ERROR_MESSAGES.shortNewPassword,
+    );
     expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute(
       'aria-invalid',
       'true',
@@ -282,7 +284,7 @@ describe('LearnerRegisterForm', () => {
   it('enforces password minLength attribute', () => {
     render(<LearnerRegisterForm />);
     const passwordInput = screen.getByLabelText('Mật khẩu');
-    expect(passwordInput).toHaveAttribute('minLength', '6');
+    expect(passwordInput).toHaveAttribute('minLength', '8');
     expect(passwordInput).toHaveAttribute('required');
   });
 });

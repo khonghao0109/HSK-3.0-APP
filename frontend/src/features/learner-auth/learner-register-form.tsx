@@ -7,6 +7,7 @@ import { FormEvent, useRef, useState, type ReactNode } from 'react';
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
 import { LearnerPasswordField } from './learner-password-field';
+import { NEW_PASSWORD_MIN_LENGTH } from './password-policy';
 
 function getErrorKind(body: unknown): string | null {
   if (
@@ -68,11 +69,11 @@ export function LearnerRegisterForm({
       return;
     }
 
-    if (passwordStr.length < 6) {
+    if (passwordStr.length < NEW_PASSWORD_MIN_LENGTH) {
       setInvalidField('password');
       setError({
         kind: 'other',
-        message: LEARNER_AUTH_ERROR_MESSAGES.shortPassword,
+        message: LEARNER_AUTH_ERROR_MESSAGES.shortNewPassword,
       });
       passwordInputRef.current?.focus();
       return;
