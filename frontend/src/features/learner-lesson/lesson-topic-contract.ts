@@ -56,3 +56,28 @@ export const lessonWordsSchema = z.object({
 export type LessonWords = z.infer<typeof lessonWordsSchema>;
 
 export const backendLessonWordsSchema = backendEnvelope(lessonWordsSchema);
+
+/**
+ * Pha C (N3): what the Từ vựng unit card reads from `GET /dictionary/words/:id`
+ * (docs/api/api.md §A.5): part of speech and the example sentence.
+ */
+export const unitWordDetailSchema = z.object({
+  example: z.string().nullable(),
+  meanings: z.array(
+    z.object({
+      vi: z.string().nullable(),
+      partOfSpeech: z.string().nullable().default(null),
+    }),
+  ),
+  examples: z.array(
+    z.object({
+      hanzi: z.string(),
+      pinyin: z.string().nullable(),
+      vi: z.string().nullable(),
+    }),
+  ),
+});
+export type UnitWordDetail = z.infer<typeof unitWordDetailSchema>;
+
+export const backendUnitWordDetailSchema =
+  backendEnvelope(unitWordDetailSchema);

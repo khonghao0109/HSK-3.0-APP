@@ -2,13 +2,17 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import type { LessonActivity } from '@/features/learner-lesson/lesson-activity-contract';
 import {
+  getLessonActivity,
   getLessonTopicActivity,
   getLessonWords,
+  getUnitWordDetail,
 } from '@/features/learner-lesson/lesson-activity-service';
 import type {
   LessonTopicActivity,
   LessonWords,
+  UnitWordDetail,
 } from '@/features/learner-lesson/lesson-topic-contract';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import { getOnboardingStatus } from '@/features/onboarding/onboarding-service';
@@ -29,8 +33,10 @@ vi.mock('@/features/learner-auth/server-learner-session', () => ({
   getServerLearnerSession: vi.fn(),
 }));
 vi.mock('@/features/learner-lesson/lesson-activity-service', () => ({
+  getLessonActivity: vi.fn(),
   getLessonTopicActivity: vi.fn(),
   getLessonWords: vi.fn(),
+  getUnitWordDetail: vi.fn(),
 }));
 vi.mock('@/features/onboarding/onboarding-service', () => ({
   getOnboardingStatus: vi.fn(),
@@ -172,5 +178,139 @@ describe('lesson topic pages (M2.5f, Q175)', () => {
     await expect(
       LessonVocabularyPage({ params: Promise.resolve({ id: '5' }) }),
     ).rejects.toThrow('NEXT_REDIRECT:/learn/lessons/5');
+  });
+});
+
+const unitTopic = (
+  id: number,
+  type: string,
+  title: string,
+  status: 'not_started' | 'done' = 'not_started',
+): LessonActivity['topics'][number] => ({
+  id,
+  title,
+  subtitle: null,
+  type,
+  orderIndex: id,
+  progress: { status, completionPercent: status === 'done' ? 100 : 0 },
+  exercises: [],
+});
+
+const unitActivity: LessonActivity = {
+  lesson: { id: 5, title: 'Gia đình', description: null, coverImage: null },
+  progress: { completionPercent: 0, status: 'learning', score: null },
+  level: { id: 1, code: 'HSK1', name: 'HSK 1' },
+  position: 2,
+  state: 'current',
+  topics: [
+    unitTopic(10, 'vocabulary', 'Thành viên', 'done'),
+    unitTopic(11, 'vocabulary', 'Gia đình'),
+    unitTopic(12, 'grammar', 'Câu với 几'),
+  ],
+  standaloneExercises: [],
+  sections: {
+    vocabulary: { wordCount: 3, topicCount: 2, topicsDone: 1 },
+    grammar: { topicCount: 1, topicsDone: 0 },
+    practice: { exerciseCount: 0, attempted: 0 },
+  },
+};
+
+const lessonWord = (
+  id: number,
+  topicId: number,
+  hanzi: string,
+  tone: string,
+  vi: string,
+) => ({
+  id,
+  topicId,
+  hanzi,
+  pinyin: tone,
+  pinyinTone: tone,
+  meanings: [{ vi, en: null }],
+  image: null,
+});
+
+const unitWords: LessonWords = {
+  words: [
+    lessonWord(1, 10, '爸爸', 'ba4 ba5', 'bố'),
+    lessonWord(2, 11, '家', 'jia1', 'nhà; gia đình'),
+    lessonWord(3, 11, '有', 'you3', 'có'),
+  ],
+};
+
+const detail = (extra: Partial<UnitWordDetail> = {}): UnitWordDetail => ({
+  example: null,
+  meanings: [],
+  examples: [],
+  ...extra,
+});
+
+describe('Từ vựng unit flow (N3)', () => {
+  beforeEach(() => {
+    vi.mocked(getLessonActivity).mockResolvedValue(unitActivity);
+    vi.mocked(getLessonWords).mockResolvedValue(unitWords);
+    vi.mocked(getUnitWordDetail).mockClear();
+    vi.mocked(getUnitWordDetail).mockImplementation(async (_token, id) =>
+      id === 2
+        ? detail({
+            meanings: [{ vi: 'nhà', partOfSpeech: 'danh từ' }],
+            examples: [
+              {
+                hanzi: '我家有四口人。',
+                pinyin: 'wǒ jiā yǒu sì kǒu rén.',
+                vi: 'Nhà tôi có bốn người.',
+              },
+            ],
+          })
+        : detail(),
+    );
+  });
+
+  const open = async (unit: string) =>
+    LessonVocabularyPage({
+      params: Promise.resolve({ id: '5' }),
+      searchParams: Promise.resolve({ unit }),
+    });
+
+  it('opens the words of that topic only, in API order, as a step flow', async () => {
+    renderPage(await open('11'));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
+      'Từ vựng 2 · Gia đình',
+    );
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('家');
+    expect(screen.getByText('Danh từ')).toBeInTheDocument();
+    // 家: card, example, quiz; 有: card, quiz.
+    expect(screen.getByLabelText('Bước 1 trên 5')).toBeInTheDocument();
+    expect(
+      vi.mocked(getUnitWordDetail).mock.calls.map((call) => call[1]),
+    ).toEqual([2, 3]);
+    expect(screen.queryByText('爸爸')).toBeNull();
+  });
+
+  it.each([
+    ['a grammar topic', '12'],
+    ['an unknown topic', '99'],
+    ['a malformed id', 'abc'],
+  ])('sends %s back to the lesson page', async (_name, unit) => {
+    await expect(open(unit)).rejects.toThrow('NEXT_REDIRECT:/learn/lessons/5');
+  });
+
+  it('opens the word list page for a vocabulary topic without words (old lessons)', async () => {
+    vi.mocked(getLessonWords).mockResolvedValue({
+      words: unitWords.words.map((word) => ({ ...word, topicId: null })),
+    });
+    await expect(open('11')).rejects.toThrow(
+      'NEXT_REDIRECT:/learn/lessons/5/vocabulary',
+    );
+  });
+
+  it('sends a locked lesson back to the lesson page (Q40)', async () => {
+    vi.mocked(getLessonActivity).mockResolvedValue({
+      ...unitActivity,
+      state: 'locked',
+    });
+    await expect(open('11')).rejects.toThrow('NEXT_REDIRECT:/learn/lessons/5');
+    expect(getUnitWordDetail).not.toHaveBeenCalled();
   });
 });

@@ -13,8 +13,10 @@ import {
 import {
   backendLessonTopicActivitySchema,
   backendLessonWordsSchema,
+  backendUnitWordDetailSchema,
   type LessonTopicActivity,
   type LessonWords,
+  type UnitWordDetail,
 } from './lesson-topic-contract';
 
 export async function getLessonActivity(
@@ -62,4 +64,15 @@ export async function getLessonWords(
     { token },
   );
   return backendLessonWordsSchema.parse(response).data;
+}
+
+/** Pha C (N3): example and part of speech of one word of a Từ vựng unit. */
+export async function getUnitWordDetail(
+  token: string,
+  wordId: number,
+): Promise<UnitWordDetail> {
+  const response = await backend.request(`/api/v1/dictionary/words/${wordId}`, {
+    token,
+  });
+  return backendUnitWordDetailSchema.parse(response).data;
 }

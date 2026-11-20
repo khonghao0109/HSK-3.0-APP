@@ -22,6 +22,7 @@ const UNIT = {
   draft: 'Nháp e2e đơn vị',
   words: ['单元甲', '单元乙'],
   draftWord: '单元丙',
+  quizPrompt: 'Chọn đáp án e2e đơn vị',
 };
 
 async function seedUnitLesson(): Promise<number> {
@@ -51,6 +52,16 @@ async function seedUnitLesson(): Promise<number> {
       word(UNIT.words[0] ?? '', 21, UNIT.vocabulary),
       word(UNIT.words[1] ?? '', 22, UNIT.vocabulary),
       word(UNIT.draftWord, 23, UNIT.draft),
+      // Pha C (debt 5a): Kiểm tra without exercises is hidden, so the quiz
+      // topic gets one published exercise.
+      `INSERT INTO "LessonExercise" ("lessonId", "topicId", type, prompt, content, answer, version, "orderIndex", status, "publishedAt", "updatedAt")
+        SELECT ${lessonId}, t.id, 'mcq'::"ExerciseType", ${sqlLiteral(UNIT.quizPrompt)},
+          '{"options":[{"id":"a","text":"A"},{"id":"b","text":"B"}]}', '{"optionId":"a"}',
+          1, 21, 'published'::"ContentStatus", now(), now()
+        FROM "Topic" t
+        WHERE t."lessonId" = ${lessonId} AND t.title = ${sqlLiteral(UNIT.quiz)}
+          AND NOT EXISTS (SELECT 1 FROM "LessonExercise" e
+            WHERE e."lessonId" = ${lessonId} AND e.prompt = ${sqlLiteral(UNIT.quizPrompt)});`,
     ].join('\n'),
   );
   return lessonId;
@@ -200,7 +211,7 @@ test.describe('Learner lesson page (M2.5a)', () => {
     );
     await expect(vocabulary).toHaveAttribute(
       'href',
-      `${lessonPath}/vocabulary`,
+      new RegExp(`^${lessonPath}/vocabulary\\?unit=\\d+$`, 'u'),
     );
     await expect(page.locator('.lu-rows a[href$="/practice"]')).toHaveCount(0);
     await expectToast(
@@ -237,7 +248,7 @@ test.describe('Learner lesson page (M2.5a)', () => {
     );
     await expect(vocabulary).toHaveAttribute(
       'href',
-      `/learn/lessons/${lessonId}/vocabulary`,
+      new RegExp(`^/learn/lessons/${lessonId}/vocabulary\\?unit=\\d+$`, 'u'),
     );
     await expect(vocabulary.locator('.lu-badge')).toHaveText('词');
     // The word of the draft topic is in no unit, the draft topic has no row.
@@ -267,6 +278,10 @@ test.describe('Learner lesson page (M2.5a)', () => {
       'Mở khi xong các đơn vị trên',
     );
     expect(await quiz.evaluate((element) => element.tagName)).toBe('DIV');
+    // Pha B debt 5b: the locked row is a disabled link named with its reason.
+    await expect(quiz).toMatchAriaSnapshot(
+      '- link /Kiểm tra\\s*,\\s*Mở khi xong các đơn vị trên\\s*,\\s*đang khoá/ [disabled]',
+    );
     for (const row of await rows.all()) {
       const box = await row.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);

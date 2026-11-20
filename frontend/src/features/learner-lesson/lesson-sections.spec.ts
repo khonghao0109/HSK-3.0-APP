@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   lessonUnits,
   parseLessonId,
+  unitHref,
   type LessonUnitsInput,
 } from './lesson-sections';
 
@@ -183,6 +184,7 @@ describe('lessonUnits', () => {
       {
         key: 'quiz',
         kind: 'quiz',
+        topicId: null,
         title: 'Kiểm tra',
         meta: '2 bài tập',
         metaLang: null,
@@ -247,6 +249,34 @@ describe('lessonUnits', () => {
       false,
     );
     expect(units.map((unit) => unit.kind)).toEqual(['vocabulary']);
+  });
+
+  it('hides Kiểm tra when its quiz topics have no exercise (Pha B debt 5a)', () => {
+    const units = lessonUnits(
+      {
+        topics: [topic(1, 'vocabulary', finished), topic(2, 'quiz')],
+        standaloneExercises: [],
+        words: [],
+      },
+      false,
+    );
+    expect(units.map((unit) => unit.kind)).toEqual(['vocabulary']);
+  });
+
+  it('opens a vocabulary unit in its own step flow, the others on their page (N3)', () => {
+    const units = lessonUnits(
+      {
+        topics: [topic(7, 'vocabulary'), topic(8, 'grammar')],
+        standaloneExercises: [{ latestAttempt: null }],
+        words: [],
+      },
+      false,
+    );
+    expect(units.map((unit) => unitHref(12, unit))).toEqual([
+      '/learn/lessons/12/vocabulary?unit=7',
+      '/learn/lessons/12/grammar',
+      '/learn/lessons/12/practice',
+    ]);
   });
 
   it('locks every unit of a locked lesson (Q44)', () => {

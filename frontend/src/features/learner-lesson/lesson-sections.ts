@@ -29,11 +29,13 @@ export type LessonUnitKind = 'vocabulary' | 'grammar' | 'key_text' | 'quiz';
 export type LessonUnit = {
   key: string;
   kind: LessonUnitKind;
+  /** Topic of the unit; null for Kiểm tra, which merges several. */
+  topicId: number | null;
   title: string;
   meta: string;
   /** `zh-Hans` when `meta` is the word preview of a vocabulary unit. */
   metaLang: 'zh-Hans' | null;
-  /** Existing page the row opens; the step-by-step flow is Pha C. */
+  /** Page the row opens; see `unitHref`. */
   slug: 'vocabulary' | 'grammar' | 'practice';
   percent: number;
   done: boolean;
@@ -80,6 +82,7 @@ export function lessonUnits(
     const done = !lessonLocked && topic.progress.status === 'done';
     const base = {
       key: `topic-${topic.id}`,
+      topicId: topic.id,
       percent: done ? 100 : unfinishedPercent(topic.progress.completionPercent),
       done,
       locked: lessonLocked,
@@ -116,7 +119,8 @@ export function lessonUnits(
     ...quizTopics.flatMap((topic) => topic.exercises),
     ...input.standaloneExercises,
   ];
-  if (quizTopics.length > 0 || exercises.length > 0) {
+  // Pha B debt 5a: a Kiểm tra without any exercise is hidden.
+  if (exercises.length > 0) {
     const attempted = exercises.filter(
       (exercise) => exercise.latestAttempt !== null,
     ).length;
@@ -131,6 +135,7 @@ export function lessonUnits(
     units.splice(position, 0, {
       key: 'quiz',
       kind: 'quiz',
+      topicId: null,
       title: 'Kiểm tra',
       meta:
         !lessonLocked && waiting
@@ -140,14 +145,20 @@ export function lessonUnits(
       slug: 'practice',
       percent: done
         ? 100
-        : exercises.length > 0
-          ? unfinishedPercent((attempted / exercises.length) * 100)
-          : 0,
+        : unfinishedPercent((attempted / exercises.length) * 100),
       done,
       locked,
     });
   }
   return units;
+}
+
+/** N3: a Từ vựng unit opens its own step flow, the others their page. */
+export function unitHref(lessonId: number, unit: LessonUnit): string {
+  const base = `/learn/lessons/${lessonId}/${unit.slug}`;
+  return unit.kind === 'vocabulary' && unit.topicId !== null
+    ? `${base}?unit=${unit.topicId}`
+    : base;
 }
 
 /** Route id must be a positive int32 before any backend call (Q41). */

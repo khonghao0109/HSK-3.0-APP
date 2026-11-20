@@ -16,6 +16,7 @@ import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader'
 import {
   LESSON_UNIT_BADGES,
   lessonUnits,
+  unitHref,
   type LessonUnit,
 } from '@/features/learner-lesson/lesson-sections';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
@@ -150,7 +151,7 @@ export default async function LearnerLessonPage({
               <li key={unit.key}>
                 <UnitRow
                   unit={unit}
-                  href={`/learn/lessons/${lessonId}/${unit.slug}`}
+                  href={unitHref(lessonId, unit)}
                   lessonLocked={locked}
                 />
               </li>
@@ -296,8 +297,10 @@ function UnitRow({
       </ToastButton>
     );
   }
+  // Pha B debt 5b: a disabled link, so the row's name (with "Mở khi xong
+  // các đơn vị trên") reaches screen readers.
   return (
-    <div className={className} aria-disabled="true">
+    <div className={className} role="link" aria-disabled="true">
       {content}
     </div>
   );
