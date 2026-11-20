@@ -18,6 +18,7 @@ import {
   lifecycleLabel,
   mediaTypeLabel,
   processingStatusLabel,
+  questionTypeLabel,
   reviewDecisionLabel,
   revisionReviewStateLabel,
   revisionReviewStateTone,
@@ -123,6 +124,41 @@ describe('admin-labels', () => {
     expect(exerciseTypeLabel('listening_choice')).toBe('Nghe chọn đáp án');
     expect(exerciseTypeLabel('arrange_sentence')).toBe('Sắp xếp câu');
     expect(exerciseTypeLabel('speaking_repeat')).toBe('Nói lặp lại');
+  });
+
+  it('maps matching (ghép cặp) in every type label table', () => {
+    expect(exerciseTypeLabel('matching')).toBe('Ghép cặp');
+    expect(questionTypeLabel('matching')).toBe('Ghép cặp');
+    expect(EXERCISE_FORM_TYPE_OPTIONS).toContainEqual({
+      value: 'matching',
+      label: 'Ghép cặp',
+    });
+  });
+
+  it('maps matching 422 codes and form labels/messages', () => {
+    expect(exerciseValidationMessage('invalid_pair_count')).toBe(
+      'Cần từ 3 đến 5 cặp.',
+    );
+    expect(exerciseValidationMessage('duplicate_pair_text')).toBe(
+      'Nội dung này trùng với một cặp khác.',
+    );
+    expect(EXERCISE_FORM).toMatchObject({
+      pairs: 'Cặp ghép',
+      pairLeft: 'Chữ Hán / từ',
+      pairLeftReading: 'Phiên âm (tuỳ chọn)',
+      pairRight: 'Nghĩa',
+      addPair: 'Thêm cặp',
+    });
+    expect(EXERCISE_FORM_MESSAGE).toMatchObject({
+      pairsRange: 'Cần từ 3 đến 5 cặp.',
+      pairLeftRequired: 'Nhập chữ Hán / từ.',
+      pairLeftTooLong: 'Chữ Hán / từ tối đa 32 ký tự.',
+      pairLeftReadingTooLong: 'Phiên âm tối đa 64 ký tự.',
+      pairRightRequired: 'Nhập nghĩa.',
+      pairRightTooLong: 'Nghĩa tối đa 80 ký tự.',
+      pairLeftDuplicate: 'Chữ Hán / từ trùng với một cặp khác.',
+      pairRightDuplicate: 'Nghĩa trùng với một cặp khác.',
+    });
   });
 
   it('maps media types to Vietnamese', () => {
@@ -327,6 +363,7 @@ describe('admin-labels', () => {
         { value: 'listening_choice', label: 'Nghe chọn' },
         { value: 'fill_blank', label: 'Điền từ' },
         { value: 'arrange_sentence', label: 'Sắp xếp câu' },
+        { value: 'matching', label: 'Ghép cặp' },
         { value: 'speaking_repeat', label: 'Luyện nói' },
       ]);
       expect(EXERCISE_FORM).toMatchObject({

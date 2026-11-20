@@ -23,12 +23,13 @@ const REVIEW_DECISION: Record<string, string> = {
 };
 
 /* Loại bài tập: Trắc nghiệm / Điền vào chỗ trống / Nghe chọn đáp án /
-   Sắp xếp câu / Nói lặp lại */
+   Sắp xếp câu / Ghép cặp / Nói lặp lại */
 const EXERCISE_TYPE: Record<string, string> = {
   mcq: 'Trắc nghiệm',
   fill_blank: 'Điền vào chỗ trống',
   listening_choice: 'Nghe chọn đáp án',
   arrange_sentence: 'Sắp xếp câu',
+  matching: 'Ghép cặp',
   speaking_repeat: 'Nói lặp lại',
 };
 
@@ -66,12 +67,13 @@ const LIFECYCLE: Record<string, string> = {
 };
 
 /* Loại câu hỏi ngân hàng (M4.1a, Q112): Trắc nghiệm / Đúng-Sai / Điền từ /
-   Sắp xếp câu */
+   Sắp xếp câu / Ghép cặp */
 const QUESTION_TYPE: Record<string, string> = {
   mcq: 'Trắc nghiệm',
   true_false: 'Đúng/Sai',
   fill_blank: 'Điền từ',
   arrange_sentence: 'Sắp xếp câu',
+  matching: 'Ghép cặp',
 };
 
 /* Kỹ năng câu hỏi (Q113): Nghe hiểu / Đọc hiểu / Viết / Nói */
@@ -192,6 +194,8 @@ const EXERCISE_VALIDATION_MESSAGE: Record<string, string> = {
   accepted_texts_required: 'Cần ít nhất một đáp án chấp nhận.',
   boolean_required: 'Giá trị phải là đúng/sai.',
   invalid_token_set: 'Các mảnh câu phải khớp đúng danh sách đã nhập.',
+  invalid_pair_count: 'Cần từ 3 đến 5 cặp.',
+  duplicate_pair_text: 'Nội dung này trùng với một cặp khác.',
   media_not_allowed: 'Chỉ câu nghe chọn mới có audio.',
   media_required: 'Câu nghe chọn cần audio.',
   positive_safe_integer_required: 'Giá trị phải là số nguyên dương.',
@@ -471,17 +475,23 @@ export const EXERCISE_FORM = {
   tokens: 'Mảnh câu',
   moveUp: 'Lên',
   moveDown: 'Xuống',
+  pairs: 'Cặp ghép',
+  pairLeft: 'Chữ Hán / từ',
+  pairLeftReading: 'Phiên âm (tuỳ chọn)',
+  pairRight: 'Nghĩa',
+  addPair: 'Thêm cặp',
   referenceText: 'Câu mẫu',
   submitCreate: 'Tạo bài tập',
   submitRevision: 'Lưu bản sửa',
 } as const;
 
-/** TL-19: 5 loại trong ô "Loại bài tập" (nhãn ngắn của form). */
+/** TL-19 + Pha E: 6 loại trong ô "Loại bài tập" (nhãn ngắn của form). */
 export const EXERCISE_FORM_TYPE_OPTIONS = [
   { value: 'mcq', label: 'Trắc nghiệm' },
   { value: 'listening_choice', label: 'Nghe chọn' },
   { value: 'fill_blank', label: 'Điền từ' },
   { value: 'arrange_sentence', label: 'Sắp xếp câu' },
+  { value: 'matching', label: 'Ghép cặp' },
   { value: 'speaking_repeat', label: 'Luyện nói' },
 ] as const;
 
@@ -499,6 +509,14 @@ export const EXERCISE_FORM_MESSAGE = {
   acceptedTextRequired: 'Nhập đáp án chấp nhận.',
   tokensRange: 'Cần từ 2 đến 100 mảnh câu.',
   tokenTextRequired: 'Nhập nội dung mảnh câu.',
+  pairsRange: 'Cần từ 3 đến 5 cặp.',
+  pairLeftRequired: 'Nhập chữ Hán / từ.',
+  pairLeftTooLong: 'Chữ Hán / từ tối đa 32 ký tự.',
+  pairLeftReadingTooLong: 'Phiên âm tối đa 64 ký tự.',
+  pairRightRequired: 'Nhập nghĩa.',
+  pairRightTooLong: 'Nghĩa tối đa 80 ký tự.',
+  pairLeftDuplicate: 'Chữ Hán / từ trùng với một cặp khác.',
+  pairRightDuplicate: 'Nghĩa trùng với một cặp khác.',
   referenceTextTooLong: 'Câu mẫu tối đa 4 096 ký tự.',
   generic: 'Kiểm tra lại các ô được đánh dấu.',
 } as const;

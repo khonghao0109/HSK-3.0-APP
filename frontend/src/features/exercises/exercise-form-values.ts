@@ -12,10 +12,18 @@ export type ExerciseFormType =
   | 'listening_choice'
   | 'fill_blank'
   | 'arrange_sentence'
-  | 'speaking_repeat';
+  | 'speaking_repeat'
+  | 'matching';
 
 export type ExerciseOptionValue = { id: string; text: string };
 export type ExerciseTokenValue = { id: string; text: string };
+/** Pha E: một cặp ghép; `leftReading` rỗng = không gửi. */
+export type ExercisePairValue = {
+  id: string;
+  left: string;
+  leftReading: string;
+  right: string;
+};
 
 /** State của form (chuỗi như ô nhập; chuyển kiểu khi submit). */
 export type ExerciseFormValue = {
@@ -41,6 +49,8 @@ export type ExerciseFormValue = {
    * trước; chỉ dùng khi sửa để giữ nguyên thứ tự hiển thị cũ. Tạo mới: `[]`.
    */
   tokenDisplayOrder: string[];
+  /** Pha E: 3–5 cặp cho matching. */
+  pairs: ExercisePairValue[];
   /** TL-19: "Câu mẫu" tuỳ chọn cho speaking_repeat. */
   referenceText: string;
   /** listening_choice: Media audio ready/live; null = chưa chọn. */
@@ -227,6 +237,7 @@ export function payloadTokenDisplayIds(payload: ExercisePayload): string[] {
  * - fill_blank: content `{}`, answer `{ acceptedTexts, caseSensitive? }`.
  * - arrange_sentence: content `{ tokens }`, answer `{ tokenIds }` theo `tokenOrder`.
  * - speaking_repeat: content `{ referenceText? }`, answer `{}`.
+ * - matching: content `{ pairs }` (leftReading rỗng bị bỏ), answer `{}`.
  * Chuỗi trim như backend; `explanation` rỗng → null; `mediaId` chỉ cho
  * listening_choice, còn lại null.
  */
@@ -288,6 +299,19 @@ export function exerciseFormToPayload(
       if (referenceText !== '') content = { referenceText };
       break;
     }
+    case 'matching':
+      content = {
+        pairs: value.pairs.map((pair) => {
+          const leftReading = pair.leftReading.trim();
+          return {
+            id: pair.id,
+            left: pair.left.trim(),
+            ...(leftReading === '' ? {} : { leftReading }),
+            right: pair.right.trim(),
+          };
+        }),
+      };
+      break;
   }
   return {
     type: value.type,
@@ -314,6 +338,7 @@ export function emptyExerciseFormValue(): ExerciseFormValue {
     tokens: [],
     tokenOrder: [],
     tokenDisplayOrder: [],
+    pairs: [],
     referenceText: '',
     mediaId: null,
   };
@@ -325,6 +350,7 @@ const EXERCISE_FORM_TYPE_VALUES = [
   'fill_blank',
   'arrange_sentence',
   'speaking_repeat',
+  'matching',
 ] as const satisfies readonly ExerciseFormType[];
 
 export function isExerciseFormType(value: unknown): value is ExerciseFormType {
@@ -392,6 +418,36 @@ function readTokens(value: unknown): ExerciseTokenValue[] | null {
     tokens.push({ id: entry.id, text: entry.text });
   }
   return tokens;
+}
+
+function readPairs(value: unknown): ExercisePairValue[] | null {
+  if (!Array.isArray(value) || value.length < 3 || value.length > 5) {
+    return null;
+  }
+  const ids = new Set<string>();
+  const pairs: ExercisePairValue[] = [];
+  for (const entry of value) {
+    if (
+      !isRecord(entry) ||
+      typeof entry.id !== 'string' ||
+      entry.id === '' ||
+      ids.has(entry.id) ||
+      typeof entry.left !== 'string' ||
+      typeof entry.right !== 'string' ||
+      (entry.leftReading !== undefined && typeof entry.leftReading !== 'string')
+    ) {
+      return null;
+    }
+    ids.add(entry.id);
+    pairs.push({
+      id: entry.id,
+      left: entry.left,
+      leftReading:
+        typeof entry.leftReading === 'string' ? entry.leftReading : '',
+      right: entry.right,
+    });
+  }
+  return pairs;
 }
 
 function readTokenDisplayOrder(
@@ -526,6 +582,12 @@ function formValueFromCandidate(candidate: unknown): ExerciseFormValue | null {
       }
       value.referenceText =
         typeof referenceText === 'string' ? referenceText : '';
+      return value;
+    }
+    case 'matching': {
+      const pairs = readPairs(content.pairs);
+      if (pairs === null) return null;
+      value.pairs = pairs;
       return value;
     }
   }
