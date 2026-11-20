@@ -6,6 +6,11 @@
       "op": "set",
       "path": "topics[0].type",
       "value": "grammar"
+    },
+    {
+      "op": "set",
+      "path": "topics[1].type",
+      "value": "grammar"
     }
   ]
 }

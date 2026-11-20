@@ -147,6 +147,10 @@ export const PILOT_CONTENT_ERROR_CODES = [
   'cross_lesson_slug_duplicate',
   'cross_lesson_order_index_duplicate',
   'cross_lesson_source_key_duplicate',
+  'word_topic_key_missing',
+  'word_topic_key_invalid',
+  'topic_vocabulary_without_words',
+  'exercise_topic_not_quiz',
 ] as const;
 
 export type PilotContentErrorCode = (typeof PILOT_CONTENT_ERROR_CODES)[number];
@@ -583,6 +587,66 @@ const SHARED_BLOCK_ISSUE_CODES: Readonly<
   topic_block_highlight_not_in_hanzi: 'block_field_invalid',
 };
 
+/**
+ * Pha F (PO 20/11/2026): mỗi từ thuộc đúng một đơn vị Từ vựng qua `topicKey`,
+ * và mỗi đơn vị Từ vựng có ít nhất một từ.
+ */
+function validateWordTopics(
+  issues: PilotContentIssue[],
+  lesson: Record<string, unknown>,
+): void {
+  if (!Array.isArray(lesson.words) || !Array.isArray(lesson.topics)) return;
+  const vocabularyIndex = new Map<string, number>();
+  for (const [index, topic] of lesson.topics.entries()) {
+    if (
+      isRecord(topic) &&
+      topic.type === 'vocabulary' &&
+      typeof topic.key === 'string'
+    ) {
+      vocabularyIndex.set(topic.key, index);
+    }
+  }
+  if (vocabularyIndex.size === 0) return;
+  const used = new Set<string>();
+  for (const [index, word] of lesson.words.entries()) {
+    if (!isRecord(word)) continue;
+    const at = `words[${index}].topicKey`;
+    if (word.topicKey === undefined) {
+      issues.push(
+        createIssue(
+          'word_topic_key_missing',
+          at,
+          'bài có topic "vocabulary" nên mỗi từ cần topicKey',
+        ),
+      );
+    } else if (
+      typeof word.topicKey !== 'string' ||
+      !vocabularyIndex.has(word.topicKey)
+    ) {
+      issues.push(
+        createIssue(
+          'word_topic_key_invalid',
+          at,
+          `= ${JSON.stringify(word.topicKey)} không phải key của topic "vocabulary" trong file`,
+        ),
+      );
+    } else {
+      used.add(word.topicKey);
+    }
+  }
+  for (const [key, index] of vocabularyIndex) {
+    if (!used.has(key)) {
+      issues.push(
+        createIssue(
+          'topic_vocabulary_without_words',
+          `topics[${index}]`,
+          `topic "${key}" không có từ nào trỏ tới`,
+        ),
+      );
+    }
+  }
+}
+
 function validateTopics(
   issues: PilotContentIssue[],
   lesson: Record<string, unknown>,
@@ -763,6 +827,12 @@ function validateExercises(
     );
     return;
   }
+  const topicTypes = new Map<string, unknown>();
+  for (const topic of Array.isArray(lesson.topics) ? lesson.topics : []) {
+    if (isRecord(topic) && typeof topic.key === 'string') {
+      topicTypes.set(topic.key, topic.type);
+    }
+  }
   const parsedExercises: Record<string, unknown>[] = [];
   for (const [index, entry] of lesson.exercises.entries()) {
     if (isRecord(entry)) {
@@ -873,6 +943,18 @@ function validateExercises(
             'topic_key_dangling',
             `${at}.topicKey`,
             `= ${JSON.stringify(exercise.topicKey)}`,
+          ),
+        );
+      } else if (topicTypes.get(exercise.topicKey) !== 'quiz') {
+        // Pha F (cách B, TL 20/11/2026): bài tập chỉ chấm ở Kiểm tra, nên chỉ
+        // gắn vào topic quiz; topic đơn vị học đóng được mà không cần bài tập.
+        issues.push(
+          createIssue(
+            'exercise_topic_not_quiz',
+            `${at}.topicKey`,
+            `= ${JSON.stringify(exercise.topicKey)} là topic "${String(
+              topicTypes.get(exercise.topicKey),
+            )}"; chỉ được null hoặc topic "quiz"`,
           ),
         );
       }
@@ -1565,6 +1647,7 @@ export function validatePilotLesson(
 
   const words = validateWords(issues, raw, refs, levelCode);
   const topicKeys = validateTopics(issues, raw);
+  validateWordTopics(issues, raw);
   validateExercises(issues, raw, topicKeys, words, refs);
   return issues;
 }

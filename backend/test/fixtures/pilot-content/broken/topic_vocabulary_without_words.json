@@ -1,0 +1,19 @@
+{
+  "description": "Pha F: topic vocabulary không có từ nào trỏ tới",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "topics[6]",
+      "value": {
+        "key": "t09",
+        "type": "vocabulary",
+        "title": "Từ vựng không có từ",
+        "orderIndex": 99,
+        "isPremium": false,
+        "isLocked": false,
+        "content": [{ "type": "vocabulary_list", "value": "lesson_words" }]
+      }
+    }
+  ]
+}

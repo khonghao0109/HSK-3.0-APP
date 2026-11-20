@@ -106,6 +106,8 @@ interface LessonFileExercise {
 interface LessonFileWord {
   readonly hanzi: string;
   readonly pinyin: string;
+  /** Đơn vị Từ vựng chứa từ (Pha F); validator bắt buộc khi có topic vocabulary. */
+  readonly topicKey?: string;
 }
 
 interface LessonFile {
@@ -207,6 +209,9 @@ function assertLessonFile(raw: unknown): LessonFile {
     return {
       hanzi: asString(entry.hanzi, 'words[].hanzi'),
       pinyin: asString(entry.pinyin, 'words[].pinyin'),
+      ...(entry.topicKey === undefined
+        ? {}
+        : { topicKey: asString(entry.topicKey, 'words[].topicKey') }),
     };
   });
   const topics = asArray(record.topics, 'topics').map((topic) => {
@@ -672,10 +677,23 @@ async function writeLessonWords(
   prisma: PrismaClient,
   lessonId: number,
   words: readonly LessonFileWord[],
+  topicIds: Readonly<Record<string, number>>,
   fileHash: string,
   log: (line: string) => void,
 ): Promise<number> {
   const resolved = await resolveWordIds(prisma, words);
+  // Pha F: topicKey → id topic vừa tạo/tái dùng ở bước topics.
+  const wordTopicIds = words.map((word) => {
+    if (word.topicKey === undefined) return null;
+    const topicId = topicIds[word.topicKey];
+    if (topicId === undefined) {
+      throw new PilotImportError(
+        'lesson_word_topic_unknown',
+        `words[].topicKey = ${word.topicKey} không khớp topic nào đã nạp`,
+      );
+    }
+    return topicId;
+  });
   await prisma.$transaction(async (tx) => {
     // Q179: khoá hàng lesson trước khi ghi.
     const locked = await tx.$queryRaw<LockedLessonRow[]>`
@@ -711,9 +729,10 @@ async function writeLessonWords(
         create: {
           lessonId,
           wordId: word.wordId,
+          topicId: wordTopicIds[index] ?? null,
           orderIndex: index + 1,
         },
-        update: { orderIndex: index + 1 },
+        update: { orderIndex: index + 1, topicId: wordTopicIds[index] ?? null },
       });
     }
     await tx.auditLog.create({
@@ -963,6 +982,7 @@ export async function importPilotLesson(
     dependencies.prisma,
     ensuredLesson.lessonId,
     file.words,
+    ensuredTopics.topicIds,
     fileHash,
     log,
   );
