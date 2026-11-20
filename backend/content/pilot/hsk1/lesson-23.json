@@ -21,7 +21,8 @@
         "hanzi": "我吃饭了。",
         "pinyin": "Wǒ chī fàn le.",
         "meaningVi": "Tôi ăn cơm rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "着",
@@ -31,7 +32,8 @@
         "hanzi": "门开着。",
         "pinyin": "Mén kāizhe.",
         "meaningVi": "Cửa đang mở."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "吧",
@@ -41,7 +43,8 @@
         "hanzi": "你明天来吧。",
         "pinyin": "Nǐ míngtiān lái ba.",
         "meaningVi": "Ngày mai bạn đến nhé."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "正",
@@ -51,7 +54,8 @@
         "hanzi": "我正要给你打电话。",
         "pinyin": "Wǒ zhèng yào gěi nǐ dǎ diànhuà.",
         "meaningVi": "Tôi đang định gọi cho bạn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "正在",
@@ -61,7 +65,8 @@
         "hanzi": "他正在吃饭。",
         "pinyin": "Tā zhèngzài chī fàn.",
         "meaningVi": "Anh ấy đang ăn cơm."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "没",
@@ -71,7 +76,8 @@
         "hanzi": "我没去学校。",
         "pinyin": "Wǒ méi qù xuéxiào.",
         "meaningVi": "Tôi (đã) không đến trường."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "还",
@@ -81,7 +87,8 @@
         "hanzi": "他还在睡觉。",
         "pinyin": "Tā hái zài shuìjiào.",
         "meaningVi": "Anh ấy vẫn đang ngủ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "还是",
@@ -91,7 +98,8 @@
         "hanzi": "你去还是我去？",
         "pinyin": "Nǐ qù háishi wǒ qù?",
         "meaningVi": "Bạn đi hay tôi đi?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "还有",
@@ -101,7 +109,8 @@
         "hanzi": "还有别的吗？",
         "pinyin": "Háiyǒu biéde ma?",
         "meaningVi": "Còn gì khác không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "就",
@@ -111,7 +120,8 @@
         "hanzi": "我马上就来。",
         "pinyin": "Wǒ mǎshàng jiù lái.",
         "meaningVi": "Tôi đến ngay."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "比",
@@ -121,7 +131,8 @@
         "hanzi": "哥哥比我高。",
         "pinyin": "Gēge bǐ wǒ gāo.",
         "meaningVi": "Anh trai cao hơn tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一样",
@@ -131,7 +142,8 @@
         "hanzi": "我们的书包一样。",
         "pinyin": "Wǒmen de shūbāo yíyàng.",
         "meaningVi": "Cặp sách của chúng tôi giống nhau."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一点儿",
@@ -141,7 +153,8 @@
         "hanzi": "我会说一点儿汉语。",
         "pinyin": "Wǒ huì shuō yìdiǎnr Hànyǔ.",
         "meaningVi": "Tôi biết nói một chút tiếng Trung."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一下儿",
@@ -151,7 +164,8 @@
         "hanzi": "你等一下儿。",
         "pinyin": "Nǐ děng yíxiàr.",
         "meaningVi": "Bạn đợi một chút."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "是不是",
@@ -161,7 +175,8 @@
         "hanzi": "你是不是老师？",
         "pinyin": "Nǐ shì bu shì lǎoshī?",
         "meaningVi": "Bạn có phải là giáo viên không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "怎么",
@@ -171,7 +186,8 @@
         "hanzi": "你怎么来学校？",
         "pinyin": "Nǐ zěnme lái xuéxiào?",
         "meaningVi": "Bạn đến trường bằng gì?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "地",
@@ -181,7 +197,8 @@
         "hanzi": "他高兴地笑了。",
         "pinyin": "Tā gāoxìng de xiào le.",
         "meaningVi": "Anh ấy cười vui vẻ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "别的",
@@ -191,7 +208,8 @@
         "hanzi": "你还要别的吗？",
         "pinyin": "Nǐ hái yào biéde ma?",
         "meaningVi": "Bạn còn cần gì khác không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有的",
@@ -201,7 +219,8 @@
         "hanzi": "有的人喜欢喝茶。",
         "pinyin": "Yǒude rén xǐhuan hē chá.",
         "meaningVi": "Có người thích uống trà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "不大",
@@ -211,14 +230,15 @@
         "hanzi": "我不大喜欢吃肉。",
         "pinyin": "Wǒ bú dà xǐhuan chī ròu.",
         "meaningVi": "Tôi không thích ăn thịt lắm."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: trợ từ, thể và so sánh",
+      "title": "Từ vựng (1/2): 了 … 就",
       "subtitle": "20 từ HSK1 chức năng: trợ từ, phó từ, so sánh và câu hỏi",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 比 … 不大",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 了, 着, 正在…呢, 比, 一样, 还是, 吧, 一点儿/一下儿, 是不是",
+      "title": "Ngữ pháp (1/3): 了 (hoàn thành) và 着 (trạng thái kéo dài) · 正在…呢",
       "subtitle": "Chín điểm ngữ pháp gộp thành năm nhóm: thể của động từ, so sánh, câu hỏi, ngữ khí và số lượng ít",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -337,7 +371,17 @@
               "highlight": "正在"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): 比 và 一样 (so sánh) · 还是 và 是不是 (câu hỏi)",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "比 và 一样 (so sánh)",
@@ -426,7 +470,17 @@
               "highlight": "是不是"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 吧, 一点儿, 一下儿",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "吧, 一点儿, 一下儿",
@@ -477,7 +531,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hỏi han hằng ngày",
       "subtitle": "Hội thoại ngắn hỏi đã làm chưa, đang làm gì, chọn món và so sánh; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -572,7 +626,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l23:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “giống nhau”?",
       "content": {
@@ -603,7 +657,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 哥哥___我高。 (Anh trai cao hơn tôi.)",
       "content": {
@@ -634,7 +688,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 你喝茶___喝水？ (Bạn uống trà hay uống nước?)",
       "content": {
@@ -665,7 +719,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 他正在睡觉___。 (Anh ấy đang ngủ.)",
       "content": {
@@ -696,7 +750,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我会说___汉语。(Tôi biết nói một chút tiếng Trung.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -715,7 +769,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这个___那个好。(Cái này tốt hơn cái kia.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -731,7 +785,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 还有___吗？(Còn cái khác không?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -747,7 +801,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Anh ấy đang ăn cơm.”",
       "content": {
@@ -783,7 +837,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Hôm nay lạnh hơn hôm qua.”",
       "content": {
@@ -819,7 +873,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l23:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Anh ấy cao bằng tôi.”",
       "content": {

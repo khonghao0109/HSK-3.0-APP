@@ -21,7 +21,8 @@
         "hanzi": "这本书一百零八块。",
         "pinyin": "Zhè běn shū yībǎi líng bā kuài.",
         "meaningVi": "Cuốn sách này một trăm lẻ tám đồng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "百",
@@ -31,7 +32,8 @@
         "hanzi": "我们学校有五百个学生。",
         "pinyin": "Wǒmen xuéxiào yǒu wǔbǎi ge xuéshēng.",
         "meaningVi": "Trường chúng tôi có năm trăm học sinh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "两",
@@ -41,7 +43,8 @@
         "hanzi": "桌子上有两本书。",
         "pinyin": "Zhuōzi shang yǒu liǎng běn shū.",
         "meaningVi": "Trên bàn có hai quyển sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "个",
@@ -51,7 +54,8 @@
         "hanzi": "那个人是我的老师。",
         "pinyin": "Nà ge rén shì wǒ de lǎoshī.",
         "meaningVi": "Người đó là thầy giáo của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "几",
@@ -61,7 +65,8 @@
         "hanzi": "你家有几个人？",
         "pinyin": "Nǐ jiā yǒu jǐ ge rén?",
         "meaningVi": "Nhà bạn có mấy người?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "元",
@@ -71,7 +76,8 @@
         "hanzi": "一个面包五元。",
         "pinyin": "Yī ge miànbāo wǔ yuán.",
         "meaningVi": "Một cái bánh mì năm tệ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "毛",
@@ -81,7 +87,8 @@
         "hanzi": "一个鸡蛋五毛钱。",
         "pinyin": "Yī ge jīdàn wǔ máo qián.",
         "meaningVi": "Một quả trứng gà năm hào."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "本",
@@ -91,7 +98,8 @@
         "hanzi": "我买了三本书。",
         "pinyin": "Wǒ mǎi le sān běn shū.",
         "meaningVi": "Tôi đã mua ba quyển sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "杯",
@@ -101,7 +109,8 @@
         "hanzi": "我想喝一杯茶。",
         "pinyin": "Wǒ xiǎng hē yī bēi chá.",
         "meaningVi": "Tôi muốn uống một cốc trà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "杯子",
@@ -111,7 +120,8 @@
         "hanzi": "桌子上有一个杯子。",
         "pinyin": "Zhuōzi shang yǒu yī ge bēizi.",
         "meaningVi": "Trên bàn có một cái cốc."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "本子",
@@ -121,7 +131,8 @@
         "hanzi": "这是我的本子。",
         "pinyin": "Zhè shì wǒ de běnzi.",
         "meaningVi": "Đây là vở của tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "第",
@@ -131,7 +142,8 @@
         "hanzi": "今天是我第一天上班。",
         "pinyin": "Jīntiān shì wǒ dì yī tiān shàngbān.",
         "meaningVi": "Hôm nay là ngày đầu tiên tôi đi làm."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "次",
@@ -141,7 +153,8 @@
         "hanzi": "我去过两次北京。",
         "pinyin": "Wǒ qù guo liǎng cì Běijīng.",
         "meaningVi": "Tôi đã đi Bắc Kinh hai lần."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "号",
@@ -151,7 +164,8 @@
         "hanzi": "今天几号？",
         "pinyin": "Jīntiān jǐ hào?",
         "meaningVi": "Hôm nay ngày mấy?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "页",
@@ -161,7 +175,8 @@
         "hanzi": "请看第十页。",
         "pinyin": "Qǐng kàn dì shí yè.",
         "meaningVi": "Mời xem trang mười."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一些",
@@ -171,7 +186,8 @@
         "hanzi": "我想买一些水果。",
         "pinyin": "Wǒ xiǎng mǎi yīxiē shuǐguǒ.",
         "meaningVi": "Tôi muốn mua một ít hoa quả."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "这些",
@@ -181,7 +197,8 @@
         "hanzi": "这些都是我的书。",
         "pinyin": "Zhèxiē dōu shì wǒ de shū.",
         "meaningVi": "Những cái này đều là sách của tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "那些",
@@ -191,7 +208,8 @@
         "hanzi": "那些人是谁？",
         "pinyin": "Nàxiē rén shì shéi?",
         "meaningVi": "Những người kia là ai?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "哪些",
@@ -201,7 +219,8 @@
         "hanzi": "你喜欢哪些菜？",
         "pinyin": "Nǐ xǐhuan nǎxiē cài?",
         "meaningVi": "Bạn thích những món nào?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有些",
@@ -211,14 +230,15 @@
         "hanzi": "有些学生没来。",
         "pinyin": "Yǒuxiē xuéshēng méi lái.",
         "meaningVi": "Có một số học sinh không đến."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: số đếm và lượng từ",
+      "title": "Từ vựng (1/2): 零 … 杯子",
       "subtitle": "20 từ HSK1 về số, lượng từ, tiền, số thứ tự và số lần",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 本子 … 有些",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: số + lượng từ, 几/多少, 两/二, 第, 次",
+      "title": "Ngữ pháp (1/3): Số + lượng từ + danh từ · 几 và 多少",
       "subtitle": "Năm điểm ngữ pháp cần khi đếm, hỏi số lượng và nói thứ tự",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -326,7 +360,17 @@
               "highlight": "多少钱"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): 两 và 二 · 第 + số",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "两 và 二",
@@ -404,7 +448,17 @@
               "highlight": "第五页"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): Số + 次",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Số + 次",
@@ -453,7 +507,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: mua cốc và vở ở cửa hàng",
       "subtitle": "Hội thoại ngắn khi hỏi giá và số lượng; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -531,7 +585,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l08:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “trang” (trang sách)?",
       "content": {
@@ -562,7 +616,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我有___个哥哥。 (Tôi có hai anh trai.)",
       "content": {
@@ -593,7 +647,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我喝一___茶。 (Tôi uống một cốc trà.)",
       "content": {
@@ -624,7 +678,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “số không”?",
       "content": {
@@ -655,7 +709,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这是我___一次来北京。(Đây là lần đầu tiên tôi đến Bắc Kinh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -671,7 +725,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这个杯子___钱？(Cái cốc này bao nhiêu tiền?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -687,7 +741,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e07",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我们一个星期上五___课。(Một tuần chúng tôi lên lớp năm lần.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -703,7 +757,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + số lượng từ + danh từ: “Tôi có hai quyển sách.”",
       "content": {
@@ -739,7 +793,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + 第 + số + danh từ: “Chúng ta đọc trang thứ năm.”",
       "content": {
@@ -775,7 +829,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l08:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu hỏi: “Bạn có mấy cái cốc?”",
       "content": {

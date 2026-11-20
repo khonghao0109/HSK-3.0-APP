@@ -21,7 +21,8 @@
         "hanzi": "我爸爸是老师。",
         "pinyin": "Wǒ bàba shì lǎoshī.",
         "meaningVi": "Bố tôi là giáo viên."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "妈妈",
@@ -31,7 +32,8 @@
         "hanzi": "我妈妈是医生。",
         "pinyin": "Wǒ māma shì yīshēng.",
         "meaningVi": "Mẹ tôi là bác sĩ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "哥哥",
@@ -41,7 +43,8 @@
         "hanzi": "哥哥有很多书。",
         "pinyin": "Gēge yǒu hěn duō shū.",
         "meaningVi": "Anh trai tôi có rất nhiều sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "姐姐",
@@ -51,7 +54,8 @@
         "hanzi": "我姐姐是大学生。",
         "pinyin": "Wǒ jiějie shì dàxuéshēng.",
         "meaningVi": "Chị gái tôi là sinh viên."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "弟弟",
@@ -61,7 +65,8 @@
         "hanzi": "弟弟今年八岁。",
         "pinyin": "Dìdi jīnnián bā suì.",
         "meaningVi": "Em trai tôi năm nay tám tuổi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "妹妹",
@@ -71,7 +76,8 @@
         "hanzi": "我妹妹今年五岁。",
         "pinyin": "Wǒ mèimei jīnnián wǔ suì.",
         "meaningVi": "Em gái tôi năm nay năm tuổi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "儿子",
@@ -81,7 +87,8 @@
         "hanzi": "这是我的儿子。",
         "pinyin": "Zhè shì wǒ de érzi.",
         "meaningVi": "Đây là con trai tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "爷爷",
@@ -91,7 +98,8 @@
         "hanzi": "爷爷和奶奶在家。",
         "pinyin": "Yéye hé nǎinai zài jiā.",
         "meaningVi": "Ông nội và bà nội ở nhà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "奶奶",
@@ -101,7 +109,8 @@
         "hanzi": "我奶奶今年六十岁了。",
         "pinyin": "Wǒ nǎinai jīnnián liùshí suì le.",
         "meaningVi": "Bà nội tôi năm nay sáu mươi tuổi rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "孩子",
@@ -111,7 +120,8 @@
         "hanzi": "这个孩子是我儿子。",
         "pinyin": "Zhège háizi shì wǒ érzi.",
         "meaningVi": "Đứa trẻ này là con trai tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "岁",
@@ -121,7 +131,8 @@
         "hanzi": "你今年几岁了？",
         "pinyin": "Nǐ jīnnián jǐ suì le?",
         "meaningVi": "Năm nay bạn mấy tuổi rồi?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "多",
@@ -131,7 +142,8 @@
         "hanzi": "他有很多朋友。",
         "pinyin": "Tā yǒu hěn duō péngyou.",
         "meaningVi": "Anh ấy có rất nhiều bạn."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "大",
@@ -141,7 +153,8 @@
         "hanzi": "你的孩子多大了？",
         "pinyin": "Nǐ de háizi duō dà le?",
         "meaningVi": "Con bạn bao nhiêu tuổi rồi?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "小",
@@ -151,7 +164,8 @@
         "hanzi": "我妹妹很小，四岁。",
         "pinyin": "Wǒ mèimei hěn xiǎo, sì suì.",
         "meaningVi": "Em gái tôi còn nhỏ, bốn tuổi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有",
@@ -161,7 +175,8 @@
         "hanzi": "我有两个姐姐。",
         "pinyin": "Wǒ yǒu liǎng ge jiějie.",
         "meaningVi": "Tôi có hai chị gái."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "没有",
@@ -171,7 +186,8 @@
         "hanzi": "我没有哥哥，有妹妹。",
         "pinyin": "Wǒ méiyǒu gēge, yǒu mèimei.",
         "meaningVi": "Tôi không có anh trai, có em gái."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "和",
@@ -181,7 +197,8 @@
         "hanzi": "爸爸和妈妈在家。",
         "pinyin": "Bàba hé māma zài jiā.",
         "meaningVi": "Bố và mẹ ở nhà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "的",
@@ -191,7 +208,8 @@
         "hanzi": "这是我爸爸的书。",
         "pinyin": "Zhè shì wǒ bàba de shū.",
         "meaningVi": "Đây là sách của bố tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "家",
@@ -201,7 +219,8 @@
         "hanzi": "我家有四个人。",
         "pinyin": "Wǒ jiā yǒu sì ge rén.",
         "meaningVi": "Nhà tôi có bốn người."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "谁",
@@ -211,14 +230,15 @@
         "hanzi": "这是谁的孩子？",
         "pinyin": "Zhè shì shéi de háizi?",
         "meaningVi": "Đây là con của ai?"
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: gia đình và tuổi tác",
+      "title": "Từ vựng (1/2): 爸爸 … 孩子",
       "subtitle": "20 từ HSK1 dùng khi nói về người thân trong gia đình và hỏi tuổi",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 岁 … 谁",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 有/没有, 的, 几/多大, 和, 谁/都",
+      "title": "Ngữ pháp (1/3): 有 (yǒu – có) và 没有 (méiyǒu – không có) · 的 (de – “của”)",
       "subtitle": "Năm điểm ngữ pháp cần cho bài nói về gia đình và tuổi tác",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -331,7 +365,17 @@
               "highlight": "的"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): Hỏi tuổi · 和 (hé – và)",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Hỏi tuổi",
@@ -421,7 +465,17 @@
               "highlight": "和"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 谁 (shéi – ai)",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "谁 (shéi – ai)",
@@ -467,7 +521,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hỏi thăm gia đình và tuổi",
       "subtitle": "Hội thoại ngắn về số người trong nhà, tuổi của chị gái và nghề nghiệp của bố mẹ",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -523,7 +577,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l02:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “bố, ba”?",
       "content": {
@@ -554,7 +608,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___两个姐姐。 (Tôi có hai chị gái.)",
       "content": {
@@ -585,7 +639,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这是___的孩子？ (Đây là con của ai?)",
       "content": {
@@ -616,7 +670,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “tuổi”?",
       "content": {
@@ -647,7 +701,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e05",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___今年六十岁。(Bà nội tôi năm nay sáu mươi tuổi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -663,7 +717,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___哥哥，有妹妹。(Tôi không có anh trai, có em gái.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -679,7 +733,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___有四个人。(Nhà tôi có bốn người.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -695,7 +749,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi có anh trai.”",
       "content": {
@@ -726,7 +780,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e09",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bố tôi rất tốt.”",
       "content": {
@@ -762,7 +816,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l02:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Con trai bạn năm nay mấy tuổi rồi?”",
       "content": {

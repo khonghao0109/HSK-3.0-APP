@@ -21,7 +21,8 @@
         "hanzi": "今天天气很好。",
         "pinyin": "Jīntiān tiānqì hěn hǎo.",
         "meaningVi": "Hôm nay thời tiết rất đẹp."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "天",
@@ -31,7 +32,8 @@
         "hanzi": "天上有一个飞机。",
         "pinyin": "Tiān shang yǒu yí ge fēijī.",
         "meaningVi": "Trên trời có một chiếc máy bay."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "雨",
@@ -41,7 +43,8 @@
         "hanzi": "雨很大。",
         "pinyin": "Yǔ hěn dà.",
         "meaningVi": "Mưa rất to."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "下雨",
@@ -51,7 +54,8 @@
         "hanzi": "明天会下雨吗？",
         "pinyin": "Míngtiān huì xiàyǔ ma?",
         "meaningVi": "Ngày mai có mưa không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "风",
@@ -61,7 +65,8 @@
         "hanzi": "今天风很大。",
         "pinyin": "Jīntiān fēng hěn dà.",
         "meaningVi": "Hôm nay gió rất to."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "冷",
@@ -71,7 +76,8 @@
         "hanzi": "外边很冷。",
         "pinyin": "Wàibian hěn lěng.",
         "meaningVi": "Bên ngoài rất lạnh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "热",
@@ -81,7 +87,8 @@
         "hanzi": "今天太热了。",
         "pinyin": "Jīntiān tài rè le.",
         "meaningVi": "Hôm nay nóng quá."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "渴",
@@ -91,7 +98,8 @@
         "hanzi": "我渴了，想喝水。",
         "pinyin": "Wǒ kě le, xiǎng hē shuǐ.",
         "meaningVi": "Tôi khát rồi, muốn uống nước."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "饿",
@@ -101,7 +109,8 @@
         "hanzi": "你饿不饿？",
         "pinyin": "Nǐ è bu è?",
         "meaningVi": "Bạn có đói không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "累",
@@ -111,7 +120,8 @@
         "hanzi": "我今天很累。",
         "pinyin": "Wǒ jīntiān hěn lèi.",
         "meaningVi": "Hôm nay tôi rất mệt."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "太",
@@ -121,7 +131,8 @@
         "hanzi": "这个太贵了。",
         "pinyin": "Zhè ge tài guì le.",
         "meaningVi": "Cái này đắt quá."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "非常",
@@ -131,7 +142,8 @@
         "hanzi": "我非常高兴。",
         "pinyin": "Wǒ fēicháng gāoxìng.",
         "meaningVi": "Tôi vô cùng vui."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "真",
@@ -141,7 +153,8 @@
         "hanzi": "你真好！",
         "pinyin": "Nǐ zhēn hǎo!",
         "meaningVi": "Bạn thật tốt!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "真的",
@@ -151,7 +164,8 @@
         "hanzi": "这是真的吗？",
         "pinyin": "Zhè shì zhēnde ma?",
         "meaningVi": "Cái này là thật à?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "最",
@@ -161,7 +175,8 @@
         "hanzi": "我最喜欢喝茶。",
         "pinyin": "Wǒ zuì xǐhuan hē chá.",
         "meaningVi": "Tôi thích uống trà nhất."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "好看",
@@ -171,7 +186,8 @@
         "hanzi": "这个电影很好看。",
         "pinyin": "Zhè ge diànyǐng hěn hǎokàn.",
         "meaningVi": "Bộ phim này rất hay."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "好吃",
@@ -181,7 +197,8 @@
         "hanzi": "妈妈做的饭很好吃。",
         "pinyin": "Māma zuò de fàn hěn hǎochī.",
         "meaningVi": "Cơm mẹ nấu rất ngon."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "好听",
@@ -191,7 +208,8 @@
         "hanzi": "这个歌很好听。",
         "pinyin": "Zhè ge gē hěn hǎotīng.",
         "meaningVi": "Bài hát này rất hay."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "好玩儿",
@@ -201,7 +219,8 @@
         "hanzi": "北京很好玩儿。",
         "pinyin": "Běijīng hěn hǎowánr.",
         "meaningVi": "Bắc Kinh rất thú vị."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "高",
@@ -211,14 +230,15 @@
         "hanzi": "我哥哥很高。",
         "pinyin": "Wǒ gēge hěn gāo.",
         "meaningVi": "Anh trai tôi rất cao."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: thời tiết và cảm giác",
+      "title": "Từ vựng (1/2): 天气 … 累",
       "subtitle": "20 từ HSK1 về trời, mưa, gió, cảm giác cơ thể, mức độ và lời khen",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 太 … 高",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: câu vị ngữ tính từ, 太…了, 非常/真/最, 下雨了",
+      "title": "Ngữ pháp (1/2): Câu vị ngữ tính từ · 太 + tính từ + 了",
       "subtitle": "Bốn điểm ngữ pháp để tả thời tiết, cảm giác và mức độ",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -331,7 +365,17 @@
               "highlight": "太"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 非常/真/最 + tính từ · 了 chỉ thay đổi",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "非常/真/最 + tính từ",
@@ -413,7 +457,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hôm nay trời thế nào",
       "subtitle": "Hội thoại ngắn hỏi thời tiết, cảm giác và khen món ăn; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -508,7 +552,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l15:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “khát”?",
       "content": {
@@ -539,7 +583,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào dùng để khen một bài hát “hay, dễ nghe”?",
       "content": {
@@ -570,7 +614,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 今天太热___。 (Hôm nay nóng quá.)",
       "content": {
@@ -601,7 +645,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我哥哥___高。 (Anh trai tôi cao nhất.)",
       "content": {
@@ -632,7 +676,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 外边___了。(Bên ngoài trời mưa rồi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -648,7 +692,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e06",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 今天___很大，很冷。(Hôm nay gió rất to, rất lạnh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -664,7 +708,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我___了，想喝水。(Tôi khát rồi, muốn uống nước.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -680,7 +724,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bài hát này hay quá.”",
       "content": {
@@ -716,7 +760,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Cơm mẹ nấu rất ngon.”",
       "content": {
@@ -752,7 +796,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l15:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Cái bánh bao này rất ngon.”",
       "content": {

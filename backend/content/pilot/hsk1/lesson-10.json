@@ -21,7 +21,8 @@
         "hanzi": "我早上六点起床。",
         "pinyin": "Wǒ zǎoshang liù diǎn qǐchuáng.",
         "meaningVi": "Tôi thức dậy lúc sáu giờ sáng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "起来",
@@ -31,7 +32,8 @@
         "hanzi": "你快起来吧！",
         "pinyin": "Nǐ kuài qǐlái ba!",
         "meaningVi": "Bạn mau dậy đi!"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "睡",
@@ -41,7 +43,8 @@
         "hanzi": "他还在睡呢。",
         "pinyin": "Tā hái zài shuì ne.",
         "meaningVi": "Anh ấy vẫn đang ngủ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "睡觉",
@@ -51,7 +54,8 @@
         "hanzi": "孩子们九点睡觉。",
         "pinyin": "Háizimen jiǔ diǎn shuìjiào.",
         "meaningVi": "Bọn trẻ đi ngủ lúc chín giờ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "洗",
@@ -61,7 +65,8 @@
         "hanzi": "吃饭前要洗手。",
         "pinyin": "Chīfàn qián yào xǐ shǒu.",
         "meaningVi": "Trước khi ăn cơm phải rửa tay."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "洗手间",
@@ -71,7 +76,8 @@
         "hanzi": "请问，洗手间在哪儿？",
         "pinyin": "Qǐngwèn, xǐshǒujiān zài nǎr?",
         "meaningVi": "Xin hỏi, nhà vệ sinh ở đâu?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "上班",
@@ -81,7 +87,8 @@
         "hanzi": "爸爸八点上班。",
         "pinyin": "Bàba bā diǎn shàngbān.",
         "meaningVi": "Bố đi làm lúc tám giờ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "下班",
@@ -91,7 +98,8 @@
         "hanzi": "妈妈下午五点下班。",
         "pinyin": "Māma xiàwǔ wǔ diǎn xiàbān.",
         "meaningVi": "Mẹ tan làm lúc năm giờ chiều."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "上学",
@@ -101,7 +109,8 @@
         "hanzi": "我弟弟今年上学了。",
         "pinyin": "Wǒ dìdi jīnnián shàngxué le.",
         "meaningVi": "Em trai tôi năm nay đã đi học rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "放学",
@@ -111,7 +120,8 @@
         "hanzi": "放学了，我们回家吧。",
         "pinyin": "Fàngxué le, wǒmen huíjiā ba.",
         "meaningVi": "Tan học rồi, chúng ta về nhà thôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "工作",
@@ -121,7 +131,8 @@
         "hanzi": "我姐姐在医院工作。",
         "pinyin": "Wǒ jiějie zài yīyuàn gōngzuò.",
         "meaningVi": "Chị tôi làm việc ở bệnh viện."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "休息",
@@ -131,7 +142,8 @@
         "hanzi": "你累了，休息一下儿吧。",
         "pinyin": "Nǐ lèi le, xiūxi yīxiàr ba.",
         "meaningVi": "Bạn mệt rồi, nghỉ một chút đi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "回家",
@@ -141,7 +153,8 @@
         "hanzi": "我晚上七点回家。",
         "pinyin": "Wǒ wǎnshang qī diǎn huíjiā.",
         "meaningVi": "Tôi về nhà lúc bảy giờ tối."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "在家",
@@ -151,7 +164,8 @@
         "hanzi": "星期天我在家休息。",
         "pinyin": "Xīngqītiān wǒ zàijiā xiūxi.",
         "meaningVi": "Chủ nhật tôi ở nhà nghỉ ngơi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "吃饭",
@@ -161,7 +175,8 @@
         "hanzi": "我们一起去吃饭吧。",
         "pinyin": "Wǒmen yīqǐ qù chīfàn ba.",
         "meaningVi": "Chúng ta cùng đi ăn cơm nhé."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "穿",
@@ -171,7 +186,8 @@
         "hanzi": "天气冷，多穿一点儿衣服。",
         "pinyin": "Tiānqì lěng, duō chuān yīdiǎnr yīfu.",
         "meaningVi": "Trời lạnh, mặc thêm chút quần áo."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "衣服",
@@ -181,7 +197,8 @@
         "hanzi": "我的衣服很干净。",
         "pinyin": "Wǒ de yīfu hěn gānjìng.",
         "meaningVi": "Quần áo của tôi rất sạch."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "做",
@@ -191,7 +208,8 @@
         "hanzi": "你在做什么？",
         "pinyin": "Nǐ zài zuò shénme?",
         "meaningVi": "Bạn đang làm gì vậy?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "事",
@@ -201,7 +219,8 @@
         "hanzi": "我今天有事，不去了。",
         "pinyin": "Wǒ jīntiān yǒu shì, bù qù le.",
         "meaningVi": "Hôm nay tôi có việc, không đi nữa."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "常常",
@@ -211,14 +230,15 @@
         "hanzi": "他常常去图书馆。",
         "pinyin": "Tā chángcháng qù túshūguǎn.",
         "meaningVi": "Anh ấy thường đến thư viện."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: sinh hoạt hằng ngày",
+      "title": "Từ vựng (1/2): 起床 … 放学",
       "subtitle": "20 từ HSK1 về giờ giấc, việc làm, việc học và việc nhà",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 工作 … 常常",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: thời gian + nơi chốn + hành động, 常常, 回家吃饭, 在家",
+      "title": "Ngữ pháp (1/2): Trình tự thời gian + nơi chốn + hành động · 常常 + động từ",
       "subtitle": "Bốn điểm ngữ pháp để kể một ngày sinh hoạt",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -336,7 +370,17 @@
               "highlight": "常常"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): Câu liên động 回家吃饭 · 在家 + động từ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Câu liên động 回家吃饭",
@@ -438,7 +482,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: một ngày của tôi",
       "subtitle": "Hội thoại ngắn về giờ giấc và thói quen; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -550,7 +594,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l10:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “nhà vệ sinh”?",
       "content": {
@@ -581,7 +625,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我晚上十点___。 (Tôi đi ngủ lúc 10 giờ tối.)",
       "content": {
@@ -612,7 +656,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___回家吃饭。 (Tôi thường về nhà ăn cơm.)",
       "content": {
@@ -643,7 +687,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “tan làm, hết giờ làm”?",
       "content": {
@@ -674,7 +718,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e05",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 你今天做什么___？(Hôm nay bạn làm việc gì?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -690,7 +734,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 妈妈常常洗___。(Mẹ thường giặt quần áo.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -706,7 +750,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我们在家___一会儿。(Chúng tôi nghỉ ở nhà một lát.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -722,7 +766,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi thường về nhà.”",
       "content": {
@@ -753,7 +797,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Anh ấy nghỉ ngơi ở nhà.”",
       "content": {
@@ -784,7 +828,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l10:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi thường giặt quần áo.”",
       "content": {

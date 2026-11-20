@@ -21,7 +21,8 @@
         "hanzi": "请读一下课文。",
         "pinyin": "Qǐng dú yíxià kèwén.",
         "meaningVi": "Mời đọc bài khoá một lượt."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "听写",
@@ -31,7 +32,8 @@
         "hanzi": "明天我们听写汉字。",
         "pinyin": "Míngtiān wǒmen tīngxiě Hànzì.",
         "meaningVi": "Ngày mai chúng ta nghe viết chữ Hán."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "读书",
@@ -41,7 +43,8 @@
         "hanzi": "他在大学读书。",
         "pinyin": "Tā zài dàxué dúshū.",
         "meaningVi": "Anh ấy đang học đại học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "教",
@@ -51,7 +54,8 @@
         "hanzi": "她教我们汉语。",
         "pinyin": "Tā jiāo wǒmen Hànyǔ.",
         "meaningVi": "Cô ấy dạy chúng tôi tiếng Trung."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "教学楼",
@@ -61,7 +65,8 @@
         "hanzi": "教学楼在前边。",
         "pinyin": "Jiàoxuélóu zài qiánbian.",
         "meaningVi": "Toà giảng đường ở phía trước."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "班",
@@ -71,7 +76,8 @@
         "hanzi": "我们班有二十个学生。",
         "pinyin": "Wǒmen bān yǒu èrshí ge xuésheng.",
         "meaningVi": "Lớp chúng tôi có hai mươi học sinh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "中学生",
@@ -81,7 +87,8 @@
         "hanzi": "我妹妹是中学生。",
         "pinyin": "Wǒ mèimei shì zhōngxuéshēng.",
         "meaningVi": "Em gái tôi là học sinh trung học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "大学生",
@@ -91,7 +98,8 @@
         "hanzi": "我哥哥是大学生。",
         "pinyin": "Wǒ gēge shì dàxuéshēng.",
         "meaningVi": "Anh trai tôi là sinh viên."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "小学生",
@@ -101,7 +109,8 @@
         "hanzi": "他是小学生。",
         "pinyin": "Tā shì xiǎoxuéshēng.",
         "meaningVi": "Cậu ấy là học sinh tiểu học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "试",
@@ -111,7 +120,8 @@
         "hanzi": "你试一下这个。",
         "pinyin": "Nǐ shì yíxià zhè ge.",
         "meaningVi": "Bạn thử cái này xem."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "考",
@@ -121,7 +131,8 @@
         "hanzi": "明天考汉语。",
         "pinyin": "Míngtiān kǎo Hànyǔ.",
         "meaningVi": "Ngày mai thi tiếng Trung."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "回答",
@@ -131,7 +142,8 @@
         "hanzi": "你回答一下。",
         "pinyin": "Nǐ huídá yíxià.",
         "meaningVi": "Bạn trả lời thử xem."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "错",
@@ -141,7 +153,8 @@
         "hanzi": "这个字写错了。",
         "pinyin": "Zhè ge zì xiě cuò le.",
         "meaningVi": "Chữ này viết sai rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "对",
@@ -151,7 +164,8 @@
         "hanzi": "你说的对。",
         "pinyin": "Nǐ shuō de duì.",
         "meaningVi": "Bạn nói đúng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "不对",
@@ -161,7 +175,8 @@
         "hanzi": "这个回答不对。",
         "pinyin": "Zhè ge huídá bú duì.",
         "meaningVi": "Câu trả lời này không đúng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "难",
@@ -171,7 +186,8 @@
         "hanzi": "汉字很难吗？",
         "pinyin": "Hànzì hěn nán ma?",
         "meaningVi": "Chữ Hán có khó không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "知识",
@@ -181,7 +197,8 @@
         "hanzi": "书里有很多知识。",
         "pinyin": "Shū lǐ yǒu hěn duō zhīshi.",
         "meaningVi": "Trong sách có rất nhiều kiến thức."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "认真",
@@ -191,7 +208,8 @@
         "hanzi": "她学习很认真。",
         "pinyin": "Tā xuéxí hěn rènzhēn.",
         "meaningVi": "Cô ấy học rất chăm chỉ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "准备",
@@ -201,7 +219,8 @@
         "hanzi": "我在准备明天的考试。",
         "pinyin": "Wǒ zài zhǔnbèi míngtiān de kǎoshì.",
         "meaningVi": "Tôi đang chuẩn bị cho kỳ thi ngày mai."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "开会",
@@ -211,14 +230,15 @@
         "hanzi": "老师们在开会。",
         "pinyin": "Lǎoshīmen zài kāihuì.",
         "meaningVi": "Các thầy cô đang họp."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: lớp học và thi cử",
+      "title": "Từ vựng (1/2): 课文 … 试",
       "subtitle": "20 từ HSK1 về bài học, học sinh, thi cử và đúng sai",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 考 … 开会",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: câu hỏi chính phản, 准备 + động từ, 对/错 làm vị ngữ",
+      "title": "Ngữ pháp (1/2): Câu hỏi chính phản · 准备 + động từ",
       "subtitle": "Ba điểm ngữ pháp để hỏi có hay không, nói dự định và nói đúng sai",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -341,7 +375,17 @@
               "highlight": "准备"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 对/错 làm vị ngữ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "对/错 làm vị ngữ",
@@ -391,7 +435,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: chuyện học và thi",
       "subtitle": "Hội thoại ngắn về bài học, kỳ thi, đúng sai và dự định học tập; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -486,7 +530,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l21:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “sinh viên đại học”?",
       "content": {
@@ -517,7 +561,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “kiến thức”?",
       "content": {
@@ -548,7 +592,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这个回答对___对？ (Câu trả lời này có đúng không?)",
       "content": {
@@ -579,7 +623,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___明年去中国读书。 (Sang năm tôi chuẩn bị sang Trung Quốc học.)",
       "content": {
@@ -610,7 +654,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这个字你写___了。(Chữ này bạn viết sai rồi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -626,7 +670,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 老师们在___，你下午再来吧。(Các thầy cô đang họp, buổi chiều bạn lại đến nhé.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -642,7 +686,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e07",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 她学习很___。(Cô ấy học rất chăm chỉ.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -658,7 +702,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bài khoá hôm nay có khó không?”",
       "content": {
@@ -689,7 +733,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi chuẩn bị đi họp.”",
       "content": {
@@ -725,7 +769,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l21:e10",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Thầy giáo dạy chúng tôi tiếng Trung.”",
       "content": {

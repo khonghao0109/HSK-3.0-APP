@@ -21,7 +21,8 @@
         "hanzi": "书在桌子上边。",
         "pinyin": "Shū zài zhuōzi shàngbian.",
         "meaningVi": "Sách ở trên bàn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "下边",
@@ -31,7 +32,8 @@
         "hanzi": "我的书在床下边。",
         "pinyin": "Wǒ de shū zài chuáng xiàbian.",
         "meaningVi": "Sách của tôi ở dưới gầm giường."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "前边",
@@ -41,7 +43,8 @@
         "hanzi": "学校前边有一个商店。",
         "pinyin": "Xuéxiào qiánbian yǒu yí ge shāngdiàn.",
         "meaningVi": "Phía trước trường có một cửa hàng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "后边",
@@ -51,7 +54,8 @@
         "hanzi": "我家后边有一个医院。",
         "pinyin": "Wǒ jiā hòubian yǒu yí ge yīyuàn.",
         "meaningVi": "Phía sau nhà tôi có một bệnh viện."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "左边",
@@ -61,7 +65,8 @@
         "hanzi": "左边的那个人是我哥哥。",
         "pinyin": "Zuǒbian de nà ge rén shì wǒ gēge.",
         "meaningVi": "Người bên trái là anh trai tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "右边",
@@ -71,7 +76,8 @@
         "hanzi": "电脑在桌子右边。",
         "pinyin": "Diànnǎo zài zhuōzi yòubian.",
         "meaningVi": "Máy tính ở bên phải cái bàn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "里边",
@@ -81,7 +87,8 @@
         "hanzi": "书包里边有两本书。",
         "pinyin": "Shūbāo lǐbian yǒu liǎng běn shū.",
         "meaningVi": "Trong cặp có hai quyển sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "外边",
@@ -91,7 +98,8 @@
         "hanzi": "外边下雨了。",
         "pinyin": "Wàibian xià yǔ le.",
         "meaningVi": "Bên ngoài mưa rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "旁边",
@@ -101,7 +109,8 @@
         "hanzi": "我坐在他旁边。",
         "pinyin": "Wǒ zuò zài tā pángbiān.",
         "meaningVi": "Tôi ngồi bên cạnh anh ấy."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "东边",
@@ -111,7 +120,8 @@
         "hanzi": "饭店在学校东边。",
         "pinyin": "Fàndiàn zài xuéxiào dōngbian.",
         "meaningVi": "Nhà hàng ở phía đông trường học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "西边",
@@ -121,7 +131,8 @@
         "hanzi": "医院在西边。",
         "pinyin": "Yīyuàn zài xībian.",
         "meaningVi": "Bệnh viện ở phía tây."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "南边",
@@ -131,7 +142,8 @@
         "hanzi": "车站在南边。",
         "pinyin": "Chēzhàn zài nánbian.",
         "meaningVi": "Bến xe ở phía nam."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "北边",
@@ -141,7 +153,8 @@
         "hanzi": "机场在北边。",
         "pinyin": "Jīchǎng zài běibian.",
         "meaningVi": "Sân bay ở phía bắc."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "中间",
@@ -151,7 +164,8 @@
         "hanzi": "我坐在爸爸妈妈中间。",
         "pinyin": "Wǒ zuò zài bàba māma zhōngjiān.",
         "meaningVi": "Tôi ngồi giữa bố và mẹ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "东",
@@ -161,7 +175,8 @@
         "hanzi": "我家在东边。",
         "pinyin": "Wǒ jiā zài dōngbian.",
         "meaningVi": "Nhà tôi ở phía đông."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "西",
@@ -171,7 +186,8 @@
         "hanzi": "学校在西边，不在东边。",
         "pinyin": "Xuéxiào zài xībian, bú zài dōngbian.",
         "meaningVi": "Trường ở phía tây, không ở phía đông."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "南",
@@ -181,7 +197,8 @@
         "hanzi": "我们去南边吧。",
         "pinyin": "Wǒmen qù nánbian ba.",
         "meaningVi": "Chúng ta đi về phía nam nhé."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "北",
@@ -191,7 +208,8 @@
         "hanzi": "北边很冷。",
         "pinyin": "Běibian hěn lěng.",
         "meaningVi": "Phía bắc rất lạnh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "左",
@@ -201,7 +219,8 @@
         "hanzi": "左手",
         "pinyin": "Zuǒ shǒu",
         "meaningVi": "Tay trái"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "右",
@@ -211,14 +230,15 @@
         "hanzi": "右手",
         "pinyin": "Yòu shǒu",
         "meaningVi": "Tay phải"
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: phương hướng và vị trí",
+      "title": "Từ vựng (1/2): 上边 … 东边",
       "subtitle": "20 từ HSK1 chỉ trên dưới, trước sau, trái phải, trong ngoài và bốn phương",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 西边 … 右",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: từ phương vị -边, A 在 B 的 + phương vị, nơi chốn + 有",
+      "title": "Ngữ pháp (1/2): Từ phương vị + 边 · A 在 B (的) + phương vị",
       "subtitle": "Ba điểm ngữ pháp để nói đồ vật, người, nơi chốn ở đâu",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -331,7 +365,17 @@
               "highlight": "在学校北边"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): Nơi chốn + 有 + người/vật",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Nơi chốn + 有 + người/vật",
@@ -391,7 +435,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hỏi đường và hỏi vị trí",
       "subtitle": "Hội thoại ngắn hỏi nơi chốn, đồ vật ở đâu; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -486,7 +530,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l11:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “bên cạnh”?",
       "content": {
@@ -517,7 +561,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “phía bắc”?",
       "content": {
@@ -548,7 +592,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 书在桌子___。 (Sách ở trên bàn.)",
       "content": {
@@ -579,7 +623,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 学校前边___一个商店。 (Phía trước trường có một cửa hàng.)",
       "content": {
@@ -610,7 +654,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e05",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 你坐在我___吧。(Bạn ngồi bên cạnh tôi đi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -626,7 +670,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 医院在商店的___。(Bệnh viện ở phía sau cửa hàng.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -642,7 +686,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我家在学校的___边。(Nhà tôi ở phía tây trường.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -658,7 +702,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Sách ở trên bàn.”",
       "content": {
@@ -694,7 +738,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bên cạnh nhà tôi có một cửa hàng.”",
       "content": {
@@ -730,7 +774,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l11:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bệnh viện ở phía đông.”",
       "content": {

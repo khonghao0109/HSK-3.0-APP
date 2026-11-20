@@ -21,7 +21,8 @@
         "hanzi": "中国是一个大国。",
         "pinyin": "Zhōngguó shì yī ge dà guó.",
         "meaningVi": "Trung Quốc là một nước lớn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "国家",
@@ -31,7 +32,8 @@
         "hanzi": "你喜欢哪个国家？",
         "pinyin": "Nǐ xǐhuan nǎ ge guójiā?",
         "meaningVi": "Bạn thích đất nước nào?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "外国",
@@ -41,7 +43,8 @@
         "hanzi": "他是外国人。",
         "pinyin": "Tā shì wàiguórén.",
         "meaningVi": "Anh ấy là người nước ngoài."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "国外",
@@ -51,7 +54,8 @@
         "hanzi": "我哥哥在国外工作。",
         "pinyin": "Wǒ gēge zài guówài gōngzuò.",
         "meaningVi": "Anh trai tôi làm việc ở nước ngoài."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "中文",
@@ -61,7 +65,8 @@
         "hanzi": "我会说中文。",
         "pinyin": "Wǒ huì shuō Zhōngwén.",
         "meaningVi": "Tôi biết nói tiếng Trung."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "外语",
@@ -71,7 +76,8 @@
         "hanzi": "你学什么外语？",
         "pinyin": "Nǐ xué shénme wàiyǔ?",
         "meaningVi": "Bạn học ngoại ngữ gì?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "北京",
@@ -81,7 +87,8 @@
         "hanzi": "我很想去北京。",
         "pinyin": "Wǒ hěn xiǎng qù Běijīng.",
         "meaningVi": "Tôi rất muốn đi Bắc Kinh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "这",
@@ -91,7 +98,8 @@
         "hanzi": "这是我的书。",
         "pinyin": "Zhè shì wǒ de shū.",
         "meaningVi": "Đây là sách của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "那",
@@ -101,7 +109,8 @@
         "hanzi": "那是谁的手机？",
         "pinyin": "Nà shì shéi de shǒujī?",
         "meaningVi": "Kia là điện thoại của ai?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "哪",
@@ -111,7 +120,8 @@
         "hanzi": "你是哪国人？",
         "pinyin": "Nǐ shì nǎ guó rén?",
         "meaningVi": "Bạn là người nước nào?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "哪儿",
@@ -121,7 +131,8 @@
         "hanzi": "你家在哪儿？",
         "pinyin": "Nǐ jiā zài nǎr?",
         "meaningVi": "Nhà bạn ở đâu?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "这儿",
@@ -131,7 +142,8 @@
         "hanzi": "我的书在这儿。",
         "pinyin": "Wǒ de shū zài zhèr.",
         "meaningVi": "Sách của tôi ở đây."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "那儿",
@@ -141,7 +153,8 @@
         "hanzi": "老师在那儿等你。",
         "pinyin": "Lǎoshī zài nàr děng nǐ.",
         "meaningVi": "Thầy giáo đang đợi bạn ở đằng kia."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "哪里",
@@ -151,7 +164,8 @@
         "hanzi": "洗手间在哪里？",
         "pinyin": "Xǐshǒujiān zài nǎlǐ?",
         "meaningVi": "Nhà vệ sinh ở đâu?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "这里",
@@ -161,7 +175,8 @@
         "hanzi": "这里的水果很好吃。",
         "pinyin": "Zhèlǐ de shuǐguǒ hěn hǎochī.",
         "meaningVi": "Hoa quả ở đây rất ngon."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "那里",
@@ -171,7 +186,8 @@
         "hanzi": "那里有一个书店。",
         "pinyin": "Nàlǐ yǒu yī ge shūdiàn.",
         "meaningVi": "Ở đó có một hiệu sách."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "在",
@@ -181,7 +197,8 @@
         "hanzi": "妈妈在家。",
         "pinyin": "Māma zài jiā.",
         "meaningVi": "Mẹ ở nhà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "住",
@@ -191,7 +208,8 @@
         "hanzi": "我住在北京。",
         "pinyin": "Wǒ zhù zài Běijīng.",
         "meaningVi": "Tôi sống ở Bắc Kinh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "来",
@@ -201,7 +219,8 @@
         "hanzi": "我朋友明天来。",
         "pinyin": "Wǒ péngyou míngtiān lái.",
         "meaningVi": "Ngày mai bạn tôi đến."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "去",
@@ -211,14 +230,15 @@
         "hanzi": "我们去商店吧。",
         "pinyin": "Wǒmen qù shāngdiàn ba.",
         "meaningVi": "Chúng ta đi cửa hàng đi."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: đất nước, ngôn ngữ, nơi chốn",
+      "title": "Từ vựng (1/2): 国 … 哪",
       "subtitle": "20 từ HSK1 về quốc gia, ngoại ngữ, đại từ chỉ định và nơi chốn",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 哪儿 … 去",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 这/那/哪, 哪儿/哪里, 在, 住在, 来/去",
+      "title": "Ngữ pháp (1/3): 这 (này, đây), 那 (kia, đó), 哪 (nào) · 哪儿 và 哪里",
       "subtitle": "Năm điểm ngữ pháp để hỏi và nói về nơi chốn",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -326,7 +360,17 @@
               "highlight": "这儿"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): 在 + nơi chốn · 住在 + nơi chốn",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "在 + nơi chốn",
@@ -410,7 +454,17 @@
               "highlight": "住在"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 来 (đến, lại đây) và 去 (đi, đến chỗ khác)",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "来 (đến, lại đây) và 去 (đi, đến chỗ khác)",
@@ -465,7 +519,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: quê ở đâu, sống ở đâu",
       "subtitle": "Hội thoại ngắn giữa hai bạn học; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -516,7 +570,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l07:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “ngoại ngữ”?",
       "content": {
@@ -547,7 +601,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 你家在___？ (Nhà bạn ở đâu?)",
       "content": {
@@ -578,7 +632,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___在北京。 (Tôi sống ở Bắc Kinh.)",
       "content": {
@@ -609,7 +663,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “Bắc Kinh”?",
       "content": {
@@ -640,7 +694,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 你是___国人？(Bạn là người nước nào?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -656,7 +710,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 他是___人。(Anh ấy là người nước ngoài.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -672,7 +726,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我们明天___图书馆。(Ngày mai chúng tôi đi thư viện.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -688,7 +742,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + 住在 + nơi chốn: “Tôi sống ở Bắc Kinh.”",
       "content": {
@@ -719,7 +773,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu hỏi: “Bạn đi đâu?”",
       "content": {
@@ -750,7 +804,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l07:e10",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Đây là sách tiếng Trung.”",
       "content": {

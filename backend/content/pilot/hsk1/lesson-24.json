@@ -21,7 +21,8 @@
         "hanzi": "他在打电话。",
         "pinyin": "Tā zài dǎ diànhuà.",
         "meaningVi": "Anh ấy đang gọi điện thoại."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "干",
@@ -31,7 +32,8 @@
         "hanzi": "这个工作我能干。",
         "pinyin": "Zhè ge gōngzuò wǒ néng gàn.",
         "meaningVi": "Công việc này tôi làm được."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "干什么",
@@ -41,7 +43,8 @@
         "hanzi": "你明天干什么？",
         "pinyin": "Nǐ míngtiān gàn shénme?",
         "meaningVi": "Ngày mai bạn làm gì?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "干净",
@@ -51,7 +54,8 @@
         "hanzi": "房间很干净。",
         "pinyin": "Fángjiān hěn gānjìng.",
         "meaningVi": "Căn phòng rất sạch sẽ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "忙",
@@ -61,7 +65,8 @@
         "hanzi": "我今天很忙。",
         "pinyin": "Wǒ jīntiān hěn máng.",
         "meaningVi": "Hôm nay tôi rất bận."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "忘记",
@@ -71,7 +76,8 @@
         "hanzi": "别忘记我的名字。",
         "pinyin": "Bié wàngjì wǒ de míngzi.",
         "meaningVi": "Đừng quên tên tôi nhé."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "得到",
@@ -81,7 +87,8 @@
         "hanzi": "我得到了一本新书。",
         "pinyin": "Wǒ dédào le yì běn xīn shū.",
         "meaningVi": "Tôi nhận được một quyển sách mới."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "上网",
@@ -91,7 +98,8 @@
         "hanzi": "晚上我上网看电影。",
         "pinyin": "Wǎnshang wǒ shàngwǎng kàn diànyǐng.",
         "meaningVi": "Buổi tối tôi lên mạng xem phim."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "网上",
@@ -101,7 +109,8 @@
         "hanzi": "我在网上买东西。",
         "pinyin": "Wǒ zài wǎngshang mǎi dōngxi.",
         "meaningVi": "Tôi mua đồ trên mạng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "网友",
@@ -111,7 +120,8 @@
         "hanzi": "他是我的网友。",
         "pinyin": "Tā shì wǒ de wǎngyǒu.",
         "meaningVi": "Anh ấy là bạn trên mạng của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "上次",
@@ -121,7 +131,8 @@
         "hanzi": "上次我没来。",
         "pinyin": "Shàngcì wǒ méi lái.",
         "meaningVi": "Lần trước tôi không đến."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "下次",
@@ -131,7 +142,8 @@
         "hanzi": "下次见！",
         "pinyin": "Xiàcì jiàn!",
         "meaningVi": "Hẹn gặp lần sau!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一半",
@@ -141,7 +153,8 @@
         "hanzi": "我吃了一半。",
         "pinyin": "Wǒ chī le yíbàn.",
         "meaningVi": "Tôi đã ăn một nửa."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "一边",
@@ -151,7 +164,8 @@
         "hanzi": "他一边吃饭一边看电视。",
         "pinyin": "Tā yìbiān chī fàn yìbiān kàn diànshì.",
         "meaningVi": "Anh ấy vừa ăn cơm vừa xem tivi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "半天",
@@ -161,7 +175,8 @@
         "hanzi": "我等了你半天。",
         "pinyin": "Wǒ děng le nǐ bàntiān.",
         "meaningVi": "Tôi đợi bạn mãi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "半年",
@@ -171,7 +186,8 @@
         "hanzi": "我学了半年汉语。",
         "pinyin": "Wǒ xué le bànnián Hànyǔ.",
         "meaningVi": "Tôi đã học tiếng Trung nửa năm."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "日期",
@@ -181,7 +197,8 @@
         "hanzi": "考试的日期是几号？",
         "pinyin": "Kǎoshì de rìqī shì jǐ hào?",
         "meaningVi": "Ngày thi là ngày mấy?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "星期日",
@@ -191,7 +208,8 @@
         "hanzi": "星期日我在家。",
         "pinyin": "Xīngqīrì wǒ zài jiā.",
         "meaningVi": "Chủ nhật tôi ở nhà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "常",
@@ -201,7 +219,8 @@
         "hanzi": "我常去那个书店。",
         "pinyin": "Wǒ cháng qù nà ge shūdiàn.",
         "meaningVi": "Tôi thường đến hiệu sách đó."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "不用",
@@ -211,14 +230,15 @@
         "hanzi": "你不用来了。",
         "pinyin": "Nǐ bú yòng lái le.",
         "meaningVi": "Bạn không cần đến nữa."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: hoạt động và khoảng thời gian",
+      "title": "Từ vựng (1/2): 打 … 网友",
       "subtitle": "20 từ HSK1 về làm việc, lên mạng, số lần và khoảng thời gian",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 上次 … 不用",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 一边…一边…, 上次/下次, 干什么, 半天/半年",
+      "title": "Ngữ pháp (1/2): 一边…一边… · 上次/下次",
       "subtitle": "Bốn điểm ngữ pháp để nói làm hai việc cùng lúc, lần trước lần sau, hỏi làm gì và nói làm trong bao lâu",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -336,7 +370,17 @@
               "highlight": "下次"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 干什么 · 半天/半年 (khoảng thời gian)",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "干什么",
@@ -449,7 +493,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: cuối tuần làm gì",
       "subtitle": "Hội thoại ngắn hỏi làm gì, lên mạng, bận rộn và lần trước lần sau; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -544,7 +588,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l24:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “sạch sẽ”?",
       "content": {
@@ -575,7 +619,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “lần sau”?",
       "content": {
@@ -606,7 +650,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 你明天___什么？ (Ngày mai bạn làm gì?)",
       "content": {
@@ -637,7 +681,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 他一边吃饭___看电视。 (Anh ấy vừa ăn cơm vừa xem tivi.)",
       "content": {
@@ -668,7 +712,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我学了___汉语。(Tôi đã học tiếng Trung nửa năm.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -684,7 +728,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: A: 要我帮你吗？ B: ___，谢谢。(A: Có cần tôi giúp không? B: Không cần đâu, cảm ơn.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -703,7 +747,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e07",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 他是我的___，我们是在网上认识的。(Anh ấy là bạn trên mạng của tôi, chúng tôi quen nhau trên mạng.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -719,7 +763,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bạn đang làm gì?”",
       "content": {
@@ -755,7 +799,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi đã học tiếng Trung nửa năm.”",
       "content": {
@@ -791,7 +835,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l24:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Phòng rất sạch.”",
       "content": {

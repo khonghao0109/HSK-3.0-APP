@@ -21,7 +21,8 @@
         "hanzi": "我喜欢吃米饭。",
         "pinyin": "Wǒ xǐhuan chī mǐfàn.",
         "meaningVi": "Tôi thích ăn cơm."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "喝",
@@ -31,7 +32,8 @@
         "hanzi": "你早上喝牛奶吗？",
         "pinyin": "Nǐ zǎoshang hē niúnǎi ma?",
         "meaningVi": "Buổi sáng bạn có uống sữa bò không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "水",
@@ -41,7 +43,8 @@
         "hanzi": "我喝水，不喝茶。",
         "pinyin": "Wǒ hē shuǐ, bù hē chá.",
         "meaningVi": "Tôi uống nước, không uống trà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "茶",
@@ -51,7 +54,8 @@
         "hanzi": "妈妈喜欢喝茶。",
         "pinyin": "Māma xǐhuan hē chá.",
         "meaningVi": "Mẹ thích uống trà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "米饭",
@@ -61,7 +65,8 @@
         "hanzi": "我吃米饭，也吃面包。",
         "pinyin": "Wǒ chī mǐfàn, yě chī miànbāo.",
         "meaningVi": "Tôi ăn cơm, cũng ăn bánh mì."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "菜",
@@ -71,7 +76,8 @@
         "hanzi": "我妈妈做的菜很好吃。",
         "pinyin": "Wǒ māma zuò de cài hěn hǎochī.",
         "meaningVi": "Món ăn mẹ tôi nấu rất ngon."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "水果",
@@ -81,7 +87,8 @@
         "hanzi": "我很喜欢水果。",
         "pinyin": "Wǒ hěn xǐhuan shuǐguǒ.",
         "meaningVi": "Tôi rất thích hoa quả."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "牛奶",
@@ -91,7 +98,8 @@
         "hanzi": "我的孩子喝牛奶。",
         "pinyin": "Wǒ de háizi hē niúnǎi.",
         "meaningVi": "Con tôi uống sữa bò."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "面包",
@@ -101,7 +109,8 @@
         "hanzi": "我买面包和牛奶。",
         "pinyin": "Wǒ mǎi miànbāo hé niúnǎi.",
         "meaningVi": "Tôi mua bánh mì và sữa bò."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "鸡蛋",
@@ -111,7 +120,8 @@
         "hanzi": "早饭我吃鸡蛋。",
         "pinyin": "Zǎofàn wǒ chī jīdàn.",
         "meaningVi": "Bữa sáng tôi ăn trứng gà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "早饭",
@@ -121,7 +131,8 @@
         "hanzi": "早饭你吃什么？",
         "pinyin": "Zǎofàn nǐ chī shénme?",
         "meaningVi": "Bữa sáng bạn ăn gì?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "午饭",
@@ -131,7 +142,8 @@
         "hanzi": "我们吃午饭吧。",
         "pinyin": "Wǒmen chī wǔfàn ba.",
         "meaningVi": "Chúng ta ăn trưa nhé."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "晚饭",
@@ -141,7 +153,8 @@
         "hanzi": "晚饭我们在家吃。",
         "pinyin": "Wǎnfàn wǒmen zài jiā chī.",
         "meaningVi": "Bữa tối chúng tôi ăn ở nhà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "喜欢",
@@ -151,7 +164,8 @@
         "hanzi": "你喜欢中国茶吗？",
         "pinyin": "Nǐ xǐhuan Zhōngguó chá ma?",
         "meaningVi": "Bạn thích trà Trung Quốc không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "买",
@@ -161,7 +175,8 @@
         "hanzi": "我想买水果和茶。",
         "pinyin": "Wǒ xiǎng mǎi shuǐguǒ hé chá.",
         "meaningVi": "Tôi muốn mua hoa quả và trà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "钱",
@@ -171,7 +186,8 @@
         "hanzi": "今天我没有钱。",
         "pinyin": "Jīntiān wǒ méiyǒu qián.",
         "meaningVi": "Hôm nay tôi không có tiền."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "块",
@@ -181,7 +197,8 @@
         "hanzi": "这个面包五块。",
         "pinyin": "Zhège miànbāo wǔ kuài.",
         "meaningVi": "Cái bánh mì này năm tệ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "多少",
@@ -191,7 +208,8 @@
         "hanzi": "这个牛奶多少钱？",
         "pinyin": "Zhège niúnǎi duōshao qián?",
         "meaningVi": "Sữa bò này bao nhiêu tiền?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "贵",
@@ -201,7 +219,8 @@
         "hanzi": "这里的菜很贵。",
         "pinyin": "Zhèlǐ de cài hěn guì.",
         "meaningVi": "Món ăn ở đây rất đắt."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "商店",
@@ -211,14 +230,15 @@
         "hanzi": "那个商店很大。",
         "pinyin": "Nàge shāngdiàn hěn dà.",
         "meaningVi": "Cửa hàng kia rất lớn."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: ăn uống và mua sắm",
+      "title": "Từ vựng (1/2): 吃 … 鸡蛋",
       "subtitle": "20 từ HSK1 dùng khi nói về đồ ăn, đồ uống, bữa ăn, giá cả và cửa hàng",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 早饭 … 商店",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 吃/喝, 喜欢, 多少钱/块, 早饭/午饭/晚饭, 没有",
+      "title": "Ngữ pháp (1/3): 吃 (ăn) và 喝 (uống) · 喜欢 (thích)",
       "subtitle": "Năm điểm ngữ pháp dùng khi nói về ăn uống và mua hàng",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -326,7 +360,17 @@
               "highlight": "不喜欢"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): Hỏi giá · 早饭 (bữa sáng), 午饭 (bữa trưa), 晚饭 (bữa tối)",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Hỏi giá",
@@ -410,7 +454,17 @@
               "highlight": "晚饭"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 有 (có) và 没有 (không có)",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "有 (có) và 没有 (không có)",
@@ -465,7 +519,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: gọi món, mua hoa quả, hỏi giá",
       "subtitle": "Năm đoạn hội thoại ngắn trong bữa ăn và ở cửa hàng",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -510,7 +564,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l04:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “cửa hàng”?",
       "content": {
@@ -541,7 +595,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___米饭。 (Tôi ăn cơm.)",
       "content": {
@@ -572,7 +626,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e03",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这个商店的水果很___。 (Hoa quả của cửa hàng này rất đắt.)",
       "content": {
@@ -603,7 +657,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “uống”?",
       "content": {
@@ -634,7 +688,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___牛奶。(Tôi uống sữa bò.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -650,7 +704,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 妈妈喜欢喝___。(Mẹ thích uống trà.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -666,7 +720,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这个水果多少___？(Hoa quả này bao nhiêu tiền?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -682,7 +736,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Cửa hàng rất lớn.”",
       "content": {
@@ -713,7 +767,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e09",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 这个: “Cửa hàng này rất đắt.”",
       "content": {
@@ -749,7 +803,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l04:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu, bắt đầu bằng 妈妈: “Mẹ mua hoa quả không?”",
       "content": {

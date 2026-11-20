@@ -21,7 +21,8 @@
         "hanzi": "她在医院工作。",
         "pinyin": "Tā zài yīyuàn gōngzuò.",
         "meaningVi": "Cô ấy làm việc ở bệnh viện."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "饭店",
@@ -31,7 +32,8 @@
         "hanzi": "这个饭店的菜很好吃。",
         "pinyin": "Zhè ge fàndiàn de cài hěn hǎochī.",
         "meaningVi": "Món ăn của nhà hàng này rất ngon."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "书店",
@@ -41,7 +43,8 @@
         "hanzi": "我去书店买书。",
         "pinyin": "Wǒ qù shūdiàn mǎi shū.",
         "meaningVi": "Tôi đi hiệu sách mua sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "商场",
@@ -51,7 +54,8 @@
         "hanzi": "商场里人很多。",
         "pinyin": "Shāngchǎng lǐ rén hěn duō.",
         "meaningVi": "Trong trung tâm thương mại rất đông người."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电影院",
@@ -61,7 +65,8 @@
         "hanzi": "我们去电影院看电影。",
         "pinyin": "Wǒmen qù diànyǐngyuàn kàn diànyǐng.",
         "meaningVi": "Chúng ta đi rạp xem phim."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "学院",
@@ -71,7 +76,8 @@
         "hanzi": "他是这个学院的老师。",
         "pinyin": "Tā shì zhè ge xuéyuàn de lǎoshī.",
         "meaningVi": "Anh ấy là giáo viên của học viện này."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "大学",
@@ -81,7 +87,8 @@
         "hanzi": "我哥哥在大学学习。",
         "pinyin": "Wǒ gēge zài dàxué xuéxí.",
         "meaningVi": "Anh trai tôi học ở trường đại học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "中学",
@@ -91,7 +98,8 @@
         "hanzi": "我在中学学习汉语。",
         "pinyin": "Wǒ zài zhōngxué xuéxí Hànyǔ.",
         "meaningVi": "Tôi học tiếng Trung ở trường trung học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "小学",
@@ -101,7 +109,8 @@
         "hanzi": "我儿子上小学。",
         "pinyin": "Wǒ érzi shàng xiǎoxué.",
         "meaningVi": "Con trai tôi học tiểu học."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "地方",
@@ -111,7 +120,8 @@
         "hanzi": "这是什么地方？",
         "pinyin": "Zhè shì shénme dìfang?",
         "meaningVi": "Đây là nơi nào?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "地点",
@@ -121,7 +131,8 @@
         "hanzi": "见面的地点在哪儿？",
         "pinyin": "Jiànmiàn de dìdiǎn zài nǎr?",
         "meaningVi": "Địa điểm gặp mặt ở đâu?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "地图",
@@ -131,7 +142,8 @@
         "hanzi": "我们看一下地图吧。",
         "pinyin": "Wǒmen kàn yíxià dìtú ba.",
         "meaningVi": "Chúng ta xem bản đồ một chút nhé."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "远",
@@ -141,7 +153,8 @@
         "hanzi": "机场很远。",
         "pinyin": "Jīchǎng hěn yuǎn.",
         "meaningVi": "Sân bay rất xa."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "门票",
@@ -151,7 +164,8 @@
         "hanzi": "门票多少钱？",
         "pinyin": "Ménpiào duōshao qián?",
         "meaningVi": "Vé vào cửa bao nhiêu tiền?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "到",
@@ -161,7 +175,8 @@
         "hanzi": "我到学校了。",
         "pinyin": "Wǒ dào xuéxiào le.",
         "meaningVi": "Tôi đến trường rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "来到",
@@ -171,7 +186,8 @@
         "hanzi": "我来到了北京。",
         "pinyin": "Wǒ láidào le Běijīng.",
         "meaningVi": "Tôi đã đến Bắc Kinh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "回到",
@@ -181,7 +197,8 @@
         "hanzi": "我回到家了。",
         "pinyin": "Wǒ huídào jiā le.",
         "meaningVi": "Tôi về đến nhà rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "从",
@@ -191,7 +208,8 @@
         "hanzi": "我从学校来。",
         "pinyin": "Wǒ cóng xuéxiào lái.",
         "meaningVi": "Tôi từ trường đến."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "进",
@@ -201,7 +219,8 @@
         "hanzi": "请进。",
         "pinyin": "Qǐng jìn.",
         "meaningVi": "Mời vào."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "出",
@@ -211,14 +230,15 @@
         "hanzi": "他出门了。",
         "pinyin": "Tā chū mén le.",
         "meaningVi": "Anh ấy ra ngoài rồi."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: nơi chốn trong thành phố",
+      "title": "Từ vựng (1/2): 医院 … 地方",
       "subtitle": "20 từ HSK1 về bệnh viện, cửa hàng, trường học, địa điểm và hành động đến, vào, ra",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 地点 … 出",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 从…到…, 去 + nơi chốn + động từ, 到/回到/来到 + nơi chốn",
+      "title": "Ngữ pháp (1/2): 从 A 到 B · 去 + nơi chốn + động từ",
       "subtitle": "Ba điểm ngữ pháp để nói đường đi, mục đích và nơi đã đến",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -346,7 +380,17 @@
               "highlight": "去"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 到/回到/来到 + nơi chốn",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "到/回到/来到 + nơi chốn",
@@ -401,7 +445,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: đi đâu trong thành phố",
       "subtitle": "Hội thoại ngắn hỏi đi đâu, xa hay gần, vé vào cửa, đã đến chưa; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -496,7 +540,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l14:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “rạp chiếu phim”?",
       "content": {
@@ -527,7 +571,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “bản đồ”?",
       "content": {
@@ -558,7 +602,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: ___我家到学校很远。 (Từ nhà tôi đến trường rất xa.)",
       "content": {
@@ -589,7 +633,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我去书店___书。 (Tôi đến hiệu sách mua sách.)",
       "content": {
@@ -620,7 +664,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我回___家了。(Tôi về đến nhà rồi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -636,7 +680,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e06",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 机场很___，我们打车去吧。(Sân bay rất xa, chúng ta bắt taxi đi nhé.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -652,7 +696,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 请___，请坐。(Mời vào, mời ngồi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -668,7 +712,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Từ nhà tôi đến trường rất xa.”",
       "content": {
@@ -704,7 +748,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đến rạp chiếu phim xem phim.”",
       "content": {
@@ -735,7 +779,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l14:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bạn từ đâu đến?”",
       "content": {
