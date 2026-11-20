@@ -806,6 +806,32 @@ describe('LessonPlayer', () => {
         name,
       });
 
+    it('moves a matched meaning onto its word row, keeping the cell node (PO 20/11)', async () => {
+      renderPlayer([matching, mcq]);
+      const meanings = () =>
+        within(screen.getByRole('list', { name: 'Nghĩa' }))
+          .getAllByRole('button')
+          .map((button) => button.textContent);
+      expect(meanings()).toEqual(['mẹ', 'nhà', 'bố']);
+
+      // A wrong move moves nothing.
+      fireEvent.click(cell('Từ', /家/u));
+      fireEvent.click(cell('Nghĩa', /^bố$/u));
+      expect(meanings()).toEqual(['mẹ', 'nhà', 'bố']);
+
+      await waitFor(() =>
+        expect(cell('Từ', /家/u)).not.toHaveClass('is-wrong'),
+      );
+      const me = cell('Nghĩa', /^mẹ$/u);
+      fireEvent.click(cell('Từ', /妈妈/u));
+      fireEvent.click(me);
+      // 妈妈 is row 3: mẹ moves there; nhà, bố keep their order.
+      expect(meanings()).toEqual(['nhà', 'bố', 'mẹ']);
+      expect(cell('Nghĩa', /^mẹ, đã ghép$/u)).toBe(me);
+      // Focus goes to the next open word (wraps to the top).
+      expect(cell('Từ', /家/u)).toHaveFocus();
+    });
+
     it('locks right pairs, flags a wrong pair, then sends the move log once', async () => {
       fetchSpy.mockResolvedValue(attempt(false));
       renderPlayer([matching, mcq]);
@@ -840,7 +866,7 @@ describe('LessonPlayer', () => {
       expect(cell('Từ', /家/u)).toHaveClass('is-done');
       expect(cell('Từ', /家/u)).toHaveAttribute('aria-disabled', 'true');
       expect(live()).toBe('Đúng: 家 jiā là nhà. Còn 2 cặp.');
-      // Focus stays in the column of the last tap, on its next open cell.
+      // Focus moves to the next open word.
       expect(cell('Từ', /爸爸/u)).toHaveFocus();
       fireEvent.click(cell('Từ', /家/u));
       expect(cell('Từ', /家/u)).toHaveAttribute('aria-pressed', 'false');

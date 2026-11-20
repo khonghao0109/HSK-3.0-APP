@@ -185,6 +185,25 @@ function live(page: Page) {
   return page.locator('.mt-live');
 }
 
+async function expectPairsOnRows(page: Page) {
+  // PO 20/11/2026: once done, each row holds a word and its own meaning.
+  const rows = await page.evaluate(() =>
+    ['Từ', 'Nghĩa'].map((name) => {
+      const label = [...document.querySelectorAll('.mt-col__label')].find(
+        (node) => node.textContent === name,
+      );
+      const list = document.querySelector(`ul[aria-labelledby="${label?.id}"]`);
+      return [...(list?.querySelectorAll<HTMLElement>('.mt-cell') ?? [])].map(
+        (cell) => cell.textContent?.trim() ?? '',
+      );
+    }),
+  );
+  expect(rows).toEqual([
+    PAIRS.map((pair) => `${pair.leftReading}${pair.left}`),
+    PAIRS.map((pair) => pair.right),
+  ]);
+}
+
 async function expectNoHorizontalScroll(page: Page) {
   const overflow = await page.evaluate(
     () =>
@@ -264,6 +283,7 @@ test.describe('Ghép cặp trong Kiểm tra (Pha E)', () => {
 
     const next = page.getByRole('button', { name: 'Tiếp tục' });
     await expect(next).toBeFocused();
+    await expectPairsOnRows(page);
     await expect(page.locator('.m02-feedback__title')).toHaveText(
       'Hoàn thành · Sai 1 lần',
     );
@@ -387,6 +407,7 @@ test.describe('Ghép cặp trong Kiểm tra (Pha E)', () => {
     }
 
     await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeFocused();
+    await expectPairsOnRows(page);
     await expect(page.locator('.m02-feedback__title')).toHaveText('Chính xác');
     await expect(
       page.getByText('Bạn đã ghép đúng cả 3 cặp.', { exact: true }),
