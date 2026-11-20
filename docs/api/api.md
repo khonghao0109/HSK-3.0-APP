@@ -361,7 +361,7 @@ một Topic hoặc Story published.
 | --- | --- | --- | --- |
 | `GET` | `/levels`, `/learning/levels` | — | `[{ id, name, orderIndex, code, minBand, maxBand }]` |
 | `GET` | `/lessons`, `/learning/lessons` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, title, description, orderIndex, slug }]` + `meta` |
-| `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready. Có `coverImage` và `words[].image`: `{ id, altText }` hoặc `null` (chỉ ảnh `ready`, chưa lưu trữ; Q350); URL lấy qua `GET /media/:id/access` |
+| `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready. Có `coverImage` và `words[].image`: `{ id, altText }` hoặc `null` (chỉ ảnh `ready`, chưa lưu trữ; Q350); URL lấy qua `GET /media/:id/access`. `words[].topicId`: id topic (đơn vị) chứa từ, `null` khi chưa gán hoặc topic không public (draft/đã xoá) |
 | `GET` | `/topics`, `/learning/topics` | `lessonId` **bắt buộc**, `page`, `limit` | `[{ id, lessonId, title, content, orderIndex }]` + `meta` |
 | `GET` | `/stories`, `/learning/stories` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, levelId, title, content, slug }]` + `meta` |
 | `GET` | `/learning/test` | — | `"Learning module working"` (smoke, sẽ xoá — B-10) |
@@ -375,7 +375,7 @@ Lesson detail `data`:
   "id": 12, "title": "Bài 1",
   "level": { "id": 3, "name": "HSK 3", "orderIndex": 3 },
   "topics": [{ "id": 34, "title": "…", "content": [], "orderIndex": 1 }],
-  "words": [{ "id": 9, "hanzi": "学习", "traditional": null, "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
+  "words": [{ "id": 9, "topicId": 34, "hanzi": "学习", "traditional": null, "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
               "meanings": [{ "en": "to study", "vi": "học" }] }],
   "stories": [{ "id": 5, "title": "…", "content": [], "slug": "…" }],
   "exercises": [{ "id": 99, "type": "mcq", "prompt": "…", "content": {}, "version": 1, "orderIndex": 1,
@@ -571,6 +571,10 @@ Trường thêm cho màn bài học (M2.B13, Q43):
   của bài (cùng tập `topics[].exercises` + `standaloneExercises`, loại `speaking_repeat`);
   `attempted` = số exercise trong tập đó có ít nhất một attempt đã submit của user.
 - Mọi trường của activity đọc từ cùng một snapshot (REPEATABLE READ).
+- Màn đơn vị học (Pha B) không đọc `sections`: số bài tập và số đã làm của từng đơn vị lấy từ
+  `topics[].exercises` / `standaloneExercises` (`latestAttempt !== null` = đã làm), tiến độ từ
+  `topics[].progress`; số từ của đơn vị Từ vựng từ `words[].topicId` của `GET /learning/lessons/:id`.
+  `sections` giữ nguyên để không đổi hành vi cho client cũ (`grammar.topicCount` vẫn không đếm `key_text`).
 
 Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextLesson }`.
 - `nextStep ∈ set_goal | content_unavailable | generate_plan | ready`, cùng giá trị

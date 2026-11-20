@@ -2858,6 +2858,8 @@ export interface components {
         };
         LessonDetailWordDto: {
             id: number;
+            /** @description Topic (đơn vị) chứa từ; `null` khi chưa gán hoặc topic không public. */
+            topicId: number | null;
             hanzi: string;
             traditional: string | null;
             pinyin: string;

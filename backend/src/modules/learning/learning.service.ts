@@ -142,6 +142,7 @@ export class LearningService {
             orderIndex: 'asc',
           },
           select: {
+            topicId: true,
             word: {
               select: {
                 id: true,
