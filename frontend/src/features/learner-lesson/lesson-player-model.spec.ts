@@ -8,6 +8,7 @@ import {
   isBarPlayed,
   matchingProgress,
   matchingRightOrder,
+  matchingRows,
   IDEMPOTENCY_KEY_PATTERN,
   newAttemptKey,
   orderPlayerExercises,
@@ -456,5 +457,47 @@ describe('matching (Pha E)', () => {
     expect(buildAnswer(exercise, { ...input, moves: all })).toEqual({
       moves: all,
     });
+  });
+});
+
+describe('matching rows (PO 20/11: a matched pair shares one row)', () => {
+  const left = ['p1', 'p2', 'p3', 'p4'];
+  const start = ['p3', 'p1', 'p4', 'p2'];
+  const right = (leftId: string, rightId: string) => ({ leftId, rightId });
+
+  it('puts the matched meaning on the row of its word after each right move', () => {
+    const moves = [right('p2', 'p2'), right('p4', 'p4')];
+    let order = matchingRows(left, start, []);
+    expect(order).toEqual(start);
+    for (let index = 0; index < moves.length; index += 1) {
+      order = matchingRows(left, start, moves.slice(0, index + 1));
+      const matched = moves[index]!.rightId;
+      expect(order[left.indexOf(matched)]).toBe(matched);
+    }
+    expect(order).toEqual(['p3', 'p2', 'p1', 'p4']);
+  });
+
+  it('keeps the unmatched meanings in their relative order', () => {
+    // p1 (row 0) is matched: p3 leaves row 0; the rest keep p3, p4, p2.
+    const order = matchingRows(left, start, [right('p1', 'p1')]);
+    expect(order).toEqual(['p1', 'p3', 'p4', 'p2']);
+    const open = order.filter((id) => id !== 'p1');
+    expect(open).toEqual(start.filter((id) => id !== 'p1'));
+  });
+
+  it('a wrong move moves nothing', () => {
+    expect(matchingRows(left, start, [right('p1', 'p2')])).toEqual(start);
+    const once = matchingRows(left, start, [right('p3', 'p3')]);
+    expect(
+      matchingRows(left, start, [right('p3', 'p3'), right('p1', 'p4')]),
+    ).toEqual(once);
+  });
+
+  it('ends with every pair on one row', () => {
+    const order = matchingRows(left, start, [
+      right('p4', 'p1'),
+      ...['p3', 'p1', 'p4', 'p2'].map((id) => right(id, id)),
+    ]);
+    expect(order).toEqual(left);
   });
 });

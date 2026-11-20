@@ -7,11 +7,7 @@ import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
 
 import { DialogueLines, GrammarPointBody, ZhText } from './topic-blocks-view';
-import type {
-  DialogueBlock,
-  GrammarPointBlock,
-  KeyTextBlock,
-} from './topic-content';
+import type { GrammarPointBlock, KeyTextBlock } from './topic-content';
 import { UnitResult } from './unit-result';
 
 type UnitProps = {

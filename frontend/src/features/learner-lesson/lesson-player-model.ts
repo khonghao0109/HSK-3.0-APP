@@ -157,6 +157,28 @@ export function matchingProgress(moves: readonly MatchingMove[]): {
   return { locked, mistakes };
 }
 
+/**
+ * Right column as shown (PO 20/11/2026): a right move puts the meaning on
+ * the row of its word; the open meanings keep their relative order in the
+ * rows still open. A wrong move changes nothing. Display only: the answer
+ * stays the move log.
+ */
+export function matchingRows(
+  leftIds: readonly string[],
+  rightOrder: readonly string[],
+  moves: readonly MatchingMove[],
+): string[] {
+  const locked = new Set<string>();
+  let order = [...rightOrder];
+  for (const move of moves) {
+    if (move.leftId !== move.rightId || locked.has(move.leftId)) continue;
+    locked.add(move.leftId);
+    const open = order.filter((id) => !locked.has(id));
+    order = leftIds.map((id) => (locked.has(id) ? id : (open.shift() ?? id)));
+  }
+  return order;
+}
+
 function readMedia(media: unknown): PlayerMedia | null {
   if (typeof media !== 'object' || media === null) return null;
   const id: unknown = Reflect.get(media, 'id');
