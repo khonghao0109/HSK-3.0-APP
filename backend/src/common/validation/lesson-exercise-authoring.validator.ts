@@ -32,6 +32,7 @@ const PUBLISHABLE_TYPES = new Set<ExerciseType>([
   ExerciseType.listening_choice,
   ExerciseType.fill_blank,
   ExerciseType.arrange_sentence,
+  ExerciseType.matching,
 ]);
 
 export class LessonExerciseAuthoringValidationError extends Error {
@@ -130,6 +131,10 @@ export function validateLessonExerciseAuthoring(
     }
     case ExerciseType.arrange_sentence: {
       ({ content, answer } = validateArrange(record.content, record.answer));
+      break;
+    }
+    case ExerciseType.matching: {
+      ({ content, answer } = validateMatching(record.content, record.answer));
       break;
     }
     case ExerciseType.speaking_repeat: {
@@ -271,6 +276,87 @@ export function validateArrange(
     content: { tokens: canonicalTokens },
     answer: { tokenIds },
   };
+}
+
+/** Pha E: 3–5 pairs; each side is unique, so a pair has one answer. */
+export const MATCHING_LIMITS = {
+  minPairs: 3,
+  maxPairs: 5,
+  maxLeftLength: 32,
+  maxLeftReadingLength: 64,
+  maxRightLength: 80,
+} as const;
+
+export function validateMatching(
+  rawContent: unknown,
+  rawAnswer: unknown,
+): Pick<LessonExerciseAuthoringValue, 'content' | 'answer'> {
+  const content = requireRecord(rawContent, 'content');
+  assertAllowedKeys(content, ['pairs'], 'content');
+  const pairs = requireArray(content.pairs, 'content.pairs', 0);
+  if (
+    pairs.length < MATCHING_LIMITS.minPairs ||
+    pairs.length > MATCHING_LIMITS.maxPairs
+  ) {
+    fail('invalid_pair_count', 'content.pairs');
+  }
+  const ids = new Set<string>();
+  const lefts = new Set<string>();
+  const rights = new Set<string>();
+  const canonicalPairs = pairs.map((pair, index) => {
+    const path = `content.pairs[${index}]`;
+    const record = requireRecord(pair, path);
+    assertAllowedKeys(record, ['id', 'left', 'leftReading', 'right'], path);
+    const id = requireStableId(record.id, `${path}.id`);
+    if (ids.has(id)) fail('duplicate_stable_id', `${path}.id`);
+    ids.add(id);
+    const left = requireBoundedText(
+      record.left,
+      `${path}.left`,
+      MATCHING_LIMITS.maxLeftLength,
+    );
+    const right = requireBoundedText(
+      record.right,
+      `${path}.right`,
+      MATCHING_LIMITS.maxRightLength,
+    );
+    for (const [text, seen, side] of [
+      [left, lefts, 'left'],
+      [right, rights, 'right'],
+    ] as const) {
+      const key = lessonExerciseTextMatchKey(text, false);
+      if (seen.has(key)) fail('duplicate_pair_text', `${path}.${side}`);
+      seen.add(key);
+    }
+    return {
+      id,
+      left,
+      ...(record.leftReading === undefined
+        ? {}
+        : {
+            leftReading: requireBoundedText(
+              record.leftReading,
+              `${path}.leftReading`,
+              MATCHING_LIMITS.maxLeftReadingLength,
+            ),
+          }),
+      right,
+    };
+  });
+  const answer = requireRecord(rawAnswer, 'answer');
+  // The pairing is the content itself, so the authored answer stays empty.
+  assertAllowedKeys(answer, [], 'answer');
+  return { content: { pairs: canonicalPairs }, answer: {} };
+}
+
+function requireBoundedText(
+  value: unknown,
+  path: string,
+  maxLength: number,
+): string {
+  const text = requireHumanText(value, path);
+  if ([...text].length > maxLength) fail('string_too_long', path);
+  return text;
 }
 
 function readMediaId(

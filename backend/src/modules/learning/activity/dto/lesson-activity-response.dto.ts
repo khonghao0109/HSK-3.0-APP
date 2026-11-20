@@ -99,6 +99,7 @@ export class LessonActivityAttemptDto {
   submittedAt!: Date | null;
 }
 
+@PinSwaggerEnumOrder('type', PUBLIC_LESSON_EXERCISE_TYPES)
 export class LessonActivityExerciseDto {
   id!: number;
   topicId!: number | null;

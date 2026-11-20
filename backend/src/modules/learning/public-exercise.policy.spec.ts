@@ -5,9 +5,15 @@ import {
 } from './public-exercise.policy';
 
 describe('public LessonExercise policy', () => {
-  it('allows only the four Lesson Activity V1 types', () => {
+  it('allows only the five publishable Lesson Activity types', () => {
     expect([...PUBLIC_LESSON_EXERCISE_TYPES].sort()).toEqual(
-      ['mcq', 'listening_choice', 'fill_blank', 'arrange_sentence'].sort(),
+      [
+        'mcq',
+        'listening_choice',
+        'fill_blank',
+        'arrange_sentence',
+        'matching',
+      ].sort(),
     );
     expect(PUBLIC_LESSON_EXERCISE_TYPES).not.toContain('speaking_repeat');
     expect(PUBLIC_LESSON_EXERCISE_WHERE).toMatchObject({

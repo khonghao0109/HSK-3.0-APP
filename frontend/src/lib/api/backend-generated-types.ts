@@ -2183,7 +2183,7 @@ export interface components {
             topicId: number | null;
             mediaId: number | null;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat";
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat" | "matching";
             prompt: string;
             explanation: string | null;
             version: number;
@@ -2222,7 +2222,7 @@ export interface components {
             topicId: number | null;
             mediaId: number | null;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat";
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat" | "matching";
             prompt: string;
             explanation: string | null;
             version: number;
@@ -2257,7 +2257,7 @@ export interface components {
             lessonId: number;
             topicId?: number | null;
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat";
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat" | "matching";
             prompt: string;
             explanation?: string | null;
             orderIndex: number;
@@ -2271,7 +2271,7 @@ export interface components {
                 [key: string]: unknown;
             };
             /** @enum {string} */
-            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat";
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat" | "matching";
             prompt: string;
             explanation?: string | null;
             orderIndex: number;
@@ -3004,7 +3004,7 @@ export interface components {
              * @description Only publishable types reach learners; `speaking_repeat` never does.
              * @enum {string}
              */
-            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence";
+            type: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "matching";
             content: {
                 [key: string]: unknown;
             } | unknown[];
@@ -4521,7 +4521,7 @@ export interface operations {
                 limit?: number;
                 lessonId?: number;
                 topicId?: number;
-                type?: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat";
+                type?: "mcq" | "fill_blank" | "listening_choice" | "arrange_sentence" | "speaking_repeat" | "matching";
                 status?: "draft" | "published" | "archived";
             };
             header?: {

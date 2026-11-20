@@ -641,9 +641,21 @@ cho bài đang khoá. Topic start, attempt
 và complete trên bài chưa start vẫn trả `409` `Lesson must be started first.`.
 
 Answer theo type: `mcq`/`listening_choice` `{ optionId }`; `fill_blank` `{ text }`;
-`arrange_sentence` `{ tokenIds: [] }`; `speaking_repeat` → `422`. Lỗi: `404` content không
+`arrange_sentence` `{ tokenIds: [] }`; `matching` `{ moves: [{ leftId, rightId }] }` (1–50 lượt,
+xem dưới); `speaking_repeat` → `422`. Lỗi: `404` content không
 public; `409` cùng key khác request; `409 lesson_locked` start bài đang khoá; `422` shape sai;
 `503` timeout.
+
+`matching` (Pha E): `content.pairs` gửi nguyên cho học viên, để client báo đúng/sai từng cặp
+ngay khi ghép (Kiểm tra là luyện tập, không phải thi). `moves` là toàn bộ các lượt ghép theo
+thứ tự bấm. Server phát lại log:
+- `leftId === rightId` thì khoá cặp đó;
+- khác nhau thì tính một lần sai;
+- `400` khi: khoá thừa, id lạ, lượt chạm cặp đã khoá, lượt sau khi đã khoá hết, quá 50
+  lượt, hoặc log kết thúc khi chưa khoá hết.
+
+Kết quả: `isCorrect = (số lần sai = 0)`, `score` 100 hoặc 0. Số lần sai chỉ lưu ở
+`LessonExerciseAttempt.detailJson.mistakes`, không có trong response hay `latestAttempt`.
 
 ### A.7b Ôn tập SRS — học viên (M3.2)
 
@@ -946,7 +958,7 @@ cho validator nạp pilot): `topic_block_type_mismatch`, `topic_block_unknown_fi
 | `POST` | `/admin/cms/exercise-imports` | `ImportBody` + `previewHash`; header `Idempotency-Key` 8–128 (thiếu → `422`) | `{ importJob, exercises, importedRows, idempotent }` (all-or-nothing) |
 
 `ExerciseRevision`: `type` ∈ `mcq | fill_blank | listening_choice | arrange_sentence |
-speaking_repeat` · `prompt` 1–4096 · `content`, `answer` JSON ≤100 000 byte/depth 20 ·
+speaking_repeat | matching` · `prompt` 1–4096 · `content`, `answer` JSON ≤100 000 byte/depth 20 ·
 `explanation?` ≤4096 · `orderIndex` · `mediaId?`. Shared validator sau DTO áp thêm giới hạn
 canonical 65 536 byte/depth 8/string 4096/array 100 và exact-key theo type. `speaking_repeat`
 chỉ lưu draft, không publish. `listening_choice` publish cần audio `ready`.
@@ -999,6 +1011,7 @@ tự, không khoảng trắng; `text` 1–4096; `prompt` 1–4096; `explanation`
 | `fill_blank` | `{}` | `{ acceptedTexts: string[] }` 1–100 phần tử + `caseSensitive?` boolean |
 | `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100 phần tử, `id` không trùng | `{ tokenIds: string[] }` đủ mọi token, không trùng, **thứ tự = đáp án đúng** |
 | `speaking_repeat` | `{ referenceText? }` | `{}`; chỉ lưu draft, không publish được |
+| `matching` | `{ pairs: [{ id, left, leftReading?, right }] }`, 3–5 cặp (`invalid_pair_count`); `left` ≤ 32 ký tự, `leftReading` ≤ 64, `right` ≤ 80 (`string_too_long`); `left` không trùng nhau, `right` không trùng nhau sau NFKC/trim/không phân biệt hoa thường (`duplicate_pair_text`) | `{}`: cặp chính là nội dung |
 
 Canonical payload ≤ 65 536 byte, depth ≤ 8. `mediaId` chỉ dùng cho `listening_choice`; publish
 cần Media `audio`, `processingStatus = ready`, chưa xoá.
@@ -1028,7 +1041,8 @@ Mã validator của `lesson-exercise-authoring.validator.ts` (422, kèm `details
 `invalid_exercise_type`, `unsupported_publish_type`, `object_required`, `unknown_field`,
 `array_required`, `array_too_small`, `array_too_large`, `duplicate_stable_id`,
 `invalid_stable_id`, `authoritative_option_not_found`, `accepted_texts_required`,
-`boolean_required`, `invalid_token_set`, `media_not_allowed`, `media_required`,
+`boolean_required`, `invalid_token_set`, `invalid_pair_count`, `duplicate_pair_text`,
+`media_not_allowed`, `media_required`,
 `positive_safe_integer_required`, `max_depth_exceeded`, `invalid_json`, `payload_too_large`,
 `string_required`, `non_empty_string_required`, `string_too_long`.
 

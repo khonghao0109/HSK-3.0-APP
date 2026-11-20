@@ -31,6 +31,8 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
   let listeningLessonId: number;
   let listeningId: number;
   let listeningMediaId: number;
+  let matchingLessonId: number;
+  let matchingId: number;
   let archiveLessonId: number;
   let archivedPointerExerciseId: number;
   let nextPointerExerciseId: number;
@@ -417,6 +419,50 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
             ],
           },
           answer: { optionId: 'heard-hello' },
+          orderIndex: 1,
+          status: 'published',
+          publishedAt: new Date(),
+        },
+      })
+    ).id;
+
+    // Pha E: a ready lesson after content-only (110) with one matching exercise.
+    matchingLessonId = (
+      await prisma.lesson.create({
+        data: {
+          levelId,
+          title: 'Matching lesson',
+          orderIndex: 111,
+          slug: `activity-matching-${suffix}`,
+          status: 'published',
+          publishedAt: new Date(),
+          stories: {
+            create: {
+              levelId,
+              title: 'Matching instructions',
+              slug: `activity-matching-story-${suffix}`,
+              content: {},
+              status: 'published',
+              publishedAt: new Date(),
+            },
+          },
+        },
+      })
+    ).id;
+    matchingId = (
+      await prisma.lessonExercise.create({
+        data: {
+          lessonId: matchingLessonId,
+          type: 'matching',
+          prompt: 'Chọn cặp tương ứng',
+          content: {
+            pairs: [
+              { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà' },
+              { id: 'p2', left: '爸爸', right: 'bố' },
+              { id: 'p3', left: '妈妈', right: 'mẹ' },
+            ],
+          },
+          answer: {},
           orderIndex: 1,
           status: 'published',
           publishedAt: new Date(),
@@ -1199,6 +1245,109 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
       }),
     ).resolves.toBe(0);
     await get('/progress/lessons').expect(200);
+  });
+
+  it('22. scores matching from the replayed move log and keeps mistakes server-side', async () => {
+    await completePreviousReadyLesson(prisma, userId, matchingLessonId);
+    await post(
+      `/learning/lessons/${matchingLessonId}/start`,
+      'matching-start-01',
+    )
+      .send({})
+      .expect(201);
+    const activity = await get(
+      `/learning/lessons/${matchingLessonId}/activity`,
+    ).expect(200);
+    expect(activity.body.data.standaloneExercises).toEqual([
+      expect.objectContaining({
+        id: matchingId,
+        type: 'matching',
+        content: {
+          pairs: [
+            { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà' },
+            { id: 'p2', left: '爸爸', right: 'bố' },
+            { id: 'p3', left: '妈妈', right: 'mẹ' },
+          ],
+        },
+        latestAttempt: null,
+      }),
+    ]);
+
+    const move = (leftId: string, rightId: string) => ({ leftId, rightId });
+    const broken = await post(
+      `/learning/exercises/${matchingId}/attempts`,
+      'matching-attempt-00',
+    )
+      .send({ answer: { moves: [move('p1', 'p1')] }, durationSeconds: 4 })
+      .expect(400);
+    expect(broken.body.success).toBe(false);
+    await expect(
+      prisma.lessonExerciseAttempt.count({
+        where: { userId, exerciseId: matchingId },
+      }),
+    ).resolves.toBe(0);
+
+    const oneMistake = await post(
+      `/learning/exercises/${matchingId}/attempts`,
+      'matching-attempt-01',
+    )
+      .send({
+        answer: {
+          moves: [
+            move('p1', 'p2'),
+            move('p1', 'p1'),
+            move('p2', 'p2'),
+            move('p3', 'p3'),
+          ],
+        },
+        durationSeconds: 9,
+      })
+      .expect(201);
+    expect(oneMistake.body.data).toMatchObject({
+      exerciseId: matchingId,
+      attemptNumber: 1,
+      isCorrect: false,
+      score: 0,
+    });
+    expect(oneMistake.body.data).not.toHaveProperty('mistakes');
+    const stored = await prisma.lessonExerciseAttempt.findUniqueOrThrow({
+      where: { id: oneMistake.body.data.attemptId as number },
+      select: { detailJson: true, score: true },
+    });
+    expect(stored.score).toBe(0);
+    expect(stored.detailJson).toMatchObject({ mistakes: 1 });
+    expect(
+      typeof (stored.detailJson as { requestHash: unknown }).requestHash,
+    ).toBe('string');
+
+    const perfect = await post(
+      `/learning/exercises/${matchingId}/attempts`,
+      'matching-attempt-02',
+    )
+      .send({
+        answer: {
+          moves: [move('p3', 'p3'), move('p1', 'p1'), move('p2', 'p2')],
+        },
+        durationSeconds: 5,
+      })
+      .expect(201);
+    expect(perfect.body.data).toMatchObject({
+      attemptNumber: 2,
+      isCorrect: true,
+      score: 100,
+    });
+
+    const after = await get(
+      `/learning/lessons/${matchingLessonId}/activity`,
+    ).expect(200);
+    const latest = after.body.data.standaloneExercises[0].latestAttempt;
+    expect(latest).toMatchObject({
+      attemptNumber: 2,
+      isCorrect: true,
+      score: 100,
+    });
+    expect(latest).not.toHaveProperty('mistakes');
+    expect(JSON.stringify(after.body)).not.toContain('detailJson');
   });
 
   function post(path: string, key?: string) {

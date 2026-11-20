@@ -195,4 +195,88 @@ describe('Lesson Activity scorer V1', () => {
       }),
     ).toThrow(UnprocessableEntityException);
   });
+  describe('matching (Pha E)', () => {
+    const content = {
+      pairs: [
+        { id: 'p1', left: '家', right: 'nhà' },
+        { id: 'p2', left: '爸爸', right: 'bố' },
+        { id: 'p3', left: '妈妈', right: 'mẹ' },
+      ],
+    };
+    const score = (moves: unknown) =>
+      scoreLessonExercise({
+        type: 'matching',
+        content,
+        authoritativeAnswer: {},
+        submittedAnswer: { moves },
+      });
+    const move = (leftId: string, rightId: string) => ({ leftId, rightId });
+
+    it('is correct with no wrong move and counts mistakes from the replayed log', () => {
+      expect(
+        score([move('p2', 'p2'), move('p1', 'p1'), move('p3', 'p3')]),
+      ).toEqual({
+        score: 100,
+        isCorrect: true,
+        mistakes: 0,
+        feedbackVersion: LESSON_ACTIVITY_SCORING_VERSION,
+      });
+      expect(
+        score([
+          move('p1', 'p2'),
+          move('p1', 'p1'),
+          move('p3', 'p2'),
+          move('p2', 'p2'),
+          move('p3', 'p3'),
+        ]),
+      ).toEqual({
+        score: 0,
+        isCorrect: false,
+        mistakes: 2,
+        feedbackVersion: LESSON_ACTIVITY_SCORING_VERSION,
+      });
+    });
+
+    it.each([
+      ['an empty log', []],
+      [
+        'a log that never matches every pair',
+        [move('p1', 'p1'), move('p2', 'p2')],
+      ],
+      ['an unknown id', [move('p1', 'p9')]],
+      [
+        'a move on an already matched pair',
+        [move('p1', 'p1'), move('p1', 'p2')],
+      ],
+      [
+        'a move after the last pair',
+        [
+          move('p1', 'p1'),
+          move('p2', 'p2'),
+          move('p3', 'p3'),
+          move('p1', 'p2'),
+        ],
+      ],
+      ['an extra move key', [{ ...move('p1', 'p1'), at: 1 }]],
+      ['a non-object move', ['p1:p1']],
+      [
+        'more than 50 moves',
+        Array.from({ length: 51 }, () => move('p1', 'p2')),
+      ],
+      ['a non-array log', 'p1'],
+    ])('rejects %s with 400', (_name, moves) => {
+      expect(() => score(moves)).toThrow(BadRequestException);
+    });
+
+    it('rejects extra answer keys with 400', () => {
+      expect(() =>
+        scoreLessonExercise({
+          type: 'matching',
+          content,
+          authoritativeAnswer: {},
+          submittedAnswer: { moves: [move('p1', 'p1')], mistakes: 0 },
+        }),
+      ).toThrow(BadRequestException);
+    });
+  });
 });
