@@ -406,6 +406,17 @@ describe('LearnerLessonPage', () => {
     expect(screen.queryByText('Hoàn thành bài trước để mở khoá.')).toBeNull();
   });
 
+  it('names the locked Kiểm tra row with the reason it is locked (Pha B debt 5b)', async () => {
+    await renderLesson(current);
+    const quiz = screen.getByRole('link', {
+      // jsdom drops the space of the sr-only ", "; Chrome's name is checked
+      // by the e2e aria snapshot.
+      name: /^Kiểm tra, ?Mở khi xong các đơn vị trên, đang khoá$/,
+    });
+    expect(quiz).toHaveAttribute('aria-disabled', 'true');
+    expect(quiz).not.toHaveAttribute('href');
+  });
+
   it('links Kiểm tra to the player once earlier units are done (N1, Q45)', async () => {
     const { container } = await renderLesson(finished);
     const quiz = Array.from(container.querySelectorAll('.lu-row')).find(
@@ -420,19 +431,22 @@ describe('LearnerLessonPage', () => {
   });
 
   it.each([
-    ['Từ vựng 1', 'vocabulary'],
-    ['Từ vựng 2', 'vocabulary'],
+    ['Từ vựng 1', 'vocabulary?unit=11'],
+    ['Từ vựng 2', 'vocabulary?unit=12'],
     ['Ngữ pháp', 'grammar'],
     ['Bài khoá', 'grammar'],
-  ])('links unit %s to its topic page (M2.5f, Q175)', async (title, slug) => {
-    const { container } = await renderLesson(current);
-    const row = Array.from(container.querySelectorAll('.lu-row')).find(
-      (candidate) =>
-        candidate.querySelector('.lu-row__title')?.textContent === title,
-    );
-    expect(row?.tagName).toBe('A');
-    expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
-  });
+  ])(
+    'links unit %s to its page, a vocabulary unit to its step flow (N3)',
+    async (title, slug) => {
+      const { container } = await renderLesson(current);
+      const row = Array.from(container.querySelectorAll('.lu-row')).find(
+        (candidate) =>
+          candidate.querySelector('.lu-row__title')?.textContent === title,
+      );
+      expect(row?.tagName).toBe('A');
+      expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
+    },
+  );
 
   it('shows a lesson without topics as its Kiểm tra unit only (fallback)', async () => {
     const { container } = await renderLesson(

@@ -144,3 +144,538 @@
     min-width: 44px;
   }
 }
+
+/* Từ vựng từng bước (N3/N4/N8): mẫu vocab-card, vocab-example, vocab-quiz,
+   unit-complete + css/lesson-units.css (Q69 contrast: jade-800 and the
+   ex-wrong tokens). Khung là `.ex` của màn luyện tập. */
+
+.learner-app .lu-flow .ex-body {
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+/* mẫu mobile: `.appbar` cao 56px, tiêu đề fs-lg đậm, `.uxa-count`; thân
+   `.uxa-main--snug` trên nền kem, không có tấm bo góc đè lên thanh. */
+@media (max-width: 1023px) {
+  .learner-app .lu-flow .ex-bar {
+    height: 56px;
+    padding: 0 var(--sp-1);
+  }
+
+  .learner-app .lu-flow .ex-bar .m02-bar__title {
+    inset: 0 60px;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+  }
+
+  .learner-app .lu-flow .m02-bar__count {
+    padding-right: var(--sp-2);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+
+  .learner-app .lu-flow .m02-sheet {
+    margin-top: 0;
+    border-radius: 0;
+  }
+
+  .learner-app .lu-flow .ex-body {
+    padding: var(--sp-3) var(--sp-4) var(--sp-6);
+  }
+
+  /* Thẻ từ, câu ví dụ: chân `.uxa-foot` của mẫu. */
+  .learner-app .lu-flow .ex-foot:has(> .lu-foot) {
+    padding: var(--sp-3) var(--sp-4)
+      calc(var(--sp-4) + env(safe-area-inset-bottom));
+  }
+
+  /* Trong media: `.m-only` cùng độ ưu tiên ẩn hàng này từ 1024px. */
+  .learner-app .lu-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-width: 0;
+  }
+}
+
+.learner-app .lu-progress .progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.learner-app .lu-progress__count {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.learner-app .lu-card {
+  padding: var(--sp-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.learner-app .lu-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.learner-app .lu-hz {
+  margin: 0;
+  font-family: var(--font-cn);
+  font-size: var(--fs-display);
+  line-height: 1.1;
+  color: var(--text-strong);
+}
+
+.learner-app .lu-hz:focus,
+.learner-app .lu-q:focus,
+.learner-app .lu-card .uxa-h3:focus {
+  outline: none;
+}
+
+.learner-app .lu-py {
+  margin: var(--sp-2) 0 0;
+  color: var(--jade-800);
+  font-size: var(--fs-lg);
+}
+
+.learner-app .lu-img {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+}
+
+.learner-app .lu-pos {
+  display: inline-block;
+  margin-top: var(--sp-3);
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--slate-100);
+  color: var(--slate-700);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.learner-app .lu-vi {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-lg);
+  color: var(--text-body);
+}
+
+.learner-app .lu-flow .uxa-h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-flow .uxa-h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-sub {
+  margin: calc(var(--sp-4) * -1 + var(--sp-1)) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+}
+
+.learner-app .lu-sent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0;
+  font-family: var(--font-cn);
+}
+
+.learner-app .lu-sent--plain {
+  display: block;
+  font-size: var(--fs-xl);
+  color: var(--text-strong);
+}
+
+.learner-app .lu-sent__py {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .lu-tok {
+  display: inline-grid;
+  justify-items: center;
+}
+
+.learner-app .lu-tok__py {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.learner-app .lu-tok__hz {
+  font-size: var(--fs-xl);
+  color: var(--text-strong);
+  line-height: 1.3;
+}
+
+.learner-app .lu-tok.is-target .lu-tok__hz {
+  color: var(--jade-800);
+  font-weight: 700;
+  border-bottom: 2px solid var(--jade-800);
+}
+
+.learner-app .lu-trans {
+  margin: var(--sp-3) 0 0;
+  color: var(--text-body);
+}
+
+.learner-app .lu-opts {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+}
+
+.learner-app .lu-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: var(--fs-lg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.learner-app .lu-opt[aria-checked='true'] {
+  border-color: var(--jade-800);
+}
+
+.learner-app .lu-opt:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .lu-opt.is-right {
+  border-color: var(--jade-700);
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .lu-opt.is-wrong {
+  border-color: var(--red-600);
+  background: var(--red-100);
+  color: var(--ex-wrong-chip-text);
+}
+
+.learner-app .lu-opt .icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+/* mẫu `.uxa-foot`: Trước | Tiếp, each half the bar. */
+.learner-app .lu-foot {
+  display: flex;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.learner-app .lu-foot > .btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+
+.learner-app .lu-foot > span:empty {
+  display: none;
+}
+
+/* Q42/Q74 (mẫu `.uxa-app .btn--primary`): jade-800, chữ trắng 5,3:1;
+   `.btn--primary` mặc định là jade-600 (3,2:1). */
+.learner-app .lu-foot > .btn--primary {
+  background: var(--jade-800);
+}
+
+.learner-app .lu-foot > .btn--primary:hover {
+  background: var(--ex-btn-hover);
+}
+
+/* Kết quả đơn vị (mẫu unit-complete + m02.css M2.5d: mỗi ô một hàng). */
+.learner-app .done-stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: var(--sp-5);
+}
+
+.learner-app .done-stat {
+  min-height: 62px;
+  padding: 12px 0 var(--sp-2);
+  border-radius: 10px;
+  text-align: center;
+  background: var(--paper);
+  color: var(--ink-900);
+}
+
+.learner-app .done-stat h2 {
+  font-size: 0.71rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.learner-app .done-stat__score {
+  margin-top: 6px;
+  color: var(--jade-800);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.learner-app .done-stat__score small {
+  margin-left: 1px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.learner-app .lu-h2 {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .lu-done .lu-h2 {
+  color: #fff;
+}
+
+.learner-app .lu-words {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.learner-app .lu-words li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+}
+
+.learner-app .lu-words .hz {
+  min-width: 3em;
+  font-family: var(--font-cn);
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .lu-words .py {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .lu-words .vi {
+  margin-left: auto;
+  color: var(--text-body);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.learner-app .lu-mark.is-ok {
+  color: var(--jade-800);
+}
+
+.learner-app .lu-mark.is-wrong {
+  color: var(--ex-wrong-text);
+}
+
+.learner-app .lu-done .done-actions {
+  margin-top: var(--sp-5);
+}
+
+/* Về bài | Đơn vị tiếp như mẫu; Lưu để ôn (N3) thêm một hàng bên dưới. */
+.learner-app .lu-done .done-actions > :nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.learner-app .lu-done__error {
+  margin-top: var(--sp-4);
+}
+
+.learner-app .lu-done__retry {
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  /* mẫu web: nội dung giữa khung tập trung, rộng tối đa 640px. */
+  .learner-app .lu-flow .ex-body > :is(.lu-card, .lu-opts, .uxa-h2, .lu-sub) {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+  }
+
+  /* mẫu `.w-focus__foot > div` (760px) thắng `.lu-foot` (640px). */
+  .learner-app .lu-foot {
+    justify-content: space-between;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* mẫu `.w-btn`. */
+  .learner-app .lu-foot > .btn {
+    flex: none;
+    min-height: 48px;
+    padding: 0 var(--sp-6);
+    border-radius: var(--r-md);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .lu-foot > span:empty {
+    display: block;
+  }
+
+  /* mẫu web vocab-quiz: thanh chân trắng `.w-focus__foot`, kết quả là hộp
+     `.lu-sheet` (nền jade-50 / red-100), nút Tiếp tục luôn `.w-btn--primary`. */
+  .learner-app .lu-flow .ex-foot:has(.m02-feedback) {
+    background: var(--surface-card);
+    border-top-color: var(--border-default);
+  }
+
+  .learner-app .lu-flow .ex-foot .m02-feedback {
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    border-top: 1px solid var(--border-default);
+    background: var(--jade-50);
+  }
+
+  .learner-app .lu-flow .ex-foot .m02-feedback--wrong {
+    background: var(--red-100);
+  }
+
+  .learner-app .lu-flow .m02-feedback__title {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--jade-800);
+  }
+
+  .learner-app .lu-flow .m02-feedback--wrong .m02-feedback__title {
+    color: var(--ex-wrong-chip-text);
+  }
+
+  .learner-app .lu-flow .m02-feedback__text {
+    color: var(--text-body);
+  }
+
+  .learner-app .lu-flow .m02-feedback--wrong .m02-feedback__btn {
+    border: 0;
+    background: var(--jade-800);
+    color: var(--white);
+  }
+
+  .learner-app .lu-flow .m02-feedback--wrong .m02-feedback__btn:hover {
+    background: var(--ex-btn-hover);
+  }
+
+  /* `.w-only` chỉ hiện khi phần web tự đặt `display` (learner.css). */
+  .learner-app .lu-done .done-kicker .w-only {
+    display: inline;
+  }
+
+  /* mẫu .done-w__stats / .done-w__stat (practice.css). */
+  .learner-app .lu-done .done-stats {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+    margin-top: var(--sp-8);
+    padding: 0 var(--sp-8);
+  }
+
+  .learner-app .lu-done .done-stat {
+    min-width: 240px;
+    padding: var(--sp-4) var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--cream-100);
+  }
+
+  .learner-app .lu-done .done-stat + .done-stat {
+    border-left: 1px solid var(--border-default);
+  }
+
+  .learner-app .lu-done .done-stat h2 {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .learner-app .lu-done .done-stat__score {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .learner-app .lu-done .done-stat__score small {
+    font-size: 0.55em;
+    font-weight: 600;
+  }
+
+  .learner-app .lu-done .lu-h2 {
+    color: var(--text-strong);
+  }
+
+  .learner-app .lu-done .lu-words,
+  .learner-app .lu-done .lu-h2,
+  .learner-app .lu-done__error {
+    margin-inline: var(--sp-8);
+  }
+
+  .learner-app .lu-done .done-actions {
+    margin-top: var(--sp-10);
+  }
+}

@@ -118,9 +118,11 @@ test.describe('Lesson topic pages (M2.5f)', () => {
     await registerReadyLearner(page, baseURL);
     await page.goto(`/learn/lessons/${lessonId}`);
     const row = page.locator('.lu-rows a.lu-row', { hasText: VOCAB_TITLE });
+    // N3: the row opens the unit flow; this seed lesson's words have no
+    // topic, so the flow falls back to the word list page.
     await expect(row).toHaveAttribute(
       'href',
-      `/learn/lessons/${lessonId}/vocabulary`,
+      new RegExp(`^/learn/lessons/${lessonId}/vocabulary\\?unit=\\d+$`, 'u'),
     );
     await row.click();
     await expect(page).toHaveURL(
