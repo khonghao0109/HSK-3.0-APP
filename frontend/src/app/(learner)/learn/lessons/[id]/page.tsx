@@ -7,12 +7,16 @@ import {
   wholePercent,
 } from '@/features/learner-home/learning-home-contract';
 import { levelLabel } from '@/features/learner-home/level-label';
-import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
+import {
+  getLessonActivity,
+  getLessonWords,
+} from '@/features/learner-lesson/lesson-activity-service';
 import { LessonImage } from '@/features/learner-lesson/lesson-image';
 import { loadLearnerLesson } from '@/features/learner-lesson/lesson-page-loader';
 import {
-  LESSON_ROW_ICONS,
-  lessonRows,
+  LESSON_UNIT_BADGES,
+  lessonUnits,
+  type LessonUnit,
 } from '@/features/learner-lesson/lesson-sections';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { ToastButton } from '@/features/learner-shell/learner-toast';
@@ -27,21 +31,25 @@ export const metadata: Metadata = {
 };
 
 /**
- * Lesson page (M2.5a, Q32–Q44). Tiếp tục học and the Luyện tập row of an
- * open lesson open the player (Q45); Từ vựng and Ngữ pháp open their topic
- * pages (M2.5f, Q175). Locked rows toast.
+ * Lesson page (M2.5a, Q32–Q44) with one "Đơn vị học" row per topic (PO
+ * 20/11/2026, mẫu lesson-units.html). Tiếp tục học and Kiểm tra open the
+ * player (Q45, N1); Từ vựng / Ngữ pháp / Bài khoá open their topic pages
+ * (M2.5f, Q175). Rows of a locked lesson toast (Q44); Kiểm tra stays inert
+ * until the units before it are done (N2).
  */
 export default async function LearnerLessonPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { lessonId, data: activity } = await loadLearnerLesson(
-    (await params).id,
-    getLessonActivity,
+  const {
+    lessonId,
+    data: [activity, { words }],
+  } = await loadLearnerLesson((await params).id, (token, id) =>
+    Promise.all([getLessonActivity(token, id), getLessonWords(token, id)]),
   );
 
-  const { lesson, level, position, sections } = activity;
+  const { lesson, level, position } = activity;
   const locked = activity.state === 'locked';
   const percent = wholePercent(activity.progress.completionPercent);
   const description = lesson.description?.trim() || null;
@@ -135,84 +143,18 @@ export default async function LearnerLessonPage({
           aria-labelledby="lesson-content-title"
         >
           <h2 className="lesson-section" id="lesson-content-title">
-            Nội dung bài học
+            Đơn vị học
           </h2>
-          <ul className="lesson-rows">
-            {lessonRows(sections, locked).map((row) => {
-              const image = LESSON_ROW_ICONS[row.kind];
-              const className = [
-                'lrow',
-                image.tone,
-                row.done ? 'is-done' : '',
-                row.locked ? 'is-locked' : '',
-              ]
-                .filter(Boolean)
-                .join(' ');
-              const content = (
-                <>
-                  <span className="lrow__icon" aria-hidden="true">
-                    <Icon name={image.icon} />
-                  </span>
-                  <span className="grow">
-                    <span className="lrow__title">{row.title}</span>
-                    <span className="sr-only">, </span>
-                    <span className="lrow__meta">{row.meta}</span>
-                  </span>
-                  <span className="lrow__end">
-                    {row.locked && (
-                      <>
-                        <Icon name="lock-fill" className="lrow__lock" />
-                        <span className="sr-only">, đã khoá</span>
-                      </>
-                    )}
-                    {row.done && (
-                      <>
-                        <Icon name="check-circle" className="lrow__check" />
-                        {/* M2.10d F11: the sample's visible done label (mẫu
-                            .learn-row__done); web-only, the sr-only line
-                            already announces the state. */}
-                        <span className="lrow__state w-only" aria-hidden="true">
-                          Đã học xong
-                        </span>
-                        <span className="sr-only">, đã học xong</span>
-                      </>
-                    )}
-                    {row.count && (
-                      <>
-                        <span className="sr-only">, </span>
-                        <span className="lrow__count">
-                          {row.count.label}
-                          <span className="sr-only">{` ${row.count.tail}`}</span>
-                        </span>
-                        <span className="progress lrow__bar" aria-hidden="true">
-                          <span className={percentClass(row.count.percent)} />
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </>
-              );
-              return (
-                <li key={row.kind}>
-                  {!row.locked ? (
-                    <Link
-                      className={className}
-                      href={`/learn/lessons/${lessonId}/${row.kind}`}
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <ToastButton
-                      className={className}
-                      aria-disabled={row.locked ? 'true' : undefined}
-                      message={TOAST_LOCKED}
-                    >
-                      {content}
-                    </ToastButton>
-                  )}
-                </li>
-              );
-            })}
+          <ul className="lu-rows">
+            {lessonUnits({ ...activity, words }, locked).map((unit) => (
+              <li key={unit.key}>
+                <UnitRow
+                  unit={unit}
+                  href={`/learn/lessons/${lessonId}/${unit.slug}`}
+                  lessonLocked={locked}
+                />
+              </li>
+            ))}
           </ul>
         </section>
 
@@ -268,5 +210,95 @@ export default async function LearnerLessonPage({
         )}
       </main>
     </>
+  );
+}
+
+/** One `.lu-row` (mẫu lesson-units.html): link, lock toast or inert row. */
+function UnitRow({
+  unit,
+  href,
+  lessonLocked,
+}: {
+  unit: LessonUnit;
+  href: string;
+  lessonLocked: boolean;
+}) {
+  const badge = LESSON_UNIT_BADGES[unit.kind];
+  const className = [
+    'lu-row',
+    unit.done ? 'is-done' : '',
+    unit.locked ? 'is-locked' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const content = (
+    <>
+      <span
+        className={`lu-badge ${unit.locked ? 'is-mute' : badge.tone}`}
+        aria-hidden="true"
+      >
+        {badge.char}
+      </span>
+      <span className="grow">
+        <span className="lu-row__title">{unit.title}</span>
+        <span className="sr-only">, </span>
+        <span className="lu-row__meta" lang={unit.metaLang ?? undefined}>
+          {unit.meta}
+        </span>
+      </span>
+      <span className="lu-row__end">
+        {unit.locked ? (
+          <>
+            <Icon name="lock" className="lu-row__lock" />
+            <span className="lu-row__state w-only" aria-hidden="true">
+              Đang khoá
+            </span>
+            <span className="sr-only">, đang khoá</span>
+          </>
+        ) : unit.done ? (
+          <>
+            <Icon name="check-circle" />
+            <span className="lu-row__state m-only" aria-hidden="true">
+              Xong
+            </span>
+            <span className="lu-row__state w-only" aria-hidden="true">
+              Đã học xong
+            </span>
+            <span className="sr-only">, đã học xong</span>
+          </>
+        ) : (
+          <>
+            <span className="sr-only">, đã học </span>
+            {`${unit.percent}%`}
+            <span className="progress lu-bar w-only" aria-hidden="true">
+              <span className={percentClass(unit.percent)} />
+            </span>
+          </>
+        )}
+      </span>
+    </>
+  );
+  if (!unit.locked) {
+    return (
+      <Link className={className} href={href}>
+        {content}
+      </Link>
+    );
+  }
+  if (lessonLocked) {
+    return (
+      <ToastButton
+        className={className}
+        aria-disabled="true"
+        message={TOAST_LOCKED}
+      >
+        {content}
+      </ToastButton>
+    );
+  }
+  return (
+    <div className={className} aria-disabled="true">
+      {content}
+    </div>
   );
 }

@@ -5,7 +5,11 @@ import { notFound, redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import type { LessonActivity } from '@/features/learner-lesson/lesson-activity-contract';
-import { getLessonActivity } from '@/features/learner-lesson/lesson-activity-service';
+import {
+  getLessonActivity,
+  getLessonWords,
+} from '@/features/learner-lesson/lesson-activity-service';
+import type { LessonWords } from '@/features/learner-lesson/lesson-topic-contract';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import {
   getCurrentGoal,
@@ -31,11 +35,31 @@ vi.mock('@/features/learner-auth/server-learner-session', () => ({
 }));
 vi.mock('@/features/learner-lesson/lesson-activity-service', () => ({
   getLessonActivity: vi.fn(),
+  getLessonWords: vi.fn(),
 }));
 vi.mock('@/features/onboarding/onboarding-service', () => ({
   getOnboardingStatus: vi.fn(),
   getCurrentGoal: vi.fn(),
 }));
+
+type Topic = LessonActivity['topics'][number];
+const attempt = { attemptId: 1 };
+const unit = (
+  id: number,
+  type: string,
+  title: string,
+  progress: Topic['progress'] = { status: 'not_started', completionPercent: 0 },
+  exercises: Topic['exercises'] = [],
+): Topic => ({
+  id,
+  title,
+  subtitle: null,
+  type,
+  orderIndex: id,
+  progress,
+  exercises,
+});
+const DONE = { status: 'done', completionPercent: 100 } as const;
 
 const current: LessonActivity = {
   lesson: {
@@ -53,6 +77,44 @@ const current: LessonActivity = {
     grammar: { topicCount: 2, topicsDone: 1 },
     practice: { exerciseCount: 3, attempted: 2 },
   },
+  topics: [
+    unit(11, 'vocabulary', 'Gia đình', DONE, [{ latestAttempt: attempt }]),
+    unit(12, 'vocabulary', 'Số đếm', {
+      status: 'learning',
+      completionPercent: 50,
+    }),
+    unit(13, 'grammar', 'Câu hỏi số lượng với 几'),
+    unit(14, 'key_text', 'Hội thoại: Nhà bạn có mấy người?'),
+    unit(15, 'quiz', 'Kiểm tra cuối bài', undefined, [{ latestAttempt: null }]),
+  ],
+  standaloneExercises: [{ latestAttempt: null }],
+};
+
+const words: LessonWords['words'] = [
+  ['爸爸', 11],
+  ['妈妈', 11],
+  ['哥哥', 11],
+  ['姐姐', 11],
+  ['家', 12],
+  ['有', 12],
+  ['几', 12],
+  ['口', 12],
+].map(([hanzi, topicId], index) => ({
+  id: index + 1,
+  topicId: topicId as number,
+  hanzi: hanzi as string,
+  pinyin: '',
+  pinyinTone: null,
+  meanings: [],
+  image: null,
+}));
+
+/** Every unit before Kiểm tra done, so Kiểm tra opens (N2). */
+const finished: LessonActivity = {
+  ...current,
+  topics: current.topics.map((topic) =>
+    topic.type === 'quiz' ? topic : { ...topic, progress: DONE },
+  ),
 };
 
 const locked: LessonActivity = {
@@ -66,6 +128,11 @@ const locked: LessonActivity = {
     grammar: { topicCount: 1, topicsDone: 0 },
     practice: { exerciseCount: 0, attempted: 0 },
   },
+  topics: [
+    unit(21, 'vocabulary', 'Thành viên'),
+    unit(22, 'grammar', 'Câu với 有'),
+  ],
+  standaloneExercises: [],
 };
 
 function status(nextStep: OnboardingStatus['nextStep']): OnboardingStatus {
@@ -86,8 +153,13 @@ function page(id: string) {
   return LearnerLessonPage({ params: Promise.resolve({ id }) });
 }
 
-async function renderLesson(activity: LessonActivity, id = '5') {
+async function renderLesson(
+  activity: LessonActivity,
+  id = '5',
+  lessonWords: LessonWords['words'] = words,
+) {
   vi.mocked(getLessonActivity).mockResolvedValue(activity);
+  vi.mocked(getLessonWords).mockResolvedValue({ words: lessonWords });
   const element = await page(id);
   return render(<LearnerToastProvider>{element}</LearnerToastProvider>);
 }
@@ -113,6 +185,7 @@ describe('LearnerLessonPage', () => {
       token: 'learner-token',
     });
     vi.mocked(getOnboardingStatus).mockResolvedValue(status('ready'));
+    vi.mocked(getLessonWords).mockResolvedValue({ words: [] });
   });
 
   it('sets the page title', () => {
@@ -132,6 +205,7 @@ describe('LearnerLessonPage', () => {
   it('reads the activity of the route id', async () => {
     await renderLesson(current, '2147483647');
     expect(getLessonActivity).toHaveBeenCalledWith('learner-token', 2147483647);
+    expect(getLessonWords).toHaveBeenCalledWith('learner-token', 2147483647);
   });
 
   it('calls notFound when the backend has no ready lesson', async () => {
@@ -243,82 +317,136 @@ describe('LearnerLessonPage', () => {
     expect(container.querySelector('[style]')).toBeNull();
   });
 
-  it('renders rows with counts, bars and spoken names (Q35, Q36)', async () => {
+  it('renders one unit row per topic with badges, meta and spoken names (L-units)', async () => {
     const { container } = await renderLesson(current);
-    const rows = Array.from(container.querySelectorAll('.lesson-rows .lrow'));
+    expect(container.querySelector('#lesson-content-title')?.textContent).toBe(
+      'Đơn vị học',
+    );
+    const rows = Array.from(container.querySelectorAll('.lu-rows .lu-row'));
     expect(rows.map((row) => row.getAttribute('class'))).toEqual([
-      'lrow is-done',
-      'lrow lrow--violet',
-      'lrow lrow--blue',
+      'lu-row is-done',
+      'lu-row',
+      'lu-row',
+      'lu-row',
+      'lu-row is-locked',
     ]);
     expect(rows.map(spokenName)).toEqual([
-      'Từ vựng, 6 từ mới, đã học xong',
-      'Ngữ pháp, 2 điểm ngữ pháp, 1/2 đã học',
-      'Luyện tập, 3 bài luyện tập, 2/3 đã làm',
+      'Từ vựng 1, 爸爸 · 妈妈 · 哥哥 · 姐姐, đã học xong',
+      'Từ vựng 2, 家 · 有 · 几 · 口, đã học 50%',
+      'Ngữ pháp, Câu hỏi số lượng với 几, đã học 0%',
+      'Bài khoá, Hội thoại: Nhà bạn có mấy người?, đã học 0%',
+      'Kiểm tra, Mở khi xong các đơn vị trên, đang khoá',
     ]);
-    expect(rows[0]?.querySelector('.lrow__bar')).toBeNull();
-    expect(rows[1]?.querySelector('.lrow__bar > span')).toHaveClass('pct-50');
-    expect(rows[2]?.querySelector('.lrow__bar > span')).toHaveClass('pct-67');
-    expect(rows.map((row) => row.tagName)).toEqual(['A', 'A', 'A']);
+    expect(
+      rows.map((row) => {
+        const badge = row.querySelector('.lu-badge');
+        return [badge?.getAttribute('class'), badge?.textContent];
+      }),
+    ).toEqual([
+      ['lu-badge is-jade', '词'],
+      ['lu-badge is-jade', '词'],
+      ['lu-badge is-violet', '语'],
+      ['lu-badge is-amber', '文'],
+      ['lu-badge is-mute', '测'],
+    ]);
+    expect(
+      rows.map((row) =>
+        row.querySelector('.lu-row__meta')?.getAttribute('lang'),
+      ),
+    ).toEqual(['zh-Hans', 'zh-Hans', null, null, null]);
+    expect(rows[0]?.querySelector('.lu-bar')).toBeNull();
+    expect(rows[1]?.querySelector('.lu-bar > span')).toHaveClass('pct-50');
+    expect(rows[2]?.querySelector('.lu-bar > span')).toHaveClass('pct-0');
+    expect(rows[4]?.querySelector('.lu-bar')).toBeNull();
+    expect(rows.map((row) => row.tagName)).toEqual(['A', 'A', 'A', 'A', 'DIV']);
     for (const row of rows) {
-      expect(row).not.toHaveAttribute('aria-disabled');
-      expect(row.querySelector('.lrow__icon')).toHaveAttribute(
+      expect(row.querySelector('.lu-badge')).toHaveAttribute(
         'aria-hidden',
         'true',
       );
     }
+    expect(rows[4]).toHaveAttribute('aria-disabled', 'true');
+    expect(rows[4]?.querySelector('.lu-row__lock')).not.toBeNull();
+    expect(container.querySelector('.lesson-rows, .lrow')).toBeNull();
   });
 
-  it('labels a finished row with the visible web-only state (F11)', async () => {
+  it('labels a finished unit with its mobile and web state (F11)', async () => {
     const { container } = await renderLesson(current);
-    const rows = Array.from(container.querySelectorAll('.lesson-rows .lrow'));
+    const rows = Array.from(container.querySelectorAll('.lu-rows .lu-row'));
     const done = rows.filter((row) => row.classList.contains('is-done'));
     expect(done).toHaveLength(1);
-    const finished = done[0];
-    if (!finished) throw new Error('missing finished row Từ vựng');
+    const finishedRow = done[0];
+    if (!finishedRow) throw new Error('missing finished unit');
 
-    // F11: the sample's visible "Đã học xong" tag (mẫu .learn-row__done).
-    // Web-only duplicate of the sr-only announcement, so it is hidden from
-    // assistive tech and the spoken name does not change.
-    const state = finished.querySelector('.lrow__state');
-    expect(state).not.toBeNull();
-    expect(state).toHaveClass('w-only');
-    expect(state).toHaveAttribute('aria-hidden', 'true');
-    expect(state?.textContent).toBe('Đã học xong');
-    expect(spokenName(finished)).toBe('Từ vựng, 6 từ mới, đã học xong');
+    const mobile = finishedRow.querySelector('.lu-row__state.m-only');
+    const web = finishedRow.querySelector('.lu-row__state.w-only');
+    expect(mobile?.textContent).toBe('Xong');
+    expect(web?.textContent).toBe('Đã học xong');
+    for (const state of [mobile, web]) {
+      expect(state).toHaveAttribute('aria-hidden', 'true');
+    }
     expect(
-      within(finished as HTMLElement).getByText(', đã học xong'),
+      within(finishedRow as HTMLElement).getByText(', đã học xong'),
     ).toHaveClass('sr-only');
-
-    for (const row of rows.filter((candidate) => candidate !== finished)) {
+    for (const row of rows.filter((candidate) => candidate !== finishedRow)) {
       expect(row).not.toHaveClass('is-done');
-      expect(row.querySelector('.lrow__state')).toBeNull();
+      expect(row.querySelector('.lu-row__state.m-only')).toBeNull();
     }
   });
 
-  it('links row Luyện tập of an open lesson to the player (Q45)', async () => {
+  it('keeps Kiểm tra an inert locked row until earlier units are done (N2)', async () => {
     const { container } = await renderLesson(current);
-    const row = Array.from(container.querySelectorAll('.lrow')).find(
-      (candidate) =>
-        candidate.querySelector('.lrow__title')?.textContent === 'Luyện tập',
+    const quiz = Array.from(container.querySelectorAll('.lu-row')).find(
+      (row) => row.querySelector('.lu-row__title')?.textContent === 'Kiểm tra',
     );
-    expect(row?.tagName).toBe('A');
-    expect(row).toHaveAttribute('href', '/learn/lessons/5/practice');
-    if (row) fireEvent.click(row);
+    if (!quiz) throw new Error('missing unit Kiểm tra');
+    expect(quiz.tagName).toBe('DIV');
+    expect(container.querySelector('.lu-rows a[href$="/practice"]')).toBeNull();
+    fireEvent.click(quiz);
+    expect(screen.queryByText('Hoàn thành bài trước để mở khoá.')).toBeNull();
+  });
+
+  it('links Kiểm tra to the player once earlier units are done (N1, Q45)', async () => {
+    const { container } = await renderLesson(finished);
+    const quiz = Array.from(container.querySelectorAll('.lu-row')).find(
+      (row) => row.querySelector('.lu-row__title')?.textContent === 'Kiểm tra',
+    );
+    expect(quiz?.tagName).toBe('A');
+    expect(quiz).toHaveAttribute('href', '/learn/lessons/5/practice');
+    expect(quiz?.querySelector('.lu-badge')).toHaveClass('is-blue');
+    expect(spokenName(quiz as Element)).toBe('Kiểm tra, 2 bài tập, đã học 0%');
+    if (quiz) fireEvent.click(quiz);
     expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });
 
   it.each([
-    ['Từ vựng', 'vocabulary'],
+    ['Từ vựng 1', 'vocabulary'],
+    ['Từ vựng 2', 'vocabulary'],
     ['Ngữ pháp', 'grammar'],
-  ])('links row %s to its topic page (M2.5f, Q175)', async (title, slug) => {
+    ['Bài khoá', 'grammar'],
+  ])('links unit %s to its topic page (M2.5f, Q175)', async (title, slug) => {
     const { container } = await renderLesson(current);
-    const row = Array.from(container.querySelectorAll('.lrow')).find(
+    const row = Array.from(container.querySelectorAll('.lu-row')).find(
       (candidate) =>
-        candidate.querySelector('.lrow__title')?.textContent === title,
+        candidate.querySelector('.lu-row__title')?.textContent === title,
     );
     expect(row?.tagName).toBe('A');
     expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
+  });
+
+  it('shows a lesson without topics as its Kiểm tra unit only (fallback)', async () => {
+    const { container } = await renderLesson(
+      {
+        ...current,
+        topics: [],
+        standaloneExercises: [{ latestAttempt: null }],
+      },
+      '5',
+      [],
+    );
+    const rows = Array.from(container.querySelectorAll('.lu-rows .lu-row'));
+    expect(rows.map(spokenName)).toEqual(['Kiểm tra, 1 bài tập, đã học 0%']);
+    expect(rows[0]).toHaveAttribute('href', '/learn/lessons/5/practice');
   });
 
   it('links the CTA to the player and toasts the heart (Q33, Q45)', async () => {
@@ -344,22 +472,16 @@ describe('LearnerLessonPage', () => {
     ).toHaveLength(1);
   });
 
-  it('keeps row Luyện tập of a locked lesson a lock toast, not a link (Q44)', async () => {
+  it('keeps unit Kiểm tra of a locked lesson a lock toast, not a link (Q44)', async () => {
     const { container } = await renderLesson(
-      {
-        ...locked,
-        sections: {
-          ...locked.sections,
-          practice: { exerciseCount: 2, attempted: 0 },
-        },
-      },
+      { ...locked, standaloneExercises: [{ latestAttempt: null }] },
       '6',
     );
-    const row = Array.from(container.querySelectorAll('.lrow')).find(
+    const row = Array.from(container.querySelectorAll('.lu-row')).find(
       (candidate) =>
-        candidate.querySelector('.lrow__title')?.textContent === 'Luyện tập',
+        candidate.querySelector('.lu-row__title')?.textContent === 'Kiểm tra',
     );
-    if (!row) throw new Error('missing row Luyện tập');
+    if (!row) throw new Error('missing unit Kiểm tra');
     expect(row.tagName).toBe('BUTTON');
     expect(row).toHaveAttribute('aria-disabled', 'true');
     expect(container.querySelector('a[href$="/practice"]')).toBeNull();
@@ -371,29 +493,29 @@ describe('LearnerLessonPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('hides a missing description (Q39) and a zero-total row (Q35)', async () => {
-    const { container } = await renderLesson(locked, '6');
+  it('hides a missing description (Q39) and Kiểm tra without exercises (Q35)', async () => {
+    const { container } = await renderLesson(locked, '6', []);
     expect(container.querySelector('.lesson-hero__desc')).toBeNull();
     expect(
-      Array.from(container.querySelectorAll('.lrow__title')).map(
+      Array.from(container.querySelectorAll('.lu-row__title')).map(
         (title) => title.textContent,
       ),
-    ).toEqual(['Từ vựng', 'Ngữ pháp']);
+    ).toEqual(['Từ vựng 1', 'Ngữ pháp']);
   });
 
   it('renders a locked lesson with lock rows and a grey CTA (Q40, Q44)', async () => {
-    const { container } = await renderLesson(locked, '6');
-    const rows = Array.from(container.querySelectorAll('.lesson-rows .lrow'));
+    const { container } = await renderLesson(locked, '6', []);
+    const rows = Array.from(container.querySelectorAll('.lu-rows .lu-row'));
     expect(rows.map(spokenName)).toEqual([
-      'Từ vựng, 3 từ mới, đã khoá',
-      'Ngữ pháp, 1 điểm ngữ pháp, đã khoá',
+      'Từ vựng 1, Thành viên, đang khoá',
+      'Ngữ pháp, Câu với 有, đang khoá',
     ]);
     for (const row of rows) {
       expect(row).toHaveClass('is-locked');
       expect(row).toHaveAttribute('aria-disabled', 'true');
       expect(row).not.toHaveAttribute('disabled');
-      expect(row.querySelector('.lrow__lock')).not.toBeNull();
-      expect(row.querySelector('.lrow__count, .lrow__bar')).toBeNull();
+      expect(row.querySelector('.lu-row__lock')).not.toBeNull();
+      expect(row.querySelector('.lu-bar')).toBeNull();
     }
     const ctas = screen.getAllByRole('button', { name: 'Tiếp tục học' });
     // M2.10b: mobile sheet CTA + web progress-card CTA, both locked.

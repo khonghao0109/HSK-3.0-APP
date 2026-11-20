@@ -169,13 +169,14 @@ test.describe('Learner activity player (M2.5b)', () => {
     );
   });
 
-  test('arrange right from the Luyện tập row, then fill_blank (Q47)', async ({
+  test('arrange right from the Tiếp tục học CTA, then fill_blank (Q47)', async ({
     page,
     baseURL,
   }) => {
     const email = await registerReadyLearner(page, baseURL);
     await page.goto(`/learn/lessons/${hsk3Lesson}`);
-    await page.locator('.lesson-rows a.lrow').click();
+    // N2: Kiểm tra stays locked while the seed vocabulary topic is not done.
+    await page.getByRole('link', { name: 'Tiếp tục học' }).first().click();
     await expect(page).toHaveURL(
       new RegExp(`/learn/lessons/${hsk3Lesson}/practice$`),
     );

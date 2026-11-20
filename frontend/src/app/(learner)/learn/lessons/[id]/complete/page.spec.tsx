@@ -62,6 +62,8 @@ function activity(
       grammar: { topicCount: 0, topicsDone: 0 },
       practice: { exerciseCount: 2, attempted: 2 },
     },
+    topics: [],
+    standaloneExercises: [],
   };
 }
 

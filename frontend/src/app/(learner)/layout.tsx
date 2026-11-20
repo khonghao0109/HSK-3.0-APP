@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 
 import './learner.css';
 import './learner-web.css';
+import './learner-lesson-units.css';
 import './learner-web-public.css';
 import './learner-web-landing.css';
 import './learner-web-legal.css';

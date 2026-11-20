@@ -1727,107 +1727,6 @@
     color: var(--text-strong);
   }
 
-  .learner-app .lesson-content .lesson-rows {
-    gap: 0;
-    margin: 0;
-  }
-
-  /* The rows become the sample's .learn-row cards. */
-  .learner-app .lesson-content .lrow {
-    height: auto;
-    min-height: 88px;
-    gap: var(--sp-4);
-    padding: var(--sp-4) var(--sp-5);
-    border-color: var(--border-default);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
-  }
-
-  .learner-app .lesson-content .lrow + li {
-    margin-top: var(--sp-3);
-  }
-
-  .learner-app .lesson-content .lrow__icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--r-md);
-  }
-
-  .learner-app .lesson-content .lrow__icon .icon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .learner-app .lesson-content .lrow .grow {
-    gap: 2px;
-    padding-top: 0;
-  }
-
-  .learner-app .lesson-content .lrow__title {
-    font-size: var(--fs-lg);
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .learner-app .lesson-content .lrow__meta {
-    font-size: var(--fs-md);
-    line-height: 1.5;
-    color: var(--text-muted);
-  }
-
-  .learner-app .lesson-content .lrow:focus-visible {
-    box-shadow: var(--focus-ring);
-  }
-
-  .learner-app .lesson-content .lrow__end {
-    display: flex;
-    position: static;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--sp-4);
-    width: 180px;
-    align-self: center;
-  }
-
-  /* M2.10d F11: the state icon sits inside the end slot like the sample
-     (.learn-row__end), not a corner badge of the row card. */
-  .learner-app .lesson-content .lrow__check,
-  .learner-app .lesson-content .lrow__lock {
-    position: static;
-    width: 20px;
-    height: 20px;
-  }
-
-  /* mẫu .learn-row__done: icon + visible "Đã học xong" in jade. */
-  .learner-app .lesson-content .lrow.is-done .lrow__end {
-    gap: var(--sp-2);
-    font-size: var(--fs-md);
-    font-weight: 600;
-    color: var(--jade-800);
-  }
-
-  .learner-app .lesson-content .lrow.is-done .lrow__check {
-    color: var(--jade-800);
-  }
-
-  .learner-app .lesson-content .lrow__count {
-    position: static;
-    font-size: var(--fs-md);
-    font-weight: 600;
-    color: var(--text-strong);
-  }
-
-  .learner-app .lesson-content .lrow.is-done .lrow__count {
-    color: var(--jade-800);
-  }
-
-  .learner-app .lesson-content .lrow__bar {
-    position: static;
-    flex: none;
-    width: 120px;
-    height: 6px;
-  }
-
   /* The progress aside (mẫu .learn-prog). */
   .learner-app .lesson-prog {
     position: sticky;
@@ -5118,7 +5017,6 @@
 .learner-app .home-streak b,
 .learner-app .topic__no,
 .learner-app .topic.is-current .topic__no,
-.learner-app .lesson-content .lrow__count,
 .learner-app .lesson-prog__pct,
 .learner-app .lesson-prog__pct b,
 .learner-app .dict-web__box .dict__count,

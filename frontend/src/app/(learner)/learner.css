@@ -2878,134 +2878,6 @@ html:has(.learner-app) {
   color: var(--ink-900);
 }
 
-.learner-app .lesson-rows {
-  display: grid;
-  gap: var(--sp-1);
-  margin: var(--sp-1) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.learner-app .lrow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  width: 100%;
-  height: 49px;
-  padding: 0 var(--sp-4) 0 var(--sp-3);
-  border: 1px solid var(--path-hairline);
-  border-radius: 10px;
-  background: var(--paper);
-  box-shadow: 0 1px 3px var(--path-tile-shadow);
-  text-align: left;
-  text-decoration: none;
-  color: inherit;
-  font: inherit;
-}
-
-.learner-app .lrow:hover {
-  border-color: var(--border-strong);
-}
-
-/* Q12: the card shadow above would replace the focus ring. */
-.learner-app .lrow:focus-visible {
-  box-shadow: var(--focus-ring);
-}
-
-.learner-app .lrow__icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  flex: none;
-  border-radius: 10px;
-  background: var(--surface-sunken);
-  color: var(--text-muted);
-}
-
-.learner-app .lrow__icon .icon {
-  width: 20px;
-  height: 20px;
-}
-
-.learner-app .lrow .grow {
-  display: grid;
-  gap: 1.5px;
-  padding-top: var(--sp-1);
-}
-
-.learner-app .lrow__title {
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--ink-900);
-}
-
-.learner-app .lrow__meta {
-  font-size: var(--fs-xs);
-  line-height: 1.2;
-  color: var(--slate-500);
-}
-
-.learner-app .lrow__end {
-  position: relative;
-  align-self: stretch;
-  width: 84px;
-  flex: none;
-}
-
-.learner-app .lrow__bar {
-  position: absolute;
-  left: 0;
-  width: 59px;
-  top: 31px;
-  height: 4px;
-  background: var(--slate-200);
-}
-
-.learner-app .lrow__count {
-  position: absolute;
-  right: 0;
-  top: 15px;
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--ink-900);
-}
-
-.learner-app .lrow__check {
-  position: absolute;
-  right: 0;
-  top: 17px;
-  width: 14px;
-  height: 14px;
-  color: var(--jade-600);
-}
-
-.learner-app .lrow--violet .lrow__bar > span {
-  background: var(--lesson-violet);
-}
-
-.learner-app .lrow--blue .lrow__bar > span {
-  background: var(--lesson-blue);
-}
-
-/* Q42, Q44: stone-500 lock (the demo's light grey is 1.47:1). */
-.learner-app .lrow__lock {
-  position: absolute;
-  right: 1px;
-  top: 18px;
-  width: 12px;
-  height: 12px;
-  color: var(--stone-500);
-  stroke-width: 2.4;
-}
-
-.learner-app .lrow.is-locked {
-  cursor: not-allowed;
-}
-
 /* Q42 (as Q28): a real 44px button on solid jade-800 (white on the demo
    gradient is 2.58:1). Q38: a toast <button>, so it needs a width. */
 .learner-app .lesson-cta {
@@ -4048,46 +3920,6 @@ html:has(.learner-app) {
     margin-top: 12px;
   }
 
-  .learner-app .lrow {
-    height: auto;
-    min-height: 49px;
-    gap: 8px;
-    padding: var(--sp-2) var(--sp-3);
-  }
-
-  .learner-app .lrow__icon {
-    display: none;
-  }
-
-  .learner-app .lrow .grow {
-    padding-top: 0;
-  }
-
-  .learner-app .lrow__title,
-  .learner-app .lrow__meta {
-    overflow-wrap: anywhere;
-  }
-
-  .learner-app .lrow__end {
-    display: grid;
-    justify-items: end;
-    align-content: center;
-    gap: 4px;
-    align-self: center;
-    width: 44px;
-  }
-
-  .learner-app .lrow__count,
-  .learner-app .lrow__check,
-  .learner-app .lrow__lock {
-    position: static;
-  }
-
-  .learner-app .lrow__bar {
-    position: static;
-    width: 100%;
-  }
-
   .learner-app .lesson-cta {
     height: auto;
     min-height: 44px;
@@ -4191,8 +4023,6 @@ html:has(.learner-app) {
 
   /* Lesson page (M2.5a): state icons follow the row's system color; the
      solid CTA fills are dropped, so outline them. */
-  .learner-app .lrow__check,
-  .learner-app .lrow__lock,
   .learner-app .lesson-hero__img {
     color: inherit;
   }
@@ -4206,11 +4036,6 @@ html:has(.learner-app) {
   .learner-app .lesson-cta[aria-disabled='true'] {
     color: GrayText;
     border-color: GrayText;
-  }
-
-  .learner-app .lrow--violet .lrow__bar > span,
-  .learner-app .lrow--blue .lrow__bar > span {
-    background: Highlight;
   }
 
   /* Player (M2.5b): solid fills are dropped; outline the buttons, keep the
@@ -8811,7 +8636,6 @@ html:has(.learner-app) {
     .home-gauge b,
     .home-streak b,
     .lesson-hero__pct,
-    .lrow__count,
     .m02-bar__count,
     .done-medal__score,
     .dict__count,

@@ -4,6 +4,9 @@ import { lessonStateSchema } from '@/features/learner-path/learning-path-contrac
 import { backendEnvelope } from '@/lib/api/backend-envelope';
 
 const countSchema = z.number().int().nonnegative();
+const exerciseSchema = z.object({
+  latestAttempt: z.object({ attemptId: z.number().int() }).nullable(),
+});
 
 /**
  * The part of `GET /learning/lessons/:lessonId/activity` the lesson page
@@ -32,6 +35,23 @@ export const lessonActivitySchema = z.object({
   level: z.object({ id: z.number().int(), code: z.string(), name: z.string() }),
   position: z.number().int().positive(),
   state: lessonStateSchema,
+  // Lesson units (Pha B): one row per topic; exercise counts from the
+  // exercises and their latest attempt (N1).
+  topics: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      subtitle: z.string().nullable(),
+      type: z.string(),
+      orderIndex: z.number().int(),
+      progress: z.object({
+        status: z.enum(['not_started', 'learning', 'done']),
+        completionPercent: z.number(),
+      }),
+      exercises: z.array(exerciseSchema),
+    }),
+  ),
+  standaloneExercises: z.array(exerciseSchema),
   sections: z.object({
     vocabulary: z.object({
       wordCount: countSchema,

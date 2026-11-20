@@ -34,6 +34,8 @@ export const lessonWordsSchema = z.object({
   words: z.array(
     z.object({
       id: z.number().int(),
+      // Lesson units: topic (đơn vị) of the word; vắng (bản cũ) = chưa gán.
+      topicId: z.number().int().nullable().default(null),
       hanzi: z.string(),
       pinyin: z.string(),
       pinyinTone: z.string().nullable(),
