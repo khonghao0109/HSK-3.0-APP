@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
@@ -11,12 +11,8 @@ import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 import { LessonImage } from './lesson-image';
 import { PLAYER_MESSAGES } from './lesson-player';
 import { UnitResult } from './unit-result';
-import {
-  answerMark,
-  sentenceTokens,
-  type UnitStep,
-  type UnitWord,
-} from './vocabulary-unit';
+import { SPEECH_RATE, SPEECH_RATE_SLOW, useChineseVoice } from './speech';
+import { answerMark, type UnitStep, type UnitWord } from './vocabulary-unit';
 
 type Props = {
   lessonId: number;
@@ -33,32 +29,42 @@ type Props = {
 /** "nhà; gia đình" -> "nhà, gia đình" in the feedback sentence (mẫu). */
 const spoken = (meaning: string) => meaning.replaceAll('; ', ', ');
 
-function capitalize(text: string): string {
-  return text.charAt(0).toLocaleUpperCase('vi') + text.slice(1);
+/** The example with each occurrence of the word marked (mẫu `.g-ex__cn`). */
+function markWord(sentence: string, target: string): ReactNode[] {
+  if (!target) return [sentence];
+  return sentence
+    .split(target)
+    .flatMap((part, partIndex) =>
+      partIndex === 0 ? [part] : [<mark key={partIndex}>{target}</mark>, part],
+    )
+    .filter((part) => part !== '');
 }
 
 /**
- * Step-by-step Từ vựng unit (PO 20/11/2026, N3/N4/N8; mẫu vocab-card,
- * vocab-example, vocab-quiz, unit-complete). Frame of the player (`.ex`).
+ * Step-by-step Từ vựng unit (PO 20/11/2026, N3/N8; Pha G2a mẫu vu-card,
+ * vu-card-noimg, vu-example, vu-quiz; unit-complete). Frame of the player
+ * (`.ex`). A meaning is graded the moment it is chosen (thay Q51/N4); the
+ * arrow keys only move focus. Nghe needs a zh voice on the device.
  */
 export function VocabularyUnitFlow(props: Props) {
   const { lessonHref, title, words, steps } = props;
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [checked, setChecked] = useState(false);
+  const [focused, setFocused] = useState(0);
   // Wrong answers per word index (Pha C debt 3b).
   const [results, setResults] = useState<Record<number, number>>({});
   const continueRef = useRef<HTMLButtonElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingRef = useRef<HTMLElement>(null);
   const moved = useRef(false);
+  const { available, speak } = useChineseVoice();
 
   const step = steps[index];
   const options = step?.kind === 'quiz' ? step.options : [];
+  const checked = selected !== null;
+  // Arrows move the roving focus only; choosing is a click, Enter or Space.
   const radio = useRadioGroup({
     items: options.map((_, optionIndex) => optionIndex),
-    onChange: (value: number) => {
-      if (!checked) setSelected(value);
-    },
+    onChange: setFocused,
   });
 
   useEffect(() => {
@@ -77,15 +83,15 @@ export function VocabularyUnitFlow(props: Props) {
     moved.current = true;
     setIndex(to);
     setSelected(null);
-    setChecked(false);
+    setFocused(0);
   };
-  const check = () => {
-    if (step.kind !== 'quiz' || selected === null || checked) return;
-    setChecked(true);
+  const choose = (optionIndex: number) => {
+    if (step.kind !== 'quiz' || checked) return;
+    setSelected(optionIndex);
     setResults((previous) => ({
       ...previous,
       [step.word]:
-        (previous[step.word] ?? 0) + (selected === step.answer ? 0 : 1),
+        (previous[step.word] ?? 0) + (optionIndex === step.answer ? 0 : 1),
     }));
   };
 
@@ -93,7 +99,7 @@ export function VocabularyUnitFlow(props: Props) {
   if (!word) return null;
   const total = steps.length;
   const shown = index + 1;
-  const correct = step.kind === 'quiz' && checked && selected === step.answer;
+  const correct = step.kind === 'quiz' && selected === step.answer;
   const progress = (className: string) => (
     <div
       className={className}
@@ -107,14 +113,18 @@ export function VocabularyUnitFlow(props: Props) {
     </div>
   );
   const head = <span lang="zh-Hans">{word.hanzi}</span>;
+  const meaning = spoken(word.meaning ?? '');
+  const feedback = correct
+    ? `${word.hanzi} ${word.pinyin} nghĩa là ${meaning}.`
+    : `Đáp án đúng: ${word.hanzi} ${word.pinyin} là ${meaning}.`;
+  const sayText =
+    step.kind === 'example' && word.example ? word.example.hanzi : word.hanzi;
 
   return (
     <div className="ex lu-flow">
-      <p className="sr-only" aria-live="polite">
+      <p className="sr-only" role="status" aria-live="polite">
         {step.kind === 'quiz' && checked
-          ? correct
-            ? PLAYER_MESSAGES.correctTitle
-            : PLAYER_MESSAGES.wrongTitle
+          ? `${correct ? PLAYER_MESSAGES.correctTitle : PLAYER_MESSAGES.wrongTitle}. ${feedback}`
           : ''}
       </p>
       <header className="m02-head m02-bar ex-bar">
@@ -146,237 +156,208 @@ export function VocabularyUnitFlow(props: Props) {
           </span>
         </div>
 
-        {step.kind === 'card' && (
-          <section className="lu-card" aria-labelledby="lu-word">
-            <div className="lu-head">
-              <div>
-                <h2
-                  className="lu-hz"
-                  id="lu-word"
-                  lang="zh-Hans"
-                  ref={headingRef}
-                  tabIndex={-1}
-                >
-                  {word.hanzi}
-                </h2>
-                <p className="lu-py" lang="zh-Latn-pinyin">
-                  {word.pinyin}
-                </p>
-              </div>
-              {word.image && (
-                <LessonImage
-                  className="lu-img"
-                  mediaId={word.image.id}
-                  altText={word.image.altText}
-                />
-              )}
-            </div>
-            {word.partOfSpeech && (
-              <p className="lu-pos">{capitalize(word.partOfSpeech)}</p>
-            )}
-            {word.meaning && <p className="lu-vi">{word.meaning}</p>}
-          </section>
-        )}
-
-        {step.kind === 'example' && word.example && (
-          <ExampleCard word={word} headingRef={headingRef} />
-        )}
-
-        {step.kind === 'quiz' && (
-          <>
-            <h2
-              className="uxa-h2 lu-q"
-              id="lu-q"
-              ref={headingRef}
-              tabIndex={-1}
+        <div className="g-body">
+          {step.kind === 'card' && (
+            <section
+              className={`g-card${word.image ? '' : ' g-card--noimg'}`}
+              aria-labelledby="lu-word"
             >
-              Chọn nghĩa đúng của {head}
-            </h2>
-            <p className="lu-sub" lang="zh-Latn-pinyin">
-              {word.pinyin}
-            </p>
-            <div className="lu-opts" role="radiogroup" aria-labelledby="lu-q">
-              {step.options.map((option, optionIndex) => {
-                const isPicked = selected === optionIndex;
-                const mark = checked
-                  ? optionIndex === step.answer
-                    ? 'is-right'
-                    : isPicked
-                      ? 'is-wrong'
-                      : ''
-                  : '';
-                return (
-                  <button
-                    key={option}
-                    className={['lu-opt', mark].filter(Boolean).join(' ')}
-                    type="button"
-                    role="radio"
-                    aria-checked={isPicked}
-                    aria-disabled={checked ? 'true' : undefined}
-                    tabIndex={
-                      isPicked || (selected === null && optionIndex === 0)
-                        ? 0
-                        : -1
-                    }
-                    onClick={() => {
-                      if (!checked) setSelected(optionIndex);
-                    }}
-                    onKeyDown={(event) =>
-                      radio.handleKeyDown(event, optionIndex)
-                    }
-                  >
-                    <span>{option}</span>
-                    {mark && (
-                      <Icon
-                        name={mark === 'is-right' ? 'check-circle' : 'x-circle'}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
+              {word.image && (
+                <div className="g-media">
+                  <LessonImage
+                    mediaId={word.image.id}
+                    altText={word.image.altText}
+                  />
+                </div>
+              )}
+              <p className="g-py" lang="zh-Latn-pinyin">
+                {word.pinyin}
+              </p>
+              <h2
+                className="g-hz"
+                id="lu-word"
+                lang="zh-Hans"
+                ref={(node) => {
+                  headingRef.current = node;
+                }}
+                tabIndex={-1}
+              >
+                {word.hanzi}
+              </h2>
+              {word.partOfSpeech && (
+                <p className="g-pos">{word.partOfSpeech}</p>
+              )}
+              {word.meaning && <p className="g-vi">{word.meaning}</p>}
+            </section>
+          )}
+
+          {step.kind === 'example' && word.example && (
+            <>
+              <p className="g-kicker">Câu ví dụ</p>
+              <section
+                className="g-ex"
+                aria-label={`Câu ví dụ với ${word.hanzi}`}
+                ref={(node) => {
+                  headingRef.current = node;
+                }}
+                tabIndex={-1}
+              >
+                <p className="g-ex__cn" lang="zh-Hans">
+                  {markWord(word.example.hanzi, word.hanzi)}
+                </p>
+                {word.example.pinyin && (
+                  <p className="g-ex__py" lang="zh-Latn-pinyin">
+                    {word.example.pinyin}
+                  </p>
+                )}
+                {word.example.vi && (
+                  <p className="g-ex__vi">{word.example.vi}</p>
+                )}
+                {available && (
+                  <div className="g-listen">
+                    <button
+                      className="g-say"
+                      type="button"
+                      onClick={() => speak(sayText, SPEECH_RATE)}
+                    >
+                      <Icon name="volume" />
+                      Nghe câu
+                    </button>
+                    <button
+                      className="g-say g-say--slow"
+                      type="button"
+                      onClick={() => speak(sayText, SPEECH_RATE_SLOW)}
+                    >
+                      <Icon name="volume" />
+                      Nghe chậm
+                    </button>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {step.kind === 'quiz' && (
+            <>
+              <h2
+                className="g-q"
+                id="lu-q"
+                ref={(node) => {
+                  headingRef.current = node;
+                }}
+                tabIndex={-1}
+              >
+                Chọn nghĩa đúng của <span className="cn">{head}</span>
+              </h2>
+              <p className="g-sub" lang="zh-Latn-pinyin">
+                {word.pinyin}
+              </p>
+              <div className="g-opts" role="radiogroup" aria-labelledby="lu-q">
+                {step.options.map((option, optionIndex) => {
+                  const isPicked = selected === optionIndex;
+                  const mark = checked
+                    ? optionIndex === step.answer
+                      ? 'is-right'
+                      : isPicked
+                        ? 'is-wrong'
+                        : ''
+                    : '';
+                  return (
+                    <button
+                      key={option}
+                      className={['g-opt', mark].filter(Boolean).join(' ')}
+                      type="button"
+                      role="radio"
+                      aria-checked={isPicked}
+                      aria-disabled={checked ? 'true' : undefined}
+                      tabIndex={
+                        (checked ? isPicked : optionIndex === focused) ? 0 : -1
+                      }
+                      onClick={() => choose(optionIndex)}
+                      onKeyDown={(event) =>
+                        radio.handleKeyDown(event, optionIndex)
+                      }
+                    >
+                      <span>{option}</span>
+                      {mark && (
+                        <Icon
+                          name={
+                            mark === 'is-right' ? 'check-circle' : 'x-circle'
+                          }
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </main>
 
-      <footer className="ex-foot">
-        {step.kind === 'quiz' ? (
-          <>
-            <div>
-              {checked && correct && (
-                <div className="m02-feedback">
-                  <Icon
-                    name="check-circle"
-                    className="m02-feedback__icon m02-feedback__icon--ok"
-                  />
-                  <div className="grow">
-                    <p className="m02-feedback__title">
-                      {PLAYER_MESSAGES.correctTitle}
-                    </p>
-                    <p className="m02-feedback__text">
-                      {head} {word.pinyin} nghĩa là {spoken(word.meaning ?? '')}
-                      .
-                    </p>
-                  </div>
-                  <button
-                    className="m02-feedback__btn"
-                    type="button"
-                    ref={continueRef}
-                    onClick={() => go(index + 1)}
-                  >
-                    Tiếp tục
-                  </button>
-                </div>
-              )}
-              {checked && !correct && (
-                <div className="m02-feedback m02-feedback--wrong">
-                  <Icon name="x-circle" className="m02-feedback__icon" />
-                  <div className="grow">
-                    <p className="m02-feedback__title">
-                      {PLAYER_MESSAGES.wrongTitle}
-                    </p>
-                    <p className="m02-feedback__text">
-                      Đáp án đúng: {head} {word.pinyin} là{' '}
-                      {spoken(word.meaning ?? '')}.
-                    </p>
-                  </div>
-                  <button
-                    className="m02-feedback__btn"
-                    type="button"
-                    ref={continueRef}
-                    onClick={() => go(index + 1)}
-                  >
-                    Tiếp tục
-                  </button>
-                </div>
-              )}
+      {step.kind === 'quiz' ? (
+        checked && (
+          <footer className="ex-foot g-wfoot">
+            <div className={`g-fb ${correct ? 'is-ok' : 'is-bad'}`}>
+              <Icon name={correct ? 'check-circle' : 'x-circle'} />
+              <div className="grow">
+                <p className="g-fb__title">
+                  {correct
+                    ? PLAYER_MESSAGES.correctTitle
+                    : PLAYER_MESSAGES.wrongTitle}
+                </p>
+                <p className="g-fb__text">
+                  {correct ? (
+                    <>
+                      {head} {word.pinyin} nghĩa là {meaning}.
+                    </>
+                  ) : (
+                    <>
+                      Đáp án đúng: {head} {word.pinyin} là {meaning}.
+                    </>
+                  )}
+                </p>
+              </div>
+              <button
+                className="g-btn"
+                type="button"
+                ref={continueRef}
+                onClick={() => go(index + 1)}
+              >
+                Tiếp tục
+              </button>
             </div>
-            {!checked && (
+          </footer>
+        )
+      ) : (
+        <footer className="ex-foot g-wfoot">
+          <div className="g-bar" role="group" aria-label="Luyện từ này">
+            {available && (
               <button
-                className="ex-check"
+                className="g-tool"
                 type="button"
-                aria-disabled={selected === null ? 'true' : undefined}
-                onClick={check}
+                onClick={() => speak(sayText, SPEECH_RATE)}
               >
-                Kiểm tra
+                <span className="g-tool__dot">
+                  <Icon name="volume" size={24} />
+                </span>
+                Nghe
               </button>
-            )}
-          </>
-        ) : (
-          <div className="lu-foot">
-            {step.kind === 'example' ? (
-              <button
-                className="btn btn--outline"
-                type="button"
-                onClick={() => go(index - 1)}
-              >
-                <Icon name="chevron-left" />
-                Trước
-              </button>
-            ) : (
-              <span />
             )}
             <button
-              className="btn btn--primary"
+              className="g-next"
               type="button"
               onClick={() => go(index + 1)}
             >
+              <span className="g-next__dot">
+                <Icon name="arrow-right" size={24} />
+              </span>
               Tiếp
-              <Icon name="arrow-right" />
             </button>
           </div>
-        )}
-      </footer>
-    </div>
-  );
-}
-
-function ExampleCard({
-  word,
-  headingRef,
-}: {
-  word: UnitWord;
-  headingRef: React.RefObject<HTMLHeadingElement | null>;
-}) {
-  const example = word.example;
-  if (!example) return null;
-  const tokens = sentenceTokens(example.hanzi, example.pinyin, word.hanzi);
-  return (
-    <section className="lu-card" aria-labelledby="lu-ex">
-      <div className="lu-head">
-        <h2 className="uxa-h3" id="lu-ex" ref={headingRef} tabIndex={-1}>
-          Câu ví dụ với <span lang="zh-Hans">{word.hanzi}</span>
-        </h2>
-      </div>
-      {tokens ? (
-        <p className="lu-sent" lang="zh-Hans" aria-label={example.hanzi}>
-          {tokens.map((token, tokenIndex) => (
-            <span
-              key={tokenIndex}
-              className={`lu-tok${token.target ? ' is-target' : ''}`}
-              aria-hidden="true"
-            >
-              <span className="lu-tok__py" lang="zh-Latn-pinyin">
-                {token.pinyin}
-              </span>
-              <span className="lu-tok__hz">{token.hanzi}</span>
-            </span>
-          ))}
-        </p>
-      ) : (
-        <>
-          <p className="lu-sent lu-sent--plain" lang="zh-Hans">
-            {example.hanzi}
-          </p>
-          {example.pinyin && (
-            <p className="lu-sent__py" lang="zh-Latn-pinyin">
-              {example.pinyin}
-            </p>
-          )}
-        </>
+        </footer>
       )}
-      {example.vi && <p className="lu-trans">{example.vi}</p>}
-    </section>
+    </div>
   );
 }
 

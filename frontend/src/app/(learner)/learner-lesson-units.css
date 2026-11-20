@@ -219,56 +219,9 @@
   box-shadow: var(--shadow-card);
 }
 
-.learner-app .lu-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-3);
-}
-
-.learner-app .lu-hz {
-  margin: 0;
-  font-family: var(--font-cn);
-  font-size: var(--fs-display);
-  line-height: 1.1;
-  color: var(--text-strong);
-}
-
-.learner-app .lu-hz:focus,
 .learner-app .lu-q:focus,
 .learner-app .lu-card .uxa-h3:focus {
   outline: none;
-}
-
-.learner-app .lu-py {
-  margin: var(--sp-2) 0 0;
-  color: var(--jade-800);
-  font-size: var(--fs-lg);
-}
-
-.learner-app .lu-img {
-  flex: none;
-  width: 96px;
-  height: 96px;
-  border-radius: var(--r-md);
-  object-fit: cover;
-}
-
-.learner-app .lu-pos {
-  display: inline-block;
-  margin-top: var(--sp-3);
-  padding: 2px 10px;
-  border-radius: var(--r-pill);
-  background: var(--slate-100);
-  color: var(--slate-700);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-}
-
-.learner-app .lu-vi {
-  margin: var(--sp-3) 0 0;
-  font-size: var(--fs-lg);
-  color: var(--text-body);
 }
 
 .learner-app .lu-flow .uxa-h2 {
@@ -293,107 +246,6 @@
   margin: calc(var(--sp-4) * -1 + var(--sp-1)) 0 0;
   color: var(--text-muted);
   font-size: var(--fs-md);
-}
-
-.learner-app .lu-sent {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-1) var(--sp-2);
-  margin: 0;
-  font-family: var(--font-cn);
-}
-
-.learner-app .lu-sent--plain {
-  display: block;
-  font-size: var(--fs-xl);
-  color: var(--text-strong);
-}
-
-.learner-app .lu-sent__py {
-  margin: var(--sp-1) 0 0;
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-}
-
-.learner-app .lu-tok {
-  display: inline-grid;
-  justify-items: center;
-}
-
-.learner-app .lu-tok__py {
-  font-family: var(--font-sans);
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  line-height: 1.2;
-}
-
-.learner-app .lu-tok__hz {
-  font-size: var(--fs-xl);
-  color: var(--text-strong);
-  line-height: 1.3;
-}
-
-.learner-app .lu-tok.is-target .lu-tok__hz {
-  color: var(--jade-800);
-  font-weight: 700;
-  border-bottom: 2px solid var(--jade-800);
-}
-
-.learner-app .lu-trans {
-  margin: var(--sp-3) 0 0;
-  color: var(--text-body);
-}
-
-.learner-app .lu-opts {
-  display: grid;
-  gap: var(--sp-3);
-  margin: 0;
-  padding: 0;
-}
-
-.learner-app .lu-opt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  width: 100%;
-  min-height: 56px;
-  padding: var(--sp-3) var(--sp-4);
-  border: 1.5px solid var(--border-default);
-  border-radius: var(--r-lg);
-  background: var(--surface-card);
-  color: var(--text-strong);
-  font: inherit;
-  font-size: var(--fs-lg);
-  text-align: left;
-  cursor: pointer;
-}
-
-.learner-app .lu-opt[aria-checked='true'] {
-  border-color: var(--jade-800);
-}
-
-.learner-app .lu-opt:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.learner-app .lu-opt.is-right {
-  border-color: var(--jade-700);
-  background: var(--jade-50);
-  color: var(--jade-800);
-}
-
-.learner-app .lu-opt.is-wrong {
-  border-color: var(--red-600);
-  background: var(--red-100);
-  color: var(--ex-wrong-chip-text);
-}
-
-.learner-app .lu-opt .icon {
-  width: 22px;
-  height: 22px;
-  flex: none;
 }
 
 /* mẫu `.uxa-foot`: Trước | Tiếp, each half the bar. */
@@ -552,7 +404,7 @@
 
 @media (min-width: 1024px) {
   /* mẫu web: nội dung giữa khung tập trung, rộng tối đa 640px. */
-  .learner-app .lu-flow .ex-body > :is(.lu-card, .lu-opts, .uxa-h2, .lu-sub) {
+  .learner-app .lu-flow .ex-body > :is(.lu-card, .uxa-h2, .lu-sub) {
     width: 100%;
     max-width: 640px;
     margin-inline: auto;
@@ -905,5 +757,449 @@
     width: 100%;
     max-width: 640px;
     margin-inline: auto;
+  }
+}
+
+/* Pha G2a (PO 20/11/2026): thẻ từ, câu ví dụ, chọn nghĩa báo ngay. Theo
+   docs/ui_reference css/vocab-unit.css (mẫu vu-card, vu-card-noimg,
+   vu-example, vu-quiz). Nút chữ jade-800 (AA) chỉ trong luồng này;
+   `--action-primary` toàn app giữ nguyên. */
+
+.learner-app .lu-flow .g-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.learner-app .lu-flow .g-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.learner-app .lu-flow .g-card--noimg {
+  width: 100%;
+  padding-block: var(--sp-8);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.learner-app .lu-flow .g-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  margin-bottom: var(--sp-3);
+  overflow: hidden;
+  border: 1px solid var(--jade-100);
+  border-radius: var(--r-xl);
+  background: var(--jade-50);
+}
+
+.learner-app .lu-flow .g-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.learner-app .lu-flow .g-py {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.02em;
+}
+
+.learner-app .lu-flow .g-hz {
+  margin: 0;
+  color: var(--text-strong);
+  font-family: var(--font-cn);
+  font-size: 4rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.learner-app .lu-flow .g-card--noimg .g-hz {
+  font-size: 5.5rem;
+}
+
+.learner-app .lu-flow .g-pos {
+  display: inline-block;
+  margin: var(--sp-1) 0;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: var(--jade-100);
+  color: var(--jade-800);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.learner-app .lu-flow .g-vi {
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--fs-lg);
+}
+
+.learner-app .lu-flow .g-kicker {
+  margin: 0;
+  color: var(--jade-800);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.learner-app .lu-flow :is(.g-hz, .g-ex, .g-q):focus {
+  outline: none;
+}
+
+/* Thanh đáy: Nghe (khi máy có giọng zh) · Tiếp. Nói, Viết là G2b. */
+.learner-app .lu-flow .g-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--sp-5);
+  width: 100%;
+}
+
+.learner-app .lu-flow :is(.g-tool, .g-next) {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.learner-app .lu-flow .g-tool {
+  color: var(--text-body);
+  font-weight: 600;
+}
+
+.learner-app .lu-flow .g-next {
+  margin-left: var(--sp-3);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.learner-app .lu-flow .g-tool__dot {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  color: var(--text-strong);
+  transition:
+    background var(--dur-fast),
+    transform var(--dur-fast);
+}
+
+.learner-app .lu-flow .g-tool:hover .g-tool__dot {
+  background: var(--jade-50);
+}
+
+.learner-app .lu-flow .g-tool:active .g-tool__dot {
+  transform: scale(0.96);
+}
+
+.learner-app .lu-flow .g-next__dot {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--action-primary);
+  box-shadow: var(--shadow-float);
+  color: var(--action-primary-text);
+}
+
+.learner-app .lu-flow .g-next:hover .g-next__dot {
+  background: var(--action-primary-hover);
+}
+
+.learner-app .lu-flow :is(.g-tool, .g-next):focus-visible {
+  outline: none;
+}
+
+.learner-app
+  .lu-flow
+  :is(.g-tool:focus-visible .g-tool__dot, .g-next:focus-visible .g-next__dot) {
+  box-shadow: var(--focus-ring);
+}
+
+/* Câu ví dụ */
+.learner-app .lu-flow .g-ex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.learner-app .lu-flow .g-ex__cn {
+  margin: 0;
+  color: var(--text-strong);
+  font-family: var(--font-cn);
+  font-size: var(--fs-2xl);
+  line-height: 1.4;
+}
+
+.learner-app .lu-flow .g-ex__cn mark {
+  background: none;
+  color: var(--text-accent-cn);
+  font-weight: 700;
+}
+
+.learner-app .lu-flow .g-ex__py {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.learner-app .lu-flow .g-ex__vi {
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--fs-lg);
+}
+
+.learner-app .lu-flow .g-listen {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.learner-app .lu-flow .g-say {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--blue-600);
+  border-radius: var(--r-pill);
+  background: var(--blue-100);
+  color: var(--blue-600);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.learner-app .lu-flow .g-say--slow {
+  border-color: var(--border-strong);
+  background: var(--surface-card);
+  color: var(--text-body);
+}
+
+.learner-app .lu-flow .g-say:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Chọn nghĩa */
+.learner-app .lu-flow .g-q {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  text-align: center;
+}
+
+.learner-app .lu-flow .g-q .cn {
+  color: var(--text-accent-cn);
+  font-family: var(--font-cn);
+}
+
+.learner-app .lu-flow .g-sub {
+  margin: 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.learner-app .lu-flow .g-opts {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.learner-app .lu-flow .g-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: var(--sp-3) var(--sp-5);
+  border: 2px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  color: var(--text-body);
+  font: inherit;
+  font-size: var(--fs-lg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.learner-app .lu-flow .g-opt:hover:not([aria-disabled='true']) {
+  border-color: var(--jade-500);
+}
+
+.learner-app .lu-flow .g-opt:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .lu-flow .g-opt.is-right {
+  border-color: var(--jade-600);
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .lu-flow .g-opt.is-wrong {
+  border-color: var(--red-600);
+  background: var(--red-100);
+  color: var(--ex-wrong-chip-text);
+}
+
+.learner-app .lu-flow .g-opt[aria-disabled='true'] {
+  cursor: default;
+}
+
+.learner-app .lu-flow .g-opt .icon {
+  flex: none;
+}
+
+/* Phản hồi ngay */
+.learner-app .lu-flow .g-fb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-4);
+  border: 1px solid var(--jade-200);
+  border-radius: var(--r-lg);
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .lu-flow .g-fb.is-bad {
+  border-color: var(--ex-wrong-border);
+  background: var(--red-100);
+  color: var(--ex-wrong-chip-text);
+}
+
+.learner-app .lu-flow .g-fb .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.learner-app .lu-flow .g-fb__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.learner-app .lu-flow .g-fb__text {
+  margin: 2px 0 0;
+  color: var(--text-body);
+}
+
+.learner-app .lu-flow .g-fb__text span[lang='zh-Hans'] {
+  white-space: nowrap;
+}
+
+.learner-app .lu-flow .g-fb > .icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.learner-app .lu-flow .g-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 var(--sp-6);
+  border: 0;
+  border-radius: var(--btn-radius);
+  background: var(--jade-800);
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.learner-app .lu-flow .g-btn:hover {
+  background: var(--ex-btn-hover);
+}
+
+.learner-app .lu-flow .g-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--white),
+    0 0 0 6px var(--jade-700);
+}
+
+/* Chân luồng: mẫu `.g-foot` (mobile: dính đáy, nền kem mờ dần) và
+   `.w-focus__foot.g-wfoot` (web: một cột ở giữa). */
+.learner-app .lu-flow .ex-foot.g-wfoot {
+  padding: var(--sp-3) var(--sp-4)
+    calc(var(--sp-4) + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--cream-50) 70%, transparent);
+}
+
+@media (min-width: 1024px) {
+  .learner-app .lu-flow .ex-body:has(> .g-body) {
+    display: flex;
+  }
+
+  .learner-app .lu-flow .g-body {
+    justify-content: center;
+    width: 100%;
+    max-width: 560px;
+    min-height: 100%;
+    margin: 0 auto;
+    padding-block: var(--sp-6);
+  }
+
+  .learner-app .lu-flow .g-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .learner-app .lu-flow .g-hz {
+    font-size: 4.5rem;
+  }
+
+  .learner-app .lu-flow .g-card--noimg .g-hz {
+    font-size: 6.5rem;
+  }
+
+  .learner-app .lu-flow .ex-foot.g-wfoot {
+    padding: var(--sp-4) var(--w-pad);
+    background: var(--surface-card);
+  }
+
+  /* Mẫu `.w-focus__foot.g-wfoot > div`: thanh và phản hồi ở giữa ô 760px. */
+  .learner-app .lu-flow .ex-foot.g-wfoot > div {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-app .lu-flow .g-tool__dot,
+  .learner-app .lu-flow .g-tool:active .g-tool__dot {
+    transform: none;
+    transition: none;
   }
 }

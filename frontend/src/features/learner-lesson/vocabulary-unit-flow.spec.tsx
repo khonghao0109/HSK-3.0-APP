@@ -76,46 +76,148 @@ afterEach(() => vi.unstubAllGlobals());
 const next = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }));
 
-describe('VocabularyUnitFlow (N3, N4, N8)', () => {
-  it('shows the word card with its step count and no Nghe button without audio', () => {
-    renderFlow();
+// Pha G2a: Nghe cần giọng zh của máy; jsdom không có speechSynthesis.
+type Spoken = { text: string; rate: number; lang: string };
+function stubVoices(voices: Array<{ lang: string; localService: boolean }>) {
+  const spoken: Spoken[] = [];
+  class Utterance {
+    text: string;
+    rate = 1;
+    lang = '';
+    voice: unknown = null;
+    constructor(text: string) {
+      this.text = text;
+    }
+  }
+  vi.stubGlobal('SpeechSynthesisUtterance', Utterance);
+  vi.stubGlobal('speechSynthesis', {
+    getVoices: () => voices,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    cancel: vi.fn(),
+    speak: (utterance: Utterance) =>
+      spoken.push({
+        text: utterance.text,
+        rate: utterance.rate,
+        lang: utterance.lang,
+      }),
+  });
+  return spoken;
+}
+
+describe('VocabularyUnitFlow (N3, N8, Pha G2a)', () => {
+  it('shows the word card (mẫu vu-card-noimg) with only Tiếp when the device has no zh voice', () => {
+    const { container } = renderFlow();
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
       'Từ vựng 2 · Gia đình',
     );
+    const card = container.querySelector('section.g-card');
+    expect(card).toHaveClass('g-card--noimg');
+    expect(
+      Array.from(card?.children ?? []).map((node) => [
+        node.className,
+        node.textContent,
+      ]),
+    ).toEqual([
+      ['g-py', 'jiā'],
+      ['g-hz', '家'],
+      ['g-pos', 'danh từ'],
+      ['g-vi', 'nhà; gia đình'],
+    ]);
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('家');
-    expect(screen.getByText('jiā')).toBeDefined();
-    expect(screen.getByText('Danh từ')).toBeDefined();
-    expect(screen.getByText('nhà; gia đình')).toBeDefined();
     expect(screen.getByLabelText('Bước 1 trên 5').textContent).toBe('1/5');
     expect(
       screen.getByRole('link', { name: 'Thoát về bài học' }),
     ).toHaveAttribute('href', '/learn/lessons/5');
-    expect(screen.queryByRole('button', { name: /Nghe/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Trước/ })).toBeNull();
+    const bar = screen.getByRole('group', { name: 'Luyện từ này' });
+    expect(
+      within(bar)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Tiếp']);
+    expect(
+      screen.queryByRole('button', { name: /Nghe|Nói|Viết|Trước/ }),
+    ).toBeNull();
   });
 
-  it('shows the example with one syllable per character, the word marked, and goes back', () => {
+  it('shows the word image above the pinyin (mẫu vu-card)', () => {
+    const withImage: UnitWord = {
+      ...jia,
+      image: { id: 9, altText: 'Ngôi nhà' },
+    };
+    const { container } = render(
+      <VocabularyUnitFlow
+        lessonId={5}
+        topicId={7}
+        title="Từ vựng 2 · Gia đình"
+        lessonHref="/learn/lessons/5"
+        nextHref={null}
+        words={[withImage]}
+        steps={unitSteps([withImage], [withImage, you])}
+      />,
+    );
+    const card = container.querySelector('section.g-card');
+    expect(card).not.toHaveClass('g-card--noimg');
+    expect(card?.firstElementChild).toHaveClass('g-media');
+    expect(
+      within(card as HTMLElement).getByRole('img', { name: 'Ngôi nhà' }),
+    ).toBeDefined();
+  });
+
+  it('reads the word with a zh voice at 0,9 only on Nghe', () => {
+    const spoken = stubVoices([
+      { lang: 'en-US', localService: true },
+      { lang: 'zh-CN', localService: true },
+    ]);
+    renderFlow();
+    expect(spoken).toEqual([]);
+    const bar = screen.getByRole('group', { name: 'Luyện từ này' });
+    expect(
+      within(bar)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Nghe', 'Tiếp']);
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe' }));
+    expect(spoken).toEqual([{ text: '家', rate: 0.9, lang: 'zh-CN' }]);
+  });
+
+  it('shows the example (mẫu vu-example) with the word marked and Nghe câu / Nghe chậm', () => {
+    const spoken = stubVoices([{ lang: 'zh-CN', localService: false }]);
     const { container } = renderFlow();
     next();
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
-      'Câu ví dụ với 家',
+    expect(
+      screen.getByText('Câu ví dụ', { selector: '.g-kicker' }),
+    ).toBeDefined();
+    const section = screen.getByRole('region', { name: 'Câu ví dụ với 家' });
+    expect(section.querySelector('.g-ex__cn')?.innerHTML).toBe(
+      '我<mark>家</mark>有四口人。',
     );
-    const sentence = container.querySelector('.lu-sent');
-    expect(sentence).toHaveAttribute('aria-label', '我家有四口人。');
-    expect(
-      Array.from(container.querySelectorAll('.lu-tok__py')).map(
-        (node) => node.textContent,
-      ),
-    ).toEqual(['wǒ', 'jiā', 'yǒu', 'sì', 'kǒu', 'rén']);
-    expect(
-      container.querySelector('.lu-tok.is-target .lu-tok__hz')?.textContent,
-    ).toBe('家');
-    expect(screen.getByText('Nhà tôi có bốn người.')).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Trước' }));
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('家');
+    expect(section.querySelector('.g-ex__py')?.textContent).toBe(
+      'wǒ jiā yǒu sì kǒu rén.',
+    );
+    expect(section.querySelector('.g-ex__vi')?.textContent).toBe(
+      'Nhà tôi có bốn người.',
+    );
+    expect(container.querySelector('.lu-tok')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Trước' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe câu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe chậm' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe' }));
+    expect(spoken).toEqual([
+      { text: '我家有四口人。', rate: 0.9, lang: 'zh-CN' },
+      { text: '我家有四口人。', rate: 0.6, lang: 'zh-CN' },
+      { text: '我家有四口人。', rate: 0.9, lang: 'zh-CN' },
+    ]);
   });
 
-  it('grades only after Kiểm tra, then shows the answer (N4, Q51)', () => {
+  it('hides Nghe câu and Nghe chậm without a zh voice', () => {
+    renderFlow();
+    next();
+    expect(screen.queryByRole('button', { name: /Nghe/ })).toBeNull();
+  });
+
+  it('grades a meaning the moment it is chosen and shows the answer (PO 20/11, thay Q51/N4)', () => {
     renderFlow();
     next();
     next();
@@ -128,8 +230,8 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     expect(options.map((option) => option.textContent)).toEqual(
       quiz?.kind === 'quiz' ? quiz.options : [],
     );
-    const check = screen.getByRole('button', { name: 'Kiểm tra' });
-    expect(check).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xác nhận' })).toBeNull();
 
     const wrong = options.find(
       (option) => option.textContent !== 'nhà; gia đình',
@@ -137,19 +239,48 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     if (!wrong) throw new Error('missing wrong option');
     fireEvent.click(wrong);
     expect(wrong).toHaveAttribute('aria-checked', 'true');
-    expect(screen.queryByText('Chưa đúng')).toBeNull();
-
-    fireEvent.click(check);
     expect(
-      screen.getByText('Chưa đúng', { selector: '.m02-feedback__title' }),
+      screen.getByText('Chưa đúng', { selector: '.g-fb__title' }),
     ).toBeDefined();
-    expect(screen.getByText(/Đáp án đúng:/).textContent).toBe(
-      'Đáp án đúng: 家 jiā là nhà, gia đình.',
-    );
+    expect(
+      screen.getByText(/Đáp án đúng:/, { selector: '.g-fb__text' }).textContent,
+    ).toBe('Đáp án đúng: 家 jiā là nhà, gia đình.');
     expect(wrong).toHaveClass('is-wrong');
     expect(
       options.find((option) => option.textContent === 'nhà; gia đình'),
     ).toHaveClass('is-right');
+    for (const option of options) {
+      expect(option).toHaveAttribute('aria-disabled', 'true');
+    }
+    expect(
+      screen
+        .getAllByRole('button')
+        .filter((button) => !options.includes(button))
+        .map((button) => button.textContent),
+    ).toEqual(['Tiếp tục']);
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Tiếp tục' }),
+    );
+    expect(screen.getByRole('status').textContent).toBe(
+      'Chưa đúng. Đáp án đúng: 家 jiā là nhà, gia đình.',
+    );
+  });
+
+  it('moves focus with the arrow keys without grading (Q51)', () => {
+    renderFlow();
+    next();
+    next();
+    const options = screen.getAllByRole('radio');
+    const [first, second] = options;
+    if (!first || !second) throw new Error('missing options');
+    first.focus();
+    fireEvent.keyDown(first, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(second);
+    expect(second).toHaveAttribute('tabindex', '0');
+    expect(first).toHaveAttribute('tabindex', '-1');
+    expect(second).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByText(/Chính xác|Chưa đúng/)).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('');
   });
 
   it('ends on the result: marks the topic learned, lists each word, no medal (N8)', async () => {
@@ -157,10 +288,12 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     next();
     next();
     fireEvent.click(screen.getByRole('radio', { name: 'nhà; gia đình' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     expect(
-      screen.getByText('Chính xác', { selector: '.m02-feedback__title' }),
+      screen.getByText('Chính xác', { selector: '.g-fb__title' }),
     ).toBeDefined();
+    expect(
+      screen.getByText(/nghĩa là/, { selector: '.g-fb__text' }).textContent,
+    ).toBe('家 jiā nghĩa là nhà, gia đình.');
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     next();
     const wrong = screen
@@ -168,7 +301,6 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
       .find((option) => option.textContent !== 'có');
     if (!wrong) throw new Error('missing wrong option');
     fireEvent.click(wrong);
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     });
@@ -217,11 +349,9 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     next();
     next();
     fireEvent.click(screen.getByRole('radio', { name: 'nhà; gia đình' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     next();
     fireEvent.click(screen.getByRole('radio', { name: 'có' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     });
@@ -237,11 +367,9 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     next();
     next();
     fireEvent.click(screen.getAllByRole('radio')[0] as HTMLElement);
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     next();
     fireEvent.click(screen.getAllByRole('radio')[0] as HTMLElement);
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     });
