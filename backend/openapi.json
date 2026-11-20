@@ -1718,7 +1718,8 @@
                 "fill_blank",
                 "listening_choice",
                 "arrange_sentence",
-                "speaking_repeat"
+                "speaking_repeat",
+                "matching"
               ]
             }
           },
@@ -9511,7 +9512,8 @@
               "fill_blank",
               "listening_choice",
               "arrange_sentence",
-              "speaking_repeat"
+              "speaking_repeat",
+              "matching"
             ]
           },
           "prompt": {
@@ -9672,7 +9674,8 @@
               "fill_blank",
               "listening_choice",
               "arrange_sentence",
-              "speaking_repeat"
+              "speaking_repeat",
+              "matching"
             ]
           },
           "prompt": {
@@ -9823,7 +9826,8 @@
               "fill_blank",
               "listening_choice",
               "arrange_sentence",
-              "speaking_repeat"
+              "speaking_repeat",
+              "matching"
             ]
           },
           "prompt": {
@@ -9876,7 +9880,8 @@
               "fill_blank",
               "listening_choice",
               "arrange_sentence",
-              "speaking_repeat"
+              "speaking_repeat",
+              "matching"
             ]
           },
           "prompt": {
@@ -12634,7 +12639,8 @@
               "mcq",
               "fill_blank",
               "listening_choice",
-              "arrange_sentence"
+              "arrange_sentence",
+              "matching"
             ],
             "type": "string"
           },

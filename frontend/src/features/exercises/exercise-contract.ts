@@ -12,6 +12,7 @@ export const exerciseTypes = [
   'listening_choice',
   'arrange_sentence',
   'speaking_repeat',
+  'matching',
 ] as const;
 export const exerciseStatuses = ['draft', 'published', 'archived'] as const;
 

@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import {
   afterEach,
@@ -47,6 +48,19 @@ const arrange: PlayerExercise = {
     { id: 'xiang', text: '想' },
     { id: 'mai', text: '买' },
   ],
+};
+const matching: PlayerExercise = {
+  id: 15,
+  topicId: null,
+  prompt: 'Chọn cặp tương ứng',
+  answered: false,
+  kind: 'matching',
+  pairs: [
+    { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà' },
+    { id: 'p2', left: '爸爸', leftReading: 'bàba', right: 'bố' },
+    { id: 'p3', left: '妈妈', leftReading: 'māma', right: 'mẹ' },
+  ],
+  rightOrder: ['p3', 'p1', 'p2'],
 };
 const fill: PlayerExercise = {
   id: 13,
@@ -782,6 +796,128 @@ describe('LessonPlayer', () => {
     ])('shows no hint before answering a %s', (_kind, exercise) => {
       renderPlayer([exercise]);
       expect(screen.queryByText(HINT)).toBeNull();
+    });
+  });
+
+  describe('matching (Pha E)', () => {
+    const live = () => document.querySelector('.mt-live')?.textContent ?? '';
+    const cell = (column: 'Từ' | 'Nghĩa', name: RegExp) =>
+      within(screen.getByRole('list', { name: column })).getByRole('button', {
+        name,
+      });
+
+    it('locks right pairs, flags a wrong pair, then sends the move log once', async () => {
+      fetchSpy.mockResolvedValue(attempt(false));
+      renderPlayer([matching, mcq]);
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Chọn cặp tương ứng' }),
+      ).toBeInTheDocument();
+      // No Kiểm tra: the last pair sends the attempt.
+      expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+      expect(
+        within(screen.getByRole('list', { name: 'Nghĩa' }))
+          .getAllByRole('button')
+          .map((button) => button.textContent),
+      ).toEqual(['mẹ', 'nhà', 'bố']);
+
+      fireEvent.click(cell('Từ', /爸爸/u));
+      expect(cell('Từ', /爸爸/u)).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.click(cell('Nghĩa', /^mẹ$/u));
+      expect(cell('Từ', /爸爸/u)).toHaveClass('is-wrong');
+      expect(cell('Nghĩa', /^mẹ$/u)).toHaveClass('is-wrong');
+      expect(
+        cell('Nghĩa', /^mẹ$/u).querySelector('.mt-cell__mark'),
+      ).not.toBeNull();
+      expect(live()).toBe('Chưa đúng: 爸爸 bàba không phải mẹ. Chọn lại.');
+      await waitFor(() =>
+        expect(cell('Từ', /爸爸/u)).not.toHaveClass('is-wrong'),
+      );
+      expect(cell('Từ', /爸爸/u)).toHaveAttribute('aria-pressed', 'false');
+
+      // Meaning first works too.
+      fireEvent.click(cell('Nghĩa', /^nhà$/u));
+      fireEvent.click(cell('Từ', /家/u));
+      expect(cell('Từ', /家/u)).toHaveClass('is-done');
+      expect(cell('Từ', /家/u)).toHaveAttribute('aria-disabled', 'true');
+      expect(live()).toBe('Đúng: 家 jiā là nhà. Còn 2 cặp.');
+      // Focus stays in the column of the last tap, on its next open cell.
+      expect(cell('Từ', /爸爸/u)).toHaveFocus();
+      fireEvent.click(cell('Từ', /家/u));
+      expect(cell('Từ', /家/u)).toHaveAttribute('aria-pressed', 'false');
+
+      fireEvent.click(cell('Từ', /爸爸/u));
+      fireEvent.click(cell('Nghĩa', /^bố$/u));
+      expect(attemptCalls()).toHaveLength(0);
+      fireEvent.click(cell('Từ', /妈妈/u));
+      fireEvent.click(cell('Nghĩa', /^mẹ$/u));
+
+      const next = await screen.findByRole('button', { name: 'Tiếp tục' });
+      await waitFor(() => expect(next).toHaveFocus());
+      expect(attemptCalls()).toHaveLength(1);
+      const [url, init] = attemptCalls()[0] ?? [];
+      expect(url).toBe('/api/learner/exercises/15/attempts');
+      expect(JSON.parse(String(init?.body))).toMatchObject({
+        answer: {
+          moves: [
+            { leftId: 'p2', rightId: 'p3' },
+            { leftId: 'p1', rightId: 'p1' },
+            { leftId: 'p2', rightId: 'p2' },
+            { leftId: 'p3', rightId: 'p3' },
+          ],
+        },
+      });
+      expect(
+        screen.getByText('Hoàn thành · Sai 1 lần', {
+          selector: '.m02-feedback__title',
+        }),
+      ).toBeInTheDocument();
+      expect(next.closest('.m02-feedback')).toHaveClass(
+        'm02-feedback--neutral',
+      );
+      expect(screen.queryByText('Chưa đúng')).toBeNull();
+    });
+
+    it('shows Chính xác with the pair count when no move was wrong', async () => {
+      fetchSpy.mockResolvedValue(attempt(true));
+      renderPlayer([matching]);
+      for (const [left, right] of [
+        [/家/u, /^nhà$/u],
+        [/爸爸/u, /^bố$/u],
+        [/妈妈/u, /^mẹ$/u],
+      ] as const) {
+        fireEvent.click(cell('Từ', left));
+        fireEvent.click(cell('Nghĩa', right));
+      }
+      const next = await screen.findByRole('button', { name: 'Tiếp tục' });
+      expect(screen.getByText('Chính xác')).toBeInTheDocument();
+      expect(
+        screen.getByText('Bạn đã ghép đúng cả 3 cặp.'),
+      ).toBeInTheDocument();
+      expect(next.closest('.m02-feedback')).not.toHaveClass(
+        'm02-feedback--neutral',
+      );
+      expect(live()).toBe('Đúng: 妈妈 māma là mẹ. Đã ghép xong cả 3 cặp.');
+    });
+
+    it('offers Kiểm tra to resend the same log when the attempt fails', async () => {
+      fetchSpy.mockResolvedValueOnce(ok({}, 500));
+      fetchSpy.mockResolvedValueOnce(attempt(true));
+      renderPlayer([matching]);
+      for (const [left, right] of [
+        [/家/u, /^nhà$/u],
+        [/爸爸/u, /^bố$/u],
+        [/妈妈/u, /^mẹ$/u],
+      ] as const) {
+        fireEvent.click(cell('Từ', left));
+        fireEvent.click(cell('Nghĩa', right));
+      }
+      await screen.findByRole('alert');
+      fireEvent.click(checkButton());
+      await screen.findByRole('button', { name: 'Tiếp tục' });
+      const [first, second] = attemptCalls();
+      expect(new Headers(second?.[1]?.headers).get('idempotency-key')).toBe(
+        new Headers(first?.[1]?.headers).get('idempotency-key'),
+      );
     });
   });
 

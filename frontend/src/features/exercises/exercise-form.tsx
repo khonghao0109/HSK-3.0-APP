@@ -54,6 +54,12 @@ const MIN_ACCEPTED = 1;
 const MAX_ACCEPTED = 100;
 const MIN_TOKENS = 2;
 const MAX_TOKENS = 100;
+// Pha E (matching): khớp MATCHING_LIMITS của backend; độ dài tính theo code point.
+const MIN_PAIRS = 3;
+const MAX_PAIRS = 5;
+const MAX_PAIR_LEFT = 32;
+const MAX_PAIR_LEFT_READING = 64;
+const MAX_PAIR_RIGHT = 80;
 const MIN_ORDER = 1;
 const MAX_ORDER = 1_000_000;
 
@@ -78,6 +84,21 @@ function FieldError({
   );
 }
 
+/** Khoá so trùng như `lessonExerciseTextMatchKey` của backend (không phân biệt hoa/thường). */
+function pairTextKey(text: string): string {
+  return text.normalize('NFKC').trim().replace(/\s+/gu, ' ').toLowerCase();
+}
+
+function codePointLength(text: string): number {
+  return [...text.trim()].length;
+}
+
+type PairField = 'left' | 'leftReading' | 'right';
+
+function pairFieldId(pairId: string, field: PairField): string {
+  return `exercise-form-pair-${pairId}-${field}`;
+}
+
 function ariaFor(errorId: string, errors: FieldErrors) {
   return errors[errorId] === undefined
     ? {}
@@ -89,7 +110,7 @@ function ariaFor(errorId: string, errors: FieldErrors) {
  * ∪ id đã cấp trước đó, nên xoá `opt-3` rồi thêm không tái sử dụng `opt-3`.
  */
 function allocateStableId(
-  prefix: 'opt' | 'tok',
+  prefix: StableIdPrefix,
   currentIds: readonly string[],
   issuedIds: Set<string>,
 ): string {
@@ -101,7 +122,8 @@ function allocateStableId(
   return id;
 }
 
-type AllocateId = (prefix: 'opt' | 'tok') => string;
+type StableIdPrefix = 'opt' | 'tok' | 'pair';
+type AllocateId = (prefix: StableIdPrefix) => string;
 
 /** Mặc định cố định khi tạo form, hoặc cấp id qua allocator (đổi loại). */
 function blankOptions(allocate?: AllocateId): ExerciseFormValue['options'] {
@@ -118,6 +140,15 @@ function blankTokens(allocate?: AllocateId): ExerciseFormValue['tokens'] {
   ];
 }
 
+function blankPairs(allocate: AllocateId): ExerciseFormValue['pairs'] {
+  return Array.from({ length: MIN_PAIRS }, () => ({
+    id: allocate('pair'),
+    left: '',
+    leftReading: '',
+    right: '',
+  }));
+}
+
 type SpecificFields = Pick<
   ExerciseFormValue,
   | 'options'
@@ -126,6 +157,7 @@ type SpecificFields = Pick<
   | 'caseSensitive'
   | 'tokens'
   | 'tokenOrder'
+  | 'pairs'
   | 'referenceText'
   | 'mediaId'
 >;
@@ -144,6 +176,7 @@ function typeSpecificDefaults(
     caseSensitive: false,
     tokens,
     tokenOrder: tokens.map((token) => token.id),
+    pairs: type === 'matching' ? blankPairs(allocate) : [],
     referenceText: '',
     mediaId: null,
   };
@@ -198,6 +231,14 @@ function tokensTarget(value: ExerciseFormValue) {
   };
 }
 
+function pairsTarget(value: ExerciseFormValue) {
+  const first = value.pairs[0];
+  return {
+    errorId: 'exercise-form-pairs-error',
+    focusId: first ? pairFieldId(first.id, 'left') : 'exercise-form-add-pair',
+  };
+}
+
 function correctTarget(value: ExerciseFormValue) {
   const first = value.options[0];
   return {
@@ -223,6 +264,9 @@ function elementIdForError(
   }
   if (errorId === 'exercise-form-tokens-error') {
     return tokensTarget(value).focusId;
+  }
+  if (errorId === 'exercise-form-pairs-error') {
+    return pairsTarget(value).focusId;
   }
   const suffix = '-error';
   return errorId.endsWith(suffix) ? errorId.slice(0, -suffix.length) : null;
@@ -293,6 +337,9 @@ function serverErrorTarget(
     case 'content.tokens.$':
     case 'answer.tokenIds':
       return value.type === 'arrange_sentence' ? tokensTarget(value) : null;
+    case 'content.pairs':
+    case 'content.pairs.$':
+      return value.type === 'matching' ? pairsTarget(value) : null;
     default:
       break;
   }
@@ -338,6 +385,19 @@ function serverErrorTarget(
     }
     return null;
   }
+  const pairMatch =
+    /^content\.pairs\[(\d+)\](?:\.(id|left|leftReading|right))?$/u.exec(clean);
+  if (pairMatch !== null) {
+    if (value.type !== 'matching') return null;
+    const pair = value.pairs[Number(pairMatch[1])];
+    if (pair === undefined) return null;
+    const segment = pairMatch[2];
+    // Lỗi của cả cặp hoặc của id (người soạn không sửa id) → ô Chữ Hán.
+    const field: PairField =
+      segment === 'leftReading' || segment === 'right' ? segment : 'left';
+    const focusId = pairFieldId(pair.id, field);
+    return { errorId: `${focusId}-error`, focusId };
+  }
   return null;
 }
 
@@ -363,6 +423,7 @@ export function ExerciseForm(props: ExerciseFormProps) {
     } else {
       for (const option of editProps.initial.options) issued.add(option.id);
       for (const token of editProps.initial.tokens) issued.add(token.id);
+      for (const pair of editProps.initial.pairs) issued.add(pair.id);
     }
     return issued;
   });
@@ -596,6 +657,50 @@ export function ExerciseForm(props: ExerciseFormProps) {
     clearFieldError('exercise-form-tokens-error');
   }
 
+  function addPair() {
+    if (value.pairs.length >= MAX_PAIRS) return;
+    const id = allocateStableId(
+      'pair',
+      value.pairs.map((pair) => pair.id),
+      issuedStableIds,
+    );
+    setValue((current) =>
+      current.pairs.length >= MAX_PAIRS
+        ? current
+        : {
+            ...current,
+            pairs: [
+              ...current.pairs,
+              { id, left: '', leftReading: '', right: '' },
+            ],
+          },
+    );
+    clearFieldError('exercise-form-pairs-error');
+    focusElement(pairFieldId(id, 'left'));
+  }
+
+  function removePair(id: string) {
+    setValue((current) =>
+      current.pairs.length <= MIN_PAIRS
+        ? current
+        : { ...current, pairs: current.pairs.filter((pair) => pair.id !== id) },
+    );
+    clearErrorsWithPrefix(`exercise-form-pair-${id}-`);
+    clearFieldError('exercise-form-pairs-error');
+    // Hàng vừa xoá mất khỏi DOM; nút "Thêm cặp" luôn bật lại sau khi xoá.
+    focusElement('exercise-form-add-pair');
+  }
+
+  function updatePair(id: string, field: PairField, text: string) {
+    setValue((current) => ({
+      ...current,
+      pairs: current.pairs.map((pair) =>
+        pair.id === id ? { ...pair, [field]: text } : pair,
+      ),
+    }));
+    clearFieldError(`${pairFieldId(id, field)}-error`);
+  }
+
   function changeAudio(raw: string) {
     const parsed = Number(raw);
     setValue((current) => ({
@@ -704,6 +809,59 @@ export function ExerciseForm(props: ExerciseFormProps) {
             EXERCISE_FORM_MESSAGE.tokenTextRequired,
           );
         }
+      }
+    } else if (current.type === 'matching') {
+      if (
+        current.pairs.length < MIN_PAIRS ||
+        current.pairs.length > MAX_PAIRS
+      ) {
+        add('exercise-form-pairs-error', EXERCISE_FORM_MESSAGE.pairsRange);
+      }
+      const seenLeft = new Set<string>();
+      const seenRight = new Set<string>();
+      for (const pair of current.pairs) {
+        const leftLength = codePointLength(pair.left);
+        if (leftLength === 0) {
+          add(
+            `${pairFieldId(pair.id, 'left')}-error`,
+            EXERCISE_FORM_MESSAGE.pairLeftRequired,
+          );
+        } else if (leftLength > MAX_PAIR_LEFT) {
+          add(
+            `${pairFieldId(pair.id, 'left')}-error`,
+            EXERCISE_FORM_MESSAGE.pairLeftTooLong,
+          );
+        } else if (seenLeft.has(pairTextKey(pair.left))) {
+          add(
+            `${pairFieldId(pair.id, 'left')}-error`,
+            EXERCISE_FORM_MESSAGE.pairLeftDuplicate,
+          );
+        }
+        if (leftLength > 0) seenLeft.add(pairTextKey(pair.left));
+        if (codePointLength(pair.leftReading) > MAX_PAIR_LEFT_READING) {
+          add(
+            `${pairFieldId(pair.id, 'leftReading')}-error`,
+            EXERCISE_FORM_MESSAGE.pairLeftReadingTooLong,
+          );
+        }
+        const rightLength = codePointLength(pair.right);
+        if (rightLength === 0) {
+          add(
+            `${pairFieldId(pair.id, 'right')}-error`,
+            EXERCISE_FORM_MESSAGE.pairRightRequired,
+          );
+        } else if (rightLength > MAX_PAIR_RIGHT) {
+          add(
+            `${pairFieldId(pair.id, 'right')}-error`,
+            EXERCISE_FORM_MESSAGE.pairRightTooLong,
+          );
+        } else if (seenRight.has(pairTextKey(pair.right))) {
+          add(
+            `${pairFieldId(pair.id, 'right')}-error`,
+            EXERCISE_FORM_MESSAGE.pairRightDuplicate,
+          );
+        }
+        if (rightLength > 0) seenRight.add(pairTextKey(pair.right));
       }
     } else if (current.referenceText.trim().length > MAX_TEXT) {
       add(
@@ -1382,6 +1540,104 @@ export function ExerciseForm(props: ExerciseFormProps) {
             onClick={addToken}
           >
             Thêm mảnh
+          </button>
+        </fieldset>
+      ) : null}
+
+      {value.type === 'matching' ? (
+        <fieldset
+          className="adm-exercise-form__group"
+          aria-describedby={
+            fieldErrors['exercise-form-pairs-error'] === undefined
+              ? undefined
+              : 'exercise-form-pairs-error'
+          }
+        >
+          <legend className="adm-exercise-form__legend">
+            {EXERCISE_FORM.pairs} (3–5) *
+          </legend>
+          <p className="adm-exercise-form__hint">Mỗi hàng là một cặp đúng.</p>
+          <ol className="adm-exercise-form__list">
+            {value.pairs.map((pair, index) => {
+              const fields: {
+                field: PairField;
+                label: string;
+                required: boolean;
+              }[] = [
+                {
+                  field: 'left',
+                  label: EXERCISE_FORM.pairLeft,
+                  required: true,
+                },
+                {
+                  field: 'leftReading',
+                  label: EXERCISE_FORM.pairLeftReading,
+                  required: false,
+                },
+                {
+                  field: 'right',
+                  label: EXERCISE_FORM.pairRight,
+                  required: true,
+                },
+              ];
+              return (
+                <li className="adm-exercise-form__row" key={pair.id}>
+                  <span className="adm-exercise-form__index" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  {fields.map(({ field, label, required }) => {
+                    const inputId = pairFieldId(pair.id, field);
+                    const errorId = `${inputId}-error`;
+                    return (
+                      <div className="adm-exercise-form__control" key={field}>
+                        <label className="adm-field__label" htmlFor={inputId}>
+                          {label}
+                        </label>
+                        <input
+                          className="adm-input"
+                          type="text"
+                          id={inputId}
+                          value={pair[field]}
+                          aria-label={`${label} ${index + 1}`}
+                          aria-required={required || undefined}
+                          disabled={disabled}
+                          onChange={(event) =>
+                            updatePair(pair.id, field, event.target.value)
+                          }
+                          {...ariaFor(errorId, fieldErrors)}
+                        />
+                        <FieldError
+                          id={errorId}
+                          message={fieldErrors[errorId]}
+                        />
+                      </div>
+                    );
+                  })}
+                  <button
+                    className="adm-btn adm-btn--ghost adm-btn--sm"
+                    type="button"
+                    aria-label={`Xoá cặp ${index + 1}`}
+                    disabled={disabled || value.pairs.length <= MIN_PAIRS}
+                    onClick={() => removePair(pair.id)}
+                  >
+                    {EXERCISE_FORM.remove}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <FieldError
+            id="exercise-form-pairs-error"
+            message={fieldErrors['exercise-form-pairs-error']}
+          />
+          <button
+            className="adm-btn adm-btn--outline adm-btn--sm"
+            id="exercise-form-add-pair"
+            type="button"
+            disabled={disabled || value.pairs.length >= MAX_PAIRS}
+            onClick={addPair}
+          >
+            {EXERCISE_FORM.addPair}
           </button>
         </fieldset>
       ) : null}

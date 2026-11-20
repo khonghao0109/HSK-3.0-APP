@@ -85,6 +85,7 @@ enum ExerciseType {
   listening_choice
   arrange_sentence
   speaking_repeat
+  matching
 }
 
 enum TargetType {

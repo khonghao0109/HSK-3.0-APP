@@ -3147,6 +3147,12 @@
     border-top-color: var(--ex-wrong-border);
   }
 
+  /* Pha E: matching finished with mistakes, neutral (not jade, not red). */
+  .learner-app .ex-foot:has(.m02-feedback--neutral) {
+    background: var(--paper);
+    border-top-color: var(--border-default);
+  }
+
   .learner-app .ex-foot .m02-feedback {
     flex: 1;
     gap: var(--sp-4);

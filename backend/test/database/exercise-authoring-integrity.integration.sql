@@ -25,6 +25,7 @@ DECLARE
   listening_revision_2_id INTEGER;
   listening_attempt_id INTEGER;
   imported_exercise_id INTEGER;
+  matching_exercise_id INTEGER;
   rejected BOOLEAN;
   persisted_version INTEGER;
   persisted_prompt TEXT;
@@ -1022,6 +1023,30 @@ BEGIN
     SELECT 1 FROM "ContentRevision" WHERE id = revision_parent_revision_id
   ) THEN
     RAISE EXCEPTION 'exercise authoring history/provenance disappeared';
+  END IF;
+
+  -- Pha E: `matching` is the last ExerciseType value and a draft row accepts it.
+  IF (
+    SELECT (enum_range(NULL::"ExerciseType"))[array_length(enum_range(NULL::"ExerciseType"), 1)]::text
+  ) IS DISTINCT FROM 'matching' THEN
+    RAISE EXCEPTION 'ExerciseType must end with matching';
+  END IF;
+  INSERT INTO "LessonExercise" (
+    "lessonId", type, prompt, content, answer, "orderIndex", status, "updatedAt"
+  ) VALUES (
+    lesson_id,
+    'matching',
+    'Ghép cặp',
+    '{"pairs":[{"id":"p1","left":"家","right":"nhà"},{"id":"p2","left":"爸爸","right":"bố"},{"id":"p3","left":"妈妈","right":"mẹ"}]}'::jsonb,
+    '{}'::jsonb,
+    900001,
+    'draft',
+    CURRENT_TIMESTAMP
+  ) RETURNING id INTO matching_exercise_id;
+  IF NOT EXISTS (
+    SELECT 1 FROM "LessonExercise" WHERE id = matching_exercise_id AND type = 'matching'
+  ) THEN
+    RAISE EXCEPTION 'matching draft exercise was not stored';
   END IF;
 END
 $test$;

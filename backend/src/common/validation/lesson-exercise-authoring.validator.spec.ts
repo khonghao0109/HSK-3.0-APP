@@ -473,6 +473,129 @@ describe('LessonExercise authoring validator', () => {
       expect.arrayContaining(['input', 'payload', 'answer', 'value']),
     );
   });
+
+  describe('matching (Pha E)', () => {
+    const matching = {
+      type: 'matching' as const,
+      prompt: 'Chọn cặp tương ứng',
+      content: {
+        pairs: [
+          { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà; gia đình' },
+          { id: 'p2', left: '爸爸', leftReading: 'bàba', right: 'bố' },
+          { id: 'p3', left: '妈妈', right: 'mẹ' },
+        ],
+      },
+      answer: {},
+    };
+    const pairs = (count: number) =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `p${index + 1}`,
+        left: `左${index + 1}`,
+        right: `phải ${index + 1}`,
+      }));
+
+    it('accepts 3 to 5 pairs at draft and publish and keeps the authored order', () => {
+      for (const mode of ['draft', 'publish'] as const) {
+        expect(validateLessonExerciseAuthoring(matching, mode)).toEqual(
+          matching,
+        );
+        expect(
+          validateLessonExerciseAuthoring(
+            { ...matching, content: { pairs: pairs(5) } },
+            mode,
+          ).content,
+        ).toEqual({ pairs: pairs(5) });
+      }
+    });
+
+    it.each([2, 6])('rejects %i pairs with invalid_pair_count', (count) => {
+      expectValidationError(
+        { ...matching, content: { pairs: pairs(count) } },
+        'draft',
+        { code: 'invalid_pair_count', path: 'content.pairs' },
+      );
+    });
+
+    it('rejects a left or right text repeated in another pair, ignoring case and width', () => {
+      const repeatedLeft = pairs(3);
+      repeatedLeft[2] = { ...repeatedLeft[2], left: ' 左１ ' };
+      expectValidationError(
+        { ...matching, content: { pairs: repeatedLeft } },
+        'draft',
+        { code: 'duplicate_pair_text', path: 'content.pairs[2].left' },
+      );
+      const repeatedRight = pairs(3);
+      repeatedRight[1] = { ...repeatedRight[1], right: 'PHẢI 1' };
+      expectValidationError(
+        { ...matching, content: { pairs: repeatedRight } },
+        'publish',
+        { code: 'duplicate_pair_text', path: 'content.pairs[1].right' },
+      );
+    });
+
+    it('limits left to 32 and right to 80 characters', () => {
+      const long = pairs(3);
+      long[0] = { ...long[0], left: '字'.repeat(32), right: 'a'.repeat(80) };
+      expect(() =>
+        validateLessonExerciseAuthoring(
+          { ...matching, content: { pairs: long } },
+          'publish',
+        ),
+      ).not.toThrow();
+      expectValidationError(
+        {
+          ...matching,
+          content: {
+            pairs: [{ ...long[0], left: '字'.repeat(33) }, ...long.slice(1)],
+          },
+        },
+        'draft',
+        { code: 'string_too_long', path: 'content.pairs[0].left' },
+      );
+      expectValidationError(
+        {
+          ...matching,
+          content: {
+            pairs: [{ ...long[0], right: 'a'.repeat(81) }, ...long.slice(1)],
+          },
+        },
+        'draft',
+        { code: 'string_too_long', path: 'content.pairs[0].right' },
+      );
+    });
+
+    it('requires stable unique pair ids, exact keys and an empty answer', () => {
+      const duplicateId = pairs(3);
+      duplicateId[1] = { ...duplicateId[1], id: 'p1' };
+      expectValidationError(
+        { ...matching, content: { pairs: duplicateId } },
+        'draft',
+        { code: 'duplicate_stable_id', path: 'content.pairs[1].id' },
+      );
+      expectValidationError(
+        {
+          ...matching,
+          content: {
+            pairs: [{ ...pairs(1)[0], extra: 1 }, ...pairs(3).slice(1)],
+          },
+        },
+        'draft',
+        { code: 'unknown_field', path: 'content.pairs[0].$unknown' },
+      );
+      expectValidationError({ ...matching, answer: { pairs: [] } }, 'draft', {
+        code: 'unknown_field',
+        path: 'answer.$unknown',
+      });
+      expectValidationError(
+        {
+          ...matching,
+          content: { pairs: [{ id: 'p1', left: '家' }, ...pairs(3).slice(1)] },
+        },
+        'draft',
+        { code: 'string_required', path: 'content.pairs[0].right' },
+      );
+    });
+  });
 });
 
 function expectValidationError(

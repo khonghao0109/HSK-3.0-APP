@@ -6,6 +6,8 @@ import {
   formatClock,
   hasHan,
   isBarPlayed,
+  matchingProgress,
+  matchingRightOrder,
   IDEMPOTENCY_KEY_PATTERN,
   newAttemptKey,
   orderPlayerExercises,
@@ -381,5 +383,78 @@ describe('listening helpers', () => {
     });
     expect(buildAnswer(listening, { ...EMPTY, optionId: 'z' })).toBeNull();
     expect(buildAnswer(listening, EMPTY)).toBeNull();
+  });
+});
+
+describe('matching (Pha E)', () => {
+  const pairs = [
+    { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà' },
+    { id: 'p2', left: '爸爸', right: 'bố' },
+    { id: 'p3', left: '妈妈', right: 'mẹ' },
+    { id: 'p4', left: '哥哥', right: 'anh trai' },
+  ];
+
+  it('reads 3 to 5 pairs and orders the right column apart from the left', () => {
+    const [exercise] = orderPlayerExercises(
+      [],
+      [raw(20, 1, 'matching', null, { pairs })],
+    );
+    expect(exercise).toMatchObject({ kind: 'matching', pairs });
+    if (exercise?.kind !== 'matching') throw new Error('not matching');
+    expect([...exercise.rightOrder].sort()).toEqual(['p1', 'p2', 'p3', 'p4']);
+    expect(exercise.rightOrder).not.toEqual(['p1', 'p2', 'p3', 'p4']);
+    // Stable for the same exercise, so a reload keeps the board.
+    expect(matchingRightOrder(['p1', 'p2', 'p3', 'p4'], 20)).toEqual(
+      exercise.rightOrder,
+    );
+  });
+
+  it.each([
+    ['too few pairs', { pairs: pairs.slice(0, 2) }],
+    [
+      'too many pairs',
+      { pairs: [...pairs, ...pairs.map((p) => ({ ...p, id: `${p.id}x` }))] },
+    ],
+    [
+      'a duplicate id',
+      { pairs: [...pairs.slice(0, 2), { ...pairs[2], id: 'p1' }] },
+    ],
+    [
+      'a missing right text',
+      { pairs: [{ id: 'p1', left: '家' }, ...pairs.slice(1)] },
+    ],
+    ['no pairs', {}],
+  ])('shows %s as unsupported', (_name, content) => {
+    expect(
+      orderPlayerExercises([], [raw(21, 1, 'matching', null, content)])[0]
+        ?.kind,
+    ).toBe('unsupported');
+  });
+
+  it('locks right pairs, counts wrong moves and answers once every pair is locked', () => {
+    const exercise: PlayerExercise = {
+      id: 22,
+      topicId: null,
+      prompt: 'p',
+      answered: false,
+      kind: 'matching',
+      pairs: pairs.slice(0, 3),
+      rightOrder: ['p2', 'p3', 'p1'],
+    };
+    const moves = [
+      { leftId: 'p1', rightId: 'p2' },
+      { leftId: 'p1', rightId: 'p1' },
+      { leftId: 'p2', rightId: 'p2' },
+    ];
+    expect(matchingProgress(moves)).toEqual({
+      locked: new Set(['p1', 'p2']),
+      mistakes: 1,
+    });
+    const input = { optionId: null, tokenIds: [], text: '', moves };
+    expect(buildAnswer(exercise, input)).toBeNull();
+    const all = [...moves, { leftId: 'p3', rightId: 'p3' }];
+    expect(buildAnswer(exercise, { ...input, moves: all })).toEqual({
+      moves: all,
+    });
   });
 });

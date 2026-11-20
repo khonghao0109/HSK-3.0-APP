@@ -25,6 +25,42 @@ const ADMIN = {
 const GRAMMAR = 'Câu hỏi e2e Pha D';
 const KEY_TEXT = 'Nhà bạn có mấy người? (e2e Pha D)';
 const KEY_TEXT_SUB = 'Đọc hội thoại giữa An và Bình.';
+// HSK1 bài 03 key_text, verbatim from backend/content/pilot/hsk1/lesson-03.json:
+// every block is `text`.
+const LESSON_03 = {
+  title: 'Đoạn hội thoại mẫu: hỏi giờ, hỏi ngày, lịch học',
+  subtitle: 'Hội thoại ngắn dùng số đếm, 点, 分, 星期, 月, 日',
+  content: [
+    {
+      type: 'text',
+      value:
+        'A: 请问，现在几点？ (Qǐngwèn, xiànzài jǐ diǎn?) — Xin hỏi, bây giờ là mấy giờ?\nB: 现在九点十分。 (Xiànzài jiǔ diǎn shí fēn.) — Bây giờ là 9 giờ 10 phút.',
+    },
+    {
+      type: 'text',
+      value:
+        'A: 我们几点上课？ (Wǒmen jǐ diǎn shàngkè?) — Chúng ta vào học lúc mấy giờ?\nB: 我们八点上课。 (Wǒmen bā diǎn shàngkè.) — Chúng ta vào học lúc 8 giờ.\nA: 好，八点见。 (Hǎo, bā diǎn jiàn.) — Vâng, 8 giờ gặp nhé.',
+    },
+    {
+      type: 'text',
+      value:
+        'A: 今天几月几日？ (Jīntiān jǐ yuè jǐ rì?) — Hôm nay là ngày mấy tháng mấy?\nB: 今天五月一日。 (Jīntiān wǔ yuè yī rì.) — Hôm nay là ngày 1 tháng 5.',
+    },
+    {
+      type: 'text',
+      value:
+        'A: 今天星期几？ (Jīntiān xīngqī jǐ?) — Hôm nay là thứ mấy?\nB: 今天星期三。明天星期四。 (Jīntiān xīngqīsān. Míngtiān xīngqīsì.) — Hôm nay là thứ Tư. Ngày mai là thứ Năm.',
+    },
+    {
+      type: 'text',
+      value:
+        '我明天上午八点上课，下午四点下课。晚上我学习汉语。 (Wǒ míngtiān shàngwǔ bā diǎn shàngkè, xiàwǔ sì diǎn xiàkè. Wǎnshang wǒ xuéxí Hànyǔ.) — Ngày mai tôi vào học lúc 8 giờ sáng, tan học lúc 4 giờ chiều. Buổi tối tôi học tiếng Hán.',
+    },
+  ],
+} as const;
+// HSK1 bài 03 (pilot content): the narrative paragraph is a `text` block.
+const NARRATIVE =
+  '我明天上午八点上课，下午四点下课。晚上我学习汉语。 (Wǒ míngtiān shàngwǔ bā diǎn shàngkè, xiàwǔ sì diǎn xiàkè. Wǎnshang wǒ xuéxí Hànyǔ.) — Ngày mai tôi vào học lúc 8 giờ sáng, tan học lúc 4 giờ chiều. Buổi tối tôi học tiếng Hán.';
 
 const point = (title: string, zh: string, hanzi: string) => ({
   type: 'grammar_point',
@@ -122,11 +158,19 @@ async function seedUnits(): Promise<{ lessonId: number; ids: number[] }> {
               },
             ],
           },
+          { type: 'text', value: NARRATIVE },
         ],
+      });
+      await publish({
+        title: LESSON_03.title,
+        subtitle: LESSON_03.subtitle,
+        type: 'key_text',
+        orderIndex: 43,
+        content: LESSON_03.content,
       });
     }
     const topics = await read();
-    const ids = [GRAMMAR, KEY_TEXT].map(
+    const ids = [GRAMMAR, KEY_TEXT, LESSON_03.title].map(
       (title) => topics.find((topic) => topic.title === title)?.id ?? 0,
     );
     return { lessonId, ids };
@@ -161,11 +205,12 @@ test.describe('Ngữ pháp and Bài khoá units (Pha D)', () => {
   let lessonId = 0;
   let grammarId = 0;
   let keyTextId = 0;
+  let lesson03Id = 0;
 
   test.beforeAll(async () => {
     const seeded = await seedUnits();
     lessonId = seeded.lessonId;
-    [grammarId = 0, keyTextId = 0] = seeded.ids;
+    [grammarId = 0, keyTextId = 0, lesson03Id = 0] = seeded.ids;
   });
 
   test('grammar row → one card per point → result marks the unit done', async ({
@@ -251,6 +296,23 @@ test.describe('Ngữ pháp and Bài khoá units (Pha D)', () => {
     await expect(lines.nth(0)).toHaveClass(/is-a/u);
     await expect(lines.nth(1)).toHaveClass(/is-b/u);
     await expect(page.getByRole('img', { name: 'Bình' })).toHaveText('B');
+    // Pha E debt: the narrative `text` block shows as a paragraph, after the
+    // dialogue as in `content`, as plain text.
+    const narrative = page.locator('p.lu-text');
+    await expect(narrative).toHaveCount(1);
+    await expect(narrative).toHaveText(NARRATIVE);
+    expect(
+      await page.evaluate(() => {
+        const dialogue = document.querySelector('.lu-dlg');
+        const text = document.querySelector('p.lu-text');
+        return Boolean(
+          dialogue &&
+          text &&
+          dialogue.compareDocumentPosition(text) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+      }),
+    ).toBe(true);
     await expectNoHorizontalScroll(page);
     await expectTargets44(page, '.lu-foot .btn, .ex-bar .icon-btn:visible');
 
@@ -266,6 +328,22 @@ test.describe('Ngữ pháp and Bài khoá units (Pha D)', () => {
     ).toHaveClass(/is-done/u);
     expect(await readCspViolations(page)).toEqual([]);
     expect(cspConsole).toEqual([]);
+  });
+
+  test('HSK1 bài 03 Bài khoá (text blocks only) shows every paragraph in order', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/lessons/${lessonId}/grammar?unit=${lesson03Id}`);
+    await expect(page).toHaveURL(new RegExp(`\\?unit=${lesson03Id}$`, 'u'));
+    await expect(
+      page.getByRole('heading', { level: 2, name: LESSON_03.title }),
+    ).toBeVisible();
+    await expect(page.locator('p.lu-text')).toHaveText(
+      LESSON_03.content.map((block) => block.value),
+    );
+    await expectNoHorizontalScroll(page);
   });
 
   test('the old Ngữ pháp page shows the new blocks read-only (TL 6)', async ({

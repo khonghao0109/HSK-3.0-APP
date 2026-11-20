@@ -112,6 +112,7 @@ const editInitial: ExerciseFormValue = {
   tokens: [],
   tokenOrder: [],
   tokenDisplayOrder: [],
+  pairs: [],
   referenceText: '',
   mediaId: null,
 };
@@ -985,5 +986,222 @@ describe('X8 — kiểm client theo loại (chữ cạnh ô, aria-describedby, f
       document.getElementById('exercise-form-reference-error'),
     ).toHaveTextContent(EXERCISE_FORM_MESSAGE.referenceTextTooLong);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('ExerciseForm — ghép cặp (matching, Pha E)', () => {
+  function startMatching() {
+    renderCreate(7);
+    fireEvent.change(screen.getByLabelText('Loại bài tập *'), {
+      target: { value: 'matching' },
+    });
+    fireEvent.change(screen.getByLabelText('Đề bài *'), {
+      target: { value: 'Ghép từ với nghĩa' },
+    });
+    fireEvent.change(screen.getByLabelText('Thứ tự *'), {
+      target: { value: '5' },
+    });
+  }
+
+  function fillPair(
+    index: number,
+    left: string,
+    right: string,
+    reading?: string,
+  ) {
+    fireEvent.change(screen.getByLabelText(`Chữ Hán / từ ${index}`), {
+      target: { value: left },
+    });
+    if (reading !== undefined) {
+      fireEvent.change(screen.getByLabelText(`Phiên âm (tuỳ chọn) ${index}`), {
+        target: { value: reading },
+      });
+    }
+    fireEvent.change(screen.getByLabelText(`Nghĩa ${index}`), {
+      target: { value: right },
+    });
+  }
+
+  function fillThreeValidPairs() {
+    fillPair(1, ' 你好 ', ' xin chào ', ' nǐ hǎo ');
+    fillPair(2, '谢谢', 'cảm ơn');
+    fillPair(3, '再见', 'tạm biệt', '   ');
+  }
+
+  it('mặc định 3 hàng có nhãn thấy được; Thêm cặp tắt khi đủ 5, Xoá tắt khi còn 3', () => {
+    startMatching();
+    expect(screen.getAllByText('Chữ Hán / từ')).toHaveLength(3);
+    expect(screen.getAllByText('Phiên âm (tuỳ chọn)')).toHaveLength(3);
+    expect(screen.getAllByText('Nghĩa')).toHaveLength(3);
+    expect(screen.getByRole('button', { name: 'Xoá cặp 1' })).toBeDisabled();
+    const add = screen.getByRole('button', { name: 'Thêm cặp' });
+    fireEvent.click(add);
+    expect(screen.getByRole('button', { name: 'Xoá cặp 1' })).toBeEnabled();
+    fireEvent.click(add);
+    expect(screen.getByLabelText('Chữ Hán / từ 5')).toBeInTheDocument();
+    expect(add).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Xoá cặp 5' }));
+    expect(screen.queryByLabelText('Chữ Hán / từ 5')).not.toBeInTheDocument();
+    expect(add).toBeEnabled();
+  });
+
+  it('thêm cặp focus ô Chữ Hán của hàng mới; xoá cặp focus nút Thêm cặp', async () => {
+    startMatching();
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm cặp' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Chữ Hán / từ 4')).toHaveFocus(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Xoá cặp 2' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Thêm cặp' })).toHaveFocus(),
+    );
+  });
+
+  it('gửi payload: trim, bỏ phiên âm rỗng, id pair-n, answer {}', async () => {
+    const fetchMock = stubFetch(200, {
+      success: true,
+      data: { exercise: { id: 103 } },
+    });
+    startMatching();
+    fillThreeValidPairs();
+    submitCreate();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      type: 'matching',
+      prompt: 'Ghép từ với nghĩa',
+      content: {
+        pairs: [
+          {
+            id: 'pair-1',
+            left: '你好',
+            leftReading: 'nǐ hǎo',
+            right: 'xin chào',
+          },
+          { id: 'pair-2', left: '谢谢', right: 'cảm ơn' },
+          { id: 'pair-3', left: '再见', right: 'tạm biệt' },
+        ],
+      },
+      answer: {},
+      mediaId: null,
+      lessonId: 7,
+    });
+  });
+
+  it('kiểm client: ô trống, quá dài, trùng → lỗi cạnh ô, focus ô lỗi đầu', () => {
+    const fetchMock = stubFetch(200);
+    startMatching();
+    fillPair(1, '你好', 'xin chào', 'n'.repeat(65));
+    fillPair(2, '好'.repeat(33), ' Xin  chào ');
+    fillPair(3, '', 'tạm biệt');
+    submitCreate();
+
+    const reading1 = screen.getByLabelText('Phiên âm (tuỳ chọn) 1');
+    expect(reading1).toHaveFocus();
+    expect(reading1).toHaveAttribute('aria-invalid', 'true');
+    expect(reading1).toHaveAttribute(
+      'aria-describedby',
+      'exercise-form-pair-pair-1-leftReading-error',
+    );
+    expect(
+      document.getElementById('exercise-form-pair-pair-1-leftReading-error'),
+    ).toHaveTextContent(EXERCISE_FORM_MESSAGE.pairLeftReadingTooLong);
+    expect(
+      document.getElementById('exercise-form-pair-pair-2-left-error'),
+    ).toHaveTextContent(EXERCISE_FORM_MESSAGE.pairLeftTooLong);
+    expect(
+      document.getElementById('exercise-form-pair-pair-2-right-error'),
+    ).toHaveTextContent(EXERCISE_FORM_MESSAGE.pairRightDuplicate);
+    expect(
+      document.getElementById('exercise-form-pair-pair-3-left-error'),
+    ).toHaveTextContent(EXERCISE_FORM_MESSAGE.pairLeftRequired);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('422 duplicate_pair_text content.pairs[2].right gắn lỗi ô Nghĩa hàng 3', async () => {
+    stubFetch(422, {
+      success: false,
+      error: {
+        status: 422,
+        code: 'duplicate_pair_text',
+        details: { path: 'content.pairs[2].right' },
+      },
+    });
+    startMatching();
+    fillThreeValidPairs();
+    submitCreate();
+
+    const error = await screen.findByText(
+      'Nội dung này trùng với một cặp khác.',
+    );
+    expect(error).toHaveAttribute(
+      'id',
+      'exercise-form-pair-pair-3-right-error',
+    );
+    const right3 = screen.getByLabelText('Nghĩa 3');
+    expect(right3).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(right3).toHaveFocus());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('422 invalid_pair_count content.pairs → lỗi nhóm cặp, focus ô đầu', async () => {
+    stubFetch(422, {
+      success: false,
+      error: {
+        status: 422,
+        code: 'invalid_pair_count',
+        details: { path: 'content.pairs' },
+      },
+    });
+    startMatching();
+    fillThreeValidPairs();
+    submitCreate();
+
+    const error = await screen.findByText('Cần từ 3 đến 5 cặp.');
+    expect(error).toHaveAttribute('id', 'exercise-form-pairs-error');
+    await waitFor(() =>
+      expect(screen.getByLabelText('Chữ Hán / từ 1')).toHaveFocus(),
+    );
+  });
+
+  it('sửa: đổ content.pairs đã lưu vào form và gửi lại giữ id', async () => {
+    const fetchMock = stubFetch(200, {
+      success: true,
+      data: { revision: { id: 78 } },
+    });
+    renderEdit({
+      initial: {
+        ...editInitial,
+        type: 'matching',
+        options: [],
+        correctOptionId: '',
+        pairs: [
+          { id: 'a', left: '你好', leftReading: 'nǐ hǎo', right: 'xin chào' },
+          { id: 'b', left: '谢谢', leftReading: '', right: 'cảm ơn' },
+          { id: 'c', left: '再见', leftReading: '', right: 'tạm biệt' },
+        ],
+      },
+    });
+    expect(screen.getByLabelText('Chữ Hán / từ 1')).toHaveValue('你好');
+    expect(screen.getByLabelText('Phiên âm (tuỳ chọn) 1')).toHaveValue(
+      'nǐ hǎo',
+    );
+    expect(screen.getByLabelText('Nghĩa 3')).toHaveValue('tạm biệt');
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu bản sửa' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      type: 'matching',
+      content: {
+        pairs: [
+          { id: 'a', left: '你好', leftReading: 'nǐ hǎo', right: 'xin chào' },
+          { id: 'b', left: '谢谢', right: 'cảm ơn' },
+          { id: 'c', left: '再见', right: 'tạm biệt' },
+        ],
+      },
+      answer: {},
+    });
   });
 });

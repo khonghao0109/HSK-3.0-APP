@@ -30,6 +30,8 @@ export type DialogueLine = {
 };
 
 export type DialogueBlock = { kind: 'dialogue'; lines: DialogueLine[] };
+/** What a Bài khoá unit shows: dialogues and narrative paragraphs. */
+export type KeyTextBlock = DialogueBlock | { kind: 'text'; value: string };
 
 export type TopicBlock =
   | { kind: 'text'; value: string }

@@ -86,6 +86,20 @@ describe('Exercise read API runtime contract', () => {
     ).toEqual([]);
   });
 
+  it('accepts a matching exercise (Pha E)', () => {
+    const parsed = exerciseDetailResponseSchema.parse({
+      success: true,
+      data: {
+        ...exercise(),
+        type: 'matching',
+        content: { pairs: [{ id: 'pair-1', left: '你好', right: 'xin chào' }] },
+        answer: {},
+        revisions: [],
+      },
+    });
+    expect(parsed.data.type).toBe('matching');
+  });
+
   it('rejects an incomplete relation and strips unrecognized media fields', () => {
     const incomplete = { ...exercise(), lesson: { id: 2, title: 'Greetings' } };
     expect(

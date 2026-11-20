@@ -121,7 +121,7 @@ describe('KeyTextUnitFlow', () => {
         title="Bài khoá · Gia đình"
         heading="Nhà bạn có mấy người?"
         description="Đọc hội thoại giữa An và Bình."
-        dialogues={[dialogue]}
+        blocks={[dialogue]}
       />,
     );
 
@@ -137,6 +137,37 @@ describe('KeyTextUnitFlow', () => {
     expect(screen.getByRole('img', { name: 'Bình' }).textContent).toBe('B');
     // mẫu: no pinyin toggle.
     expect(screen.queryByRole('checkbox')).toBeNull();
+  });
+
+  it('renders text blocks as paragraphs, in content order, as plain text', () => {
+    const { container } = render(
+      <KeyTextUnitFlow
+        {...common}
+        title="Bài khoá · Gia đình"
+        heading="Gia đình tôi"
+        description={null}
+        blocks={[
+          { kind: 'text', value: 'Đoạn mở đầu <b>không phải HTML</b>.' },
+          dialogue,
+          { kind: 'text', value: '我家有四口人。Nhà tôi có bốn người.' },
+        ]}
+      />,
+    );
+    const order = [...container.querySelectorAll('.lu-text, .lu-dlg')].map(
+      (node) => node.className,
+    );
+    expect(order).toEqual(['lu-text', 'lu-dlg', 'lu-text']);
+    const paragraphs = container.querySelectorAll('p.lu-text');
+    expect(paragraphs[0]?.textContent).toBe(
+      'Đoạn mở đầu <b>không phải HTML</b>.',
+    );
+    expect(paragraphs[0]?.querySelector('b')).toBeNull();
+    expect(paragraphs[1]?.textContent).toBe(
+      '我家有四口人。Nhà tôi có bốn người.',
+    );
+    expect(paragraphs[1]?.querySelector('[lang="zh-Hans"]')?.textContent).toBe(
+      '我家有四口人。',
+    );
   });
 
   it('Hoàn thành opens the result that marks the unit done', async () => {

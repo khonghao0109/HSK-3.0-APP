@@ -303,6 +303,26 @@ describe('handleExerciseAttempt', () => {
     });
   });
 
+  it('forwards a matching move log unchanged (Pha E)', async () => {
+    const requestBackend = vi
+      .fn()
+      .mockResolvedValue(attemptResponse(false, null));
+    const moves = [
+      { leftId: 'p2', rightId: 'p3' },
+      { leftId: 'p1', rightId: 'p1' },
+      { leftId: 'p2', rightId: 'p2' },
+      { leftId: 'p3', rightId: 'p3' },
+    ];
+    await handleExerciseAttempt(
+      request(attemptPath, { body: { answer: { moves } } }),
+      '34',
+      deps(requestBackend),
+    );
+    expect(requestBackend.mock.calls[0]?.[1]?.body).toEqual({
+      answer: { moves },
+    });
+  });
+
   it('reads a null isCorrect as not correct', async () => {
     const requestBackend = vi
       .fn()
@@ -365,6 +385,29 @@ describe('handleExerciseAttempt', () => {
     ['an empty text', { answer: { text: '   ' } }, undefined],
     ['a text over 4096', { answer: { text: 'a'.repeat(4097) } }, undefined],
     ['no token ids', { answer: { tokenIds: [] } }, undefined],
+    ['no moves', { answer: { moves: [] } }, undefined],
+    [
+      'more than 50 moves',
+      {
+        answer: {
+          moves: Array.from({ length: 51 }, () => ({
+            leftId: 'a',
+            rightId: 'b',
+          })),
+        },
+      },
+      undefined,
+    ],
+    [
+      'an extra move key',
+      { answer: { moves: [{ leftId: 'a', rightId: 'b', ok: true }] } },
+      undefined,
+    ],
+    [
+      'a bad move id',
+      { answer: { moves: [{ leftId: 'a b', rightId: 'b' }] } },
+      undefined,
+    ],
     ['a bad option id', { answer: { optionId: 'a b' } }, undefined],
     [
       'a negative duration',

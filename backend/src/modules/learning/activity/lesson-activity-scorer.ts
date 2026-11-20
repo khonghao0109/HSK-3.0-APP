@@ -16,8 +16,13 @@ export const LESSON_ACTIVITY_SCORING_VERSION = 'lesson-activity-v1';
 export type LessonActivityScore = {
   score: number;
   isCorrect: boolean;
+  /** matching only: wrong moves the server counted while replaying the log. */
+  mistakes?: number;
   feedbackVersion: typeof LESSON_ACTIVITY_SCORING_VERSION;
 };
+
+/** A matching log is one move per tap pair; 5 pairs never need more. */
+export const MATCHING_MAX_MOVES = 50;
 
 export function scoreLessonExercise(input: {
   type: ExerciseType;
@@ -47,6 +52,19 @@ export function scoreLessonExercise(input: {
       throw invalidAuthoring();
     }
     throw error;
+  }
+
+  if (authored.type === ExerciseType.matching) {
+    const mistakes = countMatchingMistakes(
+      authored.content,
+      input.submittedAnswer,
+    );
+    return {
+      score: mistakes === 0 ? 100 : 0,
+      isCorrect: mistakes === 0,
+      mistakes,
+      feedbackVersion: LESSON_ACTIVITY_SCORING_VERSION,
+    };
   }
 
   let isCorrect: boolean;
@@ -134,6 +152,50 @@ function scoreArrangeSentence(
   return submittedTokenIds.every(
     (tokenId, index) => tokenId === correctTokenIds[index],
   );
+}
+
+/**
+ * Replays the learner's moves: a right pair locks it, a wrong one is a
+ * mistake. The log must end exactly when the last pair locks.
+ */
+function countMatchingMistakes(
+  content: Record<string, unknown>,
+  submittedAnswer: unknown,
+): number {
+  const pairIds = new Set(
+    (content.pairs as Array<{ id: string }>).map((pair) => pair.id),
+  );
+  const submitted = requireClientRecord(submittedAnswer);
+  if (!hasExactKeys(submitted, ['moves'])) throw invalidClientAnswer();
+  const moves = submitted.moves;
+  if (
+    !Array.isArray(moves) ||
+    moves.length === 0 ||
+    moves.length > MATCHING_MAX_MOVES
+  ) {
+    throw invalidClientAnswer();
+  }
+  const locked = new Set<string>();
+  let mistakes = 0;
+  for (const rawMove of moves) {
+    if (locked.size === pairIds.size) throw invalidClientAnswer();
+    const move = requireClientRecord(rawMove);
+    if (!hasExactKeys(move, ['leftId', 'rightId'])) throw invalidClientAnswer();
+    const leftId = requireClientStableId(move.leftId);
+    const rightId = requireClientStableId(move.rightId);
+    if (
+      !pairIds.has(leftId) ||
+      !pairIds.has(rightId) ||
+      locked.has(leftId) ||
+      locked.has(rightId)
+    ) {
+      throw invalidClientAnswer();
+    }
+    if (leftId === rightId) locked.add(leftId);
+    else mistakes += 1;
+  }
+  if (locked.size !== pairIds.size) throw invalidClientAnswer();
+  return mistakes;
 }
 
 function isExactTokenSet(candidate: string[], expected: string[]): boolean {

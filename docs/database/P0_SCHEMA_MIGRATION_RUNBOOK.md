@@ -34,6 +34,7 @@
 | SRS-R3  | `20261111120000_srs_relearning_and_event_source`         | Enum `ReviewCardState` thêm `relearning`, enum `ReviewEventSource` (`flashcard`), cột `ReviewEvent.source` (mục 28). |
 | REV-P   | `20261112170000_review_preference`                       | Bảng `ReviewPreference` (một dòng mỗi user): `dailyCardLimit` 10/20/30, `levelCodes` (mục 30). |
 | DICT-X  | `20261116090000_word_example_and_trigram_search`         | `pg_trgm`, bảng `WordExample`, unique `WordMeaning(id, wordId)`, cột sinh `Word.pinyinCompact`, GIN trigram cho tra từ (mục 31). |
+| EX-M    | `20261121090000_exercise_type_matching`                  | Enum `ExerciseType` thêm `matching` cho bài tập ghép cặp (mục 32). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
 Toàn project hiện có 32 migration (đến `20261116090000_word_example_and_trigram_search`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
@@ -1232,3 +1233,35 @@ ALTER TABLE "WordExample" ADD CONSTRAINT "WordExample_published_data_source_chec
 - Kiểm: `npm run test:db:dictionary-search` (CHECK/FK/unique + thứ hạng trên DB thật).
 - Rollback: forward-fix. Gỡ bằng migration sau: `DROP TABLE "WordExample"`, drop các index
   trigram, cột `pinyinCompact` và `WordMeaning_id_wordId_key`; không bảng khác tham chiếu.
+
+## 32. Bài tập ghép cặp — `ExerciseType.matching` (M2.x-lesson Pha E)
+
+### 32.1. Migration `20261121090000_exercise_type_matching`
+
+```sql
+ALTER TYPE "ExerciseType" ADD VALUE 'matching';
+```
+
+- Additive DDL, chỉ một câu. PostgreSQL 12+ (môi trường dùng 16) cho `ADD VALUE` trong
+  transaction migration của Prisma, miễn là không dùng giá trị mới trong cùng transaction.
+  Vì vậy migration không có backfill, default hay CHECK dùng `'matching'`.
+- Khoá: không rewrite bảng; chỉ khoá ngắn trên kiểu enum, không khoá `LessonExercise`.
+  Trigger `LessonExercise_publish_readiness` chỉ chặn `speaking_repeat`, nên không phải sửa.
+- Impact API:
+  - Enum `type` trong OpenAPI (6 chỗ) có thêm `matching`.
+  - `POST /learning/exercises/:exerciseId/attempts` nhận `answer.moves` cho loại này.
+  - CMS có thêm 2 mã lỗi 422: `invalid_pair_count`, `duplicate_pair_text` (api.md A.7, A.9).
+  - Response không có field mới; số lần sai chỉ nằm ở `LessonExerciseAttempt.detailJson.mistakes`.
+- Rollback/forward-fix:
+  - PostgreSQL không có `DROP VALUE`, nên không đảo được migration.
+  - Rollback ứng dụng về bản không biết `matching`: route learner vẫn an toàn, vì
+    `PUBLIC_LESSON_EXERCISE_WHERE` chỉ lấy type trong danh sách publishable.
+  - Nhưng list/đọc CMS sẽ lỗi parse enum nếu đã có hàng `matching`. Trước khi rollback app,
+    archive các bài `matching` hoặc xác nhận chưa có hàng nào.
+  - Giá trị enum thừa để lại, vô hại. Muốn gỡ hẳn thì làm change riêng trong maintenance
+    window: tạo kiểu mới, `ALTER COLUMN … USING`, rồi drop kiểu cũ.
+- Kiểm: `test/database/exercise-authoring-integrity.integration.sql` khẳng định `matching`
+  là giá trị cuối của enum và một bài draft `matching` lưu được.
+  - Chạy `test:db:p0`, `test:db:exercise-integrity`, `test:db:activity-integrity` trên DB
+    disposable ở hai đường: (1) dựng mới đủ migration; (2) DB đang ở migration trước, rồi
+    `migrate deploy` chỉ áp migration này.

@@ -6,8 +6,12 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
 
-import { DialogueLines, GrammarPointBody } from './topic-blocks-view';
-import type { DialogueBlock, GrammarPointBlock } from './topic-content';
+import { DialogueLines, GrammarPointBody, ZhText } from './topic-blocks-view';
+import type {
+  DialogueBlock,
+  GrammarPointBlock,
+  KeyTextBlock,
+} from './topic-content';
 import { UnitResult } from './unit-result';
 
 type UnitProps = {
@@ -179,12 +183,13 @@ export function GrammarUnitFlow({
 export function KeyTextUnitFlow({
   heading,
   description,
-  dialogues,
+  blocks,
   ...unit
 }: UnitProps & {
   heading: string;
   description: string | null;
-  dialogues: readonly DialogueBlock[];
+  /** Dialogue and narrative text blocks, in `Topic.content` order. */
+  blocks: readonly KeyTextBlock[];
 }) {
   const [done, setDone] = useState(false);
   if (done) return <UnitResult {...unit} />;
@@ -208,9 +213,15 @@ export function KeyTextUnitFlow({
     >
       <h2 className="uxa-h2">{heading}</h2>
       {description && <p className="lu-sub">{description}</p>}
-      {dialogues.map((dialogue, index) => (
-        <DialogueLines key={index} lines={dialogue.lines} />
-      ))}
+      {blocks.map((block, index) =>
+        block.kind === 'text' ? (
+          <p key={index} className="lu-text">
+            <ZhText text={block.value} />
+          </p>
+        ) : (
+          <DialogueLines key={index} lines={block.lines} />
+        ),
+      )}
     </UnitFrame>
   );
 }

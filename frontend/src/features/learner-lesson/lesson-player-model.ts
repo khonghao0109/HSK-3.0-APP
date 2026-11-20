@@ -14,6 +14,8 @@ export type PlayerExercise = {
   | { kind: 'arrange_sentence'; tokens: PlayerChoice[] }
   | { kind: 'fill_blank' }
   | { kind: 'listening'; options: PlayerChoice[]; media: PlayerMedia }
+  // Pha E: rightOrder is the meaning column, shuffled apart from the left.
+  | { kind: 'matching'; pairs: MatchingPair[]; rightOrder: string[] }
   // listening_choice without media, and any shape the player cannot read (Q48).
   | { kind: 'unsupported' }
 );
@@ -21,8 +23,26 @@ export type PlayerExercise = {
 /** Audio of a listening_choice; `duration` (seconds) until metadata loads. */
 export type PlayerMedia = { id: number; duration: number | null };
 
+export type MatchingPair = {
+  id: string;
+  left: string;
+  leftReading?: string;
+  right: string;
+};
+
+/** One tap pair of a matching exercise; equal ids lock the pair. */
+export type MatchingMove = { leftId: string; rightId: string };
+
 export type PlayerAnswer =
-  { optionId: string } | { tokenIds: string[] } | { text: string };
+  | { optionId: string }
+  | { tokenIds: string[] }
+  | { text: string }
+  | { moves: MatchingMove[] };
+
+/** Backend validator bounds (`MATCHING_LIMITS`). */
+const MATCHING_PAIRS = { min: 3, max: 5 } as const;
+/** Backend scorer bound (`MATCHING_MAX_MOVES`). */
+export const MATCHING_MAX_MOVES = 50;
 
 /**
  * The attempt DTO sets no length; 4096 is the longest accepted text an
@@ -69,6 +89,74 @@ function readChoices(content: unknown, key: string): PlayerChoice[] | null {
   return choices;
 }
 
+function readPairs(content: unknown): MatchingPair[] | null {
+  if (typeof content !== 'object' || content === null) return null;
+  const list: unknown = Reflect.get(content, 'pairs');
+  if (
+    !Array.isArray(list) ||
+    list.length < MATCHING_PAIRS.min ||
+    list.length > MATCHING_PAIRS.max
+  ) {
+    return null;
+  }
+  const pairs: MatchingPair[] = [];
+  for (const item of list) {
+    if (typeof item !== 'object' || item === null) return null;
+    const id: unknown = Reflect.get(item, 'id');
+    const left: unknown = Reflect.get(item, 'left');
+    const right: unknown = Reflect.get(item, 'right');
+    const leftReading: unknown = Reflect.get(item, 'leftReading');
+    if (typeof id !== 'string' || !id || pairs.some((p) => p.id === id)) {
+      return null;
+    }
+    if (typeof left !== 'string' || typeof right !== 'string') return null;
+    pairs.push(
+      typeof leftReading === 'string' && leftReading
+        ? { id, left, leftReading, right }
+        : { id, left, right },
+    );
+  }
+  return pairs;
+}
+
+/**
+ * Meaning column order: a Fisher–Yates shuffle seeded by the exercise id, so
+ * one exercise keeps its board across reloads, and never the left order.
+ */
+export function matchingRightOrder(ids: string[], seed: number): string[] {
+  const order = [...ids];
+  let state = seed >>> 0 || 1;
+  const random = () => {
+    // xorshift32: small, deterministic, enough to shuffle five cells.
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    return (state >>> 0) / 4_294_967_296;
+  };
+  for (let i = order.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j] as string, order[i] as string];
+  }
+  if (order.every((id, index) => id === ids[index])) {
+    order.push(order.shift() as string);
+  }
+  return order;
+}
+
+/** Pairs locked so far and wrong moves, replayed like the backend does. */
+export function matchingProgress(moves: readonly MatchingMove[]): {
+  locked: Set<string>;
+  mistakes: number;
+} {
+  const locked = new Set<string>();
+  let mistakes = 0;
+  for (const move of moves) {
+    if (move.leftId === move.rightId) locked.add(move.leftId);
+    else mistakes += 1;
+  }
+  return { locked, mistakes };
+}
+
 function readMedia(media: unknown): PlayerMedia | null {
   if (typeof media !== 'object' || media === null) return null;
   const id: unknown = Reflect.get(media, 'id');
@@ -103,6 +191,15 @@ function toPlayerExercise(
     if (tokens) return { ...base, kind: 'arrange_sentence', tokens };
   } else if (raw.type === 'fill_blank') {
     return { ...base, kind: 'fill_blank' };
+  } else if (raw.type === 'matching') {
+    const pairs = readPairs(raw.content);
+    if (pairs) {
+      const rightOrder = matchingRightOrder(
+        pairs.map((pair) => pair.id),
+        raw.id,
+      );
+      return { ...base, kind: 'matching', pairs, rightOrder };
+    }
   } else if (raw.type === 'listening_choice') {
     const options = readChoices(raw.content, 'options');
     const media = readMedia(raw.media);
@@ -158,6 +255,8 @@ export type PlayerInput = {
   optionId: string | null;
   tokenIds: string[];
   text: string;
+  /** matching only: every move so far, in tap order. */
+  moves?: MatchingMove[];
 };
 
 /** Attempt `answer` for the exercise type, or null while it is incomplete. */
@@ -187,6 +286,12 @@ export function buildAnswer(
       const text = input.text.trim();
       return text.length > 0 && text.length <= FILL_BLANK_MAX_LENGTH
         ? { text }
+        : null;
+    }
+    case 'matching': {
+      const moves = input.moves ?? [];
+      return matchingProgress(moves).locked.size === exercise.pairs.length
+        ? { moves: [...moves] }
         : null;
     }
     case 'unsupported':

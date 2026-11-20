@@ -3401,6 +3401,128 @@ html:has(.learner-app) {
   color: var(--red-600);
 }
 
+/* Pha E matching (mockup matching.html): tap a cell, then one in the other
+   column; no drag (WCAG 2.5.7). A locked pair keeps its place. */
+.learner-app .mt-hint {
+  margin-bottom: var(--sp-3);
+}
+
+.learner-app .mt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.learner-app .mt-col {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .mt-col__label {
+  margin: 0 0 var(--sp-1);
+  color: var(--stone-600);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.learner-app .mt-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--fs-base);
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast),
+    border-color var(--dur-fast);
+}
+
+.learner-app .mt-cell__py {
+  color: var(--stone-600);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .mt-cell__hz {
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+}
+
+.learner-app .mt-cell[aria-pressed='true'] {
+  border: 2px solid var(--ink-900);
+  background: var(--cream-100);
+}
+
+/* jade-800 on the right fill, as .ls-opt.is-right (Q42). */
+.learner-app .mt-cell.is-done {
+  border-color: var(--ex-right-border);
+  background: var(--ex-right-bg);
+  color: var(--jade-800);
+  cursor: default;
+}
+
+.learner-app .mt-cell.is-done .mt-cell__py,
+.learner-app .mt-cell.is-wrong .mt-cell__py {
+  color: inherit;
+}
+
+.learner-app .mt-cell.is-wrong {
+  border: 1.5px solid var(--red-600);
+  background: var(--red-100);
+  color: var(--ex-wrong-text);
+  animation: mt-shake 0.4s;
+}
+
+@keyframes mt-shake {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.learner-app .mt-cell__mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  color: var(--jade-800);
+}
+
+.learner-app .mt-cell.is-wrong .mt-cell__mark {
+  color: var(--red-600);
+}
+
+/* Pha E: finished with wrong moves; neutral, not a failure. */
+.learner-app .m02-feedback--neutral {
+  border-color: var(--border-default);
+  background: var(--paper);
+}
+
+.learner-app .m02-feedback--neutral .m02-feedback__icon,
+.learner-app .m02-feedback--neutral .m02-feedback__title {
+  color: var(--ink-900);
+}
+
 /* listening_choice (M2.5c, Q54–Q57): mẫu 05 with its M2.5c block; play and
    "Nghe lại" are 44px for real (Q42), no transcript (Q54). */
 .learner-app .ls-audio {
@@ -4054,6 +4176,10 @@ html:has(.learner-app) {
   }
 
   .learner-app .ls-opt[aria-checked='true'] {
+    border: 3px solid Highlight;
+  }
+
+  .learner-app .mt-cell[aria-pressed='true'] {
     border: 3px solid Highlight;
   }
 

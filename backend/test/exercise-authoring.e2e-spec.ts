@@ -796,6 +796,58 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
     expect(JSON.stringify(storedRevision.snapshot)).toContain('（注意）');
   });
 
+  it('11. validates matching pairs with safe 422s and publishes 3 pairs', async () => {
+    const pairs = [
+      { id: 'p1', left: '家', leftReading: 'jiā', right: 'nhà' },
+      { id: 'p2', left: '爸爸', right: 'bố' },
+      { id: 'p3', left: '妈妈', right: 'mẹ' },
+    ];
+    const payload = (content: unknown) => ({
+      lessonId,
+      topicId,
+      type: 'matching',
+      prompt: 'Chọn cặp tương ứng',
+      content,
+      answer: {},
+      explanation: null,
+      orderIndex: 70,
+    });
+
+    const tooFew = await adminPost('/admin/cms/exercises')
+      .send(payload({ pairs: pairs.slice(0, 2) }))
+      .expect(422);
+    expect(tooFew.body.error).toMatchObject({
+      code: 'invalid_pair_count',
+      details: { path: 'content.pairs' },
+    });
+    const repeated = await adminPost('/admin/cms/exercises')
+      .send(
+        payload({ pairs: [...pairs, { id: 'p4', left: '哥哥', right: 'BỐ' }] }),
+      )
+      .expect(422);
+    expect(repeated.body.error).toMatchObject({
+      code: 'duplicate_pair_text',
+      details: { path: 'content.pairs[3].right' },
+    });
+
+    const created = await adminPost('/admin/cms/exercises')
+      .send(payload({ pairs }))
+      .expect(201);
+    const body = created.body as ExerciseMutationBody;
+    await review(body.data.exercise.id, body.data.revision.id, 'approved');
+    const published = await publish(
+      body.data.exercise.id,
+      body.data.revision.id,
+    );
+    expect(published.data.exercise.status).toBe('published');
+    await expect(
+      prisma.lessonExercise.findUniqueOrThrow({
+        where: { id: body.data.exercise.id },
+        select: { type: true, content: true, answer: true },
+      }),
+    ).resolves.toEqual({ type: 'matching', content: { pairs }, answer: {} });
+  });
+
   async function createListeningExercise(
     mediaId: number,
     orderIndex: number,

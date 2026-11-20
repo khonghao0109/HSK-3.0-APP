@@ -318,6 +318,7 @@ describe('exercisePrefillFromSnapshot (TL-15)', () => {
       tokens: [],
       tokenOrder: [],
       tokenDisplayOrder: [],
+      pairs: [],
       referenceText: '',
       mediaId: null,
     });
@@ -466,5 +467,117 @@ describe('exercisePrefillFromSnapshot (TL-15)', () => {
     expect(value.prompt).toBe('');
     expect(value.options).toEqual([]);
     expect(value.correctOptionId).toBe('');
+  });
+});
+
+describe('matching — ghép cặp (Pha E)', () => {
+  const matchingSnapshot = {
+    type: 'matching',
+    prompt: 'Ghép từ với nghĩa',
+    content: {
+      pairs: [
+        {
+          id: 'pair-1',
+          left: '你好',
+          leftReading: 'nǐ hǎo',
+          right: 'xin chào',
+        },
+        { id: 'pair-2', left: '谢谢', right: 'cảm ơn' },
+        {
+          id: 'pair-3',
+          left: '再见',
+          leftReading: 'zàijiàn',
+          right: 'tạm biệt',
+        },
+      ],
+    },
+    answer: {},
+    explanation: null,
+    mediaId: null,
+    orderIndex: 4,
+  };
+
+  it('maps matching: trim chữ, bỏ leftReading rỗng, answer {}', () => {
+    expect(
+      exerciseFormToPayload(
+        formValue({
+          type: 'matching',
+          pairs: [
+            {
+              id: 'pair-1',
+              left: ' 你好 ',
+              leftReading: ' nǐ hǎo ',
+              right: ' xin chào ',
+            },
+            { id: 'pair-2', left: '谢谢', leftReading: '   ', right: 'cảm ơn' },
+            { id: 'pair-3', left: '再见', leftReading: '', right: 'tạm biệt' },
+          ],
+        }),
+      ),
+    ).toEqual({
+      type: 'matching',
+      prompt: 'Đề bài',
+      content: {
+        pairs: [
+          {
+            id: 'pair-1',
+            left: '你好',
+            leftReading: 'nǐ hǎo',
+            right: 'xin chào',
+          },
+          { id: 'pair-2', left: '谢谢', right: 'cảm ơn' },
+          { id: 'pair-3', left: '再见', right: 'tạm biệt' },
+        ],
+      },
+      answer: {},
+      explanation: null,
+      orderIndex: 3,
+      mediaId: null,
+    });
+  });
+
+  it('đọc snapshot matching: đổ content.pairs, leftReading thiếu → chuỗi rỗng', () => {
+    expect(exercisePrefillFromSnapshot(matchingSnapshot, null)).toMatchObject({
+      type: 'matching',
+      prompt: 'Ghép từ với nghĩa',
+      orderIndex: '4',
+      pairs: [
+        {
+          id: 'pair-1',
+          left: '你好',
+          leftReading: 'nǐ hǎo',
+          right: 'xin chào',
+        },
+        { id: 'pair-2', left: '谢谢', leftReading: '', right: 'cảm ơn' },
+        {
+          id: 'pair-3',
+          left: '再见',
+          leftReading: 'zàijiàn',
+          right: 'tạm biệt',
+        },
+      ],
+    });
+  });
+
+  it('snapshot matching sai shape (2 cặp, id trùng, right không phải chuỗi) → fallback live', () => {
+    const pairs = matchingSnapshot.content.pairs;
+    const broken = [
+      { ...matchingSnapshot, content: { pairs: pairs.slice(0, 2) } },
+      {
+        ...matchingSnapshot,
+        content: {
+          pairs: [...pairs.slice(0, 2), { ...pairs[2], id: 'pair-1' }],
+        },
+      },
+      {
+        ...matchingSnapshot,
+        content: { pairs: [...pairs.slice(0, 2), { ...pairs[2], right: 3 }] },
+      },
+    ];
+    for (const snapshot of broken) {
+      expect(exercisePrefillFromSnapshot(snapshot, mcqSnapshot)).toMatchObject({
+        type: 'mcq',
+      });
+    }
   });
 });

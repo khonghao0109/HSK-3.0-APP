@@ -357,7 +357,11 @@ export class LessonActivityService {
           isCorrect: score.isCorrect,
           score: score.score,
           durationSeconds: dto.durationSeconds,
-          detailJson: { requestHash },
+          // Pha E: matching keeps its wrong-move count here, never in the DTO.
+          detailJson:
+            score.mistakes === undefined
+              ? { requestHash }
+              : { requestHash, mistakes: score.mistakes },
           feedbackVersion: score.feedbackVersion,
           idempotencyKey,
           submittedAt: now,
