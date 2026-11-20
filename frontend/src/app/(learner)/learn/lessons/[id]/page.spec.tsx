@@ -434,7 +434,7 @@ describe('LearnerLessonPage', () => {
     expect(quiz?.tagName).toBe('A');
     expect(quiz).toHaveAttribute('href', '/learn/lessons/5/practice');
     expect(quiz?.querySelector('.lu-badge')).toHaveClass('is-blue');
-    expect(spokenName(quiz as Element)).toBe('Kiểm tra, 2 bài tập, đã học 0%');
+    expect(spokenName(quiz as Element)).toBe('Kiểm tra, 3 bài tập, đã học 33%');
     if (quiz) fireEvent.click(quiz);
     expect(screen.queryByText('Tính năng sắp ra mắt.')).toBeNull();
   });

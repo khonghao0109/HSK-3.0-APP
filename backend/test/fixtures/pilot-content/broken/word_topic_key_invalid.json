@@ -1,0 +1,11 @@
+{
+  "description": "Pha F: topicKey của từ trỏ tới topic không phải vocabulary",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "words[0].topicKey",
+      "value": "t03"
+    }
+  ]
+}

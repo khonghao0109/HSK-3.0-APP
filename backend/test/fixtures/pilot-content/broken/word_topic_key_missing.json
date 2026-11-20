@@ -1,0 +1,10 @@
+{
+  "description": "Pha F: bài có topic vocabulary nhưng từ thiếu topicKey",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "delete",
+      "path": "words[0].topicKey"
+    }
+  ]
+}

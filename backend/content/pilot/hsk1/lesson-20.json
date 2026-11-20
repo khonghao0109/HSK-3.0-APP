@@ -21,7 +21,8 @@
         "hanzi": "你身体好吗？",
         "pinyin": "Nǐ shēntǐ hǎo ma?",
         "meaningVi": "Bạn có khoẻ không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "病",
@@ -31,7 +32,8 @@
         "hanzi": "他的病好了。",
         "pinyin": "Tā de bìng hǎo le.",
         "meaningVi": "Bệnh của anh ấy khỏi rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "生病",
@@ -41,7 +43,8 @@
         "hanzi": "我生病了。",
         "pinyin": "Wǒ shēngbìng le.",
         "meaningVi": "Tôi bị ốm rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "看病",
@@ -51,7 +54,8 @@
         "hanzi": "我去医院看病。",
         "pinyin": "Wǒ qù yīyuàn kànbìng.",
         "meaningVi": "Tôi đi bệnh viện khám bệnh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "手",
@@ -61,7 +65,8 @@
         "hanzi": "你的手很冷。",
         "pinyin": "Nǐ de shǒu hěn lěng.",
         "meaningVi": "Tay bạn rất lạnh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "口",
@@ -71,7 +76,8 @@
         "hanzi": "我家有四口人。",
         "pinyin": "Wǒ jiā yǒu sì kǒu rén.",
         "meaningVi": "Nhà tôi có bốn người."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "动",
@@ -81,7 +87,8 @@
         "hanzi": "别动！",
         "pinyin": "Bié dòng!",
         "meaningVi": "Đừng cử động!"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "动作",
@@ -91,7 +98,8 @@
         "hanzi": "这个动作很难。",
         "pinyin": "Zhè ge dòngzuò hěn nán.",
         "meaningVi": "Động tác này rất khó."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "坐下",
@@ -101,7 +109,8 @@
         "hanzi": "请坐下。",
         "pinyin": "Qǐng zuòxia.",
         "meaningVi": "Mời ngồi xuống."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "站",
@@ -111,7 +120,8 @@
         "hanzi": "他站在门口。",
         "pinyin": "Tā zhàn zài ménkǒu.",
         "meaningVi": "Anh ấy đứng ở cửa."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "别",
@@ -121,7 +131,8 @@
         "hanzi": "别说话。",
         "pinyin": "Bié shuōhuà.",
         "meaningVi": "Đừng nói chuyện."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "慢",
@@ -131,7 +142,8 @@
         "hanzi": "请说慢一点儿。",
         "pinyin": "Qǐng shuō màn yìdiǎnr.",
         "meaningVi": "Xin nói chậm một chút."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "快",
@@ -141,7 +153,8 @@
         "hanzi": "我们快走吧。",
         "pinyin": "Wǒmen kuài zǒu ba.",
         "meaningVi": "Chúng ta đi nhanh lên nào."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "生气",
@@ -151,7 +164,8 @@
         "hanzi": "妈妈生气了。",
         "pinyin": "Māma shēngqì le.",
         "meaningVi": "Mẹ giận rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "觉得",
@@ -161,7 +175,8 @@
         "hanzi": "我觉得很好。",
         "pinyin": "Wǒ juéde hěn hǎo.",
         "meaningVi": "Tôi thấy rất tốt."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "明白",
@@ -171,7 +186,8 @@
         "hanzi": "你明白了吗？",
         "pinyin": "Nǐ míngbai le ma?",
         "meaningVi": "Bạn hiểu chưa?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "记",
@@ -181,7 +197,8 @@
         "hanzi": "我记一下你的电话。",
         "pinyin": "Wǒ jì yíxià nǐ de diànhuà.",
         "meaningVi": "Tôi ghi lại số điện thoại của bạn."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "记住",
@@ -191,7 +208,8 @@
         "hanzi": "请记住我的名字。",
         "pinyin": "Qǐng jìzhù wǒ de míngzi.",
         "meaningVi": "Xin hãy nhớ tên tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "记得",
@@ -201,7 +219,8 @@
         "hanzi": "你还记得我吗？",
         "pinyin": "Nǐ hái jìde wǒ ma?",
         "meaningVi": "Bạn còn nhớ tôi không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "忘",
@@ -211,14 +230,15 @@
         "hanzi": "我忘了他的名字。",
         "pinyin": "Wǒ wàng le tā de míngzi.",
         "meaningVi": "Tôi quên tên anh ấy rồi."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: sức khoẻ, cơ thể và cảm nhận",
+      "title": "Từ vựng (1/2): 身体 … 站",
       "subtitle": "20 từ HSK1 về cơ thể, bệnh, động tác, cảm xúc và trí nhớ",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 别 … 忘",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 别 + động từ, 觉得 + nhận xét, 记住/记得/忘, 快/慢 + động từ",
+      "title": "Ngữ pháp (1/2): 别 + động từ · 觉得 + nhận xét",
       "subtitle": "Bốn điểm ngữ pháp để khuyên can, nói cảm nhận, nói nhớ và quên, giục hoặc dặn làm chậm",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -326,7 +360,17 @@
               "highlight": "觉得"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 记住/记得/忘 · 快/慢 + động từ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "记住/记得/忘",
@@ -413,7 +457,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hỏi thăm sức khoẻ",
       "subtitle": "Hội thoại ngắn hỏi thăm khi bị ốm, nói cảm nhận và dặn nhớ; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -508,7 +552,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l20:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “đứng”?",
       "content": {
@@ -539,7 +583,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “tức giận”?",
       "content": {
@@ -570,7 +614,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: ___说话，老师在上课。 (Đừng nói chuyện, thầy giáo đang lên lớp.)",
       "content": {
@@ -601,7 +645,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 你还___我吗？ (Bạn còn nhớ tôi không?)",
       "content": {
@@ -632,7 +676,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___这个电影很好看。(Tôi thấy bộ phim này rất hay.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -648,7 +692,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我生病了，下午去医院___。(Tôi bị ốm rồi, buổi chiều đi bệnh viện khám bệnh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -664,7 +708,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e07",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 请___我的名字。(Xin hãy nhớ kỹ tên tôi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -683,7 +727,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Đừng giận nữa.”",
       "content": {
@@ -714,7 +758,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Mau ngồi xuống đi.”",
       "content": {
@@ -745,7 +789,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l20:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Sức khoẻ của tôi rất tốt.”",
       "content": {

@@ -10,6 +10,8 @@ import {
 
 // Pha C (N3, N4, N8): one Từ vựng unit learned step by step. Its own topic
 // and words on the HSK 7–9 seed lesson, idempotent per disposable DB.
+// Pha F: the unit h1 is the unit label · the lesson title (seed HSK 7–9 lesson).
+const SEED_LESSON = 'Academic discourse & literature';
 const TOPIC = 'Gia đình e2e từng bước';
 // One WordMeaning row per meaning: the quiz shows them all ("nhà; gia
 // đình"), the result list only the first.
@@ -127,7 +129,7 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
 
     // 家: card, example, quiz; 有 and 口: card, quiz.
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      new RegExp(`^Từ vựng \\d+ · ${TOPIC}$`, 'u'),
+      new RegExp(`^Từ vựng \\d+ · ${SEED_LESSON}$`, 'u'),
     );
     await expect(page.locator('.m02-bar__count')).toHaveText('1/7');
     await expect(page.getByRole('heading', { level: 2 })).toHaveText('家');
@@ -201,7 +203,7 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
 
     await expect(page.locator('.done-kicker')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      new RegExp(`^Từ vựng \\d+ · ${TOPIC}$`, 'u'),
+      new RegExp(`^Từ vựng \\d+ · ${SEED_LESSON}$`, 'u'),
     );
     await expect(page.getByLabel('Trả lời đúng 67%')).toBeVisible();
     await expect(page.locator('.lu-words li')).toHaveText([

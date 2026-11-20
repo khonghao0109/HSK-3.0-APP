@@ -80,7 +80,8 @@ export async function TopicUnitView({
   const unit = {
     lessonId,
     topicId: topic.id,
-    title: `${isGrammar ? 'Ngữ pháp' : 'Bài khoá'} · ${activity.lesson.title}`,
+    // Pha F: same label as the unit row (Ngữ pháp 1/2/3, Bài khoá) · lesson.
+    title: `${units[position]?.title ?? (isGrammar ? 'Ngữ pháp' : 'Bài khoá')} · ${activity.lesson.title}`,
     lessonHref,
     nextHref: next && !next.locked ? unitHref(lessonId, next) : null,
   };

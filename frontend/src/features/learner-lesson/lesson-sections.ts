@@ -19,7 +19,7 @@ export type LessonUnitsInput = {
     progress: { status: ProgressStatus; completionPercent: number };
     exercises: readonly Exercise[];
   }>;
-  /** Exercises without a topic; they count into Kiểm tra (N1). */
+  /** Exercises without a topic; Kiểm tra counts them with every topic's (N1, Pha F). */
   standaloneExercises: readonly Exercise[];
   words: ReadonlyArray<{ hanzi: string; topicId: number | null }>;
 };
@@ -70,6 +70,10 @@ export function lessonUnits(
   );
   const units: LessonUnit[] = [];
   let vocabularyCount = 0;
+  let grammarCount = 0;
+  const grammarTotal = topics.filter(
+    (topic) => topic.type === 'grammar',
+  ).length;
   let quizIndex: number | null = null;
   const quizTopics: LessonUnitsInput['topics'][number][] = [];
 
@@ -104,10 +108,17 @@ export function lessonUnits(
         slug: 'vocabulary',
       });
     } else if (topic.type === 'grammar' || topic.type === 'key_text') {
+      if (topic.type === 'grammar') grammarCount += 1;
       units.push({
         ...base,
         kind: topic.type,
-        title: topic.type === 'grammar' ? 'Ngữ pháp' : 'Bài khoá',
+        // Pha F: several grammar units are numbered, a single one is not.
+        title:
+          topic.type === 'key_text'
+            ? 'Bài khoá'
+            : grammarTotal > 1
+              ? `Ngữ pháp ${grammarCount}`
+              : 'Ngữ pháp',
         meta: topic.title,
         slug: 'grammar',
       });
@@ -115,8 +126,10 @@ export function lessonUnits(
     // ai_speaking and unknown types stay hidden.
   }
 
+  // PO 20/11/2026: Kiểm tra holds every exercise of the lesson, the same
+  // set /practice plays (`orderPlayerExercises`).
   const exercises = [
-    ...quizTopics.flatMap((topic) => topic.exercises),
+    ...topics.flatMap((topic) => topic.exercises),
     ...input.standaloneExercises,
   ];
   // Pha B debt 5a: a Kiểm tra without any exercise is hidden.

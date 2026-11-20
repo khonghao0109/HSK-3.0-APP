@@ -21,7 +21,8 @@
         "hanzi": "我爱我的妈妈。",
         "pinyin": "Wǒ ài wǒ de māma.",
         "meaningVi": "Tôi yêu mẹ tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "爱好",
@@ -31,7 +32,8 @@
         "hanzi": "你的爱好是什么？",
         "pinyin": "Nǐ de àihào shì shénme?",
         "meaningVi": "Sở thích của bạn là gì?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "唱",
@@ -41,7 +43,8 @@
         "hanzi": "你唱一个吧。",
         "pinyin": "Nǐ chàng yí ge ba.",
         "meaningVi": "Bạn hát một bài đi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "唱歌",
@@ -51,7 +54,8 @@
         "hanzi": "我喜欢唱歌。",
         "pinyin": "Wǒ xǐhuan chànggē.",
         "meaningVi": "Tôi thích hát."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "歌",
@@ -61,7 +65,8 @@
         "hanzi": "这个歌我会唱。",
         "pinyin": "Zhè ge gē wǒ huì chàng.",
         "meaningVi": "Bài hát này tôi biết hát."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "球",
@@ -71,7 +76,8 @@
         "hanzi": "这是谁的球？",
         "pinyin": "Zhè shì shéi de qiú?",
         "meaningVi": "Quả bóng này của ai?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "打球",
@@ -81,7 +87,8 @@
         "hanzi": "我们一起去打球吧。",
         "pinyin": "Wǒmen yìqǐ qù dǎqiú ba.",
         "meaningVi": "Chúng ta cùng đi chơi bóng nhé."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "玩儿",
@@ -91,7 +98,8 @@
         "hanzi": "孩子们在外边玩儿。",
         "pinyin": "Háizimen zài wàibian wánr.",
         "meaningVi": "Bọn trẻ đang chơi bên ngoài."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电影",
@@ -101,7 +109,8 @@
         "hanzi": "我们去看电影吧。",
         "pinyin": "Wǒmen qù kàn diànyǐng ba.",
         "meaningVi": "Chúng ta đi xem phim nhé."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "看",
@@ -111,7 +120,8 @@
         "hanzi": "我在看书。",
         "pinyin": "Wǒ zài kàn shū.",
         "meaningVi": "Tôi đang đọc sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "看到",
@@ -121,7 +131,8 @@
         "hanzi": "我看到他了。",
         "pinyin": "Wǒ kàndào tā le.",
         "meaningVi": "Tôi nhìn thấy anh ấy rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "看见",
@@ -131,7 +142,8 @@
         "hanzi": "你看见我的书包了吗？",
         "pinyin": "Nǐ kànjiàn wǒ de shūbāo le ma?",
         "meaningVi": "Bạn có thấy cặp sách của tôi không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "听到",
@@ -141,7 +153,8 @@
         "hanzi": "你听到了吗？",
         "pinyin": "Nǐ tīngdào le ma?",
         "meaningVi": "Bạn nghe thấy chưa?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "听见",
@@ -151,7 +164,8 @@
         "hanzi": "我没听见。",
         "pinyin": "Wǒ méi tīngjiàn.",
         "meaningVi": "Tôi không nghe thấy."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "开玩笑",
@@ -161,7 +175,8 @@
         "hanzi": "别开玩笑了。",
         "pinyin": "Bié kāiwánxiào le.",
         "meaningVi": "Đừng đùa nữa."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "笑",
@@ -171,7 +186,8 @@
         "hanzi": "她笑了。",
         "pinyin": "Tā xiào le.",
         "meaningVi": "Cô ấy cười rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "会",
@@ -181,7 +197,8 @@
         "hanzi": "我会说汉语。",
         "pinyin": "Wǒ huì shuō Hànyǔ.",
         "meaningVi": "Tôi biết nói tiếng Trung."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "能",
@@ -191,7 +208,8 @@
         "hanzi": "明天你能来吗？",
         "pinyin": "Míngtiān nǐ néng lái ma?",
         "meaningVi": "Ngày mai bạn đến được không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "想",
@@ -201,7 +219,8 @@
         "hanzi": "我想喝茶。",
         "pinyin": "Wǒ xiǎng hē chá.",
         "meaningVi": "Tôi muốn uống trà."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有时候",
@@ -211,14 +230,15 @@
         "hanzi": "我有时候走路去学校。",
         "pinyin": "Wǒ yǒushíhou zǒulù qù xuéxiào.",
         "meaningVi": "Có lúc tôi đi bộ đến trường."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: sở thích và giải trí",
+      "title": "Từ vựng (1/2): 爱 … 看",
       "subtitle": "20 từ HSK1 về hát, chơi, xem, nghe và các động từ năng nguyện",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 看到 … 有时候",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 会/能/想 + động từ, bổ ngữ kết quả 到/见, 爱 + động từ",
+      "title": "Ngữ pháp (1/2): 会/能/想 + động từ · Bổ ngữ kết quả 到/见",
       "subtitle": "Ba điểm ngữ pháp để nói biết, có thể, muốn làm gì và đã nhìn thấy, nghe thấy chưa",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -336,7 +370,17 @@
               "highlight": "听见"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 爱 + động từ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "爱 + động từ",
@@ -391,7 +435,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hỏi về sở thích",
       "subtitle": "Hội thoại ngắn về sở thích, rủ đi chơi, nhìn thấy đồ vật; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -486,7 +530,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l19:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “hát, ca hát”?",
       "content": {
@@ -517,7 +561,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “nói đùa”?",
       "content": {
@@ -548,7 +592,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我不___写汉字。 (Tôi không biết viết chữ Hán.)",
       "content": {
@@ -579,7 +623,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我没___你的书包。 (Tôi không nhìn thấy cặp sách của bạn.)",
       "content": {
@@ -610,7 +654,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e05",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我们一起去看___吧。(Chúng ta cùng đi xem phim nhé.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -626,7 +670,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 他说的不是真的，他在___。(Điều anh ấy nói không phải thật, anh ấy đang nói đùa.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -642,7 +686,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e07",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 明天我有事，不___去打球。(Ngày mai tôi có việc, không thể đi chơi bóng.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -658,7 +702,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e08",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi biết hát bài hát tiếng Trung.”",
       "content": {
@@ -694,7 +738,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi không nhìn thấy anh ấy.”",
       "content": {
@@ -730,7 +774,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l19:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Em trai tôi thích chơi bóng.”",
       "content": {

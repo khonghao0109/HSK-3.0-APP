@@ -50,6 +50,7 @@ interface PilotLessonShape {
   readonly words: readonly {
     readonly hanzi: string;
     readonly pinyin: string;
+    readonly topicKey: string;
   }[];
   readonly topics: readonly { readonly key: string }[];
   readonly exercises: readonly { readonly sourceKey: string }[];
@@ -260,17 +261,20 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
     expect(await counters()).toEqual(before);
   });
 
-  it('3. nạp lần 1: Lesson + 3 Topic + 10 Exercise + 20 LessonWord, tất cả draft', async () => {
+  it('3. nạp lần 1: Lesson + 6 Topic + 10 Exercise + 20 LessonWord, tất cả draft', async () => {
     const result = await importOnce(false);
     expect(result.dryRun).toBe(false);
     expect(result.createdLesson).toBe(true);
-    expect(result.createdTopics).toBe(3);
+    expect(result.createdTopics).toBe(6);
     expect(result.importedRows).toBe(10);
     expect(result.lessonWordCount).toBe(20);
     expect(result.idempotent).toBe(false);
     expect(result.topicIds).toEqual({
       t01: expect.any(Number) as number,
+      t01b: expect.any(Number) as number,
       t02: expect.any(Number) as number,
+      t02b: expect.any(Number) as number,
+      t02c: expect.any(Number) as number,
       t03: expect.any(Number) as number,
     });
 
@@ -281,8 +285,14 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
         status: true,
         orderIndex: true,
         topics: { select: { status: true } },
-        exercises: { select: { status: true, sourceKey: true } },
-        lessonWords: { select: { orderIndex: true } },
+        exercises: { select: { status: true, sourceKey: true, topicId: true } },
+        lessonWords: {
+          select: {
+            orderIndex: true,
+            topicId: true,
+            word: { select: { hanzi: true } },
+          },
+        },
       },
     });
     expect(stored).not.toBeNull();
@@ -297,12 +307,32 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
     expect(
       stored?.exercises.every((exercise) => exercise.status === 'draft'),
     ).toBe(true);
+    // Cách B (TL 20/11/2026): bài tập không gắn topic đơn vị học.
+    expect(stored?.exercises.map((exercise) => exercise.topicId)).toEqual(
+      Array<null>(10).fill(null),
+    );
     expect(stored?.lessonWords).toHaveLength(20);
     expect(
       (stored?.lessonWords ?? [])
         .map((word) => word.orderIndex)
         .sort((left, right) => left - right),
     ).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
+    // Pha F: mỗi LessonWord thuộc đơn vị Từ vựng mà words[].topicKey chỉ tới
+    // (bài 1 có 2 topic vocabulary: 10 từ t01, 10 từ t01b).
+    const topicOfHanzi = Object.fromEntries(
+      (stored?.lessonWords ?? []).map((row) => [row.word.hanzi, row.topicId]),
+    );
+    expect(topicOfHanzi).toEqual(
+      Object.fromEntries(
+        lesson.words.map((word) => [
+          word.hanzi,
+          result.topicIds[word.topicKey],
+        ]),
+      ),
+    );
+    expect(new Set(lesson.words.map((word) => word.topicKey))).toEqual(
+      new Set(['t01', 't01b']),
+    );
   });
 
   it('3b. ADR-002: prompt/content/answer lưu byte-identical với JSON (giữ dấu câu full-width)', async () => {

@@ -21,7 +21,8 @@
         "hanzi": "我们在学校学习汉语。",
         "pinyin": "Wǒmen zài xuéxiào xuéxí Hànyǔ.",
         "meaningVi": "Chúng tôi học tiếng Hán ở trường."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "学",
@@ -31,7 +32,8 @@
         "hanzi": "他在学校学汉语。",
         "pinyin": "Tā zài xuéxiào xué Hànyǔ.",
         "meaningVi": "Anh ấy học tiếng Hán ở trường."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "汉语",
@@ -41,7 +43,8 @@
         "hanzi": "我很喜欢汉语。",
         "pinyin": "Wǒ hěn xǐhuan Hànyǔ.",
         "meaningVi": "Tôi rất thích tiếng Hán."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "汉字",
@@ -51,7 +54,8 @@
         "hanzi": "这个汉字很难。",
         "pinyin": "Zhège hànzì hěn nán.",
         "meaningVi": "Chữ Hán này rất khó."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "书",
@@ -61,7 +65,8 @@
         "hanzi": "桌子上有一本书。",
         "pinyin": "Zhuōzi shang yǒu yī běn shū.",
         "meaningVi": "Trên bàn có một quyển sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "读",
@@ -71,7 +76,8 @@
         "hanzi": "请读这个汉字。",
         "pinyin": "Qǐng dú zhège hànzì.",
         "meaningVi": "Hãy đọc chữ Hán này."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "写",
@@ -81,7 +87,8 @@
         "hanzi": "我写我的名字。",
         "pinyin": "Wǒ xiě wǒ de míngzi.",
         "meaningVi": "Tôi viết tên mình."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "说",
@@ -91,7 +98,8 @@
         "hanzi": "你会说汉语吗？",
         "pinyin": "Nǐ huì shuō Hànyǔ ma?",
         "meaningVi": "Bạn biết nói tiếng Hán không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "见",
@@ -101,7 +109,8 @@
         "hanzi": "明天见！",
         "pinyin": "Míngtiān jiàn!",
         "meaningVi": "Hẹn gặp ngày mai!"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "听",
@@ -111,7 +120,8 @@
         "hanzi": "我听老师说话。",
         "pinyin": "Wǒ tīng lǎoshī shuōhuà.",
         "meaningVi": "Tôi nghe giáo viên nói."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "学校",
@@ -121,7 +131,8 @@
         "hanzi": "我的学校很大。",
         "pinyin": "Wǒ de xuéxiào hěn dà.",
         "meaningVi": "Trường của tôi rất lớn."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "课",
@@ -131,7 +142,8 @@
         "hanzi": "今天上午有课。",
         "pinyin": "Jīntiān shàngwǔ yǒu kè.",
         "meaningVi": "Sáng nay có tiết học."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "课本",
@@ -141,7 +153,8 @@
         "hanzi": "我的课本在桌子上。",
         "pinyin": "Wǒ de kèběn zài zhuōzi shang.",
         "meaningVi": "Sách giáo khoa của tôi ở trên bàn."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "考试",
@@ -151,7 +164,8 @@
         "hanzi": "明天我们有考试。",
         "pinyin": "Míngtiān wǒmen yǒu kǎoshì.",
         "meaningVi": "Ngày mai chúng tôi có kỳ thi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "字",
@@ -161,7 +175,8 @@
         "hanzi": "这个字怎么读？",
         "pinyin": "Zhège zì zěnme dú?",
         "meaningVi": "Chữ này đọc thế nào?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "问",
@@ -171,7 +186,8 @@
         "hanzi": "我问老师这个字。",
         "pinyin": "Wǒ wèn lǎoshī zhège zì.",
         "meaningVi": "Tôi hỏi giáo viên chữ này."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "知道",
@@ -181,7 +197,8 @@
         "hanzi": "我知道他的名字。",
         "pinyin": "Wǒ zhīdào tā de míngzi.",
         "meaningVi": "Tôi biết tên của anh ấy."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "上课",
@@ -191,7 +208,8 @@
         "hanzi": "我们明天八点上课。",
         "pinyin": "Wǒmen míngtiān bā diǎn shàngkè.",
         "meaningVi": "Ngày mai chúng tôi lên lớp lúc tám giờ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "下课",
@@ -201,7 +219,8 @@
         "hanzi": "我们四点下课。",
         "pinyin": "Wǒmen sì diǎn xiàkè.",
         "meaningVi": "Chúng tôi tan học lúc bốn giờ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "图书馆",
@@ -211,14 +230,15 @@
         "hanzi": "图书馆在学校里边。",
         "pinyin": "Túshūguǎn zài xuéxiào lǐbian.",
         "meaningVi": "Thư viện ở trong trường."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: học tập và trường học",
+      "title": "Từ vựng (1/2): 学习 … 听",
       "subtitle": "20 từ HSK1 về việc học, chữ Hán, sách, lớp học và thư viện",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 学校 … 图书馆",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 学习/学, động từ + tân ngữ, 上课/下课, 问/知道, 见",
+      "title": "Ngữ pháp (1/3): 学习 và 学 đều là “học” · Động từ + tân ngữ",
       "subtitle": "Năm điểm ngữ pháp cần khi nói về việc học ở trường",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -327,7 +361,17 @@
               "highlight": "听"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): 上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết) · 问 (hỏi)",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết)",
@@ -399,7 +443,17 @@
               "highlight": "知道"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 见 nghĩa là “thấy, gặp”",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "见 nghĩa là “thấy, gặp”",
@@ -438,7 +492,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: giờ học, hỏi bài, thư viện",
       "subtitle": "Hội thoại ngắn ở trường; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -533,7 +587,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l05:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “thư viện”?",
       "content": {
@@ -564,7 +618,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我们八点___。 (Chúng tôi lên lớp lúc 8 giờ.)",
       "content": {
@@ -595,7 +649,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___老师这个字。 (Tôi hỏi giáo viên chữ này.)",
       "content": {
@@ -626,7 +680,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “kỳ thi”?",
       "content": {
@@ -657,7 +711,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我学习___。(Tôi học tiếng Hán.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -673,7 +727,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我的___在桌子上。(Sách giáo khoa của tôi ở trên bàn.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -689,7 +743,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我们四点___。(Chúng tôi tan học lúc 4 giờ.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -705,7 +759,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + động từ + tân ngữ: “Tôi học tiếng Hán.”",
       "content": {
@@ -736,7 +790,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu theo trật tự chủ ngữ + 都 + động từ + tân ngữ: “Chúng tôi đều thích tiếng Hán.”",
       "content": {
@@ -772,7 +826,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l05:e10",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Chữ Hán này rất khó.”",
       "content": {

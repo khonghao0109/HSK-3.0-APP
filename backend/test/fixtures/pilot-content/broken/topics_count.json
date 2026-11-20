@@ -9,6 +9,18 @@
     {
       "op": "delete",
       "path": "topics[1]"
+    },
+    {
+      "op": "delete",
+      "path": "topics[1]"
+    },
+    {
+      "op": "delete",
+      "path": "topics[1]"
+    },
+    {
+      "op": "delete",
+      "path": "topics[1]"
     }
   ]
 }

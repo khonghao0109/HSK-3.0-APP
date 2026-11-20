@@ -168,8 +168,9 @@ const show = (element: React.ReactElement) =>
 describe('Ngữ pháp and Bài khoá units (Pha D)', () => {
   it('opens a grammar unit as cards, and its result leads to the next unit', async () => {
     show(await open('12'));
+    // Pha F: unit label (numbered: the lesson has two grammar topics) · lesson.
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
-      'Ngữ pháp · Gia đình',
+      'Ngữ pháp 1 · Gia đình',
     );
     expect(screen.getByText('Điểm 1 trên 2')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Đã hiểu' }));

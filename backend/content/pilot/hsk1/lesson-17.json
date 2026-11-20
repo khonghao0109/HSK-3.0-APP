@@ -21,7 +21,8 @@
         "hanzi": "你买什么东西？",
         "pinyin": "Nǐ mǎi shénme dōngxi?",
         "meaningVi": "Bạn mua đồ gì?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "书包",
@@ -31,7 +32,8 @@
         "hanzi": "我的书包很新。",
         "pinyin": "Wǒ de shūbāo hěn xīn.",
         "meaningVi": "Cặp sách của tôi rất mới."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "钱包",
@@ -41,7 +43,8 @@
         "hanzi": "我的钱包不见了。",
         "pinyin": "Wǒ de qiánbāo bú jiàn le.",
         "meaningVi": "Ví tiền của tôi không thấy đâu rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "手机",
@@ -51,7 +54,8 @@
         "hanzi": "这是我的新手机。",
         "pinyin": "Zhè shì wǒ de xīn shǒujī.",
         "meaningVi": "Đây là điện thoại mới của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电脑",
@@ -61,7 +65,8 @@
         "hanzi": "我用电脑学习。",
         "pinyin": "Wǒ yòng diànnǎo xuéxí.",
         "meaningVi": "Tôi học bằng máy tính."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电视",
@@ -71,7 +76,8 @@
         "hanzi": "晚上我看电视。",
         "pinyin": "Wǎnshang wǒ kàn diànshì.",
         "meaningVi": "Buổi tối tôi xem tivi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电视机",
@@ -81,7 +87,8 @@
         "hanzi": "家里有两个电视机。",
         "pinyin": "Jiāli yǒu liǎng ge diànshìjī.",
         "meaningVi": "Trong nhà có hai cái tivi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电话",
@@ -91,7 +98,8 @@
         "hanzi": "你的电话是多少？",
         "pinyin": "Nǐ de diànhuà shì duōshao?",
         "meaningVi": "Số điện thoại của bạn là bao nhiêu?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "包",
@@ -101,7 +109,8 @@
         "hanzi": "这个包是谁的？",
         "pinyin": "Zhè ge bāo shì shéi de?",
         "meaningVi": "Cái túi này là của ai?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "包子",
@@ -111,7 +120,8 @@
         "hanzi": "我想吃两个包子。",
         "pinyin": "Wǒ xiǎng chī liǎng ge bāozi.",
         "meaningVi": "Tôi muốn ăn hai cái bánh bao."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "面条儿",
@@ -121,7 +131,8 @@
         "hanzi": "我中午吃面条儿。",
         "pinyin": "Wǒ zhōngwǔ chī miàntiáor.",
         "meaningVi": "Buổi trưa tôi ăn mì."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "肉",
@@ -131,7 +142,8 @@
         "hanzi": "我不吃肉。",
         "pinyin": "Wǒ bù chī ròu.",
         "meaningVi": "Tôi không ăn thịt."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "饭",
@@ -141,7 +153,8 @@
         "hanzi": "我们去吃饭吧。",
         "pinyin": "Wǒmen qù chī fàn ba.",
         "meaningVi": "Chúng ta đi ăn cơm nhé."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "花",
@@ -151,7 +164,8 @@
         "hanzi": "这些花很好看。",
         "pinyin": "Zhèxiē huā hěn hǎokàn.",
         "meaningVi": "Những bông hoa này rất đẹp."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "新",
@@ -161,7 +175,8 @@
         "hanzi": "我有一个新朋友。",
         "pinyin": "Wǒ yǒu yí ge xīn péngyou.",
         "meaningVi": "Tôi có một người bạn mới."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "坏",
@@ -171,7 +186,8 @@
         "hanzi": "我的手机坏了。",
         "pinyin": "Wǒ de shǒujī huài le.",
         "meaningVi": "Điện thoại của tôi hỏng rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "用",
@@ -181,7 +197,8 @@
         "hanzi": "我能用一下你的电脑吗？",
         "pinyin": "Wǒ néng yòng yíxià nǐ de diànnǎo ma?",
         "meaningVi": "Tôi dùng máy tính của bạn một chút được không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有用",
@@ -191,7 +208,8 @@
         "hanzi": "这本书很有用。",
         "pinyin": "Zhè běn shū hěn yǒuyòng.",
         "meaningVi": "Quyển sách này rất có ích."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "少",
@@ -201,7 +219,8 @@
         "hanzi": "今天人很少。",
         "pinyin": "Jīntiān rén hěn shǎo.",
         "meaningVi": "Hôm nay rất ít người."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "要",
@@ -211,14 +230,15 @@
         "hanzi": "我要一杯水。",
         "pinyin": "Wǒ yào yì bēi shuǐ.",
         "meaningVi": "Tôi muốn một cốc nước."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: đồ vật hằng ngày",
+      "title": "Từ vựng (1/2): 东西 … 包子",
       "subtitle": "20 từ HSK1 về túi, đồ điện tử, món ăn và tính chất đồ vật",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 面条儿 … 要",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 要 + danh từ/động từ, 的 làm định ngữ, 多/少 làm vị ngữ",
+      "title": "Ngữ pháp (1/2): 要 + danh từ / 要 + động từ · 的 làm định ngữ",
       "subtitle": "Ba điểm ngữ pháp để nói muốn gì, đồ của ai, đồ thế nào và nhiều hay ít",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -326,7 +360,17 @@
               "highlight": "的"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 多/少 làm vị ngữ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "多/少 làm vị ngữ",
@@ -376,7 +420,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: gọi món và nói về đồ dùng",
       "subtitle": "Hội thoại ngắn gọi đồ ăn, hỏi đồ mới, mượn máy tính; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -471,7 +515,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l17:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “ví tiền”?",
       "content": {
@@ -502,7 +546,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “hỏng”?",
       "content": {
@@ -533,7 +577,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这是___的钱包？ (Đây là ví của ai?)",
       "content": {
@@ -564,7 +608,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 今天人很___。 (Hôm nay rất ít người.)",
       "content": {
@@ -595,7 +639,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我___一杯水。(Tôi muốn một cốc nước.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -611,7 +655,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e06",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我___电脑学习。(Tôi dùng máy tính để học.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -627,7 +671,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 我的手机___了，我要买一个新的。(Điện thoại của tôi hỏng rồi, tôi muốn mua một cái mới.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -643,7 +687,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Đây là điện thoại mới của tôi.”",
       "content": {
@@ -674,7 +718,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Đồ của anh ấy rất nhiều.”",
       "content": {
@@ -705,7 +749,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l17:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Bạn có muốn ăn thịt không?”",
       "content": {

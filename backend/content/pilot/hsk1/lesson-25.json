@@ -21,7 +21,8 @@
         "hanzi": "地上很干净。",
         "pinyin": "Dìshang hěn gānjìng.",
         "meaningVi": "Mặt đất rất sạch."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女儿",
@@ -31,7 +32,8 @@
         "hanzi": "我女儿五岁了。",
         "pinyin": "Wǒ nǚ'ér wǔ suì le.",
         "meaningVi": "Con gái tôi năm tuổi rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "奶",
@@ -41,7 +43,8 @@
         "hanzi": "我早上喝奶。",
         "pinyin": "Wǒ zǎoshang hē nǎi.",
         "meaningVi": "Buổi sáng tôi uống sữa."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "子",
@@ -51,7 +54,8 @@
         "hanzi": "这个桌子很新。",
         "pinyin": "Zhè ge zhuōzi hěn xīn.",
         "meaningVi": "Cái bàn này rất mới."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "山",
@@ -61,7 +65,8 @@
         "hanzi": "那个山很高。",
         "pinyin": "Nà ge shān hěn gāo.",
         "meaningVi": "Ngọn núi kia rất cao."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "差",
@@ -71,7 +76,8 @@
         "hanzi": "现在差五分八点。",
         "pinyin": "Xiànzài chà wǔ fēn bā diǎn.",
         "meaningVi": "Bây giờ là tám giờ kém năm phút."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "树",
@@ -81,7 +87,8 @@
         "hanzi": "门口有一个大树。",
         "pinyin": "Ménkǒu yǒu yí ge dà shù.",
         "meaningVi": "Trước cửa có một cái cây to."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "电",
@@ -91,7 +98,8 @@
         "hanzi": "家里没电了。",
         "pinyin": "Jiāli méi diàn le.",
         "meaningVi": "Nhà mất điện rồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "白",
@@ -101,7 +109,8 @@
         "hanzi": "我的衣服是白的。",
         "pinyin": "Wǒ de yīfu shì bái de.",
         "meaningVi": "Quần áo của tôi màu trắng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "老",
@@ -111,7 +120,8 @@
         "hanzi": "我的电脑很老了。",
         "pinyin": "Wǒ de diànnǎo hěn lǎo le.",
         "meaningVi": "Máy tính của tôi cũ lắm rồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "行",
@@ -121,7 +131,8 @@
         "hanzi": "明天去，行吗？",
         "pinyin": "Míngtiān qù, xíng ma?",
         "meaningVi": "Ngày mai đi, được không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "起",
@@ -131,7 +142,8 @@
         "hanzi": "我七点起床。",
         "pinyin": "Wǒ qī diǎn qǐ chuáng.",
         "meaningVi": "Tôi dậy lúc bảy giờ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "还",
@@ -141,7 +153,8 @@
         "hanzi": "我明天还你书。",
         "pinyin": "Wǒ míngtiān huán nǐ shū.",
         "meaningVi": "Ngày mai tôi trả sách cho bạn."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "这边",
@@ -151,7 +164,8 @@
         "hanzi": "请到这边来。",
         "pinyin": "Qǐng dào zhèbiān lái.",
         "meaningVi": "Mời lại phía này."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "那边",
@@ -161,7 +175,8 @@
         "hanzi": "那边有一个商店。",
         "pinyin": "Nàbiān yǒu yí ge shāngdiàn.",
         "meaningVi": "Bên kia có một cửa hàng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "重",
@@ -171,7 +186,8 @@
         "hanzi": "这个包很重。",
         "pinyin": "Zhè ge bāo hěn zhòng.",
         "meaningVi": "Cái túi này rất nặng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "重要",
@@ -181,7 +197,8 @@
         "hanzi": "这个考试很重要。",
         "pinyin": "Zhè ge kǎoshì hěn zhòngyào.",
         "meaningVi": "Kỳ thi này rất quan trọng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "间",
@@ -191,14 +208,15 @@
         "hanzi": "我家有三间房间。",
         "pinyin": "Wǒ jiā yǒu sān jiān fángjiān.",
         "meaningVi": "Nhà tôi có ba phòng."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: ôn tập và từ bổ sung",
+      "title": "Từ vựng (1/2): 地 … 白",
       "subtitle": "18 từ HSK1 bổ sung về gia đình, thiên nhiên, tính chất và vị trí",
       "orderIndex": 1,
       "isPremium": false,
@@ -215,11 +233,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 老 … 间",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: ôn tập 了, 在, 有, 的",
+      "title": "Ngữ pháp (1/2): Ôn 了 · Ôn 在",
       "subtitle": "Không thêm điểm mới; ôn lại bốn từ dùng nhiều nhất trong HSK1",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -301,7 +333,17 @@
               "highlight": "在"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): Ôn 有 · Ôn 的",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Ôn 有",
@@ -393,7 +435,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: ôn tập trong đời sống",
       "subtitle": "Hội thoại ngắn hỏi đồ của ai, ở đâu, mấy giờ và mượn trả; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -488,7 +530,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l25:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “núi”?",
       "content": {
@@ -519,7 +561,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “quan trọng”?",
       "content": {
@@ -550,7 +592,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 山上___很多树。 (Trên núi có rất nhiều cây.)",
       "content": {
@@ -581,7 +623,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这个包是我女儿___。 (Cái túi này là của con gái tôi.)",
       "content": {
@@ -612,7 +654,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e05",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 明天我___你书，行吗？(Ngày mai tôi trả sách cho bạn, được không?) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -628,7 +670,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 你的书___地上，你看一下儿。(Sách của bạn ở dưới đất, bạn nhìn xem.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -644,7 +686,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 现在___五分八点。(Bây giờ là tám giờ kém năm phút.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -660,7 +702,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Con gái tôi năm tuổi rồi.”",
       "content": {
@@ -691,7 +733,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Nhà tôi có ba phòng.”",
       "content": {
@@ -727,7 +769,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l25:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Quần áo của tôi màu trắng.”",
       "content": {

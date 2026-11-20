@@ -1,0 +1,11 @@
+{
+  "description": "bài tập gắn vào topic vocabulary (chỉ topic quiz hoặc null)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[0].topicKey",
+      "value": "t01"
+    }
+  ]
+}

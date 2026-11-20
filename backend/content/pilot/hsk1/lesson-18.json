@@ -21,7 +21,8 @@
         "hanzi": "我们班有十个男学生。",
         "pinyin": "Wǒmen bān yǒu shí ge nán xuésheng.",
         "meaningVi": "Lớp chúng tôi có mười học sinh nam."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女",
@@ -31,7 +32,8 @@
         "hanzi": "我们的老师是女的。",
         "pinyin": "Wǒmen de lǎoshī shì nǚ de.",
         "meaningVi": "Giáo viên của chúng tôi là nữ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "男人",
@@ -41,7 +43,8 @@
         "hanzi": "那个男人是医生。",
         "pinyin": "Nà ge nánrén shì yīshēng.",
         "meaningVi": "Người đàn ông kia là bác sĩ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女人",
@@ -51,7 +54,8 @@
         "hanzi": "那个女人是谁？",
         "pinyin": "Nà ge nǚrén shì shéi?",
         "meaningVi": "Người phụ nữ kia là ai?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "男孩儿",
@@ -61,7 +65,8 @@
         "hanzi": "那个男孩儿七岁。",
         "pinyin": "Nà ge nánháir qī suì.",
         "meaningVi": "Cậu bé kia bảy tuổi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女孩儿",
@@ -71,7 +76,8 @@
         "hanzi": "这个女孩儿很高。",
         "pinyin": "Zhè ge nǚháir hěn gāo.",
         "meaningVi": "Cô bé này rất cao."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "男生",
@@ -81,7 +87,8 @@
         "hanzi": "男生喜欢打球。",
         "pinyin": "Nánshēng xǐhuan dǎ qiú.",
         "meaningVi": "Các bạn nam thích chơi bóng."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女生",
@@ -91,7 +98,8 @@
         "hanzi": "我们班女生很多。",
         "pinyin": "Wǒmen bān nǚshēng hěn duō.",
         "meaningVi": "Lớp chúng tôi có nhiều bạn nữ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "男朋友",
@@ -101,7 +109,8 @@
         "hanzi": "她有男朋友吗？",
         "pinyin": "Tā yǒu nánpéngyou ma?",
         "meaningVi": "Cô ấy có bạn trai không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "女朋友",
@@ -111,7 +120,8 @@
         "hanzi": "这是我女朋友。",
         "pinyin": "Zhè shì wǒ nǚpéngyou.",
         "meaningVi": "Đây là bạn gái tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "小孩儿",
@@ -121,7 +131,8 @@
         "hanzi": "小孩儿在睡觉。",
         "pinyin": "Xiǎoháir zài shuìjiào.",
         "meaningVi": "Đứa bé đang ngủ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "小朋友",
@@ -131,7 +142,8 @@
         "hanzi": "小朋友，你几岁了？",
         "pinyin": "Xiǎopéngyǒu, nǐ jǐ suì le?",
         "meaningVi": "Cháu ơi, cháu mấy tuổi rồi?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "小姐",
@@ -141,7 +153,8 @@
         "hanzi": "小姐，你好！",
         "pinyin": "Xiǎojiě, nǐ hǎo!",
         "meaningVi": "Chào cô!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "先生",
@@ -151,7 +164,8 @@
         "hanzi": "先生，请坐。",
         "pinyin": "Xiānsheng, qǐng zuò.",
         "meaningVi": "Mời ông ngồi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "老人",
@@ -161,7 +175,8 @@
         "hanzi": "那个老人是我爷爷。",
         "pinyin": "Nà ge lǎorén shì wǒ yéye.",
         "meaningVi": "Cụ già kia là ông nội tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "工人",
@@ -171,7 +186,8 @@
         "hanzi": "我爸爸是工人。",
         "pinyin": "Wǒ bàba shì gōngrén.",
         "meaningVi": "Bố tôi là công nhân."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "医生",
@@ -181,7 +197,8 @@
         "hanzi": "医生说我没病。",
         "pinyin": "Yīshēng shuō wǒ méi bìng.",
         "meaningVi": "Bác sĩ nói tôi không có bệnh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "病人",
@@ -191,7 +208,8 @@
         "hanzi": "医院里有很多病人。",
         "pinyin": "Yīyuàn lǐ yǒu hěn duō bìngrén.",
         "meaningVi": "Trong bệnh viện có rất nhiều bệnh nhân."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "别人",
@@ -201,7 +219,8 @@
         "hanzi": "这是别人的书。",
         "pinyin": "Zhè shì biérén de shū.",
         "meaningVi": "Đây là sách của người khác."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "家人",
@@ -211,14 +230,15 @@
         "hanzi": "我很想我的家人。",
         "pinyin": "Wǒ hěn xiǎng wǒ de jiārén.",
         "meaningVi": "Tôi rất nhớ gia đình."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: con người và nghề nghiệp",
+      "title": "Từ vựng (1/2): 男 … 女朋友",
       "subtitle": "20 từ HSK1 về nam nữ, trẻ em, cách xưng hô, nghề nghiệp và người thân",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 小孩儿 … 家人",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 的 chỉ sở hữu, 男/女 + danh từ, 是 + nghề nghiệp",
+      "title": "Ngữ pháp (1/2): 的 chỉ sở hữu, quan hệ · 男/女 + danh từ",
       "subtitle": "Ba điểm ngữ pháp để nói ai là ai, của ai và làm nghề gì",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -321,7 +355,17 @@
               "highlight": "女"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 是 + nghề nghiệp",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "是 + nghề nghiệp",
@@ -376,7 +420,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: người này là ai",
       "subtitle": "Hội thoại ngắn hỏi ai là ai, làm nghề gì, hỏi tuổi trẻ em; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -471,7 +515,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l18:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “người già”?",
       "content": {
@@ -502,7 +546,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “bé gái, cô bé”?",
       "content": {
@@ -533,7 +577,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我爸爸___工人。 (Bố tôi là công nhân.)",
       "content": {
@@ -564,7 +608,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 这是___的书。 (Đây là sách của người khác.)",
       "content": {
@@ -595,7 +639,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền chữ còn thiếu: 她是一个___医生。(Cô ấy là một nữ bác sĩ.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -614,7 +658,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e06",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 医院里有很多___。(Trong bệnh viện có rất nhiều bệnh nhân.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -630,7 +674,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: ___，请坐。(Thưa ông, mời ngồi.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -646,7 +690,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Mẹ tôi là bác sĩ.”",
       "content": {
@@ -677,7 +721,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Lớp chúng tôi có rất nhiều nữ sinh.”",
       "content": {
@@ -713,7 +757,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l18:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Cháu mấy tuổi rồi?”",
       "content": {

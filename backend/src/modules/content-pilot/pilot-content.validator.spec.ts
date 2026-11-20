@@ -468,7 +468,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     }
   });
 
-  it('mỗi bài có đúng 1 topic vocabulary và 1 topic grammar/key_text', () => {
+  it('mỗi bài có ít nhất 1 topic vocabulary và 1 topic grammar/key_text', () => {
     for (const source of sources) {
       const summaryIssues = validatePilotLesson(
         source.raw,
@@ -798,12 +798,163 @@ describe('block grammar_point / dialogue trong topic pilot', () => {
       extra: true,
     });
     expect(malformed.map((issue) => [issue.code, issue.path])).toEqual([
-      ['block_unknown_field', 'topics[1].content[5].extra'],
-      ['block_field_invalid', 'topics[1].content[5].formula[0].role'],
+      ['block_unknown_field', 'topics[2].content[2].extra'],
+      ['block_field_invalid', 'topics[2].content[2].formula[0].role'],
     ]);
     expect(
       codesOf(issuesWith('key_text', { type: 'dialogue', lines: [] })),
     ).toEqual(['block_field_invalid']);
+  });
+});
+
+describe('words[].topicKey: nhiều topic vocabulary/grammar (Pha F)', () => {
+  const refs = loadPilotReferenceData(BACKEND_ROOT);
+  const base = readJson(join(CONTENT_DIR, 'lesson-01.json'));
+
+  /**
+   * Bài 1 dựng lại thành 2 topic vocabulary (10 + 10 từ), 2 topic grammar và
+   * key_text, độc lập với cách nhóm của file thật.
+   */
+  function twoUnitLesson(): Record<string, unknown> {
+    const lesson = structuredClone(base);
+    if (!isRecord(lesson)) throw new Error('bài 1 không phải object');
+    const topics = (lesson.topics as unknown[]).filter(isRecord);
+    const vocabulary = topics.find((topic) => topic.type === 'vocabulary');
+    const keyText = topics.find((topic) => topic.type === 'key_text');
+    const points = topics
+      .filter((topic) => topic.type === 'grammar')
+      .flatMap((topic) => topic.content as unknown[]);
+    if (!vocabulary || !keyText) throw new Error('thiếu topic');
+    const marker = { type: 'vocabulary_list', value: 'lesson_words' };
+    lesson.topics = [
+      { ...vocabulary, key: 't01', orderIndex: 1 },
+      {
+        key: 't01b',
+        type: 'vocabulary',
+        title: 'Từ vựng (2/2)',
+        orderIndex: 2,
+        isPremium: false,
+        isLocked: false,
+        content: [marker],
+      },
+      {
+        key: 't02',
+        type: 'grammar',
+        title: 'Ngữ pháp (1/2)',
+        orderIndex: 3,
+        isPremium: false,
+        isLocked: false,
+        content: points.slice(0, 2),
+      },
+      {
+        key: 't02b',
+        type: 'grammar',
+        title: 'Ngữ pháp (2/2)',
+        orderIndex: 4,
+        isPremium: false,
+        isLocked: false,
+        content: points.slice(2),
+      },
+      { ...keyText, key: 't03', orderIndex: 5 },
+    ];
+    lesson.words = (lesson.words as unknown[])
+      .filter(isRecord)
+      .map((word, index) => ({
+        ...word,
+        topicKey: index < 10 ? 't01' : 't01b',
+      }));
+    return lesson;
+  }
+
+  const issuesOf = (lesson: unknown) =>
+    validatePilotLesson(lesson, 'lesson-01.json', refs).map((issue) => [
+      issue.code,
+      issue.path,
+    ]);
+
+  it('nhận bài có 2 topic vocabulary và 2 topic grammar, từ trỏ topicKey', () => {
+    expect(issuesOf(twoUnitLesson())).toEqual([]);
+  });
+
+  it('từ thiếu topicKey khi bài có topic vocabulary → word_topic_key_missing', () => {
+    const lesson = twoUnitLesson();
+    const words = lesson.words as Record<string, unknown>[];
+    delete words[3].topicKey;
+    expect(issuesOf(lesson)).toEqual([
+      ['word_topic_key_missing', 'words[3].topicKey'],
+    ]);
+  });
+
+  it('topicKey không tồn tại hoặc không phải topic vocabulary → word_topic_key_invalid', () => {
+    const lesson = twoUnitLesson();
+    const words = lesson.words as Record<string, unknown>[];
+    words[0].topicKey = 't99';
+    words[19].topicKey = 't02';
+    expect(issuesOf(lesson)).toEqual([
+      ['word_topic_key_invalid', 'words[0].topicKey'],
+      ['word_topic_key_invalid', 'words[19].topicKey'],
+    ]);
+  });
+
+  it('topic vocabulary không có từ nào → topic_vocabulary_without_words', () => {
+    const lesson = twoUnitLesson();
+    for (const word of lesson.words as Record<string, unknown>[]) {
+      word.topicKey = 't01';
+    }
+    expect(issuesOf(lesson)).toEqual([
+      ['topic_vocabulary_without_words', 'topics[1]'],
+    ]);
+  });
+});
+
+describe('exercises[].topicKey: chỉ null hoặc topic quiz (Pha F, cách B)', () => {
+  const refs = loadPilotReferenceData(BACKEND_ROOT);
+  const base = readJson(join(CONTENT_DIR, 'lesson-01.json'));
+
+  const withTopicKeys = (keys: (string | null)[]) => {
+    const lesson = structuredClone(base);
+    if (!isRecord(lesson)) throw new Error('bài 1 không phải object');
+    const exercises = (lesson.exercises as unknown[]).filter(isRecord);
+    keys.forEach((key, index) => {
+      const exercise = exercises[index];
+      if (exercise) exercise.topicKey = key;
+    });
+    return lesson;
+  };
+  const issuesOf = (lesson: unknown) =>
+    validatePilotLesson(lesson, 'lesson-01.json', refs).map((issue) => [
+      issue.code,
+      issue.path,
+    ]);
+
+  it('topicKey null (bài tập độc lập) hợp lệ', () => {
+    expect(issuesOf(withTopicKeys([null, null]))).toEqual([]);
+  });
+
+  it('topicKey trỏ topic vocabulary/grammar/key_text → exercise_topic_not_quiz', () => {
+    expect(issuesOf(withTopicKeys(['t01', 't02b', 't03']))).toEqual([
+      ['exercise_topic_not_quiz', 'exercises[0].topicKey'],
+      ['exercise_topic_not_quiz', 'exercises[1].topicKey'],
+      ['exercise_topic_not_quiz', 'exercises[2].topicKey'],
+    ]);
+  });
+
+  it('topicKey trỏ topic quiz không báo exercise_topic_not_quiz', () => {
+    const lesson = withTopicKeys(['t09']);
+    (lesson.topics as unknown[]).push({
+      key: 't09',
+      type: 'quiz',
+      title: 'Kiểm tra',
+      orderIndex: 7,
+      isPremium: false,
+      isLocked: false,
+      content: [{ type: 'text', value: 'Kiểm tra' }],
+    });
+    expect(
+      validatePilotLesson(lesson, 'lesson-01.json', refs).map(
+        (issue) => issue.code,
+      ),
+    ).not.toContain('exercise_topic_not_quiz');
   });
 });
 

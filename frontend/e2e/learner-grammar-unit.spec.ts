@@ -227,7 +227,8 @@ test.describe('Ngữ pháp and Bài khoá units (Pha D)', () => {
     );
     await row.click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      /^Ngữ pháp · /u,
+      // Pha F: numbered when the lesson has several grammar units.
+      /^Ngữ pháp( \d+)? · Academic discourse & literature$/u,
     );
     await expect(page.getByText('Điểm 1 trên 2')).toBeVisible();
     await expect(

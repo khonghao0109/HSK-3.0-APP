@@ -21,7 +21,8 @@
         "hanzi": "我们明天见面吧。",
         "pinyin": "Wǒmen míngtiān jiànmiàn ba.",
         "meaningVi": "Ngày mai chúng ta gặp nhau nhé."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "再",
@@ -31,7 +32,8 @@
         "hanzi": "请再说一次。",
         "pinyin": "Qǐng zài shuō yí cì.",
         "meaningVi": "Xin nói lại một lần nữa."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "先",
@@ -41,7 +43,8 @@
         "hanzi": "我先走了。",
         "pinyin": "Wǒ xiān zǒu le.",
         "meaningVi": "Tôi đi trước đây."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "说话",
@@ -51,7 +54,8 @@
         "hanzi": "上课的时候别说话。",
         "pinyin": "Shàngkè de shíhou bié shuōhuà.",
         "meaningVi": "Trong giờ học đừng nói chuyện."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "话",
@@ -61,7 +65,8 @@
         "hanzi": "我明白你的话。",
         "pinyin": "Wǒ míngbai nǐ de huà.",
         "meaningVi": "Tôi hiểu lời bạn nói."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "告诉",
@@ -71,7 +76,8 @@
         "hanzi": "请告诉我你的名字。",
         "pinyin": "Qǐng gàosu wǒ nǐ de míngzi.",
         "meaningVi": "Hãy cho tôi biết tên bạn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "介绍",
@@ -81,7 +87,8 @@
         "hanzi": "我介绍一下，这是我朋友。",
         "pinyin": "Wǒ jièshào yíxià, zhè shì wǒ péngyou.",
         "meaningVi": "Tôi giới thiệu một chút, đây là bạn tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "给",
@@ -91,7 +98,8 @@
         "hanzi": "妈妈给我一本书。",
         "pinyin": "Māma gěi wǒ yì běn shū.",
         "meaningVi": "Mẹ cho tôi một quyển sách."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "打电话",
@@ -101,7 +109,8 @@
         "hanzi": "我给妈妈打电话。",
         "pinyin": "Wǒ gěi māma dǎ diànhuà.",
         "meaningVi": "Tôi gọi điện cho mẹ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "请假",
@@ -111,7 +120,8 @@
         "hanzi": "我明天想请假。",
         "pinyin": "Wǒ míngtiān xiǎng qǐngjià.",
         "meaningVi": "Ngày mai tôi muốn xin nghỉ."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "放假",
@@ -121,7 +131,8 @@
         "hanzi": "我们下星期放假。",
         "pinyin": "Wǒmen xià xīngqī fàngjià.",
         "meaningVi": "Tuần sau chúng tôi được nghỉ."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "新年",
@@ -131,7 +142,8 @@
         "hanzi": "新年好！",
         "pinyin": "Xīnnián hǎo!",
         "meaningVi": "Chúc mừng năm mới!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "生日",
@@ -141,7 +153,8 @@
         "hanzi": "今天是我的生日。",
         "pinyin": "Jīntiān shì wǒ de shēngrì.",
         "meaningVi": "Hôm nay là sinh nhật tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "开",
@@ -151,7 +164,8 @@
         "hanzi": "请开一下门。",
         "pinyin": "Qǐng kāi yíxià mén.",
         "meaningVi": "Xin mở cửa giúp."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "关",
@@ -161,7 +175,8 @@
         "hanzi": "请关门。",
         "pinyin": "Qǐng guān mén.",
         "meaningVi": "Xin đóng cửa."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "关上",
@@ -171,7 +186,8 @@
         "hanzi": "请关上门。",
         "pinyin": "Qǐng guānshang mén.",
         "meaningVi": "Xin đóng cửa lại."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "打开",
@@ -181,7 +197,8 @@
         "hanzi": "请打开书。",
         "pinyin": "Qǐng dǎkāi shū.",
         "meaningVi": "Mời mở sách ra."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "有名",
@@ -191,7 +208,8 @@
         "hanzi": "这个饭店很有名。",
         "pinyin": "Zhè ge fàndiàn hěn yǒumíng.",
         "meaningVi": "Nhà hàng này rất nổi tiếng."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "最后",
@@ -201,7 +219,8 @@
         "hanzi": "最后一个是谁？",
         "pinyin": "Zuìhòu yí ge shì shéi?",
         "meaningVi": "Người cuối cùng là ai?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "最好",
@@ -211,14 +230,15 @@
         "hanzi": "你最好明天再来。",
         "pinyin": "Nǐ zuìhǎo míngtiān zài lái.",
         "meaningVi": "Tốt nhất là ngày mai bạn hãy đến."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: hẹn gặp, ngày lễ, liên lạc",
+      "title": "Từ vựng (1/2): 见面 … 请假",
       "subtitle": "20 từ HSK1 về gặp mặt, nói chuyện, gọi điện, nghỉ lễ và đóng mở",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 放假 … 最好",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 给 + người + động từ, 先…再…, 最 + tính từ",
+      "title": "Ngữ pháp (1/2): 给 + người + động từ · 先…再…",
       "subtitle": "Ba điểm ngữ pháp để nói làm gì cho ai, làm gì trước làm gì sau, và cái gì nhất",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -351,7 +385,17 @@
               "highlight": "先"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/2): 最 + tính từ",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "最 + tính từ",
@@ -401,7 +445,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: hẹn gặp và sinh nhật",
       "subtitle": "Hội thoại ngắn hẹn gặp, mời sinh nhật, gọi điện và nghỉ lễ; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 5,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -496,7 +540,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l22:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “giới thiệu”?",
       "content": {
@@ -527,7 +571,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “đóng lại, tắt đi”?",
       "content": {
@@ -558,7 +602,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我___妈妈打电话。 (Tôi gọi điện cho mẹ.)",
       "content": {
@@ -589,7 +633,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我们先吃饭，___去看电影。 (Chúng ta ăn cơm trước, rồi đi xem phim.)",
       "content": {
@@ -620,7 +664,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 这个饭店___有名。(Nhà hàng này nổi tiếng nhất.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -636,7 +680,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e06",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 明天是我的___，你来我家吧。(Ngày mai là sinh nhật tôi, bạn đến nhà tôi nhé.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -652,7 +696,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e07",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 请___我你的名字。(Xin hãy cho tôi biết tên của bạn.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -668,7 +712,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Ăn cơm trước, rồi mới xem phim.”",
       "content": {
@@ -704,7 +748,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Đây là cái bánh bao cuối cùng.”",
       "content": {
@@ -740,7 +784,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l22:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi đã nói cho anh ấy biết rồi.”",
       "content": {

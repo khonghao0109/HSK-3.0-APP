@@ -21,7 +21,8 @@
         "hanzi": "我是学生。",
         "pinyin": "Wǒ shì xuéshēng.",
         "meaningVi": "Tôi là học sinh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "你",
@@ -31,7 +32,8 @@
         "hanzi": "你好！",
         "pinyin": "Nǐ hǎo!",
         "meaningVi": "Xin chào bạn!"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "您",
@@ -41,7 +43,8 @@
         "hanzi": "您好，老师！",
         "pinyin": "Nín hǎo, lǎoshī!",
         "meaningVi": "Em chào thầy/cô ạ!"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "他",
@@ -51,7 +54,8 @@
         "hanzi": "他是我的老师。",
         "pinyin": "Tā shì wǒ de lǎoshī.",
         "meaningVi": "Anh ấy là thầy giáo của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "她",
@@ -61,7 +65,8 @@
         "hanzi": "她是我的朋友。",
         "pinyin": "Tā shì wǒ de péngyou.",
         "meaningVi": "Cô ấy là bạn của tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "我们",
@@ -71,7 +76,8 @@
         "hanzi": "我们都是学生。",
         "pinyin": "Wǒmen dōu shì xuéshēng.",
         "meaningVi": "Chúng tôi đều là học sinh."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "叫",
@@ -81,7 +87,8 @@
         "hanzi": "老师叫我的名字。",
         "pinyin": "Lǎoshī jiào wǒ de míngzi.",
         "meaningVi": "Giáo viên gọi tên tôi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "名字",
@@ -91,7 +98,8 @@
         "hanzi": "这是你的名字吗？",
         "pinyin": "Zhè shì nǐ de míngzi ma?",
         "meaningVi": "Đây là tên của bạn à?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "是",
@@ -101,7 +109,8 @@
         "hanzi": "我是中国人。",
         "pinyin": "Wǒ shì Zhōngguórén.",
         "meaningVi": "Tôi là người Trung Quốc."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "认识",
@@ -111,7 +120,8 @@
         "hanzi": "很高兴认识你。",
         "pinyin": "Hěn gāoxìng rènshi nǐ.",
         "meaningVi": "Rất vui được làm quen với bạn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "高兴",
@@ -121,7 +131,8 @@
         "hanzi": "今天我很高兴。",
         "pinyin": "Jīntiān wǒ hěn gāoxìng.",
         "meaningVi": "Hôm nay tôi rất vui."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "老师",
@@ -131,7 +142,8 @@
         "hanzi": "我的老师很好。",
         "pinyin": "Wǒ de lǎoshī hěn hǎo.",
         "meaningVi": "Thầy giáo của tôi rất tốt."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "学生",
@@ -141,7 +153,8 @@
         "hanzi": "你是学生吗？",
         "pinyin": "Nǐ shì xuéshēng ma?",
         "meaningVi": "Bạn là học sinh à?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "同学",
@@ -151,7 +164,8 @@
         "hanzi": "他是我的同学。",
         "pinyin": "Tā shì wǒ de tóngxué.",
         "meaningVi": "Anh ấy là bạn học của tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "朋友",
@@ -161,7 +175,8 @@
         "hanzi": "你是我的朋友。",
         "pinyin": "Nǐ shì wǒ de péngyou.",
         "meaningVi": "Cậu là bạn của tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "中国",
@@ -171,7 +186,8 @@
         "hanzi": "我有中国朋友。",
         "pinyin": "Wǒ yǒu Zhōngguó péngyou.",
         "meaningVi": "Tôi có bạn Trung Quốc."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "人",
@@ -181,7 +197,8 @@
         "hanzi": "他是中国人吗？",
         "pinyin": "Tā shì Zhōngguórén ma?",
         "meaningVi": "Anh ấy là người Trung Quốc à?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "什么",
@@ -191,7 +208,8 @@
         "hanzi": "你叫什么名字？",
         "pinyin": "Nǐ jiào shénme míngzi?",
         "meaningVi": "Bạn tên là gì?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "谢谢",
@@ -201,7 +219,8 @@
         "hanzi": "谢谢你！",
         "pinyin": "Xièxie nǐ!",
         "meaningVi": "Cảm ơn bạn!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "再见",
@@ -211,14 +230,15 @@
         "hanzi": "老师，再见！",
         "pinyin": "Lǎoshī, zàijiàn!",
         "meaningVi": "Tạm biệt thầy/cô ạ!"
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: chào hỏi và giới thiệu bản thân",
+      "title": "Từ vựng (1/2): 我 … 认识",
       "subtitle": "20 từ HSK1 dùng khi chào, hỏi tên và tự giới thiệu",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 高兴 … 再见",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 是, 叫, 吗, 很, 也/都",
+      "title": "Ngữ pháp (1/3): Câu khẳng định với 是 (là) · Hỏi tên",
       "subtitle": "Năm điểm ngữ pháp cần cho bài tự giới thiệu",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -307,7 +341,17 @@
               "highlight": "叫什么名字"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): Câu hỏi có/không · 很 đứng trước tính từ trong câu khẳng định",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "Câu hỏi có/không",
@@ -362,7 +406,17 @@
               "highlight": "很"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 也 (cũng) và 都 (đều)",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "也 (cũng) và 都 (đều)",
@@ -411,7 +465,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: lần đầu gặp nhau",
       "subtitle": "Hội thoại ngắn; tên riêng 小雨 ghép từ hai từ HSK1 小 và 雨",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -456,7 +510,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l01:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “cảm ơn”?",
       "content": {
@@ -487,7 +541,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e02",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 我们___学生。 (Chúng tôi là học sinh.)",
       "content": {
@@ -518,7 +572,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ điền vào chỗ trống: 他___什么名字？ (Anh ấy tên là gì?)",
       "content": {
@@ -549,7 +603,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e04",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “quen biết”?",
       "content": {
@@ -580,7 +634,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 她很___。(Cô ấy rất vui.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -596,7 +650,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 他___学生。(Anh ấy là học sinh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -612,7 +666,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e07",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 她是___。(Cô ấy là học sinh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -628,7 +682,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi rất vui.”",
       "content": {
@@ -659,7 +713,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đều rất vui.”",
       "content": {
@@ -695,7 +749,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l01:e10",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Tôi cũng rất vui.”",
       "content": {

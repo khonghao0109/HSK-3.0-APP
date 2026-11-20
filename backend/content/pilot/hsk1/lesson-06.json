@@ -21,7 +21,8 @@
         "hanzi": "我不喝茶。",
         "pinyin": "Wǒ bù hē chá.",
         "meaningVi": "Tôi không uống trà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "不客气",
@@ -31,7 +32,8 @@
         "hanzi": "谢谢你！不客气。",
         "pinyin": "Xièxie nǐ! Bùkèqì.",
         "meaningVi": "Cảm ơn bạn! Không có gì."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "对不起",
@@ -41,7 +43,8 @@
         "hanzi": "对不起，我来晚了。",
         "pinyin": "Duìbuqǐ, wǒ lái wǎn le.",
         "meaningVi": "Xin lỗi, tôi đến muộn."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "没关系",
@@ -51,7 +54,8 @@
         "hanzi": "对不起！没关系。",
         "pinyin": "Duìbuqǐ! Méiguānxi.",
         "meaningVi": "Xin lỗi! Không sao đâu."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "没事儿",
@@ -61,7 +65,8 @@
         "hanzi": "你怎么了？没事儿。",
         "pinyin": "Nǐ zěnme le? Méishìr.",
         "meaningVi": "Bạn sao thế? Không sao đâu."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "没什么",
@@ -71,7 +76,8 @@
         "hanzi": "谢谢你帮我。没什么。",
         "pinyin": "Xièxie nǐ bāng wǒ. Méishénme.",
         "meaningVi": "Cảm ơn bạn đã giúp tôi. Không có gì."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "请",
@@ -81,7 +87,8 @@
         "hanzi": "请喝茶。",
         "pinyin": "Qǐng hē chá.",
         "meaningVi": "Mời uống trà."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "请问",
@@ -91,7 +98,8 @@
         "hanzi": "请问，你是老师吗？",
         "pinyin": "Qǐngwèn, nǐ shì lǎoshī ma?",
         "meaningVi": "Xin hỏi, bạn là giáo viên phải không?"
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "请坐",
@@ -101,7 +109,8 @@
         "hanzi": "老师，请坐。",
         "pinyin": "Lǎoshī, qǐngzuò.",
         "meaningVi": "Thầy ơi, mời thầy ngồi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "请进",
@@ -111,7 +120,8 @@
         "hanzi": "请进，坐吧。",
         "pinyin": "Qǐngjìn, zuò ba.",
         "meaningVi": "Mời vào, ngồi đi."
-      }
+      },
+      "topicKey": "t01"
     },
     {
       "hanzi": "好",
@@ -121,7 +131,8 @@
         "hanzi": "你好，我是学生。",
         "pinyin": "Nǐ hǎo, wǒ shì xuéshēng.",
         "meaningVi": "Xin chào, tôi là học sinh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "吗",
@@ -131,7 +142,8 @@
         "hanzi": "你是中国人吗？",
         "pinyin": "Nǐ shì Zhōngguórén ma?",
         "meaningVi": "Bạn là người Trung Quốc phải không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "呢",
@@ -141,7 +153,8 @@
         "hanzi": "我很好，你呢？",
         "pinyin": "Wǒ hěn hǎo, nǐ ne?",
         "meaningVi": "Tôi rất khỏe, còn bạn thì sao?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "你们",
@@ -151,7 +164,8 @@
         "hanzi": "你们是学生吗？",
         "pinyin": "Nǐmen shì xuéshēng ma?",
         "meaningVi": "Các bạn là học sinh phải không?"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "他们",
@@ -161,7 +175,8 @@
         "hanzi": "他们是我的朋友。",
         "pinyin": "Tāmen shì wǒ de péngyou.",
         "meaningVi": "Họ là bạn của tôi."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "她们",
@@ -171,7 +186,8 @@
         "hanzi": "她们都是老师。",
         "pinyin": "Tāmen dōu shì lǎoshī.",
         "meaningVi": "Các cô ấy đều là giáo viên."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "们",
@@ -181,7 +197,8 @@
         "hanzi": "同学们，你们好！",
         "pinyin": "Tóngxuémen, nǐmen hǎo!",
         "meaningVi": "Chào các bạn học sinh!"
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "也",
@@ -191,7 +208,8 @@
         "hanzi": "我也是学生。",
         "pinyin": "Wǒ yě shì xuéshēng.",
         "meaningVi": "Tôi cũng là học sinh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "很",
@@ -201,7 +219,8 @@
         "hanzi": "今天很冷。",
         "pinyin": "Jīntiān hěn lěng.",
         "meaningVi": "Hôm nay rất lạnh."
-      }
+      },
+      "topicKey": "t01b"
     },
     {
       "hanzi": "都",
@@ -211,14 +230,15 @@
         "hanzi": "我们都喜欢喝茶。",
         "pinyin": "Wǒmen dōu xǐhuan hē chá.",
         "meaningVi": "Chúng tôi đều thích uống trà."
-      }
+      },
+      "topicKey": "t01b"
     }
   ],
   "topics": [
     {
       "key": "t01",
       "type": "vocabulary",
-      "title": "Từ vựng: lời chào lịch sự, cảm ơn, xin lỗi",
+      "title": "Từ vựng (1/2): 不 … 请进",
       "subtitle": "20 từ HSK1 để đáp lời cảm ơn, xin lỗi, mời và hỏi lại",
       "orderIndex": 1,
       "isPremium": false,
@@ -235,11 +255,25 @@
       ]
     },
     {
+      "key": "t01b",
+      "type": "vocabulary",
+      "title": "Từ vựng (2/2): 好 … 都",
+      "orderIndex": 2,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
+        {
+          "type": "vocabulary_list",
+          "value": "lesson_words"
+        }
+      ]
+    },
+    {
       "key": "t02",
       "type": "grammar",
-      "title": "Ngữ pháp: 不, 呢, 请 + động từ, 们, 也/都",
+      "title": "Ngữ pháp (1/3): 不 + động từ/tính từ để phủ định · 呢 hỏi lại",
       "subtitle": "Năm điểm ngữ pháp cần cho lời nói lịch sự hằng ngày",
-      "orderIndex": 2,
+      "orderIndex": 3,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -320,7 +354,17 @@
               "highlight": "你呢"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02b",
+      "type": "grammar",
+      "title": "Ngữ pháp (2/3): 请 + động từ · 们 đứng sau đại từ nhân xưng",
+      "orderIndex": 4,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "请 + động từ",
@@ -393,7 +437,17 @@
               "highlight": "他们"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "key": "t02c",
+      "type": "grammar",
+      "title": "Ngữ pháp (3/3): 也 (cũng) và 都 (đều)",
+      "orderIndex": 5,
+      "isPremium": false,
+      "isLocked": false,
+      "content": [
         {
           "type": "grammar_point",
           "title": "也 (cũng) và 都 (đều)",
@@ -448,7 +502,7 @@
       "type": "key_text",
       "title": "Đoạn hội thoại mẫu: mời vào, cảm ơn, xin lỗi",
       "subtitle": "Hội thoại ngắn khi đến nhà bạn; không dùng tên riêng, chỉ dùng từ HSK1",
-      "orderIndex": 3,
+      "orderIndex": 6,
       "isPremium": false,
       "isLocked": false,
       "content": [
@@ -511,7 +565,7 @@
   "exercises": [
     {
       "sourceKey": "pilot-hsk1:l06:e01",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Từ nào có nghĩa là “xin lỗi”?",
       "content": {
@@ -542,7 +596,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e02",
-      "topicKey": "t01",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Người khác nói 谢谢 với bạn. Bạn đáp lại thế nào cho lịch sự?",
       "content": {
@@ -573,7 +627,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e03",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ đúng: 我是学生，你___？(Tôi là học sinh, còn bạn?)",
       "content": {
@@ -604,7 +658,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e04",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "mcq",
       "prompt": "Chọn từ đúng: 他们___是老师。(Họ đều là giáo viên.)",
       "content": {
@@ -635,7 +689,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e05",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 我___喝茶。(Tôi không uống trà.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -651,7 +705,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e06",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: 你好，我___是学生。(Chào bạn, tôi cũng là học sinh.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -667,7 +721,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e07",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "fill_blank",
       "prompt": "Điền từ còn thiếu: A: 对不起！ B: ___关系。(A: Xin lỗi! B: Không sao.) (gõ chữ Hán hoặc pinyin)",
       "content": {},
@@ -683,7 +737,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e08",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Chúng tôi đều rất khỏe.”",
       "content": {
@@ -719,7 +773,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e09",
-      "topicKey": "t02",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Mời uống trà.”",
       "content": {
@@ -750,7 +804,7 @@
     },
     {
       "sourceKey": "pilot-hsk1:l06:e10",
-      "topicKey": "t03",
+      "topicKey": null,
       "type": "arrange_sentence",
       "prompt": "Sắp xếp các từ thành câu: “Họ cũng rất khỏe.”",
       "content": {

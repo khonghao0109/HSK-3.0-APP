@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { orderPlayerExercises } from './lesson-player-model';
 import {
   lessonUnits,
   parseLessonId,
@@ -143,7 +144,7 @@ describe('lessonUnits', () => {
     ]);
   });
 
-  it('puts quiz-topic and topic-less exercises into one Kiểm tra unit (N1)', () => {
+  it('puts every exercise of the lesson into one Kiểm tra unit (N1, Pha F)', () => {
     const units = lessonUnits(
       {
         topics: [
@@ -164,8 +165,8 @@ describe('lessonUnits', () => {
     expect(units.map((unit) => unit.kind)).toEqual(['vocabulary', 'quiz']);
     expect(units[1]).toMatchObject({
       title: 'Kiểm tra',
-      meta: '4 bài tập',
-      percent: 50,
+      meta: '5 bài tập',
+      percent: 60,
       done: false,
       locked: false,
     });
@@ -237,18 +238,106 @@ describe('lessonUnits', () => {
     ]);
   });
 
-  it('has no Kiểm tra unit when the lesson has no quiz topic nor topic-less exercise', () => {
+  it('counts exercises of vocabulary and grammar topics into a trailing Kiểm tra (PO 20/11/2026)', () => {
     const units = lessonUnits(
       {
         topics: [
           topic(1, 'vocabulary', { exercises: [{ latestAttempt: null }] }),
+          topic(2, 'grammar', { exercises: [{ latestAttempt: null }] }),
         ],
         standaloneExercises: [],
         words: [],
       },
       false,
     );
-    expect(units.map((unit) => unit.kind)).toEqual(['vocabulary']);
+    expect(units.map((unit) => [unit.kind, unit.locked])).toEqual([
+      ['vocabulary', false],
+      ['grammar', false],
+      ['quiz', true],
+    ]);
+  });
+
+  it('hides Kiểm tra when no topic of the lesson has an exercise (5a)', () => {
+    const units = lessonUnits(
+      {
+        topics: [topic(1, 'vocabulary', finished), topic(2, 'grammar')],
+        standaloneExercises: [],
+        words: [],
+      },
+      false,
+    );
+    expect(units.map((unit) => unit.kind)).toEqual(['vocabulary', 'grammar']);
+  });
+
+  it('numbers several grammar units, keeps a single one as Ngữ pháp (Pha F)', () => {
+    const titles = (types: string[]) =>
+      lessonUnits(
+        {
+          topics: types.map((type, index) => topic(index + 1, type)),
+          standaloneExercises: [],
+          words: [],
+        },
+        false,
+      ).map((unit) => unit.title);
+    expect(
+      titles([
+        'vocabulary',
+        'vocabulary',
+        'grammar',
+        'grammar',
+        'grammar',
+        'key_text',
+      ]),
+    ).toEqual([
+      'Từ vựng 1',
+      'Từ vựng 2',
+      'Ngữ pháp 1',
+      'Ngữ pháp 2',
+      'Ngữ pháp 3',
+      'Bài khoá',
+    ]);
+    expect(titles(['vocabulary', 'grammar', 'key_text'])).toEqual([
+      'Từ vựng 1',
+      'Ngữ pháp',
+      'Bài khoá',
+    ]);
+  });
+
+  it('Kiểm tra counts exactly the exercises /practice plays (Pha F)', () => {
+    const raw = (id: number, latestAttempt: unknown = null) => ({
+      id,
+      type: 'mcq',
+      prompt: `Câu ${id}`,
+      content: {},
+      orderIndex: id,
+      latestAttempt,
+    });
+    const topics = [
+      topic(1, 'vocabulary', {
+        ...finished,
+        exercises: [raw(1, done), raw(2)],
+      }),
+      topic(2, 'grammar', { ...finished, exercises: [raw(3)] }),
+      topic(3, 'key_text', finished),
+      topic(4, 'ai_speaking', { exercises: [raw(4)] }),
+      topic(5, 'quiz', { exercises: [raw(5)] }),
+    ];
+    const standalone = [raw(6), raw(7)];
+    const quiz = lessonUnits(
+      { topics, standaloneExercises: standalone, words: [] },
+      false,
+    ).find((unit) => unit.kind === 'quiz');
+    const played = orderPlayerExercises(
+      topics.map(({ id, orderIndex, exercises }) => ({
+        id,
+        orderIndex,
+        exercises: exercises as ReturnType<typeof raw>[],
+      })),
+      standalone,
+    );
+    expect(played).toHaveLength(7);
+    expect(quiz?.meta).toBe(`${played.length} bài tập`);
+    expect(quiz?.percent).toBe(14);
   });
 
   it('hides Kiểm tra when its quiz topics have no exercise (Pha B debt 5a)', () => {

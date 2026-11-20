@@ -4,12 +4,22 @@
   "operations": [
     {
       "op": "set",
-      "path": "topics[1].type",
+      "path": "topics[2].type",
       "value": "vocabulary"
     },
     {
       "op": "set",
-      "path": "topics[2].type",
+      "path": "topics[3].type",
+      "value": "vocabulary"
+    },
+    {
+      "op": "set",
+      "path": "topics[4].type",
+      "value": "vocabulary"
+    },
+    {
+      "op": "set",
+      "path": "topics[5].type",
       "value": "vocabulary"
     }
   ]
