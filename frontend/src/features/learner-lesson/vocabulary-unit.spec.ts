@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { type UnitWord, sentenceTokens, unitSteps } from './vocabulary-unit';
+import {
+  answerMark,
+  type UnitWord,
+  sentenceTokens,
+  unitSteps,
+} from './vocabulary-unit';
 
 const word = (
   id: number,
@@ -103,5 +108,15 @@ describe('sentenceTokens (vocab-example)', () => {
   it('gives null when the pinyin does not split one syllable per character', () => {
     expect(sentenceTokens('我们好', 'wǒmen hǎo', '我们')).toBeNull();
     expect(sentenceTokens('我们好', null, '我们')).toBeNull();
+  });
+});
+
+// Pha C debt 3b: the mark says how many times the word was answered wrong.
+describe('answerMark', () => {
+  it('marks a right answer, and counts the wrong ones (mẫu "Sai 1 lần")', () => {
+    expect(answerMark(0)).toEqual({ tone: 'is-ok', text: 'Đúng' });
+    expect(answerMark(1)).toEqual({ tone: 'is-wrong', text: 'Sai 1 lần' });
+    expect(answerMark(2)).toEqual({ tone: 'is-wrong', text: 'Sai 2 lần' });
+    expect(answerMark(undefined)).toBeNull();
   });
 });

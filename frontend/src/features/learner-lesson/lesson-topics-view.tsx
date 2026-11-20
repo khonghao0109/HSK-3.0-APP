@@ -19,6 +19,7 @@ import {
 } from './lesson-activity-service';
 import { loadLearnerLesson } from './lesson-page-loader';
 import type { LessonWords } from './lesson-topic-contract';
+import { DialogueLines, GrammarPointBody } from './topic-blocks-view';
 import { TopicDoneButton } from './topic-done-button';
 import {
   type LessonTopicKind,
@@ -33,7 +34,8 @@ const PAGE_TITLE: Record<LessonTopicKind, string> = {
 
 /**
  * M2.5f (Q175): the Từ vựng / Ngữ pháp page of a lesson renders the public
- * topics' `text` and `vocabulary_list` blocks. A locked lesson goes back to
+ * topics' blocks (`text`, `vocabulary_list`; Pha D: `grammar_point`,
+ * `dialogue`). A locked lesson goes back to
  * the lesson page (Q40), like the player.
  */
 export async function LessonTopicsView({
@@ -94,15 +96,35 @@ export async function LessonTopicsView({
             {topic.subtitle && (
               <p className="topic-card__sub">{topic.subtitle}</p>
             )}
-            {topicBlocks(topic.content).map((block, index) =>
-              block.kind === 'text' ? (
-                <p key={index} className="topic-card__text">
-                  {block.value}
-                </p>
-              ) : (
-                <WordList key={index} words={lessonWords.words} />
-              ),
-            )}
+            {topicBlocks(topic.content).map((block, index) => {
+              switch (block.kind) {
+                case 'text':
+                  return (
+                    <p key={index} className="topic-card__text">
+                      {block.value}
+                    </p>
+                  );
+                case 'vocabulary_list':
+                  return <WordList key={index} words={lessonWords.words} />;
+                // Pha D (TL 6): the new blocks, read-only, to review.
+                case 'grammar_point':
+                  return (
+                    <div key={index} className="topic-card__block">
+                      <GrammarPointBody
+                        block={block}
+                        headingId={`topic-${topic.id}-gp-${index}`}
+                        headingLevel="h3"
+                      />
+                    </div>
+                  );
+                case 'dialogue':
+                  return (
+                    <div key={index} className="topic-card__block">
+                      <DialogueLines lines={block.lines} />
+                    </div>
+                  );
+              }
+            })}
             <TopicDoneButton
               topicId={topic.id}
               lessonId={lessonId}

@@ -153,12 +153,10 @@ export function lessonUnits(
   return units;
 }
 
-/** N3: a Từ vựng unit opens its own step flow, the others their page. */
+/** N3, Pha D: a topic unit opens its own screen, Kiểm tra the player. */
 export function unitHref(lessonId: number, unit: LessonUnit): string {
   const base = `/learn/lessons/${lessonId}/${unit.slug}`;
-  return unit.kind === 'vocabulary' && unit.topicId !== null
-    ? `${base}?unit=${unit.topicId}`
-    : base;
+  return unit.topicId !== null ? `${base}?unit=${unit.topicId}` : base;
 }
 
 /** Route id must be a positive int32 before any backend call (Q41). */

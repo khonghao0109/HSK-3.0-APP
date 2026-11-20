@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
@@ -10,7 +10,9 @@ import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 
 import { LessonImage } from './lesson-image';
 import { PLAYER_MESSAGES } from './lesson-player';
+import { UnitResult } from './unit-result';
 import {
+  answerMark,
   sentenceTokens,
   type UnitStep,
   type UnitWord,
@@ -44,7 +46,8 @@ export function VocabularyUnitFlow(props: Props) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const [results, setResults] = useState<Record<number, boolean>>({});
+  // Wrong answers per word index (Pha C debt 3b).
+  const [results, setResults] = useState<Record<number, number>>({});
   const continueRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const moved = useRef(false);
@@ -67,7 +70,7 @@ export function VocabularyUnitFlow(props: Props) {
   }, [index]);
 
   if (!step) {
-    return <UnitResult {...props} results={results} />;
+    return <VocabularyResult {...props} results={results} />;
   }
 
   const go = (to: number) => {
@@ -81,7 +84,8 @@ export function VocabularyUnitFlow(props: Props) {
     setChecked(true);
     setResults((previous) => ({
       ...previous,
-      [step.word]: selected === step.answer,
+      [step.word]:
+        (previous[step.word] ?? 0) + (selected === step.answer ? 0 : 1),
     }));
   };
 
@@ -378,8 +382,8 @@ function ExampleCard({
 
 type Save = 'idle' | 'saving' | 'saved' | 'failed';
 
-/** mẫu unit-complete: no medal (N8), no XP (Q59), no confetti (Q340 M4). */
-function UnitResult({
+/** mẫu unit-complete for Từ vựng: score, the words, Lưu để ôn. */
+function VocabularyResult({
   lessonId,
   topicId,
   title,
@@ -388,49 +392,9 @@ function UnitResult({
   words,
   steps,
   results,
-}: Props & { results: Record<number, boolean> }) {
+}: Props & { results: Record<number, number> }) {
   const router = useRouter();
-  const [progress, setProgress] = useState<'saving' | 'saved' | 'failed'>(
-    'saving',
-  );
   const [save, setSave] = useState<Save>('idle');
-  const sent = useRef(false);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-
-  // The result replaces the flow: move focus to its title.
-  useEffect(() => titleRef.current?.focus(), []);
-
-  const markDone = useCallback(async () => {
-    setProgress('saving');
-    const post = (url: string, body: string) =>
-      fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body,
-      }).catch(() => null);
-    // A topic completes only in a started lesson; the BFF answers 200 for a
-    // lesson that is already started.
-    const started = await post(`/api/learner/lessons/${lessonId}/start`, '{}');
-    await started?.text().catch(() => '');
-    const response = started?.ok
-      ? await post(
-          `/api/learner/topics/${topicId}/complete`,
-          JSON.stringify({ lessonId }),
-        )
-      : started;
-    if (response?.status === 401 || response?.status === 403) {
-      router.replace('/sign-in');
-      return;
-    }
-    setProgress(response?.ok ? 'saved' : 'failed');
-  }, [lessonId, topicId, router]);
-
-  // Once, when the result shows (Strict Mode runs effects twice).
-  useEffect(() => {
-    if (sent.current) return;
-    sent.current = true;
-    void markDone();
-  }, [markDone]);
 
   const saveAll = async () => {
     if (save === 'saving' || save === 'saved') return;
@@ -453,128 +417,83 @@ function UnitResult({
   };
 
   const quizzes = steps.filter((step) => step.kind === 'quiz').length;
-  const right = Object.values(results).filter(Boolean).length;
+  const right = Object.values(results).filter((wrong) => wrong === 0).length;
   const score = quizzes > 0 ? Math.round((right / quizzes) * 100) : null;
 
   return (
-    <>
-      <header className="done-brand w-only">
-        <Link className="done-brand__link" href="/learn">
-          <span className="done-brand__mark" aria-hidden="true">
-            汉
-          </span>
-          <span className="done-brand__name">Hán Lộ</span>
-        </Link>
-      </header>
-      <main className="done-main lu-done">
-        <section className="done-card" aria-labelledby="done-title">
-          <div className="done-hero">
-            <p className="done-kicker">
-              <span className="m-only">Bạn đã hoàn thành đơn vị học</span>
-              <span className="w-only">Bạn đã hoàn thành đơn vị</span>
-            </p>
-            <h1
-              className="done-title"
-              id="done-title"
-              ref={titleRef}
-              tabIndex={-1}
+    <UnitResult
+      lessonId={lessonId}
+      topicId={topicId}
+      title={title}
+      lessonHref={lessonHref}
+      nextHref={nextHref}
+      alerts={
+        save === 'failed' && (
+          <p className="ex-error lu-done__error" role="alert">
+            Chưa lưu được. Bạn thử lại nhé.
+          </p>
+        )
+      }
+      actions={
+        <button
+          className="done-btn done-btn--light"
+          type="button"
+          aria-disabled={
+            save === 'saved' || save === 'saving' ? 'true' : undefined
+          }
+          aria-busy={save === 'saving' || undefined}
+          onClick={() => void saveAll()}
+        >
+          <Icon name={save === 'saved' ? 'bookmark-fill' : 'bookmark'} />
+          {save === 'saved' ? 'Đã lưu để ôn' : 'Lưu để ôn'}
+        </button>
+      }
+    >
+      <div className="done-stats">
+        {score !== null && (
+          <section className="done-stat">
+            <h2>Trả lời đúng</h2>
+            <p
+              className="done-stat__score"
+              aria-label={`Trả lời đúng ${score}%`}
             >
-              {title}
-            </h1>
-          </div>
-
-          <div className="done-stats">
-            {score !== null && (
-              <section className="done-stat">
-                <h2>Trả lời đúng</h2>
-                <p
-                  className="done-stat__score"
-                  aria-label={`Trả lời đúng ${score}%`}
-                >
-                  {score}
-                  <small>%</small>
-                </p>
-              </section>
-            )}
-            <section className="done-stat">
-              <h2>Từ đã học</h2>
-              <p className="done-stat__score">{words.length}</p>
-            </section>
-          </div>
-
-          <h2 className="lu-h2">Từ vừa học</h2>
-          <ul className="lu-words">
-            {words.map((word, wordIndex) => {
-              const result = results[wordIndex];
-              return (
-                <li key={word.id}>
-                  <span className="hz" lang="zh-Hans">
-                    {word.hanzi}
-                  </span>
-                  <span className="py" lang="zh-Latn-pinyin">
-                    {word.pinyin}
-                  </span>
-                  <span className="vi">{word.firstMeaning ?? ''}</span>
-                  {result !== undefined && (
-                    <span
-                      className={`lu-mark ${result ? 'is-ok' : 'is-wrong'}`}
-                    >
-                      <Icon
-                        name={result ? 'check-circle' : 'x-circle'}
-                        size={16}
-                      />
-                      {result ? 'Đúng' : 'Sai 1 lần'}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-
-          {progress === 'failed' && (
-            <p className="ex-error lu-done__error" role="alert">
-              Chưa lưu được tiến độ.{' '}
-              <button
-                className="lu-done__retry"
-                type="button"
-                onClick={() => void markDone()}
-              >
-                Thử lại
-              </button>
+              {score}
+              <small>%</small>
             </p>
-          )}
-          {save === 'failed' && (
-            <p className="ex-error lu-done__error" role="alert">
-              Chưa lưu được. Bạn thử lại nhé.
-            </p>
-          )}
-
-          <div className="done-actions">
-            <Link className="done-btn done-btn--light" href={lessonHref}>
-              <Icon name="arrow-left" />
-              Về bài
-            </Link>
-            {nextHref && (
-              <Link className="done-btn done-btn--primary" href={nextHref}>
-                Đơn vị tiếp
-                <Icon name="arrow-right" />
-              </Link>
-            )}
-            <button
-              className="done-btn done-btn--light"
-              type="button"
-              aria-disabled={
-                save === 'saved' || save === 'saving' ? 'true' : undefined
-              }
-              aria-busy={save === 'saving' || undefined}
-              onClick={() => void saveAll()}
-            >
-              <Icon name={save === 'saved' ? 'bookmark-fill' : 'bookmark'} />
-              {save === 'saved' ? 'Đã lưu để ôn' : 'Lưu để ôn'}
-            </button>
-          </div>
+          </section>
+        )}
+        <section className="done-stat">
+          <h2>Từ đã học</h2>
+          <p className="done-stat__score">{words.length}</p>
         </section>
-      </main>
-    </>
+      </div>
+
+      <h2 className="lu-h2">Từ vừa học</h2>
+      <ul className="lu-words">
+        {words.map((word, wordIndex) => {
+          const mark = answerMark(results[wordIndex]);
+          return (
+            <li key={word.id}>
+              <span className="hz" lang="zh-Hans">
+                {word.hanzi}
+              </span>
+              <span className="py" lang="zh-Latn-pinyin">
+                {word.pinyin}
+              </span>
+              <span className="vi">{word.firstMeaning ?? ''}</span>
+              {mark && (
+                <span className={`lu-mark ${mark.tone}`}>
+                  <Icon
+                    name={mark.tone === 'is-ok' ? 'check-circle' : 'x-circle'}
+                    size={16}
+                  />
+                  {mark.text}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </UnitResult>
   );
 }

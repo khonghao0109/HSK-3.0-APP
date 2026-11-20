@@ -265,9 +265,13 @@ test.describe('Learner lesson page (M2.5a)', () => {
       await expect(bar).toBeHidden();
     }
     await expect(grammar.locator('.lu-row__title')).toHaveText('Ngữ pháp');
+    // Pha D: a Ngữ pháp unit opens its own screen.
+    const grammarId = queryDisposableDb(
+      `SELECT id FROM "Topic" WHERE "lessonId" = ${lessonId} AND title = ${sqlLiteral(UNIT.grammar)}`,
+    );
     await expect(grammar).toHaveAttribute(
       'href',
-      `/learn/lessons/${lessonId}/grammar`,
+      `/learn/lessons/${lessonId}/grammar?unit=${grammarId}`,
     );
 
     const quiz = rows.filter({ hasText: 'Kiểm tra' });
@@ -282,10 +286,23 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(quiz).toMatchAriaSnapshot(
       '- link /Kiểm tra\\s*,\\s*Mở khi xong các đơn vị trên\\s*,\\s*đang khoá/ [disabled]',
     );
+    // Pha C debt 3c: the keyboard reaches the locked row (and its name).
+    for (let presses = 0; presses < 80; presses += 1) {
+      if (await quiz.evaluate((row) => row === document.activeElement)) break;
+      await page.keyboard.press('Tab');
+    }
+    await expect(quiz).toBeFocused();
     for (const row of await rows.all()) {
       const box = await row.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
+
+    // Pha D: a grammar topic without the new blocks (old content) opens
+    // the Ngữ pháp page that shows it.
+    await grammar.click();
+    await expect(page).toHaveURL(
+      new RegExp(`/learn/lessons/${lessonId}/grammar$`, 'u'),
+    );
   });
 
   test('deep link to a locked lesson shows it locked and toasts why (Q40, Q44)', async ({

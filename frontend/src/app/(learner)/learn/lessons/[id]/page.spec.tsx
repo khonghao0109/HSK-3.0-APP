@@ -417,6 +417,15 @@ describe('LearnerLessonPage', () => {
     expect(quiz).not.toHaveAttribute('href');
   });
 
+  // Pha C debt 3c: a keyboard user reaches the locked row and hears why.
+  it('keeps the locked Kiểm tra row in the Tab order (Pha C debt 3c)', async () => {
+    await renderLesson(current);
+    const quiz = screen.getByRole('link', {
+      name: /^Kiểm tra, ?Mở khi xong các đơn vị trên, đang khoá$/,
+    });
+    expect(quiz).toHaveAttribute('tabindex', '0');
+  });
+
   it('links Kiểm tra to the player once earlier units are done (N1, Q45)', async () => {
     const { container } = await renderLesson(finished);
     const quiz = Array.from(container.querySelectorAll('.lu-row')).find(
@@ -433,20 +442,17 @@ describe('LearnerLessonPage', () => {
   it.each([
     ['Từ vựng 1', 'vocabulary?unit=11'],
     ['Từ vựng 2', 'vocabulary?unit=12'],
-    ['Ngữ pháp', 'grammar'],
-    ['Bài khoá', 'grammar'],
-  ])(
-    'links unit %s to its page, a vocabulary unit to its step flow (N3)',
-    async (title, slug) => {
-      const { container } = await renderLesson(current);
-      const row = Array.from(container.querySelectorAll('.lu-row')).find(
-        (candidate) =>
-          candidate.querySelector('.lu-row__title')?.textContent === title,
-      );
-      expect(row?.tagName).toBe('A');
-      expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
-    },
-  );
+    ['Ngữ pháp', 'grammar?unit=13'],
+    ['Bài khoá', 'grammar?unit=14'],
+  ])('links unit %s to its own screen (N3, Pha D)', async (title, slug) => {
+    const { container } = await renderLesson(current);
+    const row = Array.from(container.querySelectorAll('.lu-row')).find(
+      (candidate) =>
+        candidate.querySelector('.lu-row__title')?.textContent === title,
+    );
+    expect(row?.tagName).toBe('A');
+    expect(row).toHaveAttribute('href', `/learn/lessons/5/${slug}`);
+  });
 
   it('shows a lesson without topics as its Kiểm tra unit only (fallback)', async () => {
     const { container } = await renderLesson(
