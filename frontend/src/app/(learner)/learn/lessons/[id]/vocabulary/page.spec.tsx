@@ -328,6 +328,13 @@ describe('Từ vựng unit flow (N3)', () => {
       searchParams: Promise.resolve({ unit }),
     });
 
+  it('titles the unit screen with the unit label and the lesson title (Pha F)', async () => {
+    renderPage(await open('10'));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
+      'Từ vựng 1 · Gia đình',
+    );
+  });
+
   it('opens the words of that topic only, in API order, as a step flow', async () => {
     renderPage(await open('11'));
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(

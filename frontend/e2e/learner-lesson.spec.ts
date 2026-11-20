@@ -200,10 +200,13 @@ test.describe('Learner lesson page (M2.5a)', () => {
     await expect(page.locator('#lesson-content-title')).toHaveText(
       'Đơn vị học',
     );
-    // Seed HSK 1 lesson: one vocabulary topic (its exercises belong to it),
-    // no word and no quiz topic, so one Từ vựng unit and no Kiểm tra (N1).
+    // Seed HSK 1 lesson: one vocabulary topic with its exercises and no
+    // word. PO 20/11/2026: Kiểm tra holds every exercise of the lesson, so it
+    // follows Từ vựng 1, locked until that unit is done (N2).
     const rows = page.locator('.lu-rows .lu-row');
-    await expect(rows).toHaveCount(1);
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(1).locator('.lu-row__title')).toHaveText('Kiểm tra');
+    await expect(rows.nth(1)).toHaveClass(/is-locked/u);
     const vocabulary = page.locator('.lu-rows a.lu-row');
     await expect(vocabulary.locator('.lu-row__title')).toHaveText('Từ vựng 1');
     await expect(vocabulary.locator('.lu-row__meta')).toHaveText(
@@ -264,7 +267,10 @@ test.describe('Learner lesson page (M2.5a)', () => {
     } else {
       await expect(bar).toBeHidden();
     }
-    await expect(grammar.locator('.lu-row__title')).toHaveText('Ngữ pháp');
+    // Pha F: numbered when other specs add grammar topics to this lesson.
+    await expect(grammar.locator('.lu-row__title')).toHaveText(
+      /^Ngữ pháp( \d+)?$/u,
+    );
     // Pha D: a Ngữ pháp unit opens its own screen.
     const grammarId = queryDisposableDb(
       `SELECT id FROM "Topic" WHERE "lessonId" = ${lessonId} AND title = ${sqlLiteral(UNIT.grammar)}`,

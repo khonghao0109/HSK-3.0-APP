@@ -120,7 +120,8 @@ export async function VocabularyUnitView({
     <VocabularyUnitFlow
       lessonId={lessonId}
       topicId={topic.id}
-      title={`${unit?.title ?? 'Từ vựng'} · ${topic.title}`}
+      // Pha F: unit label · lesson title (the topic title repeats the label).
+      title={`${unit?.title ?? 'Từ vựng'} · ${activity.lesson.title}`}
       lessonHref={lessonHref}
       nextHref={next && !next.locked ? unitHref(lessonId, next) : null}
       words={unitWords}
