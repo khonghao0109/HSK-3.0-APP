@@ -244,20 +244,167 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Câu vị ngữ tính từ: tính từ làm vị ngữ trực tiếp, không cần 是. Trong câu kể thường thêm 很 trước tính từ; 很 ở đây không mang nghĩa “rất” mạnh. Cấu trúc: chủ ngữ + 很 + tính từ; phủ định 不 + tính từ. Không nói 天气是冷. Ví dụ: 天气很冷。 (Tiānqì hěn lěng.) = Thời tiết lạnh. / 今天风很大。 (Jīntiān fēng hěn dà.) = Hôm nay gió to. / 我不饿。 (Wǒ bú è.) = Tôi không đói."
+          "type": "grammar_point",
+          "title": "Câu vị ngữ tính từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "很",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "key",
+              "zh": "形容词",
+              "vi": "Tính từ"
+            }
+          ],
+          "explanation": "tính từ làm vị ngữ trực tiếp, không cần 是. Trong câu kể thường thêm 很 trước tính từ; 很 ở đây không mang nghĩa “rất” mạnh. Cấu trúc: chủ ngữ + 很 + tính từ; phủ định 不 + tính từ. Không nói 天气是冷.",
+          "examples": [
+            {
+              "hanzi": "天气很冷。",
+              "pinyin": "Tiānqì hěn lěng.",
+              "vi": "Thời tiết lạnh.",
+              "highlight": "很"
+            },
+            {
+              "hanzi": "今天风很大。",
+              "pinyin": "Jīntiān fēng hěn dà.",
+              "vi": "Hôm nay gió to.",
+              "highlight": "很"
+            },
+            {
+              "hanzi": "我不饿。",
+              "pinyin": "Wǒ bú è.",
+              "vi": "Tôi không đói.",
+              "highlight": "不"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 太 + tính từ + 了: “quá…”, nói mức độ cao hoặc cảm thán, 了 đứng cuối câu. Phủ định 不太 + tính từ = không… lắm (không cần 了). Cấu trúc: chủ ngữ + 太 + tính từ + 了. Ví dụ: 今天太热了。 (Jīntiān tài rè le.) = Hôm nay nóng quá. / 这个太贵了。 (Zhè ge tài guì le.) = Cái này đắt quá. / 外边不太冷。 (Wàibian bú tài lěng.) = Bên ngoài không lạnh lắm."
+          "type": "grammar_point",
+          "title": "太 + tính từ + 了",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "太",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "other",
+              "zh": "形容词",
+              "vi": "Tính từ"
+            },
+            {
+              "role": "key",
+              "zh": "了",
+              "vi": "Trợ từ ngữ khí"
+            }
+          ],
+          "explanation": "“quá…”, nói mức độ cao hoặc cảm thán, 了 đứng cuối câu. Phủ định 不太 + tính từ = không… lắm (không cần 了). Cấu trúc: chủ ngữ + 太 + tính từ + 了.",
+          "examples": [
+            {
+              "hanzi": "今天太热了。",
+              "pinyin": "Jīntiān tài rè le.",
+              "vi": "Hôm nay nóng quá.",
+              "highlight": "太"
+            },
+            {
+              "hanzi": "这个太贵了。",
+              "pinyin": "Zhè ge tài guì le.",
+              "vi": "Cái này đắt quá.",
+              "highlight": "太"
+            },
+            {
+              "hanzi": "外边不太冷。",
+              "pinyin": "Wàibian bú tài lěng.",
+              "vi": "Bên ngoài không lạnh lắm.",
+              "highlight": "太"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 非常/真/最 + tính từ: 非常 = vô cùng, rất; 真 = thật là (thường dùng để cảm thán); 最 = nhất (so với tất cả). Ba phó từ này đứng ngay trước tính từ. Ví dụ: 我非常累。 (Wǒ fēicháng lèi.) = Tôi vô cùng mệt. / 这个歌真好听！ (Zhè ge gē zhēn hǎotīng!) = Bài hát này hay thật! / 我哥哥最高。 (Wǒ gēge zuì gāo.) = Anh trai tôi cao nhất."
+          "type": "grammar_point",
+          "title": "非常/真/最 + tính từ",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "非常",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "other",
+              "zh": "形容词",
+              "vi": "Tính từ"
+            }
+          ],
+          "explanation": "非常 = vô cùng, rất; 真 = thật là (thường dùng để cảm thán); 最 = nhất (so với tất cả). Ba phó từ này đứng ngay trước tính từ.",
+          "examples": [
+            {
+              "hanzi": "我非常累。",
+              "pinyin": "Wǒ fēicháng lèi.",
+              "vi": "Tôi vô cùng mệt.",
+              "highlight": "非常"
+            },
+            {
+              "hanzi": "这个歌真好听！",
+              "pinyin": "Zhè ge gē zhēn hǎotīng!",
+              "vi": "Bài hát này hay thật!",
+              "highlight": "真"
+            },
+            {
+              "hanzi": "我哥哥最高。",
+              "pinyin": "Wǒ gēge zuì gāo.",
+              "vi": "Anh trai tôi cao nhất.",
+              "highlight": "最"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 了 chỉ thay đổi: 了 ở cuối câu cho biết đã xuất hiện tình hình mới, trước đó chưa như vậy. Cấu trúc: câu + 了. Ví dụ: 下雨了。 (Xiàyǔ le.) = Trời mưa rồi. / 我饿了。 (Wǒ è le.) = Tôi đói rồi. / 天冷了。 (Tiān lěng le.) = Trời lạnh rồi."
+          "type": "grammar_point",
+          "title": "了 chỉ thay đổi",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "句子",
+              "vi": "Câu"
+            },
+            {
+              "role": "key",
+              "zh": "了",
+              "vi": "Trợ từ ngữ khí"
+            }
+          ],
+          "explanation": "了 ở cuối câu cho biết đã xuất hiện tình hình mới, trước đó chưa như vậy. Cấu trúc: câu + 了.",
+          "examples": [
+            {
+              "hanzi": "下雨了。",
+              "pinyin": "Xiàyǔ le.",
+              "vi": "Trời mưa rồi.",
+              "highlight": "了"
+            },
+            {
+              "hanzi": "我饿了。",
+              "pinyin": "Wǒ è le.",
+              "vi": "Tôi đói rồi.",
+              "highlight": "了"
+            },
+            {
+              "hanzi": "天冷了。",
+              "pinyin": "Tiān lěng le.",
+              "vi": "Trời lạnh rồi.",
+              "highlight": "了"
+            }
+          ]
         }
       ]
     },
@@ -271,24 +418,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 今天天气好吗？ B: 不太好，外边风很大。 (Jīntiān tiānqì hǎo ma? / Bú tài hǎo, wàibian fēng hěn dà.) — A: Hôm nay thời tiết có đẹp không? B: Không đẹp lắm, bên ngoài gió to."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "今天天气好吗？",
+              "pinyin": "Jīntiān tiānqì hǎo ma?",
+              "vi": "Hôm nay thời tiết có đẹp không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不太好，外边风很大。",
+              "pinyin": "Bú tài hǎo, wàibian fēng hěn dà.",
+              "vi": "Không đẹp lắm, bên ngoài gió to."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你看，下雨了！ B: 雨真大，我们不出去了。 (Nǐ kàn, xiàyǔ le! / Yǔ zhēn dà, wǒmen bù chūqù le.) — A: Bạn xem, mưa rồi! B: Mưa to thật, chúng ta không ra ngoài nữa."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你看，下雨了！",
+              "pinyin": "Nǐ kàn, xiàyǔ le!",
+              "vi": "Bạn xem, mưa rồi!"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "雨真大，我们不出去了。",
+              "pinyin": "Yǔ zhēn dà, wǒmen bù chūqù le.",
+              "vi": "Mưa to thật, chúng ta không ra ngoài nữa."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你饿不饿？ B: 我不饿，我渴了，想喝水。 (Nǐ è bu è? / Wǒ bú è, wǒ kě le, xiǎng hē shuǐ.) — A: Bạn có đói không? B: Tôi không đói, tôi khát rồi, muốn uống nước."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你饿不饿？",
+              "pinyin": "Nǐ è bu è?",
+              "vi": "Bạn có đói không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我不饿，我渴了，想喝水。",
+              "pinyin": "Wǒ bú è, wǒ kě le, xiǎng hē shuǐ.",
+              "vi": "Tôi không đói, tôi khát rồi, muốn uống nước."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 这个包子好吃吗？ B: 非常好吃！ (Zhè ge bāozi hǎochī ma? / Fēicháng hǎochī!) — A: Cái bánh bao này có ngon không? B: Rất ngon!"
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这个包子好吃吗？",
+              "pinyin": "Zhè ge bāozi hǎochī ma?",
+              "vi": "Cái bánh bao này có ngon không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "非常好吃！",
+              "pinyin": "Fēicháng hǎochī!",
+              "vi": "Rất ngon!"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你今天累吗？ B: 太累了，我想睡觉。 (Nǐ jīntiān lèi ma? / Tài lèi le, wǒ xiǎng shuìjiào.) — A: Hôm nay bạn có mệt không? B: Mệt quá, tôi muốn đi ngủ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你今天累吗？",
+              "pinyin": "Nǐ jīntiān lèi ma?",
+              "vi": "Hôm nay bạn có mệt không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "太累了，我想睡觉。",
+              "pinyin": "Tài lèi le, wǒ xiǎng shuìjiào.",
+              "vi": "Mệt quá, tôi muốn đi ngủ."
+            }
+          ]
         }
       ]
     }

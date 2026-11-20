@@ -244,24 +244,221 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 有 (yǒu – có) và 没有 (méiyǒu – không có): chủ ngữ + 有/没有 + danh từ. Phủ định sở hữu luôn dùng 没有, không nói 不有. Ví dụ: 我有两个姐姐。 (Wǒ yǒu liǎng ge jiějie.) = Tôi có hai chị gái. / 我没有哥哥。 (Wǒ méiyǒu gēge.) = Tôi không có anh trai. / 你家有几口人？ (Nǐ jiā yǒu jǐ kǒu rén?) = Nhà bạn có mấy người?"
+          "type": "grammar_point",
+          "title": "有 (yǒu – có) và 没有 (méiyǒu – không có)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "(没)",
+              "vi": "(Phó từ phủ định)"
+            },
+            {
+              "role": "key",
+              "zh": "有",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "有 (yǒu – có) và 没有 (méiyǒu – không có): chủ ngữ + 有/没有 + danh từ. Phủ định sở hữu luôn dùng 没有, không nói 不有.",
+          "examples": [
+            {
+              "hanzi": "我有两个姐姐。",
+              "pinyin": "Wǒ yǒu liǎng ge jiějie.",
+              "vi": "Tôi có hai chị gái.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "我没有哥哥。",
+              "pinyin": "Wǒ méiyǒu gēge.",
+              "vi": "Tôi không có anh trai.",
+              "highlight": "没有"
+            },
+            {
+              "hanzi": "你家有几口人？",
+              "pinyin": "Nǐ jiā yǒu jǐ kǒu rén?",
+              "vi": "Nhà bạn có mấy người?",
+              "highlight": "有"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 的 (de – “của”) nối người sở hữu với vật được sở hữu: A + 的 + B. Với người thân trong nhà, 的 thường được lược bỏ: 我妈妈 = mẹ tôi, 我爸爸 = bố tôi. Ví dụ: 这是我爸爸的书。 (Zhè shì wǒ bàba de shū.) = Đây là sách của bố tôi. / 这是我的家。 (Zhè shì wǒ de jiā.) = Đây là nhà của tôi. / 这是谁的孩子？ (Zhè shì shéi de háizi?) = Đây là con của ai?"
+          "type": "grammar_point",
+          "title": "的 (de – “của”)",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "定语",
+              "vi": "Định ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "的",
+              "vi": "Trợ từ kết cấu"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "的 (de – “của”) nối người sở hữu với vật được sở hữu: A + 的 + B. Với người thân trong nhà, 的 thường được lược bỏ: 我妈妈 = mẹ tôi, 我爸爸 = bố tôi.",
+          "examples": [
+            {
+              "hanzi": "这是我爸爸的书。",
+              "pinyin": "Zhè shì wǒ bàba de shū.",
+              "vi": "Đây là sách của bố tôi.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "这是我的家。",
+              "pinyin": "Zhè shì wǒ de jiā.",
+              "vi": "Đây là nhà của tôi.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "这是谁的孩子？",
+              "pinyin": "Zhè shì shéi de háizi?",
+              "vi": "Đây là con của ai?",
+              "highlight": "的"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Hỏi tuổi: 几 + 岁 dùng thân mật cho trẻ nhỏ, 多大 lịch sự hơn và dùng được cho mọi lứa tuổi. Mẫu: 你今年几岁？ (Nǐ jīnnián jǐ suì?) = Năm nay bạn mấy tuổi? / 你多大了？ (Nǐ duō dà le?) = Bạn bao nhiêu tuổi rồi? / 你儿子今年几岁？ (Nǐ érzi jīnnián jǐ suì?) = Con trai bạn năm nay mấy tuổi? Trả lời: 我今年八岁。 (Wǒ jīnnián bā suì.) = Năm nay tôi tám tuổi. Trước 岁 không dùng 个."
+          "type": "grammar_point",
+          "title": "Hỏi tuổi",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "几",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "other",
+              "zh": "岁",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Hỏi tuổi: 几 + 岁 dùng thân mật cho trẻ nhỏ, 多大 lịch sự hơn và dùng được cho mọi lứa tuổi. Trước 岁 không dùng 个.",
+          "examples": [
+            {
+              "hanzi": "你今年几岁？",
+              "pinyin": "Nǐ jīnnián jǐ suì?",
+              "vi": "Năm nay bạn mấy tuổi?",
+              "highlight": "几岁"
+            },
+            {
+              "hanzi": "你多大了？",
+              "pinyin": "Nǐ duō dà le?",
+              "vi": "Bạn bao nhiêu tuổi rồi?",
+              "highlight": "多大"
+            },
+            {
+              "hanzi": "你儿子今年几岁？",
+              "pinyin": "Nǐ érzi jīnnián jǐ suì?",
+              "vi": "Con trai bạn năm nay mấy tuổi?",
+              "highlight": "几岁"
+            },
+            {
+              "hanzi": "我今年八岁。",
+              "pinyin": "Wǒ jīnnián bā suì.",
+              "vi": "Năm nay tôi tám tuổi.",
+              "highlight": "八岁"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 和 (hé – và) chỉ nối hai danh từ hoặc danh ngữ, không nối hai câu hay hai động ngữ. Ví dụ: 爸爸和妈妈都是老师。 (Bàba hé māma dōu shì lǎoshī.) = Bố và mẹ đều là giáo viên. / 我和妹妹在家。 (Wǒ hé mèimei zài jiā.) = Tôi và em gái ở nhà. / 哥哥和姐姐都是学生。 (Gēge hé jiějie dōu shì xuéshēng.) = Anh trai và chị gái đều là học sinh."
+          "type": "grammar_point",
+          "title": "和 (hé – và)",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "key",
+              "zh": "和",
+              "vi": "Liên từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "和 (hé – và) chỉ nối hai danh từ hoặc danh ngữ, không nối hai câu hay hai động ngữ.",
+          "examples": [
+            {
+              "hanzi": "爸爸和妈妈都是老师。",
+              "pinyin": "Bàba hé māma dōu shì lǎoshī.",
+              "vi": "Bố và mẹ đều là giáo viên.",
+              "highlight": "和"
+            },
+            {
+              "hanzi": "我和妹妹在家。",
+              "pinyin": "Wǒ hé mèimei zài jiā.",
+              "vi": "Tôi và em gái ở nhà.",
+              "highlight": "和"
+            },
+            {
+              "hanzi": "哥哥和姐姐都是学生。",
+              "pinyin": "Gēge hé jiějie dōu shì xuéshēng.",
+              "vi": "Anh trai và chị gái đều là học sinh.",
+              "highlight": "和"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 谁 (shéi – ai) đứng ở vị trí danh từ để hỏi người: 谁是老师？ (Shéi shì lǎoshī?) = Ai là giáo viên? / 这是谁的孩子？ (Zhè shì shéi de háizi?) = Đây là con của ai? 都 (dōu – đều) đứng sau chủ ngữ và trước động từ: 我们都是学生。 (Wǒmen dōu shì xuéshēng.) = Chúng tôi đều là học sinh. / 他们都在家。 (Tāmen dōu zài jiā.) = Họ đều ở nhà."
+          "type": "grammar_point",
+          "title": "谁 (shéi – ai)",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "谁",
+              "vi": "Từ hỏi"
+            }
+          ],
+          "explanation": "谁 (shéi – ai) đứng ở vị trí danh từ để hỏi người (xem ví dụ). 都 (dōu – đều) đứng sau chủ ngữ và trước động từ (xem ví dụ).",
+          "examples": [
+            {
+              "hanzi": "谁是老师？",
+              "pinyin": "Shéi shì lǎoshī?",
+              "vi": "Ai là giáo viên?",
+              "highlight": "谁"
+            },
+            {
+              "hanzi": "这是谁的孩子？",
+              "pinyin": "Zhè shì shéi de háizi?",
+              "vi": "Đây là con của ai?",
+              "highlight": "谁"
+            },
+            {
+              "hanzi": "我们都是学生。",
+              "pinyin": "Wǒmen dōu shì xuéshēng.",
+              "vi": "Chúng tôi đều là học sinh.",
+              "highlight": "都"
+            },
+            {
+              "hanzi": "他们都在家。",
+              "pinyin": "Tāmen dōu zài jiā.",
+              "vi": "Họ đều ở nhà.",
+              "highlight": "都"
+            }
+          ]
         }
       ]
     },
@@ -275,24 +472,50 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你好！你家有几口人？ (Nǐ hǎo! Nǐ jiā yǒu jǐ kǒu rén?) — Chào bạn! Nhà bạn có mấy người?"
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你好！你家有几口人？",
+              "pinyin": "Nǐ hǎo! Nǐ jiā yǒu jǐ kǒu rén?",
+              "vi": "Chào bạn! Nhà bạn có mấy người?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我家有四个人：爸爸、妈妈、姐姐和我。",
+              "pinyin": "Wǒ jiā yǒu sì ge rén: bàba, māma, jiějie hé wǒ.",
+              "vi": "Nhà tôi có bốn người: bố, mẹ, chị gái và tôi."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "你姐姐今年多大？她也是学生吗？",
+              "pinyin": "Nǐ jiějie jīnnián duō dà? Tā yě shì xuéshēng ma?",
+              "vi": "Chị gái bạn năm nay bao nhiêu tuổi? Chị ấy cũng là học sinh à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "她今年二十岁，也是学生。她有很多朋友。",
+              "pinyin": "Tā jīnnián èrshí suì, yě shì xuéshēng. Tā yǒu hěn duō péngyou.",
+              "vi": "Chị ấy năm nay hai mươi tuổi, cũng là học sinh. Chị ấy có rất nhiều bạn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "B: 我家有四个人：爸爸、妈妈、姐姐和我。 (Wǒ jiā yǒu sì ge rén: bàba, māma, jiějie hé wǒ.) — Nhà tôi có bốn người: bố, mẹ, chị gái và tôi."
-        },
-        {
-          "type": "text",
-          "value": "A: 你姐姐今年多大？她也是学生吗？ (Nǐ jiějie jīnnián duō dà? Tā yě shì xuéshēng ma?) — Chị gái bạn năm nay bao nhiêu tuổi? Chị ấy cũng là học sinh à?"
-        },
-        {
-          "type": "text",
-          "value": "B: 她今年二十岁，也是学生。她有很多朋友。 (Tā jīnnián èrshí suì, yě shì xuéshēng. Tā yǒu hěn duō péngyou.) — Chị ấy năm nay hai mươi tuổi, cũng là học sinh. Chị ấy có rất nhiều bạn."
-        },
-        {
-          "type": "text",
-          "value": "A: 你爸爸和妈妈做什么工作？ B: 我的爸爸是老师，妈妈是医生。 (Nǐ bàba hé māma zuò shénme gōngzuò? / Wǒ de bàba shì lǎoshī, māma shì yīshēng.) — A: Bố mẹ bạn làm nghề gì? B: Bố tôi là giáo viên, mẹ tôi là bác sĩ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你爸爸和妈妈做什么工作？",
+              "pinyin": "Nǐ bàba hé māma zuò shénme gōngzuò?",
+              "vi": "Bố mẹ bạn làm nghề gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我的爸爸是老师，妈妈是医生。",
+              "pinyin": "Wǒ de bàba shì lǎoshī, māma shì yīshēng.",
+              "vi": "Bố tôi là giáo viên, mẹ tôi là bác sĩ."
+            }
+          ]
         }
       ]
     }

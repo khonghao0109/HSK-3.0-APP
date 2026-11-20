@@ -244,20 +244,177 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Bổ ngữ xu hướng 来/去: 来 chỉ hướng về phía người nói, 去 chỉ hướng rời xa người nói. Ghép sau 出, 进, 回: 出来/出去, 进来/进去, 回来/回去. Người nói ở trong phòng mời người ngoài vào thì nói 进来; người nói ở ngoài bảo người khác vào thì nói 进去. Ví dụ: 请进来。 (Qǐng jìnlái.) = Mời vào. / 我们出去吃饭吧。 (Wǒmen chūqù chī fàn ba.) = Chúng ta ra ngoài ăn cơm nhé. / 妈妈什么时候回来？ (Māma shénme shíhou huílái?) = Mẹ khi nào về?"
+          "type": "grammar_point",
+          "title": "Bổ ngữ xu hướng 来/去",
+          "formula": [
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "来",
+              "vi": "Bổ ngữ"
+            }
+          ],
+          "explanation": "来 chỉ hướng về phía người nói, 去 chỉ hướng rời xa người nói. Ghép sau 出, 进, 回: 出来/出去, 进来/进去, 回来/回去. Người nói ở trong phòng mời người ngoài vào thì nói 进来; người nói ở ngoài bảo người khác vào thì nói 进去.",
+          "examples": [
+            {
+              "hanzi": "请进来。",
+              "pinyin": "Qǐng jìnlái.",
+              "vi": "Mời vào.",
+              "highlight": "进来"
+            },
+            {
+              "hanzi": "我们出去吃饭吧。",
+              "pinyin": "Wǒmen chūqù chī fàn ba.",
+              "vi": "Chúng ta ra ngoài ăn cơm nhé.",
+              "highlight": "出去"
+            },
+            {
+              "hanzi": "妈妈什么时候回来？",
+              "pinyin": "Māma shénme shíhou huílái?",
+              "vi": "Mẹ khi nào về?",
+              "highlight": "回来"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 跟 + người + 一起 + động từ: làm việc gì cùng với ai. 一块儿 dùng như 一起 trong khẩu ngữ. Cấu trúc: chủ ngữ + 跟 + người + 一起/一块儿 + động từ. Ví dụ: 我跟朋友一起去看电影。 (Wǒ gēn péngyou yìqǐ qù kàn diànyǐng.) = Tôi cùng bạn đi xem phim. / 你跟我一起走吧。 (Nǐ gēn wǒ yìqǐ zǒu ba.) = Bạn đi cùng tôi nhé. / 我们一块儿吃饭吧。 (Wǒmen yíkuàir chī fàn ba.) = Chúng ta cùng ăn cơm nhé."
+          "type": "grammar_point",
+          "title": "跟 + người + 一起 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "跟",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "key",
+              "zh": "一起",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "làm việc gì cùng với ai. 一块儿 dùng như 一起 trong khẩu ngữ. Cấu trúc: chủ ngữ + 跟 + người + 一起/一块儿 + động từ.",
+          "examples": [
+            {
+              "hanzi": "我跟朋友一起去看电影。",
+              "pinyin": "Wǒ gēn péngyou yìqǐ qù kàn diànyǐng.",
+              "vi": "Tôi cùng bạn đi xem phim.",
+              "highlight": "跟"
+            },
+            {
+              "hanzi": "你跟我一起走吧。",
+              "pinyin": "Nǐ gēn wǒ yìqǐ zǒu ba.",
+              "vi": "Bạn đi cùng tôi nhé.",
+              "highlight": "跟"
+            },
+            {
+              "hanzi": "我们一块儿吃饭吧。",
+              "pinyin": "Wǒmen yíkuàir chī fàn ba.",
+              "vi": "Chúng ta cùng ăn cơm nhé.",
+              "highlight": "一块儿"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 帮 + người + động từ: giúp ai làm việc gì. 帮忙 không mang tân ngữ chỉ người phía sau: nói 谢谢你帮忙, không nói 帮忙我. Cấu trúc: chủ ngữ + 帮 + người + động từ. Ví dụ: 你能帮我拿水吗？ (Nǐ néng bāng wǒ ná shuǐ ma?) = Bạn giúp tôi lấy nước được không? / 我帮妈妈做饭。 (Wǒ bāng māma zuò fàn.) = Tôi giúp mẹ nấu cơm. / 谢谢你帮忙。 (Xièxie nǐ bāngmáng.) = Cảm ơn bạn đã giúp."
+          "type": "grammar_point",
+          "title": "帮 + người + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "帮",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "giúp ai làm việc gì. 帮忙 không mang tân ngữ chỉ người phía sau: nói 谢谢你帮忙, không nói 帮忙我. Cấu trúc: chủ ngữ + 帮 + người + động từ.",
+          "examples": [
+            {
+              "hanzi": "你能帮我拿水吗？",
+              "pinyin": "Nǐ néng bāng wǒ ná shuǐ ma?",
+              "vi": "Bạn giúp tôi lấy nước được không?",
+              "highlight": "帮"
+            },
+            {
+              "hanzi": "我帮妈妈做饭。",
+              "pinyin": "Wǒ bāng māma zuò fàn.",
+              "vi": "Tôi giúp mẹ nấu cơm.",
+              "highlight": "帮"
+            },
+            {
+              "hanzi": "谢谢你帮忙。",
+              "pinyin": "Xièxie nǐ bāngmáng.",
+              "vi": "Cảm ơn bạn đã giúp.",
+              "highlight": "帮"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. Động từ + 到: chỉ kết quả đạt được. 找 = tìm (đang tìm), 找到 = tìm thấy (đã có kết quả). Phủ định dùng 没 + động từ + 到. Ví dụ: 我找到我的手机了。 (Wǒ zhǎodào wǒ de shǒujī le.) = Tôi tìm thấy điện thoại của tôi rồi. / 你找到钱包了吗？ (Nǐ zhǎodào qiánbāo le ma?) = Bạn tìm thấy ví chưa? / 我没找到他。 (Wǒ méi zhǎodào tā.) = Tôi không tìm thấy anh ấy."
+          "type": "grammar_point",
+          "title": "Động từ + 到",
+          "formula": [
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "到",
+              "vi": "Bổ ngữ"
+            }
+          ],
+          "explanation": "chỉ kết quả đạt được. 找 = tìm (đang tìm), 找到 = tìm thấy (đã có kết quả). Phủ định dùng 没 + động từ + 到.",
+          "examples": [
+            {
+              "hanzi": "我找到我的手机了。",
+              "pinyin": "Wǒ zhǎodào wǒ de shǒujī le.",
+              "vi": "Tôi tìm thấy điện thoại của tôi rồi.",
+              "highlight": "找到"
+            },
+            {
+              "hanzi": "你找到钱包了吗？",
+              "pinyin": "Nǐ zhǎodào qiánbāo le ma?",
+              "vi": "Bạn tìm thấy ví chưa?",
+              "highlight": "找到"
+            },
+            {
+              "hanzi": "我没找到他。",
+              "pinyin": "Wǒ méi zhǎodào tā.",
+              "vi": "Tôi không tìm thấy anh ấy.",
+              "highlight": "找到"
+            }
+          ]
         }
       ]
     },
@@ -271,24 +428,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你在找什么？ B: 我找我的手机。 (Nǐ zài zhǎo shénme? / Wǒ zhǎo wǒ de shǒujī.) — A: Bạn đang tìm gì? B: Tôi tìm điện thoại của tôi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你在找什么？",
+              "pinyin": "Nǐ zài zhǎo shénme?",
+              "vi": "Bạn đang tìm gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我找我的手机。",
+              "pinyin": "Wǒ zhǎo wǒ de shǒujī.",
+              "vi": "Tôi tìm điện thoại của tôi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你看，手机在桌子上。 B: 我找到了，谢谢你帮忙！ (Nǐ kàn, shǒujī zài zhuōzi shang. / Wǒ zhǎodào le, xièxie nǐ bāngmáng!) — A: Bạn xem, điện thoại ở trên bàn. B: Tôi tìm thấy rồi, cảm ơn bạn đã giúp!"
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你看，手机在桌子上。",
+              "pinyin": "Nǐ kàn, shǒujī zài zhuōzi shang.",
+              "vi": "Bạn xem, điện thoại ở trên bàn."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我找到了，谢谢你帮忙！",
+              "pinyin": "Wǒ zhǎodào le, xièxie nǐ bāngmáng!",
+              "vi": "Tôi tìm thấy rồi, cảm ơn bạn đã giúp!"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我们一起出去吃饭吧。 B: 好，我跟你一起去。 (Wǒmen yìqǐ chūqù chī fàn ba. / Hǎo, wǒ gēn nǐ yìqǐ qù.) — A: Chúng ta cùng ra ngoài ăn cơm nhé. B: Được, tôi đi cùng bạn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们一起出去吃饭吧。",
+              "pinyin": "Wǒmen yìqǐ chūqù chī fàn ba.",
+              "vi": "Chúng ta cùng ra ngoài ăn cơm nhé."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，我跟你一起去。",
+              "pinyin": "Hǎo, wǒ gēn nǐ yìqǐ qù.",
+              "vi": "Được, tôi đi cùng bạn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 妈妈什么时候回来？ B: 她晚上回来。 (Māma shénme shíhou huílái? / Tā wǎnshang huílái.) — A: Mẹ khi nào về? B: Buổi tối mẹ về."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "妈妈什么时候回来？",
+              "pinyin": "Māma shénme shíhou huílái?",
+              "vi": "Mẹ khi nào về?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "她晚上回来。",
+              "pinyin": "Tā wǎnshang huílái.",
+              "vi": "Buổi tối mẹ về."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 外边下雨了，你进来吧。 B: 好，谢谢你。 (Wàibian xiàyǔ le, nǐ jìnlái ba. / Hǎo, xièxie nǐ.) — A: Bên ngoài mưa rồi, bạn vào đi. B: Vâng, cảm ơn bạn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "外边下雨了，你进来吧。",
+              "pinyin": "Wàibian xiàyǔ le, nǐ jìnlái ba.",
+              "vi": "Bên ngoài mưa rồi, bạn vào đi."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，谢谢你。",
+              "pinyin": "Hǎo, xièxie nǐ.",
+              "vi": "Vâng, cảm ơn bạn."
+            }
+          ]
         }
       ]
     }

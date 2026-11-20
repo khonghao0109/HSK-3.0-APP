@@ -244,16 +244,145 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Từ phương vị + 边: ghép 上, 下, 前, 后, 左, 右, 里, 外, 东, 西, 南, 北 với 边 để chỉ vị trí (上边, 左边, 东边…). 中间 (ở giữa) và 旁边 (bên cạnh) cũng là từ phương vị. Từ phương vị đứng sau danh từ, khác tiếng Việt: 桌子上边 = trên bàn, 学校前边 = phía trước trường. Ví dụ: 书在桌子上边。 (Shū zài zhuōzi shàngbian.) = Sách ở trên bàn. / 商店在学校旁边。 (Shāngdiàn zài xuéxiào pángbiān.) = Cửa hàng ở bên cạnh trường. / 我家在东边。 (Wǒ jiā zài dōngbian.) = Nhà tôi ở phía đông."
+          "type": "grammar_point",
+          "title": "Từ phương vị + 边",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "方位词",
+              "vi": "Từ phương vị"
+            },
+            {
+              "role": "key",
+              "zh": "边",
+              "vi": "Hậu tố"
+            }
+          ],
+          "explanation": "Từ phương vị + 边: ghép 上, 下, 前, 后, 左, 右, 里, 外, 东, 西, 南, 北 với 边 để chỉ vị trí (上边, 左边, 东边…). 中间 (ở giữa) và 旁边 (bên cạnh) cũng là từ phương vị. Từ phương vị đứng sau danh từ, khác tiếng Việt: 桌子上边 = trên bàn, 学校前边 = phía trước trường.",
+          "examples": [
+            {
+              "hanzi": "书在桌子上边。",
+              "pinyin": "Shū zài zhuōzi shàngbian.",
+              "vi": "Sách ở trên bàn.",
+              "highlight": "上边"
+            },
+            {
+              "hanzi": "商店在学校旁边。",
+              "pinyin": "Shāngdiàn zài xuéxiào pángbiān.",
+              "vi": "Cửa hàng ở bên cạnh trường.",
+              "highlight": "旁边"
+            },
+            {
+              "hanzi": "我家在东边。",
+              "pinyin": "Wǒ jiā zài dōngbian.",
+              "vi": "Nhà tôi ở phía đông.",
+              "highlight": "东边"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. A 在 B (的) + phương vị: nói người hoặc vật A ở vị trí nào so với B. Cấu trúc: A + 在 + B + (的) + từ phương vị. 的 có thể có hoặc không. Hỏi vị trí dùng 在哪儿. Ví dụ: 医院在商店的后边。 (Yīyuàn zài shāngdiàn de hòubian.) = Bệnh viện ở phía sau cửa hàng. / 我坐在他左边。 (Wǒ zuò zài tā zuǒbian.) = Tôi ngồi bên trái anh ấy. / A: 书店在哪儿？ B: 书店在学校北边。 (Shūdiàn zài nǎr? / Shūdiàn zài xuéxiào běibian.) = A: Hiệu sách ở đâu? B: Hiệu sách ở phía bắc trường."
+          "type": "grammar_point",
+          "title": "A 在 B (的) + phương vị",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "在",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "other",
+              "zh": "(的)",
+              "vi": "(Trợ từ kết cấu)"
+            },
+            {
+              "role": "other",
+              "zh": "方位词",
+              "vi": "Từ phương vị"
+            }
+          ],
+          "explanation": "A 在 B (的) + phương vị: nói người hoặc vật A ở vị trí nào so với B. Cấu trúc: A + 在 + B + (的) + từ phương vị. 的 có thể có hoặc không. Hỏi vị trí dùng 在哪儿.",
+          "examples": [
+            {
+              "hanzi": "医院在商店的后边。",
+              "pinyin": "Yīyuàn zài shāngdiàn de hòubian.",
+              "vi": "Bệnh viện ở phía sau cửa hàng.",
+              "highlight": "在商店的后边"
+            },
+            {
+              "hanzi": "我坐在他左边。",
+              "pinyin": "Wǒ zuò zài tā zuǒbian.",
+              "vi": "Tôi ngồi bên trái anh ấy.",
+              "highlight": "在他左边"
+            },
+            {
+              "hanzi": "A: 书店在哪儿？ B: 书店在学校北边。",
+              "pinyin": "Shūdiàn zài nǎr? / Shūdiàn zài xuéxiào běibian.",
+              "vi": "A: Hiệu sách ở đâu? B: Hiệu sách ở phía bắc trường.",
+              "highlight": "在学校北边"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai (câu tồn tại). Cấu trúc: nơi chốn (+ từ phương vị) + 有 + (số lượng) + danh từ; phủ định dùng 没有. Chú ý trật tự: nơi chốn đứng đầu câu, khác với câu 在 (vật đứng đầu). Ví dụ: 学校前边有一个商店。 (Xuéxiào qiánbian yǒu yí ge shāngdiàn.) = Phía trước trường có một cửa hàng. / 书包里边有两本书。 (Shūbāo lǐbian yǒu liǎng běn shū.) = Trong cặp sách có hai quyển sách. / 外边没有人。 (Wàibian méiyǒu rén.) = Bên ngoài không có ai."
+          "type": "grammar_point",
+          "title": "Nơi chốn + 有 + người/vật",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "other",
+              "zh": "(方位词)",
+              "vi": "(Từ phương vị)"
+            },
+            {
+              "role": "key",
+              "zh": "有",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(数量词)",
+              "vi": "(Số lượng)"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Nơi chốn + 有 + người/vật: nói ở một chỗ có cái gì, có ai (câu tồn tại). Cấu trúc: nơi chốn (+ từ phương vị) + 有 + (số lượng) + danh từ; phủ định dùng 没有. Chú ý trật tự: nơi chốn đứng đầu câu, khác với câu 在 (vật đứng đầu).",
+          "examples": [
+            {
+              "hanzi": "学校前边有一个商店。",
+              "pinyin": "Xuéxiào qiánbian yǒu yí ge shāngdiàn.",
+              "vi": "Phía trước trường có một cửa hàng.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "书包里边有两本书。",
+              "pinyin": "Shūbāo lǐbian yǒu liǎng běn shū.",
+              "vi": "Trong cặp sách có hai quyển sách.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "外边没有人。",
+              "pinyin": "Wàibian méiyǒu rén.",
+              "vi": "Bên ngoài không có ai.",
+              "highlight": "没有"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +396,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 请问，洗手间在哪儿？ B: 在前边，商店的左边。 (Qǐngwèn, xǐshǒujiān zài nǎr? / Zài qiánbian, shāngdiàn de zuǒbian.) — A: Xin hỏi, nhà vệ sinh ở đâu? B: Ở phía trước, bên trái cửa hàng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "请问，洗手间在哪儿？",
+              "pinyin": "Qǐngwèn, xǐshǒujiān zài nǎr?",
+              "vi": "Xin hỏi, nhà vệ sinh ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在前边，商店的左边。",
+              "pinyin": "Zài qiánbian, shāngdiàn de zuǒbian.",
+              "vi": "Ở phía trước, bên trái cửa hàng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你家在哪儿？ B: 我家在学校的东边。 (Nǐ jiā zài nǎr? / Wǒ jiā zài xuéxiào de dōngbian.) — A: Nhà bạn ở đâu? B: Nhà tôi ở phía đông trường."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你家在哪儿？",
+              "pinyin": "Nǐ jiā zài nǎr?",
+              "vi": "Nhà bạn ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我家在学校的东边。",
+              "pinyin": "Wǒ jiā zài xuéxiào de dōngbian.",
+              "vi": "Nhà tôi ở phía đông trường."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你家旁边有商店吗？ B: 有，我家旁边有一个大商店。 (Nǐ jiā pángbiān yǒu shāngdiàn ma? / Yǒu, wǒ jiā pángbiān yǒu yí ge dà shāngdiàn.) — A: Bên cạnh nhà bạn có cửa hàng không? B: Có, bên cạnh nhà tôi có một cửa hàng lớn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你家旁边有商店吗？",
+              "pinyin": "Nǐ jiā pángbiān yǒu shāngdiàn ma?",
+              "vi": "Bên cạnh nhà bạn có cửa hàng không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，我家旁边有一个大商店。",
+              "pinyin": "Yǒu, wǒ jiā pángbiān yǒu yí ge dà shāngdiàn.",
+              "vi": "Có, bên cạnh nhà tôi có một cửa hàng lớn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我的手机在哪儿？ B: 在你的书包里边。 (Wǒ de shǒujī zài nǎr? / Zài nǐ de shūbāo lǐbian.) — A: Điện thoại của tôi ở đâu? B: Ở trong cặp sách của bạn."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我的手机在哪儿？",
+              "pinyin": "Wǒ de shǒujī zài nǎr?",
+              "vi": "Điện thoại của tôi ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在你的书包里边。",
+              "pinyin": "Zài nǐ de shūbāo lǐbian.",
+              "vi": "Ở trong cặp sách của bạn."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 外边有人吗？ B: 没有，外边没有人。 (Wàibian yǒu rén ma? / Méiyǒu, wàibian méiyǒu rén.) — A: Bên ngoài có ai không? B: Không, bên ngoài không có ai."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "外边有人吗？",
+              "pinyin": "Wàibian yǒu rén ma?",
+              "vi": "Bên ngoài có ai không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "没有，外边没有人。",
+              "pinyin": "Méiyǒu, wàibian méiyǒu rén.",
+              "vi": "Không, bên ngoài không có ai."
+            }
+          ]
         }
       ]
     }

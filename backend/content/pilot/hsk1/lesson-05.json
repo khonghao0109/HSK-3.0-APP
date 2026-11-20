@@ -244,24 +244,192 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 学习 và 学 đều là “học”. Cả hai đều đi được với tân ngữ (学习汉语 = 学汉语); 学习 trang trọng hơn và hay dùng một mình khi nói chung về việc học, còn 学 khẩu ngữ và gọn hơn. Ví dụ: 我学习汉语。 (Wǒ xuéxí Hànyǔ.) = Tôi học tiếng Hán. / 我在学习。 (Wǒ zài xuéxí.) = Tôi đang học. / 我学汉字。 (Wǒ xué hànzì.) = Tôi học chữ Hán."
+          "type": "grammar_point",
+          "title": "学习 và 学 đều là “học”",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "学习",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "学习 và 学 đều là “học”. Cả hai đều đi được với tân ngữ (学习汉语 = 学汉语); 学习 trang trọng hơn và hay dùng một mình khi nói chung về việc học, còn 学 khẩu ngữ và gọn hơn.",
+          "examples": [
+            {
+              "hanzi": "我学习汉语。",
+              "pinyin": "Wǒ xuéxí Hànyǔ.",
+              "vi": "Tôi học tiếng Hán.",
+              "highlight": "学习"
+            },
+            {
+              "hanzi": "我在学习。",
+              "pinyin": "Wǒ zài xuéxí.",
+              "vi": "Tôi đang học.",
+              "highlight": "学习"
+            },
+            {
+              "hanzi": "我学汉字。",
+              "pinyin": "Wǒ xué hànzì.",
+              "vi": "Tôi học chữ Hán.",
+              "highlight": "学"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. Động từ + tân ngữ: 说 (nói), 读 (đọc), 写 (viết) đứng trước tân ngữ chỉ ngôn ngữ hoặc chữ: 说汉语, 读课本, 写汉字. 听 (nghe) nhận một cụm chủ vị làm tân ngữ: 我听老师说话 = tôi nghe thầy/cô nói, ở đó 老师说话 là cụm chủ vị (老师 không phải tân ngữ trực tiếp của 听). Ví dụ: 我说汉语。 (Wǒ shuō Hànyǔ.) = Tôi nói tiếng Hán. / 我读课本。 (Wǒ dú kèběn.) = Tôi đọc sách giáo khoa. / 我写汉字。 (Wǒ xiě hànzì.) = Tôi viết chữ Hán. / 我听老师说话。 (Wǒ tīng lǎoshī shuōhuà.) = Tôi nghe giáo viên nói."
+          "type": "grammar_point",
+          "title": "Động từ + tân ngữ",
+          "formula": [
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "宾语",
+              "vi": "Tân ngữ"
+            }
+          ],
+          "explanation": "Động từ + tân ngữ: 说 (nói), 读 (đọc), 写 (viết) đứng trước tân ngữ chỉ ngôn ngữ hoặc chữ: 说汉语, 读课本, 写汉字. 听 (nghe) nhận một cụm chủ vị làm tân ngữ: 我听老师说话 = tôi nghe thầy/cô nói, ở đó 老师说话 là cụm chủ vị (老师 không phải tân ngữ trực tiếp của 听).",
+          "examples": [
+            {
+              "hanzi": "我说汉语。",
+              "pinyin": "Wǒ shuō Hànyǔ.",
+              "vi": "Tôi nói tiếng Hán.",
+              "highlight": "说"
+            },
+            {
+              "hanzi": "我读课本。",
+              "pinyin": "Wǒ dú kèběn.",
+              "vi": "Tôi đọc sách giáo khoa.",
+              "highlight": "读"
+            },
+            {
+              "hanzi": "我写汉字。",
+              "pinyin": "Wǒ xiě hànzì.",
+              "vi": "Tôi viết chữ Hán.",
+              "highlight": "写"
+            },
+            {
+              "hanzi": "我听老师说话。",
+              "pinyin": "Wǒ tīng lǎoshī shuōhuà.",
+              "vi": "Tôi nghe giáo viên nói.",
+              "highlight": "听"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết) là động từ ghép, không cần tân ngữ. Trạng ngữ thời gian đứng trước động từ: chủ ngữ + thời gian + 上课/下课. Ví dụ: 我们上午八点上课。 (Wǒmen shàngwǔ bā diǎn shàngkè.) = Chúng tôi lên lớp lúc 8 giờ sáng. / 我们三点下课。 (Wǒmen sān diǎn xiàkè.) = Chúng tôi tan học lúc 3 giờ."
+          "type": "grammar_point",
+          "title": "上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "key",
+              "zh": "上课",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "上课 (lên lớp, vào tiết) và 下课 (tan học, hết tiết) là động từ ghép, không cần tân ngữ. Trạng ngữ thời gian đứng trước động từ: chủ ngữ + thời gian + 上课/下课.",
+          "examples": [
+            {
+              "hanzi": "我们上午八点上课。",
+              "pinyin": "Wǒmen shàngwǔ bā diǎn shàngkè.",
+              "vi": "Chúng tôi lên lớp lúc 8 giờ sáng.",
+              "highlight": "上课"
+            },
+            {
+              "hanzi": "我们三点下课。",
+              "pinyin": "Wǒmen sān diǎn xiàkè.",
+              "vi": "Chúng tôi tan học lúc 3 giờ.",
+              "highlight": "下课"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 问 (hỏi) đứng trước người được hỏi, sau đó là việc được hỏi: 问 + người + việc. 知道 (biết) + sự việc hoặc người; trong phạm vi HSK1 không dùng 很 + 知道. Ví dụ: 我问老师这个字。 (Wǒ wèn lǎoshī zhège zì.) = Tôi hỏi giáo viên chữ này. / 我知道他的名字。 (Wǒ zhīdào tā de míngzi.) = Tôi biết tên của anh ấy."
+          "type": "grammar_point",
+          "title": "问 (hỏi)",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "问",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "宾语",
+              "vi": "Tân ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "宾语",
+              "vi": "Tân ngữ"
+            }
+          ],
+          "explanation": "问 (hỏi) đứng trước người được hỏi, sau đó là việc được hỏi: 问 + người + việc. 知道 (biết) + sự việc hoặc người; trong phạm vi HSK1 không dùng 很 + 知道.",
+          "examples": [
+            {
+              "hanzi": "我问老师这个字。",
+              "pinyin": "Wǒ wèn lǎoshī zhège zì.",
+              "vi": "Tôi hỏi giáo viên chữ này.",
+              "highlight": "问"
+            },
+            {
+              "hanzi": "我知道他的名字。",
+              "pinyin": "Wǒ zhīdào tā de míngzi.",
+              "vi": "Tôi biết tên của anh ấy.",
+              "highlight": "知道"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 见 nghĩa là “thấy, gặp”, dùng trong lời hẹn gặp: 我们明天见。 (Wǒmen míngtiān jiàn.) = Ngày mai chúng ta gặp nhau. / 明天见！ (Míngtiān jiàn!) = Mai gặp nhé! 见 không đi với 很; muốn nói “rất vui được biết bạn” ở HSK1 dùng 很高兴认识你 (认识 là từ của bài 1)."
+          "type": "grammar_point",
+          "title": "见 nghĩa là “thấy, gặp”",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "key",
+              "zh": "见",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "见 nghĩa là “thấy, gặp”, dùng trong lời hẹn gặp: 见 không đi với 很; muốn nói “rất vui được biết bạn” ở HSK1 dùng 很高兴认识你 (认识 là từ của bài 1).",
+          "examples": [
+            {
+              "hanzi": "我们明天见。",
+              "pinyin": "Wǒmen míngtiān jiàn.",
+              "vi": "Ngày mai chúng ta gặp nhau.",
+              "highlight": "见"
+            },
+            {
+              "hanzi": "明天见！",
+              "pinyin": "Míngtiān jiàn!",
+              "vi": "Mai gặp nhé!",
+              "highlight": "见"
+            }
+          ]
         }
       ]
     },
@@ -275,24 +443,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你明天有课吗？ B: 有，我们上午八点上课。 (Nǐ míngtiān yǒu kè ma? / Yǒu, wǒmen shàngwǔ bā diǎn shàngkè.) — A: Ngày mai bạn có tiết không? B: Có, chúng ta lên lớp lúc 8 giờ sáng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你明天有课吗？",
+              "pinyin": "Nǐ míngtiān yǒu kè ma?",
+              "vi": "Ngày mai bạn có tiết không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，我们上午八点上课。",
+              "pinyin": "Yǒu, wǒmen shàngwǔ bā diǎn shàngkè.",
+              "vi": "Có, chúng ta lên lớp lúc 8 giờ sáng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你们几点下课？ B: 我们下午四点下课。 (Nǐmen jǐ diǎn xiàkè? / Wǒmen xiàwǔ sì diǎn xiàkè.) — A: Mấy giờ các bạn tan học? B: Chúng tôi tan học lúc 4 giờ chiều."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你们几点下课？",
+              "pinyin": "Nǐmen jǐ diǎn xiàkè?",
+              "vi": "Mấy giờ các bạn tan học?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我们下午四点下课。",
+              "pinyin": "Wǒmen xiàwǔ sì diǎn xiàkè.",
+              "vi": "Chúng tôi tan học lúc 4 giờ chiều."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 这个汉字怎么读？ B: 我去问老师。 (Zhège hànzì zěnme dú? / Wǒ qù wèn lǎoshī.) — A: Chữ Hán này đọc thế nào? B: Tôi đi hỏi giáo viên."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这个汉字怎么读？",
+              "pinyin": "Zhège hànzì zěnme dú?",
+              "vi": "Chữ Hán này đọc thế nào?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我去问老师。",
+              "pinyin": "Wǒ qù wèn lǎoshī.",
+              "vi": "Tôi đi hỏi giáo viên."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你知道这个字吗？ B: 不知道，我在学习汉语。 (Nǐ zhīdào zhège zì ma? / Bù zhīdào, wǒ zài xuéxí Hànyǔ.) — A: Bạn biết chữ này không? B: Không biết, tôi đang học tiếng Hán."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你知道这个字吗？",
+              "pinyin": "Nǐ zhīdào zhège zì ma?",
+              "vi": "Bạn biết chữ này không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不知道，我在学习汉语。",
+              "pinyin": "Bù zhīdào, wǒ zài xuéxí Hànyǔ.",
+              "vi": "Không biết, tôi đang học tiếng Hán."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我们去图书馆读书吧。 B: 好，图书馆有很多书。 (Wǒmen qù túshūguǎn dú shū ba. / Hǎo, túshūguǎn yǒu hěn duō shū.) — A: Chúng ta đến thư viện đọc sách nhé. B: Được, thư viện có rất nhiều sách."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们去图书馆读书吧。",
+              "pinyin": "Wǒmen qù túshūguǎn dú shū ba.",
+              "vi": "Chúng ta đến thư viện đọc sách nhé."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，图书馆有很多书。",
+              "pinyin": "Hǎo, túshūguǎn yǒu hěn duō shū.",
+              "vi": "Được, thư viện có rất nhiều sách."
+            }
+          ]
         }
       ]
     }

@@ -244,16 +244,130 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 要 + danh từ / 要 + động từ: 要 + danh từ = muốn có, cần cái gì (hay dùng khi mua hàng, gọi món); 要 + động từ = muốn làm việc gì. Câu hỏi chính phản: 要不要 + …? Cấu trúc: chủ ngữ + 要 + danh từ / động từ. Ví dụ: 我要一杯水。 (Wǒ yào yì bēi shuǐ.) = Tôi muốn một cốc nước. / 我要买一个新手机。 (Wǒ yào mǎi yí ge xīn shǒujī.) = Tôi muốn mua một chiếc điện thoại mới. / 你要不要吃包子？ (Nǐ yào bu yào chī bāozi?) = Bạn có muốn ăn bánh bao không?"
+          "type": "grammar_point",
+          "title": "要 + danh từ / 要 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "要",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "要 + danh từ = muốn có, cần cái gì (hay dùng khi mua hàng, gọi món); 要 + động từ = muốn làm việc gì. Câu hỏi chính phản: 要不要 + …? Cấu trúc: chủ ngữ + 要 + danh từ / động từ.",
+          "examples": [
+            {
+              "hanzi": "我要一杯水。",
+              "pinyin": "Wǒ yào yì bēi shuǐ.",
+              "vi": "Tôi muốn một cốc nước.",
+              "highlight": "要"
+            },
+            {
+              "hanzi": "我要买一个新手机。",
+              "pinyin": "Wǒ yào mǎi yí ge xīn shǒujī.",
+              "vi": "Tôi muốn mua một chiếc điện thoại mới.",
+              "highlight": "要"
+            },
+            {
+              "hanzi": "你要不要吃包子？",
+              "pinyin": "Nǐ yào bu yào chī bāozi?",
+              "vi": "Bạn có muốn ăn bánh bao không?",
+              "highlight": "要"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 的 làm định ngữ: từ bổ nghĩa + 的 + danh từ, từ bổ nghĩa đứng trước, ngược với tiếng Việt. Từ bổ nghĩa có thể là đại từ, danh từ, tính từ hoặc cụm động từ. Tính từ một chữ thường bỏ 的: 新手机 = 新的手机. Danh từ đã rõ thì có thể lược, chỉ để 的: 这个包是新的. Ví dụ: 这是谁的钱包？ (Zhè shì shéi de qiánbāo?) = Đây là ví của ai? / 这是我的新手机。 (Zhè shì wǒ de xīn shǒujī.) = Đây là điện thoại mới của tôi. / 妈妈做的饭很好吃。 (Māma zuò de fàn hěn hǎochī.) = Cơm mẹ nấu rất ngon."
+          "type": "grammar_point",
+          "title": "的 làm định ngữ",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "定语",
+              "vi": "Định ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "的",
+              "vi": "Trợ từ kết cấu"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "từ bổ nghĩa + 的 + danh từ, từ bổ nghĩa đứng trước, ngược với tiếng Việt. Từ bổ nghĩa có thể là đại từ, danh từ, tính từ hoặc cụm động từ. Tính từ một chữ thường bỏ 的: 新手机 = 新的手机. Danh từ đã rõ thì có thể lược, chỉ để 的: 这个包是新的.",
+          "examples": [
+            {
+              "hanzi": "这是谁的钱包？",
+              "pinyin": "Zhè shì shéi de qiánbāo?",
+              "vi": "Đây là ví của ai?",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "这是我的新手机。",
+              "pinyin": "Zhè shì wǒ de xīn shǒujī.",
+              "vi": "Đây là điện thoại mới của tôi.",
+              "highlight": "的"
+            },
+            {
+              "hanzi": "妈妈做的饭很好吃。",
+              "pinyin": "Māma zuò de fàn hěn hǎochī.",
+              "vi": "Cơm mẹ nấu rất ngon.",
+              "highlight": "的"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 多/少 làm vị ngữ: 多 (nhiều), 少 (ít) đứng sau chủ ngữ làm vị ngữ, thường có 很, 太, 非常 phía trước. 少 không đứng một mình trước danh từ: không nói 少人, mà nói 人很少; còn 很多 + danh từ thì dùng được (很多书). Cấu trúc: chủ ngữ + 很/太 + 多/少. Ví dụ: 今天人很少。 (Jīntiān rén hěn shǎo.) = Hôm nay rất ít người. / 他的东西很多。 (Tā de dōngxi hěn duō.) = Đồ của anh ấy rất nhiều. / 我的钱太少了。 (Wǒ de qián tài shǎo le.) = Tiền của tôi ít quá."
+          "type": "grammar_point",
+          "title": "多/少 làm vị ngữ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "很",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "key",
+              "zh": "多",
+              "vi": "Tính từ"
+            }
+          ],
+          "explanation": "多 (nhiều), 少 (ít) đứng sau chủ ngữ làm vị ngữ, thường có 很, 太, 非常 phía trước. 少 không đứng một mình trước danh từ: không nói 少人, mà nói 人很少; còn 很多 + danh từ thì dùng được (很多书). Cấu trúc: chủ ngữ + 很/太 + 多/少.",
+          "examples": [
+            {
+              "hanzi": "今天人很少。",
+              "pinyin": "Jīntiān rén hěn shǎo.",
+              "vi": "Hôm nay rất ít người.",
+              "highlight": "少"
+            },
+            {
+              "hanzi": "他的东西很多。",
+              "pinyin": "Tā de dōngxi hěn duō.",
+              "vi": "Đồ của anh ấy rất nhiều.",
+              "highlight": "多"
+            },
+            {
+              "hanzi": "我的钱太少了。",
+              "pinyin": "Wǒ de qián tài shǎo le.",
+              "vi": "Tiền của tôi ít quá.",
+              "highlight": "少"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +381,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你要什么？ B: 我要两个包子。 (Nǐ yào shénme? / Wǒ yào liǎng ge bāozi.) — A: Bạn muốn gì? B: Tôi muốn hai cái bánh bao."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你要什么？",
+              "pinyin": "Nǐ yào shénme?",
+              "vi": "Bạn muốn gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我要两个包子。",
+              "pinyin": "Wǒ yào liǎng ge bāozi.",
+              "vi": "Tôi muốn hai cái bánh bao."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你要不要吃肉？ B: 不要，我不吃肉，我要面条儿。 (Nǐ yào bu yào chī ròu? / Bú yào, wǒ bù chī ròu, wǒ yào miàntiáor.) — A: Bạn có muốn ăn thịt không? B: Không, tôi không ăn thịt, tôi muốn mì."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你要不要吃肉？",
+              "pinyin": "Nǐ yào bu yào chī ròu?",
+              "vi": "Bạn có muốn ăn thịt không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不要，我不吃肉，我要面条儿。",
+              "pinyin": "Bú yào, wǒ bù chī ròu, wǒ yào miàntiáor.",
+              "vi": "Không, tôi không ăn thịt, tôi muốn mì."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 这是你的新手机吗？ B: 是，我的手机坏了。 (Zhè shì nǐ de xīn shǒujī ma? / Shì, wǒ de shǒujī huài le.) — A: Đây là điện thoại mới của bạn à? B: Ừ, điện thoại của tôi hỏng rồi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这是你的新手机吗？",
+              "pinyin": "Zhè shì nǐ de xīn shǒujī ma?",
+              "vi": "Đây là điện thoại mới của bạn à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "是，我的手机坏了。",
+              "pinyin": "Shì, wǒ de shǒujī huài le.",
+              "vi": "Ừ, điện thoại của tôi hỏng rồi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我能用你的电脑吗？ B: 能，你用吧。 (Wǒ néng yòng nǐ de diànnǎo ma? / Néng, nǐ yòng ba.) — A: Tôi dùng máy tính của bạn được không? B: Được, bạn dùng đi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我能用你的电脑吗？",
+              "pinyin": "Wǒ néng yòng nǐ de diànnǎo ma?",
+              "vi": "Tôi dùng máy tính của bạn được không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "能，你用吧。",
+              "pinyin": "Néng, nǐ yòng ba.",
+              "vi": "Được, bạn dùng đi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 商场里人多吗？ B: 不多，今天人很少。 (Shāngchǎng lǐ rén duō ma? / Bù duō, jīntiān rén hěn shǎo.) — A: Trong trung tâm thương mại có đông người không? B: Không đông, hôm nay rất ít người."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "商场里人多吗？",
+              "pinyin": "Shāngchǎng lǐ rén duō ma?",
+              "vi": "Trong trung tâm thương mại có đông người không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不多，今天人很少。",
+              "pinyin": "Bù duō, jīntiān rén hěn shǎo.",
+              "vi": "Không đông, hôm nay rất ít người."
+            }
+          ]
         }
       ]
     }

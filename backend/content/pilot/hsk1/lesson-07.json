@@ -244,24 +244,219 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 这 (này, đây), 那 (kia, đó), 哪 (nào) đứng trước danh từ hoặc làm chủ ngữ. Cấu trúc: 这/那 + 是 + danh từ; 哪 + 国 + 人 để hỏi quốc tịch. Ví dụ: 这是我的书。 (Zhè shì wǒ de shū.) = Đây là sách của tôi. / 那是中文书。 (Nà shì Zhōngwén shū.) = Kia là sách tiếng Trung. / 你是哪国人？ (Nǐ shì nǎ guó rén?) = Bạn là người nước nào?"
+          "type": "grammar_point",
+          "title": "这 (này, đây), 那 (kia, đó), 哪 (nào)",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "这",
+              "vi": "Đại từ"
+            },
+            {
+              "role": "verb",
+              "zh": "是",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "这 (này, đây), 那 (kia, đó), 哪 (nào) đứng trước danh từ hoặc làm chủ ngữ. Cấu trúc: 这/那 + 是 + danh từ; 哪 + 国 + 人 để hỏi quốc tịch.",
+          "examples": [
+            {
+              "hanzi": "这是我的书。",
+              "pinyin": "Zhè shì wǒ de shū.",
+              "vi": "Đây là sách của tôi.",
+              "highlight": "这"
+            },
+            {
+              "hanzi": "那是中文书。",
+              "pinyin": "Nà shì Zhōngwén shū.",
+              "vi": "Kia là sách tiếng Trung.",
+              "highlight": "那"
+            },
+            {
+              "hanzi": "你是哪国人？",
+              "pinyin": "Nǐ shì nǎ guó rén?",
+              "vi": "Bạn là người nước nào?",
+              "highlight": "哪国人"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 哪儿 và 哪里 đều nghĩa là “ở đâu, chỗ nào”; 哪儿 khẩu ngữ hơn. Từ để hỏi đứng đúng vị trí của thông tin cần hỏi, không đảo lên đầu câu. Trả lời bằng 这儿/这里 (đây) hoặc 那儿/那里 (đó). Ví dụ: 你去哪儿？ (Nǐ qù nǎr?) = Bạn đi đâu? / 图书馆在哪里？ (Túshūguǎn zài nǎlǐ?) = Thư viện ở đâu? / 我在这儿。 (Wǒ zài zhèr.) = Tôi ở đây."
+          "type": "grammar_point",
+          "title": "哪儿 và 哪里",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "哪儿",
+              "vi": "Từ hỏi"
+            }
+          ],
+          "explanation": "哪儿 và 哪里 đều nghĩa là “ở đâu, chỗ nào”; 哪儿 khẩu ngữ hơn. Từ để hỏi đứng đúng vị trí của thông tin cần hỏi, không đảo lên đầu câu. Trả lời bằng 这儿/这里 (đây) hoặc 那儿/那里 (đó).",
+          "examples": [
+            {
+              "hanzi": "你去哪儿？",
+              "pinyin": "Nǐ qù nǎr?",
+              "vi": "Bạn đi đâu?",
+              "highlight": "哪儿"
+            },
+            {
+              "hanzi": "图书馆在哪里？",
+              "pinyin": "Túshūguǎn zài nǎlǐ?",
+              "vi": "Thư viện ở đâu?",
+              "highlight": "哪里"
+            },
+            {
+              "hanzi": "我在这儿。",
+              "pinyin": "Wǒ zài zhèr.",
+              "vi": "Tôi ở đây.",
+              "highlight": "这儿"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 在 + nơi chốn làm vị ngữ, nghĩa là “ở”. Cấu trúc: người/vật + 在 + nơi chốn. Ví dụ: 我在学校。 (Wǒ zài xuéxiào.) = Tôi ở trường. / 我哥哥在国外。 (Wǒ gēge zài guówài.) = Anh trai tôi ở nước ngoài. / 你在哪儿？ (Nǐ zài nǎr?) = Bạn ở đâu?"
+          "type": "grammar_point",
+          "title": "在 + nơi chốn",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "在",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            }
+          ],
+          "explanation": "在 + nơi chốn làm vị ngữ, nghĩa là “ở”. Cấu trúc: người/vật + 在 + nơi chốn.",
+          "examples": [
+            {
+              "hanzi": "我在学校。",
+              "pinyin": "Wǒ zài xuéxiào.",
+              "vi": "Tôi ở trường.",
+              "highlight": "在"
+            },
+            {
+              "hanzi": "我哥哥在国外。",
+              "pinyin": "Wǒ gēge zài guówài.",
+              "vi": "Anh trai tôi ở nước ngoài.",
+              "highlight": "在"
+            },
+            {
+              "hanzi": "你在哪儿？",
+              "pinyin": "Nǐ zài nǎr?",
+              "vi": "Bạn ở đâu?",
+              "highlight": "在"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 住在 + nơi chốn: “sống ở, ở tại”. Cấu trúc: chủ ngữ + 住在 + nơi chốn. Ví dụ: 我住在北京。 (Wǒ zhù zài Běijīng.) = Tôi sống ở Bắc Kinh. / 你住在哪儿？ (Nǐ zhù zài nǎr?) = Bạn sống ở đâu? / 他们也住在北京。 (Tāmen yě zhù zài Běijīng.) = Họ cũng sống ở Bắc Kinh."
+          "type": "grammar_point",
+          "title": "住在 + nơi chốn",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "住在",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            }
+          ],
+          "explanation": "住在 + nơi chốn: “sống ở, ở tại”. Cấu trúc: chủ ngữ + 住在 + nơi chốn.",
+          "examples": [
+            {
+              "hanzi": "我住在北京。",
+              "pinyin": "Wǒ zhù zài Běijīng.",
+              "vi": "Tôi sống ở Bắc Kinh.",
+              "highlight": "住在"
+            },
+            {
+              "hanzi": "你住在哪儿？",
+              "pinyin": "Nǐ zhù zài nǎr?",
+              "vi": "Bạn sống ở đâu?",
+              "highlight": "住在"
+            },
+            {
+              "hanzi": "他们也住在北京。",
+              "pinyin": "Tāmen yě zhù zài Běijīng.",
+              "vi": "Họ cũng sống ở Bắc Kinh.",
+              "highlight": "住在"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 来 (đến, lại đây) và 去 (đi, đến chỗ khác) đứng ngay trước nơi chốn: chủ ngữ + 来/去 + nơi chốn (+ động từ chỉ mục đích). 来 hướng về phía người nói, 去 hướng ra xa người nói. Ví dụ: 我去图书馆。 (Wǒ qù túshūguǎn.) = Tôi đi thư viện. / 他来中国学习中文。 (Tā lái Zhōngguó xuéxí Zhōngwén.) = Anh ấy đến Trung Quốc học tiếng Trung. / 你明天来我家吗？ (Nǐ míngtiān lái wǒ jiā ma?) = Ngày mai bạn đến nhà tôi không?"
+          "type": "grammar_point",
+          "title": "来 (đến, lại đây) và 去 (đi, đến chỗ khác)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "去",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "verb",
+              "zh": "(动词)",
+              "vi": "(Động từ)"
+            }
+          ],
+          "explanation": "来 (đến, lại đây) và 去 (đi, đến chỗ khác) đứng ngay trước nơi chốn: chủ ngữ + 来/去 + nơi chốn (+ động từ chỉ mục đích). 来 hướng về phía người nói, 去 hướng ra xa người nói.",
+          "examples": [
+            {
+              "hanzi": "我去图书馆。",
+              "pinyin": "Wǒ qù túshūguǎn.",
+              "vi": "Tôi đi thư viện.",
+              "highlight": "去"
+            },
+            {
+              "hanzi": "他来中国学习中文。",
+              "pinyin": "Tā lái Zhōngguó xuéxí Zhōngwén.",
+              "vi": "Anh ấy đến Trung Quốc học tiếng Trung.",
+              "highlight": "来"
+            },
+            {
+              "hanzi": "你明天来我家吗？",
+              "pinyin": "Nǐ míngtiān lái wǒ jiā ma?",
+              "vi": "Ngày mai bạn đến nhà tôi không?",
+              "highlight": "来"
+            }
+          ]
         }
       ]
     },
@@ -275,28 +470,45 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你是哪国人？ (Nǐ shì nǎ guó rén?) — A: Bạn là người nước nào?"
-        },
-        {
-          "type": "text",
-          "value": "B: 我是中国人。你呢？ (Wǒ shì Zhōngguó rén. Nǐ ne?) — B: Tôi là người Trung Quốc. Còn bạn?"
-        },
-        {
-          "type": "text",
-          "value": "A: 我是外国人，我来中国学习中文。 (Wǒ shì wàiguó rén, wǒ lái Zhōngguó xuéxí Zhōngwén.) — A: Tôi là người nước ngoài, tôi đến Trung Quốc học tiếng Trung."
-        },
-        {
-          "type": "text",
-          "value": "B: 你住在哪儿？ (Nǐ zhù zài nǎr?) — B: Bạn sống ở đâu?"
-        },
-        {
-          "type": "text",
-          "value": "A: 我住在北京。你现在去哪儿？ (Wǒ zhù zài Běijīng. Nǐ xiànzài qù nǎr?) — A: Tôi sống ở Bắc Kinh. Bây giờ bạn đi đâu?"
-        },
-        {
-          "type": "text",
-          "value": "B: 我去图书馆。图书馆在那儿。 (Wǒ qù túshūguǎn. Túshūguǎn zài nàr.) — B: Tôi đi thư viện. Thư viện ở đằng kia."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你是哪国人？",
+              "pinyin": "Nǐ shì nǎ guó rén?",
+              "vi": "Bạn là người nước nào?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我是中国人。你呢？",
+              "pinyin": "Wǒ shì Zhōngguó rén. Nǐ ne?",
+              "vi": "Tôi là người Trung Quốc. Còn bạn?"
+            },
+            {
+              "speaker": "A",
+              "hanzi": "我是外国人，我来中国学习中文。",
+              "pinyin": "Wǒ shì wàiguó rén, wǒ lái Zhōngguó xuéxí Zhōngwén.",
+              "vi": "Tôi là người nước ngoài, tôi đến Trung Quốc học tiếng Trung."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "你住在哪儿？",
+              "pinyin": "Nǐ zhù zài nǎr?",
+              "vi": "Bạn sống ở đâu?"
+            },
+            {
+              "speaker": "A",
+              "hanzi": "我住在北京。你现在去哪儿？",
+              "pinyin": "Wǒ zhù zài Běijīng. Nǐ xiànzài qù nǎr?",
+              "vi": "Tôi sống ở Bắc Kinh. Bây giờ bạn đi đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我去图书馆。图书馆在那儿。",
+              "pinyin": "Wǒ qù túshūguǎn. Túshūguǎn zài nàr.",
+              "vi": "Tôi đi thư viện. Thư viện ở đằng kia."
+            }
+          ]
         }
       ]
     }

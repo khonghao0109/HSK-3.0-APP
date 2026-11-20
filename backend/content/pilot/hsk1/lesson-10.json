@@ -244,20 +244,192 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Trình tự thời gian + nơi chốn + hành động: trong câu tiếng Hán, trạng ngữ thời gian đứng trước (sau chủ ngữ, hoặc đầu câu), rồi đến nơi chốn (在 + nơi), cuối cùng là động từ. Cấu trúc: chủ ngữ + thời gian + 在 + nơi chốn + động từ. Ví dụ: 我早上七点起床。 (Wǒ zǎoshang qī diǎn qǐchuáng.) = Tôi thức dậy lúc 7 giờ sáng. / 爸爸上午在学校工作。 (Bàba shàngwǔ zài xuéxiào gōngzuò.) = Buổi sáng bố làm việc ở trường. / 我们中午在家吃饭。 (Wǒmen zhōngwǔ zài jiā chīfàn.) = Buổi trưa chúng tôi ăn cơm ở nhà."
+          "type": "grammar_point",
+          "title": "Trình tự thời gian + nơi chốn + hành động",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "key",
+              "zh": "在",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "Trình tự thời gian + nơi chốn + hành động: trong câu tiếng Hán, trạng ngữ thời gian đứng trước (sau chủ ngữ, hoặc đầu câu), rồi đến nơi chốn (在 + nơi), cuối cùng là động từ. Cấu trúc: chủ ngữ + thời gian + 在 + nơi chốn + động từ.",
+          "examples": [
+            {
+              "hanzi": "我早上七点起床。",
+              "pinyin": "Wǒ zǎoshang qī diǎn qǐchuáng.",
+              "vi": "Tôi thức dậy lúc 7 giờ sáng.",
+              "highlight": "早上七点"
+            },
+            {
+              "hanzi": "爸爸上午在学校工作。",
+              "pinyin": "Bàba shàngwǔ zài xuéxiào gōngzuò.",
+              "vi": "Buổi sáng bố làm việc ở trường.",
+              "highlight": "上午在学校"
+            },
+            {
+              "hanzi": "我们中午在家吃饭。",
+              "pinyin": "Wǒmen zhōngwǔ zài jiā chīfàn.",
+              "vi": "Buổi trưa chúng tôi ăn cơm ở nhà.",
+              "highlight": "中午在家"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 常常 + động từ: 常常 (thường, thường xuyên) là phó từ, đứng sau chủ ngữ và trước động từ, không đứng cuối câu. Cấu trúc: chủ ngữ + 常常 + động từ. Ví dụ: 我常常喝茶。 (Wǒ chángcháng hē chá.) = Tôi thường uống trà. / 他晚上常常工作。 (Tā wǎnshang chángcháng gōngzuò.) = Buổi tối anh ấy thường làm việc. / 妈妈常常洗衣服。 (Māma chángcháng xǐ yīfu.) = Mẹ thường giặt quần áo."
+          "type": "grammar_point",
+          "title": "常常 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "常常",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "常常 + động từ: 常常 (thường, thường xuyên) là phó từ, đứng sau chủ ngữ và trước động từ, không đứng cuối câu. Cấu trúc: chủ ngữ + 常常 + động từ.",
+          "examples": [
+            {
+              "hanzi": "我常常喝茶。",
+              "pinyin": "Wǒ chángcháng hē chá.",
+              "vi": "Tôi thường uống trà.",
+              "highlight": "常常"
+            },
+            {
+              "hanzi": "他晚上常常工作。",
+              "pinyin": "Tā wǎnshang chángcháng gōngzuò.",
+              "vi": "Buổi tối anh ấy thường làm việc.",
+              "highlight": "常常"
+            },
+            {
+              "hanzi": "妈妈常常洗衣服。",
+              "pinyin": "Māma chángcháng xǐ yīfu.",
+              "vi": "Mẹ thường giặt quần áo.",
+              "highlight": "常常"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Câu liên động 回家吃饭: hai động từ đi liền nhau theo thứ tự xảy ra, động từ trước chỉ việc đi đâu, động từ sau chỉ mục đích. Cấu trúc: chủ ngữ + 回家/去 + nơi + động từ. Ví dụ: 我中午回家吃饭。 (Wǒ zhōngwǔ huíjiā chīfàn.) = Buổi trưa tôi về nhà ăn cơm. / 他去图书馆学习。 (Tā qù túshūguǎn xuéxí.) = Anh ấy đến thư viện học bài. / 我们回家休息。 (Wǒmen huíjiā xiūxi.) = Chúng tôi về nhà nghỉ ngơi."
+          "type": "grammar_point",
+          "title": "Câu liên động 回家吃饭",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "verb",
+              "zh": "去",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "Câu liên động 回家吃饭: hai động từ đi liền nhau theo thứ tự xảy ra, động từ trước chỉ việc đi đâu, động từ sau chỉ mục đích. Cấu trúc: chủ ngữ + 回家/去 + nơi + động từ.",
+          "examples": [
+            {
+              "hanzi": "我中午回家吃饭。",
+              "pinyin": "Wǒ zhōngwǔ huíjiā chīfàn.",
+              "vi": "Buổi trưa tôi về nhà ăn cơm.",
+              "highlight": "回家吃饭"
+            },
+            {
+              "hanzi": "他去图书馆学习。",
+              "pinyin": "Tā qù túshūguǎn xuéxí.",
+              "vi": "Anh ấy đến thư viện học bài.",
+              "highlight": "去图书馆学习"
+            },
+            {
+              "hanzi": "我们回家休息。",
+              "pinyin": "Wǒmen huíjiā xiūxi.",
+              "vi": "Chúng tôi về nhà nghỉ ngơi.",
+              "highlight": "回家休息"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 在家 + động từ: 在家 (ở nhà) đứng trước động từ để nói hành động diễn ra ở nhà. Cấu trúc: chủ ngữ + 在家 + động từ. Ví dụ: 今天我在家休息。 (Jīntiān wǒ zài jiā xiūxi.) = Hôm nay tôi nghỉ ở nhà. / 奶奶在家吃饭。 (Nǎinai zài jiā chīfàn.) = Bà ăn cơm ở nhà. / 星期天他在家睡觉。 (Xīngqītiān tā zài jiā shuìjiào.) = Chủ nhật anh ấy ngủ ở nhà."
+          "type": "grammar_point",
+          "title": "在家 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "在",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "家",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "在家 + động từ: 在家 (ở nhà) đứng trước động từ để nói hành động diễn ra ở nhà. Cấu trúc: chủ ngữ + 在家 + động từ.",
+          "examples": [
+            {
+              "hanzi": "今天我在家休息。",
+              "pinyin": "Jīntiān wǒ zài jiā xiūxi.",
+              "vi": "Hôm nay tôi nghỉ ở nhà.",
+              "highlight": "在家"
+            },
+            {
+              "hanzi": "奶奶在家吃饭。",
+              "pinyin": "Nǎinai zài jiā chīfàn.",
+              "vi": "Bà ăn cơm ở nhà.",
+              "highlight": "在家"
+            },
+            {
+              "hanzi": "星期天他在家睡觉。",
+              "pinyin": "Xīngqītiān tā zài jiā shuìjiào.",
+              "vi": "Chủ nhật anh ấy ngủ ở nhà.",
+              "highlight": "在家"
+            }
+          ]
         }
       ]
     },
@@ -271,28 +443,106 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你早上几点起床？ B: 我早上六点半起床。 (Nǐ zǎoshang jǐ diǎn qǐchuáng? / Wǒ zǎoshang liù diǎn bàn qǐchuáng.) — A: Buổi sáng bạn dậy lúc mấy giờ? B: Tôi dậy lúc 6 giờ rưỡi sáng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你早上几点起床？",
+              "pinyin": "Nǐ zǎoshang jǐ diǎn qǐchuáng?",
+              "vi": "Buổi sáng bạn dậy lúc mấy giờ?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我早上六点半起床。",
+              "pinyin": "Wǒ zǎoshang liù diǎn bàn qǐchuáng.",
+              "vi": "Tôi dậy lúc 6 giờ rưỡi sáng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你几点上班？ B: 我八点上班，五点下班。 (Nǐ jǐ diǎn shàngbān? / Wǒ bā diǎn shàngbān, wǔ diǎn xiàbān.) — A: Mấy giờ bạn đi làm? B: Tôi đi làm lúc 8 giờ, tan làm lúc 5 giờ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你几点上班？",
+              "pinyin": "Nǐ jǐ diǎn shàngbān?",
+              "vi": "Mấy giờ bạn đi làm?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我八点上班，五点下班。",
+              "pinyin": "Wǒ bā diǎn shàngbān, wǔ diǎn xiàbān.",
+              "vi": "Tôi đi làm lúc 8 giờ, tan làm lúc 5 giờ."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你中午在哪儿吃饭？ B: 我常常回家吃饭。 (Nǐ zhōngwǔ zài nǎr chīfàn? / Wǒ chángcháng huíjiā chīfàn.) — A: Buổi trưa bạn ăn cơm ở đâu? B: Tôi thường về nhà ăn cơm."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你中午在哪儿吃饭？",
+              "pinyin": "Nǐ zhōngwǔ zài nǎr chīfàn?",
+              "vi": "Buổi trưa bạn ăn cơm ở đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我常常回家吃饭。",
+              "pinyin": "Wǒ chángcháng huíjiā chīfàn.",
+              "vi": "Tôi thường về nhà ăn cơm."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你晚上做什么？ B: 我在家休息，也洗衣服。 (Nǐ wǎnshang zuò shénme? / Wǒ zài jiā xiūxi, yě xǐ yīfu.) — A: Buổi tối bạn làm gì? B: Tôi nghỉ ngơi ở nhà, cũng giặt quần áo."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你晚上做什么？",
+              "pinyin": "Nǐ wǎnshang zuò shénme?",
+              "vi": "Buổi tối bạn làm gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我在家休息，也洗衣服。",
+              "pinyin": "Wǒ zài jiā xiūxi, yě xǐ yīfu.",
+              "vi": "Tôi nghỉ ngơi ở nhà, cũng giặt quần áo."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你几点睡觉？ B: 我晚上十一点睡觉。 (Nǐ jǐ diǎn shuìjiào? / Wǒ wǎnshang shíyī diǎn shuìjiào.) — A: Mấy giờ bạn đi ngủ? B: Tôi đi ngủ lúc 11 giờ tối."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你几点睡觉？",
+              "pinyin": "Nǐ jǐ diǎn shuìjiào?",
+              "vi": "Mấy giờ bạn đi ngủ?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我晚上十一点睡觉。",
+              "pinyin": "Wǒ wǎnshang shíyī diǎn shuìjiào.",
+              "vi": "Tôi đi ngủ lúc 11 giờ tối."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 明天是星期天，你有事吗？ B: 没有事，我在家睡觉。 (Míngtiān shì xīngqītiān, nǐ yǒu shì ma? / Méiyǒu shì, wǒ zài jiā shuìjiào.) — A: Mai là chủ nhật, bạn có việc gì không? B: Không có việc gì, tôi ngủ ở nhà."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "明天是星期天，你有事吗？",
+              "pinyin": "Míngtiān shì xīngqītiān, nǐ yǒu shì ma?",
+              "vi": "Mai là chủ nhật, bạn có việc gì không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "没有事，我在家睡觉。",
+              "pinyin": "Méiyǒu shì, wǒ zài jiā shuìjiào.",
+              "vi": "Không có việc gì, tôi ngủ ở nhà."
+            }
+          ]
         }
       ]
     }

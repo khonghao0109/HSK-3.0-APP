@@ -244,24 +244,219 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 吃 (ăn) và 喝 (uống) là ngoại động từ, đứng trước tân ngữ: chủ ngữ + 吃/喝 + danh từ. 吃 dùng với đồ ăn, 喝 dùng với đồ uống. Ví dụ: 我吃米饭。 (Wǒ chī mǐfàn.) = Tôi ăn cơm. / 你喝茶吗？ (Nǐ hē chá ma?) = Bạn uống trà không? / 孩子喝牛奶。 (Háizi hē niúnǎi.) = Đứa trẻ uống sữa bò."
+          "type": "grammar_point",
+          "title": "吃 (ăn) và 喝 (uống)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "吃",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "吃 (ăn) và 喝 (uống) là ngoại động từ, đứng trước tân ngữ: chủ ngữ + 吃/喝 + danh từ. 吃 dùng với đồ ăn, 喝 dùng với đồ uống.",
+          "examples": [
+            {
+              "hanzi": "我吃米饭。",
+              "pinyin": "Wǒ chī mǐfàn.",
+              "vi": "Tôi ăn cơm.",
+              "highlight": "吃"
+            },
+            {
+              "hanzi": "你喝茶吗？",
+              "pinyin": "Nǐ hē chá ma?",
+              "vi": "Bạn uống trà không?",
+              "highlight": "喝"
+            },
+            {
+              "hanzi": "孩子喝牛奶。",
+              "pinyin": "Háizi hē niúnǎi.",
+              "vi": "Đứa trẻ uống sữa bò.",
+              "highlight": "喝"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 喜欢 (thích) + danh từ hoặc cụm động từ: chủ ngữ + 喜欢 + tân ngữ. Ví dụ: 我喜欢水果。 (Wǒ xǐhuan shuǐguǒ.) = Tôi thích hoa quả. / 妈妈喜欢喝茶。 (Māma xǐhuan hē chá.) = Mẹ thích uống trà. / 我不喜欢茶。 (Wǒ bù xǐhuan chá.) = Tôi không thích trà. Phủ định đặt 不 ngay trước 喜欢."
+          "type": "grammar_point",
+          "title": "喜欢 (thích)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "喜欢",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "宾语",
+              "vi": "Tân ngữ"
+            }
+          ],
+          "explanation": "喜欢 (thích) + danh từ hoặc cụm động từ: chủ ngữ + 喜欢 + tân ngữ. Phủ định đặt 不 ngay trước 喜欢.",
+          "examples": [
+            {
+              "hanzi": "我喜欢水果。",
+              "pinyin": "Wǒ xǐhuan shuǐguǒ.",
+              "vi": "Tôi thích hoa quả.",
+              "highlight": "喜欢"
+            },
+            {
+              "hanzi": "妈妈喜欢喝茶。",
+              "pinyin": "Māma xǐhuan hē chá.",
+              "vi": "Mẹ thích uống trà.",
+              "highlight": "喜欢"
+            },
+            {
+              "hanzi": "我不喜欢茶。",
+              "pinyin": "Wǒ bù xǐhuan chá.",
+              "vi": "Tôi không thích trà.",
+              "highlight": "不喜欢"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. Hỏi giá: …多少钱？ (… bao nhiêu tiền?). Trả lời: số đếm + 块 (tệ). Ví dụ: 这个面包多少钱？ (Zhège miànbāo duōshao qián?) = Cái bánh mì này bao nhiêu tiền? / 五块。 (Wǔ kuài.) = Năm tệ. / 牛奶三块。 (Niúnǎi sān kuài.) = Sữa bò ba tệ. Trong khẩu ngữ nhanh, 多少 trong 多少钱 có thể đọc nhẹ thành duōshao."
+          "type": "grammar_point",
+          "title": "Hỏi giá",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "key",
+              "zh": "多少",
+              "vi": "Từ hỏi"
+            },
+            {
+              "role": "other",
+              "zh": "钱",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "Hỏi giá: …多少钱？ (… bao nhiêu tiền?). Trả lời: số đếm + 块 (tệ). Trong khẩu ngữ nhanh, 多少 trong 多少钱 có thể đọc nhẹ thành duōshao.",
+          "examples": [
+            {
+              "hanzi": "这个面包多少钱？",
+              "pinyin": "Zhège miànbāo duōshao qián?",
+              "vi": "Cái bánh mì này bao nhiêu tiền?",
+              "highlight": "多少钱"
+            },
+            {
+              "hanzi": "五块。",
+              "pinyin": "Wǔ kuài.",
+              "vi": "Năm tệ.",
+              "highlight": "五块"
+            },
+            {
+              "hanzi": "牛奶三块。",
+              "pinyin": "Niúnǎi sān kuài.",
+              "vi": "Sữa bò ba tệ.",
+              "highlight": "三块"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 早饭 (bữa sáng), 午饭 (bữa trưa), 晚饭 (bữa tối) là danh từ chỉ bữa ăn; khi làm trạng ngữ thời gian, chúng đứng trước động từ, có thể đứng đầu câu hoặc sau chủ ngữ. Ví dụ: 我早饭吃鸡蛋。 (Wǒ zǎofàn chī jīdàn.) = Bữa sáng tôi ăn trứng gà. / 我们午饭吃米饭。 (Wǒmen wǔfàn chī mǐfàn.) = Bữa trưa chúng tôi ăn cơm. / 晚饭你吃什么？ (Wǎnfàn nǐ chī shénme?) = Bữa tối bạn ăn gì?"
+          "type": "grammar_point",
+          "title": "早饭 (bữa sáng), 午饭 (bữa trưa), 晚饭 (bữa tối)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "(主语)",
+              "vi": "(Chủ ngữ)"
+            },
+            {
+              "role": "key",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "早饭 (bữa sáng), 午饭 (bữa trưa), 晚饭 (bữa tối) là danh từ chỉ bữa ăn; khi làm trạng ngữ thời gian, chúng đứng trước động từ, có thể đứng đầu câu hoặc sau chủ ngữ.",
+          "examples": [
+            {
+              "hanzi": "我早饭吃鸡蛋。",
+              "pinyin": "Wǒ zǎofàn chī jīdàn.",
+              "vi": "Bữa sáng tôi ăn trứng gà.",
+              "highlight": "早饭"
+            },
+            {
+              "hanzi": "我们午饭吃米饭。",
+              "pinyin": "Wǒmen wǔfàn chī mǐfàn.",
+              "vi": "Bữa trưa chúng tôi ăn cơm.",
+              "highlight": "午饭"
+            },
+            {
+              "hanzi": "晚饭你吃什么？",
+              "pinyin": "Wǎnfàn nǐ chī shénme?",
+              "vi": "Bữa tối bạn ăn gì?",
+              "highlight": "晚饭"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 有 (có) và 没有 (không có) + danh từ: chủ ngữ + 有/没有 + danh từ. Ví dụ: 我有钱。 (Wǒ yǒu qián.) = Tôi có tiền. / 我没有钱。 (Wǒ méiyǒu qián.) = Tôi không có tiền. / 商店没有水果。 (Shāngdiàn méiyǒu shuǐguǒ.) = Cửa hàng không có hoa quả. Không dùng 不 đứng một mình trước 有; phủ định của 有 là 没有."
+          "type": "grammar_point",
+          "title": "有 (có) và 没有 (không có)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "(没)",
+              "vi": "(Phó từ phủ định)"
+            },
+            {
+              "role": "key",
+              "zh": "有",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "名词",
+              "vi": "Danh từ"
+            }
+          ],
+          "explanation": "有 (có) và 没有 (không có) + danh từ: chủ ngữ + 有/没有 + danh từ. Không dùng 不 đứng một mình trước 有; phủ định của 有 là 没有.",
+          "examples": [
+            {
+              "hanzi": "我有钱。",
+              "pinyin": "Wǒ yǒu qián.",
+              "vi": "Tôi có tiền.",
+              "highlight": "有"
+            },
+            {
+              "hanzi": "我没有钱。",
+              "pinyin": "Wǒ méiyǒu qián.",
+              "vi": "Tôi không có tiền.",
+              "highlight": "没有"
+            },
+            {
+              "hanzi": "商店没有水果。",
+              "pinyin": "Shāngdiàn méiyǒu shuǐguǒ.",
+              "vi": "Cửa hàng không có hoa quả.",
+              "highlight": "没有"
+            }
+          ]
         }
       ]
     },
@@ -275,24 +470,39 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你吃什么？ (Nǐ chī shénme?) — Bạn ăn gì? / B: 我吃米饭和鸡蛋。 (Wǒ chī mǐfàn hé jīdàn.) — Tôi ăn cơm và trứng gà. / A: 你喝茶吗？ (Nǐ hē chá ma?) — Bạn uống trà không? / B: 不，我喝水。 (Bù, wǒ hē shuǐ.) — Không, tôi uống nước."
-        },
-        {
-          "type": "text",
-          "value": "A: 早饭你吃什么？ (Zǎofàn nǐ chī shénme?) — Bữa sáng bạn ăn gì? / B: 我吃面包，喝牛奶。 (Wǒ chī miànbāo, hē niúnǎi.) — Tôi ăn bánh mì, uống sữa bò. / A: 我也喜欢面包。 (Wǒ yě xǐhuan miànbāo.) — Tôi cũng thích bánh mì."
-        },
-        {
-          "type": "text",
-          "value": "A: 我想买水果。 (Wǒ xiǎng mǎi shuǐguǒ.) — Tôi muốn mua hoa quả. / B: 这些水果很好吃。 (Zhèxiē shuǐguǒ hěn hǎochī.) — Những quả này rất ngon. / A: 多少钱？ (Duōshǎo qián?) — Bao nhiêu tiền? / B: 五块。 (Wǔ kuài.) — Năm tệ."
-        },
-        {
-          "type": "text",
-          "value": "A: 这个商店的面包贵吗？ (Zhège shāngdiàn de miànbāo guì ma?) — Bánh mì của cửa hàng này có đắt không? / B: 不贵。 (Bù guì.) — Không đắt. / A: 我买两个面包。 (Wǒ mǎi liǎng ge miànbāo.) — Tôi mua hai cái bánh mì."
-        },
-        {
-          "type": "text",
-          "value": "A: 晚饭我们在家吃。 (Wǎnfàn wǒmen zài jiā chī.) — Bữa tối chúng tôi ăn ở nhà. / B: 好，我做饭。 (Hǎo, wǒ zuò fàn.) — Được, tôi nấu cơm. (做饭 = 做 + 饭, hai từ HSK1 ghép thành cụm động – tân ngữ nên viết rời “zuò fàn”; cả cụm 做饭 được xếp HSK2 trong từ điển.)"
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你吃什么？",
+              "pinyin": "Nǐ chī shénme?",
+              "vi": "Bạn ăn gì? / B: 我吃米饭和鸡蛋。 (Wǒ chī mǐfàn hé jīdàn.) — Tôi ăn cơm và trứng gà. / A: 你喝茶吗？ (Nǐ hē chá ma?) — Bạn uống trà không? / B: 不，我喝水。 (Bù, wǒ hē shuǐ.) — Không, tôi uống nước."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "早饭你吃什么？",
+              "pinyin": "Zǎofàn nǐ chī shénme?",
+              "vi": "Bữa sáng bạn ăn gì? / B: 我吃面包，喝牛奶。 (Wǒ chī miànbāo, hē niúnǎi.) — Tôi ăn bánh mì, uống sữa bò. / A: 我也喜欢面包。 (Wǒ yě xǐhuan miànbāo.) — Tôi cũng thích bánh mì."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "我想买水果。",
+              "pinyin": "Wǒ xiǎng mǎi shuǐguǒ.",
+              "vi": "Tôi muốn mua hoa quả. / B: 这些水果很好吃。 (Zhèxiē shuǐguǒ hěn hǎochī.) — Những quả này rất ngon. / A: 多少钱？ (Duōshǎo qián?) — Bao nhiêu tiền? / B: 五块。 (Wǔ kuài.) — Năm tệ."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "这个商店的面包贵吗？",
+              "pinyin": "Zhège shāngdiàn de miànbāo guì ma?",
+              "vi": "Bánh mì của cửa hàng này có đắt không? / B: 不贵。 (Bù guì.) — Không đắt. / A: 我买两个面包。 (Wǒ mǎi liǎng ge miànbāo.) — Tôi mua hai cái bánh mì."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "晚饭我们在家吃。",
+              "pinyin": "Wǎnfàn wǒmen zài jiā chī.",
+              "vi": "Bữa tối chúng tôi ăn ở nhà. / B: 好，我做饭。 (Hǎo, wǒ zuò fàn.) — Được, tôi nấu cơm. (做饭 = 做 + 饭, hai từ HSK1 ghép thành cụm động – tân ngữ nên viết rời “zuò fàn”; cả cụm 做饭 được xếp HSK2 trong từ điển.)"
+            }
+          ]
         }
       ]
     }

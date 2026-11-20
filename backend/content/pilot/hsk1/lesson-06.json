@@ -244,24 +244,202 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 不 + động từ/tính từ để phủ định. Cấu trúc: chủ ngữ + 不 + động từ/tính từ. Ví dụ: 我不喝茶。 (Wǒ bù hē chá.) = Tôi không uống trà. / 茶不贵。 (Chá bù guì.) = Trà không đắt. / 他不是老师。 (Tā bù shì lǎoshī.) = Anh ấy không phải giáo viên."
+          "type": "grammar_point",
+          "title": "不 + động từ/tính từ để phủ định",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "不",
+              "vi": "Phó từ phủ định"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            }
+          ],
+          "explanation": "不 + động từ/tính từ để phủ định. Cấu trúc: chủ ngữ + 不 + động từ/tính từ.",
+          "examples": [
+            {
+              "hanzi": "我不喝茶。",
+              "pinyin": "Wǒ bù hē chá.",
+              "vi": "Tôi không uống trà.",
+              "highlight": "不"
+            },
+            {
+              "hanzi": "茶不贵。",
+              "pinyin": "Chá bù guì.",
+              "vi": "Trà không đắt.",
+              "highlight": "不"
+            },
+            {
+              "hanzi": "他不是老师。",
+              "pinyin": "Tā bù shì lǎoshī.",
+              "vi": "Anh ấy không phải giáo viên.",
+              "highlight": "不"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 呢 hỏi lại: sau khi nói về mình, đặt danh từ/đại từ + 呢 để hỏi “còn … thì sao?”. Cấu trúc: … ，你呢？ Ví dụ: 我很好，你呢？ (Wǒ hěn hǎo, nǐ ne?) = Tôi khỏe, còn bạn? / 我是学生，你呢？ (Wǒ shì xuéshēng, nǐ ne?) = Tôi là học sinh, còn bạn?"
+          "type": "grammar_point",
+          "title": "呢 hỏi lại",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "句子",
+              "vi": "Câu"
+            },
+            {
+              "role": "subj",
+              "zh": "你",
+              "vi": "Đại từ"
+            },
+            {
+              "role": "key",
+              "zh": "呢",
+              "vi": "Trợ từ nghi vấn"
+            }
+          ],
+          "explanation": "呢 hỏi lại: sau khi nói về mình, đặt danh từ/đại từ + 呢 để hỏi “còn … thì sao?”. Cấu trúc: … ，你呢？",
+          "examples": [
+            {
+              "hanzi": "我很好，你呢？",
+              "pinyin": "Wǒ hěn hǎo, nǐ ne?",
+              "vi": "Tôi khỏe, còn bạn?",
+              "highlight": "你呢"
+            },
+            {
+              "hanzi": "我是学生，你呢？",
+              "pinyin": "Wǒ shì xuéshēng, nǐ ne?",
+              "vi": "Tôi là học sinh, còn bạn?",
+              "highlight": "你呢"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 请 + động từ: mời hoặc đề nghị lịch sự. Cấu trúc: 请 + động từ (+ tân ngữ). Ví dụ: 请喝茶。 (Qǐng hē chá.) = Mời uống trà. / 请进！ (Qǐngjìn!) = Mời vào! / 请问，你叫什么名字？ (Qǐngwèn, nǐ jiào shénme míngzi?) = Xin hỏi, bạn tên là gì?"
+          "type": "grammar_point",
+          "title": "请 + động từ",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "请",
+              "vi": "Động từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "请 + động từ: mời hoặc đề nghị lịch sự. Cấu trúc: 请 + động từ (+ tân ngữ).",
+          "examples": [
+            {
+              "hanzi": "请喝茶。",
+              "pinyin": "Qǐng hē chá.",
+              "vi": "Mời uống trà.",
+              "highlight": "请"
+            },
+            {
+              "hanzi": "请进！",
+              "pinyin": "Qǐngjìn!",
+              "vi": "Mời vào!",
+              "highlight": "请"
+            },
+            {
+              "hanzi": "请问，你叫什么名字？",
+              "pinyin": "Qǐngwèn, nǐ jiào shénme míngzi?",
+              "vi": "Xin hỏi, bạn tên là gì?",
+              "highlight": "请问"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 们 đứng sau đại từ nhân xưng để chỉ số nhiều: 我们, 你们, 他们, 她们. Ví dụ: 你们好！ (Nǐmen hǎo!) = Chào các bạn! / 他们是学生。 (Tāmen shì xuéshēng.) = Họ là học sinh."
+          "type": "grammar_point",
+          "title": "们 đứng sau đại từ nhân xưng",
+          "formula": [
+            {
+              "role": "other",
+              "zh": "代词",
+              "vi": "Đại từ"
+            },
+            {
+              "role": "key",
+              "zh": "们",
+              "vi": "Hậu tố"
+            }
+          ],
+          "explanation": "们 đứng sau đại từ nhân xưng để chỉ số nhiều: 我们, 你们, 他们, 她们.",
+          "examples": [
+            {
+              "hanzi": "你们好！",
+              "pinyin": "Nǐmen hǎo!",
+              "vi": "Chào các bạn!",
+              "highlight": "你们"
+            },
+            {
+              "hanzi": "他们是学生。",
+              "pinyin": "Tāmen shì xuéshēng.",
+              "vi": "Họ là học sinh.",
+              "highlight": "他们"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "5. 也 (cũng) và 都 (đều) đứng sau chủ ngữ, trước động từ hoặc tính từ. Khi dùng cùng nhau, 也 đứng trước 都. Ví dụ: 我也是学生。 (Wǒ yě shì xuéshēng.) = Tôi cũng là học sinh. / 我们都喜欢汉语。 (Wǒmen dōu xǐhuan Hànyǔ.) = Chúng tôi đều thích tiếng Hán. / 她们也都很好。 (Tāmen yě dōu hěn hǎo.) = Họ cũng đều khỏe."
+          "type": "grammar_point",
+          "title": "也 (cũng) và 都 (đều)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "(也)",
+              "vi": "(Phó từ)"
+            },
+            {
+              "role": "key",
+              "zh": "(都)",
+              "vi": "(Phó từ)"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            }
+          ],
+          "explanation": "也 (cũng) và 都 (đều) đứng sau chủ ngữ, trước động từ hoặc tính từ. Khi dùng cùng nhau, 也 đứng trước 都.",
+          "examples": [
+            {
+              "hanzi": "我也是学生。",
+              "pinyin": "Wǒ yě shì xuéshēng.",
+              "vi": "Tôi cũng là học sinh.",
+              "highlight": "也"
+            },
+            {
+              "hanzi": "我们都喜欢汉语。",
+              "pinyin": "Wǒmen dōu xǐhuan Hànyǔ.",
+              "vi": "Chúng tôi đều thích tiếng Hán.",
+              "highlight": "都"
+            },
+            {
+              "hanzi": "她们也都很好。",
+              "pinyin": "Tāmen yě dōu hěn hǎo.",
+              "vi": "Họ cũng đều khỏe.",
+              "highlight": "也都"
+            }
+          ]
         }
       ]
     },
@@ -275,36 +453,57 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你好！请进！ (Nǐ hǎo! Qǐngjìn!) — A: Chào bạn! Mời vào!"
-        },
-        {
-          "type": "text",
-          "value": "B: 谢谢！ (Xièxie!) — B: Cảm ơn!"
-        },
-        {
-          "type": "text",
-          "value": "A: 不客气。请坐，请喝茶。 (Bùkèqì. Qǐngzuò, qǐng hē chá.) — A: Đừng khách sáo. Mời ngồi, mời uống trà."
-        },
-        {
-          "type": "text",
-          "value": "B: 对不起，我不喝茶。 (Duìbuqǐ, wǒ bù hē chá.) — B: Xin lỗi, tôi không uống trà."
-        },
-        {
-          "type": "text",
-          "value": "A: 没关系。你喝水吗？ (Méiguānxi. Nǐ hē shuǐ ma?) — A: Không sao. Bạn uống nước không?"
-        },
-        {
-          "type": "text",
-          "value": "B: 好，谢谢。你爸爸妈妈好吗？ (Hǎo, xièxie. Nǐ bàba māma hǎo ma?) — B: Được, cảm ơn. Bố mẹ bạn khỏe không?"
-        },
-        {
-          "type": "text",
-          "value": "A: 他们都很好。你呢？ (Tāmen dōu hěn hǎo. Nǐ ne?) — A: Họ đều khỏe. Còn bạn?"
-        },
-        {
-          "type": "text",
-          "value": "B: 我也很好。 (Wǒ yě hěn hǎo.) — B: Tôi cũng khỏe."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你好！请进！",
+              "pinyin": "Nǐ hǎo! Qǐngjìn!",
+              "vi": "Chào bạn! Mời vào!"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "谢谢！",
+              "pinyin": "Xièxie!",
+              "vi": "Cảm ơn!"
+            },
+            {
+              "speaker": "A",
+              "hanzi": "不客气。请坐，请喝茶。",
+              "pinyin": "Bùkèqì. Qǐngzuò, qǐng hē chá.",
+              "vi": "Đừng khách sáo. Mời ngồi, mời uống trà."
+            },
+            {
+              "speaker": "B",
+              "hanzi": "对不起，我不喝茶。",
+              "pinyin": "Duìbuqǐ, wǒ bù hē chá.",
+              "vi": "Xin lỗi, tôi không uống trà."
+            },
+            {
+              "speaker": "A",
+              "hanzi": "没关系。你喝水吗？",
+              "pinyin": "Méiguānxi. Nǐ hē shuǐ ma?",
+              "vi": "Không sao. Bạn uống nước không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "好，谢谢。你爸爸妈妈好吗？",
+              "pinyin": "Hǎo, xièxie. Nǐ bàba māma hǎo ma?",
+              "vi": "Được, cảm ơn. Bố mẹ bạn khỏe không?"
+            },
+            {
+              "speaker": "A",
+              "hanzi": "他们都很好。你呢？",
+              "pinyin": "Tāmen dōu hěn hǎo. Nǐ ne?",
+              "vi": "Họ đều khỏe. Còn bạn?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我也很好。",
+              "pinyin": "Wǒ yě hěn hǎo.",
+              "vi": "Tôi cũng khỏe."
+            }
+          ]
         }
       ]
     }

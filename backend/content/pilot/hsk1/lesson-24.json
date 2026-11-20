@@ -244,20 +244,203 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 一边…一边…: vừa làm việc này vừa làm việc kia (hai hành động cùng lúc). Cấu trúc: Chủ ngữ + 一边 + động từ 1 + 一边 + động từ 2. Ví dụ: 他一边吃饭一边看电视。 (Tā yìbiān chīfàn yìbiān kàn diànshì.) = Anh ấy vừa ăn cơm vừa xem tivi. / 我常一边听歌一边学习。 (Wǒ cháng yìbiān tīng gē yìbiān xuéxí.) = Tôi thường vừa nghe nhạc vừa học. / 她一边唱歌一边笑。 (Tā yìbiān chànggē yìbiān xiào.) = Cô ấy vừa hát vừa cười."
+          "type": "grammar_point",
+          "title": "一边…一边…",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "一边",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "一边",
+              "vi": "Phó từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "vừa làm việc này vừa làm việc kia (hai hành động cùng lúc). Cấu trúc: Chủ ngữ + 一边 + động từ 1 + 一边 + động từ 2.",
+          "examples": [
+            {
+              "hanzi": "他一边吃饭一边看电视。",
+              "pinyin": "Tā yìbiān chīfàn yìbiān kàn diànshì.",
+              "vi": "Anh ấy vừa ăn cơm vừa xem tivi.",
+              "highlight": "一边"
+            },
+            {
+              "hanzi": "我常一边听歌一边学习。",
+              "pinyin": "Wǒ cháng yìbiān tīng gē yìbiān xuéxí.",
+              "vi": "Tôi thường vừa nghe nhạc vừa học.",
+              "highlight": "一边"
+            },
+            {
+              "hanzi": "她一边唱歌一边笑。",
+              "pinyin": "Tā yìbiān chànggē yìbiān xiào.",
+              "vi": "Cô ấy vừa hát vừa cười.",
+              "highlight": "一边"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 上次/下次: lần trước / lần sau, đứng ở đầu câu hoặc ngay sau chủ ngữ, trước động từ. 下次见 là câu chào hẹn gặp lại. Cấu trúc: 上次/下次 + chủ ngữ + động từ, hoặc Chủ ngữ + 上次/下次 + động từ. Ví dụ: 上次我没来。 (Shàngcì wǒ méi lái.) = Lần trước tôi không đến. / 下次我们一起去吧。 (Xiàcì wǒmen yìqǐ qù ba.) = Lần sau chúng ta cùng đi nhé. / 下次见！ (Xiàcì jiàn!) = Hẹn gặp lại lần sau!"
+          "type": "grammar_point",
+          "title": "上次/下次",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "上次",
+              "vi": "Danh từ"
+            },
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            }
+          ],
+          "explanation": "lần trước / lần sau, đứng ở đầu câu hoặc ngay sau chủ ngữ, trước động từ. 下次见 là câu chào hẹn gặp lại. Cấu trúc: 上次/下次 + chủ ngữ + động từ, hoặc Chủ ngữ + 上次/下次 + động từ.",
+          "examples": [
+            {
+              "hanzi": "上次我没来。",
+              "pinyin": "Shàngcì wǒ méi lái.",
+              "vi": "Lần trước tôi không đến.",
+              "highlight": "上次"
+            },
+            {
+              "hanzi": "下次我们一起去吧。",
+              "pinyin": "Xiàcì wǒmen yìqǐ qù ba.",
+              "vi": "Lần sau chúng ta cùng đi nhé.",
+              "highlight": "下次"
+            },
+            {
+              "hanzi": "下次见！",
+              "pinyin": "Xiàcì jiàn!",
+              "vi": "Hẹn gặp lại lần sau!",
+              "highlight": "下次"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 干什么: hỏi “làm gì” (khẩu ngữ, nghĩa như 做什么). Cấu trúc: Chủ ngữ + (thời gian) + 干什么？; Chủ ngữ + 去 + nơi chốn + 干什么？ = đến đó để làm gì? Ví dụ: 你明天干什么？ (Nǐ míngtiān gàn shénme?) = Ngày mai bạn làm gì? / 你在干什么？ (Nǐ zài gàn shénme?) = Bạn đang làm gì? / 你去商店干什么？ (Nǐ qù shāngdiàn gàn shénme?) = Bạn đến cửa hàng làm gì?"
+          "type": "grammar_point",
+          "title": "干什么",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "(时间词)",
+              "vi": "(Thời gian)"
+            },
+            {
+              "role": "verb",
+              "zh": "干",
+              "vi": "Động từ"
+            },
+            {
+              "role": "key",
+              "zh": "什么",
+              "vi": "Từ hỏi"
+            }
+          ],
+          "explanation": "hỏi “làm gì” (khẩu ngữ, nghĩa như 做什么). Cấu trúc: Chủ ngữ + (thời gian) + 干什么？; Chủ ngữ + 去 + nơi chốn + 干什么？ = đến đó để làm gì?",
+          "examples": [
+            {
+              "hanzi": "你明天干什么？",
+              "pinyin": "Nǐ míngtiān gàn shénme?",
+              "vi": "Ngày mai bạn làm gì?",
+              "highlight": "干什么"
+            },
+            {
+              "hanzi": "你在干什么？",
+              "pinyin": "Nǐ zài gàn shénme?",
+              "vi": "Bạn đang làm gì?",
+              "highlight": "干什么"
+            },
+            {
+              "hanzi": "你去商店干什么？",
+              "pinyin": "Nǐ qù shāngdiàn gàn shénme?",
+              "vi": "Bạn đến cửa hàng làm gì?",
+              "highlight": "干什么"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "4. 半天/半年 (khoảng thời gian): từ chỉ khoảng thời gian đứng SAU động từ, trước tân ngữ, khác tiếng Việt. 半天 còn có nghĩa “rất lâu”. Cấu trúc: Chủ ngữ + động từ + 了 + khoảng thời gian (+ tân ngữ). Ví dụ: 我学了半年汉语。 (Wǒ xué le bànnián Hànyǔ.) = Tôi đã học tiếng Trung nửa năm. / 我等了半天。 (Wǒ děng le bàntiān.) = Tôi đã đợi rất lâu. Nếu tân ngữ là đại từ (你, 他…) thì khoảng thời gian đứng sau tân ngữ: 我等了你半天。 (Wǒ děng le nǐ bàntiān.) = Tôi đã đợi bạn rất lâu. / 他在中国住了半年。 (Tā zài Zhōngguó zhù le bànnián.) = Anh ấy đã sống ở Trung Quốc nửa năm."
+          "type": "grammar_point",
+          "title": "半天/半年 (khoảng thời gian)",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "了",
+              "vi": "Trợ từ động thái"
+            },
+            {
+              "role": "key",
+              "zh": "时间词",
+              "vi": "Thời gian"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "từ chỉ khoảng thời gian đứng SAU động từ, trước tân ngữ, khác tiếng Việt. 半天 còn có nghĩa “rất lâu”. Cấu trúc: Chủ ngữ + động từ + 了 + khoảng thời gian (+ tân ngữ). Nếu tân ngữ là đại từ (你, 他…) thì khoảng thời gian đứng sau tân ngữ (xem ví dụ).",
+          "examples": [
+            {
+              "hanzi": "我学了半年汉语。",
+              "pinyin": "Wǒ xué le bànnián Hànyǔ.",
+              "vi": "Tôi đã học tiếng Trung nửa năm.",
+              "highlight": "半年"
+            },
+            {
+              "hanzi": "我等了半天。",
+              "pinyin": "Wǒ děng le bàntiān.",
+              "vi": "Tôi đã đợi rất lâu.",
+              "highlight": "半天"
+            },
+            {
+              "hanzi": "我等了你半天。",
+              "pinyin": "Wǒ děng le nǐ bàntiān.",
+              "vi": "Tôi đã đợi bạn rất lâu.",
+              "highlight": "半天"
+            },
+            {
+              "hanzi": "他在中国住了半年。",
+              "pinyin": "Tā zài Zhōngguó zhù le bànnián.",
+              "vi": "Anh ấy đã sống ở Trung Quốc nửa năm.",
+              "highlight": "半年"
+            }
+          ]
         }
       ]
     },
@@ -271,24 +454,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 星期日你干什么？ B: 我在家上网。 (Xīngqīrì nǐ gàn shénme? / Wǒ zài jiā shàngwǎng.) — A: Chủ nhật bạn làm gì? B: Tôi ở nhà lên mạng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "星期日你干什么？",
+              "pinyin": "Xīngqīrì nǐ gàn shénme?",
+              "vi": "Chủ nhật bạn làm gì?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我在家上网。",
+              "pinyin": "Wǒ zài jiā shàngwǎng.",
+              "vi": "Tôi ở nhà lên mạng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你在网上干什么？ B: 我和网友说话，有时候也看电影。 (Nǐ zài wǎngshang gàn shénme? / Wǒ hé wǎngyǒu shuōhuà, yǒushíhou yě kàn diànyǐng.) — A: Bạn làm gì trên mạng? B: Tôi nói chuyện với bạn trên mạng, có lúc cũng xem phim."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你在网上干什么？",
+              "pinyin": "Nǐ zài wǎngshang gàn shénme?",
+              "vi": "Bạn làm gì trên mạng?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我和网友说话，有时候也看电影。",
+              "pinyin": "Wǒ hé wǎngyǒu shuōhuà, yǒushíhou yě kàn diànyǐng.",
+              "vi": "Tôi nói chuyện với bạn trên mạng, có lúc cũng xem phim."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你今天忙吗？ B: 很忙，我一边工作一边学习。 (Nǐ jīntiān máng ma? / Hěn máng, wǒ yìbiān gōngzuò yìbiān xuéxí.) — A: Hôm nay bạn có bận không? B: Rất bận, tôi vừa làm việc vừa học."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你今天忙吗？",
+              "pinyin": "Nǐ jīntiān máng ma?",
+              "vi": "Hôm nay bạn có bận không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "很忙，我一边工作一边学习。",
+              "pinyin": "Hěn máng, wǒ yìbiān gōngzuò yìbiān xuéxí.",
+              "vi": "Rất bận, tôi vừa làm việc vừa học."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 上次你怎么没来？ B: 对不起，我忘记了，下次我早一点儿来。 (Shàngcì nǐ zěnme méi lái? / Duìbuqǐ, wǒ wàngjì le, xiàcì wǒ zǎo yìdiǎnr lái.) — A: Lần trước sao bạn không đến? B: Xin lỗi, tôi quên mất, lần sau tôi sẽ đến sớm một chút."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "上次你怎么没来？",
+              "pinyin": "Shàngcì nǐ zěnme méi lái?",
+              "vi": "Lần trước sao bạn không đến?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "对不起，我忘记了，下次我早一点儿来。",
+              "pinyin": "Duìbuqǐ, wǒ wàngjì le, xiàcì wǒ zǎo yìdiǎnr lái.",
+              "vi": "Xin lỗi, tôi quên mất, lần sau tôi sẽ đến sớm một chút."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 要我帮你吗？ B: 不用，房间很干净。 (Yào wǒ bāng nǐ ma? / Bú yòng, fángjiān hěn gānjìng.) — A: Có cần tôi giúp không? B: Không cần, phòng rất sạch rồi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "要我帮你吗？",
+              "pinyin": "Yào wǒ bāng nǐ ma?",
+              "vi": "Có cần tôi giúp không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不用，房间很干净。",
+              "pinyin": "Bú yòng, fángjiān hěn gānjìng.",
+              "vi": "Không cần, phòng rất sạch rồi."
+            }
+          ]
         }
       ]
     }

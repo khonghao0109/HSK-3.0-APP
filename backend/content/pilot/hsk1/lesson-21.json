@@ -244,16 +244,145 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. Câu hỏi chính phản: lặp lại động từ hoặc tính từ ở dạng khẳng định + phủ định (A 不 A) để hỏi, không dùng thêm 吗. 不 ở giữa đọc nhẹ (bu). Cấu trúc: Chủ ngữ + A 不 A (+ tân ngữ)？ Ví dụ: 汉字难不难？ (Hànzì nán bu nán?) = Chữ Hán có khó không? / 这个回答对不对？ (Zhège huídá duì bu duì?) = Câu trả lời này có đúng không? / 你去不去教学楼？ (Nǐ qù bu qù jiàoxuélóu?) = Bạn có đi toà giảng đường không?"
+          "type": "grammar_point",
+          "title": "Câu hỏi chính phản",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "不",
+              "vi": "Phó từ phủ định"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "lặp lại động từ hoặc tính từ ở dạng khẳng định + phủ định (A 不 A) để hỏi, không dùng thêm 吗. 不 ở giữa đọc nhẹ (bu). Cấu trúc: Chủ ngữ + A 不 A (+ tân ngữ)？",
+          "examples": [
+            {
+              "hanzi": "汉字难不难？",
+              "pinyin": "Hànzì nán bu nán?",
+              "vi": "Chữ Hán có khó không?",
+              "highlight": "难不难"
+            },
+            {
+              "hanzi": "这个回答对不对？",
+              "pinyin": "Zhège huídá duì bu duì?",
+              "vi": "Câu trả lời này có đúng không?",
+              "highlight": "对不对"
+            },
+            {
+              "hanzi": "你去不去教学楼？",
+              "pinyin": "Nǐ qù bu qù jiàoxuélóu?",
+              "vi": "Bạn có đi toà giảng đường không?",
+              "highlight": "去不去"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 准备 + động từ: chuẩn bị, dự định làm việc gì. 准备 cũng đi được với danh từ: 准备考试 (chuẩn bị cho kỳ thi). Cấu trúc: Chủ ngữ + 准备 + động từ (+ tân ngữ). Ví dụ: 我准备去中国读书。 (Wǒ zhǔnbèi qù Zhōngguó dúshū.) = Tôi chuẩn bị sang Trung Quốc học. / 我们准备开会了。 (Wǒmen zhǔnbèi kāihuì le.) = Chúng tôi chuẩn bị họp rồi. / 他在准备明天的考试。 (Tā zài zhǔnbèi míngtiān de kǎoshì.) = Anh ấy đang chuẩn bị cho kỳ thi ngày mai."
+          "type": "grammar_point",
+          "title": "准备 + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "准备",
+              "vi": "Động từ"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "chuẩn bị, dự định làm việc gì. 准备 cũng đi được với danh từ: 准备考试 (chuẩn bị cho kỳ thi). Cấu trúc: Chủ ngữ + 准备 + động từ (+ tân ngữ).",
+          "examples": [
+            {
+              "hanzi": "我准备去中国读书。",
+              "pinyin": "Wǒ zhǔnbèi qù Zhōngguó dúshū.",
+              "vi": "Tôi chuẩn bị sang Trung Quốc học.",
+              "highlight": "准备"
+            },
+            {
+              "hanzi": "我们准备开会了。",
+              "pinyin": "Wǒmen zhǔnbèi kāihuì le.",
+              "vi": "Chúng tôi chuẩn bị họp rồi.",
+              "highlight": "准备"
+            },
+            {
+              "hanzi": "他在准备明天的考试。",
+              "pinyin": "Tā zài zhǔnbèi míngtiān de kǎoshì.",
+              "vi": "Anh ấy đang chuẩn bị cho kỳ thi ngày mai.",
+              "highlight": "准备"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 对/错 làm vị ngữ: 对 (đúng) và 错 (sai) đứng sau chủ ngữ như tính từ; phủ định của 对 là 不对. 错 còn đứng sau động từ để nói làm sai: 写错, 说错. Cấu trúc: Chủ ngữ + 对/不对/错 (+ 了); Động từ + 错 + 了. Ví dụ: 你的回答对了。 (Nǐ de huídá duì le.) = Câu trả lời của bạn đúng rồi. / 他说的不对。 (Tā shuō de bú duì.) = Điều anh ấy nói không đúng. / 这个字写错了。 (Zhège zì xiěcuò le.) = Chữ này viết sai rồi."
+          "type": "grammar_point",
+          "title": "对/错 làm vị ngữ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "对",
+              "vi": "Tính từ"
+            },
+            {
+              "role": "other",
+              "zh": "(了)",
+              "vi": "(Trợ từ ngữ khí)"
+            }
+          ],
+          "explanation": "对 (đúng) và 错 (sai) đứng sau chủ ngữ như tính từ; phủ định của 对 là 不对. 错 còn đứng sau động từ để nói làm sai: 写错, 说错. Cấu trúc: Chủ ngữ + 对/不对/错 (+ 了); Động từ + 错 + 了.",
+          "examples": [
+            {
+              "hanzi": "你的回答对了。",
+              "pinyin": "Nǐ de huídá duì le.",
+              "vi": "Câu trả lời của bạn đúng rồi.",
+              "highlight": "对"
+            },
+            {
+              "hanzi": "他说的不对。",
+              "pinyin": "Tā shuō de bú duì.",
+              "vi": "Điều anh ấy nói không đúng.",
+              "highlight": "不对"
+            },
+            {
+              "hanzi": "这个字写错了。",
+              "pinyin": "Zhège zì xiěcuò le.",
+              "vi": "Chữ này viết sai rồi.",
+              "highlight": "错"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +396,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 明天听写吗？ B: 听写，我们要听写课文里的汉字。 (Míngtiān tīngxiě ma? / Tīngxiě, wǒmen yào tīngxiě kèwén lǐ de Hànzì.) — A: Ngày mai có nghe viết không? B: Có, chúng ta phải nghe viết chữ Hán trong bài khoá."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "明天听写吗？",
+              "pinyin": "Míngtiān tīngxiě ma?",
+              "vi": "Ngày mai có nghe viết không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "听写，我们要听写课文里的汉字。",
+              "pinyin": "Tīngxiě, wǒmen yào tīngxiě kèwén lǐ de Hànzì.",
+              "vi": "Có, chúng ta phải nghe viết chữ Hán trong bài khoá."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 汉语难不难？ B: 不难，我们的老师很认真。 (Hànyǔ nán bu nán? / Bù nán, wǒmen de lǎoshī hěn rènzhēn.) — A: Tiếng Trung có khó không? B: Không khó, thầy giáo của chúng tôi rất tận tâm."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "汉语难不难？",
+              "pinyin": "Hànyǔ nán bu nán?",
+              "vi": "Tiếng Trung có khó không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不难，我们的老师很认真。",
+              "pinyin": "Bù nán, wǒmen de lǎoshī hěn rènzhēn.",
+              "vi": "Không khó, thầy giáo của chúng tôi rất tận tâm."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 这个回答对不对？ B: 不对，这个字写错了。 (Zhège huídá duì bu duì? / Bú duì, zhège zì xiěcuò le.) — A: Câu trả lời này có đúng không? B: Không đúng, chữ này viết sai rồi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这个回答对不对？",
+              "pinyin": "Zhège huídá duì bu duì?",
+              "vi": "Câu trả lời này có đúng không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不对，这个字写错了。",
+              "pinyin": "Bú duì, zhège zì xiěcuò le.",
+              "vi": "Không đúng, chữ này viết sai rồi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你准备考大学吗？ B: 是，我准备明年考大学。 (Nǐ zhǔnbèi kǎo dàxué ma? / Shì, wǒ zhǔnbèi míngnián kǎo dàxué.) — A: Bạn chuẩn bị thi đại học à? B: Vâng, tôi chuẩn bị sang năm thi đại học."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你准备考大学吗？",
+              "pinyin": "Nǐ zhǔnbèi kǎo dàxué ma?",
+              "vi": "Bạn chuẩn bị thi đại học à?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "是，我准备明年考大学。",
+              "pinyin": "Shì, wǒ zhǔnbèi míngnián kǎo dàxué.",
+              "vi": "Vâng, tôi chuẩn bị sang năm thi đại học."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 老师在教学楼吗？ B: 在，老师们在开会。 (Lǎoshī zài jiàoxuélóu ma? / Zài, lǎoshīmen zài kāihuì.) — A: Thầy giáo có ở toà giảng đường không? B: Có, các thầy cô đang họp."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "老师在教学楼吗？",
+              "pinyin": "Lǎoshī zài jiàoxuélóu ma?",
+              "vi": "Thầy giáo có ở toà giảng đường không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "在，老师们在开会。",
+              "pinyin": "Zài, lǎoshīmen zài kāihuì.",
+              "vi": "Có, các thầy cô đang họp."
+            }
+          ]
         }
       ]
     }

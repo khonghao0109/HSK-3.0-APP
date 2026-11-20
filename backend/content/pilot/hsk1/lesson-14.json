@@ -244,16 +244,155 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "1. 从 A 到 B: “từ A đến B”, dùng cho nơi chốn hoặc thời gian. Cấu trúc: 从 + điểm đầu + 到 + điểm cuối + động từ/tính từ. Ví dụ: 从我家到学校很远。 (Cóng wǒ jiā dào xuéxiào hěn yuǎn.) = Từ nhà tôi đến trường rất xa. / 从这儿到医院怎么走？ (Cóng zhèr dào yīyuàn zěnme zǒu?) = Từ đây đến bệnh viện đi thế nào? / 我从早上到晚上都在工作。 (Wǒ cóng zǎoshang dào wǎnshang dōu zài gōngzuò.) = Tôi làm việc từ sáng đến tối."
+          "type": "grammar_point",
+          "title": "从 A 到 B",
+          "formula": [
+            {
+              "role": "key",
+              "zh": "从",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "key",
+              "zh": "到",
+              "vi": "Giới từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "verb",
+              "zh": "谓语",
+              "vi": "Vị ngữ"
+            }
+          ],
+          "explanation": "“từ A đến B”, dùng cho nơi chốn hoặc thời gian. Cấu trúc: 从 + điểm đầu + 到 + điểm cuối + động từ/tính từ.",
+          "examples": [
+            {
+              "hanzi": "从我家到学校很远。",
+              "pinyin": "Cóng wǒ jiā dào xuéxiào hěn yuǎn.",
+              "vi": "Từ nhà tôi đến trường rất xa.",
+              "highlight": "从"
+            },
+            {
+              "hanzi": "从这儿到医院怎么走？",
+              "pinyin": "Cóng zhèr dào yīyuàn zěnme zǒu?",
+              "vi": "Từ đây đến bệnh viện đi thế nào?",
+              "highlight": "从"
+            },
+            {
+              "hanzi": "我从早上到晚上都在工作。",
+              "pinyin": "Wǒ cóng zǎoshang dào wǎnshang dōu zài gōngzuò.",
+              "vi": "Tôi làm việc từ sáng đến tối.",
+              "highlight": "从"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "2. 去 + nơi chốn + động từ: đi đến đâu để làm gì (câu liên động). Nơi chốn đứng ngay sau 去, việc cần làm đứng sau cùng. Cấu trúc: chủ ngữ + 去 + nơi chốn + động từ (+ tân ngữ). Ví dụ: 我去书店买书。 (Wǒ qù shūdiàn mǎi shū.) = Tôi đến hiệu sách mua sách. / 我们去电影院看电影。 (Wǒmen qù diànyǐngyuàn kàn diànyǐng.) = Chúng tôi đến rạp xem phim. / 他去医院看病。 (Tā qù yīyuàn kànbìng.) = Anh ấy đến bệnh viện khám bệnh."
+          "type": "grammar_point",
+          "title": "去 + nơi chốn + động từ",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "去",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "verb",
+              "zh": "动词",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "(宾语)",
+              "vi": "(Tân ngữ)"
+            }
+          ],
+          "explanation": "đi đến đâu để làm gì (câu liên động). Nơi chốn đứng ngay sau 去, việc cần làm đứng sau cùng. Cấu trúc: chủ ngữ + 去 + nơi chốn + động từ (+ tân ngữ).",
+          "examples": [
+            {
+              "hanzi": "我去书店买书。",
+              "pinyin": "Wǒ qù shūdiàn mǎi shū.",
+              "vi": "Tôi đến hiệu sách mua sách.",
+              "highlight": "去"
+            },
+            {
+              "hanzi": "我们去电影院看电影。",
+              "pinyin": "Wǒmen qù diànyǐngyuàn kàn diànyǐng.",
+              "vi": "Chúng tôi đến rạp xem phim.",
+              "highlight": "去"
+            },
+            {
+              "hanzi": "他去医院看病。",
+              "pinyin": "Tā qù yīyuàn kànbìng.",
+              "vi": "Anh ấy đến bệnh viện khám bệnh.",
+              "highlight": "去"
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "3. 到/回到/来到 + nơi chốn: 到 = đến nơi; 回到 = về lại nơi mình vốn ở (nhà, trường, nước mình); 来到 = đến một nơi (thường là nơi mới). Nói việc đã xảy ra thì thêm 了. Cấu trúc: chủ ngữ + 到/回到/来到 + nơi chốn + 了. Ví dụ: 我到学校了。 (Wǒ dào xuéxiào le.) = Tôi đến trường rồi. / 我回到家了。 (Wǒ huídào jiā le.) = Tôi về đến nhà rồi. / 我们来到了一个新地方。 (Wǒmen láidào le yí ge xīn dìfang.) = Chúng tôi đã đến một nơi mới."
+          "type": "grammar_point",
+          "title": "到/回到/来到 + nơi chốn",
+          "formula": [
+            {
+              "role": "subj",
+              "zh": "主语",
+              "vi": "Chủ ngữ"
+            },
+            {
+              "role": "key",
+              "zh": "到",
+              "vi": "Động từ"
+            },
+            {
+              "role": "other",
+              "zh": "地点词",
+              "vi": "Nơi chốn"
+            },
+            {
+              "role": "other",
+              "zh": "了",
+              "vi": "Trợ từ"
+            }
+          ],
+          "explanation": "到 = đến nơi; 回到 = về lại nơi mình vốn ở (nhà, trường, nước mình); 来到 = đến một nơi (thường là nơi mới). Nói việc đã xảy ra thì thêm 了. Cấu trúc: chủ ngữ + 到/回到/来到 + nơi chốn + 了.",
+          "examples": [
+            {
+              "hanzi": "我到学校了。",
+              "pinyin": "Wǒ dào xuéxiào le.",
+              "vi": "Tôi đến trường rồi.",
+              "highlight": "到"
+            },
+            {
+              "hanzi": "我回到家了。",
+              "pinyin": "Wǒ huídào jiā le.",
+              "vi": "Tôi về đến nhà rồi.",
+              "highlight": "回到"
+            },
+            {
+              "hanzi": "我们来到了一个新地方。",
+              "pinyin": "Wǒmen láidào le yí ge xīn dìfang.",
+              "vi": "Chúng tôi đã đến một nơi mới.",
+              "highlight": "来到"
+            }
+          ]
         }
       ]
     },
@@ -267,24 +406,89 @@
       "isLocked": false,
       "content": [
         {
-          "type": "text",
-          "value": "A: 你去哪儿？ B: 我去商场买东西。 (Nǐ qù nǎr? / Wǒ qù shāngchǎng mǎi dōngxi.) — A: Bạn đi đâu? B: Tôi đến trung tâm thương mại mua đồ."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你去哪儿？",
+              "pinyin": "Nǐ qù nǎr?",
+              "vi": "Bạn đi đâu?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "我去商场买东西。",
+              "pinyin": "Wǒ qù shāngchǎng mǎi dōngxi.",
+              "vi": "Tôi đến trung tâm thương mại mua đồ."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 从这儿到电影院远吗？ B: 不远，我们走路去吧。 (Cóng zhèr dào diànyǐngyuàn yuǎn ma? / Bù yuǎn, wǒmen zǒulù qù ba.) — A: Từ đây đến rạp chiếu phim có xa không? B: Không xa, chúng ta đi bộ đi."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "从这儿到电影院远吗？",
+              "pinyin": "Cóng zhèr dào diànyǐngyuàn yuǎn ma?",
+              "vi": "Từ đây đến rạp chiếu phim có xa không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "不远，我们走路去吧。",
+              "pinyin": "Bù yuǎn, wǒmen zǒulù qù ba.",
+              "vi": "Không xa, chúng ta đi bộ đi."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 这个地方的门票多少钱？ B: 三十块。 (Zhè ge dìfang de ménpiào duōshao qián? / Sānshí kuài.) — A: Vé vào cửa chỗ này bao nhiêu tiền? B: Ba mươi đồng."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "这个地方的门票多少钱？",
+              "pinyin": "Zhè ge dìfang de ménpiào duōshao qián?",
+              "vi": "Vé vào cửa chỗ này bao nhiêu tiền?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "三十块。",
+              "pinyin": "Sānshí kuài.",
+              "vi": "Ba mươi đồng."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 你到医院了吗？ B: 到了，我现在进去。 (Nǐ dào yīyuàn le ma? / Dào le, wǒ xiànzài jìnqù.) — A: Bạn đến bệnh viện chưa? B: Đến rồi, bây giờ tôi vào."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "你到医院了吗？",
+              "pinyin": "Nǐ dào yīyuàn le ma?",
+              "vi": "Bạn đến bệnh viện chưa?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "到了，我现在进去。",
+              "pinyin": "Dào le, wǒ xiànzài jìnqù.",
+              "vi": "Đến rồi, bây giờ tôi vào."
+            }
+          ]
         },
         {
-          "type": "text",
-          "value": "A: 我们有地图吗？ B: 有，你看，书店在这儿。 (Wǒmen yǒu dìtú ma? / Yǒu, nǐ kàn, shūdiàn zài zhèr.) — A: Chúng ta có bản đồ không? B: Có, bạn xem, hiệu sách ở đây."
+          "type": "dialogue",
+          "lines": [
+            {
+              "speaker": "A",
+              "hanzi": "我们有地图吗？",
+              "pinyin": "Wǒmen yǒu dìtú ma?",
+              "vi": "Chúng ta có bản đồ không?"
+            },
+            {
+              "speaker": "B",
+              "hanzi": "有，你看，书店在这儿。",
+              "pinyin": "Yǒu, nǐ kàn, shūdiàn zài zhèr.",
+              "vi": "Có, bạn xem, hiệu sách ở đây."
+            }
+          ]
         }
       ]
     }
