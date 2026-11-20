@@ -171,7 +171,6 @@ test.describe('Listening question (M2.5c)', () => {
     expect((await audioState(page))?.t ?? 9).toBeLessThan(2);
 
     await page.getByRole('radio', { name: '超市' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.locator('.m02-feedback__title')).toHaveText('Chính xác');
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     await expect(page.locator('.ex audio')).toHaveCount(0);
@@ -261,7 +260,6 @@ test.describe('Listening question (M2.5c)', () => {
     await expect(page.locator('.ex-error')).toHaveCount(0);
 
     await page.getByRole('radio', { name: '商店' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.locator('.m02-feedback--wrong')).toBeVisible();
     const api = await playwrightRequest.newContext();
     try {

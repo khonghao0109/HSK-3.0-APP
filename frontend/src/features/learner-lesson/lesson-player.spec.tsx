@@ -108,8 +108,14 @@ function renderPlayer(
   );
 }
 
+// Pha G2a (PO 20/11/2026): arrange_sentence and fill_blank send with
+// Xác nhận; a choice sends itself, and a failed send offers Thử lại.
 function checkButton() {
-  return screen.getByRole('button', { name: 'Kiểm tra' });
+  return screen.getByRole('button', { name: 'Xác nhận' });
+}
+
+function retryButton() {
+  return screen.getByRole('button', { name: 'Thử lại' });
 }
 
 function attemptCalls() {
@@ -154,22 +160,22 @@ describe('LessonPlayer', () => {
     expect(container.querySelector('[style]')).toBeNull();
   });
 
-  it('checks a correct mcq answer and moves focus to Tiếp tục', async () => {
+  it('sends a choice the moment it is made and moves focus to Tiếp tục (PO 20/11, thay Q51)', async () => {
     fetchSpy.mockResolvedValue(attempt(true));
     renderPlayer([mcq, arrange]);
     const group = screen.getByRole('radiogroup', {
       name: 'Chọn từ có nghĩa là siêu thị.',
     });
     expect(group.querySelectorAll('[role="radio"]')).toHaveLength(4);
-    expect(checkButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xác nhận' })).toBeNull();
 
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
     expect(screen.getByRole('radio', { name: '超市' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    expect(checkButton()).not.toHaveAttribute('aria-disabled');
-    fireEvent.click(checkButton());
+    expect(attemptCalls()).toHaveLength(1);
 
     const next = await screen.findByRole('button', { name: 'Tiếp tục' });
     await waitFor(() => expect(next).toHaveFocus());
@@ -205,7 +211,6 @@ describe('LessonPlayer', () => {
     fetchSpy.mockResolvedValue(attempt(false, 'Siêu thị là 超市.'));
     const { container } = renderPlayer([mcq]);
     fireEvent.click(screen.getByRole('radio', { name: '银行' }));
-    fireEvent.click(checkButton());
     await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Tiếp tục' })).toHaveFocus(),
@@ -219,39 +224,49 @@ describe('LessonPlayer', () => {
     expect(screen.getByRole('radio', { name: '超市' })).not.toHaveClass(
       'is-right',
     );
+    // Only Tiếp tục: no retry, no second send (Q50).
+    expect(
+      Array.from(container.querySelectorAll('.ex-foot button')).map(
+        (button) => button.textContent,
+      ),
+    ).toEqual(['Tiếp tục']);
     // Locked after checking: another option cannot be chosen.
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
     expect(screen.getByRole('radio', { name: '超市' })).toHaveAttribute(
       'aria-checked',
       'false',
     );
+    expect(attemptCalls()).toHaveLength(1);
   });
 
   it('hides a null explanation', async () => {
     fetchSpy.mockResolvedValue(attempt(false, null));
     const { container } = renderPlayer([mcq]);
     fireEvent.click(screen.getByRole('radio', { name: '银行' }));
-    fireEvent.click(checkButton());
     await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
     expect(
       container.querySelector('.m02-feedback--wrong .m02-feedback__text'),
     ).toBeNull();
   });
 
-  it('moves the mcq choice with arrow keys and roving tabindex', () => {
+  it('moves focus with arrow keys and roving tabindex without sending (Q51)', () => {
     renderPlayer([mcq]);
     const radios = screen.getAllByRole('radio');
     expect(radios.map((radio) => radio.tabIndex)).toEqual([0, -1, -1, -1]);
     radios[0]?.focus();
     fireEvent.keyDown(radios[0] as HTMLElement, { key: 'ArrowRight' });
-    expect(radios[1]).toHaveAttribute('aria-checked', 'true');
+    expect(radios[1]).toHaveAttribute('aria-checked', 'false');
     expect(radios[1]).toHaveFocus();
     expect(screen.getAllByRole('radio').map((radio) => radio.tabIndex)).toEqual(
       [-1, 0, -1, -1],
     );
     fireEvent.keyDown(radios[1] as HTMLElement, { key: 'ArrowLeft' });
     fireEvent.keyDown(radios[0] as HTMLElement, { key: 'ArrowLeft' });
-    expect(radios[3]).toHaveAttribute('aria-checked', 'true');
+    expect(radios[3]).toHaveFocus();
+    expect(
+      radios.every((radio) => radio.getAttribute('aria-checked') === 'false'),
+    ).toBe(true);
+    expect(attemptCalls()).toHaveLength(0);
   });
 
   it('sends one attempt for a double submit', async () => {
@@ -263,11 +278,17 @@ describe('LessonPlayer', () => {
     );
     renderPlayer([mcq]);
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
-    expect(
-      screen.getByRole('button', { name: 'Đang kiểm tra…' }),
-    ).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Đang kiểm tra…' }));
+    // Locked while the answer is in flight; a second tap sends nothing.
+    expect(screen.getByRole('radio', { name: '超市' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      'Đang chấm…',
+    );
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-busy', 'true');
+    fireEvent.click(screen.getByRole('radio', { name: '超市' }));
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
     expect(attemptCalls()).toHaveLength(1);
     await act(async () => resolve(attempt(true)));
     await screen.findByText('Chính xác');
@@ -286,19 +307,19 @@ describe('LessonPlayer', () => {
       .mockResolvedValueOnce(attempt(true));
     renderPlayer([mcq]);
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
     expect(
       await screen.findByText('Không gửi được câu trả lời. Vui lòng thử lại.', {
         selector: '.ex-error',
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText('x')).toBeNull();
-    fireEvent.click(checkButton());
+    fireEvent.click(retryButton());
     await waitFor(() => expect(attemptCalls()).toHaveLength(2));
     await screen.findByText('Không gửi được câu trả lời. Vui lòng thử lại.', {
       selector: '.ex-error',
     });
-    fireEvent.click(checkButton());
+    // Choosing the same option again resends it too.
+    fireEvent.click(screen.getByRole('radio', { name: '超市' }));
     await screen.findByText('Chính xác');
     const keys = attemptCalls().map(([, init]) =>
       new Headers(init?.headers).get('idempotency-key'),
@@ -314,12 +335,10 @@ describe('LessonPlayer', () => {
       .mockResolvedValueOnce(attempt(true));
     renderPlayer([mcq]);
     fireEvent.click(screen.getByRole('radio', { name: '银行' }));
-    fireEvent.click(checkButton());
     await screen.findByText('Không gửi được câu trả lời. Vui lòng thử lại.', {
       selector: '.ex-error',
     });
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
     await screen.findByText('Chính xác');
     const keys = attemptCalls().map(([, init]) =>
       new Headers(init?.headers).get('idempotency-key'),
@@ -334,7 +353,6 @@ describe('LessonPlayer', () => {
       fetchSpy.mockResolvedValue(ok({ success: false }, status));
       renderPlayer([mcq]);
       fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-      fireEvent.click(checkButton());
       await waitFor(() => expect(replace).toHaveBeenCalledWith('/sign-in'));
     },
   );
@@ -363,7 +381,7 @@ describe('LessonPlayer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Thêm 想' }));
     expect(checkButton()).toHaveAttribute('aria-disabled', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Thêm 买' }));
-    // Every word placed: focus moves on to Kiểm tra.
+    // Every word placed: focus moves on to Xác nhận.
     expect(checkButton()).toHaveFocus();
     expect(checkButton()).not.toHaveAttribute('aria-disabled');
     fireEvent.click(checkButton());
@@ -425,7 +443,7 @@ describe('LessonPlayer', () => {
       }),
     ).toBeInTheDocument();
     expect(container.querySelector('.m02-bar__count')?.textContent).toBe('1/2');
-    expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xác nhận' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(container.querySelector('.m02-bar__count')?.textContent).toBe('2/2');
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -461,11 +479,11 @@ describe('LessonPlayer', () => {
       .mockResolvedValueOnce(attempt(true));
     renderPlayer([mcq], { needsStart: true });
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
     expect(attemptCalls()).toHaveLength(0);
-    expect(
-      screen.getByRole('button', { name: 'Đang kiểm tra…' }),
-    ).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('radio', { name: '超市' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
 
     await act(async () => resolveStart(ok({ success: true })));
     await screen.findByText('Chính xác');
@@ -481,7 +499,6 @@ describe('LessonPlayer', () => {
     fetchSpy.mockResolvedValueOnce(ok({ success: false }, 503));
     renderPlayer([mcq], { needsStart: true });
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
     await screen.findByText('Chưa mở được bài luyện tập. Vui lòng thử lại.', {
       selector: '.ex-error',
     });
@@ -529,7 +546,6 @@ describe('LessonPlayer', () => {
 
     async function answerRight() {
       fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-      fireEvent.click(checkButton());
       await screen.findByText('Chính xác');
     }
 
@@ -685,7 +701,7 @@ describe('LessonPlayer', () => {
         expect(replace).not.toHaveBeenCalled();
         expect(screen.getByRole('region', { name: EMPTY })).toBeInTheDocument();
         expect(screen.queryByRole('progressbar')).toBeNull();
-        expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+        expect(screen.queryByRole('button', { name: 'Xác nhận' })).toBeNull();
         expect(
           screen.getByRole('button', { name: FINISH }),
         ).toBeInTheDocument();
@@ -766,7 +782,8 @@ describe('LessonPlayer', () => {
   // M2.10d (F6): the footer hint "Chọn một đáp án…" only fits kinds where the
   // learner picks an option; arrange/fill have their own guidance.
   describe('footer hint per exercise kind (F6)', () => {
-    const HINT = 'Chọn một đáp án rồi bấm Kiểm tra.';
+    // Pha G2a: a choice sends itself, so the hint no longer names a button.
+    const HINT = 'Chọn một đáp án.';
     const listeningChoice: PlayerExercise = {
       id: 15,
       topicId: null,
@@ -838,8 +855,8 @@ describe('LessonPlayer', () => {
       expect(
         screen.getByRole('heading', { level: 2, name: 'Chọn cặp tương ứng' }),
       ).toBeInTheDocument();
-      // No Kiểm tra: the last pair sends the attempt.
-      expect(screen.queryByRole('button', { name: 'Kiểm tra' })).toBeNull();
+      // No Xác nhận: the last pair sends the attempt.
+      expect(screen.queryByRole('button', { name: 'Xác nhận' })).toBeNull();
       expect(
         within(screen.getByRole('list', { name: 'Nghĩa' }))
           .getAllByRole('button')
@@ -925,7 +942,7 @@ describe('LessonPlayer', () => {
       expect(live()).toBe('Đúng: 妈妈 māma là mẹ. Đã ghép xong cả 3 cặp.');
     });
 
-    it('offers Kiểm tra to resend the same log when the attempt fails', async () => {
+    it('offers Thử lại to resend the same log when the attempt fails', async () => {
       fetchSpy.mockResolvedValueOnce(ok({}, 500));
       fetchSpy.mockResolvedValueOnce(attempt(true));
       renderPlayer([matching]);
@@ -938,7 +955,7 @@ describe('LessonPlayer', () => {
         fireEvent.click(cell('Nghĩa', right));
       }
       await screen.findByRole('alert');
-      fireEvent.click(checkButton());
+      fireEvent.click(retryButton());
       await screen.findByRole('button', { name: 'Tiếp tục' });
       const [first, second] = attemptCalls();
       expect(new Headers(second?.[1]?.headers).get('idempotency-key')).toBe(
@@ -958,7 +975,10 @@ describe('LessonPlayer', () => {
       }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
-    await screen.findByRole('button', { name: 'Kiểm tra' });
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Thử lại' })).toBeNull(),
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
@@ -1019,7 +1039,6 @@ describe('LessonPlayer', () => {
     ).toBe('true');
 
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    fireEvent.click(checkButton());
     await screen.findByRole('button', { name: 'Tiếp tục' });
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
 

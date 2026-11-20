@@ -196,10 +196,10 @@ async function reachListening(page: Page, lessonId: number): Promise<void> {
   for (const word of ['我', '想', '买']) {
     await page.getByRole('button', { name: `Thêm ${word}` }).click();
   }
-  await page.getByRole('button', { name: 'Kiểm tra' }).click();
+  await page.getByRole('button', { name: 'Xác nhận' }).click();
   await page.getByRole('button', { name: 'Tiếp tục' }).click();
   await page.getByLabel('Câu trả lời của bạn').fill('买');
-  await page.getByRole('button', { name: 'Kiểm tra' }).click();
+  await page.getByRole('button', { name: 'Xác nhận' }).click();
   await page.getByRole('button', { name: 'Tiếp tục' }).click();
   await expect(
     page.getByRole('radiogroup', { name: LISTENING_PROMPT }),
@@ -279,7 +279,8 @@ async function pressOn(
   await page.keyboard.press(key);
 }
 
-/** Focus on a radio of the group, then arrows until `name` is checked. */
+/** Focus on a radio of the group, arrows to `name` (moving focus only), then
+    Space chooses it, which sends the answer (Pha G2a). */
 async function chooseRadio(
   page: Page,
   group: Locator,
@@ -307,14 +308,13 @@ async function chooseRadio(
   throw new Error(`radio ${name} not found`);
 }
 
-/** Answers the current choice item with Kiểm tra, then Tiếp tục. */
+/** Answers the current choice item (Space sends it), then Tiếp tục. */
 async function answerChoice(
   page: Page,
   group: Locator,
   name: string | null,
 ): Promise<void> {
   await chooseRadio(page, group, name);
-  await pressOn(page, page.getByRole('button', { name: 'Kiểm tra' }));
   const next = page.getByRole('button', { name: 'Tiếp tục' });
   await expect(next).toBeFocused();
   await page.keyboard.press('Enter');
@@ -559,13 +559,11 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(mcq).toBeVisible();
     await audit(page, 'practice mcq', TITLES.practice);
     await mcq.getByRole('radio', { name: 'Hello' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
     await audit(page, 'practice right', TITLES.practice);
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
     for (let item = 1; item < total; item += 1) {
       await page.getByRole('radio').first().click();
-      await page.getByRole('button', { name: 'Kiểm tra' }).click();
       await page.getByRole('button', { name: 'Tiếp tục' }).click();
     }
     await expect(page).toHaveURL(/\/complete$/u);
@@ -575,7 +573,6 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await registerReadyLearner(page, baseURL);
     await page.goto(`/learn/lessons/${hsk1Lesson}/practice`);
     await mcq.getByRole('radio', { name: 'Thank you' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.getByText('Chưa đúng', { exact: true })).toBeVisible();
     await audit(page, 'practice wrong', TITLES.practice);
 
@@ -595,11 +592,10 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await audit(page, 'practice start 503', TITLES.practice);
     await page.unroute('**/api/learner/lessons/*/start');
     await page.getByRole('button', { name: 'Thử lại' }).click();
-    await expect(page.getByRole('button', { name: 'Kiểm tra' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Thử lại' })).toHaveCount(0);
 
     await fail(page, '**/api/learner/exercises/*/attempts');
     await page.getByRole('radio', { name: 'Hello' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expectAlert(page, 'Không gửi được câu trả lời. Vui lòng thử lại.');
     await audit(page, 'practice submit 503', TITLES.practice);
     await page.unroute('**/api/learner/exercises/*/attempts');
@@ -607,8 +603,9 @@ test.describe('Learner accessibility (M2.7e)', () => {
     const total = await exerciseCount(hsk1Lesson);
     await fail(page, '**/api/learner/lessons/*/complete');
     for (let item = 0; item < total; item += 1) {
+      // The first item resends its failed answer with Thử lại.
       if (item > 0) await page.getByRole('radio').first().click();
-      await page.getByRole('button', { name: 'Kiểm tra' }).click();
+      else await page.getByRole('button', { name: 'Thử lại' }).click();
       await page.getByRole('button', { name: 'Tiếp tục' }).click();
     }
     await expectAlert(page, 'Chưa lưu được kết quả bài học. Vui lòng thử lại.');
@@ -726,10 +723,9 @@ test.describe('Learner accessibility (M2.7e)', () => {
     await expect(page).toHaveURL(/\/learn$/u);
 
     await page.goto(`/learn/lessons/${hsk1Lesson}/practice`);
-    await expect(page.getByRole('button', { name: 'Kiểm tra' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Hello' })).toBeVisible();
     await slow(page, '**/api/learner/exercises/*/attempts');
     await page.getByRole('radio', { name: 'Hello' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expectBusy(page, 'practice');
     await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
@@ -771,13 +767,13 @@ test.describe('Learner accessibility (M2.7e)', () => {
 
     await page.goto(`/learn/lessons/${hsk1Lesson}/practice`);
     const hello = page.getByRole('radio', { name: 'Hello' });
-    await hello.click();
+    await expect(hello).toBeVisible();
     await context.setOffline(true);
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
+    await hello.click();
     await expectAlert(page, 'Không gửi được câu trả lời. Vui lòng thử lại.');
     await expect(hello).toHaveAttribute('aria-checked', 'true');
     await context.setOffline(false);
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
+    await page.getByRole('button', { name: 'Thử lại' }).click();
     await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
 
     await page.goto('/learn/dictionary');
@@ -854,7 +850,6 @@ test.describe('Learner accessibility (M2.7e)', () => {
         expect.soft(await longest(), path).toEqual([]);
       }
       await page.getByRole('radio', { name: 'Hello' }).click();
-      await page.getByRole('button', { name: 'Kiểm tra' }).click();
       await expect(page.getByText('Chính xác', { exact: true })).toBeVisible();
       expect.soft(await longest(), 'practice feedback').toEqual([]);
       await page.context().clearCookies();
@@ -985,7 +980,7 @@ test.describe('Learner accessibility (M2.7e)', () => {
     for (const part of ['我', '想', '买']) {
       await pressOn(page, page.getByRole('button', { name: `Thêm ${part}` }));
     }
-    await pressOn(page, page.getByRole('button', { name: 'Kiểm tra' }));
+    await pressOn(page, page.getByRole('button', { name: 'Xác nhận' }));
     await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeFocused();
     await page.keyboard.press('Enter');
 

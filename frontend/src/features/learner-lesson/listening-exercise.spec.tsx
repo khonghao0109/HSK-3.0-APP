@@ -332,10 +332,8 @@ describe('ListeningExercise (M2.5c)', () => {
   it('answers without listening first (Q57) and stops on unmount', async () => {
     const { container, unmount } = renderListening();
     await settle();
+    // Pha G2a: choosing sends the answer; there is no Kiểm tra.
     fireEvent.click(screen.getByRole('radio', { name: '超市' }));
-    const check = screen.getByRole('button', { name: 'Kiểm tra' });
-    expect(check.getAttribute('aria-disabled')).toBeNull();
-    fireEvent.click(check);
     await settle();
     const attempt = fetchSpy.mock.calls.find(([url]) =>
       String(url).includes('/attempts'),

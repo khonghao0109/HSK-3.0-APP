@@ -42,6 +42,7 @@ export const PLAYER_MESSAGES = {
   submitFailed: 'Không gửi được câu trả lời. Vui lòng thử lại.',
   startFailed: 'Chưa mở được bài luyện tập. Vui lòng thử lại.',
   finishing: 'Đang lưu kết quả bài học…',
+  grading: 'Đang chấm…',
   finishFailed: 'Chưa lưu được kết quả bài học. Vui lòng thử lại.',
   matchingCorrectText: (pairs: number) => `Bạn đã ghép đúng cả ${pairs} cặp.`,
   matchingDoneTitle: (mistakes: number) => `Hoàn thành · Sai ${mistakes} lần`,
@@ -69,6 +70,11 @@ export function ChoiceText({ text }: { text: string }) {
   ) : (
     <span>{text}</span>
   );
+}
+
+/** Whole seconds since `start`, kept within the attempt contract (0–86 400). */
+function secondsSince(start: number): number {
+  return Math.min(86_400, Math.max(0, Math.round((Date.now() - start) / 1000)));
 }
 
 function readResult(body: unknown): Result | null {
@@ -139,6 +145,8 @@ export function LessonPlayer({
   // lesson-player turn. It lives here because ListeningExercise is keyed by
   // exercise id; leaving the page resets it to 1×.
   const [listeningSpeed, setListeningSpeed] = useState<ListeningSpeed>('1');
+  // Pha G2a: the option the arrow keys moved to (roving tabindex only).
+  const [rovingId, setRovingId] = useState<string | null>(null);
 
   const submittingRef = useRef(false);
   const pendingRef = useRef<Pending | null>(null);
@@ -346,10 +354,7 @@ export function LessonPlayer({
         exerciseId: current.id,
         answer: serialized,
         key: newAttemptKey(),
-        durationSeconds: Math.min(
-          86_400,
-          Math.max(0, Math.round((Date.now() - shownAtRef.current) / 1000)),
-        ),
+        durationSeconds: secondsSince(shownAtRef.current),
       };
       pendingRef.current = pending;
     }
@@ -403,23 +408,29 @@ export function LessonPlayer({
     pendingRef.current = null;
     setIndex((value) => value + 1);
     setInput(EMPTY_INPUT);
+    setRovingId(null);
     setResult(null);
     setError(null);
   };
 
-  const selectOption = useCallback(
-    (optionId: string) => {
-      if (locked) return;
-      setInput((value) => ({ ...value, optionId }));
-    },
-    [locked],
-  );
   const choices =
     current?.kind === 'mcq' || current?.kind === 'listening'
       ? current.options
       : [];
+  // Pha G2a (PO 20/11/2026, thay Q51/N4): choosing sends the answer at once;
+  // the server still grades it. Choosing it again after a failed send resends
+  // it with the same key.
+  const chooseOption = (optionId: string) => {
+    // The ref also stops a second click in the same tick, before `locked`.
+    if (locked || submittingRef.current || !current) return;
+    setRovingId(optionId);
+    setInput((value) => ({ ...value, optionId }));
+    void submit(buildAnswer(current, { ...input, optionId }));
+  };
   const optionIds = choices.map((option) => option.id);
-  const radio = useRadioGroup({ items: optionIds, onChange: selectOption });
+  // Arrows only move focus; Enter and Space click the focused option.
+  const radio = useRadioGroup({ items: optionIds, onChange: setRovingId });
+  const tabStop = rovingId ?? input.optionId ?? optionIds[0];
 
   const addToken = (id: string) => {
     if (locked || input.tokenIds.includes(id)) return;
@@ -458,11 +469,15 @@ export function LessonPlayer({
   };
 
   const options = choices.length > 0 && (
-    <div className="ls-options" role="radiogroup" aria-labelledby="ex-q">
+    <div
+      className="ls-options"
+      role="radiogroup"
+      aria-labelledby="ex-q"
+      aria-busy={submitting || undefined}
+    >
       {choices.map((option, optionIndex) => {
         const checked = input.optionId === option.id;
-        const focusable =
-          checked || (input.optionId === null && optionIndex === 0);
+        const focusable = option.id === tabStop;
         const mark = result && checked;
         const className = [
           'ls-opt',
@@ -479,7 +494,7 @@ export function LessonPlayer({
             aria-checked={checked}
             aria-disabled={locked ? 'true' : undefined}
             tabIndex={focusable ? 0 : -1}
-            onClick={() => selectOption(option.id)}
+            onClick={() => chooseOption(option.id)}
             onKeyDown={(event) => radio.handleKeyDown(event, optionIndex)}
           >
             <ChoiceText text={option.text} />
@@ -503,13 +518,19 @@ export function LessonPlayer({
     current?.kind === 'matching'
       ? PLAYER_MESSAGES.matchingDoneTitle(matchingMistakes)
       : PLAYER_MESSAGES.wrongTitle;
+  const sendsItself =
+    current?.kind === 'mcq' ||
+    current?.kind === 'listening' ||
+    current?.kind === 'matching';
   const announcement = result
     ? result.correct
       ? `${PLAYER_MESSAGES.correctTitle}. ${correctText}`
       : [wrongTitle, result.explanation].filter(Boolean).join('. ')
     : completion === 'busy'
       ? PLAYER_MESSAGES.finishing
-      : '';
+      : submitting && choices.length > 0
+        ? PLAYER_MESSAGES.grading
+        : '';
   const done = index >= total;
   const shown = done ? total : index + 1;
   const answeredCount = done ? total : index + (result ? 1 : 0);
@@ -740,9 +761,7 @@ export function LessonPlayer({
               !error &&
               !startFailed &&
               (current?.kind === 'mcq' || current?.kind === 'listening') && (
-                <p className="pq-foot__hint w-only">
-                  Chọn một đáp án rồi bấm Kiểm tra.
-                </p>
+                <p className="pq-foot__hint w-only">Chọn một đáp án.</p>
               )}
             {result?.correct === true && (
               <div className="m02-feedback">
@@ -809,25 +828,25 @@ export function LessonPlayer({
               </p>
             )}
           </div>
-          {/* One node for Kiểm tra and Thử lại, so focus survives the swap.
-              Matching sends itself; Kiểm tra only resends a failed log. */}
-          {!result &&
-            (current?.kind !== 'matching' || error || startFailed) && (
-              <button
-                className="ex-check"
-                type="button"
-                ref={checkRef}
-                aria-disabled={startFailed || canCheck ? undefined : 'true'}
-                aria-busy={submitting || undefined}
-                onClick={startFailed ? retryStart : () => void submit()}
-              >
-                {startFailed
-                  ? 'Thử lại'
-                  : submitting
-                    ? 'Đang kiểm tra…'
-                    : 'Kiểm tra'}
-              </button>
-            )}
+          {/* One node for Xác nhận and Thử lại, so focus survives the swap.
+              A choice and a matching log send themselves; for them the
+              button only resends a failed answer (Pha G2a). */}
+          {!result && (!sendsItself || error || startFailed) && (
+            <button
+              className="ex-check"
+              type="button"
+              ref={checkRef}
+              aria-disabled={startFailed || canCheck ? undefined : 'true'}
+              aria-busy={submitting || undefined}
+              onClick={startFailed ? retryStart : () => void submit()}
+            >
+              {startFailed || (sendsItself && !submitting)
+                ? 'Thử lại'
+                : submitting
+                  ? 'Đang kiểm tra…'
+                  : 'Xác nhận'}
+            </button>
+          )}
         </footer>
       )}
     </div>
