@@ -90,6 +90,11 @@ const SYNTHETIC_REFERENCE_ERROR_CODES: readonly PilotContentErrorCode[] = [
   'word_level_mismatch',
 ];
 
+/** Mã lỗi hình dạng block `grammar_point`/`dialogue`, kiểm trong describe riêng bên dưới. */
+const BLOCK_SHAPE_ERROR_CODES: readonly PilotContentErrorCode[] = [
+  'block_field_invalid',
+];
+
 function readJson(filePath: string): unknown {
   return JSON.parse(readFileSync(filePath, 'utf8')) as unknown;
 }
@@ -588,6 +593,7 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
       ...fixtureCodes,
       ...CROSS_FILE_ERROR_CODES,
       ...SYNTHETIC_REFERENCE_ERROR_CODES,
+      ...BLOCK_SHAPE_ERROR_CODES,
     ]);
     const missing = PILOT_CONTENT_ERROR_CODES.filter(
       (code) => !covered.has(code),
@@ -727,6 +733,77 @@ describe('Nội dung pilot HSK1 (TL-223)', () => {
     expect(PILOT_CONTENT_LIMITS.maxDepth).toBe(8);
     expect(PILOT_CONTENT_LIMITS.maxStringLength).toBe(4096);
     expect(PILOT_CONTENT_LIMITS.minMcqOptions).toBe(4);
+  });
+});
+
+describe('block grammar_point / dialogue trong topic pilot', () => {
+  const refs = loadPilotReferenceData(BACKEND_ROOT);
+  const base = readJson(join(CONTENT_DIR, 'lesson-01.json'));
+  const grammarPoint = {
+    type: 'grammar_point',
+    title: 'Câu khẳng định với 是',
+    formula: [
+      { role: 'subj', zh: '我', vi: 'tôi' },
+      { role: 'key', zh: '是', vi: 'là' },
+    ],
+    explanation: 'Chủ ngữ + 是 + danh từ.',
+    examples: [
+      {
+        hanzi: '我是学生。',
+        pinyin: 'Wǒ shì xuésheng.',
+        vi: 'Tôi là học sinh.',
+        highlight: '是',
+      },
+    ],
+  };
+  const dialogue = {
+    type: 'dialogue',
+    lines: [
+      { speaker: 'A', hanzi: '你好！', pinyin: 'Nǐ hǎo!', vi: 'Xin chào!' },
+    ],
+  };
+
+  /** Thêm block vào topic có type cho trước của bài 1 rồi validate. */
+  function issuesWith(topicType: string, block: unknown): PilotContentIssue[] {
+    const lesson = structuredClone(base);
+    const topics = readPath(lesson, 'topics');
+    if (!Array.isArray(topics)) throw new Error('thiếu topics');
+    const index = topics.findIndex(
+      (topic) => isRecord(topic) && topic.type === topicType,
+    );
+    const content = readPath(lesson, `topics[${index}].content`);
+    if (!Array.isArray(content)) throw new Error('thiếu content');
+    content.push(block);
+    return validatePilotLesson(lesson, 'lesson-01.json', refs);
+  }
+
+  it('nhận grammar_point hợp lệ trong topic grammar', () => {
+    expect(issuesWith('grammar', grammarPoint)).toEqual([]);
+  });
+
+  it('từ chối grammar_point trong topic vocabulary', () => {
+    expect(codesOf(issuesWith('vocabulary', grammarPoint))).toEqual([
+      'block_type_unsupported',
+    ]);
+  });
+
+  it('nhận dialogue hợp lệ trong topic key_text', () => {
+    expect(issuesWith('key_text', dialogue)).toEqual([]);
+  });
+
+  it('từ chối grammar_point / dialogue sai hình dạng', () => {
+    const malformed = issuesWith('grammar', {
+      ...grammarPoint,
+      formula: [{ role: 'noun', zh: '是', vi: 'là' }],
+      extra: true,
+    });
+    expect(malformed.map((issue) => [issue.code, issue.path])).toEqual([
+      ['block_unknown_field', 'topics[1].content[5].extra'],
+      ['block_field_invalid', 'topics[1].content[5].formula[0].role'],
+    ]);
+    expect(
+      codesOf(issuesWith('key_text', { type: 'dialogue', lines: [] })),
+    ).toEqual(['block_field_invalid']);
   });
 });
 

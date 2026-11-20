@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
+import {
+  type TopicContentIssueCode,
+  validateTopicContentBlocks,
+} from '../../common/validation/topic-content-blocks';
+
 /**
  * TL-223: validator dùng chung cho nội dung pilot HSK1.
  *
@@ -93,6 +98,7 @@ export const PILOT_CONTENT_ERROR_CODES = [
   'block_invalid',
   'block_type_unsupported',
   'block_unknown_field',
+  'block_field_invalid',
   'exercises_missing',
   'exercises_count',
   'exercise_invalid',
@@ -567,6 +573,16 @@ function validateWords(
   return words;
 }
 
+const SHARED_BLOCK_ISSUE_CODES: Readonly<
+  Record<TopicContentIssueCode, PilotContentErrorCode>
+> = {
+  topic_block_type_mismatch: 'block_type_unsupported',
+  topic_block_unknown_field: 'block_unknown_field',
+  topic_block_field_invalid: 'block_field_invalid',
+  topic_block_array_size: 'block_field_invalid',
+  topic_block_highlight_not_in_hanzi: 'block_field_invalid',
+};
+
 function validateTopics(
   issues: PilotContentIssue[],
   lesson: Record<string, unknown>,
@@ -684,6 +700,19 @@ function validateTopics(
       );
       continue;
     }
+    // grammar_point (topic grammar) / dialogue (topic key_text): luật chung với CMS.
+    for (const issue of validateTopicContentBlocks(
+      String(topic.type),
+      topic.content,
+    )) {
+      issues.push(
+        createIssue(
+          SHARED_BLOCK_ISSUE_CODES[issue.code],
+          `${at}.${issue.path}`,
+          issue.code,
+        ),
+      );
+    }
     for (const [blockIndex, block] of topic.content.entries()) {
       const blockPath = `${at}.content[${blockIndex}]`;
       if (!isRecord(block)) {
@@ -692,7 +721,8 @@ function validateTopics(
         );
         continue;
       }
-      // Q175/K-A: chỉ `text` và `vocabulary_list`, value là string.
+      if (block.type === 'grammar_point' || block.type === 'dialogue') continue;
+      // Q175/K-A: ngoài 2 block trên chỉ `text` và `vocabulary_list`, value là string.
       if (block.type !== 'text' && block.type !== 'vocabulary_list') {
         issues.push(
           createIssue(

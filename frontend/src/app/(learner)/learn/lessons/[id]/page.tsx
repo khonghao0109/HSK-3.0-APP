@@ -298,9 +298,10 @@ function UnitRow({
     );
   }
   // Pha B debt 5b: a disabled link, so the row's name (with "Mở khi xong
-  // các đơn vị trên") reaches screen readers.
+  // các đơn vị trên") reaches screen readers; Pha C debt 3c: in the Tab
+  // order, so keyboard users hear it too.
   return (
-    <div className={className} role="link" aria-disabled="true">
+    <div className={className} role="link" aria-disabled="true" tabIndex={0}>
       {content}
     </div>
   );

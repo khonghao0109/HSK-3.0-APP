@@ -209,6 +209,29 @@ describe('VocabularyUnitFlow (N3, N4, N8)', () => {
     );
   });
 
+  // Pha C debt 3a: leaving before the topic is saved showed the unit as
+  // not done on the units screen.
+  it('keeps Về bài and Đơn vị tiếp closed while the progress is saving', async () => {
+    fetchMock.mockReturnValue(new Promise<Response>(() => {}));
+    renderFlow();
+    next();
+    next();
+    fireEvent.click(screen.getByRole('radio', { name: 'nhà; gia đình' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+    next();
+    fireEvent.click(screen.getByRole('radio', { name: 'có' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+    });
+    for (const name of ['Về bài', 'Đơn vị tiếp']) {
+      const link = screen.getByRole('link', { name });
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+      expect(fireEvent.click(link)).toBe(false);
+    }
+  });
+
   it('saves every word of the unit for review from the result (N3)', async () => {
     renderFlow(null);
     next();

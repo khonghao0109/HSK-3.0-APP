@@ -170,6 +170,61 @@ describe('lesson topic pages (M2.5f, Q175)', () => {
     expect(screen.queryByRole('list')).toBeNull();
   });
 
+  it('shows grammar point cards and dialogues read-only on the old grammar page (Pha D, TL 6)', async () => {
+    vi.mocked(getLessonTopicActivity).mockResolvedValue({
+      ...activity,
+      topics: [
+        {
+          ...activity.topics[2]!,
+          content: [
+            {
+              type: 'grammar_point',
+              title: 'Câu với 是',
+              formula: [{ role: 'subj', zh: '主语', vi: 'Chủ ngữ' }],
+              explanation: 'Chủ ngữ + 是 + danh từ.',
+              examples: [
+                {
+                  hanzi: '我是学生。',
+                  pinyin: 'Wǒ shì xuésheng.',
+                  vi: 'Tôi là học sinh.',
+                  highlight: '是',
+                },
+              ],
+            },
+            // Saved before the CMS rule: skipped, the page still renders.
+            { type: 'grammar_point', title: 'Hỏng' },
+          ],
+        },
+        {
+          ...activity.topics[0]!,
+          content: [
+            {
+              type: 'dialogue',
+              lines: [
+                {
+                  speaker: 'An',
+                  hanzi: '你好！',
+                  pinyin: 'Nǐ hǎo!',
+                  vi: 'Chào bạn!',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const { container } = renderPage(
+      await LessonGrammarPage({ params: Promise.resolve({ id: '5' }) }),
+    );
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Câu với 是' }),
+    ).toBeInTheDocument();
+    expect(container.querySelector('mark.lu-hl')?.textContent).toBe('是');
+    expect(screen.queryByText('Hỏng')).toBeNull();
+    expect(screen.getByLabelText('An').textContent).toBe('A');
+    expect(screen.getByText('Chào bạn!')).toBeInTheDocument();
+  });
+
   it('sends a locked lesson back to the lesson page (Q40)', async () => {
     vi.mocked(getLessonTopicActivity).mockResolvedValue({
       ...activity,

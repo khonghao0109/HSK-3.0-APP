@@ -118,6 +118,7 @@ export class LessonActivityExerciseDto {
   latestAttempt!: LessonActivityAttemptDto | null;
 }
 
+@PinSwaggerEnumOrder('type', Object.values(TopicType))
 export class LessonActivityTopicDto {
   id!: number;
   title!: string;

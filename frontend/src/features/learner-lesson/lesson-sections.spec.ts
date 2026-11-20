@@ -263,10 +263,14 @@ describe('lessonUnits', () => {
     expect(units.map((unit) => unit.kind)).toEqual(['vocabulary']);
   });
 
-  it('opens a vocabulary unit in its own step flow, the others on their page (N3)', () => {
+  it('opens each topic unit in its own screen, Kiểm tra in the player (N3, Pha D)', () => {
     const units = lessonUnits(
       {
-        topics: [topic(7, 'vocabulary'), topic(8, 'grammar')],
+        topics: [
+          topic(7, 'vocabulary'),
+          topic(8, 'grammar'),
+          topic(9, 'key_text'),
+        ],
         standaloneExercises: [{ latestAttempt: null }],
         words: [],
       },
@@ -274,7 +278,8 @@ describe('lessonUnits', () => {
     );
     expect(units.map((unit) => unitHref(12, unit))).toEqual([
       '/learn/lessons/12/vocabulary?unit=7',
-      '/learn/lessons/12/grammar',
+      '/learn/lessons/12/grammar?unit=8',
+      '/learn/lessons/12/grammar?unit=9',
       '/learn/lessons/12/practice',
     ]);
   });

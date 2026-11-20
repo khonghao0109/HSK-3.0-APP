@@ -679,3 +679,222 @@
     margin-top: var(--sp-10);
   }
 }
+
+/* Pha D: mẫu grammar-point (thẻ điểm ngữ pháp) và key-text (hội thoại), cũng
+   dùng read-only trên trang Ngữ pháp cũ (`.topic-card__block`). */
+.learner-app .lu-card > .lu-sub {
+  margin: 0 0 var(--sp-4);
+}
+
+.learner-app .lu-card .uxa-h2,
+.learner-app .topic-card__block .uxa-h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-card .uxa-h2:focus {
+  outline: none;
+}
+
+.learner-app .lu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .lu-chip {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+}
+
+.learner-app .lu-chip span {
+  font-family: var(--font-cn);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.learner-app .lu-chip small {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.learner-app .lu-chip.is-subj {
+  background: var(--blue-100);
+  border-color: transparent;
+}
+
+.learner-app .lu-chip.is-verb {
+  background: var(--jade-50);
+  border-color: transparent;
+}
+
+.learner-app .lu-chip.is-key {
+  background: var(--amber-100);
+  border-color: transparent;
+}
+
+.learner-app .lu-chip.is-mw {
+  background: var(--violet-100);
+  border-color: transparent;
+}
+
+.learner-app .lu-desc {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.learner-app .uxa-gram__ex {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+}
+
+.learner-app .uxa-gram__ex p {
+  margin: 0;
+}
+
+.learner-app .uxa-gram__excn {
+  font-family: var(--font-cn);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .uxa-gram__exvi {
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.learner-app .lu-hl {
+  padding: 0 2px;
+  border-radius: 4px;
+  background: var(--amber-100);
+  color: var(--ink-900);
+  font-weight: 700;
+}
+
+.learner-app .uxa-understand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: 44px;
+}
+
+.learner-app .uxa-understand__label {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.learner-app .lu-dlg {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .lu-line {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: var(--sp-3);
+  align-items: start;
+  padding: var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+}
+
+.learner-app .lu-line__who {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+/* mẫu: chữ jade-800 / #5a43b8 trên nền nhạt để đạt AA. */
+.learner-app .lu-line.is-a .lu-line__who {
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .lu-line.is-b .lu-line__who {
+  background: var(--violet-100);
+  color: #5a43b8;
+}
+
+.learner-app .lu-line__body {
+  min-width: 0;
+}
+
+.learner-app .lu-line__cn {
+  margin: 0;
+  font-family: var(--font-cn);
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.learner-app .lu-line__py {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.learner-app .lu-line__vi {
+  margin: 4px 0 0;
+  color: var(--text-body);
+}
+
+.learner-app .lu-line__noaudio {
+  width: 44px;
+}
+
+/* mẫu key-text: `.lu-sub` giữ lề dọc gốc (0 0 sp-4) dưới tiêu đề hội thoại; lề ngang để web căn giữa cột 640px. */
+.learner-app .lu-flow .ex-body > .lu-sub:has(+ .lu-dlg) {
+  margin-block: 0 var(--sp-4);
+}
+
+.learner-app .topic-card__block {
+  margin-top: var(--sp-4);
+}
+
+@media (min-width: 1024px) {
+  /* mẫu key-text: nút thoát và số bước chỉ có trên web (`.w-only`). */
+  .learner-app .lu-flow .ex-bar .icon-btn.w-only {
+    display: inline-grid;
+  }
+
+  .learner-app .lu-flow .ex-bar .m02-bar__count.w-only {
+    display: block;
+  }
+
+  .learner-app .lu-flow .ex-body > .lu-dlg {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
