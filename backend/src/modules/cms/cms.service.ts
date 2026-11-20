@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { ContentEntityType, MediaType, Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
@@ -20,6 +21,7 @@ import {
   canonicalJson,
   sha256CanonicalJson,
 } from '../../common/utils/canonical-json';
+import { validateTopicContentBlocks } from '../../common/validation/topic-content-blocks';
 import { PrismaService } from '../../prisma/prisma.service';
 
 import {
@@ -658,6 +660,7 @@ export class CmsService {
   ) {
     assertAdminActor(actor);
     const snapshot = topicSnapshot(dto);
+    assertTopicContentBlocks(snapshot);
     return this.executeMutation(async () =>
       this.prisma.$transaction(async (tx) => {
         await this.lockLessonForOperation(tx, 'topic.create', dto.lessonId);
@@ -707,6 +710,7 @@ export class CmsService {
   ) {
     assertAdminActor(actor);
     const snapshot = topicSnapshot(dto);
+    assertTopicContentBlocks(snapshot);
     return this.executeMutation(async () =>
       this.prisma.$transaction(async (tx) => {
         const parentLessonId = await this.lockTopicHierarchyForOperation(
@@ -806,6 +810,8 @@ export class CmsService {
           revisionId,
         );
         const snapshot = parseTopicSnapshot(revision.snapshot);
+        // Chặn cả bản sửa đã lưu trước khi có luật kiểm block.
+        assertTopicContentBlocks(snapshot);
         const liveHash =
           topic.status === 'published'
             ? sha256CanonicalJson(topicSnapshot(topic))
@@ -1329,6 +1335,16 @@ function topicSnapshot(input: {
     isPremium: input.isPremium,
     isLocked: input.isLocked,
   };
+}
+
+function assertTopicContentBlocks(snapshot: TopicSnapshot): void {
+  const [issue] = validateTopicContentBlocks(snapshot.type, snapshot.content);
+  if (!issue) return;
+  throw new UnprocessableEntityException({
+    code: 'topic_content_invalid',
+    path: issue.path,
+    message: `Topic content validation failed at ${issue.path}.`,
+  });
 }
 
 function parseLessonSnapshot(snapshot: Prisma.JsonValue): LessonSnapshot {

@@ -900,6 +900,36 @@ Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sa
 LessonExercise (A.9) cũng trả hai mã này. M5.1b1 bổ sung mã máy cho mọi `409` riêng của
 Exercise ở bảng A.9.
 
+#### Block của `Topic.content`
+
+`Topic.content` là mảng block JSON (không đổi schema DB). Các loại block:
+
+| `type` | Hình dạng | Topic được phép |
+| --- | --- | --- |
+| `text` | `{ type, value: string }` | mọi loại |
+| `vocabulary_list` | `{ type, value: string }` | mọi loại |
+| `grammar_point` | `{ type, title, formula[], explanation, examples[] }` | chỉ `grammar` |
+| `dialogue` | `{ type, lines[] }` | chỉ `key_text` |
+
+`grammar_point`: `title` 1–120 · `formula` 1–12 chip `{ role: subj|verb|key|mw|other, zh 1–20,
+vi 1–40 }` · `explanation` 1–600 · `examples` 1–5 câu `{ hanzi 1–120, pinyin 1–240, vi 1–240,
+highlight? }`. `highlight` không có key hoặc `null`; nếu là string thì phải là chuỗi con không rỗng
+của `hanzi`. `dialogue`: `lines` 1–40 dòng `{ speaker 1–40, hanzi 1–200, pinyin 1–400, vi 1–400 }`.
+Mọi field là string; độ dài tối thiểu tính sau trim, tối đa tính trên chuỗi gốc. Key lạ bị từ chối
+ở mọi cấp (block, chip, câu ví dụ, dòng thoại).
+
+CMS kiểm `grammar_point`/`dialogue` khi `POST /admin/cms/topics`, `POST …/topics/:topicId/revisions`
+và khi publish (kiểm lại snapshot của bản sửa, chặn cả bản sửa lưu trước khi có luật). Lỗi đầu tiên
+→ `422` `error.code = topic_content_invalid`, `error.details.path` (ví dụ
+`content[2].formula[0].role`, `content[0].examples[1].highlight`, `content[1].lines[3].speaker`;
+block đặt sai loại topic → `content[i].type`). Block khác (`text`, `vocabulary_list`, `image`/`audio`
+cũ, loại lạ) và `content` không phải mảng **không** bị module này kiểm (tương thích ngược).
+Mã nội bộ của module dùng chung (`backend/src/common/validation/topic-content-blocks.ts`, cũng dùng
+cho validator nạp pilot): `topic_block_type_mismatch`, `topic_block_unknown_field`,
+`topic_block_field_invalid`, `topic_block_array_size`, `topic_block_highlight_not_in_hanzi`.
+
+`GET /learning/lessons/:lessonId/activity` (A.7) trả `topics[].content` nguyên văn như đã publish.
+
 ### A.9 Admin CMS — Exercise và Import (admin)
 
 | Method | Path | Query/Body/Header | `data` |

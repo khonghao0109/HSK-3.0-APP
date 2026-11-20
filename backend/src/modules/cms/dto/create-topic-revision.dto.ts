@@ -16,7 +16,9 @@ import {
 import { BoundedJsonPayload } from './bounded-json-payload.validator';
 import { IsStrictBoolean } from '../../../common/decorators/is-strict-boolean.decorator';
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../common/openapi/json-schemas';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
+@PinSwaggerEnumOrder('type', Object.values(TopicType))
 export class CreateTopicRevisionDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
