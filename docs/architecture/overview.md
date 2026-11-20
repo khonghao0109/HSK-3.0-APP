@@ -267,6 +267,7 @@ Backend (`cd backend`):
 | Lệnh | Cần DB? | Ghi chú |
 | --- | --- | --- |
 | `npm run start:dev` | có | dev server |
+| `npm run db:reset` | có, dev | dựng lại DB trong `DATABASE_URL`: xoá schema `pgboss` rồi `prisma migrate reset`; hỏi xác nhận, `-- --force` để bỏ qua; xem "Reset database dev" bên dưới |
 | `npm run lint:check`, `npm run format:check`, `npx tsc --noEmit` | không | |
 | `npm test` | không | jest unit, rootDir `src`, 51 suite |
 | `npm run test:e2e` | có, disposable | `pretest:e2e` tự dựng DB và migrate; xem "Chạy e2e bằng một lệnh" bên dưới |
@@ -278,6 +279,26 @@ Backend (`cd backend`):
 Frontend (`cd frontend`): `npm run dev`, `npm run lint`, `npm run typecheck`
 (chạy `next typegen` trước), `npm test` (vitest), `npm run test:e2e` (build + Playwright,
 cần backend thật ở `BACKEND_API_URL` và DB đã seed console), `npm run test:generated-types`.
+
+### Reset database dev
+
+```bash
+cd backend && npm run db:reset              # hỏi xác nhận; thêm `-- --force` để chạy không hỏi
+```
+
+Không gọi thẳng `npx prisma migrate reset`: lệnh đó chỉ xoá schema trong
+`DATABASE_URL` (`public`), còn schema `pgboss` do migration
+`20260929162559_pgboss_schema` tạo vẫn ở lại, nên lần áp lại migration lỗi
+`type "job_state" already exists` (42710). DB mới (CI, e2e) không gặp lỗi này; DB
+dev bền vững (volume Docker, Postgres Homebrew) thì có.
+`backend/scripts/database/reset-dev-database.ts` chạy
+`DROP SCHEMA IF EXISTS pgboss CASCADE` qua `prisma db execute` rồi
+`prisma migrate reset --force`, cả hai cùng dùng datasource của `prisma/schema.prisma`.
+Các cờ còn lại (`--skip-seed`, `--skip-generate`) được chuyển cho Prisma. Script từ chối
+chạy khi `NODE_ENV=production` hoặc khi stdin không phải TTY mà thiếu `--force`.
+Migration pgboss không được sửa: sửa file đã áp dụng đổi checksum và làm Prisma báo
+drift trên mọi DB hiện có, còn migration mới chạy sau migration va chạm nên không giải
+quyết được.
 
 ### Chạy e2e bằng một lệnh
 

@@ -21,6 +21,7 @@
     "start:prod": "node dist/src/main.js",
     "migrate:deploy:production": "node dist/scripts/operations/bounded-prisma-migrate-deploy.js",
     "migrate:resolve:rolled-back:production": "node dist/scripts/operations/bounded-prisma-migrate-resolve-rolled-back.js",
+    "db:reset": "ts-node scripts/database/reset-dev-database.ts",
     "seed:dictionary": "ts-node scripts/dictionary/seed.ts",
     "seed:learning": "ts-node scripts/learning/seed-learning.ts",
     "content:import:pilot": "ts-node scripts/content/import-pilot-content.ts",
