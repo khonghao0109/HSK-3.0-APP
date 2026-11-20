@@ -119,7 +119,7 @@ export function sentenceTokens(
 
 /**
  * Pha C debt 3b: the result mark of a word from its wrong answers (0 = right,
- * undefined = no quiz). Q50 allows one Kiểm tra per quiz, so it reads
+ * undefined = no quiz). Q50 allows one answer per quiz, so it reads
  * "Sai 1 lần" today; the count stays true if retries come.
  */
 export function answerMark(

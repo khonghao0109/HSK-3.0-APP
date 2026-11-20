@@ -72,8 +72,10 @@ function count(page: Page): Locator {
   return page.locator('.m02-bar__count');
 }
 
+// Pha G2a (PO 20/11/2026): arrange and fill send with Xác nhận; a choice
+// sends itself.
 function check(page: Page): Locator {
-  return page.getByRole('button', { name: 'Kiểm tra' });
+  return page.getByRole('button', { name: 'Xác nhận' });
 }
 
 function feedback(page: Page): Locator {
@@ -134,8 +136,8 @@ test.describe('Learner activity player (M2.5b)', () => {
       name: 'Choose the meaning of 你好',
     });
     await expect(group.getByRole('radio')).toHaveCount(2);
+    await expect(page.getByRole('button', { name: 'Kiểm tra' })).toHaveCount(0);
     await group.getByRole('radio', { name: 'Hello' }).click();
-    await check(page).click();
     await expect(feedback(page)).toContainText('Chính xác');
     await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeFocused();
     await expect(group.getByRole('radio', { name: 'Hello' })).toHaveClass(
@@ -154,7 +156,6 @@ test.describe('Learner activity player (M2.5b)', () => {
     await registerReadyLearner(page, baseURL);
     await openPractice(page, hsk1Lesson);
     await page.getByRole('radio', { name: 'Thank you' }).click();
-    await check(page).click();
     const wrong = page.locator('.m02-feedback--wrong');
     await expect(wrong).toBeVisible();
     await expect(wrong.locator('.m02-feedback__title')).toHaveText('Chưa đúng');
@@ -221,7 +222,6 @@ test.describe('Learner activity player (M2.5b)', () => {
       LISTENING_PROMPT,
     );
     await page.getByRole('radio', { name: '超市' }).click();
-    await check(page).click();
     await expect(feedback(page)).toContainText('Chính xác');
     // M2.5d (Q58): Tiếp tục on the last exercise completes the lesson and
     // opens its complete page.
@@ -285,11 +285,10 @@ test.describe('Learner activity player (M2.5b)', () => {
     await expect(page.getByLabel('Câu trả lời của bạn')).toBeVisible();
   });
 
-  test('a double submit stores one attempt', async ({ page, baseURL }) => {
+  test('a double choice stores one attempt', async ({ page, baseURL }) => {
     const email = await registerReadyLearner(page, baseURL);
     await openPractice(page, hsk1Lesson);
-    await page.getByRole('radio', { name: 'Thank you' }).click();
-    await check(page).dblclick();
+    await page.getByRole('radio', { name: 'Thank you' }).dblclick();
     await expect(page.locator('.m02-feedback--wrong')).toBeVisible();
     const view = await backendView(email, hsk1Lesson);
     expect(view.attempts.mcq).toHaveLength(1);

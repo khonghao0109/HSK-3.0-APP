@@ -1346,7 +1346,6 @@ test.describe('Learner web content (M2.10b) @web', () => {
     await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
     const group = page.getByRole('radiogroup');
     await group.getByRole('radio').first().click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.locator('.m02-feedback')).toBeVisible();
     await axe('mcq answered');
 
@@ -1364,7 +1363,6 @@ test.describe('Learner web content (M2.10b) @web', () => {
     await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
     const group2 = page.getByRole('radiogroup');
     await group2.getByRole('radio').last().click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.locator('.m02-feedback--wrong')).toBeVisible();
     await axe('mcq wrong');
 
@@ -1382,7 +1380,6 @@ test.describe('Learner web content (M2.10b) @web', () => {
     );
     await page.goto(`/learn/lessons/${fixture.hsk1Lesson}/practice`);
     await page.getByRole('radiogroup').getByRole('radio').first().click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     await expect(page.locator('.ex-error[role="alert"]')).toBeVisible();
     await axe('submit 503');
     console.log('M2.10b 5b :: axe clean on 4 player states');

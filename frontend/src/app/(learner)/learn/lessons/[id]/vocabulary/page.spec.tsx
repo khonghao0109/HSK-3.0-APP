@@ -341,7 +341,7 @@ describe('Từ vựng unit flow (N3)', () => {
       'Từ vựng 2 · Gia đình',
     );
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('家');
-    expect(screen.getByText('Danh từ')).toBeInTheDocument();
+    expect(screen.getByText('danh từ')).toBeInTheDocument();
     // 家: card, example, quiz; 有: card, quiz.
     expect(screen.getByLabelText('Bước 1 trên 5')).toBeInTheDocument();
     expect(

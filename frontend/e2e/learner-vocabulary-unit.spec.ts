@@ -8,7 +8,7 @@ import {
   watchCsp,
 } from './support/learner-fixtures';
 
-// Pha C (N3, N4, N8): one Từ vựng unit learned step by step. Its own topic
+// Pha C (N3, N8) + Pha G2a (thẻ mới, chọn nghĩa báo ngay): one Từ vựng unit learned step by step. Its own topic
 // and words on the HSK 7–9 seed lesson, idempotent per disposable DB.
 // Pha F: the unit h1 is the unit label · the lesson title (seed HSK 7–9 lesson).
 const SEED_LESSON = 'Academic discourse & literature';
@@ -105,12 +105,16 @@ async function expectTargets44(page: Page, selector: string) {
 const CONTROLS =
   'main button, main a, footer button, footer a, header a, header button';
 
-test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
-  test('card → example → quiz with Kiểm tra → result marks the unit done', async ({
+test.describe('Từ vựng unit, step by step (Pha C: N3, N8; Pha G2a)', () => {
+  test('card → example → quiz graded on choice → result marks the unit done', async ({
     page,
     baseURL,
   }) => {
     const { lessonId, topicId } = await seedVocabularyUnit();
+    // A device without a zh voice (Linux CI has none; macOS ships some).
+    await page.addInitScript(() => {
+      speechSynthesis.getVoices = () => [];
+    });
     await registerReadyLearner(page, baseURL);
     const cspConsole = await watchCsp(page);
     const lessonPath = `/learn/lessons/${lessonId}`;
@@ -133,29 +137,25 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
     );
     await expect(page.locator('.m02-bar__count')).toHaveText('1/7');
     await expect(page.getByRole('heading', { level: 2 })).toHaveText('家');
-    await expect(page.locator('.lu-py')).toHaveText('jiā');
-    await expect(page.locator('.lu-pos')).toHaveText('Danh từ');
-    await expect(page.locator('.lu-vi')).toHaveText('nhà; gia đình');
-    await expect(page.getByRole('button', { name: /Nghe/u })).toHaveCount(0);
+    // Pha G2a (mẫu vu-card-noimg): no image, so the big-hanzi card.
+    await expect(page.locator('.g-card')).toHaveClass(/g-card--noimg/u);
+    await expect(page.locator('.g-py')).toHaveText('jiā');
+    await expect(page.locator('.g-pos')).toHaveText('danh từ');
+    await expect(page.locator('.g-vi')).toHaveText('nhà; gia đình');
+    // No zh voice: Nghe is hidden; Nói/Viết are G2b.
+    await expect(
+      page.getByRole('group', { name: 'Luyện từ này' }).getByRole('button'),
+    ).toHaveText(['Tiếp']);
     await expectTargets44(page, CONTROLS);
     await expectNoHorizontalScroll(page);
 
     await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
-    await expect(page.getByRole('heading', { level: 2 })).toHaveText(
-      'Câu ví dụ với 家',
-    );
-    await expect(page.locator('.lu-tok__py')).toHaveText([
-      'wǒ',
-      'jiā',
-      'yǒu',
-      'sì',
-      'kǒu',
-      'rén',
-    ]);
-    await expect(page.locator('.lu-tok.is-target .lu-tok__hz')).toHaveText(
-      '家',
-    );
-    await expect(page.getByText(EXAMPLE.vi)).toBeVisible();
+    const example = page.getByRole('region', { name: 'Câu ví dụ với 家' });
+    await expect(example.locator('.g-ex__cn')).toHaveText(EXAMPLE.hanzi);
+    await expect(example.locator('.g-ex__cn mark')).toHaveText('家');
+    await expect(example.locator('.g-ex__py')).toHaveText(EXAMPLE.pinyin);
+    await expect(example.locator('.g-ex__vi')).toHaveText(EXAMPLE.vi);
+    await expect(page.getByRole('button', { name: /Nghe/u })).toHaveCount(0);
     await expectTargets44(page, CONTROLS);
 
     await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
@@ -163,14 +163,18 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
       name: 'Chọn nghĩa đúng của 家',
     });
     await expect(group.getByRole('radio')).toHaveCount(3);
-    const check = page.getByRole('button', { name: 'Kiểm tra' });
-    await expect(check).toHaveAttribute('aria-disabled', 'true');
-    // N4: picking does not grade; Kiểm tra does.
-    await group.getByRole('radio', { name: 'nhà; gia đình' }).click();
-    await expect(page.locator('.m02-feedback')).toHaveCount(0);
+    // PO 20/11/2026 (thay N4/Q51): no Kiểm tra; the arrows only move focus,
+    // choosing grades at once.
+    await expect(page.getByRole('button', { name: 'Kiểm tra' })).toHaveCount(0);
     await expectTargets44(page, CONTROLS);
-    await check.click();
-    await expect(page.locator('.m02-feedback__title')).toHaveText('Chính xác');
+    await group.getByRole('radio').first().focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('.g-fb')).toHaveCount(0);
+    await group.getByRole('radio', { name: 'nhà; gia đình' }).click();
+    await expect(page.locator('.g-fb__title')).toHaveText('Chính xác');
+    await expect(page.locator('.g-fb__text')).toHaveText(
+      '家 jiā nghĩa là nhà, gia đình.',
+    );
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
 
     // 有: answer wrong.
@@ -182,17 +186,16 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
       .filter({ hasNotText: /^có$/u })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
-    await expect(page.locator('.m02-feedback__title')).toHaveText('Chưa đúng');
-    await expect(page.locator('.m02-feedback__text')).toHaveText(
+    await expect(page.locator('.g-fb__title')).toHaveText('Chưa đúng');
+    await expect(page.locator('.g-fb__text')).toHaveText(
       'Đáp án đúng: 有 yǒu là có.',
     );
+    await expect(page.locator('.ex-foot button')).toHaveText(['Tiếp tục']);
     await page.getByRole('button', { name: 'Tiếp tục' }).click();
 
     // 口: answer right.
     await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
     await page.getByRole('radio', { name: 'miệng; nhân khẩu' }).click();
-    await page.getByRole('button', { name: 'Kiểm tra' }).click();
     const completed = page.waitForResponse(
       (response) =>
         response.url().endsWith(`/api/learner/topics/${topicId}/complete`) &&
@@ -251,7 +254,6 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N4, N8)', () => {
         continue;
       }
       await page.getByRole('radio').first().click();
-      await page.getByRole('button', { name: 'Kiểm tra' }).click();
       await page.getByRole('button', { name: 'Tiếp tục' }).click();
     }
     await page.getByRole('button', { name: 'Lưu để ôn' }).click();
