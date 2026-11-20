@@ -815,6 +815,15 @@
   list-style: none;
 }
 
+.learner-app .lu-text {
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 .learner-app .lu-line {
   display: grid;
   grid-template-columns: 44px 1fr auto;
@@ -892,7 +901,7 @@
     display: block;
   }
 
-  .learner-app .lu-flow .ex-body > .lu-dlg {
+  .learner-app .lu-flow .ex-body > :is(.lu-dlg, .lu-text) {
     width: 100%;
     max-width: 640px;
     margin-inline: auto;

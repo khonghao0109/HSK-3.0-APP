@@ -3,7 +3,10 @@ import { z } from 'zod';
 import { lessonStateSchema } from '@/features/learner-path/learning-path-contract';
 import { backendEnvelope } from '@/lib/api/backend-envelope';
 
-import { FILL_BLANK_MAX_LENGTH } from './lesson-player-model';
+import {
+  FILL_BLANK_MAX_LENGTH,
+  MATCHING_MAX_MOVES,
+} from './lesson-player-model';
 
 const progressStatusSchema = z.enum(['not_started', 'learning', 'done']);
 
@@ -78,6 +81,15 @@ export const attemptInputSchema = z.strictObject({
   answer: z.union([
     z.strictObject({ optionId: stableIdSchema }),
     z.strictObject({ tokenIds: z.array(stableIdSchema).min(1).max(100) }),
+    // Pha E matching: the move log; the backend replays it and counts mistakes.
+    z.strictObject({
+      moves: z
+        .array(
+          z.strictObject({ leftId: stableIdSchema, rightId: stableIdSchema }),
+        )
+        .min(1)
+        .max(MATCHING_MAX_MOVES),
+    }),
     z.strictObject({
       text: z.string().trim().min(1).max(FILL_BLANK_MAX_LENGTH),
     }),

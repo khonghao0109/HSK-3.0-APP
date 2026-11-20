@@ -7,8 +7,8 @@ import {
 import { loadLearnerLesson } from './lesson-page-loader';
 import { lessonUnits, parseLessonId, unitHref } from './lesson-sections';
 import {
-  type DialogueBlock,
   type GrammarPointBlock,
+  type KeyTextBlock,
   topicBlocks,
 } from './topic-content';
 import { GrammarUnitFlow, KeyTextUnitFlow } from './topic-unit-flow';
@@ -17,8 +17,9 @@ import { GrammarUnitFlow, KeyTextUnitFlow } from './topic-unit-flow';
  * Pha D: one Ngữ pháp or Bài khoá unit as its own screen. The blocks come
  * from the lesson activity (`Topic.content`, verbatim); the units and the
  * next one from the lesson detail. A locked lesson, or a unit that is not a
- * grammar/key_text topic, goes back to the lesson page (Q40); a topic with
- * only the old `text` blocks opens the Ngữ pháp page that shows them.
+ * grammar/key_text topic, goes back to the lesson page (Q40); a grammar
+ * topic with only the old `text` blocks opens the Ngữ pháp page that shows
+ * them; a Bài khoá shows its `text` blocks as paragraphs.
  */
 export async function TopicUnitView({
   rawId,
@@ -47,12 +48,14 @@ export async function TopicUnitView({
   const points = blocks.filter(
     (block): block is GrammarPointBlock => block.kind === 'grammar_point',
   );
-  const dialogues = blocks.filter(
-    (block): block is DialogueBlock => block.kind === 'dialogue',
+  // Bài khoá: dialogues and narrative text, kept in content order.
+  const passage = blocks.filter(
+    (block): block is KeyTextBlock =>
+      block.kind === 'dialogue' || block.kind === 'text',
   );
   const isGrammar = topic.type === 'grammar';
-  // Old topics (text only) stay on the Ngữ pháp page (Q175).
-  if ((isGrammar ? points : dialogues).length === 0) {
+  // Old grammar topics (text only) stay on the Ngữ pháp page (Q175).
+  if ((isGrammar ? points : passage).length === 0) {
     redirect(`${lessonHref}/grammar`);
   }
 
@@ -89,7 +92,7 @@ export async function TopicUnitView({
       {...unit}
       heading={topic.title}
       description={topic.subtitle}
-      dialogues={dialogues}
+      blocks={passage}
     />
   );
 }

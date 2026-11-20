@@ -17,15 +17,19 @@ import {
   buildAnswer,
   FILL_BLANK_MAX_LENGTH,
   hasHan,
+  matchingProgress,
   newAttemptKey,
   progressClass,
   splitBlank,
   topicToClose,
+  type MatchingMove,
+  type PlayerAnswer,
   type PlayerChoice,
   type PlayerExercise,
   type PlayerInput,
 } from './lesson-player-model';
 import { ListeningExercise, type ListeningSpeed } from './listening-exercise';
+import { MatchingExercise } from './matching-exercise';
 import { Icon } from '@/components/ui/icon';
 
 export const PLAYER_MESSAGES = {
@@ -39,6 +43,8 @@ export const PLAYER_MESSAGES = {
   startFailed: 'Chưa mở được bài luyện tập. Vui lòng thử lại.',
   finishing: 'Đang lưu kết quả bài học…',
   finishFailed: 'Chưa lưu được kết quả bài học. Vui lòng thử lại.',
+  matchingCorrectText: (pairs: number) => `Bạn đã ghép đúng cả ${pairs} cặp.`,
+  matchingDoneTitle: (mistakes: number) => `Hoàn thành · Sai ${mistakes} lần`,
 } as const;
 
 type StartOutcome = 'started' | 'sign-in' | 'lesson' | 'failed';
@@ -314,8 +320,9 @@ export function LessonPlayer({
     startRef.current = requestStart().then(applyStart);
   };
 
-  const submit = async () => {
-    if (!current || !answer || result || startFailed) return;
+  // `sent` lets the last matching move send its log before the state lands.
+  const submit = async (sent: PlayerAnswer | null = answer) => {
+    if (!current || !sent || result || startFailed) return;
     if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
@@ -328,7 +335,7 @@ export function LessonPlayer({
       return;
     }
 
-    const serialized = JSON.stringify(answer);
+    const serialized = JSON.stringify(sent);
     let pending = pendingRef.current;
     if (
       !pending ||
@@ -357,7 +364,7 @@ export function LessonPlayer({
             'idempotency-key': pending.key,
           },
           body: JSON.stringify({
-            answer,
+            answer: sent,
             durationSeconds: pending.durationSeconds,
           }),
         },
@@ -429,6 +436,19 @@ export function LessonPlayer({
     }));
   };
 
+  // Pha E: the move that locks the last pair sends the whole log.
+  const addMove = (move: MatchingMove) => {
+    if (locked || current?.kind !== 'matching') return;
+    const moves = [...(input.moves ?? []), move];
+    setInput((value) => ({ ...value, moves }));
+    const complete = buildAnswer(current, { ...input, moves });
+    if (complete) void submit(complete);
+  };
+  const matchingMistakes =
+    current?.kind === 'matching'
+      ? matchingProgress(input.moves ?? []).mistakes
+      : 0;
+
   const onTextKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     // Enter that ends an IME composition only commits the text.
     if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
@@ -475,12 +495,18 @@ export function LessonPlayer({
     </div>
   );
 
+  const correctText =
+    current?.kind === 'matching'
+      ? PLAYER_MESSAGES.matchingCorrectText(current.pairs.length)
+      : PLAYER_MESSAGES.correctText;
+  const wrongTitle =
+    current?.kind === 'matching'
+      ? PLAYER_MESSAGES.matchingDoneTitle(matchingMistakes)
+      : PLAYER_MESSAGES.wrongTitle;
   const announcement = result
     ? result.correct
-      ? `${PLAYER_MESSAGES.correctTitle}. ${PLAYER_MESSAGES.correctText}`
-      : [PLAYER_MESSAGES.wrongTitle, result.explanation]
-          .filter(Boolean)
-          .join('. ')
+      ? `${PLAYER_MESSAGES.correctTitle}. ${correctText}`
+      : [wrongTitle, result.explanation].filter(Boolean).join('. ')
     : completion === 'busy'
       ? PLAYER_MESSAGES.finishing
       : '';
@@ -677,6 +703,19 @@ export function LessonPlayer({
           </ListeningExercise>
         )}
 
+        {current?.kind === 'matching' && (
+          <MatchingExercise
+            key={current.id}
+            prompt={current.prompt}
+            pairs={current.pairs}
+            rightOrder={current.rightOrder}
+            moves={input.moves ?? []}
+            locked={locked}
+            headingRef={headingRef}
+            onMove={addMove}
+          />
+        )}
+
         {current?.kind === 'fill_blank' && (
           <FillBlank
             key={current.id}
@@ -715,9 +754,7 @@ export function LessonPlayer({
                   <p className="m02-feedback__title">
                     {PLAYER_MESSAGES.correctTitle}
                   </p>
-                  <p className="m02-feedback__text">
-                    {PLAYER_MESSAGES.correctText}
-                  </p>
+                  <p className="m02-feedback__text">{correctText}</p>
                 </div>
                 <button
                   className="m02-feedback__btn"
@@ -730,12 +767,23 @@ export function LessonPlayer({
               </div>
             )}
             {result?.correct === false && (
-              <div className="m02-feedback m02-feedback--wrong">
-                <Icon name="x-circle" className="m02-feedback__icon" />
+              <div
+                className={
+                  current?.kind === 'matching'
+                    ? 'm02-feedback m02-feedback--neutral'
+                    : 'm02-feedback m02-feedback--wrong'
+                }
+              >
+                <Icon
+                  name={
+                    current?.kind === 'matching'
+                      ? 'check-circle-line'
+                      : 'x-circle'
+                  }
+                  className="m02-feedback__icon"
+                />
                 <div className="grow">
-                  <p className="m02-feedback__title">
-                    {PLAYER_MESSAGES.wrongTitle}
-                  </p>
+                  <p className="m02-feedback__title">{wrongTitle}</p>
                   {result.explanation && (
                     <p className="m02-feedback__text">{result.explanation}</p>
                   )}
@@ -761,23 +809,25 @@ export function LessonPlayer({
               </p>
             )}
           </div>
-          {/* One node for Kiểm tra and Thử lại, so focus survives the swap. */}
-          {!result && (
-            <button
-              className="ex-check"
-              type="button"
-              ref={checkRef}
-              aria-disabled={startFailed || canCheck ? undefined : 'true'}
-              aria-busy={submitting || undefined}
-              onClick={startFailed ? retryStart : () => void submit()}
-            >
-              {startFailed
-                ? 'Thử lại'
-                : submitting
-                  ? 'Đang kiểm tra…'
-                  : 'Kiểm tra'}
-            </button>
-          )}
+          {/* One node for Kiểm tra and Thử lại, so focus survives the swap.
+              Matching sends itself; Kiểm tra only resends a failed log. */}
+          {!result &&
+            (current?.kind !== 'matching' || error || startFailed) && (
+              <button
+                className="ex-check"
+                type="button"
+                ref={checkRef}
+                aria-disabled={startFailed || canCheck ? undefined : 'true'}
+                aria-busy={submitting || undefined}
+                onClick={startFailed ? retryStart : () => void submit()}
+              >
+                {startFailed
+                  ? 'Thử lại'
+                  : submitting
+                    ? 'Đang kiểm tra…'
+                    : 'Kiểm tra'}
+              </button>
+            )}
         </footer>
       )}
     </div>
