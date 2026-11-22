@@ -4975,6 +4975,62 @@
         ]
       }
     },
+    "/api/v1/dictionary/characters/strokes": {
+      "get": {
+        "operationId": "DictionaryController_getCharacterStrokes",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "hanzi",
+            "required": true,
+            "in": "query",
+            "description": "Han characters written together: at most 16, at most 8 distinct; duplicates are removed in order.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CharacterStrokesResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "tags": [
+          "Dictionary"
+        ]
+      }
+    },
     "/api/v1/dictionary/words/{id}": {
       "get": {
         "operationId": "DictionaryController_getWord",
@@ -11648,6 +11704,110 @@
           "pinyinTone",
           "meanings",
           "level"
+        ]
+      },
+      "CharacterStrokesDto": {
+        "type": "object",
+        "properties": {
+          "strokes": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "medians": {
+            "type": "array",
+            "nullable": true,
+            "description": "One entry per stroke: a list of `[x, y]` points.",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "strokeCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "`null` when the character is unknown or has no valid stroke data."
+          },
+          "sourceCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "strokes",
+          "medians",
+          "hanzi",
+          "strokeCount",
+          "sourceCode"
+        ]
+      },
+      "CharacterStrokesSourceDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "attribution": {
+            "type": "string",
+            "nullable": true
+          },
+          "referenceUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "version",
+          "license",
+          "attribution",
+          "referenceUrl"
+        ]
+      },
+      "CharacterStrokesResponseDto": {
+        "type": "object",
+        "properties": {
+          "characters": {
+            "description": "In request order, duplicates removed.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterStrokesDto"
+            }
+          },
+          "sources": {
+            "description": "Distinct data sources of the characters that have strokes.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterStrokesSourceDto"
+            }
+          }
+        },
+        "required": [
+          "characters",
+          "sources"
         ]
       },
       "DictionaryWordAudioDto": {

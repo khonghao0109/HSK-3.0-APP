@@ -307,9 +307,20 @@ describe('VocabularyUnitFlow (N3, N8, Pha G2a)', () => {
 
     // The backend completes a topic only in a started lesson: start (the BFF
     // treats an already started lesson as started), then complete.
-    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(urls.filter((url) => !url.includes('/strokes?'))).toEqual([
       '/api/learner/lessons/5/start',
       '/api/learner/topics/7/complete',
+    ]);
+    // Viết (G2d): one read-only stroke lookup per word card, nothing written.
+    expect(
+      fetchMock.mock.calls
+        .filter((call) => String(call[0]).includes('/strokes?'))
+        .every((call) => call.length === 1),
+    ).toBe(true);
+    expect(urls.filter((url) => url.includes('/strokes?'))).toEqual([
+      `/api/learner/dictionary/strokes?hanzi=${encodeURIComponent('家')}`,
+      `/api/learner/dictionary/strokes?hanzi=${encodeURIComponent('有')}`,
     ]);
     expect(fetchMock).toHaveBeenCalledWith('/api/learner/topics/7/complete', {
       method: 'POST',

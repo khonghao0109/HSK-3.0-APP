@@ -2,6 +2,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Headers,
   Param,
   Post,
@@ -9,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
@@ -18,6 +19,7 @@ import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { DictionaryService } from './dictionary.service';
+import { CharacterStrokesResponseDto } from './dto/character-strokes-response.dto';
 import {
   DictionaryWordFullDetailDto,
   DictionaryWordSavedDto,
@@ -51,6 +53,21 @@ export class DictionaryController {
   @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
   async search(@Query('query') query: string) {
     return this.dictionaryService.search(query);
+  }
+
+  @Get('characters/strokes')
+  @Throttle({ default: { limit: dictionaryReadLimit, ttl: 60_000 } })
+  @Header('Cache-Control', 'public, max-age=86400')
+  @ApiQuery({
+    name: 'hanzi',
+    required: true,
+    type: String,
+    description:
+      'Han characters written together: at most 16, at most 8 distinct; duplicates are removed in order.',
+  })
+  @ApiEnvelope(CharacterStrokesResponseDto)
+  getCharacterStrokes(@Query('hanzi') hanzi: unknown) {
+    return this.dictionaryService.getCharacterStrokes(hanzi);
   }
 
   @Get('words/:id')

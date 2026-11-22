@@ -291,6 +291,10 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
             <path d="M18 2H6v7a6 6 0 0 0 12 0Z" />
           </symbol>
+          <symbol id="i-pencil" viewBox="0 0 24 24">
+            <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <path d="m15 5 4 4" />
+          </symbol>
           <symbol id="i-mic" viewBox="0 0 24 24">
             <rect x="9" y="2" width="6" height="12" rx="3" />
             <path d="M19 10v1a7 7 0 0 1-14 0v-1" />

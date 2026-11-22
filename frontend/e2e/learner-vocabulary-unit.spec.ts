@@ -708,3 +708,200 @@ test.describe('Từ vựng unit: Nói without the microphone (Pha G2b)', () => {
     ).toBeVisible();
   });
 });
+
+// Pha G2d: Viết on the bài 01 unit. Synthetic two-stroke characters (a
+// horizontal, then a vertical line, Make Me a Hanzi coordinates) for 我 and
+// 老师; 是 stays without strokes so its card has no Viết. The Pha C unit
+// (家, 有, 口) is left without strokes for its Nói · Tiếp assertions.
+const STROKE_SOURCE = 'e2e-g2d-strokes';
+const STROKE_DATA = {
+  strokes: [
+    'M 200 450 L 800 450 L 800 550 L 200 550 Z',
+    'M 450 800 L 550 800 L 550 200 L 450 200 Z',
+  ],
+  medians: [
+    [
+      [200, 500],
+      [800, 500],
+    ],
+    [
+      [500, 800],
+      [500, 200],
+    ],
+  ],
+};
+type Median = Array<[number, number]>;
+
+function seedStrokes() {
+  queryDisposableDb(
+    [
+      `INSERT INTO "DataSource" (code, name, version, license, attribution, "referenceUrl", "updatedAt")
+        VALUES ('${STROKE_SOURCE}', 'Nét kiểm thử G2d', '0.1.0', 'Arphic Public License',
+          'Dữ liệu nét chữ kiểm thử G2d', 'https://example.test/strokes', now())
+        ON CONFLICT (code) DO NOTHING;`,
+      ...['我', '老', '师'].map(
+        (
+          hanzi,
+        ) => `INSERT INTO "Character" (hanzi, "strokeCount", "strokeData", "dataSourceId", "updatedAt")
+          SELECT ${sqlLiteral(hanzi)}, 2, ${sqlLiteral(JSON.stringify(STROKE_DATA))}::jsonb, s.id, now()
+          FROM "DataSource" s WHERE s.code = '${STROKE_SOURCE}'
+          ON CONFLICT (hanzi) DO UPDATE SET "strokeCount" = 2,
+            "strokeData" = EXCLUDED."strokeData", "dataSourceId" = EXCLUDED."dataSourceId", "updatedAt" = now();`,
+      ),
+      `UPDATE "Character" SET "strokeData" = NULL, "strokeCount" = NULL WHERE hanzi = '是';`,
+    ].join('\n'),
+  );
+}
+
+/** Draws one stroke along a median with the mouse, in a few moves. */
+async function drawStroke(page: Page, median: Median) {
+  const box = await page.locator('.g-board svg').boundingBox();
+  if (!box) throw new Error('no board');
+  const at = ([x, y]: [number, number]) => ({
+    x: box.x + (x / 1024) * box.width,
+    y: box.y + ((900 - y) / 1024) * box.height,
+  });
+  const [first, last] = [median[0], median[median.length - 1]];
+  if (!first || !last) throw new Error('empty median');
+  const start = at(first);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  for (let k = 1; k <= 8; k += 1) {
+    const point = at([
+      first[0] + ((last[0] - first[0]) * k) / 8,
+      first[1] + ((last[1] - first[1]) * k) / 8,
+    ]);
+    await page.mouse.move(point.x, point.y);
+  }
+  await page.mouse.up();
+}
+
+test.describe('Từ vựng unit: Viết (Pha G2d)', () => {
+  test('writes a one-character word stroke by stroke, with a hint after a miss', async ({
+    page,
+    baseURL,
+  }) => {
+    const { lessonId, reviewTopicId } = await seedVocabularyUnit();
+    seedStrokes();
+    await registerReadyLearner(page, baseURL);
+    const cspConsole = await watchCsp(page);
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() !== 'GET') writes.push(request.url());
+    });
+    const strokesRead = page.waitForResponse((response) =>
+      response.url().includes('/api/learner/dictionary/strokes?hanzi='),
+    );
+    await page.goto(
+      `/learn/lessons/${lessonId}/vocabulary?unit=${reviewTopicId}`,
+    );
+    const read = await strokesRead;
+    expect(read.url()).toContain(
+      `/api/learner/dictionary/strokes?hanzi=${encodeURIComponent('我')}`,
+    );
+    // The BFF answers no-store; the backend's one-day cache stays server side.
+    expect(read.headers()['cache-control']).toBe('no-store');
+    const medians = (
+      (await read.json()) as {
+        data: { characters: Array<{ medians: Median[] }> };
+      }
+    ).data.characters[0]?.medians;
+    if (!medians) throw new Error('no medians');
+
+    const group = page.getByRole('group', { name: 'Luyện từ này' });
+    // Mẫu: Nghe · Nói · Viết · Tiếp (Nghe only with a zh voice).
+    expect((await group.getByRole('button').allInnerTexts()).slice(-3)).toEqual(
+      ['Nói', 'Viết', 'Tiếp'],
+    );
+    const write = page.getByRole('button', { name: 'Viết', exact: true });
+    await write.click();
+    const dialog = page.getByRole('dialog', { name: /^Viết 我/u });
+    await expect(dialog).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Đóng bảng viết' }),
+    ).toBeFocused();
+    await expect(
+      dialog.getByRole('link', { name: 'Dữ liệu nét chữ kiểm thử G2d' }),
+    ).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(page.locator('.g-wstat')).toHaveText('Xong 2/2 nét');
+
+    await page.getByRole('button', { name: 'Tự viết' }).click();
+    await expect(page.locator('.g-wstat')).toHaveText('Nét 1/2');
+    const [first, second] = medians;
+    if (!first || !second) throw new Error('two strokes expected');
+    await drawStroke(page, second);
+    await expect(page.locator('.g-board')).toHaveClass(/is-miss/u);
+    await expect(page.locator('.g-board .hint')).toHaveCount(1);
+    await expect(page.locator('.g-wstat')).toHaveText('Nét 1/2');
+    await expect(dialog.getByRole('status')).toContainText(
+      'Chưa khớp, thử lại nét này',
+    );
+    await drawStroke(page, first);
+    await expect(page.locator('.g-wstat')).toHaveText('Nét 2/2');
+    await drawStroke(page, second);
+    await expect(page.locator('.g-wstat')).toHaveText('Xong 2/2 nét');
+    await expectTargets44(page, '.g-dialog button');
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(write).toBeFocused();
+    await expectNoHorizontalScroll(page);
+
+    // The example step has no Viết.
+    await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
+    await expect(page.locator('.g-ex')).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Viết' })).toHaveCount(0);
+    expect(writes).toEqual([]);
+    // 是 has no strokes: its card has no Viết.
+    await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
+    await page.getByRole('radiogroup').getByRole('radio').first().click();
+    await page.getByRole('button', { name: 'Tiếp tục' }).click();
+    await expect(page.locator('.g-hz')).toHaveText('是');
+    await expect(group.getByRole('button', { name: 'Tiếp' })).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Viết' })).toHaveCount(0);
+    expect(await readCspViolations(page)).toEqual([]);
+    expect(cspConsole).toEqual([]);
+  });
+
+  test('a two-character word moves to its second character by itself (Q-G5)', async ({
+    page,
+    baseURL,
+  }) => {
+    const { lessonId, reviewTopicId } = await seedVocabularyUnit();
+    seedStrokes();
+    await registerReadyLearner(page, baseURL);
+    await page.goto(
+      `/learn/lessons/${lessonId}/vocabulary?unit=${reviewTopicId}`,
+    );
+    // 我, 是, 他: card, example, quiz; 你: card, quiz; then 老师's card.
+    const tiep = page.getByRole('button', { name: 'Tiếp', exact: true });
+    const meaning = page.getByRole('radiogroup');
+    for (let step = 0; step < 11; step += 1) {
+      await expect(tiep.or(meaning).first()).toBeVisible();
+      if (await meaning.isVisible()) {
+        await meaning.getByRole('radio').first().click();
+        await page.getByRole('button', { name: 'Tiếp tục' }).click();
+      } else {
+        await tiep.click();
+      }
+    }
+    await expect(page.locator('.g-hz')).toHaveText('老师');
+    const write = page.getByRole('button', { name: 'Viết', exact: true });
+    await write.click();
+    await expect(page.locator('.g-wstat')).toHaveText('Chữ 1/2 · Xong 2/2 nét');
+    await page.getByRole('button', { name: 'Tự viết' }).click();
+    const [first, second] = STROKE_DATA.medians as Median[];
+    if (!first || !second) throw new Error('two strokes expected');
+    await drawStroke(page, first);
+    await drawStroke(page, second);
+    await expect(page.locator('.g-wstat')).toHaveText('Chữ 2/2 · Nét 1/2');
+    await expect(
+      page.getByRole('img', { name: 'Lưới chữ điền và chữ 师, 2 nét' }),
+    ).toBeVisible();
+    await drawStroke(page, first);
+    await drawStroke(page, second);
+    await expect(page.locator('.g-wstat')).toHaveText('Chữ 2/2 · Xong 2/2 nét');
+    await page.getByRole('button', { name: 'Đóng bảng viết' }).click();
+    await expect(write).toBeFocused();
+  });
+});
