@@ -23,6 +23,10 @@ import type {
   DictionaryWordSavedDto,
   DictionaryWordSaveResultDto,
 } from './dto/dictionary-word-response.dto';
+import {
+  parseStrokesHanzi,
+  toCharacterStrokesResponse,
+} from './character-strokes';
 import { classifyDictionaryQuery } from './dictionary-search-query';
 import { toWordFullDetail, WORD_FULL_INCLUDE } from './dictionary-word.mapper';
 import {
@@ -220,6 +224,29 @@ export class DictionaryService {
   private async searchIds(sql: Prisma.Sql): Promise<number[]> {
     const rows = await this.prisma.$queryRaw<Array<{ id: number }>>(sql);
     return rows.map((row) => row.id);
+  }
+
+  async getCharacterStrokes(rawHanzi: unknown) {
+    const hanzi = parseStrokesHanzi(rawHanzi);
+    const rows = await this.prisma.character.findMany({
+      where: { hanzi: { in: hanzi } },
+      select: {
+        hanzi: true,
+        strokeCount: true,
+        strokeData: true,
+        dataSource: {
+          select: {
+            code: true,
+            name: true,
+            version: true,
+            license: true,
+            attribution: true,
+            referenceUrl: true,
+          },
+        },
+      },
+    });
+    return toCharacterStrokesResponse(hanzi, rows);
   }
 
   async getWord(wordId: number): Promise<DictionaryWordFullDetailDto> {

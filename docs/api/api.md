@@ -80,8 +80,8 @@ DTO, envelope §1, lỗi `default`, security `JWT`. Tài liệu này giữ phầ
 - Rate limit: mặc định 20 req/phút cho **mỗi route và mỗi user/IP**, không phải tổng chung
   mọi route (khoá throttler gồm controller, handler và tracker). Route có giới hạn riêng:
   `GET /auth/me` 120/phút/user, `POST /learning/exercises/:exerciseId/attempts`
-  60/phút/user, `GET /dictionary`, `GET /dictionary/words/:id` và `GET /dictionary/words/:id/save`
-  120/phút/user hoặc IP, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
+  60/phút/user, `GET /dictionary`, `GET /dictionary/words/:id`, `GET /dictionary/words/:id/save` và
+  `GET /dictionary/characters/strokes` 120/phút/user hoặc IP, `POST` và `DELETE /dictionary/words/:id/save` 60/phút/user (mục A.5), `GET /media/:mediaId/access` 120/phút/user,
   `GET /media/:mediaId/content` 60/phút/grant cộng trần 600/phút/IP (mục A.11),
   `POST /auth/register` 100/phút/IP, `POST /auth/login` 10/phút/IP,
   `POST /auth/refresh` 30/phút/IP, `POST /auth/email-verification/request` 3/15 phút,
@@ -395,10 +395,12 @@ trả `answer`/`explanation`. `speaking_repeat` không xuất hiện public.
 | `GET` | `/dictionary/words/:id/save` | JWT | 120/phút/user (cùng `dictionaryReadLimit`) |
 | `POST` | `/dictionary/words/:id/save` | JWT, header `Idempotency-Key` bắt buộc | 60/phút/user (`wordSaveLimit`, 1.000 khi `NODE_ENV=test`) |
 | `DELETE` | `/dictionary/words/:id/save` | JWT | 60/phút/user (cùng `wordSaveLimit`) |
+| `GET` | `/dictionary/characters/strokes?hanzi=<chữ Hán viết liền>` | public | 120/phút/user hoặc IP (cùng `dictionaryReadLimit`) |
 
 "Từ public" = Word `published`, chưa soft-delete, `isPure = true`, có ít nhất một meaning
-(`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho cả 5 route). Không route
-nào đặt header cache.
+(`PUBLIC_WORD_WHERE` trong `modules/dictionary`, dùng chung cho 5 route từ). Chỉ
+`GET /dictionary/characters/strokes` đặt header cache (`Cache-Control: public, max-age=86400`,
+không `immutable`, không ETag); các route còn lại không đặt.
 
 **Search.** Query được chuẩn NFC rồi `trim`; hợp lệ khi dài 1–64 ký tự và:
 
@@ -447,6 +449,27 @@ từ có nghĩa đúng "to study" lên trước "field of study"; `?query=xue` t
 ```json
 [{ "id": 12, "hanzi": "学习", "pinyin": "xué xí", "pinyinTone": "xue2 xi2",
    "meanings": [{ "en": "to study", "vi": "học tập" }], "level": "HSK 1" }]
+```
+
+**Nét chữ** `GET /dictionary/characters/strokes?hanzi=我们` (G2d). Public. `hanzi` tách theo
+code point (`𠀀` là 1 chữ). `400` (`REQUEST_VALIDATION_FAILED`, `errors[0].path` `$.hanzi`) khi:
+thiếu hoặc rỗng, hoặc lặp tham số (`isNotEmpty`); chuỗi thô quá 16 chữ, đếm trước khi bỏ trùng
+(`maxLength`); có ký tự không thuộc `\p{Script=Han}` (`isHanzi`); còn quá 8 chữ sau khi bỏ trùng
+(`arrayMaxSize`). Hợp lệ thì bỏ trùng, giữ thứ tự. Chữ không có trong DB, không có hoặc sai shape
+`strokeData` (`strokes: string[]`, `medians: [x,y][][]`, cùng độ dài) trả các trường `null`, không
+`404`. `sources` gồm DataSource (bỏ trùng) của các chữ có nét; chữ có nét mà không có nguồn thì
+`sourceCode` `null`. Không trả `id`. `data` `200`:
+
+```json
+{
+  "characters": [
+    { "hanzi": "我", "strokeCount": 7, "strokes": ["M 350 571 ..."], "medians": [[[343, 655], [398, 597]]], "sourceCode": "MAKEMEAHANZI_GRAPHICS" },
+    { "hanzi": "们", "strokeCount": null, "strokes": null, "medians": null, "sourceCode": null }
+  ],
+  "sources": [
+    { "code": "MAKEMEAHANZI_GRAPHICS", "name": "Make Me a Hanzi", "version": "...", "license": "Arphic Public License", "attribution": null, "referenceUrl": "https://github.com/skishore/makemeahanzi" }
+  ]
+}
 ```
 
 **Chi tiết từ** `GET /dictionary/words/:id`. `:id` không phải số nguyên dương an toàn →
