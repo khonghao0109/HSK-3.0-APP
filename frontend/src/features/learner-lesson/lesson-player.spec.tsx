@@ -81,8 +81,19 @@ function ok(data: unknown, status = 200) {
   return Response.json(data, { status });
 }
 
-function attempt(isCorrect: boolean, explanation: string | null = null) {
-  return ok({ success: true, data: { isCorrect, explanation } });
+function attempt(
+  isCorrect: boolean,
+  explanation: string | null = null,
+  correctAnswer?: unknown,
+) {
+  return ok({
+    success: true,
+    data: {
+      isCorrect,
+      explanation,
+      ...(correctAnswer === undefined ? {} : { correctAnswer }),
+    },
+  });
 }
 
 let fetchSpy: MockInstance<typeof fetch>;
@@ -247,6 +258,64 @@ describe('LessonPlayer', () => {
     expect(
       container.querySelector('.m02-feedback--wrong .m02-feedback__text'),
     ).toBeNull();
+  });
+
+  it('reveals the correct option and names it after a wrong mcq (Q-G9)', async () => {
+    fetchSpy.mockResolvedValue(attempt(false, null, { optionId: 'market' }));
+    const { container } = renderPlayer([mcq]);
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    expect(
+      container.querySelector('.m02-feedback--wrong')?.textContent,
+    ).toContain('Đáp án đúng: 超市');
+    expect(screen.getByRole('radio', { name: '银行' })).toHaveClass('is-wrong');
+    expect(screen.getByRole('radio', { name: '超市' })).toHaveClass('is-right');
+    expect(
+      document.querySelector('[aria-live="polite"]')?.textContent,
+    ).toContain('Đáp án đúng: 超市');
+  });
+
+  it('reveals nothing when the correct option id is absent from the content (Q-G9)', async () => {
+    fetchSpy.mockResolvedValue(attempt(false, null, { optionId: 'ghost' }));
+    const { container } = renderPlayer([mcq]);
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    expect(screen.queryByText(/Đáp án đúng/u)).toBeNull();
+    expect(screen.getByRole('radio', { name: '超市' })).not.toHaveClass(
+      'is-right',
+    );
+    expect(
+      container.querySelector('.m02-feedback--wrong')?.textContent,
+    ).not.toContain('Đáp án đúng');
+  });
+
+  it('reveals the accepted text after a wrong fill_blank (Q-G9)', async () => {
+    fetchSpy.mockResolvedValue(
+      attempt(false, null, { acceptedTexts: ['好', 'hǎo'] }),
+    );
+    const { container } = renderPlayer([fill]);
+    const input = screen.getByLabelText('Câu trả lời của bạn');
+    fireEvent.change(input, { target: { value: 'sai' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    expect(
+      container.querySelector('.m02-feedback--wrong')?.textContent,
+    ).toContain('Đáp án đúng: 好');
+  });
+
+  it('reveals the correct sentence after a wrong arrange_sentence (Q-G9)', async () => {
+    fetchSpy.mockResolvedValue(
+      attempt(false, null, { tokenIds: ['wo', 'xiang', 'mai'] }),
+    );
+    const { container } = renderPlayer([arrange]);
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm 买' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm 我' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm 想' }));
+    fireEvent.click(checkButton());
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    expect(
+      container.querySelector('.m02-feedback--wrong')?.textContent,
+    ).toContain('Câu đúng: 我想买');
   });
 
   it('moves focus with arrow keys and roving tabindex without sending (Q51)', () => {

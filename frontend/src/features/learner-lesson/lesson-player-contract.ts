@@ -61,11 +61,24 @@ export const topicCompleteInputSchema = z.strictObject({
   lessonId: z.number().int().positive().max(2_147_483_647),
 });
 
-/** `Attempt` fields the result bar shows; it never carries the answer key. */
+/**
+ * Q-G9: the authored answer the result bar reveals after a wrong attempt. The
+ * backend sends it only when `isCorrect === false`; matching never carries it.
+ * `.catch(undefined)` drops a malformed shape rather than failing the whole
+ * attempt parse, so a bad `correctAnswer` never 503s the submit.
+ */
+export const correctAnswerSchema = z.union([
+  z.object({ optionId: z.string() }),
+  z.object({ acceptedTexts: z.array(z.string()), caseSensitive: z.boolean() }),
+  z.object({ tokenIds: z.array(z.string()) }),
+]);
+
+/** `Attempt` fields the result bar shows; the answer key appears only on a miss. */
 export const backendAttemptSchema = backendEnvelope(
   z.object({
     isCorrect: z.boolean().nullable(),
     explanation: z.string().nullable(),
+    correctAnswer: correctAnswerSchema.optional().catch(undefined),
   }),
 );
 

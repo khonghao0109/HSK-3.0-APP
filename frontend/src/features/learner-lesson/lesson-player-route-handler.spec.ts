@@ -241,6 +241,7 @@ describe('handleExerciseAttempt', () => {
   function attemptResponse(
     isCorrect: boolean | null,
     explanation: string | null,
+    correctAnswer?: unknown,
   ) {
     return {
       success: true,
@@ -257,6 +258,7 @@ describe('handleExerciseAttempt', () => {
         explanation,
         media: null,
         submittedAt: '2026-10-11T00:00:00.000Z',
+        ...(correctAnswer === undefined ? {} : { correctAnswer }),
       },
     };
   }
@@ -287,6 +289,57 @@ describe('handleExerciseAttempt', () => {
         idempotencyKey: KEY,
       },
     );
+  });
+
+  it('forwards the correct answer when the backend reveals it on a wrong attempt (Q-G9)', async () => {
+    const requestBackend = vi
+      .fn()
+      .mockResolvedValue(attemptResponse(false, null, { optionId: 'hello' }));
+    const response = await handleExerciseAttempt(
+      request(attemptPath, { body: { answer: { optionId: 'bye' } } }),
+      '34',
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      data: {
+        isCorrect: false,
+        explanation: null,
+        correctAnswer: { optionId: 'hello' },
+      },
+    });
+  });
+
+  it('omits correctAnswer when the backend did not send one', async () => {
+    const requestBackend = vi
+      .fn()
+      .mockResolvedValue(attemptResponse(true, null));
+    const response = await handleExerciseAttempt(
+      request(attemptPath, { body: { answer: { optionId: 'hello' } } }),
+      '34',
+      deps(requestBackend),
+    );
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { isCorrect: true, explanation: null },
+    });
+  });
+
+  it('drops a malformed correctAnswer without failing the attempt (no 503)', async () => {
+    const requestBackend = vi
+      .fn()
+      .mockResolvedValue(attemptResponse(false, null, { nonsense: 1 }));
+    const response = await handleExerciseAttempt(
+      request(attemptPath, { body: { answer: { optionId: 'bye' } } }),
+      '34',
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { isCorrect: false, explanation: null },
+    });
   });
 
   it('trims fill_blank text before forwarding', async () => {
