@@ -11,6 +11,7 @@ import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 import { LessonImage } from './lesson-image';
 import { PLAYER_MESSAGES } from './lesson-player';
 import { UnitResult } from './unit-result';
+import { VocabularyDrill } from './vocabulary-drill';
 import { SPEECH_RATE, SPEECH_RATE_SLOW, useChineseVoice } from './speech';
 import { answerMark, type UnitStep, type UnitWord } from './vocabulary-unit';
 
@@ -47,7 +48,12 @@ function markWord(sentence: string, target: string): ReactNode[] {
  * arrow keys only move focus. Nghe needs a zh voice on the device.
  */
 export function VocabularyUnitFlow(props: Props) {
-  const { lessonHref, title, words, steps } = props;
+  const { lessonHref, title, words } = props;
+  const { available, speak } = useChineseVoice();
+  // Pha G2c: no zh voice, no "nghe rồi sắp xếp" (as Nghe is hidden, G2a).
+  const steps = available
+    ? props.steps
+    : props.steps.filter((candidate) => candidate.kind !== 'listen');
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [focused, setFocused] = useState(0);
@@ -56,7 +62,6 @@ export function VocabularyUnitFlow(props: Props) {
   const continueRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLElement>(null);
   const moved = useRef(false);
-  const { available, speak } = useChineseVoice();
 
   const step = steps[index];
   const options = step?.kind === 'quiz' ? step.options : [];
@@ -76,7 +81,7 @@ export function VocabularyUnitFlow(props: Props) {
   }, [index]);
 
   if (!step) {
-    return <VocabularyResult {...props} results={results} />;
+    return <VocabularyResult {...props} steps={steps} results={results} />;
   }
 
   const go = (to: number) => {
@@ -95,8 +100,6 @@ export function VocabularyUnitFlow(props: Props) {
     }));
   };
 
-  const word = words[step.word];
-  if (!word) return null;
   const total = steps.length;
   const shown = index + 1;
   const correct = step.kind === 'quiz' && selected === step.answer;
@@ -112,6 +115,60 @@ export function VocabularyUnitFlow(props: Props) {
       <span className={percentClass((shown / total) * 100)} />
     </div>
   );
+  const header = (
+    <header className="m02-head m02-bar ex-bar">
+      <Link
+        className="icon-btn"
+        href={lessonHref}
+        aria-label="Thoát về bài học"
+      >
+        <Icon name="x" />
+      </Link>
+      <div className="ex-track">
+        <h1 className="m02-bar__title">{title}</h1>
+        {progress('progress ex-progress ex-progress--web w-only')}
+      </div>
+      <p className="m02-bar__count" aria-label={`Bước ${shown} trên ${total}`}>
+        {`${shown}/${total}`}
+      </p>
+    </header>
+  );
+  // mẫu mobile `.uxa-progress`: thanh + số bước bên cạnh.
+  const mobileProgress = (
+    <div className="lu-progress m-only">
+      {progress('progress')}
+      <span className="lu-progress__count" aria-hidden="true">
+        {`${shown}/${total}`}
+      </span>
+    </div>
+  );
+
+  if (
+    step.kind === 'match' ||
+    step.kind === 'fill' ||
+    step.kind === 'arrange' ||
+    step.kind === 'listen'
+  ) {
+    const drills = steps.filter((candidate) => !('word' in candidate));
+    return (
+      <div className="ex lu-flow">
+        {header}
+        <VocabularyDrill
+          key={index}
+          step={step}
+          place={drills.indexOf(step) + 1}
+          count={drills.length}
+          progress={mobileProgress}
+          headingRef={headingRef}
+          speak={speak}
+          onNext={() => go(index + 1)}
+        />
+      </div>
+    );
+  }
+
+  const word = words[step.word];
+  if (!word) return null;
   const head = <span lang="zh-Hans">{word.hanzi}</span>;
   const meaning = spoken(word.meaning ?? '');
   const feedback = correct
@@ -127,34 +184,10 @@ export function VocabularyUnitFlow(props: Props) {
           ? `${correct ? PLAYER_MESSAGES.correctTitle : PLAYER_MESSAGES.wrongTitle}. ${feedback}`
           : ''}
       </p>
-      <header className="m02-head m02-bar ex-bar">
-        <Link
-          className="icon-btn"
-          href={lessonHref}
-          aria-label="Thoát về bài học"
-        >
-          <Icon name="x" />
-        </Link>
-        <div className="ex-track">
-          <h1 className="m02-bar__title">{title}</h1>
-          {progress('progress ex-progress ex-progress--web w-only')}
-        </div>
-        <p
-          className="m02-bar__count"
-          aria-label={`Bước ${shown} trên ${total}`}
-        >
-          {`${shown}/${total}`}
-        </p>
-      </header>
+      {header}
 
       <main className="m02-sheet ex-body">
-        {/* mẫu mobile `.uxa-progress`: thanh + số bước bên cạnh. */}
-        <div className="lu-progress m-only">
-          {progress('progress')}
-          <span className="lu-progress__count" aria-hidden="true">
-            {`${shown}/${total}`}
-          </span>
-        </div>
+        {mobileProgress}
 
         <div className="g-body">
           {step.kind === 'card' && (

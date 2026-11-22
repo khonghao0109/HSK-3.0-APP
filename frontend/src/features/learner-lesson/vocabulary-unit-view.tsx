@@ -15,6 +15,7 @@ import { loadLearnerLesson } from './lesson-page-loader';
 import { lessonUnits, parseLessonId, unitHref } from './lesson-sections';
 import type { LessonWords, UnitWordDetail } from './lesson-topic-contract';
 import { VocabularyUnitFlow } from './vocabulary-unit-flow';
+import { unitDrills } from './vocabulary-drills';
 import { type UnitWord, unitSteps } from './vocabulary-unit';
 
 type LessonWord = LessonWords['words'][number];
@@ -76,12 +77,16 @@ export async function VocabularyUnitView({
         topic && activity.state !== 'locked'
           ? lessonWords.words.filter((word) => word.topicId === topic.id)
           : [];
-      // A word missing from the dictionary just has no example.
-      const details = await Promise.all(
-        words.map((word) =>
-          getUnitWordDetail(token, word.id).catch(() => null),
-        ),
-      );
+      // A word missing from the dictionary just has no example. Pha G2c:
+      // every lesson word, since the fill drill needs the part of speech of
+      // its distractors (lesson words only, no new contract).
+      const details = words.length
+        ? await Promise.all(
+            lessonWords.words.map((word) =>
+              getUnitWordDetail(token, word.id).catch(() => null),
+            ),
+          )
+        : [];
       return { activity, lessonWords, topic, words, details };
     },
   );
@@ -111,10 +116,12 @@ export async function VocabularyUnitView({
   const unit = units[position];
   const next = units[position + 1];
 
-  const unitWords = words.map((word, index) =>
+  const pool = lessonWords.words.map((word, index) =>
     unitWord(word, details[index] ?? null),
   );
-  const pool = lessonWords.words.map((word) => unitWord(word, null));
+  const unitWords = pool.filter((word) =>
+    words.some((candidate) => candidate.id === word.id),
+  );
 
   return (
     <VocabularyUnitFlow
@@ -125,7 +132,7 @@ export async function VocabularyUnitView({
       lessonHref={lessonHref}
       nextHref={next && !next.locked ? unitHref(lessonId, next) : null}
       words={unitWords}
-      steps={unitSteps(unitWords, pool)}
+      steps={[...unitSteps(unitWords, pool), ...unitDrills(unitWords, pool)]}
     />
   );
 }
