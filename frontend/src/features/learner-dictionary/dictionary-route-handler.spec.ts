@@ -7,6 +7,7 @@ import { getRefreshCookieName } from '@/lib/auth/session-cookie';
 import {
   handleDictionarySave,
   handleDictionarySearch,
+  handleDictionaryStrokes,
   type DictionaryHandlerDependencies,
 } from './dictionary-route-handler';
 
@@ -365,5 +366,95 @@ describe('handleDictionarySave', () => {
       deps(vi.fn().mockResolvedValue({ success: true, data: {}, meta })),
     );
     await expectFailure(response, 502, 'unknown');
+  });
+});
+
+describe('handleDictionaryStrokes (G2d)', () => {
+  const strokes = {
+    characters: [
+      {
+        hanzi: '我',
+        strokeCount: 1,
+        strokes: ['M 0 0 L 10 10'],
+        medians: [
+          [
+            [0, 0],
+            [10, 10],
+          ],
+        ],
+        sourceCode: 'MAKEMEAHANZI_GRAPHICS',
+      },
+    ],
+    sources: [
+      {
+        code: 'MAKEMEAHANZI_GRAPHICS',
+        name: 'Make Me a Hanzi',
+        version: 'v',
+        license: 'Arphic Public License',
+        attribution: 'Dữ liệu nét chữ',
+        referenceUrl: null,
+      },
+    ],
+  };
+
+  function strokeRequest(search: string) {
+    return new NextRequest(
+      new URL(`/api/learner/dictionary/strokes${search}`, appOrigin),
+    );
+  }
+
+  it('forwards one encoded hanzi value and returns the data', async () => {
+    const requestBackend = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: strokes, meta });
+    const response = await handleDictionaryStrokes(
+      strokeRequest('?hanzi=%E6%88%91%E4%BB%AC'),
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, data: strokes });
+    expect(requestBackend).toHaveBeenCalledWith(
+      '/api/v1/dictionary/characters/strokes?hanzi=%E6%88%91%E4%BB%AC',
+      undefined,
+    );
+  });
+
+  it.each([
+    ['missing', ''],
+    ['empty', '?hanzi='],
+    ['repeated', '?hanzi=%E6%88%91&hanzi=%E4%BB%AC'],
+    ['Latin', '?hanzi=a'],
+    ['a comma', '?hanzi=%E6%88%91,%E4%BB%AC'],
+    ['17 characters', `?hanzi=${encodeURIComponent('我'.repeat(17))}`],
+  ])('answers 400 for %s hanzi without calling the backend', async (_, q) => {
+    const requestBackend = vi.fn();
+    const response = await handleDictionaryStrokes(
+      strokeRequest(q),
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(400);
+    expect(requestBackend).not.toHaveBeenCalled();
+  });
+
+  it('answers 502 for a malformed backend body', async () => {
+    const requestBackend = vi.fn().mockResolvedValue({
+      success: true,
+      data: { characters: [{ hanzi: '我' }], sources: [] },
+      meta,
+    });
+    const response = await handleDictionaryStrokes(
+      strokeRequest('?hanzi=%E6%88%91'),
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(502);
+  });
+
+  it('passes a backend 400 through', async () => {
+    const requestBackend = vi.fn().mockRejectedValue(backendError(400));
+    const response = await handleDictionaryStrokes(
+      strokeRequest('?hanzi=%E6%88%91'),
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(400);
   });
 });

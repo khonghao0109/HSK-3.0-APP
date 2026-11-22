@@ -11,6 +11,7 @@ import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 import { LessonImage } from './lesson-image';
 import { PLAYER_MESSAGES } from './lesson-player';
 import { PracticeBar } from './practice-bar';
+import type { StrokeCache } from './stroke-data';
 import { UnitResult } from './unit-result';
 import { VocabularyDrill } from './vocabulary-drill';
 import { SPEECH_RATE, SPEECH_RATE_SLOW, useChineseVoice } from './speech';
@@ -60,6 +61,8 @@ export function VocabularyUnitFlow(props: Props) {
   const [focused, setFocused] = useState(0);
   // Wrong answers per word index (Pha C debt 3b).
   const [results, setResults] = useState<Record<number, number>>({});
+  // Viết: one stroke read per word for this unit (G2d), on the card being shown.
+  const [strokeCache] = useState<StrokeCache>(() => new Map());
   const continueRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLElement>(null);
   const moved = useRef(false);
@@ -377,6 +380,7 @@ export function VocabularyUnitFlow(props: Props) {
             voice={available}
             speak={speak}
             onNext={() => go(index + 1)}
+            strokeCache={step.kind === 'card' ? strokeCache : undefined}
           />
         </footer>
       )}

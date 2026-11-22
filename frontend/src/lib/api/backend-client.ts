@@ -75,6 +75,7 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/dictionary\?query=[^&#]+$/,
   /^\/api\/v1\/dictionary\/words\/\d+$/,
   /^\/api\/v1\/dictionary\/words\/\d+\/save$/,
+  /^\/api\/v1\/dictionary\/characters\/strokes\?hanzi=[^&#]+$/,
   // M4.2a (TL-118): exam intro + start. M4.2b Pha B (TL-134) adds the four
   // attempt routes; the question key is the snapshot key `q<number>` only.
   // M4.5 B1: the paginated learner list (query string filtered: level, skill,

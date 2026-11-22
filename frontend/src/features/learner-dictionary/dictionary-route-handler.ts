@@ -11,6 +11,7 @@ import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import {
   backendDictionarySavedSchema,
   backendDictionarySearchSchema,
+  backendDictionaryStrokesSchema,
 } from './dictionary-contract';
 import { normalizeSearchQuery } from './dictionary-display';
 
@@ -107,4 +108,41 @@ export async function handleDictionarySave(
   const parsed = backendDictionarySavedSchema.safeParse(raw);
   if (!parsed.success) return safeResponse(502);
   return json(200, { success: true, data: { saved: parsed.data.data.saved } });
+}
+
+/** Same rules as the backend route: 1..16 code points, Han only (G2d). */
+function strokeQuery(request: NextRequest): string | null {
+  const values = request.nextUrl.searchParams.getAll('hanzi');
+  if (values.length !== 1) return null;
+  const chars = Array.from(values[0] ?? '');
+  if (chars.length === 0 || chars.length > 16) return null;
+  return chars.every((char) => /^\p{Script=Han}$/u.test(char))
+    ? chars.join('')
+    : null;
+}
+
+/**
+ * `GET /api/learner/dictionary/strokes?hanzi=`: stroke data for the Viết board
+ * (G2d). Public on the backend; the learner token is forwarded when present.
+ */
+export async function handleDictionaryStrokes(
+  request: NextRequest,
+  deps: DictionaryHandlerDependencies,
+): Promise<NextResponse> {
+  const hanzi = strokeQuery(request);
+  if (hanzi === null) return safeResponse(400);
+  const token = request.cookies.get(deps.learnerCookieName)?.value;
+
+  let raw: unknown;
+  try {
+    raw = await deps.requestBackend(
+      `/api/v1/dictionary/characters/strokes?hanzi=${encodeURIComponent(hanzi)}`,
+      token ? { token } : undefined,
+    );
+  } catch (error) {
+    return backendFailure(error, deps);
+  }
+  const parsed = backendDictionaryStrokesSchema.safeParse(raw);
+  if (!parsed.success) return safeResponse(502);
+  return json(200, { success: true, data: parsed.data.data });
 }

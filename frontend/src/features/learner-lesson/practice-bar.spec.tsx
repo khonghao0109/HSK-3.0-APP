@@ -163,3 +163,102 @@ describe('PracticeBar (Pha G2b)', () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('PracticeBar Viết (Pha G2d)', () => {
+  const strokesBody = (withSecond: boolean) => ({
+    success: true,
+    data: {
+      characters: [
+        {
+          hanzi: '我',
+          strokeCount: 1,
+          strokes: ['M 0 0 L 9 9 Z'],
+          medians: [
+            [
+              [0, 0],
+              [9, 9],
+            ],
+          ],
+          sourceCode: 'MMAH',
+        },
+        withSecond
+          ? {
+              hanzi: '们',
+              strokeCount: 1,
+              strokes: ['M 0 0 L 9 9 Z'],
+              medians: [
+                [
+                  [0, 0],
+                  [9, 9],
+                ],
+              ],
+              sourceCode: 'MMAH',
+            }
+          : {
+              hanzi: '们',
+              strokeCount: null,
+              strokes: null,
+              medians: null,
+              sourceCode: null,
+            },
+      ],
+      sources: [
+        {
+          code: 'MMAH',
+          name: 'Make Me a Hanzi',
+          attribution: 'Dữ liệu nét chữ',
+          referenceUrl: null,
+        },
+      ],
+    },
+  });
+
+  async function renderWithStrokes(response: Promise<unknown>) {
+    fetchMock.mockReturnValue(response);
+    let view: ReturnType<typeof renderBar> | undefined;
+    await act(async () => {
+      view = renderBar({ hanzi: '我们', strokeCache: new Map() });
+    });
+    return view;
+  }
+
+  it('shows Nghe, Nói, Viết, Tiếp once every character has strokes', async () => {
+    await renderWithStrokes(
+      Promise.resolve({ ok: true, json: async () => strokesBody(true) }),
+    );
+    const group = screen.getByRole('group', { name: 'Luyện từ này' });
+    expect(
+      Array.from(group.querySelectorAll('button')).map((b) => b.textContent),
+    ).toEqual(['Nghe', 'Nói', 'Viết', 'Tiếp']);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]).toEqual([
+      `/api/learner/dictionary/strokes?hanzi=${encodeURIComponent('我们')}`,
+    ]);
+
+    const write = screen.getByRole('button', { name: 'Viết' });
+    fireEvent.click(write);
+    expect(
+      screen.getByRole('dialog', { name: 'Viết 我们 wǒ' }),
+    ).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Đóng bảng viết' }));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(write);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides Viết when one character has no strokes', async () => {
+    await renderWithStrokes(
+      Promise.resolve({ ok: true, json: async () => strokesBody(false) }),
+    );
+    expect(screen.queryByRole('button', { name: 'Viết' })).toBeNull();
+  });
+
+  it('hides Viết without an error when the read fails', async () => {
+    await renderWithStrokes(Promise.reject(new Error('offline')));
+    expect(screen.queryByRole('button', { name: 'Viết' })).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+});

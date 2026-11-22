@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { Icon } from '@/components/ui/icon';
 
@@ -11,6 +11,12 @@ import {
   useRecorder,
 } from './recording';
 import { SPEECH_RATE } from './speech';
+import {
+  loadWordStrokes,
+  type StrokeCache,
+  type WordStrokes,
+} from './stroke-data';
+import { WritingBoard } from './writing-board';
 
 type Props = {
   /** What Nghe reads and Nói asks for: the word, or the example sentence. */
@@ -21,6 +27,8 @@ type Props = {
   voice: boolean;
   speak: (text: string, rate?: number) => void;
   onNext: () => void;
+  /** Word cards only: stroke reads for the unit. Viết shows once every character has strokes. */
+  strokeCache?: StrokeCache;
 };
 
 const noSubscribe = () => () => undefined;
@@ -34,8 +42,8 @@ const LIVE = {
 
 /**
  * Thanh đáy của thẻ từ và câu ví dụ (mẫu vu-card, vu-example): Nghe · Nói ·
- * Tiếp, với bảng ghi âm phía trên. Nói ẩn khi trình duyệt không ghi được.
- * G2d chèn Viết giữa Nói và Tiếp (mẫu: Nghe · Nói · Viết · Tiếp).
+ * Viết · Tiếp, với bảng ghi âm phía trên. Nói ẩn khi trình duyệt không ghi
+ * được; Viết (G2d) chỉ có ở thẻ từ và khi mọi chữ có dữ liệu nét.
  */
 export function PracticeBar({
   hanzi,
@@ -44,6 +52,7 @@ export function PracticeBar({
   voice,
   speak,
   onNext,
+  strokeCache,
 }: Props) {
   const limit = RECORD_LIMIT_MS[length];
   const seconds = limit / 1000;
@@ -56,6 +65,25 @@ export function PracticeBar({
   );
   const audio = useRef<HTMLAudioElement | null>(null);
   const { state } = recorder;
+  const [strokes, setStrokes] = useState<WordStrokes | null>(null);
+  const [writing, setWriting] = useState(false);
+  const writeButton = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!strokeCache) return;
+    let live = true;
+    void loadWordStrokes(strokeCache, hanzi).then((data) => {
+      if (live) setStrokes(data);
+    });
+    return () => {
+      live = false;
+    };
+  }, [strokeCache, hanzi]);
+
+  const closeWriting = () => {
+    setWriting(false);
+    requestAnimationFrame(() => writeButton.current?.focus());
+  };
 
   const toggle = () =>
     state === 'recording' ? recorder.stop() : void recorder.start();
@@ -188,6 +216,20 @@ export function PracticeBar({
             Nói
           </button>
         )}
+        {strokes && (
+          <button
+            className="g-tool"
+            type="button"
+            ref={writeButton}
+            aria-haspopup="dialog"
+            onClick={() => setWriting(true)}
+          >
+            <span className="g-tool__dot">
+              <Icon name="pencil" size={24} />
+            </span>
+            Viết
+          </button>
+        )}
         <button className="g-next" type="button" onClick={onNext}>
           <span className="g-next__dot">
             <Icon name="arrow-right" size={24} />
@@ -198,6 +240,14 @@ export function PracticeBar({
       <p className="sr-only" role="status" aria-live="polite">
         {LIVE[state]}
       </p>
+      {writing && strokes && (
+        <WritingBoard
+          hanzi={hanzi}
+          pinyin={pinyin}
+          data={strokes}
+          onClose={closeWriting}
+        />
+      )}
     </div>
   );
 }

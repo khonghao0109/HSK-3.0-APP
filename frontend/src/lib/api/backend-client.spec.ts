@@ -675,6 +675,31 @@ describe('server-only backend client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
 
+  it('allowlists character strokes with exactly one hanzi parameter', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request(
+      '/api/v1/dictionary/characters/strokes?hanzi=%E6%88%91%E4%BB%AC',
+    );
+    for (const path of [
+      '/api/v1/dictionary/characters/strokes',
+      '/api/v1/dictionary/characters/strokes?hanzi=%E6%88%91&x=1',
+      '/api/v1/dictionary/characters/strokes?hanzi=%E6%88%91#top',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it('sends DELETE with the token and no body', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

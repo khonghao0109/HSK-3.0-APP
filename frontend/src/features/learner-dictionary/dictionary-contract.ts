@@ -76,3 +76,32 @@ export const backendDictionarySavedSchema = backendEnvelope(
 
 export type DictionarySearchItem = z.output<typeof dictionarySearchItemSchema>;
 export type DictionaryWordDetail = z.output<typeof dictionaryWordDetailSchema>;
+
+const pointSchema = z.tuple([z.number(), z.number()]);
+
+/** `GET /dictionary/characters/strokes?hanzi=` (G2d): Make Me a Hanzi data. */
+export const dictionaryStrokesSchema = z.object({
+  characters: z.array(
+    z.object({
+      hanzi: z.string(),
+      strokeCount: z.number().int().nullable(),
+      strokes: z.array(z.string()).nullable(),
+      medians: z.array(z.array(pointSchema)).nullable(),
+      sourceCode: z.string().nullable(),
+    }),
+  ),
+  sources: z.array(
+    z.object({
+      code: z.string(),
+      name: z.string(),
+      version: z.string(),
+      license: z.string().nullable(),
+      attribution: z.string().nullable(),
+      referenceUrl: z.string().nullable(),
+    }),
+  ),
+});
+
+export const backendDictionaryStrokesSchema = backendEnvelope(
+  dictionaryStrokesSchema,
+);
