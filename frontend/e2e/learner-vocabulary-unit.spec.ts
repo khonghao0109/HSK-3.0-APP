@@ -274,10 +274,11 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N8; Pha G2a)', () => {
     await expect(page.locator('.g-py')).toHaveText('jiā');
     await expect(page.locator('.g-pos')).toHaveText('danh từ');
     await expect(page.locator('.g-vi')).toHaveText('nhà; gia đình');
-    // No zh voice: Nghe is hidden; Nói/Viết are G2b.
+    // No zh voice: Nghe is hidden; Chromium records, so Nói (Pha G2b);
+    // Viết is G2d.
     await expect(
       page.getByRole('group', { name: 'Luyện từ này' }).getByRole('button'),
-    ).toHaveText(['Tiếp']);
+    ).toHaveText(['Nói', 'Tiếp']);
     await expectTargets44(page, CONTROLS);
     await expectNoHorizontalScroll(page);
 
@@ -590,5 +591,120 @@ test.describe('Từ vựng unit, step by step (Pha C: N3, N8; Pha G2a)', () => {
     await expect(page.locator('#lesson-content-title')).toHaveText(
       'Đơn vị học',
     );
+  });
+});
+
+// Pha G2b: Nói records the learner's own voice and plays it back, nothing
+// graded or sent. A Web Audio tone stands in for the microphone, so the real
+// MediaRecorder records it without a device or a permission prompt.
+test.describe('Từ vựng unit: Nói (Pha G2b)', () => {
+  test('records the word for at most 5 s and the sentence for 10 s, in the page only', async ({
+    page,
+    baseURL,
+  }) => {
+    const { lessonId, topicId } = await seedVocabularyUnit();
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: async () => {
+          const audio = new AudioContext();
+          const tone = audio.createOscillator();
+          const out = audio.createMediaStreamDestination();
+          tone.connect(out);
+          tone.start();
+          return out.stream;
+        },
+      });
+    });
+    await registerReadyLearner(page, baseURL);
+    const cspConsole = await watchCsp(page);
+    const response = await page.goto(
+      `/learn/lessons/${lessonId}/vocabulary?unit=${topicId}`,
+    );
+    // Q-G2: the microphone for this origin only, nothing else opened.
+    expect(response?.headers()['permissions-policy']).toBe(
+      'camera=(), microphone=(self), geolocation=()',
+    );
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() !== 'GET') writes.push(request.url());
+    });
+
+    const say = page.getByRole('button', { name: 'Nói', exact: true });
+    await expect(say).toHaveAttribute('aria-pressed', 'false');
+    await say.click();
+    await expect(say).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.g-sheet__text')).toHaveText(
+      'Đọc to 家 (jiā). Tự dừng sau 5 giây.',
+    );
+    await expect(page.locator('.g-dock [role="status"]')).toHaveText(
+      'Đang ghi âm',
+    );
+    await expectTargets44(page, CONTROLS);
+    // Stops by itself at 5 s.
+    await expect(page.getByText('Đã ghi xong', { exact: true })).toBeVisible({
+      timeout: 8000,
+    });
+    await expect(say).toHaveAttribute('aria-pressed', 'false');
+    const take = await page.evaluate(
+      () => document.querySelectorAll('audio').length,
+    );
+    expect(take).toBe(0);
+    await page.getByRole('button', { name: 'Bạn đọc' }).click();
+    await expect(
+      page.getByText(
+        'Bản ghi chỉ nằm trên máy này, không gửi đi và mất khi rời màn hình.',
+      ),
+    ).toBeVisible();
+    await expectNoHorizontalScroll(page);
+
+    await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
+    await expect(page.getByText('Đã ghi xong', { exact: true })).toHaveCount(0);
+    await say.click();
+    await expect(page.locator('.g-sheet__text')).toHaveText(
+      'Đọc to 我家有四口人。 (wǒ jiā yǒu sì kǒu rén.). Tự dừng sau 10 giây.',
+    );
+    await page.getByRole('button', { name: 'Dừng ghi' }).click();
+    await expect(page.getByText('Đã ghi xong', { exact: true })).toBeVisible();
+
+    expect(writes).toEqual([]);
+    expect(
+      await page.evaluate(async () => ({
+        local: localStorage.length,
+        session: sessionStorage.length,
+        databases: (await indexedDB.databases()).length,
+      })),
+    ).toEqual({ local: 0, session: 0, databases: 0 });
+    expect(await readCspViolations(page)).toEqual([]);
+    expect(cspConsole).toEqual([]);
+  });
+});
+
+// The learner says no to the microphone (headless Chromium would leave the
+// prompt open, so the refusal is what getUserMedia answers).
+test.describe('Từ vựng unit: Nói without the microphone (Pha G2b)', () => {
+  test('a refused microphone says so and the unit goes on', async ({
+    page,
+    baseURL,
+  }) => {
+    const { lessonId, topicId } = await seedVocabularyUnit();
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: () =>
+          Promise.reject(
+            new DOMException('Permission denied', 'NotAllowedError'),
+          ),
+      });
+    });
+    await registerReadyLearner(page, baseURL);
+    await page.goto(`/learn/lessons/${lessonId}/vocabulary?unit=${topicId}`);
+    await page.getByRole('button', { name: 'Nói', exact: true }).click();
+    await expect(page.locator('.g-sheet[role="alert"]')).toContainText(
+      'Chưa có quyền dùng micro',
+    );
+    await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
+    await page.getByRole('button', { name: 'Tiếp', exact: true }).click();
+    await expect(
+      page.getByRole('region', { name: 'Câu ví dụ với 家' }),
+    ).toBeVisible();
   });
 });
