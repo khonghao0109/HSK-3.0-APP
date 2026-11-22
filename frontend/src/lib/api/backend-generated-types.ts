@@ -1050,6 +1050,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dictionary/characters/strokes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DictionaryController_getCharacterStrokes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dictionary/words/{id}": {
         parameters: {
             query?: never;
@@ -2757,6 +2773,29 @@ export interface components {
             meanings: components["schemas"]["DictionaryRelatedWordMeaningDto"][];
             /** @description Name of the lowest public Level. */
             level: string | null;
+        };
+        CharacterStrokesDto: {
+            strokes: string[] | null;
+            /** @description One entry per stroke: a list of `[x, y]` points. */
+            medians: number[][][] | null;
+            hanzi: string;
+            /** @description `null` when the character is unknown or has no valid stroke data. */
+            strokeCount: number | null;
+            sourceCode: string | null;
+        };
+        CharacterStrokesSourceDto: {
+            code: string;
+            name: string;
+            version: string;
+            license: string | null;
+            attribution: string | null;
+            referenceUrl: string | null;
+        };
+        CharacterStrokesResponseDto: {
+            /** @description In request order, duplicates removed. */
+            characters: components["schemas"]["CharacterStrokesDto"][];
+            /** @description Distinct data sources of the characters that have strokes. */
+            sources: components["schemas"]["CharacterStrokesSourceDto"][];
         };
         DictionaryWordAudioDto: {
             mediaId: number;
@@ -6071,6 +6110,37 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    DictionaryController_getCharacterStrokes: {
+        parameters: {
+            query: {
+                /** @description Han characters written together: at most 16, at most 8 distinct; duplicates are removed in order. */
+                hanzi: string;
+            };
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CharacterStrokesResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };
