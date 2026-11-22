@@ -50,7 +50,15 @@ export const PLAYER_MESSAGES = {
 
 type StartOutcome = 'started' | 'sign-in' | 'lesson' | 'failed';
 
-type Result = { correct: boolean; explanation: string | null };
+/** Q-G9: the authored answer the BFF forwards only after a wrong attempt. */
+type CorrectAnswer =
+  { optionId: string } | { acceptedTexts: string[] } | { tokenIds: string[] };
+
+type Result = {
+  correct: boolean;
+  explanation: string | null;
+  correctAnswer: CorrectAnswer | null;
+};
 
 /** Key and duration of the answer in flight: a retry of it reuses both. */
 type Pending = {
@@ -85,7 +93,59 @@ function readResult(body: unknown): Result | null {
   const explanation: unknown = Reflect.get(data, 'explanation');
   if (typeof isCorrect !== 'boolean') return null;
   if (explanation !== null && typeof explanation !== 'string') return null;
-  return { correct: isCorrect, explanation: explanation?.trim() || null };
+  return {
+    correct: isCorrect,
+    explanation: explanation?.trim() || null,
+    correctAnswer: readCorrectAnswer(data),
+  };
+}
+
+/** Reads the revealed answer defensively; a missing or odd shape yields null. */
+function readCorrectAnswer(data: object): CorrectAnswer | null {
+  const value: unknown = Reflect.get(data, 'correctAnswer');
+  if (typeof value !== 'object' || value === null) return null;
+  const optionId: unknown = Reflect.get(value, 'optionId');
+  if (typeof optionId === 'string') return { optionId };
+  const acceptedTexts: unknown = Reflect.get(value, 'acceptedTexts');
+  if (isNonEmptyStringArray(acceptedTexts)) return { acceptedTexts };
+  const tokenIds: unknown = Reflect.get(value, 'tokenIds');
+  if (isNonEmptyStringArray(tokenIds)) return { tokenIds };
+  return null;
+}
+
+function isNonEmptyStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === 'string')
+  );
+}
+
+/**
+ * The correct answer as display text, or null when it cannot be resolved (an
+ * option/token id not in this exercise, matching, or a correct attempt). Null
+ * renders nothing rather than crashing.
+ */
+function resolveCorrectAnswerText(
+  current: PlayerExercise | undefined,
+  answer: CorrectAnswer,
+  choices: PlayerChoice[],
+): string | null {
+  if ('optionId' in answer) {
+    return (
+      choices.find((option) => option.id === answer.optionId)?.text ?? null
+    );
+  }
+  if ('acceptedTexts' in answer) {
+    return answer.acceptedTexts[0] ?? null;
+  }
+  if (current?.kind !== 'arrange_sentence') return null;
+  const textById = new Map(
+    current.tokens.map((token) => [token.id, token.text]),
+  );
+  const parts = answer.tokenIds.map((id) => textById.get(id));
+  if (parts.some((part) => part === undefined)) return null;
+  return parts.join('');
 }
 
 /**
@@ -479,12 +539,21 @@ export function LessonPlayer({
         const checked = input.optionId === option.id;
         const focusable = option.id === tabStop;
         const mark = result && checked;
-        const className = [
-          'ls-opt',
-          mark ? (result.correct ? 'is-right' : 'is-wrong') : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
+        // Q-G9: on a miss, highlight the authored option too, not just the pick.
+        const isAnswer =
+          result !== null &&
+          !result.correct &&
+          result.correctAnswer !== null &&
+          'optionId' in result.correctAnswer &&
+          result.correctAnswer.optionId === option.id;
+        const state = isAnswer
+          ? 'is-right'
+          : mark
+            ? result.correct
+              ? 'is-right'
+              : 'is-wrong'
+            : '';
+        const className = ['ls-opt', state].filter(Boolean).join(' ');
         return (
           <button
             key={option.id}
@@ -498,9 +567,9 @@ export function LessonPlayer({
             onKeyDown={(event) => radio.handleKeyDown(event, optionIndex)}
           >
             <ChoiceText text={option.text} />
-            {mark && (
+            {(mark || isAnswer) && (
               <Icon
-                name={result.correct ? 'check-circle' : 'x-circle'}
+                name={state === 'is-right' ? 'check-circle' : 'x-circle'}
                 className="ls-opt__mark"
               />
             )}
@@ -518,6 +587,13 @@ export function LessonPlayer({
     current?.kind === 'matching'
       ? PLAYER_MESSAGES.matchingDoneTitle(matchingMistakes)
       : PLAYER_MESSAGES.wrongTitle;
+  // Q-G9: the authored answer to show after a wrong attempt (null hides it).
+  const correctAnswerText =
+    result && !result.correct && result.correctAnswer
+      ? resolveCorrectAnswerText(current, result.correctAnswer, choices)
+      : null;
+  const correctAnswerLabel =
+    current?.kind === 'arrange_sentence' ? 'Câu đúng' : 'Đáp án đúng';
   const sendsItself =
     current?.kind === 'mcq' ||
     current?.kind === 'listening' ||
@@ -525,7 +601,13 @@ export function LessonPlayer({
   const announcement = result
     ? result.correct
       ? `${PLAYER_MESSAGES.correctTitle}. ${correctText}`
-      : [wrongTitle, result.explanation].filter(Boolean).join('. ')
+      : [
+          wrongTitle,
+          result.explanation,
+          correctAnswerText && `${correctAnswerLabel}: ${correctAnswerText}`,
+        ]
+          .filter(Boolean)
+          .join('. ')
     : completion === 'busy'
       ? PLAYER_MESSAGES.finishing
       : submitting && choices.length > 0
@@ -805,6 +887,12 @@ export function LessonPlayer({
                   <p className="m02-feedback__title">{wrongTitle}</p>
                   {result.explanation && (
                     <p className="m02-feedback__text">{result.explanation}</p>
+                  )}
+                  {correctAnswerText && (
+                    <p className="m02-feedback__text">
+                      {`${correctAnswerLabel}: `}
+                      <ChoiceText text={correctAnswerText} />
+                    </p>
                   )}
                 </div>
                 <button

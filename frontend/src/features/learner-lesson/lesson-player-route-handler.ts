@@ -155,11 +155,17 @@ export async function handleExerciseAttempt(
     );
     const parsed = backendAttemptSchema.safeParse(raw);
     if (!parsed.success) return safeResponse(503);
+    const attempt = parsed.data.data;
     return json(200, {
       success: true,
       data: {
-        isCorrect: parsed.data.data.isCorrect === true,
-        explanation: parsed.data.data.explanation,
+        isCorrect: attempt.isCorrect === true,
+        explanation: attempt.explanation,
+        // Q-G9: forwarded only when the backend sent it (a wrong attempt);
+        // omitted (no key) otherwise, and dropped if it was malformed.
+        ...(attempt.correctAnswer === undefined
+          ? {}
+          : { correctAnswer: attempt.correctAnswer }),
       },
     });
   } catch (error) {

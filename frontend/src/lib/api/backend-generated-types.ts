@@ -3024,7 +3024,19 @@ export interface components {
             /** Format: date-time */
             lastActivityAt: string | null;
         };
+        LessonCorrectChoiceAnswerDto: {
+            optionId: string;
+        };
+        LessonCorrectFillBlankAnswerDto: {
+            acceptedTexts: string[];
+            caseSensitive: boolean;
+        };
+        LessonCorrectArrangeAnswerDto: {
+            tokenIds: string[];
+        };
         LessonActivityAttemptDto: {
+            /** @description Q-G9: present only when `isCorrect === false`; the key is omitted otherwise. */
+            correctAnswer?: components["schemas"]["LessonCorrectChoiceAnswerDto"] | components["schemas"]["LessonCorrectFillBlankAnswerDto"] | components["schemas"]["LessonCorrectArrangeAnswerDto"];
             attemptId: number;
             exerciseId: number;
             attemptNumber: number;

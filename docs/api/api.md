@@ -566,8 +566,16 @@ Envelope §1. Mọi `POST` cần header `Idempotency-Key`; thiếu/sai →
 | `GET` | `/progress/lessons/:lessonId` | — | `Progress` + `currentTopicId`, `currentExerciseId`; `404` nếu chưa có |
 
 `Attempt`: `{ attemptId, exerciseId, attemptNumber, isCorrect, score (100|0), durationSeconds,
-exerciseVersion, feedbackVersion, explanation, media, submittedAt }` — không `userId`, không
-raw answer.
+exerciseVersion, feedbackVersion, explanation, media, submittedAt, correctAnswer? }` — không
+`userId`, không raw answer.
+`correctAnswer` (Q-G9): đáp án đúng, **chỉ xuất hiện khi `isCorrect === false`**; khi đúng thì
+bỏ hẳn key (không trả `null`). Lấy từ `contentSnapshot.authoritativeAnswer` của chính lượt đó,
+shape theo loại câu: `mcq`/`listening_choice` → `{ optionId }`; `fill_blank` →
+`{ acceptedTexts: string[], caseSensitive }`; `arrange_sentence` → `{ tokenIds: string[] }`
+(đúng thứ tự). `matching` không có answer key (đúng/sai theo cấu trúc) nên **không** trả
+`correctAnswer`. Snapshot thiếu/hỏng → bỏ key, không lỗi. Áp dụng ở serializer dùng chung nên
+mọi chỗ trả `Attempt` (nộp, lịch sử, `latestAttempt`) cùng một quy tắc. Exam M4 dùng mã chấm
+riêng, không chịu ảnh hưởng và tiếp tục mask đáp án.
 
 `Progress`: `{ lessonId, status (not_started|learning|done), score, completionPercent,
 timeSpentSeconds, startedAt, completedAt, lastActivityAt, lesson: { title, slug } }`.
