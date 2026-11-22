@@ -342,11 +342,12 @@ describe('Từ vựng unit flow (N3)', () => {
     );
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('家');
     expect(screen.getByText('danh từ')).toBeInTheDocument();
-    // 家: card, example, quiz; 有: card, quiz.
-    expect(screen.getByLabelText('Bước 1 trên 5')).toBeInTheDocument();
+    // 家: card, example, quiz; 有: card, quiz; G2c: sắp xếp câu của 家.
+    expect(screen.getByLabelText('Bước 1 trên 6')).toBeInTheDocument();
+    // G2c (TL duyệt 22/11): every lesson word, for the fill distractors.
     expect(
       vi.mocked(getUnitWordDetail).mock.calls.map((call) => call[1]),
-    ).toEqual([2, 3]);
+    ).toEqual([1, 2, 3]);
     expect(screen.queryByText('爸爸')).toBeNull();
   });
 

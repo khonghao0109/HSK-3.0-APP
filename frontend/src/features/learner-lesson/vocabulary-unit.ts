@@ -1,7 +1,9 @@
 /**
  * Step-by-step Từ vựng unit (PO 20/11/2026, N3/N4): thẻ từ → câu ví dụ →
- * chọn nghĩa. Pure and Zod-free: the client flow imports it.
+ * chọn nghĩa, then the review drills (Pha G2c). Pure and Zod-free: the
+ * client flow imports it.
  */
+import type { DrillStep } from './vocabulary-drills';
 
 export type UnitWord = {
   id: number;
@@ -16,10 +18,12 @@ export type UnitWord = {
   example: { hanzi: string; pinyin: string | null; vi: string | null } | null;
 };
 
-export type UnitStep =
+export type WordStep =
   | { kind: 'card'; word: number }
   | { kind: 'example'; word: number }
   | { kind: 'quiz'; word: number; options: string[]; answer: number };
+
+export type UnitStep = WordStep | DrillStep;
 
 const DISTRACTORS = 2;
 
@@ -32,9 +36,9 @@ const DISTRACTORS = 2;
 export function unitSteps(
   words: readonly UnitWord[],
   pool: readonly UnitWord[],
-): UnitStep[] {
-  return words.flatMap((word, index): UnitStep[] => {
-    const steps: UnitStep[] = [{ kind: 'card', word: index }];
+): WordStep[] {
+  return words.flatMap((word, index): WordStep[] => {
+    const steps: WordStep[] = [{ kind: 'card', word: index }];
     if (word.example) steps.push({ kind: 'example', word: index });
     const correct = word.meaning;
     if (correct === null) return steps;
