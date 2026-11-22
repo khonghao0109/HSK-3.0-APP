@@ -1,4 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { ExerciseType, ProgressStatus, TopicType } from '@prisma/client';
 
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../../common/openapi/json-schemas';
@@ -85,6 +90,26 @@ export class LessonActivityProgressDto extends LessonActivityTopicProgressDto {
   score!: number | null;
 }
 
+// Q-G9: the authored answer, revealed only after a wrong attempt. One shape per
+// exercise type; `matching` has no answer key and never carries this field.
+export class LessonCorrectChoiceAnswerDto {
+  optionId!: string;
+}
+
+export class LessonCorrectFillBlankAnswerDto {
+  acceptedTexts!: string[];
+  caseSensitive!: boolean;
+}
+
+export class LessonCorrectArrangeAnswerDto {
+  tokenIds!: string[];
+}
+
+@ApiExtraModels(
+  LessonCorrectChoiceAnswerDto,
+  LessonCorrectFillBlankAnswerDto,
+  LessonCorrectArrangeAnswerDto,
+)
 export class LessonActivityAttemptDto {
   attemptId!: number;
   exerciseId!: number;
@@ -97,6 +122,19 @@ export class LessonActivityAttemptDto {
   explanation!: string | null;
   media!: LessonDetailExerciseMediaDto | null;
   submittedAt!: Date | null;
+
+  /** Q-G9: present only when `isCorrect === false`; the key is omitted otherwise. */
+  @ApiPropertyOptional({
+    oneOf: [
+      { $ref: getSchemaPath(LessonCorrectChoiceAnswerDto) },
+      { $ref: getSchemaPath(LessonCorrectFillBlankAnswerDto) },
+      { $ref: getSchemaPath(LessonCorrectArrangeAnswerDto) },
+    ],
+  })
+  correctAnswer?:
+    | LessonCorrectChoiceAnswerDto
+    | LessonCorrectFillBlankAnswerDto
+    | LessonCorrectArrangeAnswerDto;
 }
 
 @PinSwaggerEnumOrder('type', PUBLIC_LESSON_EXERCISE_TYPES)

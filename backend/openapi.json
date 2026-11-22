@@ -12726,9 +12726,66 @@
           "lastActivityAt"
         ]
       },
+      "LessonCorrectChoiceAnswerDto": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "optionId"
+        ]
+      },
+      "LessonCorrectFillBlankAnswerDto": {
+        "type": "object",
+        "properties": {
+          "acceptedTexts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseSensitive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "acceptedTexts",
+          "caseSensitive"
+        ]
+      },
+      "LessonCorrectArrangeAnswerDto": {
+        "type": "object",
+        "properties": {
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "tokenIds"
+        ]
+      },
       "LessonActivityAttemptDto": {
         "type": "object",
         "properties": {
+          "correctAnswer": {
+            "description": "Q-G9: present only when `isCorrect === false`; the key is omitted otherwise.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LessonCorrectChoiceAnswerDto"
+              },
+              {
+                "$ref": "#/components/schemas/LessonCorrectFillBlankAnswerDto"
+              },
+              {
+                "$ref": "#/components/schemas/LessonCorrectArrangeAnswerDto"
+              }
+            ]
+          },
           "attemptId": {
             "type": "number"
           },

@@ -771,6 +771,53 @@ describe('Lesson Activity Attempt & Progress V1 E2E', () => {
     expect(otherHistory.body.data[0].attemptId).not.toBe(firstAttemptId);
   });
 
+  it('8b. reveals the authored answer only after a wrong attempt, then clears it on a correct retry (Q-G9)', async () => {
+    // Own learner: later tests (9, 19) count the default user's mcqId history,
+    // so this test's extra attempts must stay namespaced to a fresh user.
+    const g9 = await register('activity-g9');
+    await request(app.getHttpServer())
+      .post(`/api/v1/learning/lessons/${lessonId}/start`)
+      .set('Authorization', `Bearer ${g9.token}`)
+      .set('Idempotency-Key', 'g9-start')
+      .send({})
+      .expect(201);
+    const postG9 = (exerciseId: number, key: string) =>
+      request(app.getHttpServer())
+        .post(`/api/v1/learning/exercises/${exerciseId}/attempts`)
+        .set('Authorization', `Bearer ${g9.token}`)
+        .set('Idempotency-Key', key);
+
+    const mcqWrong = await postG9(mcqId, 'g9-mcq-wrong')
+      .send({ answer: { optionId: 'bye' } })
+      .expect(201);
+    expect(mcqWrong.body.data.isCorrect).toBe(false);
+    expect(mcqWrong.body.data.correctAnswer).toEqual({ optionId: 'hello' });
+    expect(hasForbiddenResponseKey(mcqWrong.body)).toBe(false);
+
+    const mcqRight = await postG9(mcqId, 'g9-mcq-right')
+      .send({ answer: { optionId: 'hello' } })
+      .expect(201);
+    expect(mcqRight.body.data.isCorrect).toBe(true);
+    expect(mcqRight.body.data).not.toHaveProperty('correctAnswer');
+
+    const fillWrong = await postG9(fillId, 'g9-fill-wrong')
+      .send({ answer: { text: 'khong dung' } })
+      .expect(201);
+    expect(fillWrong.body.data.isCorrect).toBe(false);
+    expect(fillWrong.body.data.correctAnswer).toEqual({
+      acceptedTexts: ['ＡBC  你好'],
+      caseSensitive: false,
+    });
+
+    const arrangeWrong = await postG9(arrangeId, 'g9-arrange-wrong')
+      .send({ answer: { tokenIds: ['t3', 't2', 't1'] } })
+      .expect(201);
+    expect(arrangeWrong.body.data.isCorrect).toBe(false);
+    expect(arrangeWrong.body.data.correctAnswer).toEqual({
+      tokenIds: ['t1', 't2', 't3'],
+    });
+  });
+
   it('9. preserves old snapshot across authoring edits and scores the new version', async () => {
     await prisma.lessonExercise.update({
       where: { id: mcqId },

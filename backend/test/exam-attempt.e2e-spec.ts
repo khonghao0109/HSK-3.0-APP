@@ -1223,6 +1223,33 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
     expectNoForbiddenKeys(read.body);
   });
 
+  it('14b. never carries correctAnswer when a question is saved or in progress (Q-G9 boundary; exam stays separate from the lesson reveal)', async () => {
+    const fixture = await fourTypeAttempt('g9-boundary');
+    // "nộp từng câu": the per-question save response.
+    const saved = await saveAnswer(fixture.token, fixture.attemptId, 'q1', {
+      answer: { choice: 'a' },
+      isFlagged: false,
+      expectedVersion: null,
+      idempotencyKey: newKey(),
+    }).expect(200);
+    expectNoForbiddenKeys(saved.body);
+    expect(collectKeys(saved.body)).not.toContain('correctAnswer');
+    // "đang làm bài": the in-progress attempt read.
+    const inProgress = await get(
+      `/exam/attempts/${String(fixture.attemptId)}`,
+      fixture.token,
+    ).expect(200);
+    expectNoForbiddenKeys(inProgress.body);
+    expect(collectKeys(inProgress.body)).not.toContain('correctAnswer');
+    // The authored answer is still frozen in the snapshot, so the scans prove
+    // the serializer strips it rather than the fixture simply lacking it.
+    const snapshot = await prisma.examAttemptSnapshot.findUniqueOrThrow({
+      where: { attemptId: fixture.attemptId },
+      select: { payload: true },
+    });
+    expect(collectKeys(snapshot.payload)).toContain('correctAnswer');
+  });
+
   it('15. replays the same key and body without bumping the version or the event count (TL-123)', async () => {
     const fixture = await fourTypeAttempt('save-replay');
     const body = {
