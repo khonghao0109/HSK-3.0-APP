@@ -10,6 +10,7 @@ import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 
 import { LessonImage } from './lesson-image';
 import { PLAYER_MESSAGES } from './lesson-player';
+import { PracticeBar } from './practice-bar';
 import { UnitResult } from './unit-result';
 import { VocabularyDrill } from './vocabulary-drill';
 import { SPEECH_RATE, SPEECH_RATE_SLOW, useChineseVoice } from './speech';
@@ -364,30 +365,19 @@ export function VocabularyUnitFlow(props: Props) {
         )
       ) : (
         <footer className="ex-foot g-wfoot">
-          <div className="g-bar" role="group" aria-label="Luyện từ này">
-            {available && (
-              <button
-                className="g-tool"
-                type="button"
-                onClick={() => speak(sayText, SPEECH_RATE)}
-              >
-                <span className="g-tool__dot">
-                  <Icon name="volume" size={24} />
-                </span>
-                Nghe
-              </button>
-            )}
-            <button
-              className="g-next"
-              type="button"
-              onClick={() => go(index + 1)}
-            >
-              <span className="g-next__dot">
-                <Icon name="arrow-right" size={24} />
-              </span>
-              Tiếp
-            </button>
-          </div>
+          <PracticeBar
+            key={index}
+            hanzi={sayText}
+            pinyin={
+              step.kind === 'example' && word.example
+                ? word.example.pinyin
+                : word.pinyin
+            }
+            length={step.kind === 'example' ? 'sentence' : 'word'}
+            voice={available}
+            speak={speak}
+            onNext={() => go(index + 1)}
+          />
         </footer>
       )}
     </div>
