@@ -1,0 +1,495 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
+
+import { PrismaClient } from '@prisma/client';
+
+import { normalizeMeaning } from '../../common/utils/normalize-meaning';
+import { normalizePinyin } from '../../common/utils/normalize-pinyin';
+import { validateTopicContentBlocks } from '../../common/validation/topic-content-blocks';
+
+import {
+  ApiClient,
+  asArray,
+  asNumber,
+  asRecord,
+  asString,
+  ensureDraftTopics,
+  findDataSourceId,
+  isRecord,
+  pickWordCandidate,
+  PilotImportDependencies,
+  PilotImportError,
+  writeLessonWords,
+} from './import-pilot-content';
+import {
+  TEXTBOOK_COURSE,
+  TextbookLessonFile,
+  TextbookWord,
+} from './textbook-seeddata.converter';
+
+/**
+ * M2.13a — `textbook` profile of the content importer
+ * (`docs/process/content-pipeline.md` §9). Differences from `pilot-hsk1`:
+ * no 20-word rule, no hsk1.json word list, slug `hsk2-textbook-g<g>-l<NN>-…`,
+ * no exercises, the lesson lives in a course unit (no Level), and a word
+ * missing from the dictionary becomes a draft `Word` of the textbook
+ * DataSource. Everything it writes stays `draft`.
+ */
+
+export interface TextbookImportOptions {
+  readonly filePath: string;
+  readonly dryRun: boolean;
+}
+
+export interface TextbookImportResult {
+  readonly dryRun: boolean;
+  readonly courseId: number | null;
+  readonly unitId: number | null;
+  readonly lessonId: number | null;
+  readonly createdCourse: boolean;
+  readonly createdUnit: boolean;
+  readonly createdLesson: boolean;
+  readonly createdTopics: number;
+  readonly wordCount: number;
+  /** Words already in the dictionary (linked as they are). */
+  readonly existingWords: number;
+  /** Words without a dictionary row: created as drafts (or, in dry-run, to create). */
+  readonly draftWords: ReadonlyArray<{ hanzi: string; pinyin: string }>;
+  readonly lessonWordCount: number;
+  readonly steps: readonly string[];
+}
+
+const TEXTBOOK_SLUG = /^hsk2-textbook-g[1-9]-l\d{2}-[a-z0-9]+(-[a-z0-9]+)*$/u;
+const PURE_HAN = /^\p{Script=Han}+$/u;
+const TOPIC_TYPES = new Set(['vocabulary', 'key_text', 'grammar']);
+
+function invalid(message: string, details?: unknown): never {
+  throw new PilotImportError('textbook_content_invalid', message, details);
+}
+
+/** Checks the parts of a textbook file the importer relies on. */
+export function assertTextbookFile(raw: unknown): TextbookLessonFile {
+  if (!isRecord(raw) || raw.format !== 'textbook' || raw.formatVersion !== 1) {
+    invalid('format phải là "textbook", formatVersion 1');
+  }
+  const file = raw as Partial<TextbookLessonFile>;
+  const course = asRecord(file.course, 'course');
+  for (const [key, value] of Object.entries(TEXTBOOK_COURSE)) {
+    if (course[key] !== value)
+      invalid(`course.${key} phải là ${String(value)}`);
+  }
+  const unit = asRecord(file.unit, 'unit');
+  const grade = asNumber(unit.gradeNumber, 'unit.gradeNumber');
+  if (!Number.isSafeInteger(grade) || grade < 1 || grade > 9) {
+    invalid('unit.gradeNumber phải là 1–9');
+  }
+  if (unit.volume !== null) invalid('unit.volume phải là null');
+  asString(unit.title, 'unit.title');
+  asNumber(unit.orderIndex, 'unit.orderIndex');
+  const dataSource = asRecord(file.dataSource, 'dataSource');
+  asString(dataSource.code, 'dataSource.code');
+  asString(dataSource.version, 'dataSource.version');
+  const lesson = asRecord(file.lesson, 'lesson');
+  const slug = asString(lesson.slug, 'lesson.slug');
+  if (!TEXTBOOK_SLUG.test(slug) || slug.length > 160) {
+    invalid(`lesson.slug sai mẫu hsk2-textbook-g<g>-l<NN>-<ascii>: ${slug}`);
+  }
+  asString(lesson.sourceKey, 'lesson.sourceKey');
+  asString(lesson.title, 'lesson.title');
+  asNumber(lesson.orderIndex, 'lesson.orderIndex');
+  const words = asArray(file.words, 'words');
+  if (words.length === 0) invalid('words rỗng');
+  const seen = new Set<string>();
+  words.forEach((entry, index) => {
+    const word = asRecord(entry, `words[${String(index)}]`);
+    const hanzi = asString(word.hanzi, `words[${String(index)}].hanzi`);
+    const pinyin = asString(word.pinyin, `words[${String(index)}].pinyin`);
+    asString(word.meaningVi, `words[${String(index)}].meaningVi`);
+    if (hanzi.trim() === '' || pinyin.trim() === '') {
+      invalid(`words[${String(index)}] thiếu hanzi/pinyin`);
+    }
+    const key = `${hanzi}\u0000${normalizePinyin(pinyin)}`;
+    if (seen.has(key)) invalid(`words[${String(index)}] trùng trong bài`);
+    seen.add(key);
+  });
+  const topics = asArray(file.topics, 'topics');
+  topics.forEach((entry, index) => {
+    const topic = asRecord(entry, `topics[${String(index)}]`);
+    const type = asString(topic.type, `topics[${String(index)}].type`);
+    if (!TOPIC_TYPES.has(type))
+      invalid(`topics[${String(index)}].type lạ: ${type}`);
+    const issues = validateTopicContentBlocks(type, topic.content);
+    if (!Array.isArray(topic.content) || issues.length > 0) {
+      invalid(`topics[${String(index)}].content không hợp lệ`, issues);
+    }
+  });
+  return file as TextbookLessonFile;
+}
+
+async function listAll(
+  api: ApiClient,
+  path: string,
+  what: string,
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = [];
+  for (let page = 1; page <= 100; page += 1) {
+    const separator = path.includes('?') ? '&' : '?';
+    const entries = asArray(
+      await api.get(`${path}${separator}page=${String(page)}&limit=100`),
+      what,
+    ).map((entry) => asRecord(entry, `${what}[]`));
+    rows.push(...entries);
+    if (entries.length < 100) return rows;
+  }
+  throw new PilotImportError('too_many_rows', `${what}: quá 10 000 dòng`);
+}
+
+function assertUsable(row: Record<string, unknown>, what: string): void {
+  if (row.status === 'archived' || row.deletedAt !== null) {
+    throw new PilotImportError(
+      `${what}_archived`,
+      `${what} id=${String(row.id)} đã archive; dừng, không ghi gì`,
+    );
+  }
+}
+
+async function ensureCourse(
+  api: ApiClient,
+  file: TextbookLessonFile,
+  dryRun: boolean,
+): Promise<{ id: number | null; created: boolean }> {
+  const found = (
+    await listAll(api, '/admin/cms/courses?kind=textbook', 'courses')
+  ).find((row) => row.code === file.course.code);
+  if (found !== undefined) {
+    assertUsable(found, 'course');
+    return { id: asNumber(found.id, 'courses[].id'), created: false };
+  }
+  if (dryRun) return { id: null, created: false };
+  const created = asRecord(
+    await api.post('/admin/cms/courses', {
+      code: file.course.code,
+      kind: file.course.kind,
+      curriculumVersion: file.course.curriculumVersion,
+      title: file.course.title,
+      orderIndex: file.course.orderIndex,
+    }),
+    'create course',
+  );
+  return { id: asNumber(created.id, 'created course.id'), created: true };
+}
+
+async function ensureUnit(
+  api: ApiClient,
+  courseId: number | null,
+  unit: TextbookLessonFile['unit'],
+  dryRun: boolean,
+): Promise<{ id: number | null; created: boolean }> {
+  if (courseId !== null) {
+    const matches = (
+      await listAll(
+        api,
+        `/admin/cms/course-units?courseId=${String(courseId)}`,
+        'course-units',
+      )
+    ).filter(
+      (row) => row.gradeNumber === unit.gradeNumber && row.volume === null,
+    );
+    if (matches.length > 1) {
+      throw new PilotImportError(
+        'unit_ambiguous',
+        `Có ${String(matches.length)} unit cấp ${String(unit.gradeNumber)}; dừng để người chạy kiểm tra`,
+      );
+    }
+    const found = matches[0];
+    if (found !== undefined) {
+      assertUsable(found, 'unit');
+      if (found.levelId !== null) {
+        throw new PilotImportError(
+          'unit_has_level',
+          `Unit id=${String(found.id)} có Level; giáo trình 2.0 không gắn Level (Q-C7)`,
+        );
+      }
+      return { id: asNumber(found.id, 'course-units[].id'), created: false };
+    }
+  }
+  if (dryRun || courseId === null) return { id: null, created: false };
+  const created = asRecord(
+    await api.post('/admin/cms/course-units', {
+      courseId,
+      orderIndex: unit.orderIndex,
+      title: unit.title,
+      gradeNumber: unit.gradeNumber,
+    }),
+    'create unit',
+  );
+  return { id: asNumber(created.id, 'created unit.id'), created: true };
+}
+
+async function findLessonBySlug(
+  api: ApiClient,
+  slug: string,
+): Promise<Record<string, unknown> | null> {
+  const matches = asArray(
+    await api.get(
+      `/admin/cms/lessons?search=${encodeURIComponent(slug)}&limit=100&page=1`,
+    ),
+    'lessons',
+  )
+    .map((entry) => asRecord(entry, 'lessons[]'))
+    .filter((entry) => entry.slug === slug);
+  if (matches.length > 1) {
+    throw new PilotImportError(
+      'lesson_slug_ambiguous',
+      `Có ${String(matches.length)} lesson cùng slug ${slug}`,
+    );
+  }
+  return matches[0] ?? null;
+}
+
+async function ensureLesson(
+  api: ApiClient,
+  unitId: number | null,
+  lesson: TextbookLessonFile['lesson'],
+  dryRun: boolean,
+): Promise<{ id: number | null; created: boolean }> {
+  const found = await findLessonBySlug(api, lesson.slug);
+  if (found !== null) {
+    if (found.status !== 'draft' || found.deletedAt !== null) {
+      throw new PilotImportError(
+        'lesson_not_draft',
+        `Lesson slug ${lesson.slug} có status=${String(found.status)}; script chỉ làm việc với bản draft`,
+      );
+    }
+    if (unitId !== null && found.courseUnitId !== unitId) {
+      throw new PilotImportError(
+        'lesson_in_other_unit',
+        `Lesson slug ${lesson.slug} thuộc unit ${String(found.courseUnitId)}, không phải ${String(unitId)}`,
+      );
+    }
+    return { id: asNumber(found.id, 'lessons[].id'), created: false };
+  }
+  if (dryRun || unitId === null) return { id: null, created: false };
+  const body: Record<string, unknown> = {
+    title: lesson.title,
+    orderIndex: lesson.orderIndex,
+    slug: lesson.slug,
+  };
+  if (lesson.description !== '') body.description = lesson.description;
+  const created = asRecord(
+    await api.post(`/admin/cms/course-units/${String(unitId)}/lessons`, body),
+    'create lesson',
+  );
+  const createdLesson = asRecord(created.lesson, 'created lesson');
+  return { id: asNumber(createdLesson.id, 'created lesson.id'), created: true };
+}
+
+interface ResolvedWords {
+  readonly byIndex: ReadonlyArray<number | null>;
+  readonly toCreate: readonly number[];
+}
+
+/**
+ * Pilot polyphone rule: a hanzi with no row is new; a hanzi whose rows do not
+ * match the pinyin is refused rather than guessed.
+ */
+async function resolveTextbookWords(
+  prisma: PrismaClient,
+  words: readonly TextbookWord[],
+): Promise<ResolvedWords> {
+  const rows = await prisma.word.findMany({
+    where: { hanzi: { in: words.map((word) => word.hanzi) } },
+    select: { id: true, hanzi: true, pinyin: true, pinyinTone: true },
+  });
+  const mismatched: Array<{ hanzi: string; pinyin: string; rows: number }> = [];
+  const byIndex = words.map((word) => {
+    const candidates = rows.filter((row) => row.hanzi === word.hanzi);
+    const match = pickWordCandidate(candidates, word.pinyin);
+    if (match !== undefined) return match.id;
+    if (candidates.length > 0) {
+      mismatched.push({
+        hanzi: word.hanzi,
+        pinyin: word.pinyin,
+        rows: candidates.length,
+      });
+    }
+    return null;
+  });
+  if (mismatched.length > 0) {
+    throw new PilotImportError(
+      'word_pinyin_mismatch',
+      `Hanzi đã có Word nhưng không dòng nào khớp pinyin; không đoán (${mismatched
+        .map((word) => `${word.hanzi} ${word.pinyin}`)
+        .join(', ')})`,
+      mismatched,
+    );
+  }
+  return {
+    byIndex,
+    toCreate: byIndex.flatMap((id, index) => (id === null ? [index] : [])),
+  };
+}
+
+async function createDraftWords(
+  prisma: PrismaClient,
+  words: readonly TextbookWord[],
+  indexes: readonly number[],
+  dataSourceId: number,
+): Promise<Map<number, number>> {
+  const ids = new Map<number, number>();
+  await prisma.$transaction(async (tx) => {
+    for (const index of indexes) {
+      const word = words[index];
+      const pinyin = normalizePinyin(word.pinyin);
+      const created = await tx.word.create({
+        data: {
+          hanzi: word.hanzi,
+          pinyin,
+          pinyinNormalized: pinyin,
+          isPure: PURE_HAN.test(word.hanzi),
+          status: 'draft',
+          meanings: {
+            create: {
+              meaningOrder: 1,
+              meaningVi: word.meaningVi,
+              meaningViNormalized: normalizeMeaning(word.meaningVi),
+              partOfSpeech: word.partOfSpeech,
+              dataSourceId,
+            },
+          },
+          sources: {
+            create: {
+              dataSourceId,
+              sourceKey: `${word.hanzi}:${word.pinyin}`,
+              isPrimary: true,
+            },
+          },
+        },
+        select: { id: true },
+      });
+      ids.set(index, created.id);
+    }
+  });
+  return ids;
+}
+
+async function verifyLesson(
+  api: ApiClient,
+  lessonId: number,
+  topicCount: number,
+): Promise<void> {
+  const detail = asRecord(
+    await api.get(`/admin/cms/lessons/${String(lessonId)}`),
+    'verify lesson',
+  );
+  const lesson = asRecord(detail.lesson, 'verify lesson.lesson');
+  if (lesson.status !== 'draft' || lesson.levelId !== null) {
+    throw new PilotImportError(
+      'verify_failed',
+      `Sau khi nạp, lesson status=${String(lesson.status)} levelId=${String(lesson.levelId)} (yêu cầu draft, không Level)`,
+    );
+  }
+  const topics = asArray(detail.topics, 'verify lesson.topics');
+  if (topics.length !== topicCount) {
+    throw new PilotImportError(
+      'verify_failed',
+      `Sau khi nạp, lesson có ${String(topics.length)} topic (yêu cầu ${String(topicCount)})`,
+    );
+  }
+}
+
+export async function importTextbookLesson(
+  dependencies: PilotImportDependencies,
+  options: TextbookImportOptions,
+): Promise<TextbookImportResult> {
+  const log = dependencies.logger ?? (() => undefined);
+  const rawText = readFileSync(options.filePath, 'utf8');
+  const file = assertTextbookFile(JSON.parse(rawText) as unknown);
+  const steps: string[] = ['validated'];
+  const api = new ApiClient(dependencies, log);
+
+  const dataSourceId = await findDataSourceId(
+    api,
+    file.dataSource.code,
+    file.dataSource.version,
+  );
+  const course = await ensureCourse(api, file, options.dryRun);
+  const unit = await ensureUnit(api, course.id, file.unit, options.dryRun);
+  const resolved = await resolveTextbookWords(dependencies.prisma, file.words);
+  steps.push('preflight');
+  const draftWords = resolved.toCreate.map((index) => ({
+    hanzi: file.words[index].hanzi,
+    pinyin: file.words[index].pinyin,
+  }));
+  const base = {
+    wordCount: file.words.length,
+    existingWords: file.words.length - draftWords.length,
+    draftWords,
+  };
+
+  if (options.dryRun) {
+    const lesson = await ensureLesson(api, unit.id, file.lesson, true);
+    log('dry-run: không ghi DB, không gọi endpoint ghi');
+    return {
+      dryRun: true,
+      courseId: course.id,
+      unitId: unit.id,
+      lessonId: lesson.id,
+      createdCourse: false,
+      createdUnit: false,
+      createdLesson: false,
+      createdTopics: 0,
+      lessonWordCount: 0,
+      steps: [...steps, 'dry-run'],
+      ...base,
+    };
+  }
+
+  const lesson = await ensureLesson(api, unit.id, file.lesson, false);
+  if (lesson.id === null || unit.id === null || course.id === null) {
+    throw new PilotImportError('internal', 'Không tạo được khoá/unit/bài');
+  }
+  steps.push('course', 'unit', 'lesson');
+  const topics = await ensureDraftTopics(api, lesson.id, file.topics, log);
+  steps.push('topics');
+
+  const created = await createDraftWords(
+    dependencies.prisma,
+    file.words,
+    resolved.toCreate,
+    dataSourceId,
+  );
+  steps.push('draft_words');
+  const wordIds = resolved.byIndex.map((id, index) => ({
+    wordId: id ?? (created.get(index) as number),
+  }));
+  const lessonWordCount = await writeLessonWords(
+    dependencies.prisma,
+    lesson.id,
+    file.words,
+    wordIds,
+    topics.topicIds,
+    createHash('sha256').update(rawText).digest('hex'),
+    log,
+    'lesson_word.import_textbook',
+  );
+  steps.push('lesson_words');
+  await verifyLesson(api, lesson.id, file.topics.length);
+  steps.push('verified');
+  log(`file=${basename(options.filePath)} lesson=${String(lesson.id)}`);
+
+  return {
+    dryRun: false,
+    courseId: course.id,
+    unitId: unit.id,
+    lessonId: lesson.id,
+    createdCourse: course.created,
+    createdUnit: unit.created,
+    createdLesson: lesson.created,
+    createdTopics: topics.created,
+    lessonWordCount,
+    steps,
+    ...base,
+  };
+}

@@ -238,6 +238,13 @@ nullable (forward-only).
 - Chữ đa âm: tra theo `(hanzi, pinyin)` như `import-pilot-content.ts:750-800`; pinyin bỏ trống mà
   chữ có nhiều dòng Word thì báo lỗi, không đoán.
 
+- **Quyết định PO 23/11/2026 (M2.13a):** nội dung HSK 2.0 lấy từ `seeddata/` (gitignored,
+  không commit): dùng hết từ vựng, bài khoá, ngữ pháp cấp 1–5; nghĩa tiếng Việt dùng thẳng; đề thi
+  2.0 để sau. Từ ngoài từ điển tạo `Word` nháp với DataSource `HSK20_TEXTBOOK_PO_V1` (tên và
+  attribution chỉ ghi "giáo trình HSK chuẩn 2.0 do PO cung cấp", không nhắc nguồn trung gian).
+  Bài không Level không publish được khi còn từ chưa published (`409 LESSON_WORDS_NOT_PUBLISHED`).
+  Cách chạy: `docs/process/content-pipeline.md` §9.
+
 ### 7. Migration theo pha
 
 Theo `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`: forward-only, không down migration, rollback

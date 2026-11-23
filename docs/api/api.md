@@ -994,6 +994,7 @@ Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sa
 | `LESSON_LEVEL_NOT_PUBLISHED` | `Lesson requires a published, non-deleted parent level.` | Publish lesson mà Level chưa published |
 | `LESSON_UNIT_NOT_PUBLISHED` | `Lesson requires a published, non-deleted course unit.` | Publish lesson không có Level mà unit chưa published (C3b-2) |
 | `LESSON_COURSE_NOT_PUBLISHED` | `Lesson requires a published, non-deleted course.` | Publish lesson không có Level mà khoá chưa published (C3b-2) |
+| `LESSON_WORDS_NOT_PUBLISHED` | `Lesson requires every lesson word to be published.` | Publish lesson không có Level mà còn `LessonWord` trỏ tới Word chưa published hoặc đã xoá (M2.13a) |
 | `COURSE_ARCHIVED` | `Lessons cannot be added to an archived course.` | Tạo bài trong unit của khoá đã archive (C3b-2) |
 | `LESSON_NO_PUBLISHED_CHILD` | `Lesson requires at least one published Topic or Story.` | Publish lesson chưa có Topic/Story published |
 | `CONTENT_UNIQUE_CONFLICT` | `Content conflicts with an existing slug or order.` | Trùng unique (ví dụ slug lesson) |

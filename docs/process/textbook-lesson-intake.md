@@ -12,6 +12,11 @@ Liên quan:
 > Trạng thái: mẫu đề xuất, đi cùng ADR-009 (Proposed). Tên cột có thể đổi nhẹ khi bộ nhập giáo
 > trình được làm; mọi thay đổi sẽ ghi lại ở đây.
 
+> **HSK 2.0 (23/11/2026):** giáo trình HSK chuẩn 2.0 đã có sẵn trong `seeddata/` (từ vựng,
+> nghĩa tiếng Việt, bài khoá, ngữ pháp). PO **không cần điền mẫu này** cho HSK 2.0: đội kỹ thuật
+> chạy bộ chuyển ở [content-pipeline.md §9](content-pipeline.md#9-profile-textbook-giáo-trình-hsk-20-m213a).
+> Mẫu dưới đây dùng cho giáo trình chưa có dữ liệu (HSK 3.0 cấp 1–4, chuyên ngành).
+
 ## 1. Một bài gồm những gì
 
 | Phần | Bắt buộc | Ghi chú |

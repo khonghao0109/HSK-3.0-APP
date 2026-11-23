@@ -1,0 +1,64 @@
+[
+  {
+    "bai": "Bài 1",
+    "ten": "犇骉",
+    "ten_vi": "Chào hỏi thử nghiệm",
+    "tu_vung": [
+      {
+        "id": 1,
+        "han": "犇",
+        "pinyin": "bēn",
+        "vi": "chạy (từ thử)",
+        "pos": "động từ",
+        "audio_file": "t1_ben.mp3",
+        "audio": "ignored-field.mp3"
+      },
+      {
+        "id": 2,
+        "han": "骉",
+        "pinyin": "biāo",
+        "vi": "ngựa chạy (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t1_biao.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bài 2",
+    "ten": "猋",
+    "ten_vi": "Đếm số đơn giản",
+    "tu_vung": [
+      {
+        "id": 3,
+        "han": "猋",
+        "pinyin": "biāo",
+        "vi": "chó chạy (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t2_biao.mp3"
+      },
+      {
+        "id": 4,
+        "han": "犇",
+        "pinyin": "bēn",
+        "vi": "chạy (từ thử)",
+        "pos": "",
+        "audio_file": "t2_ben.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bổ sung",
+    "ten": "补充词汇",
+    "ten_vi": "Từ vựng bổ sung",
+    "tu_vung": [
+      {
+        "id": 5,
+        "han": "羴",
+        "pinyin": "shān",
+        "vi": "mùi dê (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "s_shan.mp3"
+      }
+    ]
+  }
+]

@@ -889,3 +889,45 @@ thị cho learner cho tới M2.5f (Q175).
 4. Ghi nhận nợ M1.3: 14 Story placeholder chưa archive được, chờ **M5.4** (Q177).
 
 Chi tiết bằng chứng của Pha 1 nằm trong báo cáo task; `docs/PLAN.md` không bị sửa bởi task này.
+
+## 9. Profile `textbook` (giáo trình HSK 2.0, M2.13a)
+
+Nguồn: `seeddata/` (gitignored, không commit, test không đọc). PO đồng ý 23/11/2026 dùng thẳng
+từ vựng, nghĩa tiếng Việt, bài khoá và ngữ pháp trong đó (ADR-009 §6).
+
+**Bước 1 — chuyển seeddata thành file nạp** (đọc seeddata, không in nội dung):
+
+```bash
+npm run content:textbook:convert -- --vocab <tu-vung.json> --lessons <bai-hoc.json> \
+  --grade 1 --from 1 --to 3 --out /tmp/hsk-textbook
+```
+
+- `--out` phải ở ngoài repo. Mỗi bài một file `lesson-NN.json` định dạng `textbook`
+  (`formatVersion: 1`), xuất tất định (cùng input → cùng byte). Lệnh in tên file, SHA-256,
+  số từ, số dòng bài khoá, số điểm ngữ pháp.
+- Schema đóng: trường lạ, sai kiểu, trống bắt buộc → dừng, báo đúng đường dẫn trường. Bài có
+  ở file từ vựng mà không có ở file bài học (hoặc ngược lại) → `lesson_missing_in_*`.
+- Mục cuối "Từ vựng bổ sung" bị bỏ qua. Audio chỉ giữ tên file (`audioRef`, `keyTextAudioRefs`),
+  chưa nạp media.
+- Ánh xạ: từ → `vocabulary_list`; bài khoá hội thoại → `dialogue` (≤ 40 dòng/khối); đoạn văn
+  (không có người nói) → `text` (`hán\npinyin\nnghĩa`); ngữ pháp → `grammar_point`, chip công
+  thức tách từ `structure` theo `+` (trống thì lấy `pattern`), `vi = zh` vì seeddata không có
+  nghĩa từng chip; một ví dụ mỗi điểm. Không thêm loại khối mới.
+
+**Bước 2 — nạp vào CMS** (`DATABASE_URL`, `API_BASE_URL`, `ADMIN_TOKEN` do người chạy đặt):
+
+```bash
+npm run content:import:textbook -- --file /tmp/hsk-textbook/lesson-01.json --dry-run
+npm run content:import:textbook -- --file /tmp/hsk-textbook/lesson-01.json
+```
+
+- Khoá `HSK2_TEXTBOOK` (`textbook`, `HSK_2_0`) và unit cấp N (không Level) tạo qua API CMS C3b-2
+  nếu chưa có, có rồi thì dùng lại. Bài tạo bằng `POST /admin/cms/course-units/:id/lessons`,
+  luôn `draft`; topic nháp như pilot. Chạy lại không tạo trùng.
+- Từ tra theo `(hanzi, pinyin)` đúng luật đa âm của pilot. Thiếu → tạo `Word` **nháp** với
+  DataSource `HSK20_TEXTBOOK_PO_V1` (nghĩa VN từ seeddata, `pinyinTone` để trống). Hanzi có mà
+  pinyin không khớp dòng nào → lỗi `word_pinyin_mismatch`, không tự tạo.
+- `--dry-run` không ghi gì, báo số từ có sẵn / sẽ tạo nháp.
+- Bài không Level chỉ publish được khi mọi `LessonWord` trỏ tới Word published
+  (`409 LESSON_WORDS_NOT_PUBLISHED`). Chưa có route CMS duyệt Word: duyệt từ nháp là việc riêng.
+- Profile `pilot-hsk1` (§1–§7) giữ nguyên hành vi.

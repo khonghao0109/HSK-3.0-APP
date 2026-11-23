@@ -1,0 +1,388 @@
+/// <reference types="jest" />
+
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import request from 'supertest';
+
+import { AppModule } from '../src/app.module';
+import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
+import { importTextbookLesson } from '../src/modules/content-pilot/import-textbook-content';
+import {
+  convertTextbookSeeddata,
+  serializeTextbookLesson,
+  TEXTBOOK_COURSE,
+  TEXTBOOK_DATA_SOURCE,
+} from '../src/modules/content-pilot/textbook-seeddata.converter';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
+
+/**
+ * M2.13a — profile `textbook` of the content importer, on the synthetic
+ * fixture `test/fixtures/textbook` (never on seeddata). The suite owns the
+ * HSK2_TEXTBOOK course of the disposable DB: no other suite uses that code or
+ * the fixture hanzi 犇 骉 猋. `afterAll` archives the course tree and deletes
+ * the words it created.
+ */
+describe('Textbook content import (M2.13a) E2E', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let adminToken: string;
+  let apiBaseUrl: string;
+  let outDir: string;
+  let existingWordId: number;
+  const wordIdsToDelete: number[] = [];
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+  const password = 'StrongPassword123!';
+
+  const lessonFile = (n: number) => join(outDir, `lesson-0${String(n)}.json`);
+  const run = (n: number, dryRun = false) =>
+    importTextbookLesson(
+      { apiBaseUrl, adminToken, prisma },
+      { filePath: lessonFile(n), dryRun },
+    );
+
+  beforeAll(async () => {
+    assertDisposableTestDatabase();
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+        exceptionFactory: createSafeValidationException,
+      }),
+    );
+    await app.init();
+    await app.listen(0, '127.0.0.1');
+    const address = app.getHttpServer().address() as { port: number };
+    apiBaseUrl = `http://127.0.0.1:${String(address.port)}/api/v1`;
+    prisma = app.get(PrismaService);
+
+    const email = `textbook-admin-${suffix}@example.com`;
+    const registered = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password, name: 'Textbook admin' })
+      .expect(201);
+    await prisma.user.update({
+      where: { id: registered.body.data.user.id as number },
+      data: { role: 'admin' },
+    });
+    adminToken = (
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email, password })
+        .expect(201)
+    ).body.data.accessToken as string;
+
+    // The fixture's 犇 (bēn) is "already in the dictionary"; 骉 and 猋 are not.
+    const existing = await prisma.word.create({
+      data: {
+        hanzi: '犇',
+        pinyin: 'ben',
+        pinyinNormalized: 'ben',
+        status: 'published',
+        publishedAt: new Date(),
+      },
+      select: { id: true },
+    });
+    existingWordId = existing.id;
+    wordIdsToDelete.push(existing.id);
+
+    outDir = mkdtempSync('/tmp/hsk-textbook-e2e-');
+    const fixture = (name: string) =>
+      JSON.parse(
+        readFileSync(join(__dirname, 'fixtures/textbook', name), 'utf8'),
+      ) as unknown;
+    for (const { fileName, content } of convertTextbookSeeddata({
+      vocab: fixture('hsk1-vocab.json'),
+      lessons: fixture('hsk1-lessons.json'),
+      grade: 1,
+      from: 1,
+      to: 2,
+    })) {
+      writeFileSync(join(outDir, fileName), serializeTextbookLesson(content));
+    }
+  });
+
+  afterAll(async () => {
+    const course = await prisma.course.findUnique({
+      where: { code: TEXTBOOK_COURSE.code },
+      select: { id: true },
+    });
+    if (course !== null) {
+      const lessons = await prisma.lesson.findMany({
+        where: { courseUnit: { courseId: course.id } },
+        select: { id: true },
+      });
+      const lessonIds = lessons.map((lesson) => lesson.id);
+      const drafts = await prisma.lessonWord.findMany({
+        where: { lessonId: { in: lessonIds } },
+        select: { wordId: true },
+      });
+      wordIdsToDelete.push(...drafts.map((row) => row.wordId));
+      await prisma.lessonWord.deleteMany({
+        where: { lessonId: { in: lessonIds } },
+      });
+      const now = new Date();
+      await prisma.lesson.updateMany({
+        where: { id: { in: lessonIds } },
+        data: { status: 'archived', deletedAt: now },
+      });
+      await prisma.courseUnit.updateMany({
+        where: { courseId: course.id },
+        data: { status: 'archived', deletedAt: now },
+      });
+      await prisma.course.update({
+        where: { id: course.id },
+        data: { status: 'archived', deletedAt: now },
+      });
+    }
+    await prisma.word.deleteMany({
+      where: { id: { in: [...new Set(wordIdsToDelete)] } },
+    });
+    rmSync(outDir, { recursive: true, force: true });
+    await app.close();
+  });
+
+  it('[T1] has the textbook DataSource from the forward migration', async () => {
+    await expect(
+      prisma.dataSource.findUnique({
+        where: { code: TEXTBOOK_DATA_SOURCE.code },
+        select: { version: true, attribution: true },
+      }),
+    ).resolves.toMatchObject({
+      version: TEXTBOOK_DATA_SOURCE.version,
+      attribution: expect.not.stringMatching(/baolingo/i) as unknown,
+    });
+  });
+
+  it('[T2] dry-run reads only and reports existing and draft words', async () => {
+    const result = await run(1, true);
+    expect(result).toMatchObject({
+      dryRun: true,
+      courseId: null,
+      lessonId: null,
+      wordCount: 2,
+      existingWords: 1,
+      draftWords: [{ hanzi: '骉', pinyin: 'biāo' }],
+    });
+    await expect(
+      prisma.course.count({ where: { code: TEXTBOOK_COURSE.code } }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.word.count({ where: { hanzi: { in: ['骉', '猋'] } } }),
+    ).resolves.toBe(0);
+  });
+
+  it('[T3] creates the course, unit, two draft lessons without a Level and draft words', async () => {
+    const first = await run(1);
+    const second = await run(2);
+    expect(first).toMatchObject({
+      createdCourse: true,
+      createdUnit: true,
+      createdLesson: true,
+      createdTopics: 3,
+      lessonWordCount: 2,
+    });
+    expect(second).toMatchObject({
+      createdCourse: false,
+      createdUnit: false,
+      createdLesson: true,
+      createdTopics: 3,
+      draftWords: [{ hanzi: '猋', pinyin: 'biāo' }],
+    });
+
+    const course = await prisma.course.findUniqueOrThrow({
+      where: { code: TEXTBOOK_COURSE.code },
+      select: {
+        kind: true,
+        curriculumVersion: true,
+        status: true,
+        units: {
+          select: { gradeNumber: true, volume: true, levelId: true },
+        },
+      },
+    });
+    expect(course).toEqual({
+      kind: 'textbook',
+      curriculumVersion: 'HSK_2_0',
+      status: 'draft',
+      units: [{ gradeNumber: 1, volume: null, levelId: null }],
+    });
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        id: { in: [first.lessonId as number, second.lessonId as number] },
+      },
+      orderBy: { orderIndex: 'asc' },
+      select: {
+        slug: true,
+        status: true,
+        levelId: true,
+        courseUnitId: true,
+        lessonWords: {
+          orderBy: { orderIndex: 'asc' },
+          select: { word: { select: { id: true, hanzi: true, status: true } } },
+        },
+      },
+    });
+    expect(lessons.map((lesson) => lesson.slug)).toEqual([
+      'hsk2-textbook-g1-l01-chao-hoi-thu-nghiem',
+      'hsk2-textbook-g1-l02-dem-so-don-gian',
+    ]);
+    for (const lesson of lessons) {
+      expect(lesson).toMatchObject({
+        status: 'draft',
+        levelId: null,
+        courseUnitId: first.unitId,
+      });
+    }
+    const [l1, l2] = lessons.map((lesson) =>
+      lesson.lessonWords.map(({ word }) => word),
+    );
+    expect(l1[0]).toEqual({
+      id: existingWordId,
+      hanzi: '犇',
+      status: 'published',
+    });
+    expect(l2[1]).toEqual({
+      id: existingWordId,
+      hanzi: '犇',
+      status: 'published',
+    });
+    expect([l1[1], l2[0]].map((word) => [word.hanzi, word.status])).toEqual([
+      ['骉', 'draft'],
+      ['猋', 'draft'],
+    ]);
+    const draft = await prisma.word.findUniqueOrThrow({
+      where: { id: l1[1].id },
+      select: {
+        pinyin: true,
+        meanings: {
+          select: { meaningVi: true, dataSource: { select: { code: true } } },
+        },
+        sources: { select: { dataSource: { select: { code: true } } } },
+      },
+    });
+    expect(draft).toEqual({
+      pinyin: 'biao',
+      meanings: [
+        {
+          meaningVi: 'ngựa chạy (từ thử)',
+          dataSource: { code: TEXTBOOK_DATA_SOURCE.code },
+        },
+      ],
+      sources: [{ dataSource: { code: TEXTBOOK_DATA_SOURCE.code } }],
+    });
+  });
+
+  it('[T4] a second run creates nothing new', async () => {
+    const counts = () =>
+      Promise.all([
+        prisma.course.count({ where: { code: TEXTBOOK_COURSE.code } }),
+        prisma.courseUnit.count({
+          where: { course: { code: TEXTBOOK_COURSE.code } },
+        }),
+        prisma.lesson.count({
+          where: { courseUnit: { course: { code: TEXTBOOK_COURSE.code } } },
+        }),
+        prisma.topic.count({
+          where: {
+            lesson: { courseUnit: { course: { code: TEXTBOOK_COURSE.code } } },
+          },
+        }),
+        prisma.word.count({ where: { hanzi: { in: ['犇', '骉', '猋'] } } }),
+        prisma.lessonWord.count({
+          where: {
+            lesson: { courseUnit: { course: { code: TEXTBOOK_COURSE.code } } },
+          },
+        }),
+      ]);
+    const before = await counts();
+    expect(before).toEqual([1, 1, 2, 6, 3, 4]);
+    for (const n of [1, 2]) {
+      expect(await run(n)).toMatchObject({
+        createdCourse: false,
+        createdUnit: false,
+        createdLesson: false,
+        createdTopics: 0,
+        draftWords: [],
+      });
+    }
+    expect(await counts()).toEqual(before);
+  });
+
+  it('[T5] publishes a lesson only once its words are published', async () => {
+    const course = await prisma.course.findUniqueOrThrow({
+      where: { code: TEXTBOOK_COURSE.code },
+      select: { id: true, units: { select: { id: true } } },
+    });
+    const lesson = await prisma.lesson.findFirstOrThrow({
+      where: { slug: 'hsk2-textbook-g1-l01-chao-hoi-thu-nghiem' },
+      select: { id: true, lessonWords: { select: { wordId: true } } },
+    });
+    await prisma.topic.updateMany({
+      where: { lessonId: lesson.id },
+      data: { status: 'published', publishedAt: new Date() },
+    });
+    await admin(
+      'post',
+      `/admin/cms/course-units/${course.units[0].id}/publish`,
+    ).expect(201);
+    await admin('post', `/admin/cms/courses/${course.id}/publish`).expect(201);
+    const revision = await prisma.contentRevision.findFirstOrThrow({
+      where: { entityType: 'lesson', entityId: lesson.id },
+      orderBy: { revision: 'desc' },
+      select: { id: true },
+    });
+    await admin(
+      'post',
+      `/admin/cms/lessons/${lesson.id}/revisions/${revision.id}/reviews`,
+    )
+      .send({ decision: 'approved' })
+      .expect(201);
+    const publish = () =>
+      admin(
+        'post',
+        `/admin/cms/lessons/${lesson.id}/revisions/${revision.id}/publish`,
+      );
+
+    const refused = await publish().expect(409);
+    expect(refused.body.error.code).toBe('LESSON_WORDS_NOT_PUBLISHED');
+
+    // No CMS route reviews a Word yet: approve the draft words directly.
+    await prisma.word.updateMany({
+      where: {
+        id: { in: lesson.lessonWords.map((row) => row.wordId) },
+        status: 'draft',
+      },
+      data: { status: 'published', publishedAt: new Date() },
+    });
+    expect((await publish().expect(201)).body.data.lesson.status).toBe(
+      'published',
+    );
+
+    const seen = await request(app.getHttpServer())
+      .get(`/api/v1/learning/courses/${TEXTBOOK_COURSE.code}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(
+      (seen.body.data.units as Array<{ lessons: Array<{ id: number }> }>)
+        .flatMap((unit) => unit.lessons)
+        .map((row) => row.id),
+    ).toEqual([lesson.id]);
+  });
+
+  function admin(method: 'get' | 'post', path: string) {
+    return request(app.getHttpServer())
+      [method](`/api/v1${path}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+  }
+});
