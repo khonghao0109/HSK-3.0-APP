@@ -931,3 +931,41 @@ npm run content:import:textbook -- --file /tmp/hsk-textbook/lesson-01.json
 - Bài không Level chỉ publish được khi mọi `LessonWord` trỏ tới Word published
   (`409 LESSON_WORDS_NOT_PUBLISHED`). Chưa có route CMS duyệt Word: duyệt từ nháp là việc riêng.
 - Profile `pilot-hsk1` (§1–§7) giữ nguyên hành vi.
+
+**Câu dùng trong lớp (PO 23/11/2026, M2.13b).** Dòng từ vựng có dấu câu `! ！ 。 ？ ? ， ,` trong
+chữ Hán (上课!, 打开书。) là câu lệnh lớp học, không phải từ: luật nằm ở một hàm thuần
+`isClassroomPhrase` (`textbook-exercises.ts`). Các dòng này không thành `Word`/`LessonWord`; bộ
+chuyển ghi chúng vào `classroomPhrases` và thêm một khối `text` sau `vocabulary_list` trong topic
+từ vựng: dòng đầu `Câu dùng trong lớp`, mỗi câu một dòng `hán — pinyin — nghĩa`. Bài chỉ có câu
+lớp học vẫn hợp lệ (`words` rỗng). Importer từ chối file có `words[]` mang dấu câu.
+
+**Bài tập tự sinh (M2.13b).** Chỉ từ từ vựng thật của bài; luôn `draft`; nạp qua đúng luồng
+`exercise-imports/preview` → commit của pilot (`importExercises`), gắn topic từ vựng.
+
+| Dạng | Nội dung | Luật |
+| --- | --- | --- |
+| `matching` | chữ Hán (+ pinyin `leftReading`) ↔ nghĩa | 3–5 cặp, chia đều (6 → 3+3, 7 → 4+3, 11 → 4+4+3); < 3 từ thì không sinh; bỏ từ trùng chữ/nghĩa hoặc vượt giới hạn `validateMatching` |
+| `mcq` "chữ Hán → nghĩa" | `Chọn nghĩa đúng của "<hán>".`, 4 lựa chọn là nghĩa | distractor: từ khác cùng cấp, khác chữ, khác nghĩa |
+| `mcq` "pinyin → chữ Hán" | `Chọn chữ Hán đúng của "<pinyin>".`, 4 lựa chọn là chữ Hán | distractor: từ khác cùng cấp, khác chữ, khác pinyin không dấu (tránh hai đáp án đúng) |
+
+- "Cùng cấp" (R21) = mọi từ thật của file từ vựng cấp đó, kể cả từ trong bài. Thiếu 3 distractor
+  hợp lệ → bỏ câu và đếm vào `exerciseSkips`, không đoán.
+- Không sinh `fill_blank`, `arrange_sentence`: seeddata không tách từ cho câu.
+- `sourceKey` = `hsk2-textbook:g<g>:l<NN>:eNN` theo thứ tự (matching, mcq nghĩa, mcq chữ Hán);
+  vị trí đáp án và thứ tự distractor lấy từ SHA-256 của seed ổn định, không dùng `Math.random`.
+- Bộ chuyển tự kiểm từng bài tập bằng `validateLessonExerciseAuthoring` và ≤ 100 bài/bài học.
+- Chạy lại: preview báo `source_key_already_exists` cho mọi dòng → commit lại cùng payload,
+  nhận `idempotent: true`, không tạo trùng. Dry-run không gọi preview (bài chưa tồn tại); chỉ
+  kiểm cục bộ.
+
+**Nạp cả cấp (M2.13b)** — chuyển mọi bài của cấp vào `/tmp/hsk-textbook/g<cấp>/` rồi nạp lần lượt:
+
+```bash
+API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db> \
+  npm run content:textbook:import-grade -- --seeddata-root <đường dẫn seeddata> --grade 1
+```
+
+- Thêm `--dry-run` để chỉ kiểm. Bài đã published thì bỏ qua và báo (không ghi đè nội dung đã
+  xuất bản); bài lỗi đầu tiên làm dừng lệnh.
+- Đường dẫn đọc: `<seeddata>/TuVung_nguphap_baikhoa/HSK<g>_TuVung/HSK<g>_TuVung.json` và
+  `<seeddata>/TuVung_nguphap_baikhoa/HSK<g>/HSK<g>_data.json`. Cấp 6 chưa có file bài học.
