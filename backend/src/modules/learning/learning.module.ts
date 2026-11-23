@@ -9,6 +9,8 @@ import { LessonActivityController } from './activity/lesson-activity.controller'
 import { LessonActivityService } from './activity/lesson-activity.service';
 import { LessonActivityTransactionCoordinator } from './activity/lesson-activity-transaction-coordinator';
 import { ProgressController } from './activity/progress.controller';
+import { LearningCourseController } from './course/learning-course.controller';
+import { LearningCourseService } from './course/learning-course.service';
 import { LearningPathController } from './path/learning-path.controller';
 import { LearningPathService } from './path/learning-path.service';
 import { LearningHomeController } from './home/learning-home.controller';
@@ -29,6 +31,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     LessonActivityController,
     ProgressController,
     LearningPathController,
+    LearningCourseController,
     LearningHomeController,
     ReviewController,
   ],
@@ -37,6 +40,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     LessonActivityService,
     LessonActivityTransactionCoordinator,
     LearningPathService,
+    LearningCourseService,
     LearningHomeService,
     ReviewService,
     ReviewSessionService,

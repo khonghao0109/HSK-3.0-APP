@@ -20,6 +20,11 @@ import {
   mediaContentGrantLimit,
 } from '../../media/media-content-throttle';
 import {
+  courseReadLimit,
+  courseWriteLimit,
+  LearningCourseController,
+} from '../course/learning-course.controller';
+import {
   ReviewController,
   reviewGradeLimit,
   reviewQueueReadLimit,
@@ -117,6 +122,15 @@ describe('learner route limits', () => {
       withNodeEnv(nodeEnv, () => {
         expect(reviewSessionWriteLimit()).toBe(20);
         expect(reviewGradeLimit()).toBe(120);
+      });
+    }
+  });
+
+  it('resolves the ADR-009 C3a course limits in every environment', () => {
+    for (const nodeEnv of ['production', 'test']) {
+      withNodeEnv(nodeEnv, () => {
+        expect(courseReadLimit()).toBe(60);
+        expect(courseWriteLimit()).toBe(20);
       });
     }
   });
@@ -223,6 +237,36 @@ describe('learner route limits', () => {
       ReviewController.prototype,
       'gradeCard',
       reviewGradeLimit,
+    ],
+    [
+      'LearningCourseController.listCourses',
+      LearningCourseController.prototype,
+      'listCourses',
+      courseReadLimit,
+    ],
+    [
+      'LearningCourseController.getCourse',
+      LearningCourseController.prototype,
+      'getCourse',
+      courseReadLimit,
+    ],
+    [
+      'LearningCourseController.enroll',
+      LearningCourseController.prototype,
+      'enroll',
+      courseWriteLimit,
+    ],
+    [
+      'LearningCourseController.leave',
+      LearningCourseController.prototype,
+      'leave',
+      courseWriteLimit,
+    ],
+    [
+      'LearningCourseController.setCurrent',
+      LearningCourseController.prototype,
+      'setCurrent',
+      courseWriteLimit,
     ],
     [
       'MediaController.getContent',

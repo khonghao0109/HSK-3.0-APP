@@ -166,7 +166,7 @@ nullable (forward-only).
 - **Mở khoá và tiến độ độc lập theo khoá:** luật hiện có giữ nguyên nhưng phạm vi đổi từ Level sang
   khoá: bài đầu của khoá mở; bài kế mở khi bài trước (theo `unit.orderIndex`, `lesson.orderIndex`)
   xong hoặc đã có `Progress`. Mặc định unit sau mở khi unit trước xong bài cuối; người học vẫn vào
-  được bài đã có `Progress`. `Progress` vẫn theo `(userId, lessonId)`, một bài chỉ thuộc một unit
+  được bài đã có `Progress`. Luật nối tiếp xuyên unit chỉ áp cho khoá `textbook` (và tạm cho `specialty`); khoá `topic` mở bài đầu của mỗi unit như lộ trình theo Level (TL 23/11). `Progress` vẫn theo `(userId, lessonId)`, một bài chỉ thuộc một unit
   nên tiến độ tự tách theo khoá. Phần trăm hoàn thành khoá/unit tính từ `Progress`.
 - **Bài dùng chung giữa hai khoá: không cho.** Mỗi bài thuộc đúng một unit; muốn dùng lại nội dung
   thì nhân bản bài. Nhờ vậy mở khoá và tiến độ không cần xét chéo khoá.
@@ -300,5 +300,5 @@ PO 23/11/2026 trả lời: **theo khuyến nghị cho toàn bộ Q-C3 … Q-C10*
 | Q-C6 | Khi người học làm bài ở khoá không phải "đang học", có tự đổi khoá đang học không? | Không tự đổi; chỉ đổi khi người học chọn |
 | Q-C7 | Giáo trình HSK 3.0 có gắn Level cùng số cấp không (cấp 2 sách 3.0 ↔ Level HSK2)? | Có, vì cùng chuẩn; cho phép lọc SRS và đề thi theo cấp. Quyết khi làm khoá này |
 | Q-C8 | Người chỉ học giáo trình 2.0 hoặc chuyên ngành có cần mục tiêu band HSK 3.0 không? | Không bắt buộc hỏi; giữ band mặc định ẩn ở pha này, nới schema goal khi có nhu cầu |
-| Q-C9 | Mở khoá giữa các quyển (上 → 下, cấp 3 → cấp 4): bắt buộc xong quyển trước, hay mở hết? | Bắt buộc xong bài cuối quyển trước, như luật trong một quyển; có `Progress` thì vào được |
+| Q-C9 | Mở khoá giữa các quyển (上 → 下, cấp 3 → cấp 4): bắt buộc xong quyển trước, hay mở hết? | Bắt buộc xong bài cuối quyển trước, như luật trong một quyển; có `Progress` thì vào được. Luật nối tiếp xuyên unit chỉ áp cho khoá `textbook` (và tạm cho `specialty`); khoá `topic` mở bài đầu của mỗi unit như lộ trình theo Level (TL 23/11). |
 | Q-C10 | Công tắc bản quyền có cần thêm mức "ẩn cả ví dụ ngữ pháp chép từ sách" không? | Chưa; xem xét khi có khiếu nại thật |

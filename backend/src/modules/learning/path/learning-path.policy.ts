@@ -65,7 +65,22 @@ export function buildLevelPath(
   readyLessons: readonly LearningPathReadyLesson[],
   progressByLessonId: ReadonlyMap<number, LearningPathProgress>,
 ): LearningPathLesson[] {
-  const ordered = [...readyLessons].sort(compareReadyLessons);
+  return buildOrderedPath(
+    [...readyLessons].sort(compareReadyLessons),
+    progressByLessonId,
+  );
+}
+
+/**
+ * Q18 states for lessons already in path order: the first lesson opens,
+ * each next one opens when the previous is done or has Progress, and one
+ * unlocked lesson is `current`. `buildLevelPath` orders by lesson inside a
+ * level; the course path (ADR-009) passes lessons ordered across units.
+ */
+export function buildOrderedPath(
+  ordered: readonly LearningPathReadyLesson[],
+  progressByLessonId: ReadonlyMap<number, LearningPathProgress>,
+): LearningPathLesson[] {
   const rows = ordered.map((lesson, index) => {
     const progress = progressByLessonId.get(lesson.id) ?? null;
     const previous =
