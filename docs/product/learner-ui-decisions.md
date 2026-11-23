@@ -231,3 +231,12 @@ Ghi chú: **Q129** để dành cho chính sách khoá đăng nhập (login locko
 Quyết định PO ngoài UI (M2.8, 13/10/2026): Q75 chỉ dùng dữ liệu first-party đã có, không thêm bảng `ProductEvent` tới khi có consent (M1.7b2); Q76 activation = ≥ 1 `lesson_completed` trong 7 ngày đầu sau đăng ký; Q77 onboarded = user đã từng có ≥ 1 `LearningPlan` (bất kỳ status) với `createdAt < asOf`.
 
 Quyết định Tech Lead 12/10/2026 kèm Q58: mở player khi mọi bài tập của bài đã có attempt (kể cả bài đã done) thì player gọi complete bài rồi chuyển tới `/learn/lessons/:id/complete`, không hiện thẻ "Bạn đã làm xong phần luyện tập".
+
+## Đã ship trong lesson-units, Pha G2b–G3c
+
+Chỉ ghi hành vi đã có trong code; không phải quyết định PO mới nên không cấp mã Q.
+
+- **Viết theo nét chữ trên thẻ từ** (G2d, `6358e80`): thẻ từ chỉ hiện "Viết" khi mọi chữ có dữ liệu nét; bảng viết phát thứ tự nét, chấm từng nét so với đường giữa ngay trên trình duyệt, gợi ý nét cần viết sau khi sai rồi sang chữ kế tiếp; dòng ghi nguồn dữ liệu nét lấy từ API.
+- **Hiện đáp án đúng sau khi chọn sai ở Kiểm tra** (G3, `d517def` backend, `fbc8c05` frontend): lần làm sai trả `correctAnswer` lấy từ snapshot của chính lần làm; player đánh dấu lựa chọn đúng, hoặc hiện "Đáp án đúng" (điền từ) và "Câu đúng" (sắp xếp câu), kèm trong thông báo cho trình đọc màn hình. `matching` không trả đáp án (không có answer key); đề thi không đổi, vẫn ẩn đáp án.
+- **Điểm bài tính theo lần làm tốt nhất** của mỗi bài tập (`calculateLessonScore` trong `backend/src/modules/learning/activity/lesson-activity-progress.ts`, có từ `4f69f31`; G3 không đổi quy tắc này, chỉ cho người học thấy đáp án để làm lại).
+- **Không dùng inline style trên trang learner** (G3c, `97c0857`): CSP `style-src` chặn thuộc tính `style`; ô từ vựng dùng `data-hz-len` (1–4) và thanh đo ghi âm dùng quy tắc `nth-child` trong CSS thay cho style inline.

@@ -71,56 +71,6 @@ export function unitSteps(
   });
 }
 
-export type SentenceToken = { hanzi: string; pinyin: string; target: boolean };
-
-const HAN = /\p{Script=Han}/u;
-
-/**
- * Splits an example sentence into one token per Han character with its
- * syllable above (mẫu `.lu-tok`); punctuation stays with the character before
- * it. Null when the pinyin is missing or not one syllable per character
- * (e.g. "wǒmen"): the screen then shows the plain sentence.
- */
-export function sentenceTokens(
-  hanzi: string,
-  pinyin: string | null,
-  target: string,
-): SentenceToken[] | null {
-  if (!pinyin) return null;
-  const syllables = pinyin
-    .split(/\s+/u)
-    .map((part) => part.replace(/[^\p{L}\p{M}]/gu, ''))
-    .filter(Boolean);
-  const tokens: string[] = [];
-  for (const char of hanzi) {
-    if (HAN.test(char) || tokens.length === 0) tokens.push(char);
-    else tokens[tokens.length - 1] += char;
-  }
-  const hanCount = tokens.filter((token) => HAN.test(token.charAt(0))).length;
-  if (hanCount !== tokens.length || syllables.length !== tokens.length) {
-    return null;
-  }
-
-  const chars = tokens.map((token) => token.charAt(0)).join('');
-  const marked = new Set<number>();
-  const length = [...target].length;
-  if (length > 0) {
-    for (
-      let at = chars.indexOf(target);
-      at !== -1;
-      at = chars.indexOf(target, at + 1)
-    ) {
-      for (let offset = 0; offset < length; offset += 1)
-        marked.add(at + offset);
-    }
-  }
-  return tokens.map((token, index) => ({
-    hanzi: token,
-    pinyin: syllables[index] ?? '',
-    target: marked.has(index),
-  }));
-}
-
 /**
  * Pha C debt 3b: the result mark of a word from its wrong answers (0 = right,
  * undefined = no quiz). Q50 allows one answer per quiz, so it reads
