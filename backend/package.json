@@ -27,6 +27,7 @@
     "content:import:pilot": "ts-node scripts/content/import-pilot-content.ts",
     "content:textbook:convert": "ts-node scripts/content/convert-textbook-seeddata.ts",
     "content:import:textbook": "ts-node scripts/content/import-textbook-content.ts",
+    "content:textbook:import-grade": "ts-node scripts/content/import-textbook-grade.ts",
     "content:import:meanings": "ts-node scripts/content/import-hsk1-meanings.ts",
     "content:check:meanings": "ts-node scripts/content/check-hsk1-meanings.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

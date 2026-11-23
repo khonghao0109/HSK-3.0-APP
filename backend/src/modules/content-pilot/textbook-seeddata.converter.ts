@@ -1,4 +1,13 @@
+import { validateLessonExerciseAuthoring } from '../../common/validation/lesson-exercise-authoring.validator';
 import { validateTopicContentBlocks } from '../../common/validation/topic-content-blocks';
+
+import {
+  buildTextbookExercises,
+  isClassroomPhrase,
+  type ExerciseSkips,
+  type ExerciseWord,
+  type TextbookExercise,
+} from './textbook-exercises';
 
 /**
  * M2.13a: converts PO seeddata of the HSK 2.0 textbook (vocabulary file +
@@ -87,7 +96,12 @@ export interface TextbookLessonFile {
     readonly orderIndex: number;
   };
   readonly words: readonly TextbookWord[];
+  /** PO 23/11/2026: punctuated vocabulary rows; never Words (M2.13b). */
+  readonly classroomPhrases: readonly ExerciseWord[];
   readonly topics: readonly TextbookTopic[];
+  /** Draft exercises from the real words, via exercise import (M2.13b). */
+  readonly exercises: readonly TextbookExercise[];
+  readonly exerciseSkips: ExerciseSkips;
   /** Audio file names for the media phase; never read here. */
   readonly keyTextAudioRefs: readonly string[];
 }
@@ -104,7 +118,9 @@ export interface TextbookSeeddataIssue {
     | 'lesson_empty'
     | 'block_too_long'
     | 'grammar_meaning_empty'
-    | 'block_invalid';
+    | 'block_invalid'
+    | 'exercise_invalid'
+    | 'exercise_count';
   readonly path: string;
   /** Shape of the rejected value (type, never the value itself). */
   readonly detail?: string;
@@ -136,7 +152,8 @@ export interface ConvertTextbookInput {
   readonly lessons: unknown;
   readonly grade: number;
   readonly from: number;
-  readonly to: number;
+  /** Omitted: up to the last lesson of the vocabulary file (whole grade). */
+  readonly to?: number;
 }
 
 // `lessonNumber`: an int, or a label ending with it ("Bài 1") as in the vocab
@@ -559,8 +576,36 @@ function buildFile(
   grade: number,
   vocab: VocabLesson,
   lesson: LessonRecord,
+  gradePool: readonly ExerciseWord[],
 ): TextbookLessonFile {
   const number = pad(lesson.bai);
+  const sourceKey = `hsk2-textbook:g${String(grade)}:l${number}`;
+  const realWords = vocab.tu_vung.filter(
+    (word) => !isClassroomPhrase(word.han),
+  );
+  const classroomPhrases = vocab.tu_vung
+    .filter((word) => isClassroomPhrase(word.han))
+    .map(toExerciseWord);
+  const vocabularyContent: TextbookBlock[] = [
+    { type: 'vocabulary_list', value: 'lesson_words' },
+  ];
+  if (classroomPhrases.length > 0) {
+    vocabularyContent.push({
+      type: 'text',
+      value: [
+        'Câu dùng trong lớp',
+        ...classroomPhrases.map(
+          (phrase) =>
+            `${phrase.hanzi} — ${phrase.pinyin} — ${phrase.meaningVi}`,
+        ),
+      ].join('\n'),
+    });
+  }
+  const { exercises, skipped } = buildTextbookExercises(
+    sourceKey,
+    realWords.map(toExerciseWord),
+    gradePool,
+  );
   const topics: TextbookTopic[] = [
     {
       key: 'vocabulary',
@@ -569,7 +614,7 @@ function buildFile(
       orderIndex: 1,
       isPremium: false,
       isLocked: false,
-      content: [{ type: 'vocabulary_list', value: 'lesson_words' }],
+      content: vocabularyContent,
     },
   ];
   const keyText = keyTextBlocks(lesson.bai_khoa);
@@ -607,13 +652,13 @@ function buildFile(
     },
     dataSource: TEXTBOOK_DATA_SOURCE,
     lesson: {
-      sourceKey: `hsk2-textbook:g${String(grade)}:l${number}`,
+      sourceKey,
       slug: `hsk2-textbook-g${String(grade)}-l${number}-${slugTail(lesson.ten_vi)}`,
       title: lesson.ten_vi,
       description: lesson.ten,
       orderIndex: lesson.bai,
     },
-    words: vocab.tu_vung.map((word) => ({
+    words: realWords.map((word) => ({
       hanzi: word.han,
       pinyin: word.pinyin,
       meaningVi: word.vi,
@@ -621,12 +666,19 @@ function buildFile(
       audioRef: word.audio_file,
       topicKey: 'vocabulary',
     })),
+    classroomPhrases,
     topics,
+    exercises,
+    exerciseSkips: skipped,
     keyTextAudioRefs: lesson.bai_khoa.flatMap((text) => [
       text.audio_file,
       ...text.content.map((line) => line.audio),
     ]),
   };
+}
+
+function toExerciseWord(word: VocabWord): ExerciseWord {
+  return { hanzi: word.han, pinyin: word.pinyin, meaningVi: word.vi };
 }
 
 export function convertTextbookSeeddata(
@@ -655,8 +707,15 @@ export function convertTextbookSeeddata(
   }
   if (check.issues.length > 0) throw new TextbookSeeddataError(check.issues);
 
+  // R21 "cùng cấp": every real word of the grade's vocabulary file.
+  const gradePool = [...vocab.keys()]
+    .sort((a, b) => a - b)
+    .flatMap((bai) => vocab.get(bai)?.tu_vung ?? [])
+    .filter((word) => !isClassroomPhrase(word.han))
+    .map(toExerciseWord);
   const files: Array<{ fileName: string; content: TextbookLessonFile }> = [];
-  for (let bai = input.from; bai <= input.to; bai += 1) {
+  const to = input.to ?? Math.max(input.from - 1, ...vocab.keys());
+  for (let bai = input.from; bai <= to; bai += 1) {
     const vocabLesson = vocab.get(bai);
     const lesson = lessons.get(bai);
     if (vocabLesson === undefined || lesson === undefined) {
@@ -681,7 +740,33 @@ export function convertTextbookSeeddata(
       });
       continue;
     }
-    const content = buildFile(input.grade, vocabLesson, lesson);
+    const content = buildFile(input.grade, vocabLesson, lesson, gradePool);
+    if (content.exercises.length > 100) {
+      // Exercise import accepts 1–100 rows per request.
+      check.issues.push({
+        code: 'exercise_count',
+        path: `lessons bai=${String(bai)} exercises`,
+      });
+    }
+    content.exercises.forEach((exercise, index) => {
+      try {
+        validateLessonExerciseAuthoring(
+          {
+            type: exercise.type,
+            prompt: exercise.prompt,
+            content: exercise.content,
+            answer: exercise.answer,
+            explanation: exercise.explanation,
+          },
+          'publish',
+        );
+      } catch {
+        check.issues.push({
+          code: 'exercise_invalid',
+          path: `lessons bai=${String(bai)} exercises[${String(index)}]`,
+        });
+      }
+    });
     // Never emit a file the CMS validator (and so the importer) rejects.
     for (const topic of content.topics) {
       for (const issue of validateTopicContentBlocks(

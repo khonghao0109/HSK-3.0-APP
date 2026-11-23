@@ -222,3 +222,97 @@ describe('convertTextbookSeeddata (M2.13a)', () => {
     ]);
   });
 });
+
+describe('convertTextbookSeeddata classroom phrases and exercises (M2.13b)', () => {
+  const ext = (from: number, to: number) =>
+    convertTextbookSeeddata({
+      vocab: load('hsk1-ext-vocab.json'),
+      lessons: load('hsk1-ext-lessons.json'),
+      grade: 1,
+      from,
+      to,
+    });
+
+  it('moves classroom phrases out of words into a valid vocabulary block', () => {
+    const [third] = ext(3, 3);
+    expect(third.content.words.map((word) => word.hanzi)).toEqual([
+      '龘',
+      '鱻',
+      '毳',
+      '淼',
+      '焱',
+      '垚',
+    ]);
+    const vocabulary = third.content.topics.find((t) => t.key === 'vocabulary');
+    expect(vocabulary?.content).toEqual([
+      { type: 'vocabulary_list', value: 'lesson_words' },
+      {
+        type: 'text',
+        value:
+          'Câu dùng trong lớp\n龘鱻！ — Dá xiān! — Câu lớp thử một.\n毳淼? — Cuì miǎo? — Câu lớp thử hai.',
+      },
+    ]);
+    expect(
+      validateTopicContentBlocks('vocabulary', vocabulary?.content ?? []),
+    ).toEqual([]);
+    expect(third.content.classroomPhrases).toHaveLength(2);
+  });
+
+  it('keeps a lesson that has only classroom phrases', () => {
+    const [fourth] = ext(4, 4);
+    expect(fourth.content.words).toEqual([]);
+    expect(fourth.content.exercises).toEqual([]);
+    expect(fourth.content.classroomPhrases.map((p) => p.hanzi)).toEqual([
+      '焱垚。',
+      '垚，焱',
+    ]);
+  });
+
+  it('generates exercises from the real words of the grade only', () => {
+    const [third] = ext(3, 3);
+    expect(third.content.exercises.map((e) => e.sourceKey)[0]).toBe(
+      'hsk2-textbook:g1:l03:e01',
+    );
+    expect(third.content.exercises).toHaveLength(14);
+    expect(third.content.exerciseSkips).toEqual({
+      mcqMeaning: 0,
+      mcqHanzi: 0,
+      duplicateWords: 0,
+    });
+    const text = JSON.stringify(third.content.exercises);
+    expect(text).not.toContain('！');
+    expect(text).not.toContain('Câu lớp thử');
+    for (const e of third.content.exercises) {
+      expect(e.topicKey).toBe('vocabulary');
+    }
+    // Lesson 1 has 2 words: no matching, but mcq draws on the whole grade.
+    const [first] = ext(1, 1);
+    expect(first.content.exercises.map((e) => e.type)).toEqual([
+      'mcq',
+      'mcq',
+      'mcq',
+      'mcq',
+    ]);
+  });
+
+  it('is byte-identical across two runs', () => {
+    const a = ext(1, 4).map((f) => serializeTextbookLesson(f.content));
+    const b = ext(1, 4).map((f) => serializeTextbookLesson(f.content));
+    expect(a).toEqual(b);
+  });
+
+  it('converts the whole grade when `to` is omitted', () => {
+    const files = convertTextbookSeeddata({
+      vocab: load('hsk1-ext-vocab.json'),
+      lessons: load('hsk1-ext-lessons.json'),
+      grade: 1,
+      from: 1,
+    });
+    expect(files.map((f) => f.fileName)).toEqual([
+      'lesson-01.json',
+      'lesson-02.json',
+      'lesson-03.json',
+      'lesson-04.json',
+    ]);
+  });
+});

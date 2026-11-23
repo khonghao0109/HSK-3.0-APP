@@ -1,0 +1,158 @@
+[
+  {
+    "bai": "Bài 1",
+    "ten": "犇骉",
+    "ten_vi": "Chào hỏi thử nghiệm",
+    "tu_vung": [
+      {
+        "id": 1,
+        "han": "犇",
+        "pinyin": "bēn",
+        "vi": "chạy (từ thử)",
+        "pos": "động từ",
+        "audio_file": "t1_ben.mp3",
+        "audio": "ignored-field.mp3"
+      },
+      {
+        "id": 2,
+        "han": "骉",
+        "pinyin": "biāo",
+        "vi": "ngựa chạy (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t1_biao.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bài 2",
+    "ten": "猋",
+    "ten_vi": "Đếm số đơn giản",
+    "tu_vung": [
+      {
+        "id": 3,
+        "han": "猋",
+        "pinyin": "biāo",
+        "vi": "chó chạy (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t2_biao.mp3"
+      },
+      {
+        "id": 4,
+        "han": "犇",
+        "pinyin": "bēn",
+        "vi": "chạy (từ thử)",
+        "pos": "",
+        "audio_file": "t2_ben.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bài 3",
+    "ten": "龘鱻",
+    "ten_vi": "Bài nhiều từ thử",
+    "tu_vung": [
+      {
+        "id": 10,
+        "han": "龘",
+        "pinyin": "dá",
+        "vi": "rồng bay (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_10.mp3"
+      },
+      {
+        "id": 11,
+        "han": "鱻",
+        "pinyin": "xiān",
+        "vi": "cá tươi (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_11.mp3"
+      },
+      {
+        "id": 30,
+        "han": "龘鱻！",
+        "pinyin": "Dá xiān!",
+        "vi": "Câu lớp thử một.",
+        "pos": "",
+        "audio_file": "t3_c1.mp3"
+      },
+      {
+        "id": 12,
+        "han": "毳",
+        "pinyin": "cuì",
+        "vi": "lông tơ (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_12.mp3"
+      },
+      {
+        "id": 13,
+        "han": "淼",
+        "pinyin": "miǎo",
+        "vi": "nước mênh mông (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_13.mp3"
+      },
+      {
+        "id": 14,
+        "han": "焱",
+        "pinyin": "yàn",
+        "vi": "lửa cháy (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_14.mp3"
+      },
+      {
+        "id": 15,
+        "han": "垚",
+        "pinyin": "yáo",
+        "vi": "núi đất cao (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "t3_15.mp3"
+      },
+      {
+        "id": 31,
+        "han": "毳淼?",
+        "pinyin": "Cuì miǎo?",
+        "vi": "Câu lớp thử hai.",
+        "pos": "",
+        "audio_file": "t3_c2.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bài 4",
+    "ten": "焱",
+    "ten_vi": "Chỉ có câu lớp học",
+    "tu_vung": [
+      {
+        "id": 32,
+        "han": "焱垚。",
+        "pinyin": "Yàn yáo.",
+        "vi": "Câu lớp thử ba.",
+        "pos": "",
+        "audio_file": "t4_c1.mp3"
+      },
+      {
+        "id": 33,
+        "han": "垚，焱",
+        "pinyin": "Yáo, yàn",
+        "vi": "Câu lớp thử bốn.",
+        "pos": "",
+        "audio_file": "t4_c2.mp3"
+      }
+    ]
+  },
+  {
+    "bai": "Bổ sung",
+    "ten": "补充词汇",
+    "ten_vi": "Từ vựng bổ sung",
+    "tu_vung": [
+      {
+        "id": 5,
+        "han": "羴",
+        "pinyin": "shān",
+        "vi": "mùi dê (từ thử)",
+        "pos": "danh từ",
+        "audio_file": "s_shan.mp3"
+      }
+    ]
+  }
+]

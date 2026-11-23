@@ -584,7 +584,7 @@ function buildImportRows(
   });
 }
 
-async function importExercises(
+export async function importExercises(
   api: ApiClient,
   lessonSourceKey: string,
   dataSourceId: number,

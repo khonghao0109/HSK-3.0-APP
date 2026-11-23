@@ -2,7 +2,13 @@
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 import request from 'supertest';
@@ -10,6 +16,10 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { createSafeValidationException } from '../src/common/validation/safe-validation-exception.factory';
 import { importTextbookLesson } from '../src/modules/content-pilot/import-textbook-content';
+import {
+  importTextbookGrade,
+  textbookSeeddataPaths,
+} from '../src/modules/content-pilot/import-textbook-grade';
 import {
   convertTextbookSeeddata,
   serializeTextbookLesson,
@@ -38,6 +48,16 @@ describe('Textbook content import (M2.13a) E2E', () => {
   const password = 'StrongPassword123!';
 
   const lessonFile = (n: number) => join(outDir, `lesson-0${String(n)}.json`);
+  // M2.13b: lessons 3–4 of the extended fixture (classroom phrases, exercises).
+  const PHRASES = ['龘鱻！', '毳淼?', '焱垚。', '垚，焱'];
+  const runExt = (n: number) =>
+    importTextbookLesson(
+      { apiBaseUrl, adminToken, prisma },
+      {
+        filePath: join(outDir, 'ext', `lesson-0${String(n)}.json`),
+        dryRun: false,
+      },
+    );
   const run = (n: number, dryRun = false) =>
     importTextbookLesson(
       { apiBaseUrl, adminToken, prisma },
@@ -109,6 +129,19 @@ describe('Textbook content import (M2.13a) E2E', () => {
       to: 2,
     })) {
       writeFileSync(join(outDir, fileName), serializeTextbookLesson(content));
+    }
+    mkdirSync(join(outDir, 'ext'));
+    for (const { fileName, content } of convertTextbookSeeddata({
+      vocab: fixture('hsk1-ext-vocab.json'),
+      lessons: fixture('hsk1-ext-lessons.json'),
+      grade: 1,
+      from: 3,
+      to: 4,
+    })) {
+      writeFileSync(
+        join(outDir, 'ext', fileName),
+        serializeTextbookLesson(content),
+      );
     }
   });
 
@@ -378,6 +411,114 @@ describe('Textbook content import (M2.13a) E2E', () => {
         .flatMap((unit) => unit.lessons)
         .map((row) => row.id),
     ).toEqual([lesson.id]);
+  });
+
+  const extState = () =>
+    Promise.all([
+      prisma.lessonExercise.findMany({
+        where: { lesson: { slug: { startsWith: 'hsk2-textbook-g1-l03-' } } },
+        orderBy: { orderIndex: 'asc' },
+        select: { type: true, status: true, sourceKey: true, topicId: true },
+      }),
+      prisma.word.count({ where: { hanzi: { in: PHRASES } } }),
+      prisma.lessonWord.count({
+        where: { lesson: { slug: { startsWith: 'hsk2-textbook-g1-l04-' } } },
+      }),
+      prisma.lessonWord.count({
+        where: { lesson: { slug: { startsWith: 'hsk2-textbook-g1-l03-' } } },
+      }),
+    ]);
+
+  it('[T6] imports generated exercises as drafts and no Word for classroom phrases', async () => {
+    const third = await runExt(3);
+    const fourth = await runExt(4);
+    expect(third).toMatchObject({
+      createdLesson: true,
+      wordCount: 6,
+      classroomPhraseCount: 2,
+      exerciseCount: 14,
+      importedExercises: 14,
+      exercisesIdempotent: false,
+    });
+    expect(fourth).toMatchObject({
+      createdLesson: true,
+      wordCount: 0,
+      classroomPhraseCount: 2,
+      exerciseCount: 0,
+      importedExercises: 0,
+      lessonWordCount: 0,
+    });
+    const [exercises, phraseWords, l4Words, l3Words] = await extState();
+    expect(exercises).toHaveLength(14);
+    expect(new Set(exercises.map((e) => e.status))).toEqual(new Set(['draft']));
+    expect(exercises.filter((e) => e.type === 'matching')).toHaveLength(2);
+    expect(exercises.filter((e) => e.type === 'mcq')).toHaveLength(12);
+    expect(exercises[0].sourceKey).toBe('hsk2-textbook:g1:l03:e01');
+    const vocabulary = await prisma.topic.findFirstOrThrow({
+      where: {
+        type: 'vocabulary',
+        lesson: { slug: { startsWith: 'hsk2-textbook-g1-l03-' } },
+      },
+      select: { id: true },
+    });
+    expect(new Set(exercises.map((e) => e.topicId))).toEqual(
+      new Set([vocabulary.id]),
+    );
+    expect([phraseWords, l4Words, l3Words]).toEqual([0, 0, 6]);
+  });
+
+  it('[T7] a second run creates no duplicate exercise', async () => {
+    const before = await extState();
+    const again = await runExt(3);
+    expect(again).toMatchObject({
+      createdLesson: false,
+      importedExercises: 14,
+      exercisesIdempotent: true,
+    });
+    await runExt(4);
+    expect(await extState()).toEqual(before);
+  });
+
+  it('[T8] the whole-grade command converts every lesson and dry-runs them in order', async () => {
+    const root = join(outDir, 'seeddata');
+    const paths = textbookSeeddataPaths(root, 1);
+    for (const [target, name] of [
+      [paths.vocab, 'hsk1-ext-vocab.json'],
+      [paths.lessons, 'hsk1-ext-lessons.json'],
+    ] as const) {
+      mkdirSync(join(target, '..'), { recursive: true });
+      writeFileSync(
+        target,
+        readFileSync(join(__dirname, 'fixtures/textbook', name), 'utf8'),
+      );
+    }
+    const before = await extState();
+    const lessons = await importTextbookGrade(
+      { apiBaseUrl, adminToken, prisma },
+      {
+        seeddataRoot: root,
+        grade: 1,
+        outRoot: join(outDir, 'grade'),
+        dryRun: true,
+      },
+    );
+    expect(
+      lessons.map((l) => [
+        l.fileName,
+        l.wordCount,
+        l.classroomPhraseCount,
+        l.exerciseCount,
+        l.skippedPublished,
+        l.result?.dryRun ?? null,
+      ]),
+    ).toEqual([
+      // Lesson 1 was published by T5: a rerun leaves it untouched.
+      ['lesson-01.json', 2, 0, 4, true, null],
+      ['lesson-02.json', 2, 0, 4, false, true],
+      ['lesson-03.json', 6, 2, 14, false, true],
+      ['lesson-04.json', 0, 2, 0, false, true],
+    ]);
+    expect(await extState()).toEqual(before);
   });
 
   function admin(method: 'get' | 'post', path: string) {
