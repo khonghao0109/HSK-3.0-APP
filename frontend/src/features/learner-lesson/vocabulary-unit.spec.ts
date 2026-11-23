@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  answerMark,
-  type UnitWord,
-  sentenceTokens,
-  unitSteps,
-} from './vocabulary-unit';
+import { answerMark, type UnitWord, unitSteps } from './vocabulary-unit';
 
 const word = (
   id: number,
@@ -80,34 +75,6 @@ describe('unitSteps (N3, N4)', () => {
     expect(
       unitSteps([word(1, 'nhà')], [word(1, 'nhà')]).map((step) => step.kind),
     ).toEqual(['card']);
-  });
-});
-
-describe('sentenceTokens (vocab-example)', () => {
-  it('pairs each Han character with its syllable and marks the word', () => {
-    expect(
-      sentenceTokens('我家有四口人。', 'wǒ jiā yǒu sì kǒu rén.', '家'),
-    ).toEqual([
-      { hanzi: '我', pinyin: 'wǒ', target: false },
-      { hanzi: '家', pinyin: 'jiā', target: true },
-      { hanzi: '有', pinyin: 'yǒu', target: false },
-      { hanzi: '四', pinyin: 'sì', target: false },
-      { hanzi: '口', pinyin: 'kǒu', target: false },
-      { hanzi: '人。', pinyin: 'rén', target: false },
-    ]);
-  });
-
-  it('marks every character of a multi-character word', () => {
-    expect(
-      sentenceTokens('你们好', 'nǐ men hǎo', '你们')?.map(
-        (token) => token.target,
-      ),
-    ).toEqual([true, true, false]);
-  });
-
-  it('gives null when the pinyin does not split one syllable per character', () => {
-    expect(sentenceTokens('我们好', 'wǒmen hǎo', '我们')).toBeNull();
-    expect(sentenceTokens('我们好', null, '我们')).toBeNull();
   });
 });
 

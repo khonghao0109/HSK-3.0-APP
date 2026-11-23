@@ -55,9 +55,7 @@ function syllables(word: string): number {
 }
 
 /**
- * The chips of a sentence (prompt G2c: `sentenceTokens` needs one pinyin
- * syllable per space and fits 60 of the 498 HSK1 examples, so it is not
- * used). Characters split by the longest lesson word, the rest one by one;
+ * The chips of a sentence. Characters split by the longest lesson word, the rest one by one;
  * a chip never cuts a pinyin word of the sentence, so each chip carries its
  * own pinyin (Q-G6). Null when the pinyin does not match the characters.
  */
