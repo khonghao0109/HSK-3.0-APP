@@ -97,9 +97,11 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
   },
 } satisfies Prisma.LessonSelect;
 
-type PublicLessonGraph = Prisma.LessonGetPayload<{
-  select: typeof PUBLIC_LESSON_GRAPH_SELECT;
-}>;
+/** Lesson activity stays on the per-level path: its lesson always has a Level. */
+type PublicLessonGraph = Omit<
+  Prisma.LessonGetPayload<{ select: typeof PUBLIC_LESSON_GRAPH_SELECT }>,
+  'levelId'
+> & { levelId: number };
 
 const ATTEMPT_SELECT = {
   id: true,
@@ -678,7 +680,8 @@ export class LessonActivityService {
 
   async getLessonProgressList(userId: number) {
     const progresses = await this.prisma.progress.findMany({
-      where: { userId },
+      // Course lessons without a Level (ADR-009 C3b-1) stay off this route.
+      where: { userId, lesson: { is: { levelId: { not: null } } } },
       orderBy: [{ lastActivityAt: 'desc' }, { lessonId: 'asc' }],
       select: {
         lessonId: true,
@@ -702,8 +705,9 @@ export class LessonActivityService {
   }
 
   async getLessonProgress(userId: number, lessonId: number) {
-    const progress = await this.prisma.progress.findUnique({
-      where: { userId_lessonId: { userId, lessonId } },
+    const progress = await this.prisma.progress.findFirst({
+      // Same scope as the list: a course lesson without a Level answers 404.
+      where: { userId, lessonId, lesson: { is: { levelId: { not: null } } } },
       select: {
         lessonId: true,
         status: true,
@@ -871,8 +875,12 @@ export class LessonActivityService {
       where: buildLessonReadyWhere({ id: lessonId }),
       select: PUBLIC_LESSON_GRAPH_SELECT,
     });
-    if (!graph) throw new NotFoundException('Lesson not found or not ready.');
-    return graph;
+    // buildLessonReadyWhere requires a public Level; a lesson without one
+    // (ADR-009 C3b-1) is answered like any lesson that is not public.
+    if (!graph || graph.levelId === null) {
+      throw new NotFoundException('Lesson not found or not ready.');
+    }
+    return { ...graph, levelId: graph.levelId };
   }
 
   private async requirePublicTopic(

@@ -27,15 +27,15 @@ BEGIN
   END IF;
   RAISE NOTICE 'ok - legacy lesson keeps levelId, courseUnitId is null';
 
-  -- Lesson.levelId stays NOT NULL.
+  -- C3b-1 dropped NOT NULL; a lesson with neither Level nor unit is still refused.
   rejected := false;
   BEGIN
     INSERT INTO "Lesson" ("levelId", title, "orderIndex", slug, "updatedAt")
     VALUES (NULL, 'no level', 2, 'c1-no-level', CURRENT_TIMESTAMP);
-  EXCEPTION WHEN not_null_violation THEN rejected := true;
+  EXCEPTION WHEN check_violation THEN rejected := true;
   END;
-  IF NOT rejected THEN RAISE EXCEPTION 'Lesson.levelId accepted NULL'; END IF;
-  RAISE NOTICE 'ok - Lesson.levelId NOT NULL kept';
+  IF NOT rejected THEN RAISE EXCEPTION 'Lesson without Level or unit accepted'; END IF;
+  RAISE NOTICE 'ok - Lesson needs a Level or a unit';
 
   -- Old unique (levelId, orderIndex) still holds.
   rejected := false;

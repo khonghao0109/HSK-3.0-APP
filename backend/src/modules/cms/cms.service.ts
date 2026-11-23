@@ -1208,9 +1208,17 @@ export class CmsService {
 
   private async assertLessonPublishReady(
     tx: Prisma.TransactionClient,
-    levelId: number,
+    levelId: number | null,
     lessonId: number,
   ) {
+    // ADR-009 C3b-1: publishing a lesson without a Level comes with C3b-2;
+    // until then it is refused like a lesson whose Level is not published.
+    if (levelId === null) {
+      throw new ConflictException({
+        code: 'LESSON_LEVEL_NOT_PUBLISHED',
+        message: 'Lesson requires a published, non-deleted parent level.',
+      });
+    }
     const [level, topicCount, storyCount] = await Promise.all([
       tx.level.findFirst({
         where: { id: levelId, ...PUBLIC_CONTENT_WHERE },
