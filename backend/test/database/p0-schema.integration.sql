@@ -713,6 +713,105 @@ BEGIN
 END
 $test$;
 
+-- M1.7b2 consent_legal_versions: Consent.channel/documentSha256 and the
+-- append-only LegalDocumentVersion table.
+DO $consent$
+DECLARE
+  consent_user_id INTEGER;
+  rejected BOOLEAN;
+  sha CONSTANT TEXT := repeat('a', 64);
+BEGIN
+  INSERT INTO "User" ("email", "password", "updatedAt")
+  VALUES ('consent-schema@example.test', 'not-a-real-hash', CURRENT_TIMESTAMP)
+  RETURNING "id" INTO consent_user_id;
+
+  INSERT INTO "Consent" ("userId", "type", "consentVersion", "policyVersion", "documentSha256", "channel", "updatedAt")
+  VALUES (consent_user_id, 'terms', '1.0', '1.0', sha, 'signup', CURRENT_TIMESTAMP);
+  INSERT INTO "Consent" ("userId", "type", "consentVersion", "policyVersion", "channel", "updatedAt")
+  VALUES (consent_user_id, 'analytics', '1', '1', 'settings', CURRENT_TIMESTAMP);
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "Consent" ("userId", "type", "consentVersion", "policyVersion", "updatedAt")
+    VALUES (consent_user_id, 'privacy', '1.0', '1.0', CURRENT_TIMESTAMP);
+  EXCEPTION WHEN not_null_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Consent without channel was accepted';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "Consent" ("userId", "type", "consentVersion", "policyVersion", "documentSha256", "channel", "updatedAt")
+    VALUES (consent_user_id, 'privacy', '1.0', '1.0', upper(sha), 'signup', CURRENT_TIMESTAMP);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Consent with non-lowercase-hex documentSha256 was accepted';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "Consent" ("userId", "type", "consentVersion", "policyVersion", "documentSha256", "channel", "updatedAt")
+    VALUES (consent_user_id, 'marketing', '1', '1', sha, 'settings', CURRENT_TIMESTAMP);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Optional consent with a document hash was accepted';
+  END IF;
+
+  INSERT INTO "LegalDocumentVersion" ("type", "version", "sha256", "effectiveAt")
+  VALUES ('terms', '1.0', sha, CURRENT_TIMESTAMP);
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "LegalDocumentVersion" ("type", "version", "sha256", "effectiveAt")
+    VALUES ('terms', '1.0', repeat('b', 64), CURRENT_TIMESTAMP);
+  EXCEPTION WHEN unique_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'Duplicate LegalDocumentVersion (type, version) was accepted';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "LegalDocumentVersion" ("type", "version", "sha256", "effectiveAt")
+    VALUES ('privacy', '1.0', 'not-a-sha', CURRENT_TIMESTAMP);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'LegalDocumentVersion with invalid sha256 was accepted';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "LegalDocumentVersion" ("type", "version", "sha256", "effectiveAt")
+    VALUES ('privacy', ' 1.0', sha, CURRENT_TIMESTAMP);
+  EXCEPTION WHEN check_violation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'LegalDocumentVersion with invalid version was accepted';
+  END IF;
+
+  rejected := false;
+  BEGIN
+    INSERT INTO "LegalDocumentVersion" ("type", "version", "sha256", "effectiveAt")
+    VALUES ('analytics', '1.0', sha, CURRENT_TIMESTAMP);
+  EXCEPTION WHEN invalid_text_representation THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'LegalDocumentVersion accepted an optional consent type';
+  END IF;
+END
+$consent$;
+
 ROLLBACK;
 
 SELECT 'P0 schema integration tests passed' AS result;

@@ -423,6 +423,7 @@ describe('Account Deletion E2E', () => {
         type: 'terms',
         consentVersion: '1.0',
         policyVersion: '1.0',
+        channel: 'signup',
       },
     });
 
