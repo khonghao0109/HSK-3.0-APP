@@ -1012,11 +1012,41 @@
 
 .learner-app .lu-flow .g-meter i {
   flex: 1;
-  height: var(--h, 30%);
+  height: 30%;
   border-radius: 2px;
   background: var(--red-600);
   opacity: 0.75;
   animation: lu-meter 0.9s ease-in-out infinite alternate;
+}
+
+/* G3c: decorative meter-bar heights live in CSS, not an inline `style` the CSP
+   blocks. Bar 1 keeps the 30% default above. */
+.learner-app .lu-flow .g-meter i:nth-child(2) {
+  height: 60%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(3) {
+  height: 45%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(4) {
+  height: 80%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(5) {
+  height: 35%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(6) {
+  height: 70%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(7) {
+  height: 50%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(8) {
+  height: 25%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(9) {
+  height: 65%;
+}
+.learner-app .lu-flow .g-meter i:nth-child(10) {
+  height: 40%;
 }
 
 .learner-app .lu-flow .g-meter i:nth-child(3n) {

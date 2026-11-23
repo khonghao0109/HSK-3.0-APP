@@ -275,6 +275,44 @@ describe('LessonPlayer', () => {
     ).toContain('Đáp án đúng: 超市');
   });
 
+  it('speaks a single period when the explanation already ends with one (G3c)', async () => {
+    fetchSpy.mockResolvedValue(
+      attempt(false, '你好 is a greeting.', { optionId: 'market' }),
+    );
+    renderPlayer([mcq]);
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    const live =
+      document.querySelector('[aria-live="polite"]')?.textContent ?? '';
+    expect(live).toBe('Chưa đúng. 你好 is a greeting. Đáp án đúng: 超市');
+    expect(live).not.toMatch(/\.\./u);
+  });
+
+  it('adds a period between parts with no end punctuation (G3c)', async () => {
+    fetchSpy.mockResolvedValue(
+      attempt(false, 'Sai rồi', { optionId: 'market' }),
+    );
+    renderPlayer([mcq]);
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      'Chưa đúng. Sai rồi. Đáp án đúng: 超市',
+    );
+  });
+
+  it('keeps a Chinese full stop without adding a Latin period (G3c)', async () => {
+    fetchSpy.mockResolvedValue(
+      attempt(false, '这是错的。', { optionId: 'market' }),
+    );
+    renderPlayer([mcq]);
+    fireEvent.click(screen.getByRole('radio', { name: '银行' }));
+    await screen.findByText('Chưa đúng', { selector: '.m02-feedback__title' });
+    const live =
+      document.querySelector('[aria-live="polite"]')?.textContent ?? '';
+    expect(live).toBe('Chưa đúng. 这是错的。 Đáp án đúng: 超市');
+    expect(live).not.toMatch(/。\./u);
+  });
+
   it('reveals nothing when the correct option id is absent from the content (Q-G9)', async () => {
     fetchSpy.mockResolvedValue(attempt(false, null, { optionId: 'ghost' }));
     const { container } = renderPlayer([mcq]);

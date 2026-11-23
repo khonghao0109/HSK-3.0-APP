@@ -148,6 +148,22 @@ function resolveCorrectAnswerText(
   return parts.join('');
 }
 
+/** Sentence-ending marks after which the spoken join needs no extra period. */
+const SPOKEN_SENTENCE_END = /[.。!?！？]$/u;
+
+/**
+ * Joins the spoken (aria-live) result with ". " between parts, but only a
+ * space when a part already ends in sentence punctuation — so an explanation
+ * ending in "." or "。" is not read back as a double stop (G3c).
+ */
+function joinSpoken(parts: Array<string | false | null | undefined>): string {
+  return parts.reduce<string>((spoken, part) => {
+    if (!part) return spoken;
+    if (spoken === '') return part;
+    return `${spoken}${SPOKEN_SENTENCE_END.test(spoken) ? ' ' : '. '}${part}`;
+  }, '');
+}
+
 /**
  * Activity player (M2.5b, Q45–Q50): one exercise at a time, checked by the
  * backend. Exercises the player cannot show yet only count towards x/y (Q48).
@@ -600,14 +616,12 @@ export function LessonPlayer({
     current?.kind === 'matching';
   const announcement = result
     ? result.correct
-      ? `${PLAYER_MESSAGES.correctTitle}. ${correctText}`
-      : [
+      ? joinSpoken([PLAYER_MESSAGES.correctTitle, correctText])
+      : joinSpoken([
           wrongTitle,
           result.explanation,
           correctAnswerText && `${correctAnswerLabel}: ${correctAnswerText}`,
-        ]
-          .filter(Boolean)
-          .join('. ')
+        ])
     : completion === 'busy'
       ? PLAYER_MESSAGES.finishing
       : submitting && choices.length > 0

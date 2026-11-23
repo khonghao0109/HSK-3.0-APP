@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -174,7 +173,7 @@ export function WordList({ words }: { words: LessonWords['words'] }) {
               <span
                 className="topic-word__tile"
                 lang="zh-Hans"
-                style={{ '--hz-len': [...word.hanzi].length } as CSSProperties}
+                data-hz-len={Math.min([...word.hanzi].length, 4)}
               >
                 {word.hanzi}
               </span>
