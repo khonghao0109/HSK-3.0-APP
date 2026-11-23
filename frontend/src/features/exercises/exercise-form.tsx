@@ -1614,7 +1614,7 @@ export function ExerciseForm(props: ExerciseFormProps) {
                     );
                   })}
                   <button
-                    className="adm-btn adm-btn--ghost adm-btn--sm"
+                    className="adm-btn adm-btn--ghost adm-btn--sm adm-exercise-form__pair-btn"
                     type="button"
                     aria-label={`Xoá cặp ${index + 1}`}
                     disabled={disabled || value.pairs.length <= MIN_PAIRS}
@@ -1631,7 +1631,7 @@ export function ExerciseForm(props: ExerciseFormProps) {
             message={fieldErrors['exercise-form-pairs-error']}
           />
           <button
-            className="adm-btn adm-btn--outline adm-btn--sm"
+            className="adm-btn adm-btn--outline adm-btn--sm adm-exercise-form__pair-btn"
             id="exercise-form-add-pair"
             type="button"
             disabled={disabled || value.pairs.length >= MAX_PAIRS}

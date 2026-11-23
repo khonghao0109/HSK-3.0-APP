@@ -190,3 +190,9 @@
     min-block-size: 2.75rem;
   }
 }
+
+/* Pha G4a: nút Thêm/Xoá cặp ghép cặp đạt vùng chạm 44px (adm-btn--sm chỉ 36px). */
+.admin-app .adm-btn.adm-exercise-form__pair-btn {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}

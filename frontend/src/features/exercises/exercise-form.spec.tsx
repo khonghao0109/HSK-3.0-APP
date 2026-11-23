@@ -1045,6 +1045,16 @@ describe('ExerciseForm — ghép cặp (matching, Pha E)', () => {
     expect(add).toBeEnabled();
   });
 
+  it('nút Thêm cặp và Xoá cặp dùng class vùng chạm 44px', () => {
+    startMatching();
+    expect(screen.getByRole('button', { name: 'Thêm cặp' })).toHaveClass(
+      'adm-exercise-form__pair-btn',
+    );
+    expect(screen.getByRole('button', { name: 'Xoá cặp 1' })).toHaveClass(
+      'adm-exercise-form__pair-btn',
+    );
+  });
+
   it('thêm cặp focus ô Chữ Hán của hàng mới; xoá cặp focus nút Thêm cặp', async () => {
     startMatching();
     fireEvent.click(screen.getByRole('button', { name: 'Thêm cặp' }));
