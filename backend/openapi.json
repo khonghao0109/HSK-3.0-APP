@@ -6718,6 +6718,296 @@
         ]
       }
     },
+    "/api/v1/learning/courses": {
+      "get": {
+        "operationId": "LearningCourseController_listCourses",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LearningCourseListResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningCourse"
+        ]
+      }
+    },
+    "/api/v1/learning/courses/{code}": {
+      "get": {
+        "operationId": "LearningCourseController_getCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LearningCourseDetailResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningCourse"
+        ]
+      }
+    },
+    "/api/v1/learning/courses/{code}/enrollment": {
+      "post": {
+        "operationId": "LearningCourseController_enroll",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LearningCourseEnrollmentResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningCourse"
+        ]
+      },
+      "delete": {
+        "operationId": "LearningCourseController_leave",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Enrollment left, or there was none.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningCourse"
+        ]
+      }
+    },
+    "/api/v1/learning/current-course": {
+      "put": {
+        "operationId": "LearningCourseController_setCurrent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCurrentCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LearningCourseEnrollmentResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "LearningCourse"
+        ]
+      }
+    },
     "/api/v1/learning/home": {
       "get": {
         "operationId": "LearningHomeController_getHome",
@@ -13278,6 +13568,262 @@
           "goal",
           "levels",
           "nextLesson"
+        ]
+      },
+      "LearningCourseProgressDto": {
+        "type": "object",
+        "properties": {
+          "completedLessons": {
+            "type": "number"
+          },
+          "totalLessons": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "completedLessons",
+          "totalLessons"
+        ]
+      },
+      "LearningCourseSummaryDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "topic",
+              "textbook",
+              "specialty"
+            ],
+            "type": "string"
+          },
+          "curriculumVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "enrolled": {
+            "type": "boolean",
+            "description": "An `active` enrollment exists."
+          },
+          "isCurrent": {
+            "type": "boolean",
+            "description": "Course being studied, the default course included (ADR-009 Q-C4)."
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LearningCourseProgressDto"
+          }
+        },
+        "required": [
+          "kind",
+          "curriculumVersion",
+          "description",
+          "code",
+          "title",
+          "enrolled",
+          "isCurrent",
+          "progress"
+        ]
+      },
+      "LearningCourseListResponseDto": {
+        "type": "object",
+        "properties": {
+          "courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LearningCourseSummaryDto"
+            }
+          }
+        },
+        "required": [
+          "courses"
+        ]
+      },
+      "LearningCourseLessonDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "done",
+              "current",
+              "available",
+              "locked"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "completionPercent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "state",
+          "id",
+          "title",
+          "slug",
+          "position",
+          "completionPercent"
+        ]
+      },
+      "LearningCourseUnitDto": {
+        "type": "object",
+        "properties": {
+          "gradeNumber": {
+            "type": "integer",
+            "nullable": true
+          },
+          "volume": {
+            "nullable": true,
+            "enum": [
+              "upper",
+              "lower"
+            ],
+            "type": "string"
+          },
+          "levelCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LearningCourseLessonDto"
+            }
+          }
+        },
+        "required": [
+          "gradeNumber",
+          "volume",
+          "levelCode",
+          "orderIndex",
+          "title",
+          "lessons"
+        ]
+      },
+      "LearningCourseDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "topic",
+              "textbook",
+              "specialty"
+            ],
+            "type": "string"
+          },
+          "curriculumVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "enrolled": {
+            "type": "boolean",
+            "description": "An `active` enrollment exists."
+          },
+          "isCurrent": {
+            "type": "boolean",
+            "description": "Course being studied, the default course included (ADR-009 Q-C4)."
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LearningCourseProgressDto"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LearningCourseUnitDto"
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "curriculumVersion",
+          "description",
+          "code",
+          "title",
+          "enrolled",
+          "isCurrent",
+          "progress",
+          "units"
+        ]
+      },
+      "LearningCourseEnrollmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "active",
+              "left"
+            ],
+            "type": "string"
+          },
+          "leftAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "courseCode": {
+            "type": "string"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "enrolledAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "leftAt",
+          "courseCode",
+          "isCurrent",
+          "enrolledAt"
+        ]
+      },
+      "SetCurrentCourseDto": {
+        "type": "object",
+        "properties": {
+          "courseCode": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "courseCode"
         ]
       },
       "LearningHomeDailyGoalDto": {

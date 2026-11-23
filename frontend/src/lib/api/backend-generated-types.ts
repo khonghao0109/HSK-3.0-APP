@@ -1434,6 +1434,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learning/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LearningCourseController_listCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learning/courses/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LearningCourseController_getCourse"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learning/courses/{code}/enrollment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LearningCourseController_enroll"];
+        delete: operations["LearningCourseController_leave"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learning/current-course": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["LearningCourseController_setCurrent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learning/home": {
         parameters: {
             query?: never;
@@ -3149,6 +3213,71 @@ export interface components {
             goal: components["schemas"]["LearningPathGoalDto"] | null;
             levels: components["schemas"]["LearningPathLevelDto"][];
             nextLesson: components["schemas"]["LearningPathNextLessonDto"] | null;
+        };
+        LearningCourseProgressDto: {
+            completedLessons: number;
+            totalLessons: number;
+        };
+        LearningCourseSummaryDto: {
+            /** @enum {string} */
+            kind: "topic" | "textbook" | "specialty";
+            curriculumVersion: string | null;
+            description: string | null;
+            code: string;
+            title: string;
+            /** @description An `active` enrollment exists. */
+            enrolled: boolean;
+            /** @description Course being studied, the default course included (ADR-009 Q-C4). */
+            isCurrent: boolean;
+            progress: components["schemas"]["LearningCourseProgressDto"];
+        };
+        LearningCourseListResponseDto: {
+            courses: components["schemas"]["LearningCourseSummaryDto"][];
+        };
+        LearningCourseLessonDto: {
+            /** @enum {string} */
+            state: "done" | "current" | "available" | "locked";
+            id: number;
+            title: string;
+            slug: string;
+            position: number;
+            completionPercent: number;
+        };
+        LearningCourseUnitDto: {
+            gradeNumber: number | null;
+            /** @enum {string|null} */
+            volume: "upper" | "lower" | null;
+            levelCode: string | null;
+            orderIndex: number;
+            title: string;
+            lessons: components["schemas"]["LearningCourseLessonDto"][];
+        };
+        LearningCourseDetailResponseDto: {
+            /** @enum {string} */
+            kind: "topic" | "textbook" | "specialty";
+            curriculumVersion: string | null;
+            description: string | null;
+            code: string;
+            title: string;
+            /** @description An `active` enrollment exists. */
+            enrolled: boolean;
+            /** @description Course being studied, the default course included (ADR-009 Q-C4). */
+            isCurrent: boolean;
+            progress: components["schemas"]["LearningCourseProgressDto"];
+            units: components["schemas"]["LearningCourseUnitDto"][];
+        };
+        LearningCourseEnrollmentResponseDto: {
+            /** @enum {string} */
+            status: "active" | "left";
+            /** Format: date-time */
+            leftAt: string | null;
+            courseCode: string;
+            isCurrent: boolean;
+            /** Format: date-time */
+            enrolledAt: string;
+        };
+        SetCurrentCourseDto: {
+            courseCode: string;
         };
         LearningHomeDailyGoalDto: {
             targetMinutes: number;
@@ -6965,6 +7094,157 @@ export interface operations {
                         /** @enum {boolean} */
                         success: true;
                         data: components["schemas"]["LearningPathResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningCourseController_listCourses: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["LearningCourseListResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningCourseController_getCourse: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["LearningCourseDetailResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningCourseController_enroll: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["LearningCourseEnrollmentResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningCourseController_leave: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrollment left, or there was none. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LearningCourseController_setCurrent: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCurrentCourseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["LearningCourseEnrollmentResponseDto"];
                         meta: components["schemas"]["ApiResponseMetaDto"];
                     };
                 };

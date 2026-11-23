@@ -688,6 +688,52 @@ thứ tự bấm. Server phát lại log:
 Kết quả: `isCorrect = (số lần sai = 0)`, `score` 100 hoặc 0. Số lần sai chỉ lưu ở
 `LessonExerciseAttempt.detailJson.mistakes`, không có trong response hay `latestAttempt`.
 
+### A.7c Khoá học — học viên (ADR-009 C3a)
+
+JWT bắt buộc (`401` khi thiếu). Envelope §1. `GET` có header `Cache-Control: no-store` và **không
+ghi DB**. Khoá "public" = `published`, chưa xoá. Khoá không public hoặc không tồn tại → `404`
+`{ code: "NOT_FOUND", message: "Course not found." }` ở mọi route dưới. Rate limit mỗi user:
+đọc 60/phút, ghi 20/phút, mọi môi trường. Các route chỉ đọc/ghi enrollment của chính người gọi;
+không route nào đụng `Progress`.
+
+| Method | Path | Body | Thành công |
+| --- | --- | --- | --- |
+| `GET` | `/learning/courses` | — | `200` `{ courses: CourseSummary[] }`, sắp theo `Course.orderIndex` |
+| `GET` | `/learning/courses/:code` | — | `200` `CourseSummary & { units: Unit[] }` |
+| `POST` | `/learning/courses/:code/enrollment` | — | `200` `Enrollment`; idempotent |
+| `DELETE` | `/learning/courses/:code/enrollment` | — | `204`, không body; idempotent |
+| `PUT` | `/learning/current-course` | `{ courseCode: string (1..64) }` | `200` `Enrollment`; body sai → `400` |
+
+`CourseSummary`: `{ code, kind (topic|textbook|specialty), curriculumVersion | null, title,
+description | null, enrolled, isCurrent, progress: { completedLessons, totalLessons } }`.
+- `enrolled`: có enrollment `status = active`.
+- `isCurrent`: khoá đang học (Q-C4): enrollment `active` có `isCurrent = true` của khoá public;
+  không có thì khoá mặc định `HSK3_TOPIC` nếu public, chỉ tính khi đọc. Đúng một khoá trong danh
+  sách có `isCurrent: true`, hoặc không khoá nào nếu `HSK3_TOPIC` không public.
+- `progress`: chỉ đếm bài sẵn sàng (readiness như `/learning/path`) thuộc unit public của khoá;
+  `completedLessons` = bài có `Progress.status = done`.
+
+`Unit`: `{ orderIndex, title, gradeNumber | null, volume (upper|lower) | null, levelCode | null,
+lessons: [{ id, title, slug, position, state, completionPercent }] }`. Chỉ unit public, sắp theo
+`orderIndex`; bài sắp theo `orderIndex`, `id`; `position` bắt đầu lại từ 1 trong mỗi unit.
+`state ∈ done | current | available | locked`, cùng luật Q18 của `/learning/path`, phạm vi theo
+`kind` (TL 23/11):
+- `topic`: mỗi unit mở riêng, bài đầu mỗi unit mở; cho `HSK3_TOPIC` trạng thái trùng
+  `GET /learning/path`.
+- `textbook`, `specialty`: nối tiếp trong cả khoá theo (`unit.orderIndex`, `lesson.orderIndex`);
+  chỉ bài đầu của khoá mở sẵn.
+- Mọi `kind`: bài có `Progress` luôn vào được.
+
+`Enrollment`: `{ courseCode, status (active|left), isCurrent, enrolledAt, leftAt | null }`
+(`isCurrent` là cờ đã lưu của dòng này).
+- `POST …/enrollment`: chưa có → tạo `active`; đang `left` → `active`, `leftAt = null`; đã
+  `active` → không đổi. Không đổi `isCurrent` (Q-C6); `enrolledAt` giữ nguyên.
+- `DELETE …/enrollment`: enrollment `active` → `status = left`, `leftAt = now`, `isCurrent = false`;
+  không xoá dòng, giữ tiến độ (Q-C5). Chưa theo hoặc đã `left` → `204`, không đổi gì.
+- `PUT /learning/current-course`: tắt `isCurrent` cũ và bật khoá được chọn (tạo hoặc kích hoạt
+  lại enrollment) trong một transaction khoá dòng `User`, nên request song song của cùng user
+  không tạo hai dòng `isCurrent`.
+
 ### A.7b Ôn tập SRS — học viên (M3.2)
 
 Envelope §1, `JwtAuthGuard`; mọi response có `Cache-Control: no-store`. Không response nào
