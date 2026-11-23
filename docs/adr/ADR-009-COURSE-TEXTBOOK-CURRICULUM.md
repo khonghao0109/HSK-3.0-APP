@@ -1,6 +1,6 @@
 # ADR-009: Course — khoá học giáo trình, chủ đề và chuyên ngành
 
-- Status: Proposed (chờ TL review và PO trả lời mục 9)
+- Status: Accepted (PO 23/11/2026: duyệt toàn bộ khuyến nghị mục 9)
 - Date: 2026-11-23
 - Scope: mô hình nội dung và lộ trình learner sau lesson-units; chỉ thiết kế, chưa có migration
 - Related ADR: `ADR-001-IMMUTABLE-EVENT-RETENTION-AND-ACCOUNT-DELETION.md`,
@@ -121,7 +121,7 @@ CourseEnrollment                    -- người học theo khoá nào
 
 Lesson
   + courseUnitId (thêm mới, nullable ở pha expand, NOT NULL ở pha contract)
-  levelId          bỏ NOT NULL ở pha expand; bắt buộc khi unit thuộc khoá topic (CHECK/validation)
+  levelId          bỏ NOT NULL ở đầu pha C3 (không phải C1); bắt buộc khi unit thuộc khoá topic (CHECK/validation)
   unique mới (courseUnitId, orderIndex); giữ (levelId, orderIndex) cho bài có levelId
 ```
 
@@ -245,10 +245,10 @@ Theo `docs/database/P0_SCHEMA_MIGRATION_RUNBOOK.md`: forward-only, không down m
 
 | Pha | Nội dung | Rollback | Rủi ro dữ liệu |
 | --- | --- | --- | --- |
-| C1 expand | Tạo `Course`, `CourseUnit`, `CourseEnrollment`; thêm `Lesson.courseUnitId` nullable; bỏ NOT NULL của `Lesson.levelId`; unique `(courseUnitId, orderIndex)` | Ứng dụng cũ bỏ qua bảng/cột mới; không drop | Bỏ NOT NULL mở khả năng bài không Level trước khi app hiểu: CMS cũ vẫn bắt buộc `levelId` nên không phát sinh |
+| C1 expand | Tạo `Course`, `CourseUnit`, `CourseEnrollment` (kèm partial unique `isCurrent` vì bảng mới còn rỗng); thêm `Lesson.courseUnitId` nullable; unique `(courseUnitId, orderIndex)`. **Giữ** NOT NULL của `Lesson.levelId` (dời sang C3, khi app đã hiểu bài không Level) | Ứng dụng cũ bỏ qua bảng/cột mới; không drop | Không đổi kiểu cột đang dùng nên không ảnh hưởng code hiện có |
 | C2 backfill | Tạo khoá `HSK3_TOPIC` (kind topic, HSK_3_0), mỗi Level có bài thành một unit (`levelId` = Level đó); gán `courseUnitId` cho bài hiện có (24 bài HSK1 và mọi bài khác); tạo `CourseEnrollment` `isCurrent` cho người có `UserGoal` hoặc `Progress` | Script idempotent, chạy lại an toàn; sai thì forward-fix gán lại, không xoá | Không đụng `Progress`, attempt, `LearningEvent` (khoá theo `lessonId`). Kiểm: số bài có `courseUnitId` = tổng bài; số enrollment = số user có goal hoặc progress |
-| C3 app | Đọc theo khoá sau feature flag: lộ trình, home, activity, CMS, onboarding; công tắc bài khoá | Tắt flag về đường cũ theo Level (dữ liệu hai đường cùng đúng cho khoá topic) | Bài textbook tạo sau C3 không có Level: đường cũ không thấy chúng (chấp nhận khi rollback) |
-| C4 contract | `Lesson.courseUnitId` NOT NULL; CHECK/validation "unit thuộc khoá topic thì bài có `levelId`"; partial unique `isCurrent` | Forward-fix; chạy sau khi log chứng minh mọi bài có unit | Fail nếu còn bài chưa gán unit: preflight đếm trước |
+| C3 app | Bỏ NOT NULL của `Lesson.levelId` (migration riêng đầu C3); đọc theo khoá sau feature flag: lộ trình, home, activity, CMS, onboarding; công tắc bài khoá | Tắt flag về đường cũ theo Level (dữ liệu hai đường cùng đúng cho khoá topic) | Bài textbook tạo sau C3 không có Level: đường cũ không thấy chúng (chấp nhận khi rollback) |
+| C4 contract | `Lesson.courseUnitId` NOT NULL; CHECK/validation "unit thuộc khoá topic thì bài có `levelId`" | Forward-fix; chạy sau khi log chứng minh mọi bài có unit | Fail nếu còn bài chưa gán unit: preflight đếm trước |
 
 Không hard-delete gì ở mọi pha (ADR-001). Bỏ dùng `@@unique([levelId, orderIndex])` chỉ ở release
 riêng sau C4 nếu cần, không trong chuỗi này.
@@ -289,6 +289,8 @@ riêng sau C4 nếu cần, không trong chuỗi này.
 - Bộ nhập tách profile: luật HSK1 hiện tại phải được giữ nguyên byte-for-byte cho 25 file pilot.
 
 ## 9. Câu hỏi mở cho PO
+
+PO 23/11/2026 trả lời: **theo khuyến nghị cho toàn bộ Q-C3 … Q-C10** (cột "Khuyến nghị" dưới đây là quyết định).
 
 | Mã | Câu hỏi | Khuyến nghị |
 | --- | --- | --- |
