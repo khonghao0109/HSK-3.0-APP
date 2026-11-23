@@ -67,6 +67,7 @@ const REVISION_SELECT = {
 const LESSON_ADMIN_SELECT = {
   id: true,
   levelId: true,
+  courseUnitId: true,
   title: true,
   description: true,
   orderIndex: true,
@@ -177,6 +178,10 @@ export class CmsService {
     assertAdminActor(actor);
     const where: Prisma.LessonWhereInput = {
       ...(query.levelId ? { levelId: query.levelId } : {}),
+      ...(query.courseUnitId ? { courseUnitId: query.courseUnitId } : {}),
+      ...(query.courseId
+        ? { courseUnit: { is: { courseId: query.courseId } } }
+        : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.search
         ? {
@@ -278,46 +283,103 @@ export class CmsService {
     context: MutationContext,
   ) {
     assertAdminActor(actor);
-    const snapshot = lessonSnapshot(dto);
-
     return this.executeMutation(async () =>
       this.prisma.$transaction(async (tx) => {
         await this.assertLevelExists(tx, dto.levelId);
-        const lesson = await tx.lesson.create({
-          data: {
-            levelId: dto.levelId,
-            ...snapshot,
-            status: 'draft',
-            createdById: actor.id,
-            updatedById: actor.id,
-          },
-          select: LESSON_ADMIN_SELECT,
+        return this.insertDraftLesson(tx, actor, context, dto, {
+          levelId: dto.levelId,
+          courseUnitId: null,
         });
-        const revision = await tx.contentRevision.create({
-          data: {
-            entityType: 'lesson',
-            entityId: lesson.id,
-            revision: 1,
-            snapshot,
-            contentHash: sha256CanonicalJson(snapshot),
-            authorId: actor.id,
-          },
-          select: REVISION_SELECT,
-        });
-        await this.writeAudit(tx, actor.id, context, {
-          action: 'lesson.created',
-          entityType: 'lesson',
-          entityId: lesson.id,
-          revision: revision.revision,
-          status: lesson.status,
-          contentHash: revision.contentHash,
-        });
-        return {
-          success: true as const,
-          data: { lesson, revision, idempotent: false },
-        };
       }),
     );
+  }
+
+  /** ADR-009 C3b-2: a lesson of a course unit takes the unit's Level, or none. */
+  async createCourseUnitLesson(
+    actor: CmsActor,
+    courseUnitId: number,
+    dto: CreateLessonRevisionDto,
+    context: MutationContext,
+  ) {
+    assertAdminActor(actor);
+    return this.executeMutation(async () =>
+      this.prisma.$transaction(async (tx) => {
+        const rows = await tx.$queryRaw<Array<{ id: number }>>`
+          SELECT "id" FROM "CourseUnit"
+          WHERE "id" = ${courseUnitId} AND "deletedAt" IS NULL
+          FOR SHARE
+        `;
+        if (rows.length !== 1) {
+          throw new NotFoundException('Course unit not found.');
+        }
+        const unit = await tx.courseUnit.findUniqueOrThrow({
+          where: { id: courseUnitId },
+          select: {
+            levelId: true,
+            course: { select: { status: true, deletedAt: true } },
+          },
+        });
+        if (
+          unit.course.deletedAt !== null ||
+          unit.course.status === 'archived'
+        ) {
+          throw new ConflictException({
+            code: 'COURSE_ARCHIVED',
+            message: 'Lessons cannot be added to an archived course.',
+          });
+        }
+        if (unit.levelId !== null) {
+          await this.assertLevelExists(tx, unit.levelId);
+        }
+        return this.insertDraftLesson(tx, actor, context, dto, {
+          levelId: unit.levelId,
+          courseUnitId,
+        });
+      }),
+    );
+  }
+
+  private async insertDraftLesson(
+    tx: Prisma.TransactionClient,
+    actor: CmsActor,
+    context: MutationContext,
+    dto: CreateLessonRevisionDto,
+    parent: { levelId: number | null; courseUnitId: number | null },
+  ) {
+    const snapshot = lessonSnapshot(dto);
+    const lesson = await tx.lesson.create({
+      data: {
+        ...parent,
+        ...snapshot,
+        status: 'draft',
+        createdById: actor.id,
+        updatedById: actor.id,
+      },
+      select: LESSON_ADMIN_SELECT,
+    });
+    const revision = await tx.contentRevision.create({
+      data: {
+        entityType: 'lesson',
+        entityId: lesson.id,
+        revision: 1,
+        snapshot,
+        contentHash: sha256CanonicalJson(snapshot),
+        authorId: actor.id,
+      },
+      select: REVISION_SELECT,
+    });
+    await this.writeAudit(tx, actor.id, context, {
+      action: 'lesson.created',
+      entityType: 'lesson',
+      entityId: lesson.id,
+      revision: revision.revision,
+      status: lesson.status,
+      contentHash: revision.contentHash,
+    });
+    return {
+      success: true as const,
+      data: { lesson, revision, idempotent: false },
+    };
   }
 
   async createLessonRevision(
@@ -452,7 +514,7 @@ export class CmsService {
           };
         }
 
-        await this.assertLessonPublishReady(tx, lesson.levelId, lessonId);
+        await this.assertLessonPublishReady(tx, lesson, lessonId);
         const publishedLesson = await tx.lesson.update({
           where: { id: lessonId },
           data: {
@@ -1208,16 +1270,20 @@ export class CmsService {
 
   private async assertLessonPublishReady(
     tx: Prisma.TransactionClient,
-    levelId: number | null,
+    lesson: { levelId: number | null; courseUnitId: number | null },
     lessonId: number,
   ) {
-    // ADR-009 C3b-1: publishing a lesson without a Level comes with C3b-2;
-    // until then it is refused like a lesson whose Level is not published.
+    const levelId = lesson.levelId;
     if (levelId === null) {
-      throw new ConflictException({
-        code: 'LESSON_LEVEL_NOT_PUBLISHED',
-        message: 'Lesson requires a published, non-deleted parent level.',
-      });
+      // ADR-009 C3b-2: a lesson without a Level is ready once its unit and
+      // course are public and it has a published Topic or Story.
+      await this.assertCourseParentPublished(tx, lesson.courseUnitId);
+      const [topicCount, storyCount] = await Promise.all([
+        tx.topic.count({ where: { lessonId, ...PUBLIC_CONTENT_WHERE } }),
+        tx.story.count({ where: { lessonId, ...PUBLIC_CONTENT_WHERE } }),
+      ]);
+      this.assertHasPublishedChild(topicCount + storyCount);
+      return;
     }
     const [level, topicCount, storyCount] = await Promise.all([
       tx.level.findFirst({
@@ -1237,10 +1303,43 @@ export class CmsService {
         message: 'Lesson requires a published, non-deleted parent level.',
       });
     }
-    if (topicCount + storyCount === 0) {
+    this.assertHasPublishedChild(topicCount + storyCount);
+  }
+
+  private assertHasPublishedChild(count: number) {
+    if (count === 0) {
       throw new ConflictException({
         code: 'LESSON_NO_PUBLISHED_CHILD',
         message: 'Lesson requires at least one published Topic or Story.',
+      });
+    }
+  }
+
+  private async assertCourseParentPublished(
+    tx: Prisma.TransactionClient,
+    courseUnitId: number | null,
+  ) {
+    const unit =
+      courseUnitId === null
+        ? null
+        : await tx.courseUnit.findUnique({
+            where: { id: courseUnitId },
+            select: {
+              status: true,
+              deletedAt: true,
+              course: { select: { status: true, deletedAt: true } },
+            },
+          });
+    if (!unit || unit.status !== 'published' || unit.deletedAt !== null) {
+      throw new ConflictException({
+        code: 'LESSON_UNIT_NOT_PUBLISHED',
+        message: 'Lesson requires a published, non-deleted course unit.',
+      });
+    }
+    if (unit.course.status !== 'published' || unit.course.deletedAt !== null) {
+      throw new ConflictException({
+        code: 'LESSON_COURSE_NOT_PUBLISHED',
+        message: 'Lesson requires a published, non-deleted course.',
       });
     }
   }

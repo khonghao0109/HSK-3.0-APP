@@ -2338,6 +2338,27 @@
             }
           },
           {
+            "name": "courseId",
+            "required": false,
+            "in": "query",
+            "description": "ADR-009 C3b-2: lessons of one course (through their unit).",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
+            "name": "courseUnitId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          },
+          {
             "name": "status",
             "required": false,
             "in": "query",
@@ -4460,6 +4481,806 @@
         ],
         "tags": [
           "Cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/courses": {
+      "get": {
+        "operationId": "CourseAuthoringController_listCourses",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "topic",
+                "textbook",
+                "specialty"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "curriculumVersion",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HSK_2_0",
+                "HSK_3_0"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      },
+      "post": {
+        "operationId": "CourseAuthoringController_createCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/courses/{courseId}": {
+      "get": {
+        "operationId": "CourseAuthoringController_getCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      },
+      "patch": {
+        "operationId": "CourseAuthoringController_updateCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/courses/{courseId}/publish": {
+      "post": {
+        "operationId": "CourseAuthoringController_publishCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/courses/{courseId}/archive": {
+      "post": {
+        "operationId": "CourseAuthoringController_archiveCourse",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/course-units": {
+      "get": {
+        "operationId": "CourseAuthoringController_listUnits",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 2147483647,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      },
+      "post": {
+        "operationId": "CourseAuthoringController_createUnit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/course-units/{unitId}": {
+      "patch": {
+        "operationId": "CourseAuthoringController_updateUnit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "unitId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/course-units/{unitId}/publish": {
+      "post": {
+        "operationId": "CourseAuthoringController_publishUnit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "unitId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/course-units/{unitId}/archive": {
+      "post": {
+        "operationId": "CourseAuthoringController_archiveUnit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "unitId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/course-units/{unitId}/lessons": {
+      "post": {
+        "operationId": "CourseAuthoringController_createUnitLesson",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "unitId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseUnitLessonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "CourseAuthoring"
         ]
       }
     },
@@ -11792,6 +12613,203 @@
         },
         "required": [
           "expectedUpdatedAt"
+        ]
+      },
+      "CreateCourseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "topic",
+              "textbook",
+              "specialty"
+            ]
+          },
+          "curriculumVersion": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "HSK_2_0",
+              "HSK_3_0"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "keyTextVisible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "kind",
+          "title",
+          "orderIndex"
+        ]
+      },
+      "UpdateCourseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "keyTextVisible": {
+            "type": "boolean"
+          },
+          "expectedUpdatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedUpdatedAt"
+        ]
+      },
+      "CreateCourseUnitDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "gradeNumber": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 9
+          },
+          "volume": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "upper",
+              "lower"
+            ]
+          },
+          "levelId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "courseId",
+          "orderIndex",
+          "title"
+        ]
+      },
+      "UpdateCourseUnitDto": {
+        "type": "object",
+        "properties": {
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "gradeNumber": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 9
+          },
+          "volume": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "upper",
+              "lower"
+            ]
+          },
+          "levelId": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "expectedUpdatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedUpdatedAt"
+        ]
+      },
+      "CreateCourseUnitLessonDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 0,
+            "maxLength": 2000
+          },
+          "orderIndex": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "required": [
+          "title",
+          "orderIndex",
+          "slug"
         ]
       },
       "UserProfileResponseDto": {

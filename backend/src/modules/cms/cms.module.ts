@@ -5,6 +5,8 @@ import { StorageModule } from '../../infrastructure/storage/storage.module';
 
 import { CmsController } from './cms.controller';
 import { CmsService } from './cms.service';
+import { CourseAuthoringController } from './course-authoring.controller';
+import { CourseAuthoringService } from './course-authoring.service';
 import { CmsTransactionCoordinator } from './cms-transaction-coordinator';
 import { DataSourcesService } from './data-sources.service';
 import { ExerciseAuthoringService } from './exercise-authoring.service';
@@ -24,9 +26,10 @@ import { SafeMediaUploadExceptionFilter } from './media-ingestion/safe-media-upl
 
 @Module({
   imports: [MalwareModule, StorageModule],
-  controllers: [CmsController],
+  controllers: [CmsController, CourseAuthoringController],
   providers: [
     CmsService,
+    CourseAuthoringService,
     CmsTransactionCoordinator,
     DataSourcesService,
     ExerciseAuthoringService,
