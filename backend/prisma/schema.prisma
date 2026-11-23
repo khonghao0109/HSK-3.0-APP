@@ -25,6 +25,24 @@ enum ContentStatus {
   archived
 }
 
+/// ADR-009: what a course follows. Only `topic` units carry a Level.
+enum CourseKind {
+  topic
+  textbook
+  specialty
+}
+
+/// ADR-009: textbook volume of a grade (上 / 下).
+enum CourseVolume {
+  upper
+  lower
+}
+
+enum CourseEnrollmentStatus {
+  active
+  left
+}
+
 enum MediaType {
   audio
   image
@@ -300,6 +318,7 @@ model User {
   performedContentReviews  ContentReview[]          @relation("ContentReviewer")
   auditLogs                AuditLog[]               @relation("AuditActor")
   importJobs               ImportJob[]              @relation("ImportJobCreator")
+  courseEnrollments        CourseEnrollment[]
 
   @@index([role])
   @@index([status, deletedAt])
@@ -556,6 +575,7 @@ model DataSource {
   wordMeasureWords WordMeasureWord[]
   examBlueprints   ExamBlueprint[]
   questionSets     QuestionSet[]
+  courses          Course[]
 
   @@unique([name, version])
   @@index([createdById])
@@ -715,6 +735,7 @@ model Level {
   grammarPoints        GrammarPoint[]
   examBlueprints       ExamBlueprint[]
   questionSets         QuestionSet[]
+  courseUnits          CourseUnit[]
 
   @@index([status, deletedAt, orderIndex])
   @@index([dataSourceId])
@@ -726,6 +747,8 @@ model Level {
 model Lesson {
   id            Int           @id @default(autoincrement())
   levelId       Int
+  /// ADR-009 C1 expand: nullable until the C4 contract migration.
+  courseUnitId  Int?
   title         String
   description   String?
   orderIndex    Int
@@ -742,6 +765,7 @@ model Lesson {
   updatedAt     DateTime      @updatedAt
 
   level                  Level                   @relation(fields: [levelId], references: [id])
+  courseUnit             CourseUnit?             @relation(fields: [courseUnitId], references: [id], onDelete: Restrict)
   coverImage             Media?                  @relation("LessonCoverImage", fields: [coverImageId], references: [id])
   dataSource             DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
   createdBy              User?                   @relation("LessonCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -758,11 +782,92 @@ model Lesson {
   learningEvents         LearningEvent[]
 
   @@unique([levelId, orderIndex])
+  @@unique([courseUnitId, orderIndex])
   @@index([levelId, status, deletedAt, orderIndex])
+  @@index([courseUnitId, status, deletedAt, orderIndex])
   @@index([dataSourceId])
   @@index([createdById])
   @@index([updatedById])
   @@index([publishedById])
+}
+
+/// ADR-009: a learner-facing course (topic, textbook or specialty track).
+/// SQL-only checks: Course_code_format_check (A–Z, 0–9, `_`, 3–40 chars),
+/// Course_curriculumVersion_check (HSK_2_0 | HSK_3_0 | null),
+/// Course_orderIndex_check (>= 1).
+model Course {
+  id                Int           @id @default(autoincrement())
+  code              String        @unique
+  kind              CourseKind
+  /// Same column type as Level.curriculumVersion; null for specialty courses.
+  curriculumVersion String?
+  title             String
+  description       String?
+  orderIndex        Int           @unique
+  status            ContentStatus @default(draft)
+  publishedAt       DateTime?
+  deletedAt         DateTime?
+  /// ADR-009 §5: PO/admin switch that hides key texts of the whole course.
+  keyTextVisible    Boolean       @default(true)
+  dataSourceId      Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  dataSource  DataSource?        @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  units       CourseUnit[]
+  enrollments CourseEnrollment[]
+
+  @@index([status, deletedAt, orderIndex])
+  @@index([dataSourceId])
+}
+
+/// ADR-009: one book/volume or module of a course; lessons are ordered inside it.
+/// SQL-only checks: CourseUnit_gradeNumber_check (null or 1–9),
+/// CourseUnit_volume_grade_check (volume needs gradeNumber),
+/// CourseUnit_orderIndex_check (>= 1).
+model CourseUnit {
+  id          Int           @id @default(autoincrement())
+  courseId    Int
+  orderIndex  Int
+  gradeNumber Int?
+  volume      CourseVolume?
+  title       String
+  /// Only units of the HSK 3.0 topic course map to a Level.
+  levelId     Int?
+  status      ContentStatus @default(draft)
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  level   Level?   @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  lessons Lesson[]
+
+  @@unique([courseId, orderIndex])
+  @@index([courseId, status, deletedAt, orderIndex])
+  @@index([levelId])
+}
+
+/// ADR-009: a learner following a course. Progress stays per lesson.
+/// SQL-only: CourseEnrollment_left_check (status = left <=> leftAt is set),
+/// CourseEnrollment_left_not_current_check, and the partial unique index
+/// CourseEnrollment_one_current_per_user_key on ("userId") WHERE "isCurrent"
+/// AND "status" = 'active' — Prisma cannot express partial indexes.
+model CourseEnrollment {
+  id             Int                    @id @default(autoincrement())
+  userId         Int
+  courseId       Int
+  status         CourseEnrollmentStatus @default(active)
+  isCurrent      Boolean                @default(false)
+  enrolledAt     DateTime               @default(now())
+  lastActivityAt DateTime?
+  leftAt         DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
 }
 
 model Topic {

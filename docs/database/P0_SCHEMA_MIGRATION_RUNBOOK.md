@@ -35,9 +35,10 @@
 | REV-P   | `20261112170000_review_preference`                       | Bảng `ReviewPreference` (một dòng mỗi user): `dailyCardLimit` 10/20/30, `levelCodes` (mục 30). |
 | DICT-X  | `20261116090000_word_example_and_trigram_search`         | `pg_trgm`, bảng `WordExample`, unique `WordMeaning(id, wordId)`, cột sinh `Word.pinyinCompact`, GIN trigram cho tra từ (mục 31). |
 | EX-M    | `20261121090000_exercise_type_matching`                  | Enum `ExerciseType` thêm `matching` cho bài tập ghép cặp (mục 32). |
+| CRS-C1  | `20261123090000_course_expand`                           | ADR-009 C1 expand: bảng `Course`, `CourseUnit`, `CourseEnrollment`, cột `Lesson.courseUnitId` nullable, CHECK và partial unique `isCurrent` (mục 33). |
 
 Không đổi nội dung một migration đã được áp ở bất kỳ environment dùng chung nào. Sửa lỗi bằng migration mới theo hướng forward-fix.
-Toàn project hiện có 40 migration (đến `20261121090000_exercise_type_matching`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
+Toàn project hiện có 41 migration (đến `20261123090000_course_expand`; đếm bằng `ls backend/prisma/migrations | grep -c '^2'`); hardening luôn dùng forward migration mới. Ngoại lệ duy nhất đã được Tech Lead duyệt là H.11a (mục 19): bỏ dòng `BEGIN;`/`COMMIT;` khỏi sáu migration, không đổi câu lệnh nào khác. Các con số 15/16/17/19 và checksum ở những mục đánh ngày 11–13/08 bên dưới là bằng chứng lịch sử tại thời điểm đó.
 
 ## 2. Điều kiện trước khi chạy
 
@@ -1265,3 +1266,54 @@ ALTER TYPE "ExerciseType" ADD VALUE 'matching';
   - Chạy `test:db:p0`, `test:db:exercise-integrity`, `test:db:activity-integrity` trên DB
     disposable ở hai đường: (1) dựng mới đủ migration; (2) DB đang ở migration trước, rồi
     `migrate deploy` chỉ áp migration này.
+
+## 33. Khoá học — `Course`, `CourseUnit`, `CourseEnrollment` (ADR-009 C1)
+
+### 33.1. Migration `20261123090000_course_expand`
+
+Pha expand của ADR-009 §7. Chỉ thêm, không backfill (C2), không đổi hành vi app, không đổi API.
+
+- Bảng mới:
+  - `Course`: `code` unique, `kind` (`CourseKind`: `topic | textbook | specialty`), `curriculumVersion`
+    (`TEXT`, cùng kiểu `Level.curriculumVersion`), `orderIndex` unique, `status ContentStatus`,
+    `keyTextVisible` mặc định `true`, `dataSourceId` (`SET NULL` như `Level`).
+  - `CourseUnit`: `courseId` FK, unique `(courseId, orderIndex)`, `gradeNumber`, `volume`
+    (`CourseVolume`: `upper | lower`), `levelId` FK tuỳ chọn tới `Level`.
+  - `CourseEnrollment`: `userId`, `courseId`, `status` (`CourseEnrollmentStatus`: `active | left`),
+    `isCurrent`, `enrolledAt`, `lastActivityAt`, `leftAt`; unique `(userId, courseId)`.
+  - `Lesson.courseUnitId INTEGER NULL`, unique `(courseUnitId, orderIndex)`, index
+    `(courseUnitId, status, deletedAt, orderIndex)` cho truy vấn lộ trình. `Lesson.levelId` giữ
+    NOT NULL, unique `(levelId, orderIndex)` và index cũ giữ nguyên (bỏ NOT NULL ở đầu C3).
+- Ràng buộc chỉ có trong SQL (Prisma không mô tả được, ghi chú ở `schema.prisma`):
+
+  | Tên | Điều kiện |
+  | --- | --- |
+  | `Course_code_format_check` | `code ~ '^[A-Z0-9_]{3,40}$'` |
+  | `Course_curriculumVersion_check` | null hoặc `HSK_2_0`, `HSK_3_0` |
+  | `Course_orderIndex_check`, `CourseUnit_orderIndex_check` | `orderIndex > 0` (1-based như bài: CMS `@Min(1)`, `LessonExercise_order_check`) |
+  | `CourseUnit_gradeNumber_check` | null hoặc 1–9 |
+  | `CourseUnit_volume_grade_check` | `volume` chỉ có khi `gradeNumber` không null |
+  | `CourseEnrollment_left_check` | `status = 'left'` ⇔ `leftAt IS NOT NULL` |
+  | `CourseEnrollment_left_not_current_check` | `status = 'left'` ⇒ `isCurrent = false` |
+  | `CourseEnrollment_one_current_per_user_key` | partial unique `("userId") WHERE "isCurrent" AND "status" = 'active'` |
+
+- FK khi xoá:
+  - Nội dung `Course ← CourseUnit ← Lesson` và `CourseUnit.levelId → Level`: `RESTRICT` (ADR-001 không
+    hard-delete nội dung; archive bằng `status`/`deletedAt`). `CourseEnrollment.courseId`: `RESTRICT`.
+  - `CourseEnrollment.userId`: `CASCADE`, giống hệt `Progress.userId` và `UserGoal.userId`.
+  - Luồng xoá tài khoản (ADR-001) là ẩn danh hoá, không `DELETE FROM "User"`, và giữ tiến độ.
+    `CourseEnrollment` không chứa PII nên không phải sửa job `privacy.anonymize-account`.
+- Preflight: không cần. Bảng mới rỗng nên partial unique index dựng ngay; cột mới nullable, không
+  default, nên `ALTER TABLE "Lesson"` không rewrite bảng (khoá `ACCESS EXCLUSIVE` ngắn trên `Lesson`).
+  Trước deploy vẫn chạy mục 2–3 (trạng thái migration, drift).
+- Rollback: forward-only. Ứng dụng cũ bỏ qua bảng và cột mới, nên rollback = deploy lại bản app
+  trước; không drop bảng/cột. Lỗi thì forward-fix bằng migration mới (§12).
+- Rủi ro (ADR-009 §7): không đổi kiểu cột đang dùng, nên code hiện có không đổi. C2 backfill sẽ ghi
+  `courseUnitId` cho bài hiện có và phải tôn trọng unique `(courseUnitId, orderIndex)`.
+- Kiểm: `npm run test:db:course` (`backend/scripts/test/run-course-schema-integration.ts`). Runner tự
+  tạo rồi drop hai DB disposable trên server của `TEST_DATABASE_URL` (không đụng chính DB đó, từ chối
+  nếu DB đã tồn tại): (1) dựng mới từ 0 lên head; (2) áp tới migration trước, ghi `Level`/`Lesson`
+  cũ (`test/database/course-expand.legacy-seed.sql`), áp `course_expand`, rồi chạy
+  `test/database/course-expand.integration.sql` (BEGIN/ROLLBACK): mỗi CHECK một ca bị từ chối và một
+  ca hợp lệ, các unique, partial unique `isCurrent`, FK `RESTRICT`/`CASCADE`, bài cũ có
+  `courseUnitId = null` và giữ `levelId`.

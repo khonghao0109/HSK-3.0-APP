@@ -152,7 +152,7 @@ describe('DataExportJob', () => {
       ]);
 
       // User profile through Audit logs (including ReviewPreference and child tables: LearningPlanItem, ReviewEvent batch, ExamAttemptEvent, ExamAnswer batch, ResultSkillScore)
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 26; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
 
@@ -197,8 +197,8 @@ describe('DataExportJob', () => {
         },
       ]);
 
-      // Profile through Audit logs (25 queries)
-      for (let i = 0; i < 25; i++) {
+      // Profile through Audit logs (26 queries, CourseEnrollment included)
+      for (let i = 0; i < 26; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
       // LearningEvent batch 1 empty
@@ -254,8 +254,8 @@ describe('DataExportJob', () => {
         },
       ]);
 
-      // Remaining queries before batches (22 queries: PlacementAttempt through AuditLog, ReviewPreference included)
-      for (let i = 0; i < 22; i++) {
+      // Remaining queries before batches (23 queries: PlacementAttempt through AuditLog, ReviewPreference and CourseEnrollment included)
+      for (let i = 0; i < 23; i++) {
         mockTx.$queryRaw.mockResolvedValueOnce([]);
       }
       // LearningEvent batch 1 empty
@@ -289,6 +289,72 @@ describe('DataExportJob', () => {
       expect(userGoalQueryCall[0].strings.join('')).toContain(
         '"learningPurpose"',
       );
+    });
+
+    describe('courseEnrollments (ADR-009 C1)', () => {
+      type Sql = { strings?: string[]; values?: unknown[] };
+      const sqlText = (q: Sql) => (q.strings ?? []).join('?');
+      const enrollmentOf10 = {
+        id: 7,
+        courseId: 3,
+        status: 'active',
+        isCurrent: true,
+        enrolledAt: '2026-11-23T00:00:00.000Z',
+        lastActivityAt: null,
+        leftAt: null,
+      };
+
+      // Routes each raw query by table, so the test does not depend on query order.
+      const routeQueries = (enrollments: Record<number, unknown[]>) => {
+        mockTx.$queryRaw.mockImplementation((q: Sql) => {
+          const text = sqlText(q);
+          if (text.includes('"DataExportJob"') && text.includes('FOR UPDATE'))
+            return Promise.resolve([
+              { id: 1, userId: 10, status: 'requested' },
+            ]);
+          if (
+            text.includes('FROM "User"\n') ||
+            /FROM "User"\s+WHERE/.test(text)
+          )
+            return Promise.resolve([
+              {
+                id: 10,
+                email: 'l@example.com',
+                name: null,
+                createdAt: new Date(),
+                emailVerifiedAt: null,
+              },
+            ]);
+          if (text.includes('"CourseEnrollment"'))
+            return Promise.resolve(enrollments[q.values?.[0] as number] ?? []);
+          return Promise.resolve([]);
+        });
+      };
+      const exportPayload = async () => {
+        expect(await job.process({ exportId: 1 })).toBe(true);
+        const put = mockPutPrivateObject.mock.calls[0][0] as { body: Buffer };
+        return JSON.parse(put.body.toString('utf8')) as Record<string, unknown>;
+      };
+
+      it('exports the enrollments of the exporting user', async () => {
+        routeQueries({
+          10: [enrollmentOf10],
+          11: [{ ...enrollmentOf10, id: 8 }],
+        });
+        const payload = await exportPayload();
+        expect(payload.courseEnrollments).toEqual([enrollmentOf10]);
+        const call = mockTx.$queryRaw.mock.calls.find((c: [Sql]) =>
+          sqlText(c[0]).includes('"CourseEnrollment"'),
+        ) as [Sql];
+        expect(call[0].values).toEqual([10]);
+        expect(sqlText(call[0])).toContain('WHERE "userId" = ?');
+      });
+
+      it('exports an empty array when the user has no enrollment', async () => {
+        routeQueries({ 11: [{ ...enrollmentOf10, id: 8 }] });
+        const payload = await exportPayload();
+        expect(payload.courseEnrollments).toEqual([]);
+      });
     });
   });
 });
