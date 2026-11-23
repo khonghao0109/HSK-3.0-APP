@@ -8867,6 +8867,19 @@ html:has(.learner-app) {
   }
 }
 
+/* G3c: character count drives the tile font-size through a data attribute
+   instead of an inline `style` (CSP forbids the style attribute). Lengths
+   above 4 share the 4-character bucket. 1 character uses the default (1). */
+.learner-app .topic-word__tile[data-hz-len='2'] {
+  --hz-len: 2;
+}
+.learner-app .topic-word__tile[data-hz-len='3'] {
+  --hz-len: 3;
+}
+.learner-app .topic-word__tile[data-hz-len='4'] {
+  --hz-len: 4;
+}
+
 /* Q350: ảnh minh hoạ của từ, vuông, trên chữ Hán. */
 .learner-app .topic-word__img {
   width: 100%;

@@ -139,6 +139,16 @@ describe('PracticeBar (Pha G2b)', () => {
     expect(screen.getByText('Đã ghi xong')).toBeInTheDocument();
   });
 
+  it('draws the recording meter bars without an inline style (G3c, CSP)', async () => {
+    renderBar();
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Nói' })),
+    );
+    const bars = document.querySelectorAll('.g-meter i');
+    expect(bars).toHaveLength(10);
+    bars.forEach((bar) => expect(bar.getAttribute('style')).toBeNull());
+  });
+
   it('Giọng mẫu is left out without a zh voice', async () => {
     renderBar({ voice: false });
     await act(async () =>

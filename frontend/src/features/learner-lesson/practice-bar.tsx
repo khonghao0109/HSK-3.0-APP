@@ -105,11 +105,8 @@ export function PracticeBar({
             <span className="sr-only">{`, tối đa ${seconds} giây`}</span>
           </p>
           <div className="g-meter" aria-hidden="true">
-            {[30, 60, 45, 80, 35, 70, 50, 25, 65, 40].map((height, at) => (
-              <i
-                key={at}
-                style={{ '--h': `${height}%` } as React.CSSProperties}
-              />
+            {Array.from({ length: 10 }, (_, at) => (
+              <i key={at} />
             ))}
           </div>
           <p className="g-sheet__text">
