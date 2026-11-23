@@ -746,7 +746,7 @@ model Level {
 
 model Lesson {
   id            Int           @id @default(autoincrement())
-  levelId       Int
+  levelId       Int?
   /// ADR-009 C1 expand: nullable until the C4 contract migration.
   courseUnitId  Int?
   title         String
@@ -764,7 +764,7 @@ model Lesson {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  level                  Level                   @relation(fields: [levelId], references: [id])
+  level                  Level?                  @relation(fields: [levelId], references: [id], onDelete: Restrict)
   courseUnit             CourseUnit?             @relation(fields: [courseUnitId], references: [id], onDelete: Restrict)
   coverImage             Media?                  @relation("LessonCoverImage", fields: [coverImageId], references: [id])
   dataSource             DataSource?             @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)

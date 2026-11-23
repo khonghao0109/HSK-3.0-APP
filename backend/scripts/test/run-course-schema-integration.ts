@@ -6,12 +6,14 @@ import { join, resolve } from 'node:path';
 import { assertDisposableTestDatabase } from '../../src/common/utils/assert-disposable-test-database';
 
 /**
- * `test:db:course` (ADR-009 C1): proves the course_expand migration on two
- * fresh databases this runner creates and drops itself.
+ * `test:db:course` (ADR-009 C1, C3b-1): proves course_expand and the later
+ * course migrations (course_lesson_level_optional) on two fresh databases
+ * this runner creates and drops itself.
  *
  * 1. `<name>_fresh_verify`: every migration from zero to head.
  * 2. `<name>_upgrade_verify`: migrations up to the one before course_expand,
- *    legacy Level/Lesson rows, then course_expand, then the constraint suite.
+ *    legacy Level/Lesson rows, then course_expand and every later migration,
+ *    then the constraint suites. The C3b-1 suite also runs on the fresh one.
  *
  * TEST_DATABASE_URL only supplies the server and credentials; its own
  * database is never touched. Both databases must not exist beforehand.
@@ -230,6 +232,11 @@ try {
     throw new Error(`migrate diff found drift (exit ${String(drift.status)})`);
   }
   console.log(`ok - no drift: ${drift.stdout.trim()}`);
+  psql(
+    fresh,
+    '-f',
+    resolve('test/database/course-lesson-level-optional.integration.sql'),
+  );
 
   const upgrade = createDatabase(`${base}_course_upgrade_verify`);
   cpSync(prismaDir, join(preDir, 'prisma'), { recursive: true });
@@ -242,6 +249,11 @@ try {
   migrate(upgrade, join(prismaDir, 'schema.prisma'));
   assertAllApplied(upgrade, migrations.length);
   psql(upgrade, '-f', resolve('test/database/course-expand.integration.sql'));
+  psql(
+    upgrade,
+    '-f',
+    resolve('test/database/course-lesson-level-optional.integration.sql'),
+  );
   runBackfillSuite(upgrade);
   console.log('course schema integration: PASS');
 } catch (error) {

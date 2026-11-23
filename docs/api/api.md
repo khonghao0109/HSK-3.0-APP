@@ -690,6 +690,12 @@ Kết quả: `isCorrect = (số lần sai = 0)`, `score` 100 hoặc 0. Số lầ
 
 ### A.7c Khoá học — học viên (ADR-009 C3a)
 
+Từ C3b-1, bài học có thể không có Level (khoá textbook HSK 2.0). **Các endpoint có từ trước khoá
+học chỉ trả bài có Level** (`/learning/path`, `/learning/home`, `/lessons*`, `/learning/lessons*`,
+activity, `/progress/lessons*`); bài không Level ở các route đó được coi như không public (`404`
+với route theo id). Contract của chúng không đổi. Bài không Level chỉ thấy qua
+`/learning/courses/:code`.
+
 JWT bắt buộc (`401` khi thiếu). Envelope §1. `GET` có header `Cache-Control: no-store` và **không
 ghi DB**. Khoá "public" = `published`, chưa xoá. Khoá không public hoặc không tồn tại → `404`
 `{ code: "NOT_FOUND", message: "Course not found." }` ở mọi route dưới. Rate limit mỗi user:

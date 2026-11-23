@@ -187,11 +187,15 @@ export class LearningService {
       },
     });
 
-    if (!lesson) {
+    // The query requires a public Level; the check narrows `level` for the DTO.
+    if (!lesson || !lesson.level) {
       throw new NotFoundException('Lesson not found');
     }
 
-    return { success: true, data: serializePublicLessonDetail(lesson) };
+    return {
+      success: true,
+      data: serializePublicLessonDetail({ ...lesson, level: lesson.level }),
+    };
   }
 
   async getTopics(

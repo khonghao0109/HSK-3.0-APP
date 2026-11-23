@@ -11,6 +11,8 @@ import { Prisma, PrismaClient } from '@prisma/client';
  * UserGoal or Progress who have no enrollment yet. Existing rows are never
  * overwritten and nothing is deleted. Re-run after each content import until C3.
  * Prints counts only (no PII). Exits 1 if any lesson is still without a unit.
+ * Lessons without a Level (ADR-009 C3b-1) always have a unit
+ * (Lesson_level_or_unit_check), so this script never touches them.
  */
 export const COURSE_CODE = 'HSK3_TOPIC';
 

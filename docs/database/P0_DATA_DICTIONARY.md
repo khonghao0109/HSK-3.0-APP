@@ -59,7 +59,7 @@
 | Bảng | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
 | --- | --- | --- | --- |
 | `Level` | Nhóm cấp độ HSK ổn định. | `name`, `code`, `orderIndex`, `minBand`, `maxBand`, `curriculumVersion`, publish/ownership/provenance. | `name`, `code`, `orderIndex` unique; chỉ `HSK1..HSK6, HSK7_9`; band bao phủ 1..9 không chồng. |
-| `Lesson` | Đơn vị học theo level. | `levelId`, `title`, `description`, `orderIndex`, `slug`, cover, publish/ownership. | `slug` unique; `(levelId, orderIndex)` unique. |
+| `Lesson` | Đơn vị học theo level, hoặc theo unit của khoá (ADR-009). | `levelId` (nullable từ C3b-1), `title`, `description`, `orderIndex`, `slug`, cover, publish/ownership. | `slug` unique; `(levelId, orderIndex)` unique (NULL không va nhau); CHECK `Lesson_level_or_unit_check`: `levelId` hoặc `courseUnitId` phải có. |
 | `Topic` | Phần nội dung trong lesson. | `lessonId`, `type`, `content`, `orderIndex`, premium/lock, publish/ownership. | `(lessonId, orderIndex)` unique; JSON `content` phải được DTO/schema runtime validate. |
 | `Story` | Bài đọc/câu chuyện theo level, tùy chọn gắn lesson. | `levelId`, `lessonId`, `title`, `content`, `slug`, `orderIndex`, publish/ownership. | `slug` unique; trigger deferred bảo đảm story và lesson cùng level. |
 | `Word` | Headword từ điển. | `hanzi`, `traditional`, `pinyin`, `pinyinNormalized`, tone, example, media, `isPure`, publish/ownership. | Unique `(hanzi, pinyin, pinyinTone)` `NULLS NOT DISTINCT` (Q358, migration `20261119150000_word_unique_by_tone_add_gan4`: một dòng cho mỗi cách đọc có thanh, vd. 干 gān / 干 gàn); pinyin normalized bắt buộc; public prefix search dùng partial `text_pattern_ops` index; soft-delete. |
@@ -116,7 +116,7 @@ Pha expand: bảng rỗng, chưa có API. Bài cũ có `courseUnitId = null` t�
 | `Course` | Khoá học: chủ đề, giáo trình, chuyên ngành. | `code`, `kind`, `curriculumVersion`, `title`, `orderIndex`, `status`, `keyTextVisible`, `dataSourceId`. | `code`, `orderIndex` unique; CHECK `code` `^[A-Z0-9_]{3,40}$`, `curriculumVersion` null/`HSK_2_0`/`HSK_3_0`, `orderIndex > 0`. |
 | `CourseUnit` | Một quyển/tập hoặc module của khoá. | `courseId`, `orderIndex`, `gradeNumber`, `volume`, `title`, `levelId`, `status`. | Unique `(courseId, orderIndex)`; CHECK `gradeNumber` null/1–9, `volume` cần `gradeNumber`, `orderIndex > 0`; FK `RESTRICT`. |
 | `CourseEnrollment` | Người học theo khoá. | `userId`, `courseId`, `status`, `isCurrent`, `enrolledAt`, `lastActivityAt`, `leftAt`. | Unique `(userId, courseId)`; CHECK `left` ⇔ `leftAt`, `left` ⇒ không `isCurrent`; partial unique một dòng `isCurrent` `active` mỗi user; `userId` `CASCADE` như `Progress`. |
-| `Lesson.courseUnitId` | Bài thuộc unit nào. | FK tuỳ chọn tới `CourseUnit`. | Unique `(courseUnitId, orderIndex)`; FK `RESTRICT`; `levelId` vẫn NOT NULL. |
+| `Lesson.courseUnitId` | Bài thuộc unit nào. | FK tuỳ chọn tới `CourseUnit`. | Unique `(courseUnitId, orderIndex)`; FK `RESTRICT`; bài không có `levelId` (C3b-1) bắt buộc có unit. |
 
 ## 6. Learning, progress và SRS — 10 bảng
 

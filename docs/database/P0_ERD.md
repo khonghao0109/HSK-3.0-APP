@@ -115,7 +115,7 @@ erDiagram
   DataSource ||--o{ WordLevel : sources
   DataSource ||--o{ Sentence : sources
   DataSource ||--o{ Media : sources
-  Level ||--o{ Lesson : contains
+  Level o|--o{ Lesson : contains
   Course ||--o{ CourseUnit : groups
   CourseUnit o|--o{ Lesson : orders
   Level o|--o{ CourseUnit : maps

@@ -1349,3 +1349,40 @@ chạy lại sau mỗi lần nạp bài cho tới khi C3 xong (bài mới tạo 
   bài soft-delete), Level không bài, user chỉ goal/chỉ progress/không gì/ẩn danh/đang chờ xoá/đã có
   enrollment; kiểm dry-run không ghi và khớp lần chạy thật, chạy lần 2 không đổi gì, khoá đã sửa
   không bị ghi đè, fingerprint `Progress`/attempt/`LearningEvent`/`UserGoal`/`User` không đổi.
+
+## 35. Bài học không có Level — `Lesson.levelId` nullable (ADR-009 C3b-1)
+
+Migration `20261123150000_course_lesson_level_optional`:
+
+```sql
+ALTER TABLE "Lesson" ALTER COLUMN "levelId" DROP NOT NULL;
+
+ALTER TABLE "Lesson"
+  ADD CONSTRAINT "Lesson_level_or_unit_check"
+  CHECK ("levelId" IS NOT NULL OR "courseUnitId" IS NOT NULL);
+```
+
+- Mục đích: bài của khoá textbook HSK 2.0 không gắn Level HSK 3.0 (Q-C7). Mỗi bài vẫn có ít nhất
+  một cha: Level, unit, hoặc cả hai.
+- Rủi ro:
+  - `ADD CONSTRAINT … CHECK` quét toàn bảng `Lesson` khi validate và giữ khoá ghi trong lúc quét;
+    bảng nhỏ (hàng trăm bài) nên ngắn. Dữ liệu hiện có đều có `levelId` nên validate được ngay.
+  - Unique `(levelId, orderIndex)` và các index giữ nguyên; PostgreSQL coi NULL là khác nhau, nên
+    bài không Level không va nhau trên unique này (thứ tự của chúng theo `(courseUnitId, orderIndex)`).
+- Ứng dụng: endpoint có từ trước khoá học (`/learning/path`, `/learning/home`, `/lessons*`,
+  `/learning/lessons*`, activity, `/progress/lessons*`, onboarding, media) dùng
+  `buildLessonReadyWhere`, đòi Level public, nên không bao giờ trả bài không Level; activity và
+  `/progress/lessons/:id` trả `404` như bài không public. Route khoá (`/learning/courses/:code`)
+  dùng `buildAnyLessonReadyWhere`. CMS list/detail trả `levelId: null`; publish bài không Level
+  bị từ chối `409 LESSON_LEVEL_NOT_PUBLISHED` cho tới C3b-2. Data export xuất mọi `Progress`.
+- Rollback: forward-only. Thêm lại NOT NULL sẽ hỏng ngay khi có bài không Level; sai thì
+  forward-fix (gán Level cho bài hoặc archive bài), không xoá dòng.
+- Kiểm sau chạy:
+  - `SELECT is_nullable FROM information_schema.columns WHERE table_name = 'Lesson' AND
+    column_name = 'levelId'` ra `YES`;
+  - `SELECT convalidated FROM pg_constraint WHERE conname = 'Lesson_level_or_unit_check'` ra `t`;
+  - `SELECT count(*) FROM "Lesson" WHERE "levelId" IS NULL AND "courseUnitId" IS NULL` ra `0`.
+- Kiểm tự động: `npm run test:db:course` chạy `test/database/course-lesson-level-optional.integration.sql`
+  trên DB mới và DB nâng cấp (bài cũ có Level): cột nullable, CHECK đã validate, từ chối bài không
+  Level không unit, nhận bài không Level có unit, không bỏ unit khỏi bài không Level; không lệch
+  schema. E2E `test/course-lesson-without-level.e2e-spec.ts` kiểm các endpoint cũ không thấy bài.

@@ -1,4 +1,5 @@
 import {
+  buildAnyLessonReadyWhere,
   buildLessonReadyWhere,
   isLessonReady,
 } from './lesson-readiness.policy';
@@ -44,6 +45,32 @@ describe('lesson readiness policy', () => {
       OR: [
         { topics: { some: { status: 'published', deletedAt: null } } },
         { stories: { some: { status: 'published', deletedAt: null } } },
+      ],
+    });
+  });
+});
+
+describe('buildAnyLessonReadyWhere (ADR-009 C3b-1)', () => {
+  const PUBLIC = { status: 'published', deletedAt: null };
+  const where = buildAnyLessonReadyWhere({ id: 5 });
+  const parentRule = where.AND?.[2];
+
+  it('keeps the caller filter, the public lesson rule and the instructional block', () => {
+    expect(where.AND?.[0]).toEqual({ id: 5 });
+    expect(where.AND?.[1]).toEqual({
+      ...PUBLIC,
+      OR: [{ topics: { some: PUBLIC } }, { stories: { some: PUBLIC } }],
+    });
+  });
+
+  it('accepts a lesson with a public Level, whatever its unit', () => {
+    expect(parentRule).toEqual({
+      OR: [
+        { levelId: { not: null }, level: { is: PUBLIC } },
+        {
+          levelId: null,
+          courseUnit: { is: { ...PUBLIC, course: { is: PUBLIC } } },
+        },
       ],
     });
   });

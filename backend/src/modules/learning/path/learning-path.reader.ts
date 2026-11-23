@@ -57,6 +57,8 @@ export async function loadLevelPaths(
   );
   const lessonsByLevelId = new Map<number, LearningPathReadyLesson[]>();
   for (const { levelId, ...lesson } of readyLessons) {
+    // buildLessonReadyWhere requires a public Level, so this never skips a row.
+    if (levelId === null) continue;
     const list = lessonsByLevelId.get(levelId) ?? [];
     list.push(lesson);
     lessonsByLevelId.set(levelId, list);
