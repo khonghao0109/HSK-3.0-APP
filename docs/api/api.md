@@ -152,6 +152,14 @@ kể cả khi hai request đăng ký cùng email chạy song song (unique index 
 được thực thi trong cùng một `prisma.$transaction`; nếu enqueue thất bại, transaction rollback
 hoàn toàn (không tạo user mồ côi). Session chỉ được tạo sau khi transaction commit thành công.
 
+M1.7b2 (Q188): body register nhận thêm field tuỳ chọn `acceptedDocuments?:
+[{ type: "terms" | "privacy", version, sha256 }]` (1–2 phần tử, không lặp `type`, `sha256` là hex thường
+64 ký tự). Mỗi phần tử phải đúng **phiên bản hiện hành** của loại đó (xem A.3b), nếu không
+→ `400 LEGAL_DOCUMENT_MISMATCH` và không tạo user. Khi khớp, dòng `Consent`
+(`channel = signup`) và `AuditLog` `consent.document_accepted` được ghi trong cùng
+transaction tạo user. Không gửi field → hành vi như cũ, không ghi consent. Pha A chưa
+bắt buộc field này và chưa đòi đủ cả hai loại (pha B).
+
 Body login: `{ "email", "password": string(≥6) }` – giữ ngưỡng 6 cho tài khoản tạo trước Q360. Email không tồn tại, account không `active` hoặc
 đã soft-delete, sai mật khẩu → cùng `401 "Invalid credentials"`. Chỉ account đang khoá
 (5 lần sai → khoá 15 phút) → `403`.
@@ -350,6 +358,53 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   "totalPages": 3
 }
 ```
+
+### A.3b Consent và văn bản pháp lý (M1.7b2)
+
+| Method | Path | Auth | Rate limit | Response |
+| --- | --- | --- | --- | --- |
+| `GET` | `/legal/documents/current` | public | 60/phút | `[{ type, version, sha256, effectiveAt }]` |
+| `GET` | `/users/me/consents` | JWT | global | `{ documents: [...], optional: [...] }` |
+| `POST` | `/users/me/consents/accept` | JWT | 20/phút | như `GET /users/me/consents` (HTTP 200) |
+| `PUT` | `/users/me/consents/optional/:type` | JWT | 20/phút | `{ type, granted }` |
+
+- Mọi route trả `Cache-Control: no-store`. Route `me` chỉ đọc và ghi consent của chính
+  user trong JWT; không có route nhận user id.
+- **Phiên bản hiện hành** của một loại (`terms`, `privacy`) là dòng `LegalDocumentVersion`
+  có `effectiveAt` lớn nhất mà `effectiveAt ≤ now + 14 ngày` (Q189). Bản còn hơn 14 ngày
+  mới hiệu lực chưa được tính. Bảng chỉ thêm dòng qua `npm run legal:register-version`
+  (Q197), không có route sửa hay xoá.
+- `GET /legal/documents/current`: mỗi loại có phiên bản hiện hành trả một phần tử; chưa có
+  phiên bản nào → `[]`.
+- `GET /users/me/consents`: `documents` luôn có đúng 2 phần tử theo thứ tự `terms`,
+  `privacy`, mỗi phần tử `{ type, status, version, sha256, effectiveAt, deadline }`.
+  `status`:
+  - `accepted`: user đã đồng ý đúng version và hash hiện hành;
+  - `pending`: chưa đồng ý, phiên bản chưa có hiệu lực; `deadline = effectiveAt` là hạn cuối
+    được "Để sau";
+  - `blocked`: đã tới `effectiveAt` mà chưa đồng ý (pha B dùng để chặn route); cũng là
+    `blocked` khi phiên bản hiện hành chưa có hiệu lực nhưng user chưa đồng ý cả bản
+    **đang có hiệu lực** ("Để sau" chỉ hoãn bản mới). Đồng ý thẳng phiên bản hiện hành
+    là gỡ được;
+  - `not_required`: chưa có phiên bản nào; `version`, `sha256`, `effectiveAt` là `null`.
+  Đồng ý bản cũ không tính là đồng ý bản mới. `deadline` chỉ khác `null` khi `pending`.
+  `optional` là `[{ type: "analytics", granted }, { type: "marketing", granted }]`, mặc
+  định `false` khi chưa có dòng (Q190).
+- `POST /users/me/consents/accept`: body `{ documents: [{ type, version, sha256 }] }`
+  (1–2 phần tử, không lặp `type`). Mỗi phần tử phải khớp một dòng `LegalDocumentVersion` đã đăng ký (cả
+  version lẫn hash); sai một phần tử → `400 LEGAL_DOCUMENT_MISMATCH` và không ghi gì.
+  Ghi `Consent` với `channel = reconsent`; gọi lặp lại không tạo dòng mới và không ghi
+  thêm audit (unique `(userId, type, consentVersion)`).
+- `PUT /users/me/consents/optional/:type`: `type` ∈ `analytics|marketing` (khác → `400`),
+  body `{ granted: boolean }` (boolean JSON thật). Bật: tạo dòng hoặc gỡ `revokedAt` của
+  dòng đang có (đặt lại `grantedAt`); tắt: đặt `revokedAt`. Không bao giờ xoá dòng; mỗi
+  user một dòng cho mỗi loại. `channel = settings`. Gửi trạng thái đang có là no-op.
+- Không có API rút `terms`/`privacy`: muốn rút thì xoá tài khoản (Q193, M1.7c).
+- Mỗi dòng consent ghi mới (hoặc đổi trạng thái tuỳ chọn) có một `AuditLog`
+  `consent.document_accepted`, `consent.optional_granted` hoặc `consent.optional_revoked`;
+  `afterSummary` chỉ gồm `type`, `version` (với văn bản) và `channel`. Không lưu IP hay
+  user-agent (Q192).
+- Data export (`consents`) có thêm `documentSha256` và `channel`.
 
 ### A.4 Public learning content
 
@@ -2051,7 +2106,7 @@ code sẽ tự vào spec đó.
 | `POST` | `/auth/refresh`; `GET` `/auth/sessions`; `DELETE` `/auth/sessions/:id` | Refresh/revoke session (UserSession) | M1 |
 | `POST` | `/auth/verify-email`, `/auth/forgot-password`, `/auth/reset-password` | Xác minh email, reset mật khẩu | M1 |
 | `GET/PATCH` | `/users/me/profile`; `PATCH` `/users/me` | Hồ sơ | M1 |
-| `POST/GET` | `/privacy/consents`, `/privacy/exports`, `/privacy/deletion-requests` | Privacy lifecycle (ADR-001) | M1 |
+| `POST/GET` | `/privacy/consents`, `/privacy/exports`, `/privacy/deletion-requests` | Privacy lifecycle (ADR-001); consent đã làm ở A.3b với path `/users/me/consents` (M1.7b2) | M1 |
 | `POST` | `/onboarding/placements`, `/onboarding/placements/:id/complete` | Placement (feature flag) | M2 |
 | `PATCH` | `/learning-plans/items/:id` | Trạng thái item trong plan | M2 |
 | `PATCH` | `/dictionary/words/:id/progress` | Tiến độ học từ | M3 |

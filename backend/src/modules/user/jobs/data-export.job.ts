@@ -448,13 +448,15 @@ export class DataExportJob implements OnApplicationBootstrap {
               type: string;
               consentVersion: string;
               policyVersion: string;
+              documentSha256: string | null;
+              channel: string;
               grantedAt: Date;
               revokedAt: Date | null;
               createdAt: Date;
               updatedAt: Date;
             }>
           >(Prisma.sql`
-            SELECT id, type, "consentVersion", "policyVersion", "grantedAt", "revokedAt", "createdAt", "updatedAt"
+            SELECT id, type, "consentVersion", "policyVersion", "documentSha256", channel, "grantedAt", "revokedAt", "createdAt", "updatedAt"
             FROM "Consent"
             WHERE "userId" = ${userId}
             ORDER BY "createdAt" DESC

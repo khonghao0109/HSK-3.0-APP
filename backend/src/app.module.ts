@@ -25,6 +25,7 @@ import { CmsModule } from './modules/cms/cms.module';
 import { DictionaryModule } from './modules/dictionary/dictionary.module';
 import { ExamModule } from './modules/exam/exam.module';
 import { HealthModule } from './modules/health/health.module';
+import { LegalModule } from './modules/legal/legal.module';
 import { LearningModule } from './modules/learning/learning.module';
 import {
   isNotMediaContentRoute,
@@ -80,6 +81,7 @@ import { PrismaModule } from './prisma/prisma.module';
     UserModule,
     DictionaryModule,
     HealthModule,
+    LegalModule,
     LearningModule,
     ExamModule,
     MediaModule,

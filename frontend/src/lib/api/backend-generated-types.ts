@@ -148,6 +148,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/legal/documents/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current version of each legal document; empty until one is registered. */
+        get: operations["LegalController_getCurrentDocuments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_getConsents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/consents/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-consent to registered document versions; repeating is a no-op. */
+        post: operations["ConsentController_acceptDocuments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/consents/optional/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ConsentController_setOptionalConsent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -2096,11 +2162,23 @@ export interface components {
             refreshToken: string;
             refreshTokenExpiresAt: string;
         };
+        AcceptedDocumentDto: {
+            /** @enum {string} */
+            type: "terms" | "privacy";
+            version: string;
+            /** @description Lowercase hex SHA-256 of the document, as `GET /legal/documents/current` returns it. */
+            sha256: string;
+        };
         RegisterDto: {
             /** Format: email */
             email: string;
             password: string;
             name?: string;
+            /**
+             * @description M1.7b2 (Q188): legal documents ticked at sign-up. Each must be the current
+             *     version of its type; consent rows are written with `channel = signup`.
+             */
+            acceptedDocuments?: components["schemas"]["AcceptedDocumentDto"][];
         };
         LoginDto: {
             /** Format: email */
@@ -2149,6 +2227,48 @@ export interface components {
              * @example NewSecret123!
              */
             newPassword: string;
+        };
+        CurrentLegalDocumentDto: {
+            /** @enum {string} */
+            type: "terms" | "privacy";
+            version: string;
+            sha256: string;
+            /** Format: date-time */
+            effectiveAt: string;
+        };
+        DocumentConsentStateDto: {
+            /** @enum {string} */
+            type: "terms" | "privacy";
+            /**
+             * @description `accepted` the current version; `pending` may postpone until `deadline`;
+             *     `blocked` past `effectiveAt` without consent; `not_required` no version yet.
+             * @enum {string}
+             */
+            status: "accepted" | "pending" | "blocked" | "not_required";
+            version: string | null;
+            sha256: string | null;
+            /** Format: date-time */
+            effectiveAt: string | null;
+            /**
+             * Format: date-time
+             * @description Set only when `status` is `pending`.
+             */
+            deadline: string | null;
+        };
+        OptionalConsentStateDto: {
+            /** @enum {string} */
+            type: "analytics" | "marketing";
+            granted: boolean;
+        };
+        UserConsentsResponseDto: {
+            documents: components["schemas"]["DocumentConsentStateDto"][];
+            optional: components["schemas"]["OptionalConsentStateDto"][];
+        };
+        AcceptDocumentsDto: {
+            documents: components["schemas"]["AcceptedDocumentDto"][];
+        };
+        SetOptionalConsentDto: {
+            granted: boolean;
         };
         AdminUserDto: {
             id: number;
@@ -4393,6 +4513,128 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    LegalController_getCurrentDocuments: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["CurrentLegalDocumentDto"][];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ConsentController_getConsents: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["UserConsentsResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ConsentController_acceptDocuments: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptDocumentsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["UserConsentsResponseDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
+            };
+            default: components["responses"]["ErrorEnvelope"];
+        };
+    };
+    ConsentController_setOptionalConsent: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID or 32 hex characters; any other value is replaced by a new UUID. Echoed in the X-Request-ID response header and meta.requestId. */
+                "X-Request-ID"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                type: "analytics" | "marketing";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetOptionalConsentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["OptionalConsentStateDto"];
+                        meta: components["schemas"]["ApiResponseMetaDto"];
+                    };
+                };
             };
             default: components["responses"]["ErrorEnvelope"];
         };

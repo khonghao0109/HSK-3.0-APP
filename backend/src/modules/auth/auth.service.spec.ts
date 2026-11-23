@@ -47,6 +47,10 @@ describe('AuthService login throttling and lockout', () => {
   const jobQueue = {
     send: jest.fn().mockResolvedValue('job-id-1'),
   };
+  const consentService = {
+    resolveSignupDocuments: jest.fn(),
+    recordDocumentConsents: jest.fn().mockResolvedValue(undefined),
+  };
   const signAsync = jest.fn().mockResolvedValue('signed-token');
   const jwtService = {
     signAsync,
@@ -87,6 +91,7 @@ describe('AuthService login throttling and lockout', () => {
       configService,
       storage,
       jobQueue,
+      consentService as never,
     );
     verifyPassword = jest.spyOn(
       service as unknown as { verifyPassword: () => Promise<boolean> },

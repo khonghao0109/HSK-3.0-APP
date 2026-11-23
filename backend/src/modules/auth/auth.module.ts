@@ -6,6 +6,7 @@ import { StringValue } from 'ms';
 
 import { RateLimitModule } from '../../infrastructure/rate-limit/rate-limit.module';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { LegalModule } from '../legal/legal.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -15,6 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   imports: [
     PrismaModule,
     RateLimitModule,
+    LegalModule,
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),

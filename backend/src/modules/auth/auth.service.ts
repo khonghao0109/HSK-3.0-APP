@@ -19,6 +19,7 @@ import {
 } from '../../infrastructure/jobs/job-queue.port';
 import { PostgresThrottlerStorage } from '../../infrastructure/rate-limit/postgres-throttler.storage';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ConsentService } from '../legal/consent.service';
 
 import { WEAK_PASSWORDS } from './constants/weak-passwords';
 import { LoginDto } from './dto/login.dto';
@@ -46,6 +47,7 @@ export class AuthService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly rateLimitStorage: PostgresThrottlerStorage,
     @Inject(JobQueuePort) private readonly jobQueue: JobQueuePort,
+    private readonly consentService: ConsentService,
   ) {}
 
   /** Hash the timing decoy at boot so the first failed login is not slower. */
@@ -65,6 +67,12 @@ export class AuthService implements OnModuleInit {
     }
 
     this.assertPasswordNotBlacklisted(registerDto.password);
+    const acceptedDocuments =
+      registerDto.acceptedDocuments === undefined
+        ? []
+        : await this.consentService.resolveSignupDocuments(
+            registerDto.acceptedDocuments,
+          );
     const passwordHash = await this.hashPassword(registerDto.password);
 
     const user = await this.prisma
@@ -82,6 +90,13 @@ export class AuthService implements OnModuleInit {
             name: true,
           },
         });
+
+        await this.consentService.recordDocumentConsents(
+          tx,
+          createdUser.id,
+          acceptedDocuments,
+          'signup',
+        );
 
         await this.jobQueue.send(
           JOB_NAMES.SEND_EMAIL_VERIFICATION,

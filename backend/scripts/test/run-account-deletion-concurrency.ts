@@ -25,6 +25,7 @@ import { InMemoryJobQueue } from '../../src/infrastructure/jobs/in-memory-job-qu
 import { PostgresThrottlerStorage } from '../../src/infrastructure/rate-limit/postgres-throttler.storage';
 import { AdminUsersService } from '../../src/modules/admin-users/admin-users.service';
 import { AuthService } from '../../src/modules/auth/auth.service';
+import { ConsentService } from '../../src/modules/legal/consent.service';
 import { hashPasswordWithPepper } from '../../src/modules/auth/utils/password-hasher';
 import { AnonymizeAccountJob } from '../../src/modules/user/jobs/anonymize-account.job';
 import { RequestAccountDeletionDto } from '../../src/modules/user/dto/request-account-deletion.dto';
@@ -68,6 +69,7 @@ const authService = new AuthService(
   config,
   rateLimitStorage,
   jobQueue,
+  new ConsentService(prisma),
 );
 const anonymizeJob = new AnonymizeAccountJob(null, prisma, config);
 

@@ -495,6 +495,246 @@
         ]
       }
     },
+    "/api/v1/legal/documents/current": {
+      "get": {
+        "operationId": "LegalController_getCurrentDocuments",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CurrentLegalDocumentDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "summary": "Current version of each legal document; empty until one is registered.",
+        "tags": [
+          "Legal"
+        ]
+      }
+    },
+    "/api/v1/users/me/consents": {
+      "get": {
+        "operationId": "ConsentController_getConsents",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserConsentsResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Consent"
+        ]
+      }
+    },
+    "/api/v1/users/me/consents/accept": {
+      "post": {
+        "operationId": "ConsentController_acceptDocuments",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptDocumentsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserConsentsResponseDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Re-consent to registered document versions; repeating is a no-op.",
+        "tags": [
+          "Consent"
+        ]
+      }
+    },
+    "/api/v1/users/me/consents/optional/{type}": {
+      "put": {
+        "operationId": "ConsentController_setOptionalConsent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "analytics",
+                "marketing"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOptionalConsentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OptionalConsentStateDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorEnvelope"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "tags": [
+          "Consent"
+        ]
+      }
+    },
     "/api/v1/admin/users": {
       "get": {
         "operationId": "AdminUsersController_listUsers",
@@ -9626,6 +9866,30 @@
           "refreshTokenExpiresAt"
         ]
       },
+      "AcceptedDocumentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "terms",
+              "privacy"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "description": "Lowercase hex SHA-256 of the document, as `GET /legal/documents/current` returns it."
+          }
+        },
+        "required": [
+          "type",
+          "version",
+          "sha256"
+        ]
+      },
       "RegisterDto": {
         "type": "object",
         "properties": {
@@ -9639,6 +9903,14 @@
           },
           "name": {
             "type": "string"
+          },
+          "acceptedDocuments": {
+            "description": "M1.7b2 (Q188): legal documents ticked at sign-up. Each must be the current\nversion of its type; consent rows are written with `channel = signup`.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptedDocumentDto"
+            }
           }
         },
         "required": [
@@ -9758,6 +10030,149 @@
         "required": [
           "token",
           "newPassword"
+        ]
+      },
+      "CurrentLegalDocumentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "terms",
+              "privacy"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "version",
+          "sha256",
+          "effectiveAt"
+        ]
+      },
+      "DocumentConsentStateDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "terms",
+              "privacy"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "description": "`accepted` the current version; `pending` may postpone until `deadline`;\n`blocked` past `effectiveAt` without consent; `not_required` no version yet.",
+            "enum": [
+              "accepted",
+              "pending",
+              "blocked",
+              "not_required"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "sha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "deadline": {
+            "type": "string",
+            "nullable": true,
+            "description": "Set only when `status` is `pending`.",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "type",
+          "status",
+          "version",
+          "sha256",
+          "effectiveAt",
+          "deadline"
+        ]
+      },
+      "OptionalConsentStateDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "analytics",
+              "marketing"
+            ],
+            "type": "string"
+          },
+          "granted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "granted"
+        ]
+      },
+      "UserConsentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentConsentStateDto"
+            }
+          },
+          "optional": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionalConsentStateDto"
+            }
+          }
+        },
+        "required": [
+          "documents",
+          "optional"
+        ]
+      },
+      "AcceptDocumentsDto": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptedDocumentDto"
+            }
+          }
+        },
+        "required": [
+          "documents"
+        ]
+      },
+      "SetOptionalConsentDto": {
+        "type": "object",
+        "properties": {
+          "granted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "granted"
         ]
       },
       "AdminUserDto": {
