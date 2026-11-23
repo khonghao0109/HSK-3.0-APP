@@ -501,6 +501,7 @@ trình** (không đọc/ghi `.env`, không hard-code token).
 | 4 | Commit exercise | `POST /admin/cms/exercise-imports` + `previewHash` + `Idempotency-Key` | **Có** | replay cùng key + cùng payload ⇒ `idempotent: true`, không nhân bản |
 | 5 | Ghi `LessonWord` (Q179) | Prisma transaction + `SELECT … FOR UPDATE` | **Có** (`upsert` theo `(lessonId, wordId)`) | Chỉ ghi khi lesson `draft`; khác ⇒ fail-fast (§4.1) |
 | 6 | Kiểm chứng | `GET /admin/cms/lessons/:id`, `GET /admin/cms/exercises?lessonId=` | đọc | Xác nhận mọi bản ghi `draft`, đếm đúng 3 topic / 10 exercise |
+| 7 | Gán bài vào khoá (ADR-009 C2, tới khi C3 xong) | `npm run content:course:backfill` (backend, `DATABASE_URL` của môi trường) | **Có** | Bài mới tạo chưa có `courseUnitId`; script gán vào unit của Level trong khoá `HSK3_TOPIC`. Chạy `-- --dry-run` trước; exit khác 0 nghĩa là còn bài thiếu unit (runbook §34) |
 
 `GET /admin/cms/lessons?search=` khớp `title`/`slug` kiểu `contains` không phân biệt hoa thường
 (`backend/src/modules/cms/cms.service.ts:176-184`), nên script **phải tự so khớp tuyệt đối** `slug`

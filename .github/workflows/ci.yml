@@ -124,6 +124,11 @@ jobs:
           psql "$TEST_DATABASE_URL" -Atc "select extname || ' ' || extversion from pg_extension where extname = 'pg_trgm'"
           npm run test:db:dictionary-search
 
+      # ADR-009 C1/C2: course_expand migration (fresh, upgrade, drift) and the
+      # content:course:backfill script. Creates and drops its own *_verify DBs.
+      - name: Course schema and backfill DB tests
+        run: npm run test:db:course
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest
