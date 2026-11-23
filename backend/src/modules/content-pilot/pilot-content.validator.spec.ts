@@ -966,3 +966,113 @@ describe('toneMarkedPinyin', () => {
     expect(toneMarkedPinyin('xue2 sheng5')).toBe('xuésheng');
   });
 });
+
+describe('bài tập matching trong pilot (Pha G4b)', () => {
+  const refs = loadPilotReferenceData(BACKEND_ROOT);
+  const base = readJson(join(CONTENT_DIR, 'lesson-01.json'));
+  const pairs = (count: number) =>
+    [
+      ['你', 'bạn'],
+      ['我', 'tôi'],
+      ['好', 'tốt'],
+      ['是', 'là'],
+      ['人', 'người'],
+      ['他', 'anh ấy'],
+    ]
+      .slice(0, count)
+      .map(([left, right], index) => ({ id: `pair-${index}`, left, right }));
+
+  const withMatching = (content: unknown, answer: unknown = {}) => {
+    const lesson = structuredClone(base);
+    if (!isRecord(lesson)) throw new Error('bài 1 không phải object');
+    (lesson.exercises as unknown[]).push({
+      sourceKey: 'pilot-hsk1:l01:e11',
+      topicKey: null,
+      type: 'matching',
+      prompt: 'Ghép từ với nghĩa.',
+      content,
+      answer,
+      explanation: 'Mỗi chữ Hán đi với đúng một nghĩa.',
+      orderIndex: 11,
+    });
+    return lesson;
+  };
+  const issuesOf = (lesson: unknown) =>
+    validatePilotLesson(lesson, 'lesson-01.json', refs).map((issue) => [
+      issue.code,
+      issue.path,
+    ]);
+
+  it('nhận bài matching hợp lệ (3 và 5 cặp)', () => {
+    expect(issuesOf(withMatching({ pairs: pairs(3) }))).toEqual([]);
+    expect(issuesOf(withMatching({ pairs: pairs(5) }))).toEqual([]);
+  });
+
+  it('thiếu cặp hoặc ít hơn 3 cặp → matching_invalid với thông điệp tiếng Việt', () => {
+    expect(issuesOf(withMatching({}))).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs'],
+    ]);
+    const issues = validatePilotLesson(
+      withMatching({ pairs: pairs(2) }),
+      'lesson-01.json',
+      refs,
+    );
+    expect(issues.map((issue) => [issue.code, issue.path])).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs'],
+    ]);
+    expect(issues[0]?.message).toBe('cần 3–5 cặp');
+  });
+
+  it('nhiều hơn 5 cặp → matching_invalid', () => {
+    expect(issuesOf(withMatching({ pairs: pairs(6) }))).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs'],
+    ]);
+  });
+
+  it('id cặp trùng → matching_invalid ở id', () => {
+    const duplicate = pairs(3);
+    duplicate[1] = { ...duplicate[1], id: duplicate[0].id };
+    const issues = validatePilotLesson(
+      withMatching({ pairs: duplicate }),
+      'lesson-01.json',
+      refs,
+    );
+    expect(issues.map((issue) => [issue.code, issue.path])).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs[1].id'],
+    ]);
+    expect(issues[0]?.message).toBe('id cặp bị trùng');
+  });
+
+  it('left/right rỗng → matching_invalid', () => {
+    const emptyLeft = pairs(3);
+    emptyLeft[0] = { ...emptyLeft[0], left: '  ' };
+    expect(issuesOf(withMatching({ pairs: emptyLeft }))).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs[0].left'],
+    ]);
+    const emptyRight = pairs(3);
+    emptyRight[2] = { ...emptyRight[2], right: '' };
+    expect(issuesOf(withMatching({ pairs: emptyRight }))).toEqual([
+      ['matching_invalid', 'exercises[10].content.pairs[2].right'],
+    ]);
+  });
+
+  it('answer không rỗng → matching_invalid (cặp đúng nằm ở content)', () => {
+    expect(issuesOf(withMatching({ pairs: pairs(3) }, { pairs: [] }))).toEqual([
+      ['matching_invalid', 'exercises[10].answer.$unknown'],
+    ]);
+  });
+
+  it('loại lạ vẫn bị từ chối như cũ', () => {
+    const lesson = withMatching({ pairs: pairs(3) });
+    const exercises = lesson.exercises as Record<string, unknown>[];
+    exercises[10].type = 'drag_drop';
+    expect(issuesOf(lesson)).toContainEqual([
+      'exercise_type_unsupported',
+      'exercises[10].type',
+    ]);
+  });
+
+  it('bài không có matching vẫn đủ 3 loại bắt buộc (matching không bắt buộc)', () => {
+    expect(issuesOf(structuredClone(base))).toEqual([]);
+  });
+});

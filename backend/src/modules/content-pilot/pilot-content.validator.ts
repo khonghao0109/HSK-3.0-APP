@@ -2,6 +2,11 @@ import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 import {
+  LessonExerciseAuthoringValidationError,
+  MATCHING_LIMITS,
+  validateMatching as validateMatchingAuthoring,
+} from '../../common/validation/lesson-exercise-authoring.validator';
+import {
   type TopicContentIssueCode,
   validateTopicContentBlocks,
 } from '../../common/validation/topic-content-blocks';
@@ -49,8 +54,10 @@ export const PILOT_CONTENT_LIMITS = {
   /** TL-214: lesson pilot dùng dải orderIndex 1001–1030 (P8, PO 17/11/2026). */
   pilotOrderIndexMin: 1001,
   pilotOrderIndexMax: 1030,
-  /** Q173: chỉ 3 loại bài tập được publish trong pilot. */
-  allowedExerciseTypes: ['mcq', 'fill_blank', 'arrange_sentence'],
+  /** Q173: mỗi bài pilot phải có đủ 3 loại này. */
+  requiredExerciseTypes: ['mcq', 'fill_blank', 'arrange_sentence'],
+  /** Pha G4b: `matching` được phép nhưng không bắt buộc; content kiểm bằng validator của CMS. */
+  allowedExerciseTypes: ['mcq', 'fill_blank', 'arrange_sentence', 'matching'],
   forbiddenExerciseTypes: ['listening_choice', 'speaking_repeat'],
   allowedTopicTypes: ['vocabulary', 'grammar', 'key_text'],
 } as const;
@@ -140,6 +147,7 @@ export const PILOT_CONTENT_ERROR_CODES = [
   'arrange_token_duplicate',
   'arrange_ids_reveal_order',
   'arrange_tokens_not_shuffled',
+  'matching_invalid',
   'array_too_large',
   'type_missing',
   'types_count',
@@ -1050,6 +1058,9 @@ function validateExercises(
     if (type === 'arrange_sentence') {
       validateArrange(issues, at, content, answer);
     }
+    if (type === 'matching') {
+      validateMatching(issues, at, content, answer);
+    }
   }
 
   const positionCounts = new Map<number, string[]>();
@@ -1070,19 +1081,58 @@ function validateExercises(
     }
   }
 
-  for (const required of PILOT_CONTENT_LIMITS.allowedExerciseTypes) {
+  for (const required of PILOT_CONTENT_LIMITS.requiredExerciseTypes) {
     if (!typeSeen.has(required)) {
       issues.push(
         createIssue('type_missing', 'exercises', `thiếu loại ${required}`),
       );
     }
   }
-  if (typeSeen.size < PILOT_CONTENT_LIMITS.allowedExerciseTypes.length) {
+  if (typeSeen.size < PILOT_CONTENT_LIMITS.requiredExerciseTypes.length) {
     issues.push(
       createIssue(
         'types_count',
         'exercises',
-        `cần ≥ ${PILOT_CONTENT_LIMITS.allowedExerciseTypes.length} loại, đếm được ${typeSeen.size}`,
+        `cần ≥ ${PILOT_CONTENT_LIMITS.requiredExerciseTypes.length} loại, đếm được ${typeSeen.size}`,
+      ),
+    );
+  }
+}
+
+/** Thông điệp tiếng Việt cho mã lỗi của validator CMS khi kiểm `matching`. */
+const MATCHING_MESSAGES: Readonly<Record<string, string>> = {
+  invalid_pair_count: `cần ${MATCHING_LIMITS.minPairs}–${MATCHING_LIMITS.maxPairs} cặp`,
+  array_required: 'phải là mảng cặp',
+  object_required: 'phải là object',
+  unknown_field: 'có trường không được phép',
+  invalid_stable_id: 'id cặp không hợp lệ',
+  duplicate_stable_id: 'id cặp bị trùng',
+  duplicate_pair_text: 'trùng chữ với cặp khác',
+  string_required: 'phải là string',
+  non_empty_string_required: 'không được rỗng',
+  string_too_long: 'quá dài',
+};
+
+/**
+ * Pha G4b: không viết bộ luật thứ hai, gọi đúng validator mà CMS và
+ * `/admin/cms/exercise-imports` dùng. Validator ném lỗi đầu tiên nên mỗi bài
+ * matching báo tối đa một issue.
+ */
+function validateMatching(
+  issues: PilotContentIssue[],
+  at: string,
+  content: Record<string, unknown>,
+  answer: Record<string, unknown>,
+): void {
+  try {
+    validateMatchingAuthoring(content, answer);
+  } catch (error) {
+    if (!(error instanceof LessonExerciseAuthoringValidationError)) throw error;
+    issues.push(
+      createIssue(
+        'matching_invalid',
+        `${at}.${error.path}`,
+        MATCHING_MESSAGES[error.code] ?? error.code,
       ),
     );
   }

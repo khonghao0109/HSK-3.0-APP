@@ -244,6 +244,7 @@ endpoint CMS (phá R21) và không ghi `LessonWord` (mất row "Từ vựng" vì
 | `mcq` | `{ options: [{ id, text }] }`, **2–100** phần tử, `id` không trùng | `{ optionId }`, phải là một `id` trong `content.options` |
 | `fill_blank` | `{}` (exact-key: không field nào khác) | `{ acceptedTexts: string[] }` **1–100** + `caseSensitive?` boolean |
 | `arrange_sentence` | `{ tokens: [{ id, text }] }`, 2–100, `id` không trùng | `{ tokenIds }` đủ mọi token, không trùng, **thứ tự = đáp án đúng** |
+| `matching` (Pha G4b) | `{ pairs: [{ id, left, leftReading?, right }] }`, **3–5** cặp, `id` không trùng, `left`/`right` không rỗng, không trùng chữ giữa các cặp, `left` ≤ 32, `leftReading` ≤ 64, `right` ≤ 80 ký tự | `{}` (cặp đúng chính là `content.pairs`) |
 
 Field chung: `id` 1–128 ký tự không khoảng trắng; `text`/`prompt` 1–4096; `explanation` ≤ 4096;
 `orderIndex` 1–1 000 000 (`docs/api/api.md:726-728`).
@@ -443,10 +444,10 @@ Bài mẫu: `backend/content/pilot/hsk1/lesson-01.json`.
 | `topics[].orderIndex` | int | ✔ | 1..1e6, unique theo lesson |
 | `topics[].isPremium` / `isLocked` | boolean | ✔ | `TopicRevision` bắt buộc 2 field này |
 | `topics[].content` | array block | ✔ | Chỉ dùng block learner hợp lệ theo K-A (xem 2.2) |
-| `exercises` | array | ✔ | ≥ 8 bài, ≥ 3 loại trong `mcq \| fill_blank \| arrange_sentence` (Q173) |
+| `exercises` | array | ✔ | ≥ 8 bài, có đủ 3 loại `mcq \| fill_blank \| arrange_sentence` (Q173); `matching` được thêm, không bắt buộc (Pha G4b) |
 | `exercises[].sourceKey` | string | ✔ | `pilot-hsk1:lNN:eNN` (TL-212), cố định qua các lần chạy, ≤ 128 ký tự không khoảng trắng |
 | `exercises[].topicKey` | string \| null | ✔ | Trỏ tới `topics[].key`; `null` = exercise độc lập của lesson |
-| `exercises[].type` | enum | ✔ | Chỉ 3 loại được publish (Q173) |
+| `exercises[].type` | enum | ✔ | `mcq`, `fill_blank`, `arrange_sentence` (Q173) hoặc `matching` (Pha G4b); content `matching` kiểm bằng đúng `validateMatching` của CMS (`backend/src/common/validation/lesson-exercise-authoring.validator.ts`), lỗi báo mã `matching_invalid`. Ví dụ: `{"sourceKey":"pilot-hsk1:l02:e11","topicKey":null,"type":"matching","prompt":"Ghép chữ Hán với nghĩa.","content":{"pairs":[{"id":"pair-ni","left":"你","right":"bạn"},{"id":"pair-wo","left":"我","right":"tôi"},{"id":"pair-hao","left":"好","right":"tốt"}]},"answer":{},"explanation":"Mỗi chữ Hán đi với đúng một nghĩa.","orderIndex":11}` |
 | `exercises[].prompt` | string | ✔ | 1–4096 |
 | `exercises[].content` | object | ✔ | Theo bảng A.9 cho từng type (K-E) |
 | `exercises[].answer` | object | ✔ | Theo bảng A.9 |

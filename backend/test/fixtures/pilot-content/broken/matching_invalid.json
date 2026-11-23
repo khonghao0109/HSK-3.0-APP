@@ -1,0 +1,25 @@
+{
+  "description": "matching chỉ có 2 cặp (CMS cần 3–5)",
+  "fileName": "lesson-01.json",
+  "operations": [
+    {
+      "op": "set",
+      "path": "exercises[10]",
+      "value": {
+        "sourceKey": "pilot-hsk1:l01:e11",
+        "topicKey": null,
+        "type": "matching",
+        "prompt": "Ghép từ với nghĩa.",
+        "content": {
+          "pairs": [
+            { "id": "pair-ni", "left": "你", "right": "bạn" },
+            { "id": "pair-wo", "left": "我", "right": "tôi" }
+          ]
+        },
+        "answer": {},
+        "explanation": "Mỗi chữ Hán đi với đúng một nghĩa.",
+        "orderIndex": 11
+      }
+    }
+  ]
+}
