@@ -1317,3 +1317,35 @@ Pha expand của ADR-009 §7. Chỉ thêm, không backfill (C2), không đổi h
   `test/database/course-expand.integration.sql` (BEGIN/ROLLBACK): mỗi CHECK một ca bị từ chối và một
   ca hợp lệ, các unique, partial unique `isCurrent`, FK `RESTRICT`/`CASCADE`, bài cũ có
   `courseUnitId = null` và giữ `levelId`.
+
+## 34. Backfill khoá chủ đề HSK 3.0 (ADR-009 C2)
+
+Không phải migration: script dữ liệu idempotent `backend/scripts/content/backfill-course-topic.ts`,
+chạy lại sau mỗi lần nạp bài cho tới khi C3 xong (bài mới tạo chưa có `courseUnitId`).
+
+- Chạy (trong `backend/`, `DATABASE_URL` trỏ đúng môi trường):
+  - `npm run content:course:backfill -- --dry-run`: chạy toàn bộ trong transaction rồi rollback,
+    in đúng các số sẽ ghi, không ghi gì.
+  - `npm run content:course:backfill`: ghi thật, một transaction.
+  - Output chỉ có số đếm (`courses`, `units`, `lessonsWithoutUnit`, `enrollments`: trước -> sau) và
+    một dòng `SUMMARY {json}`; không in email hay PII.
+- Việc script làm (chỉ thêm, không xoá, không ghi đè):
+  - Khoá `HSK3_TOPIC` (`topic`, `HSK_3_0`, `orderIndex = 1`, `published`) nếu chưa có;
+    đã có thì giữ `title`, `status`, `keyTextVisible`.
+  - Một unit cho mỗi Level hiện có, chọn theo `(courseId, levelId)`: `orderIndex` = `Level.orderIndex`,
+    `title` = `Level.name`, `status` = `Level.status` lúc tạo, `gradeNumber` = band nếu
+    `minBand = maxBand` (HSK7_9: null). Unit đã có không bị ghi đè.
+  - `Lesson.courseUnitId` cho mọi bài `courseUnitId IS NULL` (cả bài soft-delete), theo unit cùng
+    `levelId`. Không xung đột unique `(courseUnitId, orderIndex)` vì `(levelId, orderIndex)` unique.
+  - `CourseEnrollment(active, isCurrent)` cho user chưa có enrollment nào, có `UserGoal` hoặc
+    `Progress`, `status` không phải `deletion_pending`/`anonymized` và `deletedAt IS NULL`.
+  - Không đụng `Progress`, attempt, `LearningEvent`, `UserGoal`, `User`.
+- Kiểm sau chạy: `lessonsWithoutUnit` sau phải bằng 0; script exit 1 nếu khác 0 (có Level không
+  có unit). Unit `orderIndex` trùng với unit tạo tay khác Level thì unique violation, cả transaction
+  rollback: dừng và điều tra, không sửa tay.
+- Rollback: forward-only. Ứng dụng hiện tại chưa đọc khoá (C3), nên dữ liệu thừa vô hại. Sai thì
+  forward-fix bằng change có review (gán lại `courseUnitId`, đổi trạng thái enrollment), không xoá.
+- Kiểm: `npm run test:db:course` (cũng chạy trong CI job `backend-e2e`): seed có bài ở 2 Level (1
+  bài soft-delete), Level không bài, user chỉ goal/chỉ progress/không gì/ẩn danh/đang chờ xoá/đã có
+  enrollment; kiểm dry-run không ghi và khớp lần chạy thật, chạy lần 2 không đổi gì, khoá đã sửa
+  không bị ghi đè, fingerprint `Progress`/attempt/`LearningEvent`/`UserGoal`/`User` không đổi.

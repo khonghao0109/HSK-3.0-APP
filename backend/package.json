@@ -77,7 +77,8 @@
     "content:tts": "ts-node scripts/content/generate-tts.ts",
     "content:import:exam": "ts-node scripts/content/import-hsk1-exam.ts",
     "content:import:lesson-images": "ts-node scripts/content/import-hsk1-lesson-images.ts",
-    "test:db:course": "ts-node scripts/test/run-course-schema-integration.ts"
+    "test:db:course": "ts-node scripts/test/run-course-schema-integration.ts",
+    "content:course:backfill": "ts-node scripts/content/backfill-course-topic.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",

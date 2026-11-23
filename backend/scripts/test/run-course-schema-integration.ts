@@ -102,11 +102,104 @@ const migrations = readdirSync(join(prismaDir, 'migrations'), {
 const courseMigration = migrations.filter((name) =>
   name.endsWith(COURSE_MIGRATION_SUFFIX),
 );
-if (
-  courseMigration.length !== 1 ||
-  migrations[migrations.length - 1] !== courseMigration[0]
-) {
-  throw new Error('course_expand must be the single, latest migration');
+if (courseMigration.length !== 1) {
+  throw new Error('expected exactly one course_expand migration');
+}
+// The upgrade path stops just before course_expand and replays it plus later ones.
+const fromCourseExpand = migrations.slice(
+  migrations.indexOf(courseMigration[0]),
+);
+
+// ADR-009 C2: content:course:backfill on the upgraded database.
+const HISTORY_FINGERPRINT = `SELECT md5(string_agg(t, '|' ORDER BY t)) FROM (
+  SELECT 'p' || row_to_json(x)::text AS t FROM "Progress" x
+  UNION ALL SELECT 'a' || row_to_json(x)::text FROM "LessonExerciseAttempt" x
+  UNION ALL SELECT 'e' || row_to_json(x)::text FROM "LearningEvent" x
+  UNION ALL SELECT 'g' || row_to_json(x)::text FROM "UserGoal" x
+  UNION ALL SELECT 'u' || row_to_json(x)::text FROM "User" x) r`;
+const COURSE_FINGERPRINT = `SELECT md5(string_agg(t, '|' ORDER BY t)) FROM (
+  SELECT 'c' || row_to_json(x)::text AS t FROM "Course" x
+  UNION ALL SELECT 'u' || row_to_json(x)::text FROM "CourseUnit" x
+  UNION ALL SELECT 'e' || row_to_json(x)::text FROM "CourseEnrollment" x
+  UNION ALL SELECT 'l' || "id" || ':' || coalesce("courseUnitId"::text, '-') || ':' || "updatedAt" FROM "Lesson" x) r`;
+
+type BackfillSummary = {
+  mode: string;
+  before: Record<string, number>;
+  after: Record<string, number>;
+};
+
+function backfill(url: string, dryRun: boolean): BackfillSummary {
+  const out = run(
+    'npx',
+    [
+      'ts-node',
+      'scripts/content/backfill-course-topic.ts',
+      ...(dryRun ? ['--dry-run'] : []),
+    ],
+    { ...process.env, DATABASE_URL: url },
+  );
+  const line = out.split('\n').find((l) => l.startsWith('SUMMARY '));
+  if (!line) throw new Error('backfill printed no SUMMARY line');
+  return JSON.parse(line.slice('SUMMARY '.length)) as BackfillSummary;
+}
+
+function check(condition: boolean, message: string): void {
+  if (!condition) throw new Error(message);
+  console.log(`ok - ${message}`);
+}
+
+function runBackfillSuite(url: string): void {
+  psql(url, '-f', resolve('test/database/course-backfill.seed.sql'));
+  const scalar = (sql: string) => psql(url, '-tAc', sql).trim();
+  const history = scalar(HISTORY_FINGERPRINT);
+  const seeded = scalar(COURSE_FINGERPRINT);
+
+  const dry = backfill(url, true);
+  check(scalar(COURSE_FINGERPRINT) === seeded, 'dry-run writes nothing');
+  const expected = {
+    before: { courses: 0, units: 0, lessonsWithoutUnit: 3, enrollments: 0 },
+    after: { courses: 1, units: 7, lessonsWithoutUnit: 0, enrollments: 2 },
+  };
+  check(
+    JSON.stringify([dry.before, dry.after]) ===
+      JSON.stringify([expected.before, expected.after]),
+    `dry-run plans ${JSON.stringify(dry.after)}`,
+  );
+
+  const first = backfill(url, false);
+  check(
+    JSON.stringify([first.before, first.after]) ===
+      JSON.stringify([dry.before, dry.after]),
+    'apply counts equal dry-run counts',
+  );
+  psql(url, '-f', resolve('test/database/course-backfill.assert.sql'));
+
+  const applied = scalar(COURSE_FINGERPRINT);
+  const second = backfill(url, false);
+  check(
+    JSON.stringify(second.before) === JSON.stringify(first.after) &&
+      JSON.stringify(second.after) === JSON.stringify(first.after) &&
+      scalar(COURSE_FINGERPRINT) === applied,
+    'second run changes nothing',
+  );
+
+  psql(
+    url,
+    '-c',
+    `UPDATE "Course" SET title = 'PO title', "keyTextVisible" = false, status = 'draft' WHERE code = 'HSK3_TOPIC'`,
+  );
+  backfill(url, false);
+  check(
+    scalar(
+      `SELECT title || '|' || "keyTextVisible" || '|' || status FROM "Course" WHERE code = 'HSK3_TOPIC'`,
+    ) === 'PO title|false|draft',
+    'edited course title/status/keyTextVisible kept',
+  );
+  check(
+    scalar(HISTORY_FINGERPRINT) === history,
+    'Progress/attempt/LearningEvent/UserGoal/User unchanged',
+  );
 }
 
 const preDir = mkdtempSync(join(tmpdir(), 'hsk-course-c1-'));
@@ -140,15 +233,16 @@ try {
 
   const upgrade = createDatabase(`${base}_course_upgrade_verify`);
   cpSync(prismaDir, join(preDir, 'prisma'), { recursive: true });
-  rmSync(join(preDir, 'prisma', 'migrations', courseMigration[0]), {
-    recursive: true,
-  });
+  for (const name of fromCourseExpand) {
+    rmSync(join(preDir, 'prisma', 'migrations', name), { recursive: true });
+  }
   migrate(upgrade, join(preDir, 'prisma', 'schema.prisma'));
-  assertAllApplied(upgrade, migrations.length - 1);
+  assertAllApplied(upgrade, migrations.length - fromCourseExpand.length);
   psql(upgrade, '-f', resolve('test/database/course-expand.legacy-seed.sql'));
   migrate(upgrade, join(prismaDir, 'schema.prisma'));
   assertAllApplied(upgrade, migrations.length);
   psql(upgrade, '-f', resolve('test/database/course-expand.integration.sql'));
+  runBackfillSuite(upgrade);
   console.log('course schema integration: PASS');
 } catch (error) {
   console.error(error);
