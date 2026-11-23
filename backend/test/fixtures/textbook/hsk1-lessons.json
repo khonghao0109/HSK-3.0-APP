@@ -1,0 +1,73 @@
+[
+  {
+    "bai": 1,
+    "ten": "犇骉",
+    "ten_vi": "Chào hỏi thử nghiệm",
+    "bai_khoa": [
+      {
+        "type": "dialog",
+        "audio_file": "t1_kt1.mp3",
+        "content": [
+          {
+            "speaker": "A",
+            "text_han": "犇骉！",
+            "pinyin": "Bēn biāo!",
+            "meaning": "Câu thử A.",
+            "audio": "t1_kt1_1.mp3"
+          },
+          {
+            "speaker": "B",
+            "text_han": "骉犇。",
+            "pinyin": "Biāo bēn.",
+            "meaning": "Câu thử B.",
+            "audio": "t1_kt1_2.mp3"
+          }
+        ],
+        "fileURL": "https://example.invalid/t1.mp3"
+      }
+    ],
+    "ngu_phap": [
+      {
+        "pattern": "犇 + 骉",
+        "structure": "犇 + 骉",
+        "type": "mẫu câu thử",
+        "explanation": "Giải thích thử cho mẫu câu.",
+        "example": "犇骉！",
+        "pinyin": "Bēn biāo!",
+        "meaning": "Câu thử.",
+        "gramID": 1
+      }
+    ]
+  },
+  {
+    "bai": 2,
+    "ten": "猋",
+    "ten_vi": "Đếm số đơn giản",
+    "bai_khoa": [
+      {
+        "type": "paragraph",
+        "audio_file": "t2_kt1.mp3",
+        "content": [
+          {
+            "speaker": "",
+            "text_han": "猋犇。",
+            "pinyin": "Biāo bēn.",
+            "meaning": "Đoạn thử.",
+            "audio": "t2_kt1_1.mp3"
+          }
+        ]
+      }
+    ],
+    "ngu_phap": [
+      {
+        "pattern": "猋",
+        "structure": "Chủ ngữ + 猋",
+        "type": "",
+        "explanation": "Giải thích thử thứ hai.",
+        "example": "猋犇。",
+        "pinyin": "Biāo bēn.",
+        "meaning": "Câu thử hai."
+      }
+    ]
+  }
+]

@@ -149,11 +149,14 @@ interface ImportPreviewResponse {
 
 const SOURCE_KEY_ALREADY_EXISTS = 'SOURCE_KEY_ALREADY_EXISTS';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function asRecord(value: unknown, what: string): Record<string, unknown> {
+export function asRecord(
+  value: unknown,
+  what: string,
+): Record<string, unknown> {
   if (!isRecord(value)) {
     throw new PilotImportError(
       'invalid_api_response',
@@ -163,7 +166,7 @@ function asRecord(value: unknown, what: string): Record<string, unknown> {
   return value;
 }
 
-function asArray(value: unknown, what: string): unknown[] {
+export function asArray(value: unknown, what: string): unknown[] {
   if (!Array.isArray(value)) {
     throw new PilotImportError(
       'invalid_api_response',
@@ -173,7 +176,7 @@ function asArray(value: unknown, what: string): unknown[] {
   return value;
 }
 
-function asString(value: unknown, what: string): string {
+export function asString(value: unknown, what: string): string {
   if (typeof value !== 'string') {
     throw new PilotImportError(
       'invalid_api_response',
@@ -183,7 +186,7 @@ function asString(value: unknown, what: string): string {
   return value;
 }
 
-function asNumber(value: unknown, what: string): number {
+export function asNumber(value: unknown, what: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new PilotImportError('invalid_api_response', `${what} không phải số`);
   }
@@ -270,7 +273,7 @@ function assertLessonFile(raw: unknown): LessonFile {
   };
 }
 
-class ApiClient {
+export class ApiClient {
   private readonly fetchImpl: typeof fetch;
 
   constructor(
@@ -394,7 +397,7 @@ async function findLevelId(api: ApiClient, levelCode: string): Promise<number> {
   );
 }
 
-async function findDataSourceId(
+export async function findDataSourceId(
   api: ApiClient,
   code: string,
   version: string,
@@ -419,7 +422,7 @@ async function findDataSourceId(
   );
 }
 
-async function findLessonId(
+export async function findLessonId(
   api: ApiClient,
   slug: string,
 ): Promise<{ id: number; status: string } | null> {
@@ -478,7 +481,7 @@ async function ensureDraftLesson(
   };
 }
 
-async function ensureDraftTopics(
+export async function ensureDraftTopics(
   api: ApiClient,
   lessonId: number,
   topics: readonly LessonFileTopic[],
@@ -673,15 +676,16 @@ interface LockedLessonRow {
   readonly deletedAt: Date | null;
 }
 
-async function writeLessonWords(
+export async function writeLessonWords(
   prisma: PrismaClient,
   lessonId: number,
-  words: readonly LessonFileWord[],
+  words: readonly { readonly topicKey?: string }[],
+  resolved: readonly { readonly wordId: number }[],
   topicIds: Readonly<Record<string, number>>,
   fileHash: string,
   log: (line: string) => void,
+  auditAction = 'lesson_word.import_pilot',
 ): Promise<number> {
-  const resolved = await resolveWordIds(prisma, words);
   // Pha F: topicKey → id topic vừa tạo/tái dùng ở bước topics.
   const wordTopicIds = words.map((word) => {
     if (word.topicKey === undefined) return null;
@@ -737,7 +741,7 @@ async function writeLessonWords(
     }
     await tx.auditLog.create({
       data: {
-        action: 'lesson_word.import_pilot',
+        action: auditAction,
         targetType: 'lesson',
         targetId: String(lessonId),
         correlationId: fileHash,
@@ -750,6 +754,35 @@ async function writeLessonWords(
   });
   log(`lessonWord: upsert ${String(resolved.length)} từ`);
   return resolved.length;
+}
+
+export interface WordCandidate {
+  readonly id: number;
+  readonly pinyin: string;
+  readonly pinyinTone: string | null;
+}
+
+/**
+ * Pilot polyphone rule (TL-218, Q358): match by toneless pinyin; when several
+ * rows share it (干 gān / gàn), choose by the tone marks.
+ */
+export function pickWordCandidate<T extends WordCandidate>(
+  candidates: readonly T[],
+  pinyin: string,
+): T | undefined {
+  const expected = normalizePinyinForCompare(stripToneMarks(pinyin));
+  const toneless = candidates.filter(
+    (candidate) => normalizePinyinForCompare(candidate.pinyin) === expected,
+  );
+  const marked = normalizePinyinForCompare(pinyin.normalize('NFC'));
+  return toneless.length > 1
+    ? toneless.find(
+        (candidate) =>
+          candidate.pinyinTone !== null &&
+          normalizePinyinForCompare(toneMarkedPinyin(candidate.pinyinTone)) ===
+            marked,
+      )
+    : toneless[0];
 }
 
 async function resolveWordIds(
@@ -771,23 +804,7 @@ async function resolveWordIds(
   }
   const resolved: { wordId: number; hanzi: string }[] = [];
   for (const word of words) {
-    const candidates = byHanzi.get(word.hanzi) ?? [];
-    const expected = normalizePinyinForCompare(stripToneMarks(word.pinyin));
-    const toneless = candidates.filter(
-      (candidate) => normalizePinyinForCompare(candidate.pinyin) === expected,
-    );
-    // Q358: nhiều dòng cùng pinyin bỏ dấu (干 gān / gàn) → chọn theo dấu thanh.
-    const marked = normalizePinyinForCompare(word.pinyin.normalize('NFC'));
-    const match =
-      toneless.length > 1
-        ? toneless.find(
-            (candidate) =>
-              candidate.pinyinTone !== null &&
-              normalizePinyinForCompare(
-                toneMarkedPinyin(candidate.pinyinTone),
-              ) === marked,
-          )
-        : toneless[0];
+    const match = pickWordCandidate(byHanzi.get(word.hanzi) ?? [], word.pinyin);
     if (match === undefined) {
       throw new PilotImportError(
         'word_not_found',
@@ -982,6 +999,7 @@ export async function importPilotLesson(
     dependencies.prisma,
     ensuredLesson.lessonId,
     file.words,
+    await resolveWordIds(dependencies.prisma, file.words),
     ensuredTopics.topicIds,
     fileHash,
     log,

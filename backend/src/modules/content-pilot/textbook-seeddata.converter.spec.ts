@@ -1,0 +1,224 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { validateTopicContentBlocks } from '../../common/validation/topic-content-blocks';
+
+import {
+  convertTextbookSeeddata,
+  serializeTextbookLesson,
+  TextbookSeeddataError,
+} from './textbook-seeddata.converter';
+
+const FIXTURES = join(__dirname, '../../../test/fixtures/textbook');
+const load = (name: string): unknown =>
+  JSON.parse(readFileSync(join(FIXTURES, name), 'utf8')) as unknown;
+
+function convert(
+  overrides: Partial<{
+    vocab: unknown;
+    lessons: unknown;
+    from: number;
+    to: number;
+  }> = {},
+) {
+  return convertTextbookSeeddata({
+    vocab: overrides.vocab ?? load('hsk1-vocab.json'),
+    lessons: overrides.lessons ?? load('hsk1-lessons.json'),
+    grade: 1,
+    from: overrides.from ?? 1,
+    to: overrides.to ?? 2,
+  });
+}
+
+function issuesOf(run: () => unknown): string[] {
+  try {
+    run();
+  } catch (error) {
+    if (error instanceof TextbookSeeddataError) {
+      return error.issues.map((issue) => `${issue.code} ${issue.path}`);
+    }
+    throw error;
+  }
+  throw new Error('expected TextbookSeeddataError');
+}
+
+describe('convertTextbookSeeddata (M2.13a)', () => {
+  it('builds one textbook file per lesson with the agreed shape', () => {
+    const files = convert();
+    expect(files.map((file) => file.fileName)).toEqual([
+      'lesson-01.json',
+      'lesson-02.json',
+    ]);
+    const first = files[0].content;
+    expect(first).toMatchObject({
+      format: 'textbook',
+      formatVersion: 1,
+      course: {
+        code: 'HSK2_TEXTBOOK',
+        kind: 'textbook',
+        curriculumVersion: 'HSK_2_0',
+      },
+      unit: { gradeNumber: 1, volume: null, orderIndex: 1 },
+      dataSource: { code: 'HSK20_TEXTBOOK_PO_V1', version: '1.0.0' },
+      lesson: {
+        sourceKey: 'hsk2-textbook:g1:l01',
+        slug: 'hsk2-textbook-g1-l01-chao-hoi-thu-nghiem',
+        title: 'Chào hỏi thử nghiệm',
+        description: '犇骉',
+        orderIndex: 1,
+      },
+    });
+    expect(files[1].content.lesson.slug).toBe(
+      'hsk2-textbook-g1-l02-dem-so-don-gian',
+    );
+    expect(first.words).toEqual([
+      {
+        hanzi: '犇',
+        pinyin: 'bēn',
+        meaningVi: 'chạy (từ thử)',
+        partOfSpeech: 'động từ',
+        audioRef: 't1_ben.mp3',
+        topicKey: 'vocabulary',
+      },
+      {
+        hanzi: '骉',
+        pinyin: 'biāo',
+        meaningVi: 'ngựa chạy (từ thử)',
+        partOfSpeech: 'danh từ',
+        audioRef: 't1_biao.mp3',
+        topicKey: 'vocabulary',
+      },
+    ]);
+    expect(first.topics.map((topic) => [topic.key, topic.type])).toEqual([
+      ['vocabulary', 'vocabulary'],
+      ['key_text', 'key_text'],
+      ['grammar', 'grammar'],
+    ]);
+    expect(first.keyTextAudioRefs).toEqual([
+      't1_kt1.mp3',
+      't1_kt1_1.mp3',
+      't1_kt1_2.mp3',
+    ]);
+  });
+
+  it('uses only content blocks the CMS already validates', () => {
+    for (const { content } of convert()) {
+      for (const topic of content.topics) {
+        expect(validateTopicContentBlocks(topic.type, topic.content)).toEqual(
+          [],
+        );
+        for (const block of topic.content) {
+          expect([
+            'vocabulary_list',
+            'dialogue',
+            'text',
+            'grammar_point',
+          ]).toContain(block.type);
+        }
+      }
+    }
+    const [, second] = convert();
+    // A paragraph has no speakers: it becomes text blocks, not a dialogue.
+    expect(
+      second.content.topics.find((topic) => topic.key === 'key_text')?.content,
+    ).toEqual([{ type: 'text', value: '猋犇。\nBiāo bēn.\nĐoạn thử.' }]);
+  });
+
+  it('is deterministic: the same input gives byte-identical output', () => {
+    const a = convert().map((file) => serializeTextbookLesson(file.content));
+    const b = convert().map((file) => serializeTextbookLesson(file.content));
+    expect(a).toEqual(b);
+    expect(a[0].endsWith('\n')).toBe(true);
+  });
+
+  it('skips the trailing "Từ vựng bổ sung" entry', () => {
+    const words = convert().flatMap((file) =>
+      file.content.words.map((word) => word.hanzi),
+    );
+    expect(words).not.toContain('羴');
+  });
+
+  it('honours the lesson range', () => {
+    expect(convert({ from: 2, to: 2 }).map((file) => file.fileName)).toEqual([
+      'lesson-02.json',
+    ]);
+  });
+
+  it('points at the exact field of an unknown, mistyped or empty value', () => {
+    const vocab = load('hsk1-vocab.json') as Array<Record<string, unknown>>;
+    const words = vocab[0].tu_vung as Array<Record<string, unknown>>;
+    words[1] = { ...words[1], extra: 'x' };
+    words[0] = { ...words[0], han: '  ' };
+    const lessons = load('hsk1-lessons.json') as Array<Record<string, unknown>>;
+    lessons[1] = { ...lessons[1], bai: '2' };
+    expect(issuesOf(() => convert({ vocab, lessons }))).toEqual([
+      'field_empty vocab[0].tu_vung[0].han',
+      'field_unknown vocab[0].tu_vung[1].extra',
+      'field_type lessons[1].bai',
+    ]);
+  });
+
+  it('reports lessons present in only one of the two files', () => {
+    const lessons = (
+      load('hsk1-lessons.json') as Array<Record<string, unknown>>
+    ).slice(0, 1);
+    expect(issuesOf(() => convert({ lessons }))).toEqual([
+      'lesson_missing_in_lessons vocab bai=2',
+    ]);
+    const vocab = (load('hsk1-vocab.json') as unknown[]).filter(
+      (_, index) => index !== 1,
+    );
+    expect(issuesOf(() => convert({ vocab }))).toEqual([
+      'lesson_missing_in_vocab lessons bai=2',
+    ]);
+  });
+
+  it('keeps optional-empty seeddata fields explicit', () => {
+    const [, second] = convert();
+    // Empty `pos` in seeddata → no part of speech, never a guessed one.
+    expect(second.content.words[1].partOfSpeech).toBeNull();
+    const lessons = load('hsk1-lessons.json') as Array<Record<string, unknown>>;
+    const grammar = lessons[0].ngu_phap as Array<Record<string, unknown>>;
+    grammar[0] = { ...grammar[0], structure: '', meaning: '' };
+    expect(issuesOf(() => convert({ lessons }))).toEqual([
+      'grammar_meaning_empty lessons bai=1 ngu_phap[0].meaning',
+      'block_invalid lessons bai=1 grammar content[0].examples[0].vi',
+    ]);
+    grammar[0] = { ...grammar[0], meaning: 'Câu thử.' };
+    const [first] = convert({ lessons });
+    const point = first.content.topics.find((t) => t.key === 'grammar')
+      ?.content[0];
+    // Empty structure → the chips come from the pattern.
+    expect(point).toMatchObject({
+      formula: [
+        { role: 'key', zh: '犇', vi: '犇' },
+        { role: 'key', zh: '骉', vi: '骉' },
+      ],
+    });
+  });
+
+  it('splits an over-long formula chip on spaces and never emits an invalid block', () => {
+    const lessons = load('hsk1-lessons.json') as Array<Record<string, unknown>>;
+    const grammar = lessons[0].ngu_phap as Array<Record<string, unknown>>;
+    // 26 characters without "+": too long for one chip (zh ≤ 20).
+    grammar[0] = { ...grammar[0], structure: 'Chủ ngữ 犇 động từ 骉 tân ngữ' };
+    const [first] = convert({ lessons });
+    const topic = first.content.topics.find((t) => t.key === 'grammar');
+    expect(topic?.content[0]).toMatchObject({
+      formula: [
+        { role: 'other', zh: 'Chủ' },
+        { role: 'other', zh: 'ngữ' },
+        { role: 'key', zh: '犇' },
+        { role: 'other', zh: 'động' },
+        { role: 'other', zh: 'từ' },
+        { role: 'key', zh: '骉' },
+        { role: 'other', zh: 'tân' },
+        { role: 'other', zh: 'ngữ' },
+      ],
+    });
+    grammar[0] = { ...grammar[0], structure: '犇'.repeat(21) };
+    expect(issuesOf(() => convert({ lessons }))).toEqual([
+      'block_invalid lessons bai=1 grammar content[0].formula[0].zh',
+    ]);
+  });
+});

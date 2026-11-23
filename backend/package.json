@@ -25,6 +25,8 @@
     "dictionary:import:strokes": "ts-node scripts/dictionary/import-hanzi-strokes.ts",
     "seed:learning": "ts-node scripts/learning/seed-learning.ts",
     "content:import:pilot": "ts-node scripts/content/import-pilot-content.ts",
+    "content:textbook:convert": "ts-node scripts/content/convert-textbook-seeddata.ts",
+    "content:import:textbook": "ts-node scripts/content/import-textbook-content.ts",
     "content:import:meanings": "ts-node scripts/content/import-hsk1-meanings.ts",
     "content:check:meanings": "ts-node scripts/content/check-hsk1-meanings.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

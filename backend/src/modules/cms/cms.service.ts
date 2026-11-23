@@ -1278,6 +1278,20 @@ export class CmsService {
       // ADR-009 C3b-2: a lesson without a Level is ready once its unit and
       // course are public and it has a published Topic or Story.
       await this.assertCourseParentPublished(tx, lesson.courseUnitId);
+      // ADR-009 §6 (M2.13a): every word of a lesson without a Level must be
+      // published; the textbook importer creates draft words.
+      const draftWords = await tx.lessonWord.count({
+        where: {
+          lessonId,
+          word: { NOT: { status: 'published', deletedAt: null } },
+        },
+      });
+      if (draftWords > 0) {
+        throw new ConflictException({
+          code: 'LESSON_WORDS_NOT_PUBLISHED',
+          message: 'Lesson requires every lesson word to be published.',
+        });
+      }
       const [topicCount, storyCount] = await Promise.all([
         tx.topic.count({ where: { lessonId, ...PUBLIC_CONTENT_WHERE } }),
         tx.story.count({ where: { lessonId, ...PUBLIC_CONTENT_WHERE } }),

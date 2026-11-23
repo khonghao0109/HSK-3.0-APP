@@ -1387,3 +1387,15 @@ ALTER TABLE "Lesson"
   trên DB mới và DB nâng cấp (bài cũ có Level): cột nullable, CHECK đã validate, từ chối bài không
   Level không unit, nhận bài không Level có unit, không bỏ unit khỏi bài không Level; không lệch
   schema. E2E `test/course-lesson-without-level.e2e-spec.ts` kiểm các endpoint cũ không thấy bài.
+
+## 36. DataSource giáo trình HSK 2.0 — `HSK20_TEXTBOOK_PO_V1` (M2.13a)
+
+Migration `20261124090000_hsk20_textbook_data_source`: một `INSERT … ON CONFLICT ("code") DO
+NOTHING` vào `DataSource` (code `HSK20_TEXTBOOK_PO_V1`, version `1.0.0`), giống mẫu Q178.
+
+- Mục đích: gắn nguồn cho `WordMeaning`/`WordSource` của từ nháp do importer textbook tạo.
+- Rủi ro: chỉ thêm một dòng, không khoá bảng lớn; chạy lại không đổi gì.
+- Rollback: forward-only. Không xoá dòng khi đã có `WordMeaning`/`WordSource` trỏ tới.
+- Kiểm sau chạy: `SELECT count(*) FROM "DataSource" WHERE code = 'HSK20_TEXTBOOK_PO_V1'` ra `1`.
+- Kiểm tự động: `test/textbook-content-import.e2e-spec.ts` (dòng tồn tại, attribution không nhắc
+  nguồn trung gian).
