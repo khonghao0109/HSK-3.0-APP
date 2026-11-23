@@ -47,6 +47,7 @@ export const EXPORT_COVERAGE: ExportCoverage = {
     'LessonExerciseAttempt',
     'Progress',
     'UserTopicProgress',
+    'CourseEnrollment',
     'LearningEvent',
     'UserWord',
     'UserWordProgress',
@@ -564,6 +565,24 @@ export class DataExportJob implements OnApplicationBootstrap {
             ORDER BY "createdAt" DESC
           `);
 
+          // Read course enrollments (ADR-009). The table has no createdAt/updatedAt.
+          const courseEnrollmentRows = await tx.$queryRaw<
+            Array<{
+              id: number;
+              courseId: number;
+              status: string;
+              isCurrent: boolean;
+              enrolledAt: Date;
+              lastActivityAt: Date | null;
+              leftAt: Date | null;
+            }>
+          >(Prisma.sql`
+            SELECT id, "courseId", status, "isCurrent", "enrolledAt", "lastActivityAt", "leftAt"
+            FROM "CourseEnrollment"
+            WHERE "userId" = ${userId}
+            ORDER BY "enrolledAt" DESC
+          `);
+
           // Read user words
           const userWordRows = await tx.$queryRaw<
             Array<{
@@ -973,6 +992,7 @@ export class DataExportJob implements OnApplicationBootstrap {
             lessonExerciseAttempts: exerciseAttemptRows,
             progresses: progressRows,
             topicProgresses: topicProgressRows,
+            courseEnrollments: courseEnrollmentRows,
             userWords: userWordRows,
             wordProgresses: wordProgressRows,
             reviewCards: enrichedReviewCards,

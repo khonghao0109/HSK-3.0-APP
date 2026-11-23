@@ -116,6 +116,9 @@ erDiagram
   DataSource ||--o{ Sentence : sources
   DataSource ||--o{ Media : sources
   Level ||--o{ Lesson : contains
+  Course ||--o{ CourseUnit : groups
+  CourseUnit o|--o{ Lesson : orders
+  Level o|--o{ CourseUnit : maps
   Level ||--o{ Story : classifies
   Level ||--o{ WordLevel : classifies
   Lesson ||--o{ Topic : contains
@@ -165,9 +168,26 @@ erDiagram
     ContentStatus status
     int dataSourceId FK
   }
+  Course {
+    int id PK
+    string code UK
+    CourseKind kind
+    int orderIndex UK
+    ContentStatus status
+    boolean keyTextVisible
+  }
+  CourseUnit {
+    int id PK
+    int courseId FK
+    int orderIndex
+    int gradeNumber
+    CourseVolume volume
+    int levelId FK
+  }
   Lesson {
     int id PK
     int levelId FK
+    int courseUnitId FK
     string slug UK
     int orderIndex
     ContentStatus status
@@ -290,6 +310,8 @@ erDiagram
 ```mermaid
 erDiagram
   User ||--o{ Progress : learns
+  User ||--o{ CourseEnrollment : enrolls
+  Course ||--o{ CourseEnrollment : enrolled
   Lesson ||--o{ Progress : tracked_by
   Topic o|--o{ Progress : current_topic
   LessonExercise o|--o{ Progress : current_exercise

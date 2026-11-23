@@ -107,6 +107,17 @@ Kiểm cấp nội dung: `npm run content:check:level -- --level HSKn <file.json
 `backend/src/modules/content-levels/level-vocabulary.ts`) bảo đảm nội dung cấp N chỉ dùng từ cấp ≤ N theo
 `scripts/dictionary/raw/hsk*.json`; tên riêng khai trong `properNames[]` hoặc `--allow`.
 
+### 5.2 Khoá học (ADR-009 C1, migration `20261123090000_course_expand`)
+
+Pha expand: bảng rỗng, chưa có API. Bài cũ có `courseUnitId = null` tới khi C2 backfill.
+
+| Bảng / cột | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
+| --- | --- | --- | --- |
+| `Course` | Khoá học: chủ đề, giáo trình, chuyên ngành. | `code`, `kind`, `curriculumVersion`, `title`, `orderIndex`, `status`, `keyTextVisible`, `dataSourceId`. | `code`, `orderIndex` unique; CHECK `code` `^[A-Z0-9_]{3,40}$`, `curriculumVersion` null/`HSK_2_0`/`HSK_3_0`, `orderIndex > 0`. |
+| `CourseUnit` | Một quyển/tập hoặc module của khoá. | `courseId`, `orderIndex`, `gradeNumber`, `volume`, `title`, `levelId`, `status`. | Unique `(courseId, orderIndex)`; CHECK `gradeNumber` null/1–9, `volume` cần `gradeNumber`, `orderIndex > 0`; FK `RESTRICT`. |
+| `CourseEnrollment` | Người học theo khoá. | `userId`, `courseId`, `status`, `isCurrent`, `enrolledAt`, `lastActivityAt`, `leftAt`. | Unique `(userId, courseId)`; CHECK `left` ⇔ `leftAt`, `left` ⇒ không `isCurrent`; partial unique một dòng `isCurrent` `active` mỗi user; `userId` `CASCADE` như `Progress`. |
+| `Lesson.courseUnitId` | Bài thuộc unit nào. | FK tuỳ chọn tới `CourseUnit`. | Unique `(courseUnitId, orderIndex)`; FK `RESTRICT`; `levelId` vẫn NOT NULL. |
+
 ## 6. Learning, progress và SRS — 10 bảng
 
 | Bảng | Mục đích | Trường nghiệp vụ chính | Khóa và bất biến |
