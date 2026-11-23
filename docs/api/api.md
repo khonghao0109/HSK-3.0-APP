@@ -934,9 +934,10 @@ revision đã approved mới nhất → archive. Revision/review/audit append-on
 
 | Method | Path | Query/Body | `data` |
 | --- | --- | --- | --- |
-| `GET` | `/admin/cms/lessons` | `levelId?`, `status?`, `search?` (1–200), `page`, `limit` | `[{ …LessonAdmin, latestRevision }]` + `meta` |
+| `GET` | `/admin/cms/lessons` | `levelId?`, `courseId?`, `courseUnitId?`, `status?`, `search?` (1–200), `page`, `limit` | `[{ …LessonAdmin, latestRevision }]` + `meta` |
 | `GET` | `/admin/cms/lessons/:lessonId` | — | `{ lesson, revisions, topics }` |
 | `POST` | `/admin/cms/lessons` | `CreateLesson` | `{ lesson, revision, idempotent: false }` |
+| `POST` | `/admin/cms/course-units/:unitId/lessons` | `LessonRevision` (không có `levelId`) | `{ lesson, revision, idempotent: false }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions` | `LessonRevision` | `{ lesson, revision, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/reviews` | `{ decision, note? ≤2000 }` | `{ revision, review, idempotent }` |
 | `POST` | `/admin/cms/lessons/:lessonId/revisions/:revisionId/publish` | — | `{ lesson, revision, idempotent }` |
@@ -957,7 +958,13 @@ Không có `GET /admin/cms/topics` (list).
 ≤100 000 byte, depth ≤20 · `orderIndex` · `isPremium`, `isLocked` boolean. `CreateTopic` =
 `TopicRevision` + `lessonId`.
 
-`LessonAdmin`: `{ id, levelId, title, description, orderIndex, slug, status, createdById,
+`POST /admin/cms/course-units/:unitId/lessons` (ADR-009 C3b-2): `levelId` của bài lấy từ
+`unit.levelId` (có thể `null`); body có `levelId` → `400`. Unit không tồn tại hoặc đã xoá →
+`404`; khoá của unit đã archive → `409 COURSE_ARCHIVED`; trùng `(courseUnitId, orderIndex)` →
+`409 CONTENT_UNIQUE_CONFLICT`. Không có cách dời bài sang unit khác: `LessonRevision` không
+nhận `courseUnitId` (`400`). `courseId` lọc bài qua unit của nó.
+
+`LessonAdmin`: `{ id, levelId, courseUnitId, title, description, orderIndex, slug, status, createdById,
 updatedById, publishedById, publishedAt, deletedAt, createdAt, updatedAt }`.
 
 `PUT /admin/cms/lessons/:lessonId/images` (Q350): `{ coverImageId?: int|null, wordImages?: [{ wordId, imageId: int|null }] ≤200 }`;
@@ -985,6 +992,9 @@ Mã `409` (M5.1a, B2 — message tiếng Anh giữ nguyên, client map `code` sa
 | `REVISION_NOT_LATEST` | `Only the latest content revision can be used for this action.` / `… can be published.` | Review/publish bản sửa không còn là mới nhất |
 | `REVIEW_NOT_APPROVED` | `The latest review decision must approve this revision.` | Publish khi đánh giá mới nhất không phải approved |
 | `LESSON_LEVEL_NOT_PUBLISHED` | `Lesson requires a published, non-deleted parent level.` | Publish lesson mà Level chưa published |
+| `LESSON_UNIT_NOT_PUBLISHED` | `Lesson requires a published, non-deleted course unit.` | Publish lesson không có Level mà unit chưa published (C3b-2) |
+| `LESSON_COURSE_NOT_PUBLISHED` | `Lesson requires a published, non-deleted course.` | Publish lesson không có Level mà khoá chưa published (C3b-2) |
+| `COURSE_ARCHIVED` | `Lessons cannot be added to an archived course.` | Tạo bài trong unit của khoá đã archive (C3b-2) |
 | `LESSON_NO_PUBLISHED_CHILD` | `Lesson requires at least one published Topic or Story.` | Publish lesson chưa có Topic/Story published |
 | `CONTENT_UNIQUE_CONFLICT` | `Content conflicts with an existing slug or order.` | Trùng unique (ví dụ slug lesson) |
 | `CONTENT_CONSTRAINT_CONFLICT` | `Content violates a database integrity constraint.` | Vi phạm ràng buộc FK/check |
@@ -1024,6 +1034,41 @@ cho validator nạp pilot): `topic_block_type_mismatch`, `topic_block_unknown_fi
 `topic_block_field_invalid`, `topic_block_array_size`, `topic_block_highlight_not_in_hanzi`.
 
 `GET /learning/lessons/:lessonId/activity` (A.7) trả `topics[].content` nguyên văn như đã publish.
+
+### A.8b Admin CMS — Course / CourseUnit (ADR-009 C3b-2)
+
+Guard như A.8 (admin, throttle mặc định toàn cục, không `@Throttle` riêng). Mọi `POST` trả `201`.
+PATCH bắt buộc `expectedUpdatedAt` (ISO, lấy từ `updatedAt` vừa đọc); lệch → `409
+CONTENT_CONCURRENT_UPDATE`. Publish/archive idempotent (`data.idempotent`); publish một bản đã
+archive → `409 CONTENT_ARCHIVED`. Publish khoá không đòi có bài.
+
+| Method | Path | Query/Body | `data` |
+| --- | --- | --- | --- |
+| `GET` | `/admin/cms/courses` | `kind?`, `status?`, `curriculumVersion?` (`HSK_2_0`\|`HSK_3_0`), `page`, `limit` | `[CourseAdmin]` + `meta` |
+| `GET` | `/admin/cms/courses/:courseId` | — | `CourseAdmin & { units: [UnitAdmin] }` |
+| `POST` | `/admin/cms/courses` | `{ code, kind, curriculumVersion?, title, description?, orderIndex, keyTextVisible? }` | `CourseAdmin` (`draft`) |
+| `PATCH` | `/admin/cms/courses/:courseId` | `{ expectedUpdatedAt, title?, description?, orderIndex?, keyTextVisible? }` | `CourseAdmin` |
+| `POST` | `/admin/cms/courses/:courseId/publish` · `/archive` | — | `{ course, idempotent }` |
+| `GET` | `/admin/cms/course-units` | `courseId` (bắt buộc), `page`, `limit` | `[UnitAdmin]` + `meta` |
+| `POST` | `/admin/cms/course-units` | `{ courseId, orderIndex, title, gradeNumber?, volume?, levelId? }` | `UnitAdmin` (`draft`) |
+| `PATCH` | `/admin/cms/course-units/:unitId` | `{ expectedUpdatedAt, orderIndex?, title?, gradeNumber?, volume?, levelId? }` | `UnitAdmin` |
+| `POST` | `/admin/cms/course-units/:unitId/publish` · `/archive` | — | `{ unit, idempotent }` |
+
+`CourseAdmin`: `{ id, code, kind, curriculumVersion, title, description, orderIndex, status,
+keyTextVisible, publishedAt, deletedAt, createdAt, updatedAt }`. `UnitAdmin`: `{ id, courseId,
+orderIndex, gradeNumber, volume, title, levelId, status, deletedAt, createdAt, updatedAt }`.
+
+Validate theo CHECK của migration: `code` `^[A-Z0-9_]{3,40}$`; `orderIndex` ≥ 1; `gradeNumber`
+1–9; `volume` (`upper`\|`lower`) cần `gradeNumber` (`400 COURSE_UNIT_VOLUME_REQUIRES_GRADE`);
+unit của khoá `topic` phải có `levelId` (`400 COURSE_UNIT_LEVEL_REQUIRED`); `levelId` không tồn
+tại → `404`. PATCH không nhận `code`, `kind` (`400`). Unit đã có bài không đổi được `levelId` →
+`409 COURSE_UNIT_HAS_LESSONS`. Trùng `code`, `Course.orderIndex` hay `(courseId, orderIndex)` →
+`409 CONTENT_UNIQUE_CONFLICT`.
+
+AuditLog (`targetType` `course` | `course_unit`): `course.created`, `course.updated`,
+`course.key_text_visibility_changed` (thay `course.updated` khi PATCH đổi `keyTextVisible`;
+`beforeSummary`/`afterSummary` chứa giá trị cũ/mới), `course.published`, `course.archived`,
+`course_unit.created|updated|published|archived`. PATCH không đổi giá trị nào không ghi log.
 
 ### A.9 Admin CMS — Exercise và Import (admin)
 

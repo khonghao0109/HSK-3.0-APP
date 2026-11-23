@@ -203,7 +203,7 @@ nullable (forward-only).
 | `POST /learning/lessons/:id/start` (activity) | đổi | Luật mở khoá theo khoá thay cho theo Level |
 | `GET/PUT onboarding goal` | đổi | Thêm chọn khoá; band chỉ bắt buộc với khoá topic |
 | `GET/POST/PATCH /admin/cms/courses`, `/admin/cms/course-units` | mới | CRUD, publish, archive, công tắc bài khoá |
-| `POST /admin/cms/lessons` | đổi | Nhận `courseUnitId`; `levelId` suy từ unit hoặc null |
+| `POST /admin/cms/course-units/:id/lessons` | mới | Tạo bài trong unit; `levelId` suy từ unit hoặc null. TL 23/11: route riêng để không đổi `CreateLessonDto` |
 | `GET /admin/cms/lessons` | đổi | Lọc theo `courseId`, `courseUnitId` |
 
 ### 5. Bản quyền: công tắc theo khoá

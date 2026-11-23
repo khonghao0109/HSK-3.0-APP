@@ -1374,7 +1374,8 @@ ALTER TABLE "Lesson"
   `buildLessonReadyWhere`, đòi Level public, nên không bao giờ trả bài không Level; activity và
   `/progress/lessons/:id` trả `404` như bài không public. Route khoá (`/learning/courses/:code`)
   dùng `buildAnyLessonReadyWhere`. CMS list/detail trả `levelId: null`; publish bài không Level
-  bị từ chối `409 LESSON_LEVEL_NOT_PUBLISHED` cho tới C3b-2. Data export xuất mọi `Progress`.
+  bị từ chối `409 LESSON_LEVEL_NOT_PUBLISHED` ở C3b-1; từ C3b-2 publish được khi unit và khoá
+  đều published (`409 LESSON_UNIT_NOT_PUBLISHED` / `LESSON_COURSE_NOT_PUBLISHED` nếu chưa). Data export xuất mọi `Progress`.
 - Rollback: forward-only. Thêm lại NOT NULL sẽ hỏng ngay khi có bài không Level; sai thì
   forward-fix (gán Level cho bài hoặc archive bài), không xoá dòng.
 - Kiểm sau chạy:
