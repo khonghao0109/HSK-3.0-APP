@@ -2,7 +2,8 @@
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import request from 'supertest';
@@ -122,9 +123,10 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
     return existing.id;
   }
 
-  async function seedPilotWords(): Promise<void> {
-    createdWordIds = [];
-    for (const word of lesson.words) {
+  async function seedPilotWords(
+    words: PilotLessonShape['words'] = lesson.words,
+  ): Promise<void> {
+    for (const word of words) {
       const toneless = normalizePinyinForCompare(stripToneMarks(word.pinyin));
       const where = { hanzi: word.hanzi, pinyin: toneless };
       const existing = await prisma.word.findFirst({
@@ -194,6 +196,7 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
 
     await ensurePublishedHsk1Level();
     await registerAdmin();
+    createdWordIds = [];
     await seedPilotWords();
     // `LessonExercise` là archive-only (trigger chặn DELETE vật lý), nên suite
     // không dọn được lesson của lần chạy trước. Database phải mới tinh cho mỗi
@@ -569,5 +572,90 @@ describe('Nạp nội dung pilot HSK1 (M2.9a Pha 2) E2E', () => {
       }),
     ).toBe(auditBefore);
     expect(await counters()).toEqual(before);
+  });
+
+  it('9. Pha G4b: nạp bài matching ở trạng thái draft, dry-run báo lỗi tiếng Việt', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hsk-pilot-matching-'));
+    const filePath = join(dir, 'lesson-02.json');
+    const source = JSON.parse(
+      readFileSync(
+        join(BACKEND_ROOT, 'content', 'pilot', 'hsk1', 'lesson-02.json'),
+        'utf8',
+      ),
+    ) as PilotLessonShape & { exercises: Record<string, unknown>[] };
+    const pairs = [
+      { id: 'pair-ni', left: '你', right: 'bạn' },
+      { id: 'pair-wo', left: '我', right: 'tôi' },
+      { id: 'pair-hao', left: '好', right: 'tốt' },
+    ];
+    const matching = {
+      sourceKey: 'pilot-hsk1:l02:e11',
+      topicKey: null,
+      type: 'matching',
+      prompt: 'Ghép chữ Hán với nghĩa.',
+      content: { pairs },
+      answer: {},
+      explanation: 'Mỗi chữ Hán đi với đúng một nghĩa.',
+      orderIndex: 11,
+    };
+    const run = (dryRun: boolean) =>
+      importPilotLesson(
+        { apiBaseUrl, adminToken, prisma, logger: () => undefined },
+        { filePath, backendRoot: BACKEND_ROOT, dryRun },
+      );
+    try {
+      await seedPilotWords(source.words);
+      writeFileSync(
+        filePath,
+        JSON.stringify({
+          ...source,
+          exercises: [
+            ...source.exercises,
+            { ...matching, content: { pairs: pairs.slice(0, 2) } },
+          ],
+        }),
+      );
+      await expect(run(true)).rejects.toMatchObject({
+        code: 'pilot_content_invalid',
+        message: expect.stringContaining(
+          'matching_invalid: lesson-02.json:exercises[10].content.pairs cần 3–5 cặp',
+        ) as unknown,
+      });
+
+      writeFileSync(
+        filePath,
+        JSON.stringify({
+          ...source,
+          exercises: [...source.exercises, matching],
+        }),
+      );
+      const dry = await run(true);
+      expect(dry.dryRun).toBe(true);
+      expect(
+        await prisma.lesson.count({ where: { slug: source.lesson.slug } }),
+      ).toBe(0);
+
+      await run(false);
+      const created = await prisma.lessonExercise.findMany({
+        where: { lesson: { slug: source.lesson.slug }, type: 'matching' },
+        select: { status: true, content: true, answer: true },
+      });
+      expect(created).toEqual([
+        { status: 'draft', content: { pairs }, answer: {} },
+      ]);
+      expect(
+        await prisma.lessonExercise.count({
+          where: { lesson: { slug: source.lesson.slug } },
+        }),
+      ).toBe(source.exercises.length + 1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      await prisma.lessonWord.deleteMany({
+        where: { lesson: { slug: source.lesson.slug } },
+      });
+      await prisma.importJob.deleteMany({
+        where: { fileName: 'lesson-02.json' },
+      });
+    }
   });
 });
