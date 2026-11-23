@@ -110,3 +110,4 @@ report.*.*.*.*.json
 
 # Bộ demo local (ảnh AI, khoá bí mật trong state/), không commit
 /demo/
+/seeddata/
