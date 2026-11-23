@@ -67,7 +67,7 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ1 | Ổn định repo, CI, môi trường test | PR nào cũng có CI xanh; e2e chạy một lệnh | 10 / 10 | — | ✅ |
 | GĐ2 | Đóng lỗ hổng bảo mật và tính đúng đắn | P0/P1 review đóng; envelope + OpenAPI | 14 / 14 | 2–3 tuần | ✅ |
 | GĐ3 | Media internal closeout (M0) | Full gate GREEN trên Linux AMD64 | 2 / 8 | 1–2 tuần | 🟡 |
-| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 11 / 18 | 3–4 tuần | 🟡 |
+| GĐ4 | Content/legal + Identity/Privacy (M1) | Không blocker license; privacy end-to-end | 12 / 18 | 3–4 tuần | 🟡 |
 | GĐ5 | Learner Web Core Loop (M2) | Người học đi hết vòng học trên staging | 48 / 62 | 5–7 tuần | 🟡 |
 | GĐ6 | SRS + Dictionary completion (M3) | Ôn đúng hạn, lịch sử bất biến | 3 / 12 | 3–4 tuần | 🟡 |
 | GĐ7 | Exam Engine (M4) | Thi trọn flow, kết quả bất biến | 7 / 10 | 4–6 tuần | 🟡 |
@@ -77,7 +77,7 @@ foundation và beta (GĐ11) làm sau bảo vệ.
 | GĐ11 | Production foundation + Beta (M6), sau bảo vệ | Promote, rollback, restore có bằng chứng; beta go | 0 / 9 | 4–6 tuần | ⬜ (⛔ M6.3, M6.9) |
 | GĐ12 | Sau beta: reader, payment, community (M7+) | Theo outcome beta | 0 / 3 | — | ⬜ |
 
-Tổng: **125 / 203 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
+Tổng: **126 / 203 task**. Đường găng tới bảo vệ đồ án: GĐ5 → GĐ6 → GĐ7 → GĐ9 → GĐ10; đường
 găng tới beta sau bảo vệ: GĐ4 → GĐ11. GĐ3 chạy
 ngay sau GĐ1; GĐ8 (M5.1, M5.2) có thể chạy song song GĐ5 vì cần để soạn nội dung thật;
 GĐ6 và GĐ7 có thể đổi chỗ theo ưu tiên sản phẩm. Ba bước sản xuất nội dung M1.2b, M2.9,
@@ -223,7 +223,7 @@ Vào: GĐ2 xong H.4–H.7. Ra: không blocker license P0; privacy request có b�
 | M1.7b1 | Export dữ liệu cá nhân (JSON qua S3 private, TTL 24h, purge 7d) | ✅ | ADR-001; 01/10: `57eac10`, kèm `65b96df`, `f2e2b85`, PR #5 run `36808552129`. POST/GET /users/me/data-exports, GET /users/me/data-exports/:id/download, worker privacy.data-export snapshot RepeatableRead, cron privacy.purge-expired-exports |
 | M1.7b2 | Consent API | ⬜ | Quyết định PO 02/11/2026: Q186–Q193 (nhật ký 02/11); Q197 bảng phiên bản văn bản pháp lý lưu hash |
 | M1.7c | Deletion request + anonymize worker | ✅ | 30/09: `b1aa20e`, kèm `2b0f0b5`, `3123025`, PR #5 run `36705287180`. POST /users/me/deletion-request 7 ngày, huỷ qua login, worker anonymize, C-03 |
-| M1.7d | Admin khởi tạo xoá tài khoản (lý do `under_age`, audit) | ⬜ | Q203 (PO 02/11/2026): admin bắt đầu luồng xoá có sẵn của M1.7c (chờ 7 ngày rồi ẩn danh) cho tài khoản người dưới 16 tuổi, ghi lý do và audit log; điều kiện publish M2.1f |
+| M1.7d | Admin khởi tạo xoá tài khoản (lý do `under_age`, audit) | ✅ | backend `2d82c4a`, UI admin `b9cb309` (02/11/2026, Q203–Q208); Q203 (PO 02/11/2026): admin bắt đầu luồng xoá có sẵn của M1.7c (chờ 7 ngày rồi ẩn danh) cho tài khoản người dưới 16 tuổi, ghi lý do và audit log; điều kiện publish M2.1f |
 | M1.8 | Dockerfile backend/frontend + digest | ✅ | ADR-008 §11; 15/10: ✅ đã đóng (`29e23ac`, run `38684167028`); image ID amd64 backend `03ac99c86809`, frontend `6f4aec84fa3d`; docs/operations/CONTAINER_IMAGES.md |
 | M1.E | Privacy export/delete có evidence end-to-end; RC không fixture | ⬜ | |
 
@@ -538,7 +538,7 @@ Outcome: dữ liệu và tài khoản đủ an toàn để mở learner beta.
 | M1.7b1 | Export dữ liệu cá nhân (JSON qua S3 private, TTL 24h, purge 7d) | ✅ | ADR-001; 01/10: ✅ đã đóng (`57eac10`, kèm `65b96df`, `f2e2b85`, PR #5 run `36808552129`), POST/GET /users/me/data-exports, GET /users/me/data-exports/:id/download, worker privacy.data-export snapshot RepeatableRead, cron privacy.purge-expired-exports |
 | M1.7b2 | Consent API | ⬜ | Quyết định PO 02/11/2026: Q186–Q193 (nhật ký 02/11); Q197 bảng phiên bản văn bản pháp lý lưu hash |
 | M1.7c | Deletion request + anonymize worker | ✅ | C-03. Ghi chú M1.6: anonymize phải xoá `UserProfile.displayName`; 30/09: ✅ đã đóng (`b1aa20e`, kèm `2b0f0b5`, `3123025`, PR #5 run `36705287180`), POST /users/me/deletion-request (202, xác thực lại mật khẩu 400 INVALID_PASSWORD, thời gian chờ 7 ngày, huỷ bằng đăng nhập đúng mật khẩu, guard H.7 chống lộ inactive account), worker privacy.anonymize-account (startAfter 7 ngày, ẩn danh email deleted+<id>, null name/displayName, 0 session/token, giữ fact lịch sử), worker mail.account-deletion-scheduled |
-| M1.7d | Admin khởi tạo xoá tài khoản (lý do `under_age`, audit) | ⬜ | Q203 (PO 02/11/2026): admin bắt đầu luồng xoá có sẵn của M1.7c (chờ 7 ngày rồi ẩn danh) cho tài khoản người dưới 16 tuổi, ghi lý do và audit log; điều kiện publish M2.1f |
+| M1.7d | Admin khởi tạo xoá tài khoản (lý do `under_age`, audit) | ✅ | backend `2d82c4a`, UI admin `b9cb309` (02/11/2026, Q203–Q208); Q203 (PO 02/11/2026): admin bắt đầu luồng xoá có sẵn của M1.7c (chờ 7 ngày rồi ẩn danh) cho tài khoản người dưới 16 tuổi, ghi lý do và audit log; điều kiện publish M2.1f |
 | M1.8 | Immutable build artifact cơ bản (Dockerfile + digest) | ✅ | Sau H.2; ADR-008 §11; 15/10: ✅ đã đóng (`29e23ac`, run `38684167028`); image ID amd64 backend `03ac99c86809`, frontend `6f4aec84fa3d`; docs/operations/CONTAINER_IMAGES.md |
 
 Exit: không content/license blocker P0 ⬜ · privacy request có evidence end-to-end ⬜ ·
@@ -963,3 +963,4 @@ Chỉ đưa vào mục 1 khi có lý do sản phẩm hoặc evidence; không tí
 | 12/11/2026 | GĐ6: M3.1 ✅ (`74c7f40` migration `relearning` + `ReviewEvent.source`, `1d82251` scheduler thuần `sm2-v1`, run `43154596188`). Quyết định PO (chấp nhận mặc định TL), đóng #14: Q244 chỉ SM-2, không thêm cột FSRS, không dùng `ts-fsrs`; Q245 grade bước đầu theo R3 (again lặp step đầu, hard khác good, good sang step kế, easy tốt nghiệp; floor `easeFactor` 1.3; ôn trễ tính theo thời gian thực); Q246 bài tập không tạo thẻ hay `ReviewEvent`; Q247 tra từ không tính lần ôn; Q248 không có nút hoàn tác lần chấm; Q249 thẻ `review` có `lastReviewedAt` tính khoảng ôn theo số ngày thực đã trôi cả khi ôn sớm: hard = max(1, round(elapsed × 1,2)), good không nhỏ hơn interval hiện tại, easy > good; Q250 thông số `sm2-v1`: `maxEaseFactor` 5, `maxIntervalDays` 3650, thẻ relearning chấm good về 1 ngày, elapsed tính bằng ngày nguyên (làm tròn xuống). Thẻ `repetitions ≤ 1` vẫn giữ luật cũ khi ôn sớm. DB default `schedulerVersion` vẫn `sm2-p0-v1`, đổi ở M3.2. Đếm: GĐ6 1/12, tổng 119/194. |
 | 23/11/2026 | GĐ5: thêm M2.11 ✅ bài học chia đơn vị (lesson-units, Pha B…G4b, 20–23/11, merge `75f58e7`…`013c32c`); thêm M2.12 ⬜ khoá học song song theo ADR-009 (Accepted `277df82`) với M2.12a 🟡 C1 expand (nhánh `feat/course`), M2.12b–d ⬜; thêm M2.13 ⬜ nạp giáo trình HSK 2.0 cấp 1 bài thử. Quyết định PO 20/11 và 23/11: giáo trình chuẩn HSK 2.0 sáu cấp trước, HSK 3.0 cấp 1–4 sau, khoá chuyên ngành không cấp về sau; khoá chạy song song, người học tự chọn; PO tự cung cấp từ vựng/ngữ pháp/bài khoá, bài khoá nguyên văn sách (PO nhận rủi ro bản quyền, công tắc `keyTextVisible`); matching lộ cặp đáp án trước khi nộp: chấp nhận. Đếm lại theo quy tắc 0.6 (bảng 1.1 lệch từ trước: GĐ5 44/54 → 45/55 vì M2.5f ✅ và thêm M2.9b; GĐ6 1/12 → 3/12; GĐ7 7/9 → 7/10): GĐ5 46/62, GĐ6 3/12, GĐ7 7/10, tổng 123/203. |
 | 23/11/2026 | GĐ5: M2.12a ✅ C1 expand (`dd391c4`, merge `6007ee8`) và M2.12b ✅ C2 backfill (`85972d9`, merge `f782f18`; demo: 7 unit, 25 bài được gán, 0 bài thiếu unit). M2.12c chia nhỏ, bắt đầu bằng API khoá học phía backend (chưa đổi UI). Tổng 125/203. |
+| 23/11/2026 | GĐ4: M1.7d ✅ ghi nhận muộn (code đã merge 02/11: backend `2d82c4a`, UI admin `b9cb309`; PLAN quên đánh dấu). GĐ4 12/18, tổng 126/203. |
