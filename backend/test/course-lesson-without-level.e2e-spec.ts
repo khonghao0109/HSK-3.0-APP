@@ -92,7 +92,9 @@ describe('Course lesson without a Level (ADR-009 C3b-1) E2E', () => {
     });
   });
 
-  it('[N2] keeps the lesson off every route that predates courses', async () => {
+  // C3b-3: activity, /learning/lessons/:id and /progress/lessons* now serve
+  // the lesson (course-lesson-activity.e2e-spec.ts); the rest still hide it.
+  it('[N2] keeps the lesson off the routes that predate courses', async () => {
     const learner = await register('n2');
     await prisma.progress.create({
       data: { userId: learner.userId, lessonId, status: 'learning' },
@@ -104,7 +106,6 @@ describe('Course lesson without a Level (ADR-009 C3b-1) E2E', () => {
 
     absent((await get(learner.token, '/learning/path').expect(200)).body);
     absent((await get(learner.token, '/learning/home').expect(200)).body);
-    absent((await get(learner.token, '/progress/lessons').expect(200)).body);
     // Both lists take a required levelId; scan them for every Level.
     for (const level of await prisma.level.findMany({ select: { id: true } })) {
       for (const path of ['/lessons', '/learning/lessons']) {
@@ -116,28 +117,21 @@ describe('Course lesson without a Level (ADR-009 C3b-1) E2E', () => {
         }
       }
     }
-    for (const path of [
-      `/lessons/${lessonId}`,
-      `/learning/lessons/${lessonId}`,
-      `/learning/lessons/${lessonId}/activity`,
-      `/progress/lessons/${lessonId}`,
-    ]) {
-      await get(learner.token, path).expect(404);
-    }
+    await get(learner.token, `/lessons/${lessonId}`).expect(404);
   });
 
-  it('[N3] answers 404 to starting the lesson, without side effects', async () => {
+  it('[N3] starts the lesson through its course (C3b-3)', async () => {
     const learner = await register('n3');
     const response = await request(app.getHttpServer())
       .post(`/api/v1/learning/lessons/${lessonId}/start`)
       .set('Authorization', `Bearer ${learner.token}`)
       .set('Idempotency-Key', `n3-${suffix}`)
       .send({})
-      .expect(404);
-    expect(response.body.error.code).toBe('NOT_FOUND');
+      .expect(201);
+    expect(response.body.data).toMatchObject({ lessonId, status: 'learning' });
     await expect(
       prisma.progress.count({ where: { userId: learner.userId } }),
-    ).resolves.toBe(0);
+    ).resolves.toBe(1);
   });
 
   it('[N4] lets the CMS list and read the lesson', async () => {

@@ -82,8 +82,13 @@ export default async function LearnerLessonPage({
         <nav className="w-crumbs w-only" aria-label="Vị trí">
           <Link href="/learn/path">Lộ trình học</Link>
           <Icon name="chevron-right" className="icon--sm" />
-          <Link href="/learn/path">{levelLabel(level.code)}</Link>
-          <Icon name="chevron-right" className="icon--sm" />
+          {/* ADR-009 C3b-3: a course lesson has no Level (UI comes later). */}
+          {level && (
+            <>
+              <Link href="/learn/path">{levelLabel(level.code)}</Link>
+              <Icon name="chevron-right" className="icon--sm" />
+            </>
+          )}
           <span aria-current="page">{lesson.title}</span>
         </nav>
 
@@ -105,9 +110,13 @@ export default async function LearnerLessonPage({
               {lesson.title}
             </h1>
             <p className="lesson-hero__badge">
-              {`${levelLabel(level.code)} `}
-              <span aria-hidden="true">•</span>
-              <span className="sr-only">,</span>
+              {level && (
+                <>
+                  {`${levelLabel(level.code)} `}
+                  <span aria-hidden="true">•</span>
+                  <span className="sr-only">,</span>
+                </>
+              )}
               {` Bài ${position}`}
             </p>
             {description && <p className="lesson-hero__desc">{description}</p>}

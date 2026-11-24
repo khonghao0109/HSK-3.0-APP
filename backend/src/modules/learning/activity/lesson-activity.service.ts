@@ -7,10 +7,16 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LearningEventType, Prisma, ProgressStatus } from '@prisma/client';
+import {
+  type CourseKind,
+  LearningEventType,
+  Prisma,
+  ProgressStatus,
+} from '@prisma/client';
 
 import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
 import {
+  buildAnyLessonReadyWhere,
   buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
   PUBLIC_LESSON_WORD_WHERE,
@@ -25,6 +31,7 @@ import {
   isLessonUnlocked,
   type LearningPathLesson,
 } from '../path/learning-path.policy';
+import { loadCoursePath } from '../course/learning-course.reader';
 import { loadLevelPaths } from '../path/learning-path.reader';
 import {
   PUBLIC_LESSON_IMAGE_SELECT,
@@ -65,6 +72,15 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
   slug: true,
   orderIndex: true,
   levelId: true,
+  courseUnit: {
+    select: {
+      orderIndex: true,
+      title: true,
+      gradeNumber: true,
+      volume: true,
+      course: { select: { id: true, code: true, title: true, kind: true } },
+    },
+  },
   topics: {
     where: PUBLIC_CONTENT_WHERE,
     orderBy: [{ orderIndex: 'asc' as const }, { id: 'asc' as const }],
@@ -97,11 +113,13 @@ const PUBLIC_LESSON_GRAPH_SELECT = {
   },
 } satisfies Prisma.LessonSelect;
 
-/** Lesson activity stays on the per-level path: its lesson always has a Level. */
-type PublicLessonGraph = Omit<
-  Prisma.LessonGetPayload<{ select: typeof PUBLIC_LESSON_GRAPH_SELECT }>,
-  'levelId'
-> & { levelId: number };
+/**
+ * ADR-009 C3b-3: a lesson with a Level keeps the per-level path; one without
+ * a Level (it then has a public unit and course) follows its course path.
+ */
+type PublicLessonGraph = Prisma.LessonGetPayload<{
+  select: typeof PUBLIC_LESSON_GRAPH_SELECT;
+}>;
 
 const ATTEMPT_SELECT = {
   id: true,
@@ -151,6 +169,29 @@ type ActivityFacts = {
     }
   >;
 };
+
+function lessonLocked(): ConflictException {
+  return new ConflictException({
+    code: 'lesson_locked',
+    message: 'Complete the previous lesson first.',
+  });
+}
+
+/** Readiness guarantees a unit and course for a lesson without a Level. */
+function requireCourse(graph: PublicLessonGraph): {
+  id: number;
+  kind: CourseKind;
+} {
+  const course = graph.courseUnit?.course;
+  if (!course) throw new NotFoundException('Lesson not found or not ready.');
+  return course;
+}
+
+function courseFields(graph: PublicLessonGraph) {
+  if (graph.levelId !== null || !graph.courseUnit) return {};
+  const { course, ...unit } = graph.courseUnit;
+  return { course: { code: course.code, title: course.title }, unit };
+}
 
 @Injectable()
 export class LessonActivityService {
@@ -210,6 +251,7 @@ export class LessonActivityService {
       });
 
       await this.startActivePlanItems(tx, userId, lessonId, now);
+      await this.touchEnrollment(tx, userId, graph, now);
       const event = await tx.learningEvent.create({
         data: {
           userId,
@@ -535,6 +577,7 @@ export class LessonActivityService {
         },
       });
       await this.completeActivePlanItems(tx, userId, lessonId, now);
+      await this.touchEnrollment(tx, userId, graph, now);
       const event = await tx.learningEvent.create({
         data: {
           userId,
@@ -561,7 +604,7 @@ export class LessonActivityService {
           id: exerciseId,
           AND: [
             PUBLIC_LESSON_EXERCISE_WHERE,
-            { lesson: { is: buildLessonReadyWhere() } },
+            { lesson: { is: buildAnyLessonReadyWhere() } },
           ],
         },
         select: { id: true },
@@ -586,10 +629,12 @@ export class LessonActivityService {
         });
         const facts = await this.loadFacts(tx, userId, graph, true);
         const [level, pathLesson, wordCount] = await Promise.all([
-          tx.level.findUniqueOrThrow({
-            where: { id: graph.levelId },
-            select: { id: true, code: true, name: true },
-          }),
+          graph.levelId === null
+            ? null
+            : tx.level.findUniqueOrThrow({
+                where: { id: graph.levelId },
+                select: { id: true, code: true, name: true },
+              }),
           this.findPathLesson(tx, userId, graph),
           tx.lessonWord.count({
             where: { lessonId: graph.id, ...PUBLIC_LESSON_WORD_WHERE },
@@ -640,6 +685,9 @@ export class LessonActivityService {
               levelId: graph.levelId,
             },
             level,
+            // Only lessons without a Level carry them: the response of a
+            // lesson with a Level stays as it was.
+            ...courseFields(graph),
             position: pathLesson.position,
             state: pathLesson.state,
             sections: summarizeLessonSections({
@@ -680,8 +728,7 @@ export class LessonActivityService {
 
   async getLessonProgressList(userId: number) {
     const progresses = await this.prisma.progress.findMany({
-      // Course lessons without a Level (ADR-009 C3b-1) stay off this route.
-      where: { userId, lesson: { is: { levelId: { not: null } } } },
+      where: { userId },
       orderBy: [{ lastActivityAt: 'desc' }, { lessonId: 'asc' }],
       select: {
         lessonId: true,
@@ -706,8 +753,7 @@ export class LessonActivityService {
 
   async getLessonProgress(userId: number, lessonId: number) {
     const progress = await this.prisma.progress.findFirst({
-      // Same scope as the list: a course lesson without a Level answers 404.
-      where: { userId, lessonId, lesson: { is: { levelId: { not: null } } } },
+      where: { userId, lessonId },
       select: {
         lessonId: true,
         status: true,
@@ -790,12 +836,15 @@ export class LessonActivityService {
     userId: number,
     graph: PublicLessonGraph,
   ): Promise<LearningPathLesson> {
-    const levelPaths = await loadLevelPaths(tx, userId, {
-      levelId: graph.levelId,
-    });
-    const lesson = (levelPaths.get(graph.levelId) ?? []).find(
-      (candidate) => candidate.id === graph.id,
-    );
+    const candidates =
+      graph.levelId === null
+        ? (await loadCoursePath(tx, userId, requireCourse(graph))).flatMap(
+            (unit) => unit.lessons,
+          )
+        : ((await loadLevelPaths(tx, userId, { levelId: graph.levelId })).get(
+            graph.levelId,
+          ) ?? []);
+    const lesson = candidates.find((candidate) => candidate.id === graph.id);
     if (!lesson) throw new NotFoundException('Lesson not found or not ready.');
     return lesson;
   }
@@ -811,6 +860,12 @@ export class LessonActivityService {
     hasProgress: boolean,
   ) {
     if (hasProgress) return;
+    if (graph.levelId === null) {
+      // C3b-3: unlock by the lesson's course (ADR-009 §4), same 409 as below.
+      const lesson = await this.findPathLesson(tx, userId, graph);
+      if (lesson.state === 'locked') throw lessonLocked();
+      return;
+    }
     const previous = await tx.lesson.findFirst({
       where: buildLessonReadyWhere({
         levelId: graph.levelId,
@@ -837,12 +892,25 @@ export class LessonActivityService {
       previousStatus: previousProgress?.status ?? null,
       hasProgress,
     });
-    if (!unlocked) {
-      throw new ConflictException({
-        code: 'lesson_locked',
-        message: 'Complete the previous lesson first.',
-      });
-    }
+    if (!unlocked) throw lessonLocked();
+  }
+
+  /**
+   * ADR-009 §4: activity in a course stamps the learner's active enrollment
+   * of that course. Never creates one and never touches `isCurrent` (Q-C6).
+   */
+  private async touchEnrollment(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    graph: PublicLessonGraph,
+    now: Date,
+  ) {
+    const courseId = graph.courseUnit?.course.id;
+    if (courseId === undefined) return;
+    await tx.courseEnrollment.updateMany({
+      where: { userId, courseId, status: 'active' },
+      data: { lastActivityAt: now },
+    });
   }
 
   private async lockLesson(tx: Prisma.TransactionClient, lessonId: number) {
@@ -875,12 +943,18 @@ export class LessonActivityService {
       where: buildLessonReadyWhere({ id: lessonId }),
       select: PUBLIC_LESSON_GRAPH_SELECT,
     });
-    // buildLessonReadyWhere requires a public Level; a lesson without one
-    // (ADR-009 C3b-1) is answered like any lesson that is not public.
-    if (!graph || graph.levelId === null) {
+    // ADR-009 C3b-3: a lesson without a Level is ready through its public
+    // unit and course. The query above stays as it was for one with a Level.
+    const courseGraph =
+      graph ??
+      (await tx.lesson.findFirst({
+        where: buildAnyLessonReadyWhere({ id: lessonId, levelId: null }),
+        select: PUBLIC_LESSON_GRAPH_SELECT,
+      }));
+    if (!courseGraph) {
       throw new NotFoundException('Lesson not found or not ready.');
     }
-    return { ...graph, levelId: graph.levelId };
+    return courseGraph;
   }
 
   private async requirePublicTopic(

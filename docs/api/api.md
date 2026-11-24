@@ -676,14 +676,15 @@ timeSpentSeconds, startedAt, completedAt, lastActivityAt, lesson: { title, slug 
 Score bài học là trung bình điểm tốt nhất của các bài **đã làm** (D-03).
 
 Activity `data`: `{ lesson: { id, title, description, slug, orderIndex, levelId }, level,
-position, state, sections, progress,
+course?, unit?, position, state, sections, progress,
 topics: [{ …topic, progress: {…}, exercises: PublicExercise[] }], standaloneExercises:
 PublicExercise[], currentTopic | null, currentExercise | null, nextAction }`.
 `PublicExercise` = projection public + `topicId` + `latestAttempt: Attempt | null`.
 `nextAction ∈ start_lesson | submit_exercise | complete_topic | complete_lesson | completed`.
 Trường thêm cho màn bài học (M2.B13, Q43):
 - `lesson.coverImage`: `{ id, altText }` hoặc `null` (Q350; cùng quy tắc với `GET /learning/lessons/:id`).
-- `level`: `{ id, code, name }` của Level chứa bài.
+- `level`: `{ id, code, name }` của Level chứa bài; `null` với bài không Level (C3b-3, A.7c),
+  khi đó có thêm `course`, `unit`.
 - `position`, `state`: cùng định nghĩa và cùng code với `GET /learning/path` (đọc từ
   `loadLevelPaths`, chỉ thu hẹp về level của bài); `state ∈ done | current | available | locked`.
   Bài đang khoá vẫn trả `200` với `state: "locked"`; chỉ `POST start` chặn.
@@ -784,11 +785,24 @@ Kết quả: `isCorrect = (số lần sai = 0)`, `score` 100 hoặc 0. Số lầ
 
 ### A.7c Khoá học — học viên (ADR-009 C3a)
 
-Từ C3b-1, bài học có thể không có Level (khoá textbook HSK 2.0). **Các endpoint có từ trước khoá
-học chỉ trả bài có Level** (`/learning/path`, `/learning/home`, `/lessons*`, `/learning/lessons*`,
-activity, `/progress/lessons*`); bài không Level ở các route đó được coi như không public (`404`
-với route theo id). Contract của chúng không đổi. Bài không Level chỉ thấy qua
-`/learning/courses/:code`.
+Từ C3b-1, bài học có thể không có Level (khoá textbook HSK 2.0). `/learning/path`,
+`/learning/home`, `GET /lessons*` và `GET /learning/lessons` (danh sách) **chỉ trả bài có Level**;
+bài không Level ở đó được coi như không public (`404` với `GET /lessons/:id`).
+
+Từ C3b-3, bài không Level **học được** qua các route của A.7 (activity) và `GET
+/learning/lessons/:id`, khi bài sẵn sàng theo luật của khoá (bài published có nội dung, unit và
+khoá đều published, chưa xoá); khoá, unit hoặc bài còn nháp → `404` như mọi bài không public:
+- Mở khoá theo **khoá của bài** (cùng luật `state` của `GET /learning/courses/:code`): `POST start`
+  bài đang khoá trả `409 lesson_locked` (cùng mã, message, thứ tự lỗi như bài có Level); `position`
+  và `state` của activity đọc từ lộ trình khoá, `position` đếm trong unit.
+- `level` (activity, `GET /learning/lessons/:id`) và `lesson.levelId` (activity) là `null`; thêm
+  `course: { code, title }` và `unit: { orderIndex, title, gradeNumber | null, volume | null }`.
+  Hai field này **chỉ có** ở bài không Level: response của bài có Level giữ nguyên từng field.
+- `/progress/lessons` và `/progress/lessons/:id` trả cả Progress của bài không Level.
+- `start` và `complete` bài thuộc một unit cập nhật `CourseEnrollment.lastActivityAt` của khoá đó
+  khi người học có enrollment `active`; không tạo enrollment, không đổi `isCurrent` (Q-C6).
+- Ôn tập: không có thẻ nào sinh khi hoàn thành bài; thẻ chỉ sinh khi lưu từ (A.7b), không lọc theo
+  Level, nên từ của bài textbook vào kho ôn chung (ADR-009 §4).
 
 JWT bắt buộc (`401` khi thiếu). Envelope §1. `GET` có header `Cache-Control: no-store` và **không
 ghi DB**. Khoá "public" = `published`, chưa xoá. Khoá không public hoặc không tồn tại → `404`

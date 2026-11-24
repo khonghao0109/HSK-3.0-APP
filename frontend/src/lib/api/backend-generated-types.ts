@@ -3249,6 +3249,17 @@ export interface components {
             name: string;
             orderIndex: number;
         };
+        LessonCourseRefDto: {
+            code: string;
+            title: string;
+        };
+        LessonUnitRefDto: {
+            gradeNumber: number | null;
+            /** @enum {string|null} */
+            volume: "upper" | "lower" | null;
+            orderIndex: number;
+            title: string;
+        };
         LessonImageDto: {
             id: number;
             altText: string | null;
@@ -3305,7 +3316,12 @@ export interface components {
         LessonDetailDto: {
             id: number;
             title: string;
-            level: components["schemas"]["LessonDetailLevelDto"];
+            /** @description `null` for a lesson without a Level (ADR-009 C3b-3). */
+            level: components["schemas"]["LessonDetailLevelDto"] | null;
+            /** @description Only for a lesson without a Level. */
+            course?: components["schemas"]["LessonCourseRefDto"];
+            /** @description Only for a lesson without a Level. */
+            unit?: components["schemas"]["LessonUnitRefDto"];
             coverImage: components["schemas"]["LessonImageDto"] | null;
             topics: components["schemas"]["LessonDetailTopicDto"][];
             words: components["schemas"]["LessonDetailWordDto"][];
@@ -3339,7 +3355,8 @@ export interface components {
             coverImage: components["schemas"]["LessonImageDto"] | null;
             slug: string;
             orderIndex: number;
-            levelId: number;
+            /** @description `null` for a lesson without a Level (ADR-009 C3b-3). */
+            levelId: number | null;
         };
         LessonActivityLevelDto: {
             id: number;
@@ -3466,8 +3483,16 @@ export interface components {
             /** @enum {string} */
             nextAction: "start_lesson" | "submit_exercise" | "complete_topic" | "complete_lesson" | "completed";
             lesson: components["schemas"]["LessonActivityLessonDto"];
-            level: components["schemas"]["LessonActivityLevelDto"];
-            /** @description 1..N among the ready lessons of the level, as in `GET /learning/path`. */
+            /** @description `null` for a lesson without a Level (ADR-009 C3b-3). */
+            level: components["schemas"]["LessonActivityLevelDto"] | null;
+            /** @description Only for a lesson without a Level. */
+            course?: components["schemas"]["LessonCourseRefDto"];
+            /** @description Only for a lesson without a Level. */
+            unit?: components["schemas"]["LessonUnitRefDto"];
+            /**
+             * @description 1..N among the ready lessons of the level, as in `GET /learning/path`;
+             *     for a lesson without a Level, of its unit, as in `GET /learning/courses/:code`.
+             */
             position: number;
             sections: components["schemas"]["LessonActivitySectionsDto"];
             progress: components["schemas"]["LessonActivityProgressDto"];

@@ -9,8 +9,10 @@ import { ExerciseType, ProgressStatus, TopicType } from '@prisma/client';
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../../common/openapi/json-schemas';
 import { PinSwaggerEnumOrder } from '../../../../common/openapi/pin-swagger-enum-order';
 import {
+  LessonCourseRefDto,
   LessonDetailExerciseMediaDto,
   LessonImageDto,
+  LessonUnitRefDto,
 } from '../../dto/lesson-response.dto';
 import { PUBLIC_LESSON_EXERCISE_TYPES } from '../../public-exercise.policy';
 import {
@@ -39,7 +41,8 @@ export class LessonActivityLessonDto {
   coverImage!: LessonImageDto | null;
   slug!: string;
   orderIndex!: number;
-  levelId!: number;
+  /** `null` for a lesson without a Level (ADR-009 C3b-3). */
+  levelId!: number | null;
 }
 
 export class LessonActivityLevelDto {
@@ -182,9 +185,17 @@ export class LessonActivityCurrentTopicDto {
 
 export class LessonActivityResponseDto {
   lesson!: LessonActivityLessonDto;
-  level!: LessonActivityLevelDto;
+  /** `null` for a lesson without a Level (ADR-009 C3b-3). */
+  level!: LessonActivityLevelDto | null;
+  /** Only for a lesson without a Level. */
+  course?: LessonCourseRefDto;
+  /** Only for a lesson without a Level. */
+  unit?: LessonUnitRefDto;
 
-  /** 1..N among the ready lessons of the level, as in `GET /learning/path`. */
+  /**
+   * 1..N among the ready lessons of the level, as in `GET /learning/path`;
+   * for a lesson without a Level, of its unit, as in `GET /learning/courses/:code`.
+   */
   position!: number;
 
   /** Q18 state, as in `GET /learning/path`; a locked lesson still reads. */

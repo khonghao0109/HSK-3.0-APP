@@ -1,3 +1,4 @@
+import { CourseVolume } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../common/openapi/json-schemas';
@@ -80,10 +81,37 @@ export class LessonDetailLevelDto {
   orderIndex!: number;
 }
 
+/** ADR-009 C3b-3: course of a lesson without a Level. */
+export class LessonCourseRefDto {
+  code!: string;
+  title!: string;
+}
+
+/** ADR-009 C3b-3: unit of a lesson without a Level. */
+export class LessonUnitRefDto {
+  orderIndex!: number;
+  title!: string;
+
+  @ApiProperty({ type: 'integer', nullable: true })
+  gradeNumber!: number | null;
+
+  @ApiProperty({
+    enum: Object.values(CourseVolume),
+    nullable: true,
+    type: String,
+  })
+  volume!: CourseVolume | null;
+}
+
 export class LessonDetailDto {
   id!: number;
   title!: string;
-  level!: LessonDetailLevelDto;
+  /** `null` for a lesson without a Level (ADR-009 C3b-3). */
+  level!: LessonDetailLevelDto | null;
+  /** Only for a lesson without a Level. */
+  course?: LessonCourseRefDto;
+  /** Only for a lesson without a Level. */
+  unit?: LessonUnitRefDto;
   coverImage!: LessonImageDto | null;
   topics!: LessonDetailTopicDto[];
   words!: LessonDetailWordDto[];
