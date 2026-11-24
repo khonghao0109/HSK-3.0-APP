@@ -907,8 +907,8 @@ npm run content:textbook:convert -- --vocab <tu-vung.json> --lessons <bai-hoc.js
   số từ, số dòng bài khoá, số điểm ngữ pháp.
 - Schema đóng: trường lạ, sai kiểu, trống bắt buộc → dừng, báo đúng đường dẫn trường. Bài có
   ở file từ vựng mà không có ở file bài học (hoặc ngược lại) → `lesson_missing_in_*`.
-- Mục cuối "Từ vựng bổ sung" bị bỏ qua. Audio chỉ giữ tên file (`audioRef`, `keyTextAudioRefs`),
-  chưa nạp media.
+- Mục cuối "Từ vựng bổ sung" bị bỏ qua. Audio chỉ giữ tên file (`audioRef`, `keyTextAudioRefs`);
+  audio từ vựng nạp ở bước riêng (M2.13c, bên dưới), audio bài khoá chưa nạp (M2.13d).
 - Ánh xạ: từ → `vocabulary_list`; bài khoá hội thoại → `dialogue` (≤ 40 dòng/khối); đoạn văn
   (không có người nói) → `text` (`hán\npinyin\nnghĩa`); ngữ pháp → `grammar_point`, chip công
   thức tách từ `structure` theo `+` (trống thì lấy `pattern`), `vi = zh` vì seeddata không có
@@ -988,6 +988,37 @@ API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db
   `blockedDraftWords`, `failed`, danh sách `failures` (mã lỗi), `blocked` (số từ nháp),
   `autoPublishedProperNouns` (`total` và `lessons[{fileName, count}]`) và
   `properNounCandidates`.
+
+**Audio từ vựng (M2.13c, TL 24/11/2026)** — bước riêng, chạy sau khi đã nạp cấp:
+
+```bash
+API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db> \
+  npm run content:textbook:import-audio -- --seeddata-root <đường dẫn seeddata> --grade 1 \
+  [--ledger <file>] [--dry-run]
+```
+
+- Đọc lại seeddata bằng cùng bộ chuyển; `audioRef` (`audio/<tên>.mp3`) tính từ thư mục
+  `HSK<cấp>_TuVung/`. Đường dẫn sau khi resolve (kể cả symlink) phải nằm trong
+  `--seeddata-root`, đuôi `.mp3`, chữ ký ID3/MPEG frame sync, 1 byte–2 MiB; lỗi chỉ đếm mã
+  (`audio_missing`, `audio_not_mp3`, `audio_path_outside_root`, …), không in nội dung.
+- Word được tìm qua `LessonWord` của bài (theo slug), khớp chữ Hán, pinyin chỉ để tách khi bài có
+  hai từ cùng chữ. Word đã có `audioId` (ví dụ từ HSK 3.0) không bị ghi đè và không bị nạp file.
+- Nạp qua `POST /admin/cms/media/ingestions` với DataSource `HSK20_TEXTBOOK_PO_V1` (đã đủ điều
+  kiện `eligibleFor=media`, không cần migration), `Idempotency-Key` theo sha256 file; sổ
+  `sha256 → mediaId` mặc định `/tmp/hsk-textbook/g<cấp>/audio-ledger.json`, gắn với
+  `API_BASE_URL`: sổ của môi trường khác bị từ chối (`ledger_environment_mismatch`), sổ hỏng →
+  `ledger_invalid`; dry-run không đọc sổ. Mất sổ vẫn không tạo media trùng (cùng key). File lớn
+  hơn 2 MiB bị loại trước khi đọc; file không đọc được → `audio_unreadable`. Giới hạn 5 file/phút/admin: lệnh tự chờ khi gặp 429 và in tiến độ mỗi
+  10 file (cấp 1: 183 file ≈ 40 phút).
+- Gắn: không có route CMS hay revision cho `Word.audioId`, nên mỗi Word một transaction Prisma:
+  `SELECT … FOR UPDATE`, kiểm lại `audioId IS NULL` và chưa xoá, update, ghi `AuditLog`
+  `word.audio_attached` (`targetType` `word`, `afterSummary` chỉ có `wordId`, `audioId`,
+  `dataSource`).
+- `--dry-run` không gọi API ghi, chỉ báo theo bài: `files`, `bytes`, `missing`, `invalid`,
+  `wordNotFound` (bài chưa nạp), `pending` (sẽ gắn), `skippedHasAudio`. Summary JSON có thêm
+  `ingested`, `attached`, `errors`, `errorCodes`; lệnh exit 1 khi có lỗi.
+- Learner chưa phát `Word.audioId` (từ điển trả `audio: null`, serializer bài không gửi audio của
+  từ); audio này chuẩn bị cho từ điển và SRS.
 
 **Sửa dữ liệu seeddata trong bộ chuyển (M2.13b FIX).**
 - Pinyin viết thanh 3 bằng dấu trăng (ă ĕ ĭ ŏ ŭ, cả chữ hoa) được đổi sang dấu móc (ǎ ě ǐ ǒ ǔ)
