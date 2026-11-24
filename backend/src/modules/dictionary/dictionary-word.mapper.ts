@@ -6,7 +6,11 @@ import type {
   DictionaryWordFullDetailDto,
   DictionaryWordSourceDto,
 } from './dto/dictionary-word-response.dto';
-import { PUBLIC_WORD_LEVELS } from './public-word.policy';
+import {
+  projectPublicWordAudio,
+  PUBLIC_WORD_AUDIO_SELECT,
+  PUBLIC_WORD_LEVELS,
+} from './public-word.policy';
 
 export const WORD_DETAIL_INCLUDE = {
   meanings: { orderBy: { meaningOrder: 'asc' } },
@@ -58,6 +62,7 @@ export function toWordDetail(word: WordDetailRecord): DictionaryWordDetailDto {
 /** `getWord` only: review keeps `WORD_DETAIL_INCLUDE` byte for byte (Q306). */
 export const WORD_FULL_INCLUDE = {
   ...WORD_DETAIL_INCLUDE,
+  audio: { select: PUBLIC_WORD_AUDIO_SELECT },
   examples: {
     where: {
       status: 'published',
@@ -79,7 +84,7 @@ export function toWordFullDetail(
 ): DictionaryWordFullDetailDto {
   return {
     ...toWordDetail(word),
-    audio: null,
+    audio: projectPublicWordAudio(word.audio),
     examples: word.examples.flatMap(({ dataSource, ...example }) =>
       dataSource
         ? [

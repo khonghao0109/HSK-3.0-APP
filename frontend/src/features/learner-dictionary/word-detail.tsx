@@ -15,6 +15,7 @@ import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messag
 import { NO_VIETNAMESE } from './dictionary-display';
 import { Icon } from '@/components/ui/icon';
 import { HanziCells } from '@/components/ui/hanzi-cells';
+import { WordAudioButton } from '@/features/learner-lesson/word-audio-button';
 
 export const SAVE_FAILED = 'Chưa lưu được. Vui lòng thử lại.';
 export const COPY_FAILED = 'Không sao chép được.';
@@ -31,6 +32,8 @@ export type WordView = {
   /** Q324: the same meanings, one per item of "Nghĩa". */
   meanings: string[];
   level: string | null;
+  /** M2.13c2: the speaker button; null hides it. */
+  audio?: { mediaId: number } | null;
   /** API `examples[]`, or the old `Word.example` when it is empty (Q311). */
   examples: { hanzi: string; vi: string | null }[];
   /** Distinct sources of the shown examples (Q-C). */
@@ -265,6 +268,10 @@ export function WordDetail({
                   <p className="word__py" lang="zh-Latn-pinyin">
                     {word.pinyin}
                   </p>
+                  <WordAudioButton
+                    audio={word.audio ?? null}
+                    hanzi={word.hanzi}
+                  />
                   {word.traditional ? (
                     // Q68: switches the headword only, not the example.
                     <div className="seg" role="group" aria-label="Kiểu chữ">

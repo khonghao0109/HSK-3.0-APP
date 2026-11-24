@@ -24,6 +24,7 @@ import {
   PUBLIC_CONTENT_WHERE,
 } from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PUBLIC_WORD_WHERE } from '../dictionary/public-word.policy';
 import { PUBLIC_LESSON_EXERCISE_WHERE } from '../learning/public-exercise.policy';
 import { MediaObservabilityService } from '../../infrastructure/observability/media-observability.service';
 import {
@@ -107,6 +108,22 @@ export class MediaAccessService {
           select: { id: true },
           take: 1,
         },
+        // M2.13c2: audio of a dictionary-public Word, or of a Word of a ready lesson.
+        wordAudio: {
+          where: {
+            OR: [
+              PUBLIC_WORD_WHERE,
+              {
+                ...PUBLIC_CONTENT_WHERE,
+                lessonWords: {
+                  some: { lesson: { is: buildLessonReadyWhere() } },
+                },
+              },
+            ],
+          },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
     if (!isUsableMediaContent(media, this.storage.provider)) {
@@ -124,7 +141,9 @@ export class MediaAccessService {
       media.lessonExercises.length > 0 ||
       (media.type === 'image' &&
         (media.lessonCoverImage.length > 0 || media.wordImage.length > 0));
-    if (actor.role !== 'admin' && !learnerVisible) {
+    const wordAudioVisible =
+      media.type === 'audio' && media.wordAudio.length > 0;
+    if (actor.role !== 'admin' && !learnerVisible && !wordAudioVisible) {
       throw new ForbiddenException('Media asset access is not allowed.');
     }
     const ttlSeconds =

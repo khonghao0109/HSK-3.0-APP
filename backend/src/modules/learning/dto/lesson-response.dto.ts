@@ -2,6 +2,7 @@ import { CourseVolume } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { JSON_OBJECT_OR_ARRAY_SCHEMA } from '../../../common/openapi/json-schemas';
+import { DictionaryWordAudioDto } from '../../dictionary/dto/dictionary-word-response.dto';
 
 export class LessonItemDto {
   id!: number;
@@ -42,6 +43,8 @@ export class LessonDetailWordDto {
   pinyinTone!: string | null;
   meanings!: LessonDetailWordMeaningDto[];
   image!: LessonImageDto | null;
+  /** M2.13c2: ready `Word.audio` (bytes via `GET /media/:id/access`), else `null`. */
+  audio!: DictionaryWordAudioDto | null;
 }
 
 export class LessonDetailStoryDto {

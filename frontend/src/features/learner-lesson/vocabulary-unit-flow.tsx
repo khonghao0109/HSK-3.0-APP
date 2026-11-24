@@ -9,6 +9,7 @@ import { percentClass } from '@/features/learner-home/percent';
 import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 
 import { LessonImage } from './lesson-image';
+import { WordAudioButton } from './word-audio-button';
 import { PLAYER_MESSAGES } from './lesson-player';
 import { PracticeBar } from './practice-bar';
 import type { StrokeCache } from './stroke-data';
@@ -210,6 +211,7 @@ export function VocabularyUnitFlow(props: Props) {
               <p className="g-py" lang="zh-Latn-pinyin">
                 {word.pinyin}
               </p>
+              <WordAudioButton audio={word.audio ?? null} hanzi={word.hanzi} />
               <h2
                 className="g-hz"
                 id="lu-word"

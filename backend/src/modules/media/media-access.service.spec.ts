@@ -10,6 +10,7 @@ import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.po
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
 import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
+import { PUBLIC_WORD_WHERE } from '../dictionary/public-word.policy';
 import { PUBLIC_LESSON_EXERCISE_WHERE } from '../learning/public-exercise.policy';
 import {
   createMediaAccessSignature,
@@ -160,6 +161,34 @@ describe('MediaAccessService storage-provider affinity', () => {
         lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
       });
     }
+  });
+
+  it('grants learners the audio of a public Word, never an image through it (M2.13c2)', async () => {
+    const audio = createFixture('s3', 's3', {
+      type: 'audio',
+      mimeType: 'audio/mpeg',
+      wordAudio: [{ id: 5 }],
+    });
+    await expect(
+      audio.service.createAccess({ id: 8, role: 'learner' }, 41),
+    ).resolves.toMatchObject({ success: true });
+    const [args] = audio.prisma.media.findUnique.mock.calls[0] as [
+      { select: { wordAudio: { where: unknown } } },
+    ];
+    expect(args.select.wordAudio.where).toEqual({
+      OR: [
+        PUBLIC_WORD_WHERE,
+        {
+          status: 'published',
+          deletedAt: null,
+          lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+        },
+      ],
+    });
+    const image = createFixture('s3', 's3', { wordAudio: [{ id: 5 }] });
+    await expect(
+      image.service.createAccess({ id: 8, role: 'learner' }, 41),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('does not let a lesson cover link grant non-image media to learners', async () => {
@@ -537,6 +566,7 @@ describe('MediaAccessService storage-provider affinity', () => {
       lessonExercises: { id: number }[];
       lessonCoverImage: { id: number }[];
       wordImage: { id: number }[];
+      wordAudio: { id: number }[];
       type: string;
     }> = {},
     previousSigningSecret?: string,
@@ -554,6 +584,7 @@ describe('MediaAccessService storage-provider affinity', () => {
       lessonExercises: [],
       lessonCoverImage: [],
       wordImage: [],
+      wordAudio: [],
       ...rowOverrides,
     });
     const prisma = {

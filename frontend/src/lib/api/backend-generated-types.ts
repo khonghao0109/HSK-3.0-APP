@@ -3286,6 +3286,8 @@ export interface components {
             pinyinTone: string | null;
             meanings: components["schemas"]["LessonDetailWordMeaningDto"][];
             image: components["schemas"]["LessonImageDto"] | null;
+            /** @description M2.13c2: ready `Word.audio` (bytes via `GET /media/:id/access`), else `null`. */
+            audio: components["schemas"]["DictionaryWordAudioDto"] | null;
         };
         LessonDetailStoryDto: {
             content: {

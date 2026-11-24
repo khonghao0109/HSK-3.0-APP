@@ -1,5 +1,6 @@
 import { CourseVolume, Prisma } from '@prisma/client';
 
+import { projectPublicWordAudio } from '../dictionary/public-word.policy';
 import { mediaAltText } from '../exam/exam-snapshot.builder';
 import { projectPublicExerciseMedia } from './public-exercise.policy';
 
@@ -52,6 +53,7 @@ type PublicLessonRecord = {
       pinyinTone: string | null;
       meanings: Array<{ meaningEn: string | null; meaningVi: string | null }>;
       image?: PublicImageRecord;
+      audio?: Parameters<typeof projectPublicWordAudio>[0];
     };
   }>;
   stories: Array<{
@@ -108,6 +110,7 @@ export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
         vi: meaning.meaningVi,
       })),
       image: projectPublicLessonImage(word.image),
+      audio: projectPublicWordAudio(word.audio),
     })),
     stories: lesson.stories,
     exercises: lesson.exercises.map((exercise) => {

@@ -14022,6 +14022,16 @@
                 "$ref": "#/components/schemas/LessonImageDto"
               }
             ]
+          },
+          "audio": {
+            "nullable": true,
+            "description": "M2.13c2: ready `Word.audio` (bytes via `GET /media/:id/access`), else `null`.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DictionaryWordAudioDto"
+              }
+            ]
           }
         },
         "required": [
@@ -14032,7 +14042,8 @@
           "pinyin",
           "pinyinTone",
           "meanings",
-          "image"
+          "image",
+          "audio"
         ]
       },
       "LessonDetailStoryDto": {

@@ -50,6 +50,14 @@ export const lessonWordsSchema = z.object({
         })
         .nullable()
         .default(null),
+      // M2.13c2: ready Word audio (id + format), never a URL; vắng = không có.
+      audio: z
+        .object({
+          mediaId: z.number().int().positive(),
+          mimeType: z.string().nullable(),
+          duration: z.number().nullable(),
+        })
+        .nullish(),
     }),
   ),
 });

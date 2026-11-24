@@ -33,6 +33,7 @@ function unitWord(word: LessonWord, detail: UnitWordDetail | null): UnitWord {
         .find((meaning) => meaning.vi?.trim())
         ?.partOfSpeech?.trim() || null,
     image: word.image,
+    audio: word.audio ? { mediaId: word.audio.mediaId } : null,
     // Q311: the old single Word.example only when the API has no examples.
     example: example
       ? {
