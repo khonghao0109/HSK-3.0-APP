@@ -189,7 +189,7 @@ function latestOf(row: Record<string, unknown>): {
 }
 
 /** The admin behind the token: the audit actor of auto-published names. */
-async function adminActorId(api: ApiClient): Promise<number> {
+export async function adminActorId(api: ApiClient): Promise<number> {
   const me = asRecord(await api.get('/auth/me'), 'auth/me');
   const user = asRecord(me.user, 'auth/me.user');
   if (user.role !== 'admin') {
