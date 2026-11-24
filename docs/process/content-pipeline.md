@@ -1017,8 +1017,9 @@ API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db
 - `--dry-run` không gọi API ghi, chỉ báo theo bài: `files`, `bytes`, `missing`, `invalid`,
   `wordNotFound` (bài chưa nạp), `pending` (sẽ gắn), `skippedHasAudio`. Summary JSON có thêm
   `ingested`, `attached`, `errors`, `errorCodes`; lệnh exit 1 khi có lỗi.
-- Learner chưa phát `Word.audioId` (từ điển trả `audio: null`, serializer bài không gửi audio của
-  từ); audio này chuẩn bị cho từ điển và SRS.
+- Từ M2.13c2 (24/11/2026) learner phát `Word.audioId` ở chi tiết từ điển và thẻ Từ vựng của bài
+  (`audio` chỉ khác `null` khi media là audio ready); file phát qua grant ngắn hạn
+  `GET /media/:id/access`. Ôn tập SRS chưa phát audio.
 
 **Sửa dữ liệu seeddata trong bộ chuyển (M2.13b FIX).**
 - Pinyin viết thanh 3 bằng dấu trăng (ă ĕ ĭ ŏ ŭ, cả chữ hoa) được đổi sang dấu móc (ǎ ě ǐ ǒ ǔ)

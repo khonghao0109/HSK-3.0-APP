@@ -12,7 +12,8 @@ export const WORD_AUDIO_FAILED = 'Không phát được âm thanh.';
 /**
  * M2.13c2: nút loa của một từ (thẻ Từ vựng, chi tiết từ điển). Không có audio
  * thì không hiện. Grant xin khi bấm (TTL ngắn, cùng BFF với bài nghe), rồi
- * phát bằng `<audio preload="none">`; lỗi được báo qua vùng `status`.
+ * phát bằng `<audio preload="none">`; lỗi hiện thành chữ trong vùng `status`
+ * luôn có sẵn (rỗng khi chưa lỗi) để trình đọc màn hình đọc được.
  */
 export function WordAudioButton({
   audio,
@@ -62,11 +63,9 @@ export function WordAudioButton({
         <Icon name="volume" />
       </button>
       <audio ref={audioRef} preload="none" onError={() => setFailed(true)} />
-      {failed && (
-        <span className="sr-only" role="status">
-          {WORD_AUDIO_FAILED}
-        </span>
-      )}
+      <span role="status">
+        {failed && <span className="ex-error">{WORD_AUDIO_FAILED}</span>}
+      </span>
     </>
   );
 }
