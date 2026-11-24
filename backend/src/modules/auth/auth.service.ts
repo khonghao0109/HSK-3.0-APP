@@ -67,12 +67,10 @@ export class AuthService implements OnModuleInit {
     }
 
     this.assertPasswordNotBlacklisted(registerDto.password);
-    const acceptedDocuments =
-      registerDto.acceptedDocuments === undefined
-        ? []
-        : await this.consentService.resolveSignupDocuments(
-            registerDto.acceptedDocuments,
-          );
+    // Required once a legal version is current (M1.7b2 phase B).
+    const acceptedDocuments = await this.consentService.resolveSignupDocuments(
+      registerDto.acceptedDocuments ?? [],
+    );
     const passwordHash = await this.hashPassword(registerDto.password);
 
     const user = await this.prisma

@@ -24,6 +24,11 @@ import {
  */
 export const OPTIONAL_CONSENT_VERSION = '1';
 
+const CONSENT_REQUIRED_AT_SIGNUP = {
+  code: 'LEGAL_CONSENT_REQUIRED',
+  message: 'Accept the current terms and privacy policy to sign up.',
+};
+
 const MISMATCH = {
   code: 'LEGAL_DOCUMENT_MISMATCH',
   message: 'Legal document type, version or hash does not match.',
@@ -90,14 +95,39 @@ export class ConsentService {
     };
   }
 
-  /** Sign-up: every submitted document must be the current version of its type. */
+  /**
+   * Route gate (phase B): true when a mandatory document is `blocked`. One
+   * query while no version is registered, two otherwise; nothing is cached
+   * across requests.
+   */
+  async hasBlockedDocument(userId: number, now = new Date()): Promise<boolean> {
+    const versions = await this.loadVersions();
+    if (versions.length === 0) return false;
+    const consents = await this.prisma.consent.findMany({
+      where: { userId, type: { in: [...LEGAL_DOCUMENT_TYPES] } },
+      select: {
+        type: true,
+        consentVersion: true,
+        documentSha256: true,
+        revokedAt: true,
+      },
+    });
+    return resolveConsentState(versions, consents, now).some(
+      (state) => state.status === 'blocked',
+    );
+  }
+
+  /**
+   * Sign-up: every submitted document must be the current version of its
+   * type, and every type that has a current version must be submitted.
+   */
   async resolveSignupDocuments(
     documents: readonly AcceptedDocumentDto[],
     now = new Date(),
   ): Promise<LegalVersionRecord[]> {
     assertDistinctTypes(documents);
     const versions = await this.loadVersions();
-    return documents.map((document) => {
+    const resolved = documents.map((document) => {
       const current = currentLegalVersion(versions, document.type, now);
       if (
         current === null ||
@@ -108,6 +138,13 @@ export class ConsentService {
       }
       return current;
     });
+    const missing = LEGAL_DOCUMENT_TYPES.some(
+      (type) =>
+        currentLegalVersion(versions, type, now) !== null &&
+        !resolved.some((document) => document.type === type),
+    );
+    if (missing) throw new BadRequestException(CONSENT_REQUIRED_AT_SIGNUP);
+    return resolved;
   }
 
   /** Re-consent: every submitted document must be a registered version. */

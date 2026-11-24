@@ -11,8 +11,12 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
  */
 export function LearnerAuthAlternatives({
   switchLink,
+  terms,
 }: {
   switchLink?: ReactNode;
+  /** Replaces the passive legal line; sign-up passes its mandatory checkbox
+   *  here so it keeps the line's place in the sample (Q188). */
+  terms?: ReactNode;
 } = {}) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,13 +78,15 @@ export function LearnerAuthAlternatives({
 
       {switchLink}
 
-      <p className="auth__terms">
-        {/* `{' '}` giữ đúng khoảng cách của mẫu khi bản web ẩn `<br>`; trên
+      {terms ?? (
+        <p className="auth__terms">
+          {/* `{' '}` giữ đúng khoảng cách của mẫu khi bản web ẩn `<br>`; trên
             mobile khoảng trắng cuối dòng bị CSS bỏ nên không xê dịch pixel. */}
-        Bằng việc tiếp tục, bạn đồng ý với <br />
-        <Link href="/terms">Điều khoản sử dụng</Link> và{' '}
-        <Link href="/privacy">Chính sách bảo mật</Link>
-      </p>
+          Bằng việc tiếp tục, bạn đồng ý với <br />
+          <Link href="/terms">Điều khoản sử dụng</Link> và{' '}
+          <Link href="/privacy">Chính sách bảo mật</Link>
+        </p>
+      )}
 
       <div className="toast-region" role="status" aria-live="polite">
         {toastMessage && <div className="toast">{toastMessage}</div>}

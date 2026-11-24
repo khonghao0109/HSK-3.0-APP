@@ -44,10 +44,19 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
 
+/** One legal document the learner ticked to accept (M1.7b2, Q188). */
+export const acceptedDocumentSchema = z.strictObject({
+  type: z.enum(['terms', 'privacy']),
+  // Same rules as the backend DTO and LegalDocumentVersion checks.
+  version: z.string().regex(/^[0-9A-Za-z][0-9A-Za-z._-]{0,31}$/),
+  sha256: z.string().regex(/^[0-9a-f]{64}$/),
+});
+
 export const registerInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   name: z.string().trim().min(1).optional(),
+  acceptedDocuments: z.array(acceptedDocumentSchema).min(1).max(2).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerInputSchema>;
