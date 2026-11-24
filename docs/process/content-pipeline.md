@@ -973,9 +973,21 @@ API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db
   (nếu chưa), rồi với từng bài: topic → bài tập → bài, mỗi thứ qua review `approved` + publish
   revision mới nhất (`/admin/cms/{topics|exercises|lessons}/:id/revisions/:revisionId/{reviews,publish}`,
   cùng thứ tự Bước 5 §7). Bài còn `LessonWord` trỏ Word chưa published → `blocked_draft_words`
-  kèm số từ, không publish gì của bài đó, không tính là lỗi. `--publish` không duyệt `Word`.
+  kèm số từ, không publish gì của bài đó, không tính là lỗi.
+- Tự duyệt tên riêng (M2.13b FIX-3, PO 24/11/2026): với `--publish`, trước khi kiểm từ nháp
+  của bài, một `Word` được chuyển `draft → published` khi và chỉ khi: mọi `WordSource` của nó
+  là `HSK20_TEXTBOOK_PO_V1` (Word do bộ nhập textbook tạo, không phải Word có sẵn trong từ
+  điển); seeddata ghi `pos` đúng `Danh từ riêng` sau khi trim (`words[].partOfSpeech` của file
+  nạp); Word đang `draft` và chưa xoá. Hệ thống không có route duyệt `Word`, nên mỗi Word được
+  duyệt trong một transaction Prisma riêng: `SELECT … FOR UPDATE` dòng Word, kiểm lại điều
+  kiện, update, rồi ghi một `AuditLog` (`actorId` = admin của token, lấy qua `GET /auth/me`;
+  `action` `word.auto_published_proper_noun`; `targetType` `word`; `afterSummary` chỉ có
+  `wordId`, `status`, `dataSource`, không có chữ Hán hay dữ liệu người dùng). Từ loại khác
+  không bao giờ được tự duyệt; `--dry-run` không duyệt gì, chỉ báo `properNounCandidates`.
 - Cuối lệnh in summary JSON: `lessons`, `imported`, `published`, `skippedPublished`,
-  `blockedDraftWords`, `failed`, danh sách `failures` (mã lỗi) và `blocked` (số từ nháp).
+  `blockedDraftWords`, `failed`, danh sách `failures` (mã lỗi), `blocked` (số từ nháp),
+  `autoPublishedProperNouns` (`total` và `lessons[{fileName, count}]`) và
+  `properNounCandidates`.
 
 **Sửa dữ liệu seeddata trong bộ chuyển (M2.13b FIX).**
 - Pinyin viết thanh 3 bằng dấu trăng (ă ĕ ĭ ŏ ŭ, cả chữ hoa) được đổi sang dấu móc (ǎ ě ǐ ǒ ǔ)
