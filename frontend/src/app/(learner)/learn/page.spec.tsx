@@ -7,6 +7,14 @@ import { getServerLearnerSession } from '@/features/learner-auth/server-learner-
 import { homeDateLabel } from '@/features/learner-home/home-date';
 import type { LearningHome } from '@/features/learner-home/learning-home-contract';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
+import type {
+  CourseDetail,
+  CourseSummary,
+} from '@/features/learner-course/course-model';
+import {
+  getCourse,
+  getCourses,
+} from '@/features/learner-course/course-service';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import type { UserGoal } from '@/features/onboarding/onboarding-contract';
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
@@ -27,6 +35,10 @@ vi.mock('@/features/learner-home/learning-home-service', () => ({
 }));
 vi.mock('@/features/onboarding/onboarding-service', () => ({
   getCurrentGoal: vi.fn(),
+}));
+vi.mock('@/features/learner-course/course-service', () => ({
+  getCourses: vi.fn(),
+  getCourse: vi.fn(),
 }));
 
 const readyHome: LearningHome = {
@@ -85,6 +97,7 @@ describe('LearnerHomePage', () => {
       user: { id: 1, email: 'learner@example.com', role: 'user' },
       token: 'learner-token',
     });
+    vi.mocked(getCourses).mockResolvedValue([]);
   });
 
   it('sets the page title', () => {
@@ -315,5 +328,132 @@ describe('LearnerHomePage', () => {
       'href',
       '/learn/profile',
     );
+  });
+
+  describe('"Khoá đang học" block (C3b-UI)', () => {
+    const summary: CourseSummary = {
+      code: 'HSK2_TEXTBOOK',
+      kind: 'textbook',
+      curriculumVersion: 'HSK_2_0',
+      title: 'Giáo trình HSK chuẩn 2.0',
+      description: null,
+      enrolled: true,
+      isCurrent: true,
+      progress: { completedLessons: 4, totalLessons: 134 },
+    };
+    const detail: CourseDetail = {
+      ...summary,
+      units: [
+        {
+          orderIndex: 1,
+          title: 'Cấp 1',
+          gradeNumber: 1,
+          volume: null,
+          levelCode: null,
+          lessons: [
+            {
+              id: 31,
+              title: 'Gia đình',
+              slug: 'gia-dinh',
+              position: 4,
+              state: 'done',
+              completionPercent: 100,
+            },
+            {
+              id: 32,
+              title: 'Số đếm và tuổi',
+              slug: 'so-dem',
+              position: 5,
+              state: 'current',
+              completionPercent: 40,
+            },
+          ],
+        },
+      ],
+    };
+    const other: CourseSummary = {
+      ...summary,
+      code: 'HSK3_TOPIC',
+      title: 'Chủ đề HSK 3.0',
+      isCurrent: false,
+    };
+
+    it('shows the current course and its current lesson', async () => {
+      vi.mocked(getCourses).mockResolvedValue([other, summary]);
+      vi.mocked(getCourse).mockResolvedValue(detail);
+      await renderHome(readyHome);
+      expect(getCourse).toHaveBeenCalledWith('learner-token', 'HSK2_TEXTBOOK');
+      const block = within(
+        screen.getByRole('region', { name: 'Giáo trình HSK chuẩn 2.0' }),
+      );
+      expect(block.getByText('Khoá đang học')).toBeInTheDocument();
+      expect(block.getByRole('link', { name: 'Đổi khoá' })).toHaveAttribute(
+        'href',
+        '/learn/courses',
+      );
+      const links = block.getAllByRole('link', { name: /Số đếm và tuổi/ });
+      expect(links.map((link) => link.getAttribute('href'))).toEqual([
+        '/learn/lessons/32',
+        '/learn/lessons/32',
+      ]);
+      expect(links[0]).toHaveTextContent('Cấp 1 · Bài 5 · đã học 40%');
+      expect(links[1]).toHaveTextContent(/^Học tiếp/);
+      expect(
+        block.getByRole('link', { name: 'Xem lộ trình khoá' }),
+      ).toHaveAttribute('href', '/learn/courses/HSK2_TEXTBOOK');
+      expect(block.getByRole('progressbar')).toHaveAttribute(
+        'aria-valuenow',
+        '3',
+      );
+      expect(block.getByText('汉')).toHaveAttribute('aria-hidden', 'true');
+      // PO 24/11: no XP on Home.
+      expect(screen.queryByText(/XP/)).toBeNull();
+    });
+
+    it('lists a followed course in "Khoá đang theo" (web)', async () => {
+      const followed = {
+        ...other,
+        progress: { completedLessons: 27, totalLessons: 84 },
+      };
+      const notFollowed = { ...other, code: 'E2E', enrolled: false };
+      vi.mocked(getCourses).mockResolvedValue([followed, notFollowed, summary]);
+      vi.mocked(getCourse).mockResolvedValue(detail);
+      await renderHome(readyHome);
+      const card = within(
+        screen.getByRole('region', { name: 'Khoá đang theo' }),
+      );
+      expect(
+        card.getByText(/Chủ đề HSK 3.0 · 27\/84 bài ·/),
+      ).toBeInTheDocument();
+      expect(card.getByRole('link', { name: 'Xem' })).toHaveAttribute(
+        'href',
+        '/learn/courses',
+      );
+    });
+
+    it('has no "Khoá đang theo" card without another followed course', async () => {
+      vi.mocked(getCourses).mockResolvedValue([
+        { ...other, enrolled: false },
+        summary,
+      ]);
+      vi.mocked(getCourse).mockResolvedValue(detail);
+      await renderHome(readyHome);
+      expect(
+        screen.queryByRole('region', { name: 'Khoá đang theo' }),
+      ).toBeNull();
+    });
+
+    it('keeps Home without the block when the course read fails', async () => {
+      vi.mocked(getCourses).mockRejectedValue(backendError(503));
+      await renderHome(readyHome);
+      expect(screen.queryByText('Khoá đang học')).toBeNull();
+      expect(screen.getByRole('heading', { name: 'Khám phá' })).toBeVisible();
+    });
+
+    it('sends the learner to sign-in when the course read is refused', async () => {
+      vi.mocked(getLearningHome).mockResolvedValue(readyHome);
+      vi.mocked(getCourses).mockRejectedValue(backendError(401));
+      await expect(LearnerHomePage()).rejects.toThrow('NEXT_REDIRECT:/sign-in');
+    });
   });
 });

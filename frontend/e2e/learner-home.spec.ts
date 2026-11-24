@@ -273,9 +273,10 @@ test.describe('Learner Home (M2.4a)', () => {
     const nav = tabBar(page);
     const items = nav.locator(':scope > a, :scope > button');
     const web = isWeb(page);
-    // Web: the four items of the sidebar "Điều hướng chính" (Hồ sơ is the
-    // profile cell); its ring is not inset (not at the screen edge).
-    await expect(items).toHaveCount(web ? 4 : 5);
+    // Web: the five items of the sidebar "Điều hướng chính", "Khoá học"
+    // included (C3b-UI; Hồ sơ is the profile cell); its ring is not inset
+    // (not at the screen edge). Mobile: the five tab bar items.
+    await expect(items).toHaveCount(5);
     const firstItem = items.first();
 
     // Tab through the page until the first tab bar item gets focus.
@@ -289,7 +290,7 @@ test.describe('Learner Home (M2.4a)', () => {
     expect(reached).toBe(true);
 
     const expectedLabels = web
-      ? ['Trang chủ', 'Lộ trình học', 'Tra từ', 'Ôn tập']
+      ? ['Trang chủ', 'Lộ trình học', 'Khoá học', 'Tra từ', 'Ôn tập']
       : ['Trang chủ', 'Học', 'Tra từ', 'Ôn tập', 'Hồ sơ'];
     for (const [index, label] of expectedLabels.entries()) {
       const item = items.nth(index);

@@ -35,6 +35,7 @@ describe('LearnerSidebar', () => {
     expect(Array.from(nav.children).map((item) => item.textContent)).toEqual([
       'Trang chủ',
       'Lộ trình học',
+      'Khoá học',
       'Tra từ',
       'Ôn tập',
     ]);
@@ -53,6 +54,9 @@ describe('LearnerSidebar', () => {
     // M3.3b (Q271): the review page and its session.
     ['/learn/review', 'Ôn tập', '/learn/review'],
     ['/learn/review/session', 'Ôn tập', '/learn/review'],
+    // C3b-UI (PO 24/11): the course list and every course detail.
+    ['/learn/courses', 'Khoá học', '/learn/courses'],
+    ['/learn/courses/HSK3_TOPIC', 'Khoá học', '/learn/courses'],
   ])('marks the current item on %s', (pathname, name, href) => {
     renderAt(pathname);
     const nav = mainNav();

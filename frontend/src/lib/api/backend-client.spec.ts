@@ -1167,4 +1167,51 @@ describe('server-only backend client', () => {
     }
     expect(fetchImpl).toHaveBeenCalledTimes(9);
   });
+
+  it('allowlists the five course routes and rejects path variants (ADR-009 C3b-UI, A.7c)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/learning/courses', { token: 't' });
+    await client.request('/api/v1/learning/courses/HSK2_TEXTBOOK', {
+      token: 't',
+    });
+    await client.request('/api/v1/learning/courses/HSK3_TOPIC/enrollment', {
+      token: 't',
+      method: 'POST',
+    });
+    await client.request('/api/v1/learning/courses/HSK3_TOPIC/enrollment', {
+      token: 't',
+      method: 'DELETE',
+    });
+    await client.request('/api/v1/learning/current-course', {
+      token: 't',
+      method: 'PUT',
+      body: { courseCode: 'HSK3_TOPIC' },
+    });
+
+    for (const path of [
+      '/api/v1/learning/courses?x=1',
+      '/api/v1/learning/courses/',
+      '/api/v1/learning/courses/hsk3_topic',
+      '/api/v1/learning/courses/AB',
+      '/api/v1/learning/courses/HSK3_TOPIC?x=1',
+      '/api/v1/learning/courses/HSK3_TOPIC/x',
+      '/api/v1/learning/courses/HSK3_TOPIC/enrollment/x',
+      '/api/v1/learning/courses/../admin',
+      '/api/v1/learning/current-course?x=1',
+      '/api/v1/learning/current-course/x',
+    ]) {
+      await expect(client.request(path, { token: 't' })).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(5);
+  });
 });

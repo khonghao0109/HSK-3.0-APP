@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { Icon } from '@/components/ui/icon';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { currentCourseCode } from '@/features/learner-course/course-page-data';
 import { levelLabel } from '@/features/learner-home/level-label';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { LearnerPathLevels } from '@/features/learner-path/learner-path-levels';
@@ -10,6 +12,8 @@ import type { LearningPath } from '@/features/learner-path/learning-path-contrac
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+
+import '../courses/courses.css';
 
 export const metadata: Metadata = {
   title: 'Lộ trình học',
@@ -82,6 +86,8 @@ export default async function LearnerPathPage() {
   }
 
   const { nextLesson } = path;
+  // PO 24/11: the path keeps /learn/path and links to the current course.
+  const courseCode = await currentCourseCode(session.token);
 
   return (
     <>
@@ -93,6 +99,14 @@ export default async function LearnerPathPage() {
       </header>
 
       <main className="m02-sheet path-body">
+        {courseCode && (
+          <p className="crs-path-link">
+            <Link className="crs-link" href={`/learn/courses/${courseCode}`}>
+              Xem theo khoá
+              <Icon name="chevron-right" />
+            </Link>
+          </p>
+        )}
         <LearnerPathLevels
           levels={path.levels}
           initialCode={path.goal?.targetLevelCode ?? 'HSK1'}

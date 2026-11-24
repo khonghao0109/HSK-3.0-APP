@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
 import type { LearningPath } from '@/features/learner-path/learning-path-contract';
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
+import { getCourses } from '@/features/learner-course/course-service';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
@@ -25,6 +26,9 @@ vi.mock('@/features/learner-path/learning-path-service', () => ({
 }));
 vi.mock('@/features/onboarding/onboarding-service', () => ({
   getCurrentGoal: vi.fn(),
+}));
+vi.mock('@/features/learner-course/course-service', () => ({
+  getCourses: vi.fn(),
 }));
 
 const readyPath: LearningPath = {
@@ -77,6 +81,7 @@ describe('LearnerPathPage', () => {
       user: { id: 1, email: 'learner@example.com', role: 'user' },
       token: 'learner-token',
     });
+    vi.mocked(getCourses).mockResolvedValue([]);
   });
 
   it('sets the page title', () => {
@@ -219,5 +224,36 @@ describe('LearnerPathPage', () => {
     expect(
       screen.queryByRole('complementary', { name: 'Bài tiếp theo' }),
     ).toBeNull();
+  });
+
+  describe('"Xem theo khoá" link (C3b-UI, PO 24/11)', () => {
+    it('links to the current course detail', async () => {
+      vi.mocked(getCourses).mockResolvedValue([
+        {
+          code: 'HSK3_TOPIC',
+          kind: 'topic',
+          curriculumVersion: 'HSK_3_0',
+          title: 'Chủ đề HSK 3.0',
+          description: null,
+          enrolled: true,
+          isCurrent: true,
+          progress: { completedLessons: 0, totalLessons: 8 },
+        },
+      ]);
+      await renderPath(readyPath);
+      expect(
+        screen.getByRole('link', { name: 'Xem theo khoá' }),
+      ).toHaveAttribute('href', '/learn/courses/HSK3_TOPIC');
+    });
+
+    it('hides the link without a current course or when the read fails', async () => {
+      await renderPath(readyPath);
+      expect(screen.queryByRole('link', { name: 'Xem theo khoá' })).toBeNull();
+      vi.mocked(getCourses).mockRejectedValue(
+        new BackendRequestError(normalizeApiFailure({ status: 503 })),
+      );
+      await renderPath(readyPath);
+      expect(screen.queryByRole('link', { name: 'Xem theo khoá' })).toBeNull();
+    });
   });
 });
