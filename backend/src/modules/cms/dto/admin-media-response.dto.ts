@@ -7,9 +7,11 @@ import {
 import { ApiPageResponseMetaDto } from '../../../common/openapi/api-envelope.dto';
 
 import { AdminDataSourceDto } from './admin-exercise-response.dto';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
 // Response models of the admin media library, matching projectAdminMedia.
 
+@PinSwaggerEnumOrder('processingStatus', Object.values(MediaProcessingStatus))
 export class AdminMediaDto {
   id!: number;
   /** Sanitized original filename. */

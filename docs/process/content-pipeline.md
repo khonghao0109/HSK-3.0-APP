@@ -967,5 +967,33 @@ API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db
 
 - Thêm `--dry-run` để chỉ kiểm. Bài đã published thì bỏ qua và báo (không ghi đè nội dung đã
   xuất bản); bài lỗi đầu tiên làm dừng lệnh.
+- `--continue-on-error` (M2.13b FIX): bài lỗi được ghi vào summary (chỉ mã lỗi) rồi chạy tiếp;
+  lệnh exit 1 nếu có bài lỗi.
+- `--publish` (M2.13b FIX, không dùng cùng `--dry-run`): sau khi nạp, publish unit rồi khoá
+  (nếu chưa), rồi với từng bài: topic → bài tập → bài, mỗi thứ qua review `approved` + publish
+  revision mới nhất (`/admin/cms/{topics|exercises|lessons}/:id/revisions/:revisionId/{reviews,publish}`,
+  cùng thứ tự Bước 5 §7). Bài còn `LessonWord` trỏ Word chưa published → `blocked_draft_words`
+  kèm số từ, không publish gì của bài đó, không tính là lỗi. `--publish` không duyệt `Word`.
+- Cuối lệnh in summary JSON: `lessons`, `imported`, `published`, `skippedPublished`,
+  `blockedDraftWords`, `failed`, danh sách `failures` (mã lỗi) và `blocked` (số từ nháp).
+
+**Sửa dữ liệu seeddata trong bộ chuyển (M2.13b FIX).**
+- Pinyin viết thanh 3 bằng dấu trăng (ă ĕ ĭ ŏ ŭ, cả chữ hoa) được đổi sang dấu móc (ǎ ě ǐ ǒ ǔ)
+  ở từ, bài khoá và ngữ pháp (`fixBrevePinyin`); số lần đổi ghi ở `pinyinFixes`. Không đổi ký
+  tự nào khác.
+- Từ lặp trong bài (cùng chữ Hán + pinyin không dấu) chỉ giữ bản đầu, đếm vào
+  `exerciseSkips.duplicateWords`. Importer vẫn từ chối file có từ lặp.
+- Ví dụ ngữ pháp không có nghĩa tiếng Việt bị bỏ, không tự sinh nghĩa; đếm ở
+  `grammarExamplesSkipped`. Mỗi điểm seeddata chỉ có một ví dụ và `grammar_point` cần ≥ 1 ví dụ,
+  nên điểm còn giải thích được giữ dưới dạng khối `text` (`mẫu\ngiải thích`); điểm không còn
+  gì bị bỏ, đếm ở `grammarPointsSkipped`.
+- (M2.13b FIX-2) Chữ Hán dạng `X (Y)` (ngoặc ASCII hoặc toàn chiều rộng ở cuối, ví dụ
+  `下面 (下)`) chỉ giữ `X` (`stripParenthetical`); phần ngoặc ở cuối pinyin cũng bỏ. `X` được tra
+  lại từ điển như từ thường; nếu trùng từ khác trong bài thì áp luật từ lặp. Đếm ở
+  `parentheticalStripped`.
+- (M2.13b FIX-2) Dòng có `...` (từ ba dấu chấm) hoặc `…` (ví dụ `太......了`) là mẫu câu
+  (`isSentencePattern`): không tạo Word, không vào bài tập hay pool distractor, mà vào cùng khối
+  câu dùng trong lớp của chủ đề từ vựng. Khi bài có mẫu câu, tiêu đề khối là
+  "Câu và cấu trúc dùng trong lớp". Đếm ở `patternsMoved`. Không thêm loại khối mới.
 - Đường dẫn đọc: `<seeddata>/TuVung_nguphap_baikhoa/HSK<g>_TuVung/HSK<g>_TuVung.json` và
   `<seeddata>/TuVung_nguphap_baikhoa/HSK<g>/HSK<g>_data.json`. Cấp 6 chưa có file bài học.

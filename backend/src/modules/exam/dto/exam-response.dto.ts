@@ -128,6 +128,7 @@ export const EXAM_ANSWER_BATCH_STATUSES = [
 export type ExamAnswerBatchStatus = (typeof EXAM_ANSWER_BATCH_STATUSES)[number];
 
 /** One item result of the batch save; errors are per item, never the batch. */
+@PinSwaggerEnumOrder('status', EXAM_ANSWER_BATCH_STATUSES)
 export class ExamAnswerBatchResultDto {
   questionKey!: string;
   status!: ExamAnswerBatchStatus;

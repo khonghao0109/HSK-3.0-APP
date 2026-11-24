@@ -33,6 +33,7 @@ export class AdminDataSourceDto {
   version!: string;
 }
 
+@PinSwaggerEnumOrder('processingStatus', Object.values(MediaProcessingStatus))
 export class AdminExerciseMediaDto {
   id!: number;
   url!: string;

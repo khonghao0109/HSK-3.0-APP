@@ -21,6 +21,25 @@ export function isClassroomPhrase(hanzi: string): boolean {
   return /[!！。？?，,]/u.test(hanzi);
 }
 
+/**
+ * M2.13b FIX-2: `下面 (下)` → `下面`. Only a trailing ASCII or full-width
+ * parenthesised note after a space-free head is removed.
+ */
+export function stripParenthetical(value: string): {
+  value: string;
+  stripped: boolean;
+} {
+  const match = /^(.*?\S)\s*[(（][^()（）]*[)）]$/u.exec(value);
+  return match === null
+    ? { value, stripped: false }
+    : { value: match[1], stripped: true };
+}
+
+/** M2.13b FIX-2: `太......了` is a sentence pattern, not a word. */
+export function isSentencePattern(value: string): boolean {
+  return /\.{3,}|…/u.test(value);
+}
+
 export interface ExerciseWord {
   readonly hanzi: string;
   readonly pinyin: string;
