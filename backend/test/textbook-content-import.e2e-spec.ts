@@ -703,6 +703,110 @@ describe('Textbook content import (M2.13a) E2E', () => {
     expect(cli.stdout).not.toContain('Câu lớp thử');
   });
 
+  // M2.13b FIX-3 (PO 24/11): 龘 of lesson 3 marked as a proper noun.
+  const properTree = (name: string) =>
+    seeddataTree(name, (vocab) => {
+      const words = vocab[2].tu_vung as Array<Record<string, unknown>>;
+      words[0] = { ...words[0], pos: 'Danh từ riêng' };
+    });
+  const lessonThreeWords = () =>
+    prisma.word.findMany({
+      where: { hanzi: { in: ['龘', '鱻'] } },
+      orderBy: { hanzi: 'asc' },
+      select: { id: true, hanzi: true, status: true, publishedById: true },
+    });
+  const properAudits = () =>
+    prisma.auditLog.findMany({
+      where: { action: 'word.auto_published_proper_noun' },
+      select: {
+        actorId: true,
+        targetType: true,
+        targetId: true,
+        afterSummary: true,
+      },
+    });
+
+  it('[T12] --dry-run reports the proper noun it would approve and approves none', async () => {
+    const before = await lessonThreeWords();
+    const lessons = await importTextbookGrade(
+      { apiBaseUrl, adminToken, prisma },
+      {
+        seeddataRoot: properTree('proper-dry'),
+        grade: 1,
+        outRoot: join(outDir, 'proper-dry-out'),
+        dryRun: true,
+      },
+    );
+    expect(
+      lessons.map((l) => [
+        l.fileName,
+        l.properNounCandidates,
+        l.autoPublishedProperNouns,
+      ]),
+    ).toEqual([
+      ['lesson-01.json', 0, 0],
+      ['lesson-02.json', 0, 0],
+      ['lesson-03.json', 1, 0],
+      ['lesson-04.json', 0, 0],
+    ]);
+    expect(summarizeTextbookGrade(1, true, lessons)).toMatchObject({
+      properNounCandidates: 1,
+      autoPublishedProperNouns: { total: 0, lessons: [] },
+    });
+    expect(await lessonThreeWords()).toEqual(before);
+    expect(before.map((w) => w.status)).toEqual(['draft', 'draft']);
+    await expect(properAudits()).resolves.toEqual([]);
+  });
+
+  it('[T13] --publish approves the draft proper noun with one audit; a common draft word still blocks', async () => {
+    const actor = await prisma.user.findFirstOrThrow({
+      where: { email: { startsWith: 'textbook-admin-' }, role: 'admin' },
+      select: { id: true },
+    });
+    const lessons = await publishGrade(properTree('proper-publish'));
+    const third = lessons.find((l) => l.fileName === 'lesson-03.json');
+    expect([
+      third?.status,
+      third?.draftWordCount,
+      third?.autoPublishedProperNouns,
+    ]).toEqual(['blocked_draft_words', 5, 1]);
+    expect(summarizeTextbookGrade(1, false, lessons)).toMatchObject({
+      autoPublishedProperNouns: {
+        total: 1,
+        lessons: [{ fileName: 'lesson-03.json', count: 1 }],
+      },
+    });
+    const words = await lessonThreeWords();
+    const proper = words.find((w) => w.hanzi === '龘');
+    const common = words.find((w) => w.hanzi === '鱻');
+    expect(proper).toMatchObject({
+      hanzi: '龘',
+      status: 'published',
+      publishedById: actor.id,
+    });
+    expect(common).toMatchObject({ hanzi: '鱻', status: 'draft' });
+    expect(await properAudits()).toEqual([
+      {
+        actorId: actor.id,
+        targetType: 'word',
+        targetId: String(proper?.id),
+        afterSummary: {
+          wordId: proper?.id,
+          status: 'published',
+          dataSource: 'HSK20_TEXTBOOK_PO_V1',
+        },
+      },
+    ]);
+  });
+
+  it('[T14] a second --publish run adds no audit', async () => {
+    const lessons = await publishGrade(properTree('proper-publish-2'));
+    expect(lessons.map((l) => l.autoPublishedProperNouns)).toEqual([
+      0, 0, 0, 0,
+    ]);
+    await expect(properAudits()).resolves.toHaveLength(1);
+  });
+
   function admin(method: 'get' | 'post', path: string) {
     return request(app.getHttpServer())
       [method](`/api/v1${path}`)

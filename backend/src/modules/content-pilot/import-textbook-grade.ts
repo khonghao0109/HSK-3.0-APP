@@ -27,6 +27,10 @@ import {
   TextbookSeeddataError,
 } from './textbook-seeddata.converter';
 import type { ExerciseSkips } from './textbook-exercises';
+import {
+  autoPublishProperNouns,
+  countProperNounCandidates,
+} from './textbook-proper-noun';
 
 /**
  * M2.13b — whole-grade textbook import (`docs/process/content-pipeline.md`
@@ -37,6 +41,7 @@ import type { ExerciseSkips } from './textbook-exercises';
  * `continueOnError`. With `publish` (M2.13b FIX) it then publishes the unit,
  * the course, and each lesson's topics, exercises and lesson revision through
  * the CMS review → publish routes; a lesson with draft words stays draft.
+ * FIX-3: draft textbook proper nouns are published first (`textbook-proper-noun.ts`).
  */
 
 export interface TextbookGradeOptions {
@@ -47,7 +52,10 @@ export interface TextbookGradeOptions {
   readonly dryRun: boolean;
   /** Record a failing lesson and go on (M2.13b FIX). Default: stop. */
   readonly continueOnError?: boolean;
-  /** Publish what was imported (M2.13b FIX). Never approves a `Word`. */
+  /**
+   * Publish what was imported (M2.13b FIX). Approves only the importer's own
+   * draft proper nouns (FIX-3), never any other `Word`.
+   */
   readonly publish?: boolean;
 }
 
@@ -73,6 +81,10 @@ export interface TextbookGradeLesson {
   /** Already published: left untouched, never rewritten by a rerun. */
   readonly skippedPublished: boolean;
   readonly status: TextbookGradeStatus;
+  /** Seeddata proper nouns a `--publish` run approves (dry-run: would). */
+  readonly properNounCandidates: number;
+  /** Proper nouns this run published (FIX-3); always 0 without `--publish`. */
+  readonly autoPublishedProperNouns: number;
   /** With `blocked_draft_words`: lesson words not yet published. */
   readonly draftWordCount: number;
   /** With `failed`: the error code only, never content. */
@@ -91,6 +103,12 @@ export interface TextbookGradeSummary {
   readonly failed: number;
   readonly failures: ReadonlyArray<{ fileName: string; errorCode: string }>;
   readonly blocked: ReadonlyArray<{ fileName: string; draftWords: number }>;
+  /** Total and per lesson (lessons with at least one). */
+  readonly autoPublishedProperNouns: {
+    readonly total: number;
+    readonly lessons: ReadonlyArray<{ fileName: string; count: number }>;
+  };
+  readonly properNounCandidates: number;
 }
 
 export function textbookSeeddataPaths(
@@ -168,6 +186,16 @@ function latestOf(row: Record<string, unknown>): {
         ? (asRecord(first, 'review').decision as string)
         : null,
   };
+}
+
+/** The admin behind the token: the audit actor of auto-published names. */
+async function adminActorId(api: ApiClient): Promise<number> {
+  const me = asRecord(await api.get('/auth/me'), 'auth/me');
+  const user = asRecord(me.user, 'auth/me.user');
+  if (user.role !== 'admin') {
+    throw new PilotImportError('actor_not_admin', 'Token không phải admin');
+  }
+  return asNumber(user.id, 'auth/me.user.id');
 }
 
 /** Unit first, then course (the course needs a published unit). */
@@ -325,6 +353,8 @@ export async function importTextbookGrade(
     pinyinFixes: 0,
     parentheticalStripped: 0,
     patternsMoved: 0,
+    properNounCandidates: 0,
+    autoPublishedProperNouns: 0,
     grammarExamplesSkipped: 0,
     grammarPointsSkipped: 0,
     skippedPublished: false,
@@ -336,6 +366,8 @@ export async function importTextbookGrade(
     result: null,
   }));
   let coursePublished = false;
+  const publishing = options.publish === true && !options.dryRun;
+  const actorId = publishing ? await adminActorId(api) : null;
   for (const { fileName, content } of files) {
     const summary = {
       fileName,
@@ -348,6 +380,11 @@ export async function importTextbookGrade(
       patternsMoved: content.patternsMoved,
       grammarExamplesSkipped: content.grammarExamplesSkipped,
       grammarPointsSkipped: content.grammarPointsSkipped,
+      properNounCandidates: await countProperNounCandidates(
+        dependencies.prisma,
+        content.words,
+      ),
+      autoPublishedProperNouns: 0,
       draftWordCount: 0,
       errorCode: null,
     };
@@ -372,15 +409,19 @@ export async function importTextbookGrade(
       });
       let status: TextbookGradeStatus = options.dryRun ? 'dry_run' : 'imported';
       let draftWordCount = 0;
-      if (
-        options.publish === true &&
-        !options.dryRun &&
-        result.lessonId !== null
-      ) {
+      let autoPublished = 0;
+      if (publishing && actorId !== null && result.lessonId !== null) {
         if (!coursePublished) {
           await publishCourseAndUnit(api, options.grade);
           coursePublished = true;
         }
+        // Before the draft-word check, so names do not block the lesson.
+        autoPublished = await autoPublishProperNouns(dependencies.prisma, {
+          lessonId: result.lessonId,
+          words: content.words,
+          actorId,
+          publish: true,
+        });
         const published = await publishLesson(
           dependencies,
           api,
@@ -395,6 +436,7 @@ export async function importTextbookGrade(
         skippedPublished: false,
         status,
         draftWordCount,
+        autoPublishedProperNouns: autoPublished,
         result,
       });
     } catch (error) {
@@ -446,5 +488,18 @@ export function summarizeTextbookGrade(
         fileName: lesson.fileName,
         draftWords: lesson.draftWordCount,
       })),
+    autoPublishedProperNouns: {
+      total: lessons.reduce((sum, l) => sum + l.autoPublishedProperNouns, 0),
+      lessons: lessons
+        .filter((lesson) => lesson.autoPublishedProperNouns > 0)
+        .map((lesson) => ({
+          fileName: lesson.fileName,
+          count: lesson.autoPublishedProperNouns,
+        })),
+    },
+    properNounCandidates: lessons.reduce(
+      (sum, lesson) => sum + lesson.properNounCandidates,
+      0,
+    ),
   };
 }
