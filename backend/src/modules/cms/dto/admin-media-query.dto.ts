@@ -4,10 +4,12 @@ import { IsEnum, IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 import { POSTGRESQL_INT4_MAX } from '../../../common/constants/database.constants';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { PinSwaggerEnumOrder } from '../../../common/openapi/pin-swagger-enum-order';
 
 export const MEDIA_LIFECYCLES = ['active', 'archived'] as const;
 export type MediaLifecycleFilter = (typeof MEDIA_LIFECYCLES)[number];
 
+@PinSwaggerEnumOrder('processingStatus', Object.values(MediaProcessingStatus))
 export class AdminMediaQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(MediaType)

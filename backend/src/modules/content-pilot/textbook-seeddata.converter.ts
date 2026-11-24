@@ -1,9 +1,12 @@
+import { normalizePinyin } from '../../common/utils/normalize-pinyin';
 import { validateLessonExerciseAuthoring } from '../../common/validation/lesson-exercise-authoring.validator';
 import { validateTopicContentBlocks } from '../../common/validation/topic-content-blocks';
 
 import {
   buildTextbookExercises,
   isClassroomPhrase,
+  isSentencePattern,
+  stripParenthetical,
   type ExerciseSkips,
   type ExerciseWord,
   type TextbookExercise,
@@ -102,6 +105,16 @@ export interface TextbookLessonFile {
   /** Draft exercises from the real words, via exercise import (M2.13b). */
   readonly exercises: readonly TextbookExercise[];
   readonly exerciseSkips: ExerciseSkips;
+  /** Breve vowels repaired to third-tone carons (M2.13b FIX). */
+  readonly pinyinFixes: number;
+  /** `X (Y)` hanzi reduced to `X` (M2.13b FIX-2). */
+  readonly parentheticalStripped: number;
+  /** `太......了` patterns moved to the classroom block (M2.13b FIX-2). */
+  readonly patternsMoved: number;
+  /** Grammar examples dropped for lack of a meaning (M2.13b FIX). */
+  readonly grammarExamplesSkipped: number;
+  /** Grammar points dropped: no meaningful example and no explanation. */
+  readonly grammarPointsSkipped: number;
   /** Audio file names for the media phase; never read here. */
   readonly keyTextAudioRefs: readonly string[];
 }
@@ -172,6 +185,35 @@ export function lessonNumberOf(value: unknown): number | null {
   return Number.isSafeInteger(number) && number >= 1 ? number : null;
 }
 
+const BREVE_TO_CARON: Readonly<Record<string, string>> = {
+  ă: 'ǎ',
+  ĕ: 'ě',
+  ĭ: 'ǐ',
+  ŏ: 'ǒ',
+  ŭ: 'ǔ',
+  Ă: 'Ǎ',
+  Ĕ: 'Ě',
+  Ĭ: 'Ǐ',
+  Ŏ: 'Ǒ',
+  Ŭ: 'Ǔ',
+};
+
+/**
+ * M2.13b FIX: seeddata writes the third tone with a breve (ă U+0103) instead
+ * of a caron (ǎ U+01CE). Only these ten letters change.
+ */
+export function fixBrevePinyin(value: string): {
+  value: string;
+  count: number;
+} {
+  let count = 0;
+  const fixed = value.replace(/[ăĕĭŏŭĂĔĬŎŬ]/gu, (letter) => {
+    count += 1;
+    return BREVE_TO_CARON[letter];
+  });
+  return { value: fixed, count };
+}
+
 interface VocabWord {
   han: string;
   pinyin: string;
@@ -182,6 +224,8 @@ interface VocabWord {
 
 interface VocabLesson {
   bai: number;
+  pinyinFixes: number;
+  parentheticalStripped: number;
   ten: string;
   ten_vi: string;
   tu_vung: VocabWord[];
@@ -213,6 +257,7 @@ interface LessonGrammar {
 
 interface LessonRecord {
   bai: number;
+  pinyinFixes: number;
   ten: string;
   ten_vi: string;
   bai_khoa: LessonText[];
@@ -349,7 +394,8 @@ const GRAMMAR_FIELDS = {
   patternID: 'ignored',
 } as const;
 // Empty in part of the seeddata: not used, or handled per lesson in range.
-const GRAMMAR_OPTIONAL_EMPTY = ['type', 'structure', 'meaning'];
+// `explanation` may be empty too: a point with neither is dropped (M2.13b FIX).
+const GRAMMAR_OPTIONAL_EMPTY = ['type', 'structure', 'meaning', 'explanation'];
 
 /** ASCII of a Vietnamese title: no diacritics, đ → d, kebab-case. */
 export function slugTail(title: string): string {
@@ -402,16 +448,37 @@ function readVocab(raw: unknown, check: Checker): Map<number, VocabLesson> {
       check.issues.push({ code: 'lesson_duplicate', path: `${path}.bai` });
       return;
     }
+    let pinyinFixes = 0;
+    let parentheticalStripped = 0;
+    const pinyin = (value: unknown): string => {
+      const fixed = fixBrevePinyin(value as string);
+      pinyinFixes += fixed.count;
+      return fixed.value;
+    };
+    const han = (value: unknown): string => {
+      const stripped = stripParenthetical(value as string);
+      if (stripped.stripped) parentheticalStripped += 1;
+      return stripped.value;
+    };
+    const tuVung = (words as Array<Record<string, unknown>>).map((word) => ({
+      han: han(word.han),
+      pinyin: stripParenthetical(pinyin(word.pinyin)).value,
+      vi: word.vi as string,
+      pos: word.pos as string,
+      audio_file: word.audio_file as string,
+    }));
     byNumber.set(bai, {
       bai,
+      pinyinFixes,
+      parentheticalStripped,
       ten: record.ten as string,
       ten_vi: record.ten_vi as string,
-      tu_vung: (words as Array<Record<string, unknown>>).map((word) => ({
-        han: word.han as string,
-        pinyin: word.pinyin as string,
-        vi: word.vi as string,
-        pos: word.pos as string,
-        audio_file: word.audio_file as string,
+      tu_vung: tuVung.map((word) => ({
+        han: word.han,
+        pinyin: word.pinyin,
+        vi: word.vi,
+        pos: word.pos,
+        audio_file: word.audio_file,
       })),
     });
   });
@@ -475,7 +542,13 @@ function readLessons(raw: unknown, check: Checker): Map<number, LessonRecord> {
     }
     const texts = source.bai_khoa as Array<Record<string, unknown>>;
     const grammar = source.ngu_phap as Array<Record<string, string>>;
-    byNumber.set(bai, {
+    let pinyinFixes = 0;
+    const pinyin = (value: string): string => {
+      const fixed = fixBrevePinyin(value);
+      pinyinFixes += fixed.count;
+      return fixed.value;
+    };
+    const record2 = {
       bai,
       ten: record.ten as string,
       ten_vi: record.ten_vi as string,
@@ -486,7 +559,7 @@ function readLessons(raw: unknown, check: Checker): Map<number, LessonRecord> {
           (line) => ({
             speaker: line.speaker,
             text_han: line.text_han,
-            pinyin: line.pinyin,
+            pinyin: pinyin(line.pinyin),
             meaning: line.meaning,
             audio: line.audio,
           }),
@@ -498,10 +571,11 @@ function readLessons(raw: unknown, check: Checker): Map<number, LessonRecord> {
         type: item.type,
         explanation: item.explanation,
         example: item.example,
-        pinyin: item.pinyin,
+        pinyin: pinyin(item.pinyin),
         meaning: item.meaning,
       })),
-    });
+    };
+    byNumber.set(bai, { ...record2, pinyinFixes });
   });
   return byNumber;
 }
@@ -545,6 +619,15 @@ function keyTextBlocks(texts: readonly LessonText[]): TextbookBlock[] {
  * chips with Han characters are the key words.
  */
 function grammarBlock(grammar: LessonGrammar): TextbookBlock {
+  // M2.13b FIX: an example without a meaning is dropped, never invented. With
+  // no example left a grammar_point is invalid (examples 1–5), so the point
+  // keeps its title and explanation as a text block.
+  if (grammar.meaning.trim() === '') {
+    return {
+      type: 'text',
+      value: `${grammar.pattern}\n${grammar.explanation}`,
+    };
+  }
   const source =
     grammar.structure.trim() === '' ? grammar.pattern : grammar.structure;
   // A chip longer than the CMS limit (zh ≤ 20) is split on spaces.
@@ -580,12 +663,22 @@ function buildFile(
 ): TextbookLessonFile {
   const number = pad(lesson.bai);
   const sourceKey = `hsk2-textbook:g${String(grade)}:l${number}`;
-  const realWords = vocab.tu_vung.filter(
-    (word) => !isClassroomPhrase(word.han),
-  );
+  // M2.13b FIX: a word repeated in a lesson is kept once (first wins).
+  const seenWords = new Set<string>();
+  const nonPhrases = vocab.tu_vung.filter((word) => !isPhraseRow(word.han));
+  const realWords = nonPhrases.filter((word) => {
+    const key = `${word.han}\u0000${normalizePinyin(word.pinyin)}`;
+    if (seenWords.has(key)) return false;
+    seenWords.add(key);
+    return true;
+  });
+  const repeatedWords = nonPhrases.length - realWords.length;
   const classroomPhrases = vocab.tu_vung
-    .filter((word) => isClassroomPhrase(word.han))
+    .filter((word) => isPhraseRow(word.han))
     .map(toExerciseWord);
+  const patternsMoved = classroomPhrases.filter((phrase) =>
+    isSentencePattern(phrase.hanzi),
+  ).length;
   const vocabularyContent: TextbookBlock[] = [
     { type: 'vocabulary_list', value: 'lesson_words' },
   ];
@@ -593,7 +686,9 @@ function buildFile(
     vocabularyContent.push({
       type: 'text',
       value: [
-        'Câu dùng trong lớp',
+        patternsMoved > 0
+          ? 'Câu và cấu trúc dùng trong lớp'
+          : 'Câu dùng trong lớp',
         ...classroomPhrases.map(
           (phrase) =>
             `${phrase.hanzi} — ${phrase.pinyin} — ${phrase.meaningVi}`,
@@ -629,7 +724,10 @@ function buildFile(
       content: keyText,
     });
   }
-  if (lesson.ngu_phap.length > 0) {
+  const grammarPoints = lesson.ngu_phap.filter(
+    (item) => item.meaning.trim() !== '' || item.explanation.trim() !== '',
+  );
+  if (grammarPoints.length > 0) {
     topics.push({
       key: 'grammar',
       type: 'grammar',
@@ -637,7 +735,7 @@ function buildFile(
       orderIndex: 3,
       isPremium: false,
       isLocked: false,
-      content: lesson.ngu_phap.map(grammarBlock),
+      content: grammarPoints.map(grammarBlock),
     });
   }
   return {
@@ -669,12 +767,27 @@ function buildFile(
     classroomPhrases,
     topics,
     exercises,
-    exerciseSkips: skipped,
+    exerciseSkips: {
+      ...skipped,
+      duplicateWords: skipped.duplicateWords + repeatedWords,
+    },
+    pinyinFixes: vocab.pinyinFixes + lesson.pinyinFixes,
+    parentheticalStripped: vocab.parentheticalStripped,
+    patternsMoved,
+    grammarExamplesSkipped: lesson.ngu_phap.filter(
+      (item) => item.meaning.trim() === '',
+    ).length,
+    grammarPointsSkipped: lesson.ngu_phap.length - grammarPoints.length,
     keyTextAudioRefs: lesson.bai_khoa.flatMap((text) => [
       text.audio_file,
       ...text.content.map((line) => line.audio),
     ]),
   };
+}
+
+/** Classroom phrase or sentence pattern: shown in the block, never a Word. */
+function isPhraseRow(hanzi: string): boolean {
+  return isClassroomPhrase(hanzi) || isSentencePattern(hanzi);
 }
 
 function toExerciseWord(word: VocabWord): ExerciseWord {
@@ -684,6 +797,22 @@ function toExerciseWord(word: VocabWord): ExerciseWord {
 export function convertTextbookSeeddata(
   input: ConvertTextbookInput,
 ): Array<{ fileName: string; content: TextbookLessonFile }> {
+  const { files, failures } = convertTextbookSeeddataEach(input);
+  if (failures.length > 0) {
+    throw new TextbookSeeddataError(failures.flatMap((f) => f.issues));
+  }
+  return files;
+}
+
+/**
+ * Like `convertTextbookSeeddata`, but a lesson-level issue only fails that
+ * lesson (M2.13b FIX `--continue-on-error`). File-wide issues (schema, lesson
+ * mismatch) still throw.
+ */
+export function convertTextbookSeeddataEach(input: ConvertTextbookInput): {
+  files: Array<{ fileName: string; content: TextbookLessonFile }>;
+  failures: Array<{ bai: number; issues: TextbookSeeddataIssue[] }>;
+} {
   const check = new Checker();
   const vocab = readVocab(input.vocab, check);
   const lessons = readLessons(input.lessons, check);
@@ -711,11 +840,18 @@ export function convertTextbookSeeddata(
   const gradePool = [...vocab.keys()]
     .sort((a, b) => a - b)
     .flatMap((bai) => vocab.get(bai)?.tu_vung ?? [])
-    .filter((word) => !isClassroomPhrase(word.han))
+    .filter((word) => !isPhraseRow(word.han))
     .map(toExerciseWord);
   const files: Array<{ fileName: string; content: TextbookLessonFile }> = [];
   const to = input.to ?? Math.max(input.from - 1, ...vocab.keys());
+  const failures: Array<{ bai: number; issues: TextbookSeeddataIssue[] }> = [];
   for (let bai = input.from; bai <= to; bai += 1) {
+    const issuesBefore = check.issues.length;
+    const lessonFailed = (): boolean => {
+      if (check.issues.length === issuesBefore) return false;
+      failures.push({ bai, issues: check.issues.splice(issuesBefore) });
+      return true;
+    };
     const vocabLesson = vocab.get(bai);
     const lesson = lessons.get(bai);
     if (vocabLesson === undefined || lesson === undefined) {
@@ -723,21 +859,15 @@ export function convertTextbookSeeddata(
         code: 'lesson_missing_in_vocab',
         path: `bai=${String(bai)}`,
       });
+      lessonFailed();
       continue;
     }
-    lesson.ngu_phap.forEach((item, index) => {
-      if (item.meaning.trim() === '') {
-        check.issues.push({
-          code: 'grammar_meaning_empty',
-          path: `lessons bai=${String(bai)} ngu_phap[${String(index)}].meaning`,
-        });
-      }
-    });
     if (vocabLesson.tu_vung.length === 0) {
       check.issues.push({
         code: 'lesson_empty',
         path: `vocab bai=${String(bai)}`,
       });
+      lessonFailed();
       continue;
     }
     const content = buildFile(input.grade, vocabLesson, lesson, gradePool);
@@ -779,10 +909,10 @@ export function convertTextbookSeeddata(
         });
       }
     }
+    if (lessonFailed()) continue;
     files.push({ fileName: `lesson-${pad(bai)}.json`, content });
   }
-  if (check.issues.length > 0) throw new TextbookSeeddataError(check.issues);
-  return files;
+  return { files, failures };
 }
 
 /** Stable bytes for hashing: insertion-ordered keys, 2-space indent, final LF. */

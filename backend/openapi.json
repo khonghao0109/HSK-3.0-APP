@@ -17296,11 +17296,11 @@
           "status": {
             "type": "string",
             "enum": [
-              "not_found",
-              "invalid",
               "saved",
               "replayed",
-              "conflict"
+              "conflict",
+              "invalid",
+              "not_found"
             ]
           },
           "answer": {

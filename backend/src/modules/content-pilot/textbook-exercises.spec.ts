@@ -3,6 +3,8 @@ import { validateLessonExerciseAuthoring } from '../../common/validation/lesson-
 import {
   buildTextbookExercises,
   isClassroomPhrase,
+  isSentencePattern,
+  stripParenthetical,
   type ExerciseWord,
 } from './textbook-exercises';
 
@@ -150,5 +152,36 @@ describe('buildTextbookExercises (M2.13b)', () => {
     const { exercises, skipped } = build(words);
     expect(skipped).toEqual({ mcqMeaning: 0, mcqHanzi: 0, duplicateWords: 1 });
     expect(exercises.filter((e) => e.type === 'mcq')).toHaveLength(8);
+  });
+});
+
+describe('stripParenthetical (M2.13b FIX-2)', () => {
+  it.each([
+    ['下面 (下)', '下面'],
+    ['学习 (学)', '学习'],
+    ['学习（学）', '学习'],
+    ['xiàmiàn (xià)', 'xiàmiàn'],
+  ])('strips the trailing note of %s', (value, expected) => {
+    expect(stripParenthetical(value)).toEqual({
+      value: expected,
+      stripped: true,
+    });
+  });
+
+  it.each(['下面', '(下)', '下 (面) 上', ''])('keeps %s', (value) => {
+    expect(stripParenthetical(value)).toEqual({ value, stripped: false });
+  });
+});
+
+describe('isSentencePattern (M2.13b FIX-2)', () => {
+  it.each(['太......了', '太…了', '太……了', '...吗'])(
+    'treats %s as a sentence pattern',
+    (value) => {
+      expect(isSentencePattern(value)).toBe(true);
+    },
+  );
+
+  it.each(['太', '了', '..', '上课!'])('keeps %s out', (value) => {
+    expect(isSentencePattern(value)).toBe(false);
   });
 });

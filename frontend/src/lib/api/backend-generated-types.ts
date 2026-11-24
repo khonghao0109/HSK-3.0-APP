@@ -4140,7 +4140,7 @@ export interface components {
         ExamAnswerBatchResultDto: {
             questionKey: string;
             /** @enum {string} */
-            status: "not_found" | "invalid" | "saved" | "replayed" | "conflict";
+            status: "saved" | "replayed" | "conflict" | "invalid" | "not_found";
             answer?: components["schemas"]["ExamAnswerViewDto"];
             /** @description Machine code for `invalid` items (`EXAM_ANSWER_INVALID`). */
             code?: string;

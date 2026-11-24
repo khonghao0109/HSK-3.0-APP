@@ -5,6 +5,7 @@ import { validateTopicContentBlocks } from '../../common/validation/topic-conten
 
 import {
   convertTextbookSeeddata,
+  fixBrevePinyin,
   serializeTextbookLesson,
   TextbookSeeddataError,
 } from './textbook-seeddata.converter';
@@ -180,10 +181,8 @@ describe('convertTextbookSeeddata (M2.13a)', () => {
     const lessons = load('hsk1-lessons.json') as Array<Record<string, unknown>>;
     const grammar = lessons[0].ngu_phap as Array<Record<string, unknown>>;
     grammar[0] = { ...grammar[0], structure: '', meaning: '' };
-    expect(issuesOf(() => convert({ lessons }))).toEqual([
-      'grammar_meaning_empty lessons bai=1 ngu_phap[0].meaning',
-      'block_invalid lessons bai=1 grammar content[0].examples[0].vi',
-    ]);
+    // M2.13b FIX: the example without a meaning is dropped, not an error.
+    expect(convert({ lessons })[0].content.grammarExamplesSkipped).toBe(1);
     grammar[0] = { ...grammar[0], meaning: 'Câu thử.' };
     const [first] = convert({ lessons });
     const point = first.content.topics.find((t) => t.key === 'grammar')
@@ -314,5 +313,176 @@ describe('convertTextbookSeeddata classroom phrases and exercises (M2.13b)', () 
       'lesson-03.json',
       'lesson-04.json',
     ]);
+  });
+});
+
+describe('seeddata repairs (M2.13b FIX)', () => {
+  it('turns breve vowels into third-tone carons, nothing else', () => {
+    expect(fixBrevePinyin('nă')).toEqual({ value: 'nǎ', count: 1 });
+    expect(fixBrevePinyin('Nĕ Hĭ ŏ ŭ')).toEqual({
+      value: 'Ně Hǐ ǒ ǔ',
+      count: 4,
+    });
+    expect(fixBrevePinyin('ĂĔĬŎŬ')).toEqual({ value: 'ǍĚǏǑǓ', count: 5 });
+    expect(fixBrevePinyin('nǎ nà na ná nā lǚ ü')).toEqual({
+      value: 'nǎ nà na ná nā lǚ ü',
+      count: 0,
+    });
+  });
+
+  const lessonOne = () => {
+    const vocab = load('hsk1-ext-vocab.json') as Array<Record<string, unknown>>;
+    const lessons = load('hsk1-ext-lessons.json') as Array<
+      Record<string, unknown>
+    >;
+    return { vocab, lessons };
+  };
+
+  it('repairs breve pinyin in words, key texts and grammar, and counts it', () => {
+    const { vocab, lessons } = lessonOne();
+    const words = vocab[0].tu_vung as Array<Record<string, unknown>>;
+    words[0] = { ...words[0], pinyin: 'bĕn' };
+    const text = (lessons[0].bai_khoa as Array<Record<string, unknown>>)[0];
+    const lines = text.content as Array<Record<string, unknown>>;
+    lines[0] = { ...lines[0], pinyin: 'Bĕn biăo!' };
+    const grammar = lessons[0].ngu_phap as Array<Record<string, unknown>>;
+    grammar[0] = { ...grammar[0], pinyin: 'Bĕn' };
+    const [first] = convertTextbookSeeddata({
+      vocab,
+      lessons,
+      grade: 1,
+      from: 1,
+      to: 1,
+    });
+    expect(first.content.words[0].pinyin).toBe('běn');
+    expect(first.content.pinyinFixes).toBe(4);
+    expect(serializeTextbookLesson(first.content)).not.toMatch(/[ăĕĭŏŭ]/u);
+  });
+
+  it('drops a repeated word of a lesson (first kept) and counts it', () => {
+    const { vocab, lessons } = lessonOne();
+    const words = vocab[2].tu_vung as Array<Record<string, unknown>>;
+    words.push({ ...words[0], id: 99 });
+    const [third] = convertTextbookSeeddata({
+      vocab,
+      lessons,
+      grade: 1,
+      from: 3,
+      to: 3,
+    });
+    expect(third.content.words.map((w) => w.hanzi)).toEqual([
+      '龘',
+      '鱻',
+      '毳',
+      '淼',
+      '焱',
+      '垚',
+    ]);
+    expect(third.content.exerciseSkips.duplicateWords).toBe(1);
+  });
+
+  it('drops grammar examples without a meaning, never inventing one', () => {
+    const { vocab, lessons } = lessonOne();
+    const grammar = lessons[0].ngu_phap as Array<Record<string, unknown>>;
+    grammar[0] = { ...grammar[0], meaning: '' };
+    const [first] = convertTextbookSeeddata({
+      vocab,
+      lessons,
+      grade: 1,
+      from: 1,
+      to: 1,
+    });
+    expect(first.content.grammarExamplesSkipped).toBe(1);
+    expect(first.content.grammarPointsSkipped).toBe(0);
+    const topic = first.content.topics.find((t) => t.key === 'grammar');
+    // No example left: the point keeps its title and explanation as text.
+    expect(topic?.content).toEqual([
+      { type: 'text', value: '犇 + 骉\nGiải thích thử cho mẫu câu.' },
+    ]);
+    expect(validateTopicContentBlocks('grammar', topic?.content ?? [])).toEqual(
+      [],
+    );
+    expect(JSON.stringify(topic)).not.toContain('犇骉！');
+
+    grammar[0] = { ...grammar[0], meaning: '', explanation: '' };
+    const [again] = convertTextbookSeeddata({
+      vocab,
+      lessons,
+      grade: 1,
+      from: 1,
+      to: 1,
+    });
+    expect(again.content.grammarPointsSkipped).toBe(1);
+    expect(again.content.topics.map((t) => t.key)).toEqual([
+      'vocabulary',
+      'key_text',
+    ]);
+  });
+});
+
+describe('word cleaning rules (M2.13b FIX-2)', () => {
+  const fixtures = () => ({
+    vocab: load('hsk1-ext-vocab.json') as Array<Record<string, unknown>>,
+    lessons: load('hsk1-ext-lessons.json') as Array<Record<string, unknown>>,
+  });
+  const lessonThree = (vocab: Array<Record<string, unknown>>) =>
+    vocab[2].tu_vung as Array<Record<string, unknown>>;
+  const convertThree = (
+    vocab: Array<Record<string, unknown>>,
+    lessons: Array<Record<string, unknown>>,
+  ) =>
+    convertTextbookSeeddata({ vocab, lessons, grade: 1, from: 3, to: 3 })[0]
+      .content;
+
+  it('strips a trailing (…) note and dedupes the stripped word', () => {
+    const { vocab, lessons } = fixtures();
+    const words = lessonThree(vocab);
+    words.push({ ...words[0], id: 98, han: '龘 (龍)', pinyin: 'dá (lóng)' });
+    words.push({
+      ...words[1],
+      id: 99,
+      han: '犇（牛）',
+      pinyin: 'bēn',
+      vi: 'chạy',
+    });
+    const third = convertThree(vocab, lessons);
+    expect(third.words.map((w) => w.hanzi)).toEqual([
+      '龘',
+      '鱻',
+      '毳',
+      '淼',
+      '焱',
+      '垚',
+      '犇',
+    ]);
+    expect(third.parentheticalStripped).toBe(2);
+    expect(third.exerciseSkips.duplicateWords).toBe(1);
+  });
+
+  it('moves a sentence pattern into the classroom block, never a word', () => {
+    const { vocab, lessons } = fixtures();
+    const words = lessonThree(vocab);
+    words.push({
+      ...words[0],
+      id: 97,
+      han: '龘......鱻',
+      pinyin: 'dá......xiān',
+      vi: 'mẫu câu',
+    });
+    const third = convertThree(vocab, lessons);
+    expect(third.words.map((w) => w.hanzi)).not.toContain('龘......鱻');
+    expect(third.patternsMoved).toBe(1);
+    const block = third.topics[0].content.find((b) => b.type === 'text');
+    expect(block?.value.split('\n')[0]).toBe('Câu và cấu trúc dùng trong lớp');
+    expect(block?.value).toContain('龘......鱻 — dá......xiān — mẫu câu');
+  });
+
+  it('keeps the old block title and zero counters without patterns', () => {
+    const { vocab, lessons } = fixtures();
+    const third = convertThree(vocab, lessons);
+    const block = third.topics[0].content.find((b) => b.type === 'text');
+    expect(block?.value.split('\n')[0]).toBe('Câu dùng trong lớp');
+    expect(third.parentheticalStripped).toBe(0);
+    expect(third.patternsMoved).toBe(0);
   });
 });
