@@ -77,6 +77,17 @@ export default function LearnerLayout({ children }: { children: ReactNode }) {
             <path d="M5 12h14" />
             <path d="m12 5 7 7-7 7" />
           </symbol>
+          <symbol id="i-book" viewBox="0 0 24 24">
+            <path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5 2.5 2.5 0 0 0 6.5 24" />
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          </symbol>
+          <symbol id="i-award" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="6" />
+            <path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11" />
+          </symbol>
+          <symbol id="i-plus" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" />
+          </symbol>
           <symbol id="i-lock-fill" viewBox="0 0 24 24">
             <path d="M7.5 10.5V7.5a4.5 4.5 0 0 1 9 0v3" />
             <rect

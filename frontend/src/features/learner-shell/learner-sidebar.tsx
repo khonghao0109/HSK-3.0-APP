@@ -38,6 +38,9 @@ export function LearnerSidebar() {
   const onDictionary =
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');
+  // C3b-UI (PO 24/11): the course list and each course detail.
+  const onCourses =
+    pathname === '/learn/courses' || pathname.startsWith('/learn/courses/');
   const onProfile = pathname === '/learn/profile';
   // M3.3b (Q271): the review page and its session.
   const onReview =
@@ -62,6 +65,13 @@ export function LearnerSidebar() {
         <Link href="/learn/path" aria-current={onPath ? 'page' : undefined}>
           <Icon name="book-open" />
           Lộ trình học
+        </Link>
+        <Link
+          href="/learn/courses"
+          aria-current={onCourses ? 'page' : undefined}
+        >
+          <Icon name="list" />
+          Khoá học
         </Link>
         <Link
           href="/learn/dictionary"

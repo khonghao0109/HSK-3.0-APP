@@ -1,0 +1,1159 @@
+/* Khoá học (ADR-009 C3b-UI, 24/11/2026). Nguồn: docs/ui_reference/mobile/css/course.css
+   (mc-, mobile-first) và web/css/course.css (crs-, từ 1024px). Chỉ token có sẵn;
+   không inline style (CSP): thanh tiến độ dùng `.progress` + `.pct-N` của learner.css. */
+
+/* ---------- Khung trang (mobile) ---------- */
+.learner-app .crs-page {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 18px 16px calc(var(--tabbar-height) + 24px);
+}
+
+.learner-app .crs-detail {
+  padding-bottom: calc(var(--tabbar-height) + 84px);
+}
+
+.learner-app .crs-h1 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.3;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-lead {
+  margin-top: 2px;
+  font-size: 0.875rem;
+  color: var(--stone-700);
+}
+
+.learner-app .crs-note {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--cream-100);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-body);
+}
+
+.learner-app .crs-note .icon {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 1px;
+  color: var(--jade-800);
+}
+
+/* ---------- Nhãn ---------- */
+.learner-app .crs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.learner-app :is(.crs-kind, .crs-ver) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.learner-app .crs-kind {
+  background: var(--navy-100);
+  color: var(--navy-900);
+}
+
+.learner-app .crs-kind .icon,
+.learner-app .crs-status .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.learner-app .crs-ver {
+  border: 1px solid var(--border-strong);
+  color: var(--stone-700);
+}
+
+.learner-app .crs-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.learner-app .crs-status.is-current {
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .crs-status.is-following {
+  padding: 2px 8px;
+  border: 1px solid var(--jade-700);
+  border-radius: var(--r-pill);
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .crs-status.is-none {
+  color: var(--stone-600);
+  font-weight: 600;
+}
+
+/* ---------- Thẻ khoá ---------- */
+.learner-app .crs-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .crs-card {
+  display: grid;
+  gap: 8px;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .crs-card.is-current {
+  border: 2px solid var(--jade-700);
+}
+
+.learner-app .crs-card__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-card__desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--stone-700);
+}
+
+.learner-app .crs-prog {
+  display: grid;
+  gap: 6px;
+}
+
+.learner-app .crs-prog__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--text-body);
+}
+
+.learner-app .crs-prog__meta b {
+  color: var(--navy-900);
+}
+
+.learner-app .crs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-default);
+}
+
+.learner-app .crs-actions .btn {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 0.9375rem;
+  gap: 6px;
+}
+
+/* Q74/PO 24/11: nút chính jade-800 để chữ trắng ≥ 4,5:1. */
+.learner-app :is(.crs-page, .crs-home) .btn--primary {
+  background: var(--jade-800);
+}
+
+.learner-app .crs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--jade-800);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.learner-app .crs-link:hover {
+  text-decoration: underline;
+}
+
+.learner-app .crs-ghost {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--stone-700);
+  cursor: pointer;
+}
+
+.learner-app .crs-ghost:hover {
+  color: #b3261e;
+  text-decoration: underline;
+}
+
+.learner-app
+  :is(.crs-link, .crs-ghost, .crs-lesson, .crs-unit__head):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Hộp thoại bỏ theo dõi: đỏ #b3261e cho chữ trắng ≥ 4,5:1 (PO 24/11). */
+.learner-app .crs-dialog .crs-danger {
+  padding: 0 var(--sp-5);
+  background: #b3261e;
+}
+
+.learner-app .crs-dialog .btn--outline {
+  min-height: 44px;
+}
+
+/* ---------- Rỗng / lỗi ---------- */
+.learner-app .crs-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+  text-align: center;
+}
+
+.learner-app .crs-state__art {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--cream-100);
+  color: var(--stone-600);
+}
+
+.learner-app .crs-state__art .icon {
+  width: 30px;
+  height: 30px;
+}
+
+.learner-app .crs-state.is-error .crs-state__art {
+  background: var(--red-100);
+  color: #b3261e;
+}
+
+.learner-app .crs-state h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-state p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--stone-700);
+}
+
+.learner-app .crs-state .btn {
+  margin-top: 6px;
+  gap: 6px;
+}
+
+/* ---------- Chi tiết khoá ---------- */
+.learner-app .crs-head {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .crs-head__row {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-app .crs-head__row .btn {
+  min-height: 44px;
+}
+
+.learner-app .crs-head__sum {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-app .crs-rule__text,
+.learner-app .crs-rule p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--stone-700);
+}
+
+.learner-app .crs-units {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .crs-unit {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.learner-app .crs-unit__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.learner-app .crs-unit__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-unit__sub {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--stone-600);
+}
+
+.learner-app .crs-vol {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--cinnabar-100);
+  color: #9a3412;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.learner-app .crs-vol span[lang] {
+  font-family: var(--font-cn);
+}
+
+.learner-app .crs-unit__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--stone-600);
+  white-space: nowrap;
+}
+
+.learner-app .crs-unit__state .icon,
+.learner-app .crs-lesson__state .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.learner-app .crs-unit__state:is(.is-done, .is-current) {
+  color: var(--jade-800);
+}
+
+.learner-app .crs-unit__chev {
+  width: 20px;
+  height: 20px;
+  color: var(--stone-600);
+  transition: transform var(--dur-fast);
+}
+
+.learner-app .crs-unit__head[aria-expanded='true'] .crs-unit__chev {
+  transform: rotate(180deg);
+}
+
+.learner-app .crs-unit__body {
+  padding: 8px 10px 10px;
+  border-top: 1px solid var(--border-default);
+}
+
+.learner-app .crs-lessons {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .crs-lesson {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--surface-card);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.learner-app .crs-lesson__no {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--cream-100);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-lesson__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-lesson__state {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--stone-600);
+}
+
+.learner-app .crs-lesson.is-done .crs-lesson__no {
+  background: var(--jade-100);
+  color: var(--jade-800);
+}
+
+.learner-app .crs-lesson.is-done .crs-lesson__state {
+  color: var(--jade-800);
+}
+
+.learner-app .crs-lesson.is-current {
+  border: 2px solid var(--jade-700);
+  background: var(--jade-50);
+}
+
+.learner-app .crs-lesson.is-current .crs-lesson__no,
+.learner-app .crs-home__next .crs-lesson__no {
+  background: var(--jade-800);
+  color: var(--white);
+}
+
+.learner-app .crs-lesson.is-current .crs-lesson__state {
+  color: var(--jade-800);
+  font-weight: 700;
+}
+
+.learner-app .crs-lesson.is-available .crs-lesson__state {
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+/* PO 24/11: bài khoá có ổ khoá, chữ "Chưa mở" và viền nét đứt. */
+.learner-app .crs-lesson.is-locked {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: var(--cream-50);
+  cursor: not-allowed;
+}
+
+.learner-app .crs-lesson.is-locked .crs-lesson__title {
+  color: var(--stone-700);
+  font-weight: 500;
+}
+
+.learner-app .crs-layout {
+  display: grid;
+  gap: 14px;
+}
+
+/* ---------- Trang chủ: khoá đang học ---------- */
+.learner-app .crs-home {
+  display: grid;
+  gap: 8px;
+  margin-top: var(--sp-4);
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+/* Hẹp tới 195px (M2.4a): mọi cột co được, hàng chữ xuống dòng. */
+.learner-app :is(.crs-home, .crs-home__body) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.learner-app :is(.crs-home__top, .crs-home__next) {
+  flex-wrap: wrap;
+}
+
+.learner-app .crs-home__next .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* PO 24/11: chữ Hán lớn trên nền token khoá thay ảnh minh hoạ. */
+.learner-app .crs-home__art {
+  display: none;
+}
+
+.learner-app .crs-home__body {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-app .crs-home__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.learner-app .crs-home__tag {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-home__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-home__next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--cream-100);
+  color: inherit;
+  text-decoration: none;
+}
+
+.learner-app .crs-home__next small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--stone-600);
+}
+
+.learner-app .crs-home__next b {
+  font-size: 0.9375rem;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-home__next > .icon {
+  flex: none;
+  color: var(--navy-900);
+}
+
+.learner-app .crs-home__cta {
+  display: grid;
+}
+
+.learner-app .crs-home__cta .btn {
+  min-height: 44px;
+  gap: 6px;
+}
+
+.learner-app .crs-home__next:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.learner-app .crs-path-link {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4) 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-app .crs-unit__chev {
+    transition: none;
+  }
+}
+
+/* ---------- Web từ 1024px (web/css/course.css) ---------- */
+@media (min-width: 1024px) {
+  /* learner.css ẩn mọi `.w-only`; mỗi trang tự bật phần web của mình. */
+  .learner-app .crs-page span.w-only {
+    display: inline;
+  }
+
+  .learner-app .crs-page p.w-only {
+    display: block;
+  }
+
+  /* Tiến độ trong đầu trang chỉ có trên mobile; web dùng thẻ aside. */
+  .learner-app .crs-head__sum {
+    display: none;
+  }
+
+  .learner-app .crs-page {
+    gap: 0;
+    margin-top: 0;
+    padding-inline: var(--w-pad);
+    padding-top: var(--sp-8);
+    padding-bottom: var(--sp-12);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .learner-app .crs-note {
+    align-items: flex-start;
+    gap: var(--sp-3);
+    margin: 0 0 var(--sp-6);
+    padding: var(--sp-4) var(--sp-5);
+    border-radius: var(--r-md);
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .crs-note .icon {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+  }
+
+  .learner-app :is(.crs-kind, .crs-ver) {
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: var(--fs-sm);
+  }
+
+  .learner-app .crs-ver {
+    background: var(--surface-card);
+  }
+
+  .learner-app .crs-kind .icon,
+  .learner-app .crs-status .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .learner-app .crs-meta,
+  .learner-app .crs-status {
+    gap: var(--sp-2);
+  }
+
+  .learner-app .crs-status {
+    font-size: var(--fs-sm);
+  }
+
+  .learner-app .crs-status.is-current {
+    padding: 4px 10px;
+  }
+
+  .learner-app .crs-status.is-following {
+    padding: 3px 10px;
+  }
+
+  .learner-app .crs-list {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--sp-6);
+  }
+
+  .learner-app .crs-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-6);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .crs-card__title {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-lg);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-card__desc {
+    flex: 1;
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-prog {
+    gap: var(--sp-2);
+  }
+
+  .learner-app .crs-prog__meta {
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .crs-prog__meta b {
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-actions {
+    gap: var(--sp-3);
+    padding-top: var(--sp-3);
+  }
+
+  .learner-app .crs-actions .btn {
+    min-height: 48px;
+    padding: 0 var(--sp-5);
+    font-size: var(--fs-base);
+    gap: var(--sp-2);
+  }
+
+  .learner-app .crs-link {
+    gap: 4px;
+    padding: 0;
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .crs-ghost {
+    min-height: 48px;
+    padding: 0 var(--sp-3);
+    font-size: var(--fs-base);
+  }
+
+  .learner-app .crs-state {
+    gap: var(--sp-3);
+    width: 100%;
+    max-width: 560px;
+    margin: var(--sp-8) auto 0;
+    padding: var(--sp-12) var(--sp-10);
+    border-radius: var(--r-lg);
+  }
+
+  .learner-app .crs-state__art {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+  }
+
+  .learner-app .crs-state__art .icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .learner-app .crs-state h2 {
+    font-size: var(--fs-xl);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-state p {
+    font-size: var(--fs-base);
+    color: var(--text-muted);
+  }
+
+  /* Chi tiết */
+  .learner-app .crs-detail {
+    padding-bottom: var(--sp-12);
+  }
+
+  .learner-app .crs-head {
+    margin-bottom: var(--sp-6);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .learner-app .crs-head__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-6);
+  }
+
+  .learner-app .crs-head__row .btn {
+    flex: none;
+    min-height: 48px;
+  }
+
+  .learner-app .crs-detail .crs-h1 {
+    font-weight: 600;
+    font-size: var(--fs-2xl);
+    line-height: 1.25;
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-detail .crs-lead {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-base);
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: var(--sp-6);
+  }
+
+  .learner-app .crs-layout__aside {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .learner-app :is(.crs-next, .crs-sum) {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-3);
+    padding: var(--sp-6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* PO 24/11 (như khối Trang chủ): chữ 汉 thay ảnh minh hoạ của mẫu. */
+  .learner-app .crs-next__art {
+    display: grid;
+    place-items: center;
+    width: 120px;
+    height: 100px;
+    margin-bottom: var(--sp-2);
+    border-radius: var(--r-md);
+    background: var(--jade-100);
+    color: var(--jade-800);
+    font-family: var(--font-cn);
+    font-size: 3.5rem;
+    line-height: 1;
+  }
+
+  /* Mẫu .w-h2 / .w-h3 (web.css) — app learner chưa có lớp này. */
+  .learner-app .crs-page .w-h2 {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-page .w-h3 {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-page .w-muted {
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  /* Mẫu learn-sum__big: số bài lớn, không có phần trăm. */
+  .learner-app .crs-sum .crs-prog__meta {
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-sum .crs-prog__meta b {
+    font-size: var(--fs-2xl);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-sum .crs-prog__meta span + span {
+    display: none;
+  }
+
+  .learner-app .crs-sum .crs-prog,
+  .learner-app .crs-next .btn {
+    width: 100%;
+  }
+
+  .learner-app .crs-next .btn {
+    min-height: 48px;
+  }
+
+  .learner-app .crs-rule {
+    display: grid;
+    gap: var(--sp-2);
+  }
+
+  .learner-app .crs-rule p {
+    font-size: var(--fs-md);
+    color: var(--text-body);
+  }
+
+  .learner-app .crs-units {
+    gap: var(--sp-4);
+  }
+
+  .learner-app .crs-unit {
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .crs-unit__head {
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+    gap: var(--sp-4);
+    min-height: 72px;
+    padding: var(--sp-4) var(--sp-5);
+  }
+
+  .learner-app .crs-unit__head:hover {
+    background: var(--cream-50);
+  }
+
+  .learner-app .crs-unit__name {
+    gap: var(--sp-2);
+    font-size: var(--fs-lg);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-unit__sub {
+    margin-top: 2px;
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-vol {
+    gap: 4px;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+  }
+
+  .learner-app .crs-unit__state {
+    gap: 6px;
+    font-size: var(--fs-md);
+  }
+
+  .learner-app .crs-unit__chev {
+    width: 24px;
+    height: 24px;
+  }
+
+  .learner-app .crs-unit__body {
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  }
+
+  .learner-app .crs-lessons {
+    gap: var(--sp-2);
+  }
+
+  .learner-app .crs-lesson {
+    gap: var(--sp-4);
+    min-height: 56px;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-md);
+  }
+
+  .learner-app a.crs-lesson:hover {
+    border-color: var(--jade-600);
+  }
+
+  .learner-app .crs-lesson__no {
+    width: 36px;
+    height: 36px;
+    font-size: var(--fs-md);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-lesson__title {
+    font-size: var(--fs-base);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-lesson__state {
+    gap: 6px;
+    font-size: var(--fs-md);
+  }
+
+  /* Trang chủ */
+  .learner-app .crs-home {
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--sp-8);
+    margin-top: var(--sp-6);
+    padding: var(--sp-6);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .learner-app .crs-home__art {
+    display: grid;
+    place-items: center;
+    width: 200px;
+    aspect-ratio: 200 / 164;
+    border-radius: var(--r-lg);
+    background: var(--jade-100);
+    color: var(--jade-800);
+    font-family: var(--font-cn);
+    font-size: 6rem;
+    line-height: 1;
+  }
+
+  .learner-app .crs-home__body {
+    justify-items: start;
+    gap: var(--sp-3);
+  }
+
+  .learner-app .crs-home__top {
+    width: 100%;
+    gap: var(--sp-4);
+  }
+
+  .learner-app .crs-home__tag {
+    padding: 2px var(--sp-3);
+    border-radius: var(--r-pill);
+    background: var(--jade-50);
+    color: var(--jade-800);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  /* Mẫu `.w-h2`: chữ sans, đậm 700. */
+  .learner-app .crs-home__title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+
+  /* "Khoá đang theo" ở cột phải (mẫu home.css .home-stat + .is-jade). */
+  .learner-app .home-stat.crs-follow {
+    display: grid;
+  }
+
+  .learner-app .crs-follow__icon {
+    display: grid;
+    place-items: center;
+    grid-column: 1;
+    grid-row: 1;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-md);
+    background: var(--jade-50);
+    color: var(--jade-800);
+  }
+
+  .learner-app .crs-follow__icon .icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .learner-app .crs-follow > div {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .learner-app .crs-follow p {
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-follow .crs-link {
+    display: inline-flex;
+  }
+
+  .learner-app .crs-home .crs-prog,
+  .learner-app .crs-home__next {
+    width: 100%;
+  }
+
+  .learner-app .crs-home__next {
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+  }
+
+  .learner-app .crs-home__next small {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .learner-app .crs-home__next b {
+    font-size: var(--fs-base);
+    color: var(--text-strong);
+  }
+
+  .learner-app .crs-home .w-only {
+    display: block;
+  }
+
+  .learner-app .crs-home__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+
+  .learner-app .crs-home__cta .crs-link.w-only {
+    display: inline-flex;
+  }
+
+  .learner-app .crs-home__cta .btn {
+    min-height: 48px;
+    gap: var(--sp-2);
+  }
+
+  /* Lộ trình: link đứng đầu DOM (trước tab cấp, khớp thứ tự Tab F4) và nằm ở
+     cột phải hàng tiêu đề; tiêu đề/phụ đề thu về cột 2 để không đè chữ khi
+     phóng to. Không đặt cuối trang: focus làm trang cuộn. */
+  .learner-app .path-body > .crs-path-link {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+    align-self: end;
+    padding: 0;
+  }
+
+  .learner-app .path-body:has(> .crs-path-link) .path-title,
+  .learner-app .path-body:has(> .crs-path-link) .path-sub {
+    grid-column: 2;
+  }
+}

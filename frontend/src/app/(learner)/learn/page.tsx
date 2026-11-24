@@ -3,6 +3,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { loadHomeCourse } from '@/features/learner-course/course-page-data';
+import {
+  HomeCourseCard,
+  HomeFollowingCard,
+} from '@/features/learner-course/home-course-card';
 import {
   dailyGoalPercent,
   levelLabel,
@@ -22,6 +27,8 @@ import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
 import { Icon } from '@/components/ui/icon';
+
+import './courses/courses.css';
 
 export const metadata: Metadata = {
   title: 'Trang chủ',
@@ -77,6 +84,10 @@ export default async function LearnerHomePage() {
   if (redirectTarget) {
     redirect(redirectTarget);
   }
+
+  // C3b-UI: /learning/home is unchanged; the course block reads A.7c itself.
+  const courses = await loadHomeCourse(session.token);
+  if (courses === 'auth') redirect('/sign-in');
 
   const { dailyGoal, continueLesson } = home;
   const goalPercent = dailyGoalPercent(dailyGoal);
@@ -157,7 +168,10 @@ export default async function LearnerHomePage() {
               </div>
             </div>
           </section>
+          {courses && <HomeFollowingCard courses={courses.following} />}
         </div>
+
+        {courses && <HomeCourseCard course={courses.course} />}
 
         {continueLesson && (
           <>
