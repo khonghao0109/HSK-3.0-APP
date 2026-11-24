@@ -41,7 +41,8 @@ export class LearningController {
   async getLessonDetail(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ApiSuccessResponse<LessonDetailDto>> {
-    return this.learningService.getLessonDetail(id);
+    // ADR-009 C3b-3: this route also serves lessons without a Level.
+    return this.learningService.getLessonDetail(id, true);
   }
 
   @Get('topics')

@@ -2,10 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
 import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
-import {
-  buildAnyLessonReadyWhere,
-  PUBLIC_CONTENT_WHERE,
-} from '../../../common/policies/lesson-readiness.policy';
+import { PUBLIC_CONTENT_WHERE } from '../../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { LearningPathProgress } from '../path/learning-path.policy';
 import {
@@ -18,6 +15,7 @@ import {
   buildCoursePath,
   resolveCurrentCourseCode,
 } from './learning-course.policy';
+import { courseLessonWhere } from './learning-course.reader';
 
 const COURSE_NOT_FOUND = 'Course not found.';
 
@@ -39,26 +37,6 @@ const ENROLLMENT_SELECT = {
   leftAt: true,
   course: { select: { code: true } },
 } satisfies Prisma.CourseEnrollmentSelect;
-
-/**
- * Lessons a learner sees in a course: ready lessons, with or without a Level
- * (ADR-009 C3b-1), of published units of a published course.
- */
-function courseLessonWhere(courseId?: number): Prisma.LessonWhereInput {
-  return buildAnyLessonReadyWhere({
-    courseUnit: {
-      is: {
-        ...PUBLIC_CONTENT_WHERE,
-        course: {
-          is: {
-            ...PUBLIC_CONTENT_WHERE,
-            ...(courseId === undefined ? {} : { id: courseId }),
-          },
-        },
-      },
-    },
-  });
-}
 
 /**
  * ADR-009 C3a learner course routes. Reads never write; enrollment writes

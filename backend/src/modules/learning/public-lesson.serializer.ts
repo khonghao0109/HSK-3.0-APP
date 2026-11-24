@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { CourseVolume, Prisma } from '@prisma/client';
 
 import { mediaAltText } from '../exam/exam-snapshot.builder';
 import { projectPublicExerciseMedia } from './public-exercise.policy';
@@ -35,7 +35,7 @@ export function projectPublicLessonImage(media: PublicImageRecord | undefined) {
 type PublicLessonRecord = {
   id: number;
   title: string;
-  level: { id: number; name: string; orderIndex: number };
+  level: { id: number; name: string; orderIndex: number } | null;
   topics: Array<{
     id: number;
     title: string;
@@ -73,6 +73,16 @@ type PublicLessonRecord = {
     [key: string]: unknown;
   }>;
   coverImage?: PublicImageRecord;
+  /** ADR-009 C3b-3: `course` and `unit` of a lesson without a Level. */
+  courseRef?: {
+    course: { code: string; title: string };
+    unit: {
+      orderIndex: number;
+      title: string;
+      gradeNumber: number | null;
+      volume: CourseVolume | null;
+    };
+  };
   [key: string]: unknown;
 };
 
@@ -82,6 +92,7 @@ export function serializePublicLessonDetail(lesson: PublicLessonRecord) {
     id: lesson.id,
     title: lesson.title,
     level: lesson.level,
+    ...(lesson.courseRef === undefined ? {} : lesson.courseRef),
     coverImage: projectPublicLessonImage(lesson.coverImage),
     topics: lesson.topics,
     words: lesson.lessonWords.map(({ topicId, word }) => ({

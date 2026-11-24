@@ -32,7 +32,10 @@ export const lessonActivitySchema = z.object({
     status: z.enum(['not_started', 'learning', 'done']),
     score: z.number().nullable(),
   }),
-  level: z.object({ id: z.number().int(), code: z.string(), name: z.string() }),
+  // ADR-009 C3b-3: `null` for a course lesson without a Level.
+  level: z
+    .object({ id: z.number().int(), code: z.string(), name: z.string() })
+    .nullable(),
   position: z.number().int().positive(),
   state: lessonStateSchema,
   // Lesson units (Pha B): one row per topic; exercise counts from the

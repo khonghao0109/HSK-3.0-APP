@@ -4,6 +4,7 @@ import {
   PaginationMeta,
 } from '../../common/interfaces/api-response.interface';
 import {
+  buildAnyLessonReadyWhere,
   buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
   PUBLIC_LESSON_WORD_WHERE,
@@ -108,14 +109,31 @@ export class LearningService {
     };
   }
 
+  /**
+   * `withCourseLessons` (ADR-009 C3b-3, `GET /learning/lessons/:id` only):
+   * also serve a ready lesson without a Level, with its course and unit.
+   */
   async getLessonDetail(
     id: number,
+    withCourseLessons = false,
   ): Promise<ApiSuccessResponse<LessonDetailDto>> {
     const lesson = await this.prisma.lesson.findFirst({
-      where: buildLessonReadyWhere({ id }),
+      where: withCourseLessons
+        ? buildAnyLessonReadyWhere({ id })
+        : buildLessonReadyWhere({ id }),
       select: {
         id: true,
         title: true,
+        levelId: true,
+        courseUnit: {
+          select: {
+            orderIndex: true,
+            title: true,
+            gradeNumber: true,
+            volume: true,
+            course: { select: { code: true, title: true } },
+          },
+        },
         coverImage: { select: PUBLIC_LESSON_IMAGE_SELECT },
         level: {
           select: {
@@ -187,14 +205,17 @@ export class LearningService {
       },
     });
 
-    // The query requires a public Level; the check narrows `level` for the DTO.
-    if (!lesson || !lesson.level) {
-      throw new NotFoundException('Lesson not found');
-    }
+    if (!lesson) throw new NotFoundException('Lesson not found');
+    const { levelId, courseUnit, ...rest } = lesson;
+    // A lesson with a Level answers exactly as before (no course or unit).
+    const courseRef =
+      levelId === null && courseUnit
+        ? (({ course, ...unit }) => ({ course, unit }))(courseUnit)
+        : undefined;
 
     return {
       success: true,
-      data: serializePublicLessonDetail({ ...lesson, level: lesson.level }),
+      data: serializePublicLessonDetail({ ...rest, courseRef }),
     };
   }
 

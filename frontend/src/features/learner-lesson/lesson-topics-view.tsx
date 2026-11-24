@@ -69,8 +69,13 @@ export async function LessonTopicsView({
         <nav className="w-crumbs w-only" aria-label="Vị trí">
           <Link href="/learn/path">Lộ trình học</Link>
           <Icon name="chevron-right" className="icon--sm" />
-          <Link href="/learn/path">{levelLabel(activity.level.code)}</Link>
-          <Icon name="chevron-right" className="icon--sm" />
+          {/* ADR-009 C3b-3: a course lesson has no Level (UI comes later). */}
+          {activity.level && (
+            <>
+              <Link href="/learn/path">{levelLabel(activity.level.code)}</Link>
+              <Icon name="chevron-right" className="icon--sm" />
+            </>
+          )}
           <Link href={lessonHref}>{activity.lesson.title}</Link>
           <Icon name="chevron-right" className="icon--sm" />
           <span aria-current="page">{title}</span>

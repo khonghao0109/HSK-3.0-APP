@@ -13874,6 +13874,50 @@
           "orderIndex"
         ]
       },
+      "LessonCourseRefDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "title"
+        ]
+      },
+      "LessonUnitRefDto": {
+        "type": "object",
+        "properties": {
+          "gradeNumber": {
+            "type": "integer",
+            "nullable": true
+          },
+          "volume": {
+            "nullable": true,
+            "enum": [
+              "upper",
+              "lower"
+            ],
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "gradeNumber",
+          "volume",
+          "orderIndex",
+          "title"
+        ]
+      },
       "LessonImageDto": {
         "type": "object",
         "properties": {
@@ -14112,7 +14156,30 @@
             "type": "string"
           },
           "level": {
-            "$ref": "#/components/schemas/LessonDetailLevelDto"
+            "nullable": true,
+            "description": "`null` for a lesson without a Level (ADR-009 C3b-3).",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonDetailLevelDto"
+              }
+            ]
+          },
+          "course": {
+            "description": "Only for a lesson without a Level.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonCourseRefDto"
+              }
+            ]
+          },
+          "unit": {
+            "description": "Only for a lesson without a Level.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonUnitRefDto"
+              }
+            ]
           },
           "coverImage": {
             "nullable": true,
@@ -14255,7 +14322,9 @@
             "type": "number"
           },
           "levelId": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "`null` for a lesson without a Level (ADR-009 C3b-3)."
           }
         },
         "required": [
@@ -14756,11 +14825,34 @@
             "$ref": "#/components/schemas/LessonActivityLessonDto"
           },
           "level": {
-            "$ref": "#/components/schemas/LessonActivityLevelDto"
+            "nullable": true,
+            "description": "`null` for a lesson without a Level (ADR-009 C3b-3).",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonActivityLevelDto"
+              }
+            ]
+          },
+          "course": {
+            "description": "Only for a lesson without a Level.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonCourseRefDto"
+              }
+            ]
+          },
+          "unit": {
+            "description": "Only for a lesson without a Level.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LessonUnitRefDto"
+              }
+            ]
           },
           "position": {
             "type": "number",
-            "description": "1..N among the ready lessons of the level, as in `GET /learning/path`."
+            "description": "1..N among the ready lessons of the level, as in `GET /learning/path`;\nfor a lesson without a Level, of its unit, as in `GET /learning/courses/:code`."
           },
           "sections": {
             "$ref": "#/components/schemas/LessonActivitySectionsDto"
