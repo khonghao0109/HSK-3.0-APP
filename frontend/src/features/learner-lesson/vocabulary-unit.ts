@@ -15,6 +15,8 @@ export type UnitWord = {
   firstMeaning: string | null;
   partOfSpeech: string | null;
   image: { id: number; altText: string | null } | null;
+  /** M2.13c2: the speaker button; null hides it. */
+  audio?: { mediaId: number } | null;
   example: { hanzi: string; pinyin: string | null; vi: string | null } | null;
 };
 

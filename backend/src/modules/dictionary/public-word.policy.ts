@@ -23,6 +23,45 @@ export const PUBLIC_WORD_SQL = Prisma.sql`w."status" = 'published' AND w."delete
  */
 export const MIN_PUBLIC_LEVEL_ORDER_SQL = Prisma.sql`(SELECT min(l."orderIndex") FROM "WordLevel" wl JOIN "Level" l ON l."id" = wl."levelId" WHERE wl."wordId" = w."id" AND l."status" = 'published' AND l."deletedAt" IS NULL)`;
 
+/**
+ * M2.13c2: `Word.audio` as learners get it — id plus format only. The bytes
+ * go through `GET /media/:id/access`, which re-checks usability; here a
+ * not-ready, soft-deleted or non-audio media is simply `null`.
+ */
+export const PUBLIC_WORD_AUDIO_SELECT = {
+  id: true,
+  type: true,
+  mimeType: true,
+  duration: true,
+  processingStatus: true,
+  deletedAt: true,
+} as const satisfies Prisma.MediaSelect;
+
+export function projectPublicWordAudio(
+  media:
+    | Prisma.MediaGetPayload<{ select: typeof PUBLIC_WORD_AUDIO_SELECT }>
+    | null
+    | undefined,
+): {
+  mediaId: number;
+  mimeType: string | null;
+  duration: number | null;
+} | null {
+  if (
+    !media ||
+    media.type !== 'audio' ||
+    media.processingStatus !== 'ready' ||
+    media.deletedAt !== null
+  ) {
+    return null;
+  }
+  return {
+    mediaId: media.id,
+    mimeType: media.mimeType,
+    duration: media.duration,
+  };
+}
+
 /** Levels shown next to a public word. */
 export const PUBLIC_WORD_LEVELS = {
   where: { level: { status: 'published', deletedAt: null } },

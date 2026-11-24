@@ -25,6 +25,7 @@ import {
   PUBLIC_LESSON_IMAGE_SELECT,
   serializePublicLessonDetail,
 } from './public-lesson.serializer';
+import { PUBLIC_WORD_AUDIO_SELECT } from '../dictionary/public-word.policy';
 
 @Injectable()
 export class LearningService {
@@ -175,6 +176,7 @@ export class LearningService {
                   },
                 },
                 image: { select: PUBLIC_LESSON_IMAGE_SELECT },
+                audio: { select: PUBLIC_WORD_AUDIO_SELECT },
               },
             },
           },

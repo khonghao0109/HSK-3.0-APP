@@ -41,7 +41,7 @@ const WAVE_HEIGHT = 24;
 
 type Grant = { src: string; expiresAtMs: number };
 
-async function requestGrant(mediaId: number): Promise<Grant | null> {
+export async function requestGrant(mediaId: number): Promise<Grant | null> {
   try {
     const response = await fetch(`/api/learner/media/${mediaId}/access`);
     const body: unknown = await response.json().catch(() => null);

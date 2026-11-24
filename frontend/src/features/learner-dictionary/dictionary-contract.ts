@@ -39,7 +39,7 @@ export const dictionaryWordBaseSchema = z.object({
 
 /** `GET /dictionary/words/:id` (M2.6a, M3.4b); fields the screen does not read are dropped. */
 export const dictionaryWordDetailSchema = dictionaryWordBaseSchema.extend({
-  // Q304: always null for now; never a URL.
+  // M2.13c2: ready Word audio (id + format), never a URL; null otherwise.
   audio: z
     .object({
       mediaId: z.number().int().positive(),

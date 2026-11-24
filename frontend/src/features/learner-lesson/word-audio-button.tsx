@@ -1,0 +1,72 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { Icon } from '@/components/ui/icon';
+
+import { requestGrant } from './listening-exercise';
+
+export const WORD_AUDIO_LABEL = 'Nghe phát âm';
+export const WORD_AUDIO_FAILED = 'Không phát được âm thanh.';
+
+/**
+ * M2.13c2: nút loa của một từ (thẻ Từ vựng, chi tiết từ điển). Không có audio
+ * thì không hiện. Grant xin khi bấm (TTL ngắn, cùng BFF với bài nghe), rồi
+ * phát bằng `<audio preload="none">`; lỗi được báo qua vùng `status`.
+ */
+export function WordAudioButton({
+  audio,
+  hanzi,
+  className,
+}: {
+  audio: { mediaId: number } | null;
+  hanzi: string;
+  className?: string;
+}) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const element = audioRef.current;
+    return () => element?.pause();
+  }, []);
+
+  if (audio === null) return null;
+
+  const listen = () => {
+    setFailed(false);
+    void requestGrant(audio.mediaId).then((grant) => {
+      const element = audioRef.current;
+      if (!grant || !element) {
+        setFailed(true);
+        return;
+      }
+      element.src = grant.src;
+      element.play().catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        setFailed(true);
+      });
+    });
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className={className ? `icon-btn ${className}` : 'icon-btn'}
+        aria-label={`${WORD_AUDIO_LABEL} ${hanzi}`}
+        onClick={listen}
+      >
+        <Icon name="volume" />
+      </button>
+      <audio ref={audioRef} preload="none" onError={() => setFailed(true)} />
+      {failed && (
+        <span className="sr-only" role="status">
+          {WORD_AUDIO_FAILED}
+        </span>
+      )}
+    </>
+  );
+}

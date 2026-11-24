@@ -96,6 +96,8 @@ export default async function WordPage({
       vietnamese: allVietnamese(word.meanings),
       meanings: vietnameseMeanings(word.meanings),
       level: word.levels[0]?.name ?? null,
+      // M2.13c2: id only; the bytes come through the learner media grant.
+      audio: word.audio ? { mediaId: word.audio.mediaId } : null,
       source: source ? { name: source.name, version: source.version } : null,
       // Q311: the old single Word.example only when the API has no examples.
       ...(word.examples.length > 0
