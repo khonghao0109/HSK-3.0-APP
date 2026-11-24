@@ -25,6 +25,7 @@ import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 import { ParsePositiveSafeIntegerPipe } from '../../common/pipes/parse-positive-safe-integer.pipe';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { AllowWithoutConsent } from '../legal/allow-without-consent.decorator';
 
 import { AccountDeletionResponseDto } from './dto/account-deletion-response.dto';
 import { CreateDataExportResponseDto } from './dto/create-data-export-response.dto';
@@ -55,6 +56,7 @@ export class UserController {
   ) {}
 
   @Get('me/profile')
+  @AllowWithoutConsent()
   @ApiEnvelope(UserProfileResponseDto)
   getMeProfile(
     @Req() req: AuthenticatedRequest,
@@ -79,6 +81,7 @@ export class UserController {
   }
 
   @Post('me/deletion-request')
+  @AllowWithoutConsent()
   @HttpCode(HttpStatus.ACCEPTED)
   @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
   @ApiEnvelope(AccountDeletionResponseDto)
@@ -95,6 +98,7 @@ export class UserController {
   }
 
   @Post('me/data-exports')
+  @AllowWithoutConsent()
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiEnvelope(CreateDataExportResponseDto)
   @ApiResponse({
@@ -109,6 +113,7 @@ export class UserController {
   }
 
   @Get('me/data-exports')
+  @AllowWithoutConsent()
   @ApiEnvelope([DataExportItemDto])
   @ApiResponse({
     status: HttpStatus.OK,
@@ -122,6 +127,7 @@ export class UserController {
   }
 
   @Get('me/data-exports/:id/download')
+  @AllowWithoutConsent()
   @RawResponse()
   @ApiOkResponse({
     description: 'Data export JSON file.',
@@ -151,6 +157,7 @@ export class UserController {
   }
 
   @Get('me')
+  @AllowWithoutConsent()
   getMe(@Req() req: AuthenticatedRequest) {
     return this.userService.getProfile(req.user.id);
   }

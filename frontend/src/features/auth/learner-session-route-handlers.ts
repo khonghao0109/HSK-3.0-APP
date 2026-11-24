@@ -74,6 +74,39 @@ function emailTakenResponse(): NextResponse {
   return response;
 }
 
+/** Register 400s that mean the ticked legal versions are not the current ones. */
+const LEGAL_DOCUMENT_CODES = new Set([
+  'LEGAL_CONSENT_REQUIRED',
+  'LEGAL_DOCUMENT_MISMATCH',
+]);
+
+function codeFromError(error: unknown): string | undefined {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code?: unknown }).code === 'string'
+  ) {
+    return (error as { code: string }).code;
+  }
+  return undefined;
+}
+
+function legalDocumentsOutdatedResponse(): NextResponse {
+  const kind: ApiFailureKind = 'legal_documents_outdated';
+  const response = NextResponse.json(
+    {
+      success: false,
+      error: {
+        kind,
+        message: 'Terms or privacy policy changed.',
+      },
+    },
+    { status: 400 },
+  );
+  return noStore(response);
+}
+
 function weakPasswordResponse(): NextResponse {
   const kind: ApiFailureKind = 'weak_password';
   const response = NextResponse.json(
@@ -198,6 +231,12 @@ export async function handleLearnerRegister(
   } catch (error) {
     if (error instanceof SessionTokenError) return safeResponse(503);
     const status = statusFromError(error);
+    if (
+      status === 400 &&
+      LEGAL_DOCUMENT_CODES.has(codeFromError(error) ?? '')
+    ) {
+      return legalDocumentsOutdatedResponse();
+    }
     if (status === 400) return weakPasswordResponse();
     if (status === 409) return emailTakenResponse();
     return safeResponse(

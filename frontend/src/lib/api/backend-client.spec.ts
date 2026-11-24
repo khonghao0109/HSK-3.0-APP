@@ -115,6 +115,30 @@ describe('server-only backend client', () => {
     });
   });
 
+  it('allowlists the public current legal documents read (M1.7b2 B1)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/legal/documents/current');
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    for (const path of [
+      '/api/v1/legal/documents/current?x=1',
+      '/api/v1/legal/documents',
+      '/api/v1/legal/documents/current/1',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it('allowlists only the explicit media read and lifecycle endpoints', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

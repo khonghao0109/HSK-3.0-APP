@@ -328,6 +328,78 @@ describe('learner session BFF handlers', () => {
       expect(body.error.kind).toBe('weak_password');
     });
 
+    it('forwards acceptedDocuments to the backend (M1.7b2 Q188)', async () => {
+      const deps = dependencies();
+      const acceptedDocuments = [
+        { type: 'terms', version: '1.0', sha256: 'a'.repeat(64) },
+        { type: 'privacy', version: '1.0', sha256: 'b'.repeat(64) },
+      ];
+
+      const response = await handleLearnerRegister(
+        post('/api/learner/session/register', {
+          email: 'new@example.test',
+          password: 'secretPassword123',
+          acceptedDocuments,
+        }),
+        deps,
+      );
+
+      expect(response.status).toBe(201);
+      expect(deps.register).toHaveBeenCalledWith({
+        email: 'new@example.test',
+        password: 'secretPassword123',
+        acceptedDocuments,
+      });
+    });
+
+    it('rejects malformed acceptedDocuments with 400 without calling backend', async () => {
+      for (const acceptedDocuments of [
+        [],
+        [{ type: 'analytics', version: '1.0', sha256: 'a'.repeat(64) }],
+        [{ type: 'terms', version: '1.0', sha256: 'A'.repeat(64) }],
+        [{ type: 'terms', version: ' 1.0', sha256: 'a'.repeat(64) }],
+        [{ type: 'terms', version: '1.0', sha256: 'a'.repeat(64), extra: 1 }],
+      ]) {
+        const registerMock = vi.fn();
+        const response = await handleLearnerRegister(
+          post('/api/learner/session/register', {
+            email: 'new@example.test',
+            password: 'secretPassword123',
+            acceptedDocuments,
+          }),
+          dependencies({ register: registerMock }),
+        );
+        expect(response.status).toBe(400);
+        expect(registerMock).not.toHaveBeenCalled();
+      }
+    });
+
+    it.each(['LEGAL_CONSENT_REQUIRED', 'LEGAL_DOCUMENT_MISMATCH'])(
+      'maps backend %s to 400 legal_documents_outdated',
+      async (code) => {
+        const deps = dependencies({
+          register: vi.fn().mockRejectedValue({ status: 400, code }),
+        });
+
+        const response = await handleLearnerRegister(
+          post('/api/learner/session/register', {
+            email: 'valid@example.test',
+            password: 'password123',
+          }),
+          deps,
+        );
+
+        expect(response.status).toBe(400);
+        expect(response.cookies.getAll()).toEqual([]);
+        const body = (await response.json()) as {
+          success: boolean;
+          error: { kind: string };
+        };
+        expect(body.success).toBe(false);
+        expect(body.error.kind).toBe('legal_documents_outdated');
+      },
+    );
+
     it('returns 400 without calling backend on invalid registration body', async () => {
       const registerMock = vi.fn();
       const deps = dependencies({ register: registerMock });

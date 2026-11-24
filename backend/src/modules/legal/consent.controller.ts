@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
 
+import { AllowWithoutConsent } from './allow-without-consent.decorator';
 import { ConsentService } from './consent.service';
 import {
   AcceptDocumentsDto,
@@ -44,6 +45,7 @@ type AuthenticatedRequest = Request & {
  * route to withdraw `terms`/`privacy`; that goes through account deletion.
  */
 @Controller('users/me/consents')
+@AllowWithoutConsent()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth(OPENAPI_BEARER_AUTH)
 export class ConsentController {

@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
@@ -15,6 +16,7 @@ import {
   OBJECT_STORAGE,
   ObjectStoragePort,
 } from '../src/infrastructure/storage/object-storage.port';
+import { hashPasswordWithPepper } from '../src/modules/auth/utils/password-hasher';
 import { DataExportJob } from '../src/modules/user/jobs/data-export.job';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { assertDisposableTestDatabase } from './utils/assert-disposable-database';
@@ -38,6 +40,7 @@ describe('Consent API E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let exportHandler: DataExportJob;
+  let passwordHash: string;
 
   const stamp = Date.now().toString(36);
   // Versions owned by this suite only; LegalDocumentVersion_version_check allows [._-].
@@ -82,6 +85,28 @@ describe('Consent API E2E', () => {
     return { token, userId: user.id };
   };
 
+  /**
+   * A user with no consent row. Phase B: sign-up requires both documents while
+   * versions exist, so consent-free users are created directly and log in.
+   */
+  const createUser = async (
+    label: string,
+  ): Promise<{ token: string; userId: number }> => {
+    const email = `${prefix}_${label}@example.com`;
+    const user = await prisma.user.create({
+      data: { email, password: passwordHash },
+      select: { id: true },
+    });
+    const res = await http()
+      .post('/api/v1/auth/login')
+      .send({ email, password })
+      .expect(HttpStatus.CREATED);
+    return {
+      token: (res.body as Envelope<{ accessToken: string }>).data.accessToken,
+      userId: user.id,
+    };
+  };
+
   const consentAudits = (userId: number) =>
     prisma.auditLog.findMany({
       where: { actorId: userId, action: { startsWith: 'consent.' } },
@@ -113,6 +138,8 @@ describe('Consent API E2E', () => {
     );
     await app.listen(0, '127.0.0.1');
     prisma = app.get(PrismaService);
+    const pepper = app.get(ConfigService).get<string>('AUTH_PASSWORD_PEPPER');
+    passwordHash = await hashPasswordWithPepper(password, pepper ?? '');
     exportHandler = new DataExportJob(
       null,
       prisma,
@@ -180,7 +207,7 @@ describe('Consent API E2E', () => {
 
   describe('POST /users/me/consents/accept', () => {
     it('rejects a wrong hash or version with 400 and writes nothing', async () => {
-      const { token, userId } = await registerUser('accept_bad');
+      const { token, userId } = await createUser('accept_bad');
       for (const documents of [
         [{ ...termsDoc(), sha256: 'f'.repeat(64) }],
         [{ ...termsDoc(), version: `${termsVersion}x` }],
@@ -199,7 +226,7 @@ describe('Consent API E2E', () => {
     });
 
     it('records reconsent rows with hash and audit, and is idempotent', async () => {
-      const { token, userId } = await registerUser('accept_ok');
+      const { token, userId } = await createUser('accept_ok');
 
       const before = await http()
         .get('/api/v1/users/me/consents')
@@ -279,7 +306,7 @@ describe('Consent API E2E', () => {
 
   describe('PUT /users/me/consents/optional/:type', () => {
     it('grants, revokes and grants again on one row without deleting it', async () => {
-      const { token, userId } = await registerUser('optional');
+      const { token, userId } = await createUser('optional');
       const put = (granted: boolean) =>
         http()
           .put('/api/v1/users/me/consents/optional/analytics')
@@ -341,7 +368,7 @@ describe('Consent API E2E', () => {
     });
 
     it('rejects a document type or a non-boolean body with 400', async () => {
-      const { token, userId } = await registerUser('optional_bad');
+      const { token, userId } = await createUser('optional_bad');
       await http()
         .put('/api/v1/users/me/consents/optional/terms')
         .set('Authorization', `Bearer ${token}`)
@@ -358,8 +385,8 @@ describe('Consent API E2E', () => {
 
   describe('isolation between users', () => {
     it('keeps each user to their own consents', async () => {
-      const a = await registerUser('iso_a');
-      const b = await registerUser('iso_b');
+      const a = await createUser('iso_a');
+      const b = await createUser('iso_b');
       await http()
         .post('/api/v1/users/me/consents/accept')
         .set('Authorization', `Bearer ${a.token}`)
@@ -440,16 +467,35 @@ describe('Consent API E2E', () => {
       expect(await prisma.user.count({ where: { email } })).toBe(0);
     });
 
-    it('still registers without acceptedDocuments and writes no consent', async () => {
-      const { userId } = await registerUser('signup_plain');
-      expect(await prisma.consent.count({ where: { userId } })).toBe(0);
+    it('requires every current document type and creates no user otherwise', async () => {
+      for (const [label, extra] of [
+        ['signup_none', {}],
+        ['signup_terms_only', { acceptedDocuments: [termsDoc()] }],
+      ] as const) {
+        const email = `${prefix}_${label}@example.com`;
+        const res = await http()
+          .post('/api/v1/auth/register')
+          .send({ email, password, ...extra })
+          .expect(HttpStatus.BAD_REQUEST);
+        expect(res.body.error.code).toBe('LEGAL_CONSENT_REQUIRED');
+        expect(await prisma.user.count({ where: { email } })).toBe(0);
+      }
     });
   });
 
   describe('data export', () => {
     it('includes consent rows with hash and channel', async () => {
-      const { token } = await registerUser('export', {
-        acceptedDocuments: [termsDoc()],
+      // Sign-up now records both documents; one signup row keeps this focused.
+      const { token, userId } = await createUser('export');
+      await prisma.consent.create({
+        data: {
+          userId,
+          type: 'terms',
+          consentVersion: termsVersion,
+          policyVersion: termsVersion,
+          documentSha256: termsSha,
+          channel: 'signup',
+        },
       });
       const created = await http()
         .post('/api/v1/users/me/data-exports')
@@ -542,5 +588,13 @@ describe('Consent API E2E', () => {
         created,
       );
     }, 120_000);
+  });
+  // Last: removes this suite's versions, so no legal version is current.
+  describe('POST /auth/register with no current version', () => {
+    it('still registers without acceptedDocuments and writes no consent', async () => {
+      await cleanupVersions();
+      const { userId } = await registerUser('signup_plain');
+      expect(await prisma.consent.count({ where: { userId } })).toBe(0);
+    });
   });
 });

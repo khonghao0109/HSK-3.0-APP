@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 
+import { AllowWithoutConsent } from './allow-without-consent.decorator';
 import { ConsentService } from './consent.service';
 import { CurrentLegalDocumentDto } from './dto/consent.dto';
 
@@ -15,6 +16,7 @@ export function legalReadLimit(): number {
 
 /** M1.7b2: public, no JWT. */
 @Controller('legal')
+@AllowWithoutConsent()
 export class LegalController {
   constructor(private readonly consentService: ConsentService) {}
 

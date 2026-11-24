@@ -17,6 +17,7 @@ import { ipTracker } from '../../common/guards/custom-throttler.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiEnvelope } from '../../common/openapi/api-envelope.decorator';
 import { OPENAPI_BEARER_AUTH } from '../../common/openapi/openapi.constants';
+import { AllowWithoutConsent } from '../legal/allow-without-consent.decorator';
 
 import { AuthService } from './auth.service';
 import {
@@ -117,6 +118,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Post('logout')
+  @AllowWithoutConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -129,6 +131,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Get('me')
+  @AllowWithoutConsent()
   // Every learner page render calls this route; it only verifies the JWT and runs one indexed query.
   @Throttle({ default: { limit: authMeLimit, ttl: 60_000 } })
   @ApiEnvelope(AuthMeResponseDto)
@@ -145,6 +148,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth(OPENAPI_BEARER_AUTH)
   @Post('email-verification/request')
+  @AllowWithoutConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ default: { limit: 3, ttl: 15 * 60 * 1000 } })
   @ApiResponse({

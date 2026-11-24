@@ -1,11 +1,12 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { redirect, session } = vi.hoisted(() => ({
+const { redirect, session, legalDocuments } = vi.hoisted(() => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`);
   }),
   session: vi.fn(),
+  legalDocuments: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -15,11 +16,15 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/features/learner-auth/server-learner-session', () => ({
   getServerLearnerSession: session,
 }));
+vi.mock('@/features/legal/legal-documents-service', () => ({
+  getCurrentLegalDocuments: legalDocuments,
+}));
 
 import LearnerSignUpPage from './page';
 
 async function renderPage() {
   session.mockResolvedValue({ state: 'unauthenticated', token: null });
+  legalDocuments.mockResolvedValue([]);
   return render(await LearnerSignUpPage());
 }
 
@@ -27,11 +32,16 @@ describe('sign-up page — khung công khai bản web (M2.10c, Q81)', () => {
   beforeEach(() => {
     redirect.mockClear();
     session.mockReset();
+    legalDocuments.mockReset();
   });
 
   it('renders the form only once: 2 inputs (email, password) and 1 submit button', async () => {
     const { container } = await renderPage();
-    expect(container.querySelectorAll('input')).toHaveLength(2);
+    // Q188 adds the one mandatory legal checkbox.
+    expect(container.querySelectorAll('input')).toHaveLength(3);
+    expect(container.querySelectorAll('input[type="checkbox"]')).toHaveLength(
+      1,
+    );
     expect(container.querySelectorAll('input[name="email"]')).toHaveLength(1);
     expect(container.querySelectorAll('input[name="password"]')).toHaveLength(
       1,
@@ -85,5 +95,20 @@ describe('sign-up page — khung công khai bản web (M2.10c, Q81)', () => {
     expect(children.indexOf(switchLine as Element)).toBeLessThan(
       children.indexOf(terms),
     );
+  });
+  it('reads the current legal versions on the server (M1.7b2)', async () => {
+    await renderPage();
+    expect(legalDocuments).toHaveBeenCalledTimes(1);
+  });
+
+  it('still renders the unticked mandatory checkbox when the read fails', async () => {
+    session.mockResolvedValue({ state: 'unauthenticated', token: null });
+    legalDocuments.mockRejectedValue(new Error('backend down'));
+    const { container } = render(await LearnerSignUpPage());
+    const checkbox =
+      container.querySelector<HTMLInputElement>('input#accept-legal');
+    expect(checkbox).not.toBeNull();
+    expect(checkbox?.checked).toBe(false);
+    expect(checkbox?.required).toBe(true);
   });
 });

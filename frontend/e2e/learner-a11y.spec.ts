@@ -389,6 +389,8 @@ test.describe('Learner accessibility (M2.7e)', () => {
     );
     await page.getByLabel('Email').fill('a11y@example.test');
     await page.getByLabel('Mật khẩu', { exact: true }).fill(PASSWORD);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
     await expect(
       page.getByRole('alert').filter({ hasText: 'Email này đã được đăng ký.' }),

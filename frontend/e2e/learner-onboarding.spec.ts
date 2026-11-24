@@ -60,6 +60,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
     await expect(page).toHaveURL(/\/onboarding\/goal/);
@@ -156,6 +158,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
     await expect(page).toHaveURL(/\/onboarding\/goal/);
@@ -219,6 +223,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
     await expect(page).toHaveURL(/\/onboarding\/goal/);
@@ -262,6 +268,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
     await expect(page).toHaveURL(/\/onboarding\/goal/);
@@ -291,6 +299,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
 
     await expect(page).toHaveURL(/\/onboarding\/goal/);
@@ -327,6 +337,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
     await expect(page).toHaveURL(/\/onboarding\/goal/);
 
@@ -394,6 +406,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
     await expect(page).toHaveURL(/\/onboarding\/goal/);
 
@@ -547,6 +561,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
     await expect(page).toHaveURL(/\/onboarding\/goal/);
 
@@ -680,6 +696,8 @@ test.describe('Learner Onboarding Flow', () => {
     await page.goto('/sign-up');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+    // Q188: the mandatory legal checkbox enables the button.
+    await page.getByRole('checkbox', { name: /Tôi đã đọc và đồng ý/ }).check();
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click();
     await expect(page).toHaveURL(/\/onboarding\/goal/);
 

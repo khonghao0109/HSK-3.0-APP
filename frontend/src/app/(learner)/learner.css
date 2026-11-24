@@ -1009,6 +1009,32 @@ html:has(.learner-app) {
   text-decoration: underline;
 }
 
+/* M1.7b2 (Q188): sign-up's mandatory checkbox takes the passive line's place.
+   The row is ≥ 44px so the box and its label are easy to hit. */
+.learner-app .auth__consent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  /* Text sits next to its box; the centred passive line it replaces did not. */
+  text-align: left;
+}
+
+.learner-app .auth__consent input {
+  flex: none;
+  /* 44px tall touch target; Chromium draws a 24px box centred in it. */
+  width: 24px;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--jade-800);
+  cursor: pointer;
+}
+
+.learner-app .auth__consent label {
+  cursor: pointer;
+}
+
 /* ---------- Static Page (Terms / Privacy) ---------- */
 .learner-app .static-page {
   padding: 24px 20px 40px;

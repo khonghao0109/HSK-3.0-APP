@@ -9,6 +9,8 @@ import {
   LearnerAuthSwitch,
 } from '@/features/learner-auth/learner-web-auth-chrome';
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import type { CurrentLegalDocument } from '@/features/legal/legal-documents';
+import { getCurrentLegalDocuments } from '@/features/legal/legal-documents-service';
 
 export const metadata: Metadata = {
   title: 'Tạo tài khoản',
@@ -18,6 +20,16 @@ export default async function LearnerSignUpPage() {
   const session = await getServerLearnerSession();
   if (session.state === 'learner') {
     redirect('/learn');
+  }
+
+  // M1.7b2 (Q188): the versions the checkbox accepts. If the read fails the
+  // checkbox still shows; the backend then answers LEGAL_CONSENT_REQUIRED
+  // and the form asks to reload.
+  let legalDocuments: CurrentLegalDocument[] = [];
+  try {
+    legalDocuments = await getCurrentLegalDocuments();
+  } catch {
+    // Keep [] (see above).
   }
 
   return (
@@ -43,6 +55,7 @@ export default async function LearnerSignUpPage() {
           <p className="auth__subtitle">Tạo tài khoản để bắt đầu học</p>
 
           <LearnerRegisterForm
+            legalDocuments={legalDocuments}
             switchLink={<LearnerAuthSwitch target="sign-in" />}
           />
         </div>

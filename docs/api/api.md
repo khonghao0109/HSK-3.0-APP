@@ -157,8 +157,11 @@ M1.7b2 (Q188): body register nhận thêm field tuỳ chọn `acceptedDocuments?
 64 ký tự). Mỗi phần tử phải đúng **phiên bản hiện hành** của loại đó (xem A.3b), nếu không
 → `400 LEGAL_DOCUMENT_MISMATCH` và không tạo user. Khi khớp, dòng `Consent`
 (`channel = signup`) và `AuditLog` `consent.document_accepted` được ghi trong cùng
-transaction tạo user. Không gửi field → hành vi như cũ, không ghi consent. Pha A chưa
-bắt buộc field này và chưa đòi đủ cả hai loại (pha B).
+transaction tạo user. Pha B1: khi một loại có phiên bản hiện hành mà body không gửi phần
+tử cho loại đó (kể cả không gửi field) → `400 LEGAL_CONSENT_REQUIRED` và không tạo user.
+Khi chưa có phiên bản hiện hành nào (cả hai loại `not_required`), không gửi field vẫn
+đăng ký được như cũ và không ghi consent. Field vẫn là optional trong OpenAPI; chỉ luật
+phía server thay đổi.
 
 Body login: `{ "email", "password": string(≥6) }` – giữ ngưỡng 6 cho tài khoản tạo trước Q360. Email không tồn tại, account không `active` hoặc
 đã soft-delete, sai mật khẩu → cùng `401 "Invalid credentials"`. Chỉ account đang khoá
@@ -405,6 +408,42 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   `afterSummary` chỉ gồm `type`, `version` (với văn bản) và `channel`. Không lưu IP hay
   user-agent (Q192).
 - Data export (`consents`) có thêm `documentSha256` và `channel`.
+
+#### Chặn route khi `blocked` (M1.7b2 pha B1, Q189)
+
+> **Cảnh báo:** không đăng ký phiên bản pháp lý thật (`legal:register-version`, M2.1f)
+> trước khi pha B2 merge. Frontend hiện coi mọi 403 là mất phiên (`isAuthFailure`), nên
+> user `blocked` sẽ bị chuyển qua lại giữa `/sign-in` và `/learn`. B2 xử lý
+> `CONSENT_REQUIRED` ở frontend.
+
+- `ConsentEnforcementInterceptor` (global, trong `LegalModule`) chạy sau guard của route.
+  Khi route đã xác thực JWT (`req.user` có), user không phải `admin`, route không có
+  `@AllowWithoutConsent()` và có ít nhất một loại `blocked` theo đúng luật ở trên →
+  `403 CONSENT_REQUIRED`. Lỗi được ném trước khi handler chạy, nên request bị chặn không
+  ghi gì (ví dụ không tạo `Progress`). `pending` không bị chặn.
+- Admin (`role = admin`) không bị chặn, kể cả khi gọi route learner. Route public (không
+  JWT) không bị ảnh hưởng.
+- **Route JWT mới mặc định bị chặn khi user `blocked`.** Muốn miễn phải gắn
+  `@AllowWithoutConsent()` và qua TL review; test
+  `backend/src/modules/legal/allow-without-consent.inventory.spec.ts` liệt kê cố định
+  danh sách dưới đây nên sẽ đỏ khi danh sách đổi.
+- Allowlist (13 route): `GET /legal/documents/current`; `GET /users/me/consents`,
+  `POST /users/me/consents/accept`, `PUT /users/me/consents/optional/:type`;
+  `POST /auth/logout`, `GET /auth/me`, `POST /auth/email-verification/request`;
+  `GET /users/me`, `GET /users/me/profile`, `POST /users/me/deletion-request`,
+  `POST /users/me/data-exports`, `GET /users/me/data-exports`,
+  `GET /users/me/data-exports/:id/download`. `POST /auth/refresh`, `login`, `register`
+  không có JWT nên không bị chặn.
+- Chi phí: thêm 1 query mỗi request learner khi chưa có phiên bản nào, 2 query khi đã có;
+  không cache giữa các request.
+- Đổi hành vi endpoint cũ (200 → 403) chỉ xảy ra khi đã có phiên bản pháp lý và user
+  quá hạn. Hiện bảng `LegalDocumentVersion` rỗng nên chưa ai bị ảnh hưởng.
+
+| Mã lỗi | HTTP | Khi nào |
+| --- | --- | --- |
+| `LEGAL_DOCUMENT_MISMATCH` | 400 | Sai type, version hoặc hash; lặp `type` |
+| `LEGAL_CONSENT_REQUIRED` | 400 | Register thiếu loại đang có phiên bản hiện hành |
+| `CONSENT_REQUIRED` | 403 | Route JWT ngoài allowlist khi user có loại `blocked` |
 
 ### A.4 Public learning content
 

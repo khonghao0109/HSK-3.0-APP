@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useRef, useState, type ReactNode } from 'react';
 
+import type { CurrentLegalDocument } from '@/features/legal/legal-documents';
+
 import { LearnerAuthAlternatives } from './learner-auth-alternatives';
 import { LEARNER_AUTH_ERROR_MESSAGES } from './learner-auth-messages';
 import { LearnerPasswordField } from './learner-password-field';
@@ -31,12 +33,16 @@ type InvalidField = 'email' | 'password' | null;
 
 export function LearnerRegisterForm({
   switchLink,
+  legalDocuments = [],
 }: {
   /** `.wa-switch` slot of the web page (M2.10c); keep the switch in DOM order
    *  between the social buttons and the legal links. */
   switchLink?: ReactNode;
+  /** Current versions to accept; empty while none is registered (M1.7b2). */
+  legalDocuments?: readonly CurrentLegalDocument[];
 } = {}) {
   const router = useRouter();
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<RegisterError | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
   const [pending, setPending] = useState(false);
@@ -86,7 +92,13 @@ export function LearnerRegisterForm({
       const response = await fetch('/api/learner/session/register', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: emailStr, password: passwordStr }),
+        body: JSON.stringify({
+          email: emailStr,
+          password: passwordStr,
+          ...(legalDocuments.length > 0
+            ? { acceptedDocuments: legalDocuments }
+            : {}),
+        }),
       });
 
       if (response.status === 201) {
@@ -108,7 +120,12 @@ export function LearnerRegisterForm({
         setInvalidField(null);
         const body: unknown = await response.json().catch(() => null);
         const kind = getErrorKind(body);
-        if (kind === 'weak_password') {
+        if (kind === 'legal_documents_outdated') {
+          setError({
+            kind: 'other',
+            message: LEARNER_AUTH_ERROR_MESSAGES.legalDocumentsOutdated,
+          });
+        } else if (kind === 'weak_password') {
           setError({
             kind: 'other',
             message: LEARNER_AUTH_ERROR_MESSAGES.weakPassword,
@@ -142,6 +159,26 @@ export function LearnerRegisterForm({
       });
     }
   }
+
+  // Q188: mandatory, never pre-ticked; it takes the place of the passive line
+  // of sign-up.html, and the submit button stays disabled until it is ticked.
+  const consentLine = (
+    <p className="auth__terms auth__consent" id="accept-legal-line">
+      <input
+        id="accept-legal"
+        name="acceptLegal"
+        type="checkbox"
+        checked={agreed}
+        onChange={(event) => setAgreed(event.currentTarget.checked)}
+        disabled={pending}
+        required
+      />
+      <label htmlFor="accept-legal">
+        Tôi đã đọc và đồng ý với <Link href="/terms">Điều khoản sử dụng</Link>{' '}
+        và <Link href="/privacy">Chính sách bảo mật</Link>
+      </label>
+    </p>
+  );
 
   return (
     <>
@@ -209,14 +246,15 @@ export function LearnerRegisterForm({
         <button
           className="btn btn--primary btn--block auth__submit"
           type="submit"
-          disabled={pending}
-          aria-disabled={pending ? 'true' : undefined}
+          disabled={pending || !agreed}
+          aria-disabled={pending || !agreed ? 'true' : undefined}
+          aria-describedby={agreed ? undefined : 'accept-legal-line'}
         >
           {pending ? 'Đang tạo tài khoản…' : 'Tạo tài khoản'}
         </button>
       </form>
 
-      <LearnerAuthAlternatives switchLink={switchLink} />
+      <LearnerAuthAlternatives switchLink={switchLink} terms={consentLine} />
     </>
   );
 }

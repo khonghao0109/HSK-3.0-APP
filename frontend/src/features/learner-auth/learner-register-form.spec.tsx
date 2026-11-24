@@ -19,7 +19,21 @@ async function fillAndSubmit(
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Email'), email);
   await user.type(screen.getByLabelText('Mật khẩu'), password);
+  // Q188: submitting needs the mandatory legal checkbox.
+  await user.click(screen.getByRole('checkbox', { name: CONSENT_LABEL }));
   await user.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
+}
+
+const CONSENT_LABEL =
+  'Tôi đã đọc và đồng ý với Điều khoản sử dụng và Chính sách bảo mật';
+const CURRENT_DOCUMENTS = [
+  { type: 'terms', version: '1.0', sha256: 'a'.repeat(64) },
+  { type: 'privacy', version: '1.0', sha256: 'b'.repeat(64) },
+] as const;
+
+function lastRequestBody(fetchSpy: { mock: { calls: unknown[][] } }): unknown {
+  const init = fetchSpy.mock.calls.at(-1)?.[1] as RequestInit | undefined;
+  return JSON.parse(String(init?.body));
 }
 
 describe('LearnerRegisterForm', () => {
@@ -34,6 +48,7 @@ describe('LearnerRegisterForm', () => {
     render(<LearnerRegisterForm />);
     const user = userEvent.setup();
 
+    await user.click(screen.getByRole('checkbox', { name: CONSENT_LABEL }));
     await user.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     const alert = screen.getByRole('alert');
@@ -65,6 +80,7 @@ describe('LearnerRegisterForm', () => {
 
     await user.type(screen.getByLabelText('Email'), 'valid@example.test');
     await user.type(screen.getByLabelText('Mật khẩu'), '1234567');
+    await user.click(screen.getByRole('checkbox', { name: CONSENT_LABEL }));
     await user.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     const alert = screen.getByRole('alert');
@@ -294,7 +310,11 @@ describe('LearnerRegisterForm', () => {
 describe('LearnerRegisterForm — một bản control cho bản web (M2.10c)', () => {
   it('renders exactly one email input, one password input and one submit button', () => {
     const { container } = render(<LearnerRegisterForm />);
-    expect(container.querySelectorAll('input')).toHaveLength(2);
+    // Q188 adds the one mandatory legal checkbox.
+    expect(container.querySelectorAll('input')).toHaveLength(3);
+    expect(container.querySelectorAll('input[type="checkbox"]')).toHaveLength(
+      1,
+    );
     expect(container.querySelectorAll('input[name="email"]')).toHaveLength(1);
     expect(container.querySelectorAll('input[name="password"]')).toHaveLength(
       1,
@@ -313,5 +333,96 @@ describe('LearnerRegisterForm — một bản control cho bản web (M2.10c)', (
     expect(privacy).toHaveAttribute('href', '/privacy');
     expect(terms.closest('p')).toHaveClass('auth__terms');
     expect(privacy.closest('p')).toHaveClass('auth__terms');
+  });
+  describe('mandatory legal checkbox (M1.7b2, Q188)', () => {
+    beforeEach(() => {
+      replace.mockReset();
+      refresh.mockReset();
+      vi.restoreAllMocks();
+    });
+
+    it('starts unticked and keeps the submit button disabled until ticked', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+      render(<LearnerRegisterForm legalDocuments={CURRENT_DOCUMENTS} />);
+      const user = userEvent.setup();
+      const checkbox = screen.getByRole('checkbox', { name: CONSENT_LABEL });
+      const submit = screen.getByRole('button', { name: 'Tạo tài khoản' });
+
+      expect(checkbox).not.toBeChecked();
+      expect(checkbox).toBeRequired();
+      expect(submit).toBeDisabled();
+      await user.type(screen.getByLabelText('Email'), 'newbie@example.test');
+      await user.type(screen.getByLabelText('Mật khẩu'), 'password123');
+      await user.click(submit);
+      expect(fetchSpy).not.toHaveBeenCalled();
+
+      await user.click(checkbox);
+      expect(submit).toBeEnabled();
+      await user.click(checkbox);
+      expect(submit).toBeDisabled();
+    });
+
+    it('sends the current documents as acceptedDocuments to the BFF', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(Response.json({ success: true }, { status: 201 }));
+      render(<LearnerRegisterForm legalDocuments={CURRENT_DOCUMENTS} />);
+      await fillAndSubmit();
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/learner/session/register',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(lastRequestBody(fetchSpy)).toEqual({
+        email: 'newbie@example.test',
+        password: 'password123',
+        acceptedDocuments: CURRENT_DOCUMENTS,
+      });
+    });
+
+    it('still needs the tick but sends no acceptedDocuments while no version exists', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(Response.json({ success: true }, { status: 201 }));
+      render(<LearnerRegisterForm legalDocuments={[]} />);
+      expect(
+        screen.getByRole('button', { name: 'Tạo tài khoản' }),
+      ).toBeDisabled();
+      await fillAndSubmit();
+
+      expect(lastRequestBody(fetchSpy)).toEqual({
+        email: 'newbie@example.test',
+        password: 'password123',
+      });
+    });
+
+    it('asks to reload when the legal documents changed meanwhile', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        Response.json(
+          { success: false, error: { kind: 'legal_documents_outdated' } },
+          { status: 400 },
+        ),
+      );
+      render(<LearnerRegisterForm legalDocuments={CURRENT_DOCUMENTS} />);
+      await fillAndSubmit();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        LEARNER_AUTH_ERROR_MESSAGES.legalDocumentsOutdated,
+      );
+      expect(replace).not.toHaveBeenCalled();
+    });
+
+    it('labels the checkbox and shows the legal links only once', () => {
+      const { container } = render(<LearnerRegisterForm />);
+      const checkbox = screen.getByRole('checkbox', { name: CONSENT_LABEL });
+      expect(checkbox).toHaveAttribute('id', 'accept-legal');
+      expect(
+        container.querySelector('label[for="accept-legal"]'),
+      ).not.toBeNull();
+      expect(
+        screen.getAllByRole('link', { name: 'Điều khoản sử dụng' }),
+      ).toHaveLength(1);
+      expect(screen.queryByText(/Bằng việc tiếp tục/)).toBeNull();
+    });
   });
 });
