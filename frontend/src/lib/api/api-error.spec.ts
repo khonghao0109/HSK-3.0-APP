@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   API_ERROR_DETAILS_LIMITS,
   BackendRequestError,
+  isAuthFailure,
   normalizeApiFailure,
 } from './api-error';
 
@@ -199,5 +200,33 @@ describe('safe API error normalization', () => {
     expect(failure.code).toBeUndefined();
     expect('code' in failure).toBe(false);
     expect(new BackendRequestError(failure).code).toBeUndefined();
+  });
+});
+
+describe('isAuthFailure (M1.7b2 B2a)', () => {
+  const failure = (status: number, code?: string) =>
+    new BackendRequestError(
+      normalizeApiFailure({
+        status,
+        body: code === undefined ? null : { error: { code } },
+      }),
+    );
+
+  it('keeps 401 and plain 403 as a lost session', () => {
+    expect(isAuthFailure(failure(401))).toBe(true);
+    expect(isAuthFailure(failure(403))).toBe(true);
+  });
+
+  it('does not treat CONSENT_REQUIRED as a lost session', () => {
+    expect(isAuthFailure(failure(403, 'CONSENT_REQUIRED'))).toBe(false);
+  });
+
+  it('gives the consent 403 its own kind', () => {
+    expect(
+      normalizeApiFailure({
+        status: 403,
+        body: { error: { code: 'CONSENT_REQUIRED' } },
+      }).kind,
+    ).toBe('consent_required');
   });
 });

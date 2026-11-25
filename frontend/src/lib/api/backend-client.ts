@@ -14,6 +14,9 @@ const ALLOWED_PATHS = [
   /^\/api\/v1\/auth\/email-verification\/confirm$/,
   // M1.7b2 B1: public current legal versions, read by the sign-up page.
   /^\/api\/v1\/legal\/documents\/current$/,
+  // M1.7b2 B2a: the learner's own consent state and its acceptance.
+  /^\/api\/v1\/users\/me\/consents$/,
+  /^\/api\/v1\/users\/me\/consents\/accept$/,
   /^\/api\/v1\/admin\/cms\/exercises(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+\/revisions$/,

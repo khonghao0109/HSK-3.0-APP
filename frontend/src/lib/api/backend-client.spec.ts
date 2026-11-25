@@ -139,6 +139,36 @@ describe('server-only backend client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('allowlists the learner consent read and accept only (M1.7b2 B2a)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/users/me/consents', { token: 't' });
+    await client.request('/api/v1/users/me/consents/accept', {
+      token: 't',
+      method: 'POST',
+      body: { documents: [] },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    for (const path of [
+      '/api/v1/users/me/consents?x=1',
+      '/api/v1/users/me/consents/accept/1',
+      '/api/v1/users/me/consents/withdraw',
+      '/api/v1/users/2/consents',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('allowlists only the explicit media read and lifecycle endpoints', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

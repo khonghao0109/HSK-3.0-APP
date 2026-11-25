@@ -24,12 +24,18 @@ export default async function LearnerSignUpPage() {
 
   // M1.7b2 (Q188): the versions the checkbox accepts. If the read fails the
   // checkbox still shows; the backend then answers LEGAL_CONSENT_REQUIRED
-  // and the form asks to reload.
+  // and the form asks to reload. B2a: the failure is logged (status only).
   let legalDocuments: CurrentLegalDocument[] = [];
   try {
     legalDocuments = await getCurrentLegalDocuments();
-  } catch {
-    // Keep [] (see above).
+  } catch (error: unknown) {
+    const status =
+      typeof error === 'object' && error !== null && 'status' in error
+        ? (error as { status?: unknown }).status
+        : undefined;
+    console.error('[sign-up] current legal versions read failed', {
+      status: typeof status === 'number' ? status : 'network',
+    });
   }
 
   return (

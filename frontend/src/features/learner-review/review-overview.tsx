@@ -15,6 +15,10 @@ import {
   createReviewTransport,
   type ReviewTransport,
 } from './review-transport';
+import {
+  goToConsent,
+  isConsentRequiredError,
+} from '@/lib/api/learner-session-failure';
 import { Icon } from '@/components/ui/icon';
 
 const SESSION_HREF = '/learn/review/session';
@@ -43,6 +47,7 @@ export function ReviewOverviewView({
     setPhase({ kind: 'loading' });
     const result = await transport.overview<ReviewOverview>();
     if (result.ok) return setPhase({ kind: 'ready', data: result.data });
+    if (isConsentRequiredError(result)) return goToConsent();
     if (result.status === 401 || result.status === 403) {
       return router.replace('/sign-in');
     }

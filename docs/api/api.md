@@ -412,9 +412,9 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
 #### Chặn route khi `blocked` (M1.7b2 pha B1, Q189)
 
 > **Cảnh báo:** không đăng ký phiên bản pháp lý thật (`legal:register-version`, M2.1f)
-> trước khi pha B2 merge. Frontend hiện coi mọi 403 là mất phiên (`isAuthFailure`), nên
-> user `blocked` sẽ bị chuyển qua lại giữa `/sign-in` và `/learn`. B2 xử lý
-> `CONSENT_REQUIRED` ở frontend.
+> trước khi pha B2b merge. Pha B2a (frontend) đã xử lý `CONSENT_REQUIRED` (xem
+> "Frontend khi `blocked`/`pending`" bên dưới), nhưng màn chặn chưa có xuất dữ liệu và
+> xoá tài khoản mà Q189 yêu cầu (nút hiện "Sắp có").
 
 - `ConsentEnforcementInterceptor` (global, trong `LegalModule`) chạy sau guard của route.
   Khi route đã xác thực JWT (`req.user` có), user không phải `admin`, route không có
@@ -438,6 +438,33 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   không cache giữa các request.
 - Đổi hành vi endpoint cũ (200 → 403) chỉ xảy ra khi đã có phiên bản pháp lý và user
   quá hạn. Hiện bảng `LegalDocumentVersion` rỗng nên chưa ai bị ảnh hưởng.
+
+#### Frontend khi `blocked`/`pending` (M1.7b2 pha B2a)
+
+- **Trang:** `proxy.ts` gọi `GET /users/me/consents` một lần cho mỗi lần tải trang
+  `/learn*` và `/onboarding*` khi cookie learner còn hạn quá 120 giây (token sắp được
+  refresh thì bỏ qua lượt đó, lượt sau mới kiểm). Có loại `blocked` → `307`
+  `/consent?returnTo=<đường dẫn + query>`. Có `pending` → header request
+  `x-hsk-consent-deadline` (hạn sớm nhất, ISO) cho banner của layout `/learn`; header do
+  client gửi luôn bị xoá. Lỗi đọc → cho qua (fail-open) và log server
+  `[consent-check]` chỉ kèm path và status. Không kiểm `/api/learner/*`.
+- **BFF giữa phiên:** 6 handler learner (lesson, dictionary, exam, exam-attempt, review,
+  onboarding) dùng `shouldClearLearnerSession` (`frontend/src/lib/api/learner-session-failure.ts`):
+  xoá cookie khi `401` hoặc `403` khác `CONSENT_REQUIRED`. `403 CONSENT_REQUIRED` giữ
+  cookie và trả `403` `{ success: false, error: { kind: 'consent_required', code: 'CONSENT_REQUIRED' } }`
+  kèm header `x-hsk-consent: required`. Lesson player, kết quả bài và Ôn tập chuyển sang
+  `/consent?returnTo=<trang hiện tại>`; màn thi chưa xử lý riêng (về `/sign-in` rồi
+  `/learn`, proxy đưa sang `/consent?returnTo=/learn`).
+- **`returnTo`:** chỉ nhận đường dẫn tương đối bắt đầu bằng một `/`, không `//`, `\`,
+  ký tự điều khiển, tối đa 512 ký tự và không trỏ lại `/consent`; sai thì `/learn`.
+- **`/consent`:** chưa đăng nhập → `/sign-in`; không còn loại `blocked`/`pending` →
+  về `returnTo`. Hiện loại văn bản, phiên bản, ngày hiệu lực, hạn (nếu `pending`) và link
+  `/terms`, `/privacy`. "Để sau" (chỉ `pending`) nhớ hạn trong `sessionStorage` của tab.
+- **BFF `POST /api/learner/consents/accept`:** kiểm `Origin` → 403, cookie → 401, JSON
+  hỏng hoặc sai shape `{ documents: [{ type, version, sha256 }] }` (1–2 phần tử) → 400, rồi
+  `POST /users/me/consents/accept`. Thành công `{ success: true }` + `no-store`; backend
+  `LEGAL_DOCUMENT_MISMATCH`/`LEGAL_CONSENT_REQUIRED` → 400 `legal_documents_outdated`;
+  401/403 thường xoá cookie; 400/429 khác giữ status; còn lại 503.
 
 | Mã lỗi | HTTP | Khi nào |
 | --- | --- | --- |
@@ -1893,7 +1920,7 @@ chính là `ExamAnswer.snapshotQuestionKey` (đổi tên thành `questionKey` tr
 M4.2b). Rate limit (TL-130): `PUT` một câu 240/phút (môi trường test 1 000), `PUT` lô 60/phút,
 `GET` attempt/result/review 60/phút, media-grants 30/phút.
 
-BFF routes của learner exam trên Next.js (`/api/learner/exam/*`, TL-190; tất cả trả `Cache-Control: no-store`, đọc cookie `hsk_learner_session` HttpOnly và xoá cookie khi thiếu phiên hoặc backend trả `401`/`403`):
+BFF routes của learner exam trên Next.js (`/api/learner/exam/*`, TL-190; tất cả trả `Cache-Control: no-store`, đọc cookie `hsk_learner_session` HttpOnly và xoá cookie khi thiếu phiên hoặc backend trả `401`/`403`, trừ `403 CONSENT_REQUIRED` giữ cookie, M1.7b2 B2a):
 
 | Method | Path BFF | `Origin` same-origin | Mã lỗi chính (`error.code`) |
 | --- | --- | --- | --- |

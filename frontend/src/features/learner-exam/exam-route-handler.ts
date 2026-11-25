@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
+  consentRequiredResponse,
   isSameOrigin,
   noStore,
   safeResponse,
   setClearedCookies,
   statusFromError,
 } from '@/features/auth/session-route-handlers';
+import {
+  isConsentRequiredError,
+  shouldClearLearnerSession,
+} from '@/lib/api/learner-session-failure';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
@@ -93,7 +98,8 @@ export async function handleExamStart(
       }
       return safeResponse(503);
     }
-    if (status === 401 || status === 403) {
+    if (isConsentRequiredError(error)) return consentRequiredResponse();
+    if (shouldClearLearnerSession(error)) {
       const response = safeResponse(status);
       setClearedCookies(response, {
         cookieName: deps.learnerCookieName,

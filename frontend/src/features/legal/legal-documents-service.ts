@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { backend } from '@/lib/api/server-backend';
 import { backendEnvelope } from '@/lib/api/backend-envelope';
 
+import { userConsentsResponseSchema } from './consent-route-handler';
 import type { CurrentLegalDocument } from './legal-documents';
 
 const currentLegalDocumentsSchema = backendEnvelope(
@@ -26,4 +27,12 @@ export async function getCurrentLegalDocuments(): Promise<
   return currentLegalDocumentsSchema
     .parse(response)
     .data.map(({ type, version, sha256 }) => ({ type, version, sha256 }));
+}
+
+/** The learner's own consent state (`GET /users/me/consents`, api.md A.3b). */
+export async function getUserConsents(token: string) {
+  const response = await backend.request('/api/v1/users/me/consents', {
+    token,
+  });
+  return userConsentsResponseSchema.parse(response).data.documents;
 }

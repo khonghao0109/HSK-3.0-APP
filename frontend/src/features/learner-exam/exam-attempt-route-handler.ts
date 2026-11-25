@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
+  consentRequiredResponse,
   isSameOrigin,
   noStore,
   safeResponse,
   setClearedCookies,
   statusFromError,
 } from '@/features/auth/session-route-handlers';
+import {
+  isConsentRequiredError,
+  shouldClearLearnerSession,
+} from '@/lib/api/learner-session-failure';
 import {
   isMediaId,
   readGrant,
@@ -115,7 +120,8 @@ function mapAttemptError(
     if (field !== null) return answerInvalidResponse(field);
     return safeResponse(400);
   }
-  if (status === 401 || status === 403) {
+  if (isConsentRequiredError(error)) return consentRequiredResponse();
+  if (shouldClearLearnerSession(error)) {
     return clearSession(safeResponse(status), options.deps);
   }
   if (status === 404 || status === 429) return safeResponse(status);

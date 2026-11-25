@@ -2,6 +2,7 @@ export type ApiFailureKind =
   | 'invalid_request'
   | 'session_expired'
   | 'forbidden'
+  | 'consent_required'
   | 'account_locked'
   | 'admin_account'
   | 'email_taken'
@@ -132,6 +133,12 @@ export function normalizeApiFailure(input: {
       message: 'Something went wrong. Try again or contact support.',
       retryable: status >= 500,
     }),
+    ...(status === 403 && code === CONSENT_REQUIRED_CODE
+      ? {
+          kind: 'consent_required' as const,
+          message: 'Accept the current terms and privacy policy to continue.',
+        }
+      : {}),
     ...(input.requestId ? { requestId: input.requestId } : {}),
     ...(code === undefined ? {} : { code }),
     ...(details === undefined ? {} : { details }),
@@ -266,10 +273,18 @@ export class BackendRequestError extends Error implements ApiFailure {
   }
 }
 
-/** True for a backend 401/403: the session is gone or not allowed. */
+/** Backend 403 of a learner who must accept the current legal versions. */
+export const CONSENT_REQUIRED_CODE = 'CONSENT_REQUIRED';
+
+/**
+ * True for a backend 401/403: the session is gone or not allowed. A 403
+ * CONSENT_REQUIRED keeps the session (M1.7b2 B2a): the learner goes to
+ * /consent instead of signing in again.
+ */
 export function isAuthFailure(error: unknown): boolean {
   return (
     error instanceof BackendRequestError &&
-    (error.status === 401 || error.status === 403)
+    (error.status === 401 ||
+      (error.status === 403 && error.code !== CONSENT_REQUIRED_CODE))
   );
 }
