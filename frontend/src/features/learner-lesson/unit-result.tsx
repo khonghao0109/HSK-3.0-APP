@@ -11,6 +11,10 @@ import {
   useState,
 } from 'react';
 
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 import { Icon } from '@/components/ui/icon';
 
 type Props = {
@@ -72,6 +76,7 @@ export function UnitResult({
           JSON.stringify({ lessonId }),
         )
       : started;
+    if (response && isConsentRequiredResponse(response)) return goToConsent();
     if (response?.status === 401 || response?.status === 403) {
       router.replace('/sign-in');
       return;

@@ -111,4 +111,20 @@ describe('sign-up page — khung công khai bản web (M2.10c, Q81)', () => {
     expect(checkbox?.checked).toBe(false);
     expect(checkbox?.required).toBe(true);
   });
+
+  it('logs a failed legal read on the server without the error text (M1.7b2 B2a)', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    session.mockResolvedValue({ state: 'unauthenticated', token: null });
+    legalDocuments.mockRejectedValue(
+      Object.assign(new Error('secret@example.test'), { status: 503 }),
+    );
+    render(await LearnerSignUpPage());
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith(
+      '[sign-up] current legal versions read failed',
+      { status: 503 },
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain('secret@');
+    log.mockRestore();
+  });
 });

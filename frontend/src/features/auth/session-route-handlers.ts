@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import {
   BackendRequestError,
+  CONSENT_REQUIRED_CODE,
   normalizeApiFailure,
   type ApiFailureKind,
 } from '@/lib/api/api-error';
+import { CONSENT_RESPONSE_HEADER } from '@/lib/api/learner-session-failure';
 import {
   createClearedSessionCookie,
   createRefreshSessionCookie,
@@ -49,6 +51,32 @@ export function safeResponse(status: number, requestId?: string): NextResponse {
     { status: failure.status },
   );
   response.headers.set('cache-control', 'no-store');
+  return response;
+}
+
+/**
+ * M1.7b2 B2a: the backend 403 CONSENT_REQUIRED keeps the learner signed in.
+ * The header lets client components send the learner to /consent without
+ * reading the body.
+ */
+export function consentRequiredResponse(): NextResponse {
+  const failure = normalizeApiFailure({
+    status: 403,
+    body: { error: { code: CONSENT_REQUIRED_CODE } },
+  });
+  const response = NextResponse.json(
+    {
+      success: false,
+      error: {
+        kind: failure.kind,
+        message: failure.message,
+        code: CONSENT_REQUIRED_CODE,
+      },
+    },
+    { status: 403 },
+  );
+  response.headers.set('cache-control', 'no-store');
+  response.headers.set(CONSENT_RESPONSE_HEADER, 'required');
   return response;
 }
 

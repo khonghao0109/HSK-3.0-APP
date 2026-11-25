@@ -3,11 +3,16 @@ import { z } from 'zod';
 
 import type { ApiFailureKind } from '@/lib/api/api-error';
 import {
+  consentRequiredResponse,
   isSameOrigin,
   safeResponse,
   setClearedCookies,
   statusFromError,
 } from '@/features/auth/session-route-handlers';
+import {
+  isConsentRequiredError,
+  shouldClearLearnerSession,
+} from '@/lib/api/learner-session-failure';
 
 import {
   levelsResponseSchema,
@@ -78,7 +83,8 @@ function handleBackendError(
   deps: Pick<OnboardingHandlerDependencies, 'learnerCookieName' | 'production'>,
 ): NextResponse {
   const status = statusFromError(error);
-  if (status === 401 || status === 403) {
+  if (isConsentRequiredError(error)) return consentRequiredResponse();
+  if (shouldClearLearnerSession(error)) {
     return handleAuthError(status, deps);
   }
   if (status === 400) {

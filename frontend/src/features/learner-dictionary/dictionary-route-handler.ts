@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
+  consentRequiredResponse,
   isSameOrigin,
   safeResponse,
   setClearedCookies,
   statusFromError,
 } from '@/features/auth/session-route-handlers';
+import {
+  isConsentRequiredError,
+  shouldClearLearnerSession,
+} from '@/lib/api/learner-session-failure';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 
 import {
@@ -41,7 +46,8 @@ function backendFailure(
   deps: DictionaryHandlerDependencies,
 ): NextResponse {
   const status = statusFromError(error);
-  if (status === 401 || status === 403) {
+  if (isConsentRequiredError(error)) return consentRequiredResponse();
+  if (shouldClearLearnerSession(error)) {
     const response = safeResponse(status);
     setClearedCookies(response, {
       cookieName: deps.learnerCookieName,

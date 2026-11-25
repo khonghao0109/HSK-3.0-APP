@@ -12,6 +12,10 @@ import {
 } from 'react';
 
 import { useRadioGroup } from '@/features/onboarding/use-radio-group';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 
 import {
   buildAnswer,
@@ -48,7 +52,7 @@ export const PLAYER_MESSAGES = {
   matchingDoneTitle: (mistakes: number) => `Hoàn thành · Sai ${mistakes} lần`,
 } as const;
 
-type StartOutcome = 'started' | 'sign-in' | 'lesson' | 'failed';
+type StartOutcome = 'started' | 'sign-in' | 'consent' | 'lesson' | 'failed';
 
 /** Q-G9: the authored answer the BFF forwards only after a wrong attempt. */
 type CorrectAnswer =
@@ -251,6 +255,8 @@ export function LessonPlayer({
       // Drain the body: an unread response keeps the request open.
       await response.text().catch(() => '');
       if (response.status === 200) return 'started';
+      // M1.7b2 B2a: the consent 403 keeps the session.
+      if (isConsentRequiredResponse(response)) return 'consent';
       // The BFF clears the session cookies on both.
       if (response.status === 401 || response.status === 403) return 'sign-in';
       // Locked (Q18) or gone: the lesson page shows why.
@@ -265,6 +271,7 @@ export function LessonPlayer({
     (outcome: StartOutcome) => {
       if (outcome === 'started') setStarted(true);
       else if (outcome === 'sign-in') router.replace('/sign-in');
+      else if (outcome === 'consent') goToConsent();
       else if (outcome === 'lesson') router.replace(lessonHref);
       else setStartFailed(true);
       return outcome;
@@ -314,7 +321,8 @@ export function LessonPlayer({
       outcome = await startRef.current;
     }
     // applyStart already left the page.
-    if (outcome === 'sign-in' || outcome === 'lesson') return;
+    if (outcome === 'sign-in' || outcome === 'consent' || outcome === 'lesson')
+      return;
     if (outcome === 'started') {
       await Promise.all(closingRef.current);
       try {
@@ -331,6 +339,7 @@ export function LessonPlayer({
           router.replace(`${lessonHref}/complete`);
           return;
         }
+        if (isConsentRequiredResponse(response)) return goToConsent();
         if (response.status === 401 || response.status === 403) {
           router.replace('/sign-in');
           return;
@@ -450,6 +459,7 @@ export function LessonPlayer({
           }),
         },
       );
+      if (isConsentRequiredResponse(response)) return goToConsent();
       if (response.status === 401 || response.status === 403) {
         router.replace('/sign-in');
         return;

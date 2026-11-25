@@ -214,6 +214,29 @@ describe('handleLessonStart', () => {
     },
   );
 
+  it('keeps the cookies on a consent 403 and answers consent_required (M1.7b2 B2a)', async () => {
+    const requestBackend = vi.fn().mockRejectedValue(
+      new BackendRequestError(
+        normalizeApiFailure({
+          status: 403,
+          body: { error: { code: 'CONSENT_REQUIRED' } },
+        }),
+      ),
+    );
+    const response = await handleLessonStart(
+      request(startPath),
+      '12',
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(403);
+    expect(response.headers.get('x-hsk-consent')).toBe('required');
+    expect(response.headers.getSetCookie()).toEqual([]);
+    expect(await response.json()).toMatchObject({
+      success: false,
+      error: { kind: 'consent_required' },
+    });
+  });
+
   it.each([
     [404, 404, 'not_found'],
     [500, 503, 'unavailable'],

@@ -25,6 +25,10 @@ import {
   createReviewTransport,
   type ReviewTransport,
 } from './review-transport';
+import {
+  goToConsent,
+  isConsentRequiredError,
+} from '@/lib/api/learner-session-failure';
 import { Icon } from '@/components/ui/icon';
 import { HanziCells } from '@/components/ui/hanzi-cells';
 
@@ -91,6 +95,7 @@ export function ReviewSession({
         setPhase({ kind: 'done', summary: result.data.summary });
         return;
       }
+      if (isConsentRequiredError(result)) return goToConsent();
       const action = gradeFailureAction(result.status, result.code);
       if (action === 'unauthorized') return signIn();
       if (action === 'expired') return setPhase({ kind: 'expired' });
@@ -120,6 +125,7 @@ export function ReviewSession({
           if (created.code === 'REVIEW_DAILY_LIMIT_REACHED') {
             return setPhase({ kind: 'limit' });
           }
+          if (isConsentRequiredError(created)) return goToConsent();
           if (created.status === 401 || created.status === 403) return signIn();
           return setPhase({ kind: 'error', retry: 'load' });
         }
@@ -129,6 +135,7 @@ export function ReviewSession({
         }>();
       }
       if (!current.ok) {
+        if (isConsentRequiredError(current)) return goToConsent();
         if (current.status === 401 || current.status === 403) return signIn();
         return setPhase({ kind: 'error', retry: 'load' });
       }
@@ -207,6 +214,7 @@ export function ReviewSession({
         }
         return advance();
       }
+      if (isConsentRequiredError(result)) return goToConsent();
       const action = gradeFailureAction(result.status, result.code);
       if (action === 'skip') return advance();
       if (action === 'expired') return setPhase({ kind: 'expired' });
