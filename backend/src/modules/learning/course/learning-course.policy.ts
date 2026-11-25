@@ -4,6 +4,7 @@ import {
   buildLevelPath,
   buildOrderedPath,
   compareReadyLessons,
+  isMoreRecent,
   type LearningPathLesson,
   type LearningPathProgress,
   type LearningPathReadyLesson,
@@ -94,4 +95,31 @@ export function resolveCurrentCourseCode(
   return publishedCourseCodes.has(DEFAULT_COURSE_CODE)
     ? DEFAULT_COURSE_CODE
     : null;
+}
+
+/**
+ * C3b-UI2 "Học tiếp" of a non-topic course on Home: the most recently active
+ * `learning` lesson, else the first lesson not done that is open (the
+ * `current` one of the chained path), else none.
+ */
+export function selectCourseNextLesson(
+  units: readonly CoursePathUnit[],
+): LearningPathLesson | null {
+  const lessons = units.flatMap((unit) => unit.lessons);
+  let recent: LearningPathLesson | null = null;
+  for (const lesson of lessons) {
+    if (lesson.status !== 'learning') continue;
+    if (
+      recent === null ||
+      isMoreRecent(lesson.lastActivityAt, recent.lastActivityAt)
+    ) {
+      recent = lesson;
+    }
+  }
+  return (
+    recent ??
+    lessons.find((lesson) => lesson.state === 'current') ??
+    lessons.find((lesson) => lesson.state === 'available') ??
+    null
+  );
 }

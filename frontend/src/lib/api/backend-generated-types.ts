@@ -3624,6 +3624,27 @@ export interface components {
             position: number;
             completionPercent: number;
         };
+        LearningHomeCourseLessonDto: {
+            lessonId: number;
+            title: string;
+            slug: string;
+            /** @description Position inside its course unit (starts at 1). */
+            position: number;
+            completionPercent: number;
+        };
+        LearningHomeCurrentCourseDto: {
+            /** @enum {string} */
+            kind: "topic" | "textbook" | "specialty";
+            code: string;
+            title: string;
+            progress: components["schemas"]["LearningCourseProgressDto"];
+            /**
+             * @description Lesson "Học tiếp" opens. A topic course gives the same lesson as
+             *     `continueLesson`; another kind gives its own next lesson and
+             *     `continueLesson` is then `null`.
+             */
+            nextLesson: components["schemas"]["LearningHomeCourseLessonDto"] | null;
+        };
         LearningHomeResponseDto: {
             /** @enum {string} */
             nextStep: "set_goal" | "content_unavailable" | "generate_plan" | "ready";
@@ -3631,6 +3652,8 @@ export interface components {
             dailyGoal: components["schemas"]["LearningHomeDailyGoalDto"] | null;
             streakDays: number;
             continueLesson: components["schemas"]["LearningHomeContinueLessonDto"] | null;
+            /** @description C3b-UI2: `null` when no published course is current. */
+            currentCourse?: components["schemas"]["LearningHomeCurrentCourseDto"] | null;
         };
         DictionaryWordDetailDto: {
             id: number;

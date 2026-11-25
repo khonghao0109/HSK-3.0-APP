@@ -223,6 +223,79 @@ export async function publishLockedLesson(): Promise<number> {
   }
 }
 
+/**
+ * C3b-UI2: one published unit with two ready lessons (no Level) in a course,
+ * through the Admin CMS. Idempotent per DB: a course that already has a unit
+ * is left as it is. Returns nothing; specs read the course from the learner
+ * routes.
+ */
+export async function publishCourseUnitLessons(
+  courseId: number,
+  titles: readonly string[],
+): Promise<void> {
+  const api = await playwrightRequest.newContext();
+  try {
+    const admin = await backendLogin(api, ADMIN.email, ADMIN.password);
+    const units = await call<Array<{ id: number }>>(
+      api,
+      'GET',
+      `/admin/cms/course-units?courseId=${courseId}`,
+      admin,
+    );
+    if (units.length > 0) return;
+    const unit = await call<{ id: number }>(
+      api,
+      'POST',
+      '/admin/cms/course-units',
+      admin,
+      { courseId, orderIndex: 1, title: 'Cấp 1', gradeNumber: 1 },
+    );
+    await call(
+      api,
+      'POST',
+      `/admin/cms/course-units/${unit.id}/publish`,
+      admin,
+    );
+    for (const [index, title] of titles.entries()) {
+      const lesson = await call<Draft>(
+        api,
+        'POST',
+        `/admin/cms/course-units/${unit.id}/lessons`,
+        admin,
+        {
+          title,
+          orderIndex: index + 1,
+          slug: `ui2-e2e-${courseId}-${index + 1}`,
+        },
+      );
+      const lessonId = lesson.lesson?.id;
+      if (!lessonId) throw new Error('course lesson draft has no id');
+      const topic = await call<Draft>(api, 'POST', '/admin/cms/topics', admin, {
+        lessonId,
+        title: `Ngữ pháp ${index + 1}`,
+        subtitle: 'Fixture e2e',
+        type: 'grammar',
+        content: [{ type: 'text', value: 'Nội dung fixture.' }],
+        orderIndex: 1,
+        isPremium: false,
+        isLocked: false,
+      });
+      const topicId = topic.topic?.id;
+      if (!topicId) throw new Error('topic draft has no id');
+      await approveAndPublish(api, admin, 'topics', topicId, topic.revision.id);
+      await approveAndPublish(
+        api,
+        admin,
+        'lessons',
+        lessonId,
+        lesson.revision.id,
+      );
+    }
+  } finally {
+    await api.dispose();
+  }
+}
+
 export const ARRANGE_PROMPT = 'Sắp xếp các từ sau thành câu hoàn chỉnh.';
 export const FILL_PROMPT = '我想___东西。';
 export const FILL_EXPLANATION = 'Điền 买 (mua): 我想买东西。';

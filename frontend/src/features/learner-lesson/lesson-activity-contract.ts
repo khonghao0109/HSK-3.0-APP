@@ -36,6 +36,8 @@ export const lessonActivitySchema = z.object({
   level: z
     .object({ id: z.number().int(), code: z.string(), name: z.string() })
     .nullable(),
+  // ADR-009 C3b-3: only for a lesson without a Level (C3b-UI2 breadcrumb).
+  course: z.object({ code: z.string(), title: z.string() }).optional(),
   position: z.number().int().positive(),
   state: lessonStateSchema,
   // Lesson units (Pha B): one row per topic; exercise counts from the

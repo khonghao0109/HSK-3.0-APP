@@ -570,6 +570,32 @@ describe('LearnerLessonPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('links a course lesson without a Level back to its course (C3b-UI2)', async () => {
+    const { container } = await renderLesson({
+      ...current,
+      level: null,
+      course: { code: 'HSK2_TEXTBOOK', title: 'Giáo trình HSK chuẩn 2.0' },
+      position: 3,
+    });
+    const crumbs = screen.getByRole('navigation', { name: 'Vị trí' });
+    expect(
+      Array.from(crumbs.querySelectorAll('a, [aria-current]')).map((node) => [
+        node.textContent,
+        node.getAttribute('href'),
+      ]),
+    ).toEqual([
+      ['Khoá học', '/learn/courses'],
+      ['Giáo trình HSK chuẩn 2.0', '/learn/courses/HSK2_TEXTBOOK'],
+      ['Chào hỏi', null],
+    ]);
+    expect(
+      screen.getByRole('link', { name: 'Quay lại khoá học' }),
+    ).toHaveAttribute('href', '/learn/courses/HSK2_TEXTBOOK');
+    expect(container.querySelector('.lesson-hero__badge')?.textContent).toBe(
+      ' Bài 3',
+    );
+  });
+
   it('labels HSK 7–9 in the chip', async () => {
     const { container } = await renderLesson({
       ...current,

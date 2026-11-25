@@ -162,13 +162,35 @@ describe('Learning home summary (Q13) E2E', () => {
   });
 
   it('[E2] summarises a new learner without goal, profile or events', async () => {
+    // C3b-UI2: the default course must exist whatever suite ran first
+    // (upserted and left in place, like learning-course.e2e-spec.ts).
+    await prisma.course.upsert({
+      where: { code: 'HSK3_TOPIC' },
+      update: { status: 'published', publishedAt: new Date(), deletedAt: null },
+      create: {
+        code: 'HSK3_TOPIC',
+        kind: 'topic',
+        curriculumVersion: 'HSK_3_0',
+        title: 'Chủ đề HSK 3.0',
+        orderIndex: 1,
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
     const userId = await createUser('e2', 'Lan');
-    await expect(summary(userId)).resolves.toEqual({
+    // C3b-UI2: `currentCourse` is additive; the legacy fields stay exact.
+    const { currentCourse, ...legacy } = await summary(userId);
+    expect(legacy).toEqual({
       nextStep: 'set_goal',
       greetingName: 'Lan',
       dailyGoal: null,
       streakDays: 0,
       continueLesson: null,
+    });
+    expect(currentCourse).toMatchObject({
+      code: 'HSK3_TOPIC',
+      kind: 'topic',
+      nextLesson: null,
     });
   });
 

@@ -2,15 +2,27 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import type { ApiSuccessResponse } from '../../../common/interfaces/api-response.interface';
+import { PUBLIC_CONTENT_WHERE } from '../../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   DEFAULT_USER_PROFILE,
   validateDisplayName,
   validateTimezone,
 } from '../../user/validation/user-profile.validator';
-import { selectNextLesson } from '../path/learning-path.policy';
+import {
+  resolveCurrentCourseCode,
+  selectCourseNextLesson,
+} from '../course/learning-course.policy';
+import { loadCoursePath } from '../course/learning-course.reader';
+import {
+  selectNextLesson,
+  type LearningPathLesson,
+} from '../path/learning-path.policy';
 import { LearningPathService } from '../path/learning-path.service';
-import { LearningHomeResponseDto } from './dto/learning-home-response.dto';
+import type {
+  LearningHomeCourseLessonDto,
+  LearningHomeResponseDto,
+} from './dto/learning-home-response.dto';
 import { countStreak, type LearningDayRun } from './learning-home.policy';
 
 @Injectable()
@@ -27,7 +39,7 @@ export class LearningHomeService {
     userId: number,
     now: Date,
   ): Promise<ApiSuccessResponse<LearningHomeResponseDto>> {
-    const [{ nextStep, goal, pathLevels }, user] = await Promise.all([
+    const [{ nextStep, goal, pathLevels }, user, current] = await Promise.all([
       this.path.loadPathState(userId),
       this.prisma.user.findUnique({
         where: { id: userId },
@@ -36,6 +48,7 @@ export class LearningHomeService {
           profile: { select: { displayName: true, timezone: true } },
         },
       }),
+      this.loadCurrentCourse(userId),
     ]);
 
     const timezone = validateTimezone(user?.profile?.timezone);
@@ -68,6 +81,15 @@ export class LearningHomeService {
           ?.lessons.find((lesson) => lesson.id === next.lessonId)
       : undefined;
 
+    const pathLesson =
+      next && continued
+        ? { ...next, completionPercent: continued.completionPercent }
+        : null;
+    // C3b-UI2: a topic course (and no course at all) keeps the per-level
+    // pick unchanged; another kind continues in its own path.
+    const byLevel = current === null || current.course.kind === 'topic';
+    const continueLesson = byLevel ? pathLesson : null;
+
     return {
       success: true,
       data: {
@@ -80,10 +102,64 @@ export class LearningHomeService {
             }
           : null,
         streakDays: countStreak(run, today.todayLocal),
-        continueLesson:
-          next && continued
-            ? { ...next, completionPercent: continued.completionPercent }
-            : null,
+        continueLesson,
+        currentCourse: current && {
+          code: current.course.code,
+          title: current.course.title,
+          kind: current.course.kind,
+          progress: current.progress,
+          nextLesson: byLevel
+            ? pathLesson && {
+                lessonId: pathLesson.lessonId,
+                title: pathLesson.title,
+                slug: pathLesson.slug,
+                position: pathLesson.position,
+                completionPercent: pathLesson.completionPercent,
+              }
+            : courseLesson(selectCourseNextLesson(current.units)),
+        },
+      },
+    };
+  }
+
+  /**
+   * ADR-009 Q-C4 current course (same rule as `/learning/courses`) with its
+   * path for this learner; `null` when no published course is current.
+   */
+  private async loadCurrentCourse(userId: number) {
+    const [courses, enrollments] = await Promise.all([
+      this.prisma.course.findMany({
+        where: PUBLIC_CONTENT_WHERE,
+        select: { id: true, code: true, kind: true, title: true },
+      }),
+      this.prisma.courseEnrollment.findMany({
+        where: { userId },
+        select: {
+          status: true,
+          isCurrent: true,
+          course: { select: { code: true } },
+        },
+      }),
+    ]);
+    const code = resolveCurrentCourseCode(
+      enrollments.map((enrollment) => ({
+        courseCode: enrollment.course.code,
+        status: enrollment.status,
+        isCurrent: enrollment.isCurrent,
+      })),
+      new Set(courses.map((course) => course.code)),
+    );
+    const course = courses.find((row) => row.code === code);
+    if (!course) return null;
+    const units = await loadCoursePath(this.prisma, userId, course);
+    const lessons = units.flatMap((unit) => unit.lessons);
+    return {
+      course,
+      units,
+      progress: {
+        completedLessons: lessons.filter((lesson) => lesson.state === 'done')
+          .length,
+        totalLessons: lessons.length,
       },
     };
   }
@@ -155,6 +231,20 @@ export class LearningHomeService {
     `;
     return row ?? null;
   }
+}
+
+function courseLesson(
+  lesson: LearningPathLesson | null,
+): LearningHomeCourseLessonDto | null {
+  return (
+    lesson && {
+      lessonId: lesson.id,
+      title: lesson.title,
+      slug: lesson.slug,
+      position: lesson.position,
+      completionPercent: lesson.completionPercent,
+    }
+  );
 }
 
 /**

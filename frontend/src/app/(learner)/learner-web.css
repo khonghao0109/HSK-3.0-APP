@@ -520,7 +520,7 @@
   }
 
   /* No lesson to continue: the two cards share the row. */
-  .learner-app .home-body:not(:has(> .home-lesson)) .home-stats {
+  .learner-app .home-body:not(:has(> .home-lesson, > .crs-home)) .home-stats {
     grid-column: 1 / -1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -637,6 +637,14 @@
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-card);
     line-height: 1.5;
+  }
+
+  /* C3b-UI2 (web/home-course.html): the course block takes the continue
+     card's place, the stat cards stack beside it. */
+  .learner-app .home-body > .crs-home {
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 0;
   }
 
   .learner-app .home-lesson:hover {
@@ -1361,18 +1369,18 @@
    cards go under the "Tiếp tục học" card instead. */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .learner-app .home-body,
-  .learner-app .home-body:not(:has(> .home-lesson)) {
+  .learner-app .home-body:not(:has(> .home-lesson, > .crs-home)) {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .learner-app .home-stats,
-  .learner-app .home-body:not(:has(> .home-lesson)) .home-stats {
+  .learner-app .home-body:not(:has(> .home-lesson, > .crs-home)) .home-stats {
     grid-column: 1;
     grid-row: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .learner-app .home-body:has(> .home-lesson) .home-stats {
+  .learner-app .home-body:has(> .home-lesson, > .crs-home) .home-stats {
     margin-top: var(--sp-4);
   }
 

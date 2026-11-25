@@ -80,7 +80,7 @@ export default async function LearnerCourseDetailPage({
           <CourseMeta course={course} />
           <div className="crs-head__row">
             <div>
-              <h1 className="w-h1 crs-h1" id="course-title">
+              <h1 className="w-h1 crs-h1" id="course-title" tabIndex={-1}>
                 {course.title}
               </h1>
               {course.description && (

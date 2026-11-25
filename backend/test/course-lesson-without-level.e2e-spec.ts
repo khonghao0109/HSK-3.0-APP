@@ -66,15 +66,21 @@ describe('Course lesson without a Level (ADR-009 C3b-1) E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.lesson.updateMany({
-      where: { id: { in: createdLessonIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    await prisma.course.updateMany({
-      where: { id: { in: createdCourseIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    await app.close();
+    // A failed beforeAll leaves prisma unset; the app must still close or Jest hangs.
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: createdLessonIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        await prisma.course.updateMany({
+          where: { id: { in: createdCourseIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   it('[N1] shows the lesson in its course only', async () => {

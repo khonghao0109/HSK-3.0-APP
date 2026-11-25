@@ -752,7 +752,7 @@ Path `data` (Q18, chỉ đọc, không ghi DB): `{ nextStep, goal, levels, nextL
 - Admin có JWT gọi được như mọi route JWT khác của A.7.
 
 Home `data` (Q13, chỉ đọc, không ghi DB): `{ nextStep, greetingName, dailyGoal, streakDays,
-continueLesson }`.
+continueLesson, currentCourse }` (`currentCourse` thêm từ C3b-UI2).
 - `nextStep`: như Path.
 - `greetingName: string | null`: `UserProfile.displayName` đã trim nếu khác rỗng; không có thì
   `User.name` nếu hợp lệ theo luật `displayName` (trim, 1–50 ký tự, không ký tự control hay bidi
@@ -775,7 +775,19 @@ continueLesson }`.
 - Ngày local của lịch sử tính theo timezone hiện tại lúc request: đổi timezone sẽ tính lại mọi
   ngày cũ (cả `minutesToday` lẫn `streakDays`) theo timezone mới.
 - `continueLesson`: `nextLesson` của Path cộng `completionPercent` của bài đó trên Path
-  (`{ lessonId, title, slug, levelCode, position, completionPercent } | null`).
+  (`{ lessonId, title, slug, levelCode, position, completionPercent } | null`). Từ C3b-UI2
+  (ADR-009 §4): khi khoá đang học (luật Q-C4, như `GET /learning/courses`) **không phải**
+  `topic`, `continueLesson` là `null` (bài của khoá đó có thể không có Level, nên không điền
+  được `levelCode`); bài tiếp theo nằm ở `currentCourse.nextLesson`. Khoá đang học là `topic`,
+  hoặc không có khoá nào published: `continueLesson` giữ nguyên như trước.
+- `currentCourse` (C3b-UI2, field tuỳ chọn, chỉ thêm): `{ code, title, kind, progress:
+  { completedLessons, totalLessons }, nextLesson } | null`, `null` khi không có khoá published
+  nào là khoá đang học. `progress` đếm như `GET /learning/courses/:code`. `nextLesson`:
+  `{ lessonId, title, slug, position, completionPercent } | null` (`position` đếm trong unit):
+  - khoá `topic`: cùng bài với `continueLesson` (`null` khi `continueLesson` là `null`);
+  - khoá khác: bài `learning` có `lastActivityAt` mới nhất trong khoá; không có thì bài đầu
+    tiên chưa xong đang mở (`current`) của lộ trình khoá, rồi tới bài `available` đầu tiên;
+    không có thì `null`.
 
 Khoá ở `start` (Q18): bài chưa có row Progress mà bài ready liền trước chưa `done` (và không
 phải bài đầu cấp) trả `409` `error.code = "lesson_locked"`, message `Complete the previous
@@ -814,7 +826,8 @@ Kết quả: `isCorrect = (số lần sai = 0)`, `score` 100 hoặc 0. Số lầ
 ### A.7c Khoá học — học viên (ADR-009 C3a)
 
 Từ C3b-1, bài học có thể không có Level (khoá textbook HSK 2.0). `/learning/path`,
-`/learning/home`, `GET /lessons*` và `GET /learning/lessons` (danh sách) **chỉ trả bài có Level**;
+`/learning/home` (trừ `currentCourse.nextLesson`, từ C3b-UI2), `GET /lessons*` và
+`GET /learning/lessons` (danh sách) **chỉ trả bài có Level**;
 bài không Level ở đó được coi như không public (`404` với `GET /lessons/:id`).
 
 Từ C3b-3, bài không Level **học được** qua các route của A.7 (activity) và `GET

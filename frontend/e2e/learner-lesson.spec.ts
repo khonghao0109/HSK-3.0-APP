@@ -156,7 +156,11 @@ test.describe('Learner lesson page (M2.5a)', () => {
     );
 
     await page.goto('/learn');
-    const card = page.locator('a.home-lesson');
+    // C3b-UI2 (TL 24/11): Home's lesson entry is the course block's
+    // "Học tiếp", which replaced the a.home-lesson card.
+    const card = page
+      .locator('.crs-home')
+      .getByRole('link', { name: /^Học tiếp/ });
     await expect(card).toHaveCount(1);
     await card.click();
     await expect(page).toHaveURL(/\/learn\/lessons\/\d+$/);

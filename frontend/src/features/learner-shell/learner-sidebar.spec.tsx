@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usePathname } from 'next/navigation';
 
-import { LearnerSidebar } from './learner-sidebar';
+import { LearnerSidebar, LearnerSidebarSection } from './learner-sidebar';
 import { LearnerToastProvider } from './learner-toast';
 import { TOAST_COMING_SOON } from './learner-toast-messages';
 
@@ -135,5 +135,31 @@ describe('LearnerSidebar', () => {
         ),
     ).toEqual(['Điều hướng chính', 'w-side-more', 'Khác']);
     expect(screen.getByRole('complementary')).toHaveClass('w-only');
+  });
+
+  it('marks Khoá học on a course lesson without a Level (C3b-UI2)', () => {
+    vi.mocked(usePathname).mockReturnValue('/learn/lessons/31');
+    const view = render(
+      <LearnerToastProvider>
+        <LearnerSidebar />
+        <LearnerSidebarSection section="courses" />
+      </LearnerToastProvider>,
+    );
+    const nav = mainNav();
+    expect(within(nav).getByRole('link', { name: 'Khoá học' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(nav.querySelectorAll('[aria-current]')).toHaveLength(1);
+
+    // Leaving the lesson gives the item back to the pathname rule.
+    view.rerender(
+      <LearnerToastProvider>
+        <LearnerSidebar />
+      </LearnerToastProvider>,
+    );
+    expect(
+      within(mainNav()).getByRole('link', { name: 'Lộ trình học' }),
+    ).toHaveAttribute('aria-current', 'page');
   });
 });

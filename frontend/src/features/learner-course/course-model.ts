@@ -64,6 +64,19 @@ export function progressPercent(progress: CourseSummary['progress']): number {
   return Math.round((progress.completedLessons / progress.totalLessons) * 100);
 }
 
+/** The lesson `lessonId` with its unit, or `null` when the course lacks it. */
+export function findCourseLesson(
+  course: Pick<CourseDetail, 'units'>,
+  lessonId: number | null,
+): { unit: CourseUnit; lesson: CourseLesson; unitIndex: number } | null {
+  if (lessonId === null) return null;
+  for (const [unitIndex, unit] of course.units.entries()) {
+    const lesson = unit.lessons.find((item) => item.id === lessonId);
+    if (lesson) return { unit, lesson, unitIndex };
+  }
+  return null;
+}
+
 /** The lesson "Học tiếp" opens: the first `current`, else the first open one. */
 export function nextCourseLesson(
   course: Pick<CourseDetail, 'units'>,

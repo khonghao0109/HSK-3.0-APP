@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { ToastButton } from './learner-toast';
 import { TOAST_COMING_SOON } from './learner-toast-messages';
@@ -14,6 +15,39 @@ function SoonButton({ icon, label }: { icon: string; label: string }) {
       {label} <span className="w-tag w-tag--soon">Sắp có</span>
     </ToastButton>
   );
+}
+
+/*
+ * C3b-UI2: a page the URL alone does not place (a course lesson without a
+ * Level lives at /learn/lessons/<id> like path lessons) names its sidebar
+ * item by rendering <LearnerSidebarSection>; the layout's sidebar reads it.
+ */
+type SidebarSection = 'courses';
+let sectionOverride: SidebarSection | null = null;
+const sectionListeners = new Set<() => void>();
+
+function setSectionOverride(value: SidebarSection | null) {
+  sectionOverride = value;
+  for (const listener of sectionListeners) listener();
+}
+
+function subscribeSection(listener: () => void) {
+  sectionListeners.add(listener);
+  return () => {
+    sectionListeners.delete(listener);
+  };
+}
+
+export function LearnerSidebarSection({
+  section,
+}: {
+  section: SidebarSection;
+}) {
+  useEffect(() => {
+    setSectionOverride(section);
+    return () => setSectionOverride(null);
+  }, [section]);
+  return null;
 }
 
 /**
@@ -30,17 +64,25 @@ function SoonButton({ icon, label }: { icon: string; label: string }) {
  */
 export function LearnerSidebar() {
   const pathname = usePathname();
+  const override = useSyncExternalStore(
+    subscribeSection,
+    () => sectionOverride,
+    () => null,
+  );
 
   const onHome = pathname === '/learn';
   // Lesson screens belong to the path (mẫu web/lesson.html).
   const onPath =
-    pathname === '/learn/path' || pathname.startsWith('/learn/lessons/');
+    override === null &&
+    (pathname === '/learn/path' || pathname.startsWith('/learn/lessons/'));
   const onDictionary =
     pathname === '/learn/dictionary' ||
     pathname.startsWith('/learn/dictionary/');
   // C3b-UI (PO 24/11): the course list and each course detail.
   const onCourses =
-    pathname === '/learn/courses' || pathname.startsWith('/learn/courses/');
+    override === 'courses' ||
+    pathname === '/learn/courses' ||
+    pathname.startsWith('/learn/courses/');
   const onProfile = pathname === '/learn/profile';
   // M3.3b (Q271): the review page and its session.
   const onReview =
