@@ -8,6 +8,7 @@ import {
   buildCoursePath,
   DEFAULT_COURSE_CODE,
   resolveCurrentCourseCode,
+  selectCourseNextLesson,
   type CourseUnitInput,
 } from './learning-course.policy';
 
@@ -200,5 +201,62 @@ describe('resolveCurrentCourseCode', () => {
         published,
       ),
     ).toBe('HSK3_TOPIC');
+  });
+});
+
+describe('selectCourseNextLesson (C3b-UI2)', () => {
+  const units: CourseUnitInput[] = [
+    { id: 1, orderIndex: 1, lessons: [lesson(11, 1), lesson(12, 2)] },
+    { id: 2, orderIndex: 2, lessons: [lesson(21, 1)] },
+  ];
+
+  it('picks the first lesson not done of a textbook course', () => {
+    const path = buildCoursePath('textbook', units, progress([[11, 'done']]));
+    expect(selectCourseNextLesson(path)?.id).toBe(12);
+  });
+
+  it('picks the first lesson of a course without Progress', () => {
+    const path = buildCoursePath('textbook', units, progress([]));
+    expect(selectCourseNextLesson(path)?.id).toBe(11);
+  });
+
+  it('prefers the most recently active learning lesson', () => {
+    const path = buildCoursePath(
+      'textbook',
+      units,
+      new Map<number, LearningPathProgress>([
+        [11, { status: 'done', completionPercent: 100, lastActivityAt: null }],
+        [
+          12,
+          {
+            status: 'learning',
+            completionPercent: 40,
+            lastActivityAt: new Date('2026-11-01T00:00:00Z'),
+          },
+        ],
+        [
+          21,
+          {
+            status: 'learning',
+            completionPercent: 10,
+            lastActivityAt: new Date('2026-11-20T00:00:00Z'),
+          },
+        ],
+      ]),
+    );
+    expect(selectCourseNextLesson(path)?.id).toBe(21);
+  });
+
+  it('returns null when every lesson is done', () => {
+    const path = buildCoursePath(
+      'textbook',
+      units,
+      progress([
+        [11, 'done'],
+        [12, 'done'],
+        [21, 'done'],
+      ]),
+    );
+    expect(selectCourseNextLesson(path)).toBeNull();
   });
 });

@@ -39,6 +39,9 @@ function setup(timezone: string, fail: (tz: string) => Error | null) {
   );
   const prisma = {
     $queryRaw: queryRaw,
+    // C3b-UI2: no published course, so no current course.
+    course: { findMany: jest.fn().mockResolvedValue([]) },
+    courseEnrollment: { findMany: jest.fn().mockResolvedValue([]) },
     user: {
       findUnique: jest.fn().mockResolvedValue({
         name: 'Lan',

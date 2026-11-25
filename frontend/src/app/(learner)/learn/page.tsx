@@ -171,9 +171,20 @@ export default async function LearnerHomePage() {
           {courses && <HomeFollowingCard courses={courses.following} />}
         </div>
 
-        {courses && <HomeCourseCard course={courses.course} />}
+        {courses && (
+          <HomeCourseCard
+            course={courses.course}
+            nextLessonId={
+              home.currentCourse?.code === courses.course.code
+                ? (home.currentCourse.nextLesson?.lessonId ?? null)
+                : null
+            }
+          />
+        )}
 
-        {continueLesson && (
+        {/* C3b-UI2: one "Học tiếp" entry. The course block replaces this card;
+            it stays only when the course could not be read. */}
+        {!courses && continueLesson && (
           <>
             <h2 className="home-section">Tiếp tục học</h2>
             <Link

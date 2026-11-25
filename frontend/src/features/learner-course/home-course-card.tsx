@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/icon';
 
 import { CourseMeta, CourseProgress } from './course-badges';
 import {
+  findCourseLesson,
   lessonMeta,
   nextCourseLesson,
   type CourseDetail,
@@ -14,8 +15,16 @@ import {
  * "Khoá đang học" on Home (mẫu web/home-course.html, mobile/home-course.html).
  * PO 24/11: no cart image, a large 汉 on the course token instead; no XP.
  */
-export function HomeCourseCard({ course }: { course: CourseDetail }) {
-  const next = nextCourseLesson(course);
+export function HomeCourseCard({
+  course,
+  nextLessonId = null,
+}: {
+  course: CourseDetail;
+  /** C3b-UI2: `/learning/home` lesson to continue; the unit comes from here. */
+  nextLessonId?: number | null;
+}) {
+  const next =
+    findCourseLesson(course, nextLessonId) ?? nextCourseLesson(course);
   const detailHref = `/learn/courses/${course.code}`;
   return (
     <section className="crs-home" aria-labelledby="home-course-title">

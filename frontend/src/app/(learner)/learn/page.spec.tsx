@@ -410,6 +410,40 @@ describe('LearnerHomePage', () => {
       expect(screen.queryByText(/XP/)).toBeNull();
     });
 
+    it('keeps one "Học tiếp" entry: the course block replaces the continue card (C3b-UI2)', async () => {
+      vi.mocked(getCourses).mockResolvedValue([summary]);
+      vi.mocked(getCourse).mockResolvedValue(detail);
+      const { container } = await renderHome({
+        ...readyHome,
+        // A topic pick from /learning/home that is not this course's lesson.
+        continueLesson: lesson,
+        currentCourse: {
+          code: 'HSK2_TEXTBOOK',
+          title: 'Giáo trình HSK chuẩn 2.0',
+          kind: 'textbook',
+          progress: { completedLessons: 4, totalLessons: 134 },
+          nextLesson: {
+            lessonId: 31,
+            title: 'Gia đình',
+            slug: 'gia-dinh',
+            position: 4,
+            completionPercent: 0,
+          },
+        },
+      });
+      expect(container.querySelector('.home-lesson')).toBeNull();
+      expect(
+        screen.queryByRole('heading', { name: 'Tiếp tục học' }),
+      ).toBeNull();
+      const ctas = screen.getAllByRole('link', { name: /^Học tiếp/ });
+      expect(ctas).toHaveLength(1);
+      // /learning/home decides the lesson; the unit comes from the course.
+      expect(ctas[0]).toHaveAttribute('href', '/learn/lessons/31');
+      const next = container.querySelector('a.crs-home__next');
+      expect(next).toHaveAttribute('href', '/learn/lessons/31');
+      expect(next).toHaveTextContent('Cấp 1 · Bài 4');
+    });
+
     it('lists a followed course in "Khoá đang theo" (web)', async () => {
       const followed = {
         ...other,

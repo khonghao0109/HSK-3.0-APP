@@ -55,7 +55,10 @@ export function compareReadyLessons(
 }
 
 /** Newest `lastActivityAt` first, null last; ties keep the earlier item. */
-function isMoreRecent(candidate: Date | null, best: Date | null): boolean {
+export function isMoreRecent(
+  candidate: Date | null,
+  best: Date | null,
+): boolean {
   if (candidate === null) return false;
   if (best === null) return true;
   return candidate.getTime() > best.getTime();

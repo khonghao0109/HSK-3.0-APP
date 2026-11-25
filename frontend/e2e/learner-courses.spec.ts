@@ -5,6 +5,7 @@ import {
   PASSWORD,
   backendLogin,
   call,
+  publishCourseUnitLessons,
   readyLessonId,
   registerReadyLearner,
 } from './support/learner-fixtures';
@@ -23,6 +24,10 @@ const TEXTBOOK = {
   orderIndex: 90,
 };
 const TOPIC_TITLE = 'Chủ đề HSK 3.0';
+const TEXTBOOK_LESSONS = [
+  'Bài 1 giáo trình E2E',
+  'Bài 2 giáo trình E2E',
+] as const;
 
 test.beforeAll(async () => {
   const api = await playwrightRequest.newContext();
@@ -46,6 +51,7 @@ test.beforeAll(async () => {
     if (course.status !== 'published') {
       await call(api, 'POST', `/admin/cms/courses/${course.id}/publish`, admin);
     }
+    await publishCourseUnitLessons(course.id, TEXTBOOK_LESSONS);
   } finally {
     await api.dispose();
   }
@@ -195,4 +201,48 @@ test('the course detail opens only the current unit', async ({
   expect(href).toMatch(/^\/learn\/lessons\/\d+$/u);
   await current.click();
   await expect(page).toHaveURL(new RegExp(`${href ?? ''}$`, 'u'));
+});
+
+test('Home "Học tiếp" opens lesson 1 of a picked textbook course (C3b-UI2)', async ({
+  page,
+  baseURL,
+}) => {
+  await registerReadyLearner(page, baseURL);
+  await page.goto('/learn/courses');
+  await card(page, TEXTBOOK.title)
+    .getByRole('button', { name: 'Học khoá này' })
+    .click();
+  await expect(card(page, TEXTBOOK.title).getByText('Đang học')).toBeVisible();
+
+  await page.goto('/learn');
+  const block = page.getByRole('region', { name: TEXTBOOK.title });
+  // One "Học tiếp" entry on Home: the old continue card is gone.
+  await expect(page.locator('.home-lesson')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /^Học tiếp/ })).toHaveCount(1);
+  await block.getByRole('link', { name: /^Học tiếp/ }).click();
+  await expect(page).toHaveURL(/\/learn\/lessons\/\d+$/u);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    TEXTBOOK_LESSONS[0],
+  );
+
+  const courseHref = `/learn/courses/${TEXTBOOK.code}`;
+  if ((page.viewportSize()?.width ?? 0) >= 1024) {
+    const crumbs = page.getByRole('navigation', { name: 'Vị trí' });
+    await expect(crumbs.getByRole('link')).toHaveText([
+      'Khoá học',
+      TEXTBOOK.title,
+    ]);
+    await expect(
+      crumbs.getByRole('link', { name: TEXTBOOK.title }),
+    ).toHaveAttribute('href', courseHref);
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Điều hướng chính' })
+        .getByRole('link', { name: 'Khoá học' }),
+    ).toHaveAttribute('aria-current', 'page');
+  } else {
+    await expect(
+      page.getByRole('link', { name: 'Quay lại khoá học' }),
+    ).toHaveAttribute('href', courseHref);
+  }
 });

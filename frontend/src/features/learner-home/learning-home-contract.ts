@@ -25,6 +25,28 @@ export const learningHomeSchema = z.object({
       completionPercent: z.number(),
     })
     .nullable(),
+  // ADR-009 C3b-UI2: the current course and its "Học tiếp" lesson.
+  currentCourse: z
+    .object({
+      code: z.string(),
+      title: z.string(),
+      kind: z.enum(['topic', 'textbook', 'specialty']),
+      progress: z.object({
+        completedLessons: z.number().int(),
+        totalLessons: z.number().int(),
+      }),
+      nextLesson: z
+        .object({
+          lessonId: z.number().int(),
+          title: z.string(),
+          slug: z.string(),
+          position: z.number().int(),
+          completionPercent: z.number(),
+        })
+        .nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 export type LearningHome = z.infer<typeof learningHomeSchema>;
 

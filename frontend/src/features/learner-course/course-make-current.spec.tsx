@@ -50,6 +50,14 @@ describe('CourseMakeCurrent (C3b-UI)', () => {
     ).toBeInTheDocument();
   });
 
+  it('hides itself once the course is current (C3b-UI2)', async () => {
+    renderButton({ ok: true, data: {} });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Học khoá này' }));
+    });
+    expect(screen.queryByRole('button', { name: 'Học khoá này' })).toBeNull();
+  });
+
   it('alerts on failure and does not refresh', async () => {
     renderButton({ ok: false, status: 503 });
     await act(async () => {

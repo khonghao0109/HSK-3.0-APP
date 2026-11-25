@@ -162,11 +162,12 @@ test.describe('Learner Home (M2.4a)', () => {
     await expect(
       page.locator('.home-explore').getByRole('link', { name: 'Thi thử' }),
     ).toHaveAttribute('href', '/learn/exam');
-    // M2.5a: the Tiếp tục học card links to its lesson page instead of toasting.
-    await expect(page.locator('a.home-lesson')).toHaveAttribute(
-      'href',
-      /^\/learn\/lessons\/\d+$/u,
-    );
+    // M2.5a: Home's lesson entry links to its lesson page instead of
+    // toasting. C3b-UI2 (TL 24/11): that entry is the course block's
+    // "Học tiếp", which replaced the Tiếp tục học card.
+    await expect(
+      page.locator('.crs-home').getByRole('link', { name: /^Học tiếp/ }),
+    ).toHaveAttribute('href', /^\/learn\/lessons\/\d+$/u);
   });
 
   test('marks the active tab with aria-current="page"', async ({
@@ -335,8 +336,12 @@ test.describe('Learner Home (M2.4a)', () => {
           { label: 'bell', control: page.locator('.home-hero__bell') },
           { label: 'avatar', control: page.locator('.home-hero__avatar') },
         ];
-    await expect(page.locator('.home-lesson')).toHaveCount(1);
-    targets.push({ label: 'lesson', control: page.locator('.home-lesson') });
+    // C3b-UI2 (TL 24/11): the lesson entry is the course block's "Học tiếp".
+    const lesson = page
+      .locator('.crs-home')
+      .getByRole('link', { name: /^Học tiếp/ });
+    await expect(lesson).toHaveCount(1);
+    targets.push({ label: 'lesson', control: lesson });
     targets.push({
       label: 'first explore',
       // Thi thử is a link since 7dcb63f.
@@ -378,7 +383,8 @@ test.describe('Learner Home (M2.4a)', () => {
       .evaluate((node) => window.getComputedStyle(node).backgroundImage);
     expect(gaugeImage).toContain('conic-gradient');
 
-    const bar = page.locator('.home-lesson .progress');
+    // C3b-UI2 (TL 24/11): the course block's bar replaced the lesson card's.
+    const bar = page.locator('.crs-home .progress');
     await expect(bar).toHaveCount(1);
     await expect(bar.locator('> span')).toHaveCSS(
       'forced-color-adjust',
@@ -410,14 +416,15 @@ test.describe('Learner Home (M2.4a)', () => {
       await registerReadyLearner(page, baseURL);
       await page.setViewportSize({ width, height });
       await page.goto('/learn');
-      await expect(page.locator('.home-lesson')).toHaveCount(1);
+      // C3b-UI2 (TL 24/11): the course block replaced the lesson card.
+      await expect(page.locator('.crs-home')).toHaveCount(1);
 
       const layout = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
         lessonRight:
-          document.querySelector('.home-lesson')?.getBoundingClientRect()
-            .right ?? Number.POSITIVE_INFINITY,
+          document.querySelector('.crs-home')?.getBoundingClientRect().right ??
+          Number.POSITIVE_INFINITY,
         exploreWidths: [
           ...document.querySelectorAll('.home-explore :is(a, button)'),
         ].map((node) => node.getBoundingClientRect().width),

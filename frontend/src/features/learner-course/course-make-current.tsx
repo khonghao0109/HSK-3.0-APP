@@ -28,6 +28,8 @@ export function CourseMakeCurrent({
     [transport],
   );
   const [busy, setBusy] = useState(false);
+  // C3b-UI2: like the list card, a current course has no "Học khoá này".
+  const [done, setDone] = useState(false);
   // State lags a fast double click; the ref keeps it to one PUT.
   const sending = useRef(false);
 
@@ -44,8 +46,13 @@ export function CourseMakeCurrent({
       return;
     }
     showToast(courseCurrentToast(title));
+    setDone(true);
+    // The button goes away; keep focus on the page heading, not the body.
+    document.getElementById('course-title')?.focus();
     router.refresh();
   }
+
+  if (done) return null;
 
   return (
     <button

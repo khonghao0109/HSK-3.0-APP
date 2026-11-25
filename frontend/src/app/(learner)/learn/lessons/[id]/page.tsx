@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { LearnerBackButton } from '@/features/learner-auth/learner-back-button';
+import { LearnerSidebarSection } from '@/features/learner-shell/learner-sidebar';
 import {
   percentClass,
   wholePercent,
@@ -50,7 +51,9 @@ export default async function LearnerLessonPage({
     Promise.all([getLessonActivity(token, id), getLessonWords(token, id)]),
   );
 
-  const { lesson, level, position } = activity;
+  const { lesson, level, position, course } = activity;
+  // C3b-UI2: a course lesson without a Level belongs to its course.
+  const courseHref = !level && course ? `/learn/courses/${course.code}` : null;
   const locked = activity.state === 'locked';
   const percent = wholePercent(activity.progress.completionPercent);
   const description = lesson.description?.trim() || null;
@@ -61,10 +64,11 @@ export default async function LearnerLessonPage({
       {/* M2.10b: the .w-app frame's top bar (mẫu web/lesson.html). No streak
           chip: this page loads no /learning/home (no new backend request). */}
       <LearnerWebTopbar />
+      {courseHref && <LearnerSidebarSection section="courses" />}
       <header className="m02-head m02-bar m-only">
         <LearnerBackButton
-          fallbackHref="/learn/path"
-          ariaLabel="Quay lại lộ trình"
+          fallbackHref={courseHref ?? '/learn/path'}
+          ariaLabel={courseHref ? 'Quay lại khoá học' : 'Quay lại lộ trình'}
         />
         <p className="m02-bar__title">{lesson.title}</p>
         <ToastButton
@@ -80,9 +84,16 @@ export default async function LearnerLessonPage({
         {/* M2.10b: web breadcrumbs replace the mobile back bar (mẫu
             lesson.html). */}
         <nav className="w-crumbs w-only" aria-label="Vị trí">
-          <Link href="/learn/path">Lộ trình học</Link>
+          {courseHref && course ? (
+            <>
+              <Link href="/learn/courses">Khoá học</Link>
+              <Icon name="chevron-right" className="icon--sm" />
+              <Link href={courseHref}>{course.title}</Link>
+            </>
+          ) : (
+            <Link href="/learn/path">Lộ trình học</Link>
+          )}
           <Icon name="chevron-right" className="icon--sm" />
-          {/* ADR-009 C3b-3: a course lesson has no Level (UI comes later). */}
           {level && (
             <>
               <Link href="/learn/path">{levelLabel(level.code)}</Link>

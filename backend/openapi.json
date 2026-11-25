@@ -15408,6 +15408,73 @@
           "completionPercent"
         ]
       },
+      "LearningHomeCourseLessonDto": {
+        "type": "object",
+        "properties": {
+          "lessonId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number",
+            "description": "Position inside its course unit (starts at 1)."
+          },
+          "completionPercent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lessonId",
+          "title",
+          "slug",
+          "position",
+          "completionPercent"
+        ]
+      },
+      "LearningHomeCurrentCourseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "topic",
+              "textbook",
+              "specialty"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LearningCourseProgressDto"
+          },
+          "nextLesson": {
+            "nullable": true,
+            "description": "Lesson \"Học tiếp\" opens. A topic course gives the same lesson as\n`continueLesson`; another kind gives its own next lesson and\n`continueLesson` is then `null`.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningHomeCourseLessonDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "title",
+          "progress",
+          "nextLesson"
+        ]
+      },
       "LearningHomeResponseDto": {
         "type": "object",
         "properties": {
@@ -15442,6 +15509,16 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/LearningHomeContinueLessonDto"
+              }
+            ]
+          },
+          "currentCourse": {
+            "nullable": true,
+            "description": "C3b-UI2: `null` when no published course is current.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LearningHomeCurrentCourseDto"
               }
             ]
           }
