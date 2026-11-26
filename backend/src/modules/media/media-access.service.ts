@@ -20,6 +20,7 @@ import {
   ObjectStorageErrorKind,
 } from '../../infrastructure/storage/object-storage.port';
 import {
+  buildAnyLessonReadyWhere,
   buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
 } from '../../common/policies/lesson-readiness.policy';
@@ -70,6 +71,25 @@ export class MediaAccessService {
     );
   }
 
+  /**
+   * M2.13d: audio cả bài khoá của block `dialogue` trong một topic published
+   * của bài đã sẵn sàng (jsonb `@>`). Chỉ gọi khi các liên kết khác chưa cho.
+   */
+  private async isKeyTextAudio(mediaId: number): Promise<boolean> {
+    const topic = await this.prisma.topic.findFirst({
+      where: {
+        ...PUBLIC_CONTENT_WHERE,
+        // Cùng điều kiện với route learner: cả bài không có Level (ADR-009).
+        lesson: { is: buildAnyLessonReadyWhere() },
+        content: {
+          array_contains: [{ type: 'dialogue', audioMediaId: mediaId }],
+        },
+      },
+      select: { id: true },
+    });
+    return topic !== null;
+  }
+
   async createAccess(actor: AuthenticatedMediaActor, mediaId: number) {
     const media = await this.prisma.media.findUnique({
       where: { id: mediaId },
@@ -116,7 +136,7 @@ export class MediaAccessService {
               {
                 ...PUBLIC_CONTENT_WHERE,
                 lessonWords: {
-                  some: { lesson: { is: buildLessonReadyWhere() } },
+                  some: { lesson: { is: buildAnyLessonReadyWhere() } },
                 },
               },
             ],
@@ -143,7 +163,12 @@ export class MediaAccessService {
         (media.lessonCoverImage.length > 0 || media.wordImage.length > 0));
     const wordAudioVisible =
       media.type === 'audio' && media.wordAudio.length > 0;
-    if (actor.role !== 'admin' && !learnerVisible && !wordAudioVisible) {
+    if (
+      actor.role !== 'admin' &&
+      !learnerVisible &&
+      !wordAudioVisible &&
+      !(media.type === 'audio' && (await this.isKeyTextAudio(mediaId)))
+    ) {
       throw new ForbiddenException('Media asset access is not allowed.');
     }
     const ttlSeconds =

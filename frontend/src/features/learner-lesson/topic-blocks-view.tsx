@@ -7,6 +7,7 @@ import {
   speakerInitial,
   speakerTones,
 } from './topic-content';
+import { WordAudioButton } from './word-audio-button';
 
 /**
  * Pha D: the grammar point card and the conversation of `Topic.content`,
@@ -104,8 +105,20 @@ export function GrammarPointBody({
   );
 }
 
-/** mẫu key-text: one row per turn, the speaker as an initial (N7). */
-export function DialogueLines({ lines }: { lines: readonly DialogueLine[] }) {
+export const KEY_TEXT_AUDIO_LABEL = 'Nghe bài khoá';
+
+/**
+ * mẫu key-text: one row per turn, the speaker as an initial (N7). M2.13d: the
+ * audio of the whole key text sits in the first turn's cell (`lu-say`); the
+ * other cells stay empty, since seeddata has no per-turn audio.
+ */
+export function DialogueLines({
+  lines,
+  audio,
+}: {
+  lines: readonly DialogueLine[];
+  audio?: { mediaId: number };
+}) {
   const tones = speakerTones(lines.map((line) => line.speaker));
   return (
     <ol className="lu-dlg">
@@ -123,8 +136,18 @@ export function DialogueLines({ lines }: { lines: readonly DialogueLine[] }) {
             </p>
             <p className="lu-line__vi">{line.vi}</p>
           </div>
-          {/* mẫu: no audio yet, an empty cell keeps the rows aligned. */}
-          <span className="lu-line__noaudio" aria-hidden="true" />
+          {index === 0 && audio ? (
+            <span>
+              <WordAudioButton
+                audio={audio}
+                label={KEY_TEXT_AUDIO_LABEL}
+                className="lu-say"
+              />
+            </span>
+          ) : (
+            // mẫu: no audio, an empty cell keeps the rows aligned.
+            <span className="lu-line__noaudio" aria-hidden="true" />
+          )}
         </li>
       ))}
     </ol>

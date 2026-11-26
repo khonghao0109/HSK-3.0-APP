@@ -63,6 +63,7 @@ import {
   LessonActivityTransactionCoordinator,
   type LessonActivityTransactionOperation,
 } from './lesson-activity-transaction-coordinator';
+import { projectTopicDialogueAudio } from '../topic-dialogue-audio';
 
 const PUBLIC_LESSON_GRAPH_SELECT = {
   id: true,
@@ -698,15 +699,17 @@ export class LessonActivityService {
               wordCount,
             }),
             progress: this.serializeProgress(progress),
-            topics: graph.topics.map((topic) => ({
-              ...topic,
-              progress:
-                facts.topicProgresses.get(topic.id) ??
-                this.emptyProgressSummary(),
-              exercises: publicExercises.filter(
-                (exercise) => exercise.topicId === topic.id,
-              ),
-            })),
+            topics: (await projectTopicDialogueAudio(tx, graph.topics)).map(
+              (topic) => ({
+                ...topic,
+                progress:
+                  facts.topicProgresses.get(topic.id) ??
+                  this.emptyProgressSummary(),
+                exercises: publicExercises.filter(
+                  (exercise) => exercise.topicId === topic.id,
+                ),
+              }),
+            ),
             standaloneExercises: publicExercises.filter(
               (exercise) => exercise.topicId === null,
             ),

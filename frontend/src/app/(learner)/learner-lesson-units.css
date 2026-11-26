@@ -734,6 +734,24 @@
   width: 44px;
 }
 
+/* mẫu key-text `.lu-say`; M2.13d: nút nghe cả bài khoá ở lượt đầu. */
+.learner-app .lu-say {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-pill);
+  background: var(--surface-card);
+  color: var(--text-strong);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* mẫu key-text: `.lu-sub` giữ lề dọc gốc (0 0 sp-4) dưới tiêu đề hội thoại; lề ngang để web căn giữa cột 640px. */
 .learner-app .lu-flow .ex-body > .lu-sub:has(+ .lu-dlg) {
   margin-block: 0 var(--sp-4);

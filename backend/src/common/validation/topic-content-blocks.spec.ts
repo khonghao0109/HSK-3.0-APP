@@ -140,6 +140,28 @@ describe('validateTopicContentBlocks', () => {
     ]);
   });
 
+  it('accepts a dialogue audioMediaId that is a positive int4', () => {
+    for (const audioMediaId of [1, 2_147_483_647]) {
+      expect(
+        validateTopicContentBlocks('key_text', [dialogue({ audioMediaId })]),
+      ).toEqual([]);
+    }
+  });
+
+  it.each([0, -1, 1.5, 2_147_483_648, '7', null, true])(
+    'rejects dialogue audioMediaId %p',
+    (audioMediaId) => {
+      expect(
+        validateTopicContentBlocks('key_text', [dialogue({ audioMediaId })]),
+      ).toEqual([
+        {
+          code: 'topic_block_field_invalid',
+          path: 'content[0].audioMediaId',
+        },
+      ]);
+    },
+  );
+
   it('rejects a highlight that is not in hanzi', () => {
     const example = {
       hanzi: '我是学生。',

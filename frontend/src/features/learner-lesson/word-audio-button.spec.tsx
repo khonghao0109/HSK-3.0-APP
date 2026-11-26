@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -70,10 +70,23 @@ describe('WordAudioButton (M2.13c2)', () => {
       Promise.resolve(grant(99)),
     );
     render(<WordAudioButton audio={{ mediaId: 31 }} hanzi="好" />);
+    const status = screen.getByRole('status');
+    expect(status).toBeEmptyDOMElement();
     await userEvent.setup().click(screen.getByRole('button'));
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      WORD_AUDIO_FAILED,
-    );
+    const message = await within(status).findByText(WORD_AUDIO_FAILED);
+    expect(message).toHaveClass('ex-error');
+    expect(message.closest('.sr-only')).toBeNull();
     expect(play).not.toHaveBeenCalled();
+  });
+  it('takes a whole label and a class that replaces icon-btn (M2.13d)', () => {
+    render(
+      <WordAudioButton
+        audio={{ mediaId: 31 }}
+        label="Nghe bài khoá"
+        className="lu-say"
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Nghe bài khoá' });
+    expect(button.className).toBe('lu-say');
   });
 });

@@ -124,7 +124,7 @@ export async function LessonTopicsView({
                 case 'dialogue':
                   return (
                     <div key={index} className="topic-card__block">
-                      <DialogueLines lines={block.lines} />
+                      <DialogueLines lines={block.lines} audio={block.audio} />
                     </div>
                   );
               }

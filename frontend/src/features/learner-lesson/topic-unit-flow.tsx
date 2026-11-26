@@ -215,7 +215,7 @@ export function KeyTextUnitFlow({
             <ZhText text={block.value} />
           </p>
         ) : (
-          <DialogueLines key={index} lines={block.lines} />
+          <DialogueLines key={index} lines={block.lines} audio={block.audio} />
         ),
       )}
     </UnitFrame>

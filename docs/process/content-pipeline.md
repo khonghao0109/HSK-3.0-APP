@@ -1017,8 +1017,43 @@ API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db
 - `--dry-run` không gọi API ghi, chỉ báo theo bài: `files`, `bytes`, `missing`, `invalid`,
   `wordNotFound` (bài chưa nạp), `pending` (sẽ gắn), `skippedHasAudio`. Summary JSON có thêm
   `ingested`, `attached`, `errors`, `errorCodes`; lệnh exit 1 khi có lỗi.
-- Learner chưa phát `Word.audioId` (từ điển trả `audio: null`, serializer bài không gửi audio của
-  từ); audio này chuẩn bị cho từ điển và SRS.
+- Từ M2.13c2 (24/11/2026) learner phát `Word.audioId` ở chi tiết từ điển và thẻ Từ vựng của bài
+  (`audio` chỉ khác `null` khi media là audio ready); file phát qua grant ngắn hạn
+  `GET /media/:id/access`. Ôn tập SRS chưa phát audio.
+
+**Audio bài khoá (M2.13d, TL 25/11/2026)** — cùng lệnh, thêm `--key-text`, chạy sau khi đã nạp cấp:
+
+```bash
+API_BASE_URL=http://127.0.0.1:<port>/api/v1 ADMIN_TOKEN=<token> DATABASE_URL=<db> \
+  npm run content:textbook:import-audio -- --seeddata-root <đường dẫn seeddata> --grade 1 \
+  --key-text [--ledger <file>] [--dry-run]
+```
+
+- Chỉ nạp audio cả bài khoá (`audio_file`, `audio/<tên>.mp3` tính từ thư mục `HSK<cấp>/`), cùng
+  luật đường dẫn, chữ ký, giới hạn 2 MiB, ingestion, idempotency và sổ như audio từ vựng. Ref từng
+  dòng chỉ là tên file trần, seeddata không có file: chỉ đếm vào `lineAudioUnavailable`.
+- Ghép bài khoá với block: trong topic `key_text` của bài (theo slug), block `dialogue` có hanzi
+  các dòng trùng đúng thứ tự với bài khoá. Không khớp, hoặc khớp nhiều block → `blockNotFound`
+  (không đoán theo vị trí). Bài khoá đoạn văn → `unsupportedText`. Block đã có `audioMediaId` →
+  `skippedHasAudio`.
+- Gắn qua CMS, không ghi `Topic.content` bằng Prisma: mỗi topic có block mới gắn nhận một revision
+  `POST /admin/cms/topics/:id/revisions` (snapshot đầy đủ, block có `audioMediaId`); topic published
+  thì `…/reviews` `approved` rồi `…/publish`; topic draft thì revision áp thẳng như CMS. Topic
+  published mà revision mới nhất khác bản đang live (có bản sửa chưa publish) bị bỏ qua với mã
+  `topic_pending_revision`, để không publish nhầm bản sửa đó. Ngoại lệ (M2.13d Pha 3): nếu snapshot
+  của revision mới nhất đúng bằng snapshot importer định ghi (lượt trước đã tạo revision nhưng
+  review/publish lỗi), lượt chạy lại review (nếu chưa `approved`) và publish chính revision đó,
+  không tạo revision mới.
+- Ngay trước `POST …/revisions`, importer đọc lại topic và revision mới nhất (mọi status). Content,
+  `updatedAt`, status hoặc revision mới nhất khác lúc đọc đầu → dừng topic đó với mã
+  `topic_changed` (đếm `topicChanged`), không ghi đè chỉnh sửa của editor. Vẫn còn khe nhỏ giữa lần
+  đọc lại và POST vì CMS chưa có "expected revision".
+- Summary theo bài: `texts`, `files`, `bytes`, `missing`, `invalid`, `lineAudioUnavailable`,
+  `unsupportedText`, `blockNotFound`, `pending` (dry-run), `ingested`, `attached`,
+  `skippedHasAudio`, `topicsRevised`, `topicChanged`, `errors`, cùng `errorCodes`; lệnh exit 1 khi có lỗi.
+  `--dry-run` chỉ đọc (Prisma), không gọi API ghi.
+- Learner nhận `audio` của block `dialogue` ở 4 route topic (api.md A.7/A.8) và xin grant qua
+  `GET /media/:id/access`; nút "Nghe bài khoá" nằm ở lượt đầu của hội thoại.
 
 **Sửa dữ liệu seeddata trong bộ chuyển (M2.13b FIX).**
 - Pinyin viết thanh 3 bằng dấu trăng (ă ĕ ĭ ŏ ŭ, cả chữ hoa) được đổi sang dấu móc (ǎ ě ǐ ǒ ǔ)

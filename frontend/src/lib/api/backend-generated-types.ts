@@ -3330,7 +3330,20 @@ export interface components {
             stories: components["schemas"]["LessonDetailStoryDto"][];
             exercises: components["schemas"]["LessonDetailExerciseDto"][];
         };
+        TopicDialogueLineDto: {
+            speaker: string;
+            hanzi: string;
+            pinyin: string;
+            vi: string;
+        };
+        TopicDialogueBlockDto: {
+            /** @enum {string} */
+            type: "dialogue";
+            audio: components["schemas"]["DictionaryWordAudioDto"] | null;
+            lines: components["schemas"]["TopicDialogueLineDto"][];
+        };
         TopicItemDto: {
+            /** @description Block `dialogue` có dạng `TopicDialogueBlockDto` (M2.13d); cùng dạng ở lesson detail và lesson activity. */
             content: {
                 [key: string]: unknown;
             }[];
