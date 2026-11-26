@@ -342,4 +342,18 @@ describe('handleAccountDeletion (M1.7b2 B2b)', () => {
     expect((await response.json()).error.code).toBe('INVALID_PASSWORD');
     expect(cleared(response)).toBe(false);
   });
+
+  it('keeps LAST_ADMIN_REQUIRED and the session when the last admin is refused (M1.7c-H1)', async () => {
+    const response = await handleAccountDeletion(
+      request('/api/learner/account-deletion', { method: 'POST', body }),
+      deps({
+        requestBackend: vi
+          .fn()
+          .mockRejectedValue(failure(409, 'LAST_ADMIN_REQUIRED')),
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe('LAST_ADMIN_REQUIRED');
+    expect(cleared(response)).toBe(false);
+  });
 });

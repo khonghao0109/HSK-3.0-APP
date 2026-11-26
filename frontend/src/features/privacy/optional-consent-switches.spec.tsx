@@ -29,7 +29,7 @@ describe('OptionalConsentSwitches (M1.7b2 B3, Q190)', () => {
     expect(analytics).toBeChecked();
     expect(marketing).toHaveAttribute('aria-checked', 'false');
     expect(marketing).not.toBeChecked();
-    expect(analytics).toHaveAccessibleDescription(/cải thiện ứng dụng/u);
+    expect(analytics).toHaveAccessibleDescription(/cải thiện bài học/u);
     expect(marketing).toHaveAccessibleDescription(/email/u);
     expect(screen.getAllByRole('switch')).toHaveLength(2);
   });

@@ -194,6 +194,24 @@ describe('PrivacyRightsPanel (M1.7b2 B2b, Q189)', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
+  it('explains that the last admin cannot delete their account (M1.7c-H1)', async () => {
+    await renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: /Xoá tài khoản/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Xoá tài khoản?' });
+    fireEvent.change(
+      within(dialog).getByLabelText('Nhập mật khẩu hiện tại để xác nhận'),
+      { target: { value: 'StrongPassword123!' } },
+    );
+    fetchMock.mockResolvedValueOnce(failure(409, 'LAST_ADMIN_REQUIRED'));
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: 'Xoá tài khoản' }),
+    );
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'Bạn là quản trị viên cuối cùng nên chưa thể xoá tài khoản. Hãy chỉ định thêm một quản trị viên khác trước.',
+    );
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
   it('schedules the deletion with the password, then leaves for sign-in', async () => {
     await renderPanel();
     fireEvent.click(screen.getByRole('button', { name: /Xoá tài khoản/ }));

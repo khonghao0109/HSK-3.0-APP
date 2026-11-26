@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { JOB_NAMES } from '../../infrastructure/jobs/job-queue.port';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -8,6 +12,12 @@ import { UserService } from './user.service';
 
 const USER_ITEM_FIELDS = ['createdAt', 'email', 'id', 'name', 'role'];
 
+/** The SQL text of a `Prisma.sql` call argument. */
+function sqlText(call: unknown[] | undefined): string {
+  const sql = call?.[0] as { strings?: readonly string[] } | undefined;
+  return (sql?.strings ?? []).join('?');
+}
+
 describe('UserService', () => {
   const findFirst = jest.fn();
   const findMany = jest.fn();
@@ -16,10 +26,12 @@ describe('UserService', () => {
   const queryRaw = jest.fn();
   const executeRaw = jest.fn();
   const auditLogCreate = jest.fn();
+  const txUserCount = jest.fn();
   const txPrisma = {
     $queryRaw: queryRaw,
     $executeRaw: executeRaw,
     auditLog: { create: auditLogCreate },
+    user: { count: txUserCount },
   };
   const transaction = jest.fn((cbOrArray: unknown) =>
     typeof cbOrArray === 'function'
@@ -302,7 +314,11 @@ describe('UserService', () => {
       });
 
       expect(result).toEqual({ requestId: 99, scheduledAt });
-      expect(executeRaw).not.toHaveBeenCalled();
+      // Only the M5.3 advisory lock; nothing is written.
+      expect(executeRaw).toHaveBeenCalledTimes(1);
+      expect(sqlText(executeRaw.mock.calls[0])).toContain(
+        'pg_advisory_xact_lock',
+      );
     });
 
     it('creates AccountDeletionRequest, updates user, enqueues jobs in tx, and writes AuditLog', async () => {
@@ -314,7 +330,9 @@ describe('UserService', () => {
         deletedAt: null,
       });
       queryRaw
-        .mockResolvedValueOnce([{ id: 7, status: 'active', deletedAt: null }])
+        .mockResolvedValueOnce([
+          { id: 7, role: 'user', status: 'active', deletedAt: null },
+        ])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([{ id: 101, scheduledAt }]);
 
@@ -352,6 +370,94 @@ describe('UserService', () => {
             scheduledAt: scheduledAt.toISOString(),
           },
         },
+      });
+    });
+    describe('last active admin (M1.7c-H1, M5.3)', () => {
+      const activeAdmin = {
+        id: 7,
+        password: '',
+        status: 'active',
+        deletedAt: null,
+      };
+
+      beforeEach(() => {
+        findFirst.mockResolvedValue({ ...activeAdmin, password: validHash });
+      });
+
+      it('takes the M5.3 advisory lock before locking the user row', async () => {
+        queryRaw
+          .mockResolvedValueOnce([
+            { id: 7, role: 'user', status: 'active', deletedAt: null },
+          ])
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([{ id: 101, scheduledAt: new Date() }]);
+        await service.requestAccountDeletion(7, {
+          password: 'CorrectPass123!',
+        });
+        const lock = executeRaw.mock.calls[0];
+        expect(sqlText(lock)).toContain('pg_advisory_xact_lock');
+        expect(lock?.[0].values).toEqual([5_300_201]);
+        expect(executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+          queryRaw.mock.invocationCallOrder[0] ?? 0,
+        );
+        expect(sqlText(queryRaw.mock.calls[0])).toContain('FOR UPDATE');
+      });
+
+      it('refuses the only active admin with 409 LAST_ADMIN_REQUIRED and changes nothing', async () => {
+        queryRaw
+          .mockResolvedValueOnce([
+            { id: 7, role: 'admin', status: 'active', deletedAt: null },
+          ])
+          .mockResolvedValueOnce([]);
+        txUserCount.mockResolvedValue(1);
+
+        const error = await service
+          .requestAccountDeletion(7, { password: 'CorrectPass123!' })
+          .catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(ConflictException);
+        expect((error as ConflictException).getResponse()).toEqual({
+          code: 'LAST_ADMIN_REQUIRED',
+          message: 'The last active admin cannot delete their own account.',
+        });
+        expect(txUserCount).toHaveBeenCalledWith({
+          where: { role: 'admin', status: 'active', deletedAt: null },
+        });
+        // Only the advisory lock ran: no request, no status change, no
+        // revoked session.
+        expect(executeRaw).toHaveBeenCalledTimes(1);
+        expect(queryRaw).toHaveBeenCalledTimes(2);
+        expect(jobQueue.send).not.toHaveBeenCalled();
+        expect(auditLogCreate).not.toHaveBeenCalled();
+      });
+
+      it('lets an admin go when another admin stays active', async () => {
+        queryRaw
+          .mockResolvedValueOnce([
+            { id: 7, role: 'admin', status: 'active', deletedAt: null },
+          ])
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([{ id: 102, scheduledAt: new Date() }]);
+        txUserCount.mockResolvedValue(2);
+
+        await expect(
+          service.requestAccountDeletion(7, { password: 'CorrectPass123!' }),
+        ).resolves.toMatchObject({ requestId: 102 });
+        expect(jobQueue.send).toHaveBeenCalledTimes(2);
+      });
+
+      it('does not count admins for a learner', async () => {
+        queryRaw
+          .mockResolvedValueOnce([
+            { id: 7, role: 'user', status: 'active', deletedAt: null },
+          ])
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([{ id: 103, scheduledAt: new Date() }]);
+
+        await service.requestAccountDeletion(7, {
+          password: 'CorrectPass123!',
+        });
+        expect(txUserCount).not.toHaveBeenCalled();
       });
     });
   });

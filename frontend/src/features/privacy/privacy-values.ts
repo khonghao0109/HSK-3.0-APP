@@ -22,6 +22,8 @@ export const DATA_EXPORT_CODES: ReadonlyMap<string, number> = new Map([
 ]);
 export const ACCOUNT_DELETION_CODES: ReadonlyMap<string, number> = new Map([
   ['INVALID_PASSWORD', 400],
+  // M1.7c-H1: the last active admin keeps their account (M5.3).
+  ['LAST_ADMIN_REQUIRED', 409],
 ]);
 
 /** Q190: the optional consents B3 lets a learner switch (M1.7b2 B3). */

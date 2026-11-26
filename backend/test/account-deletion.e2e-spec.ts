@@ -525,4 +525,175 @@ describe('Account Deletion E2E', () => {
       expect(afterStr).not.toContain(password);
     }
   });
+  describe('M1.7c-H1: the last active admin cannot delete their own account (M5.3)', () => {
+    const requestDeletion = (token: string) =>
+      http()
+        .post('/api/v1/users/me/deletion-request')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ password });
+
+    const registerAdmin = async (label: string) => {
+      const user = await registerUser(label);
+      await prisma.user.update({
+        where: { id: user.userId },
+        data: { role: 'admin' },
+      });
+      return user;
+    };
+
+    /**
+     * Other suites leave admins behind: demote every active admin except
+     * `keep` for the duration of `run`, then restore them.
+     */
+    const withOnlyAdmins = async (
+      keep: number[],
+      run: () => Promise<void>,
+    ): Promise<void> => {
+      const others = await prisma.user.findMany({
+        where: { role: 'admin', id: { notIn: keep } },
+        select: { id: true },
+      });
+      const otherIds = others.map((row) => row.id);
+      await prisma.user.updateMany({
+        where: { id: { in: otherIds } },
+        data: { role: 'user' },
+      });
+      try {
+        await run();
+      } finally {
+        await prisma.user.updateMany({
+          where: { id: { in: otherIds } },
+          data: { role: 'admin' },
+        });
+      }
+    };
+
+    it('refuses the only active admin with 409 and keeps the account and session', async () => {
+      const admin = await registerAdmin('h1_sole');
+      await withOnlyAdmins([admin.userId], async () => {
+        const res = await requestDeletion(admin.token).expect(
+          HttpStatus.CONFLICT,
+        );
+        expect(res.body.error.code).toBe('LAST_ADMIN_REQUIRED');
+
+        const user = await prisma.user.findUniqueOrThrow({
+          where: { id: admin.userId },
+        });
+        expect(user.status).toBe('active');
+        expect(
+          await prisma.accountDeletionRequest.count({
+            where: { userId: admin.userId },
+          }),
+        ).toBe(0);
+        expect(
+          await prisma.userSession.count({ where: { userId: admin.userId } }),
+        ).toBeGreaterThan(0);
+        expect(
+          inMemoryQueue.getJobsByName(JOB_NAMES.ANONYMIZE_ACCOUNT),
+        ).toHaveLength(0);
+        await http()
+          .get('/api/v1/users/me')
+          .set('Authorization', `Bearer ${admin.token}`)
+          .expect(HttpStatus.OK);
+      });
+    });
+
+    it('lets an admin delete their account while another active admin remains', async () => {
+      const leaving = await registerAdmin('h1_leaving');
+      const staying = await registerAdmin('h1_staying');
+      await withOnlyAdmins([leaving.userId, staying.userId], async () => {
+        await requestDeletion(leaving.token).expect(HttpStatus.ACCEPTED);
+        const user = await prisma.user.findUniqueOrThrow({
+          where: { id: leaving.userId },
+        });
+        expect(user.status).toBe('deletion_pending');
+      });
+    });
+
+    it('still lets a learner delete their account when only one admin exists', async () => {
+      const admin = await registerAdmin('h1_lone_admin');
+      const learner = await registerUser('h1_learner');
+      await withOnlyAdmins([admin.userId], async () => {
+        await requestDeletion(learner.token).expect(HttpStatus.ACCEPTED);
+      });
+    });
+
+    it('the anonymize job keeps a pending admin who became the last admin meanwhile', async () => {
+      const leaving = await registerAdmin('h1_job_leaving');
+      const other = await registerAdmin('h1_job_other');
+      await withOnlyAdmins([leaving.userId, other.userId], async () => {
+        const res = await requestDeletion(leaving.token).expect(
+          HttpStatus.ACCEPTED,
+        );
+        const { requestId } = (res.body as EnvelopeResponse<DeletionResponse>)
+          .data;
+        // The other admin is demoted during the grace period (not through the
+        // guarded admin API) and the request falls due.
+        await prisma.user.update({
+          where: { id: other.userId },
+          data: { role: 'user' },
+        });
+        await prisma.accountDeletionRequest.update({
+          where: { id: requestId },
+          data: { scheduledAt: new Date(Date.now() - 1000) },
+        });
+        try {
+          await expect(anonymizeHandler.process({ requestId })).resolves.toBe(
+            false,
+          );
+          const user = await prisma.user.findUniqueOrThrow({
+            where: { id: leaving.userId },
+          });
+          expect(user.status).toBe('deletion_pending');
+          expect(user.email).toBe(leaving.email);
+          const pending = await prisma.accountDeletionRequest.findUniqueOrThrow(
+            { where: { id: requestId } },
+          );
+          expect(pending.status).toBe('requested');
+          expect(
+            await prisma.auditLog.count({
+              where: {
+                action: 'account.anonymize_blocked_last_admin',
+                targetId: String(leaving.userId),
+              },
+            }),
+          ).toBe(1);
+        } finally {
+          await prisma.user.update({
+            where: { id: other.userId },
+            data: { role: 'admin' },
+          });
+        }
+      });
+    });
+
+    it('lets exactly one of the last two admins delete their account when both ask at once', async () => {
+      const first = await registerAdmin('h1_race_a');
+      const second = await registerAdmin('h1_race_b');
+      await withOnlyAdmins([first.userId, second.userId], async () => {
+        const responses = await Promise.all([
+          requestDeletion(first.token),
+          requestDeletion(second.token),
+        ]);
+
+        expect(responses.map((res) => res.status).sort()).toEqual([202, 409]);
+        const refused = responses.find((res) => res.status === 409);
+        expect(refused?.body.error.code).toBe('LAST_ADMIN_REQUIRED');
+        expect(
+          await prisma.accountDeletionRequest.count({
+            where: { userId: { in: [first.userId, second.userId] } },
+          }),
+        ).toBe(1);
+        expect(
+          await prisma.user.count({
+            where: {
+              id: { in: [first.userId, second.userId] },
+              role: 'admin',
+              status: 'active',
+            },
+          }),
+        ).toBe(1);
+      });
+    });
+  });
 });

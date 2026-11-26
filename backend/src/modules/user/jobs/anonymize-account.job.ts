@@ -14,6 +14,10 @@ import {
 } from '../../../infrastructure/jobs/job-queue.port';
 import type { PgBoss } from 'pg-boss' with { 'resolution-mode': 'import' };
 import { hashPasswordWithPepper } from '../../auth/utils/password-hasher';
+import {
+  countActiveAdmins,
+  lockAdminUsers,
+} from '../../admin-users/admin-users.policy';
 
 export interface AnonymizeAccountJobPayload {
   requestId: number;
@@ -56,6 +60,10 @@ export class AnonymizeAccountJob implements OnApplicationBootstrap {
     );
 
     return this.prisma.$transaction(async (tx) => {
+      // M1.7c-H1: the M5.3 admin-users lock comes first, the same order as
+      // `deletion-request` and the admin mutations.
+      await lockAdminUsers(tx);
+
       // M1.7d lock order: read `userId` without a lock, then lock the `User` row
       // before the request row — the same order the login cancellation path and
       // the admin mutation use, so the three writers serialize instead of
@@ -77,9 +85,11 @@ export class AnonymizeAccountJob implements OnApplicationBootstrap {
 
       const userId = lookup[0].userId;
 
-      await tx.$queryRaw(Prisma.sql`
-        SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE
-      `);
+      const lockedUsers = await tx.$queryRaw<Array<{ role: string }>>(
+        Prisma.sql`
+          SELECT role FROM "User" WHERE id = ${userId} FOR UPDATE
+        `,
+      );
 
       const requests = await tx.$queryRaw<
         Array<{
@@ -117,6 +127,29 @@ export class AnonymizeAccountJob implements OnApplicationBootstrap {
           `Account deletion request is not due yet (requestId: ${requestId}, jobId: ${jobId ?? 'unknown'})`,
         );
         throw new Error('Account deletion request is not due yet');
+      }
+
+      // M1.7c-H1: a pending admin is no longer counted as active. Should they
+      // be the only admin left (another one demoted meanwhile), keep the
+      // request `requested` and leave it to an operator instead of deleting
+      // the last admin. Login still cancels it as usual.
+      if (
+        lockedUsers[0]?.role === 'admin' &&
+        (await countActiveAdmins(tx)) === 0
+      ) {
+        this.logger.error(
+          `Account deletion of the last admin blocked (requestId: ${requestId}, jobId: ${jobId ?? 'unknown'})`,
+        );
+        await tx.auditLog.create({
+          data: {
+            actorId: null,
+            action: 'account.anonymize_blocked_last_admin',
+            targetType: 'User',
+            targetId: String(request.userId),
+            afterSummary: { requestId },
+          },
+        });
+        return false;
       }
 
       const updatedUsers = await tx.$executeRaw(Prisma.sql`

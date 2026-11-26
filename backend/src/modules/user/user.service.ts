@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -14,6 +15,10 @@ import {
   JobQueuePort,
 } from '../../infrastructure/jobs/job-queue.port';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  countActiveAdmins,
+  lockAdminUsers,
+} from '../admin-users/admin-users.policy';
 import { verifyPasswordWithPepper } from '../auth/utils/password-hasher';
 
 import { AccountDeletionResponseDto } from './dto/account-deletion-response.dto';
@@ -189,11 +194,20 @@ export class UserService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // 0. M1.7c-H1: the M5.3 admin-users lock first, the same order as every
+      // admin mutation, so "last active admin" is counted without a race.
+      await lockAdminUsers(tx);
+
       // 1. SELECT ... FROM "User" WHERE id = $1 FOR UPDATE
       const lockedUsers = await tx.$queryRaw<
-        Array<{ id: number; status: string; deletedAt: Date | null }>
+        Array<{
+          id: number;
+          role: string;
+          status: string;
+          deletedAt: Date | null;
+        }>
       >(Prisma.sql`
-        SELECT id, status, "deletedAt"
+        SELECT id, role, status, "deletedAt"
         FROM "User"
         WHERE id = ${userId}
         FOR UPDATE
@@ -226,6 +240,15 @@ export class UserService {
 
       if (lockedUser.status !== 'active' || lockedUser.deletedAt !== null) {
         throw new NotFoundException('User not found.');
+      }
+
+      // M1.7c-H1: never leave the system without an active admin (M5.3). No
+      // request, no status change, sessions kept.
+      if (lockedUser.role === 'admin' && (await countActiveAdmins(tx)) <= 1) {
+        throw new ConflictException({
+          code: 'LAST_ADMIN_REQUIRED',
+          message: 'The last active admin cannot delete their own account.',
+        });
       }
 
       // 3. INSERT AccountDeletionRequest with status = 'requested'
