@@ -118,4 +118,21 @@ describe('DialogueLines (N7)', () => {
     );
     expect(container.querySelector('b')).toBeNull();
   });
+  it('puts one key-text audio button in the first turn only (M2.13d)', () => {
+    render(<DialogueLines lines={talk.lines} audio={{ mediaId: 7 }} />);
+    const button = screen.getByRole('button', { name: 'Nghe bài khoá' });
+    expect(button).toHaveClass('lu-say');
+    const lines = screen.getAllByRole('listitem');
+    expect(lines[0]!.contains(button)).toBe(true);
+    expect(lines[0]!.children).toHaveLength(3);
+    expect(lines[0]!.querySelector('.lu-line__noaudio')).toBeNull();
+    for (const line of lines.slice(1)) {
+      expect(line.querySelector('.lu-line__noaudio')).not.toBeNull();
+    }
+  });
+
+  it('shows no audio button without key-text audio', () => {
+    render(<DialogueLines lines={talk.lines} />);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
 });

@@ -95,10 +95,13 @@ describe('convertTextbookSeeddata (M2.13a)', () => {
       ['key_text', 'key_text'],
       ['grammar', 'grammar'],
     ]);
-    expect(first.keyTextAudioRefs).toEqual([
-      't1_kt1.mp3',
-      't1_kt1_1.mp3',
-      't1_kt1_2.mp3',
+    expect(first.keyTexts).toEqual([
+      {
+        dialogue: true,
+        audioRef: 't1_kt1.mp3',
+        hanzi: ['犇骉！', '骉犇。'],
+        lineAudioRefs: 2,
+      },
     ]);
   });
 

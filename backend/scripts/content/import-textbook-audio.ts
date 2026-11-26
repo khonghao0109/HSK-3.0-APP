@@ -10,6 +10,7 @@ import {
 import { adminActorId } from '../../src/modules/content-pilot/import-textbook-grade';
 import {
   importTextbookAudio,
+  importTextbookKeyTextAudio,
   readTextbookAudioLessons,
 } from '../../src/modules/content-pilot/textbook-audio';
 import { TextbookSeeddataError } from '../../src/modules/content-pilot/textbook-seeddata.converter';
@@ -17,9 +18,11 @@ import { TextbookSeeddataError } from '../../src/modules/content-pilot/textbook-
 /**
  * M2.13c — audio từ vựng một cấp giáo trình HSK 2.0, bước riêng sau
  * `content:textbook:import-grade` (docs/process/content-pipeline.md §9).
+ * M2.13d: `--key-text` nạp audio cả bài khoá vào block `dialogue` qua revision
+ * CMS thay cho audio từ vựng.
  *
  *   npm run content:textbook:import-audio -- --seeddata-root <seeddata> --grade 1 \
- *     [--ledger <file>] [--dry-run]
+ *     [--key-text] [--ledger <file>] [--dry-run]
  *
  * Biến môi trường (không đọc `.env`): `DATABASE_URL`; khi không dry-run thêm
  * `API_BASE_URL`, `ADMIN_TOKEN` (admin). File nạp qua media ingestion (5 file
@@ -28,7 +31,7 @@ import { TextbookSeeddataError } from '../../src/modules/content-pilot/textbook-
  */
 function usage(): never {
   console.error(
-    'Cách dùng: npm run content:textbook:import-audio -- --seeddata-root <dir> --grade <n> [--ledger <file>] [--dry-run]',
+    'Cách dùng: npm run content:textbook:import-audio -- --seeddata-root <dir> --grade <n> [--key-text] [--ledger <file>] [--dry-run]',
   );
   process.exit(2);
 }
@@ -38,10 +41,13 @@ function parseArgs(argv: readonly string[]) {
   let grade: number | null = null;
   let ledger: string | null = null;
   let dryRun = false;
+  let keyText = false;
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index + 1];
     if (argv[index] === '--dry-run') {
       dryRun = true;
+    } else if (argv[index] === '--key-text') {
+      keyText = true;
     } else if (argv[index] === '--seeddata-root' && value !== undefined) {
       seeddataRoot = resolve(process.cwd(), value);
       index += 1;
@@ -68,6 +74,7 @@ function parseArgs(argv: readonly string[]) {
     seeddataRoot,
     grade,
     dryRun,
+    keyText,
     ledgerPath:
       ledger ?? `/tmp/hsk-textbook/g${String(grade)}/audio-ledger.json`,
   };
@@ -86,10 +93,8 @@ async function main(): Promise<void> {
     );
     usage();
   }
-  const { lessons, audioBaseDir, skippedLessons } = readTextbookAudioLessons(
-    options.seeddataRoot,
-    options.grade,
-  );
+  const { lessons, audioBaseDir, keyTextBaseDir, skippedLessons } =
+    readTextbookAudioLessons(options.seeddataRoot, options.grade);
   mkdirSync(dirname(options.ledgerPath), { recursive: true });
   const prisma = new PrismaClient();
   const log = (line: string) => console.log(line);
@@ -99,20 +104,31 @@ async function main(): Promise<void> {
       : await adminActorId(
           new ApiClient({ apiBaseUrl, adminToken, prisma }, log),
         );
-    const summary = await importTextbookAudio(
-      { apiBaseUrl, adminToken, prisma, log },
-      {
-        lessons,
-        seeddataRoot: options.seeddataRoot,
-        audioBaseDir,
-        ledgerPath: options.ledgerPath,
-        dryRun: options.dryRun,
-        actorId,
-      },
-    );
+    const deps = { apiBaseUrl, adminToken, prisma, log };
+    const summary = options.keyText
+      ? await importTextbookKeyTextAudio(deps, {
+          lessons,
+          seeddataRoot: options.seeddataRoot,
+          keyTextBaseDir,
+          ledgerPath: options.ledgerPath,
+          dryRun: options.dryRun,
+        })
+      : await importTextbookAudio(deps, {
+          lessons,
+          seeddataRoot: options.seeddataRoot,
+          audioBaseDir,
+          ledgerPath: options.ledgerPath,
+          dryRun: options.dryRun,
+          actorId,
+        });
     console.log(
       JSON.stringify(
-        { grade: options.grade, skippedLessons, ...summary },
+        {
+          grade: options.grade,
+          mode: options.keyText ? 'key-text' : 'vocabulary',
+          skippedLessons,
+          ...summary,
+        },
         null,
         2,
       ),

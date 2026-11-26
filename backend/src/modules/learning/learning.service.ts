@@ -26,6 +26,7 @@ import {
   serializePublicLessonDetail,
 } from './public-lesson.serializer';
 import { PUBLIC_WORD_AUDIO_SELECT } from '../dictionary/public-word.policy';
+import { projectTopicDialogueAudio } from './topic-dialogue-audio';
 
 @Injectable()
 export class LearningService {
@@ -217,7 +218,11 @@ export class LearningService {
 
     return {
       success: true,
-      data: serializePublicLessonDetail({ ...rest, courseRef }),
+      data: serializePublicLessonDetail({
+        ...rest,
+        topics: await projectTopicDialogueAudio(this.prisma, rest.topics),
+        courseRef,
+      }),
     };
   }
 
@@ -249,9 +254,10 @@ export class LearningService {
       this.prisma.topic.count({ where }),
     ]);
 
+    const projected = await projectTopicDialogueAudio(this.prisma, topics);
     return {
       success: true,
-      data: topics.map(
+      data: projected.map(
         (topic): TopicItemDto => ({
           id: topic.id,
           lessonId: topic.lessonId,

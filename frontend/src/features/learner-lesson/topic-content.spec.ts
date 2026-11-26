@@ -94,6 +94,18 @@ describe('topicBlocks: grammar_point and dialogue (Pha D, N5–N7)', () => {
     ]);
   });
 
+  it('keeps the key-text audio of a dialogue by media id only (M2.13d)', () => {
+    const audio = { mediaId: 7, mimeType: 'audio/mpeg', duration: 12 };
+    expect(topicBlocks([{ ...dialogue, audio }])).toEqual([
+      { kind: 'dialogue', lines: dialogue.lines, audio: { mediaId: 7 } },
+    ]);
+    for (const broken of [null, { mediaId: 0 }, { mediaId: '7' }, 7]) {
+      expect(topicBlocks([{ ...dialogue, audio: broken }])).toEqual([
+        { kind: 'dialogue', lines: dialogue.lines },
+      ]);
+    }
+  });
+
   // Blocks saved before the CMS rule may be broken: skip, never crash.
   it.each([
     ['a missing title', { ...point, title: undefined }],

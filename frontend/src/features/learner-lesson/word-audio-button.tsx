@@ -10,20 +10,21 @@ export const WORD_AUDIO_LABEL = 'Nghe phát âm';
 export const WORD_AUDIO_FAILED = 'Không phát được âm thanh.';
 
 /**
- * M2.13c2: nút loa của một từ (thẻ Từ vựng, chi tiết từ điển). Không có audio
+ * M2.13c2: nút loa của một từ (thẻ Từ vựng, chi tiết từ điển); M2.13d: cả bài
+ * khoá (`label`). Không có audio
  * thì không hiện. Grant xin khi bấm (TTL ngắn, cùng BFF với bài nghe), rồi
  * phát bằng `<audio preload="none">`; lỗi hiện thành chữ trong vùng `status`
  * luôn có sẵn (rỗng khi chưa lỗi) để trình đọc màn hình đọc được.
  */
 export function WordAudioButton({
   audio,
-  hanzi,
-  className,
+  className = 'icon-btn',
+  ...name
 }: {
   audio: { mediaId: number } | null;
-  hanzi: string;
+  /** Replaces the default `icon-btn` (M2.13d: `lu-say` of a key text). */
   className?: string;
-}) {
+} & ({ hanzi: string } | { label: string })) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -56,8 +57,10 @@ export function WordAudioButton({
     <>
       <button
         type="button"
-        className={className ? `icon-btn ${className}` : 'icon-btn'}
-        aria-label={`${WORD_AUDIO_LABEL} ${hanzi}`}
+        className={className}
+        aria-label={
+          'label' in name ? name.label : `${WORD_AUDIO_LABEL} ${name.hanzi}`
+        }
         onClick={listen}
       >
         <Icon name="volume" />

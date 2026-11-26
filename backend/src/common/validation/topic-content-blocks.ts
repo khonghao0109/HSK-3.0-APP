@@ -1,3 +1,5 @@
+import { POSTGRESQL_INT4_MAX } from '../constants/database.constants';
+
 /**
  * Kiểm các block có cấu trúc trong `Topic.content` (mảng block JSON).
  * Chỉ kiểm `grammar_point` (topic `grammar`) và `dialogue` (topic `key_text`);
@@ -160,7 +162,21 @@ function checkDialogue(
   block: Record<string, unknown>,
   path: string,
 ): void {
-  checkKeys(issues, block, ['type', 'lines'], path);
+  checkKeys(issues, block, ['type', 'lines', 'audioMediaId'], path);
+  // M2.13d: audio cả bài khoá, chỉ id Media (learner nhận bản chiếu, không id thô).
+  if (
+    'audioMediaId' in block &&
+    !(
+      Number.isSafeInteger(block.audioMediaId) &&
+      (block.audioMediaId as number) >= 1 &&
+      (block.audioMediaId as number) <= POSTGRESQL_INT4_MAX
+    )
+  ) {
+    issues.push({
+      code: 'topic_block_field_invalid',
+      path: `${path}.audioMediaId`,
+    });
+  }
   for (const [index, line] of checkArray(
     issues,
     block,

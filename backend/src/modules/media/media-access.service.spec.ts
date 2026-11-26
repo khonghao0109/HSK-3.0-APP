@@ -6,7 +6,10 @@ import {
 import type { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 
-import { buildLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
+import {
+  buildAnyLessonReadyWhere,
+  buildLessonReadyWhere,
+} from '../../common/policies/lesson-readiness.policy';
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
 import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
@@ -181,7 +184,7 @@ describe('MediaAccessService storage-provider affinity', () => {
         {
           status: 'published',
           deletedAt: null,
-          lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+          lessonWords: { some: { lesson: { is: buildAnyLessonReadyWhere() } } },
         },
       ],
     });
@@ -189,6 +192,70 @@ describe('MediaAccessService storage-provider affinity', () => {
     await expect(
       image.service.createAccess({ id: 8, role: 'learner' }, 41),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  describe('key-text dialogue audio (M2.13d)', () => {
+    const keyTextWhere = {
+      status: 'published',
+      deletedAt: null,
+      lesson: { is: buildAnyLessonReadyWhere() },
+      content: { array_contains: [{ type: 'dialogue', audioMediaId: 41 }] },
+    };
+    const audioFixture = () =>
+      createFixture('s3', 's3', { type: 'audio', mimeType: 'audio/mpeg' });
+
+    it('grants learners audio of a dialogue in a published topic of a ready lesson', async () => {
+      const { prisma, service } = audioFixture();
+      prisma.topic.findFirst.mockResolvedValueOnce({ id: 9 });
+      await expect(
+        service.createAccess({ id: 8, role: 'learner' }, 41),
+      ).resolves.toMatchObject({ success: true });
+      expect(prisma.topic.findFirst).toHaveBeenCalledWith({
+        where: keyTextWhere,
+        select: { id: true },
+      });
+    });
+
+    it('refuses when no published topic carries the audio (draft topic)', async () => {
+      const { prisma, service } = audioFixture();
+      await expect(
+        service.createAccess({ id: 8, role: 'learner' }, 41),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      const [args] = prisma.topic.findFirst.mock.calls[0] as [
+        { where: Record<string, unknown> },
+      ];
+      expect(args.where).toMatchObject({
+        status: 'published',
+        deletedAt: null,
+      });
+    });
+
+    it('refuses when the topic lesson is not ready', async () => {
+      const { prisma, service } = audioFixture();
+      await expect(
+        service.createAccess({ id: 8, role: 'learner' }, 41),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      const [args] = prisma.topic.findFirst.mock.calls[0] as [
+        { where: Record<string, unknown> },
+      ];
+      expect(args.where.lesson).toEqual({ is: buildAnyLessonReadyWhere() });
+    });
+
+    it('never queries topics for an image, nor when another link already grants', async () => {
+      const image = createFixture('s3', 's3');
+      image.prisma.topic.findFirst.mockResolvedValue({ id: 9 });
+      await expect(
+        image.service.createAccess({ id: 8, role: 'learner' }, 41),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(image.prisma.topic.findFirst).not.toHaveBeenCalled();
+      const word = createFixture('s3', 's3', {
+        type: 'audio',
+        mimeType: 'audio/mpeg',
+        wordAudio: [{ id: 5 }],
+      });
+      await word.service.createAccess({ id: 8, role: 'learner' }, 41);
+      expect(word.prisma.topic.findFirst).not.toHaveBeenCalled();
+    });
   });
 
   it('does not let a lesson cover link grant non-image media to learners', async () => {
@@ -587,10 +654,13 @@ describe('MediaAccessService storage-provider affinity', () => {
       wordAudio: [],
       ...rowOverrides,
     });
+    const findFirst = jest.fn().mockResolvedValue(null);
     const prisma = {
       media: { findUnique },
+      topic: { findFirst },
     } as unknown as PrismaService & {
       media: { findUnique: jest.Mock };
+      topic: { findFirst: jest.Mock };
     };
     const config = {
       getOrThrow: jest.fn((key: string) => {

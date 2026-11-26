@@ -78,4 +78,15 @@ describe('WordAudioButton (M2.13c2)', () => {
     expect(message.closest('.sr-only')).toBeNull();
     expect(play).not.toHaveBeenCalled();
   });
+  it('takes a whole label and a class that replaces icon-btn (M2.13d)', () => {
+    render(
+      <WordAudioButton
+        audio={{ mediaId: 31 }}
+        label="Nghe bài khoá"
+        className="lu-say"
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Nghe bài khoá' });
+    expect(button.className).toBe('lu-say');
+  });
 });

@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import {
   AUDIO_MAX_BYTES,
   checkAudioBytes,
+  findDialogueBlock,
   resolveAudioPath,
   shouldAttachAudio,
 } from './textbook-audio';
@@ -107,6 +108,32 @@ describe('textbook audio (M2.13c)', () => {
       expect(
         shouldAttachAudio({ audioId: null, deletedAt: new Date('2026-11-24') }),
       ).toBe(false);
+    });
+  });
+  describe('findDialogueBlock (M2.13d)', () => {
+    const lines = (hanzi: string[]) =>
+      hanzi.map((value) => ({
+        speaker: 'A',
+        hanzi: value,
+        pinyin: 'p',
+        vi: 'v',
+      }));
+    const content = [
+      { type: 'text', value: '你好' },
+      { type: 'dialogue', lines: lines(['你好', '再见']) },
+      { type: 'dialogue', lines: lines(['谢谢']) },
+    ];
+
+    it('finds the dialogue whose lines are exactly the key text', () => {
+      expect(findDialogueBlock(content, ['谢谢'])).toBe(2);
+      expect(findDialogueBlock(content, ['你好', '再见'])).toBe(1);
+    });
+
+    it('refuses a partial, reordered or ambiguous match', () => {
+      expect(findDialogueBlock(content, ['你好'])).toBe(-1);
+      expect(findDialogueBlock(content, ['再见', '你好'])).toBe(-1);
+      expect(findDialogueBlock([...content, content[2]], ['谢谢'])).toBe(-1);
+      expect(findDialogueBlock({ legacy: true }, ['谢谢'])).toBe(-1);
     });
   });
 });

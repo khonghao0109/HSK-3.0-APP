@@ -29,7 +29,12 @@ export type DialogueLine = {
   vi: string;
 };
 
-export type DialogueBlock = { kind: 'dialogue'; lines: DialogueLine[] };
+export type DialogueBlock = {
+  kind: 'dialogue';
+  lines: DialogueLine[];
+  /** M2.13d: audio of the whole key text; absent when there is none. */
+  audio?: { mediaId: number };
+};
 /** What a Bài khoá unit shows: dialogues and narrative paragraphs. */
 export type KeyTextBlock = DialogueBlock | { kind: 'text'; value: string };
 
@@ -113,7 +118,13 @@ function dialogue(block: Fields): DialogueBlock | null {
       ? { speaker, hanzi, pinyin, vi }
       : null;
   });
-  return lines ? { kind: 'dialogue', lines } : null;
+  if (!lines) return null;
+  const mediaId = record(block.audio)?.mediaId;
+  return typeof mediaId === 'number' &&
+    Number.isSafeInteger(mediaId) &&
+    mediaId > 0
+    ? { kind: 'dialogue', lines, audio: { mediaId } }
+    : { kind: 'dialogue', lines };
 }
 
 /** The sentence around the first occurrence of `highlight`. */

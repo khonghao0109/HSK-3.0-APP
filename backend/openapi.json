@@ -14237,6 +14237,60 @@
           "exercises"
         ]
       },
+      "TopicDialogueLineDto": {
+        "type": "object",
+        "properties": {
+          "speaker": {
+            "type": "string"
+          },
+          "hanzi": {
+            "type": "string"
+          },
+          "pinyin": {
+            "type": "string"
+          },
+          "vi": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker",
+          "hanzi",
+          "pinyin",
+          "vi"
+        ]
+      },
+      "TopicDialogueBlockDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "dialogue"
+            ]
+          },
+          "audio": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DictionaryWordAudioDto"
+              }
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicDialogueLineDto"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "audio",
+          "lines"
+        ]
+      },
       "TopicItemDto": {
         "type": "object",
         "properties": {
@@ -14245,7 +14299,8 @@
             "items": {
               "type": "object",
               "additionalProperties": true
-            }
+            },
+            "description": "Block `dialogue` có dạng `TopicDialogueBlockDto` (M2.13d); cùng dạng ở lesson detail và lesson activity."
           },
           "id": {
             "type": "number"

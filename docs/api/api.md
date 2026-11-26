@@ -2,7 +2,7 @@
 
 ## 0. Trạng thái tài liệu
 
-Cập nhật 16/11/2026 (M3.4b, Q303–Q311): `GET /dictionary/words/:id` thêm `audio` (khi đó luôn `null`; M2.13c2, 24/11/2026, bật audio ready của Word cho trường này và thêm `words[].audio` ở lesson detail), `examples[]`, `related[]` (A.5); `word` của A.7b là tập con. Trước đó (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6); 18/11/2026: thêm tiêu chí đúng thanh điệu đã gõ ngay sau khớp trọn. Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
+Cập nhật 25/11/2026 (M2.13d): block `dialogue` của `Topic.content` nhận `audioMediaId` tuỳ chọn trong CMS; 4 route learner trả `audio` thay cho id thô (A.7, A.8) và `GET /media/:mediaId/access` cấp grant cho audio đó. Trước đó, 16/11/2026 (M3.4b, Q303–Q311): `GET /dictionary/words/:id` thêm `audio` (khi đó luôn `null`; M2.13c2, 24/11/2026, bật audio ready của Word cho trường này và thêm `words[].audio` ở lesson detail), `examples[]`, `related[]` (A.5); `word` của A.7b là tập con. Trước đó (M3.4a, Q293): `GET /dictionary` nhận pinyin có dấu thanh, số thanh, viết liền hoặc cách, `v` = `ü`; xếp khớp trọn > tiền tố > trigram (A.5, R6); 18/11/2026: thêm tiêu chí đúng thanh điệu đã gõ ngay sau khớp trọn. Response không đổi. Trước đó, 12/11/2026 (M3.3 Pha C): thêm `GET`/`PUT /review/preferences` (Q279–Q280), lọc cấp và trần thẻ mỗi ngày cho hàng đợi và phiên ôn (Q281/Q282, `dailyLimitReached`, `409 REVIEW_DAILY_LIMIT_REACHED`), `retrySessionId` cho `POST /review/sessions` (Q278), `timezone` trong `GET /review/overview` (Q276); tất cả ở A.7b. M3.3 Pha B: thêm `GET /review/overview` (A.7b, Q268). Trước đó (M3.2 Pha B): thêm 4 route phiên ôn `/review/sessions…` (A.7b, Q253/Q254), hàng đợi lọc bằng `PUBLIC_WORD_WHERE` (Q255). Pha A: thêm `GET /review/queue` (A.7b, Q252, R4); lưu từ lần đầu tạo `ReviewCard` (A.5, Q251). Trước đó, 02/11/2026 (M4.3 Pha A3, trên baseline A2 `0fc94a6`): thêm `GET /exam/attempts/:attemptId/result` và `GET /exam/attempts/:attemptId/review` (Q147/Q148/Q151), mã lỗi `EXAM_ATTEMPT_NOT_TERMINAL` và `EXAM_RESULT_UNAVAILABLE` (Q156/Q157), chấm lười ở lần đọc đầu. Tài liệu chia hai phần:
 
 - **Part A — Đã triển khai**: chỉ gồm endpoint có controller trong `backend/src/modules`,
   mô tả đúng request/response như code hiện tại (kể cả chỗ chưa đẹp).
@@ -491,7 +491,7 @@ một Topic hoặc Story published.
 | `GET` | `/levels`, `/learning/levels` | — | `[{ id, name, orderIndex, code, minBand, maxBand }]` |
 | `GET` | `/lessons`, `/learning/lessons` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, title, description, orderIndex, slug }]` + `meta` |
 | `GET` | `/lessons/:id`, `/learning/lessons/:id` | — | Lesson detail; `404` nếu không ready. Có `coverImage` và `words[].image`: `{ id, altText }` hoặc `null` (chỉ ảnh `ready`, chưa lưu trữ; Q350); URL lấy qua `GET /media/:id/access`. `words[].audio` (M2.13c2): `{ mediaId, mimeType, duration }` hoặc `null`, cùng luật với `audio` của A.5. `words[].topicId`: id topic (đơn vị) chứa từ, `null` khi chưa gán hoặc topic không public (draft/đã xoá) |
-| `GET` | `/topics`, `/learning/topics` | `lessonId` **bắt buộc**, `page`, `limit` | `[{ id, lessonId, title, content, orderIndex }]` + `meta` |
+| `GET` | `/topics`, `/learning/topics` | `lessonId` **bắt buộc**, `page`, `limit` | `[{ id, lessonId, title, content, orderIndex }]` + `meta`; block `dialogue` trong `content` (cả ở lesson detail) có `audio` thay cho `audioMediaId` (M2.13d, A.8) |
 | `GET` | `/stories`, `/learning/stories` | `levelId` **bắt buộc**, `page`, `limit` | `[{ id, levelId, title, content, slug }]` + `meta` |
 | `GET` | `/learning/test` | — | `"Learning module working"` (smoke, sẽ xoá — B-10) |
 
@@ -1173,13 +1173,14 @@ Exercise ở bảng A.9.
 | `text` | `{ type, value: string }` | mọi loại |
 | `vocabulary_list` | `{ type, value: string }` | mọi loại |
 | `grammar_point` | `{ type, title, formula[], explanation, examples[] }` | chỉ `grammar` |
-| `dialogue` | `{ type, lines[] }` | chỉ `key_text` |
+| `dialogue` | `{ type, lines[], audioMediaId? }` | chỉ `key_text` |
 
 `grammar_point`: `title` 1–120 · `formula` 1–12 chip `{ role: subj|verb|key|mw|other, zh 1–20,
 vi 1–40 }` · `explanation` 1–600 · `examples` 1–5 câu `{ hanzi 1–120, pinyin 1–240, vi 1–240,
 highlight? }`. `highlight` không có key hoặc `null`; nếu là string thì phải là chuỗi con không rỗng
-của `hanzi`. `dialogue`: `lines` 1–40 dòng `{ speaker 1–40, hanzi 1–200, pinyin 1–400, vi 1–400 }`.
-Mọi field là string; độ dài tối thiểu tính sau trim, tối đa tính trên chuỗi gốc. Key lạ bị từ chối
+của `hanzi`. `dialogue`: `lines` 1–40 dòng `{ speaker 1–40, hanzi 1–200, pinyin 1–400, vi 1–400 }`;
+`audioMediaId` (M2.13d, tuỳ chọn) là số nguyên 1–2147483647, id Media audio của cả bài khoá; sai kiểu
+→ `content[i].audioMediaId`. Các field khác là string; độ dài tối thiểu tính sau trim, tối đa tính trên chuỗi gốc. Key lạ bị từ chối
 ở mọi cấp (block, chip, câu ví dụ, dòng thoại).
 
 CMS kiểm `grammar_point`/`dialogue` khi `POST /admin/cms/topics`, `POST …/topics/:topicId/revisions`
@@ -1192,7 +1193,11 @@ Mã nội bộ của module dùng chung (`backend/src/common/validation/topic-co
 cho validator nạp pilot): `topic_block_type_mismatch`, `topic_block_unknown_field`,
 `topic_block_field_invalid`, `topic_block_array_size`, `topic_block_highlight_not_in_hanzi`.
 
-`GET /learning/lessons/:lessonId/activity` (A.7) trả `topics[].content` nguyên văn như đã publish.
+`GET /learning/lessons/:lessonId/activity` (A.7) trả `topics[].content` như đã publish, trừ block
+`dialogue` (M2.13d): learner không bao giờ nhận `audioMediaId`; mỗi block `dialogue` có
+`audio: { mediaId, mimeType, duration }` khi Media là `audio`, `ready`, chưa xoá, ngược lại `null`
+(schema `TopicDialogueBlockDto`). Cùng dạng ở `GET /lessons/:id`, `/learning/lessons/:id`, `GET /topics` và
+`/learning/topics`; media của mọi block lấy bằng một truy vấn. File phát qua `GET /media/:mediaId/access`.
 
 ### A.8b Admin CMS — Course / CourseUnit (ADR-009 C3b-2)
 
@@ -2009,7 +2014,7 @@ finalize. Chi tiết ADR-005 và runbook.
 
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng; hoặc media `image` là ảnh bìa của bài ready, hay ảnh của Word published thuộc một bài ready, Q350; hoặc media `audio` là audio của Word public trong từ điển hay Word published thuộc một bài ready, M2.13c2); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
+| `GET` | `/media/:mediaId/access` | JWT (admin, hoặc learner khi media được một exercise public tham chiếu: cùng điều kiện với route attempts, xem dưới bảng; hoặc media `image` là ảnh bìa của bài ready, hay ảnh của Word published thuộc một bài ready, Q350; hoặc media `audio` là audio của Word public trong từ điển hay Word published thuộc một bài ready, M2.13c2; hoặc media `audio` là `audioMediaId` của một block `dialogue` trong Topic published, chưa xoá, thuộc bài ready, M2.13d); 120/phút/user | `200` `data: { expiresAt, url }`; `url` tương đối `/api/v1/media/:id/content?expires=&signature=`; không đủ quyền → `403`; media không ready → `404` |
 | `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
 
 Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate

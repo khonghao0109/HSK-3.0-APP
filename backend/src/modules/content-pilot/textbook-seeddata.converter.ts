@@ -115,8 +115,19 @@ export interface TextbookLessonFile {
   readonly grammarExamplesSkipped: number;
   /** Grammar points dropped: no meaningful example and no explanation. */
   readonly grammarPointsSkipped: number;
-  /** Audio file names for the media phase; never read here. */
-  readonly keyTextAudioRefs: readonly string[];
+  /**
+   * Key texts in seeddata order for the audio phase (M2.13d); files are never
+   * read here. `hanzi` equals the lines of the text's `dialogue` block, which
+   * is how the audio importer finds the block. Per-line refs are only counted.
+   */
+  readonly keyTexts: readonly TextbookKeyText[];
+}
+
+export interface TextbookKeyText {
+  readonly dialogue: boolean;
+  readonly audioRef: string;
+  readonly hanzi: readonly string[];
+  readonly lineAudioRefs: number;
 }
 
 export interface TextbookSeeddataIssue {
@@ -778,10 +789,12 @@ function buildFile(
       (item) => item.meaning.trim() === '',
     ).length,
     grammarPointsSkipped: lesson.ngu_phap.length - grammarPoints.length,
-    keyTextAudioRefs: lesson.bai_khoa.flatMap((text) => [
-      text.audio_file,
-      ...text.content.map((line) => line.audio),
-    ]),
+    keyTexts: lesson.bai_khoa.map((text) => ({
+      dialogue: text.type !== 'paragraph',
+      audioRef: text.audio_file,
+      hanzi: text.content.map((line) => line.text_han),
+      lineAudioRefs: text.content.filter((line) => line.audio !== '').length,
+    })),
   };
 }
 

@@ -21,6 +21,7 @@ import {
   AUDIO_ATTACHED_AUDIT_ACTION,
   checkAudioBytes,
   importTextbookAudio,
+  importTextbookKeyTextAudio,
   type TextbookAudioLesson,
 } from '../src/modules/content-pilot/textbook-audio';
 import { TEXTBOOK_DATA_SOURCE } from '../src/modules/content-pilot/textbook-seeddata.converter';
@@ -43,7 +44,7 @@ function silentMp3(seed: number): Buffer {
  * synthetic lesson of this suite (own slug, own words) at a random high
  * orderIndex of HSK7_9. `afterAll` archives the lesson and deletes its words.
  */
-describe('Textbook vocabulary audio import (M2.13c) E2E', () => {
+describe('Textbook audio import (M2.13c vocabulary, M2.13d key text) E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let adminToken: string;
@@ -67,6 +68,7 @@ describe('Textbook vocabulary audio import (M2.13c) E2E', () => {
     fileName: 'lesson-01.json',
     slug,
     words: WORDS,
+    keyTexts: [],
   });
   const run = (dryRun: boolean, ledger = 'ledger.json') =>
     importTextbookAudio(
@@ -161,6 +163,20 @@ describe('Textbook vocabulary audio import (M2.13c) E2E', () => {
     writeFileSync(join(root, 'vocab', 'audio', 'a.mp3'), silentMp3(1));
     writeFileSync(join(root, 'vocab', 'audio', 'b.mp3'), silentMp3(2));
     writeFileSync(join(root, 'vocab', 'audio', 'c.mp3'), silentMp3(3));
+    mkdirSync(join(root, 'lessons', 'audio'), { recursive: true });
+    for (const [name, seed] of [
+      ['k1', 11],
+      ['k2', 12],
+      ['k3', 13],
+      ['k4', 14],
+      ['k5', 15],
+      ['k6', 16],
+    ] as const) {
+      writeFileSync(
+        join(root, 'lessons', 'audio', `${name}.mp3`),
+        silentMp3(seed),
+      );
+    }
 
     presetMediaId = (
       await prisma.media.create({
@@ -366,6 +382,340 @@ describe('Textbook vocabulary audio import (M2.13c) E2E', () => {
     );
     await expect(run(false, 'foreign-ledger.json')).rejects.toMatchObject({
       code: 'ledger_environment_mismatch',
+    });
+  });
+  describe('key-text audio through CMS revisions (M2.13d)', () => {
+    const L1 = ['䨻䲜！', '䶑。'];
+    const L2 = ['䨺？'];
+    const L4 = ['䲜䨻。'];
+    const topicIds: Record<string, number> = {};
+    const dialogue = (hanzi: string[]) => ({
+      type: 'dialogue',
+      lines: hanzi.map((value, index) => ({
+        speaker: index % 2 === 0 ? 'A' : 'B',
+        hanzi: value,
+        pinyin: 'p',
+        vi: 'v',
+      })),
+    });
+    const admin = (path: string) =>
+      request(app.getHttpServer())
+        .post(`/api/v1/admin/cms${path}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+    async function createTopic(
+      title: string,
+      hanzi: string[],
+      orderIndex: number,
+      publish: boolean,
+    ): Promise<number> {
+      const created = await admin('/topics')
+        .send({
+          lessonId,
+          title,
+          type: 'key_text',
+          content: [dialogue(hanzi)],
+          orderIndex,
+          isPremium: false,
+          isLocked: false,
+        })
+        .expect(201);
+      const id = created.body.data.topic.id as number;
+      if (publish) {
+        const base = `/topics/${String(id)}/revisions/${String(created.body.data.revision.id)}`;
+        await admin(`${base}/reviews`)
+          .send({ decision: 'approved' })
+          .expect(201);
+        await admin(`${base}/publish`).send({}).expect(201);
+      }
+      return id;
+    }
+    const keyLesson = (
+      keyTexts: TextbookAudioLesson['keyTexts'],
+    ): TextbookAudioLesson => ({
+      fileName: 'lesson-01.json',
+      slug,
+      words: [],
+      keyTexts,
+    });
+    const KEY_TEXTS: TextbookAudioLesson['keyTexts'] = [
+      { dialogue: true, audioRef: 'audio/k1.mp3', hanzi: L1, lineAudioRefs: 2 },
+      { dialogue: true, audioRef: 'audio/k2.mp3', hanzi: L2, lineAudioRefs: 1 },
+      {
+        dialogue: true,
+        audioRef: 'audio/k3.mp3',
+        hanzi: ['不存在'],
+        lineAudioRefs: 0,
+      },
+      {
+        dialogue: false,
+        audioRef: 'audio/k3.mp3',
+        hanzi: [],
+        lineAudioRefs: 0,
+      },
+    ];
+    const runKey = (
+      dryRun: boolean,
+      keyTexts = KEY_TEXTS,
+      ledger = 'key-ledger.json',
+      fetchImpl?: typeof fetch,
+    ) =>
+      importTextbookKeyTextAudio(
+        {
+          apiBaseUrl,
+          adminToken,
+          prisma,
+          sleep: () => Promise.resolve(),
+          fetchImpl,
+        },
+        {
+          lessons: [keyLesson(keyTexts)],
+          seeddataRoot: root,
+          keyTextBaseDir: join(root, 'lessons'),
+          ledgerPath: join(root, ledger),
+          dryRun,
+        },
+      );
+    const topic = (id: number) =>
+      prisma.topic.findUniqueOrThrow({
+        where: { id },
+        select: { status: true, content: true },
+      });
+    const revisions = (id: number) =>
+      prisma.contentRevision.count({
+        where: { entityType: 'topic', entityId: id },
+      });
+    const blockAudio = async (id: number) =>
+      ((await topic(id)).content as Array<{ audioMediaId?: number }>)[0]
+        .audioMediaId;
+
+    beforeAll(async () => {
+      topicIds.published = await createTopic('Bài khoá 1', L1, 10, true);
+      topicIds.draft = await createTopic('Bài khoá 2', L2, 11, false);
+      await prisma.mediaUploadRateLimit.deleteMany({
+        where: { actorId: adminId },
+      });
+    });
+
+    it('K1. dry-run counts blocks and per-line refs without writing', async () => {
+      const summary = await runKey(true);
+      expect(summary.lessons).toEqual([
+        {
+          fileName: 'lesson-01.json',
+          texts: 4,
+          files: 3,
+          bytes: 3 * 1668,
+          missing: 0,
+          invalid: 0,
+          lineAudioUnavailable: 3,
+          unsupportedText: 1,
+          blockNotFound: 1,
+          pending: 2,
+          ingested: 0,
+          attached: 0,
+          skippedHasAudio: 0,
+          topicsRevised: 0,
+          topicChanged: 0,
+          errors: 0,
+        },
+      ]);
+      await expect(revisions(topicIds.published)).resolves.toBe(1);
+      await expect(blockAudio(topicIds.published)).resolves.toBeUndefined();
+      await expect(blockAudio(topicIds.draft)).resolves.toBeUndefined();
+    });
+
+    it('K2. attaches through one CMS revision per topic; publishes the live topic only', async () => {
+      const summary = await runKey(false);
+      expect(summary.errorCodes).toEqual({});
+      expect(summary.totals).toMatchObject({
+        ingested: 2,
+        attached: 2,
+        topicsRevised: 2,
+        blockNotFound: 1,
+        errors: 0,
+      });
+      const media = await prisma.media.findMany({
+        where: { checksum: { in: [sha(11), sha(12), sha(13)] } },
+        select: { id: true, checksum: true, type: true },
+      });
+      expect(media.map((row) => row.checksum).sort()).toEqual(
+        [sha(11), sha(12)].sort(),
+      );
+      const idOf = (seed: number) =>
+        media.find((row) => row.checksum === sha(seed))?.id;
+      await expect(topic(topicIds.published)).resolves.toMatchObject({
+        status: 'published',
+      });
+      await expect(blockAudio(topicIds.published)).resolves.toBe(idOf(11));
+      await expect(topic(topicIds.draft)).resolves.toMatchObject({
+        status: 'draft',
+      });
+      await expect(blockAudio(topicIds.draft)).resolves.toBe(idOf(12));
+      await expect(revisions(topicIds.published)).resolves.toBe(2);
+      await expect(revisions(topicIds.draft)).resolves.toBe(2);
+      const latest = await prisma.contentRevision.findFirstOrThrow({
+        where: { entityType: 'topic', entityId: topicIds.published },
+        orderBy: { revision: 'desc' },
+        select: { authorId: true, reviews: { select: { decision: true } } },
+      });
+      expect(latest).toEqual({
+        authorId: adminId,
+        reviews: [{ decision: 'approved' }],
+      });
+      const audits = await prisma.auditLog.findMany({
+        where: {
+          action: 'topic.published',
+          targetId: String(topicIds.published),
+        },
+        select: { id: true },
+      });
+      expect(audits).toHaveLength(2);
+    });
+
+    it('K3. reruns skip blocks that already have audio and add no revision', async () => {
+      const again = await runKey(false);
+      expect(again.totals).toMatchObject({
+        attached: 0,
+        skippedHasAudio: 2,
+        topicsRevised: 0,
+        ingested: 0,
+      });
+      await expect(revisions(topicIds.published)).resolves.toBe(2);
+      await expect(revisions(topicIds.draft)).resolves.toBe(2);
+    });
+
+    it('K4. never publishes a pending edit of a live topic', async () => {
+      const id = await createTopic('Bài khoá 4', L4, 12, true);
+      await admin(`/topics/${String(id)}/revisions`)
+        .send({
+          title: 'Bài khoá 4 (đang sửa)',
+          type: 'key_text',
+          content: [dialogue(L4)],
+          orderIndex: 12,
+          isPremium: false,
+          isLocked: false,
+        })
+        .expect(201);
+      await prisma.mediaUploadRateLimit.deleteMany({
+        where: { actorId: adminId },
+      });
+      const summary = await runKey(false, [
+        {
+          dialogue: true,
+          audioRef: 'audio/k4.mp3',
+          hanzi: L4,
+          lineAudioRefs: 0,
+        },
+      ]);
+      expect(summary.errorCodes).toEqual({ topic_pending_revision: 1 });
+      expect(summary.totals).toMatchObject({
+        attached: 0,
+        topicsRevised: 0,
+        errors: 1,
+      });
+      await expect(revisions(id)).resolves.toBe(2);
+      await expect(blockAudio(id)).resolves.toBeUndefined();
+      await expect(
+        prisma.topic.findUniqueOrThrow({ where: { id } }),
+      ).resolves.toMatchObject({
+        title: 'Bài khoá 4',
+      });
+    });
+
+    it('K5. a rerun publishes the revision left by a failed publish, without a new one', async () => {
+      const L5 = ['䲜䶑！'];
+      const id = await createTopic('Bài khoá 5', L5, 13, true);
+      await prisma.mediaUploadRateLimit.deleteMany({
+        where: { actorId: adminId },
+      });
+      const texts = [
+        {
+          dialogue: true,
+          audioRef: 'audio/k5.mp3',
+          hanzi: L5,
+          lineAudioRefs: 0,
+        },
+      ];
+      let failed = false;
+      const failPublishOnce: typeof fetch = (input, init) => {
+        if (!failed && (input as string).endsWith('/publish')) {
+          failed = true;
+          return Promise.resolve(new Response('{}', { status: 503 }));
+        }
+        return fetch(input, init);
+      };
+      const first = await runKey(
+        false,
+        texts,
+        'k5-ledger.json',
+        failPublishOnce,
+      );
+      expect(failed).toBe(true);
+      expect(first.totals).toMatchObject({ topicsRevised: 0, errors: 1 });
+      await expect(revisions(id)).resolves.toBe(2);
+      await expect(blockAudio(id)).resolves.toBeUndefined();
+
+      const second = await runKey(false, texts, 'k5-ledger.json');
+      expect(second.errorCodes).toEqual({});
+      expect(second.totals).toMatchObject({ topicsRevised: 1, errors: 0 });
+      await expect(revisions(id)).resolves.toBe(2);
+      await expect(blockAudio(id)).resolves.toEqual(expect.any(Number));
+      await expect(topic(id)).resolves.toMatchObject({ status: 'published' });
+    });
+
+    it('K6. stops with topic_changed when an editor saves between the read and the write', async () => {
+      const L6 = ['䶑䨺。'];
+      const id = await createTopic('Bài khoá 6', L6, 14, false);
+      await prisma.mediaUploadRateLimit.deleteMany({
+        where: { actorId: adminId },
+      });
+      let edited = false;
+      const editDuringIngestion: typeof fetch = async (input, init) => {
+        if (!edited && (input as string).includes('/media/ingestions')) {
+          edited = true;
+          await admin(`/topics/${String(id)}/revisions`)
+            .send({
+              title: 'Bài khoá 6 (editor)',
+              type: 'key_text',
+              content: [dialogue(L6), { type: 'text', value: 'ghi chú' }],
+              orderIndex: 14,
+              isPremium: false,
+              isLocked: false,
+            })
+            .expect(201);
+        }
+        return fetch(input, init);
+      };
+      const summary = await runKey(
+        false,
+        [
+          {
+            dialogue: true,
+            audioRef: 'audio/k6.mp3',
+            hanzi: L6,
+            lineAudioRefs: 0,
+          },
+        ],
+        'k6-ledger.json',
+        editDuringIngestion,
+      );
+      expect(edited).toBe(true);
+      expect(summary.errorCodes).toEqual({ topic_changed: 1 });
+      expect(summary.totals).toMatchObject({
+        topicChanged: 1,
+        topicsRevised: 0,
+        errors: 1,
+      });
+      await expect(revisions(id)).resolves.toBe(2);
+      const latest = await prisma.contentRevision.findFirstOrThrow({
+        where: { entityType: 'topic', entityId: id },
+        orderBy: { revision: 'desc' },
+        select: { snapshot: true },
+      });
+      expect(latest.snapshot).toMatchObject({
+        title: 'Bài khoá 6 (editor)',
+        content: [dialogue(L6), { type: 'text', value: 'ghi chú' }],
+      });
+      await expect(blockAudio(id)).resolves.toBeUndefined();
     });
   });
 });
