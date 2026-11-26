@@ -9,6 +9,7 @@ import {
 } from '@/features/onboarding/onboarding-contract';
 import { OnboardingPlanForm } from '@/features/onboarding/onboarding-plan-form';
 import { BackendRequestError } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 export const metadata: Metadata = {
   title: 'Kế hoạch học mỗi ngày',
@@ -38,6 +39,7 @@ export default async function OnboardingPlanPage({
   try {
     currentGoal = await getCurrentGoal(session.token);
   } catch (error) {
+    redirectIfConsentRequired(error, '/onboarding/plan');
     if (
       error instanceof BackendRequestError &&
       (error.status === 401 || error.status === 403)

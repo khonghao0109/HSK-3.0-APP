@@ -14,6 +14,7 @@ import {
   reviewRetryHref,
 } from '@/features/learner-exam/exam-review-model';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 import './exam-review.css';
 
@@ -110,6 +111,10 @@ export default async function LearnerExamReviewPage({
   try {
     review = await getExamReview(attemptId, session.token);
   } catch (error: unknown) {
+    redirectIfConsentRequired(
+      error,
+      `/learn/exam/attempts/${attemptId}/review`,
+    );
     if (isAuthFailure(error)) redirect('/sign-in');
     if (
       error instanceof BackendRequestError &&

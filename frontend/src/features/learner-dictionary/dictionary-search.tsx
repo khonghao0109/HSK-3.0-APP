@@ -12,6 +12,10 @@ import {
 
 import { ToastButton } from '@/features/learner-shell/learner-toast';
 import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 
 import type { DictionarySearchItem } from './dictionary-contract';
 import {
@@ -149,7 +153,7 @@ export function DictionarySearch({
   const requestSearch = async (
     q: string,
     signal: AbortSignal,
-  ): Promise<SearchState | 'sign-in'> => {
+  ): Promise<SearchState | 'sign-in' | 'consent'> => {
     try {
       const response = await fetch(
         `/api/learner/dictionary?q=${encodeURIComponent(q)}`,
@@ -157,6 +161,7 @@ export function DictionarySearch({
       );
       // The BFF has cleared the session cookies.
       if (response.status === 401) return 'sign-in';
+      if (isConsentRequiredResponse(response)) return 'consent';
       if (!response.ok) return { kind: 'error' };
       const body = (await response.json()) as { data: DictionarySearchItem[] };
       return { kind: 'results', q, items: body.data };
@@ -175,6 +180,7 @@ export function DictionarySearch({
       inFlight.current = null;
       setSearching(false);
       if (outcome === 'sign-in') router.replace('/sign-in');
+      else if (outcome === 'consent') goToConsent();
       else setState(outcome);
     });
   };

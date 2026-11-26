@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
+import { goToConsent } from '@/lib/api/learner-session-failure';
 
 import { ExamStartButton } from './exam-start-button';
 
@@ -14,6 +15,12 @@ const router = {
 
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
+}));
+vi.mock('@/lib/api/learner-session-failure', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/lib/api/learner-session-failure')
+  >()),
+  goToConsent: vi.fn(),
 }));
 
 const START_URL = '/api/learner/exam/tests/12/attempts';
@@ -227,6 +234,21 @@ describe('ExamStartButton', () => {
       expect(router.replace).toHaveBeenCalledWith('/sign-in'),
     );
     expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('sends the learner to /consent on the consent 403 (M1.7b2 B2a2)', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(null, {
+        status: 403,
+        headers: { 'x-hsk-consent': 'required' },
+      }),
+    );
+    renderButton();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thi' }));
+
+    await waitFor(() => expect(goToConsent).toHaveBeenCalledTimes(1));
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('refreshes the page on 404', async () => {

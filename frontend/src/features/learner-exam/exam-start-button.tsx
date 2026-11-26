@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { useLearnerToast } from '@/features/learner-shell/learner-toast';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 
 export const EXAM_START_UNAVAILABLE =
   'Đề thi tạm thời không làm được. Vui lòng thử lại sau.';
@@ -79,6 +83,10 @@ export function ExamStartButton({ testId }: { testId: number }) {
       } else {
         router.refresh();
       }
+      return;
+    }
+    if (isConsentRequiredResponse(response)) {
+      goToConsent();
       return;
     }
     if (response.status === 401) {

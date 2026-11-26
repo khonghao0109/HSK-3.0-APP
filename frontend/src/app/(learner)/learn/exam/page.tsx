@@ -41,6 +41,7 @@ import {
   getPublicLevels,
 } from '@/features/onboarding/onboarding-service';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 import './exam-list.css';
 import { Icon } from '@/components/ui/icon';
@@ -379,6 +380,7 @@ export default async function LearnerExamListPage({
       readLearnerLevelCode(token),
     ]);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, retryHref);
     if (isAuthFailure(error)) redirect('/sign-in');
     return (
       <ExamListShell trophyMessage={EXAM_LIST_NO_SCORE_HISTORY}>
@@ -425,6 +427,7 @@ export default async function LearnerExamListPage({
       ),
     ]);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, retryHref);
     if (isAuthFailure(error)) redirect('/sign-in');
     return (
       <ExamListShell trophyMessage={EXAM_LIST_NO_SCORE_HISTORY}>

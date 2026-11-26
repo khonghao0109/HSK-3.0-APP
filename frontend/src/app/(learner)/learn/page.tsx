@@ -26,6 +26,7 @@ import {
 import { getCurrentGoal } from '@/features/onboarding/onboarding-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 import { Icon } from '@/components/ui/icon';
 
 import './courses/courses.css';
@@ -73,6 +74,7 @@ export default async function LearnerHomePage() {
       redirectTarget = routeForOnboarding(home, goal);
     }
   } catch (error) {
+    redirectIfConsentRequired(error, '/learn');
     if (!isAuthFailure(error)) throw error;
     authFailed = true;
   }

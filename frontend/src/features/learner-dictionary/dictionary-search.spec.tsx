@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
+import { goToConsent } from '@/lib/api/learner-session-failure';
 
 import type { DictionarySearchItem } from './dictionary-contract';
 import { DictionarySearch, SEARCH_DEBOUNCE_MS } from './dictionary-search';
@@ -11,6 +12,12 @@ import { DictionarySearch, SEARCH_DEBOUNCE_MS } from './dictionary-search';
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
   useSearchParams: vi.fn(),
+}));
+vi.mock('@/lib/api/learner-session-failure', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/lib/api/learner-session-failure')
+  >()),
+  goToConsent: vi.fn(),
 }));
 
 const push = vi.fn();
@@ -387,6 +394,24 @@ describe('DictionarySearch', () => {
     await type('学习');
     await settle();
     expect(replace).toHaveBeenCalledWith('/sign-in');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('goes to /consent on the consent 403 (M1.7b2 B2a2)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(null, {
+          status: 403,
+          headers: { 'x-hsk-consent': 'required' },
+        }),
+      ),
+    );
+    renderSearch();
+    await type('学习');
+    await settle();
+    expect(goToConsent).toHaveBeenCalledTimes(1);
+    expect(replace).not.toHaveBeenCalled();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 

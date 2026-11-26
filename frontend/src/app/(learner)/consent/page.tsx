@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
+import { LearnerLogoutButton } from '@/features/learner-auth/learner-logout-button';
 import { LearnerBrand } from '@/features/learner-shell/learner-brand';
 import { LearnerPublicFooter } from '@/features/learner-shell/learner-public-footer';
 import { ConsentForm, ShieldIcon } from '@/features/legal/consent-form';
@@ -37,9 +38,8 @@ export default async function ConsentPage({
   const session = await getServerLearnerSession();
   if (session.state !== 'learner' || !session.token) redirect('/sign-in');
 
-  const documents: ConsentDocumentView[] = (
-    await getUserConsents(session.token)
-  ).flatMap((doc) =>
+  const consents = await getUserConsents(session.token);
+  const documents: ConsentDocumentView[] = consents.flatMap((doc) =>
     (doc.status === 'blocked' || doc.status === 'pending') &&
     doc.version &&
     doc.sha256 &&
@@ -56,7 +56,14 @@ export default async function ConsentPage({
         ]
       : [],
   );
-  if (documents.length === 0) redirect(target);
+  // A blocked document without a version to accept: going back to `target`
+  // would only bring the proxy back here, so say so in place.
+  const unusable = consents.some(
+    (doc) =>
+      doc.status === 'blocked' &&
+      !documents.some((shown) => shown.type === doc.type),
+  );
+  if (!unusable && documents.length === 0) redirect(target);
   const mode = documents.some((doc) => doc.status === 'blocked')
     ? 'blocked'
     : 'pending';
@@ -111,7 +118,23 @@ export default async function ConsentPage({
               </ul>
             </section>
           </div>
-          <ConsentForm mode={mode} documents={documents} returnTo={target} />
+          {unusable ? (
+            <aside className="consent__gate">
+              <div className="alert alert--error" role="alert">
+                <svg className="icon icon--sm" aria-hidden="true">
+                  <use href="#i-alert-triangle" />
+                </svg>
+                <span>
+                  Chưa tải được văn bản cần đồng ý. Thử lại sau ít phút.
+                </span>
+              </div>
+              <div className="consent__more">
+                <LearnerLogoutButton />
+              </div>
+            </aside>
+          ) : (
+            <ConsentForm mode={mode} documents={documents} returnTo={target} />
+          )}
         </main>
       </div>
       <LearnerPublicFooter />

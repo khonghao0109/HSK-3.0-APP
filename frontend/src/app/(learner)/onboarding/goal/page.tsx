@@ -16,6 +16,7 @@ import {
 } from '@/features/onboarding/onboarding-values';
 import { OnboardingGoalForm } from '@/features/onboarding/onboarding-goal-form';
 import { BackendRequestError } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 export const metadata: Metadata = {
   title: 'Mục tiêu học tập',
@@ -46,6 +47,7 @@ export default async function OnboardingGoalPage({
     levels = fetchedLevels;
     currentGoal = fetchedGoal;
   } catch (error) {
+    redirectIfConsentRequired(error, '/onboarding/goal');
     if (
       error instanceof BackendRequestError &&
       (error.status === 401 || error.status === 403)

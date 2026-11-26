@@ -84,8 +84,13 @@ async function renderPage(testId = '12') {
   );
 }
 
-function backendError(status: number) {
-  return new BackendRequestError(normalizeApiFailure({ status }));
+function backendError(status: number, code?: string) {
+  return new BackendRequestError(
+    normalizeApiFailure({
+      status,
+      body: code === undefined ? null : { error: { code } },
+    }),
+  );
 }
 
 const RULES = EXAM_INTRO_RULES;
@@ -137,6 +142,15 @@ describe('LearnerExamIntroPage', () => {
       await expect(renderPage()).rejects.toThrow('NEXT_REDIRECT:/sign-in');
     },
   );
+
+  it('sends a learner who must accept the legal documents back here through /consent (M1.7b2 B2a2)', async () => {
+    vi.mocked(getExamIntro).mockRejectedValue(
+      backendError(403, 'CONSENT_REQUIRED'),
+    );
+    await expect(renderPage('12')).rejects.toThrow(
+      'NEXT_REDIRECT:/consent?returnTo=%2Flearn%2Fexam%2F12',
+    );
+  });
 
   it('does not send a learner to onboarding', async () => {
     await renderPage();

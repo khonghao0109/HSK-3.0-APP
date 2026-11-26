@@ -11,6 +11,10 @@ import {
   useLearnerToast,
 } from '@/features/learner-shell/learner-toast';
 import { TOAST_COMING_SOON } from '@/features/learner-shell/learner-toast-messages';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 
 import { NO_VIETNAMESE } from './dictionary-display';
 import { Icon } from '@/components/ui/icon';
@@ -133,6 +137,10 @@ export function WordDetail({
         `/api/learner/dictionary/words/${word.id}/save`,
         { method: saved ? 'DELETE' : 'POST' },
       );
+      if (isConsentRequiredResponse(response)) {
+        goToConsent();
+        return;
+      }
       if (response.status === 401) {
         router.replace('/sign-in');
         return;
