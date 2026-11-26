@@ -169,16 +169,21 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
   });
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.lesson.update({
-        where: { id: lessonId },
-        data: { status: 'archived', deletedAt: new Date() },
-      });
-      await prisma.word.deleteMany({
-        where: { id: { in: Object.values(wordIds) } },
-      });
+    try {
+      if (prisma) {
+        if (lessonId !== undefined) {
+          await prisma.lesson.update({
+            where: { id: lessonId },
+            data: { status: 'archived', deletedAt: new Date() },
+          });
+        }
+        await prisma.word.deleteMany({
+          where: { id: { in: Object.values(wordIds) } },
+        });
+      }
+    } finally {
+      await app?.close();
     }
-    if (app) await app.close();
   });
 
   const get = (path: string) =>

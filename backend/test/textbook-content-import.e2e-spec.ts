@@ -149,43 +149,48 @@ describe('Textbook content import (M2.13a) E2E', () => {
   });
 
   afterAll(async () => {
-    const course = await prisma.course.findUnique({
-      where: { code: TEXTBOOK_COURSE.code },
-      select: { id: true },
-    });
-    if (course !== null) {
-      const lessons = await prisma.lesson.findMany({
-        where: { courseUnit: { courseId: course.id } },
-        select: { id: true },
-      });
-      const lessonIds = lessons.map((lesson) => lesson.id);
-      const drafts = await prisma.lessonWord.findMany({
-        where: { lessonId: { in: lessonIds } },
-        select: { wordId: true },
-      });
-      wordIdsToDelete.push(...drafts.map((row) => row.wordId));
-      await prisma.lessonWord.deleteMany({
-        where: { lessonId: { in: lessonIds } },
-      });
-      const now = new Date();
-      await prisma.lesson.updateMany({
-        where: { id: { in: lessonIds } },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.courseUnit.updateMany({
-        where: { courseId: course.id },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.course.update({
-        where: { id: course.id },
-        data: { status: 'archived', deletedAt: now },
-      });
+    try {
+      if (prisma) {
+        const course = await prisma.course.findUnique({
+          where: { code: TEXTBOOK_COURSE.code },
+          select: { id: true },
+        });
+        if (course !== null) {
+          const lessons = await prisma.lesson.findMany({
+            where: { courseUnit: { courseId: course.id } },
+            select: { id: true },
+          });
+          const lessonIds = lessons.map((lesson) => lesson.id);
+          const drafts = await prisma.lessonWord.findMany({
+            where: { lessonId: { in: lessonIds } },
+            select: { wordId: true },
+          });
+          wordIdsToDelete.push(...drafts.map((row) => row.wordId));
+          await prisma.lessonWord.deleteMany({
+            where: { lessonId: { in: lessonIds } },
+          });
+          const now = new Date();
+          await prisma.lesson.updateMany({
+            where: { id: { in: lessonIds } },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.courseUnit.updateMany({
+            where: { courseId: course.id },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.course.update({
+            where: { id: course.id },
+            data: { status: 'archived', deletedAt: now },
+          });
+        }
+        await prisma.word.deleteMany({
+          where: { id: { in: [...new Set(wordIdsToDelete)] } },
+        });
+      }
+      rmSync(outDir, { recursive: true, force: true });
+    } finally {
+      await app?.close();
     }
-    await prisma.word.deleteMany({
-      where: { id: { in: [...new Set(wordIdsToDelete)] } },
-    });
-    rmSync(outDir, { recursive: true, force: true });
-    await app.close();
   });
 
   it('[T1] has the textbook DataSource from the forward migration', async () => {

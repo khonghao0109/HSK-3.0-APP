@@ -117,12 +117,17 @@ describe('Admin data sources và giới hạn body import (M5.1b2) E2E', () => {
   });
 
   afterAll(async () => {
-    if (createdDataSourceIds.length > 0) {
-      await prisma.dataSource.deleteMany({
-        where: { id: { in: createdDataSourceIds } },
-      });
+    try {
+      if (prisma) {
+        if (createdDataSourceIds.length > 0) {
+          await prisma.dataSource.deleteMany({
+            where: { id: { in: createdDataSourceIds } },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    await app.close();
   });
 
   function listDataSources(query = '') {

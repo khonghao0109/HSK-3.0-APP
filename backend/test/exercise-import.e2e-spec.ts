@@ -133,22 +133,27 @@ describe('Exercise Import Preview & Commit V1 E2E', () => {
   });
 
   afterAll(async () => {
-    if (lessonId) {
-      const now = new Date();
-      await prisma.lessonExercise.updateMany({
-        where: { lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.topic.updateMany({
-        where: { lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.lesson.update({
-        where: { id: lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
+    try {
+      if (prisma) {
+        if (lessonId) {
+          const now = new Date();
+          await prisma.lessonExercise.updateMany({
+            where: { lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.topic.updateMany({
+            where: { lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.lesson.update({
+            where: { id: lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    await app.close();
   });
 
   it('1. protects preview and commit with authentication and admin RBAC', async () => {

@@ -220,14 +220,19 @@ describe('Textbook vocabulary audio import (M2.13c) E2E', () => {
   });
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.lesson.update({
-        where: { id: lessonId },
-        data: { status: 'archived', deletedAt: new Date() },
-      });
-      await prisma.word.deleteMany({ where: { id: { in: wordIds } } });
+    try {
+      if (prisma) {
+        if (lessonId !== undefined) {
+          await prisma.lesson.update({
+            where: { id: lessonId },
+            data: { status: 'archived', deletedAt: new Date() },
+          });
+        }
+        await prisma.word.deleteMany({ where: { id: { in: wordIds } } });
+      }
+    } finally {
+      await app?.close();
     }
-    if (app) await app.close();
     if (root) rmSync(root, { recursive: true, force: true });
   });
 

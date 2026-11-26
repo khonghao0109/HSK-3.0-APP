@@ -128,21 +128,30 @@ describe('Learner courses and enrollment (ADR-009 C3a) E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.lesson.updateMany({
-      where: { id: { in: createdLessonIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    await prisma.course.updateMany({
-      where: { id: { in: createdCourseIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    for (const [id, state] of priorLevels) {
-      await prisma.level.update({
-        where: { id },
-        data: state ?? { status: 'draft', publishedAt: null, deletedAt: null },
-      });
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: createdLessonIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        await prisma.course.updateMany({
+          where: { id: { in: createdCourseIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        for (const [id, state] of priorLevels) {
+          await prisma.level.update({
+            where: { id },
+            data: state ?? {
+              status: 'draft',
+              publishedAt: null,
+              deletedAt: null,
+            },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    await app.close();
   });
 
   describe('HSK3_TOPIC against the per-level path', () => {

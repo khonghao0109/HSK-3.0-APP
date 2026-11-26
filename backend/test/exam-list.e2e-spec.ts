@@ -476,33 +476,38 @@ describe('Exam test list E2E (M4.5 B1 / Q209–Q214)', () => {
   });
 
   afterAll(async () => {
-    // The e2e database is shared with the other specs: archive the fixture
-    // tests (attempts keep a Restrict FK on Test) and the questions.
-    await prisma.test.updateMany({
-      where: {
-        id: {
-          in: [
-            testNewestId,
-            testMiddleId,
-            testOldestId,
-            testCappedId,
-            draftTestId,
-            deletedTestId,
-            futureTestId,
-            pastTestId,
-          ],
-        },
-      },
-      data: {
-        status: ContentStatus.archived,
-        deletedAt: new Date(),
-      },
-    });
-    await prisma.question.updateMany({
-      where: { content: { contains: suffix } },
-      data: { status: ContentStatus.archived, deletedAt: new Date() },
-    });
-    await app?.close();
+    try {
+      if (prisma) {
+        // The e2e database is shared with the other specs: archive the fixture
+        // tests (attempts keep a Restrict FK on Test) and the questions.
+        await prisma.test.updateMany({
+          where: {
+            id: {
+              in: [
+                testNewestId,
+                testMiddleId,
+                testOldestId,
+                testCappedId,
+                draftTestId,
+                deletedTestId,
+                futureTestId,
+                pastTestId,
+              ].filter((id): id is number => id !== undefined),
+            },
+          },
+          data: {
+            status: ContentStatus.archived,
+            deletedAt: new Date(),
+          },
+        });
+        await prisma.question.updateMany({
+          where: { content: { contains: suffix } },
+          data: { status: ContentStatus.archived, deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   function byId(items: ExamListItemBody[]): Map<number, ExamListItemBody> {

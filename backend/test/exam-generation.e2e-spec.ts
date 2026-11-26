@@ -199,32 +199,39 @@ describe('Exam generation from blueprints (Q357)', () => {
   });
 
   afterAll(async () => {
-    if (testIds.length > 0) {
-      await prisma.testQuestionPlacement.deleteMany({
-        where: { testId: { in: testIds } },
-      });
-      await prisma.testQuestion.deleteMany({
-        where: { testId: { in: testIds } },
-      });
-      await prisma.questionGroup.deleteMany({
-        where: { testId: { in: testIds } },
-      });
-      await prisma.testSection.deleteMany({
-        where: { testId: { in: testIds } },
-      });
-      await prisma.test.deleteMany({ where: { id: { in: testIds } } });
+    try {
+      if (prisma) {
+        if (testIds.length > 0) {
+          await prisma.testQuestionPlacement.deleteMany({
+            where: { testId: { in: testIds } },
+          });
+          await prisma.testQuestion.deleteMany({
+            where: { testId: { in: testIds } },
+          });
+          await prisma.questionGroup.deleteMany({
+            where: { testId: { in: testIds } },
+          });
+          await prisma.testSection.deleteMany({
+            where: { testId: { in: testIds } },
+          });
+          await prisma.test.deleteMany({ where: { id: { in: testIds } } });
+        }
+        await prisma.questionSet.deleteMany({ where: { id: { in: setIds } } });
+        await prisma.examBlueprint.deleteMany({
+          where: { code: blueprintCode },
+        });
+        await prisma.question.updateMany({
+          where: { id: { in: questionIds } },
+          data: { status: ContentStatus.archived, deletedAt: new Date() },
+        });
+        await prisma.media.updateMany({
+          where: { id: { in: imageIds } },
+          data: { deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
     }
-    await prisma.questionSet.deleteMany({ where: { id: { in: setIds } } });
-    await prisma.examBlueprint.deleteMany({ where: { code: blueprintCode } });
-    await prisma.question.updateMany({
-      where: { id: { in: questionIds } },
-      data: { status: ContentStatus.archived, deletedAt: new Date() },
-    });
-    await prisma.media.updateMany({
-      where: { id: { in: imageIds } },
-      data: { deletedAt: new Date() },
-    });
-    if (app) await app.close();
   });
 
   it('is admin-only and no-store', async () => {

@@ -389,23 +389,28 @@ describe('Dictionary search E2E (M2.B14)', () => {
   });
 
   afterAll(async () => {
-    for (const level of restoredLevels) {
-      await prisma.level.update({
-        where: { id: level.id },
-        data: { status: level.status },
-      });
+    try {
+      if (prisma) {
+        for (const level of restoredLevels) {
+          await prisma.level.update({
+            where: { id: level.id },
+            data: { status: level.status },
+          });
+        }
+        if (prisma && draftLevel?.created) {
+          // WordLevel rows of this suite cascade with the Level.
+          await prisma.level.delete({ where: { id: draftLevel.id } });
+        } else if (prisma && draftLevel) {
+          await prisma.level.update({
+            where: { id: draftLevel.id },
+            data: { status: draftLevel.status },
+          });
+        }
+        await prisma?.rateLimitCounter.deleteMany();
+      }
+    } finally {
+      await app?.close();
     }
-    if (prisma && draftLevel?.created) {
-      // WordLevel rows of this suite cascade with the Level.
-      await prisma.level.delete({ where: { id: draftLevel.id } });
-    } else if (prisma && draftLevel) {
-      await prisma.level.update({
-        where: { id: draftLevel.id },
-        data: { status: draftLevel.status },
-      });
-    }
-    await prisma?.rateLimitCounter.deleteMany();
-    if (app) await app.close();
   });
 
   it('matches a Vietnamese meaning with or without accents', async () => {

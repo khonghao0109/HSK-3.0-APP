@@ -205,18 +205,28 @@ describe('Question Authoring V1 E2E (M4.1a)', () => {
   });
 
   afterAll(async () => {
-    await prisma.$executeRaw(
-      Prisma.sql`DELETE FROM "Test" WHERE "title" LIKE ${`Question authoring test ${suffix}%`}`,
-    );
-    await prisma.media.updateMany({
-      where: {
-        id: {
-          in: [readyAudioId, readyImageId, pendingAudioId, deletedImageId],
-        },
-      },
-      data: { deletedAt: new Date() },
-    });
-    await app.close();
+    try {
+      if (prisma) {
+        await prisma.$executeRaw(
+          Prisma.sql`DELETE FROM "Test" WHERE "title" LIKE ${`Question authoring test ${suffix}%`}`,
+        );
+        await prisma.media.updateMany({
+          where: {
+            id: {
+              in: [
+                readyAudioId,
+                readyImageId,
+                pendingAudioId,
+                deletedImageId,
+              ].filter((id): id is number => id !== undefined),
+            },
+          },
+          data: { deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   it('1. enforces authentication, admin RBAC and a safe validation error', async () => {

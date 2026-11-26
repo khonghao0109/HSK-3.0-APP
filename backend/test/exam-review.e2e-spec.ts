@@ -447,19 +447,24 @@ describe('Exam review context and finished-attempt media grants E2E (M4.5 B2a)',
   });
 
   afterAll(async () => {
-    await prisma.test.updateMany({
-      where: { id: { in: createdTestIds } },
-      data: { status: ContentStatus.archived, deletedAt: new Date() },
-    });
-    await prisma.question.updateMany({
-      where: { id: { in: createdQuestionIds } },
-      data: { status: ContentStatus.archived, deletedAt: new Date() },
-    });
-    await prisma.media.updateMany({
-      where: { id: { in: createdMediaIds } },
-      data: { deletedAt: new Date() },
-    });
-    await app?.close();
+    try {
+      if (prisma) {
+        await prisma.test.updateMany({
+          where: { id: { in: createdTestIds } },
+          data: { status: ContentStatus.archived, deletedAt: new Date() },
+        });
+        await prisma.question.updateMany({
+          where: { id: { in: createdQuestionIds } },
+          data: { status: ContentStatus.archived, deletedAt: new Date() },
+        });
+        await prisma.media.updateMany({
+          where: { id: { in: createdMediaIds } },
+          data: { deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   async function submittedAttempt(): Promise<{
