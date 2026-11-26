@@ -33,6 +33,12 @@ vi.mock('@/features/legal/legal-documents-service', () => ({
 
 import ConsentPage from './page';
 
+// Its own behaviour is proven in privacy-rights-panel.spec.tsx; here only
+// where it appears.
+vi.mock('@/features/privacy/privacy-rights-panel', () => ({
+  PrivacyRightsPanel: () => <section aria-label="Quyền của bạn" />,
+}));
+
 const SHA = 'a'.repeat(64);
 
 function doc(
@@ -119,7 +125,9 @@ describe('/consent page (M1.7b2 B2a)', () => {
       expect(
         screen.queryByRole('button', { name: 'Đồng ý và tiếp tục' }),
       ).toBeNull();
-      expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeVisible();
+      expect(
+        screen.getByRole('region', { name: 'Quyền của bạn' }),
+      ).toBeInTheDocument();
     },
   );
 
@@ -152,12 +160,10 @@ describe('/consent page (M1.7b2 B2a)', () => {
     expect(
       screen.getByRole('button', { name: 'Đồng ý và tiếp tục' }),
     ).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeEnabled();
-    for (const name of [/Xuất dữ liệu/, /Xoá tài khoản/]) {
-      const button = screen.getByRole('button', { name });
-      expect(button).toHaveAttribute('aria-disabled', 'true');
-      expect(button).toHaveTextContent('Sắp có');
-    }
+    expect(
+      screen.getByRole('region', { name: 'Quyền của bạn' }),
+    ).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('Sắp có');
     expect(screen.queryByRole('button', { name: 'Để sau' })).toBeNull();
   });
 
@@ -172,8 +178,7 @@ describe('/consent page (M1.7b2 B2a)', () => {
     expect(
       screen.getByRole('button', { name: 'Đồng ý và tiếp tục' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Đăng xuất' })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Xuất dữ liệu/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Quyền của bạn' })).toBeNull();
   });
 });
 

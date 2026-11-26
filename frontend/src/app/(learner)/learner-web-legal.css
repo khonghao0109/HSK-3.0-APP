@@ -344,16 +344,6 @@
   border-top: 1px solid var(--jade-200);
 }
 
-.learner-app .consent__soon {
-  gap: var(--sp-2);
-  color: var(--text-muted);
-}
-
-.learner-app .consent__soon-tag {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-}
-
 .learner-app .consent-banner {
   display: flex;
   flex-wrap: wrap;
@@ -462,4 +452,174 @@
   .learner-app .w-public .consent__gate {
     position: static;
   }
+}
+
+/* M1.7b2 B2b: "Quyền của bạn" (mẫu web/account-settings.html, ux-b
+   .uxb-menulink + .uxb-modal). Shared PrivacyRightsPanel. */
+.learner-app .privacy-rights {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.learner-app .privacy-rights .consent__fine:empty {
+  display: none;
+}
+
+.learner-app .privacy-rights__link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.learner-app .privacy-rights__link:hover {
+  border-color: var(--jade-600);
+  background: var(--jade-50);
+}
+
+.learner-app .privacy-rights__link > .icon {
+  flex: none;
+  box-sizing: content-box;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--jade-50);
+  color: var(--jade-800);
+}
+
+.learner-app .privacy-rights__link :is(b, small),
+.learner-app .privacy-rights__exports :is(b, small) {
+  display: block;
+}
+
+.learner-app .privacy-rights__link b {
+  font-size: var(--fs-md);
+  color: var(--text-strong);
+}
+
+.learner-app :is(.privacy-rights__link, .privacy-rights__exports) small {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.learner-app .privacy-rights__link--danger > .icon {
+  background: var(--red-100);
+  color: var(--text-danger);
+}
+
+.learner-app .privacy-rights__link--danger b {
+  color: var(--text-danger);
+}
+
+.learner-app .privacy-rights__link--danger:hover {
+  border-color: var(--text-danger);
+  background: var(--red-100);
+}
+
+.learner-app .privacy-rights__exports {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .privacy-rights__exports li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--cream-100);
+  font-size: var(--fs-sm);
+}
+
+.learner-app .privacy-rights__download {
+  min-height: 44px;
+}
+
+.learner-app .privacy-dialog {
+  width: min(calc(100% - 2 * var(--sp-4)), 520px);
+  max-width: none;
+  padding: var(--sp-6);
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-float);
+  color: var(--text-body);
+}
+
+.learner-app .privacy-dialog::backdrop {
+  background: rgb(7 20 48 / 45%);
+}
+
+.learner-app .privacy-dialog__body {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.learner-app .privacy-dialog h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  color: var(--text-strong);
+}
+
+.learner-app .privacy-dialog .muted {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.learner-app .privacy-dialog__ico {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--red-100);
+  color: var(--text-danger);
+}
+
+.learner-app .privacy-dialog .field {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.learner-app .privacy-dialog .field__error {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-danger);
+}
+
+.learner-app .privacy-dialog .field__error:empty {
+  display: none;
+}
+
+.learner-app .privacy-dialog .modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.learner-app .privacy-dialog .modal__actions .btn {
+  min-height: 44px;
+}
+
+.learner-app .privacy-dialog .btn--danger {
+  border: 0;
+  /* AA contrast with white text (Q42), as .ext-dialog. */
+  background: var(--cinnabar-700);
+  color: var(--white);
 }

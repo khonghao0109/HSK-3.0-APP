@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
-import { LearnerLogoutButton } from '@/features/learner-auth/learner-logout-button';
 import { LearnerBrand } from '@/features/learner-shell/learner-brand';
 import { LearnerPublicFooter } from '@/features/learner-shell/learner-public-footer';
 import { ConsentForm, ShieldIcon } from '@/features/legal/consent-form';
+import { PrivacyRightsPanel } from '@/features/privacy/privacy-rights-panel';
 import {
   CONSENT_DOCUMENT_LABELS,
   consentDate,
@@ -129,7 +129,7 @@ export default async function ConsentPage({
                 </span>
               </div>
               <div className="consent__more">
-                <LearnerLogoutButton />
+                <PrivacyRightsPanel />
               </div>
             </aside>
           ) : (

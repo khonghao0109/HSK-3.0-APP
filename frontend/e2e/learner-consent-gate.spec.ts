@@ -107,12 +107,13 @@ test.describe('consent gate (M1.7b2 B2a)', () => {
       'Chúng tôi đã cập nhật điều khoản',
     );
     await expect(page.locator('.consent__doc')).toHaveCount(2);
-    for (const name of [/Xuất dữ liệu/, /Xoá tài khoản/]) {
-      await expect(page.getByRole('button', { name })).toHaveAttribute(
-        'aria-disabled',
-        'true',
-      );
-    }
+    const rights = page.getByRole('region', { name: 'Quyền của bạn' });
+    await expect(
+      rights.getByRole('button', { name: /Xuất dữ liệu/ }),
+    ).toBeEnabled();
+    await expect(
+      rights.getByRole('button', { name: /Xoá tài khoản/ }),
+    ).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Để sau' })).toHaveCount(0);
 
     // The button stays inert until the box is ticked.
@@ -122,7 +123,8 @@ test.describe('consent gate (M1.7b2 B2a)', () => {
     await expect(async () => {
       await submit.focus();
       await page.keyboard.press('Enter');
-      await expect(page.getByRole('status')).toHaveText(
+      // First status is the form hint; the privacy panel has its own.
+      await expect(page.getByRole('status').first()).toHaveText(
         'Tick ô xác nhận để đồng ý.',
         { timeout: 1_000 },
       );
@@ -223,5 +225,27 @@ test.describe('consent gate (M1.7b2 B2a)', () => {
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/$/u);
     expect(await learnerCookie(page)).toBeUndefined();
+  });
+
+  test('a blocked learner can still request a data export (M1.7b2 B2b)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    insertVersions('x', "- interval '1 day'");
+    await page.goto('/learn');
+    await expect(page).toHaveURL(/\/consent\?returnTo=%2Flearn$/u);
+
+    const rights = page.getByRole('region', { name: 'Quyền của bạn' });
+    await rights.getByRole('button', { name: /Xuất dữ liệu/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Yêu cầu xuất dữ liệu' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Gửi yêu cầu' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(rights.getByRole('status')).toHaveText(/Đã gửi yêu cầu/u);
+    // No worker runs in this stack: the new job stays `requested`.
+    await expect(rights.getByRole('listitem')).toHaveCount(1);
+    await expect(rights.getByRole('listitem')).toContainText('Đang chuẩn bị');
+    await expect(page).toHaveURL(/\/consent/u);
   });
 });

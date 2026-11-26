@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useId, useState, useSyncExternalStore } from 'react';
 
-import { LearnerLogoutButton } from '@/features/learner-auth/learner-logout-button';
+import { PrivacyRightsPanel } from '@/features/privacy/privacy-rights-panel';
 import { consentHref } from '@/lib/api/learner-session-failure';
 
 import {
@@ -51,7 +51,7 @@ function earliestDeadline(
 
 /**
  * Gate of `/consent` (mẫu `.uxb-gate` / `.uxa-consent-card`). `blocked`:
- * Đồng ý, Đăng xuất and the two data actions B2b ships (disabled, "Sắp có").
+ * Đồng ý plus "Quyền của bạn" (export, deletion, sign-out; Q189, B2b).
  * `pending`: Đồng ý and "Để sau".
  */
 export function ConsentForm({
@@ -169,18 +169,7 @@ export function ConsentForm({
       </p>
       {mode === 'blocked' && (
         <div className="consent__more">
-          <LearnerLogoutButton />
-          {['Xuất dữ liệu', 'Xoá tài khoản'].map((label) => (
-            <button
-              key={label}
-              type="button"
-              className="btn btn--outline btn--block consent__soon"
-              aria-disabled="true"
-            >
-              {label}
-              <span className="consent__soon-tag">Sắp có</span>
-            </button>
-          ))}
+          <PrivacyRightsPanel />
         </div>
       )}
     </aside>

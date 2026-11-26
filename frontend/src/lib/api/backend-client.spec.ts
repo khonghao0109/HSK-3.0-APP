@@ -169,6 +169,42 @@ describe('server-only backend client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('allowlists the learner data export and deletion routes only (M1.7b2 B2b)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+
+    await client.request('/api/v1/users/me/data-exports', { token: 't' });
+    await client.request('/api/v1/users/me/data-exports', {
+      token: 't',
+      method: 'POST',
+    });
+    await client.raw('/api/v1/users/me/data-exports/4/download');
+    await client.request('/api/v1/users/me/deletion-request', {
+      token: 't',
+      method: 'POST',
+      body: { password: 'x' },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    for (const path of [
+      '/api/v1/users/me/data-exports?x=1',
+      '/api/v1/users/me/data-exports/4',
+      '/api/v1/users/me/data-exports/x/download',
+      '/api/v1/users/me/deletion-request/1',
+      '/api/v1/users/2/data-exports',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
+
   it('allowlists only the explicit media read and lifecycle endpoints', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

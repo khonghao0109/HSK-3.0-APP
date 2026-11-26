@@ -154,5 +154,7 @@ export const config = {
     '/api/learner/exam/:path*',
     '/api/learner/review/:path*',
     '/api/learner/consents/:path*',
+    '/api/learner/data-exports/:path*',
+    '/api/learner/account-deletion',
   ],
 };

@@ -83,8 +83,18 @@ describe('CSP nonce proxy and session refresh router', () => {
         '/api/learner/email-verification/:path*',
         '/api/learner/exam/:path*',
         '/api/learner/review/:path*',
+        '/api/learner/data-exports/:path*',
+        '/api/learner/account-deletion',
       ]),
     );
+  });
+
+  it.each([
+    '/api/learner/data-exports',
+    '/api/learner/data-exports/4/download',
+    '/api/learner/account-deletion',
+  ])('refreshes the session for the privacy BFF %s (M1.7b2 B2b)', (url) => {
+    expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
   });
 
   it.each([{ 'next-router-prefetch': '1' }, { purpose: 'prefetch' }])(
@@ -388,6 +398,24 @@ describe('CSP nonce proxy and session refresh router', () => {
         res.headers.get('x-middleware-request-x-hsk-consent-deadline'),
       ).toBeNull();
     });
+
+    it.each([
+      '/api/learner/data-exports',
+      '/api/learner/data-exports/4/download',
+      '/api/learner/account-deletion',
+    ])(
+      'lets a blocked learner reach the privacy BFF %s (M1.7b2 B2b)',
+      async (path) => {
+        const fetchSpy = vi
+          .spyOn(globalThis, 'fetch')
+          .mockResolvedValue(
+            consents([{ status: 'blocked' }, { status: 'accepted' }]),
+          );
+        const res = await proxy(page(path));
+        expect(fetchSpy).not.toHaveBeenCalled();
+        expect(res.headers.get('location')).toBeNull();
+      },
+    );
 
     it.each(['/sign-in', '/consent', '/learnx', '/terms'])(
       'does not call the backend for %s',

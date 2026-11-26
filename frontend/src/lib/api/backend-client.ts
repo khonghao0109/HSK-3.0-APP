@@ -17,6 +17,10 @@ const ALLOWED_PATHS = [
   // M1.7b2 B2a: the learner's own consent state and its acceptance.
   /^\/api\/v1\/users\/me\/consents$/,
   /^\/api\/v1\/users\/me\/consents\/accept$/,
+  // M1.7b2 B2b (Q189): data export and account deletion, allowed while blocked.
+  /^\/api\/v1\/users\/me\/data-exports$/,
+  /^\/api\/v1\/users\/me\/data-exports\/\d+\/download$/,
+  /^\/api\/v1\/users\/me\/deletion-request$/,
   /^\/api\/v1\/admin\/cms\/exercises(?:\?.*)?$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+$/,
   /^\/api\/v1\/admin\/cms\/exercises\/\d+\/revisions$/,
