@@ -21,7 +21,10 @@ export class LearningHomeCourseLessonDto {
   lessonId!: number;
   title!: string;
   slug!: string;
-  /** Position inside its course unit (starts at 1). */
+  /**
+   * Course `topic`: the position in the level path, as `continueLesson.position`.
+   * Other courses: the position inside its course unit (starts at 1).
+   */
   position!: number;
   completionPercent!: number;
 }
