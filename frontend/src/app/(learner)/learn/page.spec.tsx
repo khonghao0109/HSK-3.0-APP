@@ -79,8 +79,13 @@ const goal: UserGoal = {
   },
 };
 
-function backendError(status: number) {
-  return new BackendRequestError(normalizeApiFailure({ status }));
+function backendError(status: number, code?: string) {
+  return new BackendRequestError(
+    normalizeApiFailure({
+      status,
+      body: code === undefined ? null : { error: { code } },
+    }),
+  );
 }
 
 async function renderHome(home: LearningHome) {
@@ -121,6 +126,16 @@ describe('LearnerHomePage', () => {
       expect(redirect).toHaveBeenCalledWith('/sign-in');
     },
   );
+
+  it('sends a learner who must accept the legal documents to /consent (M1.7b2 B2a2)', async () => {
+    vi.mocked(getLearningHome).mockRejectedValue(
+      backendError(403, 'CONSENT_REQUIRED'),
+    );
+    await expect(LearnerHomePage()).rejects.toThrow(
+      'NEXT_REDIRECT:/consent?returnTo=%2Flearn',
+    );
+    expect(redirect).not.toHaveBeenCalledWith('/sign-in');
+  });
 
   it('rethrows other backend failures', async () => {
     const failure = backendError(503);

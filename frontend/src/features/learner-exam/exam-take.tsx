@@ -33,6 +33,11 @@ import {
   createSingleFlight,
   type AudioPreload,
 } from './exam-audio-preload';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
+
 import { createExamTransport } from './exam-take-transport';
 import {
   EXAM_CLOSED_MESSAGE,
@@ -404,7 +409,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         }
         callbacksRef.current.lockExam(status);
       },
-      onAuthLost: () => callbacksRef.current.router.replace('/sign-in'),
+      onAuthLost: (reason) =>
+        reason === 'consent'
+          ? goToConsent()
+          : callbacksRef.current.router.replace('/sign-in'),
       onNotFound: () => callbacksRef.current.router.refresh(),
       onRemainingSeconds: (seconds) => {
         setRemaining(seconds);
@@ -520,6 +528,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
           `/api/learner/exam/attempts/${attempt.id}/media-grants`,
         );
         if (!response.ok) {
+          if (isConsentRequiredResponse(response)) {
+            goToConsent();
+            return null;
+          }
           if (response.status === 401 || response.status === 403) {
             callbacksRef.current.router.replace('/sign-in');
             return null;
@@ -966,6 +978,10 @@ export function ExamTake({ attempt }: { attempt: ExamAttemptView }) {
         }
         if (response.ok) {
           finishSubmitted();
+          return;
+        }
+        if (isConsentRequiredResponse(response)) {
+          goToConsent();
           return;
         }
         const payload = (await response.json().catch(() => null)) as {

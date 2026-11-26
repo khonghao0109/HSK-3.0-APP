@@ -20,6 +20,7 @@ import {
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 const TITLE = 'Chi tiết từ vựng';
 
@@ -127,6 +128,7 @@ export default async function WordPage({
     };
     saved = isSaved;
   } catch (error) {
+    redirectIfConsentRequired(error, `/learn/dictionary/${id}`);
     if (isAuthFailure(error)) authFailed = true;
     else if (!(error instanceof BackendRequestError && error.status === 404)) {
       throw error;

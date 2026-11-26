@@ -20,6 +20,7 @@ import { levelLabel } from '@/features/learner-home/level-label';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { getPublicLevels } from '@/features/onboarding/onboarding-service';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 import '../exam-list.css';
 import './exam-history.css';
@@ -278,6 +279,7 @@ export default async function LearnerExamHistoryPage({
   try {
     levels = await getPublicLevels(token);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, examHistoryHref(raw));
     if (isAuthFailure(error)) redirect('/sign-in');
     return (
       <HistoryShell>
@@ -297,6 +299,7 @@ export default async function LearnerExamHistoryPage({
   try {
     history = await getExamHistory(state, token);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, examHistoryHref(state));
     if (isAuthFailure(error)) redirect('/sign-in');
     return (
       <HistoryShell>

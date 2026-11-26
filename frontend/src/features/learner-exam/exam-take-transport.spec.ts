@@ -107,6 +107,7 @@ describe('exam take transport (B1)', () => {
     const cases: Array<[number, string, string?]> = [
       [401, 'unauthorized'],
       [403, 'unauthorized'],
+      [403, 'consent', 'CONSENT_REQUIRED'],
       [404, 'not_found'],
       [429, 'rate_limited'],
       [503, 'unavailable'],
@@ -191,6 +192,14 @@ describe('exam take transport (B1)', () => {
         403,
         { success: false, error: { kind: 'x', message: 'x' } },
         { kind: 'unauthorized' },
+      ],
+      [
+        403,
+        {
+          success: false,
+          error: { kind: 'x', message: 'x', code: 'CONSENT_REQUIRED' },
+        },
+        { kind: 'consent' },
       ],
       [
         404,

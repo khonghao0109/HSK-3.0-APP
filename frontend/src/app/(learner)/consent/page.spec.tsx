@@ -100,6 +100,29 @@ describe('/consent page (M1.7b2 B2a)', () => {
     },
   );
 
+  it.each([
+    ['version', { version: null }],
+    ['sha256', { sha256: null }],
+    ['effectiveAt', { effectiveAt: null }],
+  ])(
+    'blocked without a usable %s: shows an error instead of looping back (M1.7b2 B2a2)',
+    async (_field, missing) => {
+      userConsents.mockResolvedValue([
+        doc('terms', 'blocked', missing),
+        doc('privacy', 'accepted'),
+      ]);
+      await renderPage('/learn');
+      expect(redirect).not.toHaveBeenCalled();
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Chưa tải được văn bản cần đồng ý. Thử lại sau ít phút.',
+      );
+      expect(
+        screen.queryByRole('button', { name: 'Đồng ý và tiếp tục' }),
+      ).toBeNull();
+      expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeVisible();
+    },
+  );
+
   it('blocked: lists each document with version, effective date and its page, and every action', async () => {
     userConsents.mockResolvedValue([
       doc('terms', 'blocked'),

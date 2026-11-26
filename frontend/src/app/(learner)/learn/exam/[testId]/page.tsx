@@ -16,6 +16,7 @@ import {
 import { levelLabel } from '@/features/learner-home/level-label';
 import { parseLessonId } from '@/features/learner-lesson/lesson-sections';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 import { Icon } from '@/components/ui/icon';
 
 export const metadata: Metadata = {
@@ -73,6 +74,7 @@ export default async function LearnerExamIntroPage({
   try {
     intro = await getExamIntro(testId, session.token);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, `/learn/exam/${testId}`);
     if (isAuthFailure(error)) redirect('/sign-in');
     if (
       error instanceof BackendRequestError &&

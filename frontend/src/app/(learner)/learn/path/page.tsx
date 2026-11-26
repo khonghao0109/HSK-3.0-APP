@@ -12,6 +12,7 @@ import type { LearningPath } from '@/features/learner-path/learning-path-contrac
 import { getLearningPath } from '@/features/learner-path/learning-path-service';
 import { routeForOnboarding } from '@/features/onboarding/route-for-onboarding';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 import '../courses/courses.css';
 
@@ -73,6 +74,7 @@ export default async function LearnerPathPage() {
   try {
     path = await getLearningPath(session.token);
   } catch (error) {
+    redirectIfConsentRequired(error, '/learn/path');
     if (!isAuthFailure(error)) throw error;
     authFailed = true;
   }

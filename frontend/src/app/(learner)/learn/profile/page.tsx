@@ -6,6 +6,7 @@ import { getServerLearnerSession } from '@/features/learner-auth/server-learner-
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 export const metadata: Metadata = {
   title: 'Hồ sơ',
@@ -29,6 +30,7 @@ export default async function LearnerProfilePage() {
     greetingName = home.greetingName;
     streakDays = home.streakDays;
   } catch (error) {
+    redirectIfConsentRequired(error, '/learn/profile');
     if (isAuthFailure(error)) authFailed = true;
     else nameUnavailable = true;
   }

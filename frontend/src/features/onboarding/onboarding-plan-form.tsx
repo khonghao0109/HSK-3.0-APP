@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { LearnerBrand } from '@/features/learner-shell/learner-brand';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 
 import { localDateString, type LearningPurpose } from './onboarding-values';
 import { ONBOARDING_ERROR_MESSAGES } from './onboarding-messages';
@@ -113,6 +117,10 @@ export function OnboardingPlanForm({
       submittingRef.current = false;
       setPending(false);
 
+      if (isConsentRequiredResponse(response)) {
+        goToConsent();
+        return;
+      }
       if (response.status === 401) {
         router.replace('/sign-in');
         return;

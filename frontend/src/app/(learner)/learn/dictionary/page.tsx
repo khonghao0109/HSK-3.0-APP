@@ -8,6 +8,7 @@ import { DictionarySearch } from '@/features/learner-dictionary/dictionary-searc
 import { searchWords } from '@/features/learner-dictionary/dictionary-service';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 export const metadata: Metadata = {
   title: 'Từ điển',
@@ -35,6 +36,10 @@ export default async function DictionaryPage({
     try {
       items = await searchWords(session.token, q);
     } catch (error) {
+      redirectIfConsentRequired(
+        error,
+        `/learn/dictionary?q=${encodeURIComponent(q)}`,
+      );
       // Any other failure shows the retry state of the list.
       if (isAuthFailure(error)) authFailed = true;
     }

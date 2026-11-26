@@ -1,5 +1,7 @@
 // M1.7b2 B2a: one place deciding what a learner 401/403 means. No Zod and no
 // next/server here, so client components may import it (AGENTS.md, CSP).
+import { redirect } from 'next/navigation';
+
 import { CONSENT_REQUIRED_CODE } from './api-error';
 
 /** Header the BFF sets on its consent 403, read by client components. */
@@ -60,6 +62,18 @@ export function safeReturnTo(raw: string | null | undefined): string {
 
 export function consentHref(returnTo: string | null | undefined): string {
   return `/consent?returnTo=${encodeURIComponent(safeReturnTo(returnTo))}`;
+}
+
+/**
+ * RSC pages: a backend 403 CONSENT_REQUIRED (the proxy let the request pass,
+ * e.g. just before a token refresh) goes to /consent instead of the error
+ * boundary. Any other failure is left to the caller.
+ */
+export function redirectIfConsentRequired(
+  error: unknown,
+  returnTo: string,
+): void {
+  if (isConsentRequiredError(error)) redirect(consentHref(returnTo));
 }
 
 /** The BFF's consent 403 (`consent_required`), as a client fetch sees it. */

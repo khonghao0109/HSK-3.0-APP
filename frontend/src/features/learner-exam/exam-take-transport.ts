@@ -6,6 +6,8 @@ import type {
   SaveRequest,
   SaveResponse,
 } from './exam-save-queue';
+import { CONSENT_REQUIRED_CODE } from '@/lib/api/api-error';
+
 import type { ExamAnswer } from './exam-take-model';
 
 /**
@@ -57,6 +59,8 @@ function viewOf(value: unknown): {
 function batchFailure(status: number, code: string | null): BatchFailure {
   if (code === 'EXAM_ATTEMPT_EXPIRED') return { kind: 'expired' };
   if (code === 'EXAM_ATTEMPT_CLOSED') return { kind: 'closed' };
+  if (status === 403 && code === CONSENT_REQUIRED_CODE)
+    return { kind: 'consent' };
   if (status === 401 || status === 403) return { kind: 'unauthorized' };
   if (status === 404) return { kind: 'not_found' };
   if (status === 429) return { kind: 'rate_limited' };
@@ -67,6 +71,8 @@ function batchFailure(status: number, code: string | null): BatchFailure {
 function terminal(status: number, code: string | null): SaveResponse {
   if (code === 'EXAM_ATTEMPT_EXPIRED') return { kind: 'expired' };
   if (code === 'EXAM_ATTEMPT_CLOSED') return { kind: 'closed' };
+  if (status === 403 && code === CONSENT_REQUIRED_CODE)
+    return { kind: 'consent' };
   if (status === 401 || status === 403) return { kind: 'unauthorized' };
   if (status === 404) return { kind: 'not_found' };
   if (status === 429) return { kind: 'rate_limited' };

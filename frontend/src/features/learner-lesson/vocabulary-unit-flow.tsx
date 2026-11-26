@@ -6,6 +6,10 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
+import {
+  goToConsent,
+  isConsentRequiredResponse,
+} from '@/lib/api/learner-session-failure';
 import { useRadioGroup } from '@/features/onboarding/use-radio-group';
 
 import { LessonImage } from './lesson-image';
@@ -414,6 +418,10 @@ function VocabularyResult({
         `/api/learner/dictionary/words/${word.id}/save`,
         { method: 'POST' },
       ).catch(() => null);
+      if (response && isConsentRequiredResponse(response)) {
+        goToConsent();
+        return;
+      }
       if (response?.status === 401) {
         router.replace('/sign-in');
         return;

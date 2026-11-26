@@ -6,6 +6,7 @@ import { getExamAttempt } from '@/features/learner-exam/exam-attempt-service';
 import { ExamTake } from '@/features/learner-exam/exam-take';
 import { parseAttemptId } from '@/features/learner-exam/exam-ids';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 export const metadata: Metadata = {
   title: 'Làm bài thi',
@@ -27,6 +28,7 @@ export default async function LearnerExamTakePage({
   try {
     attempt = await getExamAttempt(attemptId, session.token);
   } catch (error: unknown) {
+    redirectIfConsentRequired(error, `/learn/exam/attempts/${attemptId}`);
     if (isAuthFailure(error)) redirect('/sign-in');
     if (
       error instanceof BackendRequestError &&

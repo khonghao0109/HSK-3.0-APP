@@ -547,6 +547,22 @@ describe('exam save queue (TL-136)', () => {
     expect(f.events.onLocked).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['unauthorized', 'session'],
+    ['consent', 'consent'],
+  ] as const)(
+    'halts on %s and reports the auth loss as %s (M1.7b2 B2a2)',
+    async (kind, reason) => {
+      const saveOne = vi.fn(async () => ({ kind }) as SaveResponse);
+      const f = fake({ saveOne });
+      const queue = createExamSaveQueue(f);
+      queue.setAnswer('q1', body({ choice: 'a' }));
+      await settle();
+      expect(queue.hasPending()).toBe(false);
+      expect(f.events.onAuthLost).toHaveBeenCalledExactlyOnceWith(reason);
+    },
+  );
+
   it('A1: a rejected old body does not drop an edit typed while in flight', async () => {
     const calls: SaveRequest[] = [];
     let attempt = 0;

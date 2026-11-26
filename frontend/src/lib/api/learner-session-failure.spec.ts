@@ -1,14 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { redirect } from 'next/navigation';
+
 import { BackendRequestError, normalizeApiFailure } from './api-error';
 import {
   consentHref,
   goToConsent,
   isConsentRequiredError,
   isConsentRequiredResponse,
+  redirectIfConsentRequired,
   safeReturnTo,
   shouldClearLearnerSession,
 } from './learner-session-failure';
+
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
+}));
 
 const backendError = (status: number, code?: string) =>
   new BackendRequestError(
@@ -99,5 +108,36 @@ describe('BFF consent response on the client', () => {
     expect(replace).toHaveBeenCalledWith(
       '/consent?returnTo=%2Flearn%2Flessons%2F7%3Fstep%3D2',
     );
+  });
+});
+
+describe('redirectIfConsentRequired (M1.7b2 B2a2)', () => {
+  afterEach(() => vi.mocked(redirect).mockClear());
+
+  it('sends a 403 CONSENT_REQUIRED to /consent with the page as returnTo', () => {
+    expect(() =>
+      redirectIfConsentRequired(
+        backendError(403, 'CONSENT_REQUIRED'),
+        '/learn/exam/7',
+      ),
+    ).toThrow('NEXT_REDIRECT:/consent?returnTo=%2Flearn%2Fexam%2F7');
+  });
+
+  it('checks the return path', () => {
+    expect(() =>
+      redirectIfConsentRequired(
+        backendError(403, 'CONSENT_REQUIRED'),
+        '//evil.example',
+      ),
+    ).toThrow('NEXT_REDIRECT:/consent?returnTo=%2Flearn');
+  });
+
+  it.each([
+    ['401', backendError(401)],
+    ['a plain 403', backendError(403, 'FORBIDDEN')],
+    ['503', backendError(503)],
+  ] as const)('leaves %s to the caller', (_label, error) => {
+    expect(() => redirectIfConsentRequired(error, '/learn')).not.toThrow();
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

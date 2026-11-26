@@ -21,6 +21,7 @@ import { getCourse } from '@/features/learner-course/course-service';
 import { CourseUnits } from '@/features/learner-course/course-units';
 import { LearnerWebTopbar } from '@/features/learner-shell/learner-web-topbar';
 import { BackendRequestError, isAuthFailure } from '@/lib/api/api-error';
+import { redirectIfConsentRequired } from '@/lib/api/learner-session-failure';
 
 import '../courses.css';
 
@@ -46,6 +47,10 @@ export default async function LearnerCourseDetailPage({
   try {
     course = await getCourse(session.token, code);
   } catch (error) {
+    redirectIfConsentRequired(
+      error,
+      `/learn/courses/${encodeURIComponent(code)}`,
+    );
     if (isAuthFailure(error)) outcome = 'auth';
     else if (error instanceof BackendRequestError && error.status === 404)
       outcome = 'missing';

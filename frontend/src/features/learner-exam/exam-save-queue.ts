@@ -30,6 +30,7 @@ export type SaveResponse =
   | { kind: 'expired' }
   | { kind: 'closed' }
   | { kind: 'unauthorized' }
+  | { kind: 'consent' }
   | { kind: 'not_found' }
   | { kind: 'rate_limited' }
   | { kind: 'unavailable' }
@@ -49,6 +50,7 @@ export type BatchFailure =
   | { kind: 'expired' }
   | { kind: 'closed' }
   | { kind: 'unauthorized' }
+  | { kind: 'consent' }
   | { kind: 'not_found' }
   | { kind: 'rate_limited' }
   | { kind: 'unavailable' }
@@ -98,7 +100,8 @@ export type ExamQueueEvents = {
   onConflictToast: (questionKey: string) => void;
   onInvalid: (questionKey: string, code: string) => void;
   onLocked: (status: 'expired' | 'closed', unsavedKeys?: string[]) => void;
-  onAuthLost: () => void;
+  /** `consent`: the session stays, the learner must accept the legal documents. */
+  onAuthLost: (reason: 'session' | 'consent') => void;
   onNotFound: () => void;
   onRemainingSeconds: (seconds: number) => void;
   onOffline: (offline: boolean) => void;
@@ -204,8 +207,8 @@ export function createExamSaveQueue(input: {
     onLocked: (status, unsavedKeys) => {
       if (!disposed) listeners.onLocked(status, unsavedKeys);
     },
-    onAuthLost: () => {
-      if (!disposed) listeners.onAuthLost();
+    onAuthLost: (reason) => {
+      if (!disposed) listeners.onAuthLost(reason);
     },
     onNotFound: () => {
       if (!disposed) listeners.onNotFound();
@@ -301,7 +304,7 @@ export function createExamSaveQueue(input: {
 
   /** F5: a terminal answer stops all transport and clears the queue. */
   const halt = (
-    status: 'expired' | 'closed' | 'unauthorized' | 'not_found',
+    status: 'expired' | 'closed' | 'unauthorized' | 'consent' | 'not_found',
   ): void => {
     if (halted) return;
     // A4: report the unsent keys *before* clearing them, so the locked banner
@@ -319,7 +322,8 @@ export function createExamSaveQueue(input: {
     emitPending();
     if (status === 'expired' || status === 'closed') {
       events.onLocked(status, unsaved);
-    } else if (status === 'unauthorized') events.onAuthLost();
+    } else if (status === 'unauthorized') events.onAuthLost('session');
+    else if (status === 'consent') events.onAuthLost('consent');
     else events.onNotFound();
   };
 
@@ -431,8 +435,8 @@ export function createExamSaveQueue(input: {
       }
       default: {
         halt(
-          response.kind === 'unauthorized'
-            ? 'unauthorized'
+          response.kind === 'unauthorized' || response.kind === 'consent'
+            ? response.kind
             : response.kind === 'not_found'
               ? 'not_found'
               : response.kind === 'expired'
@@ -664,6 +668,7 @@ export function createExamSaveQueue(input: {
         response.kind === 'expired' ||
         response.kind === 'closed' ||
         response.kind === 'unauthorized' ||
+        response.kind === 'consent' ||
         response.kind === 'not_found'
       ) {
         halt(response.kind);
