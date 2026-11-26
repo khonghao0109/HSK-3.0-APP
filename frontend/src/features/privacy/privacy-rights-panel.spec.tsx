@@ -81,6 +81,18 @@ describe('PrivacyRightsPanel (M1.7b2 B2b, Q189)', () => {
     }
   });
 
+  it('on the profile page leaves the heading and sign-out to the page (M1.7b2 B3, Q195)', async () => {
+    fetchMock.mockResolvedValueOnce(list([]));
+    const { container } = render(<PrivacyRightsPanel variant="profile" />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(screen.queryByRole('region', { name: 'Quyền của bạn' })).toBeNull();
+    expect(container.querySelector('h2')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Đăng xuất' })).toBeNull();
+    for (const name of [/Xuất dữ liệu/, /Xoá tài khoản/]) {
+      expect(screen.getByRole('button', { name })).toBeVisible();
+    }
+  });
+
   it('lists the exports and links only a ready one to its download', async () => {
     await renderPanel([WAITING, READY]);
     const items = await screen.findAllByRole('listitem');

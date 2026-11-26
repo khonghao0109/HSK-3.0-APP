@@ -6,6 +6,7 @@ import { backend } from '@/lib/api/server-backend';
 import { backendEnvelope } from '@/lib/api/backend-envelope';
 
 import { userConsentsResponseSchema } from './consent-route-handler';
+import type { OptionalConsentState } from '@/features/privacy/privacy-values';
 import type { CurrentLegalDocument } from './legal-documents';
 
 const currentLegalDocumentsSchema = backendEnvelope(
@@ -35,4 +36,17 @@ export async function getUserConsents(token: string) {
     token,
   });
   return userConsentsResponseSchema.parse(response).data.documents;
+}
+
+/** The learner's optional consents (Q190), off unless granted and not revoked. */
+export async function getOptionalConsents(
+  token: string,
+): Promise<OptionalConsentState> {
+  const response = await backend.request('/api/v1/users/me/consents', {
+    token,
+  });
+  const optional = userConsentsResponseSchema.parse(response).data.optional;
+  const granted = (type: keyof OptionalConsentState) =>
+    optional.some((consent) => consent.type === type && consent.granted);
+  return { analytics: granted('analytics'), marketing: granted('marketing') };
 }

@@ -169,6 +169,35 @@ describe('server-only backend client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('allowlists the two optional consent routes only (M1.7b2 B3)', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => Response.json({ success: true }));
+    const client = createBackendClient({
+      baseUrl: 'http://backend.example.test',
+      timeoutMs: 100,
+      fetchImpl,
+    });
+    for (const type of ['analytics', 'marketing']) {
+      await client.request(`/api/v1/users/me/consents/optional/${type}`, {
+        token: 't',
+        method: 'PUT',
+        body: { granted: true },
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    for (const path of [
+      '/api/v1/users/me/consents/optional/terms',
+      '/api/v1/users/me/consents/optional/analytics/1',
+      '/api/v1/users/me/consents/optional',
+    ]) {
+      await expect(client.request(path)).rejects.toMatchObject({
+        kind: 'invalid_request',
+      });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('allowlists the learner data export and deletion routes only (M1.7b2 B2b)', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

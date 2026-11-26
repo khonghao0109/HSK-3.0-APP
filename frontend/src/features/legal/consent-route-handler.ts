@@ -48,7 +48,11 @@ export type ConsentHandlerDependencies = {
   production: boolean;
   requestBackend: <T = unknown>(
     path: string,
-    options?: { token?: string; method?: 'GET' | 'POST'; body?: unknown },
+    options?: {
+      token?: string;
+      method?: 'GET' | 'POST' | 'PUT';
+      body?: unknown;
+    },
   ) => Promise<T>;
 };
 
@@ -117,4 +121,53 @@ export async function handleConsentAccept(
     return backendFailure(error, deps);
   }
   return noStore(NextResponse.json({ success: true }));
+}
+
+/** Q190: optional consents B3 lets a learner turn on or off. */
+const optionalTypeSchema = z.enum(['analytics', 'marketing']);
+
+const optionalInputSchema = z.strictObject({ granted: z.boolean() });
+
+const optionalResponseSchema = backendEnvelope(
+  z.object({ type: optionalTypeSchema, granted: z.boolean() }),
+);
+
+/**
+ * `PUT /api/learner/consents/optional/:type` →
+ * `PUT /users/me/consents/optional/:type` (M1.7b2 B3, Q190): records the
+ * choice only; nothing is tracked yet (Q200).
+ */
+export async function handleOptionalConsent(
+  request: NextRequest,
+  type: string,
+  deps: ConsentHandlerDependencies,
+): Promise<NextResponse> {
+  if (!isSameOrigin(request, deps.appOrigin)) return safeResponse(403);
+  if (!optionalTypeSchema.safeParse(type).success) return safeResponse(404);
+  const token = request.cookies.get(deps.learnerCookieName)?.value;
+  if (!token) return safeResponse(401);
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return safeResponse(400);
+  }
+  const input = optionalInputSchema.safeParse(body);
+  if (!input.success) return safeResponse(400);
+
+  let raw: unknown;
+  try {
+    raw = await deps.requestBackend(
+      `/api/v1/users/me/consents/optional/${type}`,
+      { token, method: 'PUT', body: { granted: input.data.granted } },
+    );
+  } catch (error: unknown) {
+    return backendFailure(error, deps);
+  }
+  const parsed = optionalResponseSchema.safeParse(raw);
+  if (!parsed.success || parsed.data.data.type !== type) {
+    return safeResponse(503);
+  }
+  return noStore(NextResponse.json({ success: true, data: parsed.data.data }));
 }
