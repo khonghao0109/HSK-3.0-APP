@@ -34,6 +34,8 @@ const COPY = {
   passwordWrong: 'Mật khẩu không đúng.',
   deleteLimited: 'Bạn đã thử quá nhiều lần. Thử lại sau 15 phút.',
   deleteFailed: 'Chưa gửi được yêu cầu xoá. Thử lại sau ít phút.',
+  lastAdmin:
+    'Bạn là quản trị viên cuối cùng nên chưa thể xoá tài khoản. Hãy chỉ định thêm một quản trị viên khác trước.',
 } as const;
 
 const DATE = new Intl.DateTimeFormat('vi-VN', {
@@ -221,9 +223,11 @@ export function PrivacyRightsPanel({
       setPasswordError(
         code === 'INVALID_PASSWORD'
           ? COPY.passwordWrong
-          : response.status === 429
-            ? COPY.deleteLimited
-            : COPY.deleteFailed,
+          : code === 'LAST_ADMIN_REQUIRED'
+            ? COPY.lastAdmin
+            : response.status === 429
+              ? COPY.deleteLimited
+              : COPY.deleteFailed,
       );
     } catch {
       setPasswordError(COPY.network);

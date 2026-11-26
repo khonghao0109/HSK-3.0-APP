@@ -16,7 +16,8 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 
 import {
-  ADMIN_USERS_ADVISORY_LOCK_KEY,
+  countActiveAdmins,
+  lockAdminUsers,
   type AdminRole,
   type AdminUserStatus,
 } from './admin-users.policy';
@@ -218,7 +219,7 @@ export class AdminUsersService {
         target.role === 'admin' &&
         target.status === 'active' &&
         role === 'user' &&
-        (await this.countActiveAdmins(tx)) <= 1
+        (await countActiveAdmins(tx)) <= 1
       ) {
         throw lastAdminRequired();
       }
@@ -263,7 +264,7 @@ export class AdminUsersService {
       if (target.id === actor.id) throw selfActionForbidden();
       if (target.status !== 'active') throw userNotActive();
 
-      if (target.role === 'admin' && (await this.countActiveAdmins(tx)) <= 1) {
+      if (target.role === 'admin' && (await countActiveAdmins(tx)) <= 1) {
         throw lastAdminRequired();
       }
 
@@ -365,10 +366,7 @@ export class AdminUsersService {
         // A `requested` row without `deletion_pending` is not a state this
         // service produces; fail closed instead of guessing.
         if (request !== null) throw userNotModifiable();
-        if (
-          target.role === 'admin' &&
-          (await this.countActiveAdmins(tx)) <= 1
-        ) {
+        if (target.role === 'admin' && (await countActiveAdmins(tx)) <= 1) {
           throw lastAdminRequired();
         }
         return this.createAdminInitiatedRequest(
@@ -478,11 +476,7 @@ export class AdminUsersService {
     work: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
-      // `pg_advisory_xact_lock` returns `void`, which `$queryRaw` cannot
-      // deserialize; `$executeRaw` waits for the lock and returns its row count.
-      await tx.$executeRaw(
-        Prisma.sql`SELECT pg_advisory_xact_lock(${ADMIN_USERS_ADVISORY_LOCK_KEY}::bigint)`,
-      );
+      await lockAdminUsers(tx);
 
       const actors = await tx.$queryRaw<ActingAdminRow[]>(
         Prisma.sql`
@@ -536,13 +530,6 @@ export class AdminUsersService {
       select: ADMIN_USER_SELECT,
     });
     return projectUser(user);
-  }
-
-  /** TL-62/TL-65: counted inside the advisory-locked transaction. */
-  private countActiveAdmins(tx: Prisma.TransactionClient): Promise<number> {
-    return tx.user.count({
-      where: { role: 'admin', status: 'active', deletedAt: null },
-    });
   }
 
   /**

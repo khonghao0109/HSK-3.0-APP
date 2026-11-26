@@ -23,7 +23,8 @@ const ITEMS: ReadonlyArray<{
   {
     type: 'analytics',
     name: 'Phân tích sản phẩm',
-    hint: 'Cho phép dùng cách bạn sử dụng ứng dụng để cải thiện ứng dụng',
+    // PO 26/11.
+    hint: 'Cho phép ghi lại các thao tác trong ứng dụng (ẩn danh hoá) để chúng tôi cải thiện bài học. Tắt bất cứ lúc nào.',
   },
   {
     type: 'marketing',

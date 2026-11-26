@@ -312,6 +312,8 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   - Body: `{ password: string, reason?: string }` (`reason` tuỳ chọn, tối đa 500 ký tự).
   - Xác thực mật khẩu: Sai mật khẩu hiện tại → trả về HTTP `400` với mã lỗi `INVALID_PASSWORD` và message `'Invalid password'`. Không trả `401` để tránh BFF xoá session của người dùng.
   - User không `active` hoặc đã soft-delete (`deletedAt IS NOT NULL`) → trả về `404 "User not found."`.
+  - Admin active cuối cùng (M1.7c-H1, bất biến M5.3): trong transaction lấy advisory lock `5_300_201` (cùng lock của các mutation admin) rồi khoá dòng `User` (`FOR UPDATE`); nếu user là `admin` và số admin `active`, chưa soft-delete chỉ còn 1 → HTTP `409` với mã lỗi `LAST_ADMIN_REQUIRED` và message `'The last active admin cannot delete their own account.'`. Không tạo yêu cầu xoá, không đổi trạng thái, không thu hồi session. Khi có từ 2 admin cùng gửi yêu cầu, lock bảo đảm đúng một yêu cầu thành công.
+  - Job `privacy.anonymize-account` cũng lấy lock `5_300_201` trước khi khoá dòng `User`; nếu user đang chờ xoá là admin và không còn admin `active` nào (ví dụ admin khác bị hạ quyền trong thời gian chờ), job không ẩn danh, giữ yêu cầu ở `requested`, ghi log lỗi và audit `account.anonymize_blocked_last_admin`; đăng nhập trong thời gian chờ vẫn huỷ yêu cầu như thường.
   - Thành công: trả về HTTP `202 Accepted` với `{ requestId: number, scheduledAt: string }` (thời điểm lên lịch xoá sau 7 ngày).
   - Trạng thái hệ thống:
     - User chuyển sang `status = 'deletion_pending'` và gán `deletedAt = CURRENT_TIMESTAMP`.

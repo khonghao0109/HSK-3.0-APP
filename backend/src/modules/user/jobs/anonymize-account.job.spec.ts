@@ -17,6 +17,7 @@ describe('AnonymizeAccountJob', () => {
     auditLog: {
       create: jest.Mock;
     };
+    user: { count: jest.Mock };
   };
   let mockPrisma: {
     $transaction: jest.Mock;
@@ -38,11 +39,14 @@ describe('AnonymizeAccountJob', () => {
    * M1.7d lock order: (1) unlocked read of the request for `userId`, (2) lock
    * the user row, (3) lock the request row and re-check `status`/`isPastDue`.
    */
-  const primeLockSequence = (locked: LockedRequestRow = dueRequest()) => {
+  const primeLockSequence = (
+    locked: LockedRequestRow = dueRequest(),
+    role: 'user' | 'admin' = 'user',
+  ) => {
     mockTx.$queryRaw
       .mockResolvedValueOnce([{ id: locked.id, userId: locked.userId }])
       .mockResolvedValueOnce([
-        { id: locked.userId, status: 'deletion_pending' },
+        { id: locked.userId, role, status: 'deletion_pending' },
       ])
       .mockResolvedValueOnce([locked]);
   };
@@ -54,6 +58,7 @@ describe('AnonymizeAccountJob', () => {
       auditLog: {
         create: jest.fn().mockResolvedValue({ id: 1 }),
       },
+      user: { count: jest.fn() },
     };
 
     mockPrisma = {
@@ -72,6 +77,15 @@ describe('AnonymizeAccountJob', () => {
   });
 
   describe('input validation and skip conditions', () => {
+    // Nothing is written: the only raw statement is the admin-users lock.
+    const expectOnlyAdvisoryLock = () => {
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(1);
+      const [lock] = mockTx.$executeRaw.mock.calls[0] as [
+        { strings: readonly string[] },
+      ];
+      expect(lock.strings.join('?')).toContain('pg_advisory_xact_lock');
+    };
+
     it('returns false when requestId is not a number', async () => {
       const result = await job.process({ requestId: 'invalid' as never });
       expect(result).toBe(false);
@@ -83,7 +97,7 @@ describe('AnonymizeAccountJob', () => {
 
       const result = await job.process({ requestId: 99 });
       expect(result).toBe(false);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expectOnlyAdvisoryLock();
     });
 
     it('returns true idempotently when request status is already completed', async () => {
@@ -91,7 +105,7 @@ describe('AnonymizeAccountJob', () => {
 
       const result = await job.process({ requestId: 10 });
       expect(result).toBe(true);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expectOnlyAdvisoryLock();
     });
 
     it('returns true idempotently when request status is cancelled', async () => {
@@ -99,7 +113,7 @@ describe('AnonymizeAccountJob', () => {
 
       const result = await job.process({ requestId: 10 });
       expect(result).toBe(true);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expectOnlyAdvisoryLock();
     });
 
     it('throws error when request is not past due (grace period active)', async () => {
@@ -108,12 +122,13 @@ describe('AnonymizeAccountJob', () => {
       await expect(job.process({ requestId: 10 })).rejects.toThrow(
         'Account deletion request is not due yet',
       );
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expectOnlyAdvisoryLock();
     });
 
     it('throws error when user update returns 0 rows', async () => {
       primeLockSequence();
-      mockTx.$executeRaw.mockResolvedValueOnce(0);
+      // The advisory lock, then the `User` update affecting no row.
+      mockTx.$executeRaw.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
 
       await expect(job.process({ requestId: 10 })).rejects.toThrow(
         'Abnormal state: User 5 is not in deletion_pending for request 10',
@@ -147,8 +162,65 @@ describe('AnonymizeAccountJob', () => {
       const result = await job.process({ requestId: 10 });
 
       expect(result).toBe(true);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      // Only the admin-users advisory lock ran.
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(1);
       expect(mockTx.auditLog.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('last active admin (M1.7c-H1, M5.3)', () => {
+    const sqlOf = (call: unknown[] | undefined) =>
+      (
+        (call?.[0] as { strings?: readonly string[] } | undefined)?.strings ??
+        []
+      ).join('?');
+
+    it('takes the admin-users advisory lock before locking the User row', async () => {
+      primeLockSequence();
+      mockTx.$executeRaw.mockResolvedValue(1);
+
+      await job.process({ requestId: 10 });
+
+      const lock = mockTx.$executeRaw.mock.calls[0];
+      expect(sqlOf(lock)).toContain('pg_advisory_xact_lock');
+      expect((lock?.[0] as { values: unknown[] }).values).toEqual([5_300_201]);
+      expect(mockTx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        mockTx.$queryRaw.mock.invocationCallOrder[1],
+      );
+      expect(mockTx.user.count).not.toHaveBeenCalled();
+    });
+
+    it('does not anonymize an admin when no other active admin is left', async () => {
+      primeLockSequence(dueRequest(), 'admin');
+      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.user.count.mockResolvedValue(0);
+
+      const result = await job.process({ requestId: 10 });
+
+      expect(result).toBe(false);
+      expect(mockTx.user.count).toHaveBeenCalledWith({
+        where: { role: 'admin', status: 'active', deletedAt: null },
+      });
+      // Only the advisory lock: no anonymization, the request stays `requested`.
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(1);
+      expect(mockTx.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          actorId: null,
+          action: 'account.anonymize_blocked_last_admin',
+          targetType: 'User',
+          targetId: '5',
+          afterSummary: { requestId: 10 },
+        },
+      });
+    });
+
+    it('anonymizes an admin while another active admin remains', async () => {
+      primeLockSequence(dueRequest(), 'admin');
+      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.user.count.mockResolvedValue(1);
+
+      await expect(job.process({ requestId: 10 })).resolves.toBe(true);
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(7);
     });
   });
 
@@ -160,8 +232,8 @@ describe('AnonymizeAccountJob', () => {
       const result = await job.process({ requestId: 10 });
 
       expect(result).toBe(true);
-      // User update, profile update, session delete, reset token delete, verification token delete, request update = 6 executeRaw calls
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(6);
+      // Admin-users advisory lock, user update, profile update, session delete, reset token delete, verification token delete, request update = 7 executeRaw calls
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(7);
       expect(mockTx.auditLog.create).toHaveBeenCalledWith({
         data: {
           actorId: 5,
@@ -182,7 +254,7 @@ describe('AnonymizeAccountJob', () => {
       expect(result).toBe(true);
       // The worker does not branch on `initiatedBy`: the deletion lifecycle is
       // identical once the request is due.
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(6);
+      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(7);
       expect(mockTx.auditLog.create).toHaveBeenCalledWith({
         data: {
           actorId: 5,

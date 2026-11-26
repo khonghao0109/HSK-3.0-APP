@@ -7,6 +7,28 @@ import { Prisma } from '@prisma/client';
  */
 export const ADMIN_USERS_ADVISORY_LOCK_KEY = 5_300_201;
 
+/**
+ * TL-65: take the admin-users lock. `pg_advisory_xact_lock` returns `void`,
+ * which `$queryRaw` cannot deserialize; `$executeRaw` waits for the lock and
+ * returns its row count. Shared with self-service deletion (M1.7c-H1).
+ */
+export async function lockAdminUsers(
+  tx: Prisma.TransactionClient,
+): Promise<void> {
+  await tx.$executeRaw(
+    Prisma.sql`SELECT pg_advisory_xact_lock(${ADMIN_USERS_ADVISORY_LOCK_KEY}::bigint)`,
+  );
+}
+
+/** TL-62/TL-65: count only inside a transaction holding `lockAdminUsers`. */
+export function countActiveAdmins(
+  tx: Prisma.TransactionClient,
+): Promise<number> {
+  return tx.user.count({
+    where: { role: 'admin', status: 'active', deletedAt: null },
+  });
+}
+
 export const ADMIN_USER_STATUSES = [
   'active',
   'suspended',
