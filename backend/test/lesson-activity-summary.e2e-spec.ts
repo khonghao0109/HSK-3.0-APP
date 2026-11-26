@@ -137,14 +137,22 @@ describe('Lesson activity summary (Q43) E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.lesson.updateMany({
-      where: { id: { in: createdLessonIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    if (priorLevel) {
-      await prisma.level.update({ where: { id: levelId }, data: priorLevel });
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: createdLessonIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        if (priorLevel && levelId !== undefined) {
+          await prisma.level.update({
+            where: { id: levelId },
+            data: priorLevel,
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    await app.close();
   });
 
   it('[A1] rejects the activity without a JWT', async () => {

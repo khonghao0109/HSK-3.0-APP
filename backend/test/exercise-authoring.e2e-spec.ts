@@ -160,37 +160,42 @@ describe('Exercise Authoring & Media Lifecycle V1 E2E', () => {
   });
 
   afterAll(async () => {
-    if (otherLessonId) {
-      const now = new Date();
-      await prisma.lessonExercise.updateMany({
-        where: { lessonId: otherLessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.topic.updateMany({
-        where: { lessonId: otherLessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.lesson.update({
-        where: { id: otherLessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
+    try {
+      if (prisma) {
+        if (otherLessonId) {
+          const now = new Date();
+          await prisma.lessonExercise.updateMany({
+            where: { lessonId: otherLessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.topic.updateMany({
+            where: { lessonId: otherLessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.lesson.update({
+            where: { id: otherLessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+        }
+        if (lessonId) {
+          const now = new Date();
+          await prisma.lessonExercise.updateMany({
+            where: { lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.topic.updateMany({
+            where: { lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+          await prisma.lesson.update({
+            where: { id: lessonId },
+            data: { status: 'archived', deletedAt: now },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    if (lessonId) {
-      const now = new Date();
-      await prisma.lessonExercise.updateMany({
-        where: { lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.topic.updateMany({
-        where: { lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-      await prisma.lesson.update({
-        where: { id: lessonId },
-        data: { status: 'archived', deletedAt: now },
-      });
-    }
-    await app.close();
   });
 
   it('1. enforces authentication, admin RBAC and active-account state', async () => {

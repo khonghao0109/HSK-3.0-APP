@@ -111,15 +111,20 @@ describe('Course lesson activity (ADR-009 C3b-3) E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.lesson.updateMany({
-      where: { id: { in: createdLessonIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    await prisma.course.updateMany({
-      where: { id: { in: createdCourseIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    await app.close();
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: createdLessonIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        await prisma.course.updateMany({
+          where: { id: { in: createdCourseIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   it('[A1] reads and starts the first lesson of the course', async () => {

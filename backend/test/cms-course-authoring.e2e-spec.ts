@@ -82,20 +82,25 @@ describe('CMS course authoring (ADR-009 C3b-2) E2E', () => {
   });
 
   afterAll(async () => {
-    const now = new Date();
-    await prisma.lesson.updateMany({
-      where: { courseUnit: { courseId: { in: createdCourseIds } } },
-      data: { status: 'archived', deletedAt: now },
-    });
-    await prisma.courseUnit.updateMany({
-      where: { courseId: { in: createdCourseIds } },
-      data: { status: 'archived', deletedAt: now },
-    });
-    await prisma.course.updateMany({
-      where: { id: { in: createdCourseIds } },
-      data: { status: 'archived', deletedAt: now },
-    });
-    await app.close();
+    try {
+      if (prisma) {
+        const now = new Date();
+        await prisma.lesson.updateMany({
+          where: { courseUnit: { courseId: { in: createdCourseIds } } },
+          data: { status: 'archived', deletedAt: now },
+        });
+        await prisma.courseUnit.updateMany({
+          where: { courseId: { in: createdCourseIds } },
+          data: { status: 'archived', deletedAt: now },
+        });
+        await prisma.course.updateMany({
+          where: { id: { in: createdCourseIds } },
+          data: { status: 'archived', deletedAt: now },
+        });
+      }
+    } finally {
+      await app?.close();
+    }
   });
 
   it('[K1] guards every new route: 401 without login, 403 for a learner', async () => {

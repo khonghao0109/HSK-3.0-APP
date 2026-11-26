@@ -117,17 +117,26 @@ describe('Learning path and sequential lesson lock (Q18) E2E', () => {
   });
 
   afterAll(async () => {
-    await prisma.lesson.updateMany({
-      where: { id: { in: createdLessonIds } },
-      data: { status: 'archived', deletedAt: new Date() },
-    });
-    for (const [id, state] of priorLevels) {
-      await prisma.level.update({
-        where: { id },
-        data: state ?? { status: 'draft', publishedAt: null, deletedAt: null },
-      });
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: createdLessonIds } },
+          data: { status: 'archived', deletedAt: new Date() },
+        });
+        for (const [id, state] of priorLevels) {
+          await prisma.level.update({
+            where: { id },
+            data: state ?? {
+              status: 'draft',
+              publishedAt: null,
+              deletedAt: null,
+            },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    await app.close();
   });
 
   it('[S1] returns 404 for a lesson that is not ready, even when it would be locked', async () => {

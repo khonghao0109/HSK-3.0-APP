@@ -479,31 +479,36 @@ describe('Exam attempt E2E (M4.2a / TL-116)', () => {
   });
 
   afterAll(async () => {
-    // ExamAttemptSnapshot/ExamAttemptEvent are immutable by trigger and the
-    // attempt keeps the Test alive, so the tree is archived rather than
-    // deleted; the database itself is disposable.
-    const ids = [...new Set(createdTestIds)];
-    if (ids.length > 0) {
-      await prisma.test.updateMany({
-        where: { id: { in: ids } },
-        data: { status: ContentStatus.archived, deletedAt: new Date() },
-      });
+    try {
+      if (prisma) {
+        // ExamAttemptSnapshot/ExamAttemptEvent are immutable by trigger and the
+        // attempt keeps the Test alive, so the tree is archived rather than
+        // deleted; the database itself is disposable.
+        const ids = [...new Set(createdTestIds)];
+        if (ids.length > 0) {
+          await prisma.test.updateMany({
+            where: { id: { in: ids } },
+            data: { status: ContentStatus.archived, deletedAt: new Date() },
+          });
+        }
+        const questionIds = [...new Set(createdQuestionIds)];
+        if (questionIds.length > 0) {
+          await prisma.question.updateMany({
+            where: { id: { in: questionIds } },
+            data: { status: ContentStatus.archived, deletedAt: new Date() },
+          });
+        }
+        const mediaIds = [...new Set(createdMediaIds)];
+        if (mediaIds.length > 0) {
+          await prisma.media.updateMany({
+            where: { id: { in: mediaIds } },
+            data: { deletedAt: new Date() },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    const questionIds = [...new Set(createdQuestionIds)];
-    if (questionIds.length > 0) {
-      await prisma.question.updateMany({
-        where: { id: { in: questionIds } },
-        data: { status: ContentStatus.archived, deletedAt: new Date() },
-      });
-    }
-    const mediaIds = [...new Set(createdMediaIds)];
-    if (mediaIds.length > 0) {
-      await prisma.media.updateMany({
-        where: { id: { in: mediaIds } },
-        data: { deletedAt: new Date() },
-      });
-    }
-    if (app) await app.close();
   });
 
   function get(path: string, token?: string) {

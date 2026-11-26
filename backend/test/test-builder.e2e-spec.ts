@@ -204,34 +204,45 @@ describe('Test Builder V1 E2E (M4.1b / TL-102)', () => {
   });
 
   afterAll(async () => {
-    // FK order is Restrict: placement -> TestQuestion -> group -> section -> test.
-    const ids = [...new Set(createdTestIds)];
-    if (ids.length > 0) {
-      await prisma.testQuestionPlacement.deleteMany({
-        where: { testId: { in: ids } },
-      });
-      await prisma.testQuestion.deleteMany({ where: { testId: { in: ids } } });
-      await prisma.questionGroup.deleteMany({ where: { testId: { in: ids } } });
-      await prisma.testSection.deleteMany({ where: { testId: { in: ids } } });
-      await prisma.test.deleteMany({ where: { id: { in: ids } } });
+    try {
+      if (prisma) {
+        // FK order is Restrict: placement -> TestQuestion -> group -> section -> test.
+        const ids = [...new Set(createdTestIds)];
+        if (ids.length > 0) {
+          await prisma.testQuestionPlacement.deleteMany({
+            where: { testId: { in: ids } },
+          });
+          await prisma.testQuestion.deleteMany({
+            where: { testId: { in: ids } },
+          });
+          await prisma.questionGroup.deleteMany({
+            where: { testId: { in: ids } },
+          });
+          await prisma.testSection.deleteMany({
+            where: { testId: { in: ids } },
+          });
+          await prisma.test.deleteMany({ where: { id: { in: ids } } });
+        }
+        // ContentReview rows are immutable by trigger, so questions are archived
+        // (never deleted) to keep them out of live-count assertions.
+        const questionIds = [...new Set(createdQuestionIds)];
+        if (questionIds.length > 0) {
+          await prisma.question.updateMany({
+            where: { id: { in: questionIds } },
+            data: { status: ContentStatus.archived, deletedAt: new Date() },
+          });
+        }
+        const mediaIds = [...new Set(createdMediaIds)];
+        if (mediaIds.length > 0) {
+          await prisma.media.updateMany({
+            where: { id: { in: mediaIds } },
+            data: { deletedAt: new Date() },
+          });
+        }
+      }
+    } finally {
+      await app?.close();
     }
-    // ContentReview rows are immutable by trigger, so questions are archived
-    // (never deleted) to keep them out of live-count assertions.
-    const questionIds = [...new Set(createdQuestionIds)];
-    if (questionIds.length > 0) {
-      await prisma.question.updateMany({
-        where: { id: { in: questionIds } },
-        data: { status: ContentStatus.archived, deletedAt: new Date() },
-      });
-    }
-    const mediaIds = [...new Set(createdMediaIds)];
-    if (mediaIds.length > 0) {
-      await prisma.media.updateMany({
-        where: { id: { in: mediaIds } },
-        data: { deletedAt: new Date() },
-      });
-    }
-    if (app) await app.close();
   });
 
   it('1. enforces admin RBAC and Cache-Control no-store on all eight test routes', async () => {
