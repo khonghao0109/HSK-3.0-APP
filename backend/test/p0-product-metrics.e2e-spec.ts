@@ -240,21 +240,29 @@ describe('P0 product metrics (M2.8) E2E', () => {
   afterAll(async () => {
     // Events are immutable, so the fixture stays; hide its lessons and put
     // HSK4 back the way it was.
-    await prisma.lesson.updateMany({
-      where: { id: { in: lessonIds } },
-      data: { status: 'draft', deletedAt: new Date() },
-    });
-    await prisma.level.update({
-      where: { id: levelId },
-      data: priorLevel
-        ? {
-            status: priorLevel.status,
-            publishedAt: priorLevel.publishedAt,
-            deletedAt: priorLevel.deletedAt,
-          }
-        : { status: 'draft', deletedAt: new Date() },
-    });
-    await prisma.$disconnect();
+    try {
+      if (prisma) {
+        await prisma.lesson.updateMany({
+          where: { id: { in: lessonIds } },
+          data: { status: 'draft', deletedAt: new Date() },
+        });
+        // levelId stays 0 until beforeAll reads HSK4.
+        if (levelId !== 0) {
+          await prisma.level.update({
+            where: { id: levelId },
+            data: priorLevel
+              ? {
+                  status: priorLevel.status,
+                  publishedAt: priorLevel.publishedAt,
+                  deletedAt: priorLevel.deletedAt,
+                }
+              : { status: 'draft', deletedAt: new Date() },
+          });
+        }
+      }
+    } finally {
+      await prisma?.$disconnect();
+    }
   });
 
   // Worked out by hand from the fixture above.

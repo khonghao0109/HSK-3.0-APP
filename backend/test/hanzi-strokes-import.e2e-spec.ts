@@ -27,8 +27,11 @@ describe('Hanzi stroke import (Q357)', () => {
   });
 
   afterAll(async () => {
-    await prisma.character.deleteMany({ where: { hanzi: { in: chars } } });
-    await prisma.$disconnect();
+    try {
+      await prisma.character.deleteMany({ where: { hanzi: { in: chars } } });
+    } finally {
+      await prisma.$disconnect();
+    }
   });
 
   it('has the data source from the migration', async () => {

@@ -39,7 +39,7 @@ describe('Media ingestion stale-attempt fencing', () => {
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
   });
 
   it('refuses automatic takeover and preserves the winning object', async () => {

@@ -87,16 +87,24 @@ describe('Grammar points and question links import (Q357)', () => {
   });
 
   afterAll(async () => {
-    await prisma.question.updateMany({
-      where: { id: questionId },
-      data: { status: ContentStatus.archived, deletedAt: new Date() },
-    });
-    await prisma.questionWord.deleteMany({ where: { questionId } });
-    await prisma.questionGrammarPoint.deleteMany({ where: { questionId } });
-    await prisma.grammarPoint.deleteMany({ where: { code: { in: codes } } });
-    await prisma.wordLevel.deleteMany({ where: { wordId } });
-    await prisma.word.delete({ where: { id: wordId } });
-    await prisma.$disconnect();
+    // An undefined id would widen these filters to every row: skip instead.
+    try {
+      if (questionId !== undefined) {
+        await prisma.question.updateMany({
+          where: { id: questionId },
+          data: { status: ContentStatus.archived, deletedAt: new Date() },
+        });
+        await prisma.questionWord.deleteMany({ where: { questionId } });
+        await prisma.questionGrammarPoint.deleteMany({ where: { questionId } });
+      }
+      await prisma.grammarPoint.deleteMany({ where: { code: { in: codes } } });
+      if (wordId !== undefined) {
+        await prisma.wordLevel.deleteMany({ where: { wordId } });
+        await prisma.word.delete({ where: { id: wordId } });
+      }
+    } finally {
+      await prisma.$disconnect();
+    }
   });
 
   it('refuses unapproved files, then imports approved grammar and links', async () => {
