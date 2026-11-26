@@ -783,11 +783,12 @@ continueLesson, currentCourse }` (`currentCourse` thêm từ C3b-UI2).
 - `currentCourse` (C3b-UI2, field tuỳ chọn, chỉ thêm): `{ code, title, kind, progress:
   { completedLessons, totalLessons }, nextLesson } | null`, `null` khi không có khoá published
   nào là khoá đang học. `progress` đếm như `GET /learning/courses/:code`. `nextLesson`:
-  `{ lessonId, title, slug, position, completionPercent } | null` (`position` đếm trong unit):
-  - khoá `topic`: cùng bài với `continueLesson` (`null` khi `continueLesson` là `null`);
+  `{ lessonId, title, slug, position, completionPercent } | null`:
+  - khoá `topic`: cùng bài với `continueLesson` (`null` khi `continueLesson` là `null`),
+    `position` là vị trí trong lộ trình Level, bằng `continueLesson.position`;
   - khoá khác: bài `learning` có `lastActivityAt` mới nhất trong khoá; không có thì bài đầu
     tiên chưa xong đang mở (`current`) của lộ trình khoá, rồi tới bài `available` đầu tiên;
-    không có thì `null`.
+    không có thì `null`; `position` đếm trong unit, bắt đầu từ 1.
 
 Khoá ở `start` (Q18): bài chưa có row Progress mà bài ready liền trước chưa `done` (và không
 phải bài đầu cấp) trả `409` `error.code = "lesson_locked"`, message `Complete the previous

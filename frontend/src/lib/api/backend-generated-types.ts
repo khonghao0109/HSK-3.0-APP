@@ -3628,7 +3628,10 @@ export interface components {
             lessonId: number;
             title: string;
             slug: string;
-            /** @description Position inside its course unit (starts at 1). */
+            /**
+             * @description Course `topic`: the position in the level path, as `continueLesson.position`.
+             *     Other courses: the position inside its course unit (starts at 1).
+             */
             position: number;
             completionPercent: number;
         };
