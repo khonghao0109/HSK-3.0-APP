@@ -2018,10 +2018,13 @@ finalize. Chi tiết ADR-005 và runbook.
 | `GET` | `/media/:mediaId/content?expires=<unix>&signature=<64 hex>` | public (capability URL; TTL learner cố định 300 giây, admin theo `MEDIA_ACCESS_TTL_SECONDS` 60–600 giây, mặc định 300); 60/phút/grant và 600/phút/IP | bytes thô, không envelope, với `Content-Type`, `Content-Length`, `Accept-Ranges: bytes`, `Content-Disposition: inline`, `Cache-Control: private, no-store`, `nosniff`, `X-Request-ID`. Một range `bytes` hợp lệ → `206` với `Content-Range: bytes s-e/size`; range ngoài kích thước → `416` envelope JSON (`error.code` `MEDIA_RANGE_NOT_SATISFIABLE`) kèm `Content-Range: bytes */size`; header hỏng, nhiều range hoặc unit khác → `200` cả file. Lỗi khác vẫn là envelope JSON: grant sai/hết hạn → `403` (xét trước Range); `429` của backend; `503` với `error.code` `MEDIA_STORAGE_UNAVAILABLE` / `MEDIA_STORAGE_PROVIDER_MISMATCH` / `MEDIA_STORAGE_INTEGRITY_ERROR` |
 
 Learner chỉ nhận grant khi có ít nhất một `LessonExercise` dùng media thoả đúng predicate
-của route attempts (`PUBLIC_LESSON_EXERCISE_WHERE` + `buildLessonReadyWhere()`): exercise
+của route attempts (`PUBLIC_LESSON_EXERCISE_WHERE` + `buildAnyLessonReadyWhere()`): exercise
 published, chưa soft-delete, loại public (listening_choice thì media audio ready), topic
-(nếu có) published; lesson published, Level published và chưa soft-delete, lesson có ít
-nhất một topic hoặc story published. Admin không đổi.
+(nếu có) published; lesson published, chưa soft-delete, có ít nhất một topic hoặc story
+published, và có Level published chưa xoá, hoặc không có Level mà unit và course đều
+published, chưa xoá (ADR-009). Ảnh bìa, ảnh của Word, audio của Word thuộc bài và audio
+bài khoá dùng cùng điều kiện "bài ready" này (M2.13e), như `GET /learning/lessons/:id` và
+route activity. Admin không đổi.
 
 Rate limit route content: bucket `default` khoá theo `grant:<sha256(mediaId:expires:signature)>`
 (không chứa chữ ký gốc) khi `mediaId`, `expires`, `signature` đúng dạng và

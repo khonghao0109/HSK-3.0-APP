@@ -322,7 +322,46 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
     const courseIds: number[] = [];
     const courseLessonIds: number[] = [];
     const courseWordIds: number[] = [];
-    const media: Record<string, { key: number; word: number }> = {};
+    const media: Record<
+      string,
+      {
+        key: number;
+        word: number;
+        exercise: number;
+        cover: number;
+        wordImage: number;
+      }
+    > = {};
+    // A 1x1 PNG: grants check type and MIME only, never decode the image.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    async function imageMedia(label: string): Promise<number> {
+      const key = `media/m213e/${label}-${randomUUID()}.png`;
+      const checksum = createHash('sha256').update(png).digest('hex');
+      await storage.putPrivateObject({
+        key,
+        body: png,
+        contentType: 'image/png',
+        checksum,
+      });
+      return (
+        await prisma.media.create({
+          data: {
+            url: `urn:hsk:test:m213e-${label}-${randomUUID()}`,
+            type: 'image',
+            mimeType: 'image/png',
+            size: png.length,
+            storageProvider: storage.provider,
+            storageKey: key,
+            checksum,
+            processingStatus: 'ready',
+          },
+          select: { id: true },
+        })
+      ).id;
+    }
 
     async function courseLesson(
       label: string,
@@ -331,7 +370,10 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
     ) {
       const key = await audioMedia(`course-key-${label}`, 'ready');
       const wordAudio = await audioMedia(`course-word-${label}`, 'ready');
-      media[label] = { key, word: wordAudio };
+      const exercise = await audioMedia(`course-exercise-${label}`, 'ready');
+      const cover = await imageMedia(`course-cover-${label}`);
+      const wordImage = await imageMedia(`course-word-image-${label}`);
+      media[label] = { key, word: wordAudio, exercise, cover, wordImage };
       const course = await prisma.course.create({
         data: {
           code: `M213D_${label.toUpperCase()}_${suffix.replace(/\D/gu, '')}`,
@@ -367,6 +409,7 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
             publishedAt: new Date(),
             isPure: false,
             audioId: wordAudio,
+            imageId: wordImage,
             meanings: {
               create: { meaningOrder: 1, meaningVi: `nghĩa ${label}` },
             },
@@ -384,6 +427,24 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
           orderIndex: 1,
           status: 'published',
           publishedAt: new Date(),
+          coverImageId: cover,
+          exercises: {
+            create: {
+              mediaId: exercise,
+              type: 'listening_choice',
+              prompt: 'Chọn từ bạn nghe',
+              content: {
+                options: [
+                  { id: 'a', text: '你好' },
+                  { id: 'b', text: '再见' },
+                ],
+              },
+              answer: { optionId: 'a' },
+              orderIndex: 1,
+              status: 'published',
+              publishedAt: new Date(),
+            },
+          },
           topics: {
             create: {
               title: 'Bài khoá',
@@ -418,6 +479,10 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
         where: { id: { in: courseIds } },
         data: { status: 'archived', deletedAt: new Date() },
       });
+      await prisma.lessonExercise.updateMany({
+        where: { lessonId: { in: courseLessonIds } },
+        data: { status: 'archived', deletedAt: new Date() },
+      });
       await prisma.word.deleteMany({ where: { id: { in: courseWordIds } } });
     });
 
@@ -439,6 +504,37 @@ describe('Word audio for learners (M2.13c2) E2E', () => {
       for (const label of ['draftcourse', 'deletedunit']) {
         await get(`/media/${media[label].key}/access`).expect(403);
         await get(`/media/${media[label].word}/access`).expect(403);
+      }
+    });
+
+    it('W8. a ready course lesson grants its exercise audio, cover and word image (M2.13e)', async () => {
+      const detail = await get(`/learning/lessons/${readyLessonId}`).expect(
+        200,
+      );
+      expect(detail.body.data.coverImage).toMatchObject({
+        id: media.ready.cover,
+      });
+      expect(detail.body.data.words[0].image).toMatchObject({
+        id: media.ready.wordImage,
+      });
+      for (const id of [
+        media.ready.exercise,
+        media.ready.cover,
+        media.ready.wordImage,
+      ]) {
+        await get(`/media/${id}/access`).expect(200);
+      }
+    });
+
+    it('W9. a draft course or a deleted unit grants none of them (M2.13e)', async () => {
+      for (const label of ['draftcourse', 'deletedunit']) {
+        for (const id of [
+          media[label].exercise,
+          media[label].cover,
+          media[label].wordImage,
+        ]) {
+          await get(`/media/${id}/access`).expect(403);
+        }
       }
     });
   });

@@ -6,10 +6,7 @@ import {
 import type { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 
-import {
-  buildAnyLessonReadyWhere,
-  buildLessonReadyWhere,
-} from '../../common/policies/lesson-readiness.policy';
+import { buildAnyLessonReadyWhere } from '../../common/policies/lesson-readiness.policy';
 import type { ObjectStoragePort } from '../../infrastructure/storage/object-storage.port';
 import { ObjectStorageError } from '../../infrastructure/storage/object-storage.port';
 import type { PrismaService } from '../../prisma/prisma.service';
@@ -125,7 +122,7 @@ describe('MediaAccessService storage-provider affinity', () => {
     expect(args.select.lessonExercises.where).toEqual({
       AND: [
         PUBLIC_LESSON_EXERCISE_WHERE,
-        { lesson: { is: buildLessonReadyWhere() } },
+        { lesson: { is: buildAnyLessonReadyWhere() } },
       ],
     });
   });
@@ -156,12 +153,12 @@ describe('MediaAccessService storage-provider affinity', () => {
         },
       ];
       expect(args.select.lessonCoverImage.where).toEqual(
-        buildLessonReadyWhere(),
+        buildAnyLessonReadyWhere(),
       );
       expect(args.select.wordImage.where).toEqual({
         status: 'published',
         deletedAt: null,
-        lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+        lessonWords: { some: { lesson: { is: buildAnyLessonReadyWhere() } } },
       });
     }
   });

@@ -21,7 +21,6 @@ import {
 } from '../../infrastructure/storage/object-storage.port';
 import {
   buildAnyLessonReadyWhere,
-  buildLessonReadyWhere,
   PUBLIC_CONTENT_WHERE,
 } from '../../common/policies/lesson-readiness.policy';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -108,22 +107,25 @@ export class MediaAccessService {
           where: {
             AND: [
               PUBLIC_LESSON_EXERCISE_WHERE,
-              { lesson: { is: buildLessonReadyWhere() } },
+              { lesson: { is: buildAnyLessonReadyWhere() } },
             ],
           },
           select: { id: true },
           take: 1,
         },
         // Q350: ảnh bìa của bài đã sẵn sàng; ảnh của từ công khai thuộc bài đó.
+        // M2.13e: "sẵn sàng" gồm cả bài không có Level, như route learner.
         lessonCoverImage: {
-          where: buildLessonReadyWhere(),
+          where: buildAnyLessonReadyWhere(),
           select: { id: true },
           take: 1,
         },
         wordImage: {
           where: {
             ...PUBLIC_CONTENT_WHERE,
-            lessonWords: { some: { lesson: { is: buildLessonReadyWhere() } } },
+            lessonWords: {
+              some: { lesson: { is: buildAnyLessonReadyWhere() } },
+            },
           },
           select: { id: true },
           take: 1,
