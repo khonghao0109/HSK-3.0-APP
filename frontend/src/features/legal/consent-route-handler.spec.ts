@@ -5,6 +5,7 @@ import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
 
 import {
   handleConsentAccept,
+  handleOptionalConsent,
   type ConsentHandlerDependencies,
 } from './consent-route-handler';
 
@@ -112,6 +113,113 @@ describe('handleConsentAccept (M1.7b2 B2a)', () => {
     const response = await handleConsentAccept(
       request(),
       deps(vi.fn().mockRejectedValue(failure(500))),
+    );
+    expect(response.status).toBe(503);
+  });
+});
+
+function optionalRequest(
+  options: { origin?: string | null; cookie?: boolean; body?: unknown } = {},
+) {
+  const headers = new Headers({ 'content-type': 'application/json' });
+  if (options.origin !== null)
+    headers.set('origin', options.origin ?? appOrigin);
+  if (options.cookie !== false) {
+    headers.set('cookie', `${learnerCookieName}=learner-token`);
+  }
+  return new NextRequest(
+    new URL('/api/learner/consents/optional/analytics', appOrigin),
+    {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(options.body ?? { granted: true }),
+    },
+  );
+}
+
+describe('handleOptionalConsent (M1.7b2 B3)', () => {
+  it('forwards the choice with the learner token and returns the saved state', async () => {
+    const requestBackend = vi.fn().mockResolvedValue({
+      success: true,
+      data: { type: 'analytics', granted: true },
+      meta: { requestId: 'r', timestamp: 't' },
+    });
+    const response = await handleOptionalConsent(
+      optionalRequest(),
+      'analytics',
+      deps(requestBackend),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({
+      success: true,
+      data: { type: 'analytics', granted: true },
+    });
+    expect(requestBackend).toHaveBeenCalledWith(
+      '/api/v1/users/me/consents/optional/analytics',
+      { token: 'learner-token', method: 'PUT', body: { granted: true } },
+    );
+  });
+
+  it.each([
+    ['cross-origin', { origin: 'https://evil.example' }, 403],
+    ['origin-less', { origin: null }, 403],
+    ['signed out', { cookie: false }, 401],
+    ['extra key', { body: { granted: true, type: 'marketing' } }, 400],
+    ['non-boolean', { body: { granted: 'true' } }, 400],
+    ['missing granted', { body: {} }, 400],
+  ])(
+    'refuses a %s request without calling the backend',
+    async (_name, options, status) => {
+      const requestBackend = vi.fn();
+      const response = await handleOptionalConsent(
+        optionalRequest(options),
+        'analytics',
+        deps(requestBackend),
+      );
+      expect(response.status).toBe(status);
+      expect(requestBackend).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['terms', 'privacy', 'recording', 'ANALYTICS'])(
+    'answers 404 for the non-optional type %s',
+    async (type) => {
+      const requestBackend = vi.fn();
+      const response = await handleOptionalConsent(
+        optionalRequest(),
+        type,
+        deps(requestBackend),
+      );
+      expect(response.status).toBe(404);
+      expect(requestBackend).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps the session on 429 and clears it on 401', async () => {
+    const limited = await handleOptionalConsent(
+      optionalRequest(),
+      'marketing',
+      deps(vi.fn().mockRejectedValue(failure(429))),
+    );
+    expect(limited.status).toBe(429);
+    expect(limited.headers.getSetCookie()).toEqual([]);
+    const signedOut = await handleOptionalConsent(
+      optionalRequest(),
+      'marketing',
+      deps(vi.fn().mockRejectedValue(failure(401))),
+    );
+    expect(signedOut.status).toBe(401);
+    expect(signedOut.headers.getSetCookie().join(';')).toContain(
+      `${learnerCookieName}=;`,
+    );
+  });
+
+  it('maps an unexpected backend reply to 503', async () => {
+    const response = await handleOptionalConsent(
+      optionalRequest(),
+      'analytics',
+      deps(vi.fn().mockResolvedValue({ success: true, data: { granted: 1 } })),
     );
     expect(response.status).toBe(503);
   });

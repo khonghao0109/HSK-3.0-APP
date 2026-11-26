@@ -465,6 +465,12 @@ Cơ chế xoay vòng (rotation), khoảng ân hạn (grace period) và phát hi�
   `POST /users/me/consents/accept`. Thành công `{ success: true }` + `no-store`; backend
   `LEGAL_DOCUMENT_MISMATCH`/`LEGAL_CONSENT_REQUIRED` → 400 `legal_documents_outdated`;
   401/403 thường xoá cookie; 400/429 khác giữ status; còn lại 503.
+- **BFF `PUT /api/learner/consents/optional/:type` (M1.7b2 B3, Q190):** kiểm `Origin` → 403;
+  `type` ngoài `analytics|marketing` → 404; cookie → 401; JSON hỏng hoặc khác đúng
+  `{ granted: boolean }` → 400; rồi `PUT /users/me/consents/optional/:type`. Thành công
+  `{ success: true, data: { type, granted } }` + `no-store`; phản hồi backend sai shape → 503;
+  lỗi map như BFF accept. Trang Hồ sơ đọc trạng thái từ `GET /users/me/consents` (`optional`)
+  và chỉ ghi nhận lựa chọn, chưa có event tracking (Q200).
 
 | Mã lỗi | HTTP | Khi nào |
 | --- | --- | --- |

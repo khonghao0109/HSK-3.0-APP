@@ -120,7 +120,13 @@ function PrivacyDialog({
   );
 }
 
-export function PrivacyRightsPanel() {
+export function PrivacyRightsPanel({
+  variant = 'consent',
+}: {
+  /** `profile`: the page has its own heading and sign-out (Q195). */
+  variant?: 'consent' | 'profile';
+} = {}) {
+  const onConsent = variant === 'consent';
   const router = useRouter();
   const titleId = useId();
   const passwordId = useId();
@@ -226,23 +232,34 @@ export function PrivacyRightsPanel() {
   }
 
   return (
-    <section className="privacy-rights" aria-labelledby={titleId}>
-      <h2 className="consent__h2" id={titleId}>
-        Quyền của bạn
-      </h2>
-      <p className="consent__fine">
-        Bạn vẫn xuất được dữ liệu, xoá tài khoản hoặc đăng xuất khi chưa đồng ý.
-      </p>
+    <section
+      className="privacy-rights"
+      aria-labelledby={onConsent ? titleId : undefined}
+    >
+      {onConsent && (
+        <>
+          <h2 className="consent__h2" id={titleId}>
+            Quyền của bạn
+          </h2>
+          <p className="consent__fine">
+            Bạn vẫn xuất được dữ liệu, xoá tài khoản hoặc đăng xuất khi chưa
+            đồng ý.
+          </p>
+        </>
+      )}
       <button
         className="privacy-rights__link"
         type="button"
         onClick={(event) => openDialog('export', event.currentTarget)}
       >
         <DownloadIcon />
-        <span>
+        <span className="grow">
           <b>Xuất dữ liệu</b>
           <small>Tải về dữ liệu cá nhân dạng JSON</small>
         </span>
+        <svg className="icon privacy-rights__chev" aria-hidden="true">
+          <use href="#i-chevron-right" />
+        </svg>
       </button>
       {exports && exports.length > 0 && (
         <ul className="privacy-rights__exports">
@@ -278,12 +295,15 @@ export function PrivacyRightsPanel() {
         }}
       >
         <TrashIcon />
-        <span>
+        <span className="grow">
           <b>Xoá tài khoản</b>
           <small>Xoá vĩnh viễn tài khoản và dữ liệu học</small>
         </span>
+        <svg className="icon privacy-rights__chev" aria-hidden="true">
+          <use href="#i-chevron-right" />
+        </svg>
       </button>
-      <LearnerLogoutButton />
+      {onConsent && <LearnerLogoutButton />}
 
       <PrivacyDialog
         open={dialog === 'export'}

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getServerLearnerSession } from '@/features/learner-auth/server-learner-session';
@@ -6,6 +6,8 @@ import type { LearningHome } from '@/features/learner-home/learning-home-contrac
 import { getLearningHome } from '@/features/learner-home/learning-home-service';
 import { LearnerToastProvider } from '@/features/learner-shell/learner-toast';
 import { BackendRequestError, normalizeApiFailure } from '@/lib/api/api-error';
+
+import { getOptionalConsents } from '@/features/legal/legal-documents-service';
 
 import LearnerProfilePage, { metadata } from './page';
 
@@ -20,6 +22,15 @@ vi.mock('@/features/learner-auth/server-learner-session', () => ({
 }));
 vi.mock('@/features/learner-home/learning-home-service', () => ({
   getLearningHome: vi.fn(),
+}));
+vi.mock('@/features/legal/legal-documents-service', () => ({
+  getOptionalConsents: vi.fn(),
+}));
+// Its own behaviour is proven in privacy-rights-panel.spec.tsx.
+vi.mock('@/features/privacy/privacy-rights-panel', () => ({
+  PrivacyRightsPanel: ({ variant }: { variant?: string }) => (
+    <div data-testid="privacy-rights-panel" data-variant={variant} />
+  ),
 }));
 
 const home: LearningHome = {
@@ -41,6 +52,10 @@ describe('LearnerProfilePage', () => {
       state: 'learner',
       user: { id: 1, email: 'learner@example.com', role: 'user' },
       token: 'learner-token',
+    });
+    vi.mocked(getOptionalConsents).mockResolvedValue({
+      analytics: false,
+      marketing: false,
     });
   });
 
@@ -134,5 +149,66 @@ describe('LearnerProfilePage', () => {
       <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
     );
     expect(rowValue('Tên')).toBe('Chưa có tên hiển thị');
+  });
+
+  it('has a "Quyền riêng tư & dữ liệu" section with the saved optional consents and the data rights (M1.7b2 B3)', async () => {
+    vi.mocked(getLearningHome).mockResolvedValue(home);
+    vi.mocked(getOptionalConsents).mockResolvedValue({
+      analytics: true,
+      marketing: false,
+    });
+    render(
+      <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
+    );
+    const section = screen.getByRole('region', {
+      name: 'Quyền riêng tư & dữ liệu',
+    });
+    expect(getOptionalConsents).toHaveBeenCalledWith('learner-token');
+    expect(
+      within(section).getByRole('switch', { name: 'Phân tích sản phẩm' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    expect(
+      within(section).getByRole('switch', { name: 'Tin tức và ưu đãi' }),
+    ).toHaveAttribute('aria-checked', 'false');
+    expect(
+      within(section).getByRole('link', { name: /Quyền riêng tư/ }),
+    ).toHaveAttribute('href', '/privacy');
+    expect(
+      within(section).getByRole('link', { name: /Điều khoản sử dụng/ }),
+    ).toHaveAttribute('href', '/terms');
+    expect(within(section).getByTestId('privacy-rights-panel')).toHaveAttribute(
+      'data-variant',
+      'profile',
+    );
+    expect(screen.getAllByRole('button', { name: 'Đăng xuất' })).toHaveLength(
+      1,
+    );
+  });
+
+  it('says the optional consents could not be read instead of guessing them', async () => {
+    vi.mocked(getLearningHome).mockResolvedValue(home);
+    vi.mocked(getOptionalConsents).mockRejectedValue(
+      new BackendRequestError(normalizeApiFailure({ status: 503 })),
+    );
+    render(
+      <LearnerToastProvider>{await LearnerProfilePage()}</LearnerToastProvider>,
+    );
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(
+      screen.getByText(
+        'Chưa tải được lựa chọn của bạn. Tải lại trang để thử lại.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('privacy-rights-panel')).toBeInTheDocument();
+  });
+
+  it('redirects to /sign-in when reading the consents returns 401', async () => {
+    vi.mocked(getLearningHome).mockResolvedValue(home);
+    vi.mocked(getOptionalConsents).mockRejectedValue(
+      new BackendRequestError(normalizeApiFailure({ status: 401 })),
+    );
+    await expect(LearnerProfilePage()).rejects.toThrow(
+      'NEXT_REDIRECT:/sign-in',
+    );
   });
 });

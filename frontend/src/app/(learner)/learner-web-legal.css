@@ -477,6 +477,7 @@
   background: var(--surface-card);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   color: inherit;
   cursor: pointer;
 }
@@ -486,7 +487,7 @@
   background: var(--jade-50);
 }
 
-.learner-app .privacy-rights__link > .icon {
+.learner-app .privacy-rights__link > .icon:not(.privacy-rights__chev) {
   flex: none;
   box-sizing: content-box;
   padding: 10px;
@@ -510,7 +511,7 @@
   color: var(--text-muted);
 }
 
-.learner-app .privacy-rights__link--danger > .icon {
+.learner-app .privacy-rights__link--danger > .icon:not(.privacy-rights__chev) {
   background: var(--red-100);
   color: var(--text-danger);
 }
@@ -622,4 +623,79 @@
   /* AA contrast with white text (Q42), as .ext-dialog. */
   background: var(--cinnabar-700);
   color: var(--white);
+}
+
+.learner-app .privacy-rights__chev {
+  flex: none;
+  color: var(--text-muted);
+}
+
+/* M1.7b2 B3: "Quyền riêng tư & dữ liệu" on the profile page (mẫu
+   web/account-settings.html #privacy: .w-card.uxb-section + .w-h3; switches
+   as .uxb-switchlist of web/notifications.html). */
+.learner-app .profile__privacy {
+  display: grid;
+  gap: var(--sp-3);
+  align-content: start;
+  padding: var(--sp-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.learner-app .profile__h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-strong);
+}
+
+.learner-app .privacy-switches {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learner-app .privacy-switches li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 64px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.learner-app .privacy-switches li:last-child {
+  border-bottom: 0;
+}
+
+.learner-app .privacy-switches :is(b, small, .field__error) {
+  display: block;
+}
+
+.learner-app .privacy-switches b {
+  font-size: var(--fs-md);
+  color: var(--text-strong);
+}
+
+.learner-app .privacy-switches small {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.learner-app .privacy-switches .field__error {
+  font-size: var(--fs-sm);
+  color: var(--text-danger);
+}
+
+@media (min-width: 1024px) {
+  /* Below the hero card, across the whole row. */
+  .learner-app .profile__privacy {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: var(--sp-6);
+    padding: var(--sp-6);
+  }
 }

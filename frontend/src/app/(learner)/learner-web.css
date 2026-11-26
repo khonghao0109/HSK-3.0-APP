@@ -1340,7 +1340,8 @@
     color: var(--text-muted);
   }
 
-  .learner-app .profile > div:last-child {
+  /* The sign-out button's wrapper (no longer the last child, M1.7b2 B3). */
+  .learner-app .profile > div:has(> .auth__submit) {
     grid-column: 3;
     grid-row: 2;
     position: relative;

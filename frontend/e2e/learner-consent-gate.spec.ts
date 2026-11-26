@@ -21,6 +21,8 @@ import {
  */
 const RUN = `pw-g-${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}-`;
 const AGREE = /Tôi đã đọc và đồng ý/;
+/** `--red-100` of learner.css. */
+const RED_100 = 'rgb(253, 236, 235)';
 
 // `effectiveAt` is `timestamp without time zone` read as UTC; psql's session
 // zone may be local, so `now()` alone would land hours off.
@@ -247,5 +249,54 @@ test.describe('consent gate (M1.7b2 B2a)', () => {
     await expect(rights.getByRole('listitem')).toHaveCount(1);
     await expect(rights.getByRole('listitem')).toContainText('Đang chuẩn bị');
     await expect(page).toHaveURL(/\/consent/u);
+  });
+
+  test('a learner turns analytics on and off on the profile page and it stays (M1.7b2 B3)', async ({
+    page,
+    baseURL,
+  }) => {
+    await registerReadyLearner(page, baseURL);
+    await page.goto('/learn/profile');
+    const section = page.getByRole('region', {
+      name: 'Quyền riêng tư & dữ liệu',
+    });
+    const analytics = section.getByRole('switch', {
+      name: 'Phân tích sản phẩm',
+    });
+    const marketing = section.getByRole('switch', {
+      name: 'Tin tức và ưu đãi',
+    });
+    await expect(analytics).toHaveAttribute('aria-checked', 'false');
+    await expect(marketing).toHaveAttribute('aria-checked', 'false');
+
+    for (const granted of [true, false]) {
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().endsWith('/api/learner/consents/optional/analytics') &&
+          response.request().method() === 'PUT',
+      );
+      await analytics.click();
+      expect((await saved).status()).toBe(200);
+      await page.reload();
+      await expect(analytics).toHaveAttribute('aria-checked', String(granted));
+      await expect(marketing).toHaveAttribute('aria-checked', 'false');
+    }
+    await expect(
+      section.getByRole('button', { name: /Xuất dữ liệu/ }),
+    ).toBeVisible();
+    // Menu rows as in the mockup: links not underlined, the delete row's
+    // icon tile red and its chevron left alone.
+    await expect(
+      section.getByRole('link', { name: /Quyền riêng tư/ }),
+    ).toHaveCSS('text-decoration-line', 'none');
+    const remove = section.getByRole('button', { name: /Xoá tài khoản/ });
+    await expect(remove.locator('.icon:not(.privacy-rights__chev)')).toHaveCSS(
+      'background-color',
+      RED_100,
+    );
+    await expect(remove.locator('.privacy-rights__chev')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
   });
 });

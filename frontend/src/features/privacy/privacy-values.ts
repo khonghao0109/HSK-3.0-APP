@@ -23,3 +23,7 @@ export const DATA_EXPORT_CODES: ReadonlyMap<string, number> = new Map([
 export const ACCOUNT_DELETION_CODES: ReadonlyMap<string, number> = new Map([
   ['INVALID_PASSWORD', 400],
 ]);
+
+/** Q190: the optional consents B3 lets a learner switch (M1.7b2 B3). */
+export type OptionalConsentType = 'analytics' | 'marketing';
+export type OptionalConsentState = Record<OptionalConsentType, boolean>;

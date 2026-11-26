@@ -93,7 +93,8 @@ describe('CSP nonce proxy and session refresh router', () => {
     '/api/learner/data-exports',
     '/api/learner/data-exports/4/download',
     '/api/learner/account-deletion',
-  ])('refreshes the session for the privacy BFF %s (M1.7b2 B2b)', (url) => {
+    '/api/learner/consents/optional/analytics',
+  ])('refreshes the session for the privacy BFF %s (M1.7b2 B2b, B3)', (url) => {
     expect(doesProxyMatch({ config, nextConfig: {}, url })).toBe(true);
   });
 
@@ -403,8 +404,9 @@ describe('CSP nonce proxy and session refresh router', () => {
       '/api/learner/data-exports',
       '/api/learner/data-exports/4/download',
       '/api/learner/account-deletion',
+      '/api/learner/consents/optional/analytics',
     ])(
-      'lets a blocked learner reach the privacy BFF %s (M1.7b2 B2b)',
+      'lets a blocked learner reach the privacy BFF %s (M1.7b2 B2b, B3)',
       async (path) => {
         const fetchSpy = vi
           .spyOn(globalThis, 'fetch')
