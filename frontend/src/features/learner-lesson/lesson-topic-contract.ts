@@ -8,7 +8,8 @@ const progressStatusSchema = z.enum(['not_started', 'learning', 'done']);
 /** The part of `GET /learning/lessons/:id/activity` the topic pages read (M2.5f). */
 export const lessonTopicActivitySchema = z.object({
   lesson: z.object({ id: z.number().int(), title: z.string() }),
-  level: z.object({ code: z.string() }),
+  // ADR-009: `null` for a course lesson without a Level.
+  level: z.object({ code: z.string() }).nullable(),
   state: lessonStateSchema,
   topics: z.array(
     z.object({
