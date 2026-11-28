@@ -6,7 +6,12 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { percentClass } from '@/features/learner-home/percent';
 
-import { DialogueLines, GrammarPointBody, ZhText } from './topic-blocks-view';
+import {
+  DialogueLines,
+  dialogueNumbers,
+  GrammarPointBody,
+  ZhText,
+} from './topic-blocks-view';
 import type { GrammarPointBlock, KeyTextBlock } from './topic-content';
 import { UnitResult } from './unit-result';
 
@@ -189,6 +194,7 @@ export function KeyTextUnitFlow({
 }) {
   const [done, setDone] = useState(false);
   if (done) return <UnitResult {...unit} />;
+  const numbers = dialogueNumbers(blocks);
   return (
     <UnitFrame
       title={unit.title}
@@ -215,7 +221,12 @@ export function KeyTextUnitFlow({
             <ZhText text={block.value} />
           </p>
         ) : (
-          <DialogueLines key={index} lines={block.lines} audio={block.audio} />
+          <DialogueLines
+            key={index}
+            lines={block.lines}
+            audio={block.audio}
+            number={numbers[index]}
+          />
         ),
       )}
     </UnitFrame>

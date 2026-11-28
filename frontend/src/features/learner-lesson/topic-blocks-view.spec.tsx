@@ -2,7 +2,11 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import type { DialogueBlock, GrammarPointBlock } from './topic-content';
-import { DialogueLines, GrammarPointBody } from './topic-blocks-view';
+import {
+  DialogueLines,
+  dialogueNumbers,
+  GrammarPointBody,
+} from './topic-blocks-view';
 
 const card: GrammarPointBlock = {
   kind: 'grammar_point',
@@ -118,21 +122,53 @@ describe('DialogueLines (N7)', () => {
     );
     expect(container.querySelector('b')).toBeNull();
   });
-  it('puts one key-text audio button in the first turn only (M2.13d)', () => {
+  it('puts the key-text audio in the header, not in a turn', () => {
     render(<DialogueLines lines={talk.lines} audio={{ mediaId: 7 }} />);
     const button = screen.getByRole('button', { name: 'Nghe bài khoá' });
     expect(button).toHaveClass('lu-say');
-    const lines = screen.getAllByRole('listitem');
-    expect(lines[0]!.contains(button)).toBe(true);
-    expect(lines[0]!.children).toHaveLength(3);
-    expect(lines[0]!.querySelector('.lu-line__noaudio')).toBeNull();
-    for (const line of lines.slice(1)) {
-      expect(line.querySelector('.lu-line__noaudio')).not.toBeNull();
+    for (const line of screen.getAllByRole('listitem')) {
+      expect(line.contains(button)).toBe(false);
     }
+    // A lone key text needs no number.
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+
+  it('numbers each key text of a topic with several, with its own audio', () => {
+    render(
+      <>
+        <DialogueLines lines={talk.lines} audio={{ mediaId: 7 }} number={1} />
+        <DialogueLines lines={talk.lines} audio={{ mediaId: 8 }} number={2} />
+      </>,
+    );
+    const second = screen.getByRole('region', { name: 'Bài khoá 2' });
+    expect(
+      within(second).getByRole('heading', { level: 3, name: 'Bài khoá 2' }),
+    ).toBeInTheDocument();
+    expect(
+      within(second).getByRole('button', { name: 'Nghe bài khoá 2' }),
+    ).toBeInTheDocument();
+    expect(within(second).getAllByRole('listitem')).toHaveLength(3);
+    expect(
+      screen.getByRole('button', { name: 'Nghe bài khoá 1' }),
+    ).toBeInTheDocument();
   });
 
   it('shows no audio button without key-text audio', () => {
     render(<DialogueLines lines={talk.lines} />);
     expect(screen.queryByRole('button')).toBeNull();
+  });
+});
+
+describe('dialogueNumbers', () => {
+  it('numbers dialogues only when a topic has more than one', () => {
+    const dialogue = { kind: 'dialogue' };
+    const text = { kind: 'text' };
+    expect(dialogueNumbers([dialogue, text])).toEqual([undefined, undefined]);
+    expect(dialogueNumbers([dialogue, text, dialogue, dialogue])).toEqual([
+      1,
+      undefined,
+      2,
+      3,
+    ]);
   });
 });

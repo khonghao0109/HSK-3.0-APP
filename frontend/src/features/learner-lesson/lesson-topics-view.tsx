@@ -18,7 +18,11 @@ import {
 } from './lesson-activity-service';
 import { loadLearnerLesson } from './lesson-page-loader';
 import type { LessonWords } from './lesson-topic-contract';
-import { DialogueLines, GrammarPointBody } from './topic-blocks-view';
+import {
+  DialogueLines,
+  dialogueNumbers,
+  GrammarPointBody,
+} from './topic-blocks-view';
 import { TopicDoneButton } from './topic-done-button';
 import {
   type LessonTopicKind,
@@ -100,7 +104,7 @@ export async function LessonTopicsView({
             {topic.subtitle && (
               <p className="topic-card__sub">{topic.subtitle}</p>
             )}
-            {topicBlocks(topic.content).map((block, index) => {
+            {topicBlocks(topic.content).map((block, index, blocks) => {
               switch (block.kind) {
                 case 'text':
                   return (
@@ -124,7 +128,11 @@ export async function LessonTopicsView({
                 case 'dialogue':
                   return (
                     <div key={index} className="topic-card__block">
-                      <DialogueLines lines={block.lines} audio={block.audio} />
+                      <DialogueLines
+                        lines={block.lines}
+                        audio={block.audio}
+                        number={dialogueNumbers(blocks)[index]}
+                      />
                     </div>
                   );
               }

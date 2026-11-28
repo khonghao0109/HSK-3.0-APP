@@ -678,7 +678,7 @@
 
 .learner-app .lu-line {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 44px 1fr;
   gap: var(--sp-3);
   align-items: start;
   padding: var(--sp-3);
@@ -730,11 +730,36 @@
   color: var(--text-body);
 }
 
-.learner-app .lu-line__noaudio {
-  width: 44px;
+/* Một bài khoá: tiêu đề "Bài khoá n" và nút nghe cả bài (seeddata không có
+   audio từng câu), rồi các lượt thoại. Nhiều bài khoá cách nhau rõ. */
+.learner-app .lu-kt {
+  display: grid;
+  gap: var(--sp-3);
 }
 
-/* mẫu key-text `.lu-say`; M2.13d: nút nghe cả bài khoá ở lượt đầu. */
+.learner-app .lu-kt + .lu-kt {
+  margin-top: var(--sp-5);
+}
+
+.learner-app .lu-kt__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.learner-app .lu-kt__say {
+  margin-inline-start: auto;
+}
+
+.learner-app .lu-kt__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+/* mẫu key-text `.lu-say`: nút nghe cả bài khoá ở đầu bài. */
 .learner-app .lu-say {
   display: inline-flex;
   align-items: center;
@@ -753,7 +778,7 @@
 }
 
 /* mẫu key-text: `.lu-sub` giữ lề dọc gốc (0 0 sp-4) dưới tiêu đề hội thoại; lề ngang để web căn giữa cột 640px. */
-.learner-app .lu-flow .ex-body > .lu-sub:has(+ .lu-dlg) {
+.learner-app .lu-flow .ex-body > .lu-sub:has(+ .lu-kt) {
   margin-block: 0 var(--sp-4);
 }
 
@@ -771,7 +796,7 @@
     display: block;
   }
 
-  .learner-app .lu-flow .ex-body > :is(.lu-dlg, .lu-text) {
+  .learner-app .lu-flow .ex-body > :is(.lu-kt, .lu-text) {
     width: 100%;
     max-width: 640px;
     margin-inline: auto;

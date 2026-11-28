@@ -43,6 +43,10 @@ export function WordAudioButton({
         setFailed(true);
         return;
       }
+      // One voice at a time: another key text or word stops when this plays.
+      for (const other of document.querySelectorAll('audio')) {
+        if (other !== element) other.pause();
+      }
       element.src = grant.src;
       element.play().catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') {

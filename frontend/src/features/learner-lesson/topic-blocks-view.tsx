@@ -108,48 +108,73 @@ export function GrammarPointBody({
 export const KEY_TEXT_AUDIO_LABEL = 'Nghe bài khoá';
 
 /**
- * mẫu key-text: one row per turn, the speaker as an initial (N7). M2.13d: the
- * audio of the whole key text sits in the first turn's cell (`lu-say`); the
- * other cells stay empty, since seeddata has no per-turn audio.
+ * mẫu key-text: one row per turn, the speaker as an initial (N7). seeddata has
+ * one audio per key text, not per turn, so its button sits in the header of
+ * the key text. A lesson with several key texts numbers them ("Bài khoá 2")
+ * so each conversation and its audio read apart.
  */
 export function DialogueLines({
   lines,
   audio,
+  number,
 }: {
   lines: readonly DialogueLine[];
   audio?: { mediaId: number };
+  /** 1-based, only when the topic has more than one dialogue. */
+  number?: number;
 }) {
   const tones = speakerTones(lines.map((line) => line.speaker));
+  const name = number ? `Bài khoá ${number}` : null;
   return (
-    <ol className="lu-dlg">
-      {lines.map((line, index) => (
-        <li key={index} className={`lu-line ${tones.get(line.speaker)}`}>
-          <span className="lu-line__who" role="img" aria-label={line.speaker}>
-            {speakerInitial(line.speaker)}
-          </span>
-          <div className="lu-line__body">
-            <p className="lu-line__cn" lang="zh-Hans">
-              {line.hanzi}
-            </p>
-            <p className="lu-line__py" lang="zh-Latn-pinyin">
-              {line.pinyin}
-            </p>
-            <p className="lu-line__vi">{line.vi}</p>
-          </div>
-          {index === 0 && audio ? (
-            <span>
+    <section className="lu-kt" aria-label={name ?? undefined}>
+      {(name || audio) && (
+        <div className="lu-kt__head">
+          {name && <h3 className="lu-kt__title">{name}</h3>}
+          {audio && (
+            // Button, <audio> and status stay one flex item at the end.
+            <span className="lu-kt__say">
               <WordAudioButton
                 audio={audio}
-                label={KEY_TEXT_AUDIO_LABEL}
+                label={
+                  number
+                    ? `${KEY_TEXT_AUDIO_LABEL} ${number}`
+                    : KEY_TEXT_AUDIO_LABEL
+                }
                 className="lu-say"
               />
             </span>
-          ) : (
-            // mẫu: no audio, an empty cell keeps the rows aligned.
-            <span className="lu-line__noaudio" aria-hidden="true" />
           )}
-        </li>
-      ))}
-    </ol>
+        </div>
+      )}
+      <ol className="lu-dlg">
+        {lines.map((line, index) => (
+          <li key={index} className={`lu-line ${tones.get(line.speaker)}`}>
+            <span className="lu-line__who" role="img" aria-label={line.speaker}>
+              {speakerInitial(line.speaker)}
+            </span>
+            <div className="lu-line__body">
+              <p className="lu-line__cn" lang="zh-Hans">
+                {line.hanzi}
+              </p>
+              <p className="lu-line__py" lang="zh-Latn-pinyin">
+                {line.pinyin}
+              </p>
+              <p className="lu-line__vi">{line.vi}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/** "Bài khoá n" of each dialogue when a topic has several; else none. */
+export function dialogueNumbers(
+  blocks: readonly { kind: string }[],
+): (number | undefined)[] {
+  const many = blocks.filter((block) => block.kind === 'dialogue').length > 1;
+  let count = 0;
+  return blocks.map((block) =>
+    many && block.kind === 'dialogue' ? ++count : undefined,
   );
 }

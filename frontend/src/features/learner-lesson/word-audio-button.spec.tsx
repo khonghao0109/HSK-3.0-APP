@@ -54,6 +54,28 @@ describe('WordAudioButton (M2.13c2)', () => {
     );
   });
 
+  it('stops any other audio before it plays', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      Promise.resolve(grant(31)),
+    );
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, 'pause')
+      .mockImplementation(() => undefined);
+    render(
+      <>
+        <WordAudioButton audio={{ mediaId: 30 }} label="Nghe bài khoá 1" />
+        <WordAudioButton audio={{ mediaId: 31 }} label="Nghe bài khoá 2" />
+      </>,
+    );
+    const [first, second] = [...document.querySelectorAll('audio')];
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: 'Nghe bài khoá 2' }));
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    expect(pause.mock.contexts).toContain(first);
+    expect(pause.mock.contexts).not.toContain(second);
+  });
+
   it('plays from the keyboard', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
       Promise.resolve(grant(31)),
